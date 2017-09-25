@@ -98,12 +98,8 @@ using namespace std;
 // an interactive session.
 void loadLibraries()
 {
-#ifdef __CINT__
-  // Load the Event Generator abstraction library, Pythia 6
-  // library, and the Pythia 6 interface library.
-  gSystem->Load("libEG");
-  gSystem->Load("$ROOTSYS/../pythia6/libPythia6"); //change to your setup
-  gSystem->Load("libEGPythia6");
+#ifdef R__MACOSX
+  gSystem->Load("libpythia6_dummy");
 #endif
 }
 
@@ -171,7 +167,7 @@ int makeEventSample(Int_t nEvents)
   hist->Scale(3 / 100. / hist->Integral());
   hist->Fit("expo", "QO+", "", .25, 1.75);
   TF1* func = hist->GetFunction("expo");
-  func->SetParNames("A", "- 1 / T");
+  func->SetParNames("A", "-1/T");
   // and now we flush and close the file
   file->Write();
   file->Close();

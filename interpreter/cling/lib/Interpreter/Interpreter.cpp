@@ -15,6 +15,7 @@
 #include "ClingUtils.h"
 
 #include "DynamicLookup.h"
+#include "EnterUserCodeRAII.h"
 #include "ExternalInterpreterSource.h"
 #include "ForwardDeclPrinter.h"
 #include "IncrementalExecutor.h"
@@ -27,7 +28,9 @@
 #include "cling/Interpreter/ClangInternalState.h"
 #include "cling/Interpreter/ClingCodeCompleteConsumer.h"
 #include "cling/Interpreter/CompilationOptions.h"
+#include "cling/Interpreter/DynamicExprInfo.h"
 #include "cling/Interpreter/DynamicLibraryManager.h"
+#include "cling/Interpreter/Exception.h"
 #include "cling/Interpreter/LookupHelper.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
@@ -38,14 +41,15 @@
 
 #include "clang/AST/ASTContext.h"
 #include "clang/AST/GlobalDecl.h"
-#include "clang/Basic/TargetInfo.h"
 #include "clang/Basic/SourceManager.h"
+#include "clang/Basic/TargetInfo.h"
 #include "clang/CodeGen/ModuleBuilder.h"
 #include "clang/Frontend/ASTConsumers.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/Utils.h"
-#include "clang/Lex/Preprocessor.h"
+#include "clang/Lex/ExternalPreprocessorSource.h"
 #include "clang/Lex/HeaderSearch.h"
+#include "clang/Lex/Preprocessor.h"
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaDiagnostic.h"
@@ -54,7 +58,6 @@
 #include "llvm/IR/Module.h"
 #include "llvm/Support/Path.h"
 
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -246,22 +249,24 @@ namespace cling {
 
     // Now that the transactions have been commited, force symbol emission
     // and overrides.
-    if (const Transaction* T = getLastTransaction()) {
-      if (llvm::Module* M = T->getModule()) {
-        for (const llvm::StringRef& Sym : Syms) {
-          const llvm::GlobalValue* GV = M->getNamedValue(Sym);
-#if defined(__GLIBCXX__) && !defined(__APPLE__)
-          // libstdc++ mangles at_quick_exit on Linux when headers from g++ < 5
-          if (!GV && Sym.equals("at_quick_exit"))
-            GV = M->getNamedValue("_Z13at_quick_exitPFvvE");
-#endif
-          if (GV) {
-            if (void* Addr = m_Executor->getPointerToGlobalFromJIT(*GV))
-              m_Executor->addSymbol(Sym.str().c_str(), Addr, true);
-            else
-              cling::errs() << Sym << " not defined\n";
-          } else
-            cling::errs() << Sym << " not in Module!\n";
+    if (!isInSyntaxOnlyMode()) {
+      if (const Transaction* T = getLastTransaction()) {
+        if (llvm::Module* M = T->getModule()) {
+          for (const llvm::StringRef& Sym : Syms) {
+            const llvm::GlobalValue* GV = M->getNamedValue(Sym);
+  #if defined(__GLIBCXX__) && !defined(__APPLE__)
+            // libstdc++ mangles at_quick_exit on Linux when g++ < 5
+            if (!GV && Sym.equals("at_quick_exit"))
+              GV = M->getNamedValue("_Z13at_quick_exitPFvvE");
+  #endif
+            if (GV) {
+              if (void* Addr = m_Executor->getPointerToGlobalFromJIT(*GV))
+                m_Executor->addSymbol(Sym.str().c_str(), Addr, true);
+              else
+                cling::errs() << Sym << " not defined\n";
+            } else
+              cling::errs() << Sym << " not in Module!\n";
+          }
         }
       }
     }
@@ -341,10 +346,12 @@ namespace cling {
 
   Transaction* Interpreter::Initialize(bool NoRuntime, bool SyntaxOnly,
                               llvm::SmallVectorImpl<llvm::StringRef>& Globals) {
-    llvm::SmallString<1024> Buf;
-    llvm::raw_svector_ostream Strm(Buf);
+    largestream Strm;
     const clang::LangOptions& LangOpts = getCI()->getLangOpts();
-    const void* thisP = static_cast<void*>(this);
+    const void* ThisP = static_cast<void*>(this);
+    // PCH/PCM-generation defines syntax-only. If we include definitions,
+    // loading the PCH/PCM will make the runtime barf about dupe definitions.
+    bool EmitDefinitions = !SyntaxOnly;
 
     // FIXME: gCling should be const so assignemnt is a compile time error.
     // Currently the name mangling is coming up wrong for the const version
@@ -354,91 +361,109 @@ namespace cling {
     // itself? One could use a macro (simillar to __dso_handle) to block
     // assignemnt and get around the mangling issue.
     const char* Linkage = LangOpts.CPlusPlus ? "extern \"C\"" : "";
-    if (!NoRuntime && !SyntaxOnly) {
+    if (!NoRuntime) {
       if (LangOpts.CPlusPlus) {
-        Strm << "#include \"cling/Interpreter/RuntimeUniverse.h\"\n"
-                "namespace cling { class Interpreter; namespace runtime { "
-                "Interpreter* gCling=(Interpreter*)" << thisP << "; }}\n";
+        Strm << "#include \"cling/Interpreter/RuntimeUniverse.h\"\n";
+        if (EmitDefinitions)
+          Strm << "namespace cling { class Interpreter; namespace runtime { "
+                  "Interpreter* gCling=(Interpreter*)" << ThisP << ";}}\n";
       } else {
         Strm << "#include \"cling/Interpreter/CValuePrinter.h\"\n"
-                "void* gCling=(void*)" << thisP << ";\n";
+             << "void* gCling";
+        if (EmitDefinitions)
+          Strm << "=(void*)" << ThisP;
+        Strm << ";\n";
       }
     }
 
     // Intercept all atexit calls, as the Interpreter and functions will be long
     // gone when the -native- versions invoke them.
-    if (!SyntaxOnly) {
 #if defined(__GLIBCXX__) && !defined(__APPLE__)
-      const char* LinkageCxx = "extern \"C++\"";
-      const char* Attr = LangOpts.CPlusPlus ? " throw () " : "";
-      const char* cxa_atexit_is_noexcept = LangOpts.CPlusPlus ? " noexcept" : "";
+    const char* LinkageCxx = "extern \"C++\"";
+    const char* Attr = LangOpts.CPlusPlus ? " throw () " : "";
+    const char* cxa_atexit_is_noexcept = LangOpts.CPlusPlus ? " noexcept" : "";
 #else
-      const char* LinkageCxx = Linkage;
-      const char* Attr = "";
-      const char* cxa_atexit_is_noexcept = "";
+    const char* LinkageCxx = Linkage;
+    const char* Attr = "";
+    const char* cxa_atexit_is_noexcept = "";
 #endif
 
-      // While __dso_handle is still overriden in the JIT below,
-      // #define __dso_handle is used to mitigate the following problems:
-      //  1. Type of __dso_handle is void* making assignemnt to it legal
-      //  2. Making it void* const in cling would mean possible type mismatch
-      //  3. Cannot override void* __dso_handle in child Interpreter
-      //  4. On Unix where the symbol actually exists, __dso_handle will be
-      //     linked into the code before the JIT can say otherwise, so:
-      //      [cling] __dso_handle // codegened __dso_handle always printed
-      //      [cling] __cxa_atexit(f, 0, __dso_handle) // seg-fault
-      //  5. Code that actually uses __dso_handle will fail as a declaration is
-      //     needed which is not possible with the macro.
-      //  6. Assuming 4 is sorted out in user code, calling __cxa_atexit through
-      //     atexit below isn't linking to the __dso_handle symbol.
+    // While __dso_handle is still overriden in the JIT below,
+    // #define __dso_handle is used to mitigate the following problems:
+    //  1. Type of __dso_handle is void* making assignemnt to it legal
+    //  2. Making it void* const in cling would mean possible type mismatch
+    //  3. Cannot override void* __dso_handle in child Interpreter
+    //  4. On Unix where the symbol actually exists, __dso_handle will be
+    //     linked into the code before the JIT can say otherwise, so:
+    //      [cling] __dso_handle // codegened __dso_handle always printed
+    //      [cling] __cxa_atexit(f, 0, __dso_handle) // seg-fault
+    //  5. Code that actually uses __dso_handle will fail as a declaration is
+    //     needed which is not possible with the macro.
+    //  6. Assuming 4 is sorted out in user code, calling __cxa_atexit through
+    //     atexit below isn't linking to the __dso_handle symbol.
 
-      Strm << "#define __dso_handle ((void*)" << thisP << ")\n";
+    // Use __cxa_atexit to intercept all of the following routines
+    Strm << Linkage << " int __cxa_atexit(void (*f)(void*), void*, void*) "
+         << cxa_atexit_is_noexcept << ";\n";
 
-      // Use __cxa_atexit to intercept all of the following routines
-      Strm << Linkage << " int __cxa_atexit(void (*f)(void*), void*, void*) "
-           << cxa_atexit_is_noexcept << ";\n";
+    if (EmitDefinitions)
+      Strm << "#define __dso_handle ((void*)" << ThisP << ")\n";
 
-      // C atexit, std::atexit
-      Strm << Linkage << " int atexit(void(*f)()) " << Attr << " { return "
-                        "__cxa_atexit((void(*)(void*))f, 0, __dso_handle); }\n";
-      Globals.push_back("atexit");
+    // C atexit, std::atexit
+    Strm << Linkage << " int atexit(void(*f)()) " << Attr;
+    if (EmitDefinitions)
+      Strm << " { return __cxa_atexit((void(*)(void*))f, 0, __dso_handle); }\n";
+    else
+      Strm << ";\n";
+    Globals.push_back("atexit");
 
-      // C++ 11 at_quick_exit, std::at_quick_exit
-      if (LangOpts.CPlusPlus && LangOpts.CPlusPlus11) {
-        Strm << LinkageCxx << " int at_quick_exit(void(*f)()) " << Attr <<
-              " { return __cxa_atexit((void(*)(void*))f, 0, __dso_handle); }\n";
-        Globals.push_back("at_quick_exit");
-      }
+    // C++ 11 at_quick_exit, std::at_quick_exit
+    if (LangOpts.CPlusPlus && LangOpts.CPlusPlus11) {
+      Strm << LinkageCxx << " int at_quick_exit(void(*f)()) " << Attr;
+      if (EmitDefinitions)
+        Strm
+          << " { return __cxa_atexit((void(*)(void*))f, 0, __dso_handle); }\n";
+      else
+        Strm << ";\n";
+      Globals.push_back("at_quick_exit");
+    }
 
 #if defined(LLVM_ON_WIN32)
-      // Windows specific: _onexit, _onexit_m, __dllonexit
- #if !defined(_M_CEE)
-      const char* Spec = "__cdecl";
- #else
-      const char* Spec = "__clrcall";
- #endif
-      Strm << Linkage << " " << Spec << " int (*__dllonexit("
-           << "int (" << Spec << " *f)(void**, void**), void**, void**))"
-           "(void**, void**) { "
-           "__cxa_atexit((void(*)(void*))f, 0, __dso_handle); return f;"
-           "}\n";
-      Globals.push_back("__dllonexit");
- #if !defined(_M_CEE_PURE)
-      Strm << Linkage << " " << Spec << " int (*_onexit("
-           << "int (" << Spec << 	" *f)()))() { "
-           "__cxa_atexit((void(*)(void*))f, 0, __dso_handle); return f;"
-           "}\n";
-      Globals.push_back("_onexit");
- #endif
+    // Windows specific: _onexit, _onexit_m, __dllonexit
+#if !defined(_M_CEE)
+    const char* Spec = "__cdecl";
+#else
+    const char* Spec = "__clrcall";
+#endif
+    Strm << Linkage << " " << Spec << " int (*__dllonexit("
+         << "int (" << Spec << " *f)(void**, void**), void**, void**))"
+         "(void**, void**)";
+      if (EmitDefinitions)
+        Strm << " { __cxa_atexit((void(*)(void*))f, 0, __dso_handle);"
+                " return f; }\n";
+      else
+        Strm << ";\n";
+    Globals.push_back("__dllonexit");
+#if !defined(_M_CEE_PURE)
+    Strm << Linkage << " " << Spec << " int (*_onexit("
+         << "int (" << Spec << " *f)()))()";
+    if (EmitDefinitions)
+      Strm << " { __cxa_atexit((void(*)(void*))f, 0, __dso_handle);"
+              " return f; }\n";
+    else
+      Strm << ";\n";
+    Globals.push_back("_onexit");
+#endif
 #endif
 
+    if (!SyntaxOnly) {
       // Override the native symbols now, before anything can be emitted.
       m_Executor->addSymbol("__cxa_atexit",
                             utils::FunctionToVoidPtr(&local_cxa_atexit), true);
       // __dso_handle is inserted for the link phase, as macro is useless then
       m_Executor->addSymbol("__dso_handle", this, true);
 
-#ifdef LLVM_ON_WIN32
+#ifdef CLING_WIN_SEH_EXCEPTIONS
       // Windows C++ SEH handler
       m_Executor->addSymbol("_CxxThrowException",
           utils::FunctionToVoidPtr(&platform::ClingRaiseSEHException), true);
@@ -477,6 +502,10 @@ namespace cling {
     }
   }
 
+  void Interpreter::AddIncludePath(llvm::StringRef PathsStr) {
+    return AddIncludePaths(PathsStr, nullptr);
+  }
+
   void Interpreter::DumpIncludePath(llvm::raw_ostream* S) {
     utils::DumpIncludePaths(getCI()->getHeaderSearchOpts(), S ? *S : cling::outs(),
                             true /*withSystem*/, true /*withFlags*/);
@@ -488,7 +517,8 @@ namespace cling {
     if (what.equals("asttree")) {
       std::unique_ptr<clang::ASTConsumer> printer =
           clang::CreateASTDumper(filter, true  /*DumpDecls*/,
-                                         false /*DumpLookups*/ );
+                                         false /*Deserialize*/,
+                                         false /*DumpLookups*/);
       printer->HandleTranslationUnit(getSema().getASTContext());
     } else if (what.equals("ast"))
       getSema().getASTContext().PrintStats();
@@ -566,12 +596,17 @@ namespace cling {
   }
 
   const MacroInfo* Interpreter::getMacro(llvm::StringRef Macro) const {
-    const clang::Preprocessor& PP = getCI()->getPreprocessor();
-    if (const IdentifierInfo* II = PP.getIdentifierInfo(Macro)) {
-      if (const DefMacroDirective* MD = llvm::dyn_cast_or_null
-          <DefMacroDirective>(PP.getLocalMacroDirective(II))) {
-          return MD->getMacroInfo();
-      }
+    clang::Preprocessor& PP = getCI()->getPreprocessor();
+    if (IdentifierInfo* II = PP.getIdentifierInfo(Macro)) {
+      // If the information about this identifier is out of date, update it from
+      // the external source.
+      // FIXME: getIdentifierInfo will probably do this for us once we update
+      // clang. If so, please remove this manual update.
+      if (II->isOutOfDate())
+        PP.getExternalSource()->updateOutOfDateIdentifier(*II);
+      MacroDefinition MDef = PP.getMacroDefinition(II);
+      MacroInfo* MI = MDef.getMacroInfo();
+      return MI;
     }
     return nullptr;
   }
@@ -654,6 +689,7 @@ namespace cling {
     SourceLocation fileNameLoc;
     PP.LookupFile(fileNameLoc, headerFile, isAngled, FromDir, FromFile, CurDir,
                   /*SearchPath*/0, /*RelativePath*/ 0, &suggestedModule,
+                  0 /*IsMapped*/,
                   /*SkipCache*/false, /*OpenFile*/ false, /*CacheFail*/ false);
     if (!suggestedModule)
       return Interpreter::kFailure;
@@ -749,6 +785,7 @@ namespace cling {
     CO.DeclarationExtraction = 0;
     CO.ValuePrinting = 0;
     CO.ResultEvaluation = 1;
+    CO.CheckPointerValidity = 0;
 
     return EvaluateInternal(input, CO, &V);
   }
@@ -1072,6 +1109,14 @@ namespace cling {
     if (addr)
       return addr;
 
+    if (const CXXRecordDecl *CXX = dyn_cast<CXXRecordDecl>(RD)) {
+      // Don't generate a stub for a destructor that does nothing
+      // This also fixes printing of lambdas and C structures as they
+      // have no dtor test/ValuePrinter/Destruction.C
+      if (CXX->hasIrrelevantDestructor())
+        return nullptr;
+    }
+
     smallstream funcname;
     funcname << "__cling_Destruct_" << RD;
 
@@ -1188,7 +1233,7 @@ namespace cling {
     SourceLocation fileNameLoc;
     FE = PP.LookupFile(fileNameLoc, canonicalFile, isAngled, FromDir, FromFile,
                        CurDir, /*SearchPath*/0, /*RelativePath*/ 0,
-                       /*suggestedModule*/0, /*SkipCache*/false,
+                       /*suggestedModule*/0, 0 /*IsMapped*/, /*SkipCache*/false,
                        /*OpenFile*/ false, /*CacheFail*/ false);
     if (FE)
       return FE->getName();
@@ -1253,6 +1298,14 @@ namespace cling {
 
         Itr = std::find_if(m_StoredStates.begin(), m_StoredStates.end(),
                            Predicate);
+      }
+    }
+
+    // Clear any cached transaction states.
+    for (unsigned i = 0; i < kNumTransactions; ++i) {
+      if (m_CachedTrns[i] == &T) {
+        m_CachedTrns[i] = nullptr;
+        break;
       }
     }
 
@@ -1384,6 +1437,8 @@ namespace cling {
       // FIXME: Move to the InterpreterCallbacks.cpp;
       if (DynamicLibraryManager* DLM = getDynamicLibraryManager())
         DLM->setCallbacks(m_Callbacks.get());
+      if (m_Executor)
+        m_Executor->setCallbacks(m_Callbacks.get());
     }
 
     static_cast<MultiplexInterpreterCallbacks*>(m_Callbacks.get())
@@ -1541,6 +1596,24 @@ namespace cling {
     T.setState(Transaction::kCommitted);
   }
 
-
+  namespace runtime {
+    namespace internal {
+      Value EvaluateDynamicExpression(Interpreter* interp, DynamicExprInfo* DEI,
+                                      clang::DeclContext* DC) {
+        Value ret = [&]
+        {
+          LockCompilationDuringUserCodeExecutionRAII LCDUCER(*interp);
+          return interp->Evaluate(DEI->getExpr(), DC,
+                                  DEI->isValuePrinterRequested());
+        }();
+        if (!ret.isValid()) {
+          std::string msg = "Error evaluating expression ";
+          CompilationException::throwingHandler(nullptr, msg + DEI->getExpr(),
+                                                false /*backtrace*/);
+        }
+        return ret;
+      }
+    } // namespace internal
+  }  // namespace runtime
 
 } //end namespace cling

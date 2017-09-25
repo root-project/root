@@ -74,7 +74,7 @@
 #define FULong64   "%llu"
 #endif
 
-ClassImp(TBufferJSON)
+ClassImp(TBufferJSON);
 
 
 const char *TBufferJSON::fgFloatFmt = "%e";
@@ -107,15 +107,17 @@ class TArrayIndexProducer {
          fIsArray(kFALSE)
       {
          Bool_t usearrayindx = elem && (elem->GetArrayDim() > 0);
-         Bool_t usearraylen = (arraylen > 1);
+         Bool_t isloop = elem && ((elem->GetType() == TStreamerInfo::kStreamLoop) ||
+                                  (elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop));
+         Bool_t usearraylen = (arraylen > (isloop ? 0 : 1));
 
          if (usearrayindx && (arraylen > 0)) {
-            if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) ||
-                (elem->GetType() == TStreamerInfo::kStreamLoop)) { usearrayindx = kFALSE; usearraylen = kTRUE; }
-            else
-               if (arraylen != elem->GetArrayLength()) {
-                  printf("Problem with JSON coding of element %s type %d \n", elem->GetName(), elem->GetType());
-               }
+            if (isloop) {
+               usearrayindx = kFALSE;
+               usearraylen = kTRUE;
+            } else if (arraylen != elem->GetArrayLength()) {
+               printf("Problem with JSON coding of element %s type %d \n", elem->GetName(), elem->GetType());
+            }
          }
 
          if (usearrayindx) {
@@ -1076,62 +1078,70 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
          // empty container
          if (fValue != "0") Error("JsonWriteObject", "With empty stack fValue!=0");
          fValue = "[]";
-      } else if (stack->fValues.GetLast() == 0) {
-         // case of simple vector, array already in the value
-         stack->fValues.Delete();
-         if (fValue.Length() == 0) {
-            Error("JsonWriteObject", "Empty value when it should contain something");
-            fValue = "[]";
-         }
-
       } else {
-         const char *separ = "[";
-
-         if (fValue.Length() > 0) {
-            stack->fValues.Add(new TObjString(fValue));
-            fValue.Clear();
-         }
 
          Int_t size = TString(stack->fValues.At(0)->GetName()).Atoi();
 
-         if ((size * 2 == stack->fValues.GetLast()) &&
-               ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
-                (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap))) {
-            // special handling for std::map. Create entries like { '$pair': 'typename' , 'first' : key, 'second' : value }
-
-            TString pairtype = cl->GetName();
-            if (pairtype.Index("multimap<")==0) pairtype.Replace(0, 9, "pair<"); else
-            if (pairtype.Index("map<")==0) pairtype.Replace(0, 4, "pair<"); else pairtype = "TPair";
-            pairtype = TString("\"") + pairtype + TString("\"");
-            for (Int_t k = 1; k < stack->fValues.GetLast(); k += 2) {
-               fValue.Append(separ);
-               separ = fArraySepar.Data();
-               // fJsonrCnt++; // do not add entry in the map, can conflict with objects inside values
-               fValue.Append("{");
-               fValue.Append("\"$pair\"");
-               fValue.Append(fSemicolon);
-               fValue.Append(pairtype.Data());
-               fValue.Append(fArraySepar);
-               fValue.Append("\"first\"");
-               fValue.Append(fSemicolon);
-               fValue.Append(stack->fValues.At(k)->GetName());
-               fValue.Append(fArraySepar);
-               fValue.Append("\"second\"");
-               fValue.Append(fSemicolon);
-               fValue.Append(stack->fValues.At(k + 1)->GetName());
-               fValue.Append("}");
+         if ((stack->fValues.GetLast() == 0) && ((size > 1) || (fValue.Index("[") == 0))) {
+            // case of simple vector, array already in the value
+            stack->fValues.Delete();
+            if (fValue.Length() == 0) {
+               Error("JsonWriteObject", "Empty value when it should contain something");
+               fValue = "[]";
             }
+
          } else {
-            // for most stl containers write just like blob, but skipping first element with size
-            for (Int_t k = 1; k <= stack->fValues.GetLast(); k++) {
-               fValue.Append(separ);
-               separ = fArraySepar.Data();
-               fValue.Append(stack->fValues.At(k)->GetName());
-            }
-         }
+            const char *separ = "[";
 
-         fValue.Append("]");
-         stack->fValues.Delete();
+            if (fValue.Length() > 0) {
+               stack->fValues.Add(new TObjString(fValue));
+               fValue.Clear();
+            }
+
+            if ((size * 2 == stack->fValues.GetLast()) &&
+                ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
+                 (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap))) {
+               // special handling for std::map.
+               // Create entries like { '$pair': 'typename' , 'first' : key, 'second' : value }
+
+               TString pairtype = cl->GetName();
+               if (pairtype.Index("multimap<") == 0)
+                  pairtype.Replace(0, 9, "pair<");
+               else if (pairtype.Index("map<") == 0)
+                  pairtype.Replace(0, 4, "pair<");
+               else
+                  pairtype = "TPair";
+               pairtype = TString("\"") + pairtype + TString("\"");
+               for (Int_t k = 1; k < stack->fValues.GetLast(); k += 2) {
+                  fValue.Append(separ);
+                  separ = fArraySepar.Data();
+                  // fJsonrCnt++; // do not add entry in the map, can conflict with objects inside values
+                  fValue.Append("{");
+                  fValue.Append("\"$pair\"");
+                  fValue.Append(fSemicolon);
+                  fValue.Append(pairtype.Data());
+                  fValue.Append(fArraySepar);
+                  fValue.Append("\"first\"");
+                  fValue.Append(fSemicolon);
+                  fValue.Append(stack->fValues.At(k)->GetName());
+                  fValue.Append(fArraySepar);
+                  fValue.Append("\"second\"");
+                  fValue.Append(fSemicolon);
+                  fValue.Append(stack->fValues.At(k + 1)->GetName());
+                  fValue.Append("}");
+               }
+            } else {
+               // for most stl containers write just like blob, but skipping first element with size
+               for (Int_t k = 1; k <= stack->fValues.GetLast(); k++) {
+                  fValue.Append(separ);
+                  separ = fArraySepar.Data();
+                  fValue.Append(stack->fValues.At(k)->GetName());
+               }
+            }
+
+            fValue.Append("]");
+            stack->fValues.Delete();
+         }
       }
    }
 
@@ -3222,7 +3232,9 @@ void TBufferJSON::CompactFloatString(char* sbuf, unsigned len)
 void TBufferJSON::JsonWriteBasic(Float_t value)
 {
    char buf[200];
-   if (value == floor(value)) {
+   // this is just check if float value looks like integer and can be stored in more compact form
+   // default should be storage with fgFloatFmt, which will be optimized afterwards anyway
+   if ((value == std::nearbyint(value)) && (std::abs(value) < 1e15)) {
       snprintf(buf, sizeof(buf), "%1.0f", value);
    } else {
       snprintf(buf, sizeof(buf), fgFloatFmt, value);
@@ -3237,7 +3249,9 @@ void TBufferJSON::JsonWriteBasic(Float_t value)
 void TBufferJSON::JsonWriteBasic(Double_t value)
 {
    char buf[200];
-   if (value == floor(value)) {
+   // this is just check if float value looks like integer and can be stored in more compact form
+   // default should be storage with fgDoubleFmt, which will be optimized afterwards anyway
+   if ((value == std::nearbyint(value)) && (std::abs(value) < 1e25)) {
       snprintf(buf, sizeof(buf), "%1.0f", value);
    } else {
       snprintf(buf, sizeof(buf), fgDoubleFmt, value);

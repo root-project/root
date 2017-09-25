@@ -38,7 +38,7 @@ struct PCREPriv_t {
 };
 
 
-ClassImp(TPRegexp)
+ClassImp(TPRegexp);
 
 Bool_t TPRegexp::fgThrowAtCompileError = kFALSE;
 
@@ -954,7 +954,7 @@ During construction no match is done, use NextToken() to get the first
 and all subsequent tokens.
 */
 
-ClassImp(TStringToken)
+ClassImp(TStringToken);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

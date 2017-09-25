@@ -42,7 +42,7 @@ void MSP430InstrInfo::storeRegToStackSlot(MachineBasicBlock &MBB,
   DebugLoc DL;
   if (MI != MBB.end()) DL = MI->getDebugLoc();
   MachineFunction &MF = *MBB.getParent();
-  MachineFrameInfo &MFI = *MF.getFrameInfo();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
 
   MachineMemOperand *MMO = MF.getMachineMemOperand(
       MachinePointerInfo::getFixedStack(MF, FrameIdx),
@@ -69,7 +69,7 @@ void MSP430InstrInfo::loadRegFromStackSlot(MachineBasicBlock &MBB,
   DebugLoc DL;
   if (MI != MBB.end()) DL = MI->getDebugLoc();
   MachineFunction &MF = *MBB.getParent();
-  MachineFrameInfo &MFI = *MF.getFrameInfo();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
 
   MachineMemOperand *MMO = MF.getMachineMemOperand(
       MachinePointerInfo::getFixedStack(MF, FrameIdx),
@@ -104,7 +104,10 @@ void MSP430InstrInfo::copyPhysReg(MachineBasicBlock &MBB,
     .addReg(SrcReg, getKillRegState(KillSrc));
 }
 
-unsigned MSP430InstrInfo::RemoveBranch(MachineBasicBlock &MBB) const {
+unsigned MSP430InstrInfo::removeBranch(MachineBasicBlock &MBB,
+                                       int *BytesRemoved) const {
+  assert(!BytesRemoved && "code size not handled");
+
   MachineBasicBlock::iterator I = MBB.end();
   unsigned Count = 0;
 
@@ -127,7 +130,7 @@ unsigned MSP430InstrInfo::RemoveBranch(MachineBasicBlock &MBB) const {
 }
 
 bool MSP430InstrInfo::
-ReverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const {
+reverseBranchCondition(SmallVectorImpl<MachineOperand> &Cond) const {
   assert(Cond.size() == 1 && "Invalid Xbranch condition!");
 
   MSP430CC::CondCodes CC = static_cast<MSP430CC::CondCodes>(Cond[0].getImm());
@@ -170,7 +173,7 @@ bool MSP430InstrInfo::isUnpredicatedTerminator(const MachineInstr &MI) const {
   return !isPredicated(MI);
 }
 
-bool MSP430InstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
+bool MSP430InstrInfo::analyzeBranch(MachineBasicBlock &MBB,
                                     MachineBasicBlock *&TBB,
                                     MachineBasicBlock *&FBB,
                                     SmallVectorImpl<MachineOperand> &Cond,
@@ -260,15 +263,17 @@ bool MSP430InstrInfo::AnalyzeBranch(MachineBasicBlock &MBB,
   return false;
 }
 
-unsigned MSP430InstrInfo::InsertBranch(MachineBasicBlock &MBB,
+unsigned MSP430InstrInfo::insertBranch(MachineBasicBlock &MBB,
                                        MachineBasicBlock *TBB,
                                        MachineBasicBlock *FBB,
                                        ArrayRef<MachineOperand> Cond,
-                                       const DebugLoc &DL) const {
+                                       const DebugLoc &DL,
+                                       int *BytesAdded) const {
   // Shouldn't be a fall through.
-  assert(TBB && "InsertBranch must not be told to insert a fallthrough");
+  assert(TBB && "insertBranch must not be told to insert a fallthrough");
   assert((Cond.size() == 1 || Cond.size() == 0) &&
          "MSP430 branch conditions have one component!");
+  assert(!BytesAdded && "code size not handled");
 
   if (Cond.empty()) {
     // Unconditional branch?
@@ -293,8 +298,8 @@ unsigned MSP430InstrInfo::InsertBranch(MachineBasicBlock &MBB,
 /// GetInstSize - Return the number of bytes of code the specified
 /// instruction may be.  This returns the maximum number of bytes.
 ///
-unsigned MSP430InstrInfo::GetInstSizeInBytes(const MachineInstr *MI) const {
-  const MCInstrDesc &Desc = MI->getDesc();
+unsigned MSP430InstrInfo::getInstSizeInBytes(const MachineInstr &MI) const {
+  const MCInstrDesc &Desc = MI.getDesc();
 
   switch (Desc.TSFlags & MSP430II::SizeMask) {
   default:
@@ -307,14 +312,14 @@ unsigned MSP430InstrInfo::GetInstSizeInBytes(const MachineInstr *MI) const {
     case TargetOpcode::DBG_VALUE:
       return 0;
     case TargetOpcode::INLINEASM: {
-      const MachineFunction *MF = MI->getParent()->getParent();
+      const MachineFunction *MF = MI.getParent()->getParent();
       const TargetInstrInfo &TII = *MF->getSubtarget().getInstrInfo();
-      return TII.getInlineAsmLength(MI->getOperand(0).getSymbolName(),
+      return TII.getInlineAsmLength(MI.getOperand(0).getSymbolName(),
                                     *MF->getTarget().getMCAsmInfo());
     }
     }
   case MSP430II::SizeSpecial:
-    switch (MI->getOpcode()) {
+    switch (MI.getOpcode()) {
     default: llvm_unreachable("Unknown instruction size!");
     case MSP430::SAR8r1c:
     case MSP430::SAR16r1c:

@@ -121,7 +121,7 @@ using std::vector;
 
 REGISTER_METHOD(DT)
 
-ClassImp(TMVA::MethodDT)
+ClassImp(TMVA::MethodDT);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// the standard constructor for just an ordinar "decision trees"

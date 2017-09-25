@@ -37,7 +37,7 @@ END_HTML
 
 using namespace std;
 
-ClassImp(RooStats::HistFactory::FlexibleInterpVar)
+ClassImp(RooStats::HistFactory::FlexibleInterpVar);
 
 using namespace RooStats;
 using namespace HistFactory;

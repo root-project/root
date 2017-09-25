@@ -25,7 +25,7 @@ namespace {
 // deal with the Error value directly, rather than converting to error_code.
 class OrcErrorCategory : public std::error_category {
 public:
-  const char *name() const LLVM_NOEXCEPT override { return "orc"; }
+  const char *name() const noexcept override { return "orc"; }
 
   std::string message(int condition) const override {
     switch (static_cast<OrcErrorCode>(condition)) {
@@ -39,10 +39,19 @@ public:
       return "Remote indirect stubs owner does not exist";
     case OrcErrorCode::RemoteIndirectStubsOwnerIdAlreadyInUse:
       return "Remote indirect stubs owner Id already in use";
+    case OrcErrorCode::RPCConnectionClosed:
+      return "RPC connection closed";
+    case OrcErrorCode::RPCCouldNotNegotiateFunction:
+      return "Could not negotiate RPC function";
+    case OrcErrorCode::RPCResponseAbandoned:
+      return "RPC response abandoned";
     case OrcErrorCode::UnexpectedRPCCall:
       return "Unexpected RPC call";
     case OrcErrorCode::UnexpectedRPCResponse:
       return "Unexpected RPC response";
+    case OrcErrorCode::UnknownErrorCodeFromRemote:
+      return "Unknown error returned from remote RPC function "
+             "(Use StringError to get error message)";
     }
     llvm_unreachable("Unhandled error code");
   }
@@ -54,10 +63,10 @@ static ManagedStatic<OrcErrorCategory> OrcErrCat;
 namespace llvm {
 namespace orc {
 
-Error orcError(OrcErrorCode ErrCode) {
+std::error_code orcError(OrcErrorCode ErrCode) {
   typedef std::underlying_type<OrcErrorCode>::type UT;
-  return errorCodeToError(
-      std::error_code(static_cast<UT>(ErrCode), *OrcErrCat));
+  return std::error_code(static_cast<UT>(ErrCode), *OrcErrCat);
 }
+
 }
 }

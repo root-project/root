@@ -33,7 +33,7 @@ static Int_t gMAXOP=1000,gMAXPAR=1000,gMAXCONST=1000;
 const Int_t  gMAXSTRINGFOUND = 10;
 const UInt_t kOptimizationError = BIT(19);
 
-ClassImp(ROOT::v5::TFormula)
+ClassImp(ROOT::v5::TFormula);
 
 namespace ROOT {
 
@@ -105,7 +105,7 @@ The FORMULA class (ROOT version 5)
   Conceptually, fOper was changed from a simple array of Int_t
   to an array of composite values.
   For example a 'ylandau(5)' operation used to be encoded as 4105;
-  it is now encoded as (klandau >> kTFOperShit) + 5
+  it is now encoded as (klandau >> kTFOperShift) + 5
   Any class inheriting from TFormula and using directly fOper (which
   is now a private data member), needs to be updated to take this
   in consideration.  The member functions recommended to set and
@@ -259,7 +259,7 @@ TFormula::TFormula(const char *name,const char *expression) :
       Error("TFormula","The name \'%s\' is reserved as a TFormula variable name.\n"
          "\tThis function will not be registered in the list of functions",name);
    } else {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(name);
       if (old) {
          gROOT->GetListOfFunctions()->Remove(old);
@@ -311,7 +311,7 @@ TFormula& TFormula::operator=(const TFormula &rhs)
 TFormula::~TFormula()
 {
    if (gROOT) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfFunctions()->Remove(this);
    }
 
@@ -1349,7 +1349,7 @@ void TFormula::Analyze(const char *schain, Int_t &err, Int_t offset)
 
                   if (find==0) {
                      {
-                        R__LOCKGUARD2(gROOTMutex);
+                        R__LOCKGUARD(gROOTMutex);
                         oldformula = (const TFormula*)gROOT->GetListOfFunctions()->FindObject((const char*)chaine);
                      }
                      if (oldformula && strcmp(schain,oldformula->GetTitle())) {
@@ -3357,7 +3357,7 @@ void TFormula::ProcessLinear(TString &formula)
          return;
       }
       {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfFunctions()->Remove(f);
       }
       f->SetBit(kNotGlobal, 1);
@@ -3499,7 +3499,7 @@ void TFormula::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TCl
    if (v > 3 ) {
       b.ReadClassBuffer(TFormula::Class(), this, v, R__s, R__c, onfile_class);
       if (!TestBit(kNotGlobal)) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfFunctions()->Add(this);
       }
 
@@ -3547,7 +3547,7 @@ void TFormula::Streamer(TBuffer &b, Int_t v, UInt_t R__s, UInt_t R__c, const TCl
    for (i=0;i<fNoper;i++)  fExpr[i].Streamer(b);
    for (i=0;i<fNpar;i++)   fNames[i].Streamer(b);
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       if (gROOT->GetListOfFunctions()->FindObject(GetName())) return;
       gROOT->GetListOfFunctions()->Add(this);
    }

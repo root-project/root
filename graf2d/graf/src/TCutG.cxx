@@ -73,7 +73,9 @@ Example of use of a TCutG in TTree::Draw:
     tree.Draw("x:y","mycutg && z>0 %% sqrt(x)>1")
 ~~~
 A Graphical cut may be drawn via TGraph::Draw. It can be edited like a normal
-TGraph.
+TGraph. Being a TGraph the drawing options and behavior relatives to graphs apply.
+They are listed in the TGraphPainter description.
+See in particular "Graphs in logarithmic scale".
 
 A Graphical cut may be saved to a file via TCutG::Write.
 */
@@ -89,7 +91,7 @@ A Graphical cut may be saved to a file via TCutG::Write.
 #include "TClass.h"
 #include "TMath.h"
 
-ClassImp(TCutG)
+ClassImp(TCutG);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TCutG default constructor.

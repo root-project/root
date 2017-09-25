@@ -43,7 +43,7 @@ a_i it returns a_0 * Prod_i (1 - a_i).
 
 using namespace std;
 
-ClassImp(RooRecursiveFraction)
+ClassImp(RooRecursiveFraction);
 ;
 
 

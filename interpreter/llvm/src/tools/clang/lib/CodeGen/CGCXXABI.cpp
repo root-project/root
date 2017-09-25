@@ -55,7 +55,7 @@ bool CGCXXABI::canCopyArgument(const CXXRecordDecl *RD) const {
       CopyOrMoveDeleted = true;
     }
   }
-#if !defined(__clang_major__) || __clang_major__ > 4
+#if __clang_major__ < 5
   // If a move constructor or move assignment operator was declared, the
   // default copy constructors are implicitly deleted, except in one case
   // related to compatibility with MSVC pre-2015.
@@ -84,7 +84,7 @@ CGCXXABI::ConvertMemberPointerType(const MemberPointerType *MPT) {
   return CGM.getTypes().ConvertType(CGM.getContext().getPointerDiffType());
 }
 
-llvm::Value *CGCXXABI::EmitLoadOfMemberFunctionPointer(
+CGCallee CGCXXABI::EmitLoadOfMemberFunctionPointer(
     CodeGenFunction &CGF, const Expr *E, Address This,
     llvm::Value *&ThisPtrForCall,
     llvm::Value *MemPtr, const MemberPointerType *MPT) {
@@ -97,7 +97,8 @@ llvm::Value *CGCXXABI::EmitLoadOfMemberFunctionPointer(
     cast<CXXRecordDecl>(MPT->getClass()->getAs<RecordType>()->getDecl());
   llvm::FunctionType *FTy = CGM.getTypes().GetFunctionType(
       CGM.getTypes().arrangeCXXMethodType(RD, FPT, /*FD=*/nullptr));
-  return llvm::Constant::getNullValue(FTy->getPointerTo());
+  llvm::Constant *FnPtr = llvm::Constant::getNullValue(FTy->getPointerTo());
+  return CGCallee::forDirect(FnPtr, FPT);
 }
 
 llvm::Value *

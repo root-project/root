@@ -21,7 +21,7 @@ an ordering relation, i.e. there is a first and last element.
 #include "TClass.h"
 #include "TMethodCall.h"
 
-ClassImp(TSeqCollection)
+ClassImp(TSeqCollection);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return index of object in collection. Returns -1 when object not found.

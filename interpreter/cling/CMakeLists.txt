@@ -213,6 +213,10 @@ string(REPLACE "-fvisibility=hidden" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
 # The package needs to be compiler without RTTI information
 if(MSVC)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /GR-")
+  if(NOT (MSVC_VERSION LESS 1910))
+    # Add the /std:c++14 flag for Visual Studio 2017 (and up)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /std:c++14")
+  endif()
 else()
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-rtti")
 endif()
@@ -376,8 +380,8 @@ option(ROOT_CLASSIC "Building as part of the ROOT (classic)." OFF)
 if(DEFINED ROOT_BINARY_DIR)
   # Building as part of ROOT (CMake)
   include_directories(BEFORE
-    ${CMAKE_CURRENT_BINARY_DIR}/../llvm/src/tools/clang/include
-    ${CMAKE_CURRENT_SOURCE_DIR}/../llvm/src/tools/clang/include
+    ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include
+    ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include
     )
 elseif(ROOT_CLASSIC)
   # Building as part of ROOT (classic)

@@ -12,7 +12,7 @@
 
 #include "TPoints.h"
 
-ClassImp(TPoints)
+ClassImp(TPoints);
 
 /** \class TPoints
 \ingroup BasicGraphics

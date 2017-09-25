@@ -41,7 +41,7 @@
 #include "TGLabel.h"
 #include "TGDoubleSlider.h"
 
-ClassImp(TGeoTubeEditor)
+ClassImp(TGeoTubeEditor);
 
 enum ETGeoTubeWid {
    kTUBE_NAME, kTUBE_RMIN, kTUBE_RMAX, kTUBE_Z,
@@ -309,7 +309,7 @@ void TGeoTubeEditor::DoDz()
 */
 //End_Html
 
-ClassImp(TGeoTubeSegEditor)
+ClassImp(TGeoTubeSegEditor);
 
 enum ETGeoTubeSegWid {
    kTUBESEG_PHI1, kTUBESEG_PHI2, kTUBESEG_PHI
@@ -545,7 +545,7 @@ void TGeoTubeSegEditor::DoUndo()
 */
 //End_Html
 
-ClassImp(TGeoCtubEditor)
+ClassImp(TGeoCtubEditor);
 
 enum ETGeoCtubSegWid {
    kCTUB_THLO, kCTUB_PHLO, kCTUB_THHI, kCTUB_PHHI

@@ -53,7 +53,7 @@ different number can be forced on construction.
 #include "TSelector.h"
 #include "TPackMgr.h"
 
-ClassImp(TProofLite)
+ClassImp(TProofLite);
 
 Int_t TProofLite::fgWrksMax = -2; // Unitialized max number of workers
 
@@ -362,7 +362,7 @@ Int_t TProofLite::Init(const char *, const char *conffile,
       SetRunStatus(TProof::kRunning);
    }
    // We register the session as a socket so that cleanup is done properly
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfSockets()->Add(this);
 
    AskParallel();
@@ -491,7 +491,7 @@ Int_t TProofLite::SetupWorkers(Int_t opt, TList *startedWorkers)
    // Create server socket on the assigned UNIX sock path
    if (!fServSock) {
       if ((fServSock = new TServerSocket(fSockPath))) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          // Remove from the list so that cleanup can be done in the correct order
          gROOT->GetListOfSockets()->Remove(fServSock);
       }
@@ -603,7 +603,7 @@ Int_t TProofLite::SetupWorkers(Int_t opt, TList *startedWorkers)
                   // representing all worker sockets, will be added to this list. This will
                   // ensure the correct termination of all proof servers in case the
                   // root session terminates.
-                  {  R__LOCKGUARD2(gROOTMutex);
+                  {  R__LOCKGUARD(gROOTMutex);
                      gROOT->GetListOfSockets()->Remove(s);
                   }
                   if (wrk->IsValid()) {
@@ -2619,7 +2619,7 @@ Int_t TProofLite::PollForNewWorkers()
                   // representing all worker sockets, will be added to this list. This will
                   // ensure the correct termination of all proof servers in case the
                   // root session terminates.
-                  {  R__LOCKGUARD2(gROOTMutex);
+                  {  R__LOCKGUARD(gROOTMutex);
                      gROOT->GetListOfSockets()->Remove(s);
                   }
                   if (wrk->IsValid()) {

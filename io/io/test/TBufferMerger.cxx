@@ -1,9 +1,15 @@
+#include "RConfigure.h"
 #include "ROOT/TBufferMerger.hxx"
+
+#include "ROOT/TTaskGroup.hxx"
 
 #include "TFile.h"
 #include "TROOT.h"
 #include "TTree.h"
 
+#include <atomic>
+#include <cstdio>
+#include <future>
 #include <memory>
 #include <thread>
 #include <sys/stat.h>
@@ -101,7 +107,8 @@ TEST(TBufferMerger, ParallelTreeFill)
          });
       }
 
-      for (auto &&t : threads) t.join();
+      for (auto &&t : threads)
+         t.join();
    }
 
    EXPECT_TRUE(FileExists("tbuffermerger_parallel.root"));
@@ -153,4 +160,172 @@ TEST(TBufferMerger, CheckTreeFillResults)
 
    EXPECT_EQ(523776, sum_s);
    EXPECT_EQ(523776, sum_p);
+}
+
+TEST(TBufferMerger, RegisterCallbackThreads)
+{
+   const char *testfile = "tbuffermerger_threads.root";
+   int events = 1000;
+   int events_per_task = 50;
+   int tasks = events / events_per_task;
+   std::atomic<int> launched(0);
+   std::atomic<int> processed(0);
+
+   {
+      ROOT::EnableThreadSafety();
+      TBufferMerger merger(testfile);
+
+      /* define a task: create and push some events */
+      auto task = [&]() {
+         auto myfile = merger.GetFile();
+         auto mytree = new TTree("mytree", "mytree");
+
+         mytree->ResetBit(kMustCleanup);
+
+         int n = 1;
+         mytree->Branch("n", &n, "n/I");
+
+         for (int i = 0; i < events_per_task; ++i)
+            mytree->Fill();
+
+         myfile->Write();
+
+         processed += events_per_task;
+      };
+
+      std::vector<std::thread> workers;
+
+      /* callback: launches new tasks when called */
+      merger.RegisterCallback([&]() {
+         int i = 0;
+         while (launched < tasks && ++i <= 2) {
+            workers.emplace_back(task);
+            ++launched;
+         }
+      });
+
+      launched = 1;
+      workers.emplace_back(task);
+
+      /* wait until all tasks have been launched */
+      while (launched != tasks)
+         ;
+
+      /* wait until all tasks have finished running */
+      for (auto &w : workers)
+         w.join();
+
+      ASSERT_EQ(processed, events);
+   }
+
+   ASSERT_TRUE(FileExists(testfile));
+
+   /* open file and check data integrity */
+   {
+      TFile f(testfile);
+      auto t = (TTree *)f.Get("mytree");
+
+      int n, sum = 0;
+      int nentries = (int)t->GetEntries();
+
+      EXPECT_EQ(nentries, events);
+
+      t->SetBranchAddress("n", &n);
+
+      for (int i = 0; i < nentries; ++i) {
+         t->GetEntry(i);
+         sum += n;
+      }
+
+      EXPECT_EQ(sum, events);
+   }
+
+   remove(testfile);
+}
+
+TEST(TBufferMerger, RegisterCallbackTasks)
+{
+   using namespace ROOT::Experimental;
+
+   const char *testfile = "tbuffermerger_tasks.root";
+
+   std::mutex m;
+   int events = 1000;
+   int events_per_task = 50;
+   int tasks = events / events_per_task;
+   volatile int launched = 0;
+   volatile int processed = 0;
+
+   {
+#ifdef R__USE_IMT
+      ROOT::EnableImplicitMT();
+#endif
+      TBufferMerger merger(testfile);
+
+      /* define a task: create and push some events */
+      auto task = [&]() {
+         auto myfile = merger.GetFile();
+         auto mytree = new TTree("mytree", "mytree");
+
+         mytree->ResetBit(kMustCleanup);
+
+         int n = 1;
+         mytree->Branch("n", &n, "n/I");
+
+         for (int i = 0; i < events_per_task; ++i)
+            mytree->Fill();
+
+         myfile->Write();
+
+         std::lock_guard<std::mutex> lk(m);
+         processed += events_per_task;
+      };
+
+      TTaskGroup tg;
+
+      /* callback: launches new tasks when called */
+      merger.RegisterCallback([&]() {
+         int i = 0;
+         while (launched < tasks && ++i <= 2) {
+            tg.Run(task);
+            ++launched;
+         }
+      });
+
+      launched = 1;
+      tg.Run(task);
+
+      /* wait until all tasks have been launched */
+      while (launched != tasks)
+         ;
+
+      /* wait until all tasks have finished running */
+      tg.Wait();
+
+      ASSERT_EQ(processed, events);
+   }
+
+   ASSERT_TRUE(FileExists(testfile));
+
+   /* open file and check data integrity */
+   {
+      TFile f(testfile);
+      auto t = (TTree *)f.Get("mytree");
+
+      int n, sum = 0;
+      int nentries = (int)t->GetEntries();
+
+      EXPECT_EQ(nentries, events);
+
+      t->SetBranchAddress("n", &n);
+
+      for (int i = 0; i < nentries; ++i) {
+         t->GetEntry(i);
+         sum += n;
+      }
+
+      EXPECT_EQ(sum, events);
+   }
+
+   remove(testfile);
 }

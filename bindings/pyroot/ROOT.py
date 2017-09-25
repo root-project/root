@@ -554,9 +554,11 @@ class ModuleFacade( types.ModuleType ):
             not ( self.keeppolling or _root.gROOT.IsBatch() ):
          if _is_ipython and 'IPython' in sys.modules and sys.modules['IPython'].version_info[0] >= 5 :
             from IPython.terminal import pt_inputhooks
+            import time
             def _inputhook(context):
                while not context.input_is_ready():
-                 _root.gSystem.ProcessEvents()    
+                  _root.gSystem.ProcessEvents()  
+                  time.sleep( 0.01 )
             pt_inputhooks.register('ROOT',_inputhook)
             get_ipython().run_line_magic('gui', 'ROOT')
          elif self.PyConfig.StartGuiThread == 'inputhook' or\

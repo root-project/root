@@ -56,7 +56,7 @@ using namespace RooFit;
 using namespace std;
 
 
-ClassImp(RooStats::ToyMCSampler)
+ClassImp(RooStats::ToyMCSampler);
 
 namespace RooStats {
 
@@ -193,7 +193,7 @@ ToyMCSampler::ToyMCSampler() : fSamplingDistName("SD"), fNToys(1)
 ////////////////////////////////////////////////////////////////////////////////
 
 ToyMCSampler::ToyMCSampler(TestStatistic &ts, Int_t ntoys) :
-   fSamplingDistName(ts.GetVarName()), fNToys(ntoys)
+   fSamplingDistName(ts.GetVarName().Data()), fNToys(ntoys)
 {
    fPdf = NULL;
    fParametersForTestStat = NULL;

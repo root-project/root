@@ -12,7 +12,6 @@
 #ifndef ROOT_TBasket
 #define ROOT_TBasket
 
-
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // TBasket                                                              //
@@ -52,6 +51,7 @@ protected:
    Int_t       fNevBuf;          ///< Number of entries in basket
    Int_t       fLast;            ///< Pointer to last used byte in basket
    Bool_t      fHeaderOnly;      ///< True when only the basket header must be read/written
+   UChar_t     fIOBits{0};       ///<!IO feature flags.  Serialized in custom portion of streamer to avoid forward compat issues unless needed.
    Int_t      *fDisplacement;    ///<![fNevBuf] Displacement of entries in fBuffer(TKey)
    Int_t      *fEntryOffset;     ///<[fNevBuf] Offset of entries in fBuffer(TKey)
    TBranch    *fBranch;          ///<Pointer to the basket support branch
@@ -60,6 +60,28 @@ protected:
    Int_t       fLastWriteBufferSize; ///<! Size of the buffer last time we wrote it to disk
 
 public:
+   // The IO bits flag is to provide improved forward-compatibility detection.
+   // Any new non-forward compatibility flags related serialization should be
+   // added here.  When a new flag is added, set it in the kSupported field;
+   //
+   // If (fIOBits & ~kSupported) is non-zero -- i.e., an unknown IO flag is set
+   // in the fIOBits -- then the zombie flag will be set for this object.
+   //
+   enum class EIOBits : Char_t {
+      // The following to bits are reserved for now; when supported, set
+      // kSupported = kGenerateOffsetMap | kBasketClassMap
+      // kGenerateOffsetMap = BIT(1),
+      // kBasketClassMap = BIT(2),
+      kSupported = 0
+   };
+   // This enum covers IOBits that are known to this ROOT release but
+   // not supported; provides a mechanism for us to have experimental
+   // changes that are not going go into a supported release.
+   //
+   // (kUnsupported | kSupported) should result in the '|' of all IOBits.
+   enum class EUnsupportedIOBits : Char_t { kUnsupported = 0 };
+   // The number of known, defined IOBits.
+   static constexpr int kIOBitCount = 0;
 
    TBasket();
    TBasket(TDirectory *motherDir);
@@ -94,7 +116,7 @@ public:
    virtual void    Update(Int_t newlast, Int_t skipped);
    virtual Int_t   WriteBuffer();
 
-   ClassDef(TBasket,2);  //the TBranch buffers
+   ClassDef(TBasket, 3); // the TBranch buffers
 };
 
 #endif

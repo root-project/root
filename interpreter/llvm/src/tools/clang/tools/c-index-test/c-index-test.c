@@ -710,6 +710,16 @@ static void PrintCursor(CXCursor Cursor, const char *CommentSchemaFile) {
         clang_getSpellingLocation(Loc, 0, &line, &column, 0);
         printf(":%d:%d", line, column);
       }
+
+      if (clang_getCursorKind(Referenced) == CXCursor_TypedefDecl) {
+        CXType T = clang_getCursorType(Referenced);
+        if (clang_Type_isTransparentTagTypedef(T)) {
+          CXType Underlying = clang_getTypedefDeclUnderlyingType(Referenced);
+          CXString S = clang_getTypeSpelling(Underlying);
+          printf(" (Transparent: %s)", clang_getCString(S));
+          clang_disposeString(S);
+        }
+      }
     }
 
     if (clang_isCursorDefinition(Cursor))
@@ -799,6 +809,19 @@ static void PrintCursor(CXCursor Cursor, const char *CommentSchemaFile) {
     if (clang_Cursor_isObjCOptional(Cursor))
       printf(" (@optional)");
 
+    {
+      CXString language;
+      CXString definedIn;
+      unsigned generated;
+      if (clang_Cursor_isExternalSymbol(Cursor, &language, &definedIn,
+                                        &generated)) {
+        printf(" (external lang: %s, defined: %s, gen: %d)",
+            clang_getCString(language), clang_getCString(definedIn), generated);
+        clang_disposeString(language);
+        clang_disposeString(definedIn);
+      }
+    }
+
     if (Cursor.kind == CXCursor_IBOutletCollectionAttr) {
       CXType T =
         clang_getCanonicalType(clang_getIBOutletCollectionType(Cursor));
@@ -838,8 +861,11 @@ static void PrintCursor(CXCursor Cursor, const char *CommentSchemaFile) {
 
       if (Cursor.kind == CXCursor_FunctionDecl) {
         /* Collect the template parameter kinds from the base template. */
-        unsigned NumTemplateArgs = clang_Cursor_getNumTemplateArguments(Cursor);
-        unsigned I;
+        int NumTemplateArgs = clang_Cursor_getNumTemplateArguments(Cursor);
+        int I;
+        if (NumTemplateArgs < 0) {
+          printf(" [no template arg info]");
+        }
         for (I = 0; I < NumTemplateArgs; I++) {
           enum CXTemplateArgumentKind TAK =
               clang_Cursor_getTemplateArgumentKind(Cursor, I);
@@ -1313,6 +1339,25 @@ static enum CXVisitorResult FieldVisitor(CXCursor C,
     return CXVisit_Continue;
 }
 
+static void PrintTypeTemplateArgs(CXType T, const char *Format) {
+  int NumTArgs = clang_Type_getNumTemplateArguments(T);
+  if (NumTArgs != -1 && NumTArgs != 0) {
+    int i;
+    CXType TArg;
+    printf(Format, NumTArgs);
+    for (i = 0; i < NumTArgs; ++i) {
+      TArg = clang_Type_getTemplateArgumentAsType(T, i);
+      if (TArg.kind != CXType_Invalid) {
+        PrintTypeAndTypeKind(TArg, " [type=%s] [typekind=%s]");
+      }
+    }
+    /* Ensure that the returned type is invalid when indexing off-by-one. */
+    TArg = clang_Type_getTemplateArgumentAsType(T, i);
+    assert(TArg.kind == CXType_Invalid);
+    printf("]");
+  }
+}
+
 static enum CXChildVisitResult PrintType(CXCursor cursor, CXCursor p,
                                          CXClientData d) {
   if (!clang_isInvalid(clang_getCursorKind(cursor))) {
@@ -1330,11 +1375,14 @@ static enum CXChildVisitResult PrintType(CXCursor cursor, CXCursor p,
       printf(" lvalue-ref-qualifier");
     if (RQ == CXRefQualifier_RValue)
       printf(" rvalue-ref-qualifier");
+    /* Print the template argument types if they exist. */
+    PrintTypeTemplateArgs(T, " [templateargs/%d=");
     /* Print the canonical type if it is different. */
     {
       CXType CT = clang_getCanonicalType(T);
       if (!clang_equalTypes(T, CT)) {
         PrintTypeAndTypeKind(CT, " [canonicaltype=%s] [canonicaltypekind=%s]");
+        PrintTypeTemplateArgs(CT, " [canonicaltemplateargs/%d=");
       }
     }
     /* Print the return type if it exists. */
@@ -1354,21 +1402,6 @@ static enum CXChildVisitResult PrintType(CXCursor cursor, CXCursor p,
           CXType T = clang_getCursorType(clang_Cursor_getArgument(cursor, i));
           if (T.kind != CXType_Invalid) {
             PrintTypeAndTypeKind(T, " [%s] [%s]");
-          }
-        }
-        printf("]");
-      }
-    }
-    /* Print the template argument types if they exist. */
-    {
-      int NumTArgs = clang_Type_getNumTemplateArguments(T);
-      if (NumTArgs != -1 && NumTArgs != 0) {
-        int i;
-        printf(" [templateargs/%d=", NumTArgs);
-        for (i = 0; i < NumTArgs; ++i) {
-          CXType TArg = clang_Type_getTemplateArgumentAsType(T, i);
-          if (TArg.kind != CXType_Invalid) {
-            PrintTypeAndTypeKind(TArg, " [type=%s] [typekind=%s]");
           }
         }
         printf("]");
@@ -1537,6 +1570,51 @@ static enum CXChildVisitResult PrintTypeDeclaration(CXCursor cursor, CXCursor p,
   }
 
   return CXChildVisit_Recurse;
+}
+
+/******************************************************************************/
+/* Target information testing.                                                */
+/******************************************************************************/
+
+static int print_target_info(int argc, const char **argv) {
+  CXIndex Idx;
+  CXTranslationUnit TU;
+  CXTargetInfo TargetInfo;
+  CXString Triple;
+  const char *FileName;
+  enum CXErrorCode Err;
+  int PointerWidth;
+
+  if (argc == 0) {
+    fprintf(stderr, "No filename specified\n");
+    return 1;
+  }
+
+  FileName = argv[1];
+
+  Idx = clang_createIndex(0, 1);
+  Err = clang_parseTranslationUnit2(Idx, FileName, argv, argc, NULL, 0,
+                                    getDefaultParsingOptions(), &TU);
+  if (Err != CXError_Success) {
+    fprintf(stderr, "Couldn't parse translation unit!\n");
+    describeLibclangFailure(Err);
+    clang_disposeIndex(Idx);
+    return 1;
+  }
+
+  TargetInfo = clang_getTranslationUnitTargetInfo(TU);
+
+  Triple = clang_TargetInfo_getTriple(TargetInfo);
+  printf("TargetTriple: %s\n", clang_getCString(Triple));
+  clang_disposeString(Triple);
+
+  PointerWidth = clang_TargetInfo_getPointerWidth(TargetInfo);
+  printf("PointerWidth: %d\n", PointerWidth);
+
+  clang_TargetInfo_dispose(TargetInfo);
+  clang_disposeTranslationUnit(TU);
+  clang_disposeIndex(Idx);
+  return 0;
 }
 
 /******************************************************************************/
@@ -2417,11 +2495,14 @@ static void inspect_print_cursor(CXCursor Cursor) {
            clang_Cursor_getObjCSelectorIndex(Cursor));
   if (clang_Cursor_isDynamicCall(Cursor))
     printf(" Dynamic-call");
-  if (Cursor.kind == CXCursor_ObjCMessageExpr) {
+  if (Cursor.kind == CXCursor_ObjCMessageExpr ||
+      Cursor.kind == CXCursor_MemberRefExpr) {
     CXType T = clang_Cursor_getReceiverType(Cursor);
-    CXString S = clang_getTypeKindSpelling(T.kind);
-    printf(" Receiver-type=%s", clang_getCString(S));
-    clang_disposeString(S);
+    if (T.kind != CXType_Invalid) {
+      CXString S = clang_getTypeKindSpelling(T.kind);
+      printf(" Receiver-type=%s", clang_getCString(S));
+      clang_disposeString(S);
+    }
   }
 
   {
@@ -2459,8 +2540,14 @@ static void display_evaluate_results(CXEvalResult result) {
   switch (clang_EvalResult_getKind(result)) {
     case CXEval_Int:
     {
-      int val = clang_EvalResult_getAsInt(result);
-      printf("Kind: Int , Value: %d", val);
+      printf("Kind: Int, ");
+      if (clang_EvalResult_isUnsignedInt(result)) {
+        unsigned long long val = clang_EvalResult_getAsUnsigned(result);
+        printf("unsigned, Value: %llu", val);
+      } else {
+        long long val = clang_EvalResult_getAsLongLong(result);
+        printf("Value: %lld", val);
+      }
       break;
     }
     case CXEval_Float:
@@ -2988,6 +3075,7 @@ static const char *getEntityLanguageString(CXIdxEntityLanguage kind) {
   case CXIdxEntityLang_C: return "C";
   case CXIdxEntityLang_ObjC: return "ObjC";
   case CXIdxEntityLang_CXX: return "C++";
+  case CXIdxEntityLang_Swift: return "Swift";
   }
   assert(0 && "Garbage language kind");
   return 0;
@@ -4271,11 +4359,12 @@ static void print_usage(void) {
     "       c-index-test -test-print-type {<args>}*\n"
     "       c-index-test -test-print-type-size {<args>}*\n"
     "       c-index-test -test-print-bitwidth {<args>}*\n"
+    "       c-index-test -test-print-target-info {<args>}*\n"
     "       c-index-test -test-print-type-declaration {<args>}*\n"
     "       c-index-test -print-usr [<CursorKind> {<args>}]*\n"
-    "       c-index-test -print-usr-file <file>\n"
-    "       c-index-test -write-pch <file> <compiler arguments>\n");
+    "       c-index-test -print-usr-file <file>\n");
   fprintf(stderr,
+    "       c-index-test -write-pch <file> <compiler arguments>\n"
     "       c-index-test -compilation-db [lookup <filename>] database\n");
   fprintf(stderr,
     "       c-index-test -print-build-session-timestamp\n");
@@ -4381,6 +4470,8 @@ int cindextest_main(int argc, const char **argv) {
     return perform_test_load_tu(argv[2], "all", NULL, PrintMangledName, NULL);
   else if (argc > 2 && strcmp(argv[1], "-test-print-manglings") == 0)
     return perform_test_load_tu(argv[2], "all", NULL, PrintManglings, NULL);
+  else if (argc > 2 && strcmp(argv[1], "-test-print-target-info") == 0)
+    return print_target_info(argc - 2, argv + 2);
   else if (argc > 1 && strcmp(argv[1], "-print-usr") == 0) {
     if (argc > 2)
       return print_usrs(argv + 2, argv + argc);
@@ -4436,12 +4527,12 @@ int main(int argc, const char **argv) {
   LIBXML_TEST_VERSION
 #endif
 
+  if (argc > 1 && strcmp(argv[1], "core") == 0)
+    return indextest_core_main(argc, argv);
+
   client_data.main_func = cindextest_main;
   client_data.argc = argc;
   client_data.argv = argv;
-
-  if (argc > 1 && strcmp(argv[1], "core") == 0)
-    client_data.main_func = indextest_core_main;
 
   if (getenv("CINDEXTEST_NOTHREADS"))
     return client_data.main_func(client_data.argc, client_data.argv);

@@ -52,6 +52,7 @@ void MangleContext::anchor() { }
 enum CCMangling {
   CCM_Other,
   CCM_Fast,
+  CCM_RegCall,
   CCM_Vector,
   CCM_Std
 };
@@ -152,6 +153,8 @@ void MangleContext::mangleName(const NamedDecl *D, raw_ostream &Out) {
     Out << '_';
   else if (CC == CCM_Fast)
     Out << '@';
+  else if (CC == CCM_RegCall)
+    Out << "__regcall3__";
 
   if (!MCXX)
     Out << D->getIdentifier()->getName();
@@ -259,9 +262,13 @@ void MangleContext::mangleObjCMethodNameWithoutSize(const ObjCMethodDecl *MD,
   const ObjCContainerDecl *CD =
   dyn_cast<ObjCContainerDecl>(MD->getDeclContext());
   assert (CD && "Missing container decl in GetNameForMethod");
-  OS << (MD->isInstanceMethod() ? '-' : '+') << '[' << CD->getName();
-  if (const ObjCCategoryImplDecl *CID = dyn_cast<ObjCCategoryImplDecl>(CD))
+  OS << (MD->isInstanceMethod() ? '-' : '+') << '[';
+  if (const ObjCCategoryImplDecl *CID = dyn_cast<ObjCCategoryImplDecl>(CD)) {
+    OS << CID->getClassInterface()->getName();
     OS << '(' << *CID << ')';
+  } else {
+    OS << CD->getName();
+  }
   OS << ' ';
   MD->getSelector().print(OS);
   OS << ']';

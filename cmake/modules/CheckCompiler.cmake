@@ -9,9 +9,23 @@ if(fortran)
   if(DEFINED CMAKE_Fortran_COMPILER AND CMAKE_Fortran_COMPILER MATCHES "^$")
     set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
   endif()
-  check_language(Fortran)
   if(CMAKE_Fortran_COMPILER)
+    # CMAKE_Fortran_COMPILER has already been defined somewhere else, so
+    # just check whether it contains a valid compiler
     enable_language(Fortran)
+  else()
+    # CMAKE_Fortran_COMPILER has not been defined, so first check whether
+    # there is a Fortran compiler at all
+    check_language(Fortran)
+    if(CMAKE_Fortran_COMPILER)
+      # Fortran compiler found, however as 'check_language' was executed
+      # in a separate process, the result might not be compatible with
+      # the C++ compiler, so reset the variable, ...
+      unset(CMAKE_Fortran_COMPILER CACHE)
+      # ..., and enable Fortran again, this time prefering compilers
+      # compatible to the C++ compiler
+      enable_language(Fortran)
+    endif()
   endif()
 else()
   set(CMAKE_Fortran_COMPILER CMAKE_Fortran_COMPILER-NOTFOUND)
@@ -120,6 +134,7 @@ if(root7)
     message(STATUS "ROOT7 interfaces require >= cxx14 which is disabled. Switching OFF root7 option")
     set(root7 OFF CACHE BOOL "" FORCE)
   endif()
+    set(http ON CACHE BOOL "" FORCE)
 endif()
 
 #---Check for libcxx option------------------------------------------------------------

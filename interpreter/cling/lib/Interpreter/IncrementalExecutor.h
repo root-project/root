@@ -11,21 +11,25 @@
 #define CLING_INCREMENTAL_EXECUTOR_H
 
 #include "IncrementalJIT.h"
-#include "BackendPasses.h"
 
+#include "BackendPasses.h"
+#include "EnterUserCodeRAII.h"
+
+#include "cling/Interpreter/InterpreterCallbacks.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Interpreter/Value.h"
 #include "cling/Utils/Casting.h"
+#include "cling/Utils/OrderedMap.h"
 
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/StringRef.h"
 
-#include <vector>
-#include <set>
+#include <atomic>
 #include <map>
 #include <memory>
-#include <atomic>
+#include <unordered_set>
+#include <vector>
 
 namespace clang {
   class DiagnosticsEngine;
@@ -55,7 +59,10 @@ namespace cling {
     // optimizer etc passes
     std::unique_ptr<BackendPasses> m_BackendPasses;
 
-    ///\brier A pointer to the IncrementalExecutor of the parent Interpreter.
+    ///\brief Whom to call upon invocation of user code.
+    InterpreterCallbacks* m_Callbacks;
+
+    ///\brief A pointer to the IncrementalExecutor of the parent Interpreter.
     ///
     IncrementalExecutor* m_externalIncrementalExecutor;
 
@@ -64,7 +71,16 @@ namespace cling {
     /// The object is registered first as an CXAAtExitElement and then cling
     /// takes the control of it's destruction.
     ///
-    struct CXAAtExitElement {
+    class CXAAtExitElement {
+      ///\brief The function to be called.
+      ///
+      void (*m_Func)(void*);
+
+      ///\brief The single argument passed to the function.
+      ///
+      void* m_Arg;
+
+    public:
       ///\brief Constructs an element, whose destruction time will be managed by
       /// the interpreter. (By registering a function to be called by exit
       /// or when a shared library is unloaded.)
@@ -83,22 +99,10 @@ namespace cling {
       ///\param [in] fromT - The unloading of this transaction will trigger the
       ///                    atexit function.
       ///
-      CXAAtExitElement(void (*func) (void*), void* arg,
-                       const llvm::Module* fromM):
-        m_Func(func), m_Arg(arg), m_FromM(fromM) {}
+      CXAAtExitElement(void (*func)(void*), void* arg)
+          : m_Func(func), m_Arg(arg) {}
 
-      ///\brief The function to be called.
-      ///
-      void (*m_Func)(void*);
-
-      ///\brief The single argument passed to the function.
-      ///
-      void* m_Arg;
-
-      ///\brief The module whose unloading will trigger the call to this atexit
-      /// function.
-      ///
-      const llvm::Module* m_FromM;
+      void operator()() const { (*m_Func)(m_Arg); }
     };
 
     ///\brief Atomic used as a spin lock to protect the access to m_AtExitFuncs
@@ -109,10 +113,11 @@ namespace cling {
     /// again multiple conccurent access.
     std::atomic_flag m_AtExitFuncsSpinLock; // MSVC doesn't support = ATOMIC_FLAG_INIT;
 
-    typedef llvm::SmallVector<CXAAtExitElement, 128> AtExitFunctions;
-    ///\brief Static object, which are bound to unloading of certain declaration
-    /// to be destructed.
+    ///\brief Function registered via __cxa_atexit, atexit, or one of
+    /// it's C++ overloads that should be run when a module is unloaded.
     ///
+    typedef utils::OrderedMap<llvm::Module*, std::vector<CXAAtExitElement>>
+        AtExitFunctions;
     AtExitFunctions m_AtExitFuncs;
 
     ///\brief Modules to emit upon the next call to the JIT.
@@ -126,7 +131,7 @@ namespace cling {
 
     ///\brief Set of the symbols that the JIT couldn't resolve.
     ///
-    std::set<std::string> m_unresolvedSymbols;
+    std::unordered_set<std::string> m_unresolvedSymbols;
 
 #if 0 // See FIXME in IncrementalExecutor.cpp
     ///\brief The diagnostics engine, printing out issues coming from the
@@ -151,7 +156,9 @@ namespace cling {
     void setExternalIncrementalExecutor(IncrementalExecutor *extIncrExec) {
       m_externalIncrementalExecutor = extIncrExec;
     }
-
+    void setCallbacks(InterpreterCallbacks* callbacks) {
+      m_Callbacks = callbacks;
+    }
     void installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp);
 
     ///\brief Send all collected modules to the JIT, making their symbols
@@ -191,9 +198,10 @@ namespace cling {
       }
       typedef void (*InitFun_t)(void*);
       InitFun_t fun;
-      ExecutionResult res = executeInitOrWrapper(function, fun);
+      ExecutionResult res = jitInitOrWrapper(function, fun);
       if (res != kExeSuccess)
         return res;
+      EnterUserCodeRAII euc(m_Callbacks);
       (*fun)(returnValue);
       return kExeSuccess;
     }
@@ -267,15 +275,16 @@ namespace cling {
     ExecutionResult executeInit(llvm::StringRef function) {
       typedef void (*InitFun_t)();
       InitFun_t fun;
-      ExecutionResult res = executeInitOrWrapper(function, fun);
+      ExecutionResult res = jitInitOrWrapper(function, fun);
       if (res != kExeSuccess)
         return res;
+      EnterUserCodeRAII euc(m_Callbacks);
       (*fun)();
       return kExeSuccess;
     }
 
     template <class T>
-    ExecutionResult executeInitOrWrapper(llvm::StringRef funcname, T& fun) {
+    ExecutionResult jitInitOrWrapper(llvm::StringRef funcname, T& fun) {
       fun = utils::UIntToFunctionPtr<T>(m_JIT->getSymbolAddress(funcname,
                                                               false /*dlsym*/));
 

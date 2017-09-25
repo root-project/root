@@ -12,30 +12,46 @@
 //===----------------------------------------------------------------------===//
 
 #include "LanaiISelLowering.h"
-
 #include "Lanai.h"
+#include "LanaiCondCode.h"
 #include "LanaiMachineFunctionInfo.h"
 #include "LanaiSubtarget.h"
-#include "LanaiTargetMachine.h"
 #include "LanaiTargetObjectFile.h"
+#include "MCTargetDesc/LanaiBaseInfo.h"
+#include "llvm/ADT/APInt.h"
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/StringSwitch.h"
 #include "llvm/CodeGen/CallingConvLower.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/CodeGen/MachineFunction.h"
-#include "llvm/CodeGen/MachineInstrBuilder.h"
+#include "llvm/CodeGen/MachineMemOperand.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
-#include "llvm/CodeGen/SelectionDAGISel.h"
-#include "llvm/CodeGen/TargetLoweringObjectFileImpl.h"
+#include "llvm/CodeGen/MachineValueType.h"
+#include "llvm/CodeGen/RuntimeLibcalls.h"
+#include "llvm/CodeGen/SelectionDAG.h"
+#include "llvm/CodeGen/SelectionDAGNodes.h"
 #include "llvm/CodeGen/ValueTypes.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/DerivedTypes.h"
 #include "llvm/IR/Function.h"
-#include "llvm/IR/GlobalAlias.h"
-#include "llvm/IR/GlobalVariable.h"
-#include "llvm/IR/Intrinsics.h"
+#include "llvm/IR/GlobalValue.h"
+#include "llvm/Support/Casting.h"
+#include "llvm/Support/CodeGen.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/KnownBits.h"
+#include "llvm/Support/MathExtras.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Target/TargetCallingConv.h"
+#include "llvm/Target/TargetMachine.h"
+#include <cassert>
+#include <cmath>
+#include <cstdint>
+#include <cstdlib>
+#include <utility>
 
 #define DEBUG_TYPE "lanai-lower"
 
@@ -104,7 +120,7 @@ LanaiTargetLowering::LanaiTargetLowering(const TargetMachine &TM,
 
   setOperationAction(ISD::ROTR, MVT::i32, Expand);
   setOperationAction(ISD::ROTL, MVT::i32, Expand);
-  setOperationAction(ISD::SHL_PARTS, MVT::i32, Expand);
+  setOperationAction(ISD::SHL_PARTS, MVT::i32, Custom);
   setOperationAction(ISD::SRL_PARTS, MVT::i32, Custom);
   setOperationAction(ISD::SRA_PARTS, MVT::i32, Expand);
 
@@ -123,6 +139,12 @@ LanaiTargetLowering::LanaiTargetLowering(const TargetMachine &TM,
     setLoadExtAction(ISD::ZEXTLOAD, VT, MVT::i1, Promote);
     setLoadExtAction(ISD::SEXTLOAD, VT, MVT::i1, Promote);
   }
+
+  setTargetDAGCombine(ISD::ADD);
+  setTargetDAGCombine(ISD::SUB);
+  setTargetDAGCombine(ISD::AND);
+  setTargetDAGCombine(ISD::OR);
+  setTargetDAGCombine(ISD::XOR);
 
   // Function alignments (log2)
   setMinFunctionAlignment(2);
@@ -173,6 +195,8 @@ SDValue LanaiTargetLowering::LowerOperation(SDValue Op,
     return LowerSETCC(Op, DAG);
   case ISD::SETCCE:
     return LowerSETCCE(Op, DAG);
+  case ISD::SHL_PARTS:
+    return LowerSHL_PARTS(Op, DAG);
   case ISD::SRL_PARTS:
     return LowerSRL_PARTS(Op, DAG);
   case ISD::VASTART:
@@ -187,12 +211,13 @@ SDValue LanaiTargetLowering::LowerOperation(SDValue Op,
     llvm_unreachable("unimplemented operand");
   }
 }
+
 //===----------------------------------------------------------------------===//
 //                       Lanai Inline Assembly Support
 //===----------------------------------------------------------------------===//
 
-unsigned LanaiTargetLowering::getRegisterByName(const char *RegName, EVT VT,
-                                                SelectionDAG &DAG) const {
+unsigned LanaiTargetLowering::getRegisterByName(const char *RegName, EVT /*VT*/,
+                                                SelectionDAG & /*DAG*/) const {
   // Only unallocatable registers should be matched here.
   unsigned Reg = StringSwitch<unsigned>(RegName)
                      .Case("pc", Lanai::PC)
@@ -236,7 +261,7 @@ LanaiTargetLowering::getSingleConstraintMatchWeight(
   Value *CallOperandVal = Info.CallOperandVal;
   // If we don't have a value, we can't do a match,
   // but allow it at the lowest weight.
-  if (CallOperandVal == NULL)
+  if (CallOperandVal == nullptr)
     return CW_Default;
   // Look at the constraint type.
   switch (*Constraint) {
@@ -262,7 +287,7 @@ LanaiTargetLowering::getSingleConstraintMatchWeight(
 void LanaiTargetLowering::LowerAsmOperandForConstraint(
     SDValue Op, std::string &Constraint, std::vector<SDValue> &Ops,
     SelectionDAG &DAG) const {
-  SDValue Result(0, 0);
+  SDValue Result(nullptr, 0);
 
   // Only support length 1 constraints for now.
   if (Constraint.length() > 1)
@@ -417,7 +442,7 @@ SDValue LanaiTargetLowering::LowerCCCArguments(
     const SmallVectorImpl<ISD::InputArg> &Ins, const SDLoc &DL,
     SelectionDAG &DAG, SmallVectorImpl<SDValue> &InVals) const {
   MachineFunction &MF = DAG.getMachineFunction();
-  MachineFrameInfo *MFI = MF.getFrameInfo();
+  MachineFrameInfo &MFI = MF.getFrameInfo();
   MachineRegisterInfo &RegInfo = MF.getRegInfo();
   LanaiMachineFunctionInfo *LanaiMFI = MF.getInfo<LanaiMachineFunctionInfo>();
 
@@ -474,15 +499,14 @@ SDValue LanaiTargetLowering::LowerCCCArguments(
                << EVT(VA.getLocVT()).getEVTString() << "\n";
       }
       // Create the frame index object for this incoming parameter...
-      int FI = MFI->CreateFixedObject(ObjSize, VA.getLocMemOffset(), true);
+      int FI = MFI.CreateFixedObject(ObjSize, VA.getLocMemOffset(), true);
 
       // Create the SelectionDAG nodes corresponding to a load
       // from this parameter
       SDValue FIN = DAG.getFrameIndex(FI, MVT::i32);
       InVals.push_back(DAG.getLoad(
           VA.getLocVT(), DL, Chain, FIN,
-          MachinePointerInfo::getFixedStack(DAG.getMachineFunction(), FI),
-          false, false, false, 0));
+          MachinePointerInfo::getFixedStack(DAG.getMachineFunction(), FI)));
     }
   }
 
@@ -502,7 +526,7 @@ SDValue LanaiTargetLowering::LowerCCCArguments(
   if (IsVarArg) {
     // Record the frame index of the first variable argument
     // which is a value necessary to VASTART.
-    int FI = MFI->CreateFixedObject(4, CCInfo.getNextStackOffset(), true);
+    int FI = MFI.CreateFixedObject(4, CCInfo.getNextStackOffset(), true);
     LanaiMFI->setVarArgsFrameIndex(FI);
   }
 
@@ -574,7 +598,7 @@ LanaiTargetLowering::LowerReturn(SDValue Chain, CallingConv::ID CallConv,
 // (physical regs)/(stack frame), CALLSEQ_START and CALLSEQ_END are emitted.
 SDValue LanaiTargetLowering::LowerCCCCallTo(
     SDValue Chain, SDValue Callee, CallingConv::ID CallConv, bool IsVarArg,
-    bool IsTailCall, const SmallVectorImpl<ISD::OutputArg> &Outs,
+    bool /*IsTailCall*/, const SmallVectorImpl<ISD::OutputArg> &Outs,
     const SmallVectorImpl<SDValue> &OutVals,
     const SmallVectorImpl<ISD::InputArg> &Ins, const SDLoc &DL,
     SelectionDAG &DAG, SmallVectorImpl<SDValue> &InVals) const {
@@ -583,7 +607,7 @@ SDValue LanaiTargetLowering::LowerCCCCallTo(
   CCState CCInfo(CallConv, IsVarArg, DAG.getMachineFunction(), ArgLocs,
                  *DAG.getContext());
   GlobalAddressSDNode *G = dyn_cast<GlobalAddressSDNode>(Callee);
-  MachineFrameInfo *MFI = DAG.getMachineFunction().getFrameInfo();
+  MachineFrameInfo &MFI = DAG.getMachineFunction().getFrameInfo();
 
   NumFixedArgs = 0;
   if (IsVarArg && G) {
@@ -614,22 +638,19 @@ SDValue LanaiTargetLowering::LowerCCCCallTo(
     unsigned Size = Flags.getByValSize();
     unsigned Align = Flags.getByValAlign();
 
-    int FI = MFI->CreateStackObject(Size, Align, false);
+    int FI = MFI.CreateStackObject(Size, Align, false);
     SDValue FIPtr = DAG.getFrameIndex(FI, getPointerTy(DAG.getDataLayout()));
     SDValue SizeNode = DAG.getConstant(Size, DL, MVT::i32);
 
     Chain = DAG.getMemcpy(Chain, DL, FIPtr, Arg, SizeNode, Align,
                           /*IsVolatile=*/false,
                           /*AlwaysInline=*/false,
-                          /*IsTailCall=*/false, MachinePointerInfo(),
+                          /*isTailCall=*/false, MachinePointerInfo(),
                           MachinePointerInfo());
     ByValArgs.push_back(FIPtr);
   }
 
-  Chain = DAG.getCALLSEQ_START(
-      Chain,
-      DAG.getConstant(NumBytes, DL, getPointerTy(DAG.getDataLayout()), true),
-      DL);
+  Chain = DAG.getCALLSEQ_START(Chain, NumBytes, 0, DL);
 
   SmallVector<std::pair<unsigned, SDValue>, 4> RegsToPass;
   SmallVector<SDValue, 12> MemOpChains;
@@ -669,7 +690,7 @@ SDValue LanaiTargetLowering::LowerCCCCallTo(
     } else {
       assert(VA.isMemLoc());
 
-      if (StackPtr.getNode() == 0)
+      if (StackPtr.getNode() == nullptr)
         StackPtr = DAG.getCopyFromReg(Chain, DL, Lanai::SP,
                                       getPointerTy(DAG.getDataLayout()));
 
@@ -677,8 +698,8 @@ SDValue LanaiTargetLowering::LowerCCCCallTo(
           DAG.getNode(ISD::ADD, DL, getPointerTy(DAG.getDataLayout()), StackPtr,
                       DAG.getIntPtrConstant(VA.getLocMemOffset(), DL));
 
-      MemOpChains.push_back(DAG.getStore(
-          Chain, DL, Arg, PtrOff, MachinePointerInfo(), false, false, 0));
+      MemOpChains.push_back(
+          DAG.getStore(Chain, DL, Arg, PtrOff, MachinePointerInfo()));
     }
   }
 
@@ -781,8 +802,7 @@ SDValue LanaiTargetLowering::LowerCallResult(
 //===----------------------------------------------------------------------===//
 
 static LPCC::CondCode IntCondCCodeToICC(SDValue CC, const SDLoc &DL,
-                                        SDValue &LHS, SDValue &RHS,
-                                        SelectionDAG &DAG) {
+                                        SDValue &RHS, SelectionDAG &DAG) {
   ISD::CondCode SetCCOpcode = cast<CondCodeSDNode>(CC)->get();
 
   // For integer, only the SETEQ, SETNE, SETLT, SETLE, SETGT, SETGE, SETULT,
@@ -854,7 +874,7 @@ SDValue LanaiTargetLowering::LowerBR_CC(SDValue Op, SelectionDAG &DAG) const {
   SDValue Dest = Op.getOperand(4);
   SDLoc DL(Op);
 
-  LPCC::CondCode CC = IntCondCCodeToICC(Cond, DL, LHS, RHS, DAG);
+  LPCC::CondCode CC = IntCondCCodeToICC(Cond, DL, RHS, DAG);
   SDValue TargetCC = DAG.getConstant(CC, DL, MVT::i32);
   SDValue Flag =
       DAG.getNode(LanaiISD::SET_FLAG, DL, MVT::Glue, LHS, RHS, TargetCC);
@@ -956,7 +976,7 @@ SDValue LanaiTargetLowering::LowerSETCCE(SDValue Op, SelectionDAG &DAG) const {
   SDValue Cond = Op.getOperand(3);
   SDLoc DL(Op);
 
-  LPCC::CondCode CC = IntCondCCodeToICC(Cond, DL, LHS, RHS, DAG);
+  LPCC::CondCode CC = IntCondCCodeToICC(Cond, DL, RHS, DAG);
   SDValue TargetCC = DAG.getConstant(CC, DL, MVT::i32);
   SDValue Flag = DAG.getNode(LanaiISD::SUBBF, DL, MVT::Glue, LHS, RHS, Carry);
   return DAG.getNode(LanaiISD::SETCC, DL, Op.getValueType(), TargetCC, Flag);
@@ -968,7 +988,7 @@ SDValue LanaiTargetLowering::LowerSETCC(SDValue Op, SelectionDAG &DAG) const {
   SDValue Cond = Op.getOperand(2);
   SDLoc DL(Op);
 
-  LPCC::CondCode CC = IntCondCCodeToICC(Cond, DL, LHS, RHS, DAG);
+  LPCC::CondCode CC = IntCondCCodeToICC(Cond, DL, RHS, DAG);
   SDValue TargetCC = DAG.getConstant(CC, DL, MVT::i32);
   SDValue Flag =
       DAG.getNode(LanaiISD::SET_FLAG, DL, MVT::Glue, LHS, RHS, TargetCC);
@@ -985,7 +1005,7 @@ SDValue LanaiTargetLowering::LowerSELECT_CC(SDValue Op,
   SDValue Cond = Op.getOperand(4);
   SDLoc DL(Op);
 
-  LPCC::CondCode CC = IntCondCCodeToICC(Cond, DL, LHS, RHS, DAG);
+  LPCC::CondCode CC = IntCondCCodeToICC(Cond, DL, RHS, DAG);
   SDValue TargetCC = DAG.getConstant(CC, DL, MVT::i32);
   SDValue Flag =
       DAG.getNode(LanaiISD::SET_FLAG, DL, MVT::Glue, LHS, RHS, TargetCC);
@@ -1007,7 +1027,7 @@ SDValue LanaiTargetLowering::LowerVASTART(SDValue Op, SelectionDAG &DAG) const {
   // memory location argument.
   const Value *SV = cast<SrcValueSDNode>(Op.getOperand(2))->getValue();
   return DAG.getStore(Op.getOperand(0), DL, FI, Op.getOperand(1),
-                      MachinePointerInfo(SV), false, false, 0);
+                      MachinePointerInfo(SV));
 }
 
 SDValue LanaiTargetLowering::LowerDYNAMIC_STACKALLOC(SDValue Op,
@@ -1048,8 +1068,8 @@ SDValue LanaiTargetLowering::LowerDYNAMIC_STACKALLOC(SDValue Op,
 SDValue LanaiTargetLowering::LowerRETURNADDR(SDValue Op,
                                              SelectionDAG &DAG) const {
   MachineFunction &MF = DAG.getMachineFunction();
-  MachineFrameInfo *MFI = MF.getFrameInfo();
-  MFI->setReturnAddressIsTaken(true);
+  MachineFrameInfo &MFI = MF.getFrameInfo();
+  MFI.setReturnAddressIsTaken(true);
 
   EVT VT = Op.getValueType();
   SDLoc DL(Op);
@@ -1059,8 +1079,7 @@ SDValue LanaiTargetLowering::LowerRETURNADDR(SDValue Op,
     const unsigned Offset = -4;
     SDValue Ptr = DAG.getNode(ISD::ADD, DL, VT, FrameAddr,
                               DAG.getIntPtrConstant(Offset, DL));
-    return DAG.getLoad(VT, DL, DAG.getEntryNode(), Ptr, MachinePointerInfo(),
-                       false, false, false, 0);
+    return DAG.getLoad(VT, DL, DAG.getEntryNode(), Ptr, MachinePointerInfo());
   }
 
   // Return the link register, which contains the return address.
@@ -1071,8 +1090,8 @@ SDValue LanaiTargetLowering::LowerRETURNADDR(SDValue Op,
 
 SDValue LanaiTargetLowering::LowerFRAMEADDR(SDValue Op,
                                             SelectionDAG &DAG) const {
-  MachineFrameInfo *MFI = DAG.getMachineFunction().getFrameInfo();
-  MFI->setFrameAddressIsTaken(true);
+  MachineFrameInfo &MFI = DAG.getMachineFunction().getFrameInfo();
+  MFI.setFrameAddressIsTaken(true);
 
   EVT VT = Op.getValueType();
   SDLoc DL(Op);
@@ -1082,8 +1101,8 @@ SDValue LanaiTargetLowering::LowerFRAMEADDR(SDValue Op,
     const unsigned Offset = -8;
     SDValue Ptr = DAG.getNode(ISD::ADD, DL, VT, FrameAddr,
                               DAG.getIntPtrConstant(Offset, DL));
-    FrameAddr = DAG.getLoad(VT, DL, DAG.getEntryNode(), Ptr,
-                            MachinePointerInfo(), false, false, false, 0);
+    FrameAddr =
+        DAG.getLoad(VT, DL, DAG.getEntryNode(), Ptr, MachinePointerInfo());
   }
   return FrameAddr;
 }
@@ -1115,7 +1134,7 @@ const char *LanaiTargetLowering::getTargetNodeName(unsigned Opcode) const {
   case LanaiISD::SMALL:
     return "LanaiISD::SMALL";
   default:
-    return NULL;
+    return nullptr;
   }
 }
 
@@ -1164,8 +1183,8 @@ SDValue LanaiTargetLowering::LowerGlobalAddress(SDValue Op,
 
   // If the code model is small or global variable will be placed in the small
   // section, then assume address will fit in 21-bits.
-  if (getTargetMachine().getCodeModel() == CodeModel::Small ||
-      TLOF->isGlobalInSmallSection(GV, getTargetMachine())) {
+  const GlobalObject *GO = GV->getBaseObject();
+  if (TLOF->isGlobalInSmallSection(GO, getTargetMachine())) {
     SDValue Small = DAG.getTargetGlobalAddress(
         GV, DL, getPointerTy(DAG.getDataLayout()), Offset, LanaiII::MO_NO_FLAG);
     return DAG.getNode(ISD::OR, DL, MVT::i32,
@@ -1229,6 +1248,55 @@ SDValue LanaiTargetLowering::LowerJumpTable(SDValue Op,
   }
 }
 
+SDValue LanaiTargetLowering::LowerSHL_PARTS(SDValue Op,
+                                            SelectionDAG &DAG) const {
+  EVT VT = Op.getValueType();
+  unsigned VTBits = VT.getSizeInBits();
+  SDLoc dl(Op);
+  assert(Op.getNumOperands() == 3 && "Unexpected SHL!");
+  SDValue ShOpLo = Op.getOperand(0);
+  SDValue ShOpHi = Op.getOperand(1);
+  SDValue ShAmt = Op.getOperand(2);
+
+  // Performs the following for (ShOpLo + (ShOpHi << 32)) << ShAmt:
+  //   LoBitsForHi = (ShAmt == 0) ? 0 : (ShOpLo >> (32-ShAmt))
+  //   HiBitsForHi = ShOpHi << ShAmt
+  //   Hi = (ShAmt >= 32) ? (ShOpLo << (ShAmt-32)) : (LoBitsForHi | HiBitsForHi)
+  //   Lo = (ShAmt >= 32) ? 0 : (ShOpLo << ShAmt)
+  //   return (Hi << 32) | Lo;
+
+  SDValue RevShAmt = DAG.getNode(ISD::SUB, dl, MVT::i32,
+                                 DAG.getConstant(VTBits, dl, MVT::i32), ShAmt);
+  SDValue LoBitsForHi = DAG.getNode(ISD::SRL, dl, VT, ShOpLo, RevShAmt);
+
+  // If ShAmt == 0, we just calculated "(SRL ShOpLo, 32)" which is "undef". We
+  // wanted 0, so CSEL it directly.
+  SDValue Zero = DAG.getConstant(0, dl, MVT::i32);
+  SDValue SetCC = DAG.getSetCC(dl, MVT::i32, ShAmt, Zero, ISD::SETEQ);
+  LoBitsForHi = DAG.getSelect(dl, MVT::i32, SetCC, Zero, LoBitsForHi);
+
+  SDValue ExtraShAmt = DAG.getNode(ISD::SUB, dl, MVT::i32, ShAmt,
+                                   DAG.getConstant(VTBits, dl, MVT::i32));
+  SDValue HiBitsForHi = DAG.getNode(ISD::SHL, dl, VT, ShOpHi, ShAmt);
+  SDValue HiForNormalShift =
+      DAG.getNode(ISD::OR, dl, VT, LoBitsForHi, HiBitsForHi);
+
+  SDValue HiForBigShift = DAG.getNode(ISD::SHL, dl, VT, ShOpLo, ExtraShAmt);
+
+  SetCC = DAG.getSetCC(dl, MVT::i32, ExtraShAmt, Zero, ISD::SETGE);
+  SDValue Hi =
+      DAG.getSelect(dl, MVT::i32, SetCC, HiForBigShift, HiForNormalShift);
+
+  // Lanai shifts of larger than register sizes are wrapped rather than
+  // clamped, so we can't just emit "lo << b" if b is too big.
+  SDValue LoForNormalShift = DAG.getNode(ISD::SHL, dl, VT, ShOpLo, ShAmt);
+  SDValue Lo = DAG.getSelect(
+      dl, MVT::i32, SetCC, DAG.getConstant(0, dl, MVT::i32), LoForNormalShift);
+
+  SDValue Ops[2] = {Lo, Hi};
+  return DAG.getMergeValues(Ops, dl);
+}
+
 SDValue LanaiTargetLowering::LowerSRL_PARTS(SDValue Op,
                                             SelectionDAG &DAG) const {
   MVT VT = Op.getSimpleValueType();
@@ -1267,4 +1335,189 @@ SDValue LanaiTargetLowering::LowerSRL_PARTS(SDValue Op,
 
   SDValue Ops[2] = {Lo, Hi};
   return DAG.getMergeValues(Ops, dl);
+}
+
+// Helper function that checks if N is a null or all ones constant.
+static inline bool isZeroOrAllOnes(SDValue N, bool AllOnes) {
+  return AllOnes ? isAllOnesConstant(N) : isNullConstant(N);
+}
+
+// Return true if N is conditionally 0 or all ones.
+// Detects these expressions where cc is an i1 value:
+//
+//   (select cc 0, y)   [AllOnes=0]
+//   (select cc y, 0)   [AllOnes=0]
+//   (zext cc)          [AllOnes=0]
+//   (sext cc)          [AllOnes=0/1]
+//   (select cc -1, y)  [AllOnes=1]
+//   (select cc y, -1)  [AllOnes=1]
+//
+// * AllOnes determines whether to check for an all zero (AllOnes false) or an
+//   all ones operand (AllOnes true).
+// * Invert is set when N is the all zero/ones constant when CC is false.
+// * OtherOp is set to the alternative value of N.
+//
+// For example, for (select cc X, Y) and AllOnes = 0 if:
+// * X = 0, Invert = False and OtherOp = Y
+// * Y = 0, Invert = True and OtherOp = X
+static bool isConditionalZeroOrAllOnes(SDNode *N, bool AllOnes, SDValue &CC,
+                                       bool &Invert, SDValue &OtherOp,
+                                       SelectionDAG &DAG) {
+  switch (N->getOpcode()) {
+  default:
+    return false;
+  case ISD::SELECT: {
+    CC = N->getOperand(0);
+    SDValue N1 = N->getOperand(1);
+    SDValue N2 = N->getOperand(2);
+    if (isZeroOrAllOnes(N1, AllOnes)) {
+      Invert = false;
+      OtherOp = N2;
+      return true;
+    }
+    if (isZeroOrAllOnes(N2, AllOnes)) {
+      Invert = true;
+      OtherOp = N1;
+      return true;
+    }
+    return false;
+  }
+  case ISD::ZERO_EXTEND: {
+    // (zext cc) can never be the all ones value.
+    if (AllOnes)
+      return false;
+    CC = N->getOperand(0);
+    if (CC.getValueType() != MVT::i1)
+      return false;
+    SDLoc dl(N);
+    EVT VT = N->getValueType(0);
+    OtherOp = DAG.getConstant(1, dl, VT);
+    Invert = true;
+    return true;
+  }
+  case ISD::SIGN_EXTEND: {
+    CC = N->getOperand(0);
+    if (CC.getValueType() != MVT::i1)
+      return false;
+    SDLoc dl(N);
+    EVT VT = N->getValueType(0);
+    Invert = !AllOnes;
+    if (AllOnes)
+      // When looking for an AllOnes constant, N is an sext, and the 'other'
+      // value is 0.
+      OtherOp = DAG.getConstant(0, dl, VT);
+    else
+      OtherOp =
+          DAG.getConstant(APInt::getAllOnesValue(VT.getSizeInBits()), dl, VT);
+    return true;
+  }
+  }
+}
+
+// Combine a constant select operand into its use:
+//
+//   (add (select cc, 0, c), x)  -> (select cc, x, (add, x, c))
+//   (sub x, (select cc, 0, c))  -> (select cc, x, (sub, x, c))
+//   (and (select cc, -1, c), x) -> (select cc, x, (and, x, c))  [AllOnes=1]
+//   (or  (select cc, 0, c), x)  -> (select cc, x, (or, x, c))
+//   (xor (select cc, 0, c), x)  -> (select cc, x, (xor, x, c))
+//
+// The transform is rejected if the select doesn't have a constant operand that
+// is null, or all ones when AllOnes is set.
+//
+// Also recognize sext/zext from i1:
+//
+//   (add (zext cc), x) -> (select cc (add x, 1), x)
+//   (add (sext cc), x) -> (select cc (add x, -1), x)
+//
+// These transformations eventually create predicated instructions.
+static SDValue combineSelectAndUse(SDNode *N, SDValue Slct, SDValue OtherOp,
+                                   TargetLowering::DAGCombinerInfo &DCI,
+                                   bool AllOnes) {
+  SelectionDAG &DAG = DCI.DAG;
+  EVT VT = N->getValueType(0);
+  SDValue NonConstantVal;
+  SDValue CCOp;
+  bool SwapSelectOps;
+  if (!isConditionalZeroOrAllOnes(Slct.getNode(), AllOnes, CCOp, SwapSelectOps,
+                                  NonConstantVal, DAG))
+    return SDValue();
+
+  // Slct is now know to be the desired identity constant when CC is true.
+  SDValue TrueVal = OtherOp;
+  SDValue FalseVal =
+      DAG.getNode(N->getOpcode(), SDLoc(N), VT, OtherOp, NonConstantVal);
+  // Unless SwapSelectOps says CC should be false.
+  if (SwapSelectOps)
+    std::swap(TrueVal, FalseVal);
+
+  return DAG.getNode(ISD::SELECT, SDLoc(N), VT, CCOp, TrueVal, FalseVal);
+}
+
+// Attempt combineSelectAndUse on each operand of a commutative operator N.
+static SDValue
+combineSelectAndUseCommutative(SDNode *N, TargetLowering::DAGCombinerInfo &DCI,
+                               bool AllOnes) {
+  SDValue N0 = N->getOperand(0);
+  SDValue N1 = N->getOperand(1);
+  if (N0.getNode()->hasOneUse())
+    if (SDValue Result = combineSelectAndUse(N, N0, N1, DCI, AllOnes))
+      return Result;
+  if (N1.getNode()->hasOneUse())
+    if (SDValue Result = combineSelectAndUse(N, N1, N0, DCI, AllOnes))
+      return Result;
+  return SDValue();
+}
+
+// PerformSUBCombine - Target-specific dag combine xforms for ISD::SUB.
+static SDValue PerformSUBCombine(SDNode *N,
+                                 TargetLowering::DAGCombinerInfo &DCI) {
+  SDValue N0 = N->getOperand(0);
+  SDValue N1 = N->getOperand(1);
+
+  // fold (sub x, (select cc, 0, c)) -> (select cc, x, (sub, x, c))
+  if (N1.getNode()->hasOneUse())
+    if (SDValue Result = combineSelectAndUse(N, N1, N0, DCI, /*AllOnes=*/false))
+      return Result;
+
+  return SDValue();
+}
+
+SDValue LanaiTargetLowering::PerformDAGCombine(SDNode *N,
+                                               DAGCombinerInfo &DCI) const {
+  switch (N->getOpcode()) {
+  default:
+    break;
+  case ISD::ADD:
+  case ISD::OR:
+  case ISD::XOR:
+    return combineSelectAndUseCommutative(N, DCI, /*AllOnes=*/false);
+  case ISD::AND:
+    return combineSelectAndUseCommutative(N, DCI, /*AllOnes=*/true);
+  case ISD::SUB:
+    return PerformSUBCombine(N, DCI);
+  }
+
+  return SDValue();
+}
+
+void LanaiTargetLowering::computeKnownBitsForTargetNode(
+    const SDValue Op, KnownBits &Known, const APInt &DemandedElts,
+    const SelectionDAG &DAG, unsigned Depth) const {
+  unsigned BitWidth = Known.getBitWidth();
+  switch (Op.getOpcode()) {
+  default:
+    break;
+  case LanaiISD::SETCC:
+    Known = KnownBits(BitWidth);
+    Known.Zero.setBits(1, BitWidth);
+    break;
+  case LanaiISD::SELECT_CC:
+    KnownBits Known2;
+    DAG.computeKnownBits(Op->getOperand(0), Known, Depth + 1);
+    DAG.computeKnownBits(Op->getOperand(1), Known2, Depth + 1);
+    Known.Zero &= Known2.Zero;
+    Known.One &= Known2.One;
+    break;
+  }
 }

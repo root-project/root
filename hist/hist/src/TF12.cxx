@@ -13,7 +13,7 @@
 #include "TH1.h"
 #include "TVirtualPad.h"
 
-ClassImp(TF12)
+ClassImp(TF12);
 
 /** \class TF12
     \ingroup Hist

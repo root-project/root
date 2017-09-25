@@ -714,7 +714,7 @@ QPixmap *TGQt::MakeIcon(Int_t i)
 #endif
 
 
-ClassImp(TGQt)
+ClassImp(TGQt);
 
 //____________________________________________________
 //

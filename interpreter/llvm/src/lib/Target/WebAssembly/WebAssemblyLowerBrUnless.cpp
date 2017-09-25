@@ -29,7 +29,7 @@ using namespace llvm;
 
 namespace {
 class WebAssemblyLowerBrUnless final : public MachineFunctionPass {
-  const char *getPassName() const override {
+  StringRef getPassName() const override {
     return "WebAssembly Lower br_unless";
   }
 
@@ -104,12 +104,12 @@ bool WebAssemblyLowerBrUnless::runOnMachineFunction(MachineFunction &MF) {
       }
 
       // If we weren't able to invert the condition in place. Insert an
-      // expression to invert it.
+      // instruction to invert it.
       if (!Inverted) {
         unsigned Tmp = MRI.createVirtualRegister(&WebAssembly::I32RegClass);
-        MFI.stackifyVReg(Tmp);
         BuildMI(MBB, MI, MI->getDebugLoc(), TII.get(WebAssembly::EQZ_I32), Tmp)
             .addReg(Cond);
+        MFI.stackifyVReg(Tmp);
         Cond = Tmp;
         Inverted = true;
       }
@@ -118,7 +118,7 @@ bool WebAssemblyLowerBrUnless::runOnMachineFunction(MachineFunction &MF) {
       // delete the br_unless.
       assert(Inverted);
       BuildMI(MBB, MI, MI->getDebugLoc(), TII.get(WebAssembly::BR_IF))
-          .addOperand(MI->getOperand(0))
+          .add(MI->getOperand(0))
           .addReg(Cond);
       MBB.erase(MI);
     }

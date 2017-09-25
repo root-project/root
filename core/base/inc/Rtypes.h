@@ -255,6 +255,7 @@ class ClassDefGenerateInitInstanceLocalInjector:
    template<typename T>
    std::string ClassDefGenerateInitInstanceLocalInjector<T>::fgName{};
 
+   void DefaultStreamer(TBuffer &R__b, const TClass *cl, void *objpointer);
 }} // namespace ROOT::Internal
 
 
@@ -282,17 +283,16 @@ public: \
    static TClass *Class(); \
    virtual_keyword void Streamer(TBuffer&) overrd;
 
-#define _ClassDefInline_(name,id, virtual_keyword, overrd) \
-   _ClassDefBase_(name,id, virtual_keyword, overrd)       \
-public: \
-   static int ImplFileLine() { return -1; }     \
-   static const char *ImplFileName() { return 0; }      \
-   static const char *Class_Name() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector< name >::Name(); } \
-   static TClass *Dictionary() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector< name >::Dictionary(); } \
-   static TClass *Class() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector< name >::Class(); } \
-   virtual_keyword void Streamer(TBuffer& R__b) overrd {                \
-      if (R__b.IsReading()) R__b.ReadClassBuffer(name::Class(),this);   \
-      else R__b.WriteClassBuffer(name::Class(),this);}
+#define _ClassDefInline_(name, id, virtual_keyword, overrd)                                                            \
+   _ClassDefBase_(name, id, virtual_keyword, overrd) public : static int ImplFileLine() { return -1; }                 \
+   static const char *ImplFileName() { return 0; }                                                                     \
+   static const char *Class_Name() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name(); } \
+   static TClass *Dictionary()                                                                                         \
+   {                                                                                                                   \
+      return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();                            \
+   }                                                                                                                   \
+   static TClass *Class() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); }         \
+   virtual_keyword void Streamer(TBuffer &R__b) overrd { ::ROOT::Internal::DefaultStreamer(R__b, name::Class(), this); }
 
 #define ClassDef(name,id) \
    _ClassDefOutline_(name,id,virtual,)   \

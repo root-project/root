@@ -39,7 +39,7 @@
 #include <arpa/inet.h>
 
 
-ClassImp(TBonjourRegistrar)
+ClassImp(TBonjourRegistrar);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default ctor.

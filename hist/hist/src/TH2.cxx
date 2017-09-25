@@ -26,20 +26,20 @@
 #include "TVirtualHistPainter.h"
 
 
-ClassImp(TH2)
+ClassImp(TH2);
 
 /** \addtogroup Hist
 @{
 \class TH2C
-\brief tomato 2-D histogram with a byte per channel (see TH1 documentation)
+\brief 2-D histogram with a byte per channel (see TH1 documentation)
 \class TH2S
-\brief tomato 2-D histogram with a short per channel (see TH1 documentation)
+\brief 2-D histogram with a short per channel (see TH1 documentation)
 \class TH2I
-\brief tomato 2-D histogram with an int per channel (see TH1 documentation)}
+\brief 2-D histogram with an int per channel (see TH1 documentation)}
 \class TH2F
-\brief tomato 2-D histogram with a float per channel (see TH1 documentation)}
+\brief 2-D histogram with a float per channel (see TH1 documentation)}
 \class TH2D
-\brief tomato 2-D histogram with a double per channel (see TH1 documentation)}
+\brief 2-D histogram with a double per channel (see TH1 documentation)}
 @}
 */
 
@@ -859,8 +859,8 @@ void TH2::DoFitSlices(bool onX,
 ///           It makes sense when used together with a Gn option
 ///
 /// The generated histograms are returned by adding them to arr, if arr is not NULL.
-/// arr's SetOwner() is called, to signal that it is the user's respponsability to
-/// delete the histograms, possibly by deleting the arrary.
+/// arr's SetOwner() is called, to signal that it is the user's responsibility to
+/// delete the histograms, possibly by deleting the array.
 /// ~~~ {.cpp}
 ///    TObjArray aSlices;
 ///    h2->FitSlicesX(func, 0, -1, 0, "QNR", &aSlices);
@@ -871,7 +871,7 @@ void TH2::DoFitSlices(bool onX,
 /// the fits.
 ///
 /// If arr is NULL, the generated histograms are added to the list of objects
-/// in the current directory. It is the user's responsability to delete
+/// in the current directory. It is the user's responsibility to delete
 /// these histograms.
 ///
 ///  Example: Assume a 2-d histogram h2
@@ -921,8 +921,8 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
 ///           It makes sense when used together with a Gn option
 ///
 /// The generated histograms are returned by adding them to arr, if arr is not NULL.
-/// arr's SetOwner() is called, to signal that it is the user's respponsability to
-/// delete the histograms, possibly by deleting the arrary.
+/// arr's SetOwner() is called, to signal that it is the user's responsibility to
+/// delete the histograms, possibly by deleting the array.
 /// ~~~ {.cpp}
 ///    TObjArray aSlices;
 ///    h2->FitSlicesY(func, 0, -1, 0, "QNR", &aSlices);
@@ -933,7 +933,7 @@ void TH2::FitSlicesX(TF1 *f1, Int_t firstybin, Int_t lastybin, Int_t cut, Option
 /// the fits.
 ///
 /// If arr is NULL, the generated histograms are added to the list of objects
-/// in the current directory. It is the user's responsability to delete
+/// in the current directory. It is the user's responsibility to delete
 /// these histograms.
 ///
 ///  Example: Assume a 2-d histogram h2
@@ -1069,7 +1069,7 @@ Double_t TH2::GetCovariance(Int_t axis1, Int_t axis2) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 2 random numbers along axis x and y distributed according
-/// the cellcontents of a 2-dim histogram
+/// the cell-contents of a 2-dim histogram
 /// return a NaN if the histogram has a bin with negative content
 
 void TH2::GetRandom2(Double_t &x, Double_t &y)
@@ -1102,7 +1102,7 @@ void TH2::GetRandom2(Double_t &x, Double_t &y)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the array stats from the contents of this histogram
-/// The array stats must be correctly dimensionned in the calling program.
+/// The array stats must be correctly dimensioned in the calling program.
 /// ~~~ {.cpp}
 /// stats[0] = sumw
 /// stats[1] = sumw2
@@ -1208,7 +1208,7 @@ Double_t TH2::Integral(Int_t firstxbin, Int_t lastxbin, Int_t firstybin, Int_t l
 ////////////////////////////////////////////////////////////////////////////////
 /// Return integral of bin contents in range [firstxbin,lastxbin],[firstybin,lastybin]
 /// for a 2-D histogram. Calculates also the integral error using error propagation
-/// from the bin errors assumming that all the bins are uncorrelated.
+/// from the bin errors assuming that all the bins are uncorrelated.
 /// By default the integral is computed as the sum of bin contents in the range.
 /// if option "width" is specified, the integral is the sum of
 /// the bin contents multiplied by the bin width in x and in y.
@@ -1502,7 +1502,7 @@ Double_t TH2::KolmogorovTest(const TH1 *h2, Option_t *option) const
    if (TMath::Abs(rsum1-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h1=%s\n",h1->GetName());
    if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
 
-   if(opt.Contains("M"))      return dfmax;  // return avergae of max distance
+   if(opt.Contains("M"))      return dfmax;  // return average of max distance
 
    return prb;
 }
@@ -2302,7 +2302,7 @@ TH1D *TH2::ProjectionX(const char *name, Int_t firstybin, Int_t lastybin, Option
 ///   number of effective entries for all the cells included in the projection
 ///
 ///   To exclude the underflow bins in X, use firstxbin=1.
-///   To exclude the oveerflow bins in X, use lastxbin=nx.
+///   To exclude the overflow bins in X, use lastxbin=nx.
 ///
 ///   if option "e" is specified, the errors are computed.
 ///   if option "d" is specified, the projection is drawn in the current pad.
@@ -2525,7 +2525,7 @@ TH1 *TH2::ShowBackground(Int_t niter, Option_t *option)
 ///Interface to TSpectrum2::Search
 ///the function finds peaks in this histogram where the width is > sigma
 ///and the peak maximum greater than threshold*maximum bin content of this.
-///for more detauils see TSpectrum::Search.
+///for more details see TSpectrum::Search.
 ///note the difference in the default value for option compared to TSpectrum2::Search
 ///option="" by default (instead of "goff")
 
@@ -2689,7 +2689,7 @@ void TH2::Streamer(TBuffer &R__b)
 //  TH2C a 2-D histogram with one byte per cell (char)
 //______________________________________________________________________________
 
-ClassImp(TH2C)
+ClassImp(TH2C);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2943,7 +2943,7 @@ TH2C operator/(TH2C &h1, TH2C &h2)
 //  TH2S a 2-D histogram with two bytes per cell (short integer)
 //______________________________________________________________________________
 
-ClassImp(TH2S)
+ClassImp(TH2S);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3197,7 +3197,7 @@ TH2S operator/(TH2S &h1, TH2S &h2)
 //  TH2I a 2-D histogram with four bytes per cell (32 bits integer)
 //______________________________________________________________________________
 
-ClassImp(TH2I)
+ClassImp(TH2I);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3416,7 +3416,7 @@ TH2I operator/(TH2I &h1, TH2I &h2)
 //  TH2F a 2-D histogram with four bytes per cell (float)
 //______________________________________________________________________________
 
-ClassImp(TH2F)
+ClassImp(TH2F);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3680,7 +3680,7 @@ TH2F operator/(TH2F &h1, TH2F &h2)
 //  TH2D a 2-D histogram with eight bytes per cell (double)
 //______________________________________________________________________________
 
-ClassImp(TH2D)
+ClassImp(TH2D);
 
 
 ////////////////////////////////////////////////////////////////////////////////

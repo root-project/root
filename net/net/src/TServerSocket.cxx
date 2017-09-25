@@ -38,7 +38,7 @@ UChar_t TServerSocket::fgAcceptOpt = kSrvNoAuth;
 
 TVirtualMutex *gSrvAuthenticateMutex = 0;
 
-ClassImp(TServerSocket)
+ClassImp(TServerSocket);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Kind of macro to parse input options
@@ -97,7 +97,7 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
       fService += service;
       fSocket = gSystem->AnnounceUnixService(service, backlog);
       if (fSocket >= 0) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfSockets()->Add(this);
       }
    } else {
@@ -107,7 +107,7 @@ TServerSocket::TServerSocket(const char *service, Bool_t reuse, Int_t backlog,
       if (port != -1) {
          fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, tcpwindowsize);
          if (fSocket >= 0) {
-            R__LOCKGUARD2(gROOTMutex);
+            R__LOCKGUARD(gROOTMutex);
             gROOT->GetListOfSockets()->Add(this);
          }
       } else {
@@ -151,7 +151,7 @@ TServerSocket::TServerSocket(Int_t port, Bool_t reuse, Int_t backlog,
 
    fSocket = gSystem->AnnounceTcpService(port, reuse, backlog, tcpwindowsize);
    if (fSocket >= 0) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -222,7 +222,7 @@ TSocket *TServerSocket::Accept(UChar_t opt)
    if (!TestBit(TSocket::kIsUnix))
       socket->fAddress = gSystem->GetPeerName(socket->fSocket);
    if (socket->fSocket >= 0) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(socket);
    }
 

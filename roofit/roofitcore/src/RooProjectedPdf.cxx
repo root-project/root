@@ -38,7 +38,7 @@ is therefore identical to that of <pre>f->createProjection(RooArgSet(x,y))</pre>
 
 using namespace std;
 
- ClassImp(RooProjectedPdf) 
+ ClassImp(RooProjectedPdf); 
    ;
 
 

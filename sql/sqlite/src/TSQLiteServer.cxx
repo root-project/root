@@ -17,7 +17,7 @@
 #include "TSQLTableInfo.h"
 #include "TSQLRow.h"
 
-ClassImp(TSQLiteServer)
+ClassImp(TSQLiteServer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Open a connection to an SQLite DB server. The db arguments should be

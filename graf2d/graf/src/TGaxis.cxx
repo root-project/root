@@ -43,7 +43,7 @@ Float_t TGaxis::fYAxisExpXOffset = 0.; //Exponent X offset for the Y axis
 Float_t TGaxis::fYAxisExpYOffset = 0.; //Exponent Y offset for the Y axis
 const Int_t kHori = BIT(9); //defined in TPad
 
-ClassImp(TGaxis)
+ClassImp(TGaxis);
 
 /** \class TGaxis
 \ingroup BasicGraphics
@@ -2086,7 +2086,7 @@ L200:
       }
       if (x1 == x0) {
          if (autotoff) {
-            if (toffset) ylabel = 1.6*toffset;
+            if (toffset) ylabel = xlside*charheight+toffset;
             else         ylabel = xlside*1.6*charheight;
          } else {
             ylabel = xlside*1.6*charheight*toffset;

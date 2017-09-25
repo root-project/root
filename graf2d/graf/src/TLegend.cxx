@@ -28,7 +28,7 @@
 #include "TGraph.h"
 #include "THStack.h"
 
-ClassImp(TLegend)
+ClassImp(TLegend);
 
 /** \class TLegend
 \ingroup BasicGraphics

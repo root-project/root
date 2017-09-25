@@ -139,14 +139,13 @@ TProof *getProof(const char *url = "proof://localhost:40000", Int_t nwrks = -1, 
             Printf("getProof: WARNING: started/attached a session on external cluster (%s):"
                    " 'dyn=kTRUE' ignored", url);
          }
-         // Done
-         return p;
       } else {
          Printf("getProof: could not get/start a valid session at %s", url);
-         return p;
+         if (p) delete p;
+         p = 0;
       }
-      if (p) delete p;
-      p = 0;
+      // Done
+      return p;
    }
 
 #ifdef WIN32

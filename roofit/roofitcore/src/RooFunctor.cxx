@@ -39,7 +39,7 @@ Lightweight interface adaptor that exports a RooAbsPdf as a functor
 
 using namespace std;
 
-ClassImp(RooFunctor)
+ClassImp(RooFunctor);
 ;
 
 

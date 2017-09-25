@@ -18,7 +18,7 @@
 #include "TVirtualX.h"
 #include "TPoint.h"
 
-ClassImp(TWbox)
+ClassImp(TWbox);
 
 /** \class TWbox
 \ingroup BasicGraphics

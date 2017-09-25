@@ -16,7 +16,6 @@
 
 class THttpServer;
 class THttpCallArg;
-class TCanvas;
 
 class THttpEngine : public TNamed {
 protected:
@@ -50,13 +49,6 @@ class THttpWSEngine : public TNamed {
 protected:
    THttpWSEngine(const char *name, const char *title);
 
-   Bool_t fReady;    ///<! indicate if websocket get ready flag to send bigger amount of data
-   Bool_t fModified; ///<! true when canvas was modified
-   Bool_t fGetMenu;  ///<! true when menu was requested
-   TCanvas *fCanv;   ///<! canvas associated with websocket
-
-   void CheckModifiedFlag();
-
 public:
    virtual ~THttpWSEngine();
 
@@ -70,15 +62,24 @@ public:
 
    virtual Bool_t PreviewData(THttpCallArg *) { return kFALSE; }
 
-   // --------- method to work with Canvas (temporary solution)
-
-   virtual void ProcessData(THttpCallArg *arg);
-
-   virtual void AssignCanvas(TCanvas *canv);
-
-   virtual void CanvasModified();
-
    ClassDef(THttpWSEngine, 0) // abstract class for working with WebSockets-like protocol
 };
+
+// ====================================================================
+
+class THttpWSHandler : public TNamed {
+
+protected:
+   THttpWSHandler(const char *name, const char *title);
+
+public:
+   virtual ~THttpWSHandler();
+
+   virtual Bool_t ProcessWS(THttpCallArg *arg) = 0;
+
+   ClassDef(THttpWSHandler, 0) // abstract class for handling websocket requests
+};
+
+
 
 #endif

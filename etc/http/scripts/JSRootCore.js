@@ -7,11 +7,11 @@
 (function( factory ) {
    if ( typeof define === "function" && define.amd ) {
 
-      var jsroot = factory({});
-
-      var dir = jsroot.source_dir + "scripts/", ext = jsroot.source_min ? ".min" : "";
-
-      var paths = {
+      var jsroot = factory({}),
+          dir = jsroot.source_dir + "scripts/",
+          ext = jsroot.source_min ? ".min" : "",
+          norjs = (typeof requirejs=='undefined'),
+          paths = {
             'd3'                   : dir+'d3.min',
             'jquery'               : dir+'jquery.min',
             'jquery-ui'            : dir+'jquery-ui.min',
@@ -28,59 +28,60 @@
             'JSRootIOEvolution'    : dir+'JSRootIOEvolution'+ext,
             'JSRootTree'           : dir+'JSRootTree'+ext,
             'JSRootPainter'        : dir+'JSRootPainter'+ext,
+            'JSRootPainter.hist'   : dir+'JSRootPainter.hist'+ext,
+            'JSRootPainter.hist3d' : dir+'JSRootPainter.hist3d'+ext,
             'JSRootPainter.more'   : dir+'JSRootPainter.more'+ext,
+            'JSRootPainter.hierarchy' : dir+'JSRootPainter.hierarchy'+ext,
             'JSRootPainter.jquery' : dir+'JSRootPainter.jquery'+ext,
+            'JSRootPainter.openui5': dir+'JSRootPainter.openui5'+ext,
             'JSRoot3DPainter'      : dir+'JSRoot3DPainter'+ext,
             'ThreeCSG'             : dir+'ThreeCSG'+ext,
             'JSRootGeoBase'        : dir+'JSRootGeoBase'+ext,
             'JSRootGeoPainter'     : dir+'JSRootGeoPainter'+ext
          };
 
-      var cfg_paths;
-      if ((requirejs.s!==undefined) && (requirejs.s.contexts !== undefined) && ((requirejs.s.contexts._!==undefined) &&
-           requirejs.s.contexts._.config!==undefined)) cfg_paths = requirejs.s.contexts._.config.paths;
-                                                 else console.warn("Require.js paths changed - please contact JSROOT developers");
+      if (norjs) {
+         // just define locations
+         paths['MathJax'] = 'https://root.cern/js/mathjax/latest/MathJax.js?config=TeX-AMS-MML_SVG&amp;delayStartupUntil=configured';
 
-      // check if modules are already loaded
-      for (var module in paths)
-         if (requirejs.defined(module) || (cfg_paths && (module in cfg_paths)))
-            delete paths[module];
+         require({ paths: paths });
+      } else {
+         var cfg_paths;
+         if ((requirejs.s!==undefined) && (requirejs.s.contexts !== undefined) && ((requirejs.s.contexts._!==undefined) &&
+               requirejs.s.contexts._.config!==undefined)) cfg_paths = requirejs.s.contexts._.config.paths;
+         else console.warn("Require.js paths changed - please contact JSROOT developers");
 
-      // configure all dependencies
-      requirejs.config({
-        paths: paths,
-        shim: {
-         'jqueryui-mousewheel': { deps: ['jquery-ui'] },
-         'jqueryui-touch-punch': { deps: ['jquery-ui'] },
-         'threejs_all': { deps: [ 'threejs'] },
-         'ThreeCSG' : { deps: [ 'threejs'] },
-         'MathJax': {
-             exports: 'MathJax',
-             init: function () {
-                MathJax.Hub.Config({ TeX: { extensions: ["color.js"] }, SVG: { mtextFontInherit: true, minScaleAdjust: 100, matchFontHeight: true, useFontCache: false } });
-                MathJax.Hub.Register.StartupHook("SVG Jax Ready",function () {
-                   var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;
-                   VARIANT["normal"].fonts.unshift("MathJax_SansSerif");
-                   VARIANT["bold"].fonts.unshift("MathJax_SansSerif-bold");
-                   VARIANT["italic"].fonts.unshift("MathJax_SansSerif");
-                   VARIANT["-tex-mathit"].fonts.unshift("MathJax_SansSerif");
-                });
-                MathJax.Hub.Startup.onload();
-                return MathJax;
-             }
-          }
-       }
-      });
+         // check if modules are already loaded
+         for (var module in paths)
+            if (requirejs.defined(module) || (cfg_paths && (module in cfg_paths)))
+               delete paths[module];
 
-      // AMD. Register as an anonymous module.
+         // configure all dependencies
+         requirejs.config({
+            paths: paths,
+            shim: {
+               'jqueryui-mousewheel': { deps: ['jquery-ui'] },
+               'jqueryui-touch-punch': { deps: ['jquery-ui'] }
+            }
+         });
+      }
+
       define( jsroot );
 
-      if (!require.specified("JSRootCore"))
-          define('JSRootCore', [], jsroot);
+      if (norjs || !require.specified("JSRootCore"))
+         define('JSRootCore', [], jsroot);
 
-      if (!require.specified("jsroot"))
-         define('jsroot', [], jsroot);
+     if (norjs || !require.specified("jsroot"))
+        define('jsroot', [], jsroot);
 
+   } else
+   if (typeof exports === 'object' /*&& typeof module !== 'undefined'*/) {
+      // processing with Node.js or CommonJS
+
+      factory(exports);
+
+      //  mark JSROOT as used with Node.js
+      exports.BatchMode = exports.nodejs = (typeof global==='object') && global.process && (Object.prototype.toString.call(global.process) === '[object process]');
    } else {
 
       if (typeof JSROOT != 'undefined')
@@ -92,14 +93,18 @@
    }
 } (function(JSROOT) {
 
-   JSROOT.version = "5.1.2 21/04/2017";
+   "use strict";
+
+   JSROOT.version = "dev 24/08/2017";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
    JSROOT.source_fullpath = ""; // full name of source script
-   JSROOT.bower_dir = ""; // when specified, use standard libs from bower location
+   JSROOT.bower_dir = null; // when specified, use standard libs from bower location
+   JSROOT.sources = ['core']; // indicates which major sources were loaded
 
    JSROOT.id_counter = 0;
+   JSROOT.BatchMode = false; // when true, disables all kind of interactive features
 
    // JSROOT.use_full_libs = true;
 
@@ -149,7 +154,7 @@
          MoveResize : true,   // enable move and resize of elements like statbox, title, pave, colz
          DragAndDrop : true,  // enables drag and drop functionality
          ToolBar : 'popup',  // show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button
-         CanEnlarge : true,  // if drawing inside particular div can be enrlarged on full window
+         CanEnlarge : true,  // if drawing inside particular div can be enlarged on full window
          OptimizeDraw : 1, // drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always
          AutoStat : true,
          FrameNDC : { fX1NDC: 0.07, fY1NDC: 0.12, fX2NDC: 0.95, fY2NDC: 0.88 },
@@ -161,9 +166,9 @@
          GeoGradPerSegm : 6, // amount of grads per segment in TGeo spherical shapes like tube
          GeoCompressComp : true, // if one should compress faces after creation of composite shape,
          IgnoreUrlOptions : false, // if true, ignore all kind of URL options in the browser URL
-         HierarchyLimit : 250,   // how many items shown on one level of hierarhcy
+         HierarchyLimit : 250,   // how many items shown on one level of hierarchy
 
-         // these are TStyle attributes, which can be chenged via URL 'style' parameter
+         // these are TStyle attributes, which can be changed via URL 'style' parameter
 
          fPadBottomMargin : 0.1,
          fPadTopMargin : 0.1,
@@ -255,6 +260,13 @@
       else
       if ((typeof console != 'undefined') && (typeof console.log == 'function'))
          console.log(value);
+   }
+
+   // wrapper for alert, throw Error in Node.js
+   JSROOT.alert = function(msg) {
+      if (this.nodeis) throw new Error(msg);
+      if (typeof alert === 'function') alert(msg);
+      else JSROOT.console('ALERT: ' + msg);
    }
 
    /// Should be used to reintroduce objects references, produced by TBufferJSON
@@ -376,7 +388,7 @@
    // This is simple replacement of jQuery.extend method
    // Just copy (not clone) all fields from source to the target object
    JSROOT.extend = function(tgt, src) {
-      if ((src === null) || (typeof src !== 'object')) return src;
+      if ((src === null) || (typeof src !== 'object')) return tgt;
       if ((tgt === null) || (typeof tgt !== 'object')) tgt = {};
 
       for (var k in src)
@@ -560,7 +572,7 @@
          res.push(val); return res;
       }
 
-      // try to split ourself, checking quotes and brackes
+      // try to split ourself, checking quotes and brackets
       var nbr = 0, nquotes = 0, ndouble = 0, last = 1;
 
       for (var indx = 1; indx < val.length; ++indx) {
@@ -624,17 +636,13 @@
 
    JSROOT.findFunction = function(name) {
       if (typeof name === 'function') return name;
-      if (typeof window[name] == 'function') return window[name];
-      if ((typeof name !== 'string') || (name.indexOf(".") < 0)) return null;
+      if (typeof name !== 'string') return null;
+      var names = name.split('.'), elem = null;
+      if (typeof window === 'object') elem = window;
+      if (names[0]==='JSROOT') { elem = this; names.shift(); }
 
-      var names = name.split('.'), elem = window;
-      for (var n=0;n<names.length;++n) {
-         if ((n==0) && (names[0]==='JSROOT'))
-            elem = this;
-         else
-            elem = elem[names[n]];
-         if (!elem) return null;
-      }
+      for (var n=0;elem && (n<names.length);++n)
+         elem = elem[names[n]];
 
       return (typeof elem == 'function') ? elem : null;
    }
@@ -675,16 +683,24 @@
       // Request will be set as this pointer in the callback
       // If failed, request returns null
 
-      var xhr = new XMLHttpRequest();
+
+      var xhr = null;
+      if (JSROOT.nodejs) {
+         var nodejs_class = require("xhr2");
+         xhr = new nodejs_class();
+      } else {
+         xhr = new XMLHttpRequest();
+      }
 
       function callback(res) {
          // we set pointer on request when calling callback
          if (typeof user_call_back == 'function') user_call_back.call(xhr, res);
       }
 
-      var pthis = this, method = "GET";
+      var pthis = this, method = "GET", async = true, p = kind.indexOf(";sync");
+      if (p>0) { kind.substr(0,p); async = false; }
       if (kind === "head") method = "HEAD"; else
-      if (kind === "multi") method = "POST";
+      if ((kind === "multi") || (kind==="posttext")) method = "POST";
 
       xhr.onreadystatechange = function() {
 
@@ -707,8 +723,17 @@
             return callback(null);
          }
 
+         if (JSROOT.nodejs && (method == "GET") && (kind === "object") &&
+             (xhr.responseType = 'arraybuffer') && (xhr.getResponseHeader("content-encoding")=="gzip")) {
+            // special handling of gzipped JSON objects in Node.js
+            var zlib = require('zlib'),
+                str = zlib.unzipSync(Buffer.from(xhr.response));
+            return callback(pthis.parse(str));
+         }
+
          switch(kind) {
             case "xml": return callback(xhr.responseXML);
+            case "posttext":
             case "text": return callback(xhr.responseText);
             case "object": return callback(pthis.parse(xhr.responseText));
             case "multi": return callback(pthis.parse_multi(xhr.responseText));
@@ -725,7 +750,6 @@
             var filecontent = "", u8Arr = new Uint8Array(xhr.response);
             for (var i = 0; i < u8Arr.length; ++i)
                filecontent += String.fromCharCode(u8Arr[i]);
-            delete u8Arr;
 
             return callback(filecontent);
          }
@@ -733,16 +757,12 @@
          callback(xhr.response);
       }
 
-      xhr.open(method, url, true);
+      xhr.open(method, url, async);
 
-      if ((kind == "bin") || (kind == "buf")) {
-         if ('responseType' in xhr) {
-            xhr.responseType = 'arraybuffer';
-         } else {
-            //XHR binary charset opt by Marcus Granado 2006 [http://mgran.blogspot.com]
-            xhr.overrideMimeType("text/plain; charset=x-user-defined");
-         }
-      }
+      if ((kind == "bin") || (kind == "buf")) xhr.responseType = 'arraybuffer';
+
+      if (JSROOT.nodejs && (method == "GET") && (kind === "object") && (url.indexOf('.json.gz')>0))
+         xhr.responseType = 'arraybuffer';
 
       return xhr;
    }
@@ -757,6 +777,9 @@
       // <script type="text/javascript" src="scripts/JSRootCore.js"></script>
 
       function completeLoad() {
+
+         JSROOT.complete_script_load = null;
+
          if (debugout)
             document.getElementById(debugout).innerHTML = "";
          else
@@ -768,7 +791,7 @@
          JSROOT.CallBack(callback);
       }
 
-      if ((urllist==null) || (urllist.length==0))
+      if (!urllist)
          return completeLoad();
 
       var filename = urllist, separ = filename.indexOf(";"),
@@ -799,24 +822,12 @@
          filename = filename.slice(3);
       }
 
-      var font_suffix = filename.indexOf('.typeface.json');
-      if (font_suffix > 0) {
-         var fontid = 'threejs_font_' + filename.slice(filename.lastIndexOf('/')+1, font_suffix);
-         if (typeof JSROOT[fontid] !== 'undefined') return completeLoad();
-
-         if ((typeof THREE === 'undefined') || (typeof THREE.FontLoader === 'undefined')) {
-            console.log('fail to load',filename,'no (proper) three.js found');
-            return completeLoad();
+      if (JSROOT.nodejs) {
+         if ((filename.indexOf("scripts/")===0) && (filename.indexOf(".js")>0)) {
+            console.log('load', filename);
+            require("." + filename.substr(7));
          }
-
-         JSROOT.progress("loading " + filename + " ...");
-
-         var loader = new THREE.FontLoader();
-         loader.load( filename, function ( response ) {
-            JSROOT[fontid] = response;
-            completeLoad();
-         } );
-         return;
+         return completeLoad();
       }
 
       var isstyle = filename.indexOf('.css') > 0;
@@ -843,7 +854,7 @@
       }
 
       if (isrootjs && JSROOT.source_dir) filename = JSROOT.source_dir + filename; else
-      if (isbower && JSROOT.bower_dir) filename = JSROOT.bower_dir + filename;
+      if (isbower && (JSROOT.bower_dir!==null)) filename = JSROOT.bower_dir + filename;
 
       var element = null;
 
@@ -863,17 +874,19 @@
          element.setAttribute('src', filename);
       }
 
+      JSROOT.complete_script_load = completeLoad;
+
       if (element.readyState) { // Internet Explorer specific
          element.onreadystatechange = function() {
             if (element.readyState == "loaded" || element.readyState == "complete") {
                element.onreadystatechange = null;
-               completeLoad();
+               if (JSROOT.complete_script_load) completeLoad();
             }
          }
       } else { // Other browsers
          element.onload = function() {
             element.onload = null;
-            completeLoad();
+            if (JSROOT.complete_script_load) completeLoad();
          }
       }
 
@@ -884,12 +897,16 @@
       // one could specify kind of requirements
       //     'io'  TFile functionality
       //   'tree'  TTree support
-      //     '2d'  basic 2d graphic (TCanvas, TH1)
-      // 'more2d'  extra 2d graphic (TH2, TGraph)
+      //     '2d'  basic 2d graphic (TCanvas)
+      //     '3d'  basic 3d graphic (three.js)
+      //   'hist'  histograms 2d graphic
+      // 'hist3d'  histograms 3d graphic
+      // 'more2d'  extra 2d graphic (TGraph, TF1)
       //   'math'  some methods from TMath class
       //     'jq'  jQuery and jQuery-ui
-      //   'jq2d'  jQuery-dependend part of 2d graphic
-      //     '3d'  histograms 3d graphic
+      // 'hierarchy' hierarchy browser
+      //   'jq2d'  jQuery-dependent part of hierarchy
+      // 'openui5'  OpenUI5 and related functionality
       //   'geom'  TGeo support
       // 'simple'  for basic user interface
       //  'load:'  list of user-specific scripts at the end of kind string
@@ -914,34 +931,46 @@
          if (jsroot.doing_assert.length > 1) return;
       }
 
+      function normal_callback() {
+         var req = jsroot.doing_assert.shift();
+         for (var n=0;n<req.modules.length;++n)
+            jsroot.ready_modules.push(req.modules[n]);
+         jsroot.CallBack(req._callback);
+         jsroot.AssertPrerequisites('__next__');
+      }
+
       jsroot.doing_assert[0].running = true;
 
       if (kind[kind.length-1]!=";") kind+=";";
 
       var ext = jsroot.source_min ? ".min" : "",
           need_jquery = false,
-          use_bower = (jsroot.bower_dir.length > 0),
+          use_bower = jsroot.bower_dir!==null,
           mainfiles = "",
-          extrafiles = "", // scripts for direct loadin
-          modules = [];  // modules used for require.js
+          extrafiles = "", // scripts for direct loading
+          modules = [],  // modules used for require.js
+          load_callback = normal_callback;
 
-      if ((kind.indexOf('io;')>=0) || (kind.indexOf('tree;')>=0)) {
-         mainfiles += "&&&scripts/rawinflate.min.js;" +
-                      "$$$scripts/JSRootIOEvolution" + ext + ".js;";
-         modules.push('rawinflate','JSRootIOEvolution');
-      }
+      if ((kind.indexOf('io;')>=0) || (kind.indexOf('tree;')>=0))
+         if (jsroot.sources.indexOf("io")<0) {
+            mainfiles += "&&&scripts/rawinflate.min.js;" +
+                         "$$$scripts/JSRootIOEvolution" + ext + ".js;";
+            modules.push('rawinflate','JSRootIOEvolution');
+         }
 
-      if ((kind.indexOf('math;')>=0) || (kind.indexOf('tree;')>=0) || (kind.indexOf('more2d;')>=0)) {
-         mainfiles += '$$$scripts/JSRootMath' + ext + ".js;";
-         modules.push('JSRootMath');
-      }
+      if ((kind.indexOf('math;')>=0) || (kind.indexOf('tree;')>=0) || (kind.indexOf('more2d;')>=0))
+         if (jsroot.sources.indexOf("math")<0) {
+            mainfiles += '$$$scripts/JSRootMath' + ext + ".js;";
+            modules.push('JSRootMath');
+         }
 
-      if (kind.indexOf('tree;')>=0) {
-         mainfiles += "$$$scripts/JSRootTree" + ext + ".js;";
-         modules.push('JSRootTree');
-      }
+      if (kind.indexOf('tree;')>=0)
+         if (jsroot.sources.indexOf("tree")<0) {
+            mainfiles += "$$$scripts/JSRootTree" + ext + ".js;";
+            modules.push('JSRootTree');
+         }
 
-      if (kind.indexOf('2d;')>=0) {
+      if ((kind.indexOf('2d;')>=0) || (kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0)) {
          if (jsroot._test_d3_ === undefined) {
             if ((typeof d3 == 'object') && d3.version && (d3.version[0]==="4"))  {
                jsroot.console('Reuse existing d3.js ' + d3.version + ", expected 4.4.4", debugout);
@@ -960,68 +989,94 @@
                jsroot._test_d3_ = 4;
             }
          }
-         modules.push('JSRootPainter');
-         mainfiles += '$$$scripts/JSRootPainter' + ext + ".js;";
-         extrafiles += '$$$style/JSRootPainter' + ext + '.css;';
+         if (jsroot.sources.indexOf("2d") < 0) {
+            modules.push('JSRootPainter');
+            mainfiles += '$$$scripts/JSRootPainter' + ext + ".js;";
+            extrafiles += '$$$style/JSRootPainter' + ext + '.css;';
+         }
       }
 
-      if (kind.indexOf('savepng;')>=0) {
+      if ((kind.indexOf('savepng;')>=0) && (jsroot.sources.indexOf("savepng")<0)) {
          modules.push('saveSvgAsPng');
          mainfiles += '&&&scripts/saveSvgAsPng.min.js;';
       }
 
       if (kind.indexOf('jq;')>=0) need_jquery = true;
 
-      if ((kind.indexOf('more2d;')>=0) || (kind.indexOf("3d;")>=0)) {
+      if (((kind.indexOf('hist;')>=0) || (kind.indexOf('hist3d;')>=0)) && (jsroot.sources.indexOf("hist")<0)) {
+         mainfiles += '$$$scripts/JSRootPainter.hist' + ext + ".js;";
+         modules.push('JSRootPainter.hist');
+      }
+
+      if ((kind.indexOf('more2d;')>=0) && (jsroot.sources.indexOf("more2d")<0)) {
          mainfiles += '$$$scripts/JSRootPainter.more' + ext + ".js;";
          modules.push('JSRootPainter.more');
       }
 
-      if (kind.indexOf('jq2d;')>=0) {
+      if (((kind.indexOf('hierarchy;')>=0) || (kind.indexOf('jq2d;')>=0) || (kind.indexOf('openui5;')>=0)) && (jsroot.sources.indexOf("hierarchy")<0)) {
+         mainfiles += '$$$scripts/JSRootPainter.hierarchy' + ext + ".js;";
+         modules.push('JSRootPainter.hierarchy');
+      }
+
+      if (((kind.indexOf('jq2d;')>=0) || (kind.indexOf('openui5;')>=0)) && (jsroot.sources.indexOf("jq2d")<0)) {
          mainfiles += '$$$scripts/JSRootPainter.jquery' + ext + ".js;";
          modules.push('JSRootPainter.jquery');
          need_jquery = true;
       }
 
-      if ((kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0)) {
-         if (use_bower) {
-           mainfiles += "###threejs/build/three.min.js;" +
-                        "###threejs/examples/js/renderers/Projector.js;" +
-                        "###threejs/examples/js/renderers/CanvasRenderer.js;" +
-                        "###threejs/examples/js/controls/OrbitControls.js;" +
-                        "###threejs/examples/js/controls/TransformControls.js;" +
-                        "###threejs/examples/js/shaders/CopyShader.js;" +
-                        "###threejs/examples/js/postprocessing/EffectComposer.js;" +
-                        "###threejs/examples/js/postprocessing/MaskPass.js;" +
-                        "###threejs/examples/js/postprocessing/RenderPass.js;" +
-                        "###threejs/examples/js/postprocessing/ShaderPass.js;" +
-                        "###threejs/examples/js/shaders/SSAOShader.js;"
-           extrafiles += "###threejs/examples/fonts/helvetiker_regular.typeface.json;";
-         } else {
-            mainfiles += "&&&scripts/three.min.js;" +
-                         "&&&scripts/three.extra.min.js;";
-         }
+      if ((kind.indexOf('openui5;')>=0) && (jsroot.sources.indexOf("openui5")<0)) {
+         mainfiles += '$$$scripts/JSRootPainter.openui5' + ext + ".js;";
+         modules.push('JSRootPainter.openui5');
+      }
+
+      if (((kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0)) && (jsroot.sources.indexOf("3d")<0)) {
+         mainfiles += (use_bower ? "###threejs/build/" : "&&&scripts/") + "three.min.js;" +
+                       "&&&scripts/three.extra.min.js;";
          modules.push("threejs", "threejs_all");
          mainfiles += "$$$scripts/JSRoot3DPainter" + ext + ".js;";
          modules.push('JSRoot3DPainter');
       }
 
-      if (kind.indexOf("geom;")>=0) {
+      if ((kind.indexOf('hist3d;')>=0) && (jsroot.sources.indexOf("hist3d")<0)) {
+         mainfiles += '$$$scripts/JSRootPainter.hist3d' + ext + ".js;";
+         modules.push('JSRootPainter.hist3d');
+      }
+
+      if ((kind.indexOf("geom;")>=0) && (jsroot.sources.indexOf("geom")<0)) {
+         if (!JSROOT.nodjs && (typeof window !='undefined'))
+            mainfiles += (use_bower ? "###dat.gui" : "&&&scripts") + "/dat.gui.min.js;";
          mainfiles += "$$$scripts/ThreeCSG" + ext + ".js;" +
                       "$$$scripts/JSRootGeoBase" + ext + ".js;" +
-                      "$$$scripts/JSRootGeoPainter" + ext + ".js;" +
-                      "$$$scripts/dat.gui.min.js;";
+                      "$$$scripts/JSRootGeoPainter" + ext + ".js;";
          extrafiles += "$$$style/JSRootGeoPainter" + ext + ".css;";
-         modules.push('ThreeCSG', 'JSRootGeoBase', 'JSRootGeoPainter', 'dat.gui');
+         modules.push('dat.gui', 'ThreeCSG', 'JSRootGeoBase', 'JSRootGeoPainter');
       }
 
       if (kind.indexOf("mathjax;")>=0) {
          if (typeof MathJax == 'undefined') {
             mainfiles += (use_bower ? "###MathJax/MathJax.js" : "https://root.cern/js/mathjax/latest/MathJax.js") +
-                         "?config=TeX-AMS-MML_SVG," + jsroot.source_dir + "scripts/mathjax_config.js;";
+                           "?config=TeX-AMS-MML_SVG&delayStartupUntil=configured";
+            modules.push('MathJax');
+
+            load_callback = function() {
+               MathJax.Hub.Config({ jax: ["input/TeX", "output/SVG"],
+                  TeX: { extensions: ["color.js"] },
+                  SVG: { mtextFontInherit: true, minScaleAdjust: 100, matchFontHeight: true, useFontCache: false } });
+
+               MathJax.Hub.Register.StartupHook("SVG Jax Ready",function () {
+                  var VARIANT = MathJax.OutputJax.SVG.FONTDATA.VARIANT;
+                  VARIANT["normal"].fonts.unshift("MathJax_SansSerif");
+                  VARIANT["bold"].fonts.unshift("MathJax_SansSerif-bold");
+                  VARIANT["italic"].fonts.unshift("MathJax_SansSerif");
+                  VARIANT["-tex-mathit"].fonts.unshift("MathJax_SansSerif");
+               });
+
+               MathJax.Hub.Configured();
+
+               normal_callback();
+            }
          }
          if (jsroot.gStyle.MathJax == 0) jsroot.gStyle.MathJax = 1;
-         modules.push('MathJax');
       }
 
       if (kind.indexOf("simple;")>=0) {
@@ -1047,7 +1102,7 @@
             modules.push('jqueryui-touch-punch');
          }
 
-         modules.splice(0,0, 'jquery', 'jquery-ui', 'jqueryui-mousewheel');
+         modules.splice(0, 0, 'jquery', 'jquery-ui', 'jqueryui-mousewheel');
          mainfiles = lst_jq + mainfiles;
 
          jsroot.load_jquery = true;
@@ -1056,14 +1111,6 @@
       var pos = kind.indexOf("user:");
       if (pos<0) pos = kind.indexOf("load:");
       if (pos>=0) extrafiles += kind.slice(pos+5);
-
-      function load_callback() {
-         var req = jsroot.doing_assert.shift();
-         for (var n=0;n<req.modules.length;++n)
-            jsroot.ready_modules.push(req.modules[n]);
-         jsroot.CallBack(req._callback);
-         jsroot.AssertPrerequisites('__next__');
-      }
 
       // check if modules already loaded
       for (var n=modules.length-1;n>=0;--n)
@@ -1094,7 +1141,7 @@
 
    // function can be used to draw supported ROOT classes,
    // required functionality will be loaded automatically
-   // if painter pointer required, one should load '2d' functionlity itself
+   // if painter pointer required, one should load '2d' functionality itself
    // or use callback function which provides painter pointer as first argument
    JSROOT.draw = function(divid, obj, opt, callback) {
       JSROOT.AssertPrerequisites("2d", function() {
@@ -1108,6 +1155,12 @@
       });
    }
 
+   JSROOT.MakeSVG = function(args, callback) {
+      JSROOT.AssertPrerequisites("2d", function() {
+         JSROOT.MakeSVG(args, callback);
+      });
+   }
+
    JSROOT.BuildSimpleGUI = function(user_scripts, andThen) {
       if (typeof user_scripts == 'function') {
          andThen = user_scripts;
@@ -1116,31 +1169,29 @@
 
       var debugout = null,
           nobrowser = JSROOT.GetUrlOption('nobrowser')!=null,
-          requirements = "io;2d;",
+          requirements = "2d;hierarchy;",
           simplegui = document.getElementById('simpleGUI');
+
+      if (JSROOT.GetUrlOption('libs')!==null) JSROOT.use_full_libs = true;
 
       if (simplegui) {
          debugout = 'simpleGUI';
-         if ((JSROOT.GetUrlOption('json')!=null) &&
-             (JSROOT.GetUrlOption('file')==null) &&
-             (JSROOT.GetUrlOption('files')==null)) requirements = "2d;";
+         if (JSROOT.GetUrlOption('file') || JSROOT.GetUrlOption('files')) requirements += "io;";
          if (simplegui.getAttribute('nobrowser') && (simplegui.getAttribute('nobrowser')!="false")) nobrowser = true;
-      } else
-      if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI'; requirements = "2d;"; } else
-      if (document.getElementById('drawGUI')) { debugout = 'drawGUI'; requirements = "2d;"; nobrowser = true; }
+      } else if (document.getElementById('onlineGUI')) { debugout = 'onlineGUI';
+      } else if (document.getElementById('drawGUI')) { debugout = 'drawGUI'; nobrowser = true;
+      } else requirements += "io;";
 
       if (user_scripts == 'check_existing_elements') {
          user_scripts = null;
          if (debugout == null) return;
       }
 
-      if (!nobrowser) requirements += 'jq2d;simple;';
+      if (!nobrowser) requirements += 'jq2d;';
 
-      if (user_scripts == null) user_scripts = JSROOT.GetUrlOption("autoload");
-      if (user_scripts == null) user_scripts = JSROOT.GetUrlOption("load");
+      if (!user_scripts) user_scripts = JSROOT.GetUrlOption("autoload") || JSROOT.GetUrlOption("load");
 
-      if (user_scripts != null)
-         requirements += "load:" + user_scripts + ";";
+      if (user_scripts) requirements += "load:" + user_scripts + ";";
 
       JSROOT.AssertPrerequisites(requirements, function() {
          JSROOT.CallBack(JSROOT.findFunction(nobrowser ? 'JSROOT.BuildNobrowserGUI' : 'JSROOT.BuildGUI'));
@@ -1289,7 +1340,11 @@
             JSROOT.Create("TAttFill", obj);
             JSROOT.Create("TAttMarker", obj);
             JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fHistogram: null,
-                                 fMaxSize: 0, fMaximum:-1111, fMinimum:-1111, fNpoints: 0, fX: [], fY: [] });
+                                 fMaxSize: 0, fMaximum: -1111, fMinimum: -1111, fNpoints: 0, fX: [], fY: [] });
+            break;
+         case 'TGraphAsymmErrors':
+            JSROOT.Create("TGraph", obj);
+            JSROOT.extend(obj, { fEXlow: [], fEXhigh: [], fEYlow: [], fEYhigh: []});
             break;
          case 'TMultiGraph':
             JSROOT.Create("TNamed", obj);
@@ -1359,7 +1414,7 @@
             JSROOT.extend(obj, { fDoubleBuffer: 0, fRetained: true, fXsizeUser: 0,
                                  fYsizeUser: 0, fXsizeReal: 20, fYsizeReal: 10,
                                  fWindowTopX: 0, fWindowTopY: 0, fWindowWidth: 0, fWindowHeight: 0,
-                                 fCw: 800, fCh : 500, fCatt: JSROOT.Create("TAttCanvas"),
+                                 fCw: 500, fCh: 300, fCatt: JSROOT.Create("TAttCanvas"),
                                  kMoveOpaque: true, kResizeOpaque: true, fHighLightColor: 5,
                                  fBatch: true, kShowEventStatus: false, kAutoExec: true, kMenuBar: true });
             break;
@@ -1376,6 +1431,12 @@
          case 'TGeoNodeMatrix':
             JSROOT.Create("TGeoNode", obj);
             JSROOT.extend(obj, { fMatrix: null });
+            break;
+         case 'TGeoTrack':
+            JSROOT.Create("TObject", obj);
+            JSROOT.Create("TAttLine", obj);
+            JSROOT.Create("TAttMarker", obj);
+            JSROOT.extend(obj, { fGeoAtt:0, fNpoints: 0, fPoints: [] });
             break;
       }
 
@@ -1545,6 +1606,12 @@
                     _func = this.fFormula.fFormula;
                     pprefix = "[p";
                  }
+                 if (this.fFormula.fClingParameters && this.fFormula.fParams) {
+                    for (var i=0;i<this.fFormula.fParams.length;++i) {
+                       var regex = new RegExp('(\\[' + this.fFormula.fParams[i].first + '\\])', 'g');
+                       _func = _func.replace(regex, this.fFormula.fClingParameters[this.fFormula.fParams[i].second]);
+                    }
+                 }
               }
 
               if ('formulas' in this)
@@ -1581,7 +1648,12 @@
 
               if (isformula) {
                  _func = _func.replace(/x\[0\]/g,"x");
-                 this._func = new Function("x", _func).bind(this);
+                 if (this._typename==="TF2") {
+                    _func = _func.replace(/x\[1\]/g,"y");
+                    this._func = new Function("x", "y", _func).bind(this);
+                 } else {
+                    this._func = new Function("x", _func).bind(this);
+                 }
               } else
               if (this._typename==="TF2")
                  this._func = new Function("x", "y", "return " + _func).bind(this);
@@ -1606,7 +1678,7 @@
       }
 
       if ((typename.indexOf("TGraph") == 0) || (typename == "TCutG")) {
-         // check if point inside figure specified by the TGrpah
+         // check if point inside figure specified by the TGraph
          m.IsInside = function(xp,yp) {
             var i, j = this.fNpoints - 1, x = this.fX, y = this.fY, oddNodes = false;
 
@@ -1638,7 +1710,7 @@
             return Math.sqrt(Math.abs(this.fArray[bin]));
          };
          m.setBinContent = function(bin, content) {
-            // Set bin content - only trival case, without expansion
+            // Set bin content - only trivial case, without expansion
             this.fEntries++;
             this.fTsumw = 0;
             if ((bin>=0) && (bin<this.fArray.length))
@@ -1719,12 +1791,12 @@
          m.getBinEffectiveEntries = function(bin) {
             if (bin < 0 || bin >= this.fNcells) return 0;
             var sumOfWeights = this.fBinEntries[bin];
-            if ( this.fBinSumw2 == null || this.fBinSumw2.length != this.fNcells) {
+            if ( !this.fBinSumw2 || this.fBinSumw2.length != this.fNcells) {
                // this can happen  when reading an old file
                return sumOfWeights;
             }
-            var sumOfWeightsSquare = this.fSumw2[bin];
-            return ( sumOfWeightsSquare > 0 ? sumOfWeights * sumOfWeights / sumOfWeightsSquare : 0 );
+            var sumOfWeightsSquare = this.fBinSumw2[bin];
+            return (sumOfWeightsSquare > 0) ? sumOfWeights * sumOfWeights / sumOfWeightsSquare : 0;
          };
          m.getBinError = function(bin) {
             if (bin < 0 || bin >= this.fNcells) return 0;
@@ -1738,9 +1810,7 @@
             if (this.fErrorMode === EErrorType.kERRORSPREADG)
                return 1.0/Math.sqrt(sum);
             // compute variance in y (eprim2) and standard deviation in y (eprim)
-            var contsum = cont/sum;
-            var eprim2  = Math.abs(err2/sum - contsum*contsum);
-            var eprim   = Math.sqrt(eprim2);
+            var contsum = cont/sum, eprim = Math.sqrt(Math.abs(err2/sum - contsum*contsum));
             if (this.fErrorMode === EErrorType.kERRORSPREADI) {
                if (eprim != 0) return eprim/Math.sqrt(neff);
                // in case content y is an integer (so each my has an error +/- 1/sqrt(12)
@@ -1762,6 +1832,11 @@
             if (this.fNbins <= 0) return 0;
             if ((this.fXbins.length > 0) && (bin > 0) && (bin <= this.fNbins)) return this.fXbins[bin-1];
             return this.fXmin + (bin-1) * (this.fXmax - this.fXmin) / this.fNbins;
+         }
+         m.GetBinCenter = function(bin) {
+            if (this.fNbins <= 0) return 0;
+            if ((this.fXbins.length > 0) && (bin > 0) && (bin < this.fNbins)) return (this.fXbins[bin-1] + this.fXbins[bin])/2;
+            return this.fXmin + (bin-0.5) * (this.fXmax - this.fXmin) / this.fNbins;
          }
       }
 
@@ -1894,13 +1969,13 @@
       if ( typeof define === "function" && define.amd )
          return window_on_load( function() { JSROOT.BuildSimpleGUI('check_existing_elements'); } );
 
-      if (JSROOT.GetUrlOption('libs')!=null) JSROOT.use_full_libs = true;
-
       var prereq = "";
       if (JSROOT.GetUrlOption('io', src)!=null) prereq += "io;";
       if (JSROOT.GetUrlOption('tree', src)!=null) prereq += "tree;";
       if (JSROOT.GetUrlOption('2d', src)!=null) prereq += "2d;";
-      if (JSROOT.GetUrlOption('jq2d', src)!=null) prereq += "jq2d;";
+      if (JSROOT.GetUrlOption('hist', src)!=null) prereq += "2d;hist;";
+      if (JSROOT.GetUrlOption('hierarchy', src)!=null) prereq += "2d;hierarchy;";
+      if (JSROOT.GetUrlOption('jq2d', src)!=null) prereq += "2d;hierarchy;jq2d;";
       if (JSROOT.GetUrlOption('more2d', src)!=null) prereq += "more2d;";
       if (JSROOT.GetUrlOption('geom', src)!=null) prereq += "geom;";
       if (JSROOT.GetUrlOption('3d', src)!=null) prereq += "3d;";
@@ -1916,7 +1991,7 @@
          if (bower.length>0) JSROOT.bower_dir = bower; else
             if (JSROOT.source_dir.indexOf("jsroot/") == JSROOT.source_dir.length - 7)
                JSROOT.bower_dir = JSROOT.source_dir.substr(0, JSROOT.source_dir.length - 7);
-         if (JSROOT.bower_dir.length > 0) console.log("Set JSROOT.bower_dir to " + JSROOT.bower_dir);
+         if (JSROOT.bower_dir !== null) console.log("Set JSROOT.bower_dir to " + JSROOT.bower_dir);
       }
 
       if ((prereq.length>0) || (onload!=null))

@@ -45,7 +45,7 @@ TVolume *gNode;
 //R__EXTERN  Size3D gSize3D;
 static TRotMatrix *gIdentity = 0;
 
-ClassImp(TVolume)
+ClassImp(TVolume);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TVolume  description
@@ -435,10 +435,10 @@ void TVolume::Draw(Option_t *option)
 
    Int_t iopt = atoi(option);
    TDataSet *parent = 0;
-   char buffer[10];
+   char buffer[12];
    if (iopt < 0) {
       // set the "positive option"
-      snprintf(buffer,10,"%d",-iopt);
+      snprintf(buffer,12,"%d",-iopt);
       option = buffer;
       // select parent to draw
       parent = this;

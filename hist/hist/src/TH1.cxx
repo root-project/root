@@ -53,15 +53,15 @@
 /** \addtogroup Hist
 @{
 \class TH1C
-\brief tomato 1-D histogram with a byte per channel (see TH1 documentation)
+\brief 1-D histogram with a byte per channel (see TH1 documentation)
 \class TH1S
-\brief tomato 1-D histogram with a short per channel (see TH1 documentation)
+\brief 1-D histogram with a short per channel (see TH1 documentation)
 \class TH1I
-\brief tomato 1-D histogram with an int per channel (see TH1 documentation)}
+\brief 1-D histogram with an int per channel (see TH1 documentation)}
 \class TH1F
-\brief tomato 1-D histogram with a float per channel (see TH1 documentation)}
+\brief 1-D histogram with a float per channel (see TH1 documentation)}
 \class TH1D
-\brief tomato 1-D histogram with a double per channel (see TH1 documentation)}
+\brief 1-D histogram with a double per channel (see TH1 documentation)}
 @}
 */
 
@@ -293,7 +293,7 @@ When using the options 2 or 3 above, the labels are automatically
  By default, the bin number is computed using the current axis ranges.
  If the automatic binning option has been set via
 ~~~ {.cpp}
-       h->SetCanExtend(kAllAxes);
+       h->SetCanExtend(TH1::kAllAxes);
 ~~~
  then, the Fill Function will automatically extend the axis range to
  accomodate the new value specified in the Fill argument. The method
@@ -540,7 +540,7 @@ class DifferentAxisLimits: public std::exception {};
 class DifferentBinLimits: public std::exception {};
 class DifferentLabels: public std::exception {};
 
-ClassImp(TH1)
+ClassImp(TH1);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram default constructor.
@@ -668,9 +668,9 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 ///
 /// \param[in] name name of histogram (avoid blanks)
 /// \param[in] title histogram title.
-///        If title is of the form "stringt;stringx;stringy;stringz"
-///        the histogram title is set to stringt,
-///        the x axis title to stringy, the y axis title to stringy, etc.
+///        If title is of the form `stringt;stringx;stringy;stringz`
+///        the histogram title is set to `stringt`,
+///        the x axis title to `stringy`, the y axis title to `stringy`, etc.
 /// \param[in] nbins number of bins
 /// \param[in] xbins array of low-edges for each bin.
 ///        This is an array of size nbins+1
@@ -935,7 +935,7 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
          Double_t w1 = 1., w2 = 1.;
 
          // consider all special cases  when bin errors are zero
-         // see http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=13299
+         // see http://root-forum.cern.ch/viewtopic.php?f=3&t=13299
          if (e1sq) w1 = 1. / e1sq;
          else if (h1->fSumw2.fN) {
             w1 = 1.E200; // use an arbitrary huge value
@@ -1137,7 +1137,7 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
          Double_t w1 = 1., w2 = 1.;
 
          // consider all special cases  when bin errors are zero
-         // see http://root.cern.ch/phpBB3//viewtopic.php?f=3&t=13299
+         // see http://root-forum.cern.ch/viewtopic.php?f=3&t=13299
          if (e1sq) w1 = 1./ e1sq;
          else if (h1->fSumw2.fN) {
             w1 = 1.E200; // use an arbitrary huge value
@@ -2796,7 +2796,7 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
                // c1 and c2 are ignored
                //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/(c2*b2));//this is the formula in Hbook/Hoper1
                //fSumw2.fArray[bin] = TMath::Abs(w*(1-w)/b2);     // old formula from G. Flucke
-               // formula which works also for weighted histogram (see http://root.cern.ch/phpBB2/viewtopic.php?t=3753 )
+               // formula which works also for weighted histogram (see http://root-forum.cern.ch/viewtopic.php?t=3753 )
                fSumw2.fArray[i] = TMath::Abs( ( (1. - 2.* b1 / b2) * e1sq  + b1sq * e2sq / b2sq ) / b2sq );
             } else {
                //in case b1=b2 error is zero
@@ -3236,8 +3236,10 @@ void TH1::FillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride
          else BufferFill(x[i], 1.);
       }
       // fill the remaining entries if the buffer has been deleted
-      if (i < ntimes && fBuffer==0)
-         DoFillN((ntimes-i)/stride,&x[i],&w[i],stride);
+      if (i < ntimes && fBuffer==0) {
+         auto weights = w ? &w[i] : nullptr;
+         DoFillN((ntimes-i)/stride,&x[i],weights,stride);
+      }
       return;
    }
    // call internal method
@@ -3361,6 +3363,10 @@ void TH1::FillRandom(TH1 *h, Int_t ntimes)
    if (!h) { Error("FillRandom", "Null histogram"); return; }
    if (fDimension != h->GetDimension()) {
       Error("FillRandom", "Histograms with different dimensions"); return;
+   }
+   if (std::isnan(h->ComputeIntegral(true))) {
+      Error("FillRandom", "Histograms contains negative bins, does not represent probabilities");
+      return;
    }
 
    //in case the target histogram has the same binning and ntimes much greater
@@ -7482,16 +7488,29 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    const Int_t nEXPT = 1000;
    if (opt.Contains("X") && !(afunc1 || afunc2 ) ) {
       Double_t dSEXPT;
+      TH1 *h1_cpy = (TH1 *)(gDirectory ? gDirectory->CloneObject(this, kFALSE) : gROOT->CloneObject(this, kFALSE));
       TH1 *hExpt = (TH1*)(gDirectory ? gDirectory->CloneObject(this,kFALSE) : gROOT->CloneObject(this,kFALSE));
+
+      if (h1_cpy->GetMinimum() < 0.0) {
+         // With negative bins we can't draw random samples in a meaningful way.
+         Warning("KolmogorovTest", "Detected bins with negative weights, these have been ignored and output might be "
+                                   "skewed. Reduce number of bins for histogram?");
+         while (h1_cpy->GetMinimum() < 0.0) {
+            Int_t idx = h1_cpy->GetMinimumBin();
+            h1_cpy->SetBinContent(idx, 0.0);
+         }
+      }
+
       // make nEXPT experiments (this should be a parameter)
       prb3 = 0;
       for (Int_t i=0; i < nEXPT; i++) {
          hExpt->Reset();
-         hExpt->FillRandom(h1,(Int_t)esum2);
+         hExpt->FillRandom(h1_cpy, (Int_t)esum2);
          dSEXPT = KolmogorovTest(hExpt,"M");
          if (dSEXPT>dfmax) prb3 += 1.0;
       }
       prb3 /= (Double_t)nEXPT;
+      delete h1_cpy;
       delete hExpt;
    }
 
@@ -8073,7 +8092,7 @@ void TH1::SetName(const char *name)
    //  Histograms are named objects in a THashList.
    //  We must update the hashlist if we change the name
    //  We protect this operation
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    if (fDirectory) fDirectory->Remove(this);
    fName = name;
    if (fDirectory) fDirectory->Append(this);
@@ -8304,6 +8323,12 @@ void TH1::GetLowEdge(Double_t *edge) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set the bin Error
+/// Note that this resets the bin eror option to be of Normal Type and for the 
+/// non-empty bin the bin error is set by default to the square root of their content,
+/// but in case the user sets explicitly a new bin content (using SetBinContent) he needs to provide also
+/// the error, otherwise a default error = 0 is used.
+/// 
 /// See convention for numbering bins in TH1::GetBin
 
 void TH1::SetBinError(Int_t bin, Double_t error)
@@ -8311,6 +8336,8 @@ void TH1::SetBinError(Int_t bin, Double_t error)
    if (!fSumw2.fN) Sumw2();
    if (bin < 0 || bin>= fSumw2.fN) return;
    fSumw2.fArray[bin] = error * error;
+   // reset the bin error option
+   SetBinErrorOption(kNormal);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8567,7 +8594,7 @@ std::string cling::printValue(TH1 *val) {
 // TH1C : histograms with one byte per channel.   Maximum bin content = 127
 //______________________________________________________________________________
 
-ClassImp(TH1C)
+ClassImp(TH1C);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -8748,7 +8775,7 @@ TH1C operator/(const TH1C &h1, const TH1C &h2)
 // TH1S : histograms with one short per channel.  Maximum bin content = 32767
 //______________________________________________________________________________
 
-ClassImp(TH1S)
+ClassImp(TH1S);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -8929,7 +8956,7 @@ TH1S operator/(const TH1S &h1, const TH1S &h2)
 // TH1I : histograms with one int per channel.    Maximum bin content = 2147483647
 //______________________________________________________________________________
 
-ClassImp(TH1I)
+ClassImp(TH1I);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9111,7 +9138,7 @@ TH1I operator/(const TH1I &h1, const TH1I &h2)
 // TH1F : histograms with one float per channel.  Maximum precision 7 digits
 //______________________________________________________________________________
 
-ClassImp(TH1F)
+ClassImp(TH1F);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -9290,7 +9317,7 @@ TH1F operator/(const TH1F &h1, const TH1F &h2)
 // TH1D : histograms with one double per channel. Maximum precision 14 digits
 //______________________________________________________________________________
 
-ClassImp(TH1D)
+ClassImp(TH1D);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

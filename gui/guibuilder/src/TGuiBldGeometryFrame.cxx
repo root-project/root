@@ -25,7 +25,7 @@
 #include "TGuiBldDragManager.h"
 #include "TGFrame.h"
 
-ClassImp(TGuiBldGeometryFrame)
+ClassImp(TGuiBldGeometryFrame);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

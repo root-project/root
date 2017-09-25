@@ -51,7 +51,7 @@ the respective cut value.
 #include "TMVA/Node.h"
 #include "TMVA/Tools.h"
 
-ClassImp(TMVA::BinarySearchTreeNode)
+ClassImp(TMVA::BinarySearchTreeNode);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor of a node for the search tree

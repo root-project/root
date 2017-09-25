@@ -39,7 +39,7 @@ by offering it a list of new RooAbsArg objects.
 #include "RooArgSet.h"
 #include "RooArgList.h"
 
-ClassImp(RooNameSet)
+ClassImp(RooNameSet);
 ;
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -43,13 +43,13 @@ class TApplicationRemote : public TApplication {
 
 public:
    enum ESendFileOpt {
-      kAscii            = 0x0,
-      kBinary           = 0x1,
-      kForce            = 0x2
+      kAscii  = 0x0,
+      kBinary = 0x1,
+      kForce  = 0x2
    };
    // TApplication specific bits
    enum EStatusBits {
-      kCollecting       = BIT(16)   // TRUE while collecting from server
+      kCollecting = BIT(17)   // TRUE while collecting from server
    };
 
 private:

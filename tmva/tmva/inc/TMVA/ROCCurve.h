@@ -59,6 +59,8 @@ public:
 
    ~ROCCurve();
 
+   Double_t GetEffSForEffB(Double_t effB, const UInt_t num_points = 41);
+
    Double_t GetROCIntegral(const UInt_t points = 41);
    TGraph *GetROCCurve(const UInt_t points = 100); // n divisions = #points -1
 

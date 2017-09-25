@@ -146,7 +146,7 @@ XrdClientAdmin *TXNetSystem::Connect(const char *url)
             TSocket *s = new TSocket(sd);
 
             // We will clean it by ourselves
-            R__LOCKGUARD2(gROOTMutex);
+            R__LOCKGUARD(gROOTMutex);
             gROOT->GetListOfSockets()->Remove(s);
 
             s->SetOption(kNoBlock, 0);

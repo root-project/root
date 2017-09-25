@@ -15,12 +15,12 @@
 #include "TMemFile.h"
 
 #include <condition_variable>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <queue>
 #include <thread>
 
-class TArrayC;
 class TBufferFile;
 
 namespace ROOT {
@@ -46,7 +46,6 @@ public:
    /** Constructor
     * @param name Output file name
     * @param option Output file creation options
-    * @param ftitle Output file title
     * @param compression Output file compression level
     */
    TBufferMerger(const char *name, Option_t *option = "RECREATE", Int_t compress = 1);
@@ -65,6 +64,16 @@ public:
     *  a crash if ROOT manages these objects.
     */
    std::shared_ptr<TBufferMergerFile> GetFile();
+
+   /** Returns the number of buffers currently in the queue. */
+   size_t GetQueueSize() const;
+
+   /** Register a user callback function to be called after a buffer has been
+    *  removed from the merging queue and finished being processed. This
+    *  function can be useful to allow asynchronous launching of new tasks to
+    *  push more data into the queue once its size satisfies user requirements.
+    */
+   void RegisterCallback(const std::function<void(void)> &f);
 
    friend class TBufferMergerFile;
 
@@ -89,6 +98,7 @@ private:
    std::queue<TBufferFile *> fQueue;                             //< Queue to which data is pushed and merged
    std::unique_ptr<std::thread> fMergingThread;                  //< Worker thread that writes to disk
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
+   std::function<void(void)> fCallback;                          //< Callback for when data is removed from queue
 
    ClassDef(TBufferMerger, 0);
 };

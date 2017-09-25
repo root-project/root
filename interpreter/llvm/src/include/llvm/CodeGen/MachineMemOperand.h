@@ -16,10 +16,13 @@
 #ifndef LLVM_CODEGEN_MACHINEMEMOPERAND_H
 #define LLVM_CODEGEN_MACHINEMEMOPERAND_H
 
+#include "llvm/ADT/BitmaskEnum.h"
 #include "llvm/ADT/PointerUnion.h"
 #include "llvm/CodeGen/PseudoSourceValue.h"
+#include "llvm/IR/Instructions.h"
 #include "llvm/IR/Metadata.h"
 #include "llvm/IR/Value.h"  // PointerLikeTypeTraits<Value*>
+#include "llvm/Support/AtomicOrdering.h"
 #include "llvm/Support/DataTypes.h"
 
 namespace llvm {
@@ -87,38 +90,66 @@ struct MachinePointerInfo {
 /// that aren't explicit in the regular LLVM IR.
 ///
 class MachineMemOperand {
+public:
+  /// Flags values. These may be or'd together.
+  enum Flags : uint16_t {
+    // No flags set.
+    MONone = 0,
+    /// The memory access reads data.
+    MOLoad = 1u << 0,
+    /// The memory access writes data.
+    MOStore = 1u << 1,
+    /// The memory access is volatile.
+    MOVolatile = 1u << 2,
+    /// The memory access is non-temporal.
+    MONonTemporal = 1u << 3,
+    /// The memory access is dereferenceable (i.e., doesn't trap).
+    MODereferenceable = 1u << 4,
+    /// The memory access always returns the same value (or traps).
+    MOInvariant = 1u << 5,
+
+    // Reserved for use by target-specific passes.
+    MOTargetFlag1 = 1u << 6,
+    MOTargetFlag2 = 1u << 7,
+    MOTargetFlag3 = 1u << 8,
+
+    LLVM_MARK_AS_BITMASK_ENUM(/* LargestFlag = */ MOTargetFlag3)
+  };
+
+private:
+  /// Atomic information for this memory operation.
+  struct MachineAtomicInfo {
+    /// Synchronization scope for this memory operation.
+    unsigned SynchScope : 1;      // enum SynchronizationScope
+    /// Atomic ordering requirements for this memory operation. For cmpxchg
+    /// atomic operations, atomic ordering requirements when store occurs.
+    unsigned Ordering : 4;        // enum AtomicOrdering
+    /// For cmpxchg atomic operations, atomic ordering requirements when store
+    /// does not occur.
+    unsigned FailureOrdering : 4; // enum AtomicOrdering
+  };
+
   MachinePointerInfo PtrInfo;
   uint64_t Size;
-  unsigned Flags;
+  Flags FlagVals;
+  uint16_t BaseAlignLog2; // log_2(base_alignment) + 1
+  MachineAtomicInfo AtomicInfo;
   AAMDNodes AAInfo;
   const MDNode *Ranges;
 
 public:
-  /// Flags values. These may be or'd together.
-  enum MemOperandFlags {
-    /// The memory access reads data.
-    MOLoad = 1,
-    /// The memory access writes data.
-    MOStore = 2,
-    /// The memory access is volatile.
-    MOVolatile = 4,
-    /// The memory access is non-temporal.
-    MONonTemporal = 8,
-    /// The memory access is invariant.
-    MOInvariant = 16,
-    // Target hints allow target passes to annotate memory operations.
-    MOTargetStartBit = 5,
-    MOTargetNumBits = 3,
-    // This is the number of bits we need to represent flags.
-    MOMaxBits = 8
-  };
-
   /// Construct a MachineMemOperand object with the specified PtrInfo, flags,
-  /// size, and base alignment.
-  MachineMemOperand(MachinePointerInfo PtrInfo, unsigned flags, uint64_t s,
+  /// size, and base alignment. For atomic operations the synchronization scope
+  /// and atomic ordering requirements must also be specified. For cmpxchg
+  /// atomic operations the atomic ordering requirements when store does not
+  /// occur must also be specified.
+  MachineMemOperand(MachinePointerInfo PtrInfo, Flags flags, uint64_t s,
                     unsigned base_alignment,
                     const AAMDNodes &AAInfo = AAMDNodes(),
-                    const MDNode *Ranges = nullptr);
+                    const MDNode *Ranges = nullptr,
+                    SynchronizationScope SynchScope = CrossThread,
+                    AtomicOrdering Ordering = AtomicOrdering::NotAtomic,
+                    AtomicOrdering FailureOrdering = AtomicOrdering::NotAtomic);
 
   const MachinePointerInfo &getPointerInfo() const { return PtrInfo; }
 
@@ -137,11 +168,11 @@ public:
 
   const void *getOpaqueValue() const { return PtrInfo.V.getOpaqueValue(); }
 
-  /// Return the raw flags of the source value, \see MemOperandFlags.
-  unsigned int getFlags() const { return Flags & ((1 << MOMaxBits) - 1); }
+  /// Return the raw flags of the source value, \see Flags.
+  Flags getFlags() const { return FlagVals; }
 
   /// Bitwise OR the current flags with the given flags.
-  void setFlags(unsigned f) { Flags |= (f & ((1 << MOMaxBits) - 1)); }
+  void setFlags(Flags f) { FlagVals |= f; }
 
   /// For normal values, this is a byte offset added to the base address.
   /// For PseudoSourceValue::FPRel values, this is the FrameIndex number.
@@ -158,7 +189,7 @@ public:
 
   /// Return the minimum known alignment in bytes of the base address, without
   /// the offset.
-  uint64_t getBaseAlignment() const { return (1u << (Flags >> MOMaxBits)) >> 1; }
+  uint64_t getBaseAlignment() const { return (1u << BaseAlignLog2) >> 1; }
 
   /// Return the AA tags for the memory reference.
   AAMDNodes getAAInfo() const { return AAInfo; }
@@ -166,11 +197,34 @@ public:
   /// Return the range tag for the memory reference.
   const MDNode *getRanges() const { return Ranges; }
 
-  bool isLoad() const { return Flags & MOLoad; }
-  bool isStore() const { return Flags & MOStore; }
-  bool isVolatile() const { return Flags & MOVolatile; }
-  bool isNonTemporal() const { return Flags & MONonTemporal; }
-  bool isInvariant() const { return Flags & MOInvariant; }
+  /// Return the synchronization scope for this memory operation.
+  SynchronizationScope getSynchScope() const {
+    return static_cast<SynchronizationScope>(AtomicInfo.SynchScope);
+  }
+
+  /// Return the atomic ordering requirements for this memory operation. For
+  /// cmpxchg atomic operations, return the atomic ordering requirements when
+  /// store occurs.
+  AtomicOrdering getOrdering() const {
+    return static_cast<AtomicOrdering>(AtomicInfo.Ordering);
+  }
+
+  /// For cmpxchg atomic operations, return the atomic ordering requirements
+  /// when store does not occur.
+  AtomicOrdering getFailureOrdering() const {
+    return static_cast<AtomicOrdering>(AtomicInfo.FailureOrdering);
+  }
+
+  bool isLoad() const { return FlagVals & MOLoad; }
+  bool isStore() const { return FlagVals & MOStore; }
+  bool isVolatile() const { return FlagVals & MOVolatile; }
+  bool isNonTemporal() const { return FlagVals & MONonTemporal; }
+  bool isDereferenceable() const { return FlagVals & MODereferenceable; }
+  bool isInvariant() const { return FlagVals & MOInvariant; }
+
+  /// Returns true if this operation has an atomic ordering requirement of
+  /// unordered or higher, false otherwise.
+  bool isAtomic() const { return getOrdering() != AtomicOrdering::NotAtomic; }
 
   /// Returns true if this memory operation doesn't have any ordering
   /// constraints other than normal aliasing. Volatile and atomic memory

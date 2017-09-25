@@ -45,7 +45,7 @@ in the input dataset.
 
 using namespace std;
 
-ClassImp(RooNDKeysPdf)
+ClassImp(RooNDKeysPdf);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Construct N-dimensional kernel estimation p.d.f. in observables 'varList'

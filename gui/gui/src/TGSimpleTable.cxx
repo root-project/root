@@ -22,7 +22,7 @@
 #include "TGSimpleTableInterface.h"
 #include "TGSimpleTable.h"
 
-ClassImp(TGSimpleTable)
+ClassImp(TGSimpleTable);
 
 ////////////////////////////////////////////////////////////////////////////////
 

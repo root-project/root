@@ -55,10 +55,10 @@
 #include "TColor.h"
 #include "Riostream.h"
 
-ClassImp(TGColorFrame)
-ClassImp(TG16ColorSelector)
-ClassImp(TGColorPopup)
-ClassImp(TGColorSelect)
+ClassImp(TGColorFrame);
+ClassImp(TG16ColorSelector);
+ClassImp(TGColorPopup);
+ClassImp(TGColorSelect);
 
 
 ////////////////////////////////////////////////////////////////////////////////

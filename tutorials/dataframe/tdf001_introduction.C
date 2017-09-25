@@ -11,14 +11,6 @@
 /// \author Enrico Guiraud
 
 // ## Preparation
-// This notebook can be compiled with this invocation
-// `g++ -o tdf001_introduction tdf001_introduction.C `root-config --cflags --libs` -lTreePlayer`
-
-#include "TFile.h"
-#include "TH1F.h"
-#include "TTree.h"
-
-#include "ROOT/TDataFrame.hxx"
 
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
@@ -97,17 +89,17 @@ int tdf001_introduction()
    // particular column that passed filters we specified. The values are stored
    // in a list by default, but other collections can be chosen.
    auto b1_cut = d.Filter(cutb1);
-   auto b1List = b1_cut.Take<double>();
-   auto b1Vec = b1_cut.Take<double, std::vector<double>>();
+   auto b1Vec = b1_cut.Take<double>();
+   auto b1List = b1_cut.Take<double, std::list<double>>();
 
    std::cout << "Selected b1 entries" << std::endl;
    for (auto b1_entry : *b1List) std::cout << b1_entry << " ";
    std::cout << std::endl;
    auto b1VecCl = TClass::GetClass(typeid(*b1Vec));
-   std::cout << "The type of b1Vec is" << b1VecCl->GetName() << std::endl;
+   std::cout << "The type of b1Vec is " << b1VecCl->GetName() << std::endl;
 
    // ### `Histo1D` action
-   // The `Histo1D` action allows to fill an histogram. It returns a TH1F filled
+   // The `Histo1D` action allows to fill an histogram. It returns a TH1D filled
    // with values of the column that passed the filters. For the most common
    // types, the type of the values stored in the column is automatically
    // guessed.
@@ -163,13 +155,8 @@ int tdf001_introduction()
    // Additional columns can be expressed as strings. The content must be C++
    // code. The name of the variables must be the name of the branches. The code
    // is just in time compiled.
-   auto entries_sum2 = d.Define("sum", "b1 + b2").Filter("sum > 4.2").Count();
+   auto entries_sum2 = d.Define("sum2", "b1 + b2").Filter("sum2 > 4.2").Count();
    std::cout << *entries_sum2 << std::endl;
 
    return 0;
-}
-
-int main()
-{
-   return tdf001_introduction();
 }

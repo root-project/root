@@ -145,8 +145,8 @@ static BinaryOperator *isReassociableOp(Value *V, unsigned Opcode1,
   return nullptr;
 }
 
-void ReassociatePass::BuildRankMap(
-    Function &F, ReversePostOrderTraversal<Function *> &RPOT) {
+void ReassociatePass::BuildRankMap(Function &F,
+                                   ReversePostOrderTraversal<Function*> &RPOT) {
   unsigned i = 2;
 
   // Assign distinct ranks to function arguments.
@@ -155,6 +155,7 @@ void ReassociatePass::BuildRankMap(
     DEBUG(dbgs() << "Calculated Rank[" << I->getName() << "] = " << i << "\n");
   }
 
+  // Traverse basic blocks in ReversePostOrder
   for (BasicBlock *BB : RPOT) {
     unsigned BBRank = RankMap[BB] = ++i << 16;
 
@@ -507,9 +508,10 @@ static bool LinearizeExprTree(BinaryOperator *I,
           continue;
         }
         // No uses outside the expression, try morphing it.
-      } else if (It != Leaves.end()) {
+      } else {
         // Already in the leaf map.
-        assert(Visited.count(Op) && "In leaf map but not visited!");
+        assert(It != Leaves.end() && Visited.count(Op) &&
+               "In leaf map but not visited!");
 
         // Update the number of paths to the leaf.
         IncorporateWeight(It->second, Weight, Opcode);
@@ -980,7 +982,7 @@ static unsigned FindInOperandList(SmallVectorImpl<ValueEntry> &Ops, unsigned i,
 /// Emit a tree of add instructions, summing Ops together
 /// and returning the result.  Insert the tree before I.
 static Value *EmitAddTreeOfValues(Instruction *I,
-                                  SmallVectorImpl<WeakVH> &Ops){
+                                  SmallVectorImpl<WeakTrackingVH> &Ops) {
   if (Ops.size() == 1) return Ops.back();
 
   Value *V1 = Ops.back();
@@ -1067,8 +1069,7 @@ Value *ReassociatePass::RemoveFactorFromExpression(Value *V, Value *Factor) {
 ///
 /// Ops is the top-level list of add operands we're trying to factor.
 static void FindSingleUseMultiplyFactors(Value *V,
-                                         SmallVectorImpl<Value*> &Factors,
-                                       const SmallVectorImpl<ValueEntry> &Ops) {
+                                         SmallVectorImpl<Value*> &Factors) {
   BinaryOperator *BO = isReassociableOp(V, Instruction::Mul, Instruction::FMul);
   if (!BO) {
     Factors.push_back(V);
@@ -1076,8 +1077,8 @@ static void FindSingleUseMultiplyFactors(Value *V,
   }
 
   // Otherwise, add the LHS and RHS to the list of factors.
-  FindSingleUseMultiplyFactors(BO->getOperand(1), Factors, Ops);
-  FindSingleUseMultiplyFactors(BO->getOperand(0), Factors, Ops);
+  FindSingleUseMultiplyFactors(BO->getOperand(1), Factors);
+  FindSingleUseMultiplyFactors(BO->getOperand(0), Factors);
 }
 
 /// Optimize a series of operands to an 'and', 'or', or 'xor' instruction.
@@ -1497,7 +1498,7 @@ Value *ReassociatePass::OptimizeAdd(Instruction *I,
 
     // Compute all of the factors of this added value.
     SmallVector<Value*, 8> Factors;
-    FindSingleUseMultiplyFactors(BOp, Factors, Ops);
+    FindSingleUseMultiplyFactors(BOp, Factors);
     assert(Factors.size() > 1 && "Bad linearize!");
 
     // Add one to FactorOccurrences for each unique factor in this op.
@@ -1519,8 +1520,8 @@ Value *ReassociatePass::OptimizeAdd(Instruction *I,
       if (ConstantInt *CI = dyn_cast<ConstantInt>(Factor)) {
         if (CI->isNegative() && !CI->isMinValue(true)) {
           Factor = ConstantInt::get(CI->getContext(), -CI->getValue());
-          assert(!Duplicates.count(Factor) &&
-                 "Shouldn't have two constant factors, missed a canonicalize");
+          if (!Duplicates.insert(Factor).second)
+            continue;
           unsigned Occ = ++FactorOccurrences[Factor];
           if (Occ > MaxOcc) {
             MaxOcc = Occ;
@@ -1532,8 +1533,8 @@ Value *ReassociatePass::OptimizeAdd(Instruction *I,
           APFloat F(CF->getValueAPF());
           F.changeSign();
           Factor = ConstantFP::get(CF->getContext(), F);
-          assert(!Duplicates.count(Factor) &&
-                 "Shouldn't have two constant factors, missed a canonicalize");
+          if (!Duplicates.insert(Factor).second)
+            continue;
           unsigned Occ = ++FactorOccurrences[Factor];
           if (Occ > MaxOcc) {
             MaxOcc = Occ;
@@ -1558,7 +1559,7 @@ Value *ReassociatePass::OptimizeAdd(Instruction *I,
             ? BinaryOperator::CreateAdd(MaxOccVal, MaxOccVal)
             : BinaryOperator::CreateFAdd(MaxOccVal, MaxOccVal);
 
-    SmallVector<WeakVH, 4> NewMulOps;
+    SmallVector<WeakTrackingVH, 4> NewMulOps;
     for (unsigned i = 0; i != Ops.size(); ++i) {
       // Only try to remove factors from expressions we're allowed to.
       BinaryOperator *BOp =
@@ -1776,6 +1777,12 @@ Value *ReassociatePass::OptimizeMul(BinaryOperator *I,
     return nullptr; // All distinct factors, so nothing left for us to do.
 
   IRBuilder<> Builder(I);
+  // The reassociate transformation for FP operations is performed only
+  // if unsafe algebra is permitted by FastMathFlags. Propagate those flags
+  // to the newly generated operations.
+  if (auto FPI = dyn_cast<FPMathOperator>(I))
+    Builder.setFastMathFlags(FPI->getFastMathFlags());
+
   Value *V = buildMinimalMultiplyDAG(Builder, Factors);
   if (Ops.empty())
     return V;
@@ -1863,6 +1870,8 @@ void ReassociatePass::RecursivelyEraseDeadInsts(
 /// Zap the given instruction, adding interesting operands to the work list.
 void ReassociatePass::EraseInst(Instruction *I) {
   assert(isInstructionTriviallyDead(I) && "Trivially dead instructions only!");
+  DEBUG(dbgs() << "Erasing dead inst: "; I->dump());
+
   SmallVector<Value*, 8> Ops(I->op_begin(), I->op_end());
   // Erase the dead instruction.
   ValueRankMap.erase(I);
@@ -2172,28 +2181,21 @@ void ReassociatePass::ReassociateExpression(BinaryOperator *I) {
 }
 
 PreservedAnalyses ReassociatePass::run(Function &F, FunctionAnalysisManager &) {
-  // Reassociate needs for each instruction to have its operands already
-  // processed, so we first perform a RPOT of the basic blocks so that
-  // when we process a basic block, all its dominators have been processed
-  // before.
+  // Get the functions basic blocks in Reverse Post Order. This order is used by
+  // BuildRankMap to pre calculate ranks correctly. It also excludes dead basic
+  // blocks (it has been seen that the analysis in this pass could hang when
+  // analysing dead basic blocks).
   ReversePostOrderTraversal<Function *> RPOT(&F);
+
+  // Calculate the rank map for F.
   BuildRankMap(F, RPOT);
 
   MadeChange = false;
+  // Traverse the same blocks that was analysed by BuildRankMap.
   for (BasicBlock *BI : RPOT) {
-    // Use a worklist to keep track of which instructions have been processed
-    // (and which insts won't be optimized again) so when redoing insts,
-    // optimize insts rightaway which won't be processed later.
-    SmallSet<Instruction *, 8> Worklist;
-
-    // Insert all instructions in the BB
-    for (Instruction &I : *BI)
-      Worklist.insert(&I);
-
+    assert(RankMap.count(&*BI) && "BB should be ranked.");
     // Optimize every instruction in the basic block.
-    for (BasicBlock::iterator II = BI->begin(), IE = BI->end(); II != IE;) {
-      // This instruction has been processed.
-      Worklist.erase(&*II);
+    for (BasicBlock::iterator II = BI->begin(), IE = BI->end(); II != IE;)
       if (isInstructionTriviallyDead(&*II)) {
         EraseInst(&*II++);
       } else {
@@ -2202,22 +2204,29 @@ PreservedAnalyses ReassociatePass::run(Function &F, FunctionAnalysisManager &) {
         ++II;
       }
 
-      // If the above optimizations produced new instructions to optimize or
-      // made modifications which need to be redone, do them now if they won't
-      // be handled later.
-      while (!RedoInsts.empty()) {
-        Instruction *I = RedoInsts.pop_back_val();
-        // Process instructions that won't be processed later, either
-        // inside the block itself or in another basic block (based on rank),
-        // since these will be processed later.
-        if ((I->getParent() != BI || !Worklist.count(I)) &&
-            RankMap[I->getParent()] <= RankMap[BI]) {
-          if (isInstructionTriviallyDead(I))
-            EraseInst(I);
-          else
-            OptimizeInst(I);
-        }
+    // Make a copy of all the instructions to be redone so we can remove dead
+    // instructions.
+    SetVector<AssertingVH<Instruction>> ToRedo(RedoInsts);
+    // Iterate over all instructions to be reevaluated and remove trivially dead
+    // instructions. If any operand of the trivially dead instruction becomes
+    // dead mark it for deletion as well. Continue this process until all
+    // trivially dead instructions have been removed.
+    while (!ToRedo.empty()) {
+      Instruction *I = ToRedo.pop_back_val();
+      if (isInstructionTriviallyDead(I)) {
+        RecursivelyEraseDeadInsts(I, ToRedo);
+        MadeChange = true;
       }
+    }
+
+    // Now that we have removed dead instructions, we can reoptimize the
+    // remaining instructions.
+    while (!RedoInsts.empty()) {
+      Instruction *I = RedoInsts.pop_back_val();
+      if (isInstructionTriviallyDead(I))
+        EraseInst(I);
+      else
+        OptimizeInst(I);
     }
   }
 
@@ -2226,8 +2235,8 @@ PreservedAnalyses ReassociatePass::run(Function &F, FunctionAnalysisManager &) {
   ValueRankMap.clear();
 
   if (MadeChange) {
-    // FIXME: This should also 'preserve the CFG'.
-    auto PA = PreservedAnalyses();
+    PreservedAnalyses PA;
+    PA.preserveSet<CFGAnalyses>();
     PA.preserve<GlobalsAA>();
     return PA;
   }

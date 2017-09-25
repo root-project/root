@@ -35,8 +35,8 @@
 #include "TGButton.h"
 #include "Riostream.h"
 
-ClassImp(TGedMarkerSelect)
-ClassImp(TGedMarkerPopup)
+ClassImp(TGedMarkerSelect);
+ClassImp(TGedMarkerPopup);
 
 struct MarkerDescription_t {
    const char* fFilename;  // xpm file name

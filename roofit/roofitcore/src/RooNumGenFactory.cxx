@@ -48,7 +48,7 @@ the preference of the caller as encoded in the configuration object.
 
 using namespace std ;
 
-ClassImp(RooNumGenFactory)
+ClassImp(RooNumGenFactory);
 ;
 
 RooNumGenFactory* RooNumGenFactory::_instance = 0 ;

@@ -17,7 +17,12 @@
 #include "TPad.h"
 #include "TRandom2.h"
 
-ClassImp(TCandle)
+Double_t TCandle::fWhiskerRange  = 1.0;
+Double_t TCandle::fBoxRange      = 0.5;
+Bool_t TCandle::fScaledCandle = false;
+Bool_t TCandle::fScaledViolin = true;
+
+ClassImp(TCandle);
 
 /** \class TCandle
 \ingroup BasicGraphics
@@ -39,6 +44,7 @@ TCandle::TCandle()
    fIsRaw         = 0;
    fPosCandleAxis = 0.;
    fCandleWidth   = 1.0;
+   fHistoWidth    = 1.0;
    fMean          = 0.;
    fMedian        = 0.;
    fMedianErr     = 0;
@@ -50,6 +56,7 @@ TCandle::TCandle()
    fDismiss       = 0;
    fLogX          = 0;
    fLogY          = 0;
+   fLogZ          = 0;
    fNDrawPoints   = 0;
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
@@ -57,7 +64,48 @@ TCandle::TCandle()
    fOption        = kNoOption;
    fProj          = NULL;
    fDatapoints    = 0;
+
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// TCandle constructor passing a draw-option.
+
+TCandle::TCandle(const char *opt)
+{
+   fIsCalculated  = 0;
+   fIsRaw         = 0;
+   fPosCandleAxis = 0.;
+   fCandleWidth   = 1.0;
+   fHistoWidth    = 1.0;
+   fMean          = 0.;
+   fMedian        = 0.;
+   fMedianErr     = 0;
+   fBoxUp         = 0.;
+   fBoxDown       = 0.;
+   fWhiskerUp     = 0.;
+   fWhiskerDown   = 0.;
+   fNDatapoints   = 0;
+   fDismiss = 0;
+   fLogX          = 0;
+   fLogY          = 0;
+   fLogZ          = 0;
+   fNDrawPoints   = 0;
+   fNHistoPoints  = 0;
+   fAxisMin       = 0.;
+   fAxisMax       = 0.;
+   fOption        = kNoOption;
+   fProj          = NULL;
+   fDatapoints    = 0;
+
+
+   // Conversion necessary in order to cast from const char* to char*
+   char myopt[128];
+   strlcpy(myopt,opt,128);
+
+
+   ParseOption(myopt);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TCandle constructor for raw-data candles.
@@ -78,16 +126,19 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, Long64_t 
    fIsRaw         = true;
    fPosCandleAxis = candlePos;
    fCandleWidth   = candleWidth;
+   fHistoWidth    = candleWidth;
    fDatapoints    = points;
    fProj          = NULL;
    fDismiss       = 0;
    fOption        = kNoOption;
    fLogX          = 0;
    fLogY          = 0;
+   fLogZ          = 0;
    fNDrawPoints   = 0;
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
    fAxisMax       = 0.;
+   sprintf(fOptionStr," ");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -109,16 +160,19 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
    fIsRaw         = 0;
    fPosCandleAxis = candlePos;
    fCandleWidth   = candleWidth;
+   fHistoWidth    = candleWidth;
    fDatapoints    = 0;
    fProj          = proj;
    fDismiss       = 0;
    fOption        = kNoOption;
    fLogX          = 0;
    fLogY          = 0;
+   fLogZ          = 0;
    fNDrawPoints   = 0;
    fNHistoPoints  = 0;
    fAxisMin       = 0.;
    fAxisMax       = 0.;
+   sprintf(fOptionStr," ");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,6 +180,51 @@ TCandle::TCandle(const Double_t candlePos, const Double_t candleWidth, TH1D *pro
 
 TCandle::~TCandle() {
    if (fIsRaw && fProj) delete fProj;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set fWhiskerRange, by setting whisker-range, one can force
+/// the whiskers to cover the fraction of the distribution.
+/// Set wRange between 0 and 1. Default is 1
+/// TCandle::SetWhiskerRange(0.95) will set all candle-charts to cover 95% of
+/// the distribution with the whiskers.
+/// Can only be used with the standard-whisker definition
+
+void TCandle::SetWhiskerRange(const Double_t wRange) {
+   if (wRange < 0) fWhiskerRange = 0;
+   else if (wRange > 1) fWhiskerRange = 1;
+   else fWhiskerRange = wRange;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set fBoxRange, by setting whisker-range, one can force the
+/// box of the candle-chart to cover that given fraction of the distribution.
+/// Set bRange between 0 and 1. Default is 0.5
+/// TCandle::SetBoxRange(0.68) will set all candle-charts to cover 68% of the
+/// distribution by the box
+
+void TCandle::SetBoxRange(const Double_t bRange) {
+   if (bRange < 0) fBoxRange = 0;
+   else if (bRange > 1) fBoxRange = 1;
+   else fBoxRange = bRange;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set scaling between candles-withs. A candle containing
+/// 100 entries with be two times wider than a candle containing 50 entries
+
+void TCandle::SetScaledCandle(const Bool_t cScale) {
+   fScaledCandle = cScale;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Static function to set scaling between violin-withs. A violin or histo chart
+/// with a maximum bin content to 100 will be two times as high as a violin with
+/// a maximum bin content of 50
+
+void TCandle::SetScaledViolin(const Bool_t vScale) {
+   fScaledViolin = vScale;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -142,6 +241,8 @@ int TCandle::ParseOption(char * opt) {
 
       char direction = ' ';
       char preset = ' ';
+
+
 
       if (l[6] >= 'A' && l[6] <= 'Z') direction = l[6];
       if (l[6] >= '1' && l[6] <= '9') preset = l[6];
@@ -174,6 +275,7 @@ int TCandle::ParseOption(char * opt) {
 
       Bool_t useIndivOption = false;
 
+      if (direction == ' ') direction = 'X';
       if (preset == ' ') { // Check if the user wants to set the properties individually
          char *brOpen = strstr(opt,"(");
          char *brClose = strstr(opt,")");
@@ -186,11 +288,18 @@ int TCandle::ParseOption(char * opt) {
             if (isHorizontal) {fOption = (CandleOption)(fOption + kHorizontal);}
             strncpy(brOpen,"                ",brClose-brOpen+1); //Cleanup
 
-         }
+            sprintf(fOptionStr,"CANDLE%c(%ld)",direction,(long)fOption);
+         } else {
+            preset = 1;
+            fOption = (CandleOption)(fOption + fallbackCandle);
+            }
+      } else {
+         sprintf(fOptionStr,"CANDLE%c%c",direction,preset);
       }
       //Handle option "CANDLE" ,"CANDLEX" or "CANDLEY" to behave like "CANDLEX1" or "CANDLEY1"
       if (!useIndivOption && !fOption ) {
          fOption = fallbackCandle;
+         sprintf(fOptionStr,"CANDLE%c2",direction);
       }
    }
 
@@ -224,6 +333,7 @@ int TCandle::ParseOption(char * opt) {
 
       Bool_t useIndivOption = false;
 
+      if (direction == ' ') direction = 'X';
       if (preset == ' ') { // Check if the user wants to set the properties individually
          char *brOpen = strstr(opt,"(");
          char *brClose = strstr(opt,")");
@@ -236,15 +346,24 @@ int TCandle::ParseOption(char * opt) {
             if (isHorizontal) {fOption = (CandleOption)(fOption + kHorizontal);}
             strncpy(brOpen,"                ",brClose-brOpen+1); //Cleanup
 
+            sprintf(fOptionStr,"VIOLIN%c(%ld)",direction,(long)fOption);
+
+         } else {
+            preset = 1;
+            fOption = (CandleOption)(fOption + fallbackCandle);
          }
+      } else {
+         sprintf(fOptionStr,"VIOLIN%c%c",direction,preset);
       }
       //Handle option "VIOLIN" ,"VIOLINX" or "VIOLINY" to behave like "VIOLINX1" or "VIOLINY1"
       if (!useIndivOption && !fOption ) {
          fOption = fallbackCandle;
+         sprintf(fOptionStr,"VIOLIN%c1",direction);
       }
    }
 
    fIsCalculated = false;
+
    return fOption;
 
 }
@@ -261,6 +380,7 @@ void TCandle::Calculate() {
    Bool_t swapXY = IsOption(kHorizontal);
    Bool_t doLogY = (!(swapXY) && fLogY) || (swapXY && fLogX);
    Bool_t doLogX = (!(swapXY) && fLogX) || (swapXY && fLogY);
+   Bool_t doLogZ = fLogZ;
 
    //Will be min and max values of raw-data
    Double_t min = 1e15;
@@ -268,7 +388,25 @@ void TCandle::Calculate() {
 
    // Determining the quantiles
    Double_t *prob = new Double_t[5];
-   prob[0]=1E-15; prob[1]=0.25; prob[2]=0.5; prob[3]=0.75; prob[4]=1-1E-15;
+
+   if (fWhiskerRange >= 1) {
+      prob[0] = 1e-15;
+      prob[4] = 1-1e-15;
+   } else {
+      prob[0] = 0.5 - fWhiskerRange/2.;
+      prob[4] = 0.5 + fWhiskerRange/2.;
+   }
+
+
+   if (fBoxRange >= 1) {
+      prob[1] = 1E-14;
+      prob[3] = 1-1E-14;
+   } else {
+      prob[1] = 0.5 - fBoxRange/2.;
+      prob[3] = 0.5 + fBoxRange/2.;
+   }
+
+   prob[2]=0.5;
    Double_t *quantiles = new Double_t[5];
    quantiles[0]=0.; quantiles[1]=0.; quantiles[2] = 0.; quantiles[3] = 0.; quantiles[4] = 0.;
    if (!fIsRaw && fProj) { //Need a calculation for a projected histo
@@ -440,7 +578,6 @@ void TCandle::Calculate() {
          }
       }
    }
-
    if (IsOption(kHistoRight) || IsOption(kHistoLeft) || IsOption(kHistoViolin)) {
       //We are starting with kHistoRight, left will be modified from right later
       if (fIsRaw) { //This is a raw-data candle
@@ -454,7 +591,7 @@ void TCandle::Calculate() {
 
       fNHistoPoints = 0;
       Double_t maxContent = fProj->GetMaximum();
-      Double_t maxHistoHeight = fCandleWidth*0.8;
+      Double_t maxHistoHeight = fHistoWidth;
       if (IsOption(kHistoViolin)) maxHistoHeight *= 0.5;
 
       bool isFirst = true;
@@ -476,7 +613,11 @@ void TCandle::Calculate() {
                continue;
             }
          }
+
          Double_t myBinValue = fProj->GetBinContent(bin);
+         if (doLogZ) {
+            if (myBinValue > 0) myBinValue = TMath::Log10(myBinValue); else myBinValue = 0;
+         }
          fHistoPointsX[fNHistoPoints] = fPosCandleAxis + myBinValue/maxContent*maxHistoHeight;
          fHistoPointsY[fNHistoPoints] = fProj->GetBinLowEdge(bin);
          fNHistoPoints++;

@@ -87,7 +87,7 @@ on the test sample.
 
 REGISTER_METHOD(Boost)
 
-ClassImp(TMVA::MethodBoost)
+ClassImp(TMVA::MethodBoost);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -393,7 +393,7 @@ void TMVA::MethodBoost::Train()
       // the first classifier shows the option string output, the rest not
       if (fCurrentMethodIdx>0) TMVA::MsgLogger::InhibitOutput();
 
-      IMethod* method = ClassifierFactory::Instance().Create(std::string(fBoostedMethodName),
+      IMethod* method = ClassifierFactory::Instance().Create(std::string(fBoostedMethodName.Data()),
                                                              GetJobName(),
                                                              Form("%s_B%04i", fBoostedMethodTitle.Data(),fCurrentMethodIdx),
                                                              DataInfo(),

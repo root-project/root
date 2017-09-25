@@ -77,7 +77,7 @@ char* operator+( streampos&, char* );
 
 using namespace std;
 
-ClassImp(RooMinimizer)
+ClassImp(RooMinimizer);
 ;
 
 ROOT::Fit::Fitter *RooMinimizer::_theFitter = 0 ;

@@ -1,4 +1,4 @@
-//===-- llvm/Use.h - Definition of the Use class ----------------*- C++ -*-===//
+//===- llvm/Use.h - Definition of the Use class -----------------*- C++ -*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -27,24 +27,14 @@
 
 #include "llvm/ADT/PointerIntPair.h"
 #include "llvm/Support/CBindingWrapping.h"
-#include <cstddef>
+#include "llvm/Support/Compiler.h"
+#include "llvm-c/Types.h"
 
 namespace llvm {
 
-class Value;
-class User;
-class Use;
 template <typename> struct simplify_type;
-
-// Use** is only 4-byte aligned.
-template <> class PointerLikeTypeTraits<Use **> {
-public:
-  static inline void *getAsVoidPointer(Use **P) { return P; }
-  static inline Use **getFromVoidPointer(void *P) {
-    return static_cast<Use **>(P);
-  }
-  enum { NumLowBitsAvailable = 2 };
-};
+class User;
+class Value;
 
 /// \brief A Use represents the edge between a Value definition and its users.
 ///
@@ -65,17 +55,41 @@ public:
 /// time complexity.
 class Use {
 public:
+  Use(const Use &U) = delete;
+
   /// \brief Provide a fast substitute to std::swap<Use>
   /// that also works with less standard-compliant compilers
   void swap(Use &RHS);
 
+  /// Pointer traits for the UserRef PointerIntPair. This ensures we always
+  /// use the LSB regardless of pointer alignment on different targets.
+  struct UserRefPointerTraits {
+    static inline void *getAsVoidPointer(User *P) { return P; }
+
+    static inline User *getFromVoidPointer(void *P) {
+      return (User *)P;
+    }
+
+    enum { NumLowBitsAvailable = 1 };
+  };
+
   // A type for the word following an array of hung-off Uses in memory, which is
   // a pointer back to their User with the bottom bit set.
-  typedef PointerIntPair<User *, 1, unsigned> UserRef;
+  using UserRef = PointerIntPair<User *, 1, unsigned, UserRefPointerTraits>;
+
+  /// Pointer traits for the Prev PointerIntPair. This ensures we always use
+  /// the two LSBs regardless of pointer alignment on different targets.
+  struct PrevPointerTraits {
+    static inline void *getAsVoidPointer(Use **P) { return P; }
+
+    static inline Use **getFromVoidPointer(void *P) {
+      return (Use **)P;
+    }
+
+    enum { NumLowBitsAvailable = 2 };
+  };
 
 private:
-  Use(const Use &U) = delete;
-
   /// Destructor - Only for zap()
   ~Use() {
     if (Val)
@@ -85,9 +99,11 @@ private:
   enum PrevPtrTag { zeroDigitTag, oneDigitTag, stopTag, fullStopTag };
 
   /// Constructor
-  Use(PrevPtrTag tag) : Val(nullptr) { Prev.setInt(tag); }
+  Use(PrevPtrTag tag) { Prev.setInt(tag); }
 
 public:
+  friend class Value;
+
   operator Value *() const { return Val; }
   Value *get() const { return Val; }
 
@@ -95,7 +111,7 @@ public:
   ///
   /// For an instruction operand, for example, this will return the
   /// instruction.
-  User *getUser() const;
+  User *getUser() const LLVM_READONLY;
 
   inline void set(Value *Val);
 
@@ -121,13 +137,14 @@ public:
   static void zap(Use *Start, const Use *Stop, bool del = false);
 
 private:
-  const Use *getImpliedUser() const;
+  const Use *getImpliedUser() const LLVM_READONLY;
 
-  Value *Val;
+  Value *Val = nullptr;
   Use *Next;
-  PointerIntPair<Use **, 2, PrevPtrTag> Prev;
+  PointerIntPair<Use **, 2, PrevPtrTag, PrevPointerTraits> Prev;
 
   void setPrev(Use **NewPrev) { Prev.setPointer(NewPrev); }
+
   void addToList(Use **List) {
     Next = *List;
     if (Next)
@@ -135,30 +152,31 @@ private:
     setPrev(List);
     *List = this;
   }
+
   void removeFromList() {
     Use **StrippedPrev = Prev.getPointer();
     *StrippedPrev = Next;
     if (Next)
       Next->setPrev(StrippedPrev);
   }
-
-  friend class Value;
 };
 
 /// \brief Allow clients to treat uses just like values when using
 /// casting operators.
 template <> struct simplify_type<Use> {
-  typedef Value *SimpleType;
+  using SimpleType = Value *;
+
   static SimpleType getSimplifiedValue(Use &Val) { return Val.get(); }
 };
 template <> struct simplify_type<const Use> {
-  typedef /*const*/ Value *SimpleType;
+  using SimpleType = /*const*/ Value *;
+
   static SimpleType getSimplifiedValue(const Use &Val) { return Val.get(); }
 };
 
 // Create wrappers for C Binding types (see CBindingWrapping.h).
 DEFINE_SIMPLE_CONVERSION_FUNCTIONS(Use, LLVMUseRef)
 
-}
+} // end namespace llvm
 
-#endif
+#endif // LLVM_IR_USE_H

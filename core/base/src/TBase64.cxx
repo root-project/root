@@ -20,7 +20,7 @@ protocols and to pack binary data in HTTP messages.
 
 #include "TBase64.h"
 
-ClassImp(TBase64)
+ClassImp(TBase64);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Base64 encoding of 3 bytes from in.

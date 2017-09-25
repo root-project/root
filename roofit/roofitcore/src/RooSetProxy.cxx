@@ -41,7 +41,7 @@ the serverRedirect changes.
 
 using namespace std;
 
-ClassImp(RooSetProxy)
+ClassImp(RooSetProxy);
 ;
 
 
@@ -54,7 +54,9 @@ ClassImp(RooSetProxy)
 
 void* RooSetProxy::operator new (size_t bytes)
 {
-  return malloc(bytes) ;
+  auto mem = malloc(bytes) ;
+  memset(mem, TStorage::kObjectAllocMemValue, bytes);
+  return mem;
 }
 
 

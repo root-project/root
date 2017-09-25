@@ -1,4 +1,4 @@
 #include "NdbPhotonProdXS.h"
 
-ClassImp(NdbPhotonProdXS)
+ClassImp(NdbPhotonProdXS);
 

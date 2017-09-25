@@ -106,7 +106,7 @@
 
 using namespace std ;
 
-ClassImp(RooAbsReal)
+ClassImp(RooAbsReal);
 ;
 
 Bool_t RooAbsReal::_cacheCheck(kFALSE) ;

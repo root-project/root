@@ -16,13 +16,13 @@ void candledecay()
    TH2I *h1 = new TH2I("h1","Decay",1000,0,1000,20,0,20);
 
    float myRand;
-   for (int i = 0; i < 17; i++) {
+   for (int i = 0; i < 19; i++) {
       for (int j = 0; j < 1000000; j++) {
-         myRand = rand->Gaus(350+i*5,5+5*i);
+         myRand = rand->Gaus(350+i*8,20+2*i);
          h1->Fill(myRand,i);
       }
    }
-   h1->SetBarWidth(4);
+   h1->SetBarWidth(3);
    h1->SetFillStyle(0);
    h1->SetFillColor(kGray);
    h1->SetLineColor(kBlue);
@@ -30,7 +30,7 @@ void candledecay()
    h1->GetXaxis()->SetTitle("probability density");
 
    c1->cd(1);
-   h1->Draw("violiny(12000000)");
+   h1->Draw("violiny(112000000)");
    c1->cd(2);
    TH2I *h2 = (TH2I*)h1->Clone("h2");
    h2->SetBarWidth(0.8);

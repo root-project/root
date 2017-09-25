@@ -210,14 +210,12 @@
     background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQBAMAAADt3eJSAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAABJQTFRF////n4mJcEdKRDMzcEdH////lLE/CwAAAAF0Uk5TAEDm2GYAAAABYktHRACIBR1IAAAACXBIWXMAAABIAAAASABGyWs+AAAAI0lEQVQI12NgIAowIpgKEJIZLiAgAKWZGQzQ9UGlWIizBQgAN4IAvGtVrTcAAAAldEVYdGRhdGU6Y3JlYXRlADIwMTYtMDktMDJUMTU6MDQ6MzgrMDI6MDDPyc7hAAAAJXRFWHRkYXRlOm1vZGlmeQAyMDE2LTA5LTAyVDE1OjA0OjM4KzAyOjAwvpR2XQAAAABJRU5ErkJggg==");
 }
 
-
 .jsroot .img_evetrack {
     display: inline-block;
     height: 16px;
     width: 16px;
     background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAQAAAC1+jfqAAAABGdBTUEAALGPC/xhBQAAAAFzUkdCAK7OHOkAAAAgY0hSTQAAeiYAAICEAAD6AAAAgOgAAHUwAADqYAAAOpgAABdwnLpRPAAAAAJiS0dEAP+Hj8y/AAAACXBIWXMAAABIAAAASABGyWs+AAAAqElEQVQoz32RMQrCQBBFf4IgSMB0IpGkMpVHCFh7BbHIGTyVhU0K8QYewEKsbVJZaCUiPAsXV8Puzhaz7H8zs5+JUDjikLilQr5zpCRl5xMXZNScQE5gSMGaz70jjUAJcw5c3UBMTsUe+9Kzf065SbropeLXimWfDIgoab/tOyPGzOhz53+oSWcSGh7UdB2ZNKXBZdgAuUdEKJYmrEILyVgG6pE2tEHgDfe42rbjYzSHAAAAJXRFWHRkYXRlOmNyZWF0ZQAyMDE2LTA5LTAyVDE1OjA0OjQ3KzAyOjAwM0S3EQAAACV0RVh0ZGF0ZTptb2RpZnkAMjAxNi0wOS0wMlQxNTowNDo0NyswMjowMEIZD60AAAAASUVORK5CYII=");
 }
-
 
 .jsroot .geovis_this {
     background-color: lightgreen;
@@ -229,4 +227,69 @@
 
 .jsroot .geovis_all {
     background-color: yellow;
+}
+
+/* stylesheets for toolbar buttons */
+.jsroot .toolbar {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    z-index: 1001;
+    background: rgba(255, 255, 255, 0.7);
+}
+
+.jsroot .toolbar-group {
+    float: left;
+    display: inline-block;
+    box-sizing: border-box;
+    position: relative;
+    bottom: 23px;
+    vertical-align: middle;
+    white-space: nowrap;
+}
+
+.jsroot .toolbar-group:first-child {
+    margin-left: 2px;
+}
+
+.jsroot .toolbar-group a {
+    position: relative;
+    font-size: 16px;
+    padding: 3px 1px;
+    cursor: pointer;
+    line-height: normal;
+    box-sizing: border-box;
+}
+
+.jsroot .toolbar-group a svg {
+    position: relative;
+    top: 2px;
+}
+
+.jsroot .toolbar-btn path {
+    fill: rgba(0, 31, 95, 0.2);
+}
+
+.jsroot .toolbar-btn path .active,
+.jsroot .toolbar-btn path:hover {
+    fill: rgba(0, 22, 72, 0.5);
+}
+
+.jsroot .toolbar-btn-bright path {
+    fill: rgba(255, 224, 160, 0.2);
+}
+
+.jsroot .toolbar-btn-bright path .active,
+.jsroot .toolbar-btn-bright path:hover {
+    fill: rgba(255, 233, 183, 0.5);
+}
+
+.geo_info {
+	position: absolute; 
+	text-align: center;
+	vertical-align: middle;
+	top: 45%;
+	left: 40%;
+	color: red;
+	font-size: 150%;
 }

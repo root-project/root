@@ -31,7 +31,7 @@ For RooRealVars these are the definitions of the named ranges.
 
 using namespace std;
 
-ClassImp(RooRealVarSharedProperties)
+ClassImp(RooRealVarSharedProperties);
 ;
 
 

@@ -31,6 +31,6 @@ use a TTree as internal storage mechanism
 
 using namespace std;
 
-ClassImp(RooTreeData)
+ClassImp(RooTreeData);
 ;
 

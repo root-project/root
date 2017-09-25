@@ -18,7 +18,7 @@ Array of doubles (64 bits per element).
 #include "TBuffer.h"
 
 
-ClassImp(TArrayD)
+ClassImp(TArrayD);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TArrayD ctor.
@@ -88,7 +88,8 @@ void TArrayD::Adopt(Int_t n, Double_t *arr)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add double c at position i. Check for out of bounds.
+/// Set the double c value at position i in the array. Check for out of bounds. 
+/// Warning: the name of the method is misleading, it actually overwrites the position i. 
 
 void TArrayD::AddAt(Double_t c, Int_t i)
 {

@@ -19,7 +19,7 @@
 #include "TClass.h"
 #include "TMath.h"
 
-ClassImp(TTUBE)
+ClassImp(TTUBE);
 
 /** \class TTUBE
 \ingroup g3d

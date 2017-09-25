@@ -16,6 +16,7 @@
 
 #include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/Analysis/VectorUtils.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/InstVisitor.h"
 #include "llvm/Pass.h"
@@ -148,6 +149,7 @@ public:
   bool visitPHINode(PHINode &);
   bool visitLoadInst(LoadInst &);
   bool visitStoreInst(StoreInst &);
+  bool visitCallInst(CallInst &I);
 
   static void registerOptions() {
     // This is disabled by default because having separate loads and stores
@@ -168,6 +170,8 @@ private:
   bool finish();
 
   template<typename T> bool splitBinary(Instruction &, const T &);
+
+  bool splitCall(CallInst &CI);
 
   ScatterMap Scattered;
   GatherList Gathered;
@@ -306,7 +310,11 @@ void Scalarizer::gather(Instruction *Op, const ValueVector &CV) {
   ValueVector &SV = Scattered[Op];
   if (!SV.empty()) {
     for (unsigned I = 0, E = SV.size(); I != E; ++I) {
-      Instruction *Old = cast<Instruction>(SV[I]);
+      Value *V = SV[I];
+      if (V == nullptr)
+        continue;
+
+      Instruction *Old = cast<Instruction>(V);
       CV[I]->takeName(Old);
       Old->replaceAllUsesWith(CV[I]);
       Old->eraseFromParent();
@@ -390,6 +398,77 @@ bool Scalarizer::splitBinary(Instruction &I, const Splitter &Split) {
   return true;
 }
 
+static bool isTriviallyScalariable(Intrinsic::ID ID) {
+  return isTriviallyVectorizable(ID);
+}
+
+// All of the current scalarizable intrinsics only have one mangled type.
+static Function *getScalarIntrinsicDeclaration(Module *M,
+                                               Intrinsic::ID ID,
+                                               VectorType *Ty) {
+  return Intrinsic::getDeclaration(M, ID, { Ty->getScalarType() });
+}
+
+/// If a call to a vector typed intrinsic function, split into a scalar call per
+/// element if possible for the intrinsic.
+bool Scalarizer::splitCall(CallInst &CI) {
+  VectorType *VT = dyn_cast<VectorType>(CI.getType());
+  if (!VT)
+    return false;
+
+  Function *F = CI.getCalledFunction();
+  if (!F)
+    return false;
+
+  Intrinsic::ID ID = F->getIntrinsicID();
+  if (ID == Intrinsic::not_intrinsic || !isTriviallyScalariable(ID))
+    return false;
+
+  unsigned NumElems = VT->getNumElements();
+  unsigned NumArgs = CI.getNumArgOperands();
+
+  ValueVector ScalarOperands(NumArgs);
+  SmallVector<Scatterer, 8> Scattered(NumArgs);
+
+  Scattered.resize(NumArgs);
+
+  // Assumes that any vector type has the same number of elements as the return
+  // vector type, which is true for all current intrinsics.
+  for (unsigned I = 0; I != NumArgs; ++I) {
+    Value *OpI = CI.getOperand(I);
+    if (OpI->getType()->isVectorTy()) {
+      Scattered[I] = scatter(&CI, OpI);
+      assert(Scattered[I].size() == NumElems && "mismatched call operands");
+    } else {
+      ScalarOperands[I] = OpI;
+    }
+  }
+
+  ValueVector Res(NumElems);
+  ValueVector ScalarCallOps(NumArgs);
+
+  Function *NewIntrin = getScalarIntrinsicDeclaration(F->getParent(), ID, VT);
+  IRBuilder<> Builder(&CI);
+
+  // Perform actual scalarization, taking care to preserve any scalar operands.
+  for (unsigned Elem = 0; Elem < NumElems; ++Elem) {
+    ScalarCallOps.clear();
+
+    for (unsigned J = 0; J != NumArgs; ++J) {
+      if (hasVectorInstrinsicScalarOpd(ID, J))
+        ScalarCallOps.push_back(ScalarOperands[J]);
+      else
+        ScalarCallOps.push_back(Scattered[J][Elem]);
+    }
+
+    Res[Elem] = Builder.CreateCall(NewIntrin, ScalarCallOps,
+                                   CI.getName() + ".i" + Twine(Elem));
+  }
+
+  gather(&CI, Res);
+  return true;
+}
+
 bool Scalarizer::visitSelectInst(SelectInst &SI) {
   VectorType *VT = dyn_cast<VectorType>(SI.getType());
   if (!VT)
@@ -441,12 +520,25 @@ bool Scalarizer::visitGetElementPtrInst(GetElementPtrInst &GEPI) {
   unsigned NumElems = VT->getNumElements();
   unsigned NumIndices = GEPI.getNumIndices();
 
-  Scatterer Base = scatter(&GEPI, GEPI.getOperand(0));
+  // The base pointer might be scalar even if it's a vector GEP. In those cases,
+  // splat the pointer into a vector value, and scatter that vector.
+  Value *Op0 = GEPI.getOperand(0);
+  if (!Op0->getType()->isVectorTy())
+    Op0 = Builder.CreateVectorSplat(NumElems, Op0);
+  Scatterer Base = scatter(&GEPI, Op0);
 
   SmallVector<Scatterer, 8> Ops;
   Ops.resize(NumIndices);
-  for (unsigned I = 0; I < NumIndices; ++I)
-    Ops[I] = scatter(&GEPI, GEPI.getOperand(I + 1));
+  for (unsigned I = 0; I < NumIndices; ++I) {
+    Value *Op = GEPI.getOperand(I + 1);
+
+    // The indices might be scalars even if it's a vector GEP. In those cases,
+    // splat the scalar into a vector value, and scatter that vector.
+    if (!Op->getType()->isVectorTy())
+      Op = Builder.CreateVectorSplat(NumElems, Op);
+
+    Ops[I] = scatter(&GEPI, Op);
+  }
 
   ValueVector Res;
   Res.resize(NumElems);
@@ -636,6 +728,10 @@ bool Scalarizer::visitStoreInst(StoreInst &SI) {
   }
   transferMetadata(&SI, Stores);
   return true;
+}
+
+bool Scalarizer::visitCallInst(CallInst &CI) {
+  return splitCall(CI);
 }
 
 // Delete the instructions that we scalarized.  If a full vector result

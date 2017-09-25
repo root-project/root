@@ -78,7 +78,7 @@ is due to different locations/angles.
 
 REGISTER_METHOD(Category)
 
-ClassImp(TMVA::MethodCategory)
+ClassImp(TMVA::MethodCategory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// standard constructor
@@ -147,7 +147,7 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
                                                 const TString& theTitle,
                                                 const TString& theOptions )
 {
-   std::string addedMethodName = std::string(Types::Instance().GetMethodName(theMethod));
+   std::string addedMethodName = std::string(Types::Instance().GetMethodName(theMethod).Data());
 
    Log() << kINFO << "Adding sub-classifier: " << addedMethodName << "::" << theTitle << Endl;
 

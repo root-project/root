@@ -23,7 +23,7 @@
 #include "TClass.h"
 #include "TROOT.h"
 
-ClassImp(TLinearFitter)
+ClassImp(TLinearFitter);
 
 
 std::map<TString,TFormula*> TLinearFitter::fgFormulaMap;
@@ -1594,7 +1594,7 @@ void TLinearFitter::SetFormula(const char *formula)
             // create a new formula and add in the static map
             f = new TFormula("f", replaceformula.Data());
             {
-               R__LOCKGUARD2(gROOTMutex);
+               R__LOCKGUARD(gROOTMutex);
                fgFormulaMap[replaceformula]=f;
             }
          }

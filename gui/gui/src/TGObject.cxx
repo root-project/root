@@ -34,7 +34,7 @@
 #include "TVirtualX.h"
 #include "TImage.h"
 
-ClassImp(TGObject)
+ClassImp(TGObject);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write this TGObject to a file using TImage, if filename's extension signals

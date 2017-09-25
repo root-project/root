@@ -40,7 +40,7 @@ discrete dimensions.
 
 using namespace std;
 
-ClassImp(RooHistPdf)
+ClassImp(RooHistPdf);
 ;
 
 

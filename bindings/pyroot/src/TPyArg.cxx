@@ -17,7 +17,7 @@
 
 
 //- data ---------------------------------------------------------------------
-ClassImp(TPyArg)
+ClassImp(TPyArg);
 
 //- constructor dispatcher ---------------------------------------------------
 void TPyArg::CallConstructor( PyObject*& pyself, PyObject* pyclass, const std::vector<TPyArg>& args )

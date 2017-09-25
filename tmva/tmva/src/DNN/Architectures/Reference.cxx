@@ -27,6 +27,8 @@
 
 namespace TMVA {
 namespace DNN  {
+
+template class TReference<Real_t>;
 template class TReference<Double_t>;
 } // namespace TMVA
 } // namespace DNN

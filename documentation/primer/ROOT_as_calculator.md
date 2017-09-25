@@ -27,17 +27,17 @@ and let's dive in with the steps shown here:
 
 ``` {.cpp}
 root [0] 1+1
-(int)2
+(int) 2
 root [1] 2*(4+2)/12.
-(double) 1.000000e+00
+(double) 1.000000
 root [2] sqrt(3.)
-(double) 1.732051e+00
+(double) 1.732051
 root [3] 1 > 2
 (bool) false
 root [4] TMath::Pi()
-(Double_t) 3.141593e+00
+(double) 3.141593
 root [5] TMath::Erf(.2)
-(Double_t) 2.227026e-01
+(double) 0.222703
 ```
 
 Not bad. You can see that ROOT offers you the possibility not only to
@@ -49,14 +49,14 @@ well known geometrical series:
 
 ``` {.cpp}
 root [6] double x=.5
-(double) 5.000000e-01
+(double) 0.500000
 root [7] int N=30
 (int) 30
 root [8] double geom_series=0
-(double) 0.000000e+00
+(double) 0.000000
 root [9] for (int i=0;i<N;++i)geom_series+=TMath::Power(x,i)
-root [10] TMath::Abs(geom_series - (1-TMath::Power(x,N-1))/(1-x))
-(Double_t) 1.862645e-09
+root [10]  cout << TMath::Abs(geom_series - (1-TMath::Power(x,N-1))/(1-x)) <<endl;
+1.86265e-09
 ```
 
 Here we made a step forward. We even declared variables and used a *for*

@@ -26,7 +26,7 @@
 
 using namespace std;
 
-ClassImp(RooHashTable)
+ClassImp(RooHashTable);
 ;
 
 /**

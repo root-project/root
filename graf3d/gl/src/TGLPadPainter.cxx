@@ -53,7 +53,7 @@ it will be mess - at any moment I do not know, where to take line attribute - fr
 gVirtualX or from my own member. So! All attributed, _ALL_ go to/from gVirtualX.
 */
 
-ClassImp(TGLPadPainter)
+ClassImp(TGLPadPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -280,14 +280,14 @@ void TGLPadPainter::ClearDrawable()
 ////////////////////////////////////////////////////////////////////////////////
 ///Not required at the moment.
 
-void TGLPadPainter::CopyDrawable(Int_t /*id*/, Int_t /*px*/, Int_t /*py*/)
+void TGLPadPainter::CopyDrawable(Int_t /*device*/, Int_t /*px*/, Int_t /*py*/)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Not required at the moment.
 
-void TGLPadPainter::DestroyDrawable()
+void TGLPadPainter::DestroyDrawable(Int_t /*device*/)
 {
 }
 

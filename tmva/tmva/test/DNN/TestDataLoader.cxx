@@ -20,7 +20,20 @@ using namespace TMVA::DNN;
 
 int main ()
 {
-   Double_t error = testIdentity<TReference<Double_t>>();
-   std::cout << "Testing reference data loader: Mex. rel. error = " << error;
-   std::cout << std::endl;
+   using Scalar_t = Real_t;
+
+   std::cout << "Testing data loader:" << std::endl;
+
+   Scalar_t maximumError = 0.0;
+
+   Scalar_t error = testSum<TReference<Scalar_t>>();
+   std::cout << "Sum:      Maximum relative error = " << error << std::endl;
+   maximumError = std::max(error, maximumError);
+   error = testIdentity<TReference<Scalar_t>>();
+   std::cout << "Identity: Maximum relative error = " << error << std::endl;
+   maximumError = std::max(error, maximumError);
+
+   if (maximumError > 1e-3) {
+      return 1;
+   }
 }

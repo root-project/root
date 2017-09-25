@@ -101,6 +101,27 @@ RScanner::~RScanner ()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Whether we can actually visit this declaration, i.e. if it is reachable
+/// via name lookup.
+///
+/// RScanner shouldn't touch decls for which this method returns false as we
+/// call Sema methods on those declarations. Those will fail in strange way as
+/// they assume those decls are already visible.
+///
+/// The main problem this is supposed to prevent is when we use C++ modules and
+/// have hidden declarations in our AST. Usually they can't be found as they are
+/// hidden from name lookup until their module is actually imported, but as the
+/// RecursiveASTVisitor is not supposed to be restricted by lookup limitations,
+/// it still reaches those hidden declarations.
+bool RScanner::shouldVisitDecl(clang::NamedDecl *D)
+{
+   if (auto M = D->getOwningModule()) {
+      return fInterpreter.getSema().isModuleVisible(M);
+   }
+   return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 inline void* ToDeclProp(clang::Decl* item)
 {
@@ -302,7 +323,7 @@ void RScanner::UnimplementedDecl(clang::Decl* D, const std::string &txt)
    clang::Decl::Kind k = D->getKind();
 
    bool show = true;
-   if (k >= 0 || k <= fgDeclLast) {
+   if (k <= fgDeclLast) {
       if (fDeclTable [k])
          show = false; // already displayed
       else
@@ -455,6 +476,9 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
    if (fScanType == EScanType::kOnePCM)
       return true;
 
+   if (!shouldVisitDecl(N))
+      return true;
+
    // in case it is implicit we don't create a builder
    if((N && N->isImplicit()) || !N){
       return true;
@@ -490,6 +514,9 @@ bool RScanner::VisitNamespaceDecl(clang::NamespaceDecl* N)
 
 bool RScanner::VisitRecordDecl(clang::RecordDecl* D)
 {
+   if (!shouldVisitDecl(D))
+      return true;
+
    // This method visits a class node
    return TreatRecordDeclOrTypedefNameDecl(D);
 
@@ -806,6 +833,9 @@ bool RScanner::VisitTypedefNameDecl(clang::TypedefNameDecl* D)
    if (fScanType == EScanType::kOnePCM)
       return true;
 
+   if (!shouldVisitDecl(D))
+      return true;
+
    const clang::DeclContext *ctx = D->getDeclContext();
 
    bool isInStd=false;
@@ -829,6 +859,9 @@ bool RScanner::VisitEnumDecl(clang::EnumDecl* D)
    if (fScanType == EScanType::kOnePCM)
       return true;
 
+   if (!shouldVisitDecl(D))
+      return true;
+
    if(fSelectionRules.IsDeclSelected(D) &&
       !IsElementPresent(fSelectedEnums, D)){ // Removal of duplicates.
       fSelectedEnums.push_back(D);
@@ -843,6 +876,9 @@ bool RScanner::VisitVarDecl(clang::VarDecl* D)
 {
    if (!D->hasGlobalStorage() ||
        fScanType == EScanType::kOnePCM)
+      return true;
+
+   if (!shouldVisitDecl(D))
       return true;
 
    if(fSelectionRules.IsDeclSelected(D)){
@@ -880,6 +916,9 @@ bool RScanner::VisitFieldDecl(clang::FieldDecl* D)
 bool RScanner::VisitFunctionDecl(clang::FunctionDecl* D)
 {
    if (fScanType == EScanType::kOnePCM)
+      return true;
+
+   if (!shouldVisitDecl(D))
       return true;
 
    if(clang::FunctionDecl::TemplatedKind::TK_FunctionTemplate == D->getTemplatedKind())

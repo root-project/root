@@ -115,12 +115,12 @@ const TGGC   *TGRadioButton::fgDefaultGC = 0;
 
 Window_t TGButton::fgReleaseBtn = 0;
 
-ClassImp(TGButton)
-ClassImp(TGTextButton)
-ClassImp(TGPictureButton)
-ClassImp(TGCheckButton)
-ClassImp(TGRadioButton)
-ClassImp(TGSplitButton)
+ClassImp(TGButton);
+ClassImp(TGTextButton);
+ClassImp(TGPictureButton);
+ClassImp(TGCheckButton);
+ClassImp(TGRadioButton);
+ClassImp(TGSplitButton);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create button base class part.

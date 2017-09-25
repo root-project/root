@@ -96,7 +96,7 @@ The Physical disk speed is DiskIO + DiskIO*ReadExtra/100.
 #include "TDatime.h"
 #include "TMath.h"
 
-ClassImp(TTreePerfStats)
+ClassImp(TTreePerfStats);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor (used when reading an object only)

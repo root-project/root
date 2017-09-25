@@ -54,7 +54,7 @@ TString TProofProgressDialog::fgTextQueryDefault = "last";
 
 //static const Int_t gSVNMemPlot = 25090;
 
-ClassImp(TProofProgressDialog)
+ClassImp(TProofProgressDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create PROOF processing progress dialog.

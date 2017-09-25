@@ -65,7 +65,7 @@ struct BasisFunction {
 //__________________________________________________________________________________________
 
 
-ClassImp(TLinearMinimizer)
+ClassImp(TLinearMinimizer);
 
 
 TLinearMinimizer::TLinearMinimizer(int ) :

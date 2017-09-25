@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
+/// \notebook
 /// Parallel fill of a histogram.
 /// This tutorial shows how a histogram can be filled in parallel
 /// with a multiprocess approach.
@@ -7,8 +8,8 @@
 /// \macro_image
 /// \macro_code
 ///
-/// \author Danilo Piparo.
 /// \date January 2016
+/// \author Danilo Piparo.
 
 const UInt_t poolSize = 4U;
 

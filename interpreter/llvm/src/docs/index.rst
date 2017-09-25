@@ -179,6 +179,7 @@ For developers of applications which use LLVM as a library.
    Extensions
    LibFuzzer
    ScudoHardenedAllocator
+   OptBisect
 
 :doc:`LLVM Language Reference Manual <LangRef>`
   Defines the LLVM intermediate representation and the assembly form of the
@@ -226,6 +227,9 @@ For developers of applications which use LLVM as a library.
 :doc:`ScudoHardenedAllocator`
   A library that implements a security-hardened `malloc()`.
 
+:doc:`OptBisect`
+  A command line option for debugging optimization-induced failures.
+
 Subsystem Documentation
 =======================
 
@@ -235,6 +239,7 @@ For API clients and LLVM developers.
    :hidden:
 
    AliasAnalysis
+   MemorySSA
    BitCodeFormat
    BlockFrequencyTerminology
    BranchWeightMetadata
@@ -266,6 +271,11 @@ For API clients and LLVM developers.
    TypeMetadata
    FaultMaps
    MIRLangRef
+   Coroutines
+   GlobalISel
+   XRay
+   XRayExample
+   PDB/index
 
 :doc:`WritingAnLLVMPass`
    Information on how to write LLVM transformations and analyses.
@@ -289,6 +299,9 @@ For API clients and LLVM developers.
 :doc:`AliasAnalysis`
    Information on how to write a new alias analysis implementation or how to
    use existing analyses.
+
+:doc:`MemorySSA`
+   Information about the MemorySSA utility in LLVM, as well as how to use it.
 
 :doc:`GarbageCollection`
    The interfaces source-language compilers should use for compiling GC'd
@@ -377,6 +390,21 @@ For API clients and LLVM developers.
 
 :doc:`CompileCudaWithLLVM`
   LLVM support for CUDA.
+
+:doc:`Coroutines`
+  LLVM support for coroutines.
+
+:doc:`GlobalISel`
+  This describes the prototype instruction selection replacement, GlobalISel.
+
+:doc:`XRay`
+  High-level documentation of how to use XRay in LLVM.
+
+:doc:`XRayExample`
+  An example of how to debug an application with XRay.
+
+:doc:`The Microsoft PDB File Format <PDB/index>`
+  A detailed description of the Microsoft PDB (Program Database) file format.
 
 Development Process Documentation
 =================================
@@ -487,6 +515,25 @@ This channel has several bots.
 
 * clang-bot - A `geordi <http://www.eelis.net/geordi/>`_ instance running
   near-trunk clang instead of gcc.
+
+Community wide proposals
+------------------------
+
+Proposals for massive changes in how the community behaves and how the work flow
+can be better.
+
+.. toctree::
+   :hidden:
+
+   CodeOfConduct
+   Proposals/GitHubMove
+
+:doc:`CodeOfConduct`
+   Proposal to adopt a code of conduct on the LLVM social spaces (lists, events,
+   IRC, etc).
+
+:doc:`Proposals/GitHubMove`
+   Proposal to move from SVN/Git to GitHub.
 
 
 Indices and tables

@@ -248,7 +248,7 @@ Bool_t TBlinkTimer::Notify()
 }
 
 
-ClassImp(TGTextEntry)
+ClassImp(TGTextEntry);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a text entry widget. It will adopt the TGTextBuffer object

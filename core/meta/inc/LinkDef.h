@@ -32,7 +32,6 @@
 #pragma link C++ class TEnum+;
 #pragma link C++ class TFunction;
 #pragma link C++ class TFunctionTemplate+;
-#pragma link C++ class ROOT::Internal::TSchemaMatch+;
 #pragma link C++ class ROOT::TSchemaRule+;
 #pragma link C++ class ROOT::TSchemaRule::TSources+;
 #pragma link C++ class ROOT::Detail::TSchemaRuleSet-;
@@ -72,6 +71,7 @@
 #pragma link C++ class TListOfEnums+;
 #pragma link C++ class TListOfEnumsWithLock+;
 #pragma link C++ class TListOfEnumsWithLockIter;
+#pragma link C++ class ROOT::Detail::TStatusBitsChecker-;
 //for new protoclasses
 #pragma link C++ class std::vector<TDataMember * >+;
 #pragma link C++ class std::vector<TProtoClass::TProtoRealData >+;

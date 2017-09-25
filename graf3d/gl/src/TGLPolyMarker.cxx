@@ -31,7 +31,7 @@
 To draw a 3D polymarker in a GL window.
 */
 
-ClassImp(TGLPolyMarker)
+ClassImp(TGLPolyMarker);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///TAttMarker is not TObject descendant, so I need dynamic_cast

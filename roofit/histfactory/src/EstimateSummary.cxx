@@ -21,7 +21,7 @@ END_HTML
 #include <algorithm>
 #include "RooStats/HistFactory/EstimateSummary.h"
 
-ClassImp(RooStats::HistFactory::EstimateSummary)
+ClassImp(RooStats::HistFactory::EstimateSummary);
 
 using namespace std; 
 

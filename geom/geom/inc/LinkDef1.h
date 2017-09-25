@@ -47,11 +47,15 @@
 #pragma link C++ class TGeoTube+;
 #pragma link C++ class TGeoTorus+;
 #pragma link C++ class TGeoTubeSeg+;
+#pragma read sourceClass="TGeoTubeSeg" targetClass="TGeoTubeSeg" version="[1]" source="" target="" \
+    code="{ newObj->AfterStreamer() ; }" 
 #pragma link C++ class TGeoCtub+;
 #pragma link C++ class TGeoEltu+;
 #pragma link C++ class TGeoHype+;
 #pragma link C++ class TGeoCone+;
 #pragma link C++ class TGeoConeSeg+;
+#pragma read sourceClass="TGeoConeSeg" targetClass="TGeoConeSeg" version="[1]" source="" target="" \
+    code="{ newObj->AfterStreamer() ; }" 
 #pragma link C++ class TGeoParaboloid+;
 #pragma link C++ class TGeoPcon-;
 #pragma link C++ class TGeoPgon+;

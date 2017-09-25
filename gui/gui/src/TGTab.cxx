@@ -46,9 +46,9 @@
 const TGFont *TGTab::fgDefaultFont = 0;
 const TGGC   *TGTab::fgDefaultGC = 0;
 
-ClassImp(TGTabElement)
-ClassImp(TGTabLayout)
-ClassImp(TGTab)
+ClassImp(TGTabElement);
+ClassImp(TGTabLayout);
+ClassImp(TGTab);
 
 
 ////////////////////////////////////////////////////////////////////////////////

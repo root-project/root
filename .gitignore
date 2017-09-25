@@ -31,15 +31,24 @@ project.xcworkspace
 
 # Visual Code
 .vscode/*
+.build
 
 # CLion
 .idea/*
+
+# QtCreator
+CMakeLists.txt.user
+*.autosave
+
+# Eclipse
+.settings/*
 
 # Vim
 *.swp
 
 # Other Stuff
 *.d
+tags
 
 # /
 /bin
@@ -79,6 +88,10 @@ project.xcworkspace
 
 # /core/lzma/src/
 /core/lzma/src/xz-5.2.1
+
+# /core/lz4/src
+/core/lz4/src/*.tar.gz
+/core/lz4/src/lz4-*
 
 # /core/metautils/src/
 /core/metautils/src/stlLoader_set.cc

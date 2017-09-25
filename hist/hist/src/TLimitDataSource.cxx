@@ -13,7 +13,7 @@
 #include "TObjString.h"
 #include "TRandom3.h"
 
-ClassImp(TLimitDataSource)
+ClassImp(TLimitDataSource);
 
 TLimitDataSource::TLimitDataSource()
 {

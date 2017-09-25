@@ -17,7 +17,7 @@
 bool TQRootApplication::fgDebug=kFALSE;
 bool TQRootApplication::fgWarning=kFALSE;
 
-ClassImp(TQRootApplication)
+ClassImp(TQRootApplication);
 
 ////////////////////////////////////////////////////////////////////////////////
 

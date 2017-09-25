@@ -44,7 +44,7 @@ to test that assumption.
 
 using namespace std;
 
-ClassImp(RooDLLSignificanceMCSModule)
+ClassImp(RooDLLSignificanceMCSModule);
   ;
 
 

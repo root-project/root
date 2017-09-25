@@ -77,6 +77,9 @@ struct AssemblerInvocation {
   /// be a list of strings starting with '+' or '-'.
   std::vector<std::string> Features;
 
+  /// The list of symbol definitions.
+  std::vector<std::string> SymbolDefs;
+
   /// @}
   /// @name Language Options
   /// @{
@@ -209,13 +212,11 @@ bool AssemblerInvocation::CreateFromArgs(AssemblerInvocation &Opts,
   // Frontend Options
   if (Args.hasArg(OPT_INPUT)) {
     bool First = true;
-    for (arg_iterator it = Args.filtered_begin(OPT_INPUT),
-                      ie = Args.filtered_end();
-         it != ie; ++it, First = false) {
-      const Arg *A = it;
-      if (First)
+    for (const Arg *A : Args.filtered(OPT_INPUT)) {
+      if (First) {
         Opts.InputFile = A->getValue();
-      else {
+        First = false;
+      } else {
         Diags.Report(diag::err_drv_unknown_argument) << A->getAsString(Args);
         Success = false;
       }
@@ -252,6 +253,7 @@ bool AssemblerInvocation::CreateFromArgs(AssemblerInvocation &Opts,
   Opts.RelocationModel = Args.getLastArgValue(OPT_mrelocation_model, "pic");
   Opts.IncrementalLinkerCompatible =
       Args.hasArg(OPT_mincremental_linker_compatible);
+  Opts.SymbolDefs = Args.getAllArgValues(OPT_defsym);
 
   return Success;
 }
@@ -379,7 +381,8 @@ static bool ExecuteAssembler(AssemblerInvocation &Opts,
     MCAsmBackend *MAB = nullptr;
     if (Opts.ShowEncoding) {
       CE = TheTarget->createMCCodeEmitter(*MCII, *MRI, Ctx);
-      MAB = TheTarget->createMCAsmBackend(*MRI, Opts.Triple, Opts.CPU);
+      MCTargetOptions Options;
+      MAB = TheTarget->createMCAsmBackend(*MRI, Opts.Triple, Opts.CPU, Options);
     }
     auto FOut = llvm::make_unique<formatted_raw_ostream>(*Out);
     Str.reset(TheTarget->createAsmStreamer(
@@ -396,8 +399,9 @@ static bool ExecuteAssembler(AssemblerInvocation &Opts,
     }
 
     MCCodeEmitter *CE = TheTarget->createMCCodeEmitter(*MCII, *MRI, Ctx);
+    MCTargetOptions Options;
     MCAsmBackend *MAB = TheTarget->createMCAsmBackend(*MRI, Opts.Triple,
-                                                      Opts.CPU);
+                                                      Opts.CPU, Options);
     Triple T(Opts.Triple);
     Str.reset(TheTarget->createMCObjectStreamer(
         T, Ctx, *MAB, *Out, CE, *STI, Opts.RelaxAll,
@@ -417,6 +421,17 @@ static bool ExecuteAssembler(AssemblerInvocation &Opts,
       TheTarget->createMCAsmParser(*STI, *Parser, *MCII, Options));
   if (!TAP)
     Failed = Diags.Report(diag::err_target_unknown_triple) << Opts.Triple;
+
+  // Set values for symbols, if any.
+  for (auto &S : Opts.SymbolDefs) {
+    auto Pair = StringRef(S).split('=');
+    auto Sym = Pair.first;
+    auto Val = Pair.second;
+    int64_t Value;
+    // We have already error checked this in the driver.
+    Val.getAsInteger(0, Value);
+    Ctx.setSymbolValue(Parser->getStreamer(), Sym, Value);
+  }
 
   if (!Failed) {
     Parser->setTargetParser(*TAP.get());
@@ -491,12 +506,12 @@ int cc1as_main(ArrayRef<const char *> Argv, const char *Argv0, void *MainAddr) {
   // FIXME: Remove this, one day.
   if (!Asm.LLVMArgs.empty()) {
     unsigned NumArgs = Asm.LLVMArgs.size();
-    const char **Args = new const char*[NumArgs + 2];
+    auto Args = llvm::make_unique<const char*[]>(NumArgs + 2);
     Args[0] = "clang (LLVM option parsing)";
     for (unsigned i = 0; i != NumArgs; ++i)
       Args[i + 1] = Asm.LLVMArgs[i].c_str();
     Args[NumArgs + 1] = nullptr;
-    llvm::cl::ParseCommandLineOptions(NumArgs + 1, Args);
+    llvm::cl::ParseCommandLineOptions(NumArgs + 1, Args.get());
   }
 
   // Execute the invocation, unless there were parsing errors.

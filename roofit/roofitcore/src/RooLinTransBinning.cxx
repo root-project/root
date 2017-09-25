@@ -32,7 +32,7 @@ way that RooLinearVar does
 
 using namespace std;
 
-ClassImp(RooLinTransBinning) 
+ClassImp(RooLinTransBinning); 
 ;
 
 

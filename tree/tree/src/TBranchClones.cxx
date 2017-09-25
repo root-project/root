@@ -23,7 +23,7 @@
 
 #include <cstring>
 
-ClassImp(TBranchClones)
+ClassImp(TBranchClones);
 
 /** \class TBranchClones
 \ingroup tree

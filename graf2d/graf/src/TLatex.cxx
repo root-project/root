@@ -20,7 +20,7 @@
 
 const Double_t kPI = TMath::Pi();
 
-ClassImp(TLatex)
+ClassImp(TLatex);
 
 /** \class TLatex
 \ingroup BasicGraphics
@@ -326,7 +326,7 @@ Begin_Macro
    TLatex Tl; Tl.SetTextFont(43); Tl.SetTextSize(20);
    Double_t dy = 1./3.;
    Tl.DrawText(.01, dy,   "abc#alpha#beta#gamma, #it{abc#alpha#beta#gamma} :");    Tl.DrawLatex(.7, dy,   "abc#alpha#beta#gamma, #it{abc#alpha#beta#gamma}");
-   Tl.DrawText(.01, 2*dy, "#bf{bold}, #it{italic}, #bf{#it{bold italic}}, #bf{#bf{unbold}}} :");    Tl.DrawLatex(.7, 2*dy, "#bf{bold}, #it{italic}, #bf{#it{bold italic}}, #bf{#bf{unbold}}}");
+   Tl.DrawText(.01, 2*dy, "#bf{bold}, #it{italic}, #bf{#it{bold italic}}, #bf{#bf{unbold}} :");    Tl.DrawLatex(.7, 2*dy, "#bf{bold}, #it{italic}, #bf{#it{bold italic}}, #bf{#bf{unbold}}");
 }
 End_Macro
 

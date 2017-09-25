@@ -1,4 +1,4 @@
-//===--- SortJavaScriptImports.h - Sort ES6 Imports -------------*- C++ -*-===//
+//===--- SortJavaScriptImports.cpp - Sort ES6 Imports -----------*- C++ -*-===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -12,7 +12,6 @@
 ///
 //===----------------------------------------------------------------------===//
 
-#include "SortJavaScriptImports.h"
 #include "SortJavaScriptImports.h"
 #include "TokenAnalyzer.h"
 #include "TokenAnnotator.h"
@@ -105,8 +104,8 @@ bool operator<(const JsModuleReference &LHS, const JsModuleReference &RHS) {
   // Empty URLs sort *last* (for export {...};).
   if (LHS.URL.empty() != RHS.URL.empty())
     return LHS.URL.empty() < RHS.URL.empty();
-  if (LHS.URL != RHS.URL)
-    return LHS.URL < RHS.URL;
+  if (int Res = LHS.URL.compare_lower(RHS.URL))
+    return Res < 0;
   // '*' imports (with prefix) sort before {a, b, ...} imports.
   if (LHS.Prefix.empty() != RHS.Prefix.empty())
     return LHS.Prefix.empty() < RHS.Prefix.empty();
@@ -127,7 +126,8 @@ public:
   tooling::Replacements
   analyze(TokenAnnotator &Annotator,
           SmallVectorImpl<AnnotatedLine *> &AnnotatedLines,
-          FormatTokenLexer &Tokens, tooling::Replacements &Result) override {
+          FormatTokenLexer &Tokens) override {
+    tooling::Replacements Result;
     AffectedRangeMgr.computeAffectedLines(AnnotatedLines.begin(),
                                           AnnotatedLines.end());
 
@@ -192,9 +192,15 @@ public:
     DEBUG(llvm::dbgs() << "Replacing imports:\n"
                        << getSourceText(InsertionPoint) << "\nwith:\n"
                        << ReferencesText << "\n");
-    Result.insert(tooling::Replacement(
+    auto Err = Result.add(tooling::Replacement(
         Env.getSourceManager(), CharSourceRange::getCharRange(InsertionPoint),
         ReferencesText));
+    // FIXME: better error handling. For now, just print error message and skip
+    // the replacement for the release version.
+    if (Err) {
+      llvm::errs() << llvm::toString(std::move(Err)) << "\n";
+      assert(false);
+    }
 
     return Result;
   }
@@ -245,7 +251,7 @@ private:
     std::stable_sort(
         Symbols.begin(), Symbols.end(),
         [&](const JsImportedSymbol &LHS, const JsImportedSymbol &RHS) {
-          return LHS.Symbol < RHS.Symbol;
+          return LHS.Symbol.compare_lower(RHS.Symbol) < 0;
         });
     if (Symbols == Reference.Symbols) {
       // No change in symbol order.
@@ -276,16 +282,9 @@ private:
                         SmallVectorImpl<AnnotatedLine *> &AnnotatedLines) {
     SmallVector<JsModuleReference, 16> References;
     SourceLocation Start;
-    bool FoundLines = false;
     AnnotatedLine *FirstNonImportLine = nullptr;
+    bool AnyImportAffected = false;
     for (auto Line : AnnotatedLines) {
-      if (!Line->Affected) {
-        // Only sort the first contiguous block of affected lines.
-        if (FoundLines)
-          break;
-        else
-          continue;
-      }
       Current = Line->First;
       LineEnd = Line->Last;
       skipComments();
@@ -294,15 +293,20 @@ private:
         // of the import that immediately follows them by using the previously
         // set Start.
         Start = Line->First->Tok.getLocation();
-      if (!Current)
-        continue; // Only comments on this line.
-      FoundLines = true;
+      if (!Current) {
+        // Only comments on this line. Could be the first non-import line.
+        FirstNonImportLine = Line;
+        continue;
+      }
       JsModuleReference Reference;
       Reference.Range.setBegin(Start);
       if (!parseModuleReference(Keywords, Reference)) {
-        FirstNonImportLine = Line;
+        if (!FirstNonImportLine)
+          FirstNonImportLine = Line; // if no comment before.
         break;
       }
+      FirstNonImportLine = nullptr;
+      AnyImportAffected = AnyImportAffected || Line->Affected;
       Reference.Range.setEnd(LineEnd->Tok.getEndLoc());
       DEBUG({
         llvm::dbgs() << "JsModuleReference: {"
@@ -319,6 +323,9 @@ private:
       References.push_back(Reference);
       Start = SourceLocation();
     }
+    // Sort imports if any import line was affected.
+    if (!AnyImportAffected)
+      References.clear();
     return std::make_pair(References, FirstNonImportLine);
   }
 
@@ -342,7 +349,6 @@ private:
 
     if (!parseModuleBindings(Keywords, Reference))
       return false;
-    nextToken();
 
     if (Current->is(Keywords.kw_from)) {
       // imports have a 'from' clause, exports might not.
@@ -385,17 +391,28 @@ private:
     if (Current->isNot(tok::identifier))
       return false;
     Reference.Prefix = Current->TokenText;
+    nextToken();
     return true;
   }
 
   bool parseNamedBindings(const AdditionalKeywords &Keywords,
                           JsModuleReference &Reference) {
+    if (Current->is(tok::identifier)) {
+      nextToken();
+      if (Current->is(Keywords.kw_from))
+        return true;
+      if (Current->isNot(tok::comma))
+        return false;
+      nextToken(); // eat comma.
+    }
     if (Current->isNot(tok::l_brace))
       return false;
 
     // {sym as alias, sym2 as ...} from '...';
-    nextToken();
-    while (true) {
+    while (Current->isNot(tok::r_brace)) {
+      nextToken();
+      if (Current->is(tok::r_brace))
+        break;
       if (Current->isNot(tok::identifier))
         return false;
 
@@ -416,12 +433,11 @@ private:
       Symbol.Range.setEnd(Current->Tok.getLocation());
       Reference.Symbols.push_back(Symbol);
 
-      if (Current->is(tok::r_brace))
-        return true;
-      if (Current->isNot(tok::comma))
+      if (!Current->isOneOf(tok::r_brace, tok::comma))
         return false;
-      nextToken();
     }
+    nextToken(); // consume r_brace
+    return true;
   }
 };
 

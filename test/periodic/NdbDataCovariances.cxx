@@ -1,3 +1,3 @@
 #include "NdbDataCovariances.h"
 
-ClassImp(NdbDataCovariances)
+ClassImp(NdbDataCovariances);

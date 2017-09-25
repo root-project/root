@@ -85,9 +85,8 @@ private:
                           bool& isReference, bool& isPointer, int indent_level,
                           bool forArgument);
 
-   void make_narg_call(const unsigned N, std::ostringstream& typedefbuf,
-                       std::ostringstream& callbuf,
-                       const std::string& class_name, int indent_level);
+   void make_narg_call(const std::string &return_type, const unsigned N, std::ostringstream &typedefbuf,
+                       std::ostringstream &callbuf, const std::string &class_name, int indent_level);
 
    void make_narg_ctor(const unsigned N, std::ostringstream& typedefbuf,
                        std::ostringstream& callbuf,
@@ -176,7 +175,6 @@ public:
    TClingMethodInfo* FactoryMethod() const;
    void IgnoreExtraArgs(bool ignore) { fIgnoreExtraArgs = ignore; }
    void Init();
-   void Init(const clang::FunctionDecl *);
    void Init(const TClingMethodInfo&);
    void Init(std::unique_ptr<TClingMethodInfo>);
    void Invoke(cling::Value* result = 0) const;
@@ -188,6 +186,8 @@ public:
          fDecl = fMethod->GetMethodDecl();
       return fDecl;
    }
+
+   int get_wrapper_code(std::string &wrapper_name, std::string &wrapper);
 
    const clang::FunctionDecl* GetDecl() const {
       if (fDecl)

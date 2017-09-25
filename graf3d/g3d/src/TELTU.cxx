@@ -12,7 +12,7 @@
 #include "TELTU.h"
 #include "TNode.h"
 
-ClassImp(TELTU)
+ClassImp(TELTU);
 
 /** \class TELTU
 \ingroup g3d

@@ -15,7 +15,7 @@
 
 //#include <thread>
 
-ClassImp(TGraphDelaunay2D)
+ClassImp(TGraphDelaunay2D);
 
 
 /** \class TGraphDelaunay2D

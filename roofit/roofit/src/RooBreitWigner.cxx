@@ -35,7 +35,7 @@ that models a non-relativistic Breit-Wigner shape
 
 using namespace std;
 
-ClassImp(RooBreitWigner)
+ClassImp(RooBreitWigner);
 
 ////////////////////////////////////////////////////////////////////////////////
 

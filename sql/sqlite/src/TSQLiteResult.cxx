@@ -12,7 +12,7 @@
 #include "TSQLiteResult.h"
 #include "TSQLiteRow.h"
 
-ClassImp(TSQLiteResult)
+ClassImp(TSQLiteResult);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// SQLite query result.

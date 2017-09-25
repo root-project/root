@@ -68,7 +68,7 @@ to increase the information in the system (making the best selection
 #include <iostream>
 #include <limits>
 
-ClassImp(TMVA::SeparationBase)
+ClassImp(TMVA::SeparationBase);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

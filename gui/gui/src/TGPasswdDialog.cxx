@@ -48,7 +48,7 @@
 #include "TROOT.h"
 
 
-ClassImp(TGPasswdDialog)
+ClassImp(TGPasswdDialog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an editor in a dialog.

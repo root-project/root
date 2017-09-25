@@ -17,27 +17,27 @@
 
 #include "llvm/ADT/ArrayRef.h"
 #include "llvm/ADT/ilist_node.h"
+#include "llvm/ADT/None.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/IR/DebugLoc.h"
 #include "llvm/IR/SymbolTableListTraits.h"
 #include "llvm/IR/User.h"
+#include "llvm/IR/Value.h"
+#include "llvm/Support/Casting.h"
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <utility>
 
 namespace llvm {
 
-class FastMathFlags;
-class LLVMContext;
-class MDNode;
 class BasicBlock;
+class FastMathFlags;
+class MDNode;
 struct AAMDNodes;
-
-template <>
-struct SymbolTableListSentinelTraits<Instruction>
-    : public ilist_half_embedded_sentinel_traits<Instruction> {};
 
 class Instruction : public User,
                     public ilist_node_with_parent<Instruction, BasicBlock> {
-  void operator=(const Instruction &) = delete;
-  Instruction(const Instruction &) = delete;
-
   BasicBlock *Parent;
   DebugLoc DbgLoc;                         // 'dbg' Metadata cache.
 
@@ -46,7 +46,11 @@ class Instruction : public User,
     /// this instruction has metadata attached to it or not.
     HasMetadataBit = 1 << 15
   };
+
 public:
+  Instruction(const Instruction &) = delete;
+  Instruction &operator=(const Instruction &) = delete;
+
   // Out of line virtual method, so the vtable, etc has a home.
   ~Instruction() override;
 
@@ -64,14 +68,20 @@ public:
   /// Note: this is undefined behavior if the instruction does not have a
   /// parent, or the parent basic block does not have a parent function.
   const Module *getModule() const;
-  Module *getModule();
+  Module *getModule() {
+    return const_cast<Module *>(
+                           static_cast<const Instruction *>(this)->getModule());
+  }
 
   /// Return the function this instruction belongs to.
   ///
   /// Note: it is undefined behavior to call this on an instruction not
   /// currently inserted into a function.
   const Function *getFunction() const;
-  Function *getFunction();
+  Function *getFunction() {
+    return const_cast<Function *>(
+                         static_cast<const Instruction *>(this)->getFunction());
+  }
 
   /// This method unlinks 'this' from the containing basic block, but does not
   /// delete it.
@@ -93,6 +103,11 @@ public:
   /// Unlink this instruction from its current basic block and insert it into
   /// the basic block that MovePos lives in, right before MovePos.
   void moveBefore(Instruction *MovePos);
+
+  /// Unlink this instruction and insert into BB before I.
+  ///
+  /// \pre I is a valid iterator into BB.
+  void moveBefore(BasicBlock &BB, SymbolTableList<Instruction>::iterator I);
 
   //===--------------------------------------------------------------------===//
   // Subclass classification.
@@ -131,6 +146,11 @@ public:
   /// Return true if this is an arithmetic shift right.
   inline bool isArithmeticShift() const {
     return getOpcode() == AShr;
+  }
+
+  /// Return true if this is and/or/xor.
+  inline bool isBitwiseLogicOp() const {
+    return getOpcode() == And || getOpcode() == Or || getOpcode() == Xor;
   }
 
   /// Determine if the OpCode is one of the CastInst instructions.
@@ -197,6 +217,17 @@ public:
   void setMetadata(unsigned KindID, MDNode *Node);
   void setMetadata(StringRef Kind, MDNode *Node);
 
+  /// Copy metadata from \p SrcInst to this instruction. \p WL, if not empty,
+  /// specifies the list of meta data that needs to be copied. If \p WL is
+  /// empty, all meta data will be copied.
+  void copyMetadata(const Instruction &SrcInst,
+                    ArrayRef<unsigned> WL = ArrayRef<unsigned>());
+
+  /// If the instruction has "branch_weights" MD_prof metadata and the MDNode
+  /// has three operands (including name string), swap the order of the
+  /// metadata.
+  void swapProfMetadata();
+
   /// Drop all unknown metadata except for debug locations.
   /// @{
   /// Passes are required to drop metadata they don't understand. This is a
@@ -220,7 +251,18 @@ public:
   /// Retrieve the raw weight values of a conditional branch or select.
   /// Returns true on success with profile weights filled in.
   /// Returns false if no metadata or invalid metadata was found.
-  bool extractProfMetadata(uint64_t &TrueVal, uint64_t &FalseVal);
+  bool extractProfMetadata(uint64_t &TrueVal, uint64_t &FalseVal) const;
+
+  /// Retrieve total raw weight values of a branch.
+  /// Returns true on success with profile total weights filled in.
+  /// Returns false if no metadata was found.
+  bool extractProfTotalWeight(uint64_t &TotalVal) const;
+
+  /// Updates branch_weights metadata by scaling it by \p S / \p T.
+  void updateProfWeight(uint64_t S, uint64_t T);
+
+  /// Sets the branch_weights metadata to \p W for CallInst.
+  void setProfWeight(uint64_t W);
 
   /// Set the debug location information for this instruction.
   void setDebugLoc(DebugLoc Loc) { DbgLoc = std::move(Loc); }
@@ -245,6 +287,10 @@ public:
 
   /// Determine whether the no signed wrap flag is set.
   bool hasNoSignedWrap() const;
+
+  /// Drops flags that may cause this instruction to evaluate to poison despite
+  /// having non-poison inputs.
+  void dropPoisonGeneratingFlags();
 
   /// Determine whether the exact flag is set.
   bool isExact() const;
@@ -299,6 +345,9 @@ public:
   /// Determine whether the allow-reciprocal flag is set.
   bool hasAllowReciprocal() const;
 
+  /// Determine whether the allow-contract flag is set.
+  bool hasAllowContract() const;
+
   /// Convenience function for getting all the fast-math flags, which must be an
   /// operator which supports these flags. See LangRef.html for the meaning of
   /// these flags.
@@ -330,11 +379,11 @@ private:
       SmallVectorImpl<std::pair<unsigned, MDNode *>> &) const;
   /// Clear all hashtable-based metadata from this instruction.
   void clearMetadataHashEntries();
+
 public:
   //===--------------------------------------------------------------------===//
   // Predicates and helper methods.
   //===--------------------------------------------------------------------===//
-
 
   /// Return true if the instruction is associative:
   ///
@@ -342,18 +391,30 @@ public:
   ///
   /// In LLVM, the Add, Mul, And, Or, and Xor operators are associative.
   ///
-  bool isAssociative() const;
-  static bool isAssociative(unsigned op);
+  bool isAssociative() const LLVM_READONLY;
+  static bool isAssociative(unsigned Opcode) {
+    return Opcode == And || Opcode == Or || Opcode == Xor ||
+           Opcode == Add || Opcode == Mul;
+  }
 
   /// Return true if the instruction is commutative:
   ///
   ///   Commutative operators satisfy: (x op y) === (y op x)
   ///
-  /// In LLVM, these are the associative operators, plus SetEQ and SetNE, when
+  /// In LLVM, these are the commutative operators, plus SetEQ and SetNE, when
   /// applied to any type.
   ///
   bool isCommutative() const { return isCommutative(getOpcode()); }
-  static bool isCommutative(unsigned op);
+  static bool isCommutative(unsigned Opcode) {
+    switch (Opcode) {
+    case Add: case FAdd:
+    case Mul: case FMul:
+    case And: case Or: case Xor:
+      return true;
+    default:
+      return false;
+  }
+  }
 
   /// Return true if the instruction is idempotent:
   ///
@@ -362,7 +423,9 @@ public:
   /// In LLVM, the And and Or operators are idempotent.
   ///
   bool isIdempotent() const { return isIdempotent(getOpcode()); }
-  static bool isIdempotent(unsigned op);
+  static bool isIdempotent(unsigned Opcode) {
+    return Opcode == And || Opcode == Or;
+  }
 
   /// Return true if the instruction is nilpotent:
   ///
@@ -374,7 +437,9 @@ public:
   /// In LLVM, the Xor operator is nilpotent.
   ///
   bool isNilpotent() const { return isNilpotent(getOpcode()); }
-  static bool isNilpotent(unsigned op);
+  static bool isNilpotent(unsigned Opcode) {
+    return Opcode == Xor;
+  }
 
   /// Return true if this instruction may modify memory.
   bool mayWriteToMemory() const;
@@ -391,8 +456,31 @@ public:
   /// higher.
   bool isAtomic() const;
 
+  /// Return true if this atomic instruction loads from memory.
+  bool hasAtomicLoad() const;
+
+  /// Return true if this atomic instruction stores to memory.
+  bool hasAtomicStore() const;
+
   /// Return true if this instruction may throw an exception.
   bool mayThrow() const;
+
+  /// Return true if this instruction behaves like a memory fence: it can load
+  /// or store to memory location without being given a memory location.
+  bool isFenceLike() const {
+    switch (getOpcode()) {
+    default:
+      return false;
+    // This list should be kept in sync with the list in mayWriteToMemory for
+    // all opcodes which don't have a memory location.
+    case Instruction::Fence:
+    case Instruction::CatchPad:
+    case Instruction::CatchRet:
+    case Instruction::Call:
+    case Instruction::Invoke:
+      return true;
+    }
+  }
 
   /// Return true if the instruction may have side effects.
   ///
@@ -428,7 +516,7 @@ public:
   bool isIdenticalTo(const Instruction *I) const;
 
   /// This is like isIdenticalTo, except that it ignores the
-  /// SubclassOptionalData flags, which specify conditions under which the
+  /// SubclassOptionalData flags, which may specify conditions under which the
   /// instruction's result is undefined.
   bool isIdenticalToWhenDefined(const Instruction *I) const;
 
@@ -507,12 +595,16 @@ public:
 #define   LAST_OTHER_INST(N)             OtherOpsEnd = N+1
 #include "llvm/IR/Instruction.def"
   };
+
 private:
+  friend class SymbolTableListTraits<Instruction>;
+
   // Shadow Value::setValueSubclassData with a private forwarding method so that
   // subclasses cannot accidentally use it.
   void setValueSubclassData(unsigned short D) {
     Value::setValueSubclassData(D);
   }
+
   unsigned short getSubclassDataFromValue() const {
     return Value::getSubclassDataFromValue();
   }
@@ -522,8 +614,8 @@ private:
                          (V ? HasMetadataBit : 0));
   }
 
-  friend class SymbolTableListTraits<Instruction>;
   void setParent(BasicBlock *P);
+
 protected:
   // Instruction subclasses can stick up to 15 bits of stuff into the
   // SubclassData field of instruction with these members.
@@ -548,18 +640,6 @@ private:
   Instruction *cloneImpl() const;
 };
 
-// Instruction* is only 4-byte aligned.
-template<>
-class PointerLikeTypeTraits<Instruction*> {
-  typedef Instruction* PT;
-public:
-  static inline void *getAsVoidPointer(PT P) { return P; }
-  static inline PT getFromVoidPointer(void *P) {
-    return static_cast<PT>(P);
-  }
-  enum { NumLowBitsAvailable = 2 };
-};
+} // end namespace llvm
 
-} // End llvm namespace
-
-#endif
+#endif // LLVM_IR_INSTRUCTION_H

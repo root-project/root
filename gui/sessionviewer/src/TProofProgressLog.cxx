@@ -37,7 +37,7 @@ const UInt_t kDefaultActive = BIT(18); // If the log element is active by defaul
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
 
-ClassImp(TProofProgressLog)
+ClassImp(TProofProgressLog);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a window frame for log messages.

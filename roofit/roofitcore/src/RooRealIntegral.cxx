@@ -56,7 +56,7 @@ integration is performed in the various implemenations of the RooAbsIntegrator b
 
 using namespace std;
 
-ClassImp(RooRealIntegral) 
+ClassImp(RooRealIntegral); 
 ;
 
 

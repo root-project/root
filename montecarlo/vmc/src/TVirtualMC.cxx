@@ -28,7 +28,7 @@ The concrete Monte Carlo (Geant3, Geant4) is selected at run time -
 when processing a ROOT macro where the concrete Monte Carlo is instantiated.
 */
 
-ClassImp(TVirtualMC)
+ClassImp(TVirtualMC);
 
 TMCThreadLocal TVirtualMC* TVirtualMC::fgMC=0;
 

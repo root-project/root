@@ -146,6 +146,9 @@ void test_globalStats() {
 
    globalStatsCompare(TP2D, TP2P);
 
+   DMerge.Clear();
+   PMerge.Clear();
+
    delete TP2D;
    delete TP2D_2;
    delete TP2P;
@@ -186,6 +189,9 @@ void test_binEntryStats() {
    binContentCompare(TP2D, TP2P);
    binEntriesCompare(TP2D, TP2P);
 
+   DMerge.Clear();
+   PMerge.Clear();
+
    delete TP2D;
    delete TP2D_2;
    delete TP2P;
@@ -224,6 +230,9 @@ void test_binErrorSpreadStats() {
 
    binErrorCompare(TP2D, TP2P);
 
+   DMerge.Clear();
+   PMerge.Clear();
+
    delete TP2D;
    delete TP2D_2;
    delete TP2P;
@@ -260,6 +269,9 @@ void test_binErrorMeanStats() {
    TP2P->Merge(&PMerge);
 
    binErrorCompare(TP2D, TP2P);
+
+   DMerge.Clear();
+   PMerge.Clear();
 
    delete TP2D;
    delete TP2D_2;

@@ -66,6 +66,7 @@ done
 # Can not be put in a dictionary until they properly handle ROOT/*
 echo '#include "ROOT/TSeq.hxx"' >> $allheaders
 echo '#include "ROOT/StringConv.hxx"' >> $allheaders
+echo '#include "ROOT/TDataFrame.hxx"' >> $allheaders
 
 if [ "x$1" = "x--" ]; then
     shift
@@ -82,7 +83,7 @@ while ! [ "x$1" = "x" ]; do
     shift
 done
 
-for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v core/metautils/src/G__std_ | grep -v tree/treeplayer/src/G__DataFrame`; do
+for dict in `find $modules -name 'G__*.cxx' 2> /dev/null | grep -v core/metautils/src/G__std_ `; do
     dirname=`dirname $dict`                   # to get foo/src
     dirname=`echo $dirname | sed -e 's,/src$,,' -e 's,^[.]/,,' ` # to get foo/
 
@@ -142,9 +143,9 @@ done
 cat $cppflags.tmp | sort | uniq | grep -v $srcdir | grep -v `pwd` > $cppflags
 
 # Remove unwanted files
-sed -e "s/.*TSelectorCint.h.*//g" \
-    -e "s/.*ROOT\/TDataFrame.hxx.*//g" < $allheaders > $allheaders.tmp
-mv -f $allheaders.tmp $allheaders
+#sed -e "s/.*HEADER.h.*//g" \
+#    < $allheaders > $allheaders.tmp
+#mv -f $allheaders.tmp $allheaders
 
 echo
 echo Generating PCH for ${selmodules}

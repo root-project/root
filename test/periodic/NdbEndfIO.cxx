@@ -6,7 +6,7 @@
 
 char   NdbEndfIO::_str[100];      // define static _str var
 
-ClassImp(NdbEndfIO)
+ClassImp(NdbEndfIO);
 
 /* ============ NdbEndfIO ============== */
 NdbEndfIO::NdbEndfIO( char *filename, Int_t mode )

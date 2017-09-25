@@ -23,6 +23,7 @@
 #include <list>
 #include <map>
 
+
 class TFormulaFunction
 {
 public:
@@ -103,10 +104,15 @@ private:
    void     FillDefaults();
    void     HandlePolN(TString &formula);
    void     HandleParametrizedFunctions(TString &formula);
+   void HandleParamRanges(TString &formula);
+   void HandleFunctionArguments(TString &formula);
    void     HandleExponentiation(TString &formula);
    void     HandleLinear(TString &formula);
    Bool_t   InitLambdaExpression(const char * formula);
    static Bool_t   IsDefaultVariableName(const TString &name);
+   void ReplaceAllNames(TString &formula, std::map<TString, TString> &substitutions);
+   void FillParametrizedFunctions(std::map<std::pair<TString, Int_t>, std::pair<TString, TString>> &functions);
+
 protected:
 
    std::list<TFormulaFunction>         fFuncs;    //!
@@ -139,7 +145,7 @@ protected:
 
 public:
 
-   enum {
+   enum EStatusBits {
       kNotGlobal     = BIT(10),    // don't store in gROOT->GetListOfFunction (it should be protected)
       kNormalized    = BIT(14),    // set to true if the TFormula (ex gausn) is normalized
       kLinear        = BIT(16),    //set to true if the TFormula is for linear fitting

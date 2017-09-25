@@ -42,7 +42,7 @@ numerical integration algorithm.
 
 using namespace std;
 
-ClassImp(RooSegmentedIntegrator2D)
+ClassImp(RooSegmentedIntegrator2D);
 ;
 
 

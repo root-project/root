@@ -153,7 +153,7 @@ See comments to those functions for more details
 #include "TRegexp.h"
 #include "TSystem.h"
 
-ClassImp(TEntryList)
+ClassImp(TEntryList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default c-tor

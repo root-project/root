@@ -1023,9 +1023,37 @@
 }
 
 {
+   TObject::TObject() uses uninitialized value
+   Memcheck:Cond
+   fun:_ZN7TObjectC2Ev
+   ...
+}
+
+{
+   TObject::TObject() uses uninitialized value
+   Memcheck:Cond
+   fun:TObject
+   ...
+}
+
+{
    TObject::TObject(const TObject&) uses uninitialized value
    Memcheck:Cond
    fun:_ZN7TObjectC1ERKS_
+   ...
+}
+
+{
+   TObject::TObject(const TObject&) uses uninitialized value
+   Memcheck:Cond
+   fun:_ZN7TObjectC2ERKS_
+   ...
+}
+
+{
+   TObject::TObject(const TObject&) uses uninitialized value
+   Memcheck:Cond
+   fun:TObject
    ...
 }
 

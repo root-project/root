@@ -148,6 +148,7 @@ protected:
   // Utilities for modules ;
   RooFitResult* refit(RooAbsData* genSample=0) ;
   void resetFitParams() ;
+  virtual void RecursiveRemove(TObject *obj);
 
 private:
 

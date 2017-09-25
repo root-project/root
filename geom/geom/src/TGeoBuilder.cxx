@@ -47,7 +47,7 @@ geometries.
 
 #include "TGeoBuilder.h"
 
-ClassImp(TGeoBuilder)
+ClassImp(TGeoBuilder);
 
 TGeoBuilder *TGeoBuilder::fgInstance = NULL;
 

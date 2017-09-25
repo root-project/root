@@ -457,6 +457,11 @@ if(lzma)
 else()
   set(haslzmacompression undef)
 endif()
+if(lz4)
+  set(haslz4compression define)
+else()
+  set(haslz4compression undef)
+endif()
 if(cocoa)
   set(hascocoa define)
 else()
@@ -490,6 +495,11 @@ if(cxx17)
 else()
   set(usec++17 undef)
 endif()
+if(runtime_cxxmodules)
+  set(usecxxmodules define)
+else()
+  set(usecxxmodules undef)
+endif()
 if(libcxx)
   set(uselibc++ define)
 else()
@@ -502,6 +512,11 @@ if(gcctoolchain)
 else()
   set(setgcctoolchain undef)
 endif()
+if(memory_termination)
+  set(memory_term define)
+else()
+  set(memory_term undef)
+endif()
 
 CHECK_CXX_SOURCE_COMPILES("#include <string_view>
   int main() { char arr[3] = {'B', 'a', 'r'}; std::string_view strv(arr, sizeof(arr)); return 0;}" found_stdstringview)
@@ -512,7 +527,7 @@ else()
 endif()
 
 CHECK_CXX_SOURCE_COMPILES("#include <experimental/string_view>
-   int main() { std::experimental::string_view().to_string(); return 0;}" found_stdexpstringview)
+   int main() { char arr[3] = {'B', 'a', 'r'}; std::experimental::string_view strv(arr, sizeof(arr)); return 0;}" found_stdexpstringview)
 if(found_stdexpstringview)
   set(hasstdexpstringview define)
 else()
@@ -536,7 +551,7 @@ else()
 endif()
 
 CHECK_CXX_SOURCE_COMPILES("#include <tuple>
-int main() { std::tuple<int> tup;std::apply(tup, [](int){}); return 0;}" found_stdapply)
+int main() { std::apply([](int, int){}, std::make_tuple(1,2)); return 0;}" found_stdapply)
 if(found_stdapply)
   set(hasstdapply define)
 else()
@@ -610,7 +625,8 @@ set(ROOT_EXE_LINKER_FLAGS \"${CMAKE_EXE_LINKER_FLAGS}\")")
 #---To be used from the binary tree--------------------------------------------------------------------------
 set(ROOT_INCLUDE_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
-set(ROOT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
+set(ROOT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include
+    ${CMAKE_BINARY_DIR}/externals/${CMAKE_INSTALL_PREFIX}/include)
 ")
 set(ROOT_LIBRARY_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.

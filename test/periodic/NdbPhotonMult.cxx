@@ -1,4 +1,4 @@
 #include "NdbPhotonMult.h"
 
-ClassImp(NdbPhotonMult)
+ClassImp(NdbPhotonMult);
 

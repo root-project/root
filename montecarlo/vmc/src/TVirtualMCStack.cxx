@@ -18,7 +18,7 @@
 Interface to a user defined particles stack.
 */
 
-ClassImp(TVirtualMCStack)
+ClassImp(TVirtualMCStack);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor

@@ -81,7 +81,7 @@
 
 
 //- data ---------------------------------------------------------------------
-ClassImp(TPython)
+ClassImp(TPython);
 static PyObject* gMainDict = 0;
 
 namespace PyROOT {

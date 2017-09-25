@@ -24,20 +24,20 @@
 #include "TMath.h"
 #include "TObjString.h"
 
-ClassImp(TH3)
+ClassImp(TH3);
 
 /** \addtogroup Hist
 @{
 \class TH3C
-\brief tomato 3-D histogram with a byte per channel (see TH1 documentation)
+\brief 3-D histogram with a byte per channel (see TH1 documentation)
 \class TH3S
-\brief tomato 3-D histogram with a short per channel (see TH1 documentation)
+\brief 3-D histogram with a short per channel (see TH1 documentation)
 \class TH3I
-\brief tomato 3-D histogram with an int per channel (see TH1 documentation)}
+\brief 3-D histogram with an int per channel (see TH1 documentation)}
 \class TH3F
-\brief tomato 3-D histogram with a float per channel (see TH1 documentation)}
+\brief 3-D histogram with a float per channel (see TH1 documentation)}
 \class TH3D
-\brief tomato 3-D histogram with a double per channel (see TH1 documentation)}
+\brief 3-D histogram with a double per channel (see TH1 documentation)}
 @}
 */
 
@@ -508,7 +508,7 @@ Int_t TH3::Fill(const char *namex, const char *namey, Double_t z, Double_t w)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Increment cell defined by x,namey,namezz by a weight w
+/// Increment cell defined by x,namey,namez by a weight w
 ///
 /// If the weight is not equal to 1, the storage of the sum of squares of
 ///  weights is automatically triggered and the sum of the squares of weights is incremented
@@ -842,7 +842,7 @@ Int_t TH3::FindLastBinAbove(Double_t threshold, Int_t axis) const
 ///     "R" means fit the function in the specified function range
 ///
 /// Note that the generated histograms are added to the list of objects
-/// in the current directory. It is the user's responsability to delete
+/// in the current directory. It is the user's responsibility to delete
 /// these histograms.
 ///
 ///  Example: Assume a 3-d histogram h3
@@ -1084,7 +1084,7 @@ Double_t TH3::GetCovariance(Int_t axis1, Int_t axis2) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return 3 random numbers along axis x , y and z distributed according
-/// the cellcontents of a 3-dim histogram
+/// the cell-contents of a 3-dim histogram
 
 void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z)
 {
@@ -1120,7 +1120,7 @@ void TH3::GetRandom3(Double_t &x, Double_t &y, Double_t &z)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill the array stats from the contents of this histogram
-/// The array stats must be correctly dimensionned in the calling program.
+/// The array stats must be correctly dimensioned in the calling program.
 /// stats[0] = sumw
 /// stats[1] = sumw2
 /// stats[2] = sumwx
@@ -1236,7 +1236,7 @@ Double_t TH3::Integral(Int_t binx1, Int_t binx2, Int_t biny1, Int_t biny2,
 ////////////////////////////////////////////////////////////////////////////////
 /// Return integral of bin contents in range [binx1,binx2],[biny1,biny2],[binz1,binz2]
 /// for a 3-D histogram. Calculates also the integral error using error propagation
-/// from the bin errors assumming that all the bins are uncorrelated.
+/// from the bin errors assuming that all the bins are uncorrelated.
 /// By default the integral is computed as the sum of bin contents in the range.
 /// if option "width" is specified, the integral is the sum of
 /// the bin contents multiplied by the bin width in x, y and in z.
@@ -1271,7 +1271,7 @@ Double_t TH3::Interpolate(Double_t, Double_t)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Given a point P(x,y,z), Interpolate approximates the value via trilinear interpolation
-/// based on the 8 nearest bin center points ( corner of the cube surronding the points)
+/// based on the 8 nearest bin center points (corner of the cube surrounding the points)
 /// The Algorithm is described in http://en.wikipedia.org/wiki/Trilinear_interpolation
 /// The given values (x,y,z) must be between first bin center and  last bin center for each coordinate:
 ///
@@ -1350,7 +1350,7 @@ Double_t TH3::Interpolate(Double_t x, Double_t y, Double_t z)
 ///
 ///   The KS test uses the distance between the pseudo-CDF's obtained
 ///   from the histogram. Since in more than 1D the order for generating the pseudo-CDF is
-///   arbitrary, we use the pseudo-CDF's obtained from all the possible 6 combinatons of the 3 axis.
+///   arbitrary, we use the pseudo-CDF's obtained from all the possible 6 combinations of the 3 axis.
 ///   The average of all the maximum  distances obtained is used in the tests.
 
 Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
@@ -1542,7 +1542,7 @@ Double_t TH3::KolmogorovTest(const TH1 *h2, Option_t *option) const
    if (TMath::Abs(rsum1-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h1=%s\n",h1->GetName());
    if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
 
-   if (opt.Contains("M"))      return dfmax;  // return avergae of max distance
+   if (opt.Contains("M"))      return dfmax;  // return average of max distance
 
    return prb;
 }
@@ -1644,7 +1644,7 @@ TH1D *TH3::ProjectionZ(const char *name, Int_t ixmin, Int_t ixmax,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// internal methdod performing the projection to 1D histogram
+/// internal method performing the projection to 1D histogram
 /// called from TH3::Project3D
 
 TH1D *TH3::DoProject1D(const char* name, const char * title, int imin1, int imax1, int imin2, int imax2,
@@ -1697,14 +1697,14 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, int imin1, int imax
    return h1;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// internal methdod performing the projection to 1D histogram
+/// called from other TH3::DoProject1D
+
 TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
                        bool computeErrors, bool originalRange,
                        bool useUF, bool useOF) const
 {
-   // internal methdod performing the projection to 1D histogram
-   // called from other TH3::DoProject1D
-
-
    // Create the projection histogram
    TH1D *h1 = 0;
 
@@ -1806,7 +1806,7 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
 
    Int_t out1min = out1->GetFirst();
    Int_t out1max = out1->GetLast();
-   // GetFirst(), GetLast() can return (0,0) when the range bit is set artifically (see TAxis::SetRange)
+   // GetFirst(), GetLast() can return (0,0) when the range bit is set artificially (see TAxis::SetRange)
  //if (out1min == 0 && out1max == 0) { out1min = 1; out1max = out1->GetNbins(); }
    // correct for underflow/overflows
    if (useUF && !out1->TestBit(TAxis::kAxisRange) )  out1min -= 1;
@@ -2037,7 +2037,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
 
    Int_t outmin = out->GetFirst();
    Int_t outmax = out->GetLast();
-   // GetFirst(), GetLast() can return (0,0) when the range bit is set artifically (see TAxis::SetRange)
+   // GetFirst(), GetLast() can return (0,0) when the range bit is set artificially (see TAxis::SetRange)
    if (outmin == 0 && outmax == 0) { outmin = 1; outmax = out->GetNbins(); }
    // correct for underflow/overflows
    if (useUF && !out->TestBit(TAxis::kAxisRange) )  outmin -= 1;
@@ -3262,7 +3262,7 @@ void TH3::Streamer(TBuffer &R__b)
 //  TH3C a 3-D histogram with one byte per cell (char)
 //______________________________________________________________________________
 
-ClassImp(TH3C)
+ClassImp(TH3C);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3523,7 +3523,7 @@ TH3C operator/(TH3C &h1, TH3C &h2)
 //  TH3S a 3-D histogram with two bytes per cell (short integer)
 //______________________________________________________________________________
 
-ClassImp(TH3S)
+ClassImp(TH3S);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3755,7 +3755,7 @@ TH3S operator/(TH3S &h1, TH3S &h2)
 //  TH3I a 3-D histogram with four bytes per cell (32 bits integer)
 //______________________________________________________________________________
 
-ClassImp(TH3I)
+ClassImp(TH3I);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3954,7 +3954,7 @@ TH3I operator/(TH3I &h1, TH3I &h2)
 //  TH3F a 3-D histogram with four bytes per cell (float)
 //______________________________________________________________________________
 
-ClassImp(TH3F)
+ClassImp(TH3F);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4165,7 +4165,7 @@ TH3F operator/(TH3F &h1, TH3F &h2)
 //  TH3D a 3-D histogram with eight bytes per cell (double)
 //______________________________________________________________________________
 
-ClassImp(TH3D)
+ClassImp(TH3D);
 
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -37,11 +37,21 @@ TBufferMerger::~TBufferMerger()
 
 std::shared_ptr<TBufferMergerFile> TBufferMerger::GetFile()
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    std::shared_ptr<TBufferMergerFile> f(new TBufferMergerFile(*this));
    gROOT->GetListOfFiles()->Remove(f.get());
    fAttachedFiles.push_back(f);
    return f;
+}
+
+size_t TBufferMerger::GetQueueSize() const
+{
+   return fQueue.size();
+}
+
+void TBufferMerger::RegisterCallback(const std::function<void(void)> &f)
+{
+   fCallback = f;
 }
 
 void TBufferMerger::Push(TBufferFile *buffer)
@@ -63,7 +73,7 @@ void TBufferMerger::WriteOutputFile()
    merger.ResetBit(kMustCleanup);
 
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       merger.OutputFile(fName.c_str(), fOption.c_str(), fCompress);
    }
 
@@ -85,7 +95,7 @@ void TBufferMerger::WriteOutputFile()
       {
          TDirectory::TContext ctxt;
          {
-            R__LOCKGUARD2(gROOTMutex);
+            R__LOCKGUARD(gROOTMutex);
             memfile.reset(new TMemFile(fName.c_str(), buffer->Buffer() + buffer->Length(), length, "read"));
             buffer->SetBufferOffset(buffer->Length() + length);
             merger.AddFile(memfile.get(), false);
@@ -93,6 +103,9 @@ void TBufferMerger::WriteOutputFile()
          }
          merger.Reset();
       }
+
+      if (fCallback)
+         fCallback();
    }
 }
 

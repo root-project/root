@@ -44,6 +44,8 @@ protected:
    TString fDefaultPageCont; ///<! content of the file content
    TString fDrawPage;        ///<! file name for drawing of single element
    TString fDrawPageCont;    ///<! content of draw page
+   TString
+      fCors; ///<! CORS (cross-origin resource sharing): sets Access-Control-Allow-Origin for ProcessRequest responses
 
    std::mutex fMutex; ///<! mutex to protect list with arguments
    TList fCallArgs;   ///<! submitted arguments
@@ -69,6 +71,16 @@ public:
    Bool_t IsReadOnly() const;
 
    void SetReadOnly(Bool_t readonly);
+
+   /** Enable CORS header to ProcessRequests() responses
+    * Specified location (typically "*") add as "Access-Control-Allow-Origin" header */
+   void SetCors(const char *domain = "*") { fCors = domain; }
+
+   /** Returns kTRUE if CORS was configured */
+   Bool_t IsCors() const { return fCors.Length() > 0; }
+
+   /** Returns specified CORS domain */
+   const char *GetCors() const { return fCors.Data(); }
 
    /** set name of top item in objects hierarchy */
    void SetTopName(const char *top) { fTopName = top; }

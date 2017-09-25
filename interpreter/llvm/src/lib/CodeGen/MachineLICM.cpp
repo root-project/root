@@ -92,8 +92,7 @@ namespace {
     SmallVector<MachineBasicBlock*, 8> ExitBlocks;
 
     bool isExitBlock(const MachineBasicBlock *MBB) const {
-      return std::find(ExitBlocks.begin(), ExitBlocks.end(), MBB) !=
-        ExitBlocks.end();
+      return is_contained(ExitBlocks, MBB);
     }
 
     // Track 'estimated' register pressure.
@@ -268,7 +267,7 @@ bool MachineLICM::runOnMachineFunction(MachineFunction &MF) {
   TII = ST.getInstrInfo();
   TLI = ST.getTargetLowering();
   TRI = ST.getRegisterInfo();
-  MFI = MF.getFrameInfo();
+  MFI = &MF.getFrameInfo();
   MRI = &MF.getRegInfo();
   SchedModel.init(ST.getSchedModel(), &ST, TII);
 
@@ -331,7 +330,7 @@ bool MachineLICM::runOnMachineFunction(MachineFunction &MF) {
 /// Return true if instruction stores to the specified frame.
 static bool InstructionStoresToFI(const MachineInstr *MI, int FI) {
   // If we lost memory operands, conservatively assume that the instruction
-  // writes to all slots. 
+  // writes to all slots.
   if (MI->memoperands_empty())
     return true;
   for (const MachineMemOperand *MemOp : MI->memoperands()) {
@@ -709,7 +708,7 @@ void MachineLICM::SinkIntoLoop() {
   for (MachineBasicBlock::instr_iterator I = Preheader->instr_begin();
        I != Preheader->instr_end(); ++I) {
     // We need to ensure that we can safely move this instruction into the loop.
-    // As such, it must not have side-effects, e.g. such as a call has.  
+    // As such, it must not have side-effects, e.g. such as a call has.
     if (IsLoopInvariantInst(*I) && !HasLoopPHIUse(&*I))
       Candidates.push_back(&*I);
   }
@@ -764,7 +763,7 @@ void MachineLICM::InitRegPressure(MachineBasicBlock *BB) {
   if (BB->pred_size() == 1) {
     MachineBasicBlock *TBB = nullptr, *FBB = nullptr;
     SmallVector<MachineOperand, 4> Cond;
-    if (!TII->AnalyzeBranch(*BB, TBB, FBB, Cond, false) && Cond.empty())
+    if (!TII->analyzeBranch(*BB, TBB, FBB, Cond, false) && Cond.empty())
       InitRegPressure(*BB->pred_begin());
   }
 
@@ -838,9 +837,9 @@ MachineLICM::calcRegisterCost(const MachineInstr *MI, bool ConsiderSeen,
 /// constant pool.
 static bool mayLoadFromGOTOrConstantPool(MachineInstr &MI) {
   assert (MI.mayLoad() && "Expected MI that loads!");
-  
+
   // If we lost memory operands, conservatively assume that the instruction
-  // reads from everything.. 
+  // reads from everything..
   if (MI.memoperands_empty())
     return true;
 
@@ -896,7 +895,7 @@ bool MachineLICM::IsLoopInvariantInst(MachineInstr &I) {
         // If the physreg has no defs anywhere, it's just an ambient register
         // and we can freely move its uses. Alternatively, if it's allocatable,
         // it could get allocated to something with a def during allocation.
-        if (!MRI->isConstantPhysReg(Reg, *I.getParent()->getParent()))
+        if (!MRI->isConstantPhysReg(Reg))
           return false;
         // Otherwise it's safe to move.
         continue;
@@ -1139,7 +1138,8 @@ bool MachineLICM::IsProfitableToHoist(MachineInstr &MI) {
 
   // High register pressure situation, only hoist if the instruction is going
   // to be remat'ed.
-  if (!TII->isTriviallyReMaterializable(MI, AA) && !MI.isInvariantLoad(AA)) {
+  if (!TII->isTriviallyReMaterializable(MI, AA) &&
+      !MI.isDereferenceableInvariantLoad(AA)) {
     DEBUG(dbgs() << "Can't remat / high reg-pressure: " << MI);
     return false;
   }
@@ -1158,7 +1158,7 @@ MachineInstr *MachineLICM::ExtractHoistableLoad(MachineInstr *MI) {
   // If not, we may be able to unfold a load and hoist that.
   // First test whether the instruction is loading from an amenable
   // memory location.
-  if (!MI->isInvariantLoad(AA))
+  if (!MI->isDereferenceableInvariantLoad(AA))
     return nullptr;
 
   // Next determine the register class for a temporary register.
@@ -1335,6 +1335,11 @@ bool MachineLICM::Hoist(MachineInstr *MI, MachineBasicBlock *Preheader) {
   if (!EliminateCSE(MI, CI)) {
     // Otherwise, splice the instruction to the preheader.
     Preheader->splice(Preheader->getFirstTerminator(),MI->getParent(),MI);
+
+    // Since we are moving the instruction out of its basic block, we do not
+    // retain its debug location. Doing so would degrade the debugging
+    // experience and adversely affect the accuracy of profiling information.
+    MI->setDebugLoc(DebugLoc());
 
     // Update register pressure for BBs from header to this block.
     UpdateBackTraceRegPressure(MI);

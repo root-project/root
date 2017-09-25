@@ -44,7 +44,7 @@ In extended mode, a (Nexpect - Nobserved*log(NExpected) term is added
 #include "RooRealVar.h"
 #include "RooProdPdf.h"
 
-ClassImp(RooNLLVar)
+ClassImp(RooNLLVar);
 ;
 
 RooArgSet RooNLLVar::_emptySet ;

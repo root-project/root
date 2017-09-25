@@ -88,7 +88,7 @@ credible interval from the given function.
 //#include "TRandom.h"
 #include "RConfigure.h"
 
-ClassImp(RooStats::BayesianCalculator)
+ClassImp(RooStats::BayesianCalculator);
 
 using namespace std;
 

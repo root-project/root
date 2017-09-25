@@ -24,7 +24,7 @@
 #include "TNamed.h"
 #include "TAlienDirectory.h"
 
-ClassImp(TAlienJobStatus)
+ClassImp(TAlienJobStatus);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates a TAlienJobStatus object.

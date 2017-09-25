@@ -11,11 +11,6 @@
 #include "TRandom.h"
 #include "JetEvent.h"
 
-ClassImp(Jet)
-ClassImp(Track)
-ClassImp(Hit)
-ClassImp(JetEvent)
-
 TClonesArray *JetEvent::fgJets   = 0;
 TClonesArray *JetEvent::fgTracks = 0;
 TClonesArray *JetEvent::fgHitsA  = 0;

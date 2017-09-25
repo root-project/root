@@ -26,7 +26,7 @@
 Sub-editor for TEveGridStepper class.
 */
 
-ClassImp(TEveGridStepperSubEditor)
+ClassImp(TEveGridStepperSubEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -165,7 +165,7 @@ void TEveGridStepperSubEditor::DoDs()
 Editor for TEveGridStepper class.
 */
 
-ClassImp(TEveGridStepperEditor)
+ClassImp(TEveGridStepperEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

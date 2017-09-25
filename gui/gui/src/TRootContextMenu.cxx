@@ -57,7 +57,7 @@ enum EContextMenu {
 };
 
 
-ClassImp(TRootContextMenu)
+ClassImp(TRootContextMenu);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create context menu.

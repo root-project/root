@@ -103,7 +103,7 @@ static const char *gPluginFileTypes[] = {
 // The main ROOT object browser.
 //_____________________________________________________________________________
 
-ClassImp(TRootBrowser)
+ClassImp(TRootBrowser);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create browser with a specified width and height.

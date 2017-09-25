@@ -39,7 +39,7 @@ array with the  digest.
 #include <io.h>
 #endif
 
-ClassImp(TMD5)
+ClassImp(TMD5);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create TMD5 object. Set bit count to 0 and buffer to mysterious

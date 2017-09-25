@@ -24,7 +24,7 @@ Evaluates to 1.0 when ((Double_t)x) >= ((Double_t)c), 0.0 otherwise.
 
 */
 
-ClassImp(RooStats::Heaviside)
+ClassImp(RooStats::Heaviside);
 
 using namespace RooFit;
 using namespace RooStats;

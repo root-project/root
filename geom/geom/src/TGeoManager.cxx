@@ -286,7 +286,7 @@ in order to enhance rays.
 
 TGeoManager *gGeoManager = 0;
 
-ClassImp(TGeoManager)
+ClassImp(TGeoManager);
 
 std::mutex TGeoManager::fgMutex;
 Bool_t TGeoManager::fgLock         = kFALSE;
@@ -806,7 +806,7 @@ Int_t TGeoManager::AddVolume(TGeoVolume *volume)
 
 TGeoNavigator *TGeoManager::AddNavigator()
 {
-   if (fMultiThread) fgMutex.lock();
+   if (fMultiThread) { TGeoManager::ThreadId(); fgMutex.lock(); }
    std::thread::id threadId = std::this_thread::get_id();
    NavigatorsMap_t::const_iterator it = fNavigators.find(threadId);
    TGeoNavigatorArray *array = 0;
@@ -1486,9 +1486,6 @@ void TGeoManager::CloseGeometry(Option_t *option)
       // Create a geometry navigator if not present
       if (!GetCurrentNavigator()) fCurrentNavigator = AddNavigator();
       nnavigators = GetListOfNavigators()->GetEntriesFast();
-      TIter next(fShapes);
-      TGeoShape *shape;
-      while ((shape = (TGeoShape*)next())) shape->AfterStreamer();
       Voxelize("ALL");
       CountLevels();
       for (Int_t i=0; i<nnavigators; i++) {

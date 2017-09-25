@@ -110,7 +110,7 @@ char TProofMergePrg::fgCr[4] = {'-', '\\', '|', '/'};
 TList   *TProof::fgProofEnvList = 0;          // List of env vars for proofserv
 TPluginHandler *TProof::fgLogViewer = 0;      // Log viewer handler
 
-ClassImp(TProof)
+ClassImp(TProof);
 
 //----- PROOF Interrupt signal handler -----------------------------------------
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +172,7 @@ Bool_t TProofInputHandler::Notify()
 
 //------------------------------------------------------------------------------
 
-ClassImp(TSlaveInfo)
+ClassImp(TSlaveInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Used to sort slaveinfos by ordinal.
@@ -274,7 +274,7 @@ void TSlaveInfo::SetSysInfo(SysInfo_t si)
    fSysInfo.fPhysRam  = si.fPhysRam;     // Physical RAM
 }
 
-ClassImp(TProof)
+ClassImp(TProof);
 
 //------------------------------------------------------------------------------
 
@@ -485,7 +485,7 @@ TProof::TProof(const char *masterurl, const char *conffile, const char *confdir,
    // If called by a manager, make sure it stays in last position
    // for cleaning
    if (mgr) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(mgr);
       gROOT->GetListOfSockets()->Add(mgr);
    }
@@ -986,7 +986,7 @@ Int_t TProof::Init(const char *, const char *conffile,
       // Activate input handler
       ActivateAsyncInput();
 
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 
@@ -1287,7 +1287,7 @@ void TProof::SetManager(TProofMgr *mgr)
    fManager = mgr;
 
    if (mgr) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(mgr);
       gROOT->GetListOfSockets()->Add(mgr);
    }
@@ -1797,7 +1797,7 @@ void TProof::Close(Option_t *opt)
       }
    }
 
-   {  R__LOCKGUARD2(gROOTMutex);
+   {  R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
 
       if (fChains) {

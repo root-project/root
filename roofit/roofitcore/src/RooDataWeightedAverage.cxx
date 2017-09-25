@@ -44,7 +44,7 @@ plot option.
 
 using namespace std;
 
-ClassImp(RooDataWeightedAverage)
+ClassImp(RooDataWeightedAverage);
 ;
 
 

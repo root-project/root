@@ -27,7 +27,7 @@ This class is now obsolete. Use TParticle instead.
 #include "TVirtualPad.h"
 #include "TPolyLine3D.h"
 
-ClassImp(TPrimary)
+ClassImp(TPrimary);
 
 ////////////////////////////////////////////////////////////////////////////////
 ///

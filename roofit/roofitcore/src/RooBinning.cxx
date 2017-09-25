@@ -42,7 +42,7 @@ uniformly spaced boundaries.
 
 using namespace std;
 
-ClassImp(RooBinning)
+ClassImp(RooBinning);
 ;
 
 

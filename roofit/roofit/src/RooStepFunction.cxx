@@ -43,7 +43,7 @@ but a not-normalized function (RooAbsReal)
 
 using namespace std;
 
-ClassImp(RooStepFunction)
+ClassImp(RooStepFunction);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor

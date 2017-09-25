@@ -631,6 +631,9 @@ let Defs = [FPSW] in
 def FNINIT : I<0xDB, MRM_E3, (outs), (ins), "fninit", [], IIC_FNINIT>;
 def FFREE : FPI<0xDD, MRM0r, (outs), (ins RST:$reg),
                 "ffree\t$reg", IIC_FFREE>;
+def FFREEP : FPI<0xDF, MRM0r, (outs), (ins RST:$reg),
+                "ffreep\t$reg", IIC_FFREE>;
+
 // Clear exceptions
 
 let Defs = [FPSW] in
@@ -665,15 +668,16 @@ def FCOMPP : I<0xDE, MRM_D9, (outs), (ins), "fcompp", [], IIC_FCOMPP>;
 
 let Predicates = [HasFXSR] in {
   def FXSAVE : I<0xAE, MRM0m, (outs), (ins opaque512mem:$dst),
-                 "fxsave\t$dst", [(int_x86_fxsave addr:$dst)], IIC_FXSAVE>, TB;
+               "fxsave\t$dst", [(int_x86_fxsave addr:$dst)], IIC_FXSAVE>, TB;
   def FXSAVE64 : RI<0xAE, MRM0m, (outs), (ins opaque512mem:$dst),
-                    "fxsave64\t$dst", [(int_x86_fxsave64 addr:$dst)],
-                    IIC_FXSAVE>, TB, Requires<[In64BitMode]>;
+                 "fxsave64\t$dst", [(int_x86_fxsave64 addr:$dst)],
+                 IIC_FXSAVE>, TB, Requires<[In64BitMode]>;
   def FXRSTOR : I<0xAE, MRM1m, (outs), (ins opaque512mem:$src),
-                "fxrstor\t$src", [(int_x86_fxrstor addr:$src)], IIC_FXRSTOR>, TB;
+                "fxrstor\t$src", [(int_x86_fxrstor addr:$src)], IIC_FXRSTOR>, 
+                TB;
   def FXRSTOR64 : RI<0xAE, MRM1m, (outs), (ins opaque512mem:$src),
-                     "fxrstor64\t$src", [(int_x86_fxrstor64 addr:$src)],
-                     IIC_FXRSTOR>, TB, Requires<[In64BitMode]>;
+                  "fxrstor64\t$src", [(int_x86_fxrstor64 addr:$src)],
+                  IIC_FXRSTOR>, TB, Requires<[In64BitMode]>;
 } // Predicates = [FeatureFXSR]
 } // SchedRW
 
@@ -711,19 +715,19 @@ def : Pat<(X86fildflag addr:$src, i64), (ILD_Fp64m64 addr:$src)>;
 
 // FP extensions map onto simple pseudo-value conversions if they are to/from
 // the FP stack.
-def : Pat<(f64 (fextend RFP32:$src)), (COPY_TO_REGCLASS RFP32:$src, RFP64)>,
+def : Pat<(f64 (fpextend RFP32:$src)), (COPY_TO_REGCLASS RFP32:$src, RFP64)>,
           Requires<[FPStackf32]>;
-def : Pat<(f80 (fextend RFP32:$src)), (COPY_TO_REGCLASS RFP32:$src, RFP80)>,
+def : Pat<(f80 (fpextend RFP32:$src)), (COPY_TO_REGCLASS RFP32:$src, RFP80)>,
            Requires<[FPStackf32]>;
-def : Pat<(f80 (fextend RFP64:$src)), (COPY_TO_REGCLASS RFP64:$src, RFP80)>,
+def : Pat<(f80 (fpextend RFP64:$src)), (COPY_TO_REGCLASS RFP64:$src, RFP80)>,
            Requires<[FPStackf64]>;
 
 // FP truncations map onto simple pseudo-value conversions if they are to/from
 // the FP stack.  We have validated that only value-preserving truncations make
 // it through isel.
-def : Pat<(f32 (fround RFP64:$src)), (COPY_TO_REGCLASS RFP64:$src, RFP32)>,
+def : Pat<(f32 (fpround RFP64:$src)), (COPY_TO_REGCLASS RFP64:$src, RFP32)>,
           Requires<[FPStackf32]>;
-def : Pat<(f32 (fround RFP80:$src)), (COPY_TO_REGCLASS RFP80:$src, RFP32)>,
+def : Pat<(f32 (fpround RFP80:$src)), (COPY_TO_REGCLASS RFP80:$src, RFP32)>,
            Requires<[FPStackf32]>;
-def : Pat<(f64 (fround RFP80:$src)), (COPY_TO_REGCLASS RFP80:$src, RFP64)>,
+def : Pat<(f64 (fpround RFP80:$src)), (COPY_TO_REGCLASS RFP80:$src, RFP64)>,
            Requires<[FPStackf64]>;

@@ -11,6 +11,7 @@
 #include "cling/Interpreter/ClingOptions.h"
 #include "cling/Utils/Output.h"
 
+#include "clang/Basic/LangOptions.h"
 #include "clang/Driver/Options.h"
 
 #include "llvm/Option/Arg.h"
@@ -96,10 +97,10 @@ static const char kNoStdInc[] = "-nostdinc";
   }
 }
 
-CompilerOptions::CompilerOptions(int argc, const char* const* argv) :
-  Language(false), ResourceDir(false), SysRoot(false), NoBuiltinInc(false),
-  NoCXXInc(false), StdVersion(false), StdLib(false), HasOutput(false),
-  Verbose(false) {
+CompilerOptions::CompilerOptions(int argc, const char* const* argv)
+    : Language(false), ResourceDir(false), SysRoot(false), NoBuiltinInc(false),
+      NoCXXInc(false), StdVersion(false), StdLib(false), HasOutput(false),
+      Verbose(false), CxxModules(false) {
   if (argc && argv) {
     // Preserve what's already in Remaining, the user might want to push args
     // to clang while still using main's argc, argv
@@ -135,6 +136,10 @@ void CompilerOptions::Parse(int argc, const char* const argv[],
       // case options::OPT_nostdinc:
       case options::OPT_nostdincxx: NoCXXInc = true; break;
       case options::OPT_v: Verbose = true; break;
+      case options::OPT_fmodules: CxxModules = true; break;
+      case options::OPT_fmodule_name_EQ: LLVM_FALLTHROUGH;
+      case options::OPT_fmodule_name: ModuleName = arg->getValue(); break;
+      case options::OPT_fmodules_cache_path: CachePath = arg->getValue(); break;
 
       default:
         if (Inputs && arg->getOption().getKind() == Option::InputClass)
@@ -142,6 +147,20 @@ void CompilerOptions::Parse(int argc, const char* const argv[],
         break;
     }
   }
+}
+
+bool CompilerOptions::DefaultLanguage(const LangOptions* LangOpts) const {
+  // When StdVersion is set (-std=c++11, -std=gnu++11, etc.) then definitely
+  // don't setup the defaults, as they may interfere with what the user is doing
+  if (StdVersion)
+    return false;
+
+  // Also don't set up the defaults when language is explicitly set; unless
+  // the language was set to generate a PCH, in which case definitely do.
+  if (Language)
+    return HasOutput || (LangOpts && LangOpts->CompilingPCH);
+
+  return true;
 }
 
 InvocationOptions::InvocationOptions(int argc, const char* const* argv) :

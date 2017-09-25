@@ -24,8 +24,8 @@
 #include "Riostream.h"
 
 
-ClassImp(TGHorizontal3DLine)
-ClassImp(TGVertical3DLine)
+ClassImp(TGHorizontal3DLine);
+ClassImp(TGVertical3DLine);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

@@ -53,7 +53,7 @@ set to the owner of its own content.
 #include "TVirtualMutex.h"
 #include <stdlib.h>
 
-ClassImp(TObjArray)
+ClassImp(TObjArray);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create an object array. Using s one can set the array size (default is
@@ -326,39 +326,27 @@ void TObjArray::Compress()
 ////////////////////////////////////////////////////////////////////////////////
 /// Remove all objects from the array AND delete all heap based objects.
 
-void TObjArray::Delete(Option_t *opt)
+void TObjArray::Delete(Option_t * /* opt */)
 {
    // In some case, for example TParallelCoord, a list (the pad's list of
    // primitives) will contain both the container and the containees
-   // (the TParallelCoorVar) but if the Clear is being called from
+   // (the TParallelCoordVar) but if the Clear is being called from
    // the destructor of the container of this list, one of the first
    // thing done will be the remove the container (the pad) from the
    // list (of Primitives of the canvas) that was connecting it
    // (indirectly) to the list of cleanups.
-   // So let's temporarily add the current list and remove it later.
-   //
-   // If opt is "noregistration", then this protect is skipped.
-   // (To avoid performance penalties, the option must be spelt exactly (no
-   // uppercase, no spaces)
-   const char *noreg = "noregistration";
-   bool needRegister = fSize && TROOT::Initialized() && strcmp(opt,noreg) == 0;
-   if(needRegister) {
-      R__LOCKGUARD2(gROOTMutex);
-      needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
-   }
-   if (needRegister) {
-      R__LOCKGUARD2(gROOTMutex);
-      gROOT->GetListOfCleanups()->Add(this);
-   }
+   // Note: The Code in TParallelCoordVar was changed (circa June 2017),
+   // to no longer have this behavior and thus rely on this code (by moving
+   // from using Draw to Paint) but the structure might still exist elsewhere
+   // so we keep this comment here.
+
+   // Since we set fCont[i] only after the deletion is completed, we do not
+   // lose the connection and thus do not need to take any special action.
    for (Int_t i = 0; i < fSize; i++) {
       if (fCont[i] && fCont[i]->IsOnHeap()) {
          TCollection::GarbageCollect(fCont[i]);
          fCont[i] = 0;
       }
-   }
-   if (needRegister) {
-      R__LOCKGUARD2(gROOTMutex);
-      ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
    }
 
    Init(fSize, fLowerBound);
@@ -794,7 +782,7 @@ Int_t TObjArray::BinarySearch(TObject *op, Int_t upto)
 Iterator of object array.
 */
 
-ClassImp(TObjArrayIter)
+ClassImp(TObjArrayIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create array iterator. By default the iteration direction

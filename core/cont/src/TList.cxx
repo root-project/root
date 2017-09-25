@@ -20,11 +20,11 @@ the object pointer also a previous and next pointer.
 
 There are several ways to iterate over a TList; in order of preference, if
 not forced by other constraints:
-  0. Using the C++ range-based `for` or `begin()` / `end()`:
+  0. (Preferred way) Using the C++ range-based `for` or `begin()` / `end()`:
 ~~~ {.cpp}
          for(const auto&& obj: *GetListOfPrimitives())
             obj->Write();
-~~~ {.cpp}
+~~~
   1. Using the R__FOR_EACH macro:
 ~~~ {.cpp}
          GetListOfPrimitives()->R__FOR_EACH(TObject,Paint)(option);
@@ -80,7 +80,7 @@ LastLink() and lnk->Prev() or by using the Before() member.
 #include <string>
 namespace std {} using namespace std;
 
-ClassImp(TList)
+ClassImp(TList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete the list. Objects are not deleted unless the TList is the
@@ -96,6 +96,8 @@ TList::~TList()
 
 void TList::AddFirst(TObject *obj)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (IsArgNull("AddFirst", obj)) return;
 
    if (!fFirst) {
@@ -120,6 +122,8 @@ void TList::AddFirst(TObject *obj)
 
 void TList::AddFirst(TObject *obj, Option_t *opt)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (IsArgNull("AddFirst", obj)) return;
 
    if (!fFirst) {
@@ -140,6 +144,8 @@ void TList::AddFirst(TObject *obj, Option_t *opt)
 
 void TList::AddLast(TObject *obj)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (IsArgNull("AddLast", obj)) return;
 
    if (!fFirst) {
@@ -160,6 +166,8 @@ void TList::AddLast(TObject *obj)
 
 void TList::AddLast(TObject *obj, Option_t *opt)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (IsArgNull("AddLast", obj)) return;
 
    if (!fFirst) {
@@ -176,6 +184,8 @@ void TList::AddLast(TObject *obj, Option_t *opt)
 
 void TList::AddBefore(const TObject *before, TObject *obj)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (IsArgNull("AddBefore", obj)) return;
 
    if (!before)
@@ -204,6 +214,8 @@ void TList::AddBefore(const TObject *before, TObject *obj)
 
 void TList::AddBefore(TObjLink *before, TObject *obj)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (IsArgNull("AddBefore", obj)) return;
 
    if (!before)
@@ -224,6 +236,8 @@ void TList::AddBefore(TObjLink *before, TObject *obj)
 
 void TList::AddAfter(const TObject *after, TObject *obj)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (IsArgNull("AddAfter", obj)) return;
 
    if (!after)
@@ -252,6 +266,8 @@ void TList::AddAfter(const TObject *after, TObject *obj)
 
 void TList::AddAfter(TObjLink *after, TObject *obj)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (IsArgNull("AddAfter", obj)) return;
 
    if (!after)
@@ -272,6 +288,8 @@ void TList::AddAfter(TObjLink *after, TObject *obj)
 
 void TList::AddAt(TObject *obj, Int_t idx)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (IsArgNull("AddAt", obj)) return;
 
    TObjLink *lnk = LinkAt(idx);
@@ -292,6 +310,8 @@ void TList::AddAt(TObject *obj, Int_t idx)
 
 TObject *TList::After(const TObject *obj) const
 {
+   R__COLLECTION_WRITE_GUARD();
+
    TObjLink *t;
 
    if (fCache && fCache->GetObject() && fCache->GetObject()->IsEqual(obj)) {
@@ -314,6 +334,8 @@ TObject *TList::After(const TObject *obj) const
 
 TObject *TList::At(Int_t idx) const
 {
+   R__COLLECTION_WRITE_GUARD();
+
    TObjLink *lnk = LinkAt(idx);
    if (lnk) return lnk->GetObject();
    return 0;
@@ -325,6 +347,8 @@ TObject *TList::At(Int_t idx) const
 
 TObject *TList::Before(const TObject *obj) const
 {
+   R__COLLECTION_WRITE_GUARD();
+
    TObjLink *t;
 
    if (fCache && fCache->GetObject() && fCache->GetObject()->IsEqual(obj)) {
@@ -352,6 +376,8 @@ TObject *TList::Before(const TObject *obj) const
 
 void TList::Clear(Option_t *option)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    Bool_t nodel = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
 
    if (!nodel && IsOwner()) {
@@ -361,41 +387,47 @@ void TList::Clear(Option_t *option)
 
    // In some case, for example TParallelCoord, a list (the pad's list of
    // primitives) will contain both the container and the containees
-   // (the TParallelCoorVar) but if the Clear is being called from
+   // (the TParallelCoordVar) but if the Clear is being called from
    // the destructor of the container of this list, one of the first
    // thing done will be the remove the container (the pad) for the
    // list (of Primitives of the canvas) that was connecting it
    // (indirectly) to the list of cleanups.
-   // So let's temporarily add the current list and remove it later.
-   bool needRegister = fFirst && TROOT::Initialized();
-   if(needRegister) {
-      R__LOCKGUARD2(gROOTMutex);
-      needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
-   }
-   if (needRegister) {
-      R__LOCKGUARD2(gROOTMutex);
-      gROOT->GetListOfCleanups()->Add(this);
-   }
+   // Note: The Code in TParallelCoordVar was changed (circa June 2017),
+   // to no longer have this behavior and thus rely on this code (by moving
+   // from using Draw to Paint) but the structure might still exist elsewhere
+   // so we keep this comment here.
+
+   // To preserve this connection (without introducing one when there was none),
+   // we re-use fCache to inform RecursiveRemove of the node currently
+   // being cleared/deleted.
    while (fFirst) {
       TObjLink *tlk = fFirst;
       fFirst = fFirst->Next();
       fSize--;
+
+
+      // Make node available to RecursiveRemove
+      tlk->fNext = tlk->fPrev = 0;
+      fCache = tlk;
+
       // delete only heap objects marked OK to clear
-      if (!nodel && tlk->GetObject() && tlk->GetObject()->IsOnHeap()) {
-         if (tlk->GetObject()->TestBit(kCanDelete)) {
-            if(tlk->GetObject()->TestBit(kNotDeleted)) {
-               TCollection::GarbageCollect(tlk->GetObject());
+      auto obj = tlk->GetObject();
+      if (!nodel && obj) {
+         if (!obj->TestBit(kNotDeleted)) {
+            Error("Clear", "A list is accessing an object (%p) already deleted (list name = %s)",
+                  obj, GetName());
+         } else if (obj->IsOnHeap()) {
+            if (obj->TestBit(kCanDelete)) {
+               if (obj->TestBit(kNotDeleted)) {
+                  TCollection::GarbageCollect(obj);
+               }
             }
          }
+         delete tlk;
       }
-      delete tlk;
-   }
-   if (needRegister) {
-      R__LOCKGUARD2(gROOTMutex);
-      ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
    }
    fFirst = fLast = fCache = 0;
-   fSize  = 0;
+   fSize = 0;
    Changed();
 }
 
@@ -408,6 +440,8 @@ void TList::Clear(Option_t *option)
 
 void TList::Delete(Option_t *option)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
 
    TList removeDirectory; // need to deregister these from their directory
@@ -421,32 +455,30 @@ void TList::Delete(Option_t *option)
       // thing done will be the remove the container (the pad) for the
       // list (of Primitives of the canvas) that was connecting it
       // (indirectly) to the list of cleanups.
-      // So let's temporarily add the current list and remove it later.
-      bool needRegister = fFirst && TROOT::Initialized();
-      if(needRegister) {
-         R__LOCKGUARD2(gROOTMutex);
-         needRegister = needRegister && !gROOT->GetListOfCleanups()->FindObject(this);
-      }
-      if (needRegister) {
-         R__LOCKGUARD2(gROOTMutex);
-         gROOT->GetListOfCleanups()->Add(this);
-      }
+
+      // To preserve this connection (without introducing one when there was none),
+      // we re-use fCache to inform RecursiveRemove of the node currently
+      // being cleared/deleted.
       while (fFirst) {
          TObjLink *tlk = fFirst;
          fFirst = fFirst->Next();
          fSize--;
+
+         // Make node available to RecursiveRemove
+         tlk->fNext = tlk->fPrev = 0;
+         fCache = tlk;
+
          // delete only heap objects
-         if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
-            TCollection::GarbageCollect(tlk->GetObject());
-         else if (tlk->GetObject() && tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
-            removeDirectory.Add(tlk->GetObject());
+         auto obj = tlk->GetObject();
+         if (obj && !obj->TestBit(kNotDeleted))
+            Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
+                  obj, GetName());
+         else if (obj && obj->IsOnHeap())
+            TCollection::GarbageCollect(obj);
+         else if (obj && obj->IsA()->GetDirectoryAutoAdd())
+            removeDirectory.Add(obj);
 
          delete tlk;
-      }
-
-      if (needRegister) {
-         R__LOCKGUARD2(gROOTMutex);
-         ROOT::GetROOT()->GetListOfCleanups()->Remove(this);
       }
 
       fFirst = fLast = fCache = 0;
@@ -461,10 +493,14 @@ void TList::Delete(Option_t *option)
          TObjLink *tlk = first;
          first = first->Next();
          // delete only heap objects
-         if (tlk->GetObject() && tlk->GetObject()->IsOnHeap())
-            TCollection::GarbageCollect(tlk->GetObject());
-         else if (tlk->GetObject() && tlk->GetObject()->IsA()->GetDirectoryAutoAdd())
-            removeDirectory.Add(tlk->GetObject());
+         auto obj = tlk->GetObject();
+         if (obj && !obj->TestBit(kNotDeleted))
+            Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
+                  obj, GetName());
+         else if (obj && obj->IsOnHeap())
+            TCollection::GarbageCollect(obj);
+         else if (obj && obj->IsA()->GetDirectoryAutoAdd())
+            removeDirectory.Add(obj);
 
          delete tlk;
       }
@@ -487,6 +523,8 @@ void TList::Delete(Option_t *option)
 
 void TList::DeleteLink(TObjLink *lnk)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    lnk->fNext = lnk->fPrev = 0;
    lnk->fObject = 0;
    delete lnk;
@@ -500,15 +538,20 @@ void TList::DeleteLink(TObjLink *lnk)
 
 TObject *TList::FindObject(const char *name) const
 {
-   if (!name) return 0;
-   TObjLink *lnk = FirstLink();
-   while (lnk) {
-      TObject *obj = lnk->GetObject();
-      const char *objname = obj->GetName();
-      if (objname && !strcmp(name, objname)) return obj;
-      lnk = lnk->Next();
+   R__COLLECTION_READ_GUARD();
+
+   if (!name)
+      return nullptr;
+
+   for (TObjLink *lnk = FirstLink(); lnk != nullptr; lnk = lnk->Next()) {
+      if (TObject *obj = lnk->GetObject()) {
+         const char *objname = obj->GetName();
+         if (objname && strcmp(name, objname) == 0)
+            return obj;
+      }
    }
-   return 0;
+
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -520,6 +563,8 @@ TObject *TList::FindObject(const char *name) const
 
 TObject *TList::FindObject(const TObject *obj) const
 {
+   R__COLLECTION_READ_GUARD();
+
    TObjLink *lnk = FirstLink();
 
    while (lnk) {
@@ -536,6 +581,8 @@ TObject *TList::FindObject(const TObject *obj) const
 
 TObjLink *TList::FindLink(const TObject *obj, Int_t &idx) const
 {
+   R__COLLECTION_READ_GUARD();
+
    if (!fFirst) return 0;
 
    TObject *object;
@@ -560,6 +607,8 @@ TObjLink *TList::FindLink(const TObject *obj, Int_t &idx) const
 
 TObject *TList::First() const
 {
+   R__COLLECTION_READ_GUARD();
+
    if (fFirst) return fFirst->GetObject();
    return 0;
 }
@@ -569,6 +618,8 @@ TObject *TList::First() const
 
 TObject **TList::GetObjectRef(const TObject *obj) const
 {
+   R__COLLECTION_READ_GUARD();
+
    TObjLink *lnk = FirstLink();
 
    while (lnk) {
@@ -584,6 +635,8 @@ TObject **TList::GetObjectRef(const TObject *obj) const
 
 TObject *TList::Last() const
 {
+   R__COLLECTION_READ_GUARD();
+
    if (fLast) return fLast->GetObject();
    return 0;
 }
@@ -593,6 +646,8 @@ TObject *TList::Last() const
 
 TObjLink *TList::LinkAt(Int_t idx) const
 {
+   R__COLLECTION_READ_GUARD();
+
    Int_t    i = 0;
    TObjLink *lnk = fFirst;
    while (i < idx && lnk) {
@@ -607,6 +662,8 @@ TObjLink *TList::LinkAt(Int_t idx) const
 
 TIterator *TList::MakeIterator(Bool_t dir) const
 {
+   R__COLLECTION_READ_GUARD();
+
    return new TListIter(this, dir);
 }
 
@@ -615,6 +672,8 @@ TIterator *TList::MakeIterator(Bool_t dir) const
 
 TObjLink *TList::NewLink(TObject *obj, TObjLink *prev)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (prev)
       return new TObjLink(obj, prev);
    else
@@ -626,6 +685,8 @@ TObjLink *TList::NewLink(TObject *obj, TObjLink *prev)
 
 TObjLink *TList::NewOptLink(TObject *obj, Option_t *opt, TObjLink *prev)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (prev)
       return new TObjOptLink(obj, prev, opt);
    else
@@ -638,14 +699,25 @@ TObjLink *TList::NewOptLink(TObject *obj, Option_t *opt, TObjLink *prev)
 
 void TList::RecursiveRemove(TObject *obj)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (!obj) return;
+
+   // When fCache is set and has no previous and next node, it represents
+   // the node being cleared and/or deleted.
+   if (fCache && fCache->fNext == 0 && fCache->fPrev == 0) {
+      TObject *ob = fCache->GetObject();
+      if (ob && ob->TestBit(kNotDeleted)) {
+         ob->RecursiveRemove(obj);
+      }
+   }
 
    TObjLink *lnk  = fFirst;
    TObjLink *next = 0;
    while (lnk) {
       next = lnk->Next();
       TObject *ob = lnk->GetObject();
-      if (ob->TestBit(kNotDeleted)) {
+      if (ob && ob->TestBit(kNotDeleted)) {
          if (ob->IsEqual(obj)) {
             if (lnk == fFirst) {
                fFirst = next;
@@ -678,6 +750,8 @@ void TList::RecursiveRemove(TObject *obj)
 
 TObject *TList::Remove(TObject *obj)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (!obj) return 0;
 
    Int_t    idx;
@@ -718,6 +792,8 @@ TObject *TList::Remove(TObject *obj)
 
 TObject *TList::Remove(TObjLink *lnk)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (!lnk) return 0;
 
    TObject *obj = lnk->GetObject();
@@ -750,6 +826,8 @@ TObject *TList::Remove(TObjLink *lnk)
 
 void TList::RemoveLast()
 {
+   R__COLLECTION_WRITE_GUARD();
+
    TObjLink *lnk = fLast;
    if (!lnk) return;
 
@@ -774,6 +852,8 @@ void TList::RemoveLast()
 
 void TList::Sort(Bool_t order)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    if (!fFirst) return;
 
    fAscending = order;
@@ -806,6 +886,8 @@ void TList::Sort(Bool_t order)
 
 Bool_t TList::LnkCompare(TObjLink *l1, TObjLink *l2)
 {
+   R__COLLECTION_READ_GUARD();
+
    Int_t cmp = l1->GetObject()->Compare(l2->GetObject());
 
    if ((IsAscending() && cmp <=0) || (!IsAscending() && cmp > 0))
@@ -818,6 +900,8 @@ Bool_t TList::LnkCompare(TObjLink *l1, TObjLink *l2)
 
 TObjLink **TList::DoSort(TObjLink **head, Int_t n)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    TObjLink *p1, *p2, **h2, **t2;
 
    switch (n) {
@@ -875,7 +959,7 @@ TObjLink::TObjLink(TObject *obj, TObjLink *prev)
 Iterator of linked list.
 */
 
-ClassImp(TListIter)
+ClassImp(TListIter);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new list iterator. By default the iteration direction
@@ -884,6 +968,7 @@ ClassImp(TListIter)
 TListIter::TListIter(const TList *l, Bool_t dir)
         : fList(l), fCurCursor(0), fCursor(0), fDirection(dir), fStarted(kFALSE)
 {
+   R__COLLECTION_ITER_GUARD(fList);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -891,6 +976,8 @@ TListIter::TListIter(const TList *l, Bool_t dir)
 
 TListIter::TListIter(const TListIter &iter) : TIterator(iter)
 {
+   R__COLLECTION_ITER_GUARD(iter.fList);
+
    fList      = iter.fList;
    fCurCursor = iter.fCurCursor;
    fCursor    = iter.fCursor;
@@ -903,8 +990,10 @@ TListIter::TListIter(const TListIter &iter) : TIterator(iter)
 
 TIterator &TListIter::operator=(const TIterator &rhs)
 {
+
    const TListIter *rhs1 = dynamic_cast<const TListIter *>(&rhs);
    if (this != &rhs && rhs1) {
+      R__COLLECTION_ITER_GUARD(rhs1->fList);
       TIterator::operator=(rhs);
       fList      = rhs1->fList;
       fCurCursor = rhs1->fCurCursor;
@@ -921,6 +1010,7 @@ TIterator &TListIter::operator=(const TIterator &rhs)
 TListIter &TListIter::operator=(const TListIter &rhs)
 {
    if (this != &rhs) {
+      R__COLLECTION_ITER_GUARD(rhs.fList);
       TIterator::operator=(rhs);
       fList      = rhs.fList;
       fCurCursor = rhs.fCurCursor;
@@ -937,6 +1027,8 @@ TListIter &TListIter::operator=(const TListIter &rhs)
 TObject *TListIter::Next()
 {
    if (!fList) return 0;
+
+   R__COLLECTION_ITER_GUARD(fList);
 
    if (fDirection == kIterForward) {
       if (!fStarted) {
@@ -980,6 +1072,7 @@ void TListIter::SetOption(Option_t *option)
 
 void TListIter::Reset()
 {
+   R__COLLECTION_ITER_GUARD(fList);
    fStarted = kFALSE;
 }
 
@@ -1011,6 +1104,8 @@ Bool_t TListIter::operator!=(const TListIter &aIter) const
 
 void TList::Streamer(TBuffer &b)
 {
+   R__COLLECTION_WRITE_GUARD();
+
    Int_t nobjects;
    UChar_t nch;
    Int_t nbig;

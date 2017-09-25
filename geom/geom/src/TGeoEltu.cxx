@@ -46,7 +46,7 @@ End_Macro
 #include "TBuffer3DTypes.h"
 #include "TMath.h"
 
-ClassImp(TGeoEltu)
+ClassImp(TGeoEltu);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy constructor
@@ -60,7 +60,7 @@ TGeoEltu::TGeoEltu()
 /// Default constructor specifying X and Y semiaxis length
 
 TGeoEltu::TGeoEltu(Double_t a, Double_t b, Double_t dz)
-           :TGeoTube()
+           :TGeoTube(0, 0, 0)
 {
    SetShapeBit(TGeoShape::kGeoEltu);
    SetEltuDimensions(a, b, dz);

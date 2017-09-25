@@ -94,8 +94,10 @@ public:
 
 private:
   PassManagerBase *PM;
-  AnalysisID StartBefore, StartAfter;
-  AnalysisID StopAfter;
+  AnalysisID StartBefore = nullptr;
+  AnalysisID StartAfter = nullptr;
+  AnalysisID StopBefore = nullptr;
+  AnalysisID StopAfter = nullptr;
   bool Started;
   bool Stopped;
   bool AddingMachinePasses;
@@ -112,6 +114,10 @@ protected:
 
   /// Default setting for -enable-tail-merge on this target.
   bool EnableTailMerge;
+
+  /// Require processing of functions such that callees are generated before
+  /// callers.
+  bool RequireCodeGenSCCOrder;
 
 public:
   TargetPassConfig(TargetMachine *tm, PassManagerBase &pm);
@@ -143,11 +149,14 @@ public:
   /// This function expects that at least one of the StartAfter or the
   /// StartBefore pass IDs is null.
   void setStartStopPasses(AnalysisID StartBefore, AnalysisID StartAfter,
-                          AnalysisID StopAfter) {
-    if (StartAfter)
-      assert(!StartBefore && "Start after and start before passes are given");
+                          AnalysisID StopBefore, AnalysisID StopAfter) {
+    assert(!(StartBefore && StartAfter) &&
+           "Start after and start before passes are given");
+    assert(!(StopBefore && StopAfter) &&
+           "Stop after and stop before passed are given");
     this->StartBefore = StartBefore;
     this->StartAfter = StartAfter;
+    this->StopBefore = StopBefore;
     this->StopAfter = StopAfter;
     Started = (StartAfter == nullptr) && (StartBefore == nullptr);
   }
@@ -156,6 +165,11 @@ public:
 
   bool getEnableTailMerge() const { return EnableTailMerge; }
   void setEnableTailMerge(bool Enable) { setOpt(EnableTailMerge, Enable); }
+
+  bool requiresCodeGenSCCOrder() const { return RequireCodeGenSCCOrder; }
+  void setRequiresCodeGenSCCOrder(bool Enable = true) {
+    setOpt(RequireCodeGenSCCOrder, Enable);
+  }
 
   /// Allow the target to override a specific pass without overriding the pass
   /// pipeline. When passes are added to the standard pipeline at the
@@ -218,6 +232,14 @@ public:
   virtual bool addIRTranslator() { return true; }
 
   /// This method may be implemented by targets that want to run passes
+  /// immediately before legalization.
+  virtual void addPreLegalizeMachineIR() {}
+
+  /// This method should install a legalize pass, which converts the instruction
+  /// sequence into one that can be selected by the target.
+  virtual bool addLegalizeMachineIR() { return true; }
+
+  /// This method may be implemented by targets that want to run passes
   /// immediately before the register bank selection.
   virtual void addPreRegBankSelect() {}
 
@@ -225,6 +247,16 @@ public:
   /// assigns register banks to virtual registers without a register
   /// class or register banks.
   virtual bool addRegBankSelect() { return true; }
+
+  /// This method may be implemented by targets that want to run passes
+  /// immediately before the (global) instruction selection.
+  virtual void addPreGlobalInstructionSelect() {}
+
+  /// This method should install a (global) instruction selector pass, which
+  /// converts possibly generic instructions to fully target-specific
+  /// instructions, thereby constraining all generic virtual registers to
+  /// register classes.
+  virtual bool addGlobalInstructionSelect() { return true; }
 
   /// Add the complete, standard set of LLVM CodeGen passes.
   /// Fully developed targets will not generally override this.
@@ -262,6 +294,20 @@ public:
   /// Add a pass to perform basic verification of the machine function if
   /// verification is enabled.
   void addVerifyPass(const std::string &Banner);
+
+  /// Check whether or not GlobalISel should be enabled by default.
+  /// Fallback/abort behavior is controlled via other methods.
+  virtual bool isGlobalISelEnabled() const;
+
+  /// Check whether or not GlobalISel should abort on error.
+  /// When this is disable, GlobalISel will fall back on SDISel instead of
+  /// erroring out.
+  virtual bool isGlobalISelAbortEnabled() const;
+
+  /// Check whether or not a diagnostic should be emitted when GlobalISel
+  /// uses the fallback path. In other words, it will emit a diagnostic
+  /// when GlobalISel failed and isGlobalISelAbortEnabled is false.
+  virtual bool reportDiagnosticWhenGlobalISelFallback() const;
 
 protected:
   // Helper to verify the analysis is really immutable.

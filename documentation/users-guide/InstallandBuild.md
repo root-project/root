@@ -59,142 +59,38 @@ This will create the directory root. Before getting started read the
 file README/README. Also, read the Introduction chapter for an
 explanation of the directory structure.
 
-## Installing the Source
+## Installing from the Source
 
+The ROOT's source code sits in the GitHub repository <https://github.com/root-project/root>
+all the details and options to buld ROOT from sources are given in
+<https://root.cern/building-root>
 
-You have a choice to download a compressed (tar ball) file containing
-the source, or you can use the Subversion (svn) source code change
-control system and check out the most recent source. The compressed file
-is a one time only choice; every time you would like to upgrade you will
-need to download the entire new version. Choosing the CVS option will
-allow you to get changes as they are submitted by the developers and you
-can stay up to date.
+In short, the steps to build ROOT from the sources are the following:
 
-### Installing and Building the Source from a Compressed File
-
-
-To install the ROOT source you can download the tar file containing all
-the source files from the ROOT website. The first thing you should do is
-to get the latest version as a tar file. Unpack the source tar file,
-this creates directory ‘root':
-
+  1. Clone the repository:
 ``` {.cpp}
-% tar zxvf root_v5.30.xx.source.tar.gz
+$ git clone https://github.com/root-project/root.git
 ```
 
-Type the build commands:
-
+  2. Make a directory for building
 ``` {.cpp}
-% cd root
-% ./configure --help
-% ./configure [<arch>]
-% (g)make
+$ mkdir build
+$ cd build
 ```
 
-Add `bin/` to `PATH` and `lib/ to LD_LIBRARY_PATH`. For the sh shell
-family do:
-
+  3. Setup and run ROOT
 ``` {.cpp}
-% . bin/thisroot.sh
+$ source bin/thisroot.sh
+$ root
 ```
-
-and for the csh shell family do:
-
-``` {.cpp}
-% source bin/thisroot.csh
-```
-
-Try running root:
-
-``` {.cpp}
-% root
-```
-
-It is also possible to setup and build ROOT in a fixed location. Please
-check README/INSTALL for more a detailed description of this procedure.
-
-#### Target directory
-
-By default, ROOT will be built in the `$ROOTSYS` directory. In that case
-the whole system (binaries, sources, tutorials, etc.) will be located
-under the `$ROOTSYS` directory.
-
-#### `Makefile` targets
-
-The `Makefile` is documented in details in the README/BUILDSYSTEM file.
-It explains the build options and targets.
-
-### More Build Options
-
-
-To build the library providing thread support you need to define either
-the environment variable ‘`THREAD=-lpthread' `or the configure flag
-`‘--with-thread=-lpthread`' (it is the default for the `linuxegcs`
-architecture). [Note: this is only tested on Linux for the time being.]
-To build the library providing CERN RFIO (remote I/O) support you need
-to define either the environment variable `‘ RFIO=<path>/libshift.a`' or
-the configure flag `‘--with-rfio=<path>/libshift.a'`. For pre-built
-version of `libshift.a` see <ftp://root.cern.ch/root/shift/>
-
-To build the PAW and Geant3 conversion programs h2root and g2root you
-need to define either the environment variable `‘CERNLIB=<cernlibpath>`'
-or the configure flag `‘--with-cern-libdir=<cernlibpath>`'.
-
-To build the `MySQL` interface library you need to install `MySQL`
-first. Visit <http://www.mysql.com/> for the latest versions.
-
-To build the strong authentication module used by `rootd`, you first
-have to install the SRP (Secure Remote Password) system. Visit
-<http://srp.stanford.edu>
-
-To use the library you have to define either the environment variable
-‘`SRP=<srpdir>`' or the configure flag `‘--with-srp=<srpdir>'.`
-
-To build the event generator interfaces for Pythia and Pythia6, you
-first have to get the Pythia libraries available from ftp:
-<ftp://root.cern.ch/root/pythia6.tar.gz>.
-
-To use the libraries you have to define either
-‘`PYTHIA=<pythiadir>`' or the configure flag
-`‘--with-pythia=<pythiadir>`'. The same applies for Pythia6.
-
-#### Installing the Source from Subversion
-
-This paragraph describes how to checkout and build ROOT from Subversion
-for Unix systems. For description of a checkout for other platforms,
-please see ROOT installation web page:
-<http://root.cern.ch/drupal/content/installing-root-source>.
-
-``` {.cpp}
-% svn co http://root.cern.ch/svn/root/trunk root
-U root/...
-U ...
-% cd root
-% ./configure --help
-% ./configure [<arch>]
-% (g)make
-```
-
-If you are a part of collaboration, you may need to use setup procedures
-specific to the particular development environment prior to running
-`(g)make`. For more install instructions and options, see the file
-README/INSTALL.
-
-#### Subversion for Windows
-
-Although there exists a native version of Subversion for Windows, we
-only support the build process under the `Cygwin` environment. You must
-have svn version 1.6 or newer. The checkout and build procedure is
-similar to that for UNIX. For detailed install instructions, see the
-file REAMDE/INSTALL.
 
 #### Staying up-to-date
 
-To keep your local ROOT source up-to-date with the Subversion repository
+To keep your local ROOT source up-to-date with the GitHub repository
 you should regularly run the command:
 
 ``` {.cpp}
-% svn up
+% git pull
 ```
 
 ## File system.rootrc
@@ -1044,7 +940,7 @@ Rint.Canvas.HighLightColor:      5
 
 -   The latest ROOT Users Guide
 
--   <http://root.cern.ch/root/doc/RootDoc.html>
+-   <https://root.cern.ch/root/htmldoc/guides/users-guide/ROOTUsersGuide.html>
 
 -   ROOT Reference Guide
 

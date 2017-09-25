@@ -154,7 +154,7 @@ using std::make_pair;
 
 REGISTER_METHOD(BDT)
 
-ClassImp(TMVA::MethodBDT)
+ClassImp(TMVA::MethodBDT);
 
    const Int_t TMVA::MethodBDT::fgDebugLevel = 0;
 
@@ -850,7 +850,12 @@ void TMVA::MethodBDT::InitEventSample( void )
       if (fPairNegWeightsGlobal) PreProcessNegativeEventWeights();
    }
 
-   if (!DoRegression() && !fSkipNormalization){
+   if (DoRegression()) {
+      // Regression, no reweighting to do
+   } else if (DoMulticlass()) {
+      // Multiclass, only gradboost is supported. No reweighting.
+   } else if (!fSkipNormalization) {
+      // Binary classification.
       Log() << kDEBUG << "\t<InitEventSample> For classification trees, "<< Endl;
       Log() << kDEBUG << " \tthe effective number of backgrounds is scaled to match "<<Endl;
       Log() << kDEBUG << " \tthe signal. Otherwise the first boosting step would do 'just that'!"<<Endl;
@@ -1281,8 +1286,12 @@ void TMVA::MethodBDT::Train()
                   << "Please change boost option accordingly (GradBoost)."
                   << Endl;
          }
+
          UInt_t nClasses = DataInfo().GetNClasses();
          for (UInt_t i=0;i<nClasses;i++){
+            // Careful: If fSepType is nullptr, the tree will be considered a regression tree and
+            // use the correct output for gradboost (response rather than yesnoleaf) in checkEvent.
+            // See TMVA::MethodBDT::InitGradBoost.
             fForest.push_back( new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), i,
                                                  fRandomisedTrees, fUseNvars, fUsePoissonNvars, fMaxDepth,
                                                  itree*nClasses+i, fNodePurityLimit, itree*nClasses+1));
@@ -1492,14 +1501,15 @@ Double_t TMVA::MethodBDT::GradBoost(std::vector<const TMVA::Event*>& eventSample
       auto &v = leaves[node];
       auto target = e->GetTarget(cls);
       v.sumWeightTarget += target * weight;
-      v.sum2 += fabs(target) * (1.0-fabs(target)) * weight * weight;
+      v.sum2 += fabs(target) * (1.0 - fabs(target)) * weight;
    }
    for (auto &iLeave : leaves) {
       constexpr auto minValue = 1e-30;
       if (iLeave.second.sum2 < minValue) {
          iLeave.second.sum2 = minValue;
       }
-      iLeave.first->SetResponse(fShrinkage/DataInfo().GetNClasses() * iLeave.second.sumWeightTarget/iLeave.second.sum2);
+      const Double_t K = DataInfo().GetNClasses();
+      iLeave.first->SetResponse(fShrinkage * (K - 1) / K * iLeave.second.sumWeightTarget / iLeave.second.sum2);
    }
 
    //call UpdateTargets before next tree is grown

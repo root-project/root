@@ -114,7 +114,7 @@ Bool_t TGInputHandler::Notify()
 }
 
 
-ClassImp(TGClient)
+ClassImp(TGClient);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a connection with the display sever on host dpyName and setup

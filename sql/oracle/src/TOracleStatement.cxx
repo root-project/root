@@ -23,7 +23,7 @@
 #include "TDataType.h"
 #include <stdlib.h>
 
-ClassImp(TOracleStatement)
+ClassImp(TOracleStatement);
 
 using namespace std;
 using namespace oracle::occi;

@@ -38,7 +38,7 @@ by the RooRealVar::setRange() that takes RooAbsReal references as arguments
 
 using namespace std;
 
-ClassImp(RooParamBinning)
+ClassImp(RooParamBinning);
 ;
 
 

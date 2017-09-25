@@ -7,8 +7,8 @@
 ///
 /// \macro_code
 ///
-/// \author Danilo Piparo
 /// \date January 2016
+/// \author Danilo Piparo
 
 Int_t mp102_readNtuplesFillHistosAndFit()
 {
@@ -17,7 +17,7 @@ Int_t mp102_readNtuplesFillHistosAndFit()
    gROOT->SetBatch();
 
    //---------------------------------------
-   // Perform the operation sequentially 
+   // Perform the operation sequentially
    TChain inputChain("multiCore");
    inputChain.Add("mp101_multiCore_*.root");
    if (inputChain.GetNtrees() <= 0) {
@@ -29,7 +29,7 @@ Int_t mp102_readNtuplesFillHistosAndFit()
    outHisto.Fit("gaus");
 
    //---------------------------------------
-   // We now go MP! 
+   // We now go MP!
    // TProcessExecutor offers an interface to directly process trees and chains without
    // the need for the user to go through the low level implementation of a
    // map-reduce.

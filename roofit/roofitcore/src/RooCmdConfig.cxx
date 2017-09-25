@@ -45,7 +45,7 @@ arguments and dependencies between arguments
 
 using namespace std;
 
-ClassImp(RooCmdConfig) 
+ClassImp(RooCmdConfig); 
   ;
 
 

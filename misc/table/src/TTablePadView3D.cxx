@@ -22,7 +22,7 @@
 #include "TVirtualPad.h"
 
 
-//   ClassImp(TTablePadView3D)   //3-D View of TPad
+//   ClassImp(TTablePadView3D);   //3-D View of TPad
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete 3D viewer.

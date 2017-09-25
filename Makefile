@@ -93,7 +93,7 @@ MODULES       = build interpreter/llvm interpreter/cling core/foundation \
                 core/clingutils core/dictgen core/metacling \
                 core/pcre core/clib \
                 core/textinput core/base core/cont core/meta core/thread \
-                io/rootpcm io/io math/mathcore net/net core/zip core/lzma \
+                io/rootpcm io/io math/mathcore net/net core/zip core/lzma core/lz4 \
                 math/matrix \
                 core/newdelete hist/hist hist/unfold tree/tree graf2d/freetype \
                 graf2d/mathtext graf2d/graf graf2d/gpad graf3d/g3d \
@@ -587,7 +587,7 @@ COREDICTHDEP  = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMDH) \
 		$(ZIPDICTH) $(CLIBHH) $(FOUNDATIONH) $(TEXTINPUTH)
 COREDICTH     = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMDICTH) \
                 $(ZIPDICTH) $(CLIBHH) $(FOUNDATIONH) $(TEXTINPUTH)
-COREO         = $(BASEO) $(CONTO) $(FOUNDATIONO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) \
+COREO         = $(BASEO) $(CONTO) $(FOUNDATIONO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) $(LZ4O) \
                 $(CLIBO) $(TEXTINPUTO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
@@ -604,6 +604,14 @@ STATICEXTRALIBS += $(LZMALIBDIR) $(LZMACLILIB)
 else
 CORELIBEXTRA    += $(LZMALIB)
 STATICEXTRALIBS += $(LZMALIB)
+endif
+
+ifneq ($(BUILTINLZ4),yes)
+CORELIBEXTRA    += $(LZ4LIBDIR) $(LZ4CLILIB)
+STATICEXTRALIBS += $(LZ4LIBDIR) $(LZ4CLILIB)
+else
+CORELIBEXTRA    += $(LZ4LIB)
+STATICEXTRALIBS += $(LZ4LIB)
 endif
 
 ##### In case shared libs need to resolve all symbols (e.g.: aix, win32) #####
@@ -1237,7 +1245,7 @@ ifeq ($(CXXMODULES),yes)
 ROOTPCHCXXFLAGS := $(filter-out $(ROOT_CXXMODULES_CXXFLAGS),$(ROOTPCHCXXFLAGS))
 endif
 
-$(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(ORDER_) $(ALLLIBS)
+$(ROOTPCH): $(MAKEPCH) $(ROOTCLINGSTAGE1DEP) $(ALLHDRS) $(CLINGETCPCH) $(MAKEPCHINPUT) $(ORDER_) $(ALLLIBS)
 	@$(MAKEPCHINPUT) $(ROOT_SRCDIR) "$(MODULES)" $(CLINGETCPCH) -- $(ROOTPCHCXXFLAGS) $(SYSTEMDEF)
 	@ROOTIGNOREPREFIX=1 $(MAKEPCH) $@
 

@@ -54,7 +54,7 @@ A helix provides:
 #include "TGeoMatrix.h"
 #include "TGeoHelix.h"
 
-ClassImp(TGeoHelix)
+ClassImp(TGeoHelix);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Dummy constructor

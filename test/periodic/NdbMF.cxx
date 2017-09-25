@@ -1,6 +1,6 @@
 #include "NdbMF.h"
 
-ClassImp(NdbMF)
+ClassImp(NdbMF);
 
 #include <Riostream.h>
 

@@ -47,7 +47,6 @@
 #pragma link C++ class TNtuple-;
 #pragma link C++ class TNtupleD-;
 #pragma link C++ class+protected TSelector+;
-#pragma link C++ class TSelectorCint+;
 #pragma link C++ class TSelectorList+;
 #pragma link C++ class TTree-;
 #pragma link C++ class TTreeCloner+;

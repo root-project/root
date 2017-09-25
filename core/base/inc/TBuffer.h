@@ -68,8 +68,10 @@ protected:
 
 public:
    enum EMode { kRead = 0, kWrite = 1 };
-   enum { kIsOwner = BIT(16) };                        //if set TBuffer owns fBuffer
-   enum { kCannotHandleMemberWiseStreaming = BIT(17)}; //if set TClonesArray should not use member wise streaming
+   enum EStatusBits {
+     kIsOwner = BIT(16), //if set TBuffer owns fBuffer
+     kCannotHandleMemberWiseStreaming = BIT(17) //if set TClonesArray should not use member wise streaming
+   };
    enum { kInitialSize = 1024, kMinimalSize = 128 };
 
    TBuffer(EMode mode);

@@ -21,8 +21,6 @@ public:
    ClassDef(iterplugin, 0)   // A simple user iterator plugin that changes volume color
 };
 
-ClassImp(iterplugin)
-
 void iterplugin::ProcessNode()
 {
    if (!fIterator) return;

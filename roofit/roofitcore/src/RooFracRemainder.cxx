@@ -42,7 +42,7 @@ a constrained split
 
 using namespace std;
 
-ClassImp(RooFracRemainder)
+ClassImp(RooFracRemainder);
 ;
 
 

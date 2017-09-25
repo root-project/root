@@ -21,7 +21,7 @@
 #include "TTimer.h"
 #include <string.h>
 
-ClassImp(TGroupButton)
+ClassImp(TGroupButton);
 
 
 /** \class TGroupButton

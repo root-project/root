@@ -26,7 +26,7 @@ The TEnum class implements the enum type.
 
 #include "TListOfEnums.h"
 
-ClassImp(TEnum)
+ClassImp(TEnum);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for TEnum class.

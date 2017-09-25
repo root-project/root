@@ -34,8 +34,7 @@ int main()
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
-    if (error > 1e-5)
-        return 1;
+    if (error > 1e-3) return 1;
 
     //
     // Loss Functions
@@ -46,8 +45,7 @@ int main()
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
-    if (error > 1e-5)
-        return 1;
+    if (error > 1e-3) return 1;
 
     //
     // Regularization Functions
@@ -58,8 +56,7 @@ int main()
     std::cout << "Total    : ";
     std::cout << "Maximum Relative Error = " << print_error(error);
     std::cout << std::endl << std::endl;
-    if (error > 1e-5)
-        return 1;
+    if (error > 1e-3) return 1;
 
     return 0;
 }

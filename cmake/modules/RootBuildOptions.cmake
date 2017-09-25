@@ -77,6 +77,7 @@ ROOT_BUILD_OPTION(builtin_glew ON "Build included libGLEW, or use system libGLEW
 ROOT_BUILD_OPTION(builtin_gsl OFF "Build the GSL library internally (downloading tarfile from the Web)")
 ROOT_BUILD_OPTION(builtin_llvm ON "Build the LLVM internally")
 ROOT_BUILD_OPTION(builtin_lzma OFF "Build included liblzma, or use system liblzma")
+ROOT_BUILD_OPTION(builtin_lz4 OFF "Built included liblz4, or use system liblz4")
 ROOT_BUILD_OPTION(builtin_openssl OFF "Build OpenSSL internally, or use system OpenSSL")
 ROOT_BUILD_OPTION(builtin_pcre OFF "Build included libpcre, or use system libpcre")
 ROOT_BUILD_OPTION(builtin_tbb OFF "Build the TBB internally")
@@ -98,8 +99,8 @@ ROOT_BUILD_OPTION(cocoa OFF "Use native Cocoa/Quartz graphics backend (MacOS X o
 ROOT_BUILD_OPTION(cuda OFF "Use CUDA if it is found in the system")
 ROOT_BUILD_OPTION(cxx11 ON "Build using C++11 compatible mode, requires gcc > 4.7.x or clang")
 ROOT_BUILD_OPTION(cxx14 OFF "Build using C++14 compatible mode, requires gcc > 4.9.x or clang")
-ROOT_BUILD_OPTION(cxx17 OFF "Build using C++17 compatible mode, requires gcc >= 7.1.0 or clang")
-ROOT_BUILD_OPTION(cxxmodules "Compile with C++ modules enabled." OFF)
+#ROOT_BUILD_OPTION(cxx17 OFF "Build using C++17 compatible mode, requires gcc >= 7.1.0 or clang")
+ROOT_BUILD_OPTION(cxxmodules OFF "Compile with C++ modules enabled.")
 ROOT_BUILD_OPTION(davix ON "DavIx library for HTTP/WEBDAV access")
 ROOT_BUILD_OPTION(dcache ON "dCache support, requires libdcap from DESY")
 ROOT_BUILD_OPTION(exceptions ON "Turn on compiler exception handling capability")
@@ -126,6 +127,7 @@ ROOT_BUILD_OPTION(ldap ON "LDAP support, requires (Open)LDAP libs")
 ROOT_BUILD_OPTION(libcxx OFF "Build using libc++, requires cxx11 option (MacOS X only, for the time being)")
 ROOT_BUILD_OPTION(macos_native OFF "Disable looking for libraries, includes and binaries in locations other than a native installation (MacOS only)")
 ROOT_BUILD_OPTION(mathmore ON "Build the new libMathMore extended math library, requires GSL (vers. >= 1.8)")
+ROOT_BUILD_OPTION(memory_termination OFF "Free internal ROOT memory before process termination (experimental, used for leak checking)")
 ROOT_BUILD_OPTION(memstat ON "A memory statistics utility, helps to detect memory leaks")
 ROOT_BUILD_OPTION(minuit2 OFF "Build the new libMinuit2 minimizer library")
 ROOT_BUILD_OPTION(monalisa ON "Monalisa monitoring support, requires libapmoncpp")
@@ -148,6 +150,7 @@ ROOT_BUILD_OPTION(roofit OFF "Build the libRooFit advanced fitting package")
 ROOT_BUILD_OPTION(root7 OFF "Build the ROOT 7 interface prototype, requires >= cxx14")
 ROOT_BUILD_OPTION(rpath OFF "Set run-time library load path on executables and shared libraries (at installation area)")
 ROOT_BUILD_OPTION(ruby OFF "Ruby ROOT bindings, requires ruby >= 1.8")
+ROOT_BUILD_OPTION(runtime_cxxmodules OFF "Enable runtime support for C++ modules.")
 ROOT_BUILD_OPTION(sapdb ON "MaxDB/SapDB support, requires libsqlod and libsqlrte")
 ROOT_BUILD_OPTION(shadowpw ON "Shadow password support")
 ROOT_BUILD_OPTION(shared ON "Use shared 3rd party libraries if possible")
@@ -203,6 +206,7 @@ if(all)
  set(unuran_defvalue ON)
  set(vc_defvalue ON)
  set(vdt_defvalue ON)
+ set(veccore_defvalue ON)
 endif()
 
 #--- The 'builtin_all' option swithes ON old the built in options-------------------------------
@@ -229,10 +233,10 @@ if(builtin_all)
   set(builtin_veccore_defvalue ON)
 endif()
 
-#---VC does not support yet Arm and PPC processors----------------------------------------------
-if (CMAKE_SYSTEM_PROCESSOR STREQUAL "aarch64" OR CMAKE_SYSTEM_PROCESSOR STREQUAL "ppc64le")
-   message(STATUS "A system not supported by Vc, ${CMAKE_SYSTEM_PROCESSOR}, was detected. Disabling Vc by default.")
-   set(vc_defvalue OFF)
+#---Vc supports only x86_64 architecture-------------------------------------------------------
+if (NOT CMAKE_SYSTEM_PROCESSOR STREQUAL "x86_64")
+  message(STATUS "Vc does not support ${CMAKE_SYSTEM_PROCESSOR}. Support for Vc disabled.")
+  set(vc_defvalue OFF)
 endif()
 
 #---Options depending of CMake Generator-------------------------------------------------------
@@ -254,6 +258,11 @@ endforeach()
 #---Apply root7 versus language------------------------------------------------------------------
 if(cxx14 OR cxx17 OR cxx14_defval OR cxx17_defval)
   set(root7_defvalue ON)
+endif()
+
+#---roottest option implies testing
+if(roottest)
+  set(testing ON CACHE BOOL "" FORCE)
 endif()
 
 #---Define at moment the options with the selected default values-----------------------------

@@ -17,6 +17,7 @@
 //////////////////////////////////////////////////////////////////////////
 ///
 /// \class ROOT::TTreeProcessorMP
+/// \ingroup Parallelism
 /// \brief This class provides an interface to process a TTree dataset
 ///        in parallel with multi-process technology
 ///

@@ -39,6 +39,7 @@ private:
    static ReAllocFun_t   fgReAllocHook;        // custom ReAlloc
    static ReAllocCFun_t  fgReAllocCHook;       // custom ReAlloc with length check
    static Bool_t         fgHasCustomNewDelete; // true if using ROOT's new/delete
+public:
    static const UInt_t   kObjectAllocMemValue = 0x99999999;
                                                // magic number for ObjectAlloc
 

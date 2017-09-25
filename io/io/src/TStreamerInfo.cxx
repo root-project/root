@@ -80,7 +80,7 @@ std::atomic<Int_t> TStreamerInfo::fgCount{0};
 
 const Int_t kMaxLen = 1024;
 
-ClassImp(TStreamerInfo)
+ClassImp(TStreamerInfo);
 
 static void R__TObjArray_InsertAt(TObjArray *arr, TObject *obj, Int_t at)
 {
@@ -2519,7 +2519,7 @@ void TStreamerInfo::Clear(Option_t *option)
    opt.ToLower();
 
    if (opt.Contains("build")) {
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
 
       delete [] fComp;     fComp    = 0;
       delete [] fCompFull; fCompFull= 0;

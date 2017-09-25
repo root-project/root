@@ -20,7 +20,7 @@ Abstract base class for PROOF benchmark runs
 #include "TList.h"
 #include "TProof.h"
 
-ClassImp(TProofBenchRun)
+ClassImp(TProofBenchRun);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor: check PROOF and load selectors PAR

@@ -43,7 +43,7 @@ Base class for TMVA fitters. Also defines generalised fitting interface
 #include "Rtypes.h"
 #include "TString.h"
 
-ClassImp(TMVA::FitterBase)
+ClassImp(TMVA::FitterBase);
 
 #ifdef _WIN32
 /*Disable warning C4355: 'this' : used in base member initializer list*/

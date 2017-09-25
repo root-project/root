@@ -54,6 +54,7 @@ ClassImp(TGraphPainter);
 - [TGraphPolar options](#GP04)
 - [Colors automatically picked in palette](#GP05)
 - [Reverse graphs' axis](#GP06)
+- [Graphs in logarithmic scale](#GP07)
 
 
 ### <a name="GP00"></a> Introduction
@@ -107,8 +108,8 @@ Graphs can be drawn with the following options:
 | "PFC"    | Palette Fill Color: graph's fill color is taken in the current palette. |
 | "PLC"    | Palette Line Color: graph's line color is taken in the current palette. |
 | "PMC"    | Palette Marker Color: graph's marker color is taken in the current palette. |
-| "RX"     | Reserve the X axis. |
-| "RY"     | Reserve the Y axis. |
+| "RX"     | Reverse the X axis. |
+| "RY"     | Reverse the Y axis. |
 
 Drawing options can be combined. In the following example the graph
 is drawn as a smooth curve (option "C") with markers (option "P") and
@@ -484,6 +485,47 @@ Begin_Macro(source)
    c->cd(2); gPad->SetGrid(1,1);
    g->Draw("A RX RY PL");
 }
+End_Macro
+
+### <a name="GP07"></a> Graphs in logarithmic scale
+
+Like histograms, graphs can be drawn in logarithmic scale along X and Y. When
+a pad is set to logarithmic scale with TPad::SetLogx() and/or with TPad::SetLogy()
+the points building the graph are converted into logarithmic scale. But **only** the
+points not the lines connecting them which stay linear. This can be clearly seen
+on the following example:
+
+Begin_Macro(source)
+{
+   // A graph with 3 points
+   Double_t xmin = 750.;
+   Double_t xmax = 1000;
+   auto g = new TGraph(3);
+   g->SetPoint(0,xmin,0.1);
+   g->SetPoint(1,845,0.06504);
+   g->SetPoint(2,xmax,0.008);
+
+   // The same graph with n points
+   Int_t n = 10000;
+   Double_t dx = (xmax-xmin)/n;
+   Double_t x = xmin;
+   TGraph*g2 = new TGraph();
+   for (Int_t i=0; i<n; i++) {
+      g2->SetPoint(i, x, g->Eval(x));
+      x = x + dx;
+   }
+
+   auto cv = new TCanvas("cv","cv",800,600);
+   cv->SetLogy();
+   cv->SetGridx();
+   cv->SetGridy();
+   g->Draw("AL*");
+
+   g2->SetMarkerColor(kRed);
+   g2->SetMarkerStyle(1);
+   g2->Draw("P");
+}
+
 End_Macro
 */
 
@@ -1195,7 +1237,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
                if (optionFill) {
                   gPad->PaintFillArea(npt,gyworkl,gxworkl);
                   if (bord) gPad->PaintPolyLine(npt,gyworkl,gxworkl);
-               } else {
+               }
+               if (optionLine) {
                   if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, gyworkl, gxworkl);
                   gPad->PaintPolyLine(npt,gyworkl,gxworkl);
                }
@@ -1203,7 +1246,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
                if (optionFill) {
                   gPad->PaintFillArea(npt,gxworkl,gyworkl);
                   if (bord) gPad->PaintPolyLine(npt,gxworkl,gyworkl);
-               } else {
+               }
+               if (optionLine) {
                   if (TMath::Abs(theGraph->GetLineWidth())>99) PaintPolyLineHatches(theGraph, npt, gxworkl, gyworkl);
                   gPad->PaintPolyLine(npt,gxworkl,gyworkl);
                }

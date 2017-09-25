@@ -60,7 +60,8 @@ TMVAH4       := $(patsubst %,$(MODDIRI)/TMVA/%,$(TMVAH4))
 
 TMVAH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/TMVA/*.*))
 TMVAS        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
-TMVADNNS     := $(MODDIRS)/DNN/Architectures/Reference.cxx
+TMVADNNS     := $(MODDIRS)/DNN/Architectures/Reference.cxx \
+                $(MODDIRS)/DNN/Architectures/Reference/DataLoader.cxx
 TMVAO        := $(call stripsrc,$(TMVAS:.cxx=.o))  $(call stripsrc,$(TMVADNNS:.cxx=.o))
 
 TMVADEP      := $(TMVAO:.o=.d) $(TMVADO:.o=.d)
@@ -93,6 +94,7 @@ include/TMVA/DNN/%.h: $(TMVADIRI)/TMVA/DNN/%.h
 		@(if [ ! -d "include/TMVA/DNN/Architectures/Cpu" ]; then     \
 		  mkdir -p include/TMVA/DNN/Architectures/Cpu;               \
 		  mkdir -p include/TMVA/DNN/Architectures/Cuda;              \
+		  mkdir -p include/TMVA/DNN/Architectures/Reference;         \
 		fi)
 		cp $< $@
 

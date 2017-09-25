@@ -62,7 +62,7 @@ const Int_t  kMapOffset         = 2;   // first 2 map entries are taken by null 
 Int_t TBufferFile::fgMapSize   = kMapSize;
 
 
-ClassImp(TBufferFile)
+ClassImp(TBufferFile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return hash value for this object.
@@ -2756,7 +2756,8 @@ TClass *TBufferFile::ReadClass(const TClass *clReq, UInt_t *objTag)
         !(clReq->GetSchemaRules() &&
           clReq->GetSchemaRules()->HasRuleWithSourceClass(cl->GetName()) )
         ) ) {
-      Error("ReadClass", "got wrong class: %s", cl->GetName());
+      Error("ReadClass", "The on-file class is \"'%s\" which is not compatible with the requested class: \"%s\"",
+            cl->GetName(), clReq->GetName());
       // exception
    }
 

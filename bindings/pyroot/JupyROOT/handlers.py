@@ -10,7 +10,6 @@
 from ctypes import CDLL, c_char_p
 from threading import Thread
 from time import sleep as timeSleep
-from resource import setrlimit, RLIMIT_STACK, RLIM_INFINITY
 from sys import platform
 from os import path
 
@@ -95,8 +94,6 @@ class Runner(object):
     '''
     def __init__(self, function):
         self.function = function
-        if platform != 'darwin':
-            setrlimit(RLIMIT_STACK,(RLIM_INFINITY,RLIM_INFINITY))
         self.thread = None
 
     def Run(self, argument):

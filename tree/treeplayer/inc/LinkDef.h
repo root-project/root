@@ -101,5 +101,24 @@
 #pragma link C++ class ROOT::Internal::TTreeReaderArrayBase+;
 #pragma link C++ class ROOT::Internal::TNamedBranchProxy+;
 
+// All these are there for the autoloading
+#pragma link C++ class ROOT::Experimental::TDataFrame-;
+#pragma link C++ class ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TFilterBase>-;
+#pragma link C++ class ROOT::Experimental::TDF::TInterface<ROOT::Detail::TDF::TCustomColumnBase>-;
+#pragma link C++ namespace ROOT::Internal::TDF;
+#pragma link C++ namespace ROOT::Detail::TDF;
+#pragma link C++ namespace ROOT::Experimental::TDF;
+#pragma link C++ class ROOT::Detail::TDF::TFilterBase-;
+#pragma link C++ class ROOT::Detail::TDF::TCustomColumnBase-;
+#pragma link C++ class ROOT::Internal::TDF::CountHelper-;
+#pragma link C++ class ROOT::Detail::TDF::TRangeBase-;
+#pragma link C++ class ROOT::Detail::TDF::TLoopManager-;
+#pragma link C++ class ROOT::Experimental::TDF::TH1DModel-;
+#pragma link C++ class ROOT::Experimental::TDF::TH2DModel-;
+#pragma link C++ class ROOT::Experimental::TDF::TH3DModel-;
+#pragma link C++ class ROOT::Internal::TDF::TIgnoreErrorLevelRAII-;
+#pragma link C++ class ROOT::Experimental::TDF::TTrivialDS-;
+#pragma link C++ class ROOT::Experimental::TDF::TRootDS-;
+
 #endif
 

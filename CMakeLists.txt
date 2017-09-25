@@ -1,11 +1,26 @@
 #---Check if cmake has the required version-----------------------------------------------------
+
 cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
-cmake_policy(SET CMP0005 NEW)
+
+set(policy_new CMP0068)
+foreach(policy ${policy_new})
+  if(POLICY ${policy})
+    cmake_policy(SET ${policy} NEW)
+  endif()
+endforeach()
+
 include(cmake/modules/CaptureCommandLine.cmake)
 
 #---Set name of the project to "ROOT". Has to be done after check of cmake version--------------
 project(ROOT)
 set(IntegratedBuild ON)
+
+#---Set the locale to default C to prevent issued due to localization of commands---------------
+# This is necessary as we for example call `clang -v` and parse its output. But on a localized
+# program, the output parsing is much more error prone as certrain strings we're looking for
+# could be missing or be in a different order. To prevent those errors, let's just force all
+# output to use the default C locale which is more or less identical on all systems.
+set(ENV{LANG} C)
 
 #---Set pathes where to put the libraries, executables and headers------------------------------
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
@@ -61,6 +76,14 @@ if(coverage)
   set(CMAKE_EXE_LINKER_FLAGS     "${CMAKE_EXE_LINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
   set(CMAKE_SHARED_LINKER_FLAGS  "${CMAKE_SHAREDLINKER_FLAGS} ${GCC_COVERAGE_LINK_FLAGS}")
   set(CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS "${CMAKE_SHARED_LIBRARY_CREATE_CXX_FLAGS} ${GCC_COVERAGE_COMPILE_FLAGS}")
+endif()
+
+#--- Enable build timing -----------------------------------------------------------------------
+if (build_timing)
+  # FIXME: This currently will override the use of ccache if -Dbuild_timing=On -Dccache=On is passed.
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE "${CMAKE_COMMAND} -E time")
+  set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK "${CMAKE_COMMAND} -E time")
+  #set_property(GLOBAL PROPERTY RULE_LAUNCH_CUSTOM "${CMAKE_COMMAND} -E time") 
 endif()
 
 #---Enable CTest package -----------------------------------------------------------------------
@@ -137,6 +160,8 @@ endforeach()
 add_custom_target(move_artifacts DEPENDS ${stamp_file} ${tutorial_files_builddir})
 
 add_subdirectory (interpreter)
+# Add the compilation flags from LLVM to the flags we use to compile cling-based tools.
+set(CLING_CXXFLAGS "${CLING_CXXFLAGS} ${ROOT_LLVM_FLAGS}")
 
 #---CXX MODULES-----------------------------------------------------------------------------------
 if(cxxmodules)
@@ -171,36 +196,46 @@ if(cxxmodules)
     # for glew.h to it its trick.
     set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem")
   endif()
+endif(cxxmodules)
 
-  add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
-  add_custom_command(
-                    OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
-                    DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
-                    COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
-                    COMMAND cat "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> "${CMAKE_BINARY_DIR}/include/module.modulemap"
-  )
+add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
+add_custom_command(
+                  OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
+                  DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
+                  COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
+                  COMMAND cat "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> "${CMAKE_BINARY_DIR}/include/module.modulemap"
+)
+install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
-  add_dependencies(move_artifacts copymodulemap)
+add_dependencies(move_artifacts copymodulemap)
 
-  # Provide our own modulemap for implementations other than libcxx.
-  if (NOT libcxx)
-    # Write a empty overlay file to the output directory that CMake can run its compiler tests.
-    # We will create the actual overlay later in the configuration.
-    file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
-    set(__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
+# Provide our own modulemap for implementations other than libcxx.
+if (NOT libcxx)
+  # Write a empty overlay file to the output directory that CMake can run its compiler tests.
+  # We will create the actual overlay later in the configuration.
+  file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
+  set(__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
+
+  if (cxxmodules)
     set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} ${__vfs_overlay}")
+  endif()
 
-    # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
-    get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
-    string(REGEX MATCHALL "[^:]+" __libcpp_full_paths_list "${__libcpp_full_paths}")
+  # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
+  get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
+  string(REGEX MATCHALL "[^:]+" __libcpp_full_paths_list "${__libcpp_full_paths}")
+  if (__libcpp_full_paths_list)
     list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
 
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
 
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.cppmap ${CMAKE_BINARY_DIR}/include/stl.cppmap)
+    configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.modulemap ${CMAKE_BINARY_DIR}/include/stl.modulemap)
     configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
+  else()
+    message(SEND_ERROR "Couldn't find c++ library paths, no modulemap overlay will be installed! (__libcpp_full_paths = '${__libcpp_full_paths}')")
   endif()
+endif()
 
+if (cxxmodules)
   # These vars are useful when we want to compile things without cxxmodules.
   set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules" CACHE STRING "Useful to filter out the modules-related cxxflags.")
   if (NOT APPLE)
@@ -248,11 +283,10 @@ ROOT_ADD_TEST_SUBDIRECTORY(tutorials)
 # Take all the modulemap contents we collected from the packages and append them to our modulemap.
 # We have to delay this because the ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT is filled in the
 # add_subdirectory calls above.
-if(cxxmodules)
-  get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
-  string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
-  file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
-endif(cxxmodules)
+get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT)
+string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
+file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
+
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders})
@@ -280,8 +314,15 @@ add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} . ${__clingetcpch} -- ${CMAKE_CXX_FLAGS_SEPARATE}
                    DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__allFiles})
 
+get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
+foreach(d ${incdirs})
+  if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
+    set(__allIncludes ${__allIncludes} -I${d})
+  endif()
+endforeach()
+
 add_custom_command(OUTPUT etc/allDict.cxx.pch
-                   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch -I${CMAKE_BINARY_DIR}/include
+                   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
                    DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
                            etc/dictpch/allLinkDefs.h
                            etc/dictpch/allHeaders.h
@@ -378,10 +419,6 @@ if(testing)
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(roottest)
     endif()
-  endif()
-  if(clingtest)
-    message("-- cling test suite enabled: llvm / clang symbols in libCling will be exported!")
-    set(CLING_INCLUDE_TESTS ON)
   endif()
 endif()
 

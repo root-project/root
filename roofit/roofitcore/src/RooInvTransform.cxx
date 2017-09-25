@@ -36,7 +36,7 @@ range cannot include zero.
 
 using namespace std;
 
-ClassImp(RooInvTransform)
+ClassImp(RooInvTransform);
 ;
 
 

@@ -23,7 +23,7 @@
 #include "TClass.h"
 #include <cassert>
 
-ClassImp(TF3)
+ClassImp(TF3);
 
 /** \class TF3
     \ingroup Hist 
@@ -704,7 +704,7 @@ void TF3::Streamer(TBuffer &R__b)
 
    } else {
       Int_t saved = 0;
-      if (fType > 0 && fSave.empty() ) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,fZmin,fZmax);}
+      if (fType != EFType::kFormula && fSave.empty() ) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,fZmin,fZmax);}
 
       R__b.WriteClassBuffer(TF3::Class(),this);
 

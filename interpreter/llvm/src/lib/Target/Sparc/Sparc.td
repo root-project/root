@@ -84,9 +84,12 @@ def : Proc<"hypersparc",      []>;
 def : Proc<"sparclite86x",    []>;
 def : Proc<"sparclet",        []>;
 def : Proc<"tsc701",          []>;
-def : Proc<"myriad2",         []>;
-def : Proc<"myriad2.1",       []>;
-def : Proc<"myriad2.2",       []>;
+def : Proc<"myriad2",         [FeatureLeon, LeonCASA]>;
+def : Proc<"myriad2.1",       [FeatureLeon, LeonCASA]>;
+def : Proc<"myriad2.2",       [FeatureLeon, LeonCASA]>;
+def : Proc<"ma2100",          [FeatureLeon, LeonCASA]>;
+def : Proc<"ma2150",          [FeatureLeon, LeonCASA]>;
+def : Proc<"ma2450",          [FeatureLeon, LeonCASA]>;
 def : Proc<"v9",              [FeatureV9]>;
 def : Proc<"ultrasparc",      [FeatureV9, FeatureV8Deprecated, FeatureVIS]>;
 def : Proc<"ultrasparc3",     [FeatureV9, FeatureV8Deprecated, FeatureVIS,
@@ -107,7 +110,7 @@ def : Processor<"leon2", LEON2Itineraries,
 // LEON 2 FT (AT697E)
 // TO DO: Place-holder: Processor specific features will be added *very* soon here.
 def : Processor<"at697e", LEON2Itineraries,
-                [FeatureLeon, InsertNOPLoad]>;
+                [FeatureLeon, ReplaceSDIV, InsertNOPLoad]>;
 
 // LEON 2 FT (AT697F)
 // TO DO: Place-holder: Processor specific features will be added *very* soon here.

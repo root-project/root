@@ -58,7 +58,7 @@ using namespace std ;
 char* operator+( streampos&, char* );
 #endif
 
-ClassImp(RooAbsCollection)
+ClassImp(RooAbsCollection);
   ;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1238,7 +1238,12 @@ void RooAbsCollection::makeTypedStructureTag()
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// If one of the TObject we have a referenced to is deleted, remove the
+/// reference.
 
-
-
+void RooAbsCollection::RecursiveRemove(TObject *obj)
+{
+   if (obj && obj->InheritsFrom(RooAbsArg::Class())) remove(*(RooAbsArg*)obj,false,false);
+}
 

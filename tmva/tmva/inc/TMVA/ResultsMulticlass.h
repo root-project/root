@@ -75,6 +75,9 @@ namespace TMVA {
       Float_t GetAchievablePur(UInt_t cls){return fAchievablePur.at(cls);}
       std::vector<Float_t>& GetAchievableEff(){return fAchievableEff;}
       std::vector<Float_t>& GetAchievablePur(){return fAchievablePur;}
+
+      TMatrixD GetConfusionMatrix(Double_t effB);
+
       // histogramming
       void CreateMulticlassPerformanceHistos(TString prefix);
       void     CreateMulticlassHistos( TString prefix, Int_t nbins, Int_t nbins_high);

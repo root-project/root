@@ -1977,7 +1977,7 @@ using namespace TMVA;
 MethodUnitTestWithROCLimits::MethodUnitTestWithROCLimits(const Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
                                                          double lowLimit, double upLimit,
                                                          const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */ ) :
-   UnitTest((string)methodTitle, __FILE__), _methodType(theMethod) , _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit), _VariableNames(0), _TreeVariableNames(0)
+   UnitTest((string)methodTitle.Data(), __FILE__), _methodType(theMethod) , _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit), _VariableNames(0), _TreeVariableNames(0)
 {
    _VariableNames  = new std::vector<TString>(0);
    _TreeVariableNames = new std::vector<TString>(0);
@@ -2410,7 +2410,7 @@ using namespace TMVA;
 RegressionUnitTestWithDeviation::RegressionUnitTestWithDeviation(const Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
                                                                  double lowFullLimit, double upFullLimit,double low90PercentLimit, double up90PercentLimit,
                                                                  const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */)
-   : UnitTest(string("Regression_")+(string)methodTitle, __FILE__), _methodType(theMethod) , _methodTitle(methodTitle), _methodOption(theOption),
+   : UnitTest(string("Regression_")+(string)methodTitle.Data(), __FILE__), _methodType(theMethod) , _methodTitle(methodTitle), _methodOption(theOption),
                                                                                                                                   _lowerFullDeviationLimit(lowFullLimit),  _upperFullDeviationLimit(upFullLimit), _lower90PercentDeviationLimit(low90PercentLimit), _upper90PercentDeviationLimit(up90PercentLimit)
 {
 }
@@ -2652,7 +2652,7 @@ using namespace TMVA;
 MethodUnitTestWithComplexData::MethodUnitTestWithComplexData(const TString& treestring, const TString& preparestring, const Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
                                                              double lowLimit, double upLimit,
                                                              const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */) :
-   UnitTest(string("ComplexData_")+(string)methodTitle+(string)treestring, __FILE__),  _methodType(theMethod) , _treeString(treestring), _prepareString(preparestring), _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit)
+   UnitTest(string("ComplexData_")+(string)methodTitle.Data()+(string)treestring.Data(), __FILE__),  _methodType(theMethod) , _treeString(treestring), _prepareString(preparestring), _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit)
 {
     theTree = nullptr;
     _theMethod = nullptr;
@@ -3015,7 +3015,7 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
    if (full) TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kTMlpANN, "TMlpANN", "!H:!V:NCycles=200:HiddenLayers=N+1,N:LearningMethod=BFGS:ValidationFraction=0.3"  , 0.7, 0.98) ); // n_cycles:#nodes:#nodes:...
    TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kSVM, "SVM", "Gamma=0.25:Tol=0.001:VarTransform=Norm" , 0.88, 0.98) );
    TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kBDT, "BDTG",
-                                                      "!H:!V:NTrees=400:BoostType=Grad:Shrinkage=0.30:UseBaggedBoost:GradBaggingFraction=0.6:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" , 0.88, 0.98) );
+                                                      "!H:!V:NTrees=400:BoostType=Grad:Shrinkage=0.10:UseBaggedBoost:GradBaggingFraction=0.6:SeparationType=GiniIndex:nCuts=20:MaxDepth=2" , 0.88, 0.98) );
    TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kBDT, "BDT",
                                                       "!H:!V:NTrees=400:nEventsMin=100:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=10:PruneMethod=NoPruning" , 0.88, 0.98) );
    if (full) TMVA_test.addTest(new MethodUnitTestWithROCLimits( TMVA::Types::kBDT, "BDTB",
@@ -3036,14 +3036,9 @@ void addClassificationTests( UnitTestSuite& TMVA_test, bool full=true)
       "Regularization=None,TestRepetitions=5, Multithreading=True"
       "|LearningRate=0.001,Momentum=0.0,ConvergenceSteps=20,BatchSize=256,"
       "Regularization=None,TestRepetitions=5, Multithreading=True";
-   TString configStandard = "Architecture=STANDARD:" + config;
    TString configCpu      = "Architecture=CPU:" + config;
    TString configGpu      = "Architecture=GPU:" + config;
 
-
-    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
-                          TMVA::Types::kDNN, "DNN Standard",
-                          configStandard, 0.85, 0.98));
 #ifdef DNNCPU
    TMVA_test.addTest(new MethodUnitTestWithROCLimits(
                          TMVA::Types::kDNN, "DNN CPU", configCpu, 0.85, 0.98)

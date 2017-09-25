@@ -78,6 +78,7 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
    Bool_t sameLimitsY = kTRUE;
    Bool_t sameLimitsZ = kTRUE;
    Bool_t foundLabelHist = kFALSE;
+   Bool_t haveWeights = kFALSE; 
    
    // TAxis newXAxis;
    // TAxis newYAxis;
@@ -101,6 +102,8 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
          }
       }
 
+      // check if one of the histogram is weighted
+      haveWeights |= h->GetSumw2N() != 0;
 
       // do not skip anymore empty histograms
       // since are used to set the limits
@@ -266,6 +269,9 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
       return kNotCompatible;
    }
 
+   // in case of weighted histogram set Sumw2() on fH0 is is not weighted
+   if (haveWeights && fH0->GetSumw2N() == 0) fH0->Sumw2(); 
+   
    // return the type of merge
    if (allHaveLabels) return kAllLabel;
    if (allSameLimits) return kAllSameAxes;

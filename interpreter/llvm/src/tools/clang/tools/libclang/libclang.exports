@@ -35,6 +35,7 @@ clang_Cursor_getReceiverType
 clang_Cursor_isAnonymous
 clang_Cursor_isBitField
 clang_Cursor_isDynamicCall
+clang_Cursor_isExternalSymbol
 clang_Cursor_isNull
 clang_Cursor_isObjCOptional
 clang_Cursor_isVariadic
@@ -79,6 +80,9 @@ clang_TParamCommandComment_getParamName
 clang_TParamCommandComment_isParamPositionValid
 clang_TParamCommandComment_getDepth
 clang_TParamCommandComment_getIndex
+clang_TargetInfo_dispose
+clang_TargetInfo_getPointerWidth
+clang_TargetInfo_getTriple
 clang_Type_getAlignOf
 clang_Type_getClassType
 clang_Type_getSizeOf
@@ -88,6 +92,7 @@ clang_Type_getTemplateArgumentAsType
 clang_Type_getCXXRefQualifier
 clang_Type_visitFields
 clang_Type_getNamedType
+clang_Type_isTransparentTagTypedef
 clang_VerbatimBlockLineComment_getText
 clang_VerbatimLineComment_getText
 clang_HTMLTagComment_getAsString
@@ -142,6 +147,7 @@ clang_findReferencesInFile
 clang_findReferencesInFileWithBlock
 clang_formatDiagnostic
 clang_free
+clang_getAllSkippedRanges
 clang_getArgType
 clang_getArrayElementType
 clang_getArraySize
@@ -248,6 +254,7 @@ clang_getTokenLocation
 clang_getTokenSpelling
 clang_getTranslationUnitCursor
 clang_getTranslationUnitSpelling
+clang_getTranslationUnitTargetInfo
 clang_getTypeDeclaration
 clang_getTypeKindSpelling
 clang_getTypeSpelling
@@ -334,6 +341,9 @@ clang_Cursor_hasAttrs
 clang_Cursor_Evaluate
 clang_EvalResult_getKind
 clang_EvalResult_getAsInt
+clang_EvalResult_getAsLongLong
+clang_EvalResult_getAsUnsigned
+clang_EvalResult_isUnsignedInt
 clang_EvalResult_getAsDouble
 clang_EvalResult_getAsStr
 clang_EvalResult_dispose

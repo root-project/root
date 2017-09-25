@@ -335,7 +335,7 @@ static void InstantiateFuncTemplateWithDefaults(clang::FunctionTemplateDecl* FTD
 
    Sema::InstantiatingTemplate Inst(S, Info.getLocation(), FTDecl,
                                     defaultTemplateArgs,
-                                    Sema::ActiveTemplateInstantiation::DeducedTemplateArgumentSubstitution,
+                                    Sema::CodeSynthesisContext::DeducedTemplateArgumentSubstitution,
                                     Info);
 
    // Collect the function arguments of the templated function, substituting
@@ -606,6 +606,7 @@ std::string TClingMethodInfo::GetMangledName() const
    const FunctionDecl* D = GetMethodDecl();
 
    R__LOCKGUARD(gInterpreterMutex);
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
    GlobalDecl GD;
    if (const CXXConstructorDecl* Ctor = dyn_cast<CXXConstructorDecl>(D))
      GD = GlobalDecl(Ctor, Ctor_Complete);

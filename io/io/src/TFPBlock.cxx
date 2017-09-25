@@ -28,7 +28,7 @@ using std::calloc;
 using std::free;
 using std::realloc;
 
-ClassImp(TFPBlock)
+ClassImp(TFPBlock);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

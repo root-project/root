@@ -32,7 +32,7 @@ added when needed.
 #include "TROOT.h"
 #include "TVirtualMutex.h"
 
-ClassImp(TMessageHandler)
+ClassImp(TMessageHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new message handler for class cl and add it to the list
@@ -92,7 +92,7 @@ TMessageHandler:: ~TMessageHandler()
 
 void TMessageHandler::Add()
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfMessageHandlers()->Add(this);
    if (fClass) {
       // don't emit signal when the default message handler is added
@@ -234,7 +234,7 @@ void TMessageHandler::Print(Option_t *) const
 
 void TMessageHandler::Remove()
 {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfMessageHandlers()->Remove(this);
    Removed();  // emit Removed() signal
 }

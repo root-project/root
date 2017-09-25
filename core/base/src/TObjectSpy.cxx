@@ -24,8 +24,8 @@ hack. The spied object must have the kMustCleanup bit set otherwise
 you will get an error.
 */
 
-ClassImp(TObjectSpy)
-ClassImp(TObjectRefSpy)
+ClassImp(TObjectSpy);
+ClassImp(TObjectRefSpy);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Register the object that must be spied. The object must have the
@@ -36,7 +36,7 @@ TObjectSpy::TObjectSpy(TObject *obj, Bool_t fixMustCleanupBit) :
    TObject(), fObj(obj), fResetMustCleanupBit(kFALSE)
 {
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Add(this);
    }
    if (fObj && !fObj->TestBit(kMustCleanup)) {
@@ -56,7 +56,7 @@ TObjectSpy::~TObjectSpy()
 {
    if (fObj && fResetMustCleanupBit)
       fObj->SetBit(kMustCleanup, kFALSE);
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Remove(this);
 }
 
@@ -103,7 +103,7 @@ TObjectRefSpy::TObjectRefSpy(TObject *&obj, Bool_t fixMustCleanupBit) :
    fObj(obj), fResetMustCleanupBit(kFALSE)
 {
    {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfCleanups()->Add(this);
    }
    if (fObj && !fObj->TestBit(kMustCleanup)) {
@@ -123,7 +123,7 @@ TObjectRefSpy::~TObjectRefSpy()
 {
    if (fObj && fResetMustCleanupBit)
       fObj->SetBit(kMustCleanup, kFALSE);
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Remove(this);
 }
 

@@ -36,7 +36,7 @@ RooArgusBG is a RooAbsPdf implementation describing the ARGUS background shape.
 
 using namespace std;
 
-ClassImp(RooArgusBG)
+ClassImp(RooArgusBG);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

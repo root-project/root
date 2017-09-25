@@ -22,7 +22,7 @@
 #include "TClass.h"
 #include "Math/IntegratorOptions.h"
 
-ClassImp(TF2)
+ClassImp(TF2);
 
 /** \class TF2
     \ingroup Hist 
@@ -970,7 +970,7 @@ void TF2::Streamer(TBuffer &R__b)
 
    } else {
       Int_t saved = 0;
-      if (fType > 0 && fSave.empty()) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,0,0);}
+      if (fType != EFType::kFormula && fSave.empty()) { saved = 1; Save(fXmin,fXmax,fYmin,fYmax,0,0);}
 
       R__b.WriteClassBuffer(TF2::Class(),this);
 

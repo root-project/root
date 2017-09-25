@@ -24,14 +24,20 @@
 
 #include "TObject.h"
 
+#include <memory>
+
 class TVirtualMutex;
 
 // Global mutex set in TThread::Init
 R__EXTERN TVirtualMutex *gGlobalMutex;
 
-class TVirtualMutex : public TObject {
+class TVirtualMutex {
 
 public:
+   struct State {
+      virtual ~State();
+   };
+
    TVirtualMutex(Bool_t /* recursive */ = kFALSE) { }
    virtual ~TVirtualMutex() { }
 
@@ -43,8 +49,10 @@ public:
    Int_t Release() { return UnLock(); }
 
    virtual TVirtualMutex *Factory(Bool_t /*recursive*/ = kFALSE) = 0;
+   virtual std::unique_ptr<TVirtualMutex::State> Reset() = 0;
+   virtual void Restore(std::unique_ptr<State> &&state) = 0;
 
-   ClassDef(TVirtualMutex,0)  // Virtual mutex lock class
+   ClassDef(TVirtualMutex, 0)  // Virtual mutex lock class
 };
 
 

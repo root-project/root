@@ -105,7 +105,7 @@ extern "C" {
    }
 }
 
-ClassImp(TProofDraw)
+ClassImp(TProofDraw);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
@@ -463,7 +463,7 @@ Bool_t TProofDraw::CompileVariables()
 }
 
 
-ClassImp(TProofDrawHist)
+ClassImp(TProofDrawHist);
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -900,7 +900,7 @@ void TProofDrawHist::Terminate(void)
    fHistogram = 0;
 }
 
-ClassImp(TProofDrawEventList)
+ClassImp(TProofDrawEventList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// See TProofDraw::Init().
@@ -1000,7 +1000,7 @@ void TProofDrawEventList::Terminate(void)
 
 }
 
-ClassImp(TProofDrawEntryList)
+ClassImp(TProofDrawEntryList);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// See TProofDraw::Init().
@@ -1090,7 +1090,7 @@ void TProofDrawEntryList::Terminate(void)
 
 }
 
-ClassImp(TProofDrawProfile)
+ClassImp(TProofDrawProfile);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// See TProofDraw::Init().
@@ -1322,7 +1322,7 @@ void TProofDrawProfile::Terminate(void)
 }
 
 
-ClassImp(TProofDrawProfile2D)
+ClassImp(TProofDrawProfile2D);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// See TProofDraw::Init().
@@ -1565,7 +1565,7 @@ void TProofDrawProfile2D::Terminate(void)
 }
 
 
-ClassImp(TProofDrawGraph)
+ClassImp(TProofDrawGraph);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// See TProofDraw::Init().
@@ -1713,7 +1713,7 @@ void TProofDrawGraph::Terminate(void)
 }
 
 
-ClassImp(TProofDrawPolyMarker3D)
+ClassImp(TProofDrawPolyMarker3D);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// See TProofDraw::Init().
@@ -1907,7 +1907,7 @@ void TProofDrawPolyMarker3D::Terminate(void)
 }
 
 
-ClassImp(TProofDrawListOfGraphs)
+ClassImp(TProofDrawListOfGraphs);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// See TProofDraw::SlaveBegin().
@@ -2061,7 +2061,7 @@ void TProofDrawListOfGraphs::Terminate(void)
 }
 
 
-ClassImp(TProofDrawListOfPolyMarkers3D)
+ClassImp(TProofDrawListOfPolyMarkers3D);
 
 
 ////////////////////////////////////////////////////////////////////////////////

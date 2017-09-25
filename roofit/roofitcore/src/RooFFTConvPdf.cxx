@@ -124,7 +124,7 @@
 
 using namespace std ;
 
-ClassImp(RooFFTConvPdf) 
+ClassImp(RooFFTConvPdf); 
 
 
 

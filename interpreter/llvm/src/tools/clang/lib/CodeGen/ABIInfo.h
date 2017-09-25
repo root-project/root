@@ -10,6 +10,7 @@
 #ifndef LLVM_CLANG_LIB_CODEGEN_ABIINFO_H
 #define LLVM_CLANG_LIB_CODEGEN_ABIINFO_H
 
+#include "clang/AST/CharUnits.h"
 #include "clang/AST/Type.h"
 #include "llvm/IR/CallingConv.h"
 #include "llvm/IR/Type.h"
@@ -141,6 +142,8 @@ namespace swiftcall {
     virtual bool isLegalVectorTypeForSwift(CharUnits totalSize,
                                            llvm::Type *eltTy,
                                            unsigned elts) const;
+
+    virtual bool isSwiftErrorInRegister() const = 0;
 
     static bool classof(const ABIInfo *info) {
       return info->supportsSwift();

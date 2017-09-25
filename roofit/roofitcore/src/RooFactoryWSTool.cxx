@@ -68,7 +68,7 @@ using namespace std ;
 
 #define BUFFER_SIZE 64000 
 
-ClassImp(RooFactoryWSTool) 
+ClassImp(RooFactoryWSTool); 
 ;
 
 RooFactoryWSTool* RooFactoryWSTool::_of = 0 ;

@@ -48,6 +48,10 @@ public:
 
   void setASTContext(ASTContext &ctx) { Ctx = &ctx; }
 
+  bool shouldIndex(const Decl *D);
+
+  const LangOptions &getLangOpts() const;
+
   bool shouldSuppressRefs() const {
     return false;
   }
@@ -58,7 +62,6 @@ public:
     return false;
   }
 
-  static bool isFunctionLocalDecl(const Decl *D);
   static bool isTemplateImplicitInstantiation(const Decl *D);
 
   bool handleDecl(const Decl *D, SymbolRoleSet Roles = SymbolRoleSet(),
@@ -72,7 +75,7 @@ public:
   bool handleReference(const NamedDecl *D, SourceLocation Loc,
                        const NamedDecl *Parent,
                        const DeclContext *DC,
-                       SymbolRoleSet Roles,
+                       SymbolRoleSet Roles = SymbolRoleSet(),
                        ArrayRef<SymbolRelation> Relations = None,
                        const Expr *RefE = nullptr,
                        const Decl *RefD = nullptr);
@@ -81,15 +84,18 @@ public:
 
   bool indexDecl(const Decl *D);
 
-  void indexTagDecl(const TagDecl *D);
+  void indexTagDecl(const TagDecl *D,
+                    ArrayRef<SymbolRelation> Relations = None);
 
   void indexTypeSourceInfo(TypeSourceInfo *TInfo, const NamedDecl *Parent,
                            const DeclContext *DC = nullptr,
-                           bool isBase = false);
+                           bool isBase = false,
+                           bool isIBType = false);
 
   void indexTypeLoc(TypeLoc TL, const NamedDecl *Parent,
                     const DeclContext *DC = nullptr,
-                    bool isBase = false);
+                    bool isBase = false,
+                    bool isIBType = false);
 
   void indexNestedNameSpecifierLoc(NestedNameSpecifierLoc NNS,
                                    const NamedDecl *Parent,

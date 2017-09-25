@@ -51,7 +51,7 @@ Linear interpolation class
 #include <stdexcept>
 #include <algorithm>
 
-ClassImp(TMVA::VariablePCATransform)
+ClassImp(TMVA::VariablePCATransform);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor

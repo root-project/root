@@ -36,17 +36,19 @@ void drawtext()
 {
    Int_t i,n;
    Double_t x,y;
-   TLatex *l;
+   TLatex l;
+
+   l.SetTextSize(0.025);
+   l.SetTextFont(42);
+   l.SetTextAlign(21);
+   l.SetTextColor(kBlue);
 
    TGraph *g = (TGraph*)gPad->GetListOfPrimitives()->FindObject("Graph");
    n = g->GetN();
-   for (i=1; i<n; i++) {
+
+   for (i=0; i<n; i++) {
       g->GetPoint(i,x,y);
-      l = new TLatex(x,y+0.2,Form("%4.2f",y));
-      l->SetTextSize(0.025);
-      l->SetTextFont(42);
-      l->SetTextAlign(21);
-      l->Paint();
+      l.PaintText(x,y+0.2,Form("(%4.2f,%4.2f)",x,y));
    }
 }
 

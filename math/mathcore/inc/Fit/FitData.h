@@ -24,6 +24,7 @@ Classes for describing the input data for fitting
 
 #include "Fit/DataOptions.h"
 #include "Fit/DataRange.h"
+#include "Math/Types.h"
 
 #include <vector>
 #include <cassert>
@@ -183,7 +184,7 @@ namespace ROOT {
             fCoordsPtr.resize(fDim);
 
             for (unsigned int i = 0; i < fDim; i++) {
-               fCoords[i].resize(fMaxPoints);
+               fCoords[i].resize(fMaxPoints + VectorPadding(fMaxPoints));
                fCoordsPtr[i] = &fCoords[i].front();
             }
 
@@ -350,13 +351,36 @@ namespace ROOT {
             fCoords.resize(fDim);
             for (unsigned int i = 0; i < fDim; i++) {
                assert(fCoordsPtr[i]);
-               fCoords[i].resize(fNPoints);
-               std::copy(fCoordsPtr[i], fCoordsPtr[i] + fNPoints, fCoords[i].begin());
+               unsigned padding = VectorPadding(fNPoints);
+               fCoords[i].resize(fNPoints + padding);
+               std::copy(fCoordsPtr[i], fCoordsPtr[i] + fNPoints + padding, fCoords[i].begin());
                fCoordsPtr[i] = &fCoords[i].front();
             }
 
             fWrapped = false;
          }
+
+#ifdef R__HAS_VECCORE
+         /**
+          * Compute the number that should be added to dataSize in order to have a
+          * multiple of SIMD vector size.
+          */
+         static unsigned VectorPadding(unsigned dataSize)
+         {
+            unsigned padding = 0;
+            unsigned modP = (dataSize) % vecCore::VectorSize<ROOT::Double_v>();
+            if (modP > 0)
+               padding = vecCore::VectorSize<ROOT::Double_v>() - modP;
+            return padding;
+         }
+#else
+         /**
+          * If VecCore is not defined, there is no vectorization available and the SIMD vector
+          * size will always be one. Then, as every number is a multiple of SIMD vector size, the
+          * padding will always be zero.
+          */
+         static constexpr unsigned VectorPadding(const unsigned) { return 0; }
+#endif
 
       protected:
          bool          fWrapped;
@@ -400,4 +424,3 @@ namespace ROOT {
 
 
 #endif /* ROOT_Fit_Data */
-

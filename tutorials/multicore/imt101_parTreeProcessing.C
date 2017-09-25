@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
+/// \notebook
 /// Illustrate the usage of the TTreeProcessorMT::Process method.
 /// Such method provides an implicit parallelisation of the reading and processing of a TTree.
 /// In particular, when invoking Process, the user provides a function that iterates on a subrange
@@ -8,12 +9,12 @@
 /// potentially run in parallel, the function code must be thread safe.
 /// The example also introduces a new class, ROOT::TThreadedObject, which makes objects
 /// thread private. With the help of this class, histograms can be filled safely inside the
-/// user function and then merged at the end to get the final result. 
+/// user function and then merged at the end to get the final result.
 ///
 /// \macro_code
 ///
-/// \author Enric Tejedor
 /// \date 26/09/2016
+/// \author Enric Tejedor
 
 
 int imt101_parTreeProcessing()

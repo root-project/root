@@ -40,7 +40,7 @@ ULong64_t TUDPSocket::fgBytesSent = 0;
 ULong64_t TUDPSocket::fgBytesRecv = 0;
 
 
-ClassImp(TUDPSocket)
+ClassImp(TUDPSocket);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a socket. Connect to the named service at address addr.
@@ -80,7 +80,7 @@ TUDPSocket::TUDPSocket(TInetAddress addr, const char *service)
                                         -1, "upd");
 
       if (fSocket != -1) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfSockets()->Add(this);
       }
    } else
@@ -128,7 +128,7 @@ TUDPSocket::TUDPSocket(TInetAddress addr, Int_t port)
    if (fSocket == -1)
       fAddress.fPort = -1;
    else {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -170,7 +170,7 @@ TUDPSocket::TUDPSocket(const char *host, const char *service)
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), -1, "upd");
       if (fSocket != -1) {
-         R__LOCKGUARD2(gROOTMutex);
+         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfSockets()->Add(this);
       }
    } else
@@ -221,7 +221,7 @@ TUDPSocket::TUDPSocket(const char *url, Int_t port)
    if (fSocket == -1) {
       fAddress.fPort = -1;
    } else {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -256,7 +256,7 @@ TUDPSocket::TUDPSocket(const char *sockpath) : TNamed(sockpath, "")
 
    fSocket = gSystem->OpenConnection(sockpath, -1, -1, "udp");
    if (fSocket > 0) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -284,7 +284,7 @@ TUDPSocket::TUDPSocket(Int_t desc) : TNamed("", "")
    if (desc >= 0) {
       fSocket  = desc;
       fAddress = gSystem->GetPeerName(fSocket);
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    } else
       fSocket = -1;
@@ -318,7 +318,7 @@ TUDPSocket::TUDPSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
 
    if (desc >= 0) {
       fSocket  = desc;
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    } else
       fSocket = -1;
@@ -345,7 +345,7 @@ TUDPSocket::TUDPSocket(const TUDPSocket &s) : TNamed(s)
    ResetBit(TUDPSocket::kBrokenConn);
 
    if (fSocket != -1) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -362,7 +362,7 @@ void TUDPSocket::Close(Option_t *option)
 
    if (fSocket != -1) {
       gSystem->CloseConnection(fSocket, force);
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
    }
    fSocket = -1;

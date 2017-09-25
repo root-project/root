@@ -64,7 +64,7 @@ void Pass::dumpPassStructure(unsigned Offset) {
 /// implemented in terms of the name that is registered by one of the
 /// Registration templates, but can be overloaded directly.
 ///
-const char *Pass::getPassName() const {
+StringRef Pass::getPassName() const {
   AnalysisID AID =  getPassID();
   const PassInfo *PI = PassRegistry::getPassRegistry()->getPassInfo(AID);
   if (PI)
@@ -118,10 +118,12 @@ void Pass::print(raw_ostream &O,const Module*) const {
   O << "Pass::print not implemented for pass: '" << getPassName() << "'!\n";
 }
 
+#if !defined(NDEBUG) || defined(LLVM_ENABLE_DUMP)
 // dump - call print(cerr);
 LLVM_DUMP_METHOD void Pass::dump() const {
   print(dbgs(), nullptr);
 }
+#endif
 
 //===----------------------------------------------------------------------===//
 // ImmutablePass Implementation
@@ -218,7 +220,7 @@ Pass *Pass::createPass(AnalysisID ID) {
 
 // RegisterAGBase implementation
 //
-RegisterAGBase::RegisterAGBase(const char *Name, const void *InterfaceID,
+RegisterAGBase::RegisterAGBase(StringRef Name, const void *InterfaceID,
                                const void *PassID, bool isDefault)
     : PassInfo(Name, InterfaceID) {
   PassRegistry::getPassRegistry()->registerAnalysisGroup(InterfaceID, PassID,

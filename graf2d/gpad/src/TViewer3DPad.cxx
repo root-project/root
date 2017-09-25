@@ -24,7 +24,7 @@ Provides 3D viewer interface (TVirtualViewer3D) support on a pad.
 Will be merged with TView / TView3D eventually.
 */
 
-ClassImp(TViewer3DPad)
+ClassImp(TViewer3DPad);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Indicates if we prefer positions in local frame. Always false - pad

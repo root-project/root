@@ -36,7 +36,7 @@ be analytically convolved with any RooResolutionModel implementation
 
 using namespace std;
 
-ClassImp(RooBDecay)
+ClassImp(RooBDecay);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -57,7 +57,7 @@
 // don't change this flag without a good reason ! The FitterBase code won't work anymore !!!
 // #define TMVA_Configurable_SanctionUnknownOption kTRUE
 
-ClassImp(TMVA::Configurable)
+ClassImp(TMVA::Configurable);
 
 #ifdef _WIN32
 /*Disable warning C4355: 'this' : used in base member initializer list*/

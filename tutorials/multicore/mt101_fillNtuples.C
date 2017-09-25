@@ -1,5 +1,6 @@
 /// \file
 /// \ingroup tutorial_multicore
+/// \notebook
 /// Fill n-tuples in distinct workers.
 /// This tutorial illustrates the basics of how it's possible with ROOT to
 /// offload heavy operations on multiple threads and how it's possible to write
@@ -10,8 +11,8 @@
 ///
 /// \macro_code
 ///
-/// \author Danilo Piparo
 /// \date January 2016
+/// \author Danilo Piparo
 
 // Some useful constants and functions
 

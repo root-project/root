@@ -13,7 +13,7 @@
 #include "THbookTree.h"
 #include "TBrowser.h"
 
-ClassImp(THbookKey)
+ClassImp(THbookKey);
 
 /** \class THbookKey
     \ingroup Hist

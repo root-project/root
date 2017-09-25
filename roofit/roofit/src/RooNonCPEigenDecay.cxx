@@ -55,7 +55,7 @@ where Q denotes the charge of the \f$\rho\f$ meson.
 
 using namespace std;
 
-ClassImp(RooNonCPEigenDecay)
+ClassImp(RooNonCPEigenDecay);
 
 #define Debug_RooNonCPEigenDecay 1
 

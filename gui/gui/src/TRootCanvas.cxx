@@ -296,7 +296,7 @@ Bool_t TRootContainer::HandleButton(Event_t *event)
    return fCanvas->HandleContainerButton(event);
 }
 
-ClassImp(TRootCanvas)
+ClassImp(TRootCanvas);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a basic ROOT canvas.
@@ -702,6 +702,10 @@ void TRootCanvas::ReallyDelete()
               this, "EventInfo(Int_t, Int_t, Int_t, TObject*)");
 
    fCanvas->SetCanvasImp(0);
+   fCanvas->Clear();
+   fCanvas->SetName("");
+   if (gPad && gPad->GetCanvas() == fCanvas)
+      gPad = 0;
    delete this;
 }
 
@@ -1289,7 +1293,9 @@ void TRootCanvas::SetWindowSize(UInt_t w, UInt_t h)
    Resize(w, h);
 
    // Make sure the change of size is really done.
+   gVirtualX->Update(1);
    if (!gThreadXAR) {
+      gSystem->Sleep(100);
       gSystem->ProcessEvents();
       gSystem->Sleep(10);
       gSystem->ProcessEvents();

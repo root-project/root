@@ -29,7 +29,7 @@ replacing it by whatever one wants.
 #include "TClass.h"
 
 
-ClassImp(TClassMenuItem)
+ClassImp(TClassMenuItem);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TClassMenuItem ctor. TClassMenuItems are constructed in TClass

@@ -26,7 +26,7 @@
 #include "TObjString.h"
 #include "TObjArray.h"
 
-ClassImp(TAlienJDL)
+ClassImp(TAlienJDL);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets the executable.

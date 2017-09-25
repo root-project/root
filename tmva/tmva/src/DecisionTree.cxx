@@ -90,7 +90,7 @@ const Int_t TMVA::DecisionTree::fgRandomSeed = 0; // set nonzero for debugging a
 
 using std::vector;
 
-ClassImp(TMVA::DecisionTree)
+ClassImp(TMVA::DecisionTree);
 
 bool almost_equal_float(float x, float y, int ulp=4){
    // the machine epsilon has to be scaled to the magnitude of the values used
@@ -1714,10 +1714,12 @@ Double_t TMVA::DecisionTree::CheckEvent( const TMVA::Event * e, Bool_t UseYesNoL
 
    }
 
-   if ( DoRegression() ){
+   if (DoRegression()) {
+      // Note: This path is also taken for MethodBDT with analysis type
+      // kClassification and kMulticlass when using GradBoost.
+      // See TMVA::MethodBDT::InitGradBoost
       return current->GetResponse();
-   }
-   else {
+   } else {
       if (UseYesNoLeaf) return Double_t ( current->GetNodeType() );
       else              return current->GetPurity();
    }

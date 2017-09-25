@@ -9,6 +9,8 @@
 
 #include "cling/Interpreter/Value.h"
 
+#include "EnterUserCodeRAII.h"
+
 #include "cling/Interpreter/Interpreter.h"
 #include "cling/Interpreter/Transaction.h"
 #include "cling/Utils/AST.h"
@@ -86,9 +88,11 @@ namespace {
       assert (m_RefCnt > 0 && "Reference count is already zero.");
       if (--m_RefCnt == 0) {
         if (m_DtorFunc) {
-          char* payload = getPayload();
-          for (size_t el = 0; el < m_NElements; ++el)
-            (*m_DtorFunc)(payload + el * m_AllocSize / m_NElements);
+          assert(m_NElements && "No elements!");
+          char* Payload = getPayload();
+          const auto Skip = m_AllocSize / m_NElements;
+          while (m_NElements-- != 0)
+            (*m_DtorFunc)(Payload + m_NElements * Skip);
         }
         delete [] (char*)this;
       }
@@ -211,8 +215,10 @@ namespace cling {
         = llvm::dyn_cast<clang::ConstantArrayType>(DtorType.getTypePtr())) {
       DtorType = ArrTy->getElementType();
     }
-    if (const clang::RecordType* RTy = DtorType->getAs<clang::RecordType>())
+    if (const clang::RecordType* RTy = DtorType->getAs<clang::RecordType>()) {
+      LockCompilationDuringUserCodeExecutionRAII LCDUCER(*m_Interpreter);
       dtorFunc = m_Interpreter->compileDtorCallFor(RTy->getDecl());
+    }
 
     const clang::ASTContext& ctx = getASTContext();
     unsigned payloadSize = ctx.getTypeSizeInChars(getType()).getQuantity();

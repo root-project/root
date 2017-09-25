@@ -38,7 +38,7 @@ an error contour.
 
 using namespace std;
 
-ClassImp(RooEllipse)
+ClassImp(RooEllipse);
 
 
 

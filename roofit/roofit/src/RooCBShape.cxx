@@ -36,7 +36,7 @@ P.d.f implementing the Crystal Ball line shape
 
 using namespace std;
 
-ClassImp(RooCBShape)
+ClassImp(RooCBShape);
 
 ////////////////////////////////////////////////////////////////////////////////
 

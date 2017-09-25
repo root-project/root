@@ -26,7 +26,7 @@
 // (don't explicitly create a TPosixThreadFactory).
 static TPosixThreadFactory gPosixThreadFactoryCreator;
 
-ClassImp(TPosixThreadFactory)
+ClassImp(TPosixThreadFactory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Create Posix thread factory. Also sets global gThreadFactory to this.

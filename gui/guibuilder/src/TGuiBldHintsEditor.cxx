@@ -27,7 +27,7 @@
 // Editor of widget's layout hints used by the ROOT GUI builder.
 //_____________________________________________________________________________
 
-ClassImp(TGuiBldHintsEditor)
+ClassImp(TGuiBldHintsEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 class TGuiBldHintsManager : public TGVerticalFrame {

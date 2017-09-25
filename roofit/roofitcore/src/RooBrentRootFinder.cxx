@@ -35,7 +35,7 @@ in the GNU scientific library (v0.99).
 
 using namespace std;
 
-ClassImp(RooBrentRootFinder)
+ClassImp(RooBrentRootFinder);
 ;
 
 

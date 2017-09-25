@@ -46,6 +46,7 @@ Class which takes the results of a multiclass classification
 
 #include "TGraph.h"
 #include "TH1F.h"
+#include "TMatrixD.h"
 
 #include <limits>
 #include <vector>
@@ -79,6 +80,55 @@ void TMVA::ResultsMulticlass::SetValue( std::vector<Float_t>& value, Int_t ievt 
 {
    if (ievt >= (Int_t)fMultiClassValues.size()) fMultiClassValues.resize( ievt+1 );
    fMultiClassValues[ievt] = value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns a confusion matrix where each class is pitted against each other.
+///   Results are
+
+TMatrixD TMVA::ResultsMulticlass::GetConfusionMatrix(Double_t effB)
+{
+   const DataSet *ds = GetDataSet();
+   const DataSetInfo *dsi = GetDataSetInfo();
+   ds->SetCurrentType(GetTreeType());
+
+   UInt_t numClasses = dsi->GetNClasses();
+   TMatrixD mat(numClasses, numClasses);
+
+   // class == iRow is considered signal class
+   for (UInt_t iRow = 0; iRow < numClasses; ++iRow) {
+      for (UInt_t iCol = 0; iCol < numClasses; ++iCol) {
+
+         // Number is meaningless with only one class
+         if (iRow == iCol) {
+            mat(iRow, iCol) = std::numeric_limits<double>::quiet_NaN();
+         }
+
+         std::vector<Float_t> valueVector;
+         std::vector<Bool_t> classVector;
+         std::vector<Float_t> weightVector;
+
+         for (UInt_t iEvt = 0; iEvt < ds->GetNEvents(); ++iEvt) {
+            const Event *ev = ds->GetEvent(iEvt);
+            const UInt_t cls = ev->GetClass();
+            const Float_t weight = ev->GetWeight();
+            const Float_t mvaValue = fMultiClassValues[iEvt][iRow];
+
+            if (cls != iRow and cls != iCol) {
+               continue;
+            }
+
+            classVector.push_back(cls == iRow);
+            weightVector.push_back(weight);
+            valueVector.push_back(mvaValue);
+         }
+
+         ROCCurve roc(valueVector, classVector, weightVector);
+         mat(iRow, iCol) = roc.GetEffSForEffB(effB);
+      }
+   }
+
+   return mat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -197,9 +247,11 @@ void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
 
    std::vector<std::vector<Float_t>> *rawMvaRes = GetValueVector();
 
+   //
+   // 1-vs-rest ROC curves
+   //
    for (size_t iClass = 0; iClass < numClasses; ++iClass) {
       // Format data
-      // TODO: Replace with calls to GetMvaValuesPerClass
       std::vector<Float_t> mvaRes;
       std::vector<Bool_t> mvaResTypes;
       std::vector<Float_t> mvaResWeights;
@@ -234,6 +286,55 @@ void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
 
       // Store ROC Curve
       Store(rocGraph);
+   }
+
+   //
+   // 1-vs-1 ROC curves
+   //
+   for (size_t iClass = 0; iClass < numClasses; ++iClass) {
+      for (size_t jClass = 0; jClass < numClasses; ++jClass) {
+         if (iClass == jClass) {
+            continue;
+         }
+
+         auto eventCollection = ds->GetEventCollection();
+
+         // Format data
+         std::vector<Float_t> mvaRes;
+         std::vector<Bool_t> mvaResTypes;
+         std::vector<Float_t> mvaResWeights;
+
+         mvaRes.reserve(rawMvaRes->size());
+         mvaResTypes.reserve(eventCollection.size());
+         mvaResWeights.reserve(eventCollection.size());
+
+         for (size_t iEvent = 0; iEvent < eventCollection.size(); ++iEvent) {
+            Event *ev = eventCollection[iEvent];
+
+            if (ev->GetClass() == iClass or ev->GetClass() == jClass) {
+               Float_t output_value = (*rawMvaRes)[iEvent][iClass];
+               mvaRes.push_back(output_value);
+               mvaResTypes.push_back(ev->GetClass() == iClass);
+               mvaResWeights.push_back(ev->GetWeight());
+            }
+         }
+
+         // Get ROC Curve
+         ROCCurve *roc = new ROCCurve(mvaRes, mvaResTypes, mvaResWeights);
+         TGraph *rocGraph = new TGraph(*(roc->GetROCCurve()));
+         delete roc;
+
+         // Style ROC Curve
+         TString iClassName = dsi->GetClassInfo(iClass)->GetName();
+         TString jClassName = dsi->GetClassInfo(jClass)->GetName();
+         TString name = Form("%s_1v1rejBvsS_%s_vs_%s", prefix.Data(), iClassName.Data(), jClassName.Data());
+         TString title = Form("%s_%s_vs_%s", prefix.Data(), iClassName.Data(), jClassName.Data());
+         rocGraph->SetName(name);
+         rocGraph->SetTitle(title);
+
+         // Store ROC Curve
+         Store(rocGraph);
+      }
    }
 }
 

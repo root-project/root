@@ -14,6 +14,7 @@
 
 namespace PyROOT {
 
+   class ObjectProxy;
    struct TParameter;
    struct TCallContext;
 
@@ -169,7 +170,7 @@ namespace PyROOT {
    class TCppObjectConverter : public TVoidArrayConverter {
    public:
       TCppObjectConverter( Cppyy::TCppType_t klass, Bool_t keepControl = kFALSE ) :
-         TVoidArrayConverter( keepControl ), fClass( klass ) {}
+         TVoidArrayConverter( keepControl ), fClass( klass ), fObjProxy(nullptr) {}
 
    public:
       virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
@@ -178,6 +179,7 @@ namespace PyROOT {
 
    protected:
       Cppyy::TCppType_t fClass;
+      ObjectProxy* fObjProxy;
    };
 
    class TStrictCppObjectConverter : public TCppObjectConverter {
@@ -198,13 +200,14 @@ namespace PyROOT {
 
    class TRefCppObjectConverter : public TConverter  {
    public:
-      TRefCppObjectConverter( Cppyy::TCppType_t klass ) : fClass( klass ) {}
+      TRefCppObjectConverter( Cppyy::TCppType_t klass ) : fClass( klass ), fObjProxy(nullptr) {}
 
    public:
       virtual Bool_t SetArg( PyObject*, TParameter&, TCallContext* ctxt = 0 );
 
    protected:
       Cppyy::TCppType_t fClass;
+      ObjectProxy* fObjProxy;
    };
 
    template <bool ISREFERENCE>
@@ -270,6 +273,7 @@ namespace PyROOT {
 
    PYROOT_DECLARE_STRING_CONVERTER( TString,   TString );
    PYROOT_DECLARE_STRING_CONVERTER( STLString, std::string );
+   PYROOT_DECLARE_STRING_CONVERTER( STLStringView, std::string_view );
 
    class TNotImplementedConverter : public TConverter {
    public:

@@ -36,7 +36,7 @@ const Int_t  kMaxLen = 2048;
 Describe directory structure in memory.
 */
 
-ClassImp(TDirectory)
+ClassImp(TDirectory);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Directory default constructor.
@@ -76,7 +76,7 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classna
 
    Build(initMotherDir ? initMotherDir->GetFile() : 0, initMotherDir);
 
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -240,7 +240,7 @@ static TBuffer* R__CreateBuffer()
    typedef void (*tcling_callfunc_Wrapper_t)(void*, int, void**, void*);
    static tcling_callfunc_Wrapper_t creator = 0;
    if (creator == 0) {
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TClass *c = TClass::GetClass("TBufferFile");
       TMethod *m = c->GetMethodWithPrototype("TBufferFile","TBuffer::EMode,Int_t",kFALSE,ROOT::kExactMatch);
       creator = (tcling_callfunc_Wrapper_t)( m->InterfaceMethod() );
@@ -353,7 +353,7 @@ TDirectory *TDirectory::GetDirectory(const char *apath,
    char *s = (char*)strrchr(path, ':');
    if (s) {
       *s = '\0';
-      R__LOCKGUARD2(gROOTMutex);
+      R__LOCKGUARD(gROOTMutex);
       TDirectory *f = (TDirectory *)gROOT->GetListOfFiles()->FindObject(path);
       if (!f && !strcmp(gROOT->GetName(), path)) f = gROOT;
       if (s) *s = ':';
@@ -516,7 +516,7 @@ void TDirectory::Clear(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete all objects from memory and directory structure itself.
 
-void TDirectory::Close(Option_t *)
+void TDirectory::Close(Option_t *option)
 {
    if (!fList) {
       return;
@@ -525,19 +525,26 @@ void TDirectory::Close(Option_t *)
    // Save the directory key list and header
    Save();
 
-   Bool_t fast = kTRUE;
-   TObjLink *lnk = fList->FirstLink();
-   while (lnk) {
-      if (lnk->GetObject()->IsA() == TDirectory::Class()) {fast = kFALSE;break;}
-      lnk = lnk->Next();
+   Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
+   if (!slow) {
+      // Check if it is wise to use the fast deletion path.
+      TObjLink *lnk = fList->FirstLink();
+      while (lnk) {
+         if (lnk->GetObject()->IsA() == TDirectory::Class()) {
+            slow = kTRUE;
+            break;
+         }
+         lnk = lnk->Next();
+      }
    }
+
    // Delete objects from directory list, this in turn, recursively closes all
    // sub-directories (that were allocated on the heap)
    // if this dir contains subdirs, we must use the slow option for Delete!
    // we must avoid "slow" as much as possible, in particular Delete("slow")
    // with a large number of objects (eg >10^5) would take for ever.
-   if (fast) fList->Delete();
-   else      fList->Delete("slow");
+   if (slow) fList->Delete("slow");
+   else      fList->Delete();
 
    CleanTargets();
 }
@@ -1201,7 +1208,7 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
 /// Register a TContext pointing to this TDirectory object
 
 void TDirectory::RegisterContext(TContext *ctxt) {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    if (fContext) {
       TContext *current = fContext;
       while(current->fNext) {
@@ -1230,7 +1237,7 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * 
 /// UnRegister a TContext pointing to this TDirectory object
 
 void TDirectory::UnregisterContext(TContext *ctxt) {
-   R__LOCKGUARD2(gROOTMutex);
+   R__LOCKGUARD(gROOTMutex);
    if (ctxt==fContext) {
       fContext = ctxt->fNext;
       if (fContext) fContext->fPrevious = 0;

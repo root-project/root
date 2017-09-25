@@ -232,7 +232,7 @@ ToolBarData_t fTbData[] = {
 static char *gEPrinter      = 0;
 static char *gEPrintCommand = 0;
 
-ClassImp(TGTextEditor)
+ClassImp(TGTextEditor);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TGTextEditor constructor with file name as first argument.
@@ -644,6 +644,7 @@ void TGTextEditor::PrintText()
 
 void TGTextEditor::CloseWindow()
 {
+   Bool_t reallyClose = kFALSE;
    if (fExiting) {
       return;
    }
@@ -651,17 +652,23 @@ void TGTextEditor::CloseWindow()
    switch (IsSaved()) {
       case kMBYes:
          if (!fFilename.CompareTo("Untitled"))
-            SaveFileAs();
+            fTextChanged = !SaveFileAs();
          else
             SaveFile(fFilename.Data());
-         if ((fTextChanged) && (fParent == gClient->GetDefaultRoot()))
-            break;
+         // close the editor only if the text has been saved and the
+         // TGTextEditor is not embedded in the ROOT browser
+         reallyClose = (!fTextChanged || (fParent != gClient->GetDefaultRoot()));
+         break;
       case kMBCancel:
-         if (fParent == gClient->GetDefaultRoot())
-            break;
+         reallyClose = kFALSE;
+         break;
       case kMBNo:
-         gApplication->Disconnect("Terminate(Int_t)");
-         TGMainFrame::CloseWindow();
+         reallyClose = kTRUE;
+         break;
+   }
+   if (reallyClose) {
+      gApplication->Disconnect("Terminate(Int_t)");
+      TGMainFrame::CloseWindow();
    }
    fExiting = kFALSE;
 }

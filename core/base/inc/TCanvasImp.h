@@ -25,7 +25,7 @@
 #include "Rtypes.h"
 
 class TCanvas;
-
+class TVirtualPadPainter;
 
 class TCanvasImp {
 friend class TCanvas;
@@ -41,6 +41,9 @@ protected:
    virtual void   Lock() { }
    virtual void   Unlock() { }
    virtual Bool_t IsLocked() { return kFALSE; }
+
+   virtual Bool_t PerformUpdate() { return kFALSE; }
+   virtual TVirtualPadPainter *CreatePadPainter() { return 0; }
 
 public:
    TCanvasImp(TCanvas *c=0) : fCanvas(c) { }

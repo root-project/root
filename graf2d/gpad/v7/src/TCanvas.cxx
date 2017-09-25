@@ -2,8 +2,8 @@
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-10
-/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
-
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
+/// is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
@@ -15,82 +15,108 @@
 
 #include "ROOT/TCanvas.hxx"
 
-#include "ROOT/TDrawable.hxx"
-#include "TCanvas.h"
+#include <memory>
+#include <stdio.h>
+#include <string.h>
+
 #include "TROOT.h"
 
-#include "ROOT/TLogger.hxx"
-
-#include <memory>
-
 namespace {
-static
-std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>>& GetHeldCanvases() {
-  static std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> sCanvases;
-  return sCanvases;
+static std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> &GetHeldCanvases()
+{
+   static std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> sCanvases;
+   return sCanvases;
+}
+} // namespace
+
+const std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> &ROOT::Experimental::TCanvas::GetCanvases()
+{
+   return GetHeldCanvases();
 }
 
+// void ROOT::Experimental::TCanvas::Paint() {
+//  for (auto&& drw: fPrimitives) {
+//    drw->Paint(*this);
+//  }
+// }
+
+bool ROOT::Experimental::TCanvas::IsModified() const
+{
+   return fPainter ? fPainter->IsCanvasModified(fModified) : fModified;
 }
 
-namespace ROOT {
-namespace Experimental {
-namespace Internal {
+void ROOT::Experimental::TCanvas::Update(bool async, CanvasCallback_t callback)
+{
+   if (fPainter)
+      fPainter->CanvasUpdated(fModified, async, callback);
 
-class TV5CanvasAdaptor: public TObject {
-  ROOT::Experimental::TCanvas& fNewCanv;
-  ::TCanvas* fOldCanv; // ROOT owns them.
-
-public:
-  /// Construct an old TCanvas, append TV5CanvasAdaptor to its primitives.
-  /// That way, TV5CanvasAdaptor::Paint() is called when the TCanvas paints its
-  /// primitives, and TV5CanvasAdaptor::Paint() can forward to
-  /// Experimental::TCanvas::Paint().
-  TV5CanvasAdaptor(ROOT::Experimental::TCanvas& canv):
-    fNewCanv(canv),
-    fOldCanv(new ::TCanvas())
-  {
-    fOldCanv->SetTitle(canv.GetTitle().c_str());
-    AppendPad();
-  }
-
-  ~TV5CanvasAdaptor() {
-    // Make sure static destruction hasn't already destroyed the old TCanvases.
-    if (gROOT && gROOT->GetListOfCanvases() && !gROOT->GetListOfCanvases()->IsEmpty())
-      fOldCanv->RecursiveRemove(this);
-  }
-
-  void Paint(Option_t */*option*/="") override {
-    fNewCanv.Paint();
-  }
-};
-}
-}
+   // SnapshotList_t lst;
+   // for (auto&& drw: fPrimitives) {
+   //   TSnapshot *snap = drw->CreateSnapshot(*this);
+   //   lst.push_back(std::unique_ptr<TSnapshot>(snap));
+   // }
 }
 
-const std::vector<std::shared_ptr<ROOT::Experimental::TCanvas>> &
-ROOT::Experimental::TCanvas::GetCanvases() {
-  return GetHeldCanvases();
+std::shared_ptr<ROOT::Experimental::TCanvas> ROOT::Experimental::TCanvas::Create(const std::string &title)
+{
+   auto pCanvas = std::make_shared<TCanvas>();
+   pCanvas->SetTitle(title);
+   GetHeldCanvases().emplace_back(pCanvas);
+   return pCanvas;
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Create new display for the canvas
+/// Parameter \par where specifies which program could be used for display creation
+/// Possible values:
+///
+///      cef - Chromium Embeded Framework, local display, local communication
+///      qt5 - Qt5 WebEngine (when running via rootqt5), local display, local communication
+///  browser - default system web-browser, communication via random http port from range 8800 - 9800
+///  <prog> - any program name which will be started instead of default browser, like firefox or /usr/bin/opera
+///           one could also specify $url in program name, which will be replaced with canvas URL
+///  native - either any available local display or default browser
+///
+///  Canvas can be displayed in several different places
 
-ROOT::Experimental::TCanvas::TCanvas() {
-  fAdaptor = std::make_unique<Internal::TV5CanvasAdaptor>(*this);
+void ROOT::Experimental::TCanvas::Show(const std::string &where)
+{
+   if (fPainter) {
+      if (!where.empty())
+         fPainter->NewDisplay(where);
+      return;
+   }
+
+   bool batch_mode = gROOT->IsBatch();
+   if (!fModified)
+      fModified = 1; // 0 is special value, means no changes and no drawings
+
+   fPainter = Internal::TVirtualCanvasPainter::Create(*this, batch_mode);
+   if (fPainter) {
+      fPainter->NewDisplay(where);
+      fPainter->CanvasUpdated(fModified, true, nullptr); // trigger async display
+   }
 }
 
-ROOT::Experimental::TCanvas::~TCanvas() = default;
+//////////////////////////////////////////////////////////////////////////
+/// Close all canvas displays
 
-void ROOT::Experimental::TCanvas::Paint() {
-  for (auto&& drw: fPrimitives) {
-    drw->Paint(*this);
-  }
+void ROOT::Experimental::TCanvas::Hide()
+{
+   if (fPainter)
+      delete fPainter.release();
 }
 
-std::shared_ptr<ROOT::Experimental::TCanvas>
-ROOT::Experimental::TCanvas::Create(const std::string& title) {
-  auto pCanvas = std::make_shared<TCanvas>();
-  pCanvas->SetTitle(title);
-  GetHeldCanvases().emplace_back(pCanvas);
-  return pCanvas;
+void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename, bool async, CanvasCallback_t callback)
+{
+   if (!fPainter)
+      fPainter = Internal::TVirtualCanvasPainter::Create(*this, true);
+   if (filename.find(".svg") != std::string::npos)
+      fPainter->DoWhenReady("SVG", filename, async, callback);
+   else if (filename.find(".png") != std::string::npos)
+      fPainter->DoWhenReady("PNG", filename, async, callback);
+   else if ((filename.find(".jpg") != std::string::npos) || (filename.find(".jpeg") != std::string::npos))
+      fPainter->DoWhenReady("JPEG", filename, async, callback);
 }
 
 // TODO: removal from GetHeldCanvases().

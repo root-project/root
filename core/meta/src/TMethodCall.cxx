@@ -28,7 +28,7 @@ TInterpreter::Execute().
 #include "TVirtualMutex.h"
 #include "TError.h"
 
-ClassImp(TMethodCall)
+ClassImp(TMethodCall);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default TMethodCall ctor. Use Init() to initialize the method call
@@ -297,7 +297,7 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
                                      ROOT::EFunctionMatchMode mode /* = ROOT::kConversionMatch */)
 {
    if (!fFunc) {
-      R__LOCKGUARD2(gInterpreterMutex);
+      R__LOCKGUARD(gInterpreterMutex);
       fFunc = gCling->CallFunc_Factory();
    } else
       gCling->CallFunc_Init(fFunc);
@@ -316,7 +316,7 @@ void TMethodCall::InitImplementation(const char *methodname, const char *params,
 
    if (!scope) return;
 
-   R__LOCKGUARD2(gInterpreterMutex);
+   R__LOCKGUARD(gInterpreterMutex);
    if (params && params[0]) {
       gCling->CallFunc_SetFunc(fFunc, scope, (char *)methodname, (char *)params, objectIsConst, &fOffset);
    } else if (proto && proto[0]) {

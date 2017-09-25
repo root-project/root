@@ -42,7 +42,7 @@ category modifies its list of states
 
 using namespace std;
 
-ClassImp(RooMultiCategory)
+ClassImp(RooMultiCategory);
 ;
 
 

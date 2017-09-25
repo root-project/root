@@ -34,11 +34,14 @@ of local objects so it is exception safe.
 
 #include "TVirtualMutex.h"
 
-ClassImp(TVirtualMutex)
-ClassImp(TLockGuard)
+ClassImp(TVirtualMutex);
+ClassImp(TLockGuard);
 
 // Global mutex set in TThread::Init protecting creation
 // of other (preferably local) mutexes. Note that in this
 // concept gGlobalMutex must be used in TStorage to prevent
 // lockup of the system (see TMutex::Factory)
 TVirtualMutex *gGlobalMutex = 0;
+
+// Pin that vtable.
+TVirtualMutex::State::~State() = default;

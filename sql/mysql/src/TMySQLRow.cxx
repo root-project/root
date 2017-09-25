@@ -12,7 +12,7 @@
 #include "TMySQLRow.h"
 
 
-ClassImp(TMySQLRow)
+ClassImp(TMySQLRow);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Single row of query result.

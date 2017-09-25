@@ -15,8 +15,8 @@
 #include "TGScrollBar.h"
 #include "TGTable.h"
 
-ClassImp(TGTableFrame)
-ClassImp(TGTableHeaderFrame)
+ClassImp(TGTableFrame);
+ClassImp(TGTableHeaderFrame);
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //

@@ -467,6 +467,7 @@ public:
    virtual Func_t          DynFindSymbol(const char *module, const char *entry);
    virtual int             Load(const char *module, const char *entry = "", Bool_t system = kFALSE);
    virtual void            Unload(const char *module);
+   virtual UInt_t          LoadAllLibraries();
    virtual void            ListSymbols(const char *module, const char *re = "");
    virtual void            ListLibraries(const char *regexp = "");
    virtual const char     *GetLibraries(const char *regexp = "",
