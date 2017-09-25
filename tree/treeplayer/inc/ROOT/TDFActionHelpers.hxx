@@ -369,6 +369,8 @@ public:
    }
 
    void Finalize();
+
+   double *PartialUpdate(unsigned int slot) { return &fMins[slot]; }
 };
 
 extern template void MinHelper::Exec(unsigned int, const std::vector<float> &);
@@ -395,6 +397,8 @@ public:
    }
 
    void Finalize();
+
+   double *PartialUpdate(unsigned int slot) { return &fMaxs[slot]; }
 };
 
 extern template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
@@ -407,6 +411,7 @@ class MeanHelper {
    const std::shared_ptr<double> fResultMean;
    std::vector<ULong64_t> fCounts;
    std::vector<double> fSums;
+   std::vector<double> fPartialMeans;
 
 public:
    MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
@@ -425,6 +430,8 @@ public:
    }
 
    void Finalize();
+
+   double *PartialUpdate(unsigned int slot);
 };
 
 extern template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
