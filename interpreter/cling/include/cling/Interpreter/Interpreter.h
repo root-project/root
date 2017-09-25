@@ -485,19 +485,6 @@ namespace cling {
     ///
     CompilationResult loadModuleForHeader(const std::string& headerFile);
 
-    ///\brief Parses input line, which doesn't contain statements. Code
-    /// generation needed to make the module functional.
-    ///
-    /// Same as declare without most of the codegening.  Only a few
-    /// things, like inline function are codegened.  Useful when a
-    /// library is loaded and the header files need to be imported.
-    ///
-    ///\param[in] input - The input containing the declarations.
-    ///
-    ///\returns Whether the operation was fully successful.
-    ///
-    CompilationResult parseForModule(const std::string& input);
-
     ///\brief Code completes user input.
     ///
     /// The interface circumvents the most of the extra work necessary to

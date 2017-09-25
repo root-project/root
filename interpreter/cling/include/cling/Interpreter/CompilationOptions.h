@@ -47,11 +47,6 @@ namespace cling {
     ///
     unsigned CodeGeneration : 1;
 
-    ///\brief When generating executable, select whether to generate all
-    /// the code (when false) or just the code needed when the input is
-    /// describing code coming from an existing library.
-    unsigned CodeGenerationForModule : 1;
-
     ///\brief Prompt input can look weird for the compiler, e.g.
     /// void __cling_prompt() { sin(0.1); } // warning: unused function call
     /// This flag suppresses these warnings; it should be set whenever input
@@ -78,7 +73,6 @@ namespace cling {
       DynamicScoping = 0;
       Debug = 0;
       CodeGeneration = 1;
-      CodeGenerationForModule = 0;
       IgnorePromptDiags = 0;
       OptLevel = 2;
       CheckPointerValidity = 1;
@@ -92,7 +86,6 @@ namespace cling {
         DynamicScoping        == Other.DynamicScoping &&
         Debug                 == Other.Debug &&
         CodeGeneration        == Other.CodeGeneration &&
-        CodeGenerationForModule == Other.CodeGenerationForModule &&
         IgnorePromptDiags     == Other.IgnorePromptDiags &&
         CheckPointerValidity  == Other.CheckPointerValidity &&
         OptLevel              == Other.OptLevel &&
@@ -107,7 +100,6 @@ namespace cling {
         DynamicScoping        != Other.DynamicScoping ||
         Debug                 != Other.Debug ||
         CodeGeneration        != Other.CodeGeneration ||
-        CodeGenerationForModule != Other.CodeGenerationForModule ||
         IgnorePromptDiags     != Other.IgnorePromptDiags ||
         CheckPointerValidity  != Other.CheckPointerValidity ||
         OptLevel              != Other.OptLevel ||

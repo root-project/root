@@ -2999,7 +2999,7 @@ int FinalizeStreamerInfoWriting(cling::Interpreter &interp, bool writeEmptyRootP
    if (!gDriverConfig->fCloseStreamerInfoROOTFile)
       return 0;
 
-   interp.parseForModule("#include \"TStreamerInfo.h\"\n"
+   interp.declare(         "#include \"TStreamerInfo.h\"\n"
                            "#include \"TFile.h\"\n"
                            "#include \"TObjArray.h\"\n"
                            "#include \"TVirtualArray.h\"\n"

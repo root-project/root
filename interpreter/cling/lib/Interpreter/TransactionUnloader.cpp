@@ -79,6 +79,7 @@ namespace cling {
                                                    DeclUnloader& DeclU) {
     //FIXME: Terrible hack, we *must* get rid of parseForModule by implementing
     // a header file generator in cling.
+    // We need to replace this.
     bool Successful = true;
     for (Transaction::const_reverse_iterator I = T->deserialized_rdecls_begin(),
            E = T->deserialized_rdecls_end(); I != E; ++I) {
@@ -122,14 +123,6 @@ namespace cling {
     Successful = unloadDeclarations(T, DeclU) && Successful;
     Successful = unloadDeserializedDeclarations(T, DeclU) && Successful;
     Successful = unloadFromPreprocessor(T, DeclU) && Successful;
-
-#ifndef NDEBUG
-    //FIXME: Move the nested transaction marker out of the decl lists and
-    // reenable this assertion.
-    //size_t DeclSize = std::distance(T->decls_begin(), T->decls_end());
-    //if (T->getCompilationOpts().CodeGenerationForModule)
-    //  assert (!DeclSize && "No parsed decls must happen in parse for module");
-#endif
 
     if (Successful)
       T->setState(Transaction::kRolledBack);

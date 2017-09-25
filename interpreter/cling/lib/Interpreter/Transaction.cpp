@@ -376,8 +376,6 @@ namespace cling {
 
   bool Transaction::comesFromASTReader(DeclGroupRef DGR) const {
     assert(!DGR.isNull() && "DeclGroupRef is Null!");
-    if (getCompilationOpts().CodeGenerationForModule)
-      return true;
 
     // Take the first/only decl in the group.
     Decl* D = *DGR.begin();

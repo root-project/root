@@ -719,28 +719,6 @@ namespace cling {
   }
 
   Interpreter::CompilationResult
-  Interpreter::parseForModule(const std::string& input) {
-    CompilationOptions CO = makeDefaultCompilationOpts();
-    CO.CodeGenerationForModule = 1;
-    CO.DeclarationExtraction = 0;
-    CO.ValuePrinting = 0;
-    CO.ResultEvaluation = 0;
-
-    // When doing parseForModule avoid warning about the user code
-    // being loaded ... we probably might as well extend this to
-    // ALL warnings ... but this will suffice for now (working
-    // around a real bug in QT :().
-    DiagnosticsEngine& Diag = getDiagnostics();
-    Diag.setSeverity(clang::diag::warn_field_is_uninit,
-                     clang::diag::Severity::Ignored, SourceLocation());
-    CompilationResult Result = DeclareInternal(input, CO);
-    Diag.setSeverity(clang::diag::warn_field_is_uninit,
-                     clang::diag::Severity::Warning, SourceLocation());
-    return Result;
-  }
-
-
-  Interpreter::CompilationResult
   Interpreter::CodeCompleteInternal(const std::string& input, unsigned offset) {
 
     CompilationOptions CO = makeDefaultCompilationOpts();

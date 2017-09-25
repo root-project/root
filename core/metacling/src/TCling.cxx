@@ -1847,7 +1847,7 @@ void TCling::RegisterModule(const char* modulename,
          SuspendAutoParsing autoParseRaii(this);
 
          const cling::Transaction* watermark = fInterpreter->getLastTransaction();
-         cling::Interpreter::CompilationResult compRes = fInterpreter->parseForModule(code.Data());
+         cling::Interpreter::CompilationResult compRes = fInterpreter->declare(code.Data());
          if (isACLiC) {
             // Register an unload point.
             fMetaProcessor->registerUnloadPoint(watermark, headers[0]);
@@ -5448,7 +5448,7 @@ static cling::Interpreter::CompilationResult ExecAutoParse(const char *what,
       #endif
       #endif
 
-      cr = interpreter->parseForModule(code);
+      cr = interpreter->declare(code);
    }
    return cr;
 }
