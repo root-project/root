@@ -29,21 +29,11 @@
 #include <unistd.h>
 #endif
 
-#ifndef ROOT_TNamed
-#include "TNamed.h"
-#endif
-#ifndef ROOT_TString
-#include "TString.h"
-#endif
-#ifndef ROOT_TInetAddress
 #include "TInetAddress.h"
-#endif
-#ifndef ROOT_TTimer
-#include "TTimer.h"
-#endif
-#ifndef ROOT_ThreadLocalStorage
+#include "TNamed.h"
 #include "ThreadLocalStorage.h"
-#endif
+#include "TString.h"
+#include "TTimer.h"
 
 class TSeqCollection;
 class TFdSet;

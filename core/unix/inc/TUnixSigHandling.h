@@ -21,15 +21,10 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#ifndef ROOT_TSigHandling
 #include "TSigHandling.h"
-#endif
-#ifndef ROOT_TSysEvtHandler
+
 #include "TSysEvtHandler.h"
-#endif
-#ifndef ROOT_TTimer
 #include "TTimer.h"
-#endif
 
 typedef void (*SigHandler_t)(ESignals);
 
