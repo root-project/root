@@ -197,7 +197,7 @@ class TColumnValue {
 
    /// TColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a TDataFrame Define
    /// or a TDataSource. It stores which it is as an enum.
-   enum class EColumnKind { kTreeBranch, kCustomColumn, kDataSource };
+   enum class EColumnKind { kTreeValue, kTreeArray, kCustomColumn, kDataSource };
    EColumnKind fColumnKind;
    /// The slot this value belongs to. Only needed when querying custom column values.
    unsigned int fSlot;
@@ -224,12 +224,14 @@ public:
 
    void MakeProxy(TTreeReader *r, const std::string &bn)
    {
-      fColumnKind = EColumnKind::kTreeBranch;
       constexpr bool useReaderValue = std::is_same<ProxyParam_t, T>::value;
-      if (useReaderValue)
+      if (useReaderValue) {
+         fColumnKind = EColumnKind::kTreeValue;
          fReaderValues.emplace_back(new TTreeReaderValue<T>(*r, bn.c_str()));
-      else
+      } else {
+         fColumnKind = EColumnKind::kTreeArray;
          fReaderArrays.emplace_back(new TTreeReaderArray<ProxyParam_t>(*r, bn.c_str()));
+      }
    }
 
    template <typename U = T,
@@ -254,16 +256,17 @@ public:
 
    void Reset()
    {
-      if (!fReaderValues.empty()) // we must be using TTreeReaderValues
-         fReaderValues.pop_back();
-      else if (!fReaderArrays.empty()) // we must be using TTreeReaderArrays
-         fReaderArrays.pop_back();
-      else { // we must be using a custom column
+      switch (fColumnKind) {
+      case EColumnKind::kTreeValue: fReaderValues.pop_back(); break;
+      case EColumnKind::kTreeArray: fReaderArrays.pop_back(); break;
+      case EColumnKind::kCustomColumn:
          fCustomColumns.pop_back();
-         if (!fCustomValuePtrs.empty())
-            fCustomValuePtrs.pop_back();
-         else
-            fDSValuePtrs.pop_back();
+         fCustomValuePtrs.pop_back();
+         break;
+      case EColumnKind::kDataSource:
+         fCustomColumns.pop_back();
+         fDSValuePtrs.pop_back();
+         break;
       }
    }
 };
@@ -723,18 +726,13 @@ template <typename U,
 T &TColumnValue<T>::Get(Long64_t entry)
 {
    switch (fColumnKind) {
-   case EColumnKind::kTreeBranch:
-      return *(fReaderValues.back()->Get());
-      break;
-   case EColumnKind::kCustomColumn:
-      fCustomColumns.back()->Update(fSlot, entry);
-      return *fCustomValuePtrs.back();
-      break;
-   case EColumnKind::kDataSource:
-      fCustomColumns.back()->Update(fSlot, entry);
-      return **fDSValuePtrs.back();
-      break;
+   case EColumnKind::kTreeArray: /*dealt with in the other `Get` overload*/
+   case EColumnKind::kTreeValue: return *(fReaderValues.back()->Get());
+   case EColumnKind::kCustomColumn: fCustomColumns.back()->Update(fSlot, entry); return *fCustomValuePtrs.back();
+   case EColumnKind::kDataSource: fCustomColumns.back()->Update(fSlot, entry); return **fDSValuePtrs.back();
    }
+
+   return *(T*)nullptr; // avoid "control reaches end of non-void function" warnings
 }
 
 } // namespace TDF
