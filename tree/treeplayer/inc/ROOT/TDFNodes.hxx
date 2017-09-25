@@ -195,6 +195,11 @@ class TColumnValue {
    using ProxyParam_t = typename std::conditional<std::is_same<ReaderValueOrArray_t<T>, TTreeReaderValue<T>>::value, T,
                                                   TakeFirstParameter_t<T>>::type;
 
+   /// TColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a TDataFrame Define
+   /// or a TDataSource. It stores which it is as an enum.
+   enum class EColumnKind { kTreeBranch, kCustomColumn, kDataSource };
+   EColumnKind fColumnKind;
+
    // Each element of the following data members will be in use by a _single task_.
    // The vectors are used as very small stacks (1-2 elements typically) that fill in case of interleaved task execution
    // i.e. when more than one task needs readers in this worker thread.
@@ -211,8 +216,6 @@ class TColumnValue {
    std::vector<TCustomColumnBase *> fCustomColumns;
    /// The slot this value belongs to. Needed when querying custom column values.
    unsigned int fSlot;
-   /// Whether this column value refers to a data-source column. Only relevant when querying custom column values.
-   bool fIsDataSourceColumn = false;
 
 public:
    TColumnValue() = default;
@@ -221,7 +224,8 @@ public:
 
    void MakeProxy(TTreeReader *r, const std::string &bn)
    {
-      bool useReaderValue = std::is_same<ProxyParam_t, T>::value;
+      fColumnKind = EColumnKind::kTreeBranch;
+      constexpr bool useReaderValue = std::is_same<ProxyParam_t, T>::value;
       if (useReaderValue)
          fReaderValues.emplace_back(new TTreeReaderValue<T>(*r, bn.c_str()));
       else
@@ -236,6 +240,7 @@ public:
    std::array_view<ProxyParam_t> Get(Long64_t)
    {
       auto &readerArray = *fReaderArrays.back();
+      // TODO can we not do this check for each event?
       if (readerArray.GetSize() > 1 && 1 != (&readerArray[1] - &readerArray[0])) {
          std::string exceptionText = "Branch ";
          exceptionText += readerArray.GetBranchName();
@@ -692,15 +697,18 @@ void ROOT::Internal::TDF::TColumnValue<T>::SetTmpColumn(unsigned int slot,
                                                         ROOT::Detail::TDF::TCustomColumnBase *customColumn)
 {
    fCustomColumns.emplace_back(customColumn);
-   fIsDataSourceColumn = customColumn->IsDataSourceColumn();
    if (customColumn->GetTypeId() != typeid(T))
       throw std::runtime_error(
          std::string("TColumnValue: type specified for column \"" + customColumn->GetName() + "\" is ") +
          typeid(T).name() + " but temporary column has type " + customColumn->GetTypeId().name());
-   if (fIsDataSourceColumn)
+
+   if (customColumn->IsDataSourceColumn()) {
+      fColumnKind = EColumnKind::kDataSource;
       fDSValuePtrs.emplace_back(static_cast<T **>(customColumn->GetValuePtr(slot)));
-   else
+    } else {
+      fColumnKind = EColumnKind::kCustomColumn;
       fCustomValuePtrs.emplace_back(static_cast<T *>(customColumn->GetValuePtr(slot)));
+   }
    fSlot = slot;
 }
 
@@ -714,11 +722,18 @@ template <typename U,
                                   int>::type>
 T &ROOT::Internal::TDF::TColumnValue<T>::Get(Long64_t entry)
 {
-   if (!fReaderValues.empty()) {
+   switch (fColumnKind) {
+   case EColumnKind::kTreeBranch:
       return *(fReaderValues.back()->Get());
-   } else {
+      break;
+   case EColumnKind::kCustomColumn:
       fCustomColumns.back()->Update(fSlot, entry);
-      return fIsDataSourceColumn ? **fDSValuePtrs.back() : *fCustomValuePtrs.back();
+      return *fCustomValuePtrs.back();
+      break;
+   case EColumnKind::kDataSource:
+      fCustomColumns.back()->Update(fSlot, entry);
+      return **fDSValuePtrs.back();
+      break;
    }
 }
 
