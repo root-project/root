@@ -1726,7 +1726,14 @@ void TGraph2D::SetPoint(Int_t n, Double_t x, Double_t y, Double_t z)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Sets graph title
+/// Sets the 2D graph title.
+///
+/// This method allows to change the global title and the axis' titles of a 2D
+/// graph. If `g` is the 2D graph one can do:
+///
+/// ~~~ {.cpp}
+/// g->SetTitle("Graph title; X axis title; Y axis title; Z axis title");
+/// ~~~
 
 void TGraph2D::SetTitle(const char* title)
 {
