@@ -130,6 +130,7 @@ Begin_Macro(source)
    Double_t x, y, z, P = 6.;
    Int_t np = 200;
    TGraph2D *dt = new TGraph2D();
+   dt->SetTitle("Graph title; X axis title; Y axis title; Z axis title");
    TRandom *r = new TRandom();
    for (Int_t N=0; N<np; N++) {
       x = 2*P*(r->Rndm(N))-P;
