@@ -216,6 +216,9 @@ class TColumnValue {
    std::vector<T **> fDSValuePtrs;
    /// Non-owning ptrs to the node responsible for the custom column. Needed when querying custom values.
    std::vector<TCustomColumnBase *> fCustomColumns;
+   /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
+   /// in contiguous memory. Only used when T == std::array_view<U>.
+   bool fArrayHasBeenChecked = false;
 
 public:
    TColumnValue() = default;
@@ -242,13 +245,22 @@ public:
    std::array_view<ProxyParam_t> Get(Long64_t)
    {
       auto &readerArray = *fReaderArrays.back();
-      // TODO can we not do this check for each event?
-      if (readerArray.GetSize() > 1 && 1 != (&readerArray[1] - &readerArray[0])) {
-         std::string exceptionText = "Branch ";
-         exceptionText += readerArray.GetBranchName();
-         exceptionText += " hangs from a non-split branch. For this reason, it cannot be accessed via an array_view."
-                          " Please read the top level branch instead.";
-         throw std::runtime_error(exceptionText);
+      // We only use TTreeReaderArrays to read columns that users flagged as type `array_view`, so we need to check
+      // that the branch stores the array as contiguous memory that we can actually wrap in an `array_view`.
+      // Currently we need the first entry to have been loaded to perform the check
+      // TODO Move check to `MakeProxy` once Axel implements this kind of check in TTreeReaderArray using TBranchProxy
+      if (!fArrayHasBeenChecked) {
+         if (readerArray.GetSize() > 1) {
+            if (1 != (&readerArray[1] - &readerArray[0])) {
+               std::string exceptionText = "Branch ";
+               exceptionText += readerArray.GetBranchName();
+               exceptionText +=
+                  " hangs from a non-split branch. For this reason, it cannot be accessed via an array_view."
+                  " Please read the top level branch instead.";
+               throw std::runtime_error(exceptionText);
+            }
+            fArrayHasBeenChecked = true;
+         }
       }
 
       return std::array_view<ProxyParam_t>(readerArray.begin(), readerArray.end());
