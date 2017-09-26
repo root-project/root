@@ -1,4 +1,4 @@
-/// \file ROOT/THistDrawOptions.h
+/// \file ROOT/THistDrawingOpts.h
 /// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-04
@@ -13,8 +13,10 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_THistDrawOptions
-#define ROOT7_THistDrawOptions
+#ifndef ROOT7_THistDrawingOpts
+#define ROOT7_THistDrawingOpts
+
+#include <ROOT/TDrawingOptsBase.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -22,43 +24,43 @@ namespace Experimental {
 namespace Internal {
 
 template <int DIMENSION>
-struct THistDrawOptionsEnum;
+struct THistDrawingOptsEnum;
 
 /// Specialization containing 1D hist drawing options.
 template <>
-struct THistDrawOptionsEnum<1> {
+struct THistDrawingOptsEnum<1> {
    enum EOpts { kErrors, kBar, kText };
 };
 
 /// Specialization containing 2D hist drawing options.
 template <>
-struct THistDrawOptionsEnum<2> {
+struct THistDrawingOptsEnum<2> {
    enum EOpts { kBox, kText, kLego };
 };
 
 /// Specialization containing 3D hist drawing options.
 template <>
-struct THistDrawOptionsEnum<3> {
+struct THistDrawingOptsEnum<3> {
    enum EOpts { kLego, kIso };
 };
 
 } // namespace Internal
 
-/** \class THistDrawOptions
+/** \class THistDrawingOpts
  Drawing options for a histogram with DIMENSIONS
  */
 template <int DIMENSION>
-class THistDrawOptions {
+class THistDrawingOpts {
    int fOpts;
 
 public:
-   THistDrawOptions() = default;
-   constexpr THistDrawOptions(typename Internal::THistDrawOptionsEnum<DIMENSION>::EOpts opt): fOpts(2 >> opt) {}
+   THistDrawingOpts() = default;
+   constexpr THistDrawingOpts(typename Internal::THistDrawingOptsEnum<DIMENSION>::EOpts opt): fOpts(2 >> opt) {}
 };
 
 namespace Hist {
-static constexpr const THistDrawOptions<2> box(Internal::THistDrawOptionsEnum<2>::kBox);
-static constexpr const THistDrawOptions<2> text(Internal::THistDrawOptionsEnum<2>::kText);
+static constexpr const THistDrawingOpts<2> box(Internal::THistDrawingOptsEnum<2>::kBox);
+static constexpr const THistDrawingOpts<2> text(Internal::THistDrawingOptsEnum<2>::kText);
 } // namespace Hist
 
 } // namespace Experimental
