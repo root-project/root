@@ -36,7 +36,7 @@ namespace Experimental {
 
 class TFrame {
 public:
-   class TFrameDrawingOpts: public TDrawingOptsBase<TFrameDrawingOpts> {
+   struct DrawingOpts: public TDrawingOptsBase<DrawingOpts> {
       /// Position of the frame in parent TPad coordinates.
       TPadPos    fPos = {0.1_normal, 0.1_normal};
       /// Size of the frame in parent TPad coordinates.
@@ -60,11 +60,12 @@ public:
 
    // Constructor taking position and extent. Defaults to leaving 10% of the
    // pad size empty around the frame.
-   TFrame(const TPadPos& pos = TPadPos({0.1_normal, 0.1_normal}),
-          const TPadExtent& size = TPadExtent({0.8_normal, 0.8_normal}));
+   TFrame(const TPadPos& pos = DrawingOpts::Default().fPos),
+          const TPadExtent& size = DrawingOpts::Default().fSize));
 
-   TFrame(const TPadPos& pos, const TPadExtent& size,
-      std::unique_ptr<TPadUserCoordBase>&& coords):
+   TFrame(std::unique_ptr<Internal::TPadUserCoordBase>&& coords,
+          const TPadPos& pos = DrawingOpts::Default().fPos,
+          const TPadExtent& size = DrawingOpts::Default().fSize):
    fUserCoord(std::move(coords)), TFrame(pos, size);
 
    ~TFrame();
