@@ -119,18 +119,7 @@ Bool_t TMVA::MethodDNN::HasAnalysisType(Types::EAnalysisType type,
 ////////////////////////////////////////////////////////////////////////////////
 /// default initializations
 
-void TMVA::MethodDNN::Init()
-{
-   // TODO: Remove once weights are considered by the method.
-   auto &dsi = this->DataInfo();
-   auto numClasses = dsi.GetNClasses();
-   for (UInt_t i = 0; i < numClasses; ++i) {
-      if (dsi.GetWeightExpression(i) != TString("")) {
-         Log() << kERROR << "Currently event weights are not considered properly by this method." << Endl;
-         break;
-      }
-   }
-}
+void TMVA::MethodDNN::Init() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Options to be set in the option string:
