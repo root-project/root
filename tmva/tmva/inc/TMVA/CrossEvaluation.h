@@ -65,9 +65,12 @@ namespace TMVA {
       Types::EAnalysisType fAnalysisType;    //! Indicates 
       TString              fAnalysisTypeStr; //! Indicates
       Bool_t               fCorrelations;
+      TString              fCvFactoryOptions;
+      Bool_t               fFoldFileOutput;  //! If true: generate output file for each fold
       Bool_t               fFoldStatus;      //!
       TString              fJobName;
       UInt_t               fNumFolds;        //!
+      TString              fOutputFactoryOptions;
       TFile *              fOutputFile;
       Bool_t               fSilent;
       TString              fSplitExprString;

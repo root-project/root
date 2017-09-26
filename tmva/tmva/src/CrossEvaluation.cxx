@@ -71,17 +71,18 @@ See CVSplit documentation?
 
 ////////////////////////////////////////////////////////////////////////////////
 ///    
-///    TODO: Add optional file to fold factory to save output (for debugging at least).
-///    
 
 TMVA::CrossEvaluation::CrossEvaluation(TString jobName, TMVA::DataLoader *dataloader, TFile * outputFile, TString options)
    : TMVA::Envelope(jobName, dataloader, nullptr, options),
      fAnalysisType(Types::kMaxAnalysisType),
      fAnalysisTypeStr("auto"),
      fCorrelations(kFALSE),
+     fCvFactoryOptions(""),
+     fFoldFileOutput(kFALSE),
      fFoldStatus(kFALSE),
      fJobName(jobName),
      fNumFolds(2),
+     fOutputFactoryOptions(""),
      fOutputFile(outputFile),
      fSilent(kFALSE),
      fSplitExprString(""),
@@ -140,6 +141,8 @@ void TMVA::CrossEvaluation::InitOptions()
    // Options specific to CE
    DeclareOptionRef( fSplitExprString, "SplitExpr", "The expression used to assign events to folds" );
    DeclareOptionRef( fNumFolds, "NumFolds", "Number of folds to generate" );
+
+   DeclareOptionRef( fFoldFileOutput, "FoldFileOutput", "If given a TMVA output file will be generated for each fold. Filename will be the same as specifed for the combined output with a _foldX suffix. (default: false)" );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -149,15 +152,13 @@ void TMVA::CrossEvaluation::ParseOptions()
 {
    this->Envelope::ParseOptions();
 
+   // Factory options
    fAnalysisTypeStr.ToLower();
    if     ( fAnalysisTypeStr == "classification" ) fAnalysisType = Types::kClassification;
    else if( fAnalysisTypeStr == "regression" )     fAnalysisType = Types::kRegression;
    else if( fAnalysisTypeStr == "multiclass" )     fAnalysisType = Types::kMulticlass;
    else if( fAnalysisTypeStr == "auto" )           fAnalysisType = Types::kNoAnalysisType;
 
-
-   TString fCvFactoryOptions = "";
-   TString fOutputFactoryOptions = "";
    if (fVerbose) {
       fCvFactoryOptions += "V:";
       fOutputFactoryOptions += "V:";
@@ -198,8 +199,17 @@ void TMVA::CrossEvaluation::ParseOptions()
       fOutputFactoryOptions += Form("Silent:");
    }
 
-   fFoldFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(
-      fJobName, fCvFactoryOptions + "!Correlations:!ROC:!Color:!DrawProgressBar:Silent"));
+   fCvFactoryOptions += "!Correlations:!ROC:!Color:!DrawProgressBar:Silent";
+
+   // CE specific options
+   if (fFoldFileOutput and fOutputFile == nullptr) {
+      Log() << kFATAL << "No output file given, cannot generate per fold output." << Endl;
+   }
+
+   // Initialisations
+
+   fFoldFactory = std::unique_ptr<TMVA::Factory>(
+      new TMVA::Factory(fJobName, fCvFactoryOptions));
 
    // The fOutputFactory should always have !ModelPersitence set since we use a custom code path for this.
    //    In this case we create a special method (MethodCrossEvaluation) that can only be used by
@@ -263,15 +273,39 @@ void TMVA::CrossEvaluation::ProcessFold(UInt_t iFold)
    foldTitle += "_fold";
    foldTitle += iFold+1;
 
+   // Only used if fFoldOutputFile == true
+   TFile * foldOutputFile = nullptr;
+
+   if (fFoldFileOutput and fOutputFile != nullptr) {
+      TString path = std::string("") + gSystem->DirName(fOutputFile->GetName()) + "/" + foldTitle + ".root";
+      std::cout << "PATH: " << path << std::endl;
+      foldOutputFile = TFile::Open( path, "RECREATE" );
+      fFoldFactory = std::unique_ptr<TMVA::Factory>(
+         new TMVA::Factory(fJobName, foldOutputFile, fCvFactoryOptions)
+      );
+   }
+
    fDataLoader->PrepareFoldDataSet(*fSplit.get(), iFold, TMVA::Types::kTraining);
    MethodBase* smethod = fFoldFactory->BookMethod(fDataLoader.get(), methodName, foldTitle, methodOptions);
 
    // Train method (train method and eval train set)
    Event::SetIsTraining(kTRUE);
    smethod->TrainMethod();
+   Event::SetIsTraining(kFALSE);
+
+   if (fFoldFileOutput) {
+      fFoldFactory->TestAllMethods();
+      fFoldFactory->EvaluateAllMethods();
+      foldOutputFile->Close();
+   }
 
    // Clean-up for this fold
-   smethod->Data()->DeleteResults(foldTitle, Types::kTraining, smethod->GetAnalysisType());
+   {
+      smethod->Data()->DeleteResults(foldTitle, Types::kTraining, smethod->GetAnalysisType());   
+   }
+   if (fFoldFileOutput) {
+      smethod->Data()->DeleteResults(foldTitle, Types::kTesting, smethod->GetAnalysisType());
+   }
    fFoldFactory->DeleteAllMethods();
    fFoldFactory->fMethodsMap.clear();
 }
@@ -283,9 +317,9 @@ void TMVA::CrossEvaluation::ProcessFold(UInt_t iFold)
 
 void TMVA::CrossEvaluation::Evaluate()
 {
-   TString methodName  = fMethod.GetValue<TString>("MethodName");
-   TString methodTitle = fMethod.GetValue<TString>("MethodTitle");
-   if(methodName == "") Log() << kFATAL << "No method booked for cross-validation" << Endl;
+   TString methodTypeName  = fMethod.GetValue<TString>("MethodName");
+   TString methodTitle     = fMethod.GetValue<TString>("MethodTitle");
+   if(methodTypeName == "") Log() << kFATAL << "No method booked for cross-validation" << Endl;
 
    TMVA::MsgLogger::EnableOutput();
    Log() << kINFO << "Evaluate method: " << methodTitle << Endl;
@@ -308,8 +342,8 @@ void TMVA::CrossEvaluation::Evaluate()
                           ":EncapsulatedMethodTypeName=%s",
                           fSplitExprString.Data(),
                           fNumFolds,
-                          methodName.Data(),
-                          methodTitle.Data());
+                          methodTitle.Data(),
+                          methodTypeName.Data());
    fFactory->BookMethod(fDataLoader.get(), Types::kCrossEvaluation, methodTitle, options);
    
    // Evaluation
