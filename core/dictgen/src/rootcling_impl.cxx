@@ -2344,6 +2344,13 @@ static bool GenerateModule(TModuleGenerator &modGen, const std::string &resource
    // Actually lookup the module on the computed module name.
    clang::Module *module = headerSearch.lookupModule(StringRef(moduleName));
 
+   // Inform the user and abort if we can't find a module with a given name.
+   if (!module) {
+      ROOT::TMetaUtils::Error("GenerateModule", "Couldn't find module with name '%s' in modulemap!\n",
+                              moduleName.c_str());
+      return false;
+   }
+
    // Check if the loaded module covers all headers that were specified
    // by the user on the command line. This is an integrity check to
    // ensure that our used module map is
@@ -2358,13 +2365,6 @@ static bool GenerateModule(TModuleGenerator &modGen, const std::string &resource
       }
       std::string warningMessage = msgStream.str();
       ROOT::TMetaUtils::Warning("GenerateModule", warningMessage.c_str());
-   }
-
-   // Inform the user and abort if we can't find a module with a given name.
-   if (!module) {
-      ROOT::TMetaUtils::Error("GenerateModule", "Couldn't find module with name '%s' in modulemap!\n",
-                              moduleName.c_str());
-      return false;
    }
 
    IncludeModuleHeaders(modGen, module, interpreter);
