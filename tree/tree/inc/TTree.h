@@ -119,6 +119,7 @@ protected:
    UInt_t         fFriendLockStatus;      ///<! Record which method is locking the friend recursion
    TBuffer       *fTransientBuffer;       ///<! Pointer to the current transient buffer.
    Bool_t         fCacheDoAutoInit;       ///<! true if cache auto creation or resize check is needed
+   Bool_t         fCacheDoClusterPrefetch;///<! true if cache is prefetching whole clusters
    Bool_t         fCacheUserSet;          ///<! true if the cache setting was explicitly given by user
    Bool_t         fIMTEnabled;            ///<! true if implicit multi-threading is enabled for this tree
    UInt_t         fNEntriesSinceSorting;  ///<! Number of entries processed since the last re-sorting of branches
@@ -252,6 +253,10 @@ public:
       // of this next cluster
       Long64_t Next();
 
+      // Move on to the previous cluster and return the starting entry
+      // of this previous cluster
+      Long64_t Previous();
+
       // Return the start entry of the current cluster.
       Long64_t GetStartEntry() {
          return fStartEntry;
@@ -363,6 +368,7 @@ public:
    virtual TClusterIterator GetClusterIterator(Long64_t firstentry);
    virtual Long64_t        GetChainEntryNumber(Long64_t entry) const { return entry; }
    virtual Long64_t        GetChainOffset() const { return fChainOffset; }
+   virtual Bool_t          GetClusterPrefetch() const { return fCacheDoClusterPrefetch; }
    TFile                  *GetCurrentFile() const;
            Int_t           GetDefaultEntryOffsetLen() const {return fDefaultEntryOffsetLen;}
            Long64_t        GetDebugMax()  const { return fDebugMax; }
@@ -517,6 +523,7 @@ public:
    virtual void            SetCacheLearnEntries(Int_t n=10);
    virtual void            SetChainOffset(Long64_t offset = 0) { fChainOffset=offset; }
    virtual void            SetCircular(Long64_t maxEntries);
+   virtual void            SetClusterPrefetch(Bool_t enabled) { fCacheDoClusterPrefetch = enabled; }
    virtual void            SetDebug(Int_t level = 1, Long64_t min = 0, Long64_t max = 9999999); // *MENU*
    virtual void            SetDefaultEntryOffsetLen(Int_t newdefault, Bool_t updateExisting = kFALSE);
    virtual void            SetDirectory(TDirectory* dir);
