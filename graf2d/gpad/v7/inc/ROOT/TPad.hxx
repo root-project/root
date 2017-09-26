@@ -20,9 +20,9 @@
 #include <vector>
 
 #include "ROOT/TDrawable.hxx"
+#include "ROOT/TFrame.hxx"
 #include "ROOT/TPadExtent.hxx"
 #include "ROOT/TPadPos.hxx"
-#include "ROOT/TPadUserCoordBase.hxx"
 #include "ROOT/TypeTraits.hxx"
 
 namespace ROOT {
@@ -48,8 +48,8 @@ private:
    /// Content of the pad.
    Primitives_t fPrimitives;
 
-   /// User coordinate system used by this pad.
-   std::unique_ptr<Detail::TPadUserCoordBase> fUserCoord;
+   /// TFrame with user coordinate system, if used by this pad.
+   std::unique_ptr<TFrame> fFrame;
 
    /// Disable copy construction.
    TPadBase(const TPadBase &) = delete;
@@ -142,7 +142,7 @@ public:
    /// Convert user coordinates to normal coordinates.
    std::array<TPadCoord::Normal, 2> UserToNormal(const std::array<TPadCoord::User, 2> &pos) const
    {
-      return fUserCoord->ToNormal(pos);
+      return fFrame->GetUserCoords()->ToNormal(pos);
    }
 };
 } // namespace Internal
