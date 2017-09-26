@@ -188,8 +188,8 @@ public:
    /// The type of the value contained in a TResultProxy is also available as TResultProxy<T>::Value_t, e.g.
    /// \code{.cpp}
    /// auto h = tdf.Histo1D("x");
+   /// // h.kOnce is 0
    /// // decltype(h)::Value_t is TH1D
-   /// // decltype(h)::kOnce is 0
    /// \endcode
    ///
    /// When implicit multi-threading is enabled, the callback:
