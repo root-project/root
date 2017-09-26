@@ -5808,14 +5808,14 @@ void THistPainter::PaintContour(Option_t *option)
          while (1) {
             nadd = 0;
             for (i=2;i<np[ipoly];i+=2) {
-               if (xx[i] == xp[iplus] && yy[i] == yp[iplus]) {
+               if ((iplus < 2*npmax-1) && (xx[i] == xp[iplus]) && (yy[i] == yp[iplus])) {
                   iplus++;
                   xp[iplus] = xx[i+1]; yp[iplus]  = yy[i+1];
                   xx[i]   = xmin; yy[i]   = ymin;
                   xx[i+1] = xmin; yy[i+1] = ymin;
                   nadd++;
                }
-               if (xx[i+1] == xp[iminus] && yy[i+1] == yp[iminus]) {
+               if ((iminus > 0) && (xx[i+1] == xp[iminus]) && (yy[i+1] == yp[iminus])) {
                   iminus--;
                   xp[iminus] = xx[i];   yp[iminus]  = yy[i];
                   xx[i]   = xmin; yy[i]   = ymin;
