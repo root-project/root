@@ -358,7 +358,7 @@
 
             if (pnt2) this.mouse_zoom_mesh.point2 = pnt2;
 
-            if (pnt2 && this.painter.enable_hightlight)
+            if (pnt2 && this.painter.enable_highlight)
                if (this.mouse_zoom_mesh.object.ShowSelection(this.mouse_zoom_mesh.point, pnt2))
                   this.painter.Render3D(0);
 
@@ -547,60 +547,6 @@
       obj = undefined;
    }
 
-   JSROOT.Painter.HPainter_TestAxisVisibility = function(camera, toplevel, fb, bb) {
-      var top;
-      for (var n=0;n<toplevel.children.length;++n) {
-         top = toplevel.children[n];
-         if (top.axis_draw) break;
-         top = undefined;
-      }
-
-      if (!top) return;
-
-      if (!camera) {
-         // this is case when axis drawing want to be removed
-         toplevel.remove(top);
-         delete this.TestAxisVisibility;
-         return;
-      }
-
-      fb = fb ? true : false;
-      bb = bb ? true : false;
-
-      var qudrant = 1, pos = camera.position;
-      if ((pos.x < 0) && (pos.y >= 0)) qudrant = 2;
-      if ((pos.x >= 0) && (pos.y >= 0)) qudrant = 3;
-      if ((pos.x >= 0) && (pos.y < 0)) qudrant = 4;
-
-      function testvisible(id, range) {
-         if (id <= qudrant) id+=4;
-         return (id > qudrant) && (id < qudrant+range);
-      }
-
-      for (var n=0;n<top.children.length;++n) {
-         var chld = top.children[n];
-         if (chld.grid) chld.visible = bb && testvisible(chld.grid, 3); else
-         if (chld.zid) chld.visible = testvisible(chld.zid, 2); else
-         if (chld.xyid) chld.visible = testvisible(chld.xyid, 3); else
-         if (chld.xyboxid) {
-            var range = 5, shift = 0;
-            if (bb && !fb) { range = 3; shift = -2; } else
-            if (fb && !bb) range = 3; else
-            if (!fb && !bb) range = (chld.bottom ? 3 : 0);
-            chld.visible = testvisible(chld.xyboxid + shift, range);
-            if (!chld.visible && chld.bottom && bb)
-               chld.visible = testvisible(chld.xyboxid, 3);
-         } else
-         if (chld.zboxid) {
-            var range = 2, shift = 0;
-            if (fb && bb) range = 5; else
-            if (bb && !fb) range = 4; else
-            if (!bb && fb) { shift = -2; range = 4; }
-            chld.visible = testvisible(chld.zboxid + shift, range);
-         }
-      }
-   }
-
    JSROOT.Painter.createLineSegments = function(arr, material, index, only_geometry) {
       // prepare geometry for THREE.LineSegments
       // If required, calculate lineDistance attribute for dashed geometries
@@ -674,7 +620,7 @@
 
    // ==============================================================================
 
-   JSROOT.Painter.PointsCreator = function(size, iswebgl, scale) {
+   function PointsCreator(size, iswebgl, scale) {
       this.webgl = (iswebgl === undefined) ? true : iswebgl;
       this.scale = scale || 1.;
 
@@ -684,14 +630,14 @@
       this.indx = 0;
    }
 
-   JSROOT.Painter.PointsCreator.prototype.AddPoint = function(x,y,z) {
+   PointsCreator.prototype.AddPoint = function(x,y,z) {
       this.pos[this.indx]   = x;
       this.pos[this.indx+1] = y;
       this.pos[this.indx+2] = z;
       this.indx+=3;
    }
 
-   JSROOT.Painter.PointsCreator.prototype.CreatePoints = function(mcolor) {
+   PointsCreator.prototype.CreatePoints = function(mcolor) {
       // only plain geometry and sprite material is supported by CanvasRenderer, but it cannot be scaled
 
       var material = new THREE.PointsMaterial( { size: (this.webgl ? 3 : 1) * this.scale, color: mcolor || 'black' } );
@@ -700,7 +646,69 @@
       return pnts;
    }
 
-   return JSROOT.Painter;
+   // ==============================================================================
+
+   function Create3DLineMaterial(painter, obj) {
+      if (!painter || !obj) return null;
+
+      var lcolor = painter.get_color(obj.fLineColor),
+          material = null,
+          style = obj.fLineStyle ? JSROOT.Painter.root_line_styles[obj.fLineStyle] : "",
+          dash = style ? style.split(",") : [];
+
+      if (dash && dash.length>=2)
+         material = new THREE.LineDashedMaterial( { color: lcolor, dashSize: parseInt(dash[0]), gapSize: parseInt(dash[1]) } );
+      else
+         material = new THREE.LineBasicMaterial({ color: lcolor });
+
+      if (obj.fLineWidth && (obj.fLineWidth>1) && !JSROOT.browser.isIE) material.linewidth = obj.fLineWidth;
+
+      return material;
+   }
+
+   // ============================================================================================================
+
+   function drawPolyLine3D() {
+      var line = this.GetObject(),
+          main = this.main_painter();
+
+      if (!main || !main.mode3d || !main.toplevel || !line) return;
+
+      var fN, fP, fOption;
+
+      if (line._blob && line._blob.length==4) {
+         // workaround for custom streamer for JSON, should be resolved
+         fN = line._blob[1];
+         fP = line._blob[2];
+         fOption = line._blob[3];
+      } else {
+         fN = line.fN;
+         fP = line.fP;
+         fOption = line.fOption;
+      }
+
+      var pnts = [];
+
+      for (var n=3;n<3*fN;n+=3)
+         pnts.push(main.grx(fP[n-3]), main.gry(fP[n-2]), main.grz(fP[n-1]),
+                   main.grx(fP[n]), main.gry(fP[n+1]), main.grz(fP[n+2]));
+
+      var lines = JSROOT.Painter.createLineSegments(pnts, Create3DLineMaterial(this, line));
+
+      main.toplevel.add(lines);
+   }
+
+   // ==============================================================================================
+
+
+   JSROOT.Painter.PointsCreator = PointsCreator;
+
+   JSROOT.Painter.drawPolyLine3D = drawPolyLine3D;
+
+   JSROOT.Painter.Create3DLineMaterial = Create3DLineMaterial;
+
+
+   return JSROOT;
 
 }));
 

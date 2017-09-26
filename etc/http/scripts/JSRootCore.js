@@ -95,7 +95,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 24/08/2017";
+   JSROOT.version = "5.3.0 26/09/2017";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -109,21 +109,19 @@
    // JSROOT.use_full_libs = true;
 
    JSROOT.touches = false;
-   JSROOT.browser = { isOpera:false, isFirefox:true, isSafari:false, isChrome:false, isIE:false, isWin:false };
+   JSROOT.browser = { isOpera: false, isFirefox: true, isSafari: false, isChrome: false, isIE: false, isWin: false };
 
    if ((typeof document !== "undefined") && (typeof window !== "undefined")) {
       var scripts = document.getElementsByTagName('script');
       for (var n = 0; n < scripts.length; ++n) {
-         var src = scripts[n].src;
-         if ((src===undefined) || (typeof src !== 'string')) continue;
+         if (!scripts[n].src || (typeof scripts[n].src !== 'string')) continue;
 
-         var pos = src.indexOf("scripts/JSRootCore.");
+         var pos = scripts[n].src.indexOf("scripts/JSRootCore.");
          if (pos<0) continue;
 
-         JSROOT.source_dir = src.substr(0, pos);
-         JSROOT.source_min = src.indexOf("scripts/JSRootCore.min.js") >= 0;
-
-         JSROOT.source_fullpath = src;
+         JSROOT.source_dir = scripts[n].src.substr(0, pos);
+         JSROOT.source_min = scripts[n].src.indexOf("scripts/JSRootCore.min.js") >= 0;
+         JSROOT.source_fullpath = scripts[n].src;
 
          if ((console!==undefined) && (typeof console.log == 'function'))
             console.log("Set JSROOT.source_dir to " + JSROOT.source_dir + ", " + JSROOT.version);
@@ -139,7 +137,7 @@
       JSROOT.browser.isWin = navigator.platform.indexOf('Win') >= 0;
    }
 
-   JSROOT.browser.isWebKit = JSROOT.browser.isChrome || JSROOT.browser.isSafari;
+   JSROOT.browser.isWebKit = JSROOT.browser.isChrome || JSROOT.browser.isSafari || JSROOT.browser.isOpera;
 
    // default draw styles, can be changed after loading of JSRootCore.js
    // this style also can be changed providing style=itemname in the URL
@@ -159,7 +157,8 @@
          AutoStat : true,
          FrameNDC : { fX1NDC: 0.07, fY1NDC: 0.12, fX2NDC: 0.95, fY2NDC: 0.88 },
          Palette : 57,
-         MathJax : 0,  // 0 - never, 1 - only for complex cases, 2 - always
+         Latex : 2,    // 0 - never, 1 - only latex symbols, 2 - normal TLatex processing (default), 3 - use MathJax for complex case, 4 - use MathJax always
+         // MathJax : 0,  // depricated, will be supported till JSROOT 6.0, use Latex variable  0 - never, 1 - only for complex cases, 2 - always
          ProgressBox : true,  // show progress box
          Embed3DinSVG : 2,  // 0 - no embed, only 3D plot, 1 - overlay over SVG (IE/WebKit), 2 - embed into SVG (only Firefox)
          NoWebGL : false, // if true, WebGL will be disabled,
@@ -205,13 +204,13 @@
          fOptFit : 0,
          fNumberContours : 20,
          fGridColor : 0,
-         fGridStyle : 11,
+         fGridStyle : 3,
          fGridWidth : 1,
          fFrameFillColor : 0,
-         fFrameLineColor : 1,
          fFrameFillStyle : 1001,
-         fFrameLineStyle : 1,
+         fFrameLineColor : 1,
          fFrameLineWidth : 1,
+         fFrameLineStyle : 1,
          fFrameBorderSize : 1,
          fFrameBorderMode : 0,
          fEndErrorSize : 2,   // size in pixels of end error for E1 draw options
@@ -232,24 +231,6 @@
          kIsZoomed      : JSROOT.BIT(16), // bit set when zooming on Y axis
          kNoTitle       : JSROOT.BIT(17), // don't draw the histogram title
          kIsAverage     : JSROOT.BIT(18)  // Bin contents are average (used by Add)
-   };
-
-   JSROOT.EAxisBits = {
-         kTickPlus      : JSROOT.BIT(9),
-         kTickMinus     : JSROOT.BIT(10),
-         kAxisRange     : JSROOT.BIT(11),
-         kCenterTitle   : JSROOT.BIT(12),
-         kCenterLabels  : JSROOT.BIT(14),
-         kRotateTitle   : JSROOT.BIT(15),
-         kPalette       : JSROOT.BIT(16),
-         kNoExponent    : JSROOT.BIT(17),
-         kLabelsHori    : JSROOT.BIT(18),
-         kLabelsVert    : JSROOT.BIT(19),
-         kLabelsDown    : JSROOT.BIT(20),
-         kLabelsUp      : JSROOT.BIT(21),
-         kIsInteger     : JSROOT.BIT(22),
-         kMoreLogLabels : JSROOT.BIT(23),
-         kDecimals      : JSROOT.BIT(11)
    };
 
    // wrapper for console.log, avoids missing console in IE
@@ -767,7 +748,7 @@
       return xhr;
    }
 
-   JSROOT.loadScript = function(urllist, callback, debugout) {
+   JSROOT.loadScript = function(urllist, callback, debugout, from_previous) {
       // dynamic script loader using callback
       // (as loading scripts may be asynchronous)
       // one could specify list of scripts or style files, separated by semicolon ';'
@@ -776,33 +757,30 @@
       // by the position of JSRootCore.js file, which must be loaded by normal methods:
       // <script type="text/javascript" src="scripts/JSRootCore.js"></script>
 
-      function completeLoad() {
+      delete JSROOT.complete_script_load;
 
-         JSROOT.complete_script_load = null;
-
+      if (from_previous) {
          if (debugout)
             document.getElementById(debugout).innerHTML = "";
          else
             JSROOT.progress();
 
-         if (urllist)
-            return JSROOT.loadScript(urllist, callback, debugout);
-
-         JSROOT.CallBack(callback);
+         if (!urllist) return JSROOT.CallBack(callback);
       }
 
-      if (!urllist)
-         return completeLoad();
+      if (!urllist) return JSROOT.CallBack(callback);
 
       var filename = urllist, separ = filename.indexOf(";"),
           isrootjs = false, isbower = false;
 
       if (separ>0) {
          filename = filename.substr(0, separ);
-         urllist = urllist.slice(separ+1);
+         urllist = urllist.substr(separ+1);
       } else {
          urllist = "";
       }
+
+      var completeLoad = JSROOT.loadScript.bind(JSROOT, urllist, callback, debugout, true);
 
       if (filename.indexOf('&&&scripts/')===0) {
          isrootjs = true;
@@ -813,7 +791,7 @@
          isrootjs = true;
          filename = filename.slice(3);
          if ((filename.indexOf("style/")==0) && JSROOT.source_min &&
-             (filename.lastIndexOf('.css')==filename.length-3) &&
+             (filename.lastIndexOf('.css')==filename.length-4) &&
              (filename.indexOf('.min.css')<0))
             filename = filename.slice(0, filename.length-4) + '.min.css';
       } else
@@ -880,13 +858,13 @@
          element.onreadystatechange = function() {
             if (element.readyState == "loaded" || element.readyState == "complete") {
                element.onreadystatechange = null;
-               if (JSROOT.complete_script_load) completeLoad();
+               if (JSROOT.complete_script_load) JSROOT.complete_script_load();
             }
          }
       } else { // Other browsers
          element.onload = function() {
             element.onload = null;
-            if (JSROOT.complete_script_load) completeLoad();
+            if (JSROOT.complete_script_load) JSROOT.complete_script_load();
          }
       }
 
@@ -897,7 +875,7 @@
       // one could specify kind of requirements
       //     'io'  TFile functionality
       //   'tree'  TTree support
-      //     '2d'  basic 2d graphic (TCanvas)
+      //     '2d'  basic 2d graphic (TCanvas/TPad/TFrame)
       //     '3d'  basic 3d graphic (three.js)
       //   'hist'  histograms 2d graphic
       // 'hist3d'  histograms 3d graphic
@@ -970,7 +948,7 @@
             modules.push('JSRootTree');
          }
 
-      if ((kind.indexOf('2d;')>=0) || (kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0)) {
+      if ((kind.indexOf('2d;')>=0) || (kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0) || (kind.indexOf("openui5;")>=0)) {
          if (jsroot._test_d3_ === undefined) {
             if ((typeof d3 == 'object') && d3.version && (d3.version[0]==="4"))  {
                jsroot.console('Reuse existing d3.js ' + d3.version + ", expected 4.4.4", debugout);
@@ -1053,6 +1031,7 @@
       }
 
       if (kind.indexOf("mathjax;")>=0) {
+
          if (typeof MathJax == 'undefined') {
             mainfiles += (use_bower ? "###MathJax/MathJax.js" : "https://root.cern/js/mathjax/latest/MathJax.js") +
                            "?config=TeX-AMS-MML_SVG&delayStartupUntil=configured";
@@ -1076,7 +1055,6 @@
                normal_callback();
             }
          }
-         if (jsroot.gStyle.MathJax == 0) jsroot.gStyle.MathJax = 1;
       }
 
       if (kind.indexOf("simple;")>=0) {
@@ -1351,6 +1329,15 @@
             JSROOT.extend(obj, { fFunctions: JSROOT.Create("TList"), fGraphs: JSROOT.Create("TList"),
                                  fHistogram: null, fMaximum: -1111, fMinimum: -1111 });
             break;
+         case 'TGraphPolargram':
+            JSROOT.Create("TNamed", obj);
+            JSROOT.Create("TAttText", obj);
+            JSROOT.Create("TAttLine", obj);
+            JSROOT.extend(obj, { fRadian: true, fDegree: false, fGrad: false, fPolarLabelColor: 1, fRadialLabelColor: 1,
+                                 fAxisAngle: 0, fPolarOffset: 0.04, fPolarTextSize: 0.04, fRadialOffset: 0.025, fRadialTextSize: 0.035,
+                                 fRwrmin: 0, fRwrmax: 1, fRwtmin: 0, fRwtmax: 2*Math.PI, fTickpolarSize: 0.02,
+                                 fPolarLabelFont: 62, fRadialLabelFont: 62, fCutRadial: 0, fNdivRad: 508, fNdivPol: 508 });
+            break;
          case 'TPolyLine':
             JSROOT.Create("TObject", obj);
             JSROOT.Create("TAttLine", obj);
@@ -1360,11 +1347,11 @@
          case 'TGaxis':
             JSROOT.Create("TLine", obj);
             JSROOT.Create("TAttText", obj);
-            JSROOT.extend(obj, { _fChopt: "", fFunctionName: "", fGridLength: 0,
-                                  fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035,
-                                  fName: "", fNdiv: 12, fTickSize: 0.02, fTimeFormat: "",
-                                  fTitle: "", fTitleOffset: 1, fTitleSize: 0.035,
-                                  fWmax: 100, fWmin: 0 });
+            JSROOT.extend(obj, { fChopt: "", fFunctionName: "", fGridLength: 0,
+                                 fLabelColor: 1, fLabelFont: 42, fLabelOffset: 0.005, fLabelSize: 0.035,
+                                 fName: "", fNdiv: 12, fTickSize: 0.02, fTimeFormat: "",
+                                 fTitle: "", fTitleOffset: 1, fTitleSize: 0.035,
+                                 fWmax: 100, fWmin: 0 });
             break;
          case 'TAttPad':
             JSROOT.extend(obj, { fLeftMargin: JSROOT.gStyle.fPadLeftMargin,
@@ -1373,10 +1360,10 @@
                                  fTopMargin: JSROOT.gStyle.fPadTopMargin,
                                  fXfile: 2, fYfile: 2, fAfile: 1, fXstat: 0.99, fYstat: 0.99, fAstat: 2,
                                  fFrameFillColor: JSROOT.gStyle.fFrameFillColor,
-                                 fFrameLineColor: JSROOT.gStyle.fFrameLineColor,
                                  fFrameFillStyle: JSROOT.gStyle.fFrameFillStyle,
-                                 fFrameLineStyle: JSROOT.gStyle.fFrameLineStyle,
+                                 fFrameLineColor: JSROOT.gStyle.fFrameLineColor,
                                  fFrameLineWidth: JSROOT.gStyle.fFrameLineWidth,
+                                 fFrameLineStyle: JSROOT.gStyle.fFrameLineStyle,
                                  fFrameBorderSize: JSROOT.gStyle.fFrameBorderSize,
                                  fFrameBorderMode: JSROOT.gStyle.fFrameBorderMode });
             break;
@@ -1579,7 +1566,7 @@
 
       if ((typename === "TPaveText") || (typename === "TPaveStats")) {
          m.AddText = function(txt) {
-            this.fLines.Add({ _typename: 'TText', fTitle: txt, fTextColor: 1 });
+            this.fLines.Add({ _typename: 'TLatex', fTitle: txt, fTextColor: 1 });
          }
          m.Clear = function() {
             this.fLines.Clear();
@@ -1642,6 +1629,7 @@
                            .replace(/\b(cos)\b/gi, 'Math.cos')
                            .replace(/\b(tan)\b/gi, 'Math.tan')
                            .replace(/\b(exp)\b/gi, 'Math.exp')
+                           .replace(/\b(pow)\b/gi, 'Math.pow')
                            .replace(/pi/g, 'Math.PI');
               for (var n=2;n<10;++n)
                  _func = _func.replace('x^'+n, 'Math.pow(x,'+n+')');
@@ -1666,18 +1654,24 @@
             return this._func(x, y);
          }
          m.GetParName = function(n) {
-            if (('fFormula' in this) && ('fParams' in this.fFormula)) return this.fFormula.fParams[n].first;
-            if ('fNames' in this) return this.fNames[n];
-            return "Par"+n;
+            if (this.fFormula && this.fFormula.fParams) return this.fFormula.fParams[n].first;
+            if (this.fNames && this.fNames[n]) return this.fNames[n];
+            return "p"+n;
          }
          m.GetParValue = function(n) {
-            if (('fFormula' in this) && ('fClingParameters' in this.fFormula)) return this.fFormula.fClingParameters[n];
-            if (('fParams' in this) && (this.fParams!=null))  return this.fParams[n];
-            return null;
+            if (this.fFormula && this.fFormula.fClingParameters) return this.fFormula.fClingParameters[n];
+            if (this.fParams) return this.fParams[n];
+            return undefined;
+         }
+         m.GetParError = function(n) {
+            return this.fParErrors ? this.fParErrors[n] : undefined;
+         }
+         m.GetNumPars = function() {
+            return this.fNpar;
          }
       }
 
-      if ((typename.indexOf("TGraph") == 0) || (typename == "TCutG")) {
+      if (((typename.indexOf("TGraph") == 0) || (typename == "TCutG")) && (typename != "TGraphPolargram") && (typename != "TGraphTime")) {
          // check if point inside figure specified by the TGraph
          m.IsInside = function(xp,yp) {
             var i, j = this.fNpoints - 1, x = this.fX, y = this.fY, oddNodes = false;
@@ -1981,6 +1975,7 @@
       if (JSROOT.GetUrlOption('3d', src)!=null) prereq += "3d;";
       if (JSROOT.GetUrlOption('math', src)!=null) prereq += "math;";
       if (JSROOT.GetUrlOption('mathjax', src)!=null) prereq += "mathjax;";
+      if (JSROOT.GetUrlOption('openui5', src)!=null) prereq += "openui5;";
       var user = JSROOT.GetUrlOption('load', src),
           onload = JSROOT.GetUrlOption('onload', src),
           bower = JSROOT.GetUrlOption('bower', src);

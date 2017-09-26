@@ -143,6 +143,7 @@
       JSROOT.TObjectPainter.call(this, obj);
 
       this.no_default_title = true; // do not set title to main DIV
+      this.mode3d = true; // indication of 3D mode
 
       this.Cleanup(true);
    }
@@ -2533,6 +2534,14 @@
    }
 
    TGeoPainter.prototype.Render3D = function(tmout, measure) {
+      // call 3D rendering of the geometry drawing
+      // tmout specifies delay, after which actual rendering will be invoked
+      // Timeout used to avoid multiple rendering of the picture when several 3D drawings
+      // superimposed with each other.
+      // If tmeout<=0, rendering performed immediately
+      // Several special values are used:
+      //   -2222 - rendering performed only if there were previous calls, which causes timeout activation
+
       if (!this._renderer) {
          console.warn('renderer object not exists - check code');
          return;
@@ -2541,8 +2550,11 @@
       if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
 
       if ((tmout <= 0) || this._usesvg) {
-         if ('render_tmout' in this)
+         if ('render_tmout' in this) {
             clearTimeout(this.render_tmout);
+         } else {
+            if (tmout === -2222) return; // special case to check if rendering timeout was active
+         }
 
          var tm1 = new Date();
 
