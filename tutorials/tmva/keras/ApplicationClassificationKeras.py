@@ -27,7 +27,7 @@ for branch in signal.GetListOfBranches():
     background.SetBranchAddress(branchName, branches[branchName])
 
 # Book methods
-reader.BookMVA('PyKeras', TString('dataset/weights/TMVAClassification_PyKeras.weights.xml'))
+reader.BookMVA('PyKeras', TString('TMVAClassification/weights/TMVAClassification_PyKeras.weights.xml'))
 
 # Print some example classifications
 print('Some signal example classifications:')

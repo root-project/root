@@ -1,3 +1,3 @@
 void LaunchRegGUI(){
-    TMVA::TMVARegGui("TMVA.root");
+   TMVA::TMVARegGui("TMVARegression.root");
 }
