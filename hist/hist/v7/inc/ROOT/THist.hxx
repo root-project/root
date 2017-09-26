@@ -355,7 +355,7 @@ template<int DIMENSIONS, class PRECISION,
          template <int D_, class P_, template <class P__> class S_> class... STAT>
 std::unique_ptr <TDrawable>
 GetDrawable(const std::shared_ptr<THist<DIMENSIONS, PRECISION, STAT...>>& hist,
-            THistDrawOptions<DIMENSIONS> opts = {})
+            THistDrawingOpts<DIMENSIONS> opts = {})
 {
   return std::make_unique<THistDrawable<DIMENSIONS>>(hist, opts);
 }
@@ -365,7 +365,7 @@ template<int DIMENSIONS, class PRECISION,
          template <int D_, class P_, template <class P__> class S_> class... STAT>
 std::unique_ptr <TDrawable>
 GetDrawable(std::unique_ptr<THist<DIMENSIONS, PRECISION, STAT...>>&& hist,
-            THistDrawOptions<DIMENSIONS> opts = {})
+            THistDrawingOpts<DIMENSIONS> opts = {})
 {
   return std::make_unique<THistDrawable<DIMENSIONS>>(std::move(hist), opts);
 }

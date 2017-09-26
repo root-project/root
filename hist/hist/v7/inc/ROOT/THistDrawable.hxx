@@ -17,7 +17,7 @@
 #define ROOT7_THistDrawable
 
 #include "ROOT/TDrawable.hxx"
-#include "ROOT/THistDrawOptions.hxx"
+#include "ROOT/THistDrawingOpts.hxx"
 #include "ROOT/TLogger.hxx"
 
 // TODO: from Sergey Linev: should libHist depend from libGpad?
@@ -60,7 +60,7 @@ public:
    }
 
    /// Paint a THist. All we need is access to its GetBinContent()
-   virtual void Paint(TDrawable &obj, THistDrawOptions<DIMENSION> opts, TVirtualCanvasPainter &canv) = 0;
+   virtual void Paint(TDrawable &obj, THistDrawingOpts<DIMENSION> opts, TVirtualCanvasPainter &canv) = 0;
 };
 
 extern template class THistPainterBase<1>;
@@ -97,18 +97,18 @@ public:
 
 private:
    Internal::TUniWeakPtr<HistImpl_t> fHistImpl;
-   THistDrawOptions<DIMENSIONS> fOpts;
+   THistDrawingOpts<DIMENSIONS> fOpts;
 
    bool UpdateOldHist();
 
 public:
    template <class HIST>
-   THistDrawable(const std::shared_ptr<HIST> &hist, THistDrawOptions<DIMENSIONS> opts)
+   THistDrawable(const std::shared_ptr<HIST> &hist, THistDrawingOpts<DIMENSIONS> opts)
       : fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl())), fOpts(opts)
    {}
 
    template <class HIST>
-   THistDrawable(std::unique_ptr<HIST> &&hist, THistDrawOptions<DIMENSIONS> opts)
+   THistDrawable(std::unique_ptr<HIST> &&hist, THistDrawingOpts<DIMENSIONS> opts)
       : fHistImpl(std::unique_ptr<HistImpl_t>(std::move(hist->TakeImpl()))), fOpts(opts)
    {}
 
