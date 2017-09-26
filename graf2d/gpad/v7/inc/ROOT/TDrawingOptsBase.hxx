@@ -27,9 +27,7 @@ namespace Internal {
 std::map<std::string, std::string> ReadDrawingOptsDefaultConfig(std::string_view section);
 } // namespace Internal
 
-namespace Detail {
-
-/** \class ROOT::Experimental::Detail::TDrawingOptsBase
+/** \class ROOT::Experimental::TDrawingOptsBase
   Base class for drawing options. Implements access to the default and the default's initialization
   from a config file.
 
@@ -45,7 +43,7 @@ protected:
    /// initialize their default, in `InitializeDefaultFromFile()`.
    static std::map<std::string, std::string> ReadConfig(std::string_view section)
    {
-      return ReadDrawingOptsDefaultConfig(section);
+      return Internal::ReadDrawingOptsDefaultConfig(section);
    }
 
    /// Default implementation: no configuration variables in config file, simply default-initialize
@@ -62,7 +60,6 @@ public:
    }
 };
 
-} // namespace Detail
 } // namespace Experimental
 } // namespace ROOT
 
