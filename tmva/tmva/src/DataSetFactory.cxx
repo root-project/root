@@ -133,7 +133,9 @@ TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
       for (UInt_t cl = 0; cl< dsi.GetNClasses(); cl++) {
          const TString className = dsi.GetClassInfo(cl)->GetName();
          dsi.SetCorrelationMatrix( className, CalcCorrelationMatrix( ds, cl ) );
-         dsi.PrintCorrelationMatrix( className );
+         if (fCorrelations) {
+            dsi.PrintCorrelationMatrix(className);
+         }
       }
       //Log() << kHEADER <<  Endl;
       Log() << kHEADER << Form("[%s] : ",dsi.GetName()) << " " << Endl << Endl;
@@ -650,6 +652,9 @@ TMVA::DataSetFactory::InitOptions( TMVA::DataSetInfo& dsi,
    splitSpecs.AddPreDefVal(TString("Debug"));
    splitSpecs.AddPreDefVal(TString("Verbose"));
    splitSpecs.AddPreDefVal(TString("Info"));
+
+   fCorrelations = kTRUE;
+   splitSpecs.DeclareOptionRef(fCorrelations, "Correlations", "Boolean to show correlation output (Default: true)");
 
    splitSpecs.ParseOptions();
    splitSpecs.CheckForUnusedOptions();
