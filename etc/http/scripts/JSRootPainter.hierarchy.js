@@ -2166,7 +2166,7 @@
       if (drawing && socket_kind) {
 
          var painter = new JSROOT.TCanvasPainter(null);
-         painter.plain_layout = painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
+         painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
          if (painter.batch_mode) JSROOT.BatchMode = true;
 
          if (window) {
@@ -2176,13 +2176,15 @@
 
          if (use_openui && !painter.batch_mode) {
 
-            painter.plain_layout = true;
-
             painter._configured_socket_kind = socket_kind;
-
-            JSROOT.openui5_canvas_painter = painter;
+            painter.use_openui = true;
 
             return JSROOT.AssertPrerequisites('openui5', function() {
+            
+               var oData = { canvas_painter: painter };
+               var oModel = new sap.ui.model.json.JSONModel(oData);
+               sap.ui.getCore().setModel(oModel, "TopCanvasId--MainPanel");
+               
                new JSROOT.sap.ui.xmlview({
                   id: "TopCanvasId",
                   viewName: "sap.ui.jsroot.view.Canvas"
@@ -2586,6 +2588,7 @@
    GridDisplay.prototype = Object.create(MDIDisplay.prototype);
 
    GridDisplay.prototype.CreateGroup = function(handle, main, num, childs, sizes) {
+
       if (!sizes) sizes = new Array(num);
       var sum1 = 0, sum2 = 0;
       for (var n=0;n<num;++n) sum1 += (sizes[n] || 1);
