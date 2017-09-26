@@ -63,6 +63,11 @@ void TBufferMerger::Push(TBufferFile *buffer)
    fDataAvailable.notify_one();
 }
 
+size_t TBufferMerger::GetAutoSave() const
+{
+   return fAutoSave;
+}
+
 void TBufferMerger::SetAutoSave(size_t size)
 {
    fAutoSave = size;

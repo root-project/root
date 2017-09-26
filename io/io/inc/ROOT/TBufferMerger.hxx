@@ -75,6 +75,9 @@ public:
     */
    void RegisterCallback(const std::function<void(void)> &f);
 
+   /** Returns the current value of the auto save setting in bytes (default = 0). */
+   size_t GetAutoSave() const;
+
    /** By default, TBufferMerger will call TFileMerger::PartialMerge() for each
     *  buffer pushed onto its merge queue. This function lets the user change
     *  this behaviour by telling TBufferMerger to accumulate at least @param size
