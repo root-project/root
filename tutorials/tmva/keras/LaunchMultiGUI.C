@@ -1,3 +1,3 @@
 void LaunchMultiGUI(){
-   TMVA::TMVAMultiClassGui("TMVAMulticlass.root");
+    TMVA::TMVAMultiClassGui("TMVA.root");
 }

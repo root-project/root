@@ -5,15 +5,16 @@ from subprocess import call
 from os.path import isfile
 
 from keras.models import Sequential
-from keras.layers import Dense, Activation
+from keras.layers.core import Dense, Activation
 from keras.regularizers import l2
+from keras import initializations
 from keras.optimizers import SGD
 
 # Setup TMVA
 TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
-output = TFile.Open('TMVARegression.root', 'RECREATE')
+output = TFile.Open('TMVA.root', 'RECREATE')
 factory = TMVA.Factory('TMVARegression', output,
         '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=Regression')
 
@@ -24,7 +25,7 @@ if not isfile('tmva_reg_example.root'):
 data = TFile.Open('tmva_reg_example.root')
 tree = data.Get('TreeR')
 
-dataloader = TMVA.DataLoader('TMVARegression')
+dataloader = TMVA.DataLoader('dataset')
 for branch in tree.GetListOfBranches():
     name = branch.GetName()
     if name != 'fvalue':
@@ -37,11 +38,15 @@ dataloader.PrepareTrainingAndTestTree(TCut(''),
 
 # Generate model
 
+# Define initialization
+def normal(shape, name=None):
+    return initializations.normal(shape, scale=0.05, name=name)
+
 # Define model
 model = Sequential()
-model.add(Dense(64, activation='tanh', W_regularizer=l2(1e-5), input_dim=2))
-#model.add(Dense(32, activation='tanh', W_regularizer=l2(1e-5)))
-model.add(Dense(1, activation='linear'))
+model.add(Dense(64, init=normal, activation='tanh', W_regularizer=l2(1e-5), input_dim=2))
+#model.add(Dense(32, init=normal, activation='tanh', W_regularizer=l2(1e-5)))
+model.add(Dense(1, init=normal, activation='linear'))
 
 # Set loss and optimizer
 model.compile(loss='mean_squared_error', optimizer=SGD(lr=0.01))
