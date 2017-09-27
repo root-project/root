@@ -24,7 +24,19 @@ namespace Experimental {
 namespace Internal {
 
 template <int DIMENSION>
-struct THistDrawingOptsEnum;
+class THistDrawingOptsBase: public TDrawingOptsBase {
+   /// Index of the line color in TCanvas's color table.
+   size_t fLineColorIndex = (size_t) -1;
+   /// The pad containing this Drawable, used to register colors.
+   TPadBase& fPad;
+
+public:
+   THistDrawingOptsBase(TPadBase& pad) = default;
+
+   void SetLineColor(const TColor& col) {
+       fPad.RegisterColor(fLineColorIndex, col);
+   }
+};
 
 /// Specialization containing 1D hist drawing options.
 template <>
