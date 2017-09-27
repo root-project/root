@@ -1245,7 +1245,7 @@ function(ROOT_ADD_GBENCHMARK benchmark)
   ROOT_ADD_TEST(gbench${mangled_name}
     COMMAND ${benchmark}
     WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR}
-    LABELS "benchmark;longtest")
+    LABELS "benchmark")
 endfunction()
 
 #----------------------------------------------------------------------------
