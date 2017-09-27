@@ -27,7 +27,8 @@ BENCHMARK(BM_Cartesian3D_Sanity);
 
 static void BM_Cartesian3D_CreateEmpty(benchmark::State &state)
 {
-   while (state.KeepRunning()) ROOT::Math::Cartesian3D<ROOT::Double_v> c;
+   while (state.KeepRunning())
+      ROOT::Math::Cartesian3D<ROOT::Double_v> c;
 }
 BENCHMARK(BM_Cartesian3D_CreateEmpty);
 
