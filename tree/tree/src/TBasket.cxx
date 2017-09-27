@@ -184,7 +184,7 @@ Int_t TBasket::DropBuffers()
 
 Int_t *TBasket::GetCalculatedEntryOffset()
 {
-   if (fEntryOffset != reinterpret_cast<Int_t *>(1)) {
+   if (fEntryOffset != reinterpret_cast<Int_t *>(-1)) {
       return fEntryOffset;
    }
 
@@ -431,7 +431,7 @@ void inline TBasket::InitializeCompressedBuffer(Int_t len, TFile* file)
 
 void TBasket::ResetEntryOffset()
 {
-   if (fEntryOffset != (Int_t *)1) {
+   if (fEntryOffset != reinterpret_cast<Int_t *>(-1)) {
       delete[] fEntryOffset;
    }
    fEntryOffset = nullptr;
@@ -641,7 +641,7 @@ AfterBuffer:
    // Read offsets table if needed.
    // If there's no EntryOffsetLen in the branch -- or the fEntryOffset is marked to be calculated-on-demand --
    // then we skip reading out.
-   if (!fBranch->GetEntryOffsetLen() || (fEntryOffset == reinterpret_cast<Int_t *>(1))) {
+   if (!fBranch->GetEntryOffsetLen() || (fEntryOffset == reinterpret_cast<Int_t *>(-1))) {
       return 0;
    }
    // At this point, we're required to read out an offset array.
@@ -745,7 +745,7 @@ void TBasket::Reset()
    Int_t newNevBufSize = fBranch->GetEntryOffsetLen();
    if (newNevBufSize==0) {
       ResetEntryOffset();
-   } else if ((newNevBufSize != fNevBufSize) || (fEntryOffset <= (Int_t *)1)) {
+   } else if ((newNevBufSize != fNevBufSize) || (fEntryOffset <= reinterpret_cast<Int_t *>(-1))) {
       ResetEntryOffset();
       fEntryOffset = new Int_t[newNevBufSize];
    }
@@ -868,7 +868,7 @@ void TBasket::Streamer(TBuffer &b)
             b.ReadArray(fDisplacement);
          }
       } else if (mustGenerateOffsets) {
-         fEntryOffset = reinterpret_cast<Int_t *>(1);
+         fEntryOffset = reinterpret_cast<Int_t *>(-1);
       }
       if (flag == 1 || flag > 10) {
          fBufferRef = new TBufferFile(TBuffer::kRead,fBufferSize);
