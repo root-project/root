@@ -23,15 +23,6 @@
 
 using namespace ROOT::Experimental;
 
-// TColor constexpr values:
-constexpr TColor::Alpha TColor::kOpaque;
-constexpr TColor::Alpha TColor::kTransparent;
-constexpr TColor::Predefined TColor::kRed;
-constexpr TColor::Predefined TColor::kGreen;
-constexpr TColor::Predefined TColor::kBlue;
-constexpr TColor::Predefined TColor::kWhite;
-constexpr TColor::Predefined TColor::kBlack;
-
 TPalette::TPalette(bool interpolate, bool knownNormalized, const std::vector<TPalette::OrdinalAndColor> &points)
    : fColors(points), fInterpolate(interpolate), fNormalized(knownNormalized)
 {
