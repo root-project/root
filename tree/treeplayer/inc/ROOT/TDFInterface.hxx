@@ -17,6 +17,7 @@
 #include "ROOT/TDFActionHelpers.hxx"
 #include "ROOT/TDFHistoModels.hxx"
 #include "ROOT/TDFUtils.hxx"
+#include "RtypesCore.h" // for ULong64_t
 #include "TChain.h"
 #include "TH1.h" // For Histo actions
 #include "TH2.h" // For Histo actions
@@ -37,10 +38,35 @@
 
 namespace ROOT {
 
+namespace Experimental {
+namespace TDF {
+   template<typename T> class TInterface;
+
+} // end NS TDF
+} // end NS Experimental
+
 namespace Internal {
 namespace TDF {
 using namespace ROOT::Experimental::TDF;
 using namespace ROOT::Detail::TDF;
+
+// CACHE --------------
+
+template<typename T>
+class CacheColumnHolder {
+public:
+   using value_type = T;
+   std::vector<T> fContent;
+   // This method returns a pointer since we treat these columns as if they come
+   // from a data source, i.e. we forward an entry point to valid memory rather
+   // than a value.
+   T* operator()(ULong64_t iEvent)
+   {
+      return &fContent[iEvent];
+   };
+};
+
+// ENDCACHE------------
 
 /****** BuildAndBook overloads *******/
 // BuildAndBook builds a TAction with the right operation and books it with the TLoopManager
@@ -380,6 +406,9 @@ public:
          TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
                                               ColTypes_t(), *fDataSource);
       using NewCol_t = TDFDetail::TCustomColumn<F, ShouldPassSlotNumber>;
+
+      // Here we check if the return type is a pointer. In this case, we assume it points to valid memory
+      // and we treat the column as if it came from a data source, i.e. it points to valid memory.
       loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
       TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
       newInterface.fValidCustomColumns.emplace_back(name);
@@ -568,6 +597,16 @@ public:
       }
 
       return Snapshot(treename, filename, selectedColumns, options);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns in memory
+   template <typename... BranchTypes>
+   TInterface<TLoopManager>
+   Cache(const ColumnNames_t &columnList)
+   {
+      auto staticSeq = TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>();
+      return CacheImpl<BranchTypes...>(columnList, staticSeq);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1372,6 +1411,59 @@ private:
       snapshotTDF.fProxiedPtr->SetTree(chain);
 
       return snapshotTDF;
+   }
+
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Implementation of cache
+   template <typename... BranchTypes, int... S>
+   TInterface<TLoopManager> CacheImpl(const ColumnNames_t &columnList, TDFInternal::StaticSeq<S...>)
+   {
+      // We share bits and pieces with snapshot. De facto this is a snapshot
+      // in memory!
+      TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
+
+      std::tuple<TDFInternal::CacheColumnHolder<BranchTypes>...> colHolders;
+
+      // TODO: really fix the type of the Take....
+      std::initializer_list<int> expander0{(
+         // This gets expanded
+         std::get<S>(colHolders).fContent = std::move(Take<typename std::decay<decltype(std::get<S>(colHolders))>::type::value_type>(columnList[S]).GetValue())
+         , 0)...};
+      (void)expander0;
+
+      auto nEntries = std::get<0>(colHolders).fContent.size();
+
+      // Define the columns with the number of entries
+      const auto nSlots = TDFInternal::GetNSlots();
+      const auto base = nEntries / nSlots;
+      std::vector<ULong64_t> evtCursors(nSlots);
+      for (size_t slot=0; slot < nSlots; ++slot) evtCursors[slot] = slot * base;
+
+      // We do not need to save the new node. We add the name of the valid custom columns by hand later
+      TInterface<TLoopManager> cachedTDF(std::make_shared<TLoopManager>(nEntries));
+      constexpr const char* iEvtColumnName = "__TDF_iEvent__";
+      const  std::vector<std::string> iEvtColumnNameV = {iEvtColumnName};
+      cachedTDF.DefineSlot(iEvtColumnName, [evtCursors](unsigned int slot) mutable {return evtCursors[slot]++;});
+
+      // Now we define the data columns. We add the name of the valid custom columns by hand later.
+      auto lm = cachedTDF.GetDataFrameChecked();
+      std::initializer_list<int> expander1{(
+         // This gets expanded
+         lm->Book(std::make_shared<TDFDetail::TCustomColumn<typename std::decay<decltype(std::get<S>(colHolders))>::type, false>>(
+               columnList[S],
+               std::move(std::get<S>(colHolders)),
+               iEvtColumnNameV,
+               lm.get(),
+               true))
+         , 0)...};
+      (void)expander1;
+
+      // Add the defined columns
+      cachedTDF.fValidCustomColumns.assign(columnList.begin(), columnList.end());
+      cachedTDF.fValidCustomColumns.emplace_back(iEvtColumnName);
+
+      return cachedTDF;
    }
 
 protected:
