@@ -45,7 +45,7 @@ private:
    std::unique_ptr<Detail::TPadUserCoordBase> fUserCoord;
 
    /// Palette used to visualize user coordinates.
-   std::unique_ptr<TPalette> fPalette;
+   TPalette fPalette;
 
    /// Offset with respect to parent TPad.
    TPadPos fPos;
