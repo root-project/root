@@ -66,6 +66,7 @@ namespace TMVA {
       TString              fAnalysisTypeStr; //! Indicates
       Bool_t               fCorrelations;
       TString              fCvFactoryOptions;
+      Bool_t               fDrawProgressBar;
       Bool_t               fFoldFileOutput;  //! If true: generate output file for each fold
       Bool_t               fFoldStatus;      //!
       TString              fJobName;

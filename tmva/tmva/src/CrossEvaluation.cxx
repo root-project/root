@@ -78,6 +78,7 @@ TMVA::CrossEvaluation::CrossEvaluation(TString jobName, TMVA::DataLoader *datalo
      fAnalysisTypeStr("auto"),
      fCorrelations(kFALSE),
      fCvFactoryOptions(""),
+     fDrawProgressBar(kFALSE),
      fFoldFileOutput(kFALSE),
      fFoldStatus(kFALSE),
      fJobName(jobName),
@@ -128,6 +129,7 @@ void TMVA::CrossEvaluation::InitOptions()
    
    DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
 
+   DeclareOptionRef(fDrawProgressBar, "DrawProgressBar", "Boolean to show draw progress bar");
    DeclareOptionRef(fCorrelations, "Correlations", "Boolean to show correlation in output");
    DeclareOptionRef(fROC, "ROC", "Boolean to show ROC in output");
 
@@ -176,6 +178,10 @@ void TMVA::CrossEvaluation::ParseOptions()
 
    fCvFactoryOptions += Form("AnalysisType=%s:", fAnalysisTypeStr.Data());
    fOutputFactoryOptions += Form("AnalysisType=%s:", fAnalysisTypeStr.Data());
+
+   if (not fDrawProgressBar) {
+      fOutputFactoryOptions += "!DrawProgressBar:";
+   }
 
    if (fTransformations != "") {
       fCvFactoryOptions += Form("Transformations=%s:", fTransformations.Data());
