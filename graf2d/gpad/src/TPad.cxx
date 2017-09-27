@@ -2348,10 +2348,12 @@ void TPad::ExecuteEventAxis(Int_t event, Int_t px, Int_t py, TAxis *axis)
                zby1 = TMath::Power(10,zby1);
                zby2 = TMath::Power(10,zby2);
             }
-            zoombox->SetX1(zbx1);
-            zoombox->SetY1(zby1);
-            zoombox->SetX2(zbx2);
-            zoombox->SetY2(zby2);
+            if (zoombox) {
+               zoombox->SetX1(zbx1);
+               zoombox->SetY1(zby1);
+               zoombox->SetX2(zbx2);
+               zoombox->SetY2(zby2);
+            }
             gPad->Modified();
             gPad->Update();
          }
