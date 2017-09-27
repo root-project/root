@@ -443,7 +443,8 @@ void RooLinkedList::Add(TObject* arg, Int_t refCount)
 
   _size++ ;
   _last->_refCount = refCount ;
-  
+
+  _at.push_back(_last);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -466,7 +467,11 @@ Bool_t RooLinkedList::Remove(TObject* arg)
   // Update first,last if necessary
   if (elem==_first) _first=elem->_next ;
   if (elem==_last) _last=elem->_prev ;
-  
+
+  // Remove from index array
+  auto at_elem_it = std::find(_at.begin(), _at.end(), elem);
+  _at.erase(at_elem_it);
+
   // Delete and shrink
   _size-- ;
   deleteElement(elem) ;	
@@ -491,13 +496,15 @@ TObject* RooLinkedList::At(Int_t index) const
   // Check range
   if (index<0 || index>=_size) return 0 ;
 
-  
-  // Walk list
-  RooLinkedListElem* ptr = _first;
-  while(index--) ptr = ptr->_next ;
-  
-  // Return arg
-  return ptr->_arg ;
+  return _at[index]->_arg;
+//
+//
+//  // Walk list
+//  RooLinkedListElem* ptr = _first;
+//  while(index--) ptr = ptr->_next ;
+//
+//  // Return arg
+//  return ptr->_arg ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -565,6 +572,9 @@ void RooLinkedList::Clear(Option_t *)
     delete _htableLink ;
     _htableLink = new RooHashTable(hsize,RooHashTable::Pointer) ;       
   }
+
+  // empty index array
+  _at.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -595,6 +605,9 @@ void RooLinkedList::Delete(Option_t *)
     delete _htableLink ;
     _htableLink = new RooHashTable(hsize,RooHashTable::Pointer) ;       
   }
+
+  // empty index array
+  _at.clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -752,6 +765,14 @@ void RooLinkedList::Sort(Bool_t ascend)
 {
   if (ascend) _first = mergesort_impl<true>(_first, _size, &_last);
   else _first = mergesort_impl<false>(_first, _size, &_last);
+
+  // rebuild index array
+  RooLinkedListElem* elem = _first;
+  Int_t index = 0;
+  do {
+    _at[index++] = elem;
+    elem = elem->_next;
+  } while (elem != _last);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
