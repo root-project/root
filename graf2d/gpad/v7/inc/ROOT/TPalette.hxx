@@ -50,10 +50,7 @@ public:
          return lhs.fOrdinal < rhs.fOrdinal;
       }
       /// Compare an `OrdinalAndColor` and an ordinal value.
-      friend bool operator<(const OrdinalAndColor &lhs, double rhs)
-      {
-         return lhs.fOrdinal < rhs;
-      }
+      friend bool operator<(const OrdinalAndColor &lhs, double rhs) { return lhs.fOrdinal < rhs; }
    };
 
 private:
@@ -71,7 +68,8 @@ private:
 
 public:
    /// Tag type used to signal that the palette's colors should not be interpolated.
-   struct Discrete_t {};
+   struct Discrete_t {
+   };
 
    /// Tag value used to signal that the palette's colors should not be interpolated. Can be passed to the
    /// constructor: `TPalette palette(TPalette::kDiscrete, {{-100., TColor::kWhite}, {100., TColor::kRed}})`
@@ -121,11 +119,11 @@ public:
 
    /// Register a palette in the set of global palettes, making it available to `GetPalette()`.
    /// This function is not thread safe; any concurrent call to global Palette manipulation must be synchronized!
-   static void RegisterPalette(std::string_view name, const TPalette& palette);
+   static void RegisterPalette(std::string_view name, const TPalette &palette);
 
    /// Get a global palette by name. Returns an empty palette if no palette with that name is known.
    /// This function is not thread safe; any concurrent call to global Palette manipulation must be synchronized!
-   static const TPalette& GetPalette(std::string_view name);
+   static const TPalette &GetPalette(std::string_view name);
 
    ///\}
 };
