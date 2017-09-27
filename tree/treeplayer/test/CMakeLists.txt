@@ -9,6 +9,7 @@ ROOT_ADD_GTEST(dataframe_utils dataframe/dataframe_utils.cxx LIBRARIES TreePlaye
 ROOT_ADD_GTEST(dataframe_nodes dataframe/dataframe_nodes.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(dataframe_histomodels dataframe/dataframe_histomodels.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(dataframe_alias dataframe/dataframe_aliases.cxx LIBRARIES TreePlayer)
+ROOT_ADD_GTEST(dataframe_cache dataframe/dataframe_cache.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(datasource_trivial dataframe/datasource_trivial.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(datasource_root dataframe/datasource_root.cxx LIBRARIES TreePlayer)
 ROOT_ADD_PYUNITTEST(dataframe_histograms dataframe/dataframe_histograms.py)
