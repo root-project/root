@@ -44,12 +44,12 @@ private:
    std::array<TPadCoord::Pixel, 2> fSize;
 
    /// Modify counter, incremented every time canvas is changed
-   uint64_t fModified;                    ///<!
+   uint64_t fModified; ///<!
 
    /// The painter of this canvas, bootstrapping the graphics connection.
    /// Unmapped canvases (those that never had `Draw()` invoked) might not have
    /// a painter.
-   std::unique_ptr<Internal::TVirtualCanvasPainter> fPainter;  ///<!
+   std::unique_ptr<Internal::TVirtualCanvasPainter> fPainter; ///<!
 
    /// Disable copy construction for now.
    TCanvas(const TCanvas &) = delete;
@@ -70,7 +70,11 @@ public:
    void SetSize(const std::array<TPadCoord::Pixel, 2> &sz) { fSize = sz; }
 
    /// Set canvas pixel size - width and height
-   void SetSize(const TPadCoord::Pixel &width, const TPadCoord::Pixel &height) { fSize[0] = width; fSize[1] = height; }
+   void SetSize(const TPadCoord::Pixel &width, const TPadCoord::Pixel &height)
+   {
+      fSize[0] = width;
+      fSize[1] = height;
+   }
 
    /// Display the canvas.
    void Show(const std::string &where = "");
