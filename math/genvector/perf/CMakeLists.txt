@@ -1,5 +1,1 @@
-set(LIBS_TO_LINK GenVector rt)
-if (veccore)
-  set(LIBS_TO_LINK ${LIBS_TO_LINK} ${VecCore_LIBRARIES})
-endif()
-ROOT_ADD_GBENCHMARK(GenVectorBenchmarks Cartesian3DBenchmarks.cxx LIBRARIES ${LIBS_TO_LINK})
+ROOT_ADD_GBENCHMARK(GenVectorBenchmarks Cartesian3DBenchmarks.cxx LIBRARIES GenVector Vc rt)
