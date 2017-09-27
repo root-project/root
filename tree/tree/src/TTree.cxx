@@ -4559,18 +4559,12 @@ Int_t TTree::Fill()
    // If above, close the current file and continue on a new file.
    // Currently, the automatic change of file is restricted
    // to the case where the tree is in the top level directory.
-   if (!fDirectory)
-      return nbytes;
+   if (fDirectory)
+      if (TFile *file = fDirectory->GetFile())
+         if ((TDirectory *)file == fDirectory && (file->GetEND() > fgMaxTreeSize))
+            ChangeFile(file);
 
-   TFile *file = fDirectory->GetFile();
-   if (file && (file->GetEND() > fgMaxTreeSize))
-      if (fDirectory == (TDirectory *)file)
-         ChangeFile(file);
-
-   if (nerror)
-      return -1;
-
-   return nbytes;
+   return nerror == 0 ? nbytes : -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
