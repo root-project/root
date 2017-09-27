@@ -130,6 +130,7 @@ TEST(Cache, InternalColumnsSnapshot)
 
 TEST(Cache, Regex)
 {
+
    TDataFrame tdf(1);
    auto d = tdf.Define("c0", []() { return 0; })
                .Define("c1", []() { return 1; })
@@ -153,12 +154,13 @@ TEST(Cache, Regex)
    }
    EXPECT_EQ(0, ret) << "Exception not thrown even when the regex did not match any column!";
 
+   // Now from source
+   std::unique_ptr<TDataSource> tds(new TTrivialDS(4));
+   TDataFrame tdfs(std::move(tds));
+   auto cached = tdfs.Cache();
+   auto m = cached.Max<ULong64_t>("col0");
+   EXPECT_EQ(3UL, *m);
+
 }
-/*
-TEST(Cache, FromSource)
-{
-   std::unique_ptr<TDataSource> tds(new TTrivialDS(32));
-   TDataFrame tdf(std::move(tds));
-   auto cached = cache.tdf();
-}
-*/
+
+
