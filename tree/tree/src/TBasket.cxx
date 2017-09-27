@@ -660,9 +660,7 @@ AfterBuffer:
       // sizes instead of offsets (as sizes compress much better).
       fEntryOffset[0] = fKeylen;
       for (Int_t idx = 1; idx < fNevBuf + 1; idx++) {
-         printf("Reading offset for idx %d; old value %d", idx, fEntryOffset[idx]);
          fEntryOffset[idx] += fEntryOffset[idx - 1];
-         printf(", new value %d\n", fEntryOffset[idx]);
       }
    }
    fReadEntryOffset = kTRUE;
