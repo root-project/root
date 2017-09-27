@@ -181,6 +181,81 @@ Int_t RooGaussMinimizer::migrad()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Execute HESSE. Changes in parameter values
+/// and calculated errors are automatically
+/// propagated back the RooRealVars representing
+/// the floating parameters in the MINUIT operation
+
+Int_t RooGaussMinimizer::hesse()
+{
+  if (_theFitter->GetMinimizer()==0) {
+    coutW(Minimization) << "RooGaussMinimizer::hesse: Error, run Migrad before Hesse!"
+			<< endl ;
+    _status = -1;
+  }
+  else {
+
+    _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
+		    _optConst,_verbose) ;
+    //    profileStart() ;
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
+    RooAbsReal::clearEvalErrorLog() ;
+
+    _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+    bool ret = _theFitter->CalculateHessErrors();
+    _status = ((ret) ? _theFitter->Result().Status() : -1);
+
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
+    //    profileStop() ;
+    _fcn->BackProp(_theFitter->Result());
+
+    saveStatus("HESSE",_status) ;
+  
+  }
+
+  return _status ;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Execute MINOS. Changes in parameter values
+/// and calculated errors are automatically
+/// propagated back the RooRealVars representing
+/// the floating parameters in the MINUIT operation
+
+Int_t RooGaussMinimizer::minos()
+{
+  if (_theFitter->GetMinimizer()==0) {
+    coutW(Minimization) << "RooGaussMinimizer::minos: Error, run Migrad before Minos!"
+			<< endl ;
+    _status = -1;
+  }
+  else {
+
+    _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
+		      _optConst,_verbose) ;
+    //    profileStart() ;
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
+    RooAbsReal::clearEvalErrorLog() ;
+
+    _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+    bool ret = _theFitter->CalculateMinosErrors();
+    _status = ((ret) ? _theFitter->Result().Status() : -1);
+
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
+    //    profileStop() ;
+    _fcn->BackProp(_theFitter->Result());
+
+    saveStatus("MINOS",_status) ;
+
+  }
+
+  return _status ;
+
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// If flag is true, perform constant term optimization on
 /// function being minimized.
 

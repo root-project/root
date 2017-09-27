@@ -617,7 +617,7 @@ double RooGaussMinimizerFcn::DoDerivative(const double *x, unsigned int icoord) 
   // Except when the derivative itself calls DoEval where the counter is already updated!
   _evalCounter += 2;
 
-  cout << "grad value " << derivative_i_value;
+  cout << "grad value " << derivative_i_value << endl;
   return derivative_i_value;
 }
 
