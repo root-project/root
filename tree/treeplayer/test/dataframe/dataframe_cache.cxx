@@ -61,3 +61,39 @@ TEST(Cache, Class)
    EXPECT_EQ(h.GetStdDev(), *s);
    EXPECT_EQ(1UL, *c);
 }
+/*
+TEST(Cache, CacheFromCache)
+{
+   TDataFrame tdf(2);
+   auto f = 0.f;
+   auto orig = tdf.Define("float", [&f]() { return f++; });
+   auto cached = orig.Cache<float>({"float"});
+
+   auto recached = cached.Cache<float>({"float"});
+
+   auto orig = orig.Take<float>("float");
+   auto cfloat = cached.Take<float>("float");
+   auto rcfloat = recached.Take<float>("float");
+   for (auto i : {0,1}) {
+      EXPECT_EQ(orig[i], cfloat[i]);
+      EXPECT_EQ(orig[i], rcfloat[i]);
+   }
+}
+*/
+TEST(Cache, InternalColumnsSnapshot)
+{
+   TDataFrame tdf(2);
+   auto f = 0.f;
+   auto orig = tdf.Define("float", [&f]() { return f++; });
+   auto cached = orig.Cache<float>({"float"});
+   auto snapshot = cached.Snapshot("t","InternalColumnsSnapshot.root","",{"RECREATE",ROOT::kZLIB,0,0,99});
+   const char* iEventColName = "__TDF_iEvent__";
+   int ret (1);
+   try {
+      testing::internal::CaptureStderr();
+      snapshot.Mean<ULong64_t>(iEventColName);
+   } catch (const std::runtime_error &e) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret) << "Internal column " << iEventColName << " has been snapshotted!";
+}
