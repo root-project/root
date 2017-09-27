@@ -322,18 +322,16 @@ void Add(THist<DIMENSIONS, PRECISION_TO, STAT_TO...> &to, const THist<DIMENSIONS
 /// Interface to graphics taking a shared_ptr<THist>.
 template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
 std::unique_ptr<TDrawable>
-GetDrawable(const std::shared_ptr<THist<DIMENSIONS, PRECISION, STAT...>> &hist,
-            THistDrawingOpts<DIMENSIONS> opts = THistDrawingOpts<DIMENSIONS>::Default())
+GetDrawable(const std::shared_ptr<THist<DIMENSIONS, PRECISION, STAT...>> &hist, TPadBase &pad)
 {
-   return std::make_unique<THistDrawable<DIMENSIONS>>(hist, opts);
+   return std::make_unique<THistDrawable<DIMENSIONS>>(hist, pad);
 }
 
 /// Interface to graphics taking a unique_ptr<THist>.
 template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
-std::unique_ptr<TDrawable> GetDrawable(std::unique_ptr<THist<DIMENSIONS, PRECISION, STAT...>> &&hist,
-                                       THistDrawingOpts<DIMENSIONS> opts = THistDrawingOpts<DIMENSIONS>::Default())
+std::unique_ptr<TDrawable> GetDrawable(std::unique_ptr<THist<DIMENSIONS, PRECISION, STAT...>> &&hist, TPadBase &pad)
 {
-   return std::make_unique<THistDrawable<DIMENSIONS>>(std::move(hist), opts);
+   return std::make_unique<THistDrawable<DIMENSIONS>>(std::move(hist), pad);
 }
 
 } // namespace Experimental
