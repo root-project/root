@@ -1,3 +1,3 @@
 void LaunchClasGUI(){
-   TMVA::TMVAGui("TMVAClassification.root");
+    TMVA::TMVAGui("TMVA.root");
 }

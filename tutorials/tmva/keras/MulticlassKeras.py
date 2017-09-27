@@ -4,15 +4,16 @@ from ROOT import TMVA, TFile, TTree, TCut, gROOT
 from os.path import isfile
 
 from keras.models import Sequential
-from keras.layers import Dense, Activation
+from keras.layers.core import Dense, Activation
 from keras.regularizers import l2
+from keras import initializations
 from keras.optimizers import SGD
 
 # Setup TMVA
 TMVA.Tools.Instance()
 TMVA.PyMethodBase.PyInitialize()
 
-output = TFile.Open('TMVAMulticlass.root', 'RECREATE')
+output = TFile.Open('TMVA.root', 'RECREATE')
 factory = TMVA.Factory('TMVAClassification', output,
     '!V:!Silent:Color:DrawProgressBar:Transformations=D,G:AnalysisType=multiclass')
 
@@ -29,7 +30,7 @@ background0 = data.Get('TreeB0')
 background1 = data.Get('TreeB1')
 background2 = data.Get('TreeB2')
 
-dataloader = TMVA.DataLoader('TMVAMulticlass')
+dataloader = TMVA.DataLoader('dataset')
 for branch in signal.GetListOfBranches():
     dataloader.AddVariable(branch.GetName())
 
@@ -42,11 +43,15 @@ dataloader.PrepareTrainingAndTestTree(TCut(''),
 
 # Generate model
 
+# Define initialization
+def normal(shape, name=None):
+    return initializations.normal(shape, scale=0.05, name=name)
+
 # Define model
 model = Sequential()
-model.add(Dense(32, activation='relu', W_regularizer=l2(1e-5), input_dim=4))
-#model.add(Dense(32, activation='relu', W_regularizer=l2(1e-5)))
-model.add(Dense(4, activation='softmax'))
+model.add(Dense(32, init=normal, activation='relu', W_regularizer=l2(1e-5), input_dim=4))
+#model.add(Dense(32, init=normal, activation='relu', W_regularizer=l2(1e-5)))
+model.add(Dense(4, init=normal, activation='softmax'))
 
 # Set loss and optimizer
 model.compile(loss='categorical_crossentropy', optimizer=SGD(lr=0.01), metrics=['accuracy',])
