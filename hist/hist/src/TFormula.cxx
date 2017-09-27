@@ -807,6 +807,21 @@ void TFormula::FillDefaults()
         {"min","TMath::Min"},{"max","TMath::Max"},{"sign","TMath::Sign" },
         {"sq","TMath::Sq"}
       };
+#ifdef R__HAS_VECCORE  
+    const pair<TString,TString> vecFunShortcuts[] =
+      { {"sin","vecCore::math::Sin" },
+        {"cos","veccore::math::Cos" }, {"exp","vecCore::math::Exp"}, {"log","vecCore::math::Log"}, {"log10","vecCore::math::Log10"},
+        {"tan","vecCore::math::Tan"}, {"sinh","vecCore::math::SinH"}, {"cosh","vecCore::math::CosH"},
+        {"tanh","vecCore::math::TanH"}, {"asin","vecCore::math::ASin"}, {"acos","vecCore::math::ACos"},
+        {"atan","ATan"}, {"atan2","vecCore::math::ATan2"}, {"sqrt","vecCore::math::Sqrt"},
+        {"ceil","vecCore::math::Ceil"}, {"floor","vecCore::math::Floor"}, {"pow","vecCore::math::Pow"},
+        {"cbrt","vecCore::math::Cbrt"},{"abs","vecCore::math::Abs"},
+        {"min","vecCore::math::Min"},{"max","vecCore::math::Max"},{"sign","vecCore::math::Sign" }
+        //{"sq","TMath::Sq"}, {"binomial","TMath::Binomial"}  // this last two functions will not work in vectorized mode
+      };
+#else
+    const pair<TString,TString> vecFunShortcuts[] = funShortcuts;
+#endif 
 
    std::vector<TString> defvars2(10);
    for (int i = 0; i < 9; ++i)
@@ -829,8 +844,15 @@ void TFormula::FillDefaults()
    for (auto con : defconsts) {
       fConsts[con.first] = con.second;
    }
-   for (auto fun : funShortcuts) {
-      fFunctionsShortcuts[fun.first] = fun.second;
+   if (fVectorized) {
+      // for vectorized case use vecCore functions
+      for (auto fun : vecFunShortcuts) {
+         fFunctionsShortcuts[fun.first] = fun.second;
+      }
+   } else {
+      for (auto fun : funShortcuts) {
+         fFunctionsShortcuts[fun.first] = fun.second;
+      }
    }
 
    /*** - old code to support C++03
