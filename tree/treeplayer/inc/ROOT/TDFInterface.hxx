@@ -1349,6 +1349,14 @@ private:
             }
          }
       }
+
+      if (selectedColumns.empty()) {
+         std::string msg = "The regular expression specified ";
+         msg += columnNameRegexp;
+         msg += " did not match any column!";
+         throw std::runtime_error(msg);
+      }
+
       return selectedColumns;
    }
 
