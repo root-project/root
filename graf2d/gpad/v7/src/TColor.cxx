@@ -27,3 +27,10 @@ constexpr TColor::Predefined TColor::kGreen;
 constexpr TColor::Predefined TColor::kBlue;
 constexpr TColor::Predefined TColor::kWhite;
 constexpr TColor::Predefined TColor::kBlack;
+
+float TColor::GetPaletteOrdinal() const
+{
+   if (fIsRGBA)
+      throw std::runtime_error("This color does not represent a palette ordinal!");
+   return fRedOrPalettePos;
+}
