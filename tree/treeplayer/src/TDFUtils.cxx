@@ -242,6 +242,11 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree,
    return unknownColumns;
 }
 
+bool IsInternalColumn(std::string_view colName)
+{
+   return colName.find("__TDF_") == 0;
+}
+
 } // end NS TDF
 } // end NS Internal
 } // end NS ROOT
