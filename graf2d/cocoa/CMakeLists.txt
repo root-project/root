@@ -21,3 +21,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
                               SOURCES *.mm
                               DEPENDENCIES Gui GQuartz
                               LIBRARIES  "-framework Cocoa" "-framework OpenGL" ${FREETYPE_LIBRARIES})
+if(NOT opengl) # special case when cocoa is enabled but not opengl (i.e. gminimal=ON)
+  set_source_files_properties(src/TGCocoa.mm PROPERTIES 
+                             COMPILE_FLAGS "-I${CMAKE_SOURCE_DIR}/graf3d/gl/inc -I${CMAKE_SOURCE_DIR}/graf3d/glew/inc")
+endif()
