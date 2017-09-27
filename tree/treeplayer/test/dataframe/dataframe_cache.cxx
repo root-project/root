@@ -1,4 +1,6 @@
 #include "ROOT/TDataFrame.hxx"
+#include "ROOT/TSeq.hxx"
+#include "ROOT/TTrivialDS.hxx"
 #include "TH1F.h"
 #include "TRandom.h"
 
@@ -7,20 +9,25 @@
 #include <algorithm>
 
 using namespace ROOT::Experimental;
+using namespace ROOT::Experimental::TDF;
 
 TEST(Cache, FundType)
 {
-   TDataFrame tdf(1);
+   TDataFrame tdf(5);
    int i = 1;
    auto cached = tdf.Define("c0", [&i]() { return i++; })
                     .Define("c1", []() { return 1.; })
                     .Cache<int, double>({"c0","c1"});
 
    auto c = cached.Count();
-   auto m = cached.Mean<int>("c0");
+   auto m = cached.Min<int>("c0");
+   auto v = *cached.Take<int>("c0");
 
    EXPECT_EQ(1, *m);
-   EXPECT_EQ(1UL, *c);
+   EXPECT_EQ(5UL, *c);
+   for (auto j : ROOT::TSeqI(5)) {
+      EXPECT_EQ(j+1, v[j]);
+   }
 }
 
 
@@ -61,25 +68,48 @@ TEST(Cache, Class)
    EXPECT_EQ(h.GetStdDev(), *s);
    EXPECT_EQ(1UL, *c);
 }
+
+TEST(Cache, RunTwiceOnCached)
+{
+   auto nevts = 10U;
+   TDataFrame tdf(nevts);
+   auto f = 0.f;
+   auto nCalls = 0U;
+   auto orig = tdf.Define("float", [&f,&nCalls]() { nCalls++;return f++; });
+
+   auto cached = orig.Cache<float>({"float"});
+   EXPECT_EQ(nevts, nCalls);
+   auto m0 = cached.Mean<float>("float");
+   EXPECT_EQ(nevts, nCalls);
+   auto m1 = cached.Mean<float>("float");
+   EXPECT_EQ(nevts, nCalls);
+   EXPECT_EQ(*m0, *m1);
+
+}
+
+
 /*
+// Broken - caching a cached tdf destroys the cache of the cached.
 TEST(Cache, CacheFromCache)
 {
-   TDataFrame tdf(2);
+   auto nevts = 10U;
+   TDataFrame tdf(nevts);
    auto f = 0.f;
    auto orig = tdf.Define("float", [&f]() { return f++; });
-   auto cached = orig.Cache<float>({"float"});
 
+   auto cached = orig.Cache<float>({"float"}); f = 0.f;
    auto recached = cached.Cache<float>({"float"});
+   auto ofloat = *orig.Take<float>("float");
+   auto cfloat = *cached.Take<float>("float");
+   auto rcfloat = *recached.Take<float>("float");
 
-   auto orig = orig.Take<float>("float");
-   auto cfloat = cached.Take<float>("float");
-   auto rcfloat = recached.Take<float>("float");
-   for (auto i : {0,1}) {
-      EXPECT_EQ(orig[i], cfloat[i]);
-      EXPECT_EQ(orig[i], rcfloat[i]);
+   for (auto j : ROOT::TSeqU(nevts)) {
+      EXPECT_EQ(ofloat[j], cfloat[j]);
+      EXPECT_EQ(ofloat[j], rcfloat[j]);
    }
 }
 */
+
 TEST(Cache, InternalColumnsSnapshot)
 {
    TDataFrame tdf(2);
@@ -97,3 +127,29 @@ TEST(Cache, InternalColumnsSnapshot)
    }
    EXPECT_EQ(0, ret) << "Internal column " << iEventColName << " has been snapshotted!";
 }
+
+TEST(Cache, Regex)
+{
+   TDataFrame tdf(1);
+   auto d = tdf.Define("c0", []() { return 0; })
+               .Define("c1", []() { return 1; })
+               .Define("b0", []() { return 2; });
+
+   auto cachedAll = d.Cache();
+   auto cachedC = d.Cache("c[0,1].*");
+
+   auto sumAll = [](int c0, int c1, int b0){return c0 + c1 + b0;};
+   auto mAll = cachedAll.Define("sum", sumAll, {"c0", "c1", "b0"}).Max<int>("sum");
+   EXPECT_EQ(3, *mAll);
+   auto sumC = [](int c0, int c1){return c0 + c1;};
+   auto mC = cachedC.Define("sum", sumC, {"c0", "c1"}).Max<int>("sum");
+   EXPECT_EQ(1, *mC);
+}
+/*
+TEST(Cache, FromSource)
+{
+   std::unique_ptr<TDataSource> tds(new TTrivialDS(32));
+   TDataFrame tdf(std::move(tds));
+   auto cached = cache.tdf();
+}
+*/
