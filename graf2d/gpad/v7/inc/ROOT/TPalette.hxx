@@ -114,6 +114,14 @@ public:
    /// palette.
    TColor GetColor(double ordinal);
 
+   /// Given a TColor (that might either be a RGBA or a TPalette ordinal), get the RGBA-based color.
+   TColor ResolveRGBAColor(const TColor &col)
+   {
+      if (col.IsRGBA())
+         return col;
+      return GetColor(col.GetPaletteOrdinal());
+   }
+
    ///\{
    ///\name Global Palettes
 
