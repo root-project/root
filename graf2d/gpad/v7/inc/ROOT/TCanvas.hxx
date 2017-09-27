@@ -43,6 +43,9 @@ private:
    /// Size of the canvas in pixels,
    std::array<TPadCoord::Pixel, 2> fSize;
 
+   /// Colors used in the pad and any sub-pad.
+   std::vector<TColor> fColorTable;
+
    /// Modify counter, incremented every time canvas is changed
    uint64_t fModified; ///<!
 
@@ -104,6 +107,17 @@ public:
    std::array<TPadCoord::Normal, 2> PixelsToNormal(const std::array<TPadCoord::Pixel, 2> &pos) const final
    {
       return {{pos[0] / fSize[0], pos[1] / fSize[1]}};
+   }
+
+   /// Register a TColor with the TCanvas (if idx is (size_t)-1) or update an existing entry in the table.
+   /// Set idx to the new index.
+   void RegisterColor(size_t &idx, const TColor &col)
+   {
+      if (idx == (size_t)-1) {
+         idx = fColorTable.size();
+         fColorTable.push_back(col);
+      } else
+         fColorTable[idx] = col;
    }
 
    static const std::vector<std::shared_ptr<TCanvas>> &GetCanvases();
