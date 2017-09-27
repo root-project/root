@@ -68,7 +68,7 @@ static std::string GetUnsupportedName(TBasket::EUnsupportedIOBits enum_flag)
 
    std::string retval = "unknown";
 
-   TClass *cl = TClass::GetClass("TBasket");
+   TClass *cl = TBasket::Class();
    if (cl == nullptr) {
       return retval;
    }
