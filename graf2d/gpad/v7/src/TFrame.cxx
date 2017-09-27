@@ -16,16 +16,14 @@
 #include "ROOT/TFrame.hxx"
 
 #include "ROOT/TLogger.hxx"
-#include "ROOT/TPadExtent.hxx"
-#include "ROOT/TPadPos.hxx"
+#include "ROOT/TPadUserCoordBase.hxx"
 
-#include <limits>
+namespace {
+   // FIXME: this is probably worth documenting, thus not in unnamed namespace in source!
+   class TPadUserCoordDefault: public Detail::TPadUserCoordBase {
 
-ROOT::Experimental::TFrame::TFrame(const TPadPos& pos, const TPadExtent& size):
-fUserCoord(std::make_unique<TPadUserCoordDefault>()) {}
-
-
-ROOT::Experimental::TFrame::~TFrame() = default;
+   };
+}
 
 ROOT::Experimental::TFrame::TFrame(std::unique_ptr<Detail::TPadUserCoordBase> &&coords, const TPadPos &pos,
                                    const TPadExtent &size)
