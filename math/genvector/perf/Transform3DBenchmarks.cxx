@@ -38,7 +38,8 @@ using Point = ROOT::Math::PositionVector3D<ROOT::Math::Cartesian3D<T>, ROOT::Mat
 template <typename T>
 static void BM_Point3D(benchmark::State &state)
 {
-   while (state.KeepRunning()) Point<T> sp1, sp2, sp3, sp4, sp5, sp6;
+   while (state.KeepRunning())
+      Point<T> sp1, sp2, sp3, sp4, sp5, sp6;
 }
 
 BENCHMARK_TEMPLATE(BM_Point3D, double)->Range(8, 8 << 10)->Complexity(benchmark::o1);
