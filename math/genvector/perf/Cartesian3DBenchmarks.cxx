@@ -15,6 +15,13 @@ static void BM_Cartesian3D_Sanity(benchmark::State &state)
    // Report if we forgot to turn on the explicit vectorisation in ROOT.
    if (sizeof(double) == sizeof(ROOT::Double_v) || sizeof(float) == sizeof(ROOT::Float_v))
       state.SkipWithError("Explicit vectorisation is disabled!");
+
+#ifndef NDEBUG
+   // If we compile gbenchmark in debug mode it asserts because this particular benchmark doesn't have
+   // state.KeepRunning() clause. Here this is meant to perform a simple sanity check for the expected configuration.
+   while (state.KeepRunning()) {
+   }
+#endif
 }
 BENCHMARK(BM_Cartesian3D_Sanity);
 
