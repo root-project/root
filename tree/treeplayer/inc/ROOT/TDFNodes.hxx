@@ -737,14 +737,12 @@ template <typename U,
           typename std::enable_if<std::is_same<typename TColumnValue<U>::ProxyParam_t, U>::value, int>::type>
 T &TColumnValue<T>::Get(Long64_t entry)
 {
-   switch (fColumnKind) {
-   case EColumnKind::kTreeArray: /*dealt with in the other `Get` overload*/
-   case EColumnKind::kTreeValue: return *(fReaderValues.back()->Get());
-   case EColumnKind::kCustomColumn: fCustomColumns.back()->Update(fSlot, entry); return *fCustomValuePtrs.back();
-   case EColumnKind::kDataSource: fCustomColumns.back()->Update(fSlot, entry); return **fDSValuePtrs.back();
+   if (fColumnKind == EColumnKind::kTreeValue) {
+      return *(fReaderValues.back()->Get());
+   } else {
+      fCustomColumns.back()->Update(fSlot, entry);
+      return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.back() : **fDSValuePtrs.back();
    }
-
-   return *(T*)nullptr; // avoid "control reaches end of non-void function" warnings
 }
 
 } // namespace TDF
