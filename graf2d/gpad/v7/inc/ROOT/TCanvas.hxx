@@ -116,8 +116,9 @@ public:
       if (idx == (size_t)-1) {
          idx = fColorTable.size();
          fColorTable.push_back(col);
-      } else
+      } else {
          fColorTable[idx] = col;
+      }
    }
 
    static const std::vector<std::shared_ptr<TCanvas>> &GetCanvases();
