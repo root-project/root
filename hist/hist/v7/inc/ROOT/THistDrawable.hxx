@@ -118,6 +118,9 @@ public:
       if (UpdateOldHist())
          Internal::THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, canv);
    }
+
+   THistDrawingOpts<DIMENSIONS>& GetOptions() { return fOpts; }
+   const THistDrawingOpts<DIMENSIONS>& GetOptions() const { return fOpts; }
 };
 
 extern template class THistDrawable<1>;
