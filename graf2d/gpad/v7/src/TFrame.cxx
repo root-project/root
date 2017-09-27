@@ -18,17 +18,28 @@
 #include "ROOT/TLogger.hxx"
 #include "ROOT/TPadUserCoordBase.hxx"
 
-namespace {
-   // FIXME: this is probably worth documenting, thus not in unnamed namespace in source!
-   class TPadUserCoordDefault: public Detail::TPadUserCoordBase {
+#include <cassert>
 
-   };
-}
+namespace {
+using namespace ROOT::Experimental;
+// FIXME: this is probably worth documenting, thus not in unnamed namespace in source!
+class TPadUserCoordDefault: public Detail::TPadUserCoordBase {
+   bool fLogX = false;
+   bool fLogY = false;
+
+public:
+   std::array<TPadCoord::Normal, 2> ToNormal(const std::array<TPadCoord::User, 2> &user) const override
+   {
+      assert(0 && "Not yet implemented!");
+      return {{user[0].fVal, user[1].fVal}};
+   }
+};
+} // namespace
 
 ROOT::Experimental::TFrame::TFrame(std::unique_ptr<Detail::TPadUserCoordBase> &&coords, const TPadPos &pos,
-                                   const TPadExtent &size)
-   : TFrame(pos, size), fUserCoord(std::move(coords))
+                                   const TPadExtent &size):
+   fUserCoord(std::move(coords)), fPos(pos), fSize(size)
 {
    if (!fUserCoord)
-      fUserCoord = std::make_unique<TPadUserCoordDefault>();
+      fUserCoord.reset(new TPadUserCoordDefault);
 }
