@@ -158,7 +158,7 @@ public:
                   TFormula();
    virtual        ~TFormula();
    TFormula&      operator=(const TFormula &rhs);
-   TFormula(const char *name, const char * formula = "", bool addToGlobList = true);
+   TFormula(const char *name, const char * formula = "", bool addToGlobList = true, bool vectorize = false);
    TFormula(const char *name, const char * formula, int ndim, int npar, bool addToGlobList = true);
                   TFormula(const TFormula &formula);
    //               TFormula(const char *name, Int_t nparams, Int_t ndims);
