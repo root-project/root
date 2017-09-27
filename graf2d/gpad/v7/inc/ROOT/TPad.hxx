@@ -143,6 +143,9 @@ public:
    }
 
    TPad *Get() const { return fPad.get(); }
+
+   /// No options here.
+   void GetOptions() const {}
 };
 
 /** \class ROOT::Experimental::TPad
