@@ -142,7 +142,7 @@ public:
    /// Convert user coordinates to normal coordinates.
    std::array<TPadCoord::Normal, 2> UserToNormal(const std::array<TPadCoord::User, 2> &pos) const
    {
-      return fFrame->GetUserCoords()->ToNormal(pos);
+      return fFrame->UserToNormal(pos);
    }
 };
 } // namespace Internal
