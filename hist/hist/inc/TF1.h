@@ -312,7 +312,8 @@ public:
    };
 
    TF1();
-   TF1(const char *name, const char *formula, Double_t xmin = 0, Double_t xmax = 1, EAddToList addToGlobList = EAddToList::kDefault);
+   TF1(const char *name, const char *formula, Double_t xmin = 0, Double_t xmax = 1, EAddToList addToGlobList = EAddToList::kDefault, bool vectorize = false);
+   TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Option_t * option);  // same as above but using a string for option
    TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
    TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
    TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
