@@ -3738,9 +3738,11 @@ if test ! "x$enable_mysql" = "xno"; then
           else
              result "ok"
              mysqllib=`$mysql_config --libs | sed -e s/\'//g`
-             mysqlincdir=`$mysql_config --cflags | sed -e 's,^.*-I\([^ ]*\).*$,\1,' -e s/\'//g`
              mysqllibdir=""
+             mysqlincdir=`$mysql_config --cflags | sed -e s/\'//g | tr ' ' '\n' | grep ^-I | sed -e 's,^-I,,' | tr '\n' ' '`
              check_header "mysql.h" "" $mysqlincdir
+             mysqlinc=$found_hdr
+             mysqlincdir=$found_dir
              if test "x$found_hdr" = "x"; then
                 enable_mysql="no"
              fi
