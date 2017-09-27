@@ -560,55 +560,72 @@ public:
                                      std::string_view columnNameRegexp = "",
                                      const TSnapshotOptions &options = TSnapshotOptions())
    {
-      const auto theRegexSize = columnNameRegexp.size();
-      std::string theRegex(columnNameRegexp);
-
-      const auto isEmptyRegex = 0 == theRegexSize;
-      // This is to avoid cases where branches called b1, b2, b3 are all matched by expression "b"
-      if (theRegexSize > 0 && theRegex[0] != '^')
-         theRegex = "^" + theRegex;
-      if (theRegexSize > 0 && theRegex[theRegexSize - 1] != '$')
-         theRegex = theRegex + "$";
-
-      ColumnNames_t selectedColumns;
-      selectedColumns.reserve(32);
-
-      auto df = GetDataFrameChecked();
-      const auto &customColumns = df->GetCustomColumnNames();
-      // Since we support gcc48 and it does not provide in its stl std::regex,
-      // we need to use TRegexp
-      TRegexp regexp(theRegex);
-      int dummy;
-      for (auto &&branchName : customColumns) {
-         if (isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) {
-            if (!TDFInternal::IsInternalColumn(branchName)) {
-               selectedColumns.emplace_back(branchName);
-            }
-         }
-      }
-
-      auto tree = df->GetTree();
-      if (tree) {
-         const auto branches = tree->GetListOfBranches();
-         for (auto branch : *branches) {
-            auto branchName = branch->GetName();
-            if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
-               selectedColumns.emplace_back(branchName);
-            }
-         }
-      }
-
+      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp);
       return Snapshot(treename, filename, selectedColumns, options);
    }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns in memory
+   /// \param[in] columns to be cached in memory
+   ///
+   /// The content of the selected columns is saved in memory exploiting the functionality offered by
+   /// the Take action. No extra copy is carried out when serving cached data to the actions and
+   /// transformations requesting it.
    template <typename... BranchTypes>
-   TInterface<TLoopManager>
-   Cache(const ColumnNames_t &columnList)
+   TInterface<TLoopManager> Cache(const ColumnNames_t &columnList)
    {
       auto staticSeq = TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>();
       return CacheImpl<BranchTypes...>(columnList, staticSeq);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns in memory
+   /// \param[in] columns to be cached in memory
+   ///
+   /// The content of the selected columns is saved in memory exploiting the functionality offered by
+   /// the Take action. No extra copy is carried out when serving cached data to the actions and
+   /// transformations requesting it.
+   TInterface<TLoopManager> Cache(const ColumnNames_t &columnList)
+   {
+      auto df = GetDataFrameChecked();
+      auto tree = df->GetTree();
+      std::stringstream snapCall;
+      auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
+      TInterface<TTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(fProxiedPtr, fImplWeakPtr,
+                                                                                      fValidCustomColumns, fDataSource);
+      // build a string equivalent to
+      // "(TInterface<nodetype*>*)(this)->Cache<Ts...>(*(ColumnNames_t*)(&columnList))"
+      snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
+               << &upcastInterface << ")->Cache<";
+      bool first = true;
+      for (auto &b : columnList) {
+         if (!first)
+            snapCall << ", ";
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b));
+         first = false;
+      };
+      snapCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
+               << &columnList << "));";
+      // jit snapCall, return result
+      TInterpreter::EErrorCode errorCode;
+      auto newTDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
+      if (TInterpreter::EErrorCode::kNoError != errorCode) {
+         std::string msg = "Cannot jit Cache call. Interpreter error code is " + std::to_string(errorCode) + ".";
+         throw std::runtime_error(msg);
+      }
+      return *reinterpret_cast<TInterface<TLoopManager> *>(newTDFPtr);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Save selected columns in memory
+   /// \param[in] a regular expression to select the columns
+   ///
+   /// The existing columns are matched against the regeular expression. If the string provided
+   /// is empty, all columns are selected.
+   TInterface<TLoopManager> Cache(std::string_view columnNameRegexp = "")
+   {
+      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp);
+      return Cache(selectedColumns);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1292,6 +1309,49 @@ public:
    }
 
 private:
+
+   ColumnNames_t ConvertRegexToColumns(std::string_view columnNameRegexp)
+   {
+      const auto theRegexSize = columnNameRegexp.size();
+      std::string theRegex(columnNameRegexp);
+
+      const auto isEmptyRegex = 0 == theRegexSize;
+      // This is to avoid cases where branches called b1, b2, b3 are all matched by expression "b"
+      if (theRegexSize > 0 && theRegex[0] != '^')
+         theRegex = "^" + theRegex;
+      if (theRegexSize > 0 && theRegex[theRegexSize - 1] != '$')
+         theRegex = theRegex + "$";
+
+      ColumnNames_t selectedColumns;
+      selectedColumns.reserve(32);
+
+      auto df = GetDataFrameChecked();
+      const auto &customColumns = df->GetCustomColumnNames();
+      // Since we support gcc48 and it does not provide in its stl std::regex,
+      // we need to use TRegexp
+      TRegexp regexp(theRegex);
+      int dummy;
+      for (auto &&branchName : customColumns) {
+         if (isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) {
+            if (!TDFInternal::IsInternalColumn(branchName)) {
+               selectedColumns.emplace_back(branchName);
+            }
+         }
+      }
+
+      auto tree = df->GetTree();
+      if (tree) {
+         const auto branches = tree->GetListOfBranches();
+         for (auto branch : *branches) {
+            auto branchName = branch->GetName();
+            if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
+               selectedColumns.emplace_back(branchName);
+            }
+         }
+      }
+      return selectedColumns;
+   }
+
    Long_t CallJitTransformation(std::string_view transformation, std::string_view nodeName, std::string_view expression,
                                 std::string_view returnTypeName)
    {
