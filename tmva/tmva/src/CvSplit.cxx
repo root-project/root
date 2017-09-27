@@ -269,26 +269,13 @@ TMVA::CvSplitCrossEvaluationExpr::CvSplitCrossEvaluationExpr (DataSetInfo & dsi,
       throw std::runtime_error("Split expression \"" + std::string(fSplitExpr.Data()) + "\" is not a valid TFormula.");
    }
 
-   // Go though all variable names in the formula,
-   //    Get it's index or crash
-   //    Fill value
-   // 
-   // Context: "numFolds" | "NumFolds" is replaced by the currently specified number of folds
-   // Caveat: only uses variables, not parameters
-   // If: Only one variable is used retain (var%numFolds) behaviour
-   // 
-   // numFolds could be sent in as the first parameter as well, does not look as nice
-   // Hard to read if one does not know that it means.
-   // 
-   // Can we allow both? Does this make sense?
-
    for (Int_t iFormulaPar = 0; iFormulaPar < fSplitFormula.GetNpar(); ++iFormulaPar) {
       TString name = fSplitFormula.GetParName(iFormulaPar);
       
-      std::cout << "Found variable with name \"" << name << "\"." << std::endl;
+      // std::cout << "Found variable with name \"" << name << "\"." << std::endl;
 
       if (name == "NumFolds" or name == "numFolds") {
-         std::cout << "NumFolds|numFolds is a reserved variable! Adding to context." << std::endl;
+         // std::cout << "NumFolds|numFolds is a reserved variable! Adding to context." << std::endl;
          fIdxFormulaParNumFolds = iFormulaPar;
       } else {
          fFormulaParIdxToDsiSpecIdx.push_back( std::make_pair(iFormulaPar, GetSpectatorIndexForName(fDsi, name)) );
