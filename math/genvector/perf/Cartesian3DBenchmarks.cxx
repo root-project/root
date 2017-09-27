@@ -23,7 +23,6 @@ static void BM_Cartesian3D_Theta(benchmark::State &state)
    ROOT::Math::Cartesian3D<T> c(1., 2., 3.);
    // std::cout << is_aligned(&c, 16) << std::endl;
    while (state.KeepRunning()) c.Theta();
-   state.SetComplexityN(state.range(0));
 }
 BENCHMARK_TEMPLATE(BM_Cartesian3D_Theta, double)->Range(8, 8 << 10)->Complexity(benchmark::o1);
 BENCHMARK_TEMPLATE(BM_Cartesian3D_Theta, ROOT::Double_v)->Range(8, 8 << 10)->Complexity(benchmark::o1);
