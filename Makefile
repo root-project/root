@@ -79,7 +79,7 @@ include $(MAKEFILEDEP)
 MODULES       = build interpreter/llvm interpreter/cling core/metautils \
                 core/pcre core/clib \
                 core/textinput core/base core/cont core/meta core/thread \
-                io/rootpcm io/io math/mathcore net/net core/zip core/lzma core/lz4 \
+                io/io math/mathcore net/net core/zip core/lzma core/lz4 \
                 math/matrix \
                 core/newdelete hist/hist tree/tree graf2d/freetype \
                 graf2d/mathtext graf2d/graf graf2d/gpad graf3d/g3d \
@@ -562,12 +562,12 @@ COREL         = $(BASEL1) $(BASEL2) $(BASEL3) $(CONTL) $(METAL) $(ZIPL) \
 COREDS       := $(call stripsrc,$(COREBASEDIRS)/G__Core.cxx)
 COREDO       := $(COREDS:.cxx=.o)
 COREDH       := $(COREDS:.cxx=.h)
-COREDICTHDEP  = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMDH) \
-		$(ZIPDICTH) $(CLIBHH) $(FOUNDATIONH) $(TEXTINPUTH)
-COREDICTH     = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMDICTH) \
-                $(ZIPDICTH) $(CLIBHH) $(FOUNDATIONH) $(TEXTINPUTH)
-COREO         = $(BASEO) $(CONTO) $(FOUNDATIONO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) $(LZ4O) \
-                $(CLIBO) $(TEXTINPUTO)
+COREDICTHDEP  = $(BASEDICTH) $(CONTH) $(METAH) $(SYSTEMH) $(ZIPDICTH) \
+		$(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
+COREDICTH     = $(BASEDICTH) $(CONTH) $(METADICTH) $(SYSTEMDICTH) \
+                $(ZIPDICTH) $(CLIBHH) $(METAUTILSH) $(TEXTINPUTH)
+COREO         = $(BASEO) $(CONTO) $(METAO) $(SYSTEMO) $(ZIPO) $(LZMAO) $(LZ4O)\
+                $(CLIBO) $(METAUTILSO) $(TEXTINPUTO)
 
 CORELIB      := $(LPATH)/libCore.$(SOEXT)
 COREMAP      := $(CORELIB:.$(SOEXT)=.rootmap)
