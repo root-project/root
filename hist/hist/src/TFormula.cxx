@@ -362,7 +362,7 @@ TFormula::~TFormula()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   :
+TFormula::TFormula(const char *name, const char *formula, bool addToGlobList, bool vectorize)   :
    TNamed(name,formula),
    fClingInput(formula),fFormula(formula)
 {
@@ -374,6 +374,7 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   
    fNumber = 0;
    fMethod = 0;
    fLambdaPtr = nullptr;
+   fVectorized = vectorize; 
 
    FillDefaults();
 
@@ -2265,13 +2266,16 @@ void TFormula::ProcessFormula(TString &formula)
    }
 
    // clean up un-used default variables in case formula is valid
-   if (fClingInitialized && fReadyToExecute) {
-      for (auto itvar : fVars) {
-         if (!itvar.second.fFound) {
-            // std::cout << "Erase variable " << itvar.first << std::endl;
-            fVars.erase(itvar.first);
-         }
-      }
+   if (fClingInitialized && fReadyToExecute) {\
+       auto itvar = fVars.begin();
+       // need this loop because after erase change iterators
+       do {
+         if (!itvar->second.fFound) {
+            // std::cout << "Erase variable " << itvar->first << std::endl;
+            itvar = fVars.erase(itvar);
+         } else
+            itvar++;
+      } while (itvar != fVars.end());
    }
 }
 
@@ -2988,11 +2992,21 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
    if (gDebug)
       Info("EvalPar", "Function is vectorized - converting Double_t into ROOT::Double_v and back");
 
-   ROOT::Double_v xvec[fNdim];
+   if (fNdim < 5) { 
+      const int maxDim = 4; 
+      std::array<ROOT::Double_v, maxDim> xvec; 
+      for (int i = 0; i < fNdim; i++)
+         xvec[i] = x[i];
+
+      ROOT::Double_v ans = DoEvalVec(xvec.data(), params);
+      return ans[0];
+   }
+   // allocating a vector is much slower (we do only for dim > 4)
+   std::vector<ROOT::Double_v> xvec(fNdim); 
    for (int i = 0; i < fNdim; i++)
       xvec[i] = x[i];
 
-   ROOT::Double_v ans = DoEvalVec(xvec, params);
+   ROOT::Double_v ans = DoEvalVec(xvec.data(), params);
    return ans[0];
 
 #else
