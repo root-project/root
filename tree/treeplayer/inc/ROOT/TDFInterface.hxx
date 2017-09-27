@@ -1493,7 +1493,7 @@ private:
                                                 typeid(std::shared_ptr<ActionResultType>), typeid(ActionType), rOnHeap,
                                                 tree, nSlots, customColumns, fDataSource);
       lm->Jit(toJit);
-      return MakeResultProxy(r, lm);
+      return MakeResultProxy(r, lm).first;
    }
 
    ////////////////////////////////////////////////////////////////////////////

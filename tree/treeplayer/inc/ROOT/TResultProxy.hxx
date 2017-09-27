@@ -34,7 +34,10 @@ using ROOT::Experimental::TDF::TResultProxy;
 // Fwd decl for TResultProxy
 template <typename T>
 TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
-                                TDFInternal::TActionBase *actionPtr = nullptr);
+                                TDFInternal::TActionBase *actionPtr);
+template <typename T>
+std::pair<TResultProxy<T>, std::shared_ptr<ROOT::Internal::TDF::TActionBase *>>
+MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df);
 } // ns TDF
 } // ns Detail
 
@@ -87,12 +90,22 @@ class TResultProxy {
    template <typename W>
    friend TResultProxy<W>
    TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &, TDFInternal::TActionBase *);
+   template <typename W>
+   friend std::pair<TResultProxy<W>, std::shared_ptr<TDFInternal::TActionBase *>>
+   TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &);
 
    const ShrdPtrBool_t fReadiness =
       std::make_shared<bool>(false); ///< State registered also in the TLoopManager until the event loop is executed
    WPTLM_t fImplWeakPtr;             ///< Points to the TLoopManager at the root of the functional graph
    const SPT_t fObjPtr;              ///< Shared pointer encapsulating the wrapped result
-   TDFInternal::TActionBase *fActionPtr = nullptr; ///< Points to the TDF action that produces this result
+   /// Shared_ptr to a _pointer_ to the TDF action that produces this result. It is set at construction time for
+   /// non-jitted actions, and at jitting time for jitted actions (at the time of writing, this means right
+   /// before the event-loop).
+   // N.B. what's on the heap is the _pointer_ to TActionBase, we are _not_ taking shared ownership of a TAction.
+   // This cannot be a unique_ptr because that would disallow copy-construction of TResultProxies.
+   // It cannot be just a pointer to TActionBase because we need something to store in the callback callable that will
+   // be passed to TLoopManager _before_ the pointer to TActionBase is set in the case of jitted actions.
+   const std::shared_ptr<TDFInternal::TActionBase *> fActionPtrPtr;
 
    /// Triggers the event loop in the TLoopManager instance to which it's associated via the fImplWeakPtr
    void TriggerRun();
@@ -109,16 +122,14 @@ class TResultProxy {
 
    TResultProxy(const SPT_t &objPtr, const ShrdPtrBool_t &readiness, const SPTLM_t &loopManager,
                 TDFInternal::TActionBase *actionPtr = nullptr)
-      : fReadiness(readiness), fImplWeakPtr(loopManager), fObjPtr(objPtr), fActionPtr(actionPtr)
+      : fReadiness(readiness), fImplWeakPtr(loopManager), fObjPtr(objPtr),
+        fActionPtrPtr(new (TDFInternal::TActionBase *)(actionPtr))
    {
    }
 
-   void SetActionPtr(TDFInternal::TActionBase *a) { fActionPtr = a; }
+   std::shared_ptr<TDFInternal::TActionBase *> GetActionPtrPtr() const { return fActionPtrPtr; }
 
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&c) {
-      // TODO remove once useless: at the time of writing jitted actions, Reduce, Take, Count are missing the feature
-      if (!fActionPtr)
-         throw std::runtime_error("Callback registration not implemented for this kind of action yet.");
       auto lm = fImplWeakPtr.lock();
       if (!lm)
          throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
@@ -130,6 +141,8 @@ public:
    static constexpr ULong64_t kOnce = 0ull; ///< Convenience definition to express a callback must be executed once
 
    TResultProxy() = delete;
+   TResultProxy(const TResultProxy &) = default;
+   TResultProxy(TResultProxy &&) = default;
 
    /// Get a const reference to the encapsulated object.
    /// Triggers event loop and execution of all actions booked in the associated TLoopManager.
@@ -203,11 +216,11 @@ public:
    /// OnPartialResultSlot.
    void OnPartialResult(ULong64_t everyNEvents, std::function<void(T&)> callback)
    {
-      auto actionPtr = fActionPtr; // only variables with automatic storage duration can be captured
-      auto c = [actionPtr, callback](unsigned int slot) {
+      auto actionPtrPtr = fActionPtrPtr.get();
+      auto c = [actionPtrPtr, callback](unsigned int slot) {
          if (slot != 0)
             return;
-         auto partialResult = static_cast<Value_t*>(actionPtr->PartialUpdate(slot));
+         auto partialResult = static_cast<Value_t*>((*actionPtrPtr)->PartialUpdate(slot));
          callback(*partialResult);
       };
       RegisterCallback(everyNEvents, std::move(c));
@@ -243,9 +256,9 @@ public:
    /// \endcode
    void OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T&)> callback)
    {
-      auto actionPtr = fActionPtr;
-      auto c = [actionPtr, callback](unsigned int slot) {
-         auto partialResult = static_cast<Value_t*>(actionPtr->PartialUpdate(slot));
+      auto actionPtrPtr = fActionPtrPtr.get();
+      auto c = [actionPtrPtr, callback](unsigned int slot) {
+         auto partialResult = static_cast<Value_t*>((*actionPtrPtr)->PartialUpdate(slot));
          callback(slot, *partialResult);
       };
       RegisterCallback(everyNEvents, std::move(c));
@@ -266,6 +279,8 @@ void TResultProxy<T>::TriggerRun()
 
 namespace Detail {
 namespace TDF {
+/// Create a TResultProxy and set its pointer to the corresponding TAction
+/// This overload is invoked by non-jitted actions, as they have access to TAction before constructing TResultProxy.
 template <typename T>
 TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df,
                                 TDFInternal::TActionBase *actionPtr)
@@ -274,6 +289,18 @@ TResultProxy<T> MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_p
    auto resPtr = TResultProxy<T>(r, readiness, df, actionPtr);
    df->Book(readiness);
    return resPtr;
+}
+
+/// Create a TResultProxy and return it together with its pointer to TAction
+/// This overload is invoked by jitted actions; the pointer to TAction will be set right before the loop by jitted code
+template <typename T>
+std::pair<TResultProxy<T>, std::shared_ptr<TDFInternal::TActionBase *>>
+MakeResultProxy(const std::shared_ptr<T> &r, const std::shared_ptr<TLoopManager> &df)
+{
+   auto readiness = std::make_shared<bool>(false);
+   auto resPtr = TResultProxy<T>(r, readiness, df);
+   df->Book(readiness);
+   return std::make_pair(resPtr, resPtr.GetActionPtrPtr());
 }
 } // end NS TDF
 } // end NS Detail
