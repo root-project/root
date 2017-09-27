@@ -70,7 +70,8 @@ struct VecTraits {
    static double Sum(C value)
    {
       double sum = 0.;
-      for (size_t i = 0, e = TypeSize<T>::Get(); i < e; ++i) sum += value[i];
+      for (size_t i = 0, e = TypeSize<T>::Get(); i < e; ++i)
+         sum += value[i];
       return sum;
    }
    bool is_aligned(const void *__restrict__ ptr, size_t align) { return (uintptr_t)ptr % align == 0; }
