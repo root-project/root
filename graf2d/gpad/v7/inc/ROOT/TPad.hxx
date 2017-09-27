@@ -57,12 +57,13 @@ private:
    /// Disable assignment.
    TPadBase &operator=(const TPadBase &) = delete;
 
+   /// Adds a `DRAWABLE` to `fPrimitives`, returning the drawing options as given by `DRAWABLE::Options()`.
    template <class DRAWABLE>
-   DRAWABLE &AddDrawable(std::unique_ptr<DRAWABLE> &&uPtr)
+   auto AddDrawable(std::unique_ptr<DRAWABLE> &&uPtr)
    {
       DRAWABLE &drw = *uPtr;
       fPrimitives.emplace_back(std::move(uPtr));
-      return drw;
+      return drw.GetOptions();
    }
 
 protected:
@@ -85,16 +86,7 @@ public:
    auto &Draw(const std::shared_ptr<T> &what)
    {
       // Requires GetDrawable(what) to be known!
-      return AddDrawable(GetDrawable(what));
-   }
-
-   /// Add something to be painted, with options.
-   /// The pad observes what's lifetime through a weak pointer.
-   template <class T, class OPTIONS>
-   auto &Draw(const std::shared_ptr<T> &what, const OPTIONS &options)
-   {
-      // Requires GetDrawable(what, options) to be known!
-      return AddDrawable(GetDrawable(what, options));
+      return AddDrawable(GetDrawable(what, *this));
    }
 
    /// Add something to be painted. The pad claims ownership.
@@ -102,15 +94,7 @@ public:
    auto &Draw(std::unique_ptr<T> &&what)
    {
       // Requires GetDrawable(what) to be known!
-      return AddDrawable(GetDrawable(std::move(what)));
-   }
-
-   /// Add something to be painted, with options. The pad claims ownership.
-   template <class T, class OPTIONS>
-   auto &Draw(std::unique_ptr<T> &&what, const OPTIONS &options)
-   {
-      // Requires GetDrawable(what, options) to be known!
-      return AddDrawable(GetDrawable(std::move(what), options));
+      return AddDrawable(GetDrawable(std::move(what), *this));
    }
 
    /// Add a copy of something to be painted.
@@ -119,15 +103,6 @@ public:
    {
       // Requires GetDrawable(what) to be known!
       return Draw(std::make_unique<T>(what));
-   }
-
-   /// Add a copy of something to be painted, with options.
-   template <class T, class OPTIONS,
-             class = typename std::enable_if<!ROOT::TypeTraits::IsSmartOrDumbPtr<T>::value>::type>
-   auto &Draw(const T &what, const OPTIONS &options)
-   {
-      // Requires GetDrawable(what, options) to be known!
-      return Draw(std::make_unique<T>(what), options);
    }
 
    /// Remove an object from the list of primitives.
