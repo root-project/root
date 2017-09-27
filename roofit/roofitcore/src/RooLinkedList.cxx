@@ -768,11 +768,9 @@ void RooLinkedList::Sort(Bool_t ascend)
 
   // rebuild index array
   RooLinkedListElem* elem = _first;
-  Int_t index = 0;
-  do {
-    _at[index++] = elem;
-    elem = elem->_next;
-  } while (elem != _last);
+  for (auto it = _at.begin(); it != _at.end(); ++it, elem = elem->_next) {
+    *it = elem;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
