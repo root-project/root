@@ -70,6 +70,20 @@ public:
    /// Initialize a TColor with red, green, blue and alpha component.
    constexpr TColor(const Predefined &predef): TColor(predef[0], predef[1], predef[2]) {}
 
+   /// Determine whether this TColor is storing RGBA (in contrast to an ordinal of a TPalette).
+   bool isRGBA() const { return fIsRGBA; }
+
+   /// Determine whether this TColor is storing an ordinal of a TPalette (in contrast to RGBA).
+   bool isPaletteOrdinal() const { return !fIsRGBA; }
+
+   /// If this is an ordinal in a palette, resolve the
+   float GetPaletteOrdinal() const
+   {
+      if (fIsRGBA)
+         throw std::runtime_error("This color does not represent a palette ordinal!");
+      return fRedOrPalettePos;
+   }
+
    friend bool operator==(const TColor &lhs, const TColor &rhs)
    {
       if (lhs.fIsRGBA != rhs.fIsRGBA)
@@ -83,7 +97,6 @@ public:
    ///\{
    ///\name Default colors
 
-   // Implemented in TPalette.cxx.
    static constexpr Predefined kRed{{0.5, 0., 0.}};
    static constexpr Predefined kGreen{{0., 0.5, 0.}};
    static constexpr Predefined kBlue{{0., 0, 0.5}};
