@@ -1,6 +1,6 @@
 #include "Math/Cartesian3D.h"
 
-#include "Math/Types.h"
+#include "Math/Math_vectypes.hxx"
 
 #include "RandomNumberEngine.h"
 
