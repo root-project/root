@@ -1046,18 +1046,13 @@ Int_t TBasket::WriteBuffer()
                entryOffset[idx] += entryOffset[idx - 1];
             }
          }
-         if (fDisplacement) {
-            fBufferRef->WriteArray(fDisplacement, fNevBuf + 1);
-            delete[] fDisplacement;
-            fDisplacement = 0;
-         }
       } else if (!hasOffsetBit) { // In this case, write out as normal
          fBufferRef->WriteArray(entryOffset, fNevBuf + 1);
-         if (fDisplacement) {
-            fBufferRef->WriteArray(fDisplacement, fNevBuf + 1);
-            delete[] fDisplacement;
-            fDisplacement = 0;
-         }
+      }
+      if (fDisplacement) {
+         fBufferRef->WriteArray(fDisplacement, fNevBuf + 1);
+         delete[] fDisplacement;
+         fDisplacement = 0;
       }
    }
 
