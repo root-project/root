@@ -1260,7 +1260,7 @@ endfunction()
 
 #----------------------------------------------------------------------------
 # function ROOT_ADD_GTEST(<testsuite> source1 source2... LIBRARIES)
-#----------------------------------------------------------------------------
+#
 function(ROOT_ADD_GTEST test_suite)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES" ${ARGN})
   include_directories(${CMAKE_CURRENT_BINARY_DIR} ${GTEST_INCLUDE_DIR} ${GMOCK_INCLUDE_DIR})
@@ -1278,6 +1278,7 @@ function(ROOT_ADD_GTEST test_suite)
   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
   ROOT_ADD_TEST(gtest${mangled_name} COMMAND ${test_suite} WORKING_DIR ${CMAKE_CURRENT_BINARY_DIR})
 endfunction()
+
 
 #----------------------------------------------------------------------------
 # ROOT_ADD_TEST_SUBDIRECTORY( <name> )
