@@ -37,6 +37,10 @@ public:
    bool Test(TBasket::EIOBits bits) const;
 
 private:
+   // These methods allow access to the raw bitset underlying
+   // this object, breaking type safety.  They are necessary for
+   // efficient interaction with TTree / TBranch / TBasket, but left
+   // private to prevent users from interacting with the raw bits.
    TIOFeatures(UChar_t IOBits) : fIOBits(IOBits) {}
    UChar_t GetFeatures() const;
 
