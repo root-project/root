@@ -20,19 +20,38 @@
 using namespace ROOT::Experimental;
 
 /**
- * \class TIOFeatures
+ * \class ROOT::Experimental::TIOFeatures
  * \ingroup tree
  *
- * TIOFeatures provides the end-user with the ability to change the IO behavior
- * of data written via a TTree.  This class allows access to experimental and non-default
+ * `TIOFeatures` provides the end-user with the ability to change the IO behavior
+ * of data written via a `TTree`.  This class allows access to experimental and non-default
  * features.
  *
  * When one of these features are activated, forward compatibility breaks may occur.
  * That is, older versions of ROOT may not be able to read files written by this version
  * of ROOT that have enabled these non-default features.
  *
+ * To utilize `TIOFeatures`, create the object, set the desired feature flags, then attach
+ * it to a `TTree`.  All subsequently created branches (and their baskets) will be serialized
+ * using those particular features.
+ *
+ * Example usage:
+ * ~~~{.cpp}
+ * ROOT::Experimental::TIOFeatures features;
+ * features.Set(TBasket::EIOBits::kGenerateOffsetMap);
+ * ttree_ref.SetIOFeatures(features);
+ * ~~~
+ *
+ * The method `TTree::SetIOFeatures` creates a copy of the feature set; subsequent changes
+ * to the `TIOFeatures` object do not propogate to the `TTree`.
  */
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Clear a specific IO feature from this set.
+/// \param[in] enum_bits The specific feature to disable.
+///
+/// Removes a feature from the `TIOFeatures` object; emits an Error message if
+/// the IO feature is not supported by this version of ROOT.
 void TIOFeatures::Clear(TBasket::EIOBits enum_bits)
 {
    auto bits = static_cast<UChar_t>(enum_bits);
@@ -68,6 +87,15 @@ static std::string GetUnsupportedName(TBasket::EUnsupportedIOBits enum_flag)
    return retval;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Set a specific IO feature.
+/// \param[in] enum_bits The specific feature to enable.
+///
+/// Sets a feature in the `TIOFeatures` object; emits an Error message if
+/// the IO feature is not supported by this version of ROOT.
+///
+/// If the feature is supported by ROOT, this function returns kTRUE; otherwise,
+/// it returns kFALSE.
 bool TIOFeatures::Set(TBasket::EIOBits enum_bits)
 {
    auto bits = static_cast<UChar_t>(enum_bits);
@@ -86,6 +114,12 @@ bool TIOFeatures::Set(TBasket::EIOBits enum_bits)
    return kTRUE;
 }
 
+////////////////////////////////////////////////////////////////////////////
+/// \brief Test to see if a given feature is set
+/// \param[in] enum_bits The specific feature to test.
+///
+/// Returns kTRUE if the feature is enables in this object and supported by
+/// this version of ROOT.
 bool TIOFeatures::Test(TBasket::EIOBits enum_bits) const
 {
    auto bits = static_cast<UChar_t>(enum_bits);
