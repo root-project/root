@@ -66,10 +66,13 @@ TMVA::MethodCrossEvaluation::~MethodCrossEvaluation( void )
 
 void TMVA::MethodCrossEvaluation::DeclareOptions()
 {
-   DeclareOptionRef( fSplitExprString, "SplitExpr", "The expression used to assign events to folds" );
-   DeclareOptionRef( fNumFolds, "NumFolds", "Number of folds to generate" );
    DeclareOptionRef( fEncapsulatedMethodName, "EncapsulatedMethodName", "");
    DeclareOptionRef( fEncapsulatedMethodTypeName, "EncapsulatedMethodTypeName", "");
+   DeclareOptionRef( fNumFolds, "NumFolds", "Number of folds to generate" );
+   DeclareOptionRef( fOutputEnsembling = TString("None"), "OutputEnsembling", "Combines output from contained methods. If None, no combination is performed. (default None)");
+   AddPreDefVal(TString("None"));
+   AddPreDefVal(TString("Avg"));
+   DeclareOptionRef( fSplitExprString, "SplitExpr", "The expression used to assign events to folds" );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -113,6 +116,7 @@ void TMVA::MethodCrossEvaluation::ProcessOptions()
 
 void TMVA::MethodCrossEvaluation::Init( void )
 {
+   fMulticlassValues = std::vector<Float_t>(DataInfo().GetNClasses());
 }
 
 
@@ -194,6 +198,7 @@ void TMVA::MethodCrossEvaluation::AddWeightsXMLTo( void* parent ) const
    gTools().AddAttr( wght, "NumFolds", fNumFolds );
    gTools().AddAttr( wght, "EncapsulatedMethodName", fEncapsulatedMethodName );
    gTools().AddAttr( wght, "EncapsulatedMethodTypeName", fEncapsulatedMethodTypeName );
+   gTools().AddAttr( wght, "OutputEnsembling", fOutputEnsembling );
 
 
    for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
@@ -225,6 +230,7 @@ void TMVA::MethodCrossEvaluation::ReadWeightsFromXML(void* parent)
    gTools().ReadAttr( parent, "NumFolds", fNumFolds );
    gTools().ReadAttr( parent, "EncapsulatedMethodName", fEncapsulatedMethodName );
    gTools().ReadAttr( parent, "EncapsulatedMethodTypeName", fEncapsulatedMethodTypeName );
+   gTools().ReadAttr( parent, "OutputEnsembling", fOutputEnsembling );
 
    for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold){
       TString foldStr = Form( "Fold%i", iFold+1 );
@@ -260,11 +266,20 @@ void  TMVA::MethodCrossEvaluation::ReadWeightsFromStream( std::istream& /*istr*/
 Double_t TMVA::MethodCrossEvaluation::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    const Event* ev = GetEvent();
-   // auto val = ev->GetSpectator(fIdxSpec);
-   // UInt_t iFold = (UInt_t)val % (UInt_t)fNumFolds;
-   UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
-
-   return fEncapsulatedMethods.at(iFold)->GetMvaValue(err, errUpper);
+   
+   if (fOutputEnsembling == "None") {
+      UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
+      return fEncapsulatedMethods.at(iFold)->GetMvaValue(err, errUpper);
+   } else if (fOutputEnsembling == "Avg") {
+      Double_t val = 0.0;
+      for (auto & m : fEncapsulatedMethods) {
+         val += m->GetMvaValue(err, errUpper);
+      }
+      return val / fEncapsulatedMethods.size();
+   } else {
+      Log() << kFATAL << "Ensembling type " << fOutputEnsembling << " unknown" << Endl;
+      return 0; // Cannot happen
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -273,11 +288,31 @@ Double_t TMVA::MethodCrossEvaluation::GetMvaValue( Double_t* err, Double_t* errU
 const std::vector<Float_t> & TMVA::MethodCrossEvaluation::GetMulticlassValues()
 {
    const Event *ev = GetEvent();
-   // auto val = ev->GetSpectator(fIdxSpec);
-   // UInt_t iFold = (UInt_t)val % (UInt_t)fNumFolds;
-   UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
+   
+   if (fOutputEnsembling == "None") {
 
-   return fEncapsulatedMethods.at(iFold)->GetMulticlassValues();
+      UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
+      return fEncapsulatedMethods.at(iFold)->GetMulticlassValues();
+
+   } else if (fOutputEnsembling == "Avg") {
+
+      for (auto & m : fEncapsulatedMethods) {
+         auto methodValues = m->GetMulticlassValues();
+         for (size_t i = 0; i < methodValues.size(); ++i) {
+            fMulticlassValues[i] += methodValues[i];
+         }
+      }
+
+      for (auto & e : fMulticlassValues) {
+         e /= fEncapsulatedMethods.size();
+      }
+
+      return fMulticlassValues;
+
+   } else {
+      Log() << kFATAL << "Ensembling type " << fOutputEnsembling << " unknown" << Endl;
+      return fMulticlassValues; // Cannot happen
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

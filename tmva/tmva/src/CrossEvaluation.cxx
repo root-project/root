@@ -143,6 +143,10 @@ void TMVA::CrossEvaluation::InitOptions()
    DeclareOptionRef( fNumFolds, "NumFolds", "Number of folds to generate" );
 
    DeclareOptionRef( fFoldFileOutput, "FoldFileOutput", "If given a TMVA output file will be generated for each fold. Filename will be the same as specifed for the combined output with a _foldX suffix. (default: false)" );
+
+   DeclareOptionRef( fOutputEnsembling = TString("None"), "OutputEnsembling", "Combines output from contained methods. If None, no combination is performed. (default None)");
+   AddPreDefVal(TString("None"));
+   AddPreDefVal(TString("Avg"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -339,11 +343,13 @@ void TMVA::CrossEvaluation::Evaluate()
 
    TString options = Form("SplitExpr=%s:NumFolds=%i"
                           ":EncapsulatedMethodName=%s"
-                          ":EncapsulatedMethodTypeName=%s",
+                          ":EncapsulatedMethodTypeName=%s"
+                          ":OutputEnsembling=%s",
                           fSplitExprString.Data(),
                           fNumFolds,
                           methodTitle.Data(),
-                          methodTypeName.Data());
+                          methodTypeName.Data(),
+                          fOutputEnsembling.Data());
    fFactory->BookMethod(fDataLoader.get(), Types::kCrossEvaluation, methodTitle, options);
    
    // Evaluation

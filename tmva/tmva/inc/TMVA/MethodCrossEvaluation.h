@@ -106,9 +106,10 @@ namespace TMVA {
    public:
       // TODO: Only public until proper getter and setters are implemented
       // TODO: Add setter both for EMVA and String Typename directly.
-      TString fEncapsulatedMethodName; // TODO; Change to methodTitle
-      TString fEncapsulatedMethodTypeName; // TODO; Change to methodName
+      TString fEncapsulatedMethodName;
+      TString fEncapsulatedMethodTypeName;
       UInt_t  fNumFolds;
+      TString fOutputEnsembling;
       
       TString fSplitExprString;
       std::unique_ptr<CvSplitCrossEvaluationExpr> fSplitExpr;
@@ -116,7 +117,8 @@ namespace TMVA {
    private:
       // MethodBase::fFileDir gives path to weightfiles
 
-      // TODO: Make unique
+      std::vector<Float_t> fMulticlassValues;
+
       std::vector<MethodBase *> fEncapsulatedMethods;
 
       // Temporary holder of data while GetMulticlassValues and GetRegressionValues

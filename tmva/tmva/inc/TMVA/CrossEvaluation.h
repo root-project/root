@@ -71,6 +71,7 @@ namespace TMVA {
       TString              fJobName;
       UInt_t               fNumFolds;        //!
       TString              fOutputFactoryOptions;
+      TString              fOutputEnsembling; //! How to combine output of individual folds
       TFile *              fOutputFile;
       Bool_t               fSilent;
       TString              fSplitExprString;
