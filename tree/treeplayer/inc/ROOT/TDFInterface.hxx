@@ -581,7 +581,9 @@ public:
       int dummy;
       for (auto &&branchName : customColumns) {
          if (isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) {
-            selectedColumns.emplace_back(branchName);
+            if (!TDFInternal::IsInternalColumn(branchName)) {
+               selectedColumns.emplace_back(branchName);
+            }
          }
       }
 

@@ -289,6 +289,8 @@ struct RemoveFirstParameterIf<true, TypeList> {
    using type = RemoveFirstParameter_t<TypeList>;
 };
 
+bool IsInternalColumn(std::string_view colName);
+
 } // end NS TDF
 } // end NS Internal
 } // end NS ROOT
