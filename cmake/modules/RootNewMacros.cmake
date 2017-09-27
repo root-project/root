@@ -1227,7 +1227,7 @@ endfunction(ROOT_PATH_TO_STRING)
 #----------------------------------------------------------------------------
 # function ROOT_ADD_GBENCHMARK(<benchmark> source1 source2... LIBRARIES)
 #----------------------------------------------------------------------------
-function(ROOT_ADD_GBENCHMARK benchmark)
+function(ROOT_ADD_GTEST benchmark)
   CMAKE_PARSE_ARGUMENTS(ARG "" "" "LIBRARIES" ${ARGN})
   include_directories(${CMAKE_CURRENT_BINARY_DIR} ${GBENCHMARK_INCLUDE_DIR})
 

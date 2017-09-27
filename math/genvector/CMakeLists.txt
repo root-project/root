@@ -2,10 +2,6 @@
 # CMakeLists.txt file for building ROOT math/genvector package
 ############################################################################
 
-if(testing)
-  add_subdirectory(perf)
-endif()
-
 set(libname GenVector)
 
 set(headers   Math/Vector2D.h Math/Point2D.h
