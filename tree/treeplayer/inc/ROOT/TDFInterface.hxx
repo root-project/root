@@ -530,7 +530,7 @@ public:
       for (auto &b : columnList) {
          if (!first)
             snapCall << ", ";
-         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b));
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b), fDataSource);
          first = false;
       };
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
@@ -601,7 +601,7 @@ public:
       for (auto &b : columnList) {
          if (!first)
             snapCall << ", ";
-         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b));
+         snapCall << TDFInternal::ColumnName2ColumnTypeName(b, tree, df->GetBookedBranch(b), fDataSource);
          first = false;
       };
       snapCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
@@ -1346,6 +1346,15 @@ private:
             auto branchName = branch->GetName();
             if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
                selectedColumns.emplace_back(branchName);
+            }
+         }
+      }
+
+      if (fDataSource) {
+         auto &dsColNames = fDataSource->GetColumnNames();
+         for (auto &dsColName : dsColNames) {
+            if (isEmptyRegex || -1 != regexp.Index(dsColName, &dummy)) {
+               selectedColumns.emplace_back(dsColName);
             }
          }
       }
