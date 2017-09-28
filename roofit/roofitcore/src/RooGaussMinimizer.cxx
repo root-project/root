@@ -3,9 +3,12 @@
  * Package: RooFitCore                                                       *
  * @(#)root/roofitcore:$Id$
  * Authors:                                                                  *
- *   WV, Wouter Verkerke, UC Santa Barbara, verkerke@slac.stanford.edu       *
- *   DK, David Kirkby,    UC Irvine,         dkirkby@uci.edu                 *
- *   AL, Alfio Lazzaro,   INFN Milan,        alfio.lazzaro@mi.infn.it        *
+ *   WV, Wouter Verkerke, UC Santa Barbara,   verkerke@slac.stanford.edu     *
+ *   DK, David Kirkby,    UC Irvine,          dkirkby@uci.edu                *
+ *   AL, Alfio Lazzaro,   INFN Milan,         alfio.lazzaro@mi.infn.it       *
+ *   PB, Patrick Bos,     NL eScience Center, p.bos@esciencecenter.nl        *
+ *   VC, Vince Croft,     DIANA / NYU,        vincent.croft@cern.ch          *
+ *                                                                           *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *

@@ -4,6 +4,8 @@
  * @(#)root/roofitcore:$Id$
  * Authors:                                                                  *
  *   AL, Alfio Lazzaro,   INFN Milan,        alfio.lazzaro@mi.infn.it        *
+ *   PB, Patrick Bos,     NL eScience Center, p.bos@esciencecenter.nl        *
+ *   VC, Vince Croft,     DIANA / NYU,        vincent.croft@cern.ch          *
  *                                                                           *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
