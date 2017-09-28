@@ -1514,11 +1514,6 @@ private:
 
       auto nEntries = std::get<0>(colHolders).fContent.size();
 
-      // Define the columns with the number of entries
-      const auto nSlots = TDFInternal::GetNSlots();
-      const auto base = nEntries / nSlots;
-
-      // We do not need to save the new node. We add the name of the valid custom columns by hand later
       TInterface<TLoopManager> cachedTDF(std::make_shared<TLoopManager>(nEntries));
       const ColumnNames_t noCols = {};
 
