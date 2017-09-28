@@ -26,7 +26,7 @@
 
 void Legendre()
 {
-   gSystem->Load("libMathMore");
+   R__LOAD_LIBRARY(libMathMore);
 
    TCanvas *Canvas = new TCanvas("DistCanvas", "Legendre polynomials example", 10, 10, 750, 600);
    Canvas->SetGrid();

@@ -34,7 +34,7 @@
 
 void LegendreAssoc()
 {
-   gSystem->Load("libMathMore");
+   R__LOAD_LIBRARY(libMathMore);
 
    std::cout <<"Drawing associate Legendre Polynomials.." << std::endl;
    TCanvas *Canvas = new TCanvas("DistCanvas", "Associate Legendre polynomials", 10, 10, 800, 500);

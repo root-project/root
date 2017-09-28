@@ -14,7 +14,8 @@
 
 void FeldmanCousins()
 {
-   if (!gROOT->GetClass("TFeldmanCousins")) gSystem->Load("libPhysics");
+   if (!gROOT->GetClass("TFeldmanCousins"))
+      R__LOAD_LIBRARY(libPhysics);
 
    TFeldmanCousins f;
 

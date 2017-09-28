@@ -10,8 +10,6 @@
 
 void PhaseSpace() {
 
-   if (!gROOT->GetClass("TGenPhaseSpace")) gSystem->Load("libPhysics");
-
    TLorentzVector target(0.0, 0.0, 0.0, 0.938);
    TLorentzVector beam(0.0, 0.0, .65, .65);
    TLorentzVector W = beam + target;

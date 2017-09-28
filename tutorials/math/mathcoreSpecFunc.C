@@ -31,7 +31,6 @@
 
 void mathcoreSpecFunc() {
 
-   gSystem->Load("libMathCore");
    TF1 *f1a = new TF1("f1a","ROOT::Math::tgamma(x)",0,20);
    TF1 *f1b = new TF1("f1b","abs((ROOT::Math::tgamma(x)-TMath::Gamma(x))/ROOT::Math::tgamma(x))",0,20);
 

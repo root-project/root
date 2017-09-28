@@ -100,8 +100,6 @@ int testVector3D() {
              << " Vector 3D Test"
              << "\n************************************************************************\n";
 
-   gSystem->Load("libGenVector");
-
    XYZVector v1(0.01, 0.02, 16);
 
    std::cout << "Test Cartesian-Polar :          " ;
