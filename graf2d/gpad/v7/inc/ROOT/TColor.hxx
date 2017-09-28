@@ -71,10 +71,10 @@ public:
    constexpr TColor(const Predefined &predef): TColor(predef[0], predef[1], predef[2]) {}
 
    /// Determine whether this TColor is storing RGBA (in contrast to an ordinal of a TPalette).
-   bool isRGBA() const { return fIsRGBA; }
+   bool IsRGBA() const { return fIsRGBA; }
 
    /// Determine whether this TColor is storing an ordinal of a TPalette (in contrast to RGBA).
-   bool isPaletteOrdinal() const { return !fIsRGBA; }
+   bool IsPaletteOrdinal() const { return !fIsRGBA; }
 
    /// If this is an ordinal in a palette, resolve the
    float GetPaletteOrdinal() const

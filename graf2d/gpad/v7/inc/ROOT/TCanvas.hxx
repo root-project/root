@@ -16,6 +16,7 @@
 #ifndef ROOT7_TCanvas
 #define ROOT7_TCanvas
 
+#include "ROOT/TColor.hxx"
 #include "ROOT/TPad.hxx"
 #include "ROOT/TVirtualCanvasPainter.hxx"
 
@@ -39,8 +40,14 @@ private:
    /// Size of the canvas in pixels,
    std::array<TPadCoord::Pixel, 2> fSize;
 
-   /// Colors used in the pad and any sub-pad.
-   std::vector<TColor> fColorTable;
+   /// Colors used by drawing options in the pad and any sub-pad.
+   Internal::TOptsAttrTable<TColor> fColorTable;
+
+   /// Integers used by drawing options in the pad and any sub-pad.
+   Internal::TOptsAttrTable<long long> fIntAttrTable;
+
+   /// Floating points used by drawing options in the pad and any sub-pad.
+   Internal::TOptsAttrTable<double> fFPAttrTable;
 
    /// Modify counter, incremented every time canvas is changed
    uint64_t fModified; ///<!
@@ -55,6 +62,28 @@ private:
 
    /// Disable assignment for now.
    TCanvas &operator=(const TCanvas &) = delete;
+
+   ///\{
+   ///\name Drawing options attribute handling
+
+   /// Attribute table (non-const access).
+   template <class PRIMITIVE>
+   Internal::TOptsAttrTable<PRIMITIVE> &GetAttrTable();
+   // Available specializations:
+   extern template Internal::TOptsAttrTable<TColor> &GetAttrTable<TColor>();
+   extern template Internal::TOptsAttrTable<long long> &GetAttrTable<long long>();
+   extern template Internal::TOptsAttrTable<double> &GetAttrTable<double>();
+
+   /// Attribute table (const access).
+   template <class PRIMITIVE>
+   const Internal::TOptsAttrTable<PRIMITIVE> &GetAttrTable() const;
+   // Available specializations:
+   extern template const Internal::TOptsAttrTable<TColor> &GetAttrTable<TColor>() const;
+   extern template const Internal::TOptsAttrTable<long long> &GetAttrTable<long long>() const;
+   extern template const Internal::TOptsAttrTable<double> &GetAttrTable<double>() const;
+
+   friend class ROOT::Experimental::Internal::TDrawingOptsBase;
+   ///\}
 
 public:
    static std::shared_ptr<TCanvas> Create(const std::string &title);
@@ -103,18 +132,6 @@ public:
    std::array<TPadCoord::Normal, 2> PixelsToNormal(const std::array<TPadCoord::Pixel, 2> &pos) const final
    {
       return {{pos[0] / fSize[0], pos[1] / fSize[1]}};
-   }
-
-   /// Register a TColor with the TCanvas (if idx is (size_t)-1) or update an existing entry in the table.
-   /// Set idx to the new index.
-   void RegisterColor(size_t &idx, const TColor &col)
-   {
-      if (idx == (size_t)-1) {
-         idx = fColorTable.size();
-         fColorTable.push_back(col);
-      } else {
-         fColorTable[idx] = col;
-      }
    }
 
    static const std::vector<std::shared_ptr<TCanvas>> &GetCanvases();
