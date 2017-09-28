@@ -95,7 +95,7 @@ large TClonesArray where each element contains another small vector container.
   - pyROOT users can now easily specify parameters for the TDF histograms thanks to the newly introduced tuple-initialization
   - The new TDataSource interface allows developers to pipe any kind of columnar data format into TDataFrame
   - Test coverage has been increased with the introduction of google tests
-  - Users can now configure Snapshot to use different file open modes ("RECREATE" or "UPDATE"), compression level, compression algrotihm, TTree split-level and autoflush settings
+  - Users can now configure Snapshot to use different file open modes ("RECREATE" or "UPDATE"), compression level, compression algorithm, TTree split-level and autoflush settings
   - Python tutorials show the new "tuple-initialisation" feature of PyROOT (see below)
   - The possibility to read from data sources was added. An interface for all data sources, TDataSource, is provided by ROOT. Two example data sources have been provided too: the TRootDS and the TTrivialDS. The former allows to read via the novel data source mechanism ROOT data, while the latter is a simple generator, created for testing and didactic purposes. It is therefore now possible to interface *any* kind of dataset/data format to ROOT as long as an adaptor which implements the pure virtual methods of the TDataSource interface can be written in C++.
   - Column can be aliased with the TInterface method Alias: `auto histo = mytdf.Alias("myAlias", "myColumn").Histo1D("myAlias");`
@@ -136,6 +136,10 @@ large TClonesArray where each element contains another small vector container.
     a line plot. They can be combined when calling `TGraph::Draw`. Doing that
     produced a filled polygon only. Now it produces a filled polygon and a line plot.
   - `TH1::SetOption()` method didn't work when called from `TH3D` instance.
+  - With the Cocoa backend on Mac the png image were truncated when ROOT was running
+    in a small screen attached to the Mac with the graphics window on the Mac
+    display. It was reported
+    [here](https://root-forum.cern.ch/t/tcanvas-print-png-outputs-fraction-of-figure-when-canvas-size-is-declared/26011/44).
 
 ## 3D Graphics Libraries
 
