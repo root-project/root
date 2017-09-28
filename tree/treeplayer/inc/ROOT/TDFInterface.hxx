@@ -1183,8 +1183,6 @@ protected:
                trees[slot] = new TTree(treenameInt.c_str(), treenameInt.c_str());
                trees[slot]->ResetBit(kMustCleanup);
                trees[slot]->SetImplicitMT(false);
-            } else {
-               files[slot]->Write();
             }
             if(r) {
                // not an empty-source TDF
