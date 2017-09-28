@@ -55,8 +55,6 @@ void FillColorsMap(TStructViewer* sv)
 
 void gviz3d()
 {
-   // Loading library needed by TStructViewer
-   gSystem->Load("libGviz3d");
    // Creating a pointer to list
    TList* pointer = crazy(2,10);
    // Creating a viewer
