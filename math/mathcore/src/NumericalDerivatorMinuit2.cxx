@@ -31,9 +31,8 @@
 #include <iostream>
 #include <TMath.h>
 #include <cassert>
-// MODIFIED: Fitter.h
-#include <Fit/Fitter.h>
 
+#include <Math/Minimizer.h>  // needed here because in Fitter is only a forward declaration
 
 
 namespace ROOT {
@@ -76,21 +75,24 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunc
 }
 
 
-// MODIFIED: ctor with higher level arguments
+// MODIFIED: ctors with higher level arguments
 // The parameters can be extracted from a ROOT::Fit::Fitter object, for
 // simpler initialization.
 NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter) :
-    strategy(fitter.Strategy()),
+    NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(f, fitter,  ROOT::Minuit2::MnStrategy(fitter.GetMinimizer()->Strategy()))
+{}
+
+NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy) :
     NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(f,
                                                          strategy.GradientStepTolerance(),
                                                          strategy.GradientTolerance(),
                                                          strategy.GradientNCycles(),
                                                          fitter.GetMinimizer()->ErrorDef()
-                                                         )
+    )
 {}
 
 
-void NumericalDerivatorMinuit2::SetStepTolerance(double value) {
+  void NumericalDerivatorMinuit2::SetStepTolerance(double value) {
     fStepTolerance = value;
 }
 

@@ -15,8 +15,8 @@
 
 #ifndef __ROOFIT_NORooGradMinimizer
 
-#ifndef ROO_GAUSS_MINIMIZER_FCN
-#define ROO_GAUSS_MINIMIZER_FCN
+#ifndef ROO_GRAD_MINIMIZER_FCN
+#define ROO_GRAD_MINIMIZER_FCN
 
 #include "Math/IFunction.h"
 #include "Fit/ParameterSettings.h"

@@ -14,8 +14,8 @@
  * with or without modification, are permitted according to the terms        *
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
-#ifndef ROO_GAUSS_MINIMIZER
-#define ROO_GAUSS_MINIMIZER
+#ifndef ROO_GRAD_MINIMIZER
+#define ROO_GRAD_MINIMIZER
 
 #include "TObject.h"
 #include "TStopwatch.h"

@@ -13,7 +13,7 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef __ROOFIT_NOROOMINIMIZER
+#ifndef __ROOFIT_NOROOGRADMINIMIZER
 
 //////////////////////////////////////////////////////////////////////////////
 //

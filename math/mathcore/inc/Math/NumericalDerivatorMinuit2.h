@@ -26,6 +26,8 @@
 #include <vector>
 // MODIFIED: MnStrategy.h
 #include "Minuit2/MnStrategy.h"
+// MODIFIED: Fitter.h
+#include <Fit/Fitter.h>
 
 
 namespace ROOT {
@@ -37,6 +39,8 @@ public:
 
    NumericalDerivatorMinuit2();
    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level);
+   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter);
+   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy);
    virtual ~NumericalDerivatorMinuit2();
    const double* Differentiate(const double* x);
    double GetFValue() const {
@@ -51,7 +55,7 @@ public:
    
    void SetInitialValues(const double* g, const double* g2, const double* s);
        
-   void SetInitialGradient (const double * s);
+   void SetInitialGradient();
 
 private:
 
@@ -59,7 +63,7 @@ private:
     std::vector <double> fG2;
     std::vector <double> fGstep;
     const ROOT::Math::IBaseFunctionMultiDim* fFunction;
-    ROOT::Minuit2::MnStrategy strategy;
+    ROOT::Minuit2::MnStrategy _strategy;
     double fStepTolerance;
     double fGradTolerance;
     double fNCycles;
