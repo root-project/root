@@ -1175,17 +1175,17 @@ protected:
             if(!trees[slot]) {
                // first time this thread executes something, let's create a TBufferMerger output directory
                files[slot] = merger.GetFile();
+               std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
+               if (!dirnameInt.empty()) {
+                  files[slot]->mkdir(dirnameInt.c_str());
+                  files[slot]->cd(dirnameInt.c_str());
+               }
+               trees[slot] = new TTree(treenameInt.c_str(), treenameInt.c_str());
+               trees[slot]->ResetBit(kMustCleanup);
+               trees[slot]->SetImplicitMT(false);
             } else {
                files[slot]->Write();
             }
-            std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
-            if (!dirnameInt.empty()) {
-               files[slot]->mkdir(dirnameInt.c_str());
-               files[slot]->cd(dirnameInt.c_str());
-            }
-            trees[slot] = new TTree(treenameInt.c_str(), treenameInt.c_str());
-            trees[slot]->ResetBit(kMustCleanup);
-            trees[slot]->SetImplicitMT(false);
             if(r) {
                // not an empty-source TDF
                auto tree = r->GetTree();
