@@ -39,7 +39,10 @@ struct TSnapshotOptions {
    TSnapshotOptions(const TSnapshotOptions &) = default;
    TSnapshotOptions(TSnapshotOptions &&) = default;
    TSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel)
-    : fMode(mode), fCompressionAlgorithm(comprAlgo), fCompressionLevel{comprLevel}, fAutoFlush(autoFlush), fSplitLevel(splitLevel){}
+      : fMode(mode), fCompressionAlgorithm(comprAlgo), fCompressionLevel{comprLevel}, fAutoFlush(autoFlush),
+        fSplitLevel(splitLevel)
+   {
+   }
    std::string fMode = "RECREATE";            //< Mode of creation of output file
    ECAlgo fCompressionAlgorithm = ROOT::kLZ4; //< Compression algorithm of output file
    int fCompressionLevel = 1;                 //< Compression level of output file
