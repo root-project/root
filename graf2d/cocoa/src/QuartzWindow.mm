@@ -1498,7 +1498,7 @@ void print_mask_info(ULong_t mask)
 {
    if (!fContentView)
       return;
- 
+
    assert(attr && "-getAttributes:, parameter 'attr' is nil");
 
    X11::GetWindowAttributes(self, attr);
@@ -2260,7 +2260,7 @@ void print_mask_info(ULong_t mask)
       NSLog(@"QuartzView: -readColorBits:, bitmapImageRepForCachingDisplayInRect failed");
       return nullptr;
    }
-   
+
    CGContextRef ctx = self.fContext; //Save old context if any.
    [self cacheDisplayInRect : visRect toBitmapImageRep : imageRep];
    self.fContext = ctx; //Restore old context.
@@ -2273,7 +2273,7 @@ void print_mask_info(ULong_t mask)
 
    unsigned char *srcData = nullptr;
    std::vector<unsigned char> downscaled;
-   if ([[NSScreen mainScreen] backingScaleFactor] > 1 && imageRep.CGImage) {
+   if ([self.window.screen backingScaleFactor] > 1 && imageRep.CGImage) {
       downscaled = X11::DownscaledImageData(area.fWidth, area.fHeight, imageRep.CGImage);
       if (downscaled.size())
          srcData = &downscaled[0];
@@ -2288,7 +2288,7 @@ void print_mask_info(ULong_t mask)
 
    //We have a source data now. Let's allocate buffer for ROOT's GUI and convert source data.
    unsigned char *data = nullptr;
-   
+
    try {
       data = new unsigned char[area.fWidth * area.fHeight * 4];//bgra?
    } catch (const std::bad_alloc &) {
@@ -2299,7 +2299,7 @@ void print_mask_info(ULong_t mask)
    unsigned char *dstPixel = data;
    const unsigned char *line = srcData + area.fY * dataWidth * 4;
    const unsigned char *srcPixel = line + area.fX * 4;
-      
+
    for (unsigned i = 0; i < area.fHeight; ++i) {
       for (unsigned j = 0; j < area.fWidth; ++j, srcPixel += 4, dstPixel += 4) {
          dstPixel[0] = srcPixel[2];
@@ -2311,7 +2311,7 @@ void print_mask_info(ULong_t mask)
       line += dataWidth * 4;
       srcPixel = line + area.fX * 4;
    }
-   
+
    return data;
 }
 
