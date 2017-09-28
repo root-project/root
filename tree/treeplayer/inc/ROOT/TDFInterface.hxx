@@ -61,7 +61,7 @@ public:
    // This method returns a pointer since we treat these columns as if they come
    // from a data source, i.e. we forward an entry point to valid memory rather
    // than a value.
-   T *operator()(ULong64_t iEvent) { return &fContent[iEvent]; };
+   T *operator()(unsigned int /*slot*/, ULong64_t iEvent) { return &fContent[iEvent]; };
 };
 
 // ENDCACHE------------
@@ -176,7 +176,7 @@ void DefineDSColumnHelper(std::string_view name, TLoopManager &lm, TDataSource &
 {
    auto readers = ds.GetColumnReaders<T>(name);
    auto getValue = [readers](unsigned int slot) { return *readers[slot]; };
-   using NewCol_t = TCustomColumn<decltype(getValue), /*PassSlotNumber=*/true>;
+   using NewCol_t = TCustomColumn<decltype(getValue), TCCHelperTypes::TSlot>;
    lm.Book(std::make_shared<NewCol_t>(name, std::move(getValue), ColumnNames_t{}, &lm, /*isDSColumn=*/true));
    lm.AddDataSourceColumn(name);
 }
@@ -388,22 +388,27 @@ public:
    /// * column aliasing, i.e. changing the name of a branch/column
    ///
    /// An exception is thrown if the name of the new column is already in use.
-   template <typename F, bool ShouldPassSlotNumber = false,
+   template <typename F, typename NEEDED_INFO = TDFDetail::TCCHelperTypes::TNothing,
              typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    TInterface<Proxied> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       auto loopManager = GetDataFrameChecked();
       TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
-      using ColTypes_t = typename TDFInternal::RemoveFirstParameterIf<ShouldPassSlotNumber, ArgTypes_t>::type;
+      using ColTypesTmp_t = typename TDFInternal::RemoveFirstParameterIf<
+         std::is_same<NEEDED_INFO, TDFDetail::TCCHelperTypes::TSlot>::value, ArgTypes_t>::type;
+      using ColTypes_t = typename TDFInternal::RemoveFirstTwoParametersIf<
+         std::is_same<NEEDED_INFO, TDFDetail::TCCHelperTypes::TSlotAndEntry>::value, ColTypesTmp_t>::type;
+
       constexpr auto nColumns = ColTypes_t::list_size;
       const auto validColumnNames =
          TDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
       if (fDataSource)
          TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
                                               ColTypes_t(), *fDataSource);
-      using NewCol_t = TDFDetail::TCustomColumn<F, ShouldPassSlotNumber>;
+      using NewCol_t = TDFDetail::TCustomColumn<F, NEEDED_INFO>;
 
       // Here we check if the return type is a pointer. In this case, we assume it points to valid memory
       // and we treat the column as if it came from a data source, i.e. it points to valid memory.
@@ -430,7 +435,7 @@ public:
    template <typename F>
    TInterface<Proxied> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return Define<F, true>(name, std::move(expression), columns);
+      return Define<F, TDFDetail::TCCHelperTypes::TSlot>(name, std::move(expression), columns);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1512,29 +1517,24 @@ private:
       // Define the columns with the number of entries
       const auto nSlots = TDFInternal::GetNSlots();
       const auto base = nEntries / nSlots;
-      std::vector<ULong64_t> evtCursors(nSlots);
-      for (size_t slot = 0; slot < nSlots; ++slot)
-         evtCursors[slot] = slot * base;
 
       // We do not need to save the new node. We add the name of the valid custom columns by hand later
       TInterface<TLoopManager> cachedTDF(std::make_shared<TLoopManager>(nEntries));
-      constexpr const char *iEvtColumnName = "__TDF_iEvent__";
-      const std::vector<std::string> iEvtColumnNameV = {iEvtColumnName};
-      cachedTDF.DefineSlot(iEvtColumnName, [evtCursors](unsigned int slot) mutable { return evtCursors[slot]++; });
+      const ColumnNames_t noCols = {};
 
       // Now we define the data columns. We add the name of the valid custom columns by hand later.
       auto lm = cachedTDF.GetDataFrameChecked();
       std::initializer_list<int> expander1{(
          // This gets expanded
-         lm->Book(std::make_shared<
-                  TDFDetail::TCustomColumn<typename std::decay<decltype(std::get<S>(colHolders))>::type, false>>(
-            columnList[S], std::move(std::get<S>(colHolders)), iEvtColumnNameV, lm.get(), true)),
+         lm->Book(
+            std::make_shared<TDFDetail::TCustomColumn<typename std::decay<decltype(std::get<S>(colHolders))>::type,
+                                                      TDFDetail::TCCHelperTypes::TSlotAndEntry>>(
+               columnList[S], std::move(std::get<S>(colHolders)), noCols, lm.get(), true)),
          0)...};
       (void)expander1;
 
       // Add the defined columns
       cachedTDF.fValidCustomColumns.assign(columnList.begin(), columnList.end());
-      cachedTDF.fValidCustomColumns.emplace_back(iEvtColumnName);
 
       return cachedTDF;
    }
