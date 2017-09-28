@@ -59,7 +59,6 @@ public:
    void ReturnSlot(unsigned int slotNumber);
    unsigned int GetSlot();
 };
-
 }
 }
 
@@ -93,8 +92,8 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    ::TDirectory *const fDirPtr{nullptr};
    std::shared_ptr<TTree> fTree{nullptr}; //< Shared pointer to the input TTree/TChain. It does not own the pointee if
-                                          //the TTree/TChain was passed directly as an argument to TDataFrame's ctor (in
-                                          //which case we let users retain ownership).
+   // the TTree/TChain was passed directly as an argument to TDataFrame's ctor (in
+   // which case we let users retain ownership).
    const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
@@ -104,7 +103,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    std::string fToJit;        ///< string containing all `BuildAndBook` actions that should be jitted before running
    const std::unique_ptr<TDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
-   ColumnNames_t fDefinedDataSourceColumns; ///< List of data-source columns that have been `Define`d so far
+   ColumnNames_t fDefinedDataSourceColumns;        ///< List of data-source columns that have been `Define`d so far
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
 
    void RunEmptySourceMT();
@@ -158,7 +157,6 @@ public:
    void AddDataSourceColumn(std::string_view name) { fDefinedDataSourceColumns.emplace_back(name); }
    void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
-
 };
 } // end ns TDF
 } // end ns Detail
@@ -306,9 +304,9 @@ void ResetTDFValueTuple(ValueTuple &values, StaticSeq<S...>)
 
 class TActionBase {
 protected:
-   TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional
-                           /// graph. It is only guaranteed to contain a valid address during an
-                           /// event loop.
+   TLoopManager *fImplPtr;     ///< A raw pointer to the TLoopManager at the root of this functional
+                               /// graph. It is only guaranteed to contain a valid address during an
+                               /// event loop.
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
 
 public:
@@ -402,10 +400,28 @@ public:
    bool IsDataSourceColumn() const { return fIsDataSourceColumn; }
 };
 
-template <typename F, bool PassSlotNumber = false>
+namespace TCCHelperTypes {
+struct TNothing {
+};
+struct TSlot {
+};
+struct TSlotAndEntry {
+};
+}
+
+template <typename F, typename UPDATE_HELPER_TYPE = TCCHelperTypes::TNothing>
 class TCustomColumn final : public TCustomColumnBase {
+   // shortcuts
+   using TNothing = TCCHelperTypes::TNothing;
+   using TSlot = TCCHelperTypes::TSlot;
+   using TSlotAndEntry = TCCHelperTypes::TSlotAndEntry;
+   using UHT_t = UPDATE_HELPER_TYPE;
+   // other types
    using FunParamTypes_t = typename CallableTraits<F>::arg_types;
-   using BranchTypes_t = typename TDFInternal::RemoveFirstParameterIf<PassSlotNumber, FunParamTypes_t>::type;
+   using BranchTypesTmp_t =
+      typename TDFInternal::RemoveFirstParameterIf<std::is_same<TSlot, UHT_t>::value, FunParamTypes_t>::type;
+   using BranchTypes_t = typename TDFInternal::RemoveFirstTwoParametersIf<std::is_same<TSlotAndEntry, UHT_t>::value,
+                                                                          BranchTypesTmp_t>::type;
    using TypeInd_t = TDFInternal::GenStaticSeq_t<BranchTypes_t::list_size>;
    using ret_type = typename CallableTraits<F>::ret_type;
    // Avoid instantiating vector<bool> as `operator[]` returns temporaries in that case. Use std::deque instead.
@@ -442,18 +458,29 @@ public:
    {
       if (entry != fLastCheckedEntry[slot]) {
          // evaluate this filter, cache the result
-         UpdateHelper(slot, entry, TypeInd_t(), BranchTypes_t(), std::integral_constant<bool, PassSlotNumber>());
+         UpdateHelper(slot, entry, TypeInd_t(), BranchTypes_t(), (UPDATE_HELPER_TYPE *)nullptr);
          fLastCheckedEntry[slot] = entry;
       }
    }
 
-   const std::type_info &GetTypeId() const {
+   const std::type_info &GetTypeId() const
+   {
       return fIsDataSourceColumn ? typeid(typename std::remove_pointer<ret_type>::type) : typeid(ret_type);
    }
 
    template <int... S, typename... BranchTypes>
    void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
-                     std::true_type /*shouldPassSlotNumber*/)
+                     TCCHelperTypes::TNothing *)
+   {
+      fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
+      // silence "unused parameter" warnings in gcc
+      (void)slot;
+      (void)entry;
+   }
+
+   template <int... S, typename... BranchTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
+                     TCCHelperTypes::TSlot *)
    {
       fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -463,9 +490,9 @@ public:
 
    template <int... S, typename... BranchTypes>
    void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
-                     std::false_type /*shouldPassSlotNumber*/)
+                     TCCHelperTypes::TSlotAndEntry *)
    {
-      fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
+      fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
@@ -524,8 +551,8 @@ class TFilter final : public TFilterBase {
 
 public:
    TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
-      : TFilterBase(pd.GetImplPtr(), name, pd.GetNSlots()), fFilter(std::move(f)), fBranches(bl),
-        fPrevData(pd), fValues(fNSlots)
+      : TFilterBase(pd.GetImplPtr(), name, pd.GetNSlots()), fFilter(std::move(f)), fBranches(bl), fPrevData(pd),
+        fValues(fNSlots)
    {
    }
 
@@ -721,7 +748,7 @@ void TColumnValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::TDF::TCustom
    if (customColumn->IsDataSourceColumn()) {
       fColumnKind = EColumnKind::kDataSource;
       fDSValuePtrs.emplace_back(static_cast<T **>(customColumn->GetValuePtr(slot)));
-    } else {
+   } else {
       fColumnKind = EColumnKind::kCustomColumn;
       fCustomValuePtrs.emplace_back(static_cast<T *>(customColumn->GetValuePtr(slot)));
    }
