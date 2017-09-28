@@ -142,7 +142,7 @@ const char *ToConstCharPtr(const char *s)
    return s;
 }
 
-const char *ToConstCharPtr(const std::string& s)
+const char *ToConstCharPtr(const std::string &s)
 {
    return s.c_str();
 }
@@ -196,8 +196,8 @@ void CheckSnapshot(unsigned int nTemplateParams, unsigned int nColumnNames)
 }
 
 /// Choose between local column names or default column names, throw in case of errors.
-const ColumnNames_t SelectColumns(unsigned int nRequiredNames, const ColumnNames_t &names,
-                                  const ColumnNames_t &defaultNames)
+const ColumnNames_t
+SelectColumns(unsigned int nRequiredNames, const ColumnNames_t &names, const ColumnNames_t &defaultNames)
 {
    if (names.empty()) {
       // use default column names
