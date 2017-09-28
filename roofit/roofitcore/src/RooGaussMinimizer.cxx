@@ -16,27 +16,14 @@
  *****************************************************************************/
 
 /**
-\file RooMinimizer.cxx
-\class RooMinimizer
+\file RooGaussMinimizer.cxx
+\class RooGaussMinimizer
 \ingroup Roofitcore
 
-RooMinimizer is a wrapper class around ROOT::Fit:Fitter that
-provides a seamless interface between the minimizer functionality
-and the native RooFit interface.
-By default the Minimizer is MINUIT.
-RooMinimizer can minimize any RooAbsReal function with respect to
-its parameters. Usual choices for minimization are RooNLLVar
-and RooChi2Var
-RooMinimizer has methods corresponding to MINUIT functions like
-hesse(), migrad(), minos() etc. In each of these function calls
-the state of the MINUIT engine is synchronized with the state
-of the RooFit variables: any change in variables, change
-in the constant status etc is forwarded to MINUIT prior to
-execution of the MINUIT call. Afterwards the RooFit objects
-are resynchronized with the output state of MINUIT: changes
-parameter values, errors are propagated.
-Various methods are available to control verbosity, profiling,
-automatic PDF optimization.
+RooGaussMinimizer is a test class for extracting the gradient
+functionality from Minuit2 using only a Gaussian function for
+easy testing. This approach will be generalized in RooGradMinimizer.
+This class is based on RooMinimizer.
 **/
 
 #include "RooFit.h"

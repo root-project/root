@@ -17,8 +17,8 @@
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// RooMinimizerFcn is am interface class to the ROOT::Math function 
-// for minization.
+// RooGaussMinimizerFcn is am interface class to the ROOT::Math function
+// for minization. See RooGaussMinimizer.cxx for more information.
 //                                                                                   
 
 #include <iostream>
