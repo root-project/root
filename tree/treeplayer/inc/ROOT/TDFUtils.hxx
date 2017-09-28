@@ -292,6 +292,17 @@ struct RemoveFirstParameterIf<true, TypeList> {
    using type = RemoveFirstParameter_t<TypeList>;
 };
 
+template <bool MustRemove, typename TypeList>
+struct RemoveFirstTwoParametersIf {
+   using type = TypeList;
+};
+
+template <typename TypeList>
+struct RemoveFirstTwoParametersIf<true, TypeList> {
+   using typeTmp = typename RemoveFirstParameterIf<true, TypeList>::type;
+   using type = typename RemoveFirstParameterIf<true, typeTmp>::type;
+};
+
 bool IsInternalColumn(std::string_view colName);
 
 } // end NS TDF
