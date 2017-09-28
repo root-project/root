@@ -15,7 +15,9 @@ sap.ui.define([
          this.rendering_perfromed = false;
       },
 
-      drawObject: function(obj, options) {
+      drawObject: function(obj, options, call_back) {
+
+         if (call_back) this.get_callbacks.push(call_back);
 
          if (!this.rendering_perfromed) {
             this.panel_data = { object: obj, opt: opt };
@@ -77,6 +79,13 @@ sap.ui.define([
       },
 
       onAfterRendering: function() {
+         console.log('Panel On after rendering', this.getView().getId(), typeof this.after_render_callback);
+
+         if (this.after_render_callback) {
+            JSROOT.CallBack(this.after_render_callback);
+            delete this.after_render_callback;
+         }
+
          this.rendering_perfromed = true;
          if (this.panel_data) this.drawModel(this.panel_data);
       },
