@@ -10,11 +10,6 @@ sap.ui.define([
       },
 
       onAfterRendering: function() {
-         if (this.after_render_callback) {
-            JSROOT.CallBack(this.after_render_callback);
-            delete this.after_render_callback;
-         }
-
          if (this.canvas_painter && this.canvas_painter._configured_socket_kind) {
             this.canvas_painter.SetDivId(this.getView().getDomRef(), -1);
             this.canvas_painter.OpenWebsocket(this.canvas_painter._configured_socket_kind);

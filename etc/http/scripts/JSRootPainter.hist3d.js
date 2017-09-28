@@ -555,6 +555,7 @@
       } else {
          this.grz = d3.scaleLinear();
          this.z_kind = "normal";
+         if ((this.Dimension()==3) && histo && histo.fZaxis.fLabels) this.z_kind = "labels";
       }
 
       this.logz = (this.z_kind === "log");
