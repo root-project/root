@@ -26,10 +26,6 @@
 namespace ROOT {
 namespace Experimental {
 
-namespace Internal {
-class TCanvasSharedPtrMaker;
-}
-
 /** \class ROOT::Experimental::TCanvas
   A window's topmost `TPad`.
   Access is through TCanvasPtr.
