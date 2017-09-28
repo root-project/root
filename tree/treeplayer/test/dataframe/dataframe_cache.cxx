@@ -79,12 +79,12 @@ TEST(Cache, RunTwiceOnCached)
    EXPECT_EQ(nevts, nCalls);
    auto m0 = cached.Mean<float>("float");
    EXPECT_EQ(nevts, nCalls);
-   auto m1 = cached.Mean<float>("float");
+   cached.Foreach([]() {});               // run the event loop
+   auto m1 = cached.Mean<float>("float"); // re-run the event loop
    EXPECT_EQ(nevts, nCalls);
    EXPECT_EQ(*m0, *m1);
 }
 
-/*
 // Broken - caching a cached tdf destroys the cache of the cached.
 TEST(Cache, CacheFromCache)
 {
@@ -93,7 +93,8 @@ TEST(Cache, CacheFromCache)
    auto f = 0.f;
    auto orig = tdf.Define("float", [&f]() { return f++; });
 
-   auto cached = orig.Cache<float>({"float"}); f = 0.f;
+   auto cached = orig.Cache<float>({"float"});
+   f = 0.f;
    auto recached = cached.Cache<float>({"float"});
    auto ofloat = *orig.Take<float>("float");
    auto cfloat = *cached.Take<float>("float");
@@ -104,7 +105,6 @@ TEST(Cache, CacheFromCache)
       EXPECT_EQ(ofloat[j], rcfloat[j]);
    }
 }
-*/
 
 TEST(Cache, InternalColumnsSnapshot)
 {
