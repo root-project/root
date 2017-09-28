@@ -7,7 +7,7 @@
 #include "Math/MinimizerOptions.h"
 #include <chrono>
 
-unsigned tolerance = 0.01;
+double tolerance = 0.01;
 
 // Evaluating function
 template <class T>
@@ -48,7 +48,7 @@ void benchmarkFit(TF1 *f, TH1D &h, const std::string &opt, const std::string &fi
       model.refValue = result;
    } else {
       // Check if numerical result is within tolerance
-      if (std::abs(model.refValue->MinFcnValue() - result->MinFcnValue()) <
+      if (std::abs(result->MinFcnValue() - model.refValue->MinFcnValue()) >
           tolerance * std::abs(model.refValue->MinFcnValue())) {
          Error("testBinnedFitExecPolicy", "%s : Failed comparison of fit results \t FCN = %f, it should be = %f",
                msg.c_str(), result->MinFcnValue(), model.refValue->MinFcnValue());
