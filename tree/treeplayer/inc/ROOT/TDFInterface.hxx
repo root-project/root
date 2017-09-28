@@ -1325,6 +1325,36 @@ public:
       fProxiedPtr->Report();
    }
 
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Returns the names of the available columns
+   ///
+   /// This is not an action nor a transformation, just a simple utility to
+   /// get columns names out of the TDataFrame nodes.
+   ColumnNames_t GetColumnNames()
+   {
+      ColumnNames_t allColumns;
+
+      auto addIfNotInternal = [&allColumns](std::string_view colName){ if (!TDFInternal::IsInternalColumn(colName)) allColumns.emplace_back(colName);};
+
+      std::for_each(fValidCustomColumns.begin(), fValidCustomColumns.end(), addIfNotInternal);
+
+      auto df = GetDataFrameChecked();
+      auto tree = df->GetTree();
+      if (tree) {
+         const auto branches = tree->GetListOfBranches();
+         for (auto branch : *branches) {
+            allColumns.emplace_back(branch->GetName());
+         }
+      }
+
+      if (fDataSource) {
+         auto &dsColNames = fDataSource->GetColumnNames();
+         allColumns.insert(allColumns.end(), dsColNames.begin(), dsColNames.end());
+      }
+
+      return allColumns;
+   }
+
 private:
    ColumnNames_t ConvertRegexToColumns(std::string_view columnNameRegexp)
    {
