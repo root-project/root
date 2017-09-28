@@ -110,18 +110,18 @@ TEST(Cache, InternalColumnsSnapshot)
 {
    TDataFrame tdf(2);
    auto f = 0.f;
-   auto orig = tdf.Define("float", [&f]() { return f++; });
-   auto cached = orig.Cache<float>({"float"});
+   auto colName = "__TDF_MySecretCol_";
+   auto orig = tdf.Define(colName, [&f]() { return f++; });
+   auto cached = orig.Cache<float>({colName});
    auto snapshot = cached.Snapshot("t", "InternalColumnsSnapshot.root", "", {"RECREATE", ROOT::kZLIB, 0, 0, 99});
-   const char *iEventColName = "__TDF_iEvent__";
    int ret(1);
    try {
       testing::internal::CaptureStderr();
-      snapshot.Mean<ULong64_t>(iEventColName);
+      snapshot.Mean<ULong64_t>(colName);
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
-   EXPECT_EQ(0, ret) << "Internal column " << iEventColName << " has been snapshotted!";
+   EXPECT_EQ(0, ret) << "Internal column " << colName << " has been snapshotted!";
 }
 
 TEST(Cache, Regex)
