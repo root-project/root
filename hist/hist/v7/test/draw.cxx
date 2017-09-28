@@ -1,6 +1,7 @@
 #include "gtest/gtest.h"
 #include "ROOT/THist.hxx"
 #include "ROOT/TCanvas.hxx"
+#include "ROOT/TColor.hxx"
 
 using namespace ROOT::Experimental;
 
@@ -33,4 +34,13 @@ TEST(DrawTest, ThreeD) {
    TCanvas canv;
    canv.Draw(h);
    EXPECT_EQ(canv.GetPrimitives().size(), 1u);
+}
+
+// Drawing options:
+TEST(DrawOptTest, OneD) {
+   TAxisConfig xaxis{10, 0., 1.};
+   auto h = std::make_shared<TH1D>(xaxis);
+   TCanvas canv;
+   auto Opts = canv.Draw(h);
+   Opts.SetLineColor(TColor::kRed);
 }
