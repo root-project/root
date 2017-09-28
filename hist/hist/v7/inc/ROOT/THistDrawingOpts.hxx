@@ -21,61 +21,48 @@
 namespace ROOT {
 namespace Experimental {
 
-namespace Internal {
+   /** \class ROOT::Experimental::THistDrawingOptsBase
+    
+   Stores drawing options for a histogram. This class contains the properties
+   that are independent of the histogram dimensionality.
 
-template <int DIMENSION>
-class THistDrawingOptsBase: public TDrawingOptsBase {
+   Customize the defaults with `THistDrawingOpts<1>::SetLineColor(TColor::kRed);` or by modifying the
+   style configuration file `rootstylerc` (e.g. $ROOTSYS/etc/system.rootstylerc or ~/.rootstylerc).   
+    */
+template <class DERIVED>
+class THistDrawingOptsBase: public TDrawingOptsBaseT<DERIVED> {
    /// Index of the line color in TCanvas's color table.
-   size_t fLineColorIndex = (size_t)-1;
-   /// The pad containing this Drawable, used to register colors.
-   TPadBase &fPad;
-
+   TOptsAttrIdx<long long> fLineColorIndex;
 public:
-   THistDrawingOptsBase(TPadBase &pad) = default;
+   using Attrs = typename TDrawingOptsBaseT<DERIVED>::Attrs;
+   THistDrawingOptsBase(TPadBase &pad, const Attrs& attrs)
+      : TDrawingOptsBaseT<DERIVED>(pad, Attrs(attrs).Add({fLineColorIndex, this->Default().fLineColorIndex})) {}
 
-   void SetLineColor(const TColor &col) { fPad.RegisterColor(fLineColorIndex, col); }
+   /// The color of the histogram line.
+   void SetLineColor(const TColor &col) { Update(fLineColorIndex, col); }
 };
 
-template <int>
-class THistDrawingOptsEnum {
-};
-
-/// Specialization containing 1D hist drawing options.
-template <>
-struct THistDrawingOptsEnum<1> {
-   enum EOpts { kErrors, kBar, kText };
-};
-
-/// Specialization containing 2D hist drawing options.
-template <>
-struct THistDrawingOptsEnum<2> {
-   enum EOpts { kBox, kText, kLego };
-};
-
-/// Specialization containing 3D hist drawing options.
-template <>
-struct THistDrawingOptsEnum<3> {
-   enum EOpts { kLego, kIso };
-};
-
-} // namespace Internal
 
 /** \class THistDrawingOpts
  Drawing options for a histogram with DIMENSIONS
  */
 template <int DIMENSION>
-class THistDrawingOpts: public THistDrawingOptsBase {
-   int fOpts;
-
+class THistDrawingOptsBase: public THistDrawingOptsBase<THistDrawingOpts<DIMENSION>> {
+   TOptsAttrIdx<long long> fStyle;
 public:
-   THistDrawingOpts() = default;
-   constexpr THistDrawingOpts(typename Internal::THistDrawingOptsEnum<DIMENSION>::EOpts opt): fOpts(2 >> opt) {}
+   using Attrs = typename TDrawingOptsBaseT<DERIVED>::Attrs;
+   THistDrawingOptsBase(TPadBase &pad, const Attrs& attrs)
+      : THistDrawingOptsBase<THistDrawingOpts<DIMENSION>>(pad, Attrs(attrs).Add({fStyle, this->Default().fStyle})) {}
 };
 
-namespace Hist {
-static constexpr const THistDrawingOpts<2> box(Internal::THistDrawingOptsEnum<2>::kBox);
-static constexpr const THistDrawingOpts<2> text(Internal::THistDrawingOptsEnum<2>::kText);
-} // namespace Hist
+class THist1DDrawingOpts: public THistDrawingOptsBase<3> {
+   enum class EStyle {
+      kErrors,
+      kBar,
+      kText
+   };
+public:
+};
 
 } // namespace Experimental
 } // namespace ROOT
