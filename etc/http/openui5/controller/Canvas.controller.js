@@ -231,8 +231,8 @@ sap.ui.define([
          var ctrl = this.getBottomController();
          if (!ctrl) ctrl = this.getLeftController("Panel");
 
-         if (ctrl && ctrl.drawCanvas)
-            ctrl.drawCanvas(can, opt, call_back);
+         if (ctrl && ctrl.drawObject)
+            ctrl.drawObject(can, opt, call_back);
          else
             JSROOT.CallBack(call_back, null);
       },
@@ -245,6 +245,8 @@ sap.ui.define([
 
          if (!ctrl || ctrl.getView().getDomRef())
             return JSROOT.CallBack(call_back, !!ctrl);
+
+         if (ctrl.rendering_perfromed) console.log('Rendering already done');
 
          // FIXME: one should have much easier way to get callback when rendering done
          ctrl.after_render_callback = call_back;
