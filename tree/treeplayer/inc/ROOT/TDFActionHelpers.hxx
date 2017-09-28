@@ -519,9 +519,6 @@ public:
          fOutputTrees[slot]->ResetBit(kMustCleanup); // do not mingle with the thread-unsafe gListOfCleanups
          if (fOptions.fAutoFlush)
             fOutputTrees[slot]->SetAutoFlush(fOptions.fAutoFlush);
-      } else {
-         // this thread is now re-executing the task, let's flush the current contents of the TBufferMergerFile
-         fOutputFiles[slot]->Write();
       }
       if (r) {
          // not an empty-source TDF
