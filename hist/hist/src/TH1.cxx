@@ -7306,13 +7306,12 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
 ///    -  "D" Put out a line of "Debug" printout
 ///    -  "M" Return the Maximum Kolmogorov distance instead of prob
 ///    -  "X" Run the pseudo experiments post-processor with the following procedure:
-///       make pseudoexperiments based on random values from the parent
-///       distribution and compare the KS distance of the pseudoexperiment
-///       to the parent distribution. Bin the KS distances in a histogram,
-///       and then take the integral of all the KS values above the value
+///       make pseudoexperiments based on random values from the parent distribution,
+///       compare the KS distance of the pseudoexperiment to the parent
+///       distribution, and count all the KS values above the value
 ///       obtained from the original data to Monte Carlo distribution.
 ///       The number of pseudo-experiments nEXPT is currently fixed at 1000.
-///       The function returns the integral.
+///       The function returns the probability.
 ///       (thanks to Ben Kilminster to submit this procedure). Note that
 ///       this option "X" is much slower.
 ///
