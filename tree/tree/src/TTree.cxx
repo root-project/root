@@ -4471,16 +4471,23 @@ Int_t TTree::Fill()
       Info("TTree::Fill", " - A: %d %lld %lld %lld %lld %lld %lld \n", nbytes, fEntries, fAutoFlush, fAutoSave,
            GetZipBytes(), fFlushedBytes, fSavedBytes);
 
+   bool autoFlush = false;
+   bool autoSave = false;
+
    if (fAutoFlush != 0 || fAutoSave != 0) {
       // Is it time to flush or autosave baskets?
       if (fFlushedBytes == 0) {
+         // If fFlushedBytes == 0, it means we never flushed or saved, so
+         // we need to check if it's time to do it and recompute the values
+         // of fAutoFlush and fAutoSave in terms of the number of entries.
          // Decision can be based initially either on the number of bytes
          // or the number of entries written.
          Long64_t zipBytes = GetZipBytes();
-         if ((fAutoFlush < 0 && zipBytes > -fAutoFlush) || (fAutoSave < 0 && zipBytes > -fAutoSave) ||
-             (fAutoFlush > 0 && fEntries % TMath::Max((Long64_t)1, fAutoFlush) == 0) ||
-             (fAutoSave > 0 && fEntries % TMath::Max((Long64_t)1, fAutoSave) == 0)) {
 
+         autoFlush = fAutoFlush < 0 ? (zipBytes > -fAutoFlush) : (fEntries % TMath::Max((Long64_t)1, fAutoFlush) == 0);
+         autoSave = fAutoSave < 0 ? (zipBytes > -fAutoSave) : (fEntries % TMath::Max((Long64_t)1, fAutoSave) == 0);
+
+         if (autoFlush || autoSave) {
             // First call FlushBasket to make sure that fTotBytes is up to date.
             FlushBaskets();
             OptimizeBaskets(GetTotBytes(), 1, "");
