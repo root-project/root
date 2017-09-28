@@ -518,6 +518,13 @@ public:
                                      const ColumnNames_t &columnList,
                                      const TSnapshotOptions &options = TSnapshotOptions())
    {
+      // Early return: if the list of columns is empty, just return an empty TDF
+      // If we proceed, the jitted call will not compile!
+      if (columnList.empty()) {
+         auto nEntries = *this->Count();
+         TInterface<TLoopManager> emptyTDF(std::make_shared<TLoopManager>(nEntries));
+         return emptyTDF;
+      }
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       std::stringstream snapCall;
@@ -589,6 +596,14 @@ public:
    /// transformations requesting it.
    TInterface<TLoopManager> Cache(const ColumnNames_t &columnList)
    {
+      // Early return: if the list of columns is empty, just return an empty TDF
+      // If we proceed, the jitted call will not compile!
+      if (columnList.empty()) {
+         auto nEntries = *this->Count();
+         TInterface<TLoopManager> emptyTDF(std::make_shared<TLoopManager>(nEntries));
+         return emptyTDF;
+      }
+
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       std::stringstream snapCall;
@@ -1333,10 +1348,8 @@ private:
       TRegexp regexp(theRegex);
       int dummy;
       for (auto &&branchName : customColumns) {
-         if (isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) {
-            if (!TDFInternal::IsInternalColumn(branchName)) {
-               selectedColumns.emplace_back(branchName);
-            }
+         if ((isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) && !TDFInternal::IsInternalColumn(branchName)) {
+            selectedColumns.emplace_back(branchName);
          }
       }
 
@@ -1358,13 +1371,6 @@ private:
                selectedColumns.emplace_back(dsColName);
             }
          }
-      }
-
-      if (selectedColumns.empty()) {
-         std::string msg = "The regular expression specified ";
-         msg += columnNameRegexp;
-         msg += " did not match any column!";
-         throw std::runtime_error(msg);
       }
 
       return selectedColumns;

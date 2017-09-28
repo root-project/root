@@ -140,14 +140,6 @@ TEST(Cache, Regex)
    auto mC = cachedC.Define("sum", sumC, {"c0", "c1"}).Max<int>("sum");
    EXPECT_EQ(1, *mC);
 
-   int ret(1);
-   try {
-      auto cachedBogus = d.Cache("Bogus");
-   } catch (const std::runtime_error &e) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret) << "Exception not thrown even when the regex did not match any column!";
-
    // Now from source
    std::unique_ptr<TDataSource> tds(new TTrivialDS(4));
    TDataFrame tdfs(std::move(tds));
