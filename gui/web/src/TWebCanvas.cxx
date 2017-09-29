@@ -109,7 +109,8 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject* obj)
        { "TGaxis", false },
        { "TPave", true },
        { "TArrow", false },
-//       { "TBox", false },    // can be handled via TWebPainter
+       { "TBox", false },      // in principle, can be handled via TWebPainter
+       { "TWbox", false },     // some extra calls which cannout be handled via TWebPainter
        { "TLine", false },     // also can be handler via TWebPainter
        { "TText", false },
        { "TLatex", false },
