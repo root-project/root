@@ -407,9 +407,9 @@ private:
    // this overload is SFINAE'd out if Helper does not implement `PartialUpdate`
    // the template parameter is required to defer instantiation of the method to SFINAE time
    template <typename H = Helper>
-   auto PartialUpdateImpl(unsigned int slot) -> decltype(std::declval<H>().PartialUpdate(slot))
+   auto PartialUpdateImpl(unsigned int slot) -> decltype(std::declval<H>().PartialUpdate(slot), (void *)(nullptr))
    {
-      return fHelper.PartialUpdate(slot);
+      return &fHelper.PartialUpdate(slot);
    }
    // this one is always available but has lower precedence thanks to `...`
    void *PartialUpdateImpl(...) {
