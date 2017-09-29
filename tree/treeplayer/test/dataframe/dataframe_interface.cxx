@@ -1,10 +1,12 @@
 #include "ROOT/TDataFrame.hxx"
+#include "ROOT/TTrivialDS.hxx"
 #include "TMemFile.h"
 #include "TTree.h"
 
 #include "gtest/gtest.h"
 
 using namespace ROOT::Experimental;
+using namespace ROOT::Experimental::TDF;
 
 TEST(TDataFrameInterface, CreateFromNullTDirectory)
 {
@@ -89,3 +91,38 @@ TEST(TDataFrameInterface, CheckAliasesPerChain)
    }
    EXPECT_EQ(0, ret) << "No exception thrown when trying to alias a non-existing column.";
 }
+
+TEST(TDataFrameInterface, GetColumnNamesFromScratch)
+{
+   TDataFrame f(1);
+   auto dummyGen = []() { return 1; };
+   auto names = f.Define("a", dummyGen).Define("b", dummyGen).Define("__TDF_Dummy", dummyGen).GetColumnNames();
+   EXPECT_STREQ("a", names[0].c_str());
+   EXPECT_STREQ("b", names[1].c_str());
+   EXPECT_EQ(2U, names.size());
+}
+
+TEST(TDataFrameInterface, GetColumnNamesFromTree)
+{
+   TTree t("t","t");
+   int a,b;
+   t.Branch("a",&a);
+   t.Branch("b",&b);
+   TDataFrame tdf(t);
+   auto names = tdf.GetColumnNames();
+   EXPECT_STREQ("a", names[0].c_str());
+   EXPECT_STREQ("b", names[1].c_str());
+   EXPECT_EQ(2U, names.size());
+}
+
+TEST(TDataFrameInterface, GetColumnNamesFromSource)
+{
+   std::unique_ptr<TDataSource> tds(new TTrivialDS(1));
+   TDataFrame tdf(std::move(tds));
+   auto names = tdf.Define("b", []() { return 1; }).GetColumnNames();
+   EXPECT_STREQ("b", names[0].c_str());
+   EXPECT_STREQ("col0", names[1].c_str());
+   EXPECT_EQ(2U, names.size());
+}
+
+
