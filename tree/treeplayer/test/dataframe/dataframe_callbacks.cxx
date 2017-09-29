@@ -1,5 +1,6 @@
 #include "ROOT/TDataFrame.hxx"
 #include "TRandom.h"
+#include "TROOT.h"
 #include "gtest/gtest.h"
 #include <limits>
 using namespace ROOT::Experimental;
@@ -24,6 +25,38 @@ protected:
    TDFCallbacks() : fLoopManager(nEvents), tdf(DefineRandomCol()) {}
    TInterface<TLoopManager> tdf;
 };
+
+// fixture that enables implicit MT and provides a TDF with no data-source and a single column "x" containing
+// normal-distributed doubles
+class TDFCallbacksMT : public ::testing::Test {
+   class TIMTEnabler {
+   public:
+      TIMTEnabler(unsigned int nSlots) {
+         ROOT::EnableImplicitMT(nSlots);
+      }
+      ~TIMTEnabler() {
+         ROOT::DisableImplicitMT();
+      }
+   };
+
+protected:
+   const ULong64_t nEvents = 8ull; // must be initialized before fLoopManager
+   const unsigned int nSlots = 4u;
+
+private:
+   TIMTEnabler fIMTEnabler;
+   TDataFrame fLoopManager;
+   TInterface<TLoopManager> DefineRandomCol()
+   {
+      std::vector<TRandom> rs;
+      return fLoopManager.DefineSlot("x", [rs](unsigned int slot) mutable { return rs[slot].Gaus(); });
+   }
+
+protected:
+   TDFCallbacksMT() : fIMTEnabler(nSlots), fLoopManager(nEvents), tdf(DefineRandomCol()) {}
+   TInterface<TLoopManager> tdf;
+};
+
 
 /********* TESTS *********/
 TEST_F(TDFCallbacks, Histo1DWithFillTOHelper)
@@ -218,6 +251,26 @@ TEST_F(TDFCallbacks, OrderOfExecution)
    });
    *c;
    EXPECT_EQ(i, 0u);
+}
+
+TEST_F(TDFCallbacks, ExecuteOnce)
+{
+   // OnPartialResult(kOnce)
+   auto c = tdf.Count();
+   unsigned int callCount = 0;
+   c.OnPartialResult(0, [&callCount](ULong64_t) { callCount++; });
+   *c;
+   EXPECT_EQ(callCount, 1u);
+}
+
+TEST_F(TDFCallbacksMT, ExecuteOncePerSlot)
+{
+   // OnPartialResultSlot(kOnce)
+   auto c = tdf.Count();
+   std::atomic_uint callCount(0u);
+   c.OnPartialResultSlot(c.kOnce, [&callCount](unsigned int, ULong64_t) { callCount++; });
+   *c;
+   EXPECT_EQ(callCount, nSlots);
 }
 
 TEST_F(TDFCallbacks, MultipleCallbacks)
