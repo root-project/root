@@ -197,8 +197,8 @@ class TColumnValue {
    /// or a TDataSource. It stores which it is as an enum.
    enum class EColumnKind { kTreeValue, kTreeArray, kCustomColumn, kDataSource };
    EColumnKind fColumnKind;
-   /// The slot this value belongs to. Only needed when querying custom column values.
-   unsigned int fSlot;
+   /// The slot this value belongs to. Only needed when querying custom column values, it is set in `SetTmpColumn`.
+   unsigned int fSlot = std::numeric_limits<unsigned int>::max();
 
    // Each element of the following data members will be in use by a _single task_.
    // The vectors are used as very small stacks (1-2 elements typically) that fill in case of interleaved task execution
