@@ -1541,7 +1541,8 @@ private:
    {
 
       // Check at compile time that the columns types are copy constructible
-      constexpr bool areCopyConstructible = TDFInternal::TEvalAnd<std::is_copy_constructible<BranchTypes>::value...>::value;
+      constexpr bool areCopyConstructible =
+         TDFInternal::TEvalAnd<std::is_copy_constructible<BranchTypes>::value...>::value;
       static_assert(areCopyConstructible, "Columns of a type which is not copy constructible cannot be cached yet.");
 
       // We share bits and pieces with snapshot. De facto this is a snapshot

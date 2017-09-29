@@ -160,5 +160,6 @@ TEST(Cache, NonCopiable)
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
-   EXPECT_EQ(0, ret) << "The static assert was not triggered even if caching of columns of a non copiable type was requested";
+   EXPECT_EQ(0, ret)
+      << "The static assert was not triggered even if caching of columns of a non copiable type was requested";
 }
