@@ -140,21 +140,20 @@ ClassImp(TFormula);
     This class is not anymore the base class for the function classes `TF1`, but it has now
     a data member of TF1 which can be accessed via `TF1::GetFormula`.
 
-    ### A note on variables and parameters
+    ### An expanded note on variables and parameters
 
-    In a TFormula, a variable is a defined by a name such as "x" or "mass" in a
-    formula defined as
-
-    ```
-    TFormula("", "x * mass + 10")
-    ```
-
-    Parameters are very similar but can be unnamed. It is specified using brackets
-    e.g. `[0]`. In the following example `[0]` is the first parameter and `[1]` is
-    the second.
+    In a TFormula, a variable is a defined by a name `x`, `y`, `z` or `t` or an
+    index like `x[0]`, `x[1]`, `x[2]`; that is `x[N]` where N is an integer.
 
     ```
-    TFormula("", "[0]+[1]*[0]")
+    TFormula("", "x[0] * x[1] + 10")
+    ```
+
+    Parameters are similar and can take any name. It is specified using brackets
+    e.g. `[expected_mass]` or `[0]`.
+
+    ```
+    TFormula("", "exp([expected_mass])-1")
     ```
 
     Variables and parameters can be combined in the same TFormula. Here we consider
@@ -171,7 +170,21 @@ ClassImp(TFormula);
     }
     ```
 
-    A guiding rule is that values of parameters should be fixed when looping over events, while variables can vary.
+    The distinction between variables and parameters arose from the TFormula's
+    application in fitting. There parameters are fitted to the data provided
+    through variables. In other applications this distinction can go away.
+
+    Parameter values can be provided dynamically using `TFormula::EvalPar`
+    instead of `TFormula::Eval`. In this way parameters can be used identically
+    to variables. See below for an example that uses only parameters to model a
+    function.
+
+    ```
+    Int_t params[2] = {1, 2}; // {vel_x, vel_y}
+    TFormula tf ("", "[vel_x]/sqrt(([vel_x + vel_y])**2)");
+
+    tf.EvalPar(nullptr, params);
+    ```
 
     ### A note on operators
 
