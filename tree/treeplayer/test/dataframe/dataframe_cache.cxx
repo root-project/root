@@ -4,6 +4,8 @@
 #include "TH1F.h"
 #include "TRandom.h"
 
+#include "TNonCopiableDS.hxx"
+
 #include "gtest/gtest.h"
 
 #include <algorithm>
@@ -146,4 +148,17 @@ TEST(Cache, Regex)
    auto cached = tdfs.Cache();
    auto m = cached.Max<ULong64_t>("col0");
    EXPECT_EQ(3UL, *m);
+}
+
+TEST(Cache, NonCopiable)
+{
+   std::unique_ptr<TDataSource> tds(new NonCopiableDS());
+   TDataFrame tdf(std::move(tds));
+   int ret(1);
+   try {
+      tdf.Cache(NonCopiableDS::fgColumnName);
+   } catch (const std::runtime_error &e) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret) << "The static assert was not triggered even if caching of columns of a non copiable type was requested";
 }
