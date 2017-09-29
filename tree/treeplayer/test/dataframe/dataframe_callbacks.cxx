@@ -31,12 +31,8 @@ protected:
 class TDFCallbacksMT : public ::testing::Test {
    class TIMTEnabler {
    public:
-      TIMTEnabler(unsigned int nSlots) {
-         ROOT::EnableImplicitMT(nSlots);
-      }
-      ~TIMTEnabler() {
-         ROOT::DisableImplicitMT();
-      }
+      TIMTEnabler(unsigned int nSlots) { ROOT::EnableImplicitMT(nSlots); }
+      ~TIMTEnabler() { ROOT::DisableImplicitMT(); }
    };
 
 protected:
@@ -56,7 +52,6 @@ protected:
    TDFCallbacksMT() : fIMTEnabler(nSlots), fLoopManager(nEvents), tdf(DefineRandomCol()) {}
    TInterface<TLoopManager> tdf;
 };
-
 
 /********* TESTS *********/
 TEST_F(TDFCallbacks, Histo1DWithFillTOHelper)

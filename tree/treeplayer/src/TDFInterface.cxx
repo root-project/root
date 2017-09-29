@@ -203,7 +203,7 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
                             const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns,
-                            TDataSource *ds, const std::shared_ptr<TActionBase *> * const actionPtrPtr)
+                            TDataSource *ds, const std::shared_ptr<TActionBase *> *const actionPtrPtr)
 {
    auto nBranches = bl.size();
 
