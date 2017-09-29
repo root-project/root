@@ -316,8 +316,9 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 //                                                                      //
 // http server implementation, based on civetweb embedded server        //
 // It is default kind of engine, created for THttpServer                //
+// Currently v1.8 from https://github.com/civetweb/civetweb is used     //
 //                                                                      //
-// Following additional options can be specified                        //
+// Following additional options can be specified:                       //
 //    top=foldername - name of top folder, seen in the browser          //
 //    thrds=N - use N threads to run civetweb server (default 5)        //
 //    auth_file - global authentication file                            //
@@ -385,7 +386,8 @@ Int_t TCivetweb::ProcessLog(const char *message)
 ///    auth_domain=domain   - authentication domain
 ///    websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
 ///    loopback  - bind specified port to loopback 127.0.0.1 address
-///    debug  - enable debug mode, server always returns html page with request info
+///    debug   - enable debug mode, server always returns html page with request info
+///    log=filename  - configure civetweb log file
 
 Bool_t TCivetweb::Create(const char *args)
 {
