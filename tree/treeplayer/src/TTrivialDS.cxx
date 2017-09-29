@@ -1,6 +1,7 @@
 #include <ROOT/TDFUtils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/TTrivialDS.hxx>
+#include <ROOT/RMakeUnique.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -75,8 +76,7 @@ void TTrivialDS::SetNSlots(unsigned int nSlots)
 
 TDataFrame MakeTrivialDataFrame(ULong64_t size)
 {
-   std::unique_ptr<TTrivialDS> tds(new TTrivialDS(size));
-   ROOT::Experimental::TDataFrame tdf(std::move(tds));
+   ROOT::Experimental::TDataFrame tdf(std::make_unique<TTrivialDS>(size));
    return tdf;
 }
 
