@@ -183,6 +183,7 @@ public:
    ///
    /// \param[in] everyNEvents Frequency at which the callback will be called, as a number of events processed
    /// \param[in] callback a callable with signature `void(Value_t&)` where Value_t is the type of the value contained in this TResultProxy
+   /// \return this TResultProxy, to allow chaining of OnPartialResultSlot with other calls
    ///
    /// The callback must be a callable (lambda, function, functor class...) that takes a reference to the result type as
    /// argument and returns nothing. TDataFrame will invoke registered callbacks passing partial action results as
@@ -218,7 +219,7 @@ public:
    ///   might change between calls
    /// To register a callback that is called by _each_ worker thread (concurrently) every N events one can use
    /// OnPartialResultSlot.
-   void OnPartialResult(ULong64_t everyNEvents, std::function<void(T&)> callback)
+   TResultProxy<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T&)> callback)
    {
       auto actionPtrPtr = fActionPtrPtr.get();
       auto c = [actionPtrPtr, callback](unsigned int slot) {
@@ -228,12 +229,14 @@ public:
          callback(*partialResult);
       };
       RegisterCallback(everyNEvents, std::move(c));
+      return *this;
    }
 
    /// Register a callback that TDataFrame will execute in each worker thread concurrently on that thread's partial result.
    ///
    /// \param[in] everyNEvents Frequency at which the callback will be called by each thread, as a number of events processed
    /// \param[in] a callable with signature `void(unsigned int, Value_t&)` where Value_t is the type of the value contained in this TResultProxy
+   /// \return this TResultProxy, to allow chaining of OnPartialResultSlot with other calls
    ///
    /// See `RegisterCallback` for a generic explanation of the callback mechanism.
    /// Compared to `RegisterCallback`, this method has two major differences:
@@ -258,7 +261,7 @@ public:
    /// *c; // trigger the event loop by accessing an action's result
    /// std::cout << "\nDone!" << std::endl;
    /// \endcode
-   void OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T&)> callback)
+   TResultProxy<T> &OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T&)> callback)
    {
       auto actionPtrPtr = fActionPtrPtr.get();
       auto c = [actionPtrPtr, callback](unsigned int slot) {
@@ -266,6 +269,7 @@ public:
          callback(slot, *partialResult);
       };
       RegisterCallback(everyNEvents, std::move(c));
+      return *this;
    }
 };
 
