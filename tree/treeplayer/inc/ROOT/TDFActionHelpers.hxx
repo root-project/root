@@ -71,7 +71,7 @@ public:
    void InitSlot(TTreeReader *, unsigned int) {}
    void Exec(unsigned int slot);
    void Finalize();
-   ULong64_t *PartialUpdate(unsigned int slot);
+   ULong64_t &PartialUpdate(unsigned int slot);
 };
 
 class FillHelper {
@@ -126,7 +126,7 @@ public:
       }
    }
 
-   Hist_t *PartialUpdate(unsigned int);
+   Hist_t &PartialUpdate(unsigned int);
 
    void Finalize();
 };
@@ -245,7 +245,7 @@ public:
    }
    void Finalize() { fTo->Merge(); }
 
-   HIST *PartialUpdate(unsigned int slot) { return fTo->GetAtSlotRaw(slot); }
+   HIST &PartialUpdate(unsigned int slot) { return *fTo->GetAtSlotRaw(slot); }
 };
 
 // IMPORTANT NOTE: changes to this class should probably be replicated in its partial specialization below
@@ -278,7 +278,7 @@ public:
       }
    }
 
-   COLL *PartialUpdate(unsigned int slot) { return fColls[slot].get(); }
+   COLL &PartialUpdate(unsigned int slot) { return fColls[slot].get(); }
 };
 
 // note: changes to this class should probably be replicated in its unspecialized
@@ -317,7 +317,7 @@ public:
       }
    }
 
-   std::vector<T> *PartialUpdate(unsigned int slot) { return fColls[slot].get(); }
+   std::vector<T> &PartialUpdate(unsigned int slot) { return *fColls[slot]; }
 };
 
 template <typename F, typename T>
@@ -344,7 +344,7 @@ public:
       for (auto &t : fReduceObjs) *fReduceRes = fReduceFun(*fReduceRes, t);
    }
 
-   T *PartialUpdate(unsigned int slot) { return &fReduceObjs[slot]; }
+   T &PartialUpdate(unsigned int slot) { return fReduceObjs[slot]; }
 };
 
 class MinHelper {
@@ -367,7 +367,7 @@ public:
 
    void Finalize();
 
-   double *PartialUpdate(unsigned int slot) { return &fMins[slot]; }
+   double &PartialUpdate(unsigned int slot) { return fMins[slot]; }
 };
 
 extern template void MinHelper::Exec(unsigned int, const std::vector<float> &);
@@ -395,7 +395,7 @@ public:
 
    void Finalize();
 
-   double *PartialUpdate(unsigned int slot) { return &fMaxs[slot]; }
+   double &PartialUpdate(unsigned int slot) { return fMaxs[slot]; }
 };
 
 extern template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
@@ -428,7 +428,7 @@ public:
 
    void Finalize();
 
-   double *PartialUpdate(unsigned int slot);
+   double &PartialUpdate(unsigned int slot);
 };
 
 extern template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
