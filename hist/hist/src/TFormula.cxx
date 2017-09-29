@@ -810,10 +810,13 @@ void TFormula::FillDefaults()
 #ifdef R__HAS_VECCORE  
     const pair<TString,TString> vecFunShortcuts[] =
       { {"sin","vecCore::math::Sin" },
-        {"cos","veccore::math::Cos" }, {"exp","vecCore::math::Exp"}, {"log","vecCore::math::Log"}, {"log10","vecCore::math::Log10"},
-        {"tan","vecCore::math::Tan"}, {"sinh","vecCore::math::SinH"}, {"cosh","vecCore::math::CosH"},
-        {"tanh","vecCore::math::TanH"}, {"asin","vecCore::math::ASin"}, {"acos","vecCore::math::ACos"},
-        {"atan","ATan"}, {"atan2","vecCore::math::ATan2"}, {"sqrt","vecCore::math::Sqrt"},
+        {"cos","vecCore::math::Cos" }, {"exp","vecCore::math::Exp"}, {"log","vecCore::math::Log"}, {"log10","vecCore::math::Log10"},
+        {"tan","vecCore::math::Tan"},
+        //{"sinh","vecCore::math::Sinh"}, {"cosh","vecCore::math::Cosh"},{"tanh","vecCore::math::Tanh"},
+        {"asin","vecCore::math::ASin"},
+        {"acos","TMath::Pi()/2-vecCore::math::ASin"},
+        {"atan","vecCore::math::ATan"},
+        {"atan2","vecCore::math::ATan2"}, {"sqrt","vecCore::math::Sqrt"},
         {"ceil","vecCore::math::Ceil"}, {"floor","vecCore::math::Floor"}, {"pow","vecCore::math::Pow"},
         {"cbrt","vecCore::math::Cbrt"},{"abs","vecCore::math::Abs"},
         {"min","vecCore::math::Min"},{"max","vecCore::math::Max"},{"sign","vecCore::math::Sign" }
@@ -2989,6 +2992,7 @@ void TFormula::SetVectorized(Bool_t vectorized)
          fMethod->Delete();
       fMethod = nullptr;
 
+      FillDefaults();  // to replace with the right vectorized signature (e.g. sin  -> vecCore::math::Sin)
       PreProcessFormula(fFormula);
       PrepareFormula(fFormula);
    }
@@ -3201,9 +3205,13 @@ ROOT::Double_v TFormula::DoEvalVec(const ROOT::Double_v *x, const double *params
 
    ROOT::Double_v *vars = const_cast<ROOT::Double_v *>(x);
    args[0] = &vars;
-   if (fNpar <= 0)
+   if (fNpar <= 0) {
+      if (fNdim>1) 
+      std::cout << "called function with value " << vars[0] << "  " << vars[1] << std::endl;
       (*fFuncPtr)(0, 1, args, &result);
-   else {
+      if (fNdim>1) 
+      std::cout << "called function with value " << vars[0] << "  " << vars[1] << " result " << result << std::endl;
+   }else {
       double *pars = (params) ? const_cast<double *>(params) : const_cast<double *>(fClingParameters.data());
       args[1] = &pars;
       (*fFuncPtr)(0, 2, args, &result);
