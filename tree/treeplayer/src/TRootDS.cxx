@@ -4,6 +4,7 @@
 #include <TClass.h>
 #include <TROOT.h>         // For the gROOTMutex
 #include <TVirtualMutex.h> // For the R__LOCKGUARD
+#include <ROOT/RMakeUnique.hxx>
 
 #include <algorithm>
 #include <vector>
@@ -138,8 +139,7 @@ void TRootDS::SetNSlots(unsigned int nSlots)
 
 TDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob)
 {
-   std::unique_ptr<TDF::TRootDS> tds(new TDF::TRootDS(treeName, fileNameGlob));
-   ROOT::Experimental::TDataFrame tdf(std::move(tds));
+   ROOT::Experimental::TDataFrame tdf(std::make_unique<TRootDS>(treeName, fileNameGlob));
    return tdf;
 }
 
