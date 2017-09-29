@@ -114,6 +114,8 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject* obj)
        { "TLine", false },     // also can be handler via TWebPainter
        { "TText", false },
        { "TLatex", false },
+       { "TMathText", false },
+       { "TPolyMarker3D", false },
        { 0, false }
    };
 
