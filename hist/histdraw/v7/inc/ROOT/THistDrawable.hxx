@@ -60,7 +60,7 @@ public:
    }
 
    /// Paint a THist. All we need is access to its GetBinContent()
-   virtual void Paint(TDrawable &obj, THistDrawingOpts<DIMENSION> opts, TVirtualCanvasPainter &canv) = 0;
+   virtual void Paint(TDrawable &obj, const THistDrawingOpts<DIMENSION>& opts, TVirtualCanvasPainter &canv) = 0;
 };
 
 extern template class THistPainterBase<1>;
