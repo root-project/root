@@ -4484,8 +4484,11 @@ Int_t TTree::Fill()
          // or the number of entries written.
          Long64_t zipBytes = GetZipBytes();
 
-         autoFlush = fAutoFlush < 0 ? (zipBytes > -fAutoFlush) : (fEntries % TMath::Max((Long64_t)1, fAutoFlush) == 0);
-         autoSave = fAutoSave < 0 ? (zipBytes > -fAutoSave) : (fEntries % TMath::Max((Long64_t)1, fAutoSave) == 0);
+         if (fAutoFlush)
+            autoFlush = fAutoFlush < 0 ? (zipBytes > -fAutoFlush) : fEntries % fAutoFlush == 0;
+
+         if (fAutoSave)
+            autoSave = fAutoSave < 0 ? (zipBytes > -fAutoSave) : fEntries % fAutoSave == 0;
 
          if (autoFlush || autoSave) {
             // First call FlushBasket to make sure that fTotBytes is up to date.
