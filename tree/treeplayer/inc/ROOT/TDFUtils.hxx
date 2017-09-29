@@ -306,11 +306,12 @@ struct RemoveFirstTwoParametersIf<true, TypeList> {
 bool IsInternalColumn(std::string_view colName);
 
 // Check if a condition is true for all types
-template<bool...> struct TBoolPack;
-template<bool... bs>
+template <bool...>
+struct TBoolPack;
+template <bool... bs>
 using IsTrueForAllImpl_t = typename std::is_same<TBoolPack<bs..., true>, TBoolPack<true, bs...>>;
 
-template<bool... Conditions>
+template <bool... Conditions>
 struct TEvalAnd {
    static constexpr bool value = IsTrueForAllImpl_t<Conditions...>::value;
 };
