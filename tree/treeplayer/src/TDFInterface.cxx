@@ -203,7 +203,7 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *rOnHeap, TTree *tree,
                             const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns,
-                            TDataSource *ds)
+                            TDataSource *ds, const std::shared_ptr<TActionBase *> * const actionPtrPtr)
 {
    auto nBranches = bl.size();
 
@@ -246,7 +246,8 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
 
    // createAction_str will contain the following:
    // ROOT::Internal::TDF::CallBuildAndBook<actionType, branchType1, branchType2...>(
-   //   *reinterpret_cast<PrevNodeType*>(prevNode), { bl[0], bl[1], ... }, reinterpret_cast<actionResultType*>(rOnHeap))
+   //   *reinterpret_cast<PrevNodeType*>(prevNode), { bl[0], bl[1], ... }, reinterpret_cast<actionResultType*>(rOnHeap),
+   //   reinterpret_cast<shared_ptr<TActionBase*>*>(actionPtrPtr))
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::TDF::CallBuildAndBook"
                     << "<" << actionTypeName;
@@ -257,7 +258,9 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
          createAction_str << ", ";
       createAction_str << '"' << bl[i] << '"';
    }
-   createAction_str << "}, " << nSlots << ", reinterpret_cast<" << actionResultTypeName << "*>(" << rOnHeap << "));";
+   createAction_str << "}, " << nSlots << ", reinterpret_cast<" << actionResultTypeName << "*>(" << rOnHeap << ")"
+                    << ", reinterpret_cast<const std::shared_ptr<ROOT::Internal::TDF::TActionBase*>*>(" << actionPtrPtr
+                    << "));";
    return createAction_str.str();
 }
 
