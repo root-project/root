@@ -83,10 +83,10 @@ class FillHelper {
    std::vector<Buf_t> fBuffers;
    std::vector<Buf_t> fWBuffers;
    const std::shared_ptr<Hist_t> fResultHist;
-   /// Histograms containing "snapshots" of partial results. Non-null only if a registered callback requires it.
-   std::vector<std::unique_ptr<Hist_t>> fPartialHists;
    unsigned int fNSlots;
    unsigned int fBufSize;
+   /// Histograms containing "snapshots" of partial results. Non-null only if a registered callback requires it.
+   std::vector<std::unique_ptr<Hist_t>> fPartialHists;
    Buf_t fMin;
    Buf_t fMax;
 
@@ -245,9 +245,6 @@ public:
    }
    void Finalize() { fTo->Merge(); }
 
-   // Must be implemented to activate callbacks for Histo1D<T> actions.
-   // Currently no-op, meaning we leave the result object as it is:
-   // the result object is already being filled because FillTOHelper keeps it in its working slot 0
    HIST *PartialUpdate(unsigned int slot) { return fTo->GetAtSlotRaw(slot); }
 };
 
