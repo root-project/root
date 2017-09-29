@@ -1376,19 +1376,18 @@ private:
       ColumnNames_t selectedColumns;
       selectedColumns.reserve(32);
 
-      auto df = GetDataFrameChecked();
-      const auto &customColumns = df->GetCustomColumnNames();
       // Since we support gcc48 and it does not provide in its stl std::regex,
       // we need to use TRegexp
       TRegexp regexp(theRegex);
       int dummy;
-      for (auto &&branchName : customColumns) {
+      for (auto &&branchName : fValidCustomColumns) {
          if ((isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) &&
              !TDFInternal::IsInternalColumn(branchName)) {
             selectedColumns.emplace_back(branchName);
          }
       }
 
+      auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       if (tree) {
          const auto branches = tree->GetListOfBranches();
