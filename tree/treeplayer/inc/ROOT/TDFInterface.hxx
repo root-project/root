@@ -1539,6 +1539,11 @@ private:
    template <typename... BranchTypes, int... S>
    TInterface<TLoopManager> CacheImpl(const ColumnNames_t &columnList, TDFInternal::StaticSeq<S...>)
    {
+
+      // Check at compile time that the columns types are copy constructible
+      constexpr bool areCopyConstructible = TDFInternal::TEvalAnd<std::is_copy_constructible<BranchTypes>::value...>::value;
+      static_assert(areCopyConstructible, "Columns of a type which is not copy constructible cannot be cached yet.");
+
       // We share bits and pieces with snapshot. De facto this is a snapshot
       // in memory!
       TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
