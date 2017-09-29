@@ -130,11 +130,7 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
          throw std::runtime_error(msg);
       }
    }
-
-   std::string msg("Cannot deduce type of column ");
-   msg += colName.c_str();
-   msg += ".";
-   throw std::runtime_error(msg);
+   // we never reach here
 }
 
 const char *ToConstCharPtr(const char *s)
