@@ -32,8 +32,32 @@
 8. Only single canvas is supported at the moment, one get different warnings       
 
 
+## Using CEF in batch mode on Linux
+
+CEF under Linux uses X11 functionality and therefore requires configured display and running X11 server
+On the long run there is hope, that CEF introduces true headless mode - chromium itself 
+[already supports it](https://chromium.googlesource.com/chromium/src/+/lkgr/headless/README.md).
+
+There is simple workaround for this problem.
+One could use [Xvfb](https://en.wikipedia.org/wiki/Xvfb) as X11 server.
+It does not require any graphics adapter, screen or input device.
+CEF works with  Xvfb without problem. 
+
+1. Start Xvfb
+
+    [shell] Xvfb :99 &
+    [shell] export DISPLAY=:99
+
+2. Run macro in batch mode:
+    
+    [shell] root -l -b draw_v6.cxx -q
+
+
 
 ## Compilation with QT5 WebEngine support
+
+This is alternative implementation of local display, using chromium from Qt5.
+Idea to have easy possibility to embed ROOT panels (TCanvas, TBrowser) in Qt applications.  
 
 1. Install libqt5-qtwebengine and libqt5-qtwebengine-devel packages
 
