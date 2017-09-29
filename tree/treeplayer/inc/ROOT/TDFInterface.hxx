@@ -556,6 +556,7 @@ public:
       return *reinterpret_cast<TInterface<TLoopManager> *>(newTDFPtr);
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns to disk, in a new TTree `treename` in file `filename`.
    /// \param[in] treename The name of the output TTree
@@ -572,6 +573,7 @@ public:
       auto selectedColumns = ConvertRegexToColumns(columnNameRegexp);
       return Snapshot(treename, filename, selectedColumns, options);
    }
+   // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Save selected columns in memory
