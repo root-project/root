@@ -455,8 +455,15 @@ Bool_t THttpServer::CreateEngine(const char *engine)
 /// Method arguments are the same as for TTimer constructor
 /// By default, sync timer with 100 ms period is created
 ///
+/// It is recommended to always use sync timer mode and only change period to
+/// adjust server reaction time. Use of async timer requires, that application regularly
+/// calls gSystem->ProcessEvents(). It happens automatically in ROOT interactive shell.
 /// If milliSec == 0, no timer will be created.
 /// In this case application should regularly call ProcessRequests() method.
+///
+/// Async timer allows to use THttpServer in applications, which does not have explicit
+/// gSystem->ProcessEvents() calls. But be aware, that such timer can interrupt any system call
+/// (lise malloc) and can lead to dead locks, especially in multi-threaded applications.
 
 void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 {
