@@ -68,6 +68,20 @@ If iteration is not supported by the type of the proxied object, a compilation e
 */
 template <typename T>
 class TResultProxy {
+   // private using declarations
+   using SPT_t = std::shared_ptr<T>;
+   using SPTLM_t = std::shared_ptr<TDFDetail::TLoopManager>;
+   using WPTLM_t = std::weak_ptr<TDFDetail::TLoopManager>;
+   using ShrdPtrBool_t = std::shared_ptr<bool>;
+
+   // friend declarations
+   template <typename W>
+   friend TResultProxy<W>
+   TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &, TDFInternal::TActionBase *);
+   template <typename W>
+   friend std::pair<TResultProxy<W>, std::shared_ptr<TDFInternal::TActionBase *>>
+   TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &);
+
    /// \cond HIDDEN_SYMBOLS
    template <typename V, bool isCont = TTraits::IsContainer<V>::value>
    struct TIterationHelper {
@@ -83,21 +97,11 @@ class TResultProxy {
       static Iterator_t GetEnd(const V &v) { return std::end(v); };
    };
    /// \endcond
-   using SPT_t = std::shared_ptr<T>;
-   using SPTLM_t = std::shared_ptr<TDFDetail::TLoopManager>;
-   using WPTLM_t = std::weak_ptr<TDFDetail::TLoopManager>;
-   using ShrdPtrBool_t = std::shared_ptr<bool>;
-   template <typename W>
-   friend TResultProxy<W>
-   TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &, TDFInternal::TActionBase *);
-   template <typename W>
-   friend std::pair<TResultProxy<W>, std::shared_ptr<TDFInternal::TActionBase *>>
-   TDFDetail::MakeResultProxy(const std::shared_ptr<W> &, const SPTLM_t &);
 
-   const ShrdPtrBool_t fReadiness =
-      std::make_shared<bool>(false); ///< State registered also in the TLoopManager until the event loop is executed
-   WPTLM_t fImplWeakPtr;             ///< Points to the TLoopManager at the root of the functional graph
-   const SPT_t fObjPtr;              ///< Shared pointer encapsulating the wrapped result
+   /// State registered also in the TLoopManager until the event loop is executed
+   const ShrdPtrBool_t fReadiness = std::make_shared<bool>(false);
+   WPTLM_t fImplWeakPtr; ///< Points to the TLoopManager at the root of the functional graph
+   const SPT_t fObjPtr;  ///< Shared pointer encapsulating the wrapped result
    /// Shared_ptr to a _pointer_ to the TDF action that produces this result. It is set at construction time for
    /// non-jitted actions, and at jitting time for jitted actions (at the time of writing, this means right
    /// before the event-loop).
