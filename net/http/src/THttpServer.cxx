@@ -41,7 +41,7 @@
 // THttpTimer                                                           //
 //                                                                      //
 // Specialized timer for THttpServer                                    //
-// Provides regular call of THttpServer::ProcessRequests() method       //
+// Provides regular calls of THttpServer::ProcessRequests() method      //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -53,10 +53,12 @@ public:
    {
       // construtor
    }
+
    virtual ~THttpTimer()
    {
       // destructor
    }
+
    virtual void Timeout()
    {
       // timeout handler
@@ -209,16 +211,29 @@ ClassImp(THttpServer);
 ///
 /// As argument, one specifies engine kind which should be
 /// created like "http:8080". One could specify several engines
-/// at once, separating them with ; like "http:8080;fastcgi:9000"
-/// One also can configure readonly flag for sniffer like
-/// "http:8080;readonly" or "http:8080;readwrite"
+/// at once, separating them with semicolon (";"). Following engines are supported:
 ///
-/// CORS (cross-origin resource sharing) header for response of ProcessRequest()
-/// Can be set in the options like "http:8088s;cors" for all origins ("*")
-/// or "http:8088s;cors=domain" for a specific domain.
+///       http - TCivetweb, civetweb-based implementation of http protocol
+///       fastcgi - TFastCgi, special protocol for communicating with web servers
 ///
-/// THttpServer searches for JavaScript ROOT sources, which are used in the web clients
-/// Typically JSROOT sources located from $ROOTSYS/etc/http directory,
+/// For each created engine one should provide socket port number like "http:8080" or "fastcgi:9000".
+/// Additional engine-specific options can be supplied with URL syntax like "http:8080?thrds=10".
+/// Full list of supported options should be checked in engines docu.
+///
+/// One also can configure following options, separated by semicolon:
+///
+///     readonly, ro   - set read-only mode (default)
+///     readwrite, rw  - allows methods execution of registered objects
+///     global         - scans global ROOT lists for existing objects (default)
+///     noglobal       - disable scan of global lists
+///     cors           - enable CORS header with origin="*"
+///     cors=domain    - enable CORS header with origin="domain"
+///
+/// For example, create http server, which allows cors headers and disable scan of global lists,
+/// one should provide "http:8080;cors;noglobal" as parameter
+///
+/// THttpServer uses JavaScript ROOT (https://root.cern/js) to implement web clients UI.
+/// Normally JSROOT sources are used from $ROOTSYS/etc/http directory,
 /// but one could set JSROOTSYS shell variable to specify alternative location
 
 THttpServer::THttpServer(const char *engine)
@@ -403,10 +418,10 @@ void THttpServer::SetDrawPage(const char *filename)
 /// At the moment two engine kinds are supported:
 ///   civetweb (default) and fastcgi
 /// Examples:
-///   "civetweb:8080" or "http:8080" or ":8080" - creates civetweb web server with http port 8080
+///   "http:8080" or "civetweb:8080" or ":8080"  - creates civetweb web server with http port 8080
 ///   "fastcgi:9000" - creates fastcgi server with port 9000
-///   "dabc:1237"    - create DABC server with port 1237 (only available with DABC installed)
-///   "dabc:master_host:port" - attach to DABC master, running on master_host:port (only available with DABC installed)
+/// One could apply additional parameters, using URL syntax:
+///    "http:8080?thrds=10"
 
 Bool_t THttpServer::CreateEngine(const char *engine)
 {
