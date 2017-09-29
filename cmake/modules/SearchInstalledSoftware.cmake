@@ -1205,6 +1205,13 @@ if(imt)
 endif()  
 if(builtin_tbb)
   set(tbb_version 2017_U5)
+  if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
+    set(_tbb_compiler compiler=clang)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
+    set(_tbb_compiler compiler=icc)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+    set(_tbb_compiler compiler=gcc)
+  endif()
   ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
   set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
@@ -1212,7 +1219,7 @@ if(builtin_tbb)
     URL ${lcgpackages}/tbb${tbb_version}.tar.gz
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND make CXXFLAGS=${_tbb_cxxflags} CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
+    BUILD_COMMAND make ${_tbb_compiler} CXXFLAGS=${_tbb_cxxflags} CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
     INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
                                      -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
     INSTALL_COMMAND ""
