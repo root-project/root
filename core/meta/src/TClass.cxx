@@ -5768,9 +5768,14 @@ Long_t TClass::Property() const
          kl->fStreamerType  = kExternal;
          kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
+
+      if (const_cast<TClass*>(this)->GetClassMethodWithPrototype("Hash","",kTRUE)) {
+         kl->SetBit(kHasLocalHashMember);
+      }
+
       if (GetClassInfo()) {
          // In the case where the TClass for one of ROOT's core class
-         // (eg TClonesArray for map<int,TClonesArray*>) is requesting
+         // (eg TClonesArray for map<int,TClonesArray*>) is requested
          // during the execution of rootcling, we could end up in a situation
          // where we should have the information (since TClonesArray has
          // a dictionary as part of libCore) but do not because the user
@@ -6927,6 +6932,21 @@ Bool_t TClass::HasDefaultConstructor() const
       return kTRUE;
    }
    return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns true if this class has an definition and/or overload of the
+/// member function Hash.
+///
+/// For example to test if the class overload TObject::Hash use
+/// ~~~ {.cpp}
+///     if (cl->IsTObject() && cl->HasLocalHashMember())
+/// ~~~
+
+Bool_t  TClass::HasLocalHashMember() const
+{
+   if (fProperty==(-1)) Property();
+   return TestBit(kHasLocalHashMember);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -80,6 +80,7 @@ public:
    // TClass status bits
    enum EStatusBits {
       kClassSaved  = BIT(12),
+      kHasLocalHashMember = BIT(14),
       kIgnoreTObjectStreamer = BIT(15),
       kUnloaded    = BIT(16), // The library containing the dictionary for this class was
                               // loaded and has been unloaded from memory.
@@ -448,6 +449,7 @@ public:
    const std::type_info     *GetTypeInfo() const { return fTypeInfo; };
    Bool_t             HasDictionary() const;
    static Bool_t      HasDictionarySelection(const char* clname);
+   Bool_t             HasLocalHashMember() const;
    void               GetMissingDictionaries(THashTable& result, bool recurse = false);
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;
