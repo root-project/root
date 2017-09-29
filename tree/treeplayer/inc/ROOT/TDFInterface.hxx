@@ -1334,7 +1334,10 @@ public:
    {
       ColumnNames_t allColumns;
 
-      auto addIfNotInternal = [&allColumns](std::string_view colName){ if (!TDFInternal::IsInternalColumn(colName)) allColumns.emplace_back(colName);};
+      auto addIfNotInternal = [&allColumns](std::string_view colName) {
+         if (!TDFInternal::IsInternalColumn(colName))
+            allColumns.emplace_back(colName);
+      };
 
       std::for_each(fValidCustomColumns.begin(), fValidCustomColumns.end(), addIfNotInternal);
 
@@ -1378,7 +1381,8 @@ private:
       TRegexp regexp(theRegex);
       int dummy;
       for (auto &&branchName : customColumns) {
-         if ((isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) && !TDFInternal::IsInternalColumn(branchName)) {
+         if ((isEmptyRegex || -1 != regexp.Index(branchName.c_str(), &dummy)) &&
+             !TDFInternal::IsInternalColumn(branchName)) {
             selectedColumns.emplace_back(branchName);
          }
       }

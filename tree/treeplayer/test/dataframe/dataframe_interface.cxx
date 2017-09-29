@@ -104,10 +104,10 @@ TEST(TDataFrameInterface, GetColumnNamesFromScratch)
 
 TEST(TDataFrameInterface, GetColumnNamesFromTree)
 {
-   TTree t("t","t");
-   int a,b;
-   t.Branch("a",&a);
-   t.Branch("b",&b);
+   TTree t("t", "t");
+   int a, b;
+   t.Branch("a", &a);
+   t.Branch("b", &b);
    TDataFrame tdf(t);
    auto names = tdf.GetColumnNames();
    EXPECT_STREQ("a", names[0].c_str());
@@ -124,5 +124,3 @@ TEST(TDataFrameInterface, GetColumnNamesFromSource)
    EXPECT_STREQ("col0", names[1].c_str());
    EXPECT_EQ(2U, names.size());
 }
-
-
