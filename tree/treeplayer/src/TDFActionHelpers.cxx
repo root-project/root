@@ -46,7 +46,7 @@ void FillHelper::UpdateMinMax(unsigned int slot, double v)
 }
 
 FillHelper::FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots)
-   : fResultHist(h), fNSlots(nSlots), fBufSize(fgTotalBufSize / nSlots),
+   : fResultHist(h), fNSlots(nSlots), fBufSize(fgTotalBufSize / nSlots), fPartialHists(fNSlots),
      fMin(nSlots, std::numeric_limits<BufEl_t>::max()), fMax(nSlots, std::numeric_limits<BufEl_t>::lowest())
 {
    fBuffers.reserve(fNSlots);
