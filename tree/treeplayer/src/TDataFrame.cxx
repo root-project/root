@@ -11,6 +11,7 @@
 #include "ROOT/TDataFrame.hxx"
 using namespace ROOT::Experimental;
 
+// clang-format off
 /**
 * \class ROOT::Experimental::TDataFrame
 * \ingroup dataframe
@@ -544,6 +545,7 @@ thread-safety, see [here](#generic-actions).
 
 <a name="reference"></a>
 */
+// clang-format on
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe
