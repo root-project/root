@@ -32,9 +32,9 @@ void CountHelper::Finalize()
    }
 }
 
-ULong64_t *CountHelper::PartialUpdate(unsigned int slot)
+ULong64_t &CountHelper::PartialUpdate(unsigned int slot)
 {
-   return &fCounts[slot];
+   return fCounts[slot];
 }
 
 void FillHelper::UpdateMinMax(unsigned int slot, double v)
@@ -72,7 +72,7 @@ void FillHelper::Exec(unsigned int slot, double v, double w)
    fWBuffers[slot].emplace_back(w);
 }
 
-Hist_t *FillHelper::PartialUpdate(unsigned int slot)
+Hist_t &FillHelper::PartialUpdate(unsigned int slot)
 {
    auto &partialHist = fPartialHists[slot];
    // TODO it is inefficient to re-create the partial histogram everytime the callback is called
@@ -80,7 +80,7 @@ Hist_t *FillHelper::PartialUpdate(unsigned int slot)
    partialHist.reset(new Hist_t(*fResultHist));
    auto weights = fWBuffers[slot].empty() ? nullptr : fWBuffers[slot].data();
    partialHist->FillN(fBuffers[slot].size(), fBuffers[slot].data(), weights);
-   return partialHist.get();
+   return *partialHist;
 }
 
 void FillHelper::Finalize()
@@ -182,10 +182,10 @@ void MeanHelper::Finalize()
    *fResultMean = sumOfSums / (sumOfCounts > 0 ? sumOfCounts : 1);
 }
 
-double *MeanHelper::PartialUpdate(unsigned int slot)
+double &MeanHelper::PartialUpdate(unsigned int slot)
 {
    fPartialMeans[slot] = fSums[slot] / fCounts[slot];
-   return &fPartialMeans[slot];
+   return fPartialMeans[slot];
 }
 
 template void MeanHelper::Exec(unsigned int, const std::vector<float> &);
