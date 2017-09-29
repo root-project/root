@@ -19,20 +19,82 @@
 
 using namespace ROOT::Experimental;
 
-std::map<std::string, std::string> Internal::ReadDrawingOptsDefaultConfig(std::string_view /*section*/)
+namespace {
+
+/// The default attribute values for drawing options.
+static TDrawingOptsReader::DefaultAttrs_t &GetDefaultAttrConfig()
 {
-   assert(0 && "Not yet implemented!");
+   static TDrawingOptsReader::DefaultAttrs_t sDefaults = TDrawingOptsReader::ReadDefaults();
 }
 
-Internal::TDrawingOptsBase::TDrawingOptsBase(TPadBase &pad, const Attrs& attrs)
-   : fCanvas(pad.GetCanvas())
+template <class PRIMITIVE>
+using ParsedAttrs_t = std::unordered_map<std::string, TOptsAttrRef<T>>;
+using AllParsedAttrs_t = std::tuple<ParsedAttrs_t<TColor>, ParsedAttrs_t<long long>, ParsedAttrs_t<double>>;
+
+static AllParsedAttrs_t &GetParsedDefaultAttrs()
 {
-   for (auto&& a: attrs.fCols)
-      a.Init(*this);
-   for (auto&& a: attrs.fInts)
-      a.Init(*this);
-   for (auto&& a: attrs.fFPs)
-      a.Init(*this);
+   static AllParsedAttrs_t &sAllParsedAttrs;
+   return sAllParsedAttrs;
+}
+
+} // unnamed namespace
+
+template <class PRIMITIVE>
+TOptsAttrRef::TOptsAttrRef(TDrawingOptsBase &opts, std::string_ref name, std::vector<std::string_view> opts)
+{
+   TCanvas &canv = opts.GetCanvas();
+   if (&canv == &opts.GetDefaultCanvas()) {
+      // We are a member of the default option object.
+      auto iIdx = GetParsedDefaultAttrs().find(name);
+      if (iIdx == GetParsedDefaultAttrs().end()) {
+         // We haven't read the default yet, do that now:
+         PRIMITIVE val = TDrawingOptsReader(GetDefaultAttrConfig()).Parse(name, (const PRIMITIVE *)nullptr, opts);
+         fIdx = opts.Register(val);
+         GetParsedDefaultAttrs()[name] = fIdx;
+      } else {
+         fIdx = opts.SameAs(iIdx);
+      }
+   } else {
+      const auto &defaultTable = opts.GetDefaultCanvas().GetAttrTable<PRIMITIVE>();
+      PRIMITIVE val = defaultTable.Get(GetParsedDefaultAttrs()[name]);
+      fIdx = opts.Register(val);
+   }
+}
+
+template <class PRIMITIVE>
+TOptsAttrIdx<PRIMITIVE> Internal::TDrawingOptsBase::OptsAttrRefArr<PRIMITIVE>::Register(TCanvas& canv, const PRIMITIVE &val)
+{
+   fRefArray.push_back(canv.GetAttrTable<PRIMITIVE>().Register(col));
+   return GetIndexVec<PRIMITIVE>().back();
+}
+
+template <class PRIMITIVE>
+TOptsAttrIdx<PRIMITIVE> Internal::TDrawingOptsBase::OptsAttrRefArr<PRIMITIVE>::SameAs(TCanvas& canv, TOptsAttrIdx<PRIMITIVE> idx)
+{
+   canv.GetAttrTable<PRIMITIVE>().IncrUse(idx));
+   return idx;
+}
+
+template <class PRIMITIVE>
+TOptsAttrRef<PRIMITIVE> Internal::TDrawingOptsBase::OptsAttrRefArr<PRIMITIVE>::SameAs(TCanvas& canv, const PRIMITIVE &val) {
+   return canv.GetAttrTable<PRIMITIVE>().SameAs(val);
+}
+
+
+template <class PRIMITIVE>
+void Internal::TDrawingOptsBase::OptsAttrRefArr<PRIMITIVE>::Update(TOptsAttrIdx<PRIMITIVE> idx, const PRIMITIVE &val)
+{
+   fCanvas.GetAttrTable<PRIMITIVE>().Update(idx, val);
+}
+
+// Provide specializations promised by the header:
+template class TDrawingOptsBase::OptsAttrRefArr<TColor>;
+template class TDrawingOptsBase::OptsAttrRefArr<long long>;
+template class TDrawingOptsBase::OptsAttrRefArr<double>;
+
+
+Internal::TDrawingOptsBase::TDrawingOptsBase(TPadBase &pad): fCanvas(pad.GetCanvas())
+{
 }
 
 ROOT::Experimental::TCanvas &Internal::TDrawingOptsBase::GetDefaultCanvas()
@@ -41,7 +103,11 @@ ROOT::Experimental::TCanvas &Internal::TDrawingOptsBase::GetDefaultCanvas()
    return sCanv;
 }
 
-Internal::TDrawingOptsBase::~TDrawingOptsBase()
+namespace Internal {
+   struct TDrawingOptsBase;
+}
+
+DrawingOptsBase::~TDrawingOptsBase()
 {
    for (auto idx: fColorIdx)
       fCanvas.GetColorAttrTable().DecrUse(idx);
@@ -77,37 +143,3 @@ template const std::vector<TOptsAttrIdx<double>> &Internal::TDrawingOptsBase::Ge
 {
    return fFPIdx;
 }
-
-template <class PRIMITIVE>
-TOptsAttrIdx<PRIMITIVE> Internal::TDrawingOptsBase<PRIMITIVE>::Register(const PRIMITIVE &col)
-{
-   GetIndexVec<PRIMITIVE>().push_back(fCanvas.GetAttrTable<PRIMITIVE>().Register(col));
-   return GetIndexVec<PRIMITIVE>().back();
-}
-
-template TOptsAttrIdx<TColor> Internal::TDrawingOptsBase<TColor>::Register(const TColor &col);
-template TOptsAttrIdx<long long> Internal::TDrawingOptsBase<long long>::Register(const long long &col);
-template TOptsAttrIdx<double> Internal::TDrawingOptsBase<double>::Register(const double &col);
-
-template <class PRIMITIVE>
-void Internal::TDrawingOptsBase<PRIMITIVE>::Update(TOptsAttrIdx<PRIMITIVE> idx, const PRIMITIVE &val)
-{
-   fCanvas.GetAttrTable<PRIMITIVE>().Update(idx, val);
-}
-
-template TOptsAttrIdx<TColor> Internal::TDrawingOptsBase::Register(const TColor &);
-template TOptsAttrIdx<long long> Internal::TDrawingOptsBase::Register(const long long &);
-template TOptsAttrIdx<double> Internal::TDrawingOptsBase::Register(const double &);
-
-void Internal::TDrawingOptsBase::Init(TDrawingOptsBase &opts)
-{
-   fIdxMemRef = ops.Register(GetDefaultCanvas().GetAttrTable<PRIMITIVE>().Get(fDefaultIdx));
-}
-
-template void Internal::TDrawingOptsBase<TColor>::Init(TDrawingOptsBase &opts);
-template void Internal::TDrawingOptsBase<long long>::Init(TDrawingOptsBase &opts);
-template void Internal::TDrawingOptsBase<double>::Init(TDrawingOptsBase &opts);
-
-template class Internal::TDrawingOptsBase::AttrIdxAndDefault<TColor>;
-template class Internal::TDrawingOptsBase::AttrIdxAndDefault<long long>;
-template class Internal::TDrawingOptsBase::AttrIdxAndDefault<double>;
