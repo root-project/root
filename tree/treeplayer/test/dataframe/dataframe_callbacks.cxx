@@ -156,6 +156,70 @@ TEST_F(TDFCallbacks, JittedMean)
    EXPECT_TRUE(called);
 }
 
+TEST_F(TDFCallbacks, Take)
+{
+   // Take + OnPartialResult
+   auto t = tdf.Take<double>("x");
+   unsigned int i = 0u;
+   t.OnPartialResult(1, [&](decltype(t)::Value_t &t_) {
+      ++i;
+      EXPECT_EQ(t_.size(), i);
+   });
+   *t;
+}
+
+TEST_F(TDFCallbacks, Count)
+{
+   // Count + OnPartialResult
+   auto c = tdf.Count();
+   ULong64_t i = 0ull;
+   c.OnPartialResult(1, [&](decltype(c)::Value_t c_) {
+      ++i;
+      EXPECT_EQ(c_, i);
+   });
+   EXPECT_EQ(*c, i);
+}
+
+TEST_F(TDFCallbacks, Reduce)
+{
+   // Reduce + OnPartialResult
+   double runningMin;
+   auto m = tdf.Min<double>("x").OnPartialResult(1, [&runningMin](double m_) { runningMin = m_; });
+   auto r = tdf.Reduce([](double x1, double x2) { return std::min(x1, x2); }, {"x"}, 0.);
+   r.OnPartialResult(1, [&runningMin](double r_) { EXPECT_DOUBLE_EQ(r_, runningMin); });
+   *r;
+}
+
+TEST_F(TDFCallbacks, Chaining)
+{
+   // Chaining of multiple OnPartialResult[Slot] calls
+   unsigned int i = 0u;
+   auto c = tdf.Count()
+               .OnPartialResult(1, [&i](ULong64_t) { ++i; })
+               .OnPartialResultSlot(1, [&i](unsigned int, ULong64_t) {++i; });
+   *c;
+   EXPECT_EQ(i, nEvents * 2);
+}
+
+TEST_F(TDFCallbacks, OrderOfExecution)
+{
+   // Test that callbacks are executed in the order they are registered
+   unsigned int i = 0u;
+   auto c = tdf.Count();
+   c.OnPartialResult(1, [&i](ULong64_t) {
+      EXPECT_EQ(i, 0u);
+      i = 42u;
+   });
+   c.OnPartialResultSlot(1, [&i](unsigned int slot, ULong64_t) {
+      if (slot == 0u) {
+         EXPECT_EQ(i, 42u);
+         i = 0u;
+      }
+   });
+   *c;
+   EXPECT_EQ(i, 0u);
+}
+
 TEST_F(TDFCallbacks, MultipleCallbacks)
 {
    // registration of multiple callbacks on the same partial result
@@ -191,4 +255,31 @@ TEST_F(TDFCallbacks, MultipleEventLoops)
    *h2;
 
    EXPECT_EQ(i, nEvents);
+}
+
+class FunctorClass {
+   unsigned int &i_;
+
+public:
+   FunctorClass(unsigned int &i) : i_(i) {}
+   void operator()(ULong64_t) { ++i_; }
+};
+
+TEST_F(TDFCallbacks, FunctorClass)
+{
+   unsigned int i = 0;
+   *(tdf.Count().OnPartialResult(1, FunctorClass(i)));
+   EXPECT_EQ(i, nEvents);
+}
+
+unsigned int freeFunctionCounter = 0;
+void FreeFunction(ULong64_t)
+{
+   freeFunctionCounter++;
+}
+
+TEST_F(TDFCallbacks, FreeFunction)
+{
+   *(tdf.Count().OnPartialResult(1, FreeFunction));
+   EXPECT_EQ(freeFunctionCounter, nEvents);
 }
