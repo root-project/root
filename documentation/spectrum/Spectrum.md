@@ -2,7 +2,7 @@
 
 ## 1-DIMENSIONAL SPECTRA
 
-This function calculates background spectrum from source spectrum. The
+This function calculates background spectrum from the source spectrum. The
 result is placed in the vector pointed by spectrum pointer. On
 successful completion it returns 0. On error it returns pointer to the
 string describing error.
@@ -15,18 +15,18 @@ char *Background1(float *spectrum,
 
 Function parameters:
 
--   **`spectrum`**: pointer to the vector of source spectrum
+-   **`spectrum`**: pointer to the vector of the source spectrum
 -   **`size`**: length of spectrum
 -   **`number_of_iterations`**: or width of the clipping window
 
 The function allows to separate useless spectrum information (continuous
 background) from peaks, based on Sensitive Nonlinear Iterative Peak
-Clipping Algorithm. In fact it represents second order difference filter
-(-1,2,-1). The basic algorithm is described in detail in [1], [2].
+Clipping Algorithm. In fact, it represents the second order difference filter
+(-1,2,-1). The basic algorithm is described in details in [1], [2].
 
 $$ v_p(i)= min\left\{v_{p-1} , \frac{[v_{p-1}(i+p)+v_{p-1}(i-p)]}{2} \right\} $$
 
-where `p` can be changed
+where `p` can be changed as follows:
 
 a. from 1 up to a given parameter value `w` by incrementing it in each
 iteration step by 1 - INCREASING CLIPPING WINDOW
@@ -35,7 +35,7 @@ b. from a given value `w` by decrementing it in each iteration step by
 1 - DECREASING CLIPPING WINDOW
 
 An example of the original spectrum and estimated background (INCREASING
-CLIPPING WINDOW) is given in the Figure 1.1 .
+CLIPPING WINDOW) is given in the Figure 1.1.
 
 ![Example of the original spectrum and estimated background (INCREASING
 CLIPPING WINDOW)](figures/image004.png)
@@ -50,33 +50,33 @@ CLIPPING WINDOW). Then the result obtained is given in the Figure 1.2.
 The estimated background is smoother. The method does not deform the
 shape of peaks.
 
-However sometimes the shape of the background is very complicated. The
+However, sometimes the shape of the background is very complicated, and the
 second order filter is insufficient. Let us illustrate such a case in
-the Figure 1.3. The forth order background estimation filter gives better
+the Figure 1.3. The fourth order background estimation filter gives a better
 estimate of complicated background (the clipping window `w=10`).
 
 ![The forth order background estimation filter gives better estimate of complicated background](figures/image008.png)
 
 4-th order algorithm ignores linear as well as cubic component of the
-background. In this case the filter is (1,-4,6,-4,1). In general the
+background. In this case the filter is (1,-4,6,-4,1). In general, the
 allowed values for the order of the filter are 2, 4, 6, 8. An example of
-the same spectrum estimated with the clipping window w=40 and with
+the same spectrum estimated with the clipping window `w=40` and with
 filters of the orders 2, 4, 6, 8 is given in the Figure 1.4.
 
 ![The same spectrum estimated with the clipping window `w=40` and with filters of the orders 2, 4, 6, 8](figures/image010.png)
 
- Sometimes it is necessary to include also the Compton edges
+ Sometimes it is necessary to also include the Compton edges
 into the estimate of the background. In Figure 1.5 we present the example of
 the synthetic spectrum with Compton edges. The background was estimated
 using the 8-th order filter with the estimation of the Compton edges and
 decreasing clipping window. In the lower part of the Figure we present
 the background, which was added to the synthetic spectrum. One can
 observe good coincidence with the estimated background. The method of
-the estimation of Compton edge is described in detail in [3].
+the estimation of Compton edge is described in details in [3].
 
 ![Synthetic spectrum with Compton edges](figures/image012.png)
 
-The generalized form of the algorithm is implemented in the function.
+The generalized form of the algorithm is implemented in the following function.
 
 ``` {.cpp}
 char *Background1General(float *spectrum,
@@ -89,9 +89,9 @@ char *Background1General(float *spectrum,
 
 The meaning of the parameters is as follows:
 
--   **`spectrum`**: pointer to the vector of source spectrum
+-   **`spectrum`**: pointer to the vector of the source spectrum
 -   **`size`**: length of spectrum vector
--   **`number_of_iterations`**: maximal width of clipping window,
+-   **`number_of_iterations`**: maximal width of clipping window
 -   **`direction`**:  direction of change of clipping window. Possible values:
     -   `BACK1_INCREASING_WINDOW`
     -   `BACK1_DECREASING_WINDOW`
@@ -109,10 +109,9 @@ The meaning of the parameters is as follows:
 This basic background estimation function allows to separate useless
 spectrum information (2D-continuous background and coincidences of peaks
 with background in both dimensions) from peaks. It calculates background
-spectrum from source spectrum. The result is placed in the array
+spectrum from the source spectrum. The result is placed in the array
 pointed by spectrum pointer. On successful completion it returns 0. On
-error it returns pointer to the string describing
-error.
+error it returns a pointer to the string describing error.
 
 ``` {.cpp}
 char *Background2(float **spectrum,
@@ -123,12 +122,12 @@ char *Background2(float **spectrum,
 
 Function parameters:
 
--   **`spectrum`**: pointer to the array of source spectrum
+-   **`spectrum`**: pointer to the array of the source spectrum
 -   **`sizex`**: x length of spectrum
 -   **`sizey`**: y length of spectrum
 -   **`number_of_iterations`**:  width of the clipping window
 
-In Figure 1.6 we present an example of 2-dimensional spectrum before background elimination.
+In Figure 1.6 we present an example of a 2-dimensional spectrum before background elimination.
 
 ![2-dimensional spectrum before background elimination](figures/image014.png)
 
@@ -137,9 +136,9 @@ Estimated background is shown in Figure 1.7. After subtraction we get pure
 
 ![Estimated background](figures/image016.png)
 
-Similarly to 1-dimensional case we have generalized also the function
-for 2-dimensional background estimation. Sometimes the width of peaks in
-both dimensions are different. As an example we can introduce n-gamma
+Similarly to 1-dimensional case, we have generalized also the function
+for 2-dimensional background estimation. Sometimes the widths of peaks in
+both dimensions are different. As an example, we can introduce an n-gamma
 2-dimensional spectra. Then it is necessary to set different widths of
 clipping window in both dimensions. In Figure 1.8 we give an example of such
 a spectrum.
@@ -147,7 +146,7 @@ a spectrum.
 ![It is necessary to set different widths of clipping window in both dimensions](figures/image018.png)
 
 Spectrum after background estimation (clipping window 10 for
-x-direction, 20 for y- direction) and subtraction is given in Figure 1.9.
+x-direction, 20 for y-direction) and subtraction is given in Figure 1.9.
 
 ![Spectrum after background estimation (clipping window 10 for x-direction, 20 for y- direction) and subtraction](figures/image020.png)
 
@@ -200,7 +199,7 @@ result is placed to the array pointed by spectrum pointer.
 
 Function parameters:
 
--   **`spectrum`**: pointer to the array of source spectrum
+-   **`spectrum`**: pointer to the array of the source spectrum
 -   **`sizex`**: x length of spectrum
 -   **`sizey`**: y length of spectrum
 -   **`number_of_iterations_x_maximal`**: x width of clipping window
@@ -215,7 +214,7 @@ Function parameters:
     -   `BACK2_SUCCESSIVE_FILTERING`
     -   `BACK2_ONE_STEP_FILTERING`
 
-In what follows we describe a function to estimate continuous
+In what follows we describe a function to estimate a continuous
 2-dimensional background together with rectangular and skew ridges. In
 Figure 1.13 we present a spectrum of this type.
 
@@ -223,20 +222,18 @@ Figure 1.13 we present a spectrum of this type.
 
 The goal is to remove rectangular as well as skew ridges from the
 spectrum and to leave only 2-dimensional coincidence peaks. After
-applying background elimination function and subtraction we get the two
-dimensional peaks presented in Figure 1.14
+applying background elimination function and subtraction we get the two-dimensional peaks presented in Figure 1.14
 
 ![Two dimensional peaks obtained after applying background elimination function and subtraction](figures/image032.png)
 
-In Figures 1.15 and 1.16 we present experimental spectrum with skew ridges and
-estimated background, respectively.
+In Figures 1.15 and 1.16 we present an experimental spectrum with skew ridges and estimated background, respectively.
 
 ![Experimental spectrum with skew ridges](figures/image034.png)
 
 ![Experimental spectrum with estimated background](figures/image036.png)
 
 The function for the estimation of background together with skew ridges
-has the form
+has the form of
 
 ``` {.cpp}
 char *Background2SkewRidges(float **spectrum,
@@ -252,7 +249,7 @@ The result is placed to the array pointed by spectrum pointer.
 
 Function parameters:
 
--   **`spectrum`**: pointer to the array of source spectrum
+-   **`spectrum`**: pointer to the array of the source spectrum
 -   **`sizex`**: x length of spectrum
 -   **`sizey`**: y length of spectrum
 -   **`number_of_iterations_x`**: maximal x width of clipping window
@@ -267,11 +264,11 @@ Function parameters:
     -   `BACK2_ORDER8`
 
  Next we present the function that estimates the continuous
-background together with rectangular, and nonlinear ridges. To
+background together with rectangular and nonlinear ridges. To
 illustrate the data of such a form we present synthetic data shown in
 Figure 1.17. The estimated background is given in Figure 1.18. Pure Gaussian
 after subtracting the background from the original spectrum is shown in
-Figure 1.19
+Figure 1.19.
 
 ![Synthetic data](figures/image038.png)
 
@@ -295,7 +292,7 @@ The result is placed to the array pointed by spectrum pointer.
 
 Function parameters:
 
--   **`spectrum`**: pointer to the array of source spectrum
+-   **`spectrum`**: pointer to the array of the source spectrum
 -   **`sizex`**: x length of spectrum
 -   **`sizey`**: y length of spectrum
 -   **`number_of_iterations_x`**: maximal x width of clipping window
@@ -309,9 +306,9 @@ Function parameters:
     -   `BACK2_ORDER6`
     -   `BACK2_ORDER8`
 
- The information contained in the skew ridges and non-linear
+The information contained in the skew ridges and non-linear
 ridges can be interesting and one may wish to separate it from the
-rectangular ridges. Therefore we have implemented also two functions
+rectangular ridges. Therefore we have also implemented two functions
 allowing to estimate ridges only in the direction rectangular to x-axis
 and y-axis. Let us have both rectangular and skew ridges from spectrum
 given in Figure 1.13 estimated using above described function
@@ -344,7 +341,7 @@ char *Background2RectangularRidgesX(float **spectrum,
 
 Function parameters:
 
--   **`spectrum`**: pointer to the array of source spectrum
+-   **`spectrum`**: pointer to the array of the source spectrum
 -   **`sizex`**: x length of spectrum
 -   **`sizey`**: y length of spectrum
 -   **`number_of_iterations`**: maximal x width of clipping window
@@ -370,7 +367,7 @@ char *Background2RectangularRidgesY(float **spectrum,
 
 Function parameters:
 
--   **`spectrum`**: pointer to the array of source spectrum
+-   **`spectrum`**: pointer to the array of source the spectrum
 -   **`sizex`**: x length of spectrum
 -   **`sizey`**: y length of spectrum
 -   **`number_of_iterations`**: maximal width of clipping window
@@ -388,21 +385,21 @@ Function parameters:
 ## 1-DIMENSIONAL SPECTRA
 
 The operation of the smoothing is based on the convolution of the
-original data with the filter of the type
+original data with the filter of the type:
 
-(1,2,1)/4 -three points smoothing
+(1,2,1)/4 - three points smoothing
 
-(-3,12,17,12,-3)/35 -five points smoothing
+(-3,12,17,12,-3)/35 - five points smoothing
 
-(-2,3,6,7,6,3,-2)/21 -seven points smoothing
+(-2,3,6,7,6,3,-2)/21 - seven points smoothing
 
-(-21,14,39,54,59,54,39,14,-21)/231 -nine points smoothing
+(-21,14,39,54,59,54,39,14,-21)/231 - nine points smoothing
 
-(-36,9,44,69,84,89,84,69,44,9,-36)/429 -11 points smoothing
+(-36,9,44,69,84,89,84,69,44,9,-36)/429 - 11 points smoothing
 
-(-11,0,9,16,21,24,25,24,21,16,9,0,-11)/143 -13 points smoothing
+(-11,0,9,16,21,24,25,24,21,16,9,0,-11)/143 - 13 points smoothing
 
-(-78,-13,42,87,122,147,162,167,162,147,122,87,42,-13,-78)/1105 -15
+(-78,-13,42,87,122,147,162,167,162,147,122,87,42,-13,-78)/1105 -15 
 points smoothing. The function for one-dimensional smoothing has the
 form of
 
@@ -412,14 +409,14 @@ char *Smooth1(float *spectrum,
               int points);
 ```
 
-This function calculates smoothed spectrum from source spectrum. The
+This function calculates smoothed spectrum from the source spectrum. The
 result is placed in the vector pointed by the spectrum pointer.
 
 Function parameters:
 
--   **`spectrum`**: pointer to the vector of source spectrum
+-   **`spectrum`**: pointer to the vector of the source spectrum
 -   **`size`**: length of spectrum
--   **`points`**: width of smoothing window. Allowed values:
+-   **`points`**: width of smoothing window. Possible values:
     -    `SMOOTH1_3POINTS`
     -    `SMOOTH1_5POINTS`
     -    `SMOOTH1_7POINTS`
@@ -429,14 +426,14 @@ Function parameters:
     -    `SMOOTH1_15POINTS`
 
 An example of 1-dimensional spectra smoothing and the influence of the
-filter width on the data is presented in Figure 2.1
+filter width on the data is presented in Figure 2.1.
 
 ![1-dimensional spectra smoothing and the influence of the filter width on the data](figures/image052.png)
 
 ## 2-DIMENSIONAL SPECTRA
 
- The smoothing of the two dimensional data is similar to
-the one dimensional case. The width of the filter can be chosen
+The smoothing of the two-dimensional data is similar to
+the one-dimensional case. The width of the filter can be chosen
 independently for each dimension. The form of the 2-D smoothing function
 is as follows:
 
@@ -448,15 +445,15 @@ char *Smooth2(float **spectrum,
               int pointsy);
 ```
 
-This function calculates smoothed spectrum from source spectrum. The
+This function calculates smoothed spectrum from the source spectrum. The
 result is placed in the array pointed by the spectrum pointer.
 
 Function parameters:
 
--   **`spectrum`**: pointer to the array of source spectrum
+-   **`spectrum`**: pointer to the array of the source spectrum
 -   **`sizex`**: x length of spectrum
 -   **`sizey`**: y length of spectrum
--   **`pointsx, pointsy`**: width of smoothing window. Allowed values:
+-   **`pointsx, pointsy`**: width of smoothing window. Possible values:
     -   `SMOOTH2_3POINTS`
     -   `SMOOTH2_5POINTS`
     -   `SMOOTH2_7POINTS`
@@ -476,12 +473,12 @@ An example of 2-D original data and data after smoothing is given in Figures 2.2
 ## 1-DIMENSIONAL SPECTRA
 
  The basic function of the 1-dimensional peak searching is described in
-detail in [4], [5]. It allows to automatically identify the
+details in [4], [5]. It allows to automatically identify the
 peaks in a spectrum with the presence of the continuous background and
 statistical fluctuations -- noise. The algorithm is based on smoothed
 second differences that are compared to its standard deviations.
 Therefore it is necessary to pass a parameter of sigma to the peak
-searching function. The algorithm is selective to the peaks with the
+searching function. The algorithm is selective to the peaks with a
 given sigma. The form of the basic peak searching function is
 
 ```{.cpp}
@@ -496,9 +493,9 @@ peaks and their positions are written into structure pointed by
 
 Function parameters:
 
--   **`source`**: pointer to the vector of source spectrum
+-   **`source`**: pointer to the vector of the source spectrum
 -   **`p`**: pointer to the `one_dim_peak` structure pointer
--   **`size`**: length of source spectrum
+-   **`size`**: length of the source spectrum
 -   **`sigma`**: sigma of searched peaks
 
 The `one_dim_peak` structure has the form of
@@ -536,11 +533,11 @@ the noise is suppressed, the spectrum is smoother than the original one.
 On the other hand it emphasizes peaks (depending on the averaging
 window). The example of the part of original noisy spectrum and Markov
 spectrum for `window=3` is given in Figure 3.5 Then the peaks can be found in
-Markov spectrum using standard above presented algorithm.
+Markov spectrum using standard above-presented algorithm.
 
 ![Part of original noisy spectrum and Markov spectrum for window=3](figures/image066.png)
 
-The form of the generalized peak searching function is as follows.
+The form of the generalized peak searching function is as follows:
 
 ```{.cpp}
 Int_t Search1General(float *spectrum,
@@ -552,13 +549,13 @@ Int_t Search1General(float *spectrum,
 ```
 
 This function searches for peaks in the source spectrum. The number of found
-peaks and their positions are written into structure pointed by
+peaks and their positions are written into the structure pointed by the
 `one_dim_peak` structure pointer.
 
 Function parameters:
 
--   **`spectrum`**: pointer to the vector of source spectrum. This source spectrum is replaced by new spectrum calculated using Markov chains method.
--   **`size`**: length of source spectrum
+-   **`spectrum`**: pointer to the vector of the source spectrum. This source spectrum is replaced by the new spectrum calculated using Markov chains method.
+-   **`size`**: length of the source spectrum
 -   **`sigma`**: sigma of searched peaks
 -   **`threshold`**: threshold value for peaks selection
 -   **`markov`**: logical variable. If it is set to `true`, then the source spectrum is first replaced by the new spectrum calculated using Markov chains method
@@ -587,7 +584,7 @@ were not discovered.
 ## 2-DIMENSIONAL SPECTRA
 
  The basic function of the 2-dimensional peak searching is described in
-detail in [4]. It automatically identifies the peaks in a
+details in [4]. It automatically identifies the peaks in a
 spectrum with the presence of the continuous background, statistical
 fluctuations as well as coincidences of background in one dimension and
 peak in the other one-ridges. The form of the basic function of
@@ -601,14 +598,14 @@ Int_t Search2(const float **source,
 ```
 
 This function searches for peaks in the source spectrum. The number of found
-peaks and their positions are written into structure pointed by
+peaks and their positions are written into the structure pointed by
 `two_dim_peak` structure pointer.
 
 Function parameters:
 
 -   **`source`**: pointer to the vector of the source spectrum
--   **`sizex`**: x length of source spectrum
--   **`sizey`**: y length of source spectrum
+-   **`sizex`**: x length of the source spectrum
+-   **`sizey`**: y length of the source spectrum
 -   **`sigma`**: sigma of searched peaks
 
 An example of the two-dimensional spectrum with the identified peaks is
@@ -616,9 +613,7 @@ shown in Figure 3.8.
 
 ![Two-dimensional spectrum with the identified peaks](figures/image072.png)
 
-We have also generalized the peak searching function similarly to one
-dimensional data. The generalized peak searching function for two
-dimensional spectra has the form of
+We have also generalized the peak searching function similarly to one-dimensional data. The generalized peak searching function for two-dimensional spectra has the form of
 
 ```{.cpp}
 Int_t Search2General(float **source,
@@ -637,8 +632,8 @@ peaks and their positions are written into the structure pointed by
 Function parameters:
 
 -   **`source`**: pointer to the vector of the source spectrum
--   **`sizex`**: x length of source spectrum
--   **`sizey`**: y length of source spectrum
+-   **`sizex`**: x length of the source spectrum
+-   **`sizey`**: y length of the source spectrum
 -   **`sigma`**: sigma of searched peaks
 -   **`threshold`**: threshold value for peaks selection
 -   **`markov`**: logical variable. If it is set to `true`, then the source spectrum is first replaced by the new spectrum calculated using Markov chains method
@@ -728,7 +723,7 @@ where:
 $$ k=1,2,3,...,I $$
 $$ x^{(0)} = [1,1,...,1]^T $$
 
-The basic function has the form
+The basic function has the form of
 
 ```{.cpp}
 char *Deconvolution1(float *source,
@@ -738,7 +733,7 @@ char *Deconvolution1(float *source,
 ```
 
 
-This function calculates deconvolution from source spectrum according to the response spectrum.
+This function calculates deconvolution from the source spectrum according to the response spectrum.
 
 Function parameters:
 
@@ -777,8 +772,9 @@ function calculates exact solution of the Toeplitz system of linear
 equations.
 
 $$ x^{(0)} = [x_e^2(0),x_e^2(1),...,x_e^2(N-1),]^T$$
-where :
+where
 $$ x_e=H^{'-1}y^{'}$$
+
 Then it applies the Gold deconvolution algorithm to the solution and
 carries out preset number of iterations. Then the power function with
 the exponent equal to the boosting coefficient is applied to the
@@ -797,7 +793,7 @@ char *Deconvolution1HighResolution(float *source,
                                    double boost);
 ```
 
-This function calculates deconvolution from source spectrum according
+This function calculates deconvolution from the source spectrum according
 to the response spectrum.
 
 The result is placed in the vector pointed by the source pointer.
@@ -852,7 +848,7 @@ Function parameters:
 -   **`sizey`**: # of columns of response matrix
 -   **`number_of_iterations`**
 
-Note, that `sizex` must be equal or greater than `sizey`. After decomposition, the resulting channels are written back to the first `sizey` channels of the source spectrum.
+Note that `sizex` must be equal to or greater than `sizey`. After decomposition, the resulting channels are written back to the first `sizey` channels of the source spectrum.
 
 An example of the response matrix composed of the responses of
 different chemical elements is given in Figure 4.6.
@@ -922,7 +918,7 @@ The example of 2-dimensional spectrum before deconvolution is presented
 in Figure 4.13. In the process of deconvolution we have used the response
 matrix (one peak shifted to the beginning of the coordinate system)
 given in Figure 4.14. Employing the Gold deconvolution algorithm implemented
-in the `decon2` function we get the result shown in Figure 4.15. One can
+in the `decon2` function, we get the result shown in Figure 4.15. One can
 notice that the peaks became narrower, thus improving the resolution in
 the spectrum.
 
@@ -1000,8 +996,7 @@ algorithm, however, it is not suitable to fit large number of parameters.
 
 ## 1-DIMENSIONAL SPECTRA
 
-The quantity to be minimized in the fitting procedure for one
-dimensional spectrum is defined as
+The quantity to be minimized in the fitting procedure for one-dimensional spectrum is defined as
 
 $$ \chi^2 = \frac{1}{N-M}\sum_{i=1}^{N}\frac{[y_i-f(i,a)]^2}{y_i} $$
 
@@ -1099,7 +1094,7 @@ char* Fit1Awmi(float *source,
 ```
 
 This function fits the source spectrum. The calling program should fill
-in input parameters of the `one_dim_fit` structure. The fitted parameters
+in the input parameters of the `one_dim_fit` structure. The fitted parameters
 are written into structure pointed by `one_dim_fit` structure pointer
 and fitted data are written into source spectrum.
 
@@ -1159,7 +1154,7 @@ public:
    double s_calc;
    double s_err;
    bool fix_s;
-   double a0_init;   // backgroud is estimated as a0+a1*x+a2*x*x
+   double a0_init;   // background is estimated as a0+a1*x+a2*x*x
    double a0_calc;
    double a0_err;
    bool fix_a0;
@@ -1189,7 +1184,7 @@ peaks missing.
 
 ![More complicated fit with lot of overlapping peaks](figures/image174.png)
 
-However, in order to analyze the spectrum, we can proceed in a completely different way employing the sophisticated functions of background elimination and deconvolution. First let us remove background from the original raw
+However, in order to analyze the spectrum, we can proceed in a completely different way employing the sophisticated functions of background elimination and deconvolution. First, let us remove background from the original raw
 data. We get spectrum given in Figure 5.3.
 
 ![Removed background from the original raw data](figures/image176.png)
@@ -1217,7 +1212,7 @@ char *Fit1Stiefel(float *source,
 ```
 
 This function fits the source spectrum. The calling program should fill
-in input parameters of the `one_dim_fit` structure. The fitted parameters
+in the input parameters of the `one_dim_fit` structure. The fitted parameters
 are written into structure pointed by `one_dim_fit` structure pointer
 and fitted data are written into source spectrum.
 
@@ -1234,7 +1229,7 @@ The results for small number of fitted parameters are the same as with
 awmi function. However, it converges faster. The example for data given
 in Figure 5.1 is given in the following table:
 
-| # of iterationsi | Chi awmi |  Chi-Stiefel | 
+| # of iterations  | Chi awmi |  Chi-Stiefel | 
 | ---------------- | ---------| ------------ |
 | 1                | 924      | 89.042       |
 | 5                | 773.15   | 0.96242      |
@@ -1246,7 +1241,7 @@ in Figure 5.1 is given in the following table:
 
 ## 2-DIMENSIONAL SPECTRA
 
-It is straightforward that for two dimensional spectra one can write
+It is straightforward that for two-dimensional spectra one can write
 
 $$
 \Delta a_k^{(t+1)}=\alpha^{(t)}
@@ -1258,7 +1253,7 @@ $$
 \frac{1}{y_{i_1,i_2}}}
 $$
 
-In a similar way, for two dimensional peaks we have chosen the peak shape
+In a similar way, for two-dimensional peaks we have chosen the peak shape
 function of the following form:
 
 $$
@@ -1289,7 +1284,7 @@ char* Fit2Awmi(float **source,
 ```
 
 This function fits the source spectrum. The calling program should
-fill in input parameters of the `two_dim_fit` structure. The fitted
+fill in the input parameters of the `two_dim_fit` structure. The fitted
 parameters are written into the structure pointed by `two_dim_fit` structure
 pointer and fitted data are written back into the source spectrum.
 
@@ -1297,8 +1292,8 @@ Function parameters:
 
 -   **`source`**: pointer to the matrix of the source spectrum
 -   **`p`**: pointer to the `two_dim_fit` structure pointer, see manual
--   **`sizex`**: length x of source spectrum
--   **`sizey`**: length y of source spectrum
+-   **`sizex`**: length x of the source spectrum
+-   **`sizey`**: length y of the source spectrum
 
 The `two_dim_fit` structure has the form of
 
@@ -1348,7 +1343,7 @@ public:
    double amp_init_x1[MAX_NUMBER_OF_PEAKS2];      // initial values of 1D ridges amplitudes, input parameters
    double amp_calc_x1[MAX_NUMBER_OF_PEAKS2];      // calculated values of fitted amplitudes of 1D ridges, output parameters
    double amp_err_x1[MAX_NUMBER_OF_PEAKS2];       // amplitude errors of 1D ridges
-   bool fix_amp_x1[MAX_NUMBER_OF_PEAKS2];         // logical vector which alloes to fix the appropriate amplitudes of 1D ridges (not fit). However, they are present in the estimated functional
+   bool fix_amp_x1[MAX_NUMBER_OF_PEAKS2];         // logical vector which allows to fix the appropriate amplitudes of 1D ridges (not fit). However, they are present in the estimated functional
    double amp_init_y1[MAX_NUMBER_OF_PEAKS2];      // initial values of 1D ridges amplitudes, input parameters
    double amp_calc_y1[MAX_NUMBER_OF_PEAKS2];      // calculated values of fitted amplitudes of 1D ridges, output parameters
    double amp_err_y1[MAX_NUMBER_OF_PEAKS2];       // amplitude errors of 1D ridges
@@ -1447,7 +1442,7 @@ char* Fit2Stiefel(float **source,
 ```
 
 This function fits the source spectrum. The calling program should
-fill in input parameters of the `two_dim_fit structure`. The fitted
+fill in the input parameters of the `two_dim_fit structure`. The fitted
 parameters are written into structure pointed by `two_dim_fit` structure
 pointer and fitted data are written back into the source spectrum.
 
@@ -1455,10 +1450,10 @@ Function parameters:
 
 -   **`source`**: pointer to the matrix of the source spectrum
 -   **`p`**: pointer to the `two_dim_fit` structure pointer, see manual
--   **`sizex`**: length x of source spectrum
--   **`sizey`**: length y of source spectrum
+-   **`sizex`**: length x of the source spectrum
+-   **`sizey`**: length y of the source spectrum
 
-The structure `two_dim_fit` is the same as in awmi function. The
+The structure `two_dim_fit` is the same as in the awmi function. The
 parameters power, `fit_taylor` are not applicable for this function
 
 The results for small number of fitted parameters are the same as with
@@ -1491,7 +1486,7 @@ Orthogonal transforms can be successfully used for the
 processing of nuclear spectra. They can be used to remove high
 frequency noise, to increase signal-to-background ratio as well as to
 enhance low intensity components [14]. We have implemented also the
-function for the calculation of the commonly used orthogonal transforms
+function for the calculation of the commonly used orthogonal transforms:
 
 -   Haar
 -   Walsh
@@ -1525,31 +1520,30 @@ char *Transform1(const float *source,
 ```
 
 This function transforms the source spectrum. The calling program
-should fill in input parameters. Transformed data are written into the `dest`
-spectrum.
+should fill in the input parameters. Transformed data are written into the dest spectrum.
 
 Function parameters:
 
--   **`source`**: pointer to the vector of the source spectrum, its length should be equal to the size parameter except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR transform. These need 2*size length to supply real and imaginary coefficients
--   **`dest`**: pointer to the vector of the dest data, its length should be equal to the size parameter except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These need 2*size length to store real and imaginary coefficients
--   **`size`**: basic length of source and dest spectra
+-   **`source`**: pointer to the vector of the source spectrum, its length should be equal to the `size` parameter except for inverse FOURIER, FOUR-WALSH, FOUR-HAAR transform. These need 2*`size` length to supply real and imaginary coefficients
+-   **`dest`**: pointer to the vector of the dest data, its length should be equal to the size parameter except for direct FOURIER, FOUR-WALSh, FOUR-HAAR. These need 2*`size` length to store real and imaginary coefficients
+-   **`size`**: basic length of the source and dest spectra
 -   **`type`**: type of transform
-    -   TRANSFORM1_HAAR
-    -   TRANSFORM1_WALSH
-    -   TRANSFORM1_COS
-    -   TRANSFORM1_SIN
-    -   TRANSFORM1_FOURIER
-    -   TRANSFORM1_HARTLEY
-    -   TRANSFORM1_FOURIER_WALSH
-    -   TRANSFORM1_FOURIER_HAAR
-    -   TRANSFORM1_WALSH_HAAR
-    -   TRANSFORM1_COS_WALSH
-    -   TRANSFORM1_COS_HAAR
-    -   TRANSFORM1_SIN_WALSH
-    -   TRANSFORM1_SIN_HAAR
+    -   `TRANSFORM1_HAAR`
+    -   `TRANSFORM1_WALSH`
+    -   `TRANSFORM1_COS`
+    -   `TRANSFORM1_SIN`
+    -   `TRANSFORM1_FOURIER`
+    -   `TRANSFORM1_HARTLEY`
+    -   `TRANSFORM1_FOURIER_WALSH`
+    -   `TRANSFORM1_FOURIER_HAAR`
+    -   `TRANSFORM1_WALSH_HAAR`
+    -   `TRANSFORM1_COS_WALSH`
+    -   `TRANSFORM1_COS_HAAR`
+    -   `TRANSFORM1_SIN_WALSH`
+    -   `TRANSFORM1_SIN_HAAR`
 -   **`direction`**: transform direction (forward, inverse)
-    -   TRANSFORM1_FORWARD
-    -   TRANSFORM1_INVERSE
+    -   `TRANSFORM1_FORWARD`
+    -   `TRANSFORM1_INVERSE`
 -   **`degree`**: applies only for mixed transforms
     
 
@@ -1576,7 +1570,7 @@ coefficients to the beginning of the coordinate system. From the point
 of view of the variance distribution, it is sometimes called suboptimal.
 One can notice that approximately one half of the coefficients are
 negligible. This fact can be used to the compression purposes (in
-two or more dimensional data), filtering (smoothing) etc.
+two- or more dimensional data), filtering (smoothing), etc.
 
 We have implemented several application functions exploiting
 the properties of the orthogonal transforms. Let us start with zonal
@@ -1596,13 +1590,13 @@ char *Filter1Zonal(const float *source,
 This function transforms the source spectrum. The calling program should
 fill in the input parameters. Then it sets transformed coefficients in the
 given region (`xmin`, `xmax`) to the given `filter_coeff` and transforms it
-back. Filtered data are written into dest spectrum.
+back. Filtered data are written into the dest spectrum.
 
 Function parameters:
 
--   **`source`**: pointer to the vector of the source spectrum, its length should be size
--   **`dest`**: pointer to the vector of dest data, its length should be size
--   **`size`**: basic length of source and dest spectra
+-   **`source`**: pointer to the vector of the source spectrum, its length should be equal to `size`
+-   **`dest`**: pointer to the vector of dest data, its length should be equal to `size`
+-   **`size`**: basic length of the source and dest spectra
 -   **`type`**: type of transform
     -    `TRANSFORM1_HAAR`
     -    `TRANSFORM1_WALSH`
@@ -1635,7 +1629,7 @@ one half of the original space.
 
 In the transform domain one can also enhance (multiply with
 the constant > 1) some regions. This way, one can change
-peak-to-background ratio. This function has the form of
+peak-to-background ratio. This function has a form of
 
 ```{.cpp}
 char *Enhance1(const float *source,
@@ -1656,9 +1650,9 @@ the dest spectrum.
 
 Function parameters:
 
--   **`source`**: pointer to the vector of the source spectrum, its length should be size
--   **`dest`**: pointer to the vector of the dest data, its length should be size
--   **`size`**: basic length of source and dest spectra
+-   **`source`**: pointer to the vector of the source spectrum, its length should be equal to `size`
+-   **`dest`**: pointer to the vector of the dest data, its length should be equal to `size`
+-   **`size`**: basic length of the source and dest spectra
 -   **`type`**: type of transform
     -   `TRANSFORM1_HAAR`
     -   `TRANSFORM1_WALSH`
@@ -1731,7 +1725,7 @@ Function parameters:
     be `sizex`*`sizey` except for direct FOURIER, FOUR-WALSh, FOUR-HAAR.
     These need `sizex`\*2\*`sizey` length to store real and imaginary
     coefficients
--   **`sizex,sizey`**: basic dimensions of source and dest spectra
+-   **`sizex,sizey`**: basic dimensions of the source and dest spectra
 -   **`type`**: type of transform
     -    `TRANSFORM2_HAAR`
     -    `TRANSFORM2_WALSH`
@@ -1814,7 +1808,7 @@ Function parameters:
 -   **`ymax`**: high limit y of filtered region
 -   **`filter_coeff`**: value which is set in filtered region
 
-The enhancement function using transforms has the form of
+The enhancement function using transforms has a form of
 
 ```{.cpp}
 char *Enhance2(const float **source,
@@ -1839,7 +1833,7 @@ Function parameters:
 
 -   **`source`**: pointer to the matrix of the source spectrum, its size should be `sizex`*`sizey`
 -   **`dest`**: pointer to the matrix of the destination data, its size should be `sizex`*`sizey`
--   **`sizex,sizey`**: basic dimensions of source and dest spectra
+-   **`sizex,sizey`**: basic dimensions of the source and dest spectra
 -   **`type`**: type of transform
     -    `TRANSFORM2_HAAR`
     -    `TRANSFORM2_WALSH`
@@ -1868,7 +1862,7 @@ Function parameters:
 The 1-dimensional visualization function displays spectrum
 (or its part) on the Canvas of a form. Before calling the function, one
 has to fill in the `one_dim_pic` structure containing all parameters of the
-display. The function has the form of
+display. The function has a form of
 
 ```{.cpp}
 char *display1(struct one_dim_pic* p);
@@ -1900,12 +1894,12 @@ struct one_dim_pic {
    int y_scale;         // y scale (linear, log, sqrt)
    int levels;          // # of color levels for rainbow display mode, it does not apply
                         // for other display modes
-   float rainbow1_step; // determines the first color component step for neighbouring
+   float rainbow1_step; // determines the first color component step for neighboring
                         // color levels, applies only for rainbow display mode
    float rainbow2_step; // determines the second component color step for
-                        // neighbouring color levels, applies only for rainbow display mode
+                        // neighboring color levels, applies only for rainbow display mode
    float rainbow3_step; // determines the third component color step for
-                        // neighbouring color levels, applies only for rainbow display mode
+                        // neighboring color levels, applies only for rainbow display mode
 
    int color_alg; // applies only for rainbow display mode (rgb smooth algorithm, rgb
                   // modulo color component, cmy smooth algorithm, cmy modulo color
@@ -1965,7 +1959,7 @@ few Figures.
 The 2-dimensional visualization function displays spectrum
 (or its part) on the Canvas of a form. Before calling the function, one
 has to fill in the `two_dim_pic` structure containing all parameters of the
-display. The function has the form of
+display. The function has a form of
 
 ```{.cpp}
 char *display2(struct two_dim_pic* p);
@@ -2015,13 +2009,13 @@ struct two_dim_pic {
    int view_angle;      // rotation angle of the view, it can be 0, 90, 180, 270 degrees
    int levels;          // # of color levels for rainbowed display modes, it does not apply for
                         // simple display modes algorithm group
-   float rainbow1_step; // determines the first component step for neighbouring color
+   float rainbow1_step; // determines the first component step for neighboring color
                         // levels, applies only for rainbowed display modes, it does not apply
                         // for simple display modes algorithm group
-   float rainbow2_step; // determines the second component step for neighbouring
+   float rainbow2_step; // determines the second component step for neighboring
                         // color levels, applies only for rainbowed display modes, it does not
                         // apply for simple display modes algorithm group
-   float rainbow3_step; // determines the third component step for neighbouring
+   float rainbow3_step; // determines the third component step for neighboring
                         // color levels, applies only for rainbowed display modes, it does not
                         // apply for simple display modes algorithm group
    int color_alg;       // applies only for rainbowed display modes (rgb smooth algorithm,
@@ -2137,7 +2131,7 @@ presence of background and its application to spectrum analysis. NIM 50
 NIM A 376 (1996), 451.
 
 [7] P. Bandžuch, M. Morháč, J. Krištiak: Study of the VanCitter and Gold
-iterative methods of deconvolutionand their application in the
+iterative methods of deconvolution and their application in the
 deconvolution of experimental spectra of positron annihilation, NIM A
 384 (1997) 506-515.
 
