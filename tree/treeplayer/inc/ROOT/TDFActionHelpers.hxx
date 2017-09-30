@@ -511,15 +511,17 @@ public:
       if (!fOutputTrees[slot]) {
          // first time this thread executes something, let's create a TBufferMerger output directory
          fOutputFiles[slot] = fMerger->GetFile();
-         TDirectory *treeDirectory = fOutputFiles[slot].get();
-         if (!fDirName.empty()) {
-            treeDirectory = fOutputFiles[slot]->mkdir(fDirName.c_str());
-         }
-         fOutputTrees[slot] = new TTree(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, treeDirectory);
-         fOutputTrees[slot]->ResetBit(kMustCleanup); // do not mingle with the thread-unsafe gListOfCleanups
-         if (fOptions.fAutoFlush)
-            fOutputTrees[slot]->SetAutoFlush(fOptions.fAutoFlush);
       }
+      TDirectory *treeDirectory = fOutputFiles[slot].get();
+      if (!fDirName.empty()) {
+         treeDirectory = fOutputFiles[slot]->mkdir(fDirName.c_str());
+      }
+      // re-create output tree as we need to create its branches again, with new input variables
+      // TODO we could instead create the output tree and its branches, change addresses of input variables in each task
+      fOutputTrees[slot] = new TTree(fTreeName.c_str(), fTreeName.c_str(), fOptions.fSplitLevel, /*dir=*/treeDirectory);
+      fOutputTrees[slot]->ResetBit(kMustCleanup); // do not mingle with the thread-unsafe gListOfCleanups
+      if (fOptions.fAutoFlush)
+         fOutputTrees[slot]->SetAutoFlush(fOptions.fAutoFlush);
       if (r) {
          // not an empty-source TDF
          auto inputTree = r->GetTree();
