@@ -1177,10 +1177,9 @@ protected:
                files[slot] = merger.GetFile();
             }
             std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
-            if (!dirnameInt.empty()) {
-               files[slot]->mkdir(dirnameInt.c_str());
-               files[slot]->cd(dirnameInt.c_str());
-            }
+            TDirectory *subdir = files[slot].get();
+            if (!dirnameInt.empty()) subdir = files[slot]->mkdir(dirnameInt.c_str());
+            subdir->cd();
             trees[slot] = new TTree(treenameInt.c_str(), treenameInt.c_str());
             trees[slot]->ResetBit(kMustCleanup);
             trees[slot]->SetImplicitMT(false);
