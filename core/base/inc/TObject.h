@@ -217,7 +217,7 @@ public:
 /// (see TEnv) the object is added to the global TObjectTable for
 /// bookkeeping.
 
-inline TObject::TObject() : fBits(kNotDeleted) // Need to leave FUniqueID unset
+inline TObject::TObject() : fBits(kNotDeleted) // Need to leave fUniqueID unset
 {
    // This will be reported by valgrind as uninitialized memory reads for
    // object created on the stack, use $ROOTSYS/etc/valgrind-root.supp
