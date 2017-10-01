@@ -330,6 +330,11 @@ Bool_t TFileMerger::OutputFile(std::unique_ptr<TFile> outputfile)
       return kFALSE;
    }
 
+   if (!outputfile->IsWritable()) {
+      Error("OutputFile", "output file %s is not writable", outputfile->GetName());
+      return kFALSE;
+   }
+
    fExplicitCompLevel = kTRUE;
 
    TFile *oldfile = fOutputFile;
