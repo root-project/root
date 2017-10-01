@@ -358,6 +358,7 @@ public:
                      TDFInternal::TTypeList<BranchTypes...>)
    {
       *fLastResultPtr[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
+      (void)entry; // avoid bogus unused parameter warning in gcc
    }
 
    // recursive chain of `Report`s
