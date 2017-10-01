@@ -1175,6 +1175,8 @@ protected:
             if(!trees[slot]) {
                // first time this thread executes something, let's create a TBufferMerger output directory
                files[slot] = merger.GetFile();
+            } else {
+               files[slot]->Write();
             }
             std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
             TDirectory *subdir = files[slot].get();
