@@ -1,12 +1,14 @@
 #include "ROOT/TDataFrame.hxx"
+#include "TFile.h"
 #include "TROOT.h"
 #include "TSystem.h"
+#include "TTree.h"
 #include "gtest/gtest.h"
 #include <limits>
 #include <memory>
-using namespace ROOT::Experimental; // TDataFrame
+using namespace ROOT::Experimental;      // TDataFrame
 using namespace ROOT::Experimental::TDF; // TInterface
-using namespace ROOT::Detail::TDF; // TLoopManager
+using namespace ROOT::Detail::TDF;       // TLoopManager
 
 /********* FIXTURES *********/
 // fixture that provides a TDF with no data-source and a single integer column "ans" with value 42
@@ -51,7 +53,6 @@ protected:
    TDFSnapshotMT() : fIMTEnabler(nSlots), fTdf(nEvents), tdf(DefineAns()) {}
    TInterface<TLoopManager> tdf;
 };
-
 
 /********* TESTS ***********/
 void test_snapshot_update(TInterface<TLoopManager> &tdf)
@@ -141,4 +142,37 @@ TEST_F(TDFSnapshot, Snapshot_action_with_options)
 TEST_F(TDFSnapshotMT, Snapshot_action_with_options)
 {
    test_snapshot_options(tdf);
+}
+
+TEST(TDFSnapshotMore, ManyTasksPerThread)
+{
+   const auto nSlots = 4u;
+   ROOT::EnableImplicitMT(nSlots);
+
+   // easiest way to be sure reading requires spawning of several tasks: create several input files
+   const std::string inputFilePrefix = "snapshot_manytasks_";
+   const auto tasksPerThread = 8u;
+   const auto nInputFiles = nSlots * tasksPerThread;
+   ROOT::Experimental::TDataFrame d(1);
+   auto dd = d.Define("x", []() { return 42; });
+   for (auto i = 0u; i < nInputFiles; ++i)
+      dd.Snapshot<int>("t", inputFilePrefix + std::to_string(i) + ".root", {"x"});
+
+   // test multi-thread Snapshotting from many tasks per worker thread
+   const auto outputFile = "snapshot_manytasks_out.root";
+   ROOT::Experimental::TDataFrame tdf("t", (inputFilePrefix + "*.root").c_str());
+   tdf.Snapshot<int>("t", outputFile, {"x"});
+
+   // check output contents
+   ROOT::Experimental::TDataFrame checkTdf("t", outputFile);
+   auto c = checkTdf.Count();
+   auto t = checkTdf.Take<int>("x");
+   for (auto v : t)
+      EXPECT_EQ(v, 42);
+   EXPECT_EQ(*c, nInputFiles);
+
+   // clean-up input files
+   for (auto i = 0u; i < nInputFiles; ++i)
+      gSystem->Unlink((inputFilePrefix + std::to_string(i) + ".root").c_str());
+   gSystem->Unlink(outputFile);
 }
