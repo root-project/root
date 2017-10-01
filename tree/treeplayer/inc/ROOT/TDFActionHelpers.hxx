@@ -511,6 +511,9 @@ public:
       if (!fOutputTrees[slot]) {
          // first time this thread executes something, let's create a TBufferMerger output directory
          fOutputFiles[slot] = fMerger->GetFile();
+      } else {
+         // this thread is now re-executing the task, let's flush the current contents of the TBufferMergerFile
+         fOutputFiles[slot]->Write();
       }
       TDirectory *treeDirectory = fOutputFiles[slot].get();
       if (!fDirName.empty()) {
