@@ -439,7 +439,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       // Look for single ',' delimiter
       int delimPosition = -1;
       int parenCount = 0;
-      for (uint i = 5; i < strlen(formula) - 1; i++) {
+      for (unsigned int i = 5; i < strlen(formula) - 1; i++) {
          if (formula[i] == '(')
             parenCount++;
          else if (formula[i] == ')')
