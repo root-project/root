@@ -54,7 +54,7 @@ Double_t AnalyticalIntegral(TF1 *f, Double_t a, Double_t b)
       if (formula->TestBit(TFormula::kNormalized) ) 
          result =  amp*( ROOT::Math::gaussian_cdf(xmax, sigma, mean)- ROOT::Math::gaussian_cdf(xmin, sigma, mean) );
       else
-         result =  amp*sqrt(2*M_PI)*sigma*(ROOT::Math::gaussian_cdf(xmax, sigma, mean)- ROOT::Math::gaussian_cdf(xmin, sigma, mean));//
+         result =  amp*sqrt(2*TMath::Pi())*sigma*(ROOT::Math::gaussian_cdf(xmax, sigma, mean)- ROOT::Math::gaussian_cdf(xmin, sigma, mean));//
    }
    else if (num == 400)//landau: root::math::landau(x,mpv=0,sigma=1,bool norm=false)
    {
