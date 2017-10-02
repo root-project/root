@@ -2677,7 +2677,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
    Int_t      off;
    TBaseClass *inh;
    TObjLink *lnk = 0;
-   if (fBase.load()==0)
+   if (fBase.load() == 0)
       lnk = GetListOfBases()->FirstLink();
    else
       lnk = fBase.load()->FirstLink();
