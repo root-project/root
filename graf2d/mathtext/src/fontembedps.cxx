@@ -255,6 +255,7 @@ namespace mathtext {
             bswap_32(segment_header.length);
 #endif // LITTLE_ENDIAN
             char *buffer = new char[segment_header.length];
+            char *match = "/FontName";
             char *fname;
 
             memcpy(buffer, &font_data[offset],
@@ -275,9 +276,8 @@ namespace mathtext {
                      buffer[segment_header.length - 1] = '\n';
                   }
                   ret.append(buffer, segment_header.length);
-
-                  fname = (char*)memmem(buffer, segment_header.length,
-                                        "/FontName", 9);
+                  fname = std::search(buffer, buffer+segment_header.length,
+                                      match, match+9);
                   if (fname) {
                      fname += 9;
                      while (fname < buffer + segment_header.length &&

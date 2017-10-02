@@ -997,11 +997,11 @@ Int_t TRatioPlot::BuildLowerPlot()
       std::vector<double> ci1;
       std::vector<double> ci2;
 
-      Double_t x_arr[fH1->GetNbinsX()];
+      Double_t *x_arr = new Double_t[fH1->GetNbinsX()];
       std::fill_n(x_arr, fH1->GetNbinsX(), 0);
-      Double_t ci_arr1[fH1->GetNbinsX()];
+      Double_t *ci_arr1 = new Double_t[fH1->GetNbinsX()];
       std::fill_n(ci_arr1, fH1->GetNbinsX(), 0);
-      Double_t ci_arr2[fH1->GetNbinsX()];
+      Double_t *ci_arr2 = new Double_t[fH1->GetNbinsX()];
       std::fill_n(ci_arr2, fH1->GetNbinsX(), 0);
       for (Int_t i=0; i<fH1->GetNbinsX();++i) {
          x_arr[i] = fH1->GetBinCenter(i+1);
@@ -1083,7 +1083,9 @@ Int_t TRatioPlot::BuildLowerPlot()
          }
 
       }
-
+      delete [] x_arr;
+      delete [] ci_arr1;
+      delete [] ci_arr2;
    } else if (fMode == TRatioPlot::CalculationMode::kDivideHist){
       SetGridlines(divideGridlines, 3);
 
