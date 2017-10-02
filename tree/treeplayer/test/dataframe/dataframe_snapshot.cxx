@@ -28,6 +28,7 @@ protected:
    TInterface<TLoopManager> tdf;
 };
 
+#ifdef R__USE_IMT
 // fixture that enables implicit MT and provides a TDF with no data-source and a single column "x" containing
 // normal-distributed doubles
 class TDFSnapshotMT : public ::testing::Test {
@@ -53,6 +54,7 @@ protected:
    TDFSnapshotMT() : fIMTEnabler(nSlots), fTdf(nEvents), tdf(DefineAns()) {}
    TInterface<TLoopManager> tdf;
 };
+#endif
 
 /********* TESTS ***********/
 void test_snapshot_update(TInterface<TLoopManager> &tdf)
@@ -97,11 +99,6 @@ TEST_F(TDFSnapshot, Snapshot_update)
    test_snapshot_update(tdf);
 }
 
-TEST_F(TDFSnapshotMT, Snapshot_update)
-{
-   test_snapshot_update(tdf);
-}
-
 void test_snapshot_options(TInterface<TLoopManager> &tdf)
 {
    TSnapshotOptions opts;
@@ -137,6 +134,12 @@ void test_snapshot_options(TInterface<TLoopManager> &tdf)
 TEST_F(TDFSnapshot, Snapshot_action_with_options)
 {
    test_snapshot_options(tdf);
+}
+
+#ifdef R__USE_IMT
+TEST_F(TDFSnapshotMT, Snapshot_update)
+{
+   test_snapshot_update(tdf);
 }
 
 TEST_F(TDFSnapshotMT, Snapshot_action_with_options)
@@ -176,3 +179,4 @@ TEST(TDFSnapshotMore, ManyTasksPerThread)
       gSystem->Unlink((inputFilePrefix + std::to_string(i) + ".root").c_str());
    gSystem->Unlink(outputFile);
 }
+#endif
