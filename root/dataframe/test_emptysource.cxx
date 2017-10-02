@@ -10,7 +10,7 @@
 int main() {
    auto fileName = "test_emptysource.root";
    auto treeName = "test_emptysource";
-   Long64_t numEntries = 1002;
+   constexpr Long64_t numEntries = 1002;
 
    // Build the empty-source dataframe
    ROOT::Experimental::TDataFrame d(numEntries);
@@ -31,17 +31,20 @@ int main() {
    std::cout << "Number of snapshot branches: " << t->GetNbranches() << std::endl;
 
 #ifdef R__USE_IMT
-   unsigned int numThreads = 4;
+   constexpr unsigned int numThreads = 4;
    ROOT::EnableImplicitMT(numThreads);
 #endif
+   // Build the empty-source dataframe
+   ROOT::Experimental::TDataFrame d2(numEntries);
+   auto dd2 = d2.Define("bOnes", []() { return 1; }).Define("bZeroes", []() { return 0; });
 
    // Increment a counter for each entry
    std::atomic_int counter(0);
-   dWithB.Foreach([&counter](int val1, int val2) { counter += val1 + val2; }, {"bOnes", "bZeroes"});
+   dd2.Foreach([&counter](int val1, int val2) { counter += val1 + val2; }, {"bOnes", "bZeroes"});
    std::cout << "Counter value: "  << counter << std::endl;
   
    // Sum up all the ones in bOnes
-   auto sum = dWithB.Reduce([](int a, int b) { return a + b; }, {"bOnes"});
+   auto sum = dd2.Reduce([](int a, int b) { return a + b; }, {"bOnes"});
    std::cout << "Sum value: "  << *sum << std::endl;
     
    return 0;
