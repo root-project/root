@@ -37,7 +37,7 @@ private:
    CRITICAL_SECTION fCritSect;
 
    constexpr static int kIsRecursive = BIT(14);
-   
+
 public:
    TWin32Mutex(Bool_t recursive=kFALSE);
    virtual ~TWin32Mutex();
