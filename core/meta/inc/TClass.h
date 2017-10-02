@@ -230,6 +230,8 @@ private:
    enum class ERuntimeProperties : UChar_t {
       kNotInitialized = 0,
       kSet = BIT(0),
+      // kInconsistent when kSet & !kConsistent.
+      kConsistentHash = BIT(1)
    };
    friend bool operator&(UChar_t l, ERuntimeProperties r) {
       return l & static_cast<UChar_t>(r);
@@ -458,6 +460,14 @@ public:
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
    TVirtualStreamerInfo     *FindStreamerInfoAbstractEmulated(UInt_t checksum) const;
    const std::type_info     *GetTypeInfo() const { return fTypeInfo; };
+
+   /// @brief Return 'true' if we can guarantee that if this class (or any class in
+   /// this class inheritance hierarchy) overload TObject::Hash it also starts
+   /// the RecursiveRemove process from its own destructor.
+   Bool_t             HasConsistentHashMember() {
+      if (!fRuntimeProperties) SetRuntimeProperties();
+      return fRuntimeProperties.load() & ERuntimeProperties::kConsistentHash;
+   }
    Bool_t             HasDictionary() const;
    static Bool_t      HasDictionarySelection(const char* clname);
    Bool_t             HasLocalHashMember() const;

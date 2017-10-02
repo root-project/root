@@ -62,6 +62,7 @@ a 'using namespace std;' has been applied to and with:
 #include "TProtoClass.h"
 #include "TROOT.h"
 #include "TRealData.h"
+#include "TCheckHashRecurveRemoveConsistency.h" // Private header
 #include "TStreamer.h"
 #include "TStreamerElement.h"
 #include "TVirtualStreamerInfo.h"
@@ -5819,6 +5820,9 @@ void TClass::SetRuntimeProperties()
    // thread-safe.
 
    UChar_t properties = static_cast<UChar_t>(ERuntimeProperties::kSet);
+
+   if (ROOT::Internal::TCheckHashRecurveRemoveConsistency::Check(*this))
+      properties |= static_cast<UChar_t>(ERuntimeProperties::kConsistentHash);
 
    const_cast<TClass*>(this)->fRuntimeProperties = properties;
 }
