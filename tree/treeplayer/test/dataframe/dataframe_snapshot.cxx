@@ -178,5 +178,7 @@ TEST(TDFSnapshotMore, ManyTasksPerThread)
    for (auto i = 0u; i < nInputFiles; ++i)
       gSystem->Unlink((inputFilePrefix + std::to_string(i) + ".root").c_str());
    gSystem->Unlink(outputFile);
+
+   ROOT::DisableImplicitMT();
 }
 #endif
