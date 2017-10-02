@@ -815,7 +815,9 @@ namespace {
 
       // determine the fileopen.C file path:
       TString fileopen = "fileopen.C";
-      gSystem->PrependPathName(TROOT::GetMacroDir(), fileopen);
+      TString rootmacrodir = "macros";
+      sys->PrependPathName(getenv("ROOTSYS"), rootmacrodir);
+      sys->PrependPathName(rootmacrodir.Data(), fileopen);
 
       if (regROOTwrite) {
          // only write to registry if fileopen.C is readable
@@ -1179,7 +1181,7 @@ const char *TWinNTSystem::BaseName(const char *name)
       char *cp;
       char *bslash = (char *)strrchr(&symbol[idx],'\\');
       char *rslash = (char *)strrchr(&symbol[idx],'/');
-      if (cp = std::max(rslash, bslash)) {
+      if (cp = (std::max)(rslash, bslash)) {
          //return StrDup(++cp);
          return ++cp;
       }
@@ -2178,7 +2180,7 @@ char *TWinNTSystem::GetWorkingDirectory(char driveletter) const
 const char *TWinNTSystem::HomeDirectory(const char *userName)
 {
    static char mydir[kMAXPATHLEN] = "./";
-   FillWithHomeDirectory(mydir);
+   FillWithHomeDirectory(userName, mydir);
    return mydir;
 }
 
@@ -2188,7 +2190,7 @@ const char *TWinNTSystem::HomeDirectory(const char *userName)
 std::string TWinNTSystem::GetHomeDirectory(const char *userName) const
 {
    char mydir[kMAXPATHLEN] = "./";
-   FillWithHomeDirectory(mydir); 
+   FillWithHomeDirectory(userName, mydir);
    return std::string(mydir); 
 }
 
@@ -2221,7 +2223,6 @@ void TWinNTSystem::FillWithHomeDirectory(const char *userName, char *mydir) cons
    // Make sure the drive letter is upper case
    if (mydir[1] == ':')
       mydir[0] = toupper(mydir[0]);
-   return mydir;
 }
 
 
@@ -2385,7 +2386,7 @@ const char *TWinNTSystem::DirName(const char *pathname)
       if (strchr(pathname, '/') || strchr(pathname, '\\')) {
          const char *rslash = strrchr(pathname, '/');
          const char *bslash = strrchr(pathname, '\\');
-         const char *r = std::max(rslash, bslash);
+         const char *r = (std::max)(rslash, bslash);
          const char *ptr = pathname;
          while (ptr <= r) {
             if (*ptr == ':') {
