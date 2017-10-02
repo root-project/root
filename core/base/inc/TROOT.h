@@ -73,7 +73,7 @@ namespace Internal {
       TParBranchProcessingRAII()  { EnableParBranchProcessing();  }
       ~TParBranchProcessingRAII() { DisableParBranchProcessing(); }
    };
-      
+
    // Manage parallel tree processing
    void EnableParTreeProcessing();
    void DisableParTreeProcessing();
@@ -373,6 +373,20 @@ namespace ROOT {
    TROOT *GetROOT();
    namespace Internal {
       R__EXTERN TROOT *gROOTLocal;
+   }
+
+   /// @Brief call RecursiveRemove for obj if gROOT is valid
+   /// and obj.TestBit(kMustCleanup) is true.
+   /// Note: this reset the kMustCleanup bit to allow
+   /// harmless multiple call to this function.
+   inline void CallRecursiveRemoveIfNeeded(TObject &obj) {
+      if (obj.TestBit(kMustCleanup)) {
+         TROOT *root = ROOT::Internal::gROOTLocal;
+         if (root && root != &obj && root->MustClean()) {
+            root->RecursiveRemove(&obj);
+            obj.ResetBit(kMustCleanup);
+         }
+      }
    }
 }
 #define gROOT (ROOT::GetROOT())

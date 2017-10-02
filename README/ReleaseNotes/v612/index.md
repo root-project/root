@@ -54,6 +54,17 @@ The following interfaces have been removed, after deprecation in v6.10.
   provided by `Rtype.h`'s `#include` of `stddef.h`.
 - ROOT now supports dictionaries, autoload and autoparse for classes with template parameter packs.
 - std::make_unique has been backported
+- If a class overloads TObject::Hash, this derived class should also add
+```{.cpp}
+   ROOT::CallRecursiveRemoveIfNeeded(*this)
+```
+Otherwise, when RecursiveRemove is called (by ~TObject or example) for this
+type of object, the transversal of THashList and THashTable containers will
+will have to be done without call Hash (and hence be linear rather than
+logarithmic complexity).  You will also see warnings like
+```
+   Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SomeName overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
+```
 
 
 ## I/O Libraries
