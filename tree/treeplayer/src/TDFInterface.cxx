@@ -110,7 +110,7 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    std::vector<std::string> usedBranchesTypes;
    static unsigned int iNs = 0U;
    std::stringstream dummyDecl;
-   dummyDecl << "namespace __tdf_" << std::to_string(iNs++) << "{ void f(){\n";
+   dummyDecl << "namespace __tdf_" << std::to_string(iNs++) << "{ auto __tdf_lambda = []() {";
 
    // Declare variables with the same name as the column used by this transformation
    auto aliasMapEnd = aliasMap.end();
@@ -129,9 +129,18 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
       }
    }
 
-   // Put the expression used for the transformation in the function
-   dummyDecl << "auto __tdfexprres = " << expression << ";}}"; // close scopes of f and namespace __tdf_N
-   // Try to declare the dummy function, error out if it does not compile
+   TRegexp re("[^a-zA-Z0-9_]return[^a-zA-Z0-9_]");
+   int exprSize = expression.size();
+   bool hasReturnStmt = re.Index(std::string(expression), &exprSize) != -1;
+
+   // Now that branches are declared as variables, put the body of the
+   // lambda in dummyDecl and close scopes of f and namespace __tdf_N
+   if (hasReturnStmt)
+      dummyDecl << expression << "\n;};}";
+   else
+      dummyDecl << "return " << expression << "\n;};}";
+
+   // Try to declare the dummy lambda, error out if it does not compile
    if (!gInterpreter->Declare(dummyDecl.str().c_str())) {
       auto msg =
          "Cannot interpret the following expression:\n" + std::string(expression) + "\n\nMake sure it is valid C++.";
@@ -154,7 +163,12 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    }
    if (!usedBranchesTypes.empty())
       ss.seekp(-2, ss.cur);
-   ss << "){ return " << expression << ";}";
+
+   if (hasReturnStmt)
+      ss << "){\n" << expression << "\n}";
+   else
+      ss << "){return " << expression << "\n;}";
+
    auto filterLambda = ss.str();
 
    // The TInterface type to convert the result to. For example, Filter returns a TInterface<TFilter<F,P>> but when
