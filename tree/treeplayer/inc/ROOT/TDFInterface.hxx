@@ -1179,7 +1179,7 @@ protected:
                files[slot]->Write();
             }
             std::tie(dirnameInt, treenameInt) = getDirTreeName(treename);
-            TDirectory *subdir = files[slot].get();
+            ::TDirectory *subdir = files[slot].get();
             if (!dirnameInt.empty()) subdir = files[slot]->mkdir(dirnameInt.c_str());
             subdir->cd();
             trees[slot] = new TTree(treenameInt.c_str(), treenameInt.c_str());
