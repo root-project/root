@@ -430,11 +430,7 @@ public:
    ROOT::NewFunc_t    GetNew() const;
    ROOT::NewArrFunc_t GetNewArray() const;
    Int_t              GetNmethods();
-#ifdef __CINT__
-   TClass           **GetPersistentRef() const { return fPersistentRef; }
-#else
    TClass      *const*GetPersistentRef() const { return fPersistentRef; }
-#endif
    TRealData         *GetRealData(const char *name) const;
    TVirtualRefProxy  *GetReferenceProxy()  const   {  return fRefProxy; }
    const ROOT::Detail::TSchemaRuleSet *GetSchemaRules() const;
