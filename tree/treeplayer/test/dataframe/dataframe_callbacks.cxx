@@ -26,25 +26,22 @@ protected:
    TInterface<TLoopManager> tdf;
 };
 
+#ifdef R__USE_IMT
 // fixture that enables implicit MT and provides a TDF with no data-source and a single column "x" containing
 // normal-distributed doubles
 class TDFCallbacksMT : public ::testing::Test {
    class TIMTEnabler {
    public:
-      TIMTEnabler(unsigned int nSlots) { ROOT::EnableImplicitMT(nSlots); }
+      TIMTEnabler(unsigned int sl) { ROOT::EnableImplicitMT(sl); }
       ~TIMTEnabler() { ROOT::DisableImplicitMT(); }
    };
-
-protected:
-   const ULong64_t nEvents = 8ull; // must be initialized before fLoopManager
-   const unsigned int nSlots = 4u;
 
 private:
    TIMTEnabler fIMTEnabler;
    TDataFrame fLoopManager;
    TInterface<TLoopManager> DefineRandomCol()
    {
-      std::vector<TRandom> rs;
+      std::vector<TRandom> rs(nSlots);
       return fLoopManager.DefineSlot("x", [rs](unsigned int slot) mutable { return rs[slot].Gaus(); });
    }
 
@@ -52,6 +49,7 @@ protected:
    TDFCallbacksMT() : fIMTEnabler(nSlots), fLoopManager(nEvents), tdf(DefineRandomCol()) {}
    TInterface<TLoopManager> tdf;
 };
+#endif
 
 /********* TESTS *********/
 TEST_F(TDFCallbacks, Histo1DWithFillTOHelper)
@@ -263,16 +261,6 @@ TEST_F(TDFCallbacks, ExecuteOnce)
    EXPECT_EQ(callCount, 1u);
 }
 
-TEST_F(TDFCallbacksMT, ExecuteOncePerSlot)
-{
-   // OnPartialResultSlot(kOnce)
-   auto c = tdf.Count();
-   std::atomic_uint callCount(0u);
-   c.OnPartialResultSlot(c.kOnce, [&callCount](unsigned int, ULong64_t) { callCount++; });
-   *c;
-   EXPECT_EQ(callCount, nSlots);
-}
-
 TEST_F(TDFCallbacks, MultipleCallbacks)
 {
    // registration of multiple callbacks on the same partial result
@@ -336,3 +324,49 @@ TEST_F(TDFCallbacks, FreeFunction)
    *(tdf.Count().OnPartialResult(1, FreeFunction));
    EXPECT_EQ(freeFunctionCounter, nEvents);
 }
+
+
+#ifdef R__USE_IMT
+/******** Multi-thread tests **********/
+TEST_F(TDFCallbacksMT, ExecuteOncePerSlot)
+{
+   // OnPartialResultSlot(kOnce)
+   auto c = tdf.Count();
+   std::atomic_uint callCount(0u);
+   c.OnPartialResultSlot(c.kOnce, [&callCount](unsigned int, ULong64_t) { callCount++; });
+   *c;
+   EXPECT_EQ(callCount, nSlots);
+}
+
+TEST_F(TDFCallbacksMT, Histo1DWithFillTOHelper)
+{
+   // Histo1D<double> + OnPartialResultSlot + FillTOHelper
+   auto h = tdf.Histo1D<double>({"", "", 128, -2., 2.}, "x");
+   using value_t = typename decltype(h)::Value_t;
+   std::array<ULong64_t, nSlots> is;
+   is.fill(0ull);
+   constexpr ULong64_t everyN = 1ull;
+   h.OnPartialResultSlot(everyN, [&is, &everyN](unsigned int slot, value_t &h_) {
+      is[slot] += everyN;
+      EXPECT_EQ(h_.GetEntries(), is[slot]);
+   });
+   *h;
+   EXPECT_EQ(nEvents, std::accumulate(is.begin(), is.end(), 0ull));
+}
+
+TEST_F(TDFCallbacksMT, Histo1DWithFillHelper)
+{
+   // Histo1D<double> + OnPartialResultSlot + FillHelper
+   auto h = tdf.Histo1D<double>("x");
+   using value_t = typename decltype(h)::Value_t;
+   std::array<ULong64_t, nSlots> is;
+   is.fill(0ull);
+   constexpr ULong64_t everyN = 1ull;
+   h.OnPartialResultSlot(everyN, [&is, &everyN](unsigned int slot, value_t &h_) {
+      is[slot] += everyN;
+      EXPECT_EQ(h_.GetEntries(), is[slot]);
+   });
+   *h;
+   EXPECT_EQ(nEvents, std::accumulate(is.begin(), is.end(), 0ull));
+}
+#endif
