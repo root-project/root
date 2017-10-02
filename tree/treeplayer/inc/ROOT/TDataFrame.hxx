@@ -52,8 +52,10 @@ public:
    /// booking of actions or transformations.
    /// See TInterface for the documentation of the
    /// methods available.
-   template <typename FILENAMESCOLL = std::vector<std::string>,
-             typename std::enable_if<TTraits::IsContainer<FILENAMESCOLL>::value, int>::type = 0>
+   template <
+      typename FILENAMESCOLL = std::vector<std::string>,
+      typename std::enable_if<
+         TTraits::IsContainer<FILENAMESCOLL>::value && !std::is_same<FILENAMESCOLL, std::string>::value, int>::type = 0>
    TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll, const ColumnNames_t &defaultBranches = {});
    TDataFrame(std::string_view treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
    TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
@@ -61,7 +63,9 @@ public:
    TDataFrame(std::unique_ptr<TDataSource>, const ColumnNames_t &defaultBranches = {});
 };
 
-template <typename FILENAMESCOLL, typename std::enable_if<TTraits::IsContainer<FILENAMESCOLL>::value, int>::type>
+template <typename FILENAMESCOLL,
+          typename std::enable_if<
+             TTraits::IsContainer<FILENAMESCOLL>::value && !std::is_same<FILENAMESCOLL, std::string>::value, int>::type>
 TDataFrame::TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll,
                        const ColumnNames_t &defaultBranches)
    : TDF::TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
