@@ -68,7 +68,6 @@ TEST(TFileMerger, CreateWithTFilePointer)
    TMemFile a("a.root", "RECREATE");
    CreateATuple(a, "a_tree", 1.);
 
-   // FIXME: Calling this out of order causes two values to be written to the second file.
    TMemFile b("b.root", "RECREATE");
    CreateATuple(b, "b_tree", 2.);
 
