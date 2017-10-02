@@ -8,6 +8,29 @@
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::TDF;
 
+TEST(TDataFrameInterface, CreateFromCStrings)
+{
+   TDataFrame tdf("t", "file");
+}
+
+TEST(TDataFrameInterface, CreateFromStrings)
+{
+   std::string t("t"), f("file");
+   TDataFrame tdf(t, f);
+}
+
+TEST(TDataFrameInterface, CreateFromContainer)
+{
+   std::string t("t");
+   std::vector<std::string> f({"f1", "f2"});
+   TDataFrame tdf(t, f);
+}
+
+TEST(TDataFrameInterface, CreateFromInitList)
+{
+   TDataFrame tdf("t", {"f1","f2"});
+}
+
 TEST(TDataFrameInterface, CreateFromNullTDirectory)
 {
    int ret = 1;
