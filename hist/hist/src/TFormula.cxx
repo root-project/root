@@ -807,24 +807,6 @@ void TFormula::FillDefaults()
         {"min","TMath::Min"},{"max","TMath::Max"},{"sign","TMath::Sign" },
         {"sq","TMath::Sq"}
       };
-#ifdef R__HAS_VECCORE  
-    const pair<TString,TString> vecFunShortcuts[] =
-      { {"sin","vecCore::math::Sin" },
-        {"cos","vecCore::math::Cos" }, {"exp","vecCore::math::Exp"}, {"log","vecCore::math::Log"}, {"log10","vecCore::math::Log10"},
-        {"tan","vecCore::math::Tan"},
-        //{"sinh","vecCore::math::Sinh"}, {"cosh","vecCore::math::Cosh"},{"tanh","vecCore::math::Tanh"},
-        {"asin","vecCore::math::ASin"},
-        {"acos","TMath::Pi()/2-vecCore::math::ASin"},
-        {"atan","vecCore::math::ATan"},
-        {"atan2","vecCore::math::ATan2"}, {"sqrt","vecCore::math::Sqrt"},
-        {"ceil","vecCore::math::Ceil"}, {"floor","vecCore::math::Floor"}, {"pow","vecCore::math::Pow"},
-        {"cbrt","vecCore::math::Cbrt"},{"abs","vecCore::math::Abs"},
-        {"min","vecCore::math::Min"},{"max","vecCore::math::Max"},{"sign","vecCore::math::Sign" }
-        //{"sq","TMath::Sq"}, {"binomial","TMath::Binomial"}  // this last two functions will not work in vectorized mode
-      };
-#else
-    const pair<TString,TString> vecFunShortcuts[] = funShortcuts;
-#endif 
 
    std::vector<TString> defvars2(10);
    for (int i = 0; i < 9; ++i)
@@ -848,60 +830,43 @@ void TFormula::FillDefaults()
       fConsts[con.first] = con.second;
    }
    if (fVectorized) {
-      // for vectorized case use vecCore functions
-      for (auto fun : vecFunShortcuts) {
-         fFunctionsShortcuts[fun.first] = fun.second;
-      }
+      FillVecFunctionsShurtCuts(); 
    } else {
       for (auto fun : funShortcuts) {
          fFunctionsShortcuts[fun.first] = fun.second;
       }
    }
-
-   /*** - old code to support C++03
-        #else
-
-        TString  defvarsNames[] = {"x","y","z","t"};
-        Int_t    defvarsLength = sizeof(defvarsNames)/sizeof(TString);
-
-        TString  defconstsNames[] =
-   {"pi","sqrt2","infinity","e","ln10","loge","c","g","h","k","sigma","r","eg","true","false"};
-        Double_t defconstsValues[] =
-   {TMath::Pi(),TMath::Sqrt2(),TMath::Infinity(),TMath::E(),TMath::Ln10(),TMath::LogE(),
-        TMath::C(),TMath::G(),TMath::H(),TMath::K(),TMath::Sigma(),TMath::R(),TMath::EulerGamma(), 1, 0};
-        Int_t    defconstsLength = sizeof(defconstsNames)/sizeof(TString);
-
-        TString  funShortcutsNames[] =
-   {"sin","cos","exp","log","tan","sinh","cosh","tanh","asin","acos","atan","atan2","sqrt",
-        "ceil","floor","pow","binomial","abs"};
-        TString  funShortcutsExtendedNames[] =
-   {"TMath::Sin","TMath::Cos","TMath::Exp","TMath::Log","TMath::Tan","TMath::SinH",
-        "TMath::CosH","TMath::TanH","TMath::ASin","TMath::ACos","TMath::ATan","TMath::ATan2",
-        "TMath::Sqrt","TMath::Ceil","TMath::Floor","TMath::Power","TMath::Binomial","TMath::Abs"};
-        Int_t    funShortcutsLength = sizeof(funShortcutsNames)/sizeof(TString);
-
-        for(Int_t i = 0; i < defvarsLength; ++i)
-        {
-        TString var = defvarsNames[i];
-        Double_t value = 0;
-        unsigned int pos = fVars.size();
-        fVars[var] = TFormulaVariable(var,value,pos);
-        fClingVariables.push_back(value);
-        }
-
-        for(Int_t i = 0; i < defconstsLength; ++i)
-        {
-        fConsts[defconstsNames[i]] = defconstsValues[i];
-        }
-        for(Int_t i = 0; i < funShortcutsLength; ++i)
-        {
-        pair<TString,TString> fun(funShortcutsNames[i],funShortcutsExtendedNames[i]);
-        fFunctionsShortcuts[fun.first] = fun.second;
-        }
-
-        #endif
-   ***/
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///    Fill the shortcuts for vectorized functions
+///    We will replace for example sin with vecCore::Mat::Sin
+///
+
+void TFormula::FillVecFunctionsShurtCuts() {
+#ifdef R__HAS_VECCORE
+   const pair<TString,TString> vecFunShortcuts[] =
+      { {"sin","vecCore::math::Sin" },
+        {"cos","vecCore::math::Cos" }, {"exp","vecCore::math::Exp"}, {"log","vecCore::math::Log"}, {"log10","vecCore::math::Log10"},
+        {"tan","vecCore::math::Tan"},
+        //{"sinh","vecCore::math::Sinh"}, {"cosh","vecCore::math::Cosh"},{"tanh","vecCore::math::Tanh"},
+        {"asin","vecCore::math::ASin"},
+        {"acos","TMath::Pi()/2-vecCore::math::ASin"},
+        {"atan","vecCore::math::ATan"},
+        {"atan2","vecCore::math::ATan2"}, {"sqrt","vecCore::math::Sqrt"},
+        {"ceil","vecCore::math::Ceil"}, {"floor","vecCore::math::Floor"}, {"pow","vecCore::math::Pow"},
+        {"cbrt","vecCore::math::Cbrt"},{"abs","vecCore::math::Abs"},
+        {"min","vecCore::math::Min"},{"max","vecCore::math::Max"},{"sign","vecCore::math::Sign" }
+        //{"sq","TMath::Sq"}, {"binomial","TMath::Binomial"}  // this last two functions will not work in vectorized mode
+      };
+   // replace in the data member maps fFunctionsShortcuts 
+   for (auto fun : vecFunShortcuts) {
+      fFunctionsShortcuts[fun.first] = fun.second;
+   }
+#endif
+   // do nothing in case Veccore is not enabled
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///    Handling polN
@@ -2992,7 +2957,7 @@ void TFormula::SetVectorized(Bool_t vectorized)
          fMethod->Delete();
       fMethod = nullptr;
 
-      FillDefaults();  // to replace with the right vectorized signature (e.g. sin  -> vecCore::math::Sin)
+      FillVecFunctionsShurtCuts();   // to replace with the right vectorized signature (e.g. sin  -> vecCore::math::Sin)
       PreProcessFormula(fFormula);
       PrepareFormula(fFormula);
    }
