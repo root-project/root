@@ -2677,8 +2677,10 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
    Int_t      off;
    TBaseClass *inh;
    TObjLink *lnk = 0;
-   if (fBase.load()==0) lnk = GetListOfBases()->FirstLink();
-   else lnk = fBase.load()->FirstLink();
+   if (fBase.load()==0)
+      lnk = GetListOfBases()->FirstLink();
+   else
+      lnk = fBase.load()->FirstLink();
 
    // otherwise look at inheritance tree
    while (lnk) {
@@ -3483,7 +3485,7 @@ TList *TClass::GetListOfBases()
          Fatal("GetListOfBases", "gInterpreter not initialized");
 
       R__LOCKGUARD(gInterpreterMutex);
-      if(!fBase.load()) {
+      if (!fBase.load()) {
          gInterpreter->CreateListOfBaseClasses(this);
       }
    }
