@@ -2677,7 +2677,7 @@ Int_t TClass::GetBaseClassOffsetRecurse(const TClass *cl)
    Int_t      off;
    TBaseClass *inh;
    TObjLink *lnk = 0;
-   if (fBase==0) lnk = GetListOfBases()->FirstLink();
+   if (fBase.load()==0) lnk = GetListOfBases()->FirstLink();
    else lnk = fBase.load()->FirstLink();
 
    // otherwise look at inheritance tree
@@ -3455,7 +3455,7 @@ const char *TClass::GetSharedLibs()
 
 TList *TClass::GetListOfBases()
 {
-   if (!fBase) {
+   if (!fBase.load()) {
       if (fCanLoadClassInfo) {
          if (fState == kHasTClassInit) {
 
@@ -3483,7 +3483,7 @@ TList *TClass::GetListOfBases()
          Fatal("GetListOfBases", "gInterpreter not initialized");
 
       R__LOCKGUARD(gInterpreterMutex);
-      if(!fBase) {
+      if(!fBase.load()) {
          gInterpreter->CreateListOfBaseClasses(this);
       }
    }
@@ -3989,7 +3989,7 @@ void TClass::ResetCaches()
 
    delete fAllPubData; fAllPubData = 0;
 
-   if (fBase)
+   if (fBase.load())
       (*fBase).Delete();
    delete fBase.load(); fBase = 0;
 
@@ -6460,7 +6460,7 @@ void TClass::StreamerDefault(const TClass* pThis, void *object, TBuffer &b, cons
    // *and* before check fProperty, another thread might have call Property
    // and this fProperty when we read it, is not -1 and fStreamerImpl is
    // supposed to be set properly (no longer pointing to the default).
-   if (pThis->fStreamerImpl == &TClass::StreamerDefault) {
+   if (pThis->fStreamerImpl.load() == &TClass::StreamerDefault) {
       pThis->Fatal("StreamerDefault", "fStreamerImpl not properly initialized (%d)", pThis->fStreamerType);
    } else {
       (*pThis->fStreamerImpl)(pThis,object,b,onfile_class);
