@@ -622,14 +622,6 @@ void TKey::FillBuffer(char *&buffer)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This Hash function should redefine the default from TNamed.
-
-ULong_t TKey::Hash() const
-{
-   return TNamed::Hash();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Increment fPidOffset by 'offset'.
 ///
 /// This offset is used when a key (or basket) is transfered from one file to
