@@ -2948,6 +2948,8 @@ void TFormula::SetVectorized(Bool_t vectorized)
          Error("SetVectorized", "Cannot set vectorized to %d -- Formula is missing", vectorized);
 
       fVectorized = vectorized;
+      // no need to JIT a new signature in case of zero dimension
+      if (fNdim== 0) return; 
       fClingInitialized = false;
       fReadyToExecute = false;
       fClingName = "";
@@ -3171,11 +3173,7 @@ ROOT::Double_v TFormula::DoEvalVec(const ROOT::Double_v *x, const double *params
    ROOT::Double_v *vars = const_cast<ROOT::Double_v *>(x);
    args[0] = &vars;
    if (fNpar <= 0) {
-      if (fNdim>1) 
-      std::cout << "called function with value " << vars[0] << "  " << vars[1] << std::endl;
       (*fFuncPtr)(0, 1, args, &result);
-      if (fNdim>1) 
-      std::cout << "called function with value " << vars[0] << "  " << vars[1] << " result " << result << std::endl;
    }else {
       double *pars = (params) ? const_cast<double *>(params) : const_cast<double *>(fClingParameters.data());
       args[1] = &pars;
