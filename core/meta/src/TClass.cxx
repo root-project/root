@@ -1043,7 +1043,7 @@ TClass::TClass() :
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
@@ -1081,7 +1081,7 @@ TClass::TClass(const char *name, Bool_t silent) :
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
@@ -1128,7 +1128,7 @@ TClass::TClass(const char *name, Version_t cversion, Bool_t silent) :
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
@@ -1155,7 +1155,7 @@ TClass::TClass(const char *name, Version_t cversion, EState theState, Bool_t sil
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(theState),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
@@ -1199,7 +1199,7 @@ TClass::TClass(ClassInfo_t *classInfo, Version_t cversion,
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
@@ -1249,7 +1249,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kNoInfo),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
@@ -1280,7 +1280,7 @@ TClass::TClass(const char *name, Version_t cversion,
    fMerge(0), fResetAfterMerge(0), fNew(0), fNewArray(0), fDelete(0), fDeleteArray(0),
    fDestructor(0), fDirAutoAdd(0), fStreamerFunc(0), fConvStreamerFunc(0), fSizeof(-1),
    fCanSplit(-1), fProperty(0), fClassProperty(0), fHasRootPcmInfo(kFALSE), fCanLoadClassInfo(kFALSE),
-   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
+   fIsOffsetStreamerSet(kFALSE), fVersionUsed(kFALSE), fRuntimeProperties(0), fOffsetStreamer(0), fStreamerType(TClass::kDefault),
    fState(kHasTClassInit),
    fCurrentInfo(0), fLastReadInfo(0), fRefProxy(0),
    fSchemaRules(0), fStreamerImpl(&TClass::StreamerDefault)
@@ -5803,6 +5803,26 @@ Long_t TClass::Property() const
 
    return fProperty;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Internal routine to set calculate the class properties that can only be
+/// known at run-time, for example whether the Hash member function and the
+/// destructor are consistent.
+
+void TClass::SetRuntimeProperties()
+{
+   // For now, no need to lock this routines as fRuntimeProperties is
+   // the only atomic set here and this is done at the end
+   // and there is no downside if the execution is done twice.
+
+   // Note SetRuntimeProperties is set to const as it is technically
+   // thread-safe.
+
+   UChar_t properties = static_cast<UChar_t>(ERuntimeProperties::kSet);
+
+   const_cast<TClass*>(this)->fRuntimeProperties = properties;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal routine to set fStreamerImpl based on the value of
