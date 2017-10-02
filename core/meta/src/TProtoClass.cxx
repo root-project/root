@@ -208,8 +208,7 @@ void TProtoClass::Delete(Option_t* opt /*= ""*/) {
 /// duplicate dictionary is acceptable for namespace or STL collections.
 
 Bool_t TProtoClass::FillTClass(TClass* cl) {
-   if (cl->fRealData || cl->fBase.load() || cl->fData || cl->fEnums.load()
-       || cl->fSizeof != -1 || cl->fCanSplit >= 0
+   if (cl->fRealData || cl->fBase.load() || cl->fData || cl->fEnums.load() || cl->fSizeof != -1 || cl->fCanSplit >= 0
        || cl->fProperty != (-1) ) {
 
       if (cl->GetCollectionType() != ROOT::kNotSTL) {
