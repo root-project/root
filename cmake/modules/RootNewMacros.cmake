@@ -513,7 +513,50 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   endforeach()
   #set(modulemap_entry "${modulemap_entry}  link \"lib/${library}\"\n")
   set(modulemap_entry "${modulemap_entry}  export *\n}\n\n")
-  set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT ${modulemap_entry})
+  # Non ROOT projects need a modulemap generated for them in the current
+  # directory. The same happens with test dictionaries in ROOT which are not
+  # exposed via the main modulemap. This is exposed by setting the
+  # ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR.
+  if (NOT "${CMAKE_PROJECT_NAME}" STREQUAL ROOT OR ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR)
+    set(modulemap_output_file "${CMAKE_CURRENT_BINARY_DIR}/module.modulemap")
+
+    # It's possible that multiple modulemaps are needed in the current
+    # directory and we need to merge them. As we don't want to have multiple
+    # modules in the same moduluemap when rerunning CMake, we do a quick
+    # check if the current module is already in the modulemap (in which case
+    # we know we rerun CMake at the moment and start writing a new modulemap
+    # instead of appending new modules).
+
+    # The string we use to identify if the current module is already in the
+    # modulemap.
+    set(modulemap_needle "module \"${library}\"")
+    # Check if the needle is in the modulemap. If the file doesn't exist
+    # we just pretend we didn't found the string in the modulemap.
+    set(match_result -1)
+    if (EXISTS "${modulemap_output_file}")
+      file(READ "${modulemap_output_file}" existing_contents)
+      string(FIND "${existing_contents}" "${modulemap_needle}" match_result)
+    endif()
+    # Append our new module to the existing modulemap containing other modules.
+    if(${match_result} EQUAL -1)
+      file(APPEND "${modulemap_output_file}" "${modulemap_entry}")
+    else()
+      file(WRITE "${modulemap_output_file}" "${modulemap_entry}")
+    endif()
+
+    # Sanity check that the string we're looking for is actually in the content
+    # we're writing to this file.
+    string(FIND "${modulemap_entry}" "${modulemap_needle}" match_result)
+    if(${match_result} EQUAL -1)
+      message(AUTHOR_WARNING "Couldn't find module declaration in modulemap file."
+                             "This would break the modulemap generation when "
+                             " rerunning CMake. Module needle was "
+                             "'${modulemap_needle}' and the content was '${modulemap_entry}'")
+    endif()
+
+  else()
+    set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT ${modulemap_entry})
+  endif()
 endfunction()
 
 #---------------------------------------------------------------------------------------------------

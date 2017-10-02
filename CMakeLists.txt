@@ -287,6 +287,8 @@ get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MOD
 string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
 file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
 
+# From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
+set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders})
