@@ -210,7 +210,7 @@ install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE
 add_dependencies(move_artifacts copymodulemap)
 
 # Provide our own modulemap for implementations other than libcxx.
-if (NOT libcxx)
+if (NOT WIN32 AND NOT libcxx)
   # Write a empty overlay file to the output directory that CMake can run its compiler tests.
   # We will create the actual overlay later in the configuration.
   file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
@@ -307,6 +307,11 @@ if(cxxmodules)
   string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
 endif(cxxmodules)
 string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE} ${CORE_OS_DICT_CXX_FLAGS}")
+if(MSVC)
+  string(REPLACE "-nologo" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+  string(REPLACE "-EHsc-" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+  string(REPLACE "-GR" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+endif()
 
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                           etc/dictpch/allHeaders.h
@@ -320,6 +325,11 @@ foreach(d ${incdirs})
     set(__allIncludes ${__allIncludes} -I${d})
   endif()
 endforeach()
+if(MSVC)
+  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib)
+  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src)
+  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk)
+endif()
 
 add_custom_command(OUTPUT etc/allDict.cxx.pch
                    COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
@@ -355,9 +365,11 @@ endif()
 install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
 
 #---version--------------------------------------------------------------------------------------
+if(NOT WIN32)
 add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh ${CMAKE_BINARY_DIR}
                           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 #add_dependencies(version root.exe)
+endif()
 
 #---distribution commands------------------------------------------------------------------------
 add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh ${CMAKE_SOURCE_DIR}

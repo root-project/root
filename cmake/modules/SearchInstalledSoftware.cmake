@@ -86,21 +86,18 @@ if(builtin_freetype)
   set(FREETYPE_LIBRARY ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
-      set(freetypeliba objs/freetype261MT_D.lib)
-      set(freetypebuild "freetype - Win32 Debug Multithreaded")
+      set(freetypebuild "Debug")
     else()
-      set(freetypeliba objs/freetype261MT.lib)
-      set(freetypebuild "freetype - Win32 Release Multithreaded")
+      set(freetypebuild "Release")
     endif()
     ExternalProject_Add(
       FREETYPE
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/win32 builds/windows/visualc/.
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND ${CMAKE_COMMAND} -E chdir builds/windows/visualc/
-                    nmake -nologo -f freetype.mak CFG=${freetypebuild} NMAKECXXFLAGS=-D_CRT_SECURE_NO_DEPRECATE 
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypeliba} ./libs/freetype.lib     
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${freetypebuild}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypebuild}/freetype.lib ${FREETYPE_LIBRARY}
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
       BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
   else()
     set(_freetype_cflags -O)
@@ -139,19 +136,20 @@ if(builtin_pcre)
   message(STATUS "Building pcre version ${pcre_version} included in ROOT itself")
   set(PCRE_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pcre${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
-    if(winrtdebug)
-      set(pcrebuild "libpcre - Win32 Debug")
-     else()
-      set(pcrebuild "libpcre - Win32 Release")
+    if (winrtdebug)
+      set(pcre_lib pcred.lib)
+      set(pcre_build_type Debug)
+    else()
+      set(pcre_lib pcre.lib)
+      set(pcre_build_type Release)
     endif()
     ExternalProject_Add(
       PCRE
       URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/core/pcre/src/win32 .
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND ${CMAKE_COMMAND} nmake -nologo -f Makefile.msc 
-                                     CFG=${pcrebuild} NMCXXFLAGS=${CMAKE_CC_FLAGS}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different libpcre-8.37.lib  <INSTALL_DIR>/lib/pcre.lib
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+#      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${pcre_build_type}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${pcre_build_type}/${pcre_lib} ${PCRE_LIBRARY}
               COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre.h  <INSTALL_DIR>/include
               COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre_scanner.h  <INSTALL_DIR>/include
               COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre_stringpiece.h  <INSTALL_DIR>/include
@@ -244,18 +242,34 @@ if(builtin_lz4)
     set(LZ4_CFLAGS "-Wno-format-nonliteral")
   elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
     set(LZ4_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179")
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    set(LZ4_CFLAGS "/Zl")
   endif()
   set(LZ4_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
-  ExternalProject_Add(
-    LZ4
-    URL ${lcgpackages}/lz4-${lz4_version}.tar.gz
-    URL_MD5 c9610c5ce97eb431dddddf0073d919b9
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CONFIGURE_COMMAND  /bin/sh -c "PREFIX=<INSTALL_DIR> CMAKE_PARAMS='-DCMAKE_C_COMPILER=\\\"${CMAKE_C_COMPILER}\\\" -DCMAKE_C_FLAGS=\\\"${CMAKE_C_FLAGS}\\\" -DCMAKE_OSX_SYSROOT=\\\"${CMAKE_OSX_SYSROOT}\\\"' make cmake"
-    BUILD_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> MOREFLAGS=-fPIC make"
-    INSTALL_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> make install"
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
+  if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include" NATIVE_INCLUDEDIR)
+    ExternalProject_Add(
+      LZ4
+      URL http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/lz4-${lz4_version}.tar.gz
+      URL_MD5 c9610c5ce97eb431dddddf0073d919b9
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND cl /c "${LZ4_CFLAGS}" -DXXH_NAMESPACE=LZ4_ lib/lz4.c lib/lz4hc.c lib/lz4frame.c lib/xxhash.c
+      BUILD_COMMAND lib /NODEFAULTLIB lz4.obj lz4hc.obj lz4frame.obj xxhash.obj /OUT:${LZ4_LIBRARIES}
+      INSTALL_COMMAND xcopy "lib\\*.h" "${NATIVE_INCLUDEDIR}\\" /Y
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
+  else()
+    ExternalProject_Add(
+      LZ4
+      URL ${lcgpackages}/lz4-${lz4_version}.tar.gz
+      URL_MD5 c9610c5ce97eb431dddddf0073d919b9
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND  /bin/sh -c "PREFIX=<INSTALL_DIR> CMAKE_PARAMS='-DCMAKE_C_COMPILER=\\\"${CMAKE_C_COMPILER}\\\" -DCMAKE_C_FLAGS=\\\"${CMAKE_C_FLAGS}\\\" -DCMAKE_OSX_SYSROOT=\\\"${CMAKE_OSX_SYSROOT}\\\"' make cmake"
+      BUILD_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> MOREFLAGS=-fPIC make"
+      INSTALL_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> make install"
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
+  endif()
   set(LZ4_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
   set(LZ4_DEFINITIONS -DBUILTIN_LZ4)
 endif()
@@ -356,8 +370,9 @@ if(builtin_afterimage)
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND ""
       BUILD_COMMAND nmake -nologo -f libAfterImage.mak FREETYPEDIRI=-I${FREETYPE_INCLUDE_DIR}
-                    CFG=${astepbld} NMAKECXXFLAGS="${CMAKE_CXX_FLAGS} /wd4244"
+                    CFG=${astepbld} NMAKECXXFLAGS=${CMAKE_CXX_FLAGS}
       INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different libAfterImage.lib <INSTALL_DIR>/lib/.
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
       BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES})
