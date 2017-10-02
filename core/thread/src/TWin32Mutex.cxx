@@ -71,11 +71,11 @@ Int_t TWin32Mutex::UnLock(void)
 }
 
 namespace {
-  struct TWin32MutexState: public TVirtualMutex::State {
-     int fLockCount = 0;
-  };
+struct TWin32MutexState: public TVirtualMutex::State {
+   int fLockCount = 0;
+};
 }
-  
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the mutex state to unlocked. The state before resetting to unlocked is
 /// returned and can be passed to `Restore()` later on. This function must only
@@ -108,7 +108,7 @@ std::unique_ptr<TVirtualMutex::State> TWin32Mutex::Reset()
 
 void TWin32Mutex::Restore(std::unique_ptr<TVirtualMutex::State> &&state)
 {
-  TWin32MutexState *pState = dynamic_cast<TWin32MutexState *>(state.get());
+   TWin32MutexState *pState = dynamic_cast<TWin32MutexState *>(state.get());
    if (!pState) {
       if (state) {
          SysError("Restore", "LOGIC ERROR - invalid state object!");
