@@ -8,11 +8,11 @@ using namespace ROOT::Experimental::TDF;
 using namespace ROOT::Detail::TDF;
 
 /********* FIXTURES *********/
+static constexpr ULong64_t nEvents = 8ull;
+static constexpr unsigned int nSlots = 4u;
+
 // fixture that provides a TDF with no data-source and a single column "x" containing normal-distributed doubles
 class TDFCallbacks : public ::testing::Test {
-protected:
-   const ULong64_t nEvents = 8ull; // must be initialized before fLoopManager
-
 private:
    TDataFrame fLoopManager;
    TInterface<TLoopManager> DefineRandomCol()
@@ -63,10 +63,10 @@ TEST_F(TDFCallbacks, Histo1DWithFillTOHelper)
    ULong64_t everyN = 1ull;
    h.OnPartialResult(everyN, [&i, &everyN](value_t &h_) {
       i += everyN;
-      EXPECT_EQ(h_.GetEntries(), everyN * i);
+      EXPECT_EQ(h_.GetEntries(), i);
    });
    *h;
-   EXPECT_EQ(nEvents, everyN * i);
+   EXPECT_EQ(nEvents, i);
 }
 
 TEST_F(TDFCallbacks, JittedHisto1DWithFillTOHelper)
@@ -78,10 +78,10 @@ TEST_F(TDFCallbacks, JittedHisto1DWithFillTOHelper)
    ULong64_t everyN = 1ull;
    h.OnPartialResult(everyN, [&i, &everyN](value_t &h_) {
       i += everyN;
-      EXPECT_EQ(h_.GetEntries(), everyN * i);
+      EXPECT_EQ(h_.GetEntries(), i);
    });
    *h;
-   EXPECT_EQ(nEvents, everyN * i);
+   EXPECT_EQ(nEvents, i);
 }
 
 TEST_F(TDFCallbacks, Histo1DWithFillHelper)
@@ -93,10 +93,10 @@ TEST_F(TDFCallbacks, Histo1DWithFillHelper)
    ULong64_t everyN = 1ull;
    h.OnPartialResult(everyN, [&i, &everyN](value_t &h_) {
       i += everyN;
-      EXPECT_EQ(h_.GetEntries(), everyN * i);
+      EXPECT_EQ(h_.GetEntries(), i);
    });
    *h;
-   EXPECT_EQ(nEvents, everyN * i);
+   EXPECT_EQ(nEvents, i);
 }
 
 TEST_F(TDFCallbacks, JittedHisto1DWithFillHelper)
@@ -108,10 +108,10 @@ TEST_F(TDFCallbacks, JittedHisto1DWithFillHelper)
    ULong64_t everyN = 1ull;
    h.OnPartialResult(everyN, [&i, &everyN](value_t &h_) {
       i += everyN;
-      EXPECT_EQ(h_.GetEntries(), everyN * i);
+      EXPECT_EQ(h_.GetEntries(), i);
    });
    *h;
-   EXPECT_EQ(nEvents, everyN * i);
+   EXPECT_EQ(nEvents, i);
 }
 
 TEST_F(TDFCallbacks, Min)
@@ -123,6 +123,7 @@ TEST_F(TDFCallbacks, Min)
       EXPECT_LE(x, runningMin);
       runningMin = x;
    });
+   *m;
    EXPECT_DOUBLE_EQ(runningMin, *m);
 }
 
@@ -135,6 +136,7 @@ TEST_F(TDFCallbacks, JittedMin)
       EXPECT_LE(x, runningMin);
       runningMin = x;
    });
+   *m;
    EXPECT_DOUBLE_EQ(runningMin, *m);
 }
 
@@ -147,6 +149,7 @@ TEST_F(TDFCallbacks, Max)
       EXPECT_GE(x, runningMax);
       runningMax = x;
    });
+   *m;
    EXPECT_DOUBLE_EQ(runningMax, *m);
 }
 
@@ -159,6 +162,7 @@ TEST_F(TDFCallbacks, JittedMax)
       EXPECT_GE(x, runningMax);
       runningMax = x;
    });
+   *m;
    EXPECT_DOUBLE_EQ(runningMax, *m);
 }
 
@@ -205,6 +209,7 @@ TEST_F(TDFCallbacks, Count)
       ++i;
       EXPECT_EQ(c_, i);
    });
+   *c;
    EXPECT_EQ(*c, i);
 }
 
