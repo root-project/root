@@ -272,7 +272,7 @@ _ROOT_LIBCPP_BEGIN_NAMESPACE_LFTS
         size_type length()   const _NOEXCEPT { return __size; }
 
         _LIBCPP_CONSTEXPR _LIBCPP_INLINE_VISIBILITY
-        size_type max_size() const _NOEXCEPT { return _VSTD::numeric_limits<size_type>::max(); }
+        size_type max_size() const _NOEXCEPT { return (_VSTD::numeric_limits<size_type>::max)(); }
 
         _LIBCPP_CONSTEXPR bool _LIBCPP_INLINE_VISIBILITY
         empty()         const _NOEXCEPT { return __size == 0; }
@@ -351,7 +351,7 @@ _ROOT_LIBCPP_BEGIN_NAMESPACE_LFTS
         {
             if ( __pos > size())
                 throw out_of_range("string_view::copy");
-            size_type __rlen = _VSTD::min( __n, size() - __pos );
+            size_type __rlen = (_VSTD::min)( __n, size() - __pos );
             _VSTD::copy_n(begin() + __pos, __rlen, __s );
             return __rlen;
         }
@@ -365,12 +365,12 @@ _ROOT_LIBCPP_BEGIN_NAMESPACE_LFTS
 //             return basic_string_view(data() + __pos, __rlen);
             return __pos > size()
                 ? throw out_of_range("string_view::substr")
-                : basic_string_view(data() + __pos, _VSTD::min(__n, size() - __pos));
+                : basic_string_view(data() + __pos, (_VSTD::min)(__n, size() - __pos));
         }
 
         _LIBCPP_CONSTEXPR_AFTER_CXX11 int compare(basic_string_view __sv) const _NOEXCEPT
         {
-            size_type __rlen = _VSTD::min( size(), __sv.size());
+            size_type __rlen = (_VSTD::min)( size(), __sv.size());
             int __retval = _Traits::compare(data(), __sv.data(), __rlen);
             if ( __retval == 0 ) // first __rlen chars matched
                 __retval = size() == __sv.size() ? 0 : ( size() < __sv.size() ? -1 : 1 );
@@ -628,6 +628,18 @@ _ROOT_LIBCPP_BEGIN_NAMESPACE_LFTS
         if ( __lhs.size() != __rhs.size()) return false;
         return __lhs.compare(__rhs) == 0;
     }
+
+#ifdef _WIN32
+    template<class _CharT, class _Traits>
+    _LIBCPP_CONSTEXPR_AFTER_CXX11 _LIBCPP_INLINE_VISIBILITY
+    bool operator==(basic_string_view<_CharT, _Traits> __lhs,
+                    const _CharT* __rhs) _NOEXCEPT
+    {
+        basic_string_view<_CharT, _Traits> __rhsv(__rhs);
+        if ( __lhs.size() != __rhsv.size()) return false;
+        return __lhs.compare(__rhsv) == 0;
+    }
+#endif
 
 
     // operator !=
