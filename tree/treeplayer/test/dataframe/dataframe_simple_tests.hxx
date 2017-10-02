@@ -162,6 +162,29 @@ TEST(TEST_CATEGORY, Define_jitted_complex)
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
+TEST(TEST_CATEGORY, Define_jitted_complex_array_sum)
+{
+   TDataFrame tdf(10);
+   auto d = tdf.Define("x", "3.0")
+               .Define("y", "4.0")
+               .Define("z", "12.0")
+               .Define("v", "std::array<double, 3> v{x, y, z}; return v;")
+               .Define("r", "double r2 = 0.0; for (auto&& w : v) r2 += w*w; return sqrt(r2);");
+   auto m = d.Max("r");
+   EXPECT_DOUBLE_EQ(13.0, *m);
+}
+
+TEST(TEST_CATEGORY, Define_jitted_defines_with_return)
+{
+   TDataFrame tdf(10);
+   auto d = tdf.Define("my_return_x", "3.0")
+               .Define("return_y", "4.0 // with a comment")
+               .Define("v", "std::array<double, 2> v{my_return_x, return_y}; return v; // also with comment")
+               .Define("r", "double r2 = 0.0; for (auto&& w : v) r2 += w*w; return sqrt(r2);");
+   auto m = d.Max("r");
+   EXPECT_DOUBLE_EQ(5.0, *m);
+}
+
 // Define + Filters
 TEST(TEST_CATEGORY, Define_Filter)
 {
@@ -242,6 +265,25 @@ TEST(TEST_CATEGORY, Define_jitted_Filter_named_jitted)
    auto df = d.Filter("r>5", "myFilter");
    auto m = df.Max("r");
    EXPECT_EQ(7.867497533559811628, *m);
+}
+
+TEST(TEST_CATEGORY, Define_jitted_Filter_complex_array)
+{
+   gInterpreter->ProcessLine("r.SetSeed(1);");
+   TDataFrame tdf(50);
+   auto d = tdf.Define("x", "r.Uniform(0.0, 1.0)")
+               .Define("y", "r.Uniform(0.0, 1.0)")
+               .Define("z", "r.Uniform(0.0, 1.0)")
+               .Define("v", "std::array<double, 3> v{x, y, z}; return v;")
+               .Define("r", "double r2 = 0.0; for (auto&& w : v) r2 += w*w; return sqrt(r2);");
+   auto dfin = d.Filter("r <= 1.0", "inside");
+   auto dfout = d.Filter("bool out = r > 1.0; return out;", "outside");
+   auto in  = dfin.Count();
+   auto out = dfout.Count();
+
+   EXPECT_TRUE(*in  < 50U);
+   EXPECT_TRUE(*out < 50U);
+   EXPECT_EQ(50U, *in + *out);
 }
 
 TEST(TEST_CATEGORY, DefineSlotConsistency)
