@@ -3407,8 +3407,8 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
    theHist->GetYaxis()->SetTickLength(TLY);
    theHist->GetXaxis()->SetAxisColor(XACOL);
    theHist->GetYaxis()->SetAxisColor(YACOL);
-   delete [] newX;
-   delete [] newY;
+   delete[] newX;
+   delete[] newY;
 }
 
 
