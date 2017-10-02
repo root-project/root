@@ -139,9 +139,9 @@ void TLoopManager::RunEmptySourceMT()
 #ifdef R__USE_IMT
    TSlotStack slotStack(fNSlots);
    // Working with an empty tree.
-   // Evenly partition the entries according to fNSlots
-   const auto nEntriesPerSlot = fNEmptyEntries / fNSlots;
-   auto remainder = fNEmptyEntries % fNSlots;
+   // Evenly partition the entries according to fNSlots. Produce around 2 tasks per slot.
+   const auto nEntriesPerSlot = fNEmptyEntries / (fNSlots * 2);
+   auto remainder = fNEmptyEntries % (fNSlots * 2);
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
    ULong64_t start = 0;
    while (start < fNEmptyEntries) {
