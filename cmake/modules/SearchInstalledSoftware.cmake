@@ -245,13 +245,15 @@ if(builtin_lz4)
   elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     set(LZ4_CFLAGS "/Zl")
   endif()
+  set(LZ4_URL ${lcgpackages}/lz4-${lz4_version}.tar.gz)
+  set(LZ4_MD5 c9610c5ce97eb431dddddf0073d919b9)
   set(LZ4_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
   if("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
     file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include" NATIVE_INCLUDEDIR)
     ExternalProject_Add(
       LZ4
-      URL http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources/lz4-${lz4_version}.tar.gz
-      URL_MD5 c9610c5ce97eb431dddddf0073d919b9
+      URL ${LZ4_URL}
+      URL_MD5 ${LZ4_MD5}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND cl /c "${LZ4_CFLAGS}" -DXXH_NAMESPACE=LZ4_ lib/lz4.c lib/lz4hc.c lib/lz4frame.c lib/xxhash.c
       BUILD_COMMAND lib /NODEFAULTLIB lz4.obj lz4hc.obj lz4frame.obj xxhash.obj /OUT:${LZ4_LIBRARIES}
@@ -261,8 +263,8 @@ if(builtin_lz4)
   else()
     ExternalProject_Add(
       LZ4
-      URL ${lcgpackages}/lz4-${lz4_version}.tar.gz
-      URL_MD5 c9610c5ce97eb431dddddf0073d919b9
+      URL ${LZ4_URL}
+      URL_MD5 ${LZ4_MD5}
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND  /bin/sh -c "PREFIX=<INSTALL_DIR> CMAKE_PARAMS='-DCMAKE_C_COMPILER=\\\"${CMAKE_C_COMPILER}\\\" -DCMAKE_C_FLAGS=\\\"${CMAKE_C_FLAGS}\\\" -DCMAKE_OSX_SYSROOT=\\\"${CMAKE_OSX_SYSROOT}\\\"' make cmake"
       BUILD_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> MOREFLAGS=-fPIC make"
