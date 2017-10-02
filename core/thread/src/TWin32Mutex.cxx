@@ -71,7 +71,7 @@ Int_t TWin32Mutex::UnLock(void)
 }
 
 namespace {
-struct TWin32MutexState: public TVirtualMutex::State {
+struct TWin32MutexState : public TVirtualMutex::State {
    int fLockCount = 0;
 };
 }
