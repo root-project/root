@@ -227,6 +227,15 @@ private:
    mutable std::atomic<Bool_t> fIsOffsetStreamerSet; //!saved remember if fOffsetStreamer has been set.
    mutable std::atomic<Bool_t> fVersionUsed;         //!Indicates whether GetClassVersion has been called
 
+   enum class ERuntimeProperties : UChar_t {
+      kNotInitialized = 0,
+      kSet = BIT(0),
+   };
+   friend bool operator&(UChar_t l, ERuntimeProperties r) {
+      return l & static_cast<UChar_t>(r);
+   }
+   mutable std::atomic<UChar_t> fRuntimeProperties;    //! Properties that can only be evaluated at run-time
+
    mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    EState             fState;           //!Current 'state' of the class (Emulated,Interpreted,Loaded)
@@ -264,6 +273,8 @@ private:
    TVirtualStreamerInfo* DetermineCurrentStreamerInfo();
 
    void SetStreamerImpl();
+
+   void SetRuntimeProperties();
 
    // Various implementation for TClass::Stramer
    static void StreamerExternal(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class);
