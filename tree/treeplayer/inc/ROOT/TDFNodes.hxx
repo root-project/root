@@ -128,6 +128,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    std::string fToJit;        ///< string containing all `BuildAndBook` actions that should be jitted before running
    const std::unique_ptr<TDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
+   TDataSource* fDataSourceRawPtr{0}; ///< Workaround for ROOT-9041: no access to the compiled fDataSource unique_ptr must happen in the jitted code on 32-bits platforms.
    ColumnNames_t fDefinedDataSourceColumns;        ///< List of data-source columns that have been `Define`d so far
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
    std::vector<TLoopCallback> fCallbacks; ///< Registered callbacks
@@ -164,7 +165,7 @@ public:
    const std::map<std::string, TCustomColumnBasePtr_t> &GetBookedColumns() const { return fBookedCustomColumns; }
    ::TDirectory *GetDirectory() const;
    ULong64_t GetNEmptyEntries() const { return fNEmptyEntries; }
-   TDataSource *GetDataSource() const { return fDataSource.get(); }
+   TDataSource *GetDataSource() const { return fDataSourceRawPtr; }
    void Book(const ActionBasePtr_t &actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
    void Book(const TCustomColumnBasePtr_t &branchPtr);
