@@ -1,8 +1,10 @@
-#include "ROOT/TDataFrame.hxx"
 #include "Compression.h"
-#include "TFile.h"
+#include "ROOT/TDataFrame.hxx"
+#include "ROOT/TSeq.hxx"
 #include "TInterpreter.h"
+#include "TFile.h"
 #include "TRandom.h"
+#include "TSystem.h"
 
 #include "gtest/gtest.h"
 
@@ -310,4 +312,50 @@ TEST(TEST_CATEGORY, CArraysFromTree)
    // jitting
    auto h_jit = df.Filter(/*"b3[0] == b1"*/"b4[0] == 21"/*"b4.size() == n"*/).Histo1D("b3");
    EXPECT_EQ(20, h_jit->GetEntries());
+}
+
+
+TEST(TEST_CATEGORY, TakeCarrays)
+{
+   auto treeName = "t";
+   auto fileName = "CacheCarrays.root";
+
+   {
+      TFile f(fileName, "RECREATE");
+      TTree t(treeName, treeName);
+      float arr[4];
+      t.Branch("arr", arr, "arr[4]/F");
+      for (auto i : ROOT::TSeqU(4)) {
+         for (auto j : ROOT::TSeqU(4)) {
+            arr[j] = i + j;
+         }
+         t.Fill();
+      }
+      t.Write();
+   }
+
+   TDataFrame tdf(treeName, fileName);
+   // no auto here: we check that the type is a COLL<vector<float>>!
+   using ColType_t = std::array_view<float>;
+   std::vector<std::vector<float>> v = *tdf.Take<ColType_t>("arr");
+   std::deque<std::vector<float>> d = *tdf.Take<ColType_t, std::deque<ColType_t>>("arr");
+   std::list<std::vector<float>> l = *tdf.Take<ColType_t, std::list<ColType_t>>("arr");
+
+   auto lit = l.begin();
+   auto ifloat = 0.f;
+   for (auto i : ROOT::TSeqU(4)) {
+      const auto &vv = v[i];
+      const auto &dv = d[i];
+      const auto &lv = *lit;
+      for (auto j : ROOT::TSeqU(4)) {
+         const auto ref = ifloat + j;
+         EXPECT_EQ(ref, vv[j]);
+         EXPECT_EQ(ref, dv[j]);
+         EXPECT_EQ(ref, lv[j]);
+      }
+      ifloat++;
+      lit++;
+   }
+
+   gSystem->Unlink(fileName);
 }
