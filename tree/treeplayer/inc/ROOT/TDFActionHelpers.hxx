@@ -278,7 +278,7 @@ public:
       }
    }
 
-   COLL &PartialUpdate(unsigned int slot) { return fColls[slot].get(); }
+   COLL &PartialUpdate(unsigned int slot) { return *fColls[slot].get(); }
 };
 
 // note: changes to this class should probably be replicated in its unspecialized
