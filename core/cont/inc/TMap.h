@@ -110,7 +110,7 @@ private:
 public:
    TPair(TObject *key, TObject *value) : fKey(key), fValue(value) { }
    TPair(const TPair &a) : TObject(), fKey(a.fKey), fValue(a.fValue) { }
-   virtual               ~TPair() { }
+   virtual               ~TPair();
    Bool_t                IsFolder() const { return kTRUE;}
    virtual void          Browse(TBrowser *b);
    const char           *GetName() const { return fKey->GetName(); }

@@ -278,6 +278,15 @@ TEnvRec::TEnvRec(const char *n, const char *v, const char *t, EEnvLevel l)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// TNamed destructor.
+
+TEnvRec::~TEnvRec()
+{
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Change the value of a resource.
 
 void TEnvRec::ChangeValue(const char *v, const char *, EEnvLevel l,

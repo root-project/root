@@ -80,6 +80,10 @@ TDrawFeedback::TDrawFeedback(TProof *proof, TSeqCollection *names)
 TDrawFeedback::~TDrawFeedback()
 {
    delete fNames;
+
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+
    fProof->Disconnect("Feedback(TList*)", this, "Feedback(TList*");
 }
 

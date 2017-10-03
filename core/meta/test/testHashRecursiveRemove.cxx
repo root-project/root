@@ -169,3 +169,14 @@ TEST(HashRecursiveRemove,FailingClasses)
    std::string output = testing::internal::GetCapturedStderr();
    EXPECT_EQ(gErrorOutput,output);
 }
+
+/*
+virtual ULong_t     Hash() const;
+
+RooSetPair
+RooLinkedList
+TStatsFeedback
+TDrawFeedback
+TVolume
+
+*/

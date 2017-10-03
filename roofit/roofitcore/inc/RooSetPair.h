@@ -32,8 +32,7 @@ public:
   }
 
   // Destructor
-  virtual ~RooSetPair() {    
-  }
+  virtual ~RooSetPair();
 
   RooArgSet* _set1 ;
   RooArgSet* _set2 ;

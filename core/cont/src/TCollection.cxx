@@ -202,6 +202,15 @@ void TCollection::TErrorLock::ReadUnlock()
 #endif // R__CHECK_COLLECTION_MULTI_ACCESS
 
 ////////////////////////////////////////////////////////////////////////////////
+/// TNamed destructor.
+
+TCollection::~TCollection()
+{
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add all objects from collection col to this collection.
 
 void TCollection::AddAll(const TCollection *col)

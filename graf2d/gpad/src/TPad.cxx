@@ -381,6 +381,9 @@ TPad::~TPad()
    SafeDelete(fExecs);
    delete fViewer3D;
    if (fCollideGrid) delete [] fCollideGrid;
+
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

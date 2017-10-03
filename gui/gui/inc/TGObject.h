@@ -43,8 +43,7 @@ protected:
 public:
    TGObject(): fId(0), fClient(0) { }
    TGObject(const TGObject& tgo): TObject(tgo), fId(tgo.fId), fClient(tgo.fClient) { }
-   virtual ~TGObject() { }
-
+   virtual ~TGObject();
    Handle_t  GetId() const { return fId; }
    TGClient *GetClient() const { return fClient; }
    ULong_t   Hash() const { return (ULong_t) fId >> 0; }
