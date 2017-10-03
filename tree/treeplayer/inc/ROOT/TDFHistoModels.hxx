@@ -17,6 +17,8 @@
 class TH1D;
 class TH2D;
 class TH3D;
+class TProfile;
+class TProfile2D;
 
 namespace ROOT {
 namespace Experimental {
@@ -73,6 +75,48 @@ struct TH3DModel {
    TH3DModel(const ::TH3D &h);
    TH3DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, double ylow,
              double yup, int nbinsz, double zlow, double zup);
+};
+
+struct TProfile1DModel {
+   TString fName;
+   TString fTitle;
+   int fNbinsX = 128;
+   double fXLow = 0.;
+   double fXUp = 64.;
+   double fYLow = 0.;
+   double fYUp = 0.;
+   TString fOption;
+
+   TProfile1DModel() = default;
+   TProfile1DModel(const TProfile1DModel &) = default;
+   ~TProfile1DModel();
+   TProfile1DModel(const ::TProfile &h);
+   TProfile1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, const char *option = "");
+   TProfile1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, double ylow, double yup,
+                   const char *option = "");
+};
+
+struct TProfile2DModel {
+   TString fName;
+   TString fTitle;
+   int fNbinsX = 128;
+   double fXLow = 0.;
+   double fXUp = 64.;
+   int fNbinsY = 128;
+   double fYLow = 0.;
+   double fYUp = 64.;
+   double fZLow = 0.;
+   double fZUp = 0.;
+   TString fOption;
+
+   TProfile2DModel() = default;
+   TProfile2DModel(const TProfile2DModel &) = default;
+   ~TProfile2DModel();
+   TProfile2DModel(const ::TProfile2D &h);
+   TProfile2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, double ylow,
+                   double yup, const char *option = "");
+   TProfile2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, double ylow,
+                   double yup, double zlow, double zup, const char *option = "");
 };
 
 } // ns TDF
