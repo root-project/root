@@ -130,10 +130,30 @@ TEST(Cache, CollectionColumns)
 {
    TDataFrame tdf(3);
    int i = 0;
-   auto d = tdf.Define("vector", [&i](){std::vector<int> v(3); v[0] = i; v[1] = i+1; v[2] = i+2; return v;})
-               .Define("list", [&i](){std::list<int> v; for (auto j : {0,1,2}) v.emplace_back(j+i); return v;})
-               .Define("deque", [&i](){std::deque<int> v(3); v[0] = i; v[1] = i+1; v[2] = i+2; return v;})
-               .Define("blob", [&i](){return ++i;});
+   auto d = tdf.Define("vector",
+                       [&i]() {
+                          std::vector<int> v(3);
+                          v[0] = i;
+                          v[1] = i + 1;
+                          v[2] = i + 2;
+                          return v;
+                       })
+               .Define("list",
+                       [&i]() {
+                          std::list<int> v;
+                          for (auto j : {0, 1, 2})
+                             v.emplace_back(j + i);
+                          return v;
+                       })
+               .Define("deque",
+                       [&i]() {
+                          std::deque<int> v(3);
+                          v[0] = i;
+                          v[1] = i + 1;
+                          v[2] = i + 2;
+                          return v;
+                       })
+               .Define("blob", [&i]() { return ++i; });
    {
       auto c = d.Cache<std::vector<int>, std::list<int>, std::deque<int>>({"vector", "list", "deque"});
       auto hv = c.Histo1D("vector");
@@ -201,7 +221,7 @@ TEST(Cache, TakeCarrays)
       TFile f(fileName, "RECREATE");
       TTree t(treeName, treeName);
       float arr[4];
-      t.Branch("arr", arr,"arr[4]/F");
+      t.Branch("arr", arr, "arr[4]/F");
       for (auto i : ROOT::TSeqU(4)) {
          for (auto j : ROOT::TSeqU(4)) {
             arr[j] = i + j;
@@ -240,13 +260,13 @@ TEST(Cache, Carrays)
    TDataFrame tdf(treeName, fileName);
    auto cache = tdf.Cache<std::array_view<float>>({"arr"});
    int i = 0;
-   auto checkArr = [&i](std::vector<float> av){
+   auto checkArr = [&i](std::vector<float> av) {
       auto ifloat = float(i);
       EXPECT_EQ(ifloat, av[0]);
-      EXPECT_EQ(ifloat + 1 , av[1]);
-      EXPECT_EQ(ifloat + 2 , av[2]);
-      EXPECT_EQ(ifloat + 3 , av[3]);
+      EXPECT_EQ(ifloat + 1, av[1]);
+      EXPECT_EQ(ifloat + 2, av[2]);
+      EXPECT_EQ(ifloat + 3, av[3]);
       i++;
    };
-   cache.Foreach(checkArr,{"arr"});
+   cache.Foreach(checkArr, {"arr"});
 }

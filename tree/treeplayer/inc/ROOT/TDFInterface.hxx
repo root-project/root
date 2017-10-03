@@ -157,7 +157,7 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
                             const unsigned int nSlots, const std::map<std::string, TmpBranchBasePtr_t> &customColumns,
-                            TDataSource *ds, const std::shared_ptr<TActionBase *> * const actionPtrPtr);
+                            TDataSource *ds, const std::shared_ptr<TActionBase *> *const actionPtrPtr);
 
 // allocate a shared_ptr on the heap, return a reference to it. the user is responsible of deleting the shared_ptr*.
 // this function is meant to only be used by TInterface's action methods, and should be deprecated as soon as we find
@@ -239,7 +239,7 @@ void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const uns
 namespace Detail {
 namespace TDF {
 
-template<typename T, typename COLL = std::vector<T>>
+template <typename T, typename COLL = std::vector<T>>
 struct TakeRealTypes {
    // We cannot put in the output collection C arrays: the ownership is not defined.
    // We therefore proceed to check if T is an array_view
@@ -250,15 +250,12 @@ struct TakeRealTypes {
    using ValueType_t = typename TDFInternal::ValueType<T>::value_type;
    using ValueTypeColl_t = std::vector<ValueType_t>;
 
-   using NewC0_t = typename std::conditional<isAV && TDFInternal::IsVector_t<COLL>::value,
-                                             std::vector<ValueTypeColl_t>,
-                                             COLL>::type;
-   using NewC1_t = typename std::conditional<isAV && TDFInternal::IsList_t<NewC0_t>::value,
-                                             std::list<ValueTypeColl_t>,
+   using NewC0_t =
+      typename std::conditional<isAV && TDFInternal::IsVector_t<COLL>::value, std::vector<ValueTypeColl_t>, COLL>::type;
+   using NewC1_t = typename std::conditional<isAV && TDFInternal::IsList_t<NewC0_t>::value, std::list<ValueTypeColl_t>,
                                              NewC0_t>::type;
    using NewC2_t = typename std::conditional<isAV && TDFInternal::IsDeque_t<NewC1_t>::value,
-                                             std::deque<ValueTypeColl_t>,
-                                             NewC1_t>::type;
+                                             std::deque<ValueTypeColl_t>, NewC1_t>::type;
 
    using RealT_t = typename std::conditional<isAV, ValueType_t, T>::type;
    using RealColl_t = NewC2_t;
@@ -1612,7 +1609,9 @@ private:
       // We share bits and pieces with snapshot. De facto this is a snapshot
       // in memory!
       TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
-      std::tuple<TDFInternal::CacheColumnHolder<typename TDFDetail::TakeRealTypes<BranchTypes>::RealColl_t::value_type>...> colHolders;
+      std::tuple<
+         TDFInternal::CacheColumnHolder<typename TDFDetail::TakeRealTypes<BranchTypes>::RealColl_t::value_type>...>
+         colHolders;
 
       // TODO: really fix the type of the Take....
       std::initializer_list<int> expander0{(

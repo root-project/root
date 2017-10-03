@@ -33,7 +33,6 @@ namespace TDF {
 using namespace ROOT::TypeTraits;
 using namespace ROOT::Experimental::TDF;
 
-
 using Hist_t = ::TH1D;
 
 template <typename F>
@@ -140,8 +139,8 @@ extern template void FillHelper::Exec(unsigned int, const std::vector<float> &, 
 extern template void FillHelper::Exec(unsigned int, const std::vector<double> &, const std::vector<double> &);
 extern template void FillHelper::Exec(unsigned int, const std::vector<char> &, const std::vector<char> &);
 extern template void FillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
-extern template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &,
-                                      const std::vector<unsigned int> &);
+extern template void
+FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
 template <typename HIST = Hist_t>
 class FillTOHelper {
@@ -265,14 +264,15 @@ public:
    TakeHelper(const std::shared_ptr<COLL> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
-      for (unsigned int i = 1; i < nSlots; ++i) fColls.emplace_back(std::make_shared<COLL>());
+      for (unsigned int i = 1; i < nSlots; ++i)
+         fColls.emplace_back(std::make_shared<COLL>());
    }
    TakeHelper(TakeHelper &&) = default;
    TakeHelper(const TakeHelper &) = delete;
 
    void InitSlot(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, T& v) { fColls[slot]->emplace_back(v); }
+   void Exec(unsigned int slot, T &v) { fColls[slot]->emplace_back(v); }
 
    void Finalize()
    {
@@ -310,13 +310,14 @@ public:
 
    void InitSlot(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, T& v) { fColls[slot]->emplace_back(v); }
+   void Exec(unsigned int slot, T &v) { fColls[slot]->emplace_back(v); }
 
    // This is optimised to treat vectors
    void Finalize()
    {
       ULong64_t totSize = 0;
-      for (auto &coll : fColls) totSize += coll->size();
+      for (auto &coll : fColls)
+         totSize += coll->size();
       auto rColl = fColls[0];
       rColl->reserve(totSize);
       for (unsigned int i = 1; i < fColls.size(); ++i) {
@@ -339,17 +340,15 @@ public:
    TakeHelper(const std::shared_ptr<COLL> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
-      for (unsigned int i = 1; i < nSlots; ++i) fColls.emplace_back(std::make_shared<COLL>());
+      for (unsigned int i = 1; i < nSlots; ++i)
+         fColls.emplace_back(std::make_shared<COLL>());
    }
    TakeHelper(TakeHelper &&) = default;
    TakeHelper(const TakeHelper &) = delete;
 
    void InitSlot(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, std::array_view<RealT_t> av)
-   {
-      fColls[slot]->emplace_back(av.begin(), av.end());
-   }
+   void Exec(unsigned int slot, std::array_view<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
 
    void Finalize()
    {
@@ -385,16 +384,14 @@ public:
 
    void InitSlot(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, std::array_view<RealT_t> av)
-   {
-      fColls[slot]->emplace_back(av.begin(), av.end());
-   }
+   void Exec(unsigned int slot, std::array_view<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
 
    // This is optimised to treat vectors
    void Finalize()
    {
       ULong64_t totSize = 0;
-      for (auto &coll : fColls) totSize += coll->size();
+      for (auto &coll : fColls)
+         totSize += coll->size();
       auto rColl = fColls[0];
       rColl->reserve(totSize);
       for (unsigned int i = 1; i < fColls.size(); ++i) {
@@ -403,8 +400,6 @@ public:
       }
    }
 };
-
-
 
 template <typename F, typename T>
 class ReduceHelper {
@@ -427,7 +422,8 @@ public:
 
    void Finalize()
    {
-      for (auto &t : fReduceObjs) *fReduceRes = fReduceFun(*fReduceRes, t);
+      for (auto &t : fReduceObjs)
+         *fReduceRes = fReduceFun(*fReduceRes, t);
    }
 
    T &PartialUpdate(unsigned int slot) { return fReduceObjs[slot]; }
@@ -448,7 +444,8 @@ public:
    template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs)
    {
-      for (auto &&v : vs) fMins[slot] = std::min((double)v, fMins[slot]);
+      for (auto &&v : vs)
+         fMins[slot] = std::min((double)v, fMins[slot]);
    }
 
    void Finalize();
@@ -476,7 +473,8 @@ public:
    template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs)
    {
-      for (auto &&v : vs) fMaxs[slot] = std::max((double)v, fMaxs[slot]);
+      for (auto &&v : vs)
+         fMaxs[slot] = std::max((double)v, fMaxs[slot]);
    }
 
    void Finalize();
@@ -535,8 +533,8 @@ public:
    SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
                   const ColumnNames_t &bnames, const TSnapshotOptions &options)
       : fOutputFile(TFile::Open(std::string(filename).c_str(), options.fMode.c_str(), /*ftitle=*/"",
-                    ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
-                    fBranchNames(bnames)
+                                ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
+        fBranchNames(bnames)
    {
       if (!dirname.empty()) {
          std::string dirnameStr(dirname);
@@ -544,10 +542,11 @@ public:
          fOutputFile->cd(dirnameStr.c_str());
       }
       std::string treenameStr(treename);
-      fOutputTree.reset(new TTree(treenameStr.c_str(), treenameStr.c_str(), options.fSplitLevel, /*dir=*/fOutputFile.get()));
+      fOutputTree.reset(
+         new TTree(treenameStr.c_str(), treenameStr.c_str(), options.fSplitLevel, /*dir=*/fOutputFile.get()));
 
       if (options.fAutoFlush)
-        fOutputTree->SetAutoFlush(options.fAutoFlush);
+         fOutputTree->SetAutoFlush(options.fAutoFlush);
    }
 
    SnapshotHelper(const SnapshotHelper &) = delete;
@@ -594,15 +593,16 @@ class SnapshotHelperMT {
    std::vector<int> fIsFirstEvent;    // vector<bool> is evil
    const std::string fDirName;        // name of TFile subdirectory in which output must be written (possibly empty)
    const std::string fTreeName;       // name of output tree
-   const TSnapshotOptions fOptions;    // struct holding options to pass down to TFile and TTree in this action
+   const TSnapshotOptions fOptions;   // struct holding options to pass down to TFile and TTree in this action
    const ColumnNames_t fBranchNames;
 
 public:
    using BranchTypes_t = TypeList<BranchTypes...>;
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
                     std::string_view treename, const ColumnNames_t &bnames, const TSnapshotOptions &options)
-      : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(std::string(filename).c_str(), options.fMode.c_str(),
-                                 ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
+      : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(
+                            std::string(filename).c_str(), options.fMode.c_str(),
+                            ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
         fOutputFiles(fNSlots), fOutputTrees(fNSlots, nullptr), fIsFirstEvent(fNSlots, 1), fDirName(dirname),
         fTreeName(treename), fOptions(options), fBranchNames(bnames)
    {
