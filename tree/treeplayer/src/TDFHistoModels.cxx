@@ -13,6 +13,8 @@
 #include <TH1D.h>
 #include <TH2D.h>
 #include <TH3D.h>
+#include <TProfile.h>
+#include <TProfile2D.h>
 
 /**
 * \class ROOT::Experimental::TDF::TH1DModel
@@ -26,6 +28,14 @@
 * \class ROOT::Experimental::TDF::TH3DModel
 * \ingroup dataframe
 * \brief A struct which stores the parameters of a TH3D
+*
+* \class ROOT::Experimental::TDF::TProfile1DModel
+* \ingroup dataframe
+* \brief A struct which stores the parameters of a TProfile
+*
+* \class ROOT::Experimental::TDF::TProfile2DModel
+* \ingroup dataframe
+* \brief A struct which stores the parameters of a TProfile2D
 */
 
 namespace ROOT {
@@ -74,6 +84,56 @@ TH3DModel::TH3DModel(const char *name, const char *title, int nbinsx, double xlo
 {
 }
 TH3DModel::~TH3DModel()
+{
+}
+
+// Profiles
+
+TProfile1DModel::TProfile1DModel(const ::TProfile &h)
+   : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()),
+     fXUp(h.GetXaxis()->GetXmax()), fYLow(h.GetYaxis()->GetXmin()), fYUp(h.GetYaxis()->GetXmax()),
+     fOption(h.GetErrorOption())
+{
+}
+TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup,
+                                 const char *option)
+   : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fOption(option)
+{
+}
+
+TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup,
+                                 double ylow, double yup, const char *option)
+   : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fYLow(ylow), fYUp(yup),
+     fOption(option)
+{
+}
+
+TProfile1DModel::~TProfile1DModel()
+{
+}
+
+TProfile2DModel::TProfile2DModel(const ::TProfile2D &h)
+   : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()),
+     fXUp(h.GetXaxis()->GetXmax()), fNbinsY(h.GetNbinsY()), fYLow(h.GetYaxis()->GetXmin()),
+     fYUp(h.GetYaxis()->GetXmax()), fZLow(h.GetZaxis()->GetXmin()), fZUp(h.GetZaxis()->GetXmax()),
+     fOption(h.GetErrorOption())
+{
+}
+TProfile2DModel::TProfile2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy,
+                                 double ylow, double yup, const char *option)
+   : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fNbinsY(nbinsy), fYLow(ylow), fYUp(yup),
+     fOption(option)
+{
+}
+
+TProfile2DModel::TProfile2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy,
+                                 double ylow, double yup, double zlow, double zup, const char *option)
+   : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fNbinsY(nbinsy), fYLow(ylow), fYUp(yup),
+     fZLow(zlow), fZUp(zup), fOption(option)
+{
+}
+
+TProfile2DModel::~TProfile2DModel()
 {
 }
 
