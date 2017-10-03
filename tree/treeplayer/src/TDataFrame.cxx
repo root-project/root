@@ -191,9 +191,10 @@ You can think of your data as "flowing" through the chain of calls, being transf
 perform actions. Multiple `Filter` calls can be chained one after another.
 
 Using string filters is nice for simple things, but they are limited to specifying the equivalent of a single return
-statement. They also add a small runtime overhead, as ROOT needs to just-in-time compile the string into c++ code.
-When more freedom is required or runtime is very important, a c++ callable can be specified instead (a lambda in the
-following snippet, but it can be any kind of function or even a functor class), together with a list of branch names.
+statement or the body of a lambda, so it's cumbersome to use strings with more complex filters. They also add a small
+runtime overhead, as ROOT needs to just-in-time compile the string into C++ code. When more freedom is required or
+runtime performance is very important, a C++ callable can be specified instead (a lambda in the following snippet,
+but it can be any kind of function or even a functor class), together with a list of branch names.
 This snippet is analogous to the one above:
 ~~~{.cpp}
 TDataFrame d("myTree", "file.root");
@@ -201,6 +202,20 @@ auto metCut = [](double x) { return x > 4.; }; // a c++11 lambda function checki
 auto c = d.Filter(metCut, {"MET"}).Count();
 std::cout << *c << std::endl;
 ~~~
+
+An example of a more complex filter with just in time compilation is shown below:
+
+~~~{.cpp}
+TDataFrame d("myTree", "file.root");
+auto df = d.Define("p", "std::array<double, 4> p{px, py, pz, E}; return p;")
+           .Filter("double p2 = 0.0; for (auto&& x : p) p2 += x*x; return sqrt(p2) < 10.0;");
+~~~
+
+The code snippet above defines a column `p` that is a fixed-size array using the component column names, then filters
+on its magnitude by looping over its elements. The good thing about using strings like this for defining new columns
+is that this makes it easy to use with Python scripts, where creating a C++ callable can be an annoyance. However,
+there is still a limitation that the lambda cannot capture anything. For that, a C++ lambda is the best option.
+
 More information on filters and how to use them to automatically generate cutflow reports can be found [below](#Filters).
 
 ### Defining custom columns
