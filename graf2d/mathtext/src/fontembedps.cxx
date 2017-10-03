@@ -254,8 +254,8 @@ namespace mathtext {
             segment_header.length =
             bswap_32(segment_header.length);
 #endif // LITTLE_ENDIAN
+            const char *match = "/FontName";
             char *buffer = new char[segment_header.length];
-            char *match = "/FontName";
             char *fname;
 
             memcpy(buffer, &font_data[offset],
