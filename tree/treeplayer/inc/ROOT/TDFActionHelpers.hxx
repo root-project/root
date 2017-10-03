@@ -248,8 +248,15 @@ public:
    HIST &PartialUpdate(unsigned int slot) { return *fTo->GetAtSlotRaw(slot); }
 };
 
-// IMPORTANT NOTE: changes to this class should probably be replicated in its partial specialization below
-template <typename T, typename COLL>
+// In case of the take helper we have 4 cases:
+// 1. The column is not an array_view, the collection is not a vector
+// 2. The column is not an array_view, the collection is a vector
+// 3. The column is an array_view, the collection is not a vector
+// 4. The column is an array_view, the collection is a vector
+
+// Case 1.: The column is not an array_view, the collection is not a vector
+// No optimisations, no transformations: just copies.
+template <typename RealT_t, typename T, typename COLL>
 class TakeHelper {
    std::vector<std::shared_ptr<COLL>> fColls;
 
@@ -265,7 +272,7 @@ public:
 
    void InitSlot(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, T v) { fColls[slot]->emplace_back(v); }
+   void Exec(unsigned int slot, T& v) { fColls[slot]->emplace_back(v); }
 
    void Finalize()
    {
@@ -281,10 +288,10 @@ public:
    COLL &PartialUpdate(unsigned int slot) { return *fColls[slot].get(); }
 };
 
-// note: changes to this class should probably be replicated in its unspecialized
-// declaration above
-template <typename T>
-class TakeHelper<T, std::vector<T>> {
+// Case 2.: The column is not an array_view, the collection is a vector
+// Optimisations, no transformations: just copies.
+template <typename RealT_t, typename T>
+class TakeHelper<RealT_t, T, std::vector<T>> {
    std::vector<std::shared_ptr<std::vector<T>>> fColls;
 
 public:
@@ -303,8 +310,9 @@ public:
 
    void InitSlot(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, T v) { fColls[slot]->emplace_back(v); }
+   void Exec(unsigned int slot, T& v) { fColls[slot]->emplace_back(v); }
 
+   // This is optimised to treat vectors
    void Finalize()
    {
       ULong64_t totSize = 0;
@@ -319,6 +327,84 @@ public:
 
    std::vector<T> &PartialUpdate(unsigned int slot) { return *fColls[slot]; }
 };
+
+// Case 3.: The column is an array_view, the collection is not a vector
+// No optimisations, transformations from array_views to vectors
+template <typename RealT_t, typename COLL>
+class TakeHelper<RealT_t, std::array_view<RealT_t>, COLL> {
+   std::vector<std::shared_ptr<COLL>> fColls;
+
+public:
+   using BranchTypes_t = TypeList<std::array_view<RealT_t>>;
+   TakeHelper(const std::shared_ptr<COLL> &resultColl, const unsigned int nSlots)
+   {
+      fColls.emplace_back(resultColl);
+      for (unsigned int i = 1; i < nSlots; ++i) fColls.emplace_back(std::make_shared<COLL>());
+   }
+   TakeHelper(TakeHelper &&) = default;
+   TakeHelper(const TakeHelper &) = delete;
+
+   void InitSlot(TTreeReader *, unsigned int) {}
+
+   void Exec(unsigned int slot, std::array_view<RealT_t> av)
+   {
+      fColls[slot]->emplace_back(av.begin(), av.end());
+   }
+
+   void Finalize()
+   {
+      auto rColl = fColls[0];
+      for (unsigned int i = 1; i < fColls.size(); ++i) {
+         auto &coll = fColls[i];
+         for (auto &v : *coll) {
+            rColl->emplace_back(v);
+         }
+      }
+   }
+};
+
+// Case 4.: The column is an array_view, the collection is a vector
+// Optimisations, transformations from array_views to vectors
+template <typename RealT_t>
+class TakeHelper<RealT_t, std::array_view<RealT_t>, std::vector<RealT_t>> {
+   std::vector<std::shared_ptr<std::vector<std::vector<RealT_t>>>> fColls;
+
+public:
+   using BranchTypes_t = TypeList<std::array_view<RealT_t>>;
+   TakeHelper(const std::shared_ptr<std::vector<std::vector<RealT_t>>> &resultColl, const unsigned int nSlots)
+   {
+      fColls.emplace_back(resultColl);
+      for (unsigned int i = 1; i < nSlots; ++i) {
+         auto v = std::make_shared<std::vector<RealT_t>>();
+         v->reserve(1024);
+         fColls.emplace_back(v);
+      }
+   }
+   TakeHelper(TakeHelper &&) = default;
+   TakeHelper(const TakeHelper &) = delete;
+
+   void InitSlot(TTreeReader *, unsigned int) {}
+
+   void Exec(unsigned int slot, std::array_view<RealT_t> av)
+   {
+      fColls[slot]->emplace_back(av.begin(), av.end());
+   }
+
+   // This is optimised to treat vectors
+   void Finalize()
+   {
+      ULong64_t totSize = 0;
+      for (auto &coll : fColls) totSize += coll->size();
+      auto rColl = fColls[0];
+      rColl->reserve(totSize);
+      for (unsigned int i = 1; i < fColls.size(); ++i) {
+         auto &coll = fColls[i];
+         rColl->insert(rColl->end(), coll->begin(), coll->end());
+      }
+   }
+};
+
+
 
 template <typename F, typename T>
 class ReduceHelper {
