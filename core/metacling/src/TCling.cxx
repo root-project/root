@@ -176,7 +176,7 @@ extern "C" {
 #undef GetModuleFileName
 #define RTLD_DEFAULT ((void *)::GetModuleHandle(NULL))
 #define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
-#define dlopen(library_name, flags) ::LoadLibrary(library_name)
+#define dlopen(library_name, flags) ::LoadLibraryA(library_name)
 #define dlclose(library) ::FreeLibrary((HMODULE)library)
 #define R__DLLEXPORT __declspec(dllexport)
 #endif
@@ -1677,7 +1677,7 @@ void TCling::RegisterModule(const char* modulename,
          if (!dyLibHandle) {
 #ifdef R__WIN32
             char dyLibError[1000];
-            FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
+            FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
                           MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), dyLibError,
                           sizeof(dyLibError), NULL);
 #else
@@ -4729,20 +4729,24 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
    const std::map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7},{'e',5},{'v',4}};
 
    if (rootmapfile && *rootmapfile) {
-
+      std::string rmapfile(rootmapfile);
+#ifdef _MSC_VER
+      std::replace(rmapfile.begin(), rmapfile.end(), '\\', '/');
+#endif
       // Add content of a specific rootmap file
-      if (fRootmapFiles->FindObject(rootmapfile)) return -1;
+      if (fRootmapFiles->FindObject(rmapfile.c_str()))
+         return -1;
 
       if (uniqueString)
-         uniqueString->Append(std::string("\n#line 1 \"Forward declarations from ") + rootmapfile + "\"\n");
+         uniqueString->Append(std::string("\n#line 1 \"Forward declarations from ") + rmapfile + "\"\n");
 
-      std::ifstream file(rootmapfile);
+      std::ifstream file(rmapfile);
       std::string line; line.reserve(200);
       std::string lib_name; line.reserve(100);
       bool newFormat=false;
       while (getline(file, line, '\n')) {
          if (!newFormat &&
-             (strstr(line.c_str(),"Library.")!=nullptr || strstr(line.c_str(),"Declare.")!=nullptr)) {
+             (strstr(line.c_str(),"Library.") != nullptr || strstr(line.c_str(),"Declare.") != nullptr)) {
             file.close();
             return -3; // old format
          }
@@ -4754,8 +4758,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
             while (getline(file, line, '\n')) {
                if (line[0] == '[') break;
                if (!uniqueString) {
-                  Error("ReadRootmapFile", "Cannot handle \"{ decls }\" sections in custom rootmap file %s",
-                        rootmapfile);
+                  Error("ReadRootmapFile", "Cannot handle \"{ decls }\" sections in custom rootmap file %s", rmapfile);
                   return -4;
                }
                uniqueString->Append(line);
