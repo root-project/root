@@ -115,8 +115,5 @@ endif()
 if(builtin_lzma)
   ROOT_ADD_BUILTIN_DEPENDENCIES(Core LZMA)
 endif()
-if(builtin_lz4)
-  ROOT_ADD_BUILTIN_DEPENDENCIES(Core LZ4)
-endif()
 
 #----------------------------------------------------------------------------------------
