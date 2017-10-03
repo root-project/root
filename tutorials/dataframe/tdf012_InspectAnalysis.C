@@ -94,7 +94,7 @@ void tdf012_InspectAnalysis()
    // Magic numbers that yield good progress bars for nSlots = 1,2,4,8
    const auto everyN = nSlots == 8 ? 1000 : 100ull * nSlots;
    const auto barWidth = nEvents / everyN;
-   h.OnPartialResultSlot(everyN, [&barWidth, &progressBar, &barMutex](unsigned int, TH1D &) {
+   h.OnPartialResultSlot(everyN, [&barWidth, &progressBar, &barMutex](unsigned int /*slot*/, TH1D &/*partialHist*/) {
       std::lock_guard<std::mutex> l(barMutex); // lock_guard locks the mutex at construction, releases it at destruction
       progressBar.push_back('#');
       // re-print the line with the progress bar
