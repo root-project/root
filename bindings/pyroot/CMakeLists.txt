@@ -18,7 +18,9 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES}
                               DEPENDENCIES Core MathCore Net Tree Rint)
-ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core)
+if(NOT MSVC)
+  ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core)
+endif()
 
 
 if(MSVC)
@@ -48,9 +50,11 @@ foreach(pyfile ${pyfiles})
   file(COPY ${pyfile} DESTINATION ${localruntimedir})
 endforeach()
 
-set(JupyROOTDirName "JupyROOT")
-install (DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
-file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
+if(NOT MSVC)
+  set(JupyROOTDirName "JupyROOT")
+  install (DIRECTORY ${JupyROOTDirName} DESTINATION ${runtimedir})
+  file(COPY ${JupyROOTDirName} DESTINATION ${localruntimedir})
+endif()
 
 set( JsMVADirName "JsMVA")
 install (DIRECTORY ${JsMVADirName} DESTINATION ${runtimedir})
