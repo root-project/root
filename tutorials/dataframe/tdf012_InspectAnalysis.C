@@ -11,7 +11,7 @@
 
 using namespace ROOT::Experimental; // TDataFrame lives in here
 
-void tdf_inspect_analysis()
+void tdf012_InspectAnalysis()
 {
    // We need this here if we want to draw and update canvases at runtime
    TApplication app("app", nullptr, nullptr);
@@ -31,7 +31,7 @@ void tdf_inspect_analysis()
    // `heavyWork` is a lambda that fakes some interesting computation and just returns a normally distributed double
    TRandom r;
    auto heavyWork = [&r]() {
-      for (volatile int i = 0; i < 1000000; ++i) {}
+      for (volatile int i = 0; i < 1000000; ++i);
       return r.Gaus();
    };
 
@@ -43,7 +43,6 @@ void tdf_inspect_analysis()
    // `h` can be used just like a pointer to TH1D but it is actually a TResultProxy<TH1D>, a smart object that triggers
    // an event-loop to fill the pointee histogram if needed.
    auto h = tdf.Histo1D<double>({"browserHisto", "", 100, -2., 2.}, "x");
-
 
    // ## Use the callback mechanism to draw the histogram on a TBrowser while it is being filled
    // So far we have registered a column "x" to a data-frame with `nEvents` events and we registered the filling of a
@@ -65,7 +64,7 @@ void tdf_inspect_analysis()
    // increasing number of events.
    // Instead of requesting the callback to be executed every N entries, this time we use the special value `kOnce` to
    // request that it is executed once right before starting the event-loop.
-   // The callback is a C++11 lambda that registers the partial result object in `tdfDirectory`. 
+   // The callback is a C++11 lambda that registers the partial result object in `tdfDirectory`.
    h.OnPartialResult(h.kOnce, [&tdfDirectory](TH1D &h_) { tdfDirectory.Add(&h_); });
    // Note that we called `OnPartialResult` with a dot, `.`, since this is a method of `TResultProxy` itself.
    // We do not want to call `OnPartialResult` on the pointee histogram!)
@@ -93,7 +92,7 @@ void tdf_inspect_analysis()
    std::string progressBar;
    std::mutex barMutex; // Only one thread at a time can lock a mutex. Let's use this to avoid concurrent printing.
    // Magic numbers that yield good progress bars for nSlots = 1,2,4,8
-   const auto everyN = nSlots == 8 ? 1000 : 100ull*nSlots;
+   const auto everyN = nSlots == 8 ? 1000 : 100ull * nSlots;
    const auto barWidth = nEvents / everyN;
    h.OnPartialResultSlot(everyN, [&barWidth, &progressBar, &barMutex](unsigned int, TH1D &) {
       std::lock_guard<std::mutex> l(barMutex); // lock_guard locks the mutex at construction, releases it at destruction
