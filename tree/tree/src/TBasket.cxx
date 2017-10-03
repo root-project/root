@@ -868,6 +868,9 @@ void TBasket::Streamer(TBuffer &b)
             b.ReadArray(fDisplacement);
          }
       } else if (mustGenerateOffsets) {
+         // We currently believe that in all cases when offsets can be generated, then the
+         // displacement array must be zero.
+         assert(flag <= 40);
          fEntryOffset = reinterpret_cast<Int_t *>(-1);
       }
       if (flag == 1 || flag > 10) {
@@ -903,6 +906,9 @@ void TBasket::Streamer(TBuffer &b)
       Bool_t mustGenerateOffsets = fEntryOffset && fNevBuf &&
                                    (fIOBits & static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap)) &&
                                    CanGenerateOffsetArray();
+      // We currently believe that in all cases when offsets can be generated, then the
+      // displacement array must be zero.
+      if (mustGenerateOffsets) assert(fDisplacement == nullptr);
       if (fHeaderOnly) {
          flag = mustGenerateOffsets ? 80 : 0;
          b << flag;

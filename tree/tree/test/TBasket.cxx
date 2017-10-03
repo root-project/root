@@ -270,10 +270,12 @@ TEST(TBasket, TestVarLengthArrays)
    }
 }
 
-UChar_t GetFeatures(const ROOT::Experimental::TIOFeatures &settings) {
+// A simple helper function for determining all supported features.
+// Crude, but works without making tests a 'friend' class of ROOT::TIOFeatures.
+UChar_t GetFeatures(const ROOT::TIOFeatures &settings) {
    UChar_t features = 0;
    for (Int_t idx = 0; idx < 8; idx++) {
-      if (settings.Test(static_cast<TBasket::EIOBits>(1 << idx))) {
+      if (settings.Test(static_cast<ROOT::Experimental::EIOFeatures>(1 << idx))) {
          features |= 1 << idx;
       }
    }
@@ -296,15 +298,15 @@ TEST(TBasket, TestSettingIOBits)
    TTree t2("t2", "Simple tree for testing serialized entry offset.");
    ASSERT_FALSE(t2.IsZombie());
 
-   ROOT::Experimental::TIOFeatures settings;
+   ROOT::TIOFeatures settings;
    ASSERT_EQ(GetFeatures(settings), 0);
-   ASSERT_FALSE(settings.Test(TBasket::EIOBits::kGenerateOffsetMap));
-   settings.Set(TBasket::EIOBits::kGenerateOffsetMap);
-   ASSERT_EQ(GetFeatures(settings), static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap));
-   ASSERT_TRUE(settings.Test(TBasket::EIOBits::kGenerateOffsetMap));
-   settings.Clear(TBasket::EIOBits::kGenerateOffsetMap);
-   ASSERT_FALSE(settings.Test(TBasket::EIOBits::kGenerateOffsetMap));
-   settings.Set(TBasket::EIOBits::kGenerateOffsetMap);
+   ASSERT_FALSE(settings.Test(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap));
+   settings.Set(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap);
+   ASSERT_EQ(GetFeatures(settings), static_cast<UChar_t>(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap));
+   ASSERT_TRUE(settings.Test(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap));
+   settings.Clear(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap);
+   ASSERT_FALSE(settings.Test(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap));
+   settings.Set(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap);
 
    t1.SetIOFeatures(settings);
    Int_t idx, idx2;

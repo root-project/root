@@ -17,10 +17,10 @@
 
 #include <bitset>
 
-using namespace ROOT::Experimental;
+using namespace ROOT;
 
 /**
- * \class ROOT::Experimental::TIOFeatures
+ * \class ROOT::TIOFeatures
  * \ingroup tree
  *
  * `TIOFeatures` provides the end-user with the ability to change the IO behavior
@@ -37,8 +37,8 @@ using namespace ROOT::Experimental;
  *
  * Example usage:
  * ~~~{.cpp}
- * ROOT::Experimental::TIOFeatures features;
- * features.Set(TBasket::EIOBits::kGenerateOffsetMap);
+ * ROOT::TIOFeatures features;
+ * features.Set(ROOT::EIOFeatures::kGenerateOffsetMap);
  * ttree_ref.SetIOFeatures(features);
  * ~~~
  *
@@ -46,14 +46,38 @@ using namespace ROOT::Experimental;
  * to the `TIOFeatures` object do not propogate to the `TTree`.
  */
 
+
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Clear a specific IO feature from this set.
 /// \param[in] enum_bits The specific feature to disable.
 ///
 /// Removes a feature from the `TIOFeatures` object; emits an Error message if
 /// the IO feature is not supported by this version of ROOT.
-void TIOFeatures::Clear(TBasket::EIOBits enum_bits)
+void TIOFeatures::Clear(Experimental::EIOFeatures input_bits)
 {
+   Clear(static_cast<EIOFeatures>(input_bits));
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Clear a specific IO feature from this set.
+/// \param[in] enum_bits The specific feature to disable.
+///
+/// Removes a feature from the `TIOFeatures` object; emits an Error message if
+/// the IO feature is not supported by this version of ROOT.
+void TIOFeatures::Clear(Experimental::EIOUnsupportedFeatures input_bits)
+{
+   Clear(static_cast<EIOFeatures>(input_bits));
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Clear a specific IO feature from this set.
+/// \param[in] enum_bits The specific feature to disable.
+///
+/// Removes a feature from the `TIOFeatures` object; emits an Error message if
+/// the IO feature is not supported by this version of ROOT.
+void TIOFeatures::Clear(EIOFeatures input_bits)
+{
+   TBasket::EIOBits enum_bits = static_cast<TBasket::EIOBits>(input_bits);
    auto bits = static_cast<UChar_t>(enum_bits);
    if (R__unlikely((bits & static_cast<UChar_t>(TBasket::EIOBits::kSupported)) != bits)) {
       Error("TestFeature", "A feature is being cleared that is not supported.");
@@ -96,8 +120,23 @@ static std::string GetUnsupportedName(TBasket::EUnsupportedIOBits enum_flag)
 ///
 /// If the feature is supported by ROOT, this function returns kTRUE; otherwise,
 /// it returns kFALSE.
-bool TIOFeatures::Set(TBasket::EIOBits enum_bits)
+bool TIOFeatures::Set(Experimental::EIOFeatures input_bits)
 {
+   return Set(static_cast<EIOFeatures>(input_bits));
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Set a specific IO feature.
+/// \param[in] enum_bits The specific feature to enable.
+///
+/// Sets a feature in the `TIOFeatures` object; emits an Error message if
+/// the IO feature is not supported by this version of ROOT.
+///
+/// If the feature is supported by ROOT, this function returns kTRUE; otherwise,
+/// it returns kFALSE.
+bool TIOFeatures::Set(EIOFeatures input_bits)
+{
+   TBasket::EIOBits enum_bits = static_cast<TBasket::EIOBits>(input_bits);
    auto bits = static_cast<UChar_t>(enum_bits);
    if (R__unlikely((bits & static_cast<UChar_t>(TBasket::EIOBits::kSupported)) != bits)) {
       UChar_t unsupported = bits & static_cast<UChar_t>(TBasket::EUnsupportedIOBits::kUnsupported);
@@ -114,14 +153,68 @@ bool TIOFeatures::Set(TBasket::EIOBits enum_bits)
    return kTRUE;
 }
 
+
+/////////////////////////////////////////////////////////////////////////////
+/// \brief Given a IO feature string, set the corresponding feature
+/// \param [in] value Feature name to test.
+///
+/// This allows one to set a feature given a specific string from the
+/// TBasket::EIOBits enum.
+///
+/// *NOTE* this function is quite slow and users are strongly encouraged to
+/// use the type-safe `Set` version instead.  This has been added for better
+/// CLI interfaces.
+///
+/// Returns kTRUE only if a new feature was set; otherwise emits an error message
+/// and returns kFALSE.
+bool TIOFeatures::Set(const std::string &value)
+{
+   TBasket::EIOBits bits;
+   TClass *cl = TBasket::Class();
+   if (cl == nullptr) {
+      Error("Set", "Could not retrieve TBasket's class");
+      return kFALSE;
+   }
+   TEnum *eIOBits = static_cast<TEnum*>(cl->GetListOfEnums()->FindObject("EIOBits"));
+   if (eIOBits == nullptr) {
+      Error("Set", "Could not locate TBasket::EIOBits enum");
+      return kFALSE;
+   }
+   bool foundConstant = false;
+   for (auto constant : ROOT::Detail::TRangeStaticCast<TEnumConstant>(eIOBits->GetConstants())) {
+      if (!strcmp(constant->GetName(), value.c_str())) {
+         foundConstant = true;
+         bits = static_cast<TBasket::EIOBits>(constant->GetValue());
+         break;
+      }
+   }
+   if (!foundConstant) {
+      Error("Set", "Could not locate %s in TBasket::EIOBits", value.c_str());
+      return kFALSE;
+   }
+   return Set(static_cast<EIOFeatures>(bits));
+}
+
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Test to see if a given feature is set
 /// \param[in] enum_bits The specific feature to test.
 ///
 /// Returns kTRUE if the feature is enables in this object and supported by
 /// this version of ROOT.
-bool TIOFeatures::Test(TBasket::EIOBits enum_bits) const
+bool TIOFeatures::Test(Experimental::EIOFeatures input_bits) const
 {
+   return Test(static_cast<EIOFeatures>(input_bits));
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Test to see if a given feature is set
+/// \param[in] enum_bits The specific feature to test.
+///
+/// Returns kTRUE if the feature is enables in this object and supported by
+/// this version of ROOT.
+bool TIOFeatures::Test(EIOFeatures input_bits) const
+{
+   TBasket::EIOBits enum_bits = static_cast<TBasket::EIOBits>(input_bits);
    auto bits = static_cast<UChar_t>(enum_bits);
    if (R__unlikely((bits & static_cast<UChar_t>(TBasket::EIOBits::kSupported)) != bits)) {
       Error("TestFeature", "A feature is being tested for that is not supported or known.");

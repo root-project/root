@@ -33,11 +33,7 @@
 
 #include "TDataType.h"
 
-namespace ROOT {
-namespace Experimental {
-class TIOFeatures;
-}
-}
+#include "ROOT/TIOFeatures.hxx"
 
 class TTree;
 class TBasket;
@@ -84,7 +80,7 @@ protected:
    Int_t       fEntryOffsetLen;   ///<  Initial Length of fEntryOffset table in the basket buffers
    Int_t       fWriteBasket;      ///<  Last basket number written
    Long64_t    fEntryNumber;      ///<  Current entry number (last one filled in this branch)
-   UChar_t     fIOBits{0};        ///<! IO features for newly-created baskets.
+   ROOT::TIOFeatures fIOFeatures; ///<! IO features for newly-created baskets.
    Int_t       fOffset;           ///<  Offset of this branch
    Int_t       fMaxBaskets;       ///<  Maximum number of Baskets so far
    Int_t       fNBaskets;         ///<! Number of baskets in memory
@@ -191,7 +187,7 @@ public:
            Long64_t  GetZipBytes(Option_t *option="")    const;
            Long64_t  GetEntryNumber() const {return fEntryNumber;}
            Long64_t  GetFirstEntry()  const {return fFirstEntry; }
-           ROOT::Experimental::TIOFeatures GetIOFeatures() const;
+           ROOT::TIOFeatures GetIOFeatures() const;
          TObjArray  *GetListOfBaskets()  {return &fBaskets;}
          TObjArray  *GetListOfBranches() {return &fBranches;}
          TObjArray  *GetListOfLeaves()   {return &fLeaves;}
