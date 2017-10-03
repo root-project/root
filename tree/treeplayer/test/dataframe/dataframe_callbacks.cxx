@@ -335,7 +335,7 @@ TEST_F(TDFCallbacksMT, ExecuteOncePerSlot)
    std::atomic_uint callCount(0u);
    c.OnPartialResultSlot(c.kOnce, [&callCount](unsigned int, ULong64_t) { callCount++; });
    *c;
-   EXPECT_EQ(callCount, gNSlots);
+   EXPECT_EQ(callCount, gNSlots * 2); // TDF spawns two tasks per slot
 }
 
 TEST_F(TDFCallbacksMT, Histo1DWithFillTOHelper)
