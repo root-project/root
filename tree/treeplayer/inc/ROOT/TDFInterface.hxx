@@ -1144,9 +1144,15 @@ public:
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
-   TResultProxy<::TProfile> Profile1D(::TProfile &&model, std::string_view v1Name = "", std::string_view v2Name = "")
+   TResultProxy<::TProfile> Profile1D(const TProfile1DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
-      auto h = std::make_shared<::TProfile>(std::move(model));
+      std::shared_ptr<::TProfile> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         h = std::make_shared<::TProfile>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                          model.fYLow, model.fYUp, model.fOption);
+      }
+
       if (!TDFInternal::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profiles with no axes limits are not supported yet.");
       }
@@ -1173,9 +1179,15 @@ public:
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename W = TDFDetail::TInferType>
    TResultProxy<::TProfile>
-   Profile1D(::TProfile &&model, std::string_view v1Name, std::string_view v2Name, std::string_view wName)
+   Profile1D(const TProfile1DModel &model, std::string_view v1Name, std::string_view v2Name, std::string_view wName)
    {
-      auto h = std::make_shared<::TProfile>(std::move(model));
+      std::shared_ptr<::TProfile> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         h = std::make_shared<::TProfile>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                          model.fYLow, model.fYUp, model.fOption);
+      }
+
       if (!TDFInternal::HistoUtils<::TProfile>::HasAxisLimits(*h)) {
          throw std::runtime_error("Profile histograms with no axes limits are not supported yet.");
       }
@@ -1187,9 +1199,9 @@ public:
    }
 
    template <typename V1, typename V2, typename W>
-   TResultProxy<::TProfile> Profile1D(::TProfile &&model)
+   TResultProxy<::TProfile> Profile1D(const TProfile1DModel &model)
    {
-      return Profile1D<V1, V2, W>(std::move(model), "", "", "");
+      return Profile1D<V1, V2, W>(model, "", "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1207,10 +1219,16 @@ public:
    /// The user gives up ownership of the model profile.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType>
-   TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, std::string_view v1Name = "",
+   TResultProxy<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name = "",
                                         std::string_view v2Name = "", std::string_view v3Name = "")
    {
-      auto h = std::make_shared<::TProfile2D>(std::move(model));
+      std::shared_ptr<::TProfile2D> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         h = std::make_shared<::TProfile2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
+                                            model.fYLow, model.fYUp, model.fZLow, model.fZUp, model.fOption);
+      }
+
       if (!TDFInternal::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
@@ -1238,10 +1256,16 @@ public:
    /// The user gives up ownership of the model profile.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType,
              typename V3 = TDFDetail::TInferType, typename W = TDFDetail::TInferType>
-   TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model, std::string_view v1Name, std::string_view v2Name,
+   TResultProxy<::TProfile2D> Profile2D(const TProfile2DModel &model, std::string_view v1Name, std::string_view v2Name,
                                         std::string_view v3Name, std::string_view wName)
    {
-      auto h = std::make_shared<::TProfile2D>(std::move(model));
+      std::shared_ptr<::TProfile2D> h(nullptr);
+      {
+         ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
+         h = std::make_shared<::TProfile2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
+                                            model.fYLow, model.fYUp, model.fZLow, model.fZUp, model.fOption);
+      }
+
       if (!TDFInternal::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D profiles with no axes limits are not supported yet.");
       }
@@ -1253,9 +1277,9 @@ public:
    }
 
    template <typename V1, typename V2, typename V3, typename W>
-   TResultProxy<::TProfile2D> Profile2D(::TProfile2D &&model)
+   TResultProxy<::TProfile2D> Profile2D(const TProfile2DModel &model)
    {
-      return Profile2D<V1, V2, V3, W>(std::move(model), "", "", "", "");
+      return Profile2D<V1, V2, V3, W>(model, "", "", "", "");
    }
 
    ////////////////////////////////////////////////////////////////////////////
