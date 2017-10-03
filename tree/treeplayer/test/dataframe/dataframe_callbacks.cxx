@@ -8,8 +8,8 @@ using namespace ROOT::Experimental::TDF;
 using namespace ROOT::Detail::TDF;
 
 /********* FIXTURES *********/
-static constexpr ULong64_t nEvents = 8ull;
-static constexpr unsigned int nSlots = 4u;
+static constexpr ULong64_t gNEvents = 8ull;
+static constexpr unsigned int gNSlots = 4u;
 
 // fixture that provides a TDF with no data-source and a single column "x" containing normal-distributed doubles
 class TDFCallbacks : public ::testing::Test {
@@ -22,7 +22,7 @@ private:
    }
 
 protected:
-   TDFCallbacks() : fLoopManager(nEvents), tdf(DefineRandomCol()) {}
+   TDFCallbacks() : fLoopManager(gNEvents), tdf(DefineRandomCol()) {}
    TInterface<TLoopManager> tdf;
 };
 
@@ -41,12 +41,12 @@ private:
    TDataFrame fLoopManager;
    TInterface<TLoopManager> DefineRandomCol()
    {
-      std::vector<TRandom> rs(nSlots);
+      std::vector<TRandom> rs(gNSlots);
       return fLoopManager.DefineSlot("x", [rs](unsigned int slot) mutable { return rs[slot].Gaus(); });
    }
 
 protected:
-   TDFCallbacksMT() : fIMTEnabler(nSlots), fLoopManager(nEvents), tdf(DefineRandomCol()) {}
+   TDFCallbacksMT() : fIMTEnabler(gNSlots), fLoopManager(gNEvents), tdf(DefineRandomCol()) {}
    TInterface<TLoopManager> tdf;
 };
 #endif
@@ -64,7 +64,7 @@ TEST_F(TDFCallbacks, Histo1DWithFillTOHelper)
       EXPECT_EQ(h_.GetEntries(), i);
    });
    *h;
-   EXPECT_EQ(nEvents, i);
+   EXPECT_EQ(gNEvents, i);
 }
 
 TEST_F(TDFCallbacks, JittedHisto1DWithFillTOHelper)
@@ -79,7 +79,7 @@ TEST_F(TDFCallbacks, JittedHisto1DWithFillTOHelper)
       EXPECT_EQ(h_.GetEntries(), i);
    });
    *h;
-   EXPECT_EQ(nEvents, i);
+   EXPECT_EQ(gNEvents, i);
 }
 
 TEST_F(TDFCallbacks, Histo1DWithFillHelper)
@@ -94,7 +94,7 @@ TEST_F(TDFCallbacks, Histo1DWithFillHelper)
       EXPECT_EQ(h_.GetEntries(), i);
    });
    *h;
-   EXPECT_EQ(nEvents, i);
+   EXPECT_EQ(gNEvents, i);
 }
 
 TEST_F(TDFCallbacks, JittedHisto1DWithFillHelper)
@@ -109,7 +109,7 @@ TEST_F(TDFCallbacks, JittedHisto1DWithFillHelper)
       EXPECT_EQ(h_.GetEntries(), i);
    });
    *h;
-   EXPECT_EQ(nEvents, i);
+   EXPECT_EQ(gNEvents, i);
 }
 
 TEST_F(TDFCallbacks, Min)
@@ -170,7 +170,7 @@ TEST_F(TDFCallbacks, Mean)
    auto m = tdf.Mean<double>("x");
    // TODO find a better way to check that the running mean makes sense
    bool called = false;
-   m.OnPartialResult(nEvents / 2, [&called](double) { called = true; });
+   m.OnPartialResult(gNEvents / 2, [&called](double) { called = true; });
    *m;
    EXPECT_TRUE(called);
 }
@@ -181,7 +181,7 @@ TEST_F(TDFCallbacks, JittedMean)
    auto m = tdf.Mean("x");
    // TODO find a better way to check that the running mean makes sense
    bool called = false;
-   m.OnPartialResult(nEvents / 2, [&called](double) { called = true; });
+   m.OnPartialResult(gNEvents / 2, [&called](double) { called = true; });
    *m;
    EXPECT_TRUE(called);
 }
@@ -229,7 +229,7 @@ TEST_F(TDFCallbacks, Chaining)
                .OnPartialResult(1, [&i](ULong64_t) { ++i; })
                .OnPartialResultSlot(1, [&i](unsigned int, ULong64_t) {++i; });
    *c;
-   EXPECT_EQ(i, nEvents * 2);
+   EXPECT_EQ(i, gNEvents * 2);
 }
 
 TEST_F(TDFCallbacks, OrderOfExecution)
@@ -295,7 +295,7 @@ TEST_F(TDFCallbacks, MultipleEventLoops)
    auto h2 = tdf.Histo1D<double>({"", "", 128, -2., 2.}, "x");
    *h2;
 
-   EXPECT_EQ(i, nEvents);
+   EXPECT_EQ(i, gNEvents);
 }
 
 class FunctorClass {
@@ -310,7 +310,7 @@ TEST_F(TDFCallbacks, FunctorClass)
 {
    unsigned int i = 0;
    *(tdf.Count().OnPartialResult(1, FunctorClass(i)));
-   EXPECT_EQ(i, nEvents);
+   EXPECT_EQ(i, gNEvents);
 }
 
 unsigned int freeFunctionCounter = 0;
@@ -322,7 +322,7 @@ void FreeFunction(ULong64_t)
 TEST_F(TDFCallbacks, FreeFunction)
 {
    *(tdf.Count().OnPartialResult(1, FreeFunction));
-   EXPECT_EQ(freeFunctionCounter, nEvents);
+   EXPECT_EQ(freeFunctionCounter, gNEvents);
 }
 
 
@@ -335,7 +335,7 @@ TEST_F(TDFCallbacksMT, ExecuteOncePerSlot)
    std::atomic_uint callCount(0u);
    c.OnPartialResultSlot(c.kOnce, [&callCount](unsigned int, ULong64_t) { callCount++; });
    *c;
-   EXPECT_EQ(callCount, nSlots);
+   EXPECT_EQ(callCount, gNSlots);
 }
 
 TEST_F(TDFCallbacksMT, Histo1DWithFillTOHelper)
@@ -343,7 +343,7 @@ TEST_F(TDFCallbacksMT, Histo1DWithFillTOHelper)
    // Histo1D<double> + OnPartialResultSlot + FillTOHelper
    auto h = tdf.Histo1D<double>({"", "", 128, -2., 2.}, "x");
    using value_t = typename decltype(h)::Value_t;
-   std::array<ULong64_t, nSlots> is;
+   std::array<ULong64_t, gNSlots> is;
    is.fill(0ull);
    constexpr ULong64_t everyN = 1ull;
    h.OnPartialResultSlot(everyN, [&is, &everyN](unsigned int slot, value_t &h_) {
@@ -351,7 +351,7 @@ TEST_F(TDFCallbacksMT, Histo1DWithFillTOHelper)
       EXPECT_EQ(h_.GetEntries(), is[slot]);
    });
    *h;
-   EXPECT_EQ(nEvents, std::accumulate(is.begin(), is.end(), 0ull));
+   EXPECT_EQ(gNEvents, std::accumulate(is.begin(), is.end(), 0ull));
 }
 
 TEST_F(TDFCallbacksMT, Histo1DWithFillHelper)
@@ -359,7 +359,7 @@ TEST_F(TDFCallbacksMT, Histo1DWithFillHelper)
    // Histo1D<double> + OnPartialResultSlot + FillHelper
    auto h = tdf.Histo1D<double>("x");
    using value_t = typename decltype(h)::Value_t;
-   std::array<ULong64_t, nSlots> is;
+   std::array<ULong64_t, gNSlots> is;
    is.fill(0ull);
    constexpr ULong64_t everyN = 1ull;
    h.OnPartialResultSlot(everyN, [&is, &everyN](unsigned int slot, value_t &h_) {
@@ -367,6 +367,6 @@ TEST_F(TDFCallbacksMT, Histo1DWithFillHelper)
       EXPECT_EQ(h_.GetEntries(), is[slot]);
    });
    *h;
-   EXPECT_EQ(nEvents, std::accumulate(is.begin(), is.end(), 0ull));
+   EXPECT_EQ(gNEvents, std::accumulate(is.begin(), is.end(), 0ull));
 }
 #endif
