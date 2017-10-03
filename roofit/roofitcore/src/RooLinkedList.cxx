@@ -363,6 +363,9 @@ void RooLinkedList::setHashTableSize(Int_t size)
 
 RooLinkedList::~RooLinkedList() 
 {
+  // Required since we overload TObject::Hash.
+  ROOT::CallRecursiveRemoveIfNeeded(*this);
+
   if (_htableName) {
     delete _htableName ;
     _htableName=0 ;
