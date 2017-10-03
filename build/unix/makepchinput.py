@@ -138,13 +138,15 @@ def getSTLIncludes():
                      "atomic",
                      "thread",
                      "mutex",
-                     "future",
                      "condition_variable",
                      "ciso646",
                      "ccomplex",
                      "ctgmath",
                      "cstdalign",
                      "cstdbool")
+
+   if sys.platform != 'win32':
+      stlHeadersList += ("future",)
 
    allHeadersPartContent = "// STL headers\n"
 
@@ -461,6 +463,12 @@ def makePCHInput():
    allHeadersFilename = os.path.join(outdir,"allHeaders.h")
    allLinkdefsFilename = os.path.join(outdir,"allLinkDefs.h")
    cppFlagsFilename = os.path.join(outdir, "allCppflags.txt")
+
+   if sys.platform == 'win32':
+      outdir.replace("\\","/")
+      allHeadersFilename.replace("\\","/")
+      allLinkdefsFilename.replace("\\","/")
+      cppFlagsFilename.replace("\\","/")
 
    mkdirIfNotThere(outdir)
    removeFiles((allHeadersFilename,allLinkdefsFilename))
