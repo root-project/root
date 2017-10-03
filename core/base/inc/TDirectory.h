@@ -71,16 +71,7 @@ public:
          if ( newCurrent ) newCurrent->cd();
          else CdNull();
       }
-      ~TContext()
-      {
-         // Destructor.   Reset the current directory to its
-         // previous state.
-         if ( fDirectory ) {
-            fDirectory->UnregisterContext(this);
-            fDirectory->cd();
-         }
-         else CdNull();
-      }
+      ~TContext();
    };
 
 protected:
