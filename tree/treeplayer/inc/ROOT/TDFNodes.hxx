@@ -83,7 +83,7 @@ using RangeBaseVec_t = std::vector<RangeBasePtr_t>;
 
 class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    using TDataSource = ROOT::Experimental::TDF::TDataSource;
-   enum class ELoopType { kROOTFiles, kNoFiles, kDataSource };
+   enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
 
    using Callback_t = std::function<void(unsigned int)>;
    class TLoopCallback {

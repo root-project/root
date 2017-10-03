@@ -117,17 +117,20 @@ unsigned int TSlotStack::GetSlot()
 
 TLoopManager::TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
-     fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kROOTFiles)
+     fNSlots(TDFInternal::GetNSlots()),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles)
 {
 }
 
 TLoopManager::TLoopManager(ULong64_t nEmptyEntries)
-   : fNEmptyEntries(nEmptyEntries), fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kNoFiles)
+   : fNEmptyEntries(nEmptyEntries), fNSlots(TDFInternal::GetNSlots()),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles)
 {
 }
 
 TLoopManager::TLoopManager(std::unique_ptr<TDataSource> ds, const ColumnNames_t &defaultBranches)
-   : fDefaultColumns(defaultBranches), fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kDataSource),
+   : fDefaultColumns(defaultBranches), fNSlots(TDFInternal::GetNSlots()),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
      fDataSource(std::move(ds))
 {
    fDataSource->SetNSlots(fNSlots);
@@ -356,23 +359,14 @@ void TLoopManager::Run()
 
    InitNodes();
 
-#ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled()) {
-      switch (fLoopType) {
-      case ELoopType::kNoFiles: RunEmptySourceMT(); break;
-      case ELoopType::kROOTFiles: RunTreeProcessorMT(); break;
-      case ELoopType::kDataSource: RunDataSourceMT(); break;
-      }
-   } else {
-#endif // R__USE_IMT
-      switch (fLoopType) {
-      case ELoopType::kNoFiles: RunEmptySource(); break;
-      case ELoopType::kROOTFiles: RunTreeReader(); break;
-      case ELoopType::kDataSource: RunDataSource(); break;
-      }
-#ifdef R__USE_IMT
+   switch (fLoopType) {
+   case ELoopType::kNoFilesMT: RunEmptySourceMT(); break;
+   case ELoopType::kROOTFilesMT: RunTreeProcessorMT(); break;
+   case ELoopType::kDataSourceMT: RunDataSourceMT(); break;
+   case ELoopType::kNoFiles: RunEmptySource(); break;
+   case ELoopType::kROOTFiles: RunTreeReader(); break;
+   case ELoopType::kDataSource: RunDataSource(); break;
    }
-#endif // R__USE_IMT
 
    CleanUpNodes();
 }
