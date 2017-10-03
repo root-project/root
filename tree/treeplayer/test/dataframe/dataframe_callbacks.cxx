@@ -9,7 +9,6 @@ using namespace ROOT::Detail::TDF;
 
 /********* FIXTURES *********/
 static constexpr ULong64_t gNEvents = 8ull;
-static constexpr unsigned int gNSlots = 4u;
 
 // fixture that provides a TDF with no data-source and a single column "x" containing normal-distributed doubles
 class TDFCallbacks : public ::testing::Test {
@@ -27,6 +26,8 @@ protected:
 };
 
 #ifdef R__USE_IMT
+static constexpr unsigned int gNSlots = 4u;
+
 // fixture that enables implicit MT and provides a TDF with no data-source and a single column "x" containing
 // normal-distributed doubles
 class TDFCallbacksMT : public ::testing::Test {
