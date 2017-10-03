@@ -9,6 +9,11 @@ Set(ZipOldHeaders
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/RZip.h
 )
 
+Set(ZipNewHeaders
+  ${CMAKE_CURRENT_SOURCE_DIR}/inc/zlib.h
+  ${CMAKE_CURRENT_SOURCE_DIR}/inc/zconf.h
+)
+
 Set(ZipOldSource
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZDeflate.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZInflate.c
@@ -16,7 +21,11 @@ Set(ZipOldSource
 
 # Depending on the system either the old and the new
 # or only the old compression is build
-set(ZLIB_HEADERS ${ZipOldHeaders})
+if(MSVC AND builtin_zlib)
+  set(ZLIB_HEADERS ${ZipNewHeaders} ${ZipOldHeaders})
+else()
+  set(ZLIB_HEADERS ${ZipOldHeaders})
+endif()
 set(ZLIB_SRCS ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${CMAKE_CURRENT_SOURCE_DIR}/src/RZip.cxx)
 
 # Define all the header files which should be installed when
