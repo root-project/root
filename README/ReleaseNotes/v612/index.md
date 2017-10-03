@@ -101,6 +101,15 @@ large TClonesArray where each element contains another small vector container.
   - Column can be aliased with the `TDF::TInterface` method `Alias`: `auto histo = mytdf.Alias("myAlias", "myColumn").Histo1D("myAlias");`
   - Add the `GetColumnsNames` method to the `TDF::TInterface`: the user can therefore get the names of the available columns coming from trees, data sources or `Define`d columns
   - `TDataFrame`s can be cached in memory with the `TDF::TInterface` method `Cache`. All or some columns can be cached. Two versions of the method are proposed: one which allows to explicitly list the types of the columns and another one allowing to let the system infer them (the same mechanism of the `Snapshot` method). Only columns containing instances of classes which have a copy constructor can be cached.
+  - Add `OnPartialResult` and `OnPartialResultSlot`: users can now register one or more functions to be executed on partial results of TDF actions during the event loop.
+    This mechanism is meant to be used to inspect partial results of the analysis or print useful debug information.
+    For example, both in single- and multi-thread event loops, one can draw a result histogram and update the canvas every 100 entries like this:
+    ```
+    auto h = tdf.Histo1D("x");
+    TCanvas c("c","x hist");
+    h.OnPartialResult(100, [&c](TH1D &h_) { c.cd(); h_.Draw(); c.Update(); });
+    ```
+    See the tutorials for more examples.
 
 ## Histogram Libraries
 
