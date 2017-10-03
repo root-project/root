@@ -84,7 +84,9 @@
 // Author: Andrea Dotti (15 Feb 2013): First Implementation
 // ---------------------------------------------------------------
 
+#ifndef _WIN32
 #define TMCMULTITHREADED 1
+#endif
 
 #if defined(TMCMULTITHREADED)
 
@@ -97,6 +99,7 @@ typedef int (*thread_lock)(TMCMutex *);
 typedef int (*thread_unlock)(TMCMutex *);
 #else
 typedef int TMCMutex;
+int fake_mutex_lock_unlock(TMCMutex *);
 #define TMCMUTEX_INITIALIZER 1
 #define TMCMUTEXLOCK fake_mutex_lock_unlock
 #define TMCMUTEXUNLOCK fake_mutex_lock_unlock
