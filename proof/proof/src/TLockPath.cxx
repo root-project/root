@@ -18,7 +18,13 @@ Path locking class allowing shared and exclusive locks
 
 #include "TLockPath.h"
 #include "TSystem.h"
+#ifndef R__WIN32
 #include <sys/file.h>
+#else
+#include <io.h>
+#define lseek(fd, offset, origin) _lseek(fd, offset, origin)
+#define close(fd) _close(fd)
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Locks the directory. Waits if lock is hold by an other process.
@@ -35,10 +41,17 @@ Int_t TLockPath::Lock(Bool_t shared)
 {
    const char *pname = GetName();
 
+#if defined(R__WIN32) && !defined(R__WINGCC)
+   if (gSystem->AccessPathName(pname))
+      fLockId = _open(pname, _O_CREAT|_O_RDWR, 0644);
+   else
+      fLockId = _open(pname, _O_RDWR);
+#else
    if (gSystem->AccessPathName(pname))
       fLockId = open(pname, O_CREAT|O_RDWR, 0644);
    else
       fLockId = open(pname, O_RDWR);
+#endif
 
    if (fLockId == -1) {
       SysError("Lock", "cannot open lock file %s", pname);
