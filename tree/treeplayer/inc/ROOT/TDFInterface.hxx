@@ -294,7 +294,7 @@ class TInterface {
    using TRangeBase = TDFDetail::TRangeBase;
    using TCustomColumnBase = TDFDetail::TCustomColumnBase;
    using TLoopManager = TDFDetail::TLoopManager;
-   friend std::string cling::printValue(ROOT::Experimental::TDataFrame *tdf); // For a nice printing at the prompt
+   friend std::string cling::printValue(TDataFrame *tdf); // For a nice printing at the prompt
    template <typename T>
    friend class TInterface;
 
