@@ -96,6 +96,10 @@ def makepch():
 
    allCppFlags = " ".join(cppflagsList)
 
+   if sys.platform == 'win32':
+      allheadersFilename.replace("\\","/")
+      alllinkdefsFilename.replace("\\","/")
+
    rootclingExe = os.path.join(rootdir,"bin","rootcling")
    command = "%s %s -1 -f allDict.cxx -noDictSelection -c %s %s %s %s" %(rootclingExe,
                                                                          rootbuildFlag,
