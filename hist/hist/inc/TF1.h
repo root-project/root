@@ -321,7 +321,7 @@ public:
    TF1(const char *name, std::function<T(const T *data, const Double_t *param)> &fcn, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
       TF1(EFType::kTemplScalar, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<T>(fcn))
    {
-      fType = std::is_same<T, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
+      fType = std::is_same<T, double>::value ? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
    }
 
    ////////////////////////////////////////////////////////////////////////////////
