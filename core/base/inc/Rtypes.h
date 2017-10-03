@@ -259,6 +259,7 @@ class ClassDefGenerateInitInstanceLocalInjector:
    std::string ClassDefGenerateInitInstanceLocalInjector<T>::fgName{};
 
    void DefaultStreamer(TBuffer &R__b, const TClass *cl, void *objpointer);
+   Bool_t HasConsistentHashMember(TClass &clRef);
 }} // namespace ROOT::Internal
 
 
@@ -266,6 +267,11 @@ class ClassDefGenerateInitInstanceLocalInjector:
 // DeclFileLine() is not part of it since CINT uses that as trigger for
 // the class comment string.
 #define _ClassDefBase_(name,id, virtual_keyword, overrd) \
+private: \
+   virtual_keyword  Bool_t CheckTObjectHashConsistency() const overrd { \
+      static const bool consistent = ROOT::Internal::HasConsistentHashMember(*IsA()); \
+      return consistent; \
+   } \
 public: \
    static Version_t Class_Version() { return id; } \
    virtual_keyword TClass *IsA() const overrd { return name::Class(); } \

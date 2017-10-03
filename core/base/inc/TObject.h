@@ -77,6 +77,8 @@ public:
       kIsOnHeap      = 0x01000000,    ///< object is on heap
       kNotDeleted    = 0x02000000,    ///< object has not been deleted
       kZombie        = 0x04000000,    ///< object ctor failed
+      kInconsistent  = 0x08000000,    ///< class overload Hash but does call RecursiveRemove in destructor
+  //  kCheckedHash   = 0x10000000,    ///< CheckedHash has check for the consistency of Hash/RecursiveRemove
       kBitMask       = 0x00ffffff
    };
 
@@ -96,6 +98,7 @@ public:
    virtual void        Browse(TBrowser *b);
    virtual const char *ClassName() const;
    virtual void        Clear(Option_t * /*option*/ ="") { }
+           ULong_t     CheckedHash(); // Not virtual
    virtual TObject    *Clone(const char *newname="") const;
    virtual Int_t       Compare(const TObject *obj) const;
    virtual void        Copy(TObject &object) const;
@@ -118,6 +121,7 @@ public:
    virtual char       *GetObjectInfo(Int_t px, Int_t py) const;
    virtual const char *GetTitle() const;
    virtual Bool_t      HandleTimer(TTimer *timer);
+           Bool_t      HasInconsistentHash() const;
    virtual ULong_t     Hash() const;
    virtual Bool_t      InheritsFrom(const char *classname) const;
    virtual Bool_t      InheritsFrom(const TClass *cl) const;
@@ -277,6 +281,54 @@ inline TObject &TObject::operator=(const TObject &rhs)
       fBits &= ~kCanDelete;
    }
    return *this;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Checked and record whether for this class has a consistent
+/// Hash/RecursiveRemove setup (*) and then return the regular Hash value for
+/// this object.  The intent is for this routines to be call instead of directly
+/// calling the function Hash during "insert" operations.  See TObject::HasInconsistenTObjectHash();
+///
+/// (*) The setup is consistent when all classes in the class hierarchy that overload
+/// TObject::Hash do call ROOT::CallRecursiveRemoveIfNeeded in their destructor.
+/// i.e. it is safe to call the Hash virtual function during the RecursiveRemove operation.
+
+inline ULong_t TObject::CheckedHash()
+{
+   // Testing and recording whether we already called HasInconstistentTObjectHash
+   // for this object could save some cpu cycles in some circuntances (at the cost
+   // of reserving yet another bit).
+   // For each insert (CheckedHash is called only for insert in THashList/THashTable), it
+   // cost one memory fetch, one arithmetic operation and one branching.
+   // This save a virtual function call which itself contains a static variable memory
+   // fetch, a branching (of whether the static was already set or not).
+   // Given that a virtual function call is essentially 2 memory fetches (virtual table
+   // location and then content), one arithmetic operation and one function call/jump),
+   // we guess-estimate that the version recording-then-testing-prior-check would start
+   // saving cpu cycle when each object is inserted in average 1.5 times in a THashList/THashTable.
+
+   //if ( !fBits & kCheckedHash) {
+   if ( !CheckTObjectHashConsistency() ) fBits &= kInconsistent;
+   //   fBits &= kChecked;
+   //}
+   return Hash();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// @brief Return true is the type of this object is *known* to have an
+/// inconsistent setup for Hash and RecursiveRemove (i.e. missing call to
+/// RecursiveRemove in destructor).
+///
+/// Note: Since the consistency is only tested for during inserts, this
+/// routine will return true for object that have never been inserted
+/// whether or not they have a consistent setup.  This has no negative
+/// side-effect as searching for the object with the right or wrong
+/// Hash will always yield a not-found answer (Since anyway no hash
+/// can be guaranteed unique, there is always a check)
+
+inline Bool_t TObject::HasInconsistentHash() const {
+   return fBits & kInconsistent;
 }
 
 // Global bits (can be set for any object and should not be reused).

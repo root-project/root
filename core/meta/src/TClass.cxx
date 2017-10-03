@@ -6923,6 +6923,17 @@ void TClass::RemoveStreamerInfo(Int_t slot)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return true is the Hash/RecursiveRemove setup is consistent, i.e. when all
+/// classes in the class hierarchy that overload TObject::Hash do call
+/// ROOT::CallRecursiveRemoveIfNeeded in their destructor.
+/// i.e. it is safe to call the Hash virtual function during the RecursiveRemove operation.
+
+Bool_t ROOT::Internal::HasConsistentHashMember(TClass &clRef)
+{
+   return clRef.HasConsistentHashMember();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return true if we have access to a constructor useable for I/O.  This is
 /// typically the default constructor but can also be a constructor specifically
 /// marked for I/O (for example a constructor taking a TRootIOCtor* as an
