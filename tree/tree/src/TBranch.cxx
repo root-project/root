@@ -1279,11 +1279,11 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
             fNextBasketEntry = -1;
             return -1;
          }
-         if (fTree->GetMaxVirtualSize()< 0 || fTree->GetClusterPrefetch()) {
+         if (fTree->GetMaxVirtualSize() < 0 || fTree->GetClusterPrefetch()) {
             TTree::TClusterIterator clusterIterator = fTree->GetClusterIterator(entry);
             clusterIterator.Next();
             Int_t nextClusterEntry = clusterIterator.GetNextEntry();
-            for (Int_t i = fReadBasket; i < fMaxBaskets && fBasketEntry[i] < nextClusterEntry; i++) {
+            for (Int_t i = fReadBasket + 1; i < fMaxBaskets && fBasketEntry[i] < nextClusterEntry; i++) {
                GetBasket(i);
             }
          }

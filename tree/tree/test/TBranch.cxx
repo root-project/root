@@ -6,47 +6,47 @@
 #include "gtest/gtest.h"
 
 class TBranchTest : public ::testing::Test {
-   protected:
-      virtual void SetUp()
-      {
-         random = new TRandom(837);
-         f = new TFile("TBranchTestTree.root","RECREATE");
-         myTree = new TTree("myTree", "A test tree");
-         myTree->SetAutoSave(10);
-         Float_t data = 0;
-         myTree->Branch("branch0", &data);
+protected:
+   virtual void SetUp()
+   {
+      random = new TRandom(837);
+      f = new TFile("TBranchTestTree.root", "RECREATE");
+      myTree = new TTree("myTree", "A test tree");
+      myTree->SetAutoSave(10);
+      Float_t data = 0;
+      myTree->Branch("branch0", &data);
 
-         for(Int_t ev = 0; ev < 100; ev++) {
-            data = random->Gaus(100,7);
-            myTree->Fill();
-            if (ev % 10 == 7) {
-               myTree->FlushBaskets();
-            }
+      for (Int_t ev = 0; ev < 100; ev++) {
+         data = random->Gaus(100, 7);
+         myTree->Fill();
+         if (ev % 10 == 7) {
+            myTree->FlushBaskets();
          }
-         f->Write();
-         delete myTree;
-         delete f;
       }
+      f->Write();
+      delete myTree;
+      delete f;
+   }
 
-      virtual void TearDown()
-      {
-         myTree->DropBaskets();
-         delete branch;
-         delete myTree;
-         delete random;
-         delete f;
-      }
+   virtual void TearDown()
+   {
+      myTree->DropBaskets();
+      delete branch;
+      delete myTree;
+      delete random;
+      delete f;
+   }
 
-      TRandom *random;
-      TTree *myTree;
-      TFile *f;
-      TBranch *branch;
+   TRandom *random;
+   TTree *myTree;
+   TFile *f;
+   TBranch *branch;
 };
 
 TEST_F(TBranchTest, nonePreviousTest)
 {
    f = new TFile("TBranchTestTree.root");
-   myTree = (TTree*)f->Get("myTree");
+   myTree = (TTree *)f->Get("myTree");
    branch = myTree->GetBranch("branch0");
 
    myTree->SetClusterPrefetch(false);
@@ -68,7 +68,7 @@ TEST_F(TBranchTest, nonePreviousTest)
 TEST_F(TBranchTest, onePreviousTest)
 {
    f = new TFile("TBranchTestTree.root");
-   myTree = (TTree*)f->Get("myTree");
+   myTree = (TTree *)f->Get("myTree");
    branch = myTree->GetBranch("branch0");
 
    // Checks to make sure only first basket is loaded
@@ -116,7 +116,7 @@ TEST_F(TBranchTest, onePreviousTest)
 TEST_F(TBranchTest, twoPreviousTest)
 {
    f = new TFile("TBranchTestTree.root");
-   myTree = (TTree*)f->Get("myTree");
+   myTree = (TTree *)f->Get("myTree");
    branch = myTree->GetBranch("branch0");
 
    myTree->SetMaxVirtualSize(-2);
