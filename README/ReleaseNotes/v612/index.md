@@ -65,6 +65,7 @@ logarithmic complexity).  You will also see warnings like
 ```
    Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SomeName overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 ```
+- When a container relies on TObject::Hash and RecursiveRemove, for example THashTable, the container call use ```TObject::CheckedHash()``` instead of ```TObject::Hash``` during insertion operation to record in the object whether the Hash/RecursiveRemove setup is done properly (as explain above).  It this is not the case ```TObject::HasInconsistentHash()``` will return true.  This can then be used to select, in RecursiveRemove, whether the call to Hash can be trusted or if one needs to do a linear search (as was done in v6.10 and earlier).
 
 
 ## I/O Libraries
