@@ -606,7 +606,7 @@ Long64_t TTree::TClusterIterator::Next()
       fNextEntry = fStartEntry + clusterEstimate;
    } else {
       if (fClusterRange == fTree->fNClusterRange) {
-         // We are looking at the last range ; its size
+         // We are looking at a range which size
          // is defined by AutoFlush itself and goes to the GetEntries.
          fNextEntry += fTree->GetAutoFlush();
       } else {
@@ -645,21 +645,21 @@ Long64_t TTree::TClusterIterator::Next()
 Long64_t TTree::TClusterIterator::Previous()
 {
    fNextEntry = fStartEntry;
-   if ( fTree->GetAutoFlush() <= 0 ) {
+   if (fTree->GetAutoFlush() <= 0) {
       // Case of old files before November 9 2009
       Long64_t clusterEstimate = GetEstimatedClusterSize();
       fStartEntry = fNextEntry - clusterEstimate;
    } else {
-      if (fClusterRange == 0) {
-         // We are looking at the last range ; its size
-         // is defined by AutoFlush itself and goes to the GetEntries.
+      if (fClusterRange == 0 || fTree->fNClusterRange == 0) {
+         // We are looking at a range which size
+         // is defined by AutoFlush itself.
          fStartEntry -= fTree->GetAutoFlush();
       } else {
          if (fNextEntry <= fTree->fClusterRangeEnd[fClusterRange]) {
             --fClusterRange;
          }
          if (fClusterRange == 0) {
-            // We are looking at the first range
+            // We are looking at the first range.
             fStartEntry = 0;
          } else {
             Long64_t clusterSize = fTree->fClusterSize[fClusterRange];
