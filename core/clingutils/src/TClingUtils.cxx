@@ -58,6 +58,10 @@
 
 #include "TClingUtils.h"
 
+#ifdef _WIN32
+#define strncasecmp _strnicmp
+#endif
+
 namespace ROOT {
 namespace TMetaUtils {
 
