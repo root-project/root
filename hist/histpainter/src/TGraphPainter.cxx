@@ -3320,8 +3320,8 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
    Double_t YA2 = theGraph->GetYaxis()->GetXmax();
    Double_t dX  = XA1+XA2;
    Double_t dY  = YA1+YA2;
-   Double_t *newX = new Double_t[N];
-   Double_t *newY = new Double_t[N];
+   std::vector<Double_t> newX(N);
+   std::vector<Double_t> newY(N);
 
    if (lrx) {
       opt.ReplaceAll("rx", "");
@@ -3407,8 +3407,6 @@ void TGraphPainter::PaintGraphReverse(TGraph *theGraph, Option_t *option)
    theHist->GetYaxis()->SetTickLength(TLY);
    theHist->GetXaxis()->SetAxisColor(XACOL);
    theHist->GetYaxis()->SetAxisColor(YACOL);
-   delete[] newX;
-   delete[] newY;
 }
 
 
