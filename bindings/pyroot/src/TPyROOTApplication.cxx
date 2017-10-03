@@ -13,7 +13,9 @@
 #include "TStyle.h"
 #include "TError.h"
 #include "Getline.h"
-//#include "TVirtualX.h"
+#ifdef R__WIN32
+#include "TVirtualX.h"
+#endif
 
 // Standard
 #include <string.h>
