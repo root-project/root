@@ -3,6 +3,7 @@
 #include "ROOT/TTrivialDS.hxx"
 #include "TH1F.h"
 #include "TRandom.h"
+#include "TSystem.h"
 
 #include "TNonCopiableDS.hxx"
 
@@ -212,11 +213,11 @@ TEST(Cache, NonCopiable)
       << "The static assert was not triggered even if caching of columns of a non copiable type was requested";
 }
 
-auto treeName = "t";
-auto fileName = "fileName.root";
-
-TEST(Cache, TakeCarrays)
+TEST(Cache, Carrays)
 {
+   auto treeName = "t";
+   auto fileName = "CacheCarrays.root";
+
    {
       TFile f(fileName, "RECREATE");
       TTree t(treeName, treeName);
@@ -231,32 +232,6 @@ TEST(Cache, TakeCarrays)
       t.Write();
    }
 
-   TDataFrame tdf(treeName, fileName);
-   // no auto here: we check that the type is a COLL<vector<float>>!
-   using ColType_t = std::array_view<float>;
-   std::vector<std::vector<float>> v = *tdf.Take<ColType_t>("arr");
-   std::deque<std::vector<float>> d = *tdf.Take<ColType_t, std::deque<ColType_t>>("arr");
-   std::list<std::vector<float>> l = *tdf.Take<ColType_t, std::list<ColType_t>>("arr");
-
-   auto lit = l.begin();
-   auto ifloat = 0.f;
-   for (auto i : ROOT::TSeqU(4)) {
-      const auto &vv = v[i];
-      const auto &dv = d[i];
-      const auto &lv = *lit;
-      for (auto j : ROOT::TSeqU(4)) {
-         const auto ref = ifloat + j;
-         EXPECT_EQ(ref, vv[j]);
-         EXPECT_EQ(ref, dv[j]);
-         EXPECT_EQ(ref, lv[j]);
-      }
-      ifloat++;
-      lit++;
-   }
-}
-
-TEST(Cache, Carrays)
-{
    TDataFrame tdf(treeName, fileName);
    auto cache = tdf.Cache<std::array_view<float>>({"arr"});
    int i = 0;
@@ -274,4 +249,7 @@ TEST(Cache, Carrays)
    auto cachej = tdf.Cache("arr");
    i = 0;
    cache.Foreach(checkArr, {"arr"});
+
+   gSystem->Unlink(fileName);
+
 }
