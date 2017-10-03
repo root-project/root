@@ -56,12 +56,12 @@ using namespace ROOT::Detail::TDF;
 template <typename T>
 class CacheColumnHolder {
 public:
-   using value_type = T;
-   std::vector<T> fContent;
+   using value_type = T; // A shortcut to the value_type of the vector
+   std::vector<value_type> fContent;
    // This method returns a pointer since we treat these columns as if they come
    // from a data source, i.e. we forward an entry point to valid memory rather
    // than a value.
-   T *operator()(unsigned int /*slot*/, ULong64_t iEvent) { return &fContent[iEvent]; };
+   value_type *operator()(unsigned int /*slot*/, ULong64_t iEvent) { return &fContent[iEvent]; };
 };
 
 // ENDCACHE------------
@@ -235,6 +235,37 @@ void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const uns
 
 } // namespace TDF
 } // namespace Internal
+
+namespace Detail {
+namespace TDF {
+
+template<typename T, typename COLL = std::vector<T>>
+struct TakeRealTypes {
+   // We cannot put in the output collection C arrays: the ownership is not defined.
+   // We therefore proceed to check if T is an array_view
+   // If yes, we check what type is the output collection and we rebuild it.
+   // E.g. if a vector<V> was the selected collection, where V is array_view<T>,
+   // the collection becomes vector<vector<T>>.
+   static constexpr auto isAV = TDFInternal::IsArrayView_t<T>::value;
+   using ValueType_t = typename TDFInternal::ValueType<T>::value_type;
+   using ValueTypeColl_t = std::vector<ValueType_t>;
+
+   using NewC0_t = typename std::conditional<isAV && TDFInternal::IsVector_t<COLL>::value,
+                                             std::vector<ValueTypeColl_t>,
+                                             COLL>::type;
+   using NewC1_t = typename std::conditional<isAV && TDFInternal::IsList_t<NewC0_t>::value,
+                                             std::list<ValueTypeColl_t>,
+                                             NewC0_t>::type;
+   using NewC2_t = typename std::conditional<isAV && TDFInternal::IsDeque_t<NewC1_t>::value,
+                                             std::deque<ValueTypeColl_t>,
+                                             NewC1_t>::type;
+
+   using RealT_t = typename std::conditional<isAV, ValueType_t, T>::type;
+   using RealColl_t = NewC2_t;
+};
+
+} // namespace TDF
+} // namespace Detail
 
 namespace Experimental {
 
@@ -844,7 +875,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T, typename COLL = std::vector<T>>
-   TResultProxy<COLL> Take(std::string_view column = "")
+   auto Take(std::string_view column = "") -> TResultProxy<typename TDFDetail::TakeRealTypes<T, COLL>::RealColl_t>
    {
       auto loopManager = GetDataFrameChecked();
       const auto columns = column.empty() ? ColumnNames_t() : ColumnNames_t({std::string(column)});
@@ -853,9 +884,13 @@ public:
       if (fDataSource)
          TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<1>(),
                                               TTraits::TypeList<T>(), *fDataSource);
-      using Helper_t = TDFInternal::TakeHelper<T, COLL>;
+
+      using RealT_t = typename TDFDetail::TakeRealTypes<T, COLL>::RealT_t;
+      using RealColl_t = typename TDFDetail::TakeRealTypes<T, COLL>::RealColl_t;
+
+      using Helper_t = TDFInternal::TakeHelper<RealT_t, T, RealColl_t>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-      auto valuesPtr = std::make_shared<COLL>();
+      auto valuesPtr = std::make_shared<RealColl_t>();
       const auto nSlots = fProxiedPtr->GetNSlots();
       auto action = std::make_shared<Action_t>(Helper_t(valuesPtr, nSlots), validColumnNames, *fProxiedPtr);
       loopManager->Book(action);
@@ -1574,8 +1609,7 @@ private:
       // We share bits and pieces with snapshot. De facto this is a snapshot
       // in memory!
       TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
-
-      std::tuple<TDFInternal::CacheColumnHolder<BranchTypes>...> colHolders;
+      std::tuple<TDFInternal::CacheColumnHolder<typename TDFDetail::TakeRealTypes<BranchTypes>::RealColl_t::value_type>...> colHolders;
 
       // TODO: really fix the type of the Take....
       std::initializer_list<int> expander0{(
