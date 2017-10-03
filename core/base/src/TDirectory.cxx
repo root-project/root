@@ -116,6 +116,20 @@ TDirectory::~TDirectory()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Destructor.
+
+TDirectory::TContext::~TContext()
+{
+   // Destructor.   Reset the current directory to its
+   // previous state.
+   if (fDirectory) {
+      fDirectory->UnregisterContext(this);
+      fDirectory->cd();
+   } else
+      CdNull();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Sets the flag controlling the automatic add objects like histograms, TGraph2D, etc
 /// in memory
 ///
