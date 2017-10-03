@@ -21,11 +21,13 @@
 
 #include <array>
 #include <cstddef> // std::size_t
+#include <deque>
 #include <functional>
 #include <memory>
 #include <string>
 #include <type_traits> // std::decay
 #include <vector>
+
 class TTree;
 class TTreeReader;
 
@@ -314,6 +316,44 @@ using IsTrueForAllImpl_t = typename std::is_same<TBoolPack<bs..., true>, TBoolPa
 template <bool... Conditions>
 struct TEvalAnd {
    static constexpr bool value = IsTrueForAllImpl_t<Conditions...>::value;
+};
+
+// Check if a class is a specialisation of stl containers templates
+
+template<typename>
+struct IsVector_t : std::false_type {};
+
+template<typename T>
+struct IsVector_t<std::vector<T>> : std::true_type {};
+
+template<typename>
+struct IsList_t : std::false_type {};
+
+template<typename T>
+struct IsList_t<std::list<T>> : std::true_type {};
+
+template<typename>
+struct IsDeque_t : std::false_type {};
+
+template<typename T>
+struct IsDeque_t<std::deque<T>> : std::true_type {};
+
+template<typename>
+struct IsArrayView_t : std::false_type {};
+
+template<typename T>
+struct IsArrayView_t<std::array_view<T>> : std::true_type {};
+
+// Check the value_type type of a type with a SFINAE to allow compilation in presence
+// fundamental types
+template<typename T, bool IsContainer = IsContainer<typename std::decay<T>::type>::value>
+struct ValueType {
+   using value_type = typename T::value_type;
+};
+
+template<typename T>
+struct ValueType<T, false> {
+   using value_type = T;
 };
 
 } // end NS TDF
