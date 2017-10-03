@@ -17,3 +17,4 @@ ROOT_ADD_GTEST(datasource_noncopiable dataframe/datasource_noncopiable.cxx LIBRA
 ROOT_ADD_GTEST(dataframe_callbacks dataframe/dataframe_callbacks.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_PYUNITTEST(dataframe_histograms dataframe/dataframe_histograms.py)
+# ROOT_ADD_PYUNITTEST(dataframe_cache dataframe/dataframe_cache.py)
