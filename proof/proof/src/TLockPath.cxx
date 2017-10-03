@@ -43,12 +43,12 @@ Int_t TLockPath::Lock(Bool_t shared)
 
 #if defined(R__WIN32) && !defined(R__WINGCC)
    if (gSystem->AccessPathName(pname))
-      fLockId = _open(pname, _O_CREAT|_O_RDWR, 0644);
+      fLockId = _open(pname, _O_CREAT | _O_RDWR, 0644);
    else
       fLockId = _open(pname, _O_RDWR);
 #else
    if (gSystem->AccessPathName(pname))
-      fLockId = open(pname, O_CREAT|O_RDWR, 0644);
+      fLockId = open(pname, O_CREAT | O_RDWR, 0644);
    else
       fLockId = open(pname, O_RDWR);
 #endif
