@@ -100,6 +100,7 @@ large TClonesArray where each element contains another small vector container.
   - The possibility to read from data sources was added. An interface for all data sources, TDataSource, is provided by ROOT. Two example data sources have been provided too: the TRootDS and the TTrivialDS. The former allows to read via the novel data source mechanism ROOT data, while the latter is a simple generator, created for testing and didactic purposes. It is therefore now possible to interface *any* kind of dataset/data format to ROOT as long as an adaptor which implements the pure virtual methods of the TDataSource interface can be written in C++.
   - Column can be aliased with the `TDF::TInterface` method `Alias`: `auto histo = mytdf.Alias("myAlias", "myColumn").Histo1D("myAlias");`
   - Add the `GetColumnsNames` method to the `TDF::TInterface`: the user can therefore get the names of the available columns coming from trees, data sources or `Define`d columns
+  - `TDataFrame`s can be cached in memory with the `TDF::TInterface` method `Cache`. All or some columns can be cached. Two versions of the method are proposed: one which allows to explicitly list the types of the columns and another one allowing to let the system infer them (the same mechanism of the `Snapshot` method). Only columns containing instances of classes which have a copy constructor can be cached.
 
 ## Histogram Libraries
 
