@@ -1677,9 +1677,8 @@ void TCling::RegisterModule(const char* modulename,
          if (!dyLibHandle) {
 #ifdef R__WIN32
             char dyLibError[1000];
-            FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(),
-                          MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), dyLibError,
-                          sizeof(dyLibError), NULL);
+            FormatMessageA(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                           dyLibError, sizeof(dyLibError), NULL);
 #else
             const char* dyLibError = dlerror();
             if (dyLibError)
@@ -4746,7 +4745,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
       bool newFormat=false;
       while (getline(file, line, '\n')) {
          if (!newFormat &&
-             (strstr(line.c_str(),"Library.") != nullptr || strstr(line.c_str(),"Declare.") != nullptr)) {
+             (strstr(line.c_str(), "Library.") != nullptr || strstr(line.c_str(), "Declare.") != nullptr)) {
             file.close();
             return -3; // old format
          }
@@ -4758,7 +4757,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
             while (getline(file, line, '\n')) {
                if (line[0] == '[') break;
                if (!uniqueString) {
-                  Error("ReadRootmapFile", "Cannot handle \"{ decls }\" sections in custom rootmap file %s", rmapfile);
+                  Error("ReadRootmapFile", "Cannot handle \"{ decls }\" sections in custom rootmap file %s", rmapfile.c_str());
                   return -4;
                }
                uniqueString->Append(line);
