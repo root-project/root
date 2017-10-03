@@ -186,7 +186,7 @@ TBranch::TBranch(TTree *tree, const char *name, void *address, const char *leafl
 , fEntryOffsetLen(0)
 , fWriteBasket(0)
 , fEntryNumber(0)
-, fIOBits(tree ? tree->GetIOFeatures().GetFeatures() : 0)
+, fIOFeatures(tree ? tree->GetIOFeatures().GetFeatures() : 0)
 , fOffset(0)
 , fMaxBaskets(10)
 , fNBaskets(0)
@@ -238,7 +238,7 @@ TBranch::TBranch(TBranch *parent, const char *name, void *address, const char *l
 , fEntryOffsetLen(0)
 , fWriteBasket(0)
 , fEntryNumber(0)
-, fIOBits(parent->fIOBits)
+, fIOFeatures(parent->fIOFeatures)
 , fOffset(0)
 , fMaxBaskets(10)
 , fNBaskets(0)
@@ -1762,9 +1762,9 @@ Long64_t TBranch::GetZipBytes(Option_t *option) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the IO settings currently in use for this branch.
 
-ROOT::Experimental::TIOFeatures TBranch::GetIOFeatures() const
+ROOT::TIOFeatures TBranch::GetIOFeatures() const
 {
-   return ROOT::Experimental::TIOFeatures(fIOBits);
+   return fIOFeatures;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

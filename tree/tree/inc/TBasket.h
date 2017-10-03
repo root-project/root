@@ -60,13 +60,13 @@ protected:
    Int_t       fLast{0};       ///< Pointer to last used byte in basket
    Bool_t      fHeaderOnly{kFALSE}; ///< True when only the basket header must be read/written
    UChar_t     fIOBits{0}; ///<!IO feature flags.  Serialized in custom portion of streamer to avoid forward compat issues unless needed.
-   Bool_t      fReadEntryOffset{kFALSE}; ///<!Set to true if offset array was read from a file.
    Int_t      *fDisplacement{nullptr};   ///<![fNevBuf] Displacement of entries in fBuffer(TKey)
    Int_t      *fEntryOffset{nullptr}; ///<[fNevBuf] Offset of entries in fBuffer(TKey); generated at runtime.  Special value
                                  /// of `-1` indicates that the offset generation MUST be performed on first read.
    TBranch    *fBranch{nullptr};    ///<Pointer to the basket support branch
    TBuffer    *fCompressedBufferRef{nullptr}; ///<! Compressed buffer.
    Bool_t      fOwnsCompressedBuffer{kFALSE};   ///<! Whether or not we own the compressed buffer.
+   Bool_t      fReadEntryOffset{kFALSE}; ///<!Set to true if offset array was read from a file.
    Int_t       fLastWriteBufferSize{0};          ///<! Size of the buffer last time we wrote it to disk
 
 public:

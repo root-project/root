@@ -5821,9 +5821,9 @@ const char* TTree::GetFriendAlias(TTree* tree) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns the current set of IO settings
-ROOT::Experimental::TIOFeatures TTree::GetIOFeatures() const
+ROOT::TIOFeatures TTree::GetIOFeatures() const
 {
-   return ROOT::Experimental::TIOFeatures(fIOBits);
+   return fIOFeatures;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8682,19 +8682,18 @@ void TTree::SetEstimate(Long64_t n /* = 1000000 */)
 ///
 /// Returns all the newly-set IO settings.
 
-ROOT::Experimental::TIOFeatures TTree::SetIOFeatures(const ROOT::Experimental::TIOFeatures &features)
+ROOT::TIOFeatures TTree::SetIOFeatures(const ROOT::TIOFeatures &features)
 {
    // Purposely ignore all unsupported bits; TIOFeatures implementation already warned the user about the
    // error of their ways; this is just a safety check.
    UChar_t featuresRequested = features.GetFeatures() & static_cast<UChar_t>(TBasket::EIOBits::kSupported);
 
-   UChar_t newFeatures = ~fIOBits & featuresRequested;
-   fIOBits |= newFeatures;
+   UChar_t curFeatures = fIOFeatures.GetFeatures();
+   UChar_t newFeatures = ~curFeatures & featuresRequested;
+   curFeatures |= newFeatures;
+   fIOFeatures.Set(curFeatures);
 
-   ROOT::Experimental::TIOFeatures newSettings;
-   for (Int_t idx = 0; idx < TBasket::kIOBitCount; idx++) {
-      newSettings.Set(static_cast<TBasket::EIOBits>(BIT(idx)));
-   }
+   ROOT::TIOFeatures newSettings(newFeatures);
    return newSettings;
 }
 
