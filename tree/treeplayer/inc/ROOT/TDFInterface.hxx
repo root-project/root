@@ -247,17 +247,15 @@ struct TakeRealTypes {
    // E.g. if a vector<V> was the selected collection, where V is array_view<T>,
    // the collection becomes vector<vector<T>>.
    static constexpr auto isAV = TDFInternal::IsArrayView_t<T>::value;
-   using ValueType_t = typename TDFInternal::ValueType<T>::value_type;
-   using ValueTypeColl_t = std::vector<ValueType_t>;
+   using RealT_t = typename TDFInternal::ValueType<T>::value_type;
+   using VTColl_t = std::vector<RealT_t>;
 
    using NewC0_t =
-      typename std::conditional<isAV && TDFInternal::IsVector_t<COLL>::value, std::vector<ValueTypeColl_t>, COLL>::type;
-   using NewC1_t = typename std::conditional<isAV && TDFInternal::IsList_t<NewC0_t>::value, std::list<ValueTypeColl_t>,
-                                             NewC0_t>::type;
-   using NewC2_t = typename std::conditional<isAV && TDFInternal::IsDeque_t<NewC1_t>::value,
-                                             std::deque<ValueTypeColl_t>, NewC1_t>::type;
-
-   using RealT_t = typename std::conditional<isAV, ValueType_t, T>::type;
+      typename std::conditional<isAV && TDFInternal::IsVector_t<COLL>::value, std::vector<VTColl_t>, COLL>::type;
+   using NewC1_t =
+      typename std::conditional<isAV && TDFInternal::IsList_t<NewC0_t>::value, std::list<VTColl_t>, NewC0_t>::type;
+   using NewC2_t =
+      typename std::conditional<isAV && TDFInternal::IsDeque_t<NewC1_t>::value, std::deque<VTColl_t>, NewC1_t>::type;
    using RealColl_t = NewC2_t;
 };
 
@@ -875,7 +873,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T, typename COLL = std::vector<T>>
-   auto Take(std::string_view column = "") -> TResultProxy<typename TDFDetail::TakeRealTypes<T, COLL>::RealColl_t>
+   TResultProxy<typename TDFDetail::TakeRealTypes<T, COLL>::RealColl_t> Take(std::string_view column = "")
    {
       auto loopManager = GetDataFrameChecked();
       const auto columns = column.empty() ? ColumnNames_t() : ColumnNames_t({std::string(column)});
