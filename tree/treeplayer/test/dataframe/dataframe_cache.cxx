@@ -269,4 +269,9 @@ TEST(Cache, Carrays)
       i++;
    };
    cache.Foreach(checkArr, {"arr"});
+
+   // now jitted
+   auto cachej = tdf.Cache("arr");
+   i = 0;
+   cache.Foreach(checkArr, {"arr"});
 }
