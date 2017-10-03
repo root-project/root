@@ -8,11 +8,11 @@
 #define ROOT_Math_MixMaxEngineImpl
 
 
-#if (_NN==17)
+#if (ROOT_MM_N==17)
 namespace mixmax_17 {
-#elif (_NN==240)
+#elif (ROOT_MM_N==240)
 namespace mixmax_240 {
-#elif (_NN==256)
+#elif (ROOT_MM_N==256)
 namespace mixmax_256 {
 #else
 namespace { 
@@ -31,11 +31,11 @@ namespace {
 
 #include <iostream>
 
-#if (_NN==17)
+#if (ROOT_MM_N==17)
 using namespace mixmax_17;
-#elif (_NN==240)
+#elif (ROOT_MM_N==240)
 using namespace mixmax_240;
-#elif (_NN==256)
+#elif (ROOT_MM_N==256)
 using namespace mixmax_256;
 #endif
 
@@ -65,12 +65,12 @@ namespace ROOT {
 
 
 template<> 
-class MixMaxEngineImpl<_NN> {
+class MixMaxEngineImpl<ROOT_MM_N> {
    rng_state_t * fRngState;
 public:
 
-   typedef MixMaxEngine<_NN,0>::StateInt_t StateInt_t; 
-   typedef MixMaxEngine<_NN,0>::Result_t Result_t;
+   typedef MixMaxEngine<ROOT_MM_N,0>::StateInt_t StateInt_t; 
+   typedef MixMaxEngine<ROOT_MM_N,0>::Result_t Result_t;
    
    MixMaxEngineImpl(uint64_t seed) {
       fRngState = rng_alloc();
