@@ -1,7 +1,7 @@
 
 
 // define number for used to Mixmax
-#define _N 240
+#define _NN 240
 
 #include "MixMaxEngineImpl.h"
 

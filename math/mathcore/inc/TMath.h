@@ -490,7 +490,6 @@ struct Limits {
 #if defined(R__WIN32) && !defined(__CINT__)
 #   ifndef finite
 #      define finite _finite
-#      define isnan  _isnan
 #   endif
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS_CC50) || \
