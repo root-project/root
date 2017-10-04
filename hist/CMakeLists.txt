@@ -1,4 +1,5 @@
 add_subdirectory(hist)             # special CMakeLists.txt
+add_subdirectory(histdraw)         # special CMakeLists.txt
 add_subdirectory(histpainter)      # special CMakeLists.txt
 add_subdirectory(spectrum)
 add_subdirectory(spectrumpainter)  # special CMakeLists.txt
