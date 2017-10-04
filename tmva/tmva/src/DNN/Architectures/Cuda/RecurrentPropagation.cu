@@ -36,9 +36,38 @@ auto TCuda<AFloat>::RecurrentLayerBackward(TCudaMatrix<AFloat> & state_gradients
                                            const TCudaMatrix<AFloat> & weights_state, // HxH
                                            const TCudaMatrix<AFloat> & input,  // BxD
                                            TCudaMatrix<AFloat> & input_gradient);
--> Matrix_t &
+-> TCudaMatrix<AFloat> &
 {
-   //TODO
+   // Compute element-wise product.
+   TCuda<AFloat>::Hadamard(df, state_gradients_backward); // B x H
+
+   // Input gradients.
+   if (input_gradient.GetNoElements() > 0) {
+      TCuda<AFloat>::Multiply(input_gradient, df, weights_input);
+   }
+
+   // State gradients.
+   if (state_gradients_backward.GetNoElements() > 0) {
+      TCuda<AFloat>::Multiply(state_gradients_backward, df, weights_state);
+   }
+
+   // Weights gradients
+   if (input_weight_gradients.GetNoElements() > 0) {
+      TCudaMatrix<AFloat> tmp(input_weight_gradients);
+      TCuda<AFloat>::TransposeMultiply(input_weight_gradients, df, input); // H x B . B x D
+      TCuda<AFloat>::ScaleAdd(input_weight_gradients, tmp, 1);
+   }
+   if (state_weight_gradients.GetNoElements() > 0) {
+      TCpuMatrix<AFloat> tmp(state_weight_gradients);
+      TCuda<AFloat>::TransposeMultiply(state_weight_gradients, df, state); // H x B . B x H
+      TCuda<AFloat>::ScaleAdd(state_weight_gradients, tmp, 1);
+   }
+
+   // Bias gradients.
+   if (bias_gradients.GetNoElements() > 0) {
+      TCuda<AFloat>::SumColumns(bias_gradients, df);
+   }
+   return input_gradient;
 }
 
 } // namespace DNN

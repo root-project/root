@@ -4,7 +4,7 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class : RNNLayer                                                               *
+ * Class : BasicRNNLayer                                                          *
  *                                                                                *
  * Description:                                                                   *
  *       NeuralNetwork                                                            *
@@ -239,7 +239,6 @@ auto inline TBasicRNNLayer<Architecture_t>::Forward(Tensor_t &input, bool isTrai
    for (size_t t = 0; t < fTimeSteps; ++t) {
       CellForward(arrInput[t]);
       Architecture_t::Copy(arrOutput[t], fState);
-      //debugMatrix<Architecture_t>(fState, "arch state");
    }
    Architecture_t::Rearrange(this->GetOutput(), arrOutput);  // B x T x D
 }
