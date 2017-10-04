@@ -9,11 +9,13 @@
  *************************************************************************/
 
 #include "RConfigure.h"      // R__USE_IMT
+#include "ROOT/RMakeUnique.hxx" // std::make_unique
 #include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName -> TCustomColumnBase, FindUnknownColumns -> TLoopManager
 #include "ROOT/TDFUtils.hxx"
 #include "TBranch.h"
 #include "TBranchElement.h"
 #include "TClassRef.h"
+#include "TFriendElement.h"
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
 
 #include <stdexcept>
@@ -222,6 +224,7 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree,
                                  const ColumnNames_t &dataSourceColumns)
 {
    ColumnNames_t unknownColumns;
+   const auto friends = tree ? std::unique_ptr<TList>(tree->GetListOfFriends()) : std::make_unique<TList>();
    for (auto &column : requiredCols) {
       const auto isTreeBranch = (tree != nullptr && tree->GetBranch(column.c_str()) != nullptr);
       if (isTreeBranch)
@@ -233,6 +236,19 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree,
          std::find(dataSourceColumns.begin(), dataSourceColumns.end(), column) != dataSourceColumns.end();
       if (isDataSourceColumn)
          continue;
+      if (friends) {
+         bool isFriendBranch = false;
+         for (auto friendTree : *friends) {
+            const auto friendBranch = static_cast<TFriendElement*>(friendTree)->GetTree()->GetBranch(column.c_str());
+            if (friendBranch != nullptr) {
+               isFriendBranch = true;
+               break;
+            }
+         }
+         if (isFriendBranch)
+            continue;
+      }
+
       unknownColumns.emplace_back(column);
    }
    return unknownColumns;
