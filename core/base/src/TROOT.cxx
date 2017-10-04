@@ -486,11 +486,9 @@ namespace Internal {
    /// libImt
    static Bool_t &IsImplicitMTEnabledImpl()
    {
-      static Bool_t isImplicitMTEnabled= kFALSE;
+      static Bool_t isImplicitMTEnabled = kFALSE;
       return isImplicitMTEnabled;
    }
-
-
 
 } // end of Internal sub namespace
 // back to ROOT namespace
