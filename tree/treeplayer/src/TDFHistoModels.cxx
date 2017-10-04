@@ -91,8 +91,7 @@ TH3DModel::~TH3DModel()
 
 TProfile1DModel::TProfile1DModel(const ::TProfile &h)
    : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()),
-     fXUp(h.GetXaxis()->GetXmax()), fYLow(h.GetYmin()), fYUp(h.GetYmax()),
-     fOption(h.GetErrorOption())
+     fXUp(h.GetXaxis()->GetXmax()), fYLow(h.GetYmin()), fYUp(h.GetYmax()), fOption(h.GetErrorOption())
 {
 }
 TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup,
@@ -101,10 +100,9 @@ TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx
 {
 }
 
-TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup,
-                                 double ylow, double yup, const char *option)
-   : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fYLow(ylow), fYUp(yup),
-     fOption(option)
+TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, double ylow,
+                                 double yup, const char *option)
+   : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fYLow(ylow), fYUp(yup), fOption(option)
 {
 }
 
@@ -115,8 +113,7 @@ TProfile1DModel::~TProfile1DModel()
 TProfile2DModel::TProfile2DModel(const ::TProfile2D &h)
    : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()),
      fXUp(h.GetXaxis()->GetXmax()), fNbinsY(h.GetNbinsY()), fYLow(h.GetYaxis()->GetXmin()),
-     fYUp(h.GetYaxis()->GetXmax()), fZLow(h.GetZmin()), fZUp(h.GetZmax()),
-     fOption(h.GetErrorOption())
+     fYUp(h.GetYaxis()->GetXmax()), fZLow(h.GetZmin()), fZUp(h.GetZmax()), fOption(h.GetErrorOption())
 {
 }
 TProfile2DModel::TProfile2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy,
