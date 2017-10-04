@@ -91,7 +91,7 @@ TH3DModel::~TH3DModel()
 
 TProfile1DModel::TProfile1DModel(const ::TProfile &h)
    : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()),
-     fXUp(h.GetXaxis()->GetXmax()), fYLow(h.GetYaxis()->GetXmin()), fYUp(h.GetYaxis()->GetXmax()),
+     fXUp(h.GetXaxis()->GetXmax()), fYLow(h.GetYmin()), fYUp(h.GetYmax()),
      fOption(h.GetErrorOption())
 {
 }
@@ -115,7 +115,7 @@ TProfile1DModel::~TProfile1DModel()
 TProfile2DModel::TProfile2DModel(const ::TProfile2D &h)
    : fName(h.GetName()), fTitle(h.GetTitle()), fNbinsX(h.GetNbinsX()), fXLow(h.GetXaxis()->GetXmin()),
      fXUp(h.GetXaxis()->GetXmax()), fNbinsY(h.GetNbinsY()), fYLow(h.GetYaxis()->GetXmin()),
-     fYUp(h.GetYaxis()->GetXmax()), fZLow(h.GetZaxis()->GetXmin()), fZUp(h.GetZaxis()->GetXmax()),
+     fYUp(h.GetYaxis()->GetXmax()), fZLow(h.GetZmin()), fZUp(h.GetZmax()),
      fOption(h.GetErrorOption())
 {
 }
