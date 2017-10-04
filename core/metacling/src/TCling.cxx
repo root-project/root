@@ -4728,18 +4728,18 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
    const std::map<char, unsigned int> keyLenMap = {{'c',6},{'n',10},{'t',8},{'h',7},{'e',5},{'v',4}};
 
    if (rootmapfile && *rootmapfile) {
-      std::string rmapfile(rootmapfile);
+      std::string rootmapfileNoBackslash(rootmapfile);
 #ifdef _MSC_VER
-      std::replace(rmapfile.begin(), rmapfile.end(), '\\', '/');
+      std::replace(rootmapfileNoBackslash.begin(), rootmapfileNoBackslash.end(), '\\', '/');
 #endif
       // Add content of a specific rootmap file
-      if (fRootmapFiles->FindObject(rmapfile.c_str()))
+      if (fRootmapFiles->FindObject(rootmapfileNoBackslash.c_str()))
          return -1;
 
       if (uniqueString)
-         uniqueString->Append(std::string("\n#line 1 \"Forward declarations from ") + rmapfile + "\"\n");
+         uniqueString->Append(std::string("\n#line 1 \"Forward declarations from ") + rootmapfileNoBackslash + "\"\n");
 
-      std::ifstream file(rmapfile);
+      std::ifstream file(rootmapfileNoBackslash);
       std::string line; line.reserve(200);
       std::string lib_name; line.reserve(100);
       bool newFormat=false;
@@ -4757,7 +4757,8 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
             while (getline(file, line, '\n')) {
                if (line[0] == '[') break;
                if (!uniqueString) {
-                  Error("ReadRootmapFile", "Cannot handle \"{ decls }\" sections in custom rootmap file %s", rmapfile.c_str());
+                  Error("ReadRootmapFile", "Cannot handle \"{ decls }\" sections in custom rootmap file %s",
+                        rootmapfileNoBackslash.c_str());
                   return -4;
                }
                uniqueString->Append(line);
