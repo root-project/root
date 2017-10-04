@@ -34,9 +34,7 @@ namespace Internal {
 class TVirtualCanvasPainter;
 }
 
-namespace Internal {
-
-/** \class ROOT::Experimental::Internal::TPadBase
+/** \class ROOT::Experimental::TPadBase
   Base class for graphic containers for `TDrawable`-s.
   */
 
