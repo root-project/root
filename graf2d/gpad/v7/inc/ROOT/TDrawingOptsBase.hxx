@@ -273,6 +273,13 @@ public:
    ~TDrawingOptsBaseNoDefault();
    TDrawingOptsBaseNoDefault(const TDrawingOptsBaseNoDefault &other);
    TDrawingOptsBaseNoDefault(TDrawingOptsBaseNoDefault &&other) = default;
+
+   /// Access to the attribute (non-const version).
+   template <class PRIMITIVE>
+   PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> ref) { return GetAttrsRefArr((PRIMITIVE*)nullptr).Get(ref); }
+   /// Access to the attribute (const version).
+   template <class PRIMITIVE>
+   const PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> ref) const { return GetAttrsRefArr((PRIMITIVE*)nullptr).Get(ref); }
 };
 
 extern template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<TColor>;
