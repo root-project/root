@@ -15,10 +15,10 @@
 void fill_tree(const char *treeName, const char *fileName)
 {
    ROOT::Experimental::TDataFrame d(25000);
-   d.Define("px", [](){return gRandom->Gaus();})
-    .Define("py", [](){return gRandom->Gaus();})
-    .Define("pz", [](double px, double py){return sqrt(px * px + py * py);}, {"px", "py"})
-    .Snapshot(treeName, fileName);
+   d.Define("px", []() { return gRandom->Gaus(); })
+      .Define("py", []() { return gRandom->Gaus(); })
+      .Define("pz", [](double px, double py) { return sqrt(px * px + py * py); }, {"px", "py"})
+      .Snapshot(treeName, fileName);
 }
 
 void tdf003_profiles()
