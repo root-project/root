@@ -19,6 +19,7 @@
 #include "ROOT/TPadExtent.hxx"
 #include "ROOT/TPadPos.hxx"
 
+#include <cassert>
 #include <limits>
 
 ROOT::Experimental::TPadBase::~TPadBase() = default;
@@ -54,3 +55,8 @@ ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &pa
 }
 
 ROOT::Experimental::TPad::~TPad() = default;
+
+ROOT::Experimental::TPadDrawable::TPadDrawable(std::unique_ptr<TPad> &&pPad, TPadBase& parent): fPad(std::move(pPad)), fOpts(parent)
+{
+   assert(&fPad->GetParent() == &parent && "Parent mismatch!");
+}
