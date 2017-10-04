@@ -1,7 +1,16 @@
 #include "TClass.h"
 #include "TInterpreter.h"
+#include <memory>
 
 #include "gtest/gtest.h"
+
+class FirstOverload : public TObject
+{
+public:
+   virtual ULong_t     Hash() const { return 1; }
+
+   ClassDefInline(FirstOverload, 2);
+};
 
 const char* gCode = R"CODE(
 
@@ -42,7 +51,7 @@ const char* gCode = R"CODE(
    class Third : public SecondAbstract
    {
    public:
-      int Get() override { return 0 ; };
+      int Get() override { return 0; };
 
       ClassDefInlineOverride(Third, 2);
    };
@@ -82,7 +91,7 @@ const char* gCode = R"CODE(
    class ThirdCorrect : public SecondCorrectAbstract
    {
    public:
-      int Get() override { return 0 ; };
+      int Get() override { return 0; };
 
       ClassDefInlineOverride(ThirdCorrect, 2);
    };
@@ -90,7 +99,7 @@ const char* gCode = R"CODE(
    class SecondInCorrectAbstract : public FirstOverloadCorrect // Could also have used TNamed.
    {
    public:
-      virtual ULong_t Hash() const { return 4; }
+      virtual ULong_t Hash() const { return 5; }
       virtual int     Get() = 0;
 
       ClassDef(SecondInCorrectAbstract, 2);
@@ -99,7 +108,7 @@ const char* gCode = R"CODE(
    class ThirdInCorrect : public SecondInCorrectAbstract
    {
    public:
-      int Get() override { return 0 ; };
+      int Get() override { return 0; };
 
       ClassDefInlineOverride(ThirdInCorrect, 2);
    };
@@ -111,6 +120,7 @@ Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemo
 Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SecondInCorrectAbstract overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
+Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class WrongSetup overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 )OUTPUT";
 
 
@@ -157,7 +167,75 @@ TEST(HashRecursiveRemove,FailingClasses)
    EXPECT_TRUE(TClass::GetClass("ThirdCorrect")->HasConsistentHashMember());
    EXPECT_FALSE(TClass::GetClass("SecondInCorrectAbstract")->HasConsistentHashMember());
    EXPECT_FALSE(TClass::GetClass("ThirdInCorrect")->HasConsistentHashMember());
+   EXPECT_FALSE(WrongSetup::Class()->HasConsistentHashMember());
 
    std::string output = testing::internal::GetCapturedStderr();
    EXPECT_EQ(gErrorOutput,output);
 }
+
+#include "THashList.h"
+#include "TROOT.h"
+
+constexpr size_t kHowMany = 10000;
+
+TEST(HashRecursiveRemove,SimpleDelete)
+{
+   THashList cont;
+
+   for(size_t i = 0; i < kHowMany; ++i) {
+      TNamed *n = new TNamed(TString::Format("n%ld",i),TString(""));
+      n->SetBit(kMustCleanup);
+      cont.Add(n);
+   }
+   cont.Delete();
+
+   EXPECT_EQ(0, cont.GetSize());
+}
+
+TEST(HashRecursiveRemove,DeleteWithRecursiveRemove)
+{
+   THashList cont;
+   TList todelete;
+
+   for(size_t i = 0; i < kHowMany; ++i) {
+      TNamed *n = new TNamed(TString::Format("n%ld",i),TString(""));
+      n->SetBit(kMustCleanup);
+      cont.Add(n);
+      todelete.Add(n);
+   }
+   gROOT->GetListOfCleanups()->Add(&cont);
+
+   for(auto o : todelete)
+     delete o;
+
+   todelete.Clear("nodelete");
+
+   EXPECT_EQ(0, cont.GetSize());
+}
+
+TEST(HashRecursiveRemove,DeleteBadHashWithRecursiveRemove)
+{
+   THashList cont;
+   TList todelete;
+
+   for(size_t i = 0; i < kHowMany; ++i) {
+      TObject *o;
+      if (i%2) o = (TObject*)TClass::GetClass("FirstOverload")->New();
+      else o = new WrongSetup;
+      o->SetBit(kMustCleanup);
+      cont.Add(o);
+      todelete.Add(o);
+   }
+   gROOT->GetListOfCleanups()->Add(&cont);
+
+   for(auto o : todelete) {
+     delete o;
+   }
+
+   EXPECT_EQ(0, cont.GetSize());
+
+   todelete.Clear("nodelete");
+
+   // Avoid spurrious/redundant error messages in case of failure.
+   cont.Clear("nodelete");
+  }
