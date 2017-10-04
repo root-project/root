@@ -271,7 +271,7 @@ protected:
 public:
    ~TDrawingOptsBaseNoDefault();
    TDrawingOptsBaseNoDefault(const TDrawingOptsBaseNoDefault &other);
-   TDrawingOptsBaseNoDefault(TDrawingOptsBaseNoDefault &&other);
+   TDrawingOptsBaseNoDefault(TDrawingOptsBaseNoDefault &&other) = default;
 };
 
 extern template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<TColor>;
