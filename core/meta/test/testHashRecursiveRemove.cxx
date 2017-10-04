@@ -202,8 +202,52 @@ TEST(HashRecursiveRemove,FailingClasses)
 
    std::string output = testing::internal::GetCapturedStderr();
    EXPECT_EQ(gErrorOutput,output);
+}
 
-   EXPECT_FALSE(WrongSetup::Class()->HasConsistentHashMember());
+bool CallCheckedHash(const char *clname)
+{
+   auto cl = TClass::GetClass(clname);
+   EXPECT_NE(nullptr,cl);
+
+   std::unique_ptr<TObject> obj((TObject*)cl->New());
+   EXPECT_NE(nullptr,obj.get());
+
+   obj->CheckedHash();
+   return !obj->HasInconsistentHash();
+}
+TEST(HashRecursiveRemove,CheckedHashRootClasses)
+{
+   EXPECT_TRUE(CallCheckedHash("TObject"));
+   EXPECT_TRUE(CallCheckedHash("TNamed"));
+   EXPECT_TRUE(CallCheckedHash("TH1F"));
+
+   EXPECT_TRUE(CallCheckedHash("TEnvRec"));
+   EXPECT_TRUE(CallCheckedHash("TDataType"));
+   EXPECT_TRUE(CallCheckedHash("TObjArray"));
+   EXPECT_TRUE(CallCheckedHash("TList"));
+   EXPECT_TRUE(CallCheckedHash("THashList"));
+   //EXPECT_TRUE(CallCheckedHash("TClass"));
+   EXPECT_TRUE(CallCheckedHash("TMethod"));
+   //EXPECT_TRUE(CallCheckedHash("ROOT::Internal::TCheckHashRecurveRemoveConsistency"));
+}
+
+TEST(HashRecursiveRemove,CheckedHashFailingClasses)
+{
+   //testing::internal::CaptureStderr();
+
+   EXPECT_FALSE(CallCheckedHash("FirstOverload"));
+   EXPECT_FALSE(CallCheckedHash("SecondOverload"));
+   EXPECT_FALSE(CallCheckedHash("SecondNoHash"));
+
+   EXPECT_FALSE(CallCheckedHash("Third"));
+   EXPECT_TRUE(CallCheckedHash("FirstOverloadCorrect"));
+
+   EXPECT_TRUE(CallCheckedHash("ThirdCorrect"));
+   EXPECT_FALSE(CallCheckedHash("ThirdInCorrect"));
+   EXPECT_FALSE(CallCheckedHash("WrongSetup"));
+
+   //std::string output = testing::internal::GetCapturedStderr();
+   //EXPECT_EQ(gErrorOutput,output);
 }
 
 #include "THashList.h"
