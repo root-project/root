@@ -33,11 +33,14 @@ namespace Experimental {
 
 class TFrame {
 public:
-   struct DrawingOpts: public TDrawingOptsBaseT<DrawingOpts> {
+   class DrawingOpts: public TDrawingOptsBase<DrawingOpts> {
+   public:
       /// Position of the frame in parent TPad coordinates.
       TPadPos fPos = {0.1_normal, 0.1_normal};
       /// Size of the frame in parent TPad coordinates.
       TPadExtent fSize = {0.8_normal, 0.8_normal};
+
+      DrawingOpts(TPadBase& pad): TDrawingOptsBase<DrawingOpts>(pad) {}
    };
 
 private:
