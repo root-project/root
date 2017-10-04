@@ -48,7 +48,9 @@ ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &pa
       for (int iVert = 0; iVert < nVert; ++iVert) {
          TPadPos subPos = offset;
          subPos *= {1. * nHoriz, 1. * nVert};
-         ret[iHoriz][iVert] = Draw(std::make_unique<TPad>(*this, size), subPos).Get();
+         auto uniqPad = std::make_unique<TPad>(*this, size);
+         ret[iHoriz][iVert] = uniqPad.get();
+         Draw(std::move(uniqPad)).At(subPos);
       }
    }
    return ret;
