@@ -21,10 +21,10 @@
 
 #include <limits>
 
-ROOT::Experimental::Internal::TPadBase::~TPadBase() = default;
+ROOT::Experimental::TPadBase::~TPadBase() = default;
 
 std::vector<std::vector<ROOT::Experimental::TPad *>>
-ROOT::Experimental::Internal::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &padding /*= {}*/)
+ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &padding /*= {}*/)
 {
    std::vector<std::vector<TPad *>> ret;
    if (!nHoriz)
