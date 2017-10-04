@@ -19,8 +19,13 @@ void fill_tree(const char *treeName, const char *fileName)
    ROOT::Experimental::TDataFrame d(10);
    int i(0);
    d.Define("b1", [&i]() { return (double)i; })
-    .Define("b2", [&i]() { auto j = i*i; ++i; return j; })
-    .Snapshot(treeName, fileName);
+      .Define("b2",
+              [&i]() {
+                 auto j = i * i;
+                 ++i;
+                 return j;
+              })
+      .Snapshot(treeName, fileName);
 }
 
 int tdf001_introduction()
@@ -84,7 +89,8 @@ int tdf001_introduction()
    auto b1List = b1_cut.Take<double, std::list<double>>();
 
    std::cout << "Selected b1 entries" << std::endl;
-   for (auto b1_entry : *b1List) std::cout << b1_entry << " ";
+   for (auto b1_entry : *b1List)
+      std::cout << b1_entry << " ";
    std::cout << std::endl;
    auto b1VecCl = TClass::GetClass(typeid(*b1Vec));
    std::cout << "The type of b1Vec is " << b1VecCl->GetName() << std::endl;

@@ -16,8 +16,7 @@ void fill_tree(const char *treeName, const char *fileName)
 {
    ROOT::Experimental::TDataFrame d(10000);
    auto i = 0.;
-   d.Define("b1", [&i]() { return i++; })
-    .Snapshot(treeName, fileName);
+   d.Define("b1", [&i]() { return i++; }).Snapshot(treeName, fileName);
 }
 
 using TDS = ROOT::Experimental::TDF::TDataSource;

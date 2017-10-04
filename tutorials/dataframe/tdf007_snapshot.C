@@ -14,8 +14,13 @@ void fill_tree(const char *treeName, const char *fileName)
    ROOT::Experimental::TDataFrame d(10000);
    int i(0);
    d.Define("b1", [&i]() { return i; })
-    .Define("b2", [&i]() { float j = i*i; ++i; return j; })
-    .Snapshot(treeName, fileName);
+      .Define("b2",
+              [&i]() {
+                 float j = i * i;
+                 ++i;
+                 return j;
+              })
+      .Snapshot(treeName, fileName);
 }
 
 int tdf007_snapshot()
@@ -39,7 +44,8 @@ int tdf007_snapshot()
                 .Define("b2_vector",
                         [](float b2) {
                            std::vector<float> v;
-                           for (int i = 0; i < 3; i++) v.push_back(b2*i);
+                           for (int i = 0; i < 3; i++)
+                              v.push_back(b2 * i);
                            return v;
                         },
                         {"b2"});

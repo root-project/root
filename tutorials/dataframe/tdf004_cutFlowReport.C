@@ -19,8 +19,13 @@ void fill_tree(const char *treeName, const char *fileName)
    ROOT::Experimental::TDataFrame d(50);
    int i(0);
    d.Define("b1", [&i]() { return (double)i; })
-    .Define("b2", [&i]() { auto j = i*i; ++i; return j; })
-    .Snapshot(treeName, fileName);
+      .Define("b2",
+              [&i]() {
+                 auto j = i * i;
+                 ++i;
+                 return j;
+              })
+      .Snapshot(treeName, fileName);
 }
 
 void tdf004_cutFlowReport()
