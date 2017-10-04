@@ -70,11 +70,6 @@ extern "C" void ROOT_TImplicitMT_DisableImplicitMT()
    }
 };
 
-extern "C" bool ROOT_TImplicitMT_IsImplicitMTEnabled()
-{
-   return GetImplicitMTFlag();
-};
-
 extern "C" UInt_t ROOT_TImplicitMT_GetImplicitMTPoolSize()
 {
    return ROOT::Internal::TPoolManager::GetPoolSize();
