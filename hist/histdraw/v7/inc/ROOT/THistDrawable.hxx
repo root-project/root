@@ -1,5 +1,5 @@
 /// \file ROOT/THistDrawable.h
-/// \ingroup Hist ROOT7
+/// \ingroup HistDraw ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-07-09
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -18,10 +18,7 @@
 
 #include "ROOT/TDrawable.hxx"
 #include "ROOT/THistDrawingOpts.hxx"
-#include "ROOT/TLogger.hxx"
-
-// TODO: from Sergey Linev: should libHist depend from libGpad?
-//#include "ROOT/TMenuItem.hxx"
+#include "ROOT/TMenuItem.hxx"
 
 #include <memory>
 
