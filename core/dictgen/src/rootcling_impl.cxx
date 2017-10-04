@@ -706,8 +706,7 @@ void SetRootSys()
             // $ROOTSYS/bin/rootcling_stage1.exe
             removesubdirs = 2;
             gBuildingROOT = true;
-         }
-         else if (!strncmp(s + 1, "rootcling_stage1", 16)) {
+         } else if (!strncmp(s + 1, "rootcling_stage1", 16)) {
             // $ROOTSYS/core/rootcling_stage1/src/rootcling_stage1
             removesubdirs = 4;
             gBuildingROOT = true;
@@ -2921,7 +2920,7 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
 #ifdef WIN32
                   if (mangledName[0] == '\01')
                      mangledName.erase(0, 1);
-                  char* demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
+                  char *demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
                   if (!errDemangle && demangledTIName) {
                      static const char typeinfoNameFor[] = " `RTTI Type Descriptor'";
                      if (strstr(demangledTIName, typeinfoNameFor)) {
@@ -2948,7 +2947,7 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
                      } else {
 #ifdef WIN32
                         ROOT::TMetaUtils::Error("ExtractClassesListAndDeclLines",
-                                                "Demangled typeinfo name '%s' does not contains `RTTI Type Descriptor'\n",
+                                                "Demangled typeinfo name '%s' does not contain `RTTI Type Descriptor'\n",
                                                 demangledTIName);
 #else
                         ROOT::TMetaUtils::Error("ExtractClassesListAndDeclLines",
@@ -3867,15 +3866,11 @@ public:
 
    ~TRootClingCallbacks(){};
 
-   virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/,
-                                   const clang::Token &/*IncludeTok*/,
-                                   llvm::StringRef FileName,
-                                   bool IsAngled,
-                                   clang::CharSourceRange /*FilenameRange*/,
-                                   const clang::FileEntry * /*File*/,
-                                   llvm::StringRef /*SearchPath*/,
-                                   llvm::StringRef /*RelativePath*/,
-                                   const clang::Module * /*Imported*/) {
+   virtual void InclusionDirective(clang::SourceLocation /*HashLoc*/, const clang::Token &/*IncludeTok*/,
+                                   llvm::StringRef FileName, bool IsAngled, clang::CharSourceRange /*FilenameRange*/,
+                                   const clang::FileEntry * /*File*/, llvm::StringRef /*SearchPath*/,
+                                   llvm::StringRef /*RelativePath*/, const clang::Module * /*Imported*/)
+   {
       if (isLocked) return;
       if (IsAngled) return;
       auto& PP = m_Interpreter->getCI()->getPreprocessor();
