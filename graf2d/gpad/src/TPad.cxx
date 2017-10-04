@@ -19,6 +19,8 @@
 #include "TSystem.h"
 #include "TStyle.h"
 #include "TH1.h"
+#include "TH2.h"
+#include "TH3.h"
 #include "TClass.h"
 #include "TBaseClass.h"
 #include "TClassTable.h"
@@ -3182,6 +3184,9 @@ void TPad::FillCollideGridTGraph(TObject *o)
 void TPad::FillCollideGridTH1(TObject *o)
 {
    TH1 *h = (TH1 *)o;
+
+   if (o->InheritsFrom(TH2::Class())) return;
+   if (o->InheritsFrom(TH3::Class())) return;
 
    TString name = h->GetName();
    if (name.Index("hframe") >= 0) return;
