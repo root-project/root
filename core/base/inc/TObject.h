@@ -61,7 +61,7 @@ public:
       kIsReferenced     = BIT(4),   ///< if object is referenced by a TRef or TRefArray
       kHasUUID          = BIT(5),   ///< if object has a TUUID (its fUniqueID=UUIDNumber)
       kCannotPick       = BIT(6),   ///< if object in a pad cannot be picked
-      // 7 is taken by TAxis.
+      // 7 is taken by TAxis and TClass.
       kNoContextMenu    = BIT(8),   ///< if object does not want context menu
       // 9, 10 are taken by TH1, TF1, TAxis and a few others
       // 12 is taken by TAxis
