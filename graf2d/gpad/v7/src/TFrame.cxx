@@ -37,8 +37,8 @@ public:
 } // namespace
 
 ROOT::Experimental::TFrame::TFrame(std::unique_ptr<Detail::TPadUserCoordBase> &&coords, const TPadPos &pos,
-                                   const TPadExtent &size):
-   fUserCoord(std::move(coords)), fPalette(TPalette::GetPalette("default")), fPos(pos), fSize(size)
+                                   const TPadExtent &size)
+   : fUserCoord(std::move(coords)), fPalette(TPalette::GetPalette("default")), fPos(pos), fSize(size)
 {
    if (!fUserCoord)
       fUserCoord.reset(new TPadUserCoordDefault);

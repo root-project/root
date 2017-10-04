@@ -40,7 +40,7 @@ public:
       /// Size of the frame in parent TPad coordinates.
       TPadExtent fSize = {0.8_normal, 0.8_normal};
 
-      DrawingOpts(TPadBase& pad): TDrawingOptsBase<DrawingOpts>(pad) {}
+      DrawingOpts(TPadBase &pad): TDrawingOptsBase<DrawingOpts>(pad) {}
    };
 
 private:
@@ -70,8 +70,7 @@ public:
    Detail::TPadUserCoordBase &GetUserCoord() const;
 
    /// Get the current user coordinate system.
-   std::unique_ptr<Detail::TPadUserCoordBase>
-   SwapUserCoordSystem(std::unique_ptr<Detail::TPadUserCoordBase> &&newCoord)
+   std::unique_ptr<Detail::TPadUserCoordBase> SwapUserCoordSystem(std::unique_ptr<Detail::TPadUserCoordBase> &&newCoord)
    {
       std::unique_ptr<Detail::TPadUserCoordBase> ret(std::move(newCoord));
       std::swap(ret, fUserCoord);

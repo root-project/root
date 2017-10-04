@@ -6,7 +6,8 @@
 using namespace ROOT::Experimental;
 
 // Test drawing of histograms.
-TEST(DrawTest, OneD) {
+TEST(DrawTest, OneD)
+{
    TAxisConfig xaxis{10, 0., 1.};
    auto h = std::make_shared<TH1D>(xaxis);
    TCanvas canv;
@@ -14,19 +15,21 @@ TEST(DrawTest, OneD) {
    EXPECT_EQ(canv.GetPrimitives().size(), 1u);
 }
 
-TEST(DrawTest, TwoD) {
+TEST(DrawTest, TwoD)
+{
    TAxisConfig xaxis{10, 0., 1.};
    TAxisConfig yaxis{{0., 1., 10., 100.}};
    auto h = std::make_shared<TH2I>(xaxis, yaxis);
    TCanvas canv;
    canv.Draw(h);
    // No THist copt c'tor:
-   //canv.Draw(TH2F(xaxis, yaxis));
+   // canv.Draw(TH2F(xaxis, yaxis));
    canv.Draw(std::make_unique<TH2C>(xaxis, yaxis));
    EXPECT_EQ(canv.GetPrimitives().size(), 2u);
 }
 
-TEST(DrawTest, ThreeD) {
+TEST(DrawTest, ThreeD)
+{
    TAxisConfig xaxis{{0., 1.}};
    TAxisConfig yaxis{10, 0., 1.};
    TAxisConfig zaxis{{0., 1., 10., 100.}};
@@ -37,10 +40,11 @@ TEST(DrawTest, ThreeD) {
 }
 
 // Drawing options:
-TEST(DrawOptTest, OneD) {
+TEST(DrawOptTest, OneD)
+{
    TAxisConfig xaxis{10, 0., 1.};
    auto h = std::make_shared<TH1D>(xaxis);
    TCanvas canv;
-   auto& Opts = canv.Draw(h);
+   auto &Opts = canv.Draw(h);
    Opts.SetLineColor(TColor::kRed);
 }

@@ -140,7 +140,6 @@ private:
    TPadExtent fSize;
 
 public:
-
    friend std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, const TPadBase &parent);
 
    /// Create a child pad.
@@ -195,10 +194,14 @@ public:
 class TPadDrawingOpts: public TDrawingOptsBase<TPadDrawingOpts> {
    TPadPos fPos; ///< Offset with respect to parent TPad.
 public:
-   TPadDrawingOpts(TPadBase& parent): TDrawingOptsBase<TPadDrawingOpts>(parent) {}
+   TPadDrawingOpts(TPadBase &parent): TDrawingOptsBase<TPadDrawingOpts>(parent) {}
 
    /// Set the position of this pad with respect to the parent pad.
-   TPadDrawingOpts &At(const TPadPos& pos) { fPos = pos; return *this; }
+   TPadDrawingOpts &At(const TPadPos &pos)
+   {
+      fPos = pos;
+      return *this;
+   }
 };
 
 /** \class TPadDrawable
@@ -207,11 +210,11 @@ public:
 class TPadDrawable: public TDrawable {
 private:
    const std::unique_ptr<TPad> fPad; ///< The pad to be painted
-   TPadDrawingOpts fOpts; ///< The drawing options.
+   TPadDrawingOpts fOpts;            ///< The drawing options.
 
 public:
    /// Move a sub-pad into this (i.e. parent's) list of drawables.
-   TPadDrawable(std::unique_ptr<TPad> &&pPad, TPadBase& parent);
+   TPadDrawable(std::unique_ptr<TPad> &&pPad, TPadBase &parent);
 
    /// Paint the pad.
    void Paint(Internal::TVirtualCanvasPainter & /*canv*/) final
@@ -222,7 +225,7 @@ public:
    TPad *Get() const { return fPad.get(); }
 
    /// Drawing options.
-   TPadDrawingOpts& GetOptions() { return fOpts;}
+   TPadDrawingOpts &GetOptions() { return fOpts; }
 };
 
 inline std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, TPadBase &parent)

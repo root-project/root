@@ -329,7 +329,8 @@ GetDrawable(const std::shared_ptr<THist<DIMENSIONS, PRECISION, STAT...>> &hist, 
 
 /// Interface to graphics taking a unique_ptr<THist>.
 template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
-std::unique_ptr<THistDrawable<DIMENSIONS>> GetDrawable(std::unique_ptr<THist<DIMENSIONS, PRECISION, STAT...>> &&hist, TPadBase &pad)
+std::unique_ptr<THistDrawable<DIMENSIONS>>
+GetDrawable(std::unique_ptr<THist<DIMENSIONS, PRECISION, STAT...>> &&hist, TPadBase &pad)
 {
    return std::make_unique<THistDrawable<DIMENSIONS>>(std::move(hist), pad);
 }
