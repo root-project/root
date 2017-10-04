@@ -41,7 +41,9 @@
 using namespace std;
 
 #ifdef WIN32
+#include <process.h>
 static string pathsep("\\");
+#define execlp _execlp
 #else
 static string pathsep("/");
 #endif
