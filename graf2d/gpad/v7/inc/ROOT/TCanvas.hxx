@@ -89,6 +89,11 @@ public:
    /// Create a temporary TCanvas; for long-lived ones please use Create().
    TCanvas() = default;
 
+   const TCanvas &GetCanvas() const override { return *this; }
+
+   /// Access to the top-most canvas, if any (non-const version).
+   TCanvas &GetCanvas() override { return *this; }
+
    /// Return canvas pixel size as array with two elements - width and height
    const std::array<TPadCoord::Pixel, 2> &GetSize() const { return fSize; }
 
