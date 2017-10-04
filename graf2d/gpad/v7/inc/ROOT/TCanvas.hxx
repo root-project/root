@@ -32,7 +32,7 @@ namespace Experimental {
   Access is through TCanvasPtr.
   */
 
-class TCanvas: public Internal::TPadBase {
+class TCanvas: public TPadBase {
 private:
    /// Title of the canvas.
    std::string fTitle;
