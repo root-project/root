@@ -124,6 +124,17 @@ TEST(HashRecursiveRemove,RootClasses)
    EXPECT_TRUE(TClass::GetClass("TNamed")->HasConsistentHashMember());
    EXPECT_FALSE(TClass::GetClass("TH1")->HasConsistentHashMember());
    EXPECT_TRUE(TClass::GetClass("TH1F")->HasConsistentHashMember());
+
+   EXPECT_TRUE(TClass::GetClass("TEnvRec")->HasConsistentHashMember());
+   EXPECT_TRUE(TClass::GetClass("TDataType")->HasConsistentHashMember());
+   EXPECT_TRUE(TClass::GetClass("TObjArray")->HasConsistentHashMember());
+   EXPECT_TRUE(TClass::GetClass("TList")->HasConsistentHashMember());
+   EXPECT_TRUE(TClass::GetClass("THashList")->HasConsistentHashMember());
+   EXPECT_TRUE(TClass::GetClass("TClass")->HasConsistentHashMember());
+   EXPECT_FALSE(TClass::GetClass("TInterpreter")->HasConsistentHashMember());
+   //EXPECT_TRUE(TClass::GetClass("TCling")->HasConsistentHashMember());
+   EXPECT_TRUE(TClass::GetClass("TMethod")->HasConsistentHashMember());
+   //EXPECT_TRUE(TClass::GetClass("ROOT::Internal::TCheckHashRecurveRemoveConsistency")->HasConsistentHashMember());
 }
 
 TEST(HashRecursiveRemove,FailingClasses)
