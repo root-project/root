@@ -193,6 +193,7 @@ const char *rootClingHelp =
 #ifdef system
 #undef system
 #endif
+#undef UNICODE
 #include <windows.h>
 #include <Tlhelp32.h> // for MAX_MODULE_NAME32
 #include <process.h>
@@ -701,7 +702,12 @@ void SetRootSys()
       if ((s = strrchr(ep, '/'))) {
          // $ROOTSYS/bin/rootcling
          int removesubdirs = 2;
-         if (!strncmp(s + 1, "rootcling_stage1", 16)) {
+         if (!strncmp(s + 1, "rootcling_stage1.exe", 20)) {
+            // $ROOTSYS/bin/rootcling_stage1.exe
+            removesubdirs = 2;
+            gBuildingROOT = true;
+         }
+         else if (!strncmp(s + 1, "rootcling_stage1", 16)) {
             // $ROOTSYS/core/rootcling_stage1/src/rootcling_stage1
             removesubdirs = 4;
             gBuildingROOT = true;
@@ -2912,11 +2918,26 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
                }
                if (!mangledName.empty()) {
                   int errDemangle = 0;
+#ifdef WIN32
+                  if (mangledName[0] == '\01')
+                     mangledName.erase(0, 1);
+                  char* demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
+                  if (!errDemangle && demangledTIName) {
+                     static const char typeinfoNameFor[] = " `RTTI Type Descriptor'";
+                     if (strstr(demangledTIName, typeinfoNameFor)) {
+                        std::string demangledName = demangledTIName;
+                        demangledName.erase(demangledName.end() - strlen(typeinfoNameFor), demangledName.end());
+                        if (demangledName.compare(0, 6, "class ") == 0)
+                           demangledName.erase(0, 6);
+                        else if (demangledName.compare(0, 7, "struct ") == 0)
+                           demangledName.erase(0, 7);
+#else
                   char* demangledTIName = TClassEdit::DemangleName(mangledName.c_str(), errDemangle);
                   if (!errDemangle && demangledTIName) {
                      static const char typeinfoNameFor[] = "typeinfo for ";
                      if (!strncmp(demangledTIName, typeinfoNameFor, strlen(typeinfoNameFor))) {
                         std::string demangledName = demangledTIName + strlen(typeinfoNameFor);
+#endif
                         // See the operations in TCling::AutoLoad(type_info)
                         TClassEdit::TSplitType splitname( demangledName.c_str(), (TClassEdit::EModType)(TClassEdit::kLong64 | TClassEdit::kDropStd) );
                         splitname.ShortType(demangledName, TClassEdit::kDropStlDefault | TClassEdit::kDropStd);
@@ -2925,9 +2946,15 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
                            classesListForRootmap.push_back(demangledName);
                         } // if demangledName != other name
                      } else {
+#ifdef WIN32
+                        ROOT::TMetaUtils::Error("ExtractClassesListAndDeclLines",
+                                                "Demangled typeinfo name '%s' does not contains `RTTI Type Descriptor'\n",
+                                                demangledTIName);
+#else
                         ROOT::TMetaUtils::Error("ExtractClassesListAndDeclLines",
                                                 "Demangled typeinfo name '%s' does not start with 'typeinfo for'\n",
                                                 demangledTIName);
+#endif
                      } // if demangled type_info starts with "typeinfo for "
                   } // if demangling worked
                   free(demangledTIName);
@@ -3845,10 +3872,10 @@ public:
                                    llvm::StringRef FileName,
                                    bool IsAngled,
                                    clang::CharSourceRange /*FilenameRange*/,
-                                   const clang::FileEntry */*File*/,
+                                   const clang::FileEntry * /*File*/,
                                    llvm::StringRef /*SearchPath*/,
                                    llvm::StringRef /*RelativePath*/,
-                                   const clang::Module */*Imported*/) {
+                                   const clang::Module * /*Imported*/) {
       if (isLocked) return;
       if (IsAngled) return;
       auto& PP = m_Interpreter->getCI()->getPreprocessor();
@@ -4203,7 +4230,7 @@ int RootClingMain(int argc,
             // filter out even more undesirable options
             if (strcmp("-p", argv[ic])) {
                CheckForMinusW(argv[ic], diagnosticPragmas);
-               clingArgs.push_back(argv[ic]);
+               clingArgs.push_back(llvm::sys::path::convert_to_slash(argv[ic]));
             }
          }
       } else if (nextStart == 0) {
@@ -4219,7 +4246,7 @@ int RootClingMain(int argc,
    }
 
    ic = nextStart;
-   clingArgs.push_back(std::string("-I") + gDriverConfig->fTROOT__GetIncludeDir());
+   clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(gDriverConfig->fTROOT__GetIncludeDir()));
 
    std::vector<std::string> pcmArgs;
    for (size_t parg = 0, n = clingArgs.size(); parg < n; ++parg) {
@@ -4243,13 +4270,15 @@ int RootClingMain(int argc,
    }
 
    // cling-only arguments
-   clingArgs.push_back(std::string("-I") + gDriverConfig->fTROOT__GetEtcDir());
+   clingArgs.push_back(std::string("-I") + llvm::sys::path::convert_to_slash(gDriverConfig->fTROOT__GetEtcDir()));
    // We do not want __ROOTCLING__ in the pch!
    if (!onepcm) {
       clingArgs.push_back("-D__ROOTCLING__");
    }
    clingArgs.push_back("-fsyntax-only");
+#ifndef R__WIN32
    clingArgs.push_back("-fPIC");
+#endif
    clingArgs.push_back("-Xclang");
    clingArgs.push_back("-fmodules-embed-all-files");
    clingArgs.push_back("-Xclang");
@@ -4753,7 +4782,7 @@ int RootClingMain(int argc,
    // Write schema evolution related headers and declarations
    /////////////////////////////////////////////////////////////////////////////
 
-   if (!gReadRules.empty() || !gReadRawRules.empty()) {
+   if (!ROOT::gReadRules.empty() || !ROOT::gReadRawRules.empty()) {
       dictStream << "#include \"TBuffer.h\"\n"
                  << "#include \"TVirtualObject.h\"\n"
                  << "#include <vector>\n"

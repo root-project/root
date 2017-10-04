@@ -346,16 +346,35 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
       const std::string &fwdDeclString) const
 {
 
-   std::string fwdDeclStringRAW;
-   if ("nullptr" == fwdDeclString ||
-       "\"\"" == fwdDeclString) {
-      fwdDeclStringRAW = fwdDeclString;
+   std::string fwdDeclStringOS = fwdDeclString;
+#ifdef R__WIN32
+   // Visual sudio has a limitation of 2048 characters max in raw strings, so split
+   // the potentially huge DICTFWDDCLS raw string into multiple smaller ones
+   const std::string &from = "\n";
+   const std::string &to = "\n)DICTFWDDCLS\"\nR\"DICTFWDDCLS(";
+   size_t start_pos = 0;
+   while((start_pos = fwdDeclStringOS.find(from, start_pos)) != std::string::npos) {
+      if (fwdDeclStringOS.find(from, start_pos+1) == std::string::npos) // skip the last
+         break;
+      if ((fwdDeclStringOS.at(start_pos+1) == '}') ||
+          (fwdDeclStringOS.at(start_pos+1) == '\n') )
+         start_pos += 2;
+      else {
+         fwdDeclStringOS.replace(start_pos, from.length(), to);
+         start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+      }
    }
-   else{
+#endif
+   std::string fwdDeclStringRAW;
+   if ("nullptr" == fwdDeclStringOS ||
+       "\"\"" == fwdDeclStringOS) {
+      fwdDeclStringRAW = fwdDeclStringOS;
+   }
+   else {
       fwdDeclStringRAW = "R\"DICTFWDDCLS(\n";
       fwdDeclStringRAW += "#line 1 \"";
       fwdDeclStringRAW += fDictionaryName +" dictionary forward declarations' payload\"\n";
-      fwdDeclStringRAW += fwdDeclString;
+      fwdDeclStringRAW += fwdDeclStringOS;
       fwdDeclStringRAW += ")DICTFWDDCLS\"";
    }
 
