@@ -1,5 +1,5 @@
 // @(#)root/tmva/tmva/cnn:$Id$
-// Author: Vladimir Ilievski
+// Author: Vladimir Ilievski, Saurav Shekhar
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -11,7 +11,8 @@
  *      Deep Neural Network Method                                                *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Vladimir Ilievski      <ilievski.vladimir@live.com>  - CERN, Switzerland  *
+ *      Vladimir Ilievski  <ilievski.vladimir@live.com> - CERN, Switzerland       *
+ *      Saurav Shekhar     <sauravshekhar01@gmail.com> - ETH Zurich, Switzerland  *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
@@ -1247,20 +1248,20 @@ void MethodDL::TrainCpu()
 ////////////////////////////////////////////////////////////////////////////////
 Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
 {
-   // TO DO
+   // TODO
    return 0.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::AddWeightsXMLTo(void *parent) const
 {
-   // TO DO
+   // TODO
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::ReadWeightsFromXML(void *rootXML)
 {
-   // TO DO
+   // TODO
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1271,14 +1272,14 @@ void MethodDL::ReadWeightsFromStream(std::istream & /*istr*/)
 ////////////////////////////////////////////////////////////////////////////////
 const Ranking *TMVA::MethodDL::CreateRanking()
 {
-   // TO DO
+   // TODO
    return NULL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 void MethodDL::GetHelpMessage() const
 {
-   // TO DO
+   // TODO
 }
 
 } // namespace TMVA

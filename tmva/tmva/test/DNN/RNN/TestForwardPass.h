@@ -113,10 +113,8 @@ auto testForwardPass(size_t timeSteps, size_t batchSize, size_t stateSize,
          }
       }
       // activation fn
-      //printMatrix<TReference<double>>(state, "ref state");
       applyMatrix(state, [](double x){return tanh(x);});
       TMatrixT<Double_t> output = arr_outputArch[t];
-      //printMatrix<Architecture>(output, "arch state");
       
       Double_t error = maximumRelativeError(output, state);
       std::cout << "Time " << t << " Error: " << error << "\n";
