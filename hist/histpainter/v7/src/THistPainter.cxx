@@ -29,7 +29,7 @@ using namespace ROOT::Experimental::Internal;
 namespace {
 class THistPainter1D: public THistPainterBase<1> {
 public:
-   void Paint(TDrawable &hist, const THistDrawingOpts<1> &/*opts*/, TVirtualCanvasPainter & /*canv*/) final
+   void Paint(TDrawable &hist, const THistDrawingOpts<1> & /*opts*/, TVirtualCanvasPainter & /*canv*/) final
    {
       // TODO: paint!
       std::cout << "Painting histogram @" << &hist << '\n';
@@ -39,7 +39,7 @@ public:
 
 class THistPainter2D: public THistPainterBase<2> {
 public:
-   void Paint(TDrawable &drw, const THistDrawingOpts<2> &/*opts*/, TVirtualCanvasPainter &canv) final
+   void Paint(TDrawable &drw, const THistDrawingOpts<2> & /*opts*/, TVirtualCanvasPainter &canv) final
    {
       std::cout << "Painting histogram @" << &drw << '\n';
       assert(dynamic_cast<THistDrawable<2> *>(&drw) && "Wrong drawable type");
@@ -57,7 +57,7 @@ public:
 
 class THistPainter3D: public THistPainterBase<3> {
 public:
-   void Paint(TDrawable &hist, const THistDrawingOpts<3> &/*opts*/, TVirtualCanvasPainter & /*canv*/) final
+   void Paint(TDrawable &hist, const THistDrawingOpts<3> & /*opts*/, TVirtualCanvasPainter & /*canv*/) final
    {
       // TODO: paint!
       std::cout << "Painting histogram @" << &hist << '\n';

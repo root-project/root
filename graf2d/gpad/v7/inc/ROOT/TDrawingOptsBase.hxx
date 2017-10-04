@@ -149,10 +149,10 @@ public:
    TOptsAttrRef<PRIMITIVE> SameAs(const PRIMITIVE &val);
 
    /// Access to the underlying attribute table (non-const version).
-   std::vector<value_type>& GetTable() { return fTable; }
+   std::vector<value_type> &GetTable() { return fTable; }
 
    /// Access to the underlying attribute table (const version).
-   const std::vector<value_type>& GetTable() const { return fTable; }
+   const std::vector<value_type> &GetTable() const { return fTable; }
 };
 
 extern template class TOptsAttrTable<TColor>;
@@ -223,14 +223,14 @@ private:
    OptsAttrRefArr<double> fFPIdx;
 
    /// Access to the attribute tables (non-const version).
-   OptsAttrRefArr<TColor> &GetAttrsRefArr(TColor*) { return fColorIdx; }
-   OptsAttrRefArr<long long> &GetAttrsRefArr(long long*) { return fIntIdx; }
-   OptsAttrRefArr<double> &GetAttrsRefArr(double*) { return fFPIdx; }
+   OptsAttrRefArr<TColor> &GetAttrsRefArr(TColor *) { return fColorIdx; }
+   OptsAttrRefArr<long long> &GetAttrsRefArr(long long *) { return fIntIdx; }
+   OptsAttrRefArr<double> &GetAttrsRefArr(double *) { return fFPIdx; }
 
    /// Access to the attribute tables (const version).
-   const OptsAttrRefArr<TColor> &GetAttrsRefArr(TColor*) const  { return fColorIdx; }
-   const OptsAttrRefArr<long long> &GetAttrsRefArr(long long*) const { return fIntIdx; }
-   const OptsAttrRefArr<double> &GetAttrsRefArr(double*) const { return fFPIdx; }
+   const OptsAttrRefArr<TColor> &GetAttrsRefArr(TColor *) const { return fColorIdx; }
+   const OptsAttrRefArr<long long> &GetAttrsRefArr(long long *) const { return fIntIdx; }
+   const OptsAttrRefArr<double> &GetAttrsRefArr(double *) const { return fFPIdx; }
 
 protected:
    /// Construct from the pad that holds our `TDrawable`.
@@ -245,28 +245,29 @@ protected:
    template <class PRIMITIVE>
    TOptsAttrRef<PRIMITIVE> Register(const PRIMITIVE &val)
    {
-      return GetAttrsRefArr((PRIMITIVE*)nullptr).Register(GetCanvas(), val);
+      return GetAttrsRefArr((PRIMITIVE *)nullptr).Register(GetCanvas(), val);
    }
 
    template <class PRIMITIVE>
    void Update(TOptsAttrRef<PRIMITIVE> idx, const PRIMITIVE &val)
    {
-      GetAttrsRefArr((PRIMITIVE*)nullptr).Update(GetCanvas(), idx, val);
+      GetAttrsRefArr((PRIMITIVE *)nullptr).Update(GetCanvas(), idx, val);
    }
 
    template <class PRIMITIVE>
    TOptsAttrRef<PRIMITIVE> SameAs(TOptsAttrRef<PRIMITIVE> idx)
    {
-      return GetAttrsRefArr((PRIMITIVE*)nullptr).SameAs(GetCanvas(), idx);
+      return GetAttrsRefArr((PRIMITIVE *)nullptr).SameAs(GetCanvas(), idx);
    }
 
    template <class PRIMITIVE>
    TOptsAttrRef<PRIMITIVE> SameAs(const PRIMITIVE &val)
    {
-      return GetAttrsRefArr((PRIMITIVE*)nullptr).SameAs(GetCanvas(), val);
+      return GetAttrsRefArr((PRIMITIVE *)nullptr).SameAs(GetCanvas(), val);
    }
 
-   template <class PRIMITIVE> friend class TOptsAttrRef;
+   template <class PRIMITIVE>
+   friend class TOptsAttrRef;
 
 public:
    ~TDrawingOptsBaseNoDefault();
@@ -287,7 +288,7 @@ public:
       if (&pad != &GetDefaultCanvas())
          Default();
    }
-      
+
    /// Retrieve the default drawing options for `DERIVED`. Can be used to query and adjust the
    /// default options.
    static DERIVED &Default()
