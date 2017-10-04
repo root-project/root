@@ -27,6 +27,9 @@
 namespace ROOT {
 namespace Experimental {
 
+class TDrawingOptsBaseNoDefault;
+template <class PRIMITIVE> class TOptsAttrRef;
+
 /** \class ROOT::Experimental::TCanvas
   A window's topmost `TPad`.
   Access is through TCanvasPtr.
@@ -67,22 +70,17 @@ private:
    ///\name Drawing options attribute handling
 
    /// Attribute table (non-const access).
-   template <class PRIMITIVE>
-   Internal::TOptsAttrTable<PRIMITIVE> &GetAttrTable();
-   // Available specializations:
-   extern template Internal::TOptsAttrTable<TColor> &GetAttrTable<TColor>();
-   extern template Internal::TOptsAttrTable<long long> &GetAttrTable<long long>();
-   extern template Internal::TOptsAttrTable<double> &GetAttrTable<double>();
+   Internal::TOptsAttrTable<TColor> &GetAttrTable(TColor*) { return fColorTable; }
+   Internal::TOptsAttrTable<long long> &GetAttrTable(long long*) { return fIntAttrTable; }
+   Internal::TOptsAttrTable<double> &GetAttrTable(double*) { return fFPAttrTable; }
 
    /// Attribute table (const access).
-   template <class PRIMITIVE>
-   const Internal::TOptsAttrTable<PRIMITIVE> &GetAttrTable() const;
-   // Available specializations:
-   extern template const Internal::TOptsAttrTable<TColor> &GetAttrTable<TColor>() const;
-   extern template const Internal::TOptsAttrTable<long long> &GetAttrTable<long long>() const;
-   extern template const Internal::TOptsAttrTable<double> &GetAttrTable<double>() const;
+   const Internal::TOptsAttrTable<TColor> &GetAttrTable(TColor*) const { return fColorTable; }
+   const Internal::TOptsAttrTable<long long> &GetAttrTable(long long*) const { return fIntAttrTable; }
+   const Internal::TOptsAttrTable<double> &GetAttrTable(double*) const { return fFPAttrTable; }
 
-   friend class ROOT::Experimental::Internal::TDrawingOptsBase;
+   friend class ROOT::Experimental::TDrawingOptsBaseNoDefault;
+   template <class PRIMITIVE> friend class ROOT::Experimental::TOptsAttrRef;
    ///\}
 
 public:
