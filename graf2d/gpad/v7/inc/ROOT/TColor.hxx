@@ -77,12 +77,7 @@ public:
    bool IsPaletteOrdinal() const { return !fIsRGBA; }
 
    /// If this is an ordinal in a palette, resolve the
-   float GetPaletteOrdinal() const
-   {
-      if (fIsRGBA)
-         throw std::runtime_error("This color does not represent a palette ordinal!");
-      return fRedOrPalettePos;
-   }
+   float GetPaletteOrdinal() const;
 
    friend bool operator==(const TColor &lhs, const TColor &rhs)
    {
