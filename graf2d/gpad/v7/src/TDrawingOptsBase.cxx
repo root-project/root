@@ -256,5 +256,3 @@ fFPIdx(other.fFPIdx)
    fIntIdx.RegisterCopy(GetCanvas());
    fFPIdx.RegisterCopy(GetCanvas());
 }
-
-TDrawingOptsBaseNoDefault::TDrawingOptsBaseNoDefault(TDrawingOptsBaseNoDefault &&other) = default;
