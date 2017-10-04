@@ -211,7 +211,7 @@ public:
 
 private:
    /// The `TCanvas` holding the `TDrawable` (or its `TPad`).
-   TCanvas *fCanvas; //! always != nullptr
+   TCanvas *fCanvas; //-> always != nullptr
 
    /// Indexes of the `TCanvas`'s color table entries used by this options object.
    OptsAttrRefArr<TColor> fColorIdx;
