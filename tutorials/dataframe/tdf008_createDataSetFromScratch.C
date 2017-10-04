@@ -14,12 +14,11 @@ void tdf008_createDataSetFromScratch()
 
    // We now fill it with random numbers
    TRandom3 rnd(1);
-   auto tdf_1 = tdf.Define("rnd", [&rnd](){return rnd.Gaus();});
+   auto tdf_1 = tdf.Define("rnd", [&rnd]() { return rnd.Gaus(); });
 
    // We plot these numbers
    auto hgaus = tdf_1.Histo1D("rnd");
 
    // And we write out the dataset on disk
    tdf_1.Snapshot("randomNumbers", "tdf008_createDataSetFromScratch.root");
-
 }

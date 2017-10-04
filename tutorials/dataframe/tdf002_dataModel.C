@@ -77,7 +77,8 @@ int tdf002_dataModel()
    auto getPt = [](const FourVectors &tracks) {
       std::vector<double> pts;
       pts.reserve(tracks.size());
-      for (auto &t : tracks) pts.emplace_back(t.Pt());
+      for (auto &t : tracks)
+         pts.emplace_back(t.Pt());
       return pts;
    };
 
@@ -85,7 +86,8 @@ int tdf002_dataModel()
    auto getPtWeights = [](const FourVectors &tracks) {
       std::vector<double> ptsw;
       ptsw.reserve(tracks.size());
-      for (auto &t : tracks) ptsw.emplace_back(1. / t.Pt());
+      for (auto &t : tracks)
+         ptsw.emplace_back(1. / t.Pt());
       return ptsw;
    };
 
