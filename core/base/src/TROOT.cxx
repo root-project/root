@@ -481,6 +481,17 @@ namespace Internal {
 #endif
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Keeps track of the status of ImplicitMT w/o resorting to the load of
+   /// libImt
+   static Bool_t &IsImplicitMTEnabledImpl()
+   {
+      static Bool_t isImplicitMTEnabled= kFALSE;
+      return isImplicitMTEnabled;
+   }
+
+
+
 } // end of Internal sub namespace
 // back to ROOT namespace
 
@@ -529,6 +540,7 @@ namespace Internal {
       static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableImplicitMT");
       if (sym)
          sym(numthreads);
+      ROOT::Internal::IsImplicitMTEnabledImpl() = kTRUE;
 #else
       ::Warning("EnableImplicitMT", "Cannot enable implicit multi-threading with %d threads, please build ROOT with -Dimt=ON", numthreads);
 #endif
@@ -542,6 +554,7 @@ namespace Internal {
       static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableImplicitMT");
       if (sym)
          sym();
+      ROOT::Internal::IsImplicitMTEnabledImpl() = kFALSE;
 #else
       ::Warning("DisableImplicitMT", "Cannot disable implicit multi-threading, please build ROOT with -Dimt=ON");
 #endif
@@ -551,15 +564,7 @@ namespace Internal {
    /// Returns true if the implicit multi-threading in ROOT is enabled.
    Bool_t IsImplicitMTEnabled()
    {
-#ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsImplicitMTEnabled");
-      if (sym)
-         return sym();
-      else
-         return kFALSE;
-#else
-      return kFALSE;
-#endif
+      return ROOT::Internal::IsImplicitMTEnabledImpl();
    }
 
    ////////////////////////////////////////////////////////////////////////////////
