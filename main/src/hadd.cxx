@@ -83,9 +83,12 @@
 #include "ROOT/StringConv.hxx"
 #include <stdlib.h>
 #include <climits>
+#include <sstream>
 
 #include "TFileMerger.h"
+#ifndef R__WIN32
 #include "ROOT/TProcessExecutor.hxx"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -510,6 +513,7 @@ int main( int argc, char **argv )
 
    Bool_t status;
 
+#ifndef R__WIN32
    if (multiproc) {
       ROOT::TProcessExecutor p(nProcesses);
       auto res = p.Map(parallelMerge, ROOT::TSeqI(ffirst, argc, step));
@@ -527,6 +531,9 @@ int main( int argc, char **argv )
    } else {
       status = sequentialMerge(fileMerger, ffirst, filesToProcess);
    }
+#else
+   status = sequentialMerge(fileMerger, ffirst, filesToProcess);
+#endif
 
    if (status) {
       if (verbosity == 1) {
