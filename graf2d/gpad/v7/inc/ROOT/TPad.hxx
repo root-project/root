@@ -112,6 +112,12 @@ public:
    /// Convert a `Pixel` position to Canvas-normalized positions.
    virtual std::array<TPadCoord::Normal, 2> PixelsToNormal(const std::array<TPadCoord::Pixel, 2> &pos) const = 0;
 
+   /// Access to the top-most canvas, if any (const version).
+   virtual const TCanvas &GetCanvas() const = 0;
+
+   /// Access to the top-most canvas, if any (non-const version).
+   virtual TCanvas &GetCanvas() = 0;
+
    /// Convert user coordinates to normal coordinates.
    std::array<TPadCoord::Normal, 2> UserToNormal(const std::array<TPadCoord::User, 2> &pos) const
    {
@@ -172,6 +178,18 @@ public:
 
    /// Destructor to have a vtable.
    virtual ~TPad();
+
+   /// Access to the parent pad (const version).
+   const TPadBase &GetParent() const { return *fParent; }
+
+   /// Access to the parent pad (non-const version).
+   TPadBase &GetParent() { return *fParent; }
+
+   /// Access to the top-most canvas (const version).
+   const TCanvas &GetCanvas() const override { return fParent->GetCanvas(); }
+
+   /// Access to the top-most canvas (non-const version).
+   TCanvas &GetCanvas() override { return fParent->GetCanvas(); }
 
    /// Get the size of the pad in parent (!) coordinates.
    const TPadExtent &GetSize() const { return fSize; }
