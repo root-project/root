@@ -13,7 +13,7 @@ const char* gCode = R"CODE(
    public:
       virtual ULong_t     Hash() const { return 1; }
 
-      ClassDef(FirstOverload, 2);
+      ClassDefInline(FirstOverload, 2);
    };
 
    class SecondOverload : public FirstOverload // Could also have used TNamed.
@@ -21,14 +21,14 @@ const char* gCode = R"CODE(
    public:
       virtual ULong_t     Hash() const { return 2; }
 
-      ClassDef(SecondOverload, 2);
+      ClassDefInline(SecondOverload, 2);
    };
 
    class SecondNoHash : public FirstOverload // Could also have used TNamed.
    {
    public:
 
-      ClassDef(SecondNoHash, 2);
+      ClassDefInline(SecondNoHash, 2);
    };
 
    class SecondAbstract : public FirstOverload // Could also have used TNamed.
@@ -44,7 +44,7 @@ const char* gCode = R"CODE(
    public:
       int Get() override { return 0 ; };
 
-      ClassDefOverride(Third, 2);
+      ClassDefInlineOverride(Third, 2);
    };
 
    class FirstOverloadCorrect : public TObject
@@ -55,7 +55,7 @@ const char* gCode = R"CODE(
       }
       virtual ULong_t     Hash() const { return 3; }
 
-      ClassDef(FirstOverloadCorrect, 2);
+      ClassDefInline(FirstOverloadCorrect, 2);
    };
 
    class SecondCorrectAbstract : public FirstOverloadCorrect // Could also have used TNamed.
@@ -84,7 +84,7 @@ const char* gCode = R"CODE(
    public:
       int Get() override { return 0 ; };
 
-      ClassDefOverride(ThirdCorrect, 2);
+      ClassDefInlineOverride(ThirdCorrect, 2);
    };
 
    class SecondInCorrectAbstract : public FirstOverloadCorrect // Could also have used TNamed.
@@ -101,7 +101,7 @@ const char* gCode = R"CODE(
    public:
       int Get() override { return 0 ; };
 
-      ClassDefOverride(ThirdInCorrect, 2);
+      ClassDefInlineOverride(ThirdInCorrect, 2);
    };
 
 )CODE";
