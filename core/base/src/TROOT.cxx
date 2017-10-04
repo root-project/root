@@ -80,7 +80,7 @@ of a main program creating an interactive version is shown below:
 #include "Windows4Root.h"
 #include <Psapi.h>
 #define RTLD_DEFAULT ((void *)::GetModuleHandle(NULL))
-#define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
+//#define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
 #define dlopen(library_name, flags) ::LoadLibrary(library_name)
 #define dlclose(library) ::FreeLibrary((HMODULE)library)
 char *dlerror() {
@@ -89,6 +89,26 @@ char *dlerror() {
                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
                  sizeof(Msg), NULL);
    return Msg;
+}
+FARPROC dlsym(void *library, const char *function_name)
+{
+   HMODULE hMods[1024];
+   HANDLE hProcess;
+   DWORD cbNeeded;
+   FARPROC address = NULL;
+   unsigned int i;
+   if (library == RTLD_DEFAULT) {
+      if ( EnumProcessModules( ::GetCurrentProcess(), hMods, sizeof(hMods), &cbNeeded)) {
+         for ( i = 0; i < (cbNeeded / sizeof(HMODULE)); i++ ) {
+               address = ::GetProcAddress((HMODULE)hMods[i], function_name);
+            if (address) return address;
+         }
+      }
+      return address;
+   }
+   else {
+      return ::GetProcAddress((HMODULE)library, function_name);
+   }
 }
 #else
 #include <dlfcn.h>
