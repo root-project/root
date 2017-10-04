@@ -139,6 +139,28 @@ void DeclareFailingClasses() {
    gInterpreter->Declare(gCode);
 }
 
+TEST(HashRecursiveRemove,GetClassClassDefInline)
+{
+   DeclareFailingClasses();
+
+   auto getcl = TClass::GetClass("FirstOverload");
+   EXPECT_NE(nullptr,getcl);
+
+   std::unique_ptr<TObject> obj((TObject*)getcl->New());
+   EXPECT_NE(nullptr,obj.get());
+
+   auto isacl = obj->IsA();
+   EXPECT_NE(nullptr,isacl);
+   EXPECT_EQ(getcl,isacl);
+
+   // EXPECT_NE(nullptr,TClass::GetClass("WrongSetup"));
+   WrongSetup ws;
+   isacl = ws.IsA();
+   EXPECT_NE(nullptr,isacl);
+   getcl = TClass::GetClass("WrongSetup");
+   EXPECT_EQ(getcl,isacl);
+}
+
 TEST(HashRecursiveRemove,RootClasses)
 {
    EXPECT_TRUE(TClass::GetClass("TObject")->HasConsistentHashMember());
@@ -160,8 +182,6 @@ TEST(HashRecursiveRemove,RootClasses)
 
 TEST(HashRecursiveRemove,FailingClasses)
 {
-   DeclareFailingClasses();
-
    testing::internal::CaptureStderr();
 
    EXPECT_NE(nullptr,TClass::GetClass("FirstOverload"));
