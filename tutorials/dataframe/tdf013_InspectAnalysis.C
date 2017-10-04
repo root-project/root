@@ -11,10 +11,8 @@
 
 using namespace ROOT::Experimental; // TDataFrame lives in here
 
-void tdf012_InspectAnalysis()
+void tdf013_InspectAnalysis()
 {
-   // We need this here if we want to draw and update canvases at runtime
-   TApplication app("app", nullptr, nullptr);
 #ifdef R__USE_IMT
    // Run on multiple cores if Implicit Multi-Threading has been enabled when compiling ROOT (default is yes)
    ROOT::EnableImplicitMT();
@@ -53,8 +51,8 @@ void tdf012_InspectAnalysis()
    // - another callback is responsible of updating a simple progress bar from multiple threads
 
    // First off we create a TBrowser that contains a "TDFResults" directory
-   TMemFile tdfDirectory("TDFResults", "RECREATE");
-   TBrowser browser("b", &tdfDirectory);
+   TMemFile *tdfDirectory = new TMemFile("TDFResults", "RECREATE");
+   TBrowser *browser = new TBrowser("b", tdfDirectory);
    // The global pad should now be set to the TBrowser's canvas, let's store its value in a local variable
    auto browserPad = gPad;
 
@@ -65,7 +63,7 @@ void tdf012_InspectAnalysis()
    // Instead of requesting the callback to be executed every N entries, this time we use the special value `kOnce` to
    // request that it is executed once right before starting the event-loop.
    // The callback is a C++11 lambda that registers the partial result object in `tdfDirectory`.
-   h.OnPartialResult(h.kOnce, [&tdfDirectory](TH1D &h_) { tdfDirectory.Add(&h_); });
+   h.OnPartialResult(h.kOnce, [tdfDirectory](TH1D &h_) { tdfDirectory->Add(&h_); });
    // Note that we called `OnPartialResult` with a dot, `.`, since this is a method of `TResultProxy` itself.
    // We do not want to call `OnPartialResult` on the pointee histogram!)
 
@@ -112,8 +110,12 @@ void tdf012_InspectAnalysis()
    h->Draw(); // the final, complete result will be drawn after the event-loop has completed.
    std::cout << "\nDone!" << std::endl;
 
-   // Keep ROOT running instead of exiting the application. Quit with ctrl-C or from the TBrowser's menu.
-   app.Run();
-   return 0;
+   // Finally, some book-keeping: in the TMemFile that we are using as TBrowser directory, we substitute the partial
+   // result with a clone of the final result (the "original" final result will be deleted at the end of the macro).
+   tdfDirectory->Clear();
+   auto clone = static_cast<TH1D*>(h->Clone());
+   clone->SetDirectory(nullptr);
+   tdfDirectory->Add(clone);
+   browserPad->cd();
+   clone->Draw();
 }
-
