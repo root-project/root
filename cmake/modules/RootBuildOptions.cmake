@@ -180,6 +180,7 @@ option(gminimal "Do not automatically search for support libraries, but include 
 option(all "Enable all optional components" OFF)
 option(testing "Enable testing with CTest" OFF)
 option(roottest "Include roottest, if roottest exists in root or if it is a sibling directory." OFF)
+option(rootbench "Include rootbench, if rootbench exists in root or if it is a sibling directory." OFF)
 option(clingtest "Include cling tests. NOTE that this makes llvm/clang symbols visible in libCling." OFF)
 
 #--- Minor chnages in defaults due to platform--------------------------------------------------
@@ -261,7 +262,7 @@ if(cxx14 OR cxx17 OR cxx14_defval OR cxx17_defval)
 endif()
 
 #---roottest option implies testing
-if(roottest)
+if(roottest OR rootbench)
   set(testing ON CACHE BOOL "" FORCE)
 endif()
 
