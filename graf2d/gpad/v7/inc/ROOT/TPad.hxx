@@ -124,7 +124,6 @@ public:
       return fFrame->UserToNormal(pos);
    }
 };
-} // namespace Internal
 
 
 /** \class TPadDrawable
@@ -156,7 +155,7 @@ public:
   Graphic container for `TDrawable`-s.
   */
 
-class TPad: public Internal::TPadBase {
+class TPad: public TPadBase {
 private:
    /// Pad containing this pad as a sub-pad.
    const TPadBase *fParent = nullptr;
