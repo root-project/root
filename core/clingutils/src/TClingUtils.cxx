@@ -2472,23 +2472,39 @@ int ROOT::TMetaUtils::GetClassVersion(const clang::RecordDecl *cl, const cling::
       return -1;
    }
    const clang::FunctionDecl* funcCV = ROOT::TMetaUtils::ClassInfo__HasMethod(CRD,"Class_Version",interp);
+
    // if we have no Class_Info() return -1.
    if (!funcCV) return -1;
+
    // if we have many Class_Info() (?!) return 1.
    if (funcCV == (clang::FunctionDecl*)-1) return 1;
 
+   return GetTrivialIntegralReturnValue(funcCV, interp).second;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// If the function contains 'just': return SomeValue;
+/// this routine will extract this value and return it.
+/// The first element is set to true we have the body of the function and it
+/// is indeed a trivial function with just a return of a value.
+/// The second element contains the value (or -1 is case of failure)
+
+std::pair<bool,int> ROOT::TMetaUtils::GetTrivialIntegralReturnValue(const clang::FunctionDecl *funcCV, const cling::Interpreter& interp)
+{
+   using res_t = std::pair<bool,int>;
+
    const clang::CompoundStmt* FuncBody
       = llvm::dyn_cast_or_null<clang::CompoundStmt>(funcCV->getBody());
-   if (!FuncBody) return -1;
+   if (!FuncBody) return res_t{false,-1};
    if (FuncBody->size() != 1) {
       // This is a non-ClassDef(), complex function - it might depend on state
       // and thus we'll need the runtime and cannot determine the result
       // statically.
-      return -1;
+      return res_t{false,-1};
    }
    const clang::ReturnStmt* RetStmt
       = llvm::dyn_cast<clang::ReturnStmt>(FuncBody->body_back());
-   if (!RetStmt) return -1;
+   if (!RetStmt) return res_t{false,-1};
    const clang::Expr* RetExpr = RetStmt->getRetValue();
    // ClassDef controls the content of Class_Version() but not the return
    // expression which is CPP expanded from what the user provided as second
@@ -2497,13 +2513,14 @@ int ROOT::TMetaUtils::GetClassVersion(const clang::RecordDecl *cl, const cling::
    // Go through ICE to be more general.
    llvm::APSInt RetRes;
    if (!RetExpr->isIntegerConstantExpr(RetRes, funcCV->getASTContext()))
-      return -1;
+      return res_t{false,-1};
    if (RetRes.isSigned()) {
-      return (Version_t)RetRes.getSExtValue();
+      return res_t{true,(Version_t)RetRes.getSExtValue()};
    }
    // else
-   return (Version_t)RetRes.getZExtValue();
+   return res_t{true,(Version_t)RetRes.getZExtValue()};
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Is this an STL container.

@@ -61,6 +61,7 @@ namespace Internal {
          R__instance.SetDelete(Delete);
          R__instance.SetDeleteArray(DeleteArray);
          R__instance.SetDestructor(Destruct);
+         R__instance.SetImplFile("",-1);
    }
 
    void TCDGIILIBase::SetName(const std::string& name,
