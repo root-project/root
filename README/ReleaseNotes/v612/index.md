@@ -92,7 +92,7 @@ large TClonesArray where each element contains another small vector container.
   - Added `DefineSlot`, a `Define` transformation that is aware of the multi-threading slot where the workload is executed
   - Improvements in Cling drastically enhanced scaling and performance of TDF jitted code
   - Fixed reading of c-style arrays from jitted transformations and actions
-  - pyROOT users can now easily specify parameters for the TDF histograms thanks to the newly introduced tuple-initialization
+  - pyROOT users can now easily specify parameters for the TDF histograms and profiles thanks to the newly introduced tuple-initialization
   - The new TDataSource interface allows developers to pipe any kind of columnar data format into TDataFrame
   - Test coverage has been increased with the introduction of google tests
   - Users can now configure Snapshot to use different file open modes ("RECREATE" or "UPDATE"), compression level, compression algorithm, TTree split-level and autoflush settings
