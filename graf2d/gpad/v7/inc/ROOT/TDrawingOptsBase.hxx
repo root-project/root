@@ -28,23 +28,53 @@ namespace ROOT {
 namespace Experimental {
 class TCanvas;
 class TPadBase;
+class TDrawingOptsBaseNoDefault;
 
-/** class ROOT::Experimental::TOptsAttrIdx
+namespace Internal {
+template <class PRIMITIVE>
+class TOptsAttrTable;
+}
+
+/** class ROOT::Experimental::TOptsAttrRef
  The `TCanvas` keep track of `TColor`s, integer and floating point attributes used by the drawing options,
  making them accessible from other drawing options. The index into the table of the active attributes is
- wrapped into `TOptsAttrIdx` to make them type-safe (i.e. distinct for `TColor`, `long long` and `double`).
+ wrapped into `TOptsAttrRef` to make them type-safe (i.e. distinct for `TColor`, `long long` and `double`).
  */
 
 template <class PRIMITIVE>
-struct TOptsAttrIdx {
+class TOptsAttrRef {
+private:
    size_t fIdx = (size_t)-1; ///<! The index in the relevant attribute table of `TCanvas`.
+
+   /// Construct a reference given the index.
+   explicit TOptsAttrRef(size_t idx): fIdx(idx) {}
+
+   friend class Internal::TOptsAttrTable<PRIMITIVE>;
+
+public:
+   /// Construct an invalid reference.
+   TOptsAttrRef() = default;
+
+   /// Construct a reference from its options object, name, and set of string options.
+   /// Initialized the PRIMITIVE to the default value, as available in TDrawingOptsBase::GetDefaultCanvas().
+   /// The value of this attribute will be the index in the vector of strings; the default value is parsed by
+   /// finding the configured string in the vector of strings. `optStrings` will only be used if
+   /// `PRIMITIVE` is `long long`.
+   TOptsAttrRef(TDrawingOptsBaseNoDefault &opts, std::string_view name,
+                const std::vector<std::string_view> &optStrings = {});
+
+   /// Get the underlying index.
    operator size_t() const { return fIdx; }
+
+   /// Whether the reference is valid.
+   explicit operator bool() const { return fIdx != (size_t)-1; }
 };
 
+extern template class TOptsAttrRef<TColor>;
+extern template class TOptsAttrRef<long long>;
+extern template class TOptsAttrRef<double>;
+
 namespace Internal {
-/// Implementation detail - reads the config values from (system).rootstylerc.
-std::map<std::string, std::string> ReadDrawingOptsDefaultConfig(std::string_view section);
-class TDrawingOptsBase;
 
 template <class PRIMITIVE>
 class TOptsAttrAndUseCount {
@@ -70,7 +100,13 @@ public:
    void DecrUse();
 
    /// Whether the use count is 0 and this object has space for a new value.
-   bool IsFree() const { fUseCount == 0; }
+   bool IsFree() const { return fUseCount == 0; }
+
+   /// Value access (non-const).
+   PRIMITIVE &Get() { return fVal; }
+
+   /// Value access (const).
+   const PRIMITIVE &Get() const { return fVal; }
 };
 
 // Only these specializations are used and provided:
@@ -91,22 +127,32 @@ private:
 public:
    /// Register an attribute with the table.
    /// \returns the index in the table.
-   TOptsAttrIdx<PRIMITIVE> Register(const PRIMITIVE &val);
+   TOptsAttrRef<PRIMITIVE> Register(const PRIMITIVE &val);
 
    /// Add a use of the attribute at table index idx.
-   void IncrUse(TOptsAttrIdx<PRIMITIVE> idx) { fTable[idx].IncrUse(); }
+   void IncrUse(TOptsAttrRef<PRIMITIVE> idx) { fTable[idx].IncrUse(); }
 
    /// Remove a use of the attribute at table index idx.
-   void DecrUse(TOptsAttrIdx<PRIMITIVE> idx) { fTable[idx].DeclUse(); }
+   void DecrUse(TOptsAttrRef<PRIMITIVE> idx) { fTable[idx].DecrUse(); }
 
    /// Update an existing attribute entry in the table.
-   void Update(TOptsAttrIdx<PRIMITIVE> idx, const PRIMITIVE &val) { fTable[idx] = val; }
+   void Update(TOptsAttrRef<PRIMITIVE> idx, const PRIMITIVE &val) { fTable[idx] = val; }
 
    /// Get the value at index `idx` (const version).
-   const value_type &Get(TOptsAttrIdx<PRIMITIVE> idx) const { return fTable[idx]; }
+   const PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> idx) const { return fTable[idx].Get(); }
 
    /// Get the value at index `idx` (non-const version).
-   value_type &Get(TOptsAttrIdx<PRIMITIVE> idx) { return fTable[idx]; }
+   PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> idx) { return fTable[idx].Get(); }
+
+   /// Find the index belonging to the attribute at the given address and add a use.
+   /// \returns the reference to `val`, which might be `IsInvalid()` if `val` is not part of this table.
+   TOptsAttrRef<PRIMITIVE> SameAs(const PRIMITIVE &val);
+
+   /// Access to the underlying attribute table (non-const version).
+   std::vector<value_type>& GetTable() { return fTable; }
+
+   /// Access to the underlying attribute table (const version).
+   const std::vector<value_type>& GetTable() const { return fTable; }
 };
 
 extern template class TOptsAttrTable<TColor>;
@@ -127,107 +173,126 @@ extern template class TOptsAttrTable<double>;
   which empties the respective slots in the tables of the `TCanvas`, unless other options reference
   the same primitives (through `SameAs()`), and until the last use has deregistered.
 
-  Derived classes must implement `InitializeDefaultFromFile()`.
+  In derived classes (e.g. drawing options for the class `MyFancyBox`), declare attribute members as
+     TOptsAttrRef<TColor> fLineColor{*this, "MyFancyBox.LineColor"};
+  The attribute's value will be taken from the  will be initialized
   */
 
-class TDrawingOptsBase {
+class TDrawingOptsBaseNoDefault {
+public:
+   template <class PRIMITIVE>
+   class OptsAttrRefArr {
+      /// Indexes of the `TCanvas`'s attribute table entries used by the options object.
+      std::vector<TOptsAttrRef<PRIMITIVE>> fRefArray;
+
+   public:
+      ~OptsAttrRefArr();
+      /// Register an attribute.
+      ///\returns the index of the new attribute.
+      TOptsAttrRef<PRIMITIVE> Register(TCanvas &canv, const PRIMITIVE &val);
+
+      /// Re-use an existing attribute.
+      ///\returns the index of the attribute (i.e. valRef).
+      TOptsAttrRef<PRIMITIVE> SameAs(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx);
+
+      /// Re-use an existing attribute.
+      ///\returns the index of the attribute, might be `IsInvalid()` if `val` could not be found.
+      TOptsAttrRef<PRIMITIVE> SameAs(TCanvas &canv, const PRIMITIVE &val);
+
+      /// Update the attribute at index `idx` to the value `val`.
+      void Update(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx, const PRIMITIVE &val);
+
+      /// Clear all attribute references, removing their uses in `TCanvas`.
+      void Release(TCanvas &canv);
+
+      /// Once copied, elements of a OptsAttrRefArr need to increase their use count.
+      void RegisterCopy(TCanvas &canv);
+   };
+
 private:
-   /// `TCanvas` that holds our `TDrawable` (or its TPad).
-   TCanvas &fCanvas;
+   /// The `TCanvas` holding the `TDrawable` (or its `TPad`).
+   TCanvas *fCanvas; //! always != nullptr
 
    /// Indexes of the `TCanvas`'s color table entries used by this options object.
-   std::vector<TOptsAttrIdx<TColor>> fColorIdx;
+   OptsAttrRefArr<TColor> fColorIdx;
 
    /// Indexes of the `TCanvas`'s integer table entries used by this options object.
-   std::vector<TOptsAttrIdx<long long>> fIntIdx;
+   OptsAttrRefArr<long long> fIntIdx;
 
    /// Indexes of the `TCanvas`'s floating point table entries used by this options object.
-   std::vector<TOptsAttrIdx<double>> fFPIdx;
+   OptsAttrRefArr<double> fFPIdx;
 
-   /// Read the configuration for section from the config file. Used by derived classes to
-   /// initialize their default, in `InitializeDefaultFromFile()`.
-   static std::map<std::string, std::string> ReadConfig(std::string_view section)
+   /// Access to the attribute tables (non-const version).
+   OptsAttrRefArr<TColor> &GetAttrsRefArr(TColor*) { return fColorIdx; }
+   OptsAttrRefArr<long long> &GetAttrsRefArr(long long*) { return fIntIdx; }
+   OptsAttrRefArr<double> &GetAttrsRefArr(double*) { return fFPIdx; }
+
+   /// Access to the attribute tables (const version).
+   const OptsAttrRefArr<TColor> &GetAttrsRefArr(TColor*) const  { return fColorIdx; }
+   const OptsAttrRefArr<long long> &GetAttrsRefArr(long long*) const { return fIntIdx; }
+   const OptsAttrRefArr<double> &GetAttrsRefArr(double*) const { return fFPIdx; }
+
+protected:
+   /// Construct from the pad that holds our `TDrawable`.
+   TDrawingOptsBaseNoDefault(TPadBase &pad);
+
+   /// Default attributes need to register their values in a pad - they will take this pad!
+   static TPadBase &GetDefaultCanvas();
+
+   /// The `TCanvas` holding the `TDrawable` (or its `TPad`).
+   TCanvas &GetCanvas() { return *fCanvas; }
+
+   template <class PRIMITIVE>
+   TOptsAttrRef<PRIMITIVE> Register(const PRIMITIVE &val)
    {
-      return Internal::ReadDrawingOptsDefaultConfig(section);
+      return GetAttrsRefArr((PRIMITIVE*)nullptr).Register(GetCanvas(), val);
    }
 
    template <class PRIMITIVE>
-   std::vector<TOptsAttrIdx<PRIMITIVE>> &GetIndexVec();
+   void Update(TOptsAttrRef<PRIMITIVE> idx, const PRIMITIVE &val)
+   {
+      GetAttrsRefArr((PRIMITIVE*)nullptr).Update(GetCanvas(), idx, val);
+   }
 
    template <class PRIMITIVE>
-   const std::vector<TOptsAttrIdx<PRIMITIVE>> &GetIndexVec() const;
+   TOptsAttrRef<PRIMITIVE> SameAs(TOptsAttrRef<PRIMITIVE> idx)
+   {
+      return GetAttrsRefArr((PRIMITIVE*)nullptr).SameAs(GetCanvas(), idx);
+   }
 
-protected:
-   /// Default attributes need to register their values in a pad - they will take this pad!
-   static TCanvas &GetDefaultCanvas();
-
-   /// Register an attribute.
-   ///\returns the index of the new attribute.
    template <class PRIMITIVE>
-   TOptsAttrIdx<PRIMITIVE> Register(const PRIMITIVE &col);
+   TOptsAttrRef<PRIMITIVE> SameAs(const PRIMITIVE &val)
+   {
+      return GetAttrsRefArr((PRIMITIVE*)nullptr).SameAs(GetCanvas(), val);
+   }
 
-   /// Update the attribute at index `idx` to the value `val`.
-   template <class PRIMITIVE>
-   void Update(TOptsAttrIdx<PRIMITIVE> idx, const PRIMITIVE &val);
+   template <class PRIMITIVE> friend class TOptsAttrRef;
 
 public:
-   ~TDrawingOptsBase();
-
-   template <class PRIMITIVE>
-   struct AttrIdxAndDefault {
-      TOptsAttrIdx<PRIMITIVE> &fIdxMemRef;
-      TOptsAttrIdx<PRIMITIVE> fDefaultIdx;
-      void Init(TDrawingOptsBase &opts);
-   };
-
-   class Attrs {
-      std::vector<AttrIdxAndDefault<TColor>> fCols;
-      std::vector<AttrIdxAndDefault<long long>> fInts;
-      std::vector<AttrIdxAndDefault<double>> fFPs;
-
-      Attrs& Add(const AttrIdxAndDefault<TColor>& c) { fCols.push_back(c); return *this; }
-      Attrs& Add(const AttrIdxAndDefault<long long>& c) { fInts.push_back(c); return *this; }
-      Attrs& Add(const AttrIdxAndDefault<double>& c) { fFPs.push_back(c); return *this; }
-   };
-
-   /// Construct from the pad that holds our `TDrawable` and the index reference data mambers,
-   /// registering our colors, integer attributes and floating point attributes. The pair consists of
-   /// an integer reference to our member (e.g. `fLineColorIndex`) and the default value as stored in the
-   /// canvas `GetDefaultCanvas()`.
-   TDrawingOptsBase(TPadBase &pad, const Attrs& attrs);
-
-   template <class PRIMITIVE> friend class AttrIdxAndDefault;
+   ~TDrawingOptsBaseNoDefault();
+   TDrawingOptsBaseNoDefault(const TDrawingOptsBaseNoDefault &other);
+   TDrawingOptsBaseNoDefault(TDrawingOptsBaseNoDefault &&other);
 };
-extern template std::vector<TOptsAttrIdx<TColor>> &TDrawingOptsBase::GetIndexVec<TColor>();
-extern template std::vector<TOptsAttrIdx<long long>> &TDrawingOptsBase::GetIndexVec<long long>();
-extern template std::vector<TOptsAttrIdx<double>> &TDrawingOptsBase::GetIndexVec<double>();
-extern template const std::vector<TOptsAttrIdx<TColor>> &TDrawingOptsBase::GetIndexVec<TColor>() const;
-extern template const std::vector<TOptsAttrIdx<long long>> &TDrawingOptsBase::GetIndexVec<long long>() const;
-extern template const std::vector<TOptsAttrIdx<double>> &TDrawingOptsBase::GetIndexVec<double>() const;
-extern template class TDrawingOptsBase::AttrIdxAndDefault<TColor>;
-extern template class TDrawingOptsBase::AttrIdxAndDefault<long long>;
-extern template class TDrawingOptsBase::AttrIdxAndDefault<double>;
 
-/** \class ROOT::Experimental::TDrawingOptsBaseT
- Templated layer on top of TDrawingOptBase, providing a `Default()` initialized from a config file.
- */
+extern template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<TColor>;
+extern template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<long long>;
+extern template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<double>;
 
 template <class DERIVED>
-class TDrawingOptsBaseT: public TDrawingOptsBase {
-protected:
-   const DERIVED &ToDerived() const { return static_cast<DERIVED &>(*this); }
-   DERIVED &ToDerived() { return static_cast<DERIVED &>(*this); }
-
-   /// Default implementation: no configuration variables in config file, simply default-initialize
-   /// the drawing options.
-   static DERIVED InitializeDefaultFromFile() { return DERIVED(GetDefaultCanvas()); }
-
+class TDrawingOptsBase: public TDrawingOptsBaseNoDefault {
 public:
+   /// Construct from the pad that holds our `TDrawable`.
+   TDrawingOptsBase(TPadBase &pad): TDrawingOptsBaseNoDefault(pad)
+   {
+      if (&pad != &GetDefaultCanvas())
+         Default();
+   }
+      
    /// Retrieve the default drawing options for `DERIVED`. Can be used to query and adjust the
    /// default options.
    static DERIVED &Default()
    {
-      static DERIVED defaultOpts = DERIVED::InitializeDefaultFromFile();
+      static DERIVED defaultOpts(GetDefaultCanvas());
       return defaultOpts;
    }
 };
