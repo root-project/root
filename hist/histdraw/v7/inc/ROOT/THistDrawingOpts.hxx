@@ -30,12 +30,12 @@ Customize the defaults with `THistDrawingOpts<1>::SetLineColor(TColor::kRed);` o
 style configuration file `rootstylerc` (e.g. $ROOTSYS/etc/system.rootstylerc or ~/.rootstylerc).
  */
 template <class DERIVED>
-class THistDrawingOptsBase: public TDrawingOptsBaseWithDefault<DERIVED> {
+class THistDrawingOptsBase: public TDrawingOptsBase<DERIVED> {
    /// Index of the line color in TCanvas's color table.
-   TOptsAttrRef<long long> fLineColorIndex{*this, "Hist.LineColor"};
+   TOptsAttrRef<TColor> fLineColorIndex{*this, "Hist.LineColor"};
 
 public:
-   THistDrawingOptsBase(TPadBase &pad): TDrawingOptsBaseWithDefault<DERIVED>(pad) {}
+   THistDrawingOptsBase(TPadBase &pad): TDrawingOptsBase<DERIVED>(pad) {}
 
    /// The color of the histogram line.
    void SetLineColor(const TColor &col) { this->Update(fLineColorIndex, col); }
