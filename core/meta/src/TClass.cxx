@@ -6927,6 +6927,32 @@ void TClass::RemoveStreamerInfo(Int_t slot)
 /// classes in the class hierarchy that overload TObject::Hash do call
 /// ROOT::CallRecursiveRemoveIfNeeded in their destructor.
 /// i.e. it is safe to call the Hash virtual function during the RecursiveRemove operation.
+/// This routines is used for a small subset of the class for which we need
+/// the answer before gROOT is properly initialized.
+
+Bool_t ROOT::Internal::HasConsistentHashMember(const char* cname)
+{
+   // Hand selection of correct classes, those classes should be
+   // cross-checked in testHashRecursiveRemove.cxx
+   static const char *handVerified[] = {
+      "TEnvRec", "TDataType", "TObjArray", "TList", "THashList",
+      "TClass", "TCling", "TInterpreter", "TMethod",
+      "ROOT::Internal::TCheckHashRecurveRemoveConsistency"
+   };
+
+   if (cname && cname[0]) {
+      for(auto cursor : handVerified) {
+         if (strcmp(cname,cursor) == 0) return true;
+      }
+   }
+   return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true is the Hash/RecursiveRemove setup is consistent, i.e. when all
+/// classes in the class hierarchy that overload TObject::Hash do call
+/// ROOT::CallRecursiveRemoveIfNeeded in their destructor.
+/// i.e. it is safe to call the Hash virtual function during the RecursiveRemove operation.
 
 Bool_t ROOT::Internal::HasConsistentHashMember(TClass &clRef)
 {

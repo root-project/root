@@ -260,6 +260,7 @@ class ClassDefGenerateInitInstanceLocalInjector:
 
    void DefaultStreamer(TBuffer &R__b, const TClass *cl, void *objpointer);
    Bool_t HasConsistentHashMember(TClass &clRef);
+   Bool_t HasConsistentHashMember(const char *clName);
 }} // namespace ROOT::Internal
 
 
@@ -269,7 +270,8 @@ class ClassDefGenerateInitInstanceLocalInjector:
 #define _ClassDefBase_(name,id, virtual_keyword, overrd) \
 private: \
    virtual_keyword  Bool_t CheckTObjectHashConsistency() const overrd { \
-      static const bool consistent = ROOT::Internal::HasConsistentHashMember(*IsA()); \
+      static const bool consistent = ::ROOT::Internal::HasConsistentHashMember(Class_Name()) \
+        || ::ROOT::Internal::HasConsistentHashMember(*IsA()); \
       return consistent; \
    } \
 public: \
