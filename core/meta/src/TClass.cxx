@@ -3035,36 +3035,62 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    if (gDebug>0){
       printf("TClass::GetClass: Header Parsing - The representation of %s was not found in the type system. A lookup in the interpreter is about to be tried: this can cause parsing. This can be avoided selecting %s in the linkdef/selection file.\n",normalizedName.c_str(), normalizedName.c_str());
    }
-   if (normalizedName.length() &&
-       gInterpreter->CheckClassInfo(normalizedName.c_str(), kTRUE /* autoload */, kTRUE /*Only class, structs and ns*/)) {
-      // Get the normalized name based on the decl (currently the only way
-      // to get the part to add or drop the default arguments as requested by the user)
-      std::string alternative;
-      gInterpreter->GetInterpreterTypeName(normalizedName.c_str(),alternative,kTRUE);
-      const char *altname = alternative.c_str();
-      if ( strncmp(altname,"std::",5)==0 ) {
-         // For namespace (for example std::__1), GetInterpreterTypeName does
-         // not strip std::, so we must do it explicitly here.
-         altname += 5;
-      }
-      if (altname != normalizedName && strcmp(altname,name) != 0) {
-         // altname now contains the full name of the class including a possible
-         // namespace if there has been a using namespace statement.
+   if (normalizedName.length()) {
+      auto cci = gInterpreter->CheckClassInfo(normalizedName.c_str(), kTRUE /* autoload */, kTRUE /*Only class, structs and ns*/);
 
-         // At least in the case C<string [2]> (normalized) vs C<string[2]> (altname)
-         // the TClassEdit normalization and the TMetaUtils normalization leads to
-         // two different space layout.  To avoid an infinite recursion, we also
-         // add the test on (altname != name)
+      // We could have an interpreted class with an inline ClassDef, in this case we do not
+      // want to create an 'interpreted' TClass but we want the one triggered via the call to
+      // the Dictionary member.  If we go ahead and generate the 'interpreted' version it will
+      // replace if/when there is a call to IsA on an object of this type.
 
-         return GetClass(altname,load);
+      if (cci == TInterpreter::kWithClassDefInline) {
+         auto ci = gInterpreter->ClassInfo_Factory(normalizedName.c_str());
+         auto funcDecl = gInterpreter->GetFunctionWithPrototype(ci, "Dictionary", "", false, ROOT::kExactMatch);
+         auto method = gInterpreter->MethodInfo_Factory(funcDecl);
+         typedef void (*tcling_callfunc_Wrapper_t)(void*, int, void**, void*);
+         auto funcPtr = (tcling_callfunc_Wrapper_t)gInterpreter->MethodInfo_InterfaceMethod(method);
+
+         TClass *res = nullptr;
+         if (funcPtr) funcPtr(0,0,nullptr,&res);
+         // else
+         //   We could fallback to the interpreted case ...
+         //   For now just 'fail' (return nullptr)
+
+         gInterpreter->MethodInfo_Delete(method);
+         gInterpreter->ClassInfo_Delete(ci);
+
+         return res;
+      } else if (cci) {
+         // Get the normalized name based on the decl (currently the only way
+         // to get the part to add or drop the default arguments as requested by the user)
+         std::string alternative;
+         gInterpreter->GetInterpreterTypeName(normalizedName.c_str(),alternative,kTRUE);
+         const char *altname = alternative.c_str();
+         if ( strncmp(altname,"std::",5)==0 ) {
+            // For namespace (for example std::__1), GetInterpreterTypeName does
+            // not strip std::, so we must do it explicitly here.
+            altname += 5;
+         }
+         if (altname != normalizedName && strcmp(altname,name) != 0) {
+            // altname now contains the full name of the class including a possible
+            // namespace if there has been a using namespace statement.
+
+            // At least in the case C<string [2]> (normalized) vs C<string[2]> (altname)
+            // the TClassEdit normalization and the TMetaUtils normalization leads to
+            // two different space layout.  To avoid an infinite recursion, we also
+            // add the test on (altname != name)
+
+            return GetClass(altname,load);
+         }
+
+         TClass *ncl = gInterpreter->GenerateTClass(normalizedName.c_str(), /* emulation = */ kFALSE, silent);
+         if (!ncl->IsZombie()) {
+            return ncl;
+         }
+         delete ncl;
       }
-      TClass *ncl = gInterpreter->GenerateTClass(normalizedName.c_str(), /* emulation = */ kFALSE, silent);
-      if (!ncl->IsZombie()) {
-         return ncl;
-      }
-      delete ncl;
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
