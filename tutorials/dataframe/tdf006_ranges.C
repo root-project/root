@@ -14,8 +14,13 @@ void fill_tree(const char *treeName, const char *fileName)
    ROOT::Experimental::TDataFrame d(100);
    int i(0);
    d.Define("b1", [&i]() { return i; })
-    .Define("b2", [&i]() { float j = i*i; ++i; return j; })
-    .Snapshot(treeName, fileName);
+      .Define("b2",
+              [&i]() {
+                 float j = i * i;
+                 ++i;
+                 return j;
+              })
+      .Snapshot(treeName, fileName);
 }
 
 int tdf006_ranges()

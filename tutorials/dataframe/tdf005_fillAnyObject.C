@@ -8,7 +8,6 @@
 /// \date March 2017
 /// \author Danilo Piparo
 
-
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
 void fill_tree(const char *treeName, const char *fileName)
@@ -16,8 +15,13 @@ void fill_tree(const char *treeName, const char *fileName)
    ROOT::Experimental::TDataFrame d(100);
    auto i = 0.;
    d.Define("b1", [&i]() { return i; })
-    .Define("b2", [&i]() { float j = i*i; ++i; return j; })
-    .Snapshot(treeName, fileName);
+      .Define("b2",
+              [&i]() {
+                 float j = i * i;
+                 ++i;
+                 return j;
+              })
+      .Snapshot(treeName, fileName);
 }
 
 int tdf005_fillAnyObject()

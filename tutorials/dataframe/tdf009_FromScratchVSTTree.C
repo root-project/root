@@ -54,14 +54,14 @@ void TDFWay()
 {
    ROOT::Experimental::TDataFrame tdf(10);
    auto b = 0.;
-   tdf.Define("b1",[&b](){return b++;})
-      .Define("b2","(int) b1 * b1") // This can even be a string
+   tdf.Define("b1", [&b]() { return b++; })
+      .Define("b2", "(int) b1 * b1") // This can even be a string
       .Snapshot("treeName", "tdf009_FromScratchVSTTree_tdf.root");
 }
 
-void tdf009_FromScratchVSTTree() {
+void tdf009_FromScratchVSTTree()
+{
 
    classicWay();
    TDFWay();
-
 }
