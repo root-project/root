@@ -21,7 +21,7 @@ Set(ZipOldSource
 
 # Depending on the system either the old and the new
 # or only the old compression is build
-if(MSVC AND builtin_zlib)
+if(builtin_zlib)
   set(ZLIB_HEADERS ${ZipNewHeaders} ${ZipOldHeaders})
 else()
   set(ZLIB_HEADERS ${ZipOldHeaders})
