@@ -350,8 +350,8 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
 #ifdef R__WIN32
    // Visual sudio has a limitation of 2048 characters max in raw strings, so split
    // the potentially huge DICTFWDDCLS raw string into multiple smaller ones
-   constexpr std::string &from = "\n";
-   constexpr std::string &to = "\n)DICTFWDDCLS\"\nR\"DICTFWDDCLS(";
+   constexpr char from[] = "\n";
+   constexpr char to[] = "\n)DICTFWDDCLS\"\nR\"DICTFWDDCLS(";
    size_t start_pos = 0;
    while ((start_pos = fwdDeclStringSanitized.find(from, start_pos)) != std::string::npos) {
       if (fwdDeclStringSanitized.find(from, start_pos + 1) == std::string::npos) // skip the last
@@ -359,8 +359,8 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
       if ((fwdDeclStringSanitized.at(start_pos + 1) == '}') || (fwdDeclStringSanitized.at(start_pos + 1) == '\n'))
          start_pos += 2;
       else {
-         fwdDeclStringSanitized.replace(start_pos, from.length(), to);
-         start_pos += to.length(); // In case 'to' contains 'from', like replacing 'x' with 'yx'
+         fwdDeclStringSanitized.replace(start_pos, strlen(from), to);
+         start_pos += strlen(to); // In case 'to' contains 'from', like replacing 'x' with 'yx'
       }
    }
 #endif
