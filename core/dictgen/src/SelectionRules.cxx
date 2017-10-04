@@ -17,7 +17,12 @@ The class representing the collection of selection rules.
 #include <iostream>
 #include <sstream>
 #include <algorithm>
+#ifndef WIN32
 #include <fnmatch.h>
+#else
+#include "Shlwapi.h"
+#define fnmatch(glob, path, dummy) PathMatchSpecA(path, glob);
+#endif
 #include "RtypesCore.h"
 #include "SelectionRules.h"
 #include "llvm/Support/raw_ostream.h"
