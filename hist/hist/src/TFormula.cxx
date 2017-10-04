@@ -716,16 +716,16 @@ bool TFormula::PrepareEvalMethod()
       Bool_t hasParameters = (fNpar > 0);
       Bool_t hasVariables = (fNdim > 0);
       TString prototypeArguments = "";
-      if (hasVariables) {
+      if (hasVariables || hasParameters) {
          if (fVectorized)
             prototypeArguments.Append("ROOT::Double_v*");
          else
             prototypeArguments.Append("Double_t*");
       }
-      if (hasVariables && hasParameters) {
-         prototypeArguments.Append(",");
-      }
       if (hasParameters) {
+         prototypeArguments.Append(",");
+//      }
+//      if (hasParameters) {
          prototypeArguments.Append("Double_t*");
       }
       // init method call using real function name (cling name) which is defined in ProcessFormula
@@ -2160,13 +2160,16 @@ void TFormula::ProcessFormula(TString &formula)
       if (!hasParameters) {
          fAllParametersSetted = true;
       }
-      // assume a function without variables is always 1-dimensional
-      if (hasParameters && !hasVariables) {
-         fNdim = 1;
-         AddVariable("x", 0);
-         hasVariables = true;
-      }
-      Bool_t hasBoth = hasVariables && hasParameters;
+      // assume a function without variables is always 1-dimensional ???
+      // if (hasParameters && !hasVariables) {
+      //    fNdim = 1;
+      //    AddVariable("x", 0);
+      //    hasVariables = true;
+      // }
+      // does not make sense to vectorize function which is of FNDim=0
+      if (!hasVariables) fVectorized=false;
+      // when there are no variables but only parameter we still need to ad
+      Bool_t hasBoth = hasVariables && hasParameters; 
       Bool_t inputIntoCling = (formula.Length() > 0);
       if (inputIntoCling) {
          // save copy of inputFormula in a std::strig for the unordered map
@@ -2181,9 +2184,9 @@ void TFormula::ProcessFormula(TString &formula)
 
          TString argType = fVectorized ? "ROOT::Double_v" : "Double_t";
 
-         // valid input formula - try to put into Cling
-         TString argumentsPrototype = TString::Format("%s%s%s", (hasVariables ? (argType + " *x").Data() : ""),
-                                                      (hasBoth ? "," : ""), (hasParameters ? "Double_t *p" : ""));
+         // valid input formula - try to put into Cling (in case of no variables but only parameter we need to add the standard signature)
+         TString argumentsPrototype = TString::Format("%s%s%s", ( (hasVariables || hasParameters) ? (argType + " *x").Data() : ""),
+                                                      (hasParameters ? "," : ""), (hasParameters ? "Double_t *p" : ""));
 
          // set the name for Cling using the hash_function
          fClingName = gNamePrefix;
@@ -2203,12 +2206,22 @@ void TFormula::ProcessFormula(TString &formula)
             inputIntoCling = false;
          }
 
+         
+         
          // set the cling name using hash of the static formulae map
          auto hasher = gClingFunctions.hash_function();
-         fClingName = TString::Format("%s__id%zu", gNamePrefix.Data(), hasher(inputFormula));
+         fClingName = TString::Format("%s__id%zu", gNamePrefix.Data(), hasher(inputFormulaVecFlag));
 
          fClingInput = TString::Format("%s %s(%s){ return %s ; }", argType.Data(), fClingName.Data(),
                                        argumentsPrototype.Data(), inputFormula.c_str());
+
+
+         // std::cout << "Input Formula " << inputFormula << " \t vec formula  :  " << inputFormulaVecFlag << std::endl;
+         // std::cout << "Cling functions existing " << std::endl;
+         // for (auto & ff : gClingFunctions)
+         //    std::cout << ff.first << std::endl;
+         // std::cout << "\n";
+         // std::cout << fClingName << std::endl;
 
          // this is not needed (maybe can be re-added in case of recompilation of identical expressions
          // // check in case of a change if need to re-initialize
@@ -2943,13 +2956,17 @@ void TFormula::ReplaceParamName(TString & formula, const TString & oldName, cons
 void TFormula::SetVectorized(Bool_t vectorized)
 {
 #ifdef R__HAS_VECCORE
+   if (fNdim == 0) {
+      Info("SetVectorized","Cannot vectorized a function of zero dimension");
+      return;
+   }
    if (vectorized != fVectorized) {
       if (!fFormula)
          Error("SetVectorized", "Cannot set vectorized to %d -- Formula is missing", vectorized);
 
       fVectorized = vectorized;
       // no need to JIT a new signature in case of zero dimension
-      if (fNdim== 0) return; 
+      //if (fNdim== 0) return; 
       fClingInitialized = false;
       fReadyToExecute = false;
       fClingName = "";
