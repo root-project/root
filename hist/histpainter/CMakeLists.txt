@@ -1,5 +1,5 @@
 ############################################################################
-# CMakeLists.txt file for building ROOT hist/histpainter package
+#CMakeLists.txt file for building ROOT hist / histpainter package
 ############################################################################
 
 if(root7)

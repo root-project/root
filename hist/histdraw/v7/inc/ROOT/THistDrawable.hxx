@@ -57,7 +57,7 @@ public:
    }
 
    /// Paint a THist. All we need is access to its GetBinContent()
-   virtual void Paint(TDrawable &obj, const THistDrawingOpts<DIMENSION>& opts, TVirtualCanvasPainter &canv) = 0;
+   virtual void Paint(TDrawable &obj, const THistDrawingOpts<DIMENSION> &opts, TVirtualCanvasPainter &canv) = 0;
 };
 
 extern template class THistPainterBase<1>;
@@ -88,7 +88,7 @@ public:
 };
 
 template <int DIMENSIONS>
-class THistDrawable final : public THistDrawableBase {
+class THistDrawable final: public THistDrawableBase {
 public:
    using HistImpl_t = Detail::THistImplPrecisionAgnosticBase<DIMENSIONS>;
 
@@ -116,8 +116,8 @@ public:
          Internal::THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, canv);
    }
 
-   THistDrawingOpts<DIMENSIONS>& GetOptions() { return fOpts; }
-   const THistDrawingOpts<DIMENSIONS>& GetOptions() const { return fOpts; }
+   THistDrawingOpts<DIMENSIONS> &GetOptions() { return fOpts; }
+   const THistDrawingOpts<DIMENSIONS> &GetOptions() const { return fOpts; }
 };
 
 extern template class THistDrawable<1>;

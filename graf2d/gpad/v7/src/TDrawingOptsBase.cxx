@@ -48,23 +48,27 @@ static AllParsedAttrs_t &GetParsedDefaultAttrs()
    return sAllParsedAttrs;
 }
 
-static ParsedAttrs_t<TColor> &GetParsedDefaultAttrsOfAKind(TColor*) {
+static ParsedAttrs_t<TColor> &GetParsedDefaultAttrsOfAKind(TColor *)
+{
    return std::get<0>(GetParsedDefaultAttrs());
 }
 
-static ParsedAttrs_t<long long> &GetParsedDefaultAttrsOfAKind(long long*) {
+static ParsedAttrs_t<long long> &GetParsedDefaultAttrsOfAKind(long long *)
+{
    return std::get<1>(GetParsedDefaultAttrs());
 }
-static ParsedAttrs_t<double> &GetParsedDefaultAttrsOfAKind(double*) {
+static ParsedAttrs_t<double> &GetParsedDefaultAttrsOfAKind(double *)
+{
    return std::get<2>(GetParsedDefaultAttrs());
 }
 
 } // unnamed namespace
 
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE>::TOptsAttrRef(TDrawingOptsBaseNoDefault &opts, std::string_view name, const std::vector<std::string_view>& optStrings)
+TOptsAttrRef<PRIMITIVE>::TOptsAttrRef(TDrawingOptsBaseNoDefault &opts, std::string_view name,
+                                      const std::vector<std::string_view> &optStrings)
 {
-   static constexpr PRIMITIVE* kNullPtr = (PRIMITIVE*)nullptr;
+   static constexpr PRIMITIVE *kNullPtr = (PRIMITIVE *)nullptr;
    auto &parsedAttrs = GetParsedDefaultAttrsOfAKind(kNullPtr);
    TCanvas &canv = opts.GetCanvas();
    std::string strName(name);
@@ -80,8 +84,8 @@ TOptsAttrRef<PRIMITIVE>::TOptsAttrRef(TDrawingOptsBaseNoDefault &opts, std::stri
          fIdx = opts.SameAs(iIdx->second);
       }
    } else {
-      auto &defCanv = static_cast<TCanvas&>(opts.GetDefaultCanvas());
-      const auto &defaultTable = defCanv.GetAttrTable((PRIMITIVE*)nullptr);
+      auto &defCanv = static_cast<TCanvas &>(opts.GetDefaultCanvas());
+      const auto &defaultTable = defCanv.GetAttrTable((PRIMITIVE *)nullptr);
       PRIMITIVE val = defaultTable.Get(parsedAttrs[strName]);
       fIdx = opts.Register(val);
    }
@@ -177,48 +181,54 @@ template class Internal::TOptsAttrTable<TColor>;
 template class Internal::TOptsAttrTable<long long>;
 template class Internal::TOptsAttrTable<double>;
 
-
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE> TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Register(TCanvas& canv, const PRIMITIVE &val)
+TOptsAttrRef<PRIMITIVE>
+TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Register(TCanvas &canv, const PRIMITIVE &val)
 {
-   fRefArray.push_back(canv.GetAttrTable((PRIMITIVE*)nullptr).Register(val));
+   fRefArray.push_back(canv.GetAttrTable((PRIMITIVE *)nullptr).Register(val));
    return fRefArray.back();
 }
 
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE> TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::SameAs(TCanvas& canv, TOptsAttrRef<PRIMITIVE> idx)
+TOptsAttrRef<PRIMITIVE>
+TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::SameAs(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx)
 {
-   canv.GetAttrTable((PRIMITIVE*)nullptr).IncrUse(idx);
+   canv.GetAttrTable((PRIMITIVE *)nullptr).IncrUse(idx);
    return idx;
 }
 
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE> TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::SameAs(TCanvas& canv, const PRIMITIVE &val) {
-   return canv.GetAttrTable((PRIMITIVE*)nullptr).SameAs(val);
-}
-
-
-template <class PRIMITIVE>
-void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Update(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx, const PRIMITIVE &val)
+TOptsAttrRef<PRIMITIVE>
+TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::SameAs(TCanvas &canv, const PRIMITIVE &val)
 {
-   canv.GetAttrTable((PRIMITIVE*)nullptr).Update(idx, val);
+   return canv.GetAttrTable((PRIMITIVE *)nullptr).SameAs(val);
 }
 
 template <class PRIMITIVE>
-void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Release(TCanvas &canv) {
+void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Update(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx,
+                                                                  const PRIMITIVE &val)
+{
+   canv.GetAttrTable((PRIMITIVE *)nullptr).Update(idx, val);
+}
+
+template <class PRIMITIVE>
+void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Release(TCanvas &canv)
+{
    for (auto idx: fRefArray)
-      canv.GetAttrTable((PRIMITIVE*)nullptr).DecrUse(idx);
+      canv.GetAttrTable((PRIMITIVE *)nullptr).DecrUse(idx);
    fRefArray.clear();
 }
 
 template <class PRIMITIVE>
-void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::RegisterCopy(TCanvas &canv) {
+void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::RegisterCopy(TCanvas &canv)
+{
    for (auto idx: fRefArray)
-      canv.GetAttrTable((PRIMITIVE*)nullptr).IncrUse(idx);
+      canv.GetAttrTable((PRIMITIVE *)nullptr).IncrUse(idx);
 }
 
 template <class PRIMITIVE>
-TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::~OptsAttrRefArr() {
+TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::~OptsAttrRefArr()
+{
    if (!fRefArray.empty())
       R__ERROR_HERE("Gpad") << "Drawing attributes table not empty - must call Release() before!";
 }
@@ -228,10 +238,7 @@ template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<TColor>;
 template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<long long>;
 template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<double>;
 
-
-TDrawingOptsBaseNoDefault::TDrawingOptsBaseNoDefault(TPadBase &pad): fCanvas(&pad.GetCanvas())
-{
-}
+TDrawingOptsBaseNoDefault::TDrawingOptsBaseNoDefault(TPadBase &pad): fCanvas(&pad.GetCanvas()) {}
 
 ROOT::Experimental::TPadBase &TDrawingOptsBaseNoDefault::GetDefaultCanvas()
 {
@@ -246,11 +253,8 @@ TDrawingOptsBaseNoDefault::~TDrawingOptsBaseNoDefault()
    fFPIdx.Release(GetCanvas());
 }
 
-TDrawingOptsBaseNoDefault::TDrawingOptsBaseNoDefault(const TDrawingOptsBaseNoDefault &other):
-fCanvas(other.fCanvas),
-fColorIdx(other.fColorIdx),
-fIntIdx(other.fIntIdx),
-fFPIdx(other.fFPIdx)
+TDrawingOptsBaseNoDefault::TDrawingOptsBaseNoDefault(const TDrawingOptsBaseNoDefault &other)
+   : fCanvas(other.fCanvas), fColorIdx(other.fColorIdx), fIntIdx(other.fIntIdx), fFPIdx(other.fFPIdx)
 {
    fColorIdx.RegisterCopy(GetCanvas());
    fIntIdx.RegisterCopy(GetCanvas());

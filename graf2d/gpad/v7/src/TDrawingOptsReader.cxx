@@ -27,7 +27,8 @@ using namespace ROOT::Experimental::Internal;
 namespace {
 }
 
-TDrawingOptsReader::Attrs_t TDrawingOptsReader::ReadDefaults() {
+TDrawingOptsReader::Attrs_t TDrawingOptsReader::ReadDefaults()
+{
    Attrs_t ret;
    TDrawingOptsReader reader(ret);
    reader.AddFromStyleFile(TROOT::GetEtcDir() + "/system.rootstylerc");
@@ -36,7 +37,8 @@ TDrawingOptsReader::Attrs_t TDrawingOptsReader::ReadDefaults() {
    return ret;
 }
 
-ROOT::Experimental::TColor TDrawingOptsReader::ParseColor(std::string_view /*attr*/) {
+ROOT::Experimental::TColor TDrawingOptsReader::ParseColor(std::string_view /*attr*/)
+{
    // TODO: implement!
    return ROOT::Experimental::TColor::kBlack;
 }
