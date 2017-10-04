@@ -309,7 +309,7 @@ inline ULong_t TObject::CheckedHash()
    // saving cpu cycle when each object is inserted in average 1.5 times in a THashList/THashTable.
 
    //if ( !fBits & kCheckedHash) {
-   if ( !CheckTObjectHashConsistency() ) fBits &= kInconsistent;
+   if ( !CheckTObjectHashConsistency() ) fBits |= kInconsistent;
    //   fBits &= kChecked;
    //}
    return Hash();
