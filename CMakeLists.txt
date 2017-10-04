@@ -434,6 +434,27 @@ if(testing)
       add_subdirectory(roottest)
     endif()
   endif()
+  if(rootbench)
+    find_package(Git REQUIRED)
+    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                    OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+    #---Is the rootbench source directory around?
+    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
+      set(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
+    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../rootbench)
+      get_filename_component(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/../rootbench ABSOLUTE)
+    endif()
+    if(rootbenchdir)
+      file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/rootbench)
+      add_subdirectory(${rootbenchdir} rootbench)
+    else()
+      message("-- Could not find rootbench directory! Cloning from the repository...")
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} https://github.com/root-project/rootbench.git
+                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+      add_subdirectory(rootbench)
+    endif()
+  endif()
 endif()
 
 #---Packaging-------------------------------------------------------------------------------------
