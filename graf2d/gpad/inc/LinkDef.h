@@ -53,7 +53,8 @@
 #pragma link C++ struct ROOT::Experimental::TPadExtent+;
 #pragma link C++ struct ROOT::Experimental::TPadPos+;
 #pragma link C++ class std::vector<std::unique_ptr<ROOT::Experimental::TDrawable>>+;
-#pragma link C++ class ROOT::Experimental::Internal::TPadBase+;
+#pragma link C++ class ROOT::Experimental::TPadBase+;
+#pragma link C++ class ROOT::Experimental::TPadDrawingOpts+;
 #pragma link C++ class ROOT::Experimental::TPad+;
 #pragma link C++ class ROOT::Experimental::TPadDrawable+;
 #pragma link C++ class ROOT::Experimental::TCanvas+;
