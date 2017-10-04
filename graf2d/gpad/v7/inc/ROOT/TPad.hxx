@@ -134,18 +134,17 @@ class TPadDrawable;
 class TPad: public TPadBase {
 private:
    /// Pad containing this pad as a sub-pad.
-   const TPadBase *fParent = nullptr;
+   TPadBase *fParent = nullptr; //-> This must never be nullptr!
 
    /// Size of the pad in the parent's (!) coordinate system.
    TPadExtent fSize;
-
 
 public:
 
    friend std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, const TPadBase &parent);
 
    /// Create a child pad.
-   TPad(const TPadBase &parent, const TPadExtent &size): fParent(&parent), fSize(size) {}
+   TPad(TPadBase &parent, const TPadExtent &size): fParent(&parent), fSize(size) {}
 
    /// Destructor to have a vtable.
    virtual ~TPad();
