@@ -207,6 +207,12 @@ public:
 
       /// Once copied, elements of a OptsAttrRefArr need to increase their use count.
       void RegisterCopy(TCanvas &canv);
+
+      /// Access to attribute (const version).
+      const PRIMITIVE &Get(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx) const;
+
+      /// Access to attribute (non-const version).
+      PRIMITIVE &Get(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx);
    };
 
 private:
@@ -239,8 +245,11 @@ protected:
    /// Default attributes need to register their values in a pad - they will take this pad!
    static TPadBase &GetDefaultCanvas();
 
-   /// The `TCanvas` holding the `TDrawable` (or its `TPad`).
+   /// The `TCanvas` holding the `TDrawable` (or its `TPad`) (non-const version).
    TCanvas &GetCanvas() { return *fCanvas; }
+
+   /// The `TCanvas` holding the `TDrawable` (or its `TPad`) (const version).
+   const TCanvas &GetCanvas() const { return *fCanvas; }
 
    template <class PRIMITIVE>
    TOptsAttrRef<PRIMITIVE> Register(const PRIMITIVE &val)
@@ -276,10 +285,10 @@ public:
 
    /// Access to the attribute (non-const version).
    template <class PRIMITIVE>
-   PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> ref) { return GetAttrsRefArr((PRIMITIVE*)nullptr).Get(ref); }
+   PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> ref) { return GetAttrsRefArr((PRIMITIVE*)nullptr).Get(GetCanvas(), ref); }
    /// Access to the attribute (const version).
    template <class PRIMITIVE>
-   const PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> ref) const { return GetAttrsRefArr((PRIMITIVE*)nullptr).Get(ref); }
+   const PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> ref) const { return GetAttrsRefArr((PRIMITIVE*)nullptr).Get(GetCanvas(), ref); }
 };
 
 extern template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<TColor>;

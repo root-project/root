@@ -47,4 +47,6 @@ TEST(DrawOptTest, OneD)
    TCanvas canv;
    auto &Opts = canv.Draw(h);
    Opts.SetLineColor(TColor::kRed);
+   TColor shouldBeRed = Opts.GetLineColor();
+   EXPECT_EQ(shouldBeRed, TColor::kRed);
 }

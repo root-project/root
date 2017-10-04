@@ -227,6 +227,18 @@ void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::RegisterCopy(TCanvas 
 }
 
 template <class PRIMITIVE>
+const PRIMITIVE &TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Get(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx) const
+{
+   return canv.GetAttrTable((PRIMITIVE *)nullptr).Get(idx);
+}
+
+template <class PRIMITIVE>
+PRIMITIVE &TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Get(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx)
+{
+   return canv.GetAttrTable((PRIMITIVE *)nullptr).Get(idx);
+}
+
+template <class PRIMITIVE>
 TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::~OptsAttrRefArr()
 {
    if (!fRefArray.empty())
