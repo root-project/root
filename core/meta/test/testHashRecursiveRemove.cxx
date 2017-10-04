@@ -8,25 +8,6 @@ const char* gCode = R"CODE(
    #include "TROOT.h"
    #include <iostream>
 
-   void CallRecursiveRemoveIfNeeded(TObject &obj)
-   {
-      //std::cerr << "CallRecursiveRemoveIfNeeded: " << (void*)&obj << '\n';
-      if (obj.TestBit(kMustCleanup)) {
-         TROOT *root = ROOT::Internal::gROOTLocal;
-         if (root) {
-            if (root->MustClean()) {
-               if (root == &obj)
-                  return;
-               //std::cerr << "CallRecursiveRemoveIfNeeded Inside: " << (void*)&obj << '\n';
-               //root->GetListOfCleanups()->ls();
-               root->GetListOfCleanups()->RecursiveRemove(&obj);
-               // root->RecursiveRemove(&obj);
-               obj.ResetBit(kMustCleanup);
-            }
-         }
-      }
-   }
-
    class FirstOverload : public TObject
    {
    public:
@@ -70,7 +51,7 @@ const char* gCode = R"CODE(
    {
    public:
       ~FirstOverloadCorrect() {
-         CallRecursiveRemoveIfNeeded(*this);
+         ROOT::CallRecursiveRemoveIfNeeded(*this);
       }
       virtual ULong_t     Hash() const { return 3; }
 
@@ -89,7 +70,7 @@ const char* gCode = R"CODE(
    {
    public:
       ~SecondCorrectAbstractHash() {
-         CallRecursiveRemoveIfNeeded(*this);
+         ROOT::CallRecursiveRemoveIfNeeded(*this);
       }
 
       virtual ULong_t Hash() const { return 4; }
