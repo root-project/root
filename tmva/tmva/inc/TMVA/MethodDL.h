@@ -1,5 +1,5 @@
 // @(#)root/tmva/tmva/dnn:$Id$
-// Author: Vladimir Ilievski
+// Author: Vladimir Ilievski, Saurav Shekhar
 
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
@@ -11,7 +11,8 @@
  *      Deep Neural Network Method                                                *
  *                                                                                *
  * Authors (alphabetical):                                                        *
- *      Vladimir Ilievski      <ilievski.vladimir@live.com>  - CERN, Switzerland  *
+ *      Vladimir Ilievski  <ilievski.vladimir@live.com> - CERN, Switzerland       *
+ *      Saurav Shekhar     <sauravshekhar01@gmail.com> - ETH Zurich, Switzerland  *
  *                                                                                *
  * Copyright (c) 2005-2015:                                                       *
  *      CERN, Switzerland                                                         *
