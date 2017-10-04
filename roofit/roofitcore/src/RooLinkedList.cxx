@@ -37,6 +37,7 @@ Use RooAbsCollection derived objects for public use
 
 #include "Riostream.h"
 #include "TBuffer.h"
+#include "TROOT.h"
 
 #include <algorithm>
 

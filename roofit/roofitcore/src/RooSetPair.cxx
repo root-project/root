@@ -23,6 +23,7 @@ RooSetPair is a utility class that stores a pair of RooArgSets
 **/
 
 #include "RooFit.h"
+#include "TROOT.h"
 
 #define ROOSETPAIR_CXX
 #include "RooSetPair.h"
