@@ -77,7 +77,7 @@ void THashTable::Add(TObject *obj)
 {
    if (IsArgNull("Add", obj)) return;
 
-   Int_t slot = GetHashValue(obj);
+   Int_t slot = GetCheckedHashValue(obj);
    if (!fCont[slot]) {
       fCont[slot] = new TList;
       fUsedSlots++;
@@ -99,7 +99,7 @@ void THashTable::AddBefore(const TObject *before, TObject *obj)
 {
    if (IsArgNull("Add", obj)) return;
 
-   Int_t slot = GetHashValue(obj);
+   Int_t slot = GetCheckedHashValue(obj);
    if (!fCont[slot]) {
       fCont[slot] = new TList;
       fUsedSlots++;
