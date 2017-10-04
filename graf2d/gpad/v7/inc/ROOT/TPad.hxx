@@ -57,7 +57,7 @@ private:
 
    /// Adds a `DRAWABLE` to `fPrimitives`, returning the drawing options as given by `DRAWABLE::Options()`.
    template <class DRAWABLE>
-   auto AddDrawable(std::unique_ptr<DRAWABLE> &&uPtr)
+   auto &AddDrawable(std::unique_ptr<DRAWABLE> &&uPtr)
    {
       DRAWABLE &drw = *uPtr;
       fPrimitives.emplace_back(std::move(uPtr));
