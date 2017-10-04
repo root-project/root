@@ -4,14 +4,6 @@
 
 #include "gtest/gtest.h"
 
-class FirstOverload : public TObject
-{
-public:
-   virtual ULong_t     Hash() const { return 1; }
-
-   ClassDefInline(FirstOverload, 2);
-};
-
 const char* gCode = R"CODE(
 
    #include "TROOT.h"
@@ -113,7 +105,26 @@ const char* gCode = R"CODE(
       ClassDefInlineOverride(ThirdInCorrect, 2);
    };
 
+   // Just declare this one so Cling will know it, but
+   // do not use it to avoid the TClass being stuck in
+   // kInterpreted state.
+   class WrongSetup : public TObject
+   {
+   public:
+      virtual ULong_t     Hash() const { return 6; }
+
+      ClassDefInline(WrongSetup, 2);
+   };
+
 )CODE";
+
+class WrongSetup : public TObject
+{
+public:
+   virtual ULong_t     Hash() const { return 6; }
+
+   ClassDefInline(WrongSetup, 2);
+};
 
 const char *gErrorOutput = R"OUTPUT(Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SecondOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
@@ -171,6 +182,8 @@ TEST(HashRecursiveRemove,FailingClasses)
 
    std::string output = testing::internal::GetCapturedStderr();
    EXPECT_EQ(gErrorOutput,output);
+
+   EXPECT_FALSE(WrongSetup::Class()->HasConsistentHashMember());
 }
 
 #include "THashList.h"

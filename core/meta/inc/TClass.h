@@ -79,6 +79,8 @@ friend class TProtoClass;
 public:
    // TClass status bits
    enum EStatusBits {
+      kReservedLoading = BIT(7), // Internal status bits, set and reset only during initialization
+
       kClassSaved  = BIT(12),
       kHasLocalHashMember = BIT(14),
       kIgnoreTObjectStreamer = BIT(15),
@@ -296,7 +298,7 @@ private:
    static Bool_t HasNoInfoOrEmuOrFwdDeclaredDecl(const char*);
 
    // Internal status bits, set and reset only during initialization and thus under the protection of the global lock.
-   enum { kLoading = BIT(14), kUnloading = BIT(14) };
+   enum { kLoading = kReservedLoading, kUnloading = kReservedLoading };
    // Internal streamer type.
    enum EStreamerType {kDefault=0, kEmulatedStreamer=1, kTObject=2, kInstrumented=4, kForeign=8, kExternal=16};
 
