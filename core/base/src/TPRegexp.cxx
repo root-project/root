@@ -25,6 +25,9 @@ found at : http://perldoc.perl.org/perlre.html
 #include "TObjString.h"
 #include "TError.h"
 
+#ifdef R__WIN32
+#define PCRE_STATIC
+#endif
 #include <pcre.h>
 
 #include <vector>

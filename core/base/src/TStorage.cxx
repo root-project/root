@@ -518,29 +518,3 @@ Bool_t TStorage::IsOnHeap(void *)
    return false;
 }
 
-#ifdef WIN32
-////////////////////////////////////////////////////////////////////////////////
-///return max block size
-
-size_t TStorage::GetMaxBlockSize()
-{
-   return fgMaxBlockSize;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///set max block size
-
-void TStorage::SetMaxBlockSize(size_t size)
-{
-   fgMaxBlockSize = size;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///return free hook
-
-FreeHookFun_t TStorage::GetFreeHook()
-{
-   return fgFreeHook;
-}
-
-#endif

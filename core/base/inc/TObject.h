@@ -209,6 +209,7 @@ public:
    ClassDef(TObject,1)  //Basic ROOT object
 };
 
+#ifndef R__WIN32
 ////////////////////////////////////////////////////////////////////////////////
 /// TObject constructor. It sets the two data words of TObject to their
 /// initial values. The unique ID is set to 0 and the status word is
@@ -250,6 +251,7 @@ inline TObject::TObject(const TObject &obj)
 
    if (R__unlikely(fgObjectStat)) TObject::AddToTObjectTable(this);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TObject assignment operator.
