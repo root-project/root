@@ -767,17 +767,17 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
             TString strstateSize(token->GetString());
             stateSize = strstateSize.Atoi();
          } break;
-         case 2:
+         case 2:  // input size
          {
             TString strinputSize(token->GetString());
             inputSize = strinputSize.Atoi();
          } break;
-         case 3:
+         case 3:  // time steps
          {
             TString strtimeSteps(token->GetString());
             timeSteps = strtimeSteps.Atoi();
          }
-         case 4:
+         case 4: // remember state (1 or 0)
          {
             TString strrememberState(token->GetString());
             rememberState = (bool) strrememberState.Atoi();
@@ -1108,7 +1108,7 @@ void MethodDL::TrainCpu()
    size_t trainingPhase = 1;
    for (TTrainingSettings &settings : this->GetTrainingSettings()) {
 
-      size_t nThreads = 1;
+      size_t nThreads = 1;       // FIXME threads are hard coded to 1, no use of slave threads or multi-threading
 
       Log() << "Training phase " << trainingPhase << " of " << this->GetTrainingSettings().size() << ":" << Endl;
       trainingPhase++;
@@ -1178,21 +1178,25 @@ void MethodDL::TrainCpu()
          trainingData.Shuffle();
 
          // execute all epochs
-         for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
+         //for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
             // Clean and load new batches, one batch for one slave net
-            batches.clear();
-            batches.reserve(nThreads);
-            for (size_t j = 0; j < nThreads; j++) {
-               batches.push_back(trainingData.GetTensorBatch());
-            }
+            //batches.clear();
+            //batches.reserve(nThreads);
+            //for (size_t j = 0; j < nThreads; j++) {
+            //   batches.push_back(trainingData.GetTensorBatch());
+            //}
+         auto my_batch = trainingData.GetTensorBatch();
 
-            // execute one minimization step
-            if (settings.momentum > 0.0) {
-               minimizer.StepMomentum(deepNet, nets, batches, settings.momentum);
-            } else {
-               minimizer.Step(deepNet, nets, batches);
-            }
+         // execute one minimization step
+         // StepMomentum is currently not written for single thread, TODO write it
+         if (settings.momentum > 0.0) {
+            //minimizer.StepMomentum(deepNet, nets, batches, settings.momentum);
+            minimizer.Step(deepNet, my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
+         } else {
+            //minimizer.Step(deepNet, nets, batches);
+            minimizer.Step(deepNet, my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
          }
+         //}
 
          if ((stepCount % minimizer.GetTestInterval()) == 0) {
             // Compute test error.

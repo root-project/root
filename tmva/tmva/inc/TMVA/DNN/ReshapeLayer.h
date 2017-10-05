@@ -72,6 +72,9 @@ public:
    /*! Prints the info about the layer. */
    void Print() const;
 
+   /*! TODO Add documentation 
+    * Does this layer flatten? (necessary for DenseLayer)
+    * B x D1 x D2 --> 1 x B x (D1 * D2) */
    bool isFlattening() const { return fFlattening; }
 };
 
