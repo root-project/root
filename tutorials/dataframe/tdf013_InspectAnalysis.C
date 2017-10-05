@@ -51,8 +51,8 @@ void tdf013_InspectAnalysis()
    // - another callback is responsible of updating a simple progress bar from multiple threads
 
    // First off we create a TBrowser that contains a "TDFResults" directory
-   TMemFile *tdfDirectory = new TMemFile("TDFResults", "RECREATE");
-   TBrowser *browser = new TBrowser("b", tdfDirectory);
+   auto *tdfDirectory = new TMemFile("TDFResults", "RECREATE");
+   auto *browser = new TBrowser("b", tdfDirectory);
    // The global pad should now be set to the TBrowser's canvas, let's store its value in a local variable
    auto browserPad = gPad;
 
@@ -98,7 +98,6 @@ void tdf013_InspectAnalysis()
       // re-print the line with the progress bar
       std::cout << "\r[" << std::left << std::setw(barWidth) << progressBar << ']' << std::flush;
    });
-   /***************************************/
 
    // ## Running the analysis
    // So far we told TDataFrame what we want to happen during the event-loop, but we have not actually run any of those
