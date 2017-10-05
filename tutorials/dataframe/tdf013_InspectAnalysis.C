@@ -3,6 +3,7 @@
 /// \notebook -nodraw
 /// Showcase registration of callback functions that act on partial results while
 /// the event-loop is running using `OnPartialResult` and `OnPartialResultSlot`.
+/// This tutorial is not meant to run in batch mode.
 ///
 /// \macro_code
 ///
@@ -66,6 +67,7 @@ void tdf013_InspectAnalysis()
    // same order as they were registered). We now request that the partial result is drawn and the TBrowser's TPad is
    // updated every 50 events.
    h.OnPartialResult(50, [&browserPad](TH1D &hist) {
+      if (!browserPad) return; // in case root -b was invoked
       browserPad->cd();
       hist.Draw();
       browserPad->Update();
@@ -110,6 +112,7 @@ void tdf013_InspectAnalysis()
    auto clone = static_cast<TH1D*>(h->Clone());
    clone->SetDirectory(nullptr);
    tdfDirectory->Add(clone);
+   if (!browserPad) return; // in case root -b was invoked
    browserPad->cd();
    clone->Draw();
 }
