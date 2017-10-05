@@ -120,7 +120,7 @@ private:
    std::vector<std::weak_ptr<TBufferMergerFile>> fAttachedFiles; //< Attached files
    std::function<void(void)> fCallback;                          //< Callback for when data is removed from queue
 
-   ClassDef(TBufferMerger, 1);
+   ClassDef(TBufferMerger, 0);
 };
 
 /**
