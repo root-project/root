@@ -258,7 +258,6 @@ inline TObject::TObject(const TObject &obj)
    if (R__unlikely(fgObjectStat)) TObject::AddToTObjectTable(this);
 #endif
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// TObject assignment operator.
