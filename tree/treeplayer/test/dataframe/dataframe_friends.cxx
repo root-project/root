@@ -46,8 +46,8 @@ TEST_F(TDFAndFriends, FriendByFile)
    t1->AddFriend("t2", kFile2);
    TDataFrame d(*t1);
    auto x = d.Min<int>("x");
-   EXPECT_EQ(*x, 1);
    auto t = d.Take<int>("y");
+   EXPECT_EQ(*x, 1);
    for (auto v : t)
       EXPECT_EQ(v, 2);
 }
@@ -61,8 +61,8 @@ TEST_F(TDFAndFriends, FriendByPointer)
    t1->AddFriend(t2);
    TDataFrame d(*t1);
    auto x = d.Min<int>("x");
-   EXPECT_EQ(*x, 1);
    auto t = d.Take<int>("y");
+   EXPECT_EQ(*x, 1);
    for (auto v : t)
       EXPECT_EQ(v, 2);
 }
