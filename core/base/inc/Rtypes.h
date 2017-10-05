@@ -227,6 +227,7 @@ class ClassDefGenerateInitInstanceLocalInjector:
    public TCDGIILIBase {
       static atomic_TClass_ptr fgIsA;
       static std::string fgName;
+      static ::ROOT::TGenericClassInfo *fgGenericInfo;
    public:
       static void *New(void *p) { return p ? new(p) T : new T; };
       static void *NewArray(Long_t nElements, void *p) {
@@ -257,6 +258,10 @@ class ClassDefGenerateInitInstanceLocalInjector:
    atomic_TClass_ptr ClassDefGenerateInitInstanceLocalInjector<T>::fgIsA{};
    template<typename T>
    std::string ClassDefGenerateInitInstanceLocalInjector<T>::fgName{};
+   template<typename T>
+   ::ROOT::TGenericClassInfo *ClassDefGenerateInitInstanceLocalInjector<T>::fgGenericInfo {
+      ClassDefGenerateInitInstanceLocalInjector<T>::GenerateInitInstanceLocal()
+   };
 
    template <typename T>
    struct THashConsistencyHolder {
