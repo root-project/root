@@ -239,3 +239,29 @@ TEST(TDataFrameUtils, FindUnknownColumnsWithDataSource)
    EXPECT_EQ(ncols.size(), 1u);
    EXPECT_STREQ("d", ncols[0].c_str());
 }
+
+TEST(TDataFrameUtils, FriendTrees)
+{
+   int i;
+
+   TTree t1("t1", "t1");
+   t1.Branch("c1", &i);
+
+   TTree t2("t2", "t2");
+   t2.Branch("c2", &i);
+
+   TTree t3("t3", "t3");
+   t3.Branch("c3", &i);
+
+   // Circular
+   TTree t4("t4", "t4");
+   t4.Branch("c4", &i);
+   t4.AddFriend(&t1);
+
+   t2.AddFriend(&t3);
+   t1.AddFriend(&t2);
+   t1.AddFriend(&t4);
+
+   auto ncols = ROOT::Internal::TDF::FindUnknownColumns({"c2", "c3", "c4"}, &t1, {}, {});
+   EXPECT_EQ(ncols.size(), 0u) << "Cannot find column in friend trees.";
+}
