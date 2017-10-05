@@ -1112,11 +1112,11 @@ Bool_t TSystem::ExpandFileName(TString &fname)
 
 Bool_t TSystem::ExpandFileName(const char *fname, char *xname, const int kBufSize)
 {
-   int         n, ier, iter, lx, ncopy;
-   char       *inp, *out, *x, *t, *buff;
+   int n, ier, iter, lx, ncopy;
+   char *inp, *out, *x, *t, *buff;
    const char *b, *c, *e;
    const char *p;
-   buff = new char[kBufSize*4];
+   buff = new char[kBufSize * 4];
 
    iter = 0; xname[0] = 0; inp = buff + kBufSize; out = inp + kBufSize;
    inp[-1] = ' '; inp[0] = 0; out[-1] = ' ';
@@ -1234,7 +1234,7 @@ again:
    ncopy = (lx >= kBufSize) ? kBufSize-1 : lx;
    xname[0] = 0; strncat(xname, out, ncopy);
 
-   delete [] buff;
+   delete[] buff;
 
    if (ier || ncopy != lx) {
       ::Error("TSystem::ExpandFileName", "input: %s, output: %s", fname, xname);
