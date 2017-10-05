@@ -15,7 +15,7 @@ namespace Name
     template<class T>
     T & func(T * t  )
     { return *t; }
-    void Print(Option_t *);
+    void Print(Option_t *) const;
   protected:
     ClassDef(MyClass,1);
   };
