@@ -98,7 +98,7 @@ FARPROC dlsym(void *library, const char *function_name)
    FARPROC address = NULL;
    unsigned int i;
    if (library == RTLD_DEFAULT) {
-      if (EnumProcessModules( ::GetCurrentProcess(), hMods, sizeof(hMods), &cbNeeded)) {
+      if (EnumProcessModules(::GetCurrentProcess(), hMods, sizeof(hMods), &cbNeeded)) {
          for (i = 0; i < (cbNeeded / sizeof(HMODULE)); i++) {
             address = ::GetProcAddress((HMODULE)hMods[i], function_name);
             if (address)
