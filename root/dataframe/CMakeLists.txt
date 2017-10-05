@@ -17,7 +17,6 @@ ROOTTEST_ADD_TEST(missingBranches
 ROOTTEST_GENERATE_EXECUTABLE(test_hugeTDF test_hugeTDF.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_hugeTDF
                   EXEC test_hugeTDF
-                  OUTREF test_hugeTDF.ref
                   LABELS longtest
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
