@@ -209,7 +209,6 @@ public:
    ClassDef(TObject,1)  //Basic ROOT object
 };
 
-#ifndef R__WIN32
 ////////////////////////////////////////////////////////////////////////////////
 /// TObject constructor. It sets the two data words of TObject to their
 /// initial values. The unique ID is set to 0 and the status word is
@@ -226,7 +225,11 @@ inline TObject::TObject() : fBits(kNotDeleted) // Need to leave FUniqueID unset
 
    fUniqueID = 0;
 
+#ifdef R__WIN32
+   if (R__unlikely(GetObjectStat())) TObject::AddToTObjectTable(this);
+#else
    if (R__unlikely(fgObjectStat)) TObject::AddToTObjectTable(this);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -249,7 +252,11 @@ inline TObject::TObject(const TObject &obj)
    // Set only after used in above call
    fUniqueID = obj.fUniqueID; // when really unique don't copy
 
+#ifdef R__WIN32
+   if (R__unlikely(GetObjectStat())) TObject::AddToTObjectTable(this);
+#else
    if (R__unlikely(fgObjectStat)) TObject::AddToTObjectTable(this);
+#endif
 }
 #endif
 
