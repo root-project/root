@@ -99,6 +99,8 @@ TEST(TRootTDS, SetNSlotsTwice)
 }
 #endif
 
+#ifdef R__B64
+
 TEST(TRootTDS, FromATDF)
 {
    std::unique_ptr<TDataSource> tds(new TRootDS(treeName, fileGlob));
@@ -174,4 +176,6 @@ TEST(TRootTDS, FromATDFWithJittingMT)
    EXPECT_DOUBLE_EQ(5., *min);
 }
 
-#endif
+#endif // R__USE_IMT
+
+#endif // R__B64

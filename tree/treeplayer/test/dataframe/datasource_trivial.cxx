@@ -88,6 +88,8 @@ TEST(TTrivialDS, FromATDF)
    EXPECT_DOUBLE_EQ(22., *min2);
 }
 
+#ifdef R__B64
+
 TEST(TTrivialDS, FromATDFWithJitting)
 {
    std::unique_ptr<TDataSource> tds(new TTrivialDS(32));
@@ -157,5 +159,6 @@ TEST(TTrivialDS, FromATDFWithJittingMT)
    EXPECT_DOUBLE_EQ(22., *min);
 }
 
-#endif
+#endif // R__USE_IMT
 
+#endif // R__B64
