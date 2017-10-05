@@ -203,7 +203,7 @@ auto c = d.Filter(metCut, {"MET"}).Count();
 std::cout << *c << std::endl;
 ~~~
 
-An example of a more complex filter with just in time compilation is shown below:
+An example of a more complex filter expressed as a string containing C++ code is shown below
 
 ~~~{.cpp}
 TDataFrame d("myTree", "file.root");
@@ -211,10 +211,11 @@ auto df = d.Define("p", "std::array<double, 4> p{px, py, pz, E}; return p;")
            .Filter("double p2 = 0.0; for (auto&& x : p) p2 += x*x; return sqrt(p2) < 10.0;");
 ~~~
 
-The code snippet above defines a column `p` that is a fixed-size array using the component column names, then filters
-on its magnitude by looping over its elements. The good thing about using strings like this for defining new columns
-is that this makes it easy to use with Python scripts, where creating a C++ callable can be an annoyance. However,
-there is still a limitation that the lambda cannot capture anything. For that, a C++ lambda is the best option.
+The code snippet above defines a column `p` that is a fixed-size array using the component column names and then
+filters on its magnitude by looping over its elements. It must be noted that the usage of strings to define columns
+like the one above is a major advantage when using PyROOT. However, only constants and data coming from other columns
+in the dataset can be involved in the code passed as a string. Local variables and functions cannot be used, since
+the interpreter will not know how to find them. When capturing local state is necessary, a C++ callable can be used.
 
 More information on filters and how to use them to automatically generate cutflow reports can be found [below](#Filters).
 
