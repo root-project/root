@@ -5,8 +5,6 @@
 #include "TRandom.h"
 #include "TSystem.h"
 
-#include "TNonCopiableDS.hxx"
-
 #include "gtest/gtest.h"
 
 #include <algorithm>
@@ -167,9 +165,9 @@ TEST(Cache, CollectionColumns)
 
    // same but jitted
    auto c = d.Cache({"vector", "list", "deque"});
-   auto hv = c.Histo1D("vector");
-   auto hl = c.Histo1D("list");
-   auto hd = c.Histo1D("deque");
+   auto hv = c.Histo1D<std::vector<int>>("vector");
+   auto hl = c.Histo1D<std::list<int>>("list");
+   auto hd = c.Histo1D<std::deque<int>>("deque");
    EXPECT_EQ(1, hv->GetMean());
    EXPECT_EQ(1, hl->GetMean());
    EXPECT_EQ(1, hd->GetMean());
@@ -197,20 +195,6 @@ TEST(Cache, Regex)
    auto cached = tdfs.Cache();
    auto m = cached.Max<ULong64_t>("col0");
    EXPECT_EQ(3UL, *m);
-}
-
-TEST(Cache, NonCopiable)
-{
-   std::unique_ptr<TDataSource> tds(new NonCopiableDS());
-   TDataFrame tdf(std::move(tds));
-   int ret(1);
-   try {
-      tdf.Cache(NonCopiableDS::fgColumnName);
-   } catch (const std::runtime_error &e) {
-      ret = 0;
-   }
-   EXPECT_EQ(0, ret)
-      << "The static assert was not triggered even if caching of columns of a non copiable type was requested";
 }
 
 TEST(Cache, Carrays)
@@ -251,5 +235,4 @@ TEST(Cache, Carrays)
    cache.Foreach(checkArr, {"arr"});
 
    gSystem->Unlink(fileName);
-
 }
