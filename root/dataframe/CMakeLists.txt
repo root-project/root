@@ -14,6 +14,13 @@ ROOTTEST_ADD_TEST(missingBranches
                   MACRO test_missingBranches.C
                   ERRREF test_missingBranches.eref)
 
+ROOTTEST_GENERATE_EXECUTABLE(test_hugeTDF test_hugeTDF.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_ADD_TEST(test_hugeTDF
+                  EXEC test_hugeTDF
+                  OUTREF test_hugeTDF.ref
+                  LABELS longtest
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 ROOTTEST_GENERATE_EXECUTABLE(test_columnoverride test_columnoverride.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_columnoverride
                   EXEC test_columnoverride
