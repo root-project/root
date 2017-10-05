@@ -239,7 +239,7 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree,
       if (friends) {
          bool isFriendBranch = false;
          for (auto friendTree : *friends) {
-            const auto friendBranch = static_cast<TFriendElement *>(friendTree)->GetTree()->GetBranch(column.c_str());
+            const auto friendBranch = static_cast<TFriendElement*>(friendTree)->GetTree()->GetBranch(column.c_str());
             if (friendBranch != nullptr) {
                isFriendBranch = true;
                break;
