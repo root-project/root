@@ -157,7 +157,8 @@ TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSiz
                                               size_t timeSteps, bool rememberState,
                                               DNN::EActivationFunction f,
                                               bool training, DNN::EInitialization fA)
-   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, inputSize, 1, 1, stateSize, 2, {stateSize, stateSize}, {inputSize, stateSize},
+   //TODO inputDepth and outputDepth changed to batchSize??
+   : VGeneralLayer<Architecture_t>(batchSize, 1, timeSteps, inputSize, 1, timeSteps, stateSize, 2, {stateSize, stateSize}, {inputSize, stateSize},
    1, {stateSize}, {1}, batchSize, timeSteps, stateSize, fA),
    fTimeSteps(timeSteps), fStateSize(stateSize), fRememberState(rememberState), fWeightsInput(this->GetWeightsAt(0)), fF(f),
    fState(batchSize, stateSize), fWeightsState(this->GetWeightsAt(1)), fBiases(this->GetBiasesAt(0)), fDerivatives(batchSize, stateSize),
