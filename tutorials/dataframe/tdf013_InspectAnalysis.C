@@ -15,7 +15,8 @@ using namespace ROOT::Experimental; // TDataFrame lives in here
 void tdf013_InspectAnalysis()
 {
    ROOT::EnableImplicitMT();
-   const auto nSlots = ROOT::GetImplicitMTPoolSize();
+   const auto poolSize = ROOT::GetImplicitMTPoolSize();
+   const auto nSlots = 0 == poolSize ? 1 : poolSize;
 
    // ## Setup a simple TDataFrame
    // We start by creating a TDataFrame with a good number of empty events
