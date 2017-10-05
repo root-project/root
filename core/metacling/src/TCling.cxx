@@ -1098,6 +1098,11 @@ TCling::TCling(const char *name, const char *title)
    // rootcling also uses TCling for generating the dictionary ROOT files.
    bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
 
+   bool useCxxModules = false;
+#ifdef R__USE_CXXMODULES
+   useCxxModules = true;
+#endif
+
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
    fTemporaries = new std::vector<cling::Value>();
@@ -1126,7 +1131,7 @@ TCling::TCling(const char *name, const char *title)
 
       // Attach the PCH (unless we have C++ modules enabled which provide the
       // same functionality).
-      if (!getenv("ROOT_MODULES")) {
+      if (!useCxxModules) {
          std::string pchFilename = interpInclude + "/allDict.cxx.pch";
          if (gSystem->Getenv("ROOT_PCH")) {
             pchFilename = gSystem->Getenv("ROOT_PCH");
@@ -1145,12 +1150,11 @@ TCling::TCling(const char *name, const char *title)
            eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)
       interpArgs.push_back(iArg->c_str());
 
-#ifdef R__USE_CXXMODULES
    // Activate C++ modules support. If we are running within rootcling, it's up
    // to rootcling to set this flag depending on whether it wants to produce
    // C++ modules.
    std::string vfsArg;
-   if (!fromRootCling) {
+   if (useCxxModules && !fromRootCling) {
       // We only set this flag, rest is done by the CIFactory.
       interpArgs.push_back("-fmodules");
 
@@ -1158,7 +1162,6 @@ TCling::TCling(const char *name, const char *title)
       vfsArg = "-ivfsoverlay" + vfsPath;
       interpArgs.push_back(vfsArg.c_str());
    }
-#endif
 
 #ifdef R__FAST_MATH
    interpArgs.push_back("-ffast-math");
