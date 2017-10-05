@@ -18,6 +18,7 @@ The following people have contributed to this new version:
  Brian Bockelman, UNL,\
  Rene Brun, CERN/SFT,\
  Philippe Canal, FNAL,\
+ David Clark, ANL (SULI),\
  Olivier Couet, CERN/SFT,\
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
@@ -29,6 +30,7 @@ The following people have contributed to this new version:
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
+ Peter van Gemmeren, ANL,\
  Vassil Vassilev, Fermilab/CMS,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit
 
@@ -81,6 +83,11 @@ or will be set to the address of the histogram read from the file.
 large TClonesArray where each element contains another small vector container.
 - `TTree::TTree()` now takes the `TDirectory*` that the tree should be constructed in.
   Defaults to `gDirectory`, i.e. the default behavior did not change.
+- To prepare for multi-threaded workflows, a preloading and retaining clusters feature is introduced.
+  This change will prevent additional reads from occurring when reading events out of sequence.
+  By setting TTree::SetClusterPrefetch(), an entire clusters will be loaded into memory, rather than single baskets.
+  By setting the MaxVirtualSize of the tree to a negative value, previous clusters will be retained
+  (the absolute value of MaxVirtualSize indicates how many additional clusters will be kept in memory).
 
 ### TDataFrame
   - Improved documentation

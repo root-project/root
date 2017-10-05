@@ -9,48 +9,35 @@ class TBranchTest : public ::testing::Test {
 protected:
    virtual void SetUp()
    {
-      random = new TRandom(837);
-      f = new TFile("TBranchTestTree.root", "RECREATE");
-      myTree = new TTree("myTree", "A test tree");
-      myTree->SetAutoSave(10);
+      TRandom *random = new TRandom(837);
+      TFile *file = new TFile("TBranchTestTree.root", "RECREATE");
+      TTree *tree = new TTree("tree", "A test tree");
+      tree->SetAutoSave(10);
       Float_t data = 0;
-      myTree->Branch("branch0", &data);
+      tree->Branch("branch", &data);
 
       for (Int_t ev = 0; ev < 100; ev++) {
          data = random->Gaus(100, 7);
-         myTree->Fill();
+         tree->Fill();
          if (ev % 10 == 7) {
-            myTree->FlushBaskets();
+            tree->FlushBaskets();
          }
       }
-      f->Write();
-      delete myTree;
-      delete f;
-   }
-
-   virtual void TearDown()
-   {
-      myTree->DropBaskets();
-      delete branch;
-      delete myTree;
+      file->Write();
       delete random;
-      delete f;
+      delete tree;
+      delete file;
    }
-
-   TRandom *random;
-   TTree *myTree;
-   TFile *f;
-   TBranch *branch;
 };
 
 TEST_F(TBranchTest, nonePreviousTest)
 {
-   f = new TFile("TBranchTestTree.root");
-   myTree = (TTree *)f->Get("myTree");
-   branch = myTree->GetBranch("branch0");
+   TFile *file = new TFile("TBranchTestTree.root");
+   TTree *tree = (TTree *)file->Get("tree");
+   TBranch *branch = tree->GetBranch("branch");
 
-   myTree->SetClusterPrefetch(false);
-   myTree->SetMaxVirtualSize(0);
+   tree->SetClusterPrefetch(false);
+   tree->SetMaxVirtualSize(0);
 
    // Checks for normal behavior when change is
    // not being used
@@ -63,20 +50,21 @@ TEST_F(TBranchTest, nonePreviousTest)
    ASSERT_FALSE(branch->GetListOfBaskets()->At(1));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(2));
    ASSERT_FALSE(branch->GetListOfBaskets()->At(3));
+   delete file;
 }
 
 TEST_F(TBranchTest, onePreviousTest)
 {
-   f = new TFile("TBranchTestTree.root");
-   myTree = (TTree *)f->Get("myTree");
-   branch = myTree->GetBranch("branch0");
+   TFile *file = new TFile("TBranchTestTree.root");
+   TTree *tree = (TTree *)file->Get("tree");
+   TBranch *branch = tree->GetBranch("branch");
 
    // Checks to make sure only first basket is loaded
    branch->GetEntry(0);
    ASSERT_TRUE(branch->GetListOfBaskets()->At(0));
    ASSERT_FALSE(branch->GetListOfBaskets()->At(1));
 
-   myTree->SetClusterPrefetch(true);
+   tree->SetClusterPrefetch(true);
 
    // Checks to make sure the whole cluster is loaded
    branch->GetEntry(10);
@@ -93,9 +81,9 @@ TEST_F(TBranchTest, onePreviousTest)
    ASSERT_TRUE(branch->GetListOfBaskets()->At(4));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(5));
 
-   myTree->SetMaxVirtualSize(-1);
+   tree->SetMaxVirtualSize(-1);
 
-   // Checks to make sure previous is retained in memory
+   // Checks to make sure previous cluster is retained in memory
    branch->GetEntry(30);
    ASSERT_TRUE(branch->GetListOfBaskets()->At(4));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(5));
@@ -111,32 +99,42 @@ TEST_F(TBranchTest, onePreviousTest)
    ASSERT_TRUE(branch->GetListOfBaskets()->At(7));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(8));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(9));
+   delete file;
 }
 
 TEST_F(TBranchTest, twoPreviousTest)
 {
-   f = new TFile("TBranchTestTree.root");
-   myTree = (TTree *)f->Get("myTree");
-   branch = myTree->GetBranch("branch0");
+   TFile *file = new TFile("TBranchTestTree.root");
+   TTree *tree = (TTree *)file->Get("tree");
+   TBranch *branch = tree->GetBranch("branch");
 
-   myTree->SetMaxVirtualSize(-2);
+   tree->SetMaxVirtualSize(-2);
 
-   // Checks to make sure the whole cluster is loaded
+   // Checks to make sure only first basket is loaded
    branch->GetEntry(0);
    ASSERT_TRUE(branch->GetListOfBaskets()->At(0));
-   ASSERT_TRUE(branch->GetListOfBaskets()->At(1));
+   ASSERT_FALSE(branch->GetListOfBaskets()->At(1));
 
-   // Checks to make sure previous is retained in memory
+   // Checks to make sure previous cluster is retained in memory
    branch->GetEntry(10);
    ASSERT_TRUE(branch->GetListOfBaskets()->At(0));
-   ASSERT_TRUE(branch->GetListOfBaskets()->At(1));
+   ASSERT_FALSE(branch->GetListOfBaskets()->At(1));
+   ASSERT_TRUE(branch->GetListOfBaskets()->At(2));
+   ASSERT_FALSE(branch->GetListOfBaskets()->At(3));
+
+   // Checks to make sure previous cluster is retained in memory
+   branch->GetEntry(19);
+   ASSERT_TRUE(branch->GetListOfBaskets()->At(0));
+   ASSERT_FALSE(branch->GetListOfBaskets()->At(1));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(2));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(3));
 
-   // Checks to make sure previous is retained in memory
+   tree->SetClusterPrefetch(true);
+
+   // Checks to make sure previous cluster is retained in memory
    branch->GetEntry(20);
    ASSERT_TRUE(branch->GetListOfBaskets()->At(0));
-   ASSERT_TRUE(branch->GetListOfBaskets()->At(1));
+   ASSERT_FALSE(branch->GetListOfBaskets()->At(1));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(2));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(3));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(4));
@@ -153,4 +151,5 @@ TEST_F(TBranchTest, twoPreviousTest)
    ASSERT_TRUE(branch->GetListOfBaskets()->At(5));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(6));
    ASSERT_TRUE(branch->GetListOfBaskets()->At(7));
+   delete file;
 }
