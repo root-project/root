@@ -1,7 +1,7 @@
 #! /usr/bin/env bash
 
 COUNTER=0
-while ((COUNTER < 500 )); do
+while ((COUNTER < 100 )); do
       echo "Run number $COUNTER"
       ./testSetAddress;
       RETVAL=$?
