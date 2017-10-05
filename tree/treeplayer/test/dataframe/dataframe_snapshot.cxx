@@ -39,8 +39,8 @@ class TDFSnapshotMT : public ::testing::Test {
    };
 
 protected:
-   const ULong64_t nEvents = 100ull; // must be initialized before fLoopManager
-   const unsigned int nSlots = 4u;
+   const ULong64_t kNEvents = 100ull; // must be initialized before fLoopManager
+   const unsigned int kNSlots = 4u;
 
 private:
    TIMTEnabler fIMTEnabler;
@@ -51,7 +51,7 @@ private:
    }
 
 protected:
-   TDFSnapshotMT() : fIMTEnabler(nSlots), fTdf(nEvents), tdf(DefineAns()) {}
+   TDFSnapshotMT() : fIMTEnabler(kNSlots), fTdf(kNEvents), tdf(DefineAns()) {}
    TInterface<TLoopManager> tdf;
 };
 #endif
