@@ -275,13 +275,19 @@ void THashList::RecursiveRemove(TObject *obj)
 {
    if (!obj) return;
 
-   // Remove obj in the list itself
-   TObject *object = TList::Remove(obj);
-   if (object) fTable->RemoveSlow(object);
+   if (obj->HasInconsistentHash()) {
+      // Remove obj in the list itself
+      TObject *object = TList::Remove(obj);
+      if (object) fTable->RemoveSlow(object);
+
+   } else if (fTable->FindObject(obj)) {
+      TObject *object = TList::Remove(obj);
+      if (object) fTable->Remove(object);
+   }
 
    // Scan again the list and invoke RecursiveRemove for all objects
    TIter next(this);
-
+   TObject *object;
    while ((object = next())) {
       if (object->TestBit(kNotDeleted)) object->RecursiveRemove(obj);
    }
