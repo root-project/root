@@ -106,3 +106,16 @@ TEST_F(TDFAndFriends, FriendArrayByPointer)
    };
    d.Foreach(checkArr, {"arr"});
 }
+
+TEST_F(TDFAndFriends, QualifiedBranchName)
+{
+   TFile f1(kFile1);
+   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   t1->AddFriend("t2", kFile2);
+   TDataFrame d(*t1);
+   auto x = d.Min<int>("x");
+   EXPECT_EQ(*x, 1);
+   auto t = d.Take<int>("t2.y");
+   for (auto v : t)
+      EXPECT_EQ(v, 2);
+}
