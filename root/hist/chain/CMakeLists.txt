@@ -1,1 +1,2 @@
+include_directories(${GTEST_INCLUDE_DIR})
 ROOTTEST_ADD_UNITTEST_DIR(Core Hist RIO)
