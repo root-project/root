@@ -157,9 +157,9 @@ TEST(Cache, CollectionColumns)
                .Define("blob", [&i]() { return ++i; });
    {
       auto c = d.Cache<std::vector<int>, std::list<int>, std::deque<int>>({"vector", "list", "deque"});
-      auto hv = c.Histo1D("vector");
-      auto hl = c.Histo1D("list");
-      auto hd = c.Histo1D("deque");
+      auto hv = c.Histo1D<std::vector<int>>("vector");
+      auto hl = c.Histo1D<std::list<int>>("list");
+      auto hd = c.Histo1D<std::deque<int>>("deque");
       EXPECT_EQ(1, hv->GetMean());
       EXPECT_EQ(1, hl->GetMean());
       EXPECT_EQ(1, hd->GetMean());
