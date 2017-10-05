@@ -131,7 +131,7 @@ TLoopManager::TLoopManager(ULong64_t nEmptyEntries)
 TLoopManager::TLoopManager(std::unique_ptr<TDataSource> ds, const ColumnNames_t &defaultBranches)
    : fDefaultColumns(defaultBranches), fNSlots(TDFInternal::GetNSlots()),
      fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
-     fDataSource(std::move(ds))
+     fDataSource(std::move(ds)), fDataSourceRawPtr(fDataSource.get())
 {
    fDataSource->SetNSlots(fNSlots);
 }
