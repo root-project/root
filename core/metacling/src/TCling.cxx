@@ -1153,14 +1153,14 @@ TCling::TCling(const char *name, const char *title)
    // Activate C++ modules support. If we are running within rootcling, it's up
    // to rootcling to set this flag depending on whether it wants to produce
    // C++ modules.
-   std::string vfsArg;
+   TString vfsArg;
    if (useCxxModules && !fromRootCling) {
       // We only set this flag, rest is done by the CIFactory.
       interpArgs.push_back("-fmodules");
 
-      std::string vfsPath = std::string(TROOT::GetIncludeDir()) + "/modulemap.overlay.yaml";
+      TString vfsPath = TROOT::GetIncludeDir() + "/modulemap.overlay.yaml";
       vfsArg = "-ivfsoverlay" + vfsPath;
-      interpArgs.push_back(vfsArg.c_str());
+      interpArgs.push_back(vfsArg.Data());
    }
 
 #ifdef R__FAST_MATH
