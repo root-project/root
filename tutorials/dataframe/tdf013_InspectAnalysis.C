@@ -13,13 +13,8 @@ using namespace ROOT::Experimental; // TDataFrame lives in here
 
 void tdf013_InspectAnalysis()
 {
-#ifdef R__USE_IMT
-   // Run on multiple cores if Implicit Multi-Threading has been enabled when compiling ROOT (default is yes)
    ROOT::EnableImplicitMT();
    const auto nSlots = ROOT::GetImplicitMTPoolSize();
-#else
-   const auto nSlots = 1u;
-#endif
 
    // ## Setup a simple TDataFrame
    // We start by creating a TDataFrame with a good number of empty events
