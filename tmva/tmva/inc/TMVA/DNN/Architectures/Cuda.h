@@ -393,7 +393,7 @@ public:
    static void Deflatten(std::vector<TCudaMatrix<AFloat>> &A, const TCudaMatrix<AFloat> &B, size_t index, size_t nRows,
                          size_t nCols);
    /** Rearrage data accoring to time fill B x T x D out with T x B x D matrix in*/
-   static void Rearrange(std::vector<TCudaMatrix<AReal>> &out, const std::vector<TCudaMatrix<AReal>> &in); 
+   static void Rearrange(std::vector<TCudaMatrix<AFloat>> &out, const std::vector<TCudaMatrix<AFloat>> &in); 
 
    ///@}
 

@@ -869,7 +869,7 @@ auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> &input, c
       std::vector<Matrix_t> &activations_backward = fLayers[i - 1]->GetOutput();
       fLayers[i]->Backward(activation_gradient_backward, activations_backward, inp1, inp2);
    }
- 
+
    std::vector<Matrix_t> dummy;
    for (size_t i = 0; i < input.size(); i++) {
       //dummy.emplace_back(input[i].GetNrows(), input[i].GetNcols());
