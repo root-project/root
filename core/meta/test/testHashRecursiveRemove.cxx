@@ -226,7 +226,7 @@ TEST(HashRecursiveRemove,CheckedHashRootClasses)
    EXPECT_TRUE(CallCheckedHash("TObjArray"));
    EXPECT_TRUE(CallCheckedHash("TList"));
    EXPECT_TRUE(CallCheckedHash("THashList"));
-   //EXPECT_TRUE(CallCheckedHash("TClass"));
+   EXPECT_TRUE(CallCheckedHash("TClass"));
    EXPECT_TRUE(CallCheckedHash("TMethod"));
    //EXPECT_TRUE(CallCheckedHash("ROOT::Internal::TCheckHashRecurveRemoveConsistency"));
 }
@@ -253,7 +253,7 @@ TEST(HashRecursiveRemove,CheckedHashFailingClasses)
 #include "THashList.h"
 #include "TROOT.h"
 
-constexpr size_t kHowMany = 10000;
+constexpr size_t kHowMany = 20000;
 
 TEST(HashRecursiveRemove,SimpleDelete)
 {
@@ -265,6 +265,27 @@ TEST(HashRecursiveRemove,SimpleDelete)
       cont.Add(n);
    }
    cont.Delete();
+
+   EXPECT_EQ(0, cont.GetSize());
+}
+
+TEST(HashRecursiveRemove,SimpleDirectRemove)
+{
+   THashList cont;
+   TList todelete;
+
+   for(size_t i = 0; i < kHowMany; ++i) {
+      TNamed *n = new TNamed(TString::Format("n%ld",i),TString(""));
+      n->SetBit(kMustCleanup);
+      cont.Add(n);
+      todelete.Add(n);
+   }
+   for(auto o : todelete) {
+      cont.Remove(o);
+      delete o;
+   }
+
+   todelete.Clear("nodelete");
 
    EXPECT_EQ(0, cont.GetSize());
 }
@@ -295,7 +316,7 @@ TEST(HashRecursiveRemove,DeleteBadHashWithRecursiveRemove)
    THashList cont;
    TList todelete;
 
-   for(size_t i = 0; i < kHowMany; ++i) {
+   for(size_t i = 0; i < kHowMany / 4; ++i) {
       TObject *o;
       if (i%2) o = (TObject*)TClass::GetClass("FirstOverload")->New();
       else o = new WrongSetup;
