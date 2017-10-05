@@ -22,15 +22,11 @@ import ROOT
 npoints = 10000000
 tdf = ROOT.ROOT.Experimental.TDataFrame(npoints)
 
-ROOT.gInterpreter.ProcessLine("TRandom rx, ry;")
-ROOT.gInterpreter.ProcessLine("rx.SetSeed(1);")
-ROOT.gInterpreter.ProcessLine("ry.SetSeed(2);")
-
 ## Define what data we want inside the dataframe. We do not need to define p
 ## as an array, but we do it here to demonstrate how to use jitting with TDataFrame
 
-pidf = tdf.Define("x", "rx.Uniform(-1.0, 1.0)") \
-          .Define("y", "ry.Uniform(-1.0, 1.0)") \
+pidf = tdf.Define("x", "gRandom->Uniform(-1.0, 1.0)") \
+          .Define("y", "gRandom->Uniform(-1.0, 1.0)") \
           .Define("p", "std::array<double, 2> v{x, y}; return v;") \
           .Define("r", "double r2 = 0.0; for (auto&& w : p) r2 += w*w; return sqrt(r2);")
 

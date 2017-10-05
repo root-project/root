@@ -10,7 +10,6 @@
 /// \date October 2017
 /// \author Guilherme Amadio
 
-#include "TRandom.h"
 #include "ROOT/TDataFrame.hxx"
 
 void tdf012_DefinesAndFiltersAsStrings()
@@ -25,13 +24,6 @@ void tdf012_DefinesAndFiltersAsStrings()
    size_t npoints = 10000000;
    ROOT::Experimental::TDataFrame tdf(npoints);
 
-   // Make generators known to interpreter
-   gInterpreter->ProcessLine("TRandom rx, ry;");
-
-   // Use different seeds for independent streams
-   gInterpreter->ProcessLine("rx.SetSeed(1);");
-   gInterpreter->ProcessLine("ry.SetSeed(2);");
-
    // Define what we want inside the dataframe. We do not need to define p as an array,
    // but we do it here to demonstrate how to use jitting with TDataFrame
 
@@ -40,8 +32,8 @@ void tdf012_DefinesAndFiltersAsStrings()
    // if the local variable and the data column are of different types or the
    // local x variable is declared in the global scope of the lambda function
 
-   auto pidf = tdf.Define("x", "rx.Uniform(-1.0, 1.0)")
-                  .Define("y", "ry.Uniform(-1.0, 1.0)")
+   auto pidf = tdf.Define("x", "gRandom->Uniform(-1.0, 1.0)")
+                  .Define("y", "gRandom->Uniform(-1.0, 1.0)")
                   .Define("p", "std::array<double, 2> v{x, y}; return v;")
                   .Define("r", "double r2 = 0.0; for (auto&& x : p) r2 += x*x; return sqrt(r2);");
 
