@@ -5525,7 +5525,9 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          clang::DeclContext* previousScopeAsContext = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
          if (TClassEdit::IsStdClass(cls))
              previousScopeAsContext = fInterpreter->getSema().getStdNamespace();
-         for (auto const scopeObj : *tokens){
+         auto nTokens = tokens->GetSize();
+         for (Int_t tk = 0; tk < nTokens; ++tk) {
+            auto scopeObj = tokens->UncheckedAt(tk);
             auto scopeName = ((TObjString*) scopeObj)->String().Data();
             previousScopeAsNamedDecl = cling::utils::Lookup::Named(&fInterpreter->getSema(), scopeName, previousScopeAsContext);
             // Check if we have multiple nodes in the AST with this name
