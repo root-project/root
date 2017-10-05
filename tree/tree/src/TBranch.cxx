@@ -1128,7 +1128,12 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    if (file == 0) {
       return 0;
    }
-   basket = (fTree->GetMaxVirtualSize() < 0 || fTree->GetClusterPrefetch()) ? GetFreshCluster() : GetFreshBasket();
+   // if cluster pre-fetching or retaining is on, do not re-use existing baskets
+   // unless a new cluster is used.
+   if (fTree->GetMaxVirtualSize() < 0 || fTree->GetClusterPrefetch())
+      basket = GetFreshCluster();
+   else
+      basket = GetFreshBasket();
 
    // fSkipZip is old stuff still maintained for CDF
    if (fSkipZip) basket->SetBit(TBufferFile::kNotDecompressed);
@@ -1279,7 +1284,7 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
             fNextBasketEntry = -1;
             return -1;
          }
-         if (fTree->GetMaxVirtualSize() < 0 || fTree->GetClusterPrefetch()) {
+         if (fTree->GetClusterPrefetch()) {
             TTree::TClusterIterator clusterIterator = fTree->GetClusterIterator(entry);
             clusterIterator.Next();
             Int_t nextClusterEntry = clusterIterator.GetNextEntry();
