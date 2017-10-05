@@ -224,7 +224,7 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree,
                                  const ColumnNames_t &dataSourceColumns)
 {
    ColumnNames_t unknownColumns;
-   const auto friends = tree ? std::unique_ptr<TList>(tree->GetListOfFriends()) : std::make_unique<TList>();
+   const auto friends = tree ? tree->GetListOfFriends() : static_cast<TList*>(nullptr);
    for (auto &column : requiredCols) {
       const auto isTreeBranch = (tree != nullptr && tree->GetBranch(column.c_str()) != nullptr);
       if (isTreeBranch)
