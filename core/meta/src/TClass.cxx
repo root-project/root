@@ -6964,7 +6964,7 @@ Bool_t ROOT::Internal::HasConsistentHashMember(const char* cname)
       "TEnvRec", "TDataType", "TObjArray", "TList", "THashList",
       "TClass", "TCling", "TInterpreter", "TMethod",
       "ROOT::Internal::TCheckHashRecurveRemoveConsistency",
-      "TDirectory", "TDirectoryFile"
+      "TDirectory", "TDirectoryFile", "TObject"
    };
 
    if (cname && cname[0]) {
