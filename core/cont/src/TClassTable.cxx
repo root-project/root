@@ -203,6 +203,17 @@ namespace ROOT {
 
       return slot;
    }
+
+   std::vector<std::unique_ptr<TClassRec> > &GetDelayedAddClass() {
+      static std::vector<std::unique_ptr<TClassRec> > delayedAddClass;
+      return delayedAddClass;
+   }
+
+   std::vector<std::pair<const char*, const char*> > &GetDelayedAddClassAlternate() {
+      static std::vector<std::pair<const char*, const char*> > delayedAddClassAlternate;
+      return delayedAddClassAlternate;
+   }
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -219,6 +230,16 @@ TClassTable::TClassTable()
    memset(fgTable, 0, fgSize*sizeof(TClassRec*));
    memset(fgAlternate, 0, fgSize*sizeof(TClassAlt*));
    gClassTable = this;
+
+   for(auto &&r : GetDelayedAddClass()) {
+      AddClass(r->fName, r->fId, *r->fInfo, r->fDict, r->fBits);
+   };
+   GetDelayedAddClass().clear();
+
+   for(auto &&r : GetDelayedAddClassAlternate()) {
+      AddAlternate(r.first,r.second);
+   }
+   GetDelayedAddClassAlternate().clear();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -711,7 +732,17 @@ void ROOT::AddClass(const char *cname, Version_t id,
                     DictFuncPtr_t dict,
                     Int_t pragmabits)
 {
-   TClassTable::Add(cname, id, info, dict, pragmabits);
+   if (!TROOT::Initialized() && !gClassTable) {
+      auto r = std::unique_ptr<TClassRec>(new TClassRec(nullptr));
+      r->fName = StrDup(cname);
+      r->fId   = id;
+      r->fBits = pragmabits;
+      r->fDict = dict;
+      r->fInfo = &info;
+      GetDelayedAddClass().emplace_back(std::move(r));
+   } else {
+      TClassTable::Add(cname, id, info, dict, pragmabits);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -720,7 +751,11 @@ void ROOT::AddClass(const char *cname, Version_t id,
 
 void ROOT::AddClassAlternate(const char *normName, const char *alternate)
 {
-   TClassTable::AddAlternate(normName,alternate);
+   if (!TROOT::Initialized() && !gClassTable) {
+      GetDelayedAddClassAlternate().emplace_back(normName,alternate);
+   } else {
+      TClassTable::AddAlternate(normName,alternate);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -352,7 +352,7 @@ namespace Internal {
    // This mechanism was primarily intended to fix the issues with order in which
    // global TROOT and LLVM globals are initialized. TROOT was initializing
    // Cling, but Cling could not be used yet due to LLVM globals not being
-   // initialized yet.  The solution is to delay initializing the interpreter in
+   // Initialized yet.  The solution is to delay initializing the interpreter in
    // TROOT till after main() when all LLVM globals are initialized.
 
    // Technically, the mechanism used actually delay the interpreter
@@ -671,9 +671,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    ROOT::Internal::gROOTLocal = this;
    gDirectory = 0;
-
-   // initialize gClassTable is not already done
-   if (!gClassTable) new TClassTable;
 
    SetName(name);
    SetTitle(title);
@@ -2008,6 +2005,9 @@ void TROOT::InitInterpreter()
    fInterpreter->SetBit(kMustCleanup);
 
    fgRootInit = kTRUE;
+
+   // initialize gClassTable is not already done
+   if (!gClassTable) new TClassTable;
 
    // Initialize all registered dictionaries.
    for (std::vector<ModuleHeaderInfo_t>::const_iterator
