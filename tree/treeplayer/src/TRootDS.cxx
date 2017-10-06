@@ -139,7 +139,11 @@ void TRootDS::SetNSlots(unsigned int nSlots)
 
 TDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob)
 {
+#ifdef R__WIN32
+   ROOT::Experimental::TDataFrame tdf(std::unique_ptr<TRootDS>(new TRootDS(treeName, fileNameGlob)));
+#else
    ROOT::Experimental::TDataFrame tdf(std::make_unique<TRootDS>(treeName, fileNameGlob));
+#endif
    return tdf;
 }
 

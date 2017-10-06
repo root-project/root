@@ -76,7 +76,11 @@ void TTrivialDS::SetNSlots(unsigned int nSlots)
 
 TDataFrame MakeTrivialDataFrame(ULong64_t size)
 {
+#ifdef R__WIN32
+   ROOT::Experimental::TDataFrame tdf(std::unique_ptr<TTrivialDS>(new TTrivialDS(size)));
+#else
    ROOT::Experimental::TDataFrame tdf(std::make_unique<TTrivialDS>(size));
+#endif
    return tdf;
 }
 
