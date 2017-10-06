@@ -38,26 +38,26 @@ public:
    void Dump() const;
 
 #ifdef R__WIN32
-   const TT* Arr() const
+   const TT *Arr() const
    {
       if (offsetof(TEveVectorT, fZ) == offsetof(TEveVectorT, fX) + 2 * sizeof(TT))
          Error("TEveVectorT", "Subsequent nembers cannot be accessed as array!");
       return &fX;
    }
-   TT* Arr()
+   TT *Arr()
    {
       if (offsetof(TEveVectorT, fZ) == offsetof(TEveVectorT, fX) + 2 * sizeof(TT))
          Error("TEveVectorT", "Subsequent nembers cannot be accessed as array!");
       return &fX;
    }
 #else
-   const TT* Arr() const
+   const TT *Arr() const
    {
       static_assert(offsetof(TEveVectorT, fZ) == offsetof(TEveVectorT, fX) + 2 * sizeof(TT),
                     "Subsequent nembers cannot be accessed as array!");
       return &fX;
    }
-   TT* Arr()
+   TT *Arr()
    {
       static_assert(offsetof(TEveVectorT, fZ) == offsetof(TEveVectorT, fX) + 2 * sizeof(TT),
                     "Subsequent nembers cannot be accessed as array!");
