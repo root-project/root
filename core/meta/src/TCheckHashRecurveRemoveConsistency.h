@@ -143,11 +143,15 @@ public:
 
       if (!CheckRecursiveRemove(classRef)) {
          TClass *failing = FindMissingRecursiveRemove(classRef);
+
+         // Because ClassDefInline does not yet support class template on all platforms,
+         // we have no ClassDef and thus can not get a good message from TObject::Error.
+         constexpr const char *funcName = "ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove";
          if (failing) {
-            Error("CheckRecursiveRemove","The class %s overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.",
+            ::Error(funcName,"The class %s overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.",
                failing->GetName());
          } else {
-            Error("CheckRecursiveRemove","The class %s "
+            ::Error(funcName,"The class %s "
             "or one of its base classes override TObject::Hash but does not call TROOT::CallRecursiveRemoveIfNeeded in its destructor.\n",
             classRef.GetName());
 
