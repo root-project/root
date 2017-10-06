@@ -181,21 +181,9 @@ if(cxxmodules)
     message(FATAL_ERROR "cxxmodules is not supported by this compiler")
   endif()
 
-  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path=${CMAKE_BINARY_DIR}/include/pcms/ -fno-autolink -fdiagnostics-show-note-include-stack -Wno-module-import-in-extern-c")
+  set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fmodules -fmodules-cache-path= -fno-autolink -fdiagnostics-show-note-include-stack -Wno-module-import-in-extern-c")
 
   # FIXME: We should remove this once libc++ supports -fmodules-local-submodule-visibility.
-  if (APPLE)
-    # FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
-    # trickery to override the contents of system's OpenGL.
-    # On OSX #include TGLIncludes.h will trigger the creation of the system
-    # OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
-    # the translation units which it needs to 'rewrite'. The translation units
-    # which need glew support are in graf3d. However, depending on the modulemap
-    # organization we could request it implicitly (eg. one big module for ROOT).
-    # In these cases we need to 'prepend' this include path to the compiler in order
-    # for glew.h to it its trick.
-    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem")
-  endif()
 endif(cxxmodules)
 
 add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
@@ -209,44 +197,39 @@ install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE
 
 add_dependencies(move_artifacts copymodulemap)
 
-# Provide our own modulemap for implementations other than libcxx.
-if (NOT WIN32 AND NOT libcxx)
-  # Write a empty overlay file to the output directory that CMake can run its compiler tests.
-  # We will create the actual overlay later in the configuration.
-  file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
-  set(__vfs_overlay "-ivfsoverlay ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
-
-  if (cxxmodules)
-    set(ROOT_CXXMODULES_COMMONFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} ${__vfs_overlay}")
+if(runtime_cxxmodules OR cxxmodules)
+  set(ClangModules_ExtraFlags "-fno-autolink -fdiagnostics-show-note-include-stack -Wno-module-import-in-extern-c")
+  if (APPLE)
+    # FIXME: TGLIncludes and alike depend on glew.h doing special preprocessor
+    # trickery to override the contents of system's OpenGL.
+    # On OSX #include TGLIncludes.h will trigger the creation of the system
+    # OpenGL.pcm. Once it is built, glew cannot use preprocessor trickery to 'fix'
+    # the translation units which it needs to 'rewrite'. The translation units
+    # which need glew support are in graf3d. However, depending on the modulemap
+    # organization we could request it implicitly (eg. one big module for ROOT).
+    # In these cases we need to 'prepend' this include path to the compiler in order
+    # for glew.h to it its trick.
+    set(ClangModules_ExtraFlags "${ClangModules_ExtraFlags} -isystem ${CMAKE_SOURCE_DIR}/graf3d/glew/isystem")
   endif()
 
-  # Only use the first path from the HEADERS_LOCATION (which is separated by colons).
-  get_property(__libcpp_full_paths GLOBAL PROPERTY ROOT_CLING_CXX_HEADERS_LOCATION)
-  string(REGEX MATCHALL "[^:]+" __libcpp_full_paths_list "${__libcpp_full_paths}")
-  if (__libcpp_full_paths_list)
-    list(GET __libcpp_full_paths_list 0 __libcpp_full_path)
+  set(ClangModules_ModulesCache "${CMAKE_BINARY_DIR}/include/pcms")
+  set(ClangModules_OutputVFSFile "${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml")
+  set(ClangModules_CheckOnlyFor stl libc)
+  if(runtime_cxxmodules)
+    set(ClangModules_WithoutClang ON)
+  endif()
+  if(cxxmodules)
+    set(ClangModules_RequiredModules stl libc)
+  endif()
+  include(ClangModules.cmake)
 
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/modulemap.overlay.yaml.in ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml @ONLY)
-
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/stl.modulemap ${CMAKE_BINARY_DIR}/include/stl.modulemap)
-    configure_file(${CMAKE_SOURCE_DIR}/build/unix/libc.modulemap ${CMAKE_BINARY_DIR}/include/libc.modulemap)
-  else()
-    message(SEND_ERROR "Couldn't find c++ library paths, no modulemap overlay will be installed! (__libcpp_full_paths = '${__libcpp_full_paths}')")
+  if(cxxmodules)
+    set(ROOT_CXXMODULES_CXXFLAGS "${ClangModules_CXX_FLAGS}" CACHE STRING
+                          "Useful to filter out the modules-related cxxflags.")
+    set(ROOT_CXXMODULES_CFLAGS   "${ClangModules_C_FLAGS}"   CACHE STRING
+                          "Useful to filter out the modules-related cflags.")
   endif()
 endif()
-
-if (cxxmodules)
-  # These vars are useful when we want to compile things without cxxmodules.
-  set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -fcxx-modules" CACHE STRING "Useful to filter out the modules-related cxxflags.")
-  if (NOT APPLE)
-    set(ROOT_CXXMODULES_CXXFLAGS "${ROOT_CXXMODULES_COMMONFLAGS} -Xclang -fmodules-local-submodule-visibility" CACHE STRING "Useful to filter out the modules-related cxxflags." FORCE)
-  endif()
-  set(ROOT_CXXMODULES_CFLAGS "${ROOT_CXXMODULES_COMMONFLAGS}" CACHE STRING "Useful to filter out the modules-related cflags.")
-
-
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${ROOT_CXXMODULES_CFLAGS}")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${ROOT_CXXMODULES_CXXFLAGS}")
-endif(cxxmodules)
 
 #---Recurse into the given subdirectories.  This does not actually cause another cmake executable
 #  to run. The same process will walk through the project's entire directory structure.
