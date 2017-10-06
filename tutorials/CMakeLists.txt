@@ -170,6 +170,10 @@ else()
   endif()
 endif()
 
+if(ROOT_root7_FOUND)
+  set(root7_veto dataframe/tdf013_InspectAnalysis.C)
+endif()
+
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   htmlex.C
@@ -218,6 +222,7 @@ set(all_veto hsimple.C
              ${imt_veto}
              ${classic_veto}
              ${pythia_veto}
+             ${root7_veto}
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
