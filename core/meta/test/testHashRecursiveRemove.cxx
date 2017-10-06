@@ -1,4 +1,5 @@
 #include "TClass.h"
+#include "TClassTable.h"
 #include "TInterpreter.h"
 #include <memory>
 
@@ -126,6 +127,15 @@ public:
    ClassDefInline(WrongSetup, 2);
 };
 
+class InlineCompiledOnly : public TObject
+{
+public:
+   virtual ULong_t     Hash() const { return 6; }
+
+   ClassDefInline(InlineCompiledOnly, 2);
+};
+
+
 const char *gErrorOutput = R"OUTPUT(Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SecondOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
@@ -153,11 +163,25 @@ TEST(HashRecursiveRemove,GetClassClassDefInline)
    EXPECT_NE(nullptr,isacl);
    EXPECT_EQ(getcl,isacl);
 
+   getcl = TClass::GetClass("WrongSetup");
+   EXPECT_NE(nullptr,getcl);
    // EXPECT_NE(nullptr,TClass::GetClass("WrongSetup"));
    WrongSetup ws;
    isacl = ws.IsA();
    EXPECT_NE(nullptr,isacl);
+   EXPECT_EQ(getcl,isacl);
    getcl = TClass::GetClass("WrongSetup");
+   EXPECT_EQ(getcl,isacl);
+
+   EXPECT_NE(nullptr,TClassTable::GetDict("InlineCompiledOnly"));
+   getcl = TClass::GetClass("InlineCompiledOnly");
+   EXPECT_NE(nullptr,getcl);
+   // EXPECT_NE(nullptr,TClass::GetClass("InlineCompiledOnly"));
+   InlineCompiledOnly ico;
+   isacl = ico.IsA();
+   EXPECT_NE(nullptr,isacl);
+   EXPECT_EQ(getcl,isacl);
+   getcl = TClass::GetClass("InlineCompiledOnly");
    EXPECT_EQ(getcl,isacl);
 }
 
