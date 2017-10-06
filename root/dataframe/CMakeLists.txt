@@ -14,7 +14,9 @@ ROOTTEST_ADD_TEST(missingBranches
                   MACRO test_missingBranches.C
                   ERRREF test_missingBranches.eref)
 
-ROOTTEST_GENERATE_EXECUTABLE(test_hugeTDF test_hugeTDF.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_GENERATE_EXECUTABLE(test_hugeTDF test_hugeTDF.cxx
+                             COMPILE_FLAGS "-O2"  # too slow otherwise
+                             LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_hugeTDF
                   EXEC test_hugeTDF
                   LABELS longtest
