@@ -28,7 +28,7 @@ TEST(TDataFrameInterface, CreateFromContainer)
 
 TEST(TDataFrameInterface, CreateFromInitList)
 {
-   TDataFrame tdf("t", {"f1","f2"});
+   TDataFrame tdf("t", {"f1", "f2"});
 }
 
 TEST(TDataFrameInterface, CreateFromNullTDirectory)
@@ -146,4 +146,16 @@ TEST(TDataFrameInterface, GetColumnNamesFromSource)
    EXPECT_STREQ("b", names[0].c_str());
    EXPECT_STREQ("col0", names[1].c_str());
    EXPECT_EQ(2U, names.size());
+}
+
+TEST(TDataFrameInterface, DefaultColumns)
+{
+   TDataFrame tdf(8);
+   ULong64_t i(0ULL);
+   auto checkSlotAndEntries = [&i](unsigned int slot, ULong64_t entry) {
+      EXPECT_EQ(entry, i);
+      EXPECT_EQ(slot, 0U);
+      i++;
+   };
+   tdf.Foreach(checkSlotAndEntries, {"__slot", "__entry"});
 }
