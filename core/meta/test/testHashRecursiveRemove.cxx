@@ -173,14 +173,26 @@ TEST(HashRecursiveRemove,GetClassClassDefInline)
    getcl = TClass::GetClass("WrongSetup");
    EXPECT_EQ(getcl,isacl);
 
-   EXPECT_NE(nullptr,TClassTable::GetDict("InlineCompiledOnly"));
+#if 0
+   // Due to the fact that a compile ClassDefInline does not
+   // (can not) register a header file, we have a 'new state' where
+   // the TClass might have an initilization routine but can not
+   // have its ClassInfo loaded.  This new state is not yet supported
+   // by the TClass implementation, so we do not yet register the
+   // class with a ClassDefInline in the list of class table
+   // to avoid 'automatic' tool from attempting to use them.
+   //EXPECT_NE(nullptr,TClassTable::GetDict("InlineCompiledOnly"));
+   //getcl = TClass::GetClass("InlineCompiledOnly");
+   //EXPECT_NE(nullptr,getcl);
+#else
+   EXPECT_EQ(nullptr,TClassTable::GetDict("InlineCompiledOnly"));
    getcl = TClass::GetClass("InlineCompiledOnly");
-   EXPECT_NE(nullptr,getcl);
-   // EXPECT_NE(nullptr,TClass::GetClass("InlineCompiledOnly"));
+   EXPECT_EQ(nullptr,getcl);
+#endif
    InlineCompiledOnly ico;
    isacl = ico.IsA();
    EXPECT_NE(nullptr,isacl);
-   EXPECT_EQ(getcl,isacl);
+   //EXPECT_EQ(getcl,isacl);
    getcl = TClass::GetClass("InlineCompiledOnly");
    EXPECT_EQ(getcl,isacl);
 }
