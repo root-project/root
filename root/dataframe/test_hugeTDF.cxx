@@ -5,7 +5,9 @@
 #include <limits>
 
 int main() {
-#if !defined(NDEBUG) && !defined(__aarch64__) && defined(R__B64)
+#if defined(NDEBUG) || defined(__aarch64__) || !defined(R__B64)
+ return 0;
+#else
   ULong64_t nEntries = std::numeric_limits<unsigned int>::max();
   nEntries += 128;
 
@@ -18,7 +20,5 @@ int main() {
 
   auto countedEntries = *f.Count();
   return nEntries == countedEntries ? 0 : 1;
-#else
-  return 0;
 #endif
 }
