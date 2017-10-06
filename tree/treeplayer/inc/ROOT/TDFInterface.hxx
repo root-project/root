@@ -1144,7 +1144,8 @@ public:
    /// booked but not executed. See TResultProxy documentation.
    /// The user gives up ownership of the model profile object.
    template <typename V1 = TDFDetail::TInferType, typename V2 = TDFDetail::TInferType>
-   TResultProxy<::TProfile> Profile1D(const TProfile1DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
+   TResultProxy<::TProfile>
+   Profile1D(const TProfile1DModel &model, std::string_view v1Name = "", std::string_view v2Name = "")
    {
       std::shared_ptr<::TProfile> h(nullptr);
       {
@@ -1225,8 +1226,9 @@ public:
       std::shared_ptr<::TProfile2D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TProfile2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                            model.fYLow, model.fYUp, model.fZLow, model.fZUp, model.fOption);
+         h = std::make_shared<::TProfile2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                            model.fNbinsY, model.fYLow, model.fYUp, model.fZLow, model.fZUp,
+                                            model.fOption);
       }
 
       if (!TDFInternal::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
@@ -1262,8 +1264,9 @@ public:
       std::shared_ptr<::TProfile2D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TProfile2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                            model.fYLow, model.fYUp, model.fZLow, model.fZUp, model.fOption);
+         h = std::make_shared<::TProfile2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                            model.fNbinsY, model.fYLow, model.fYUp, model.fZLow, model.fZUp,
+                                            model.fOption);
       }
 
       if (!TDFInternal::HistoUtils<::TProfile2D>::HasAxisLimits(*h)) {
@@ -1440,6 +1443,26 @@ public:
    }
 
 private:
+   void AddDefaultColumns()
+   {
+      auto lm = GetDataFrameChecked();
+      ColumnNames_t validColNames = {};
+
+      // Entry number column
+      auto entryColGen = [](unsigned int, ULong64_t entry) { return entry; };
+      const auto entryColName = "__entry";
+      using EntryCol_t = TDFDetail::TCustomColumn<decltype(entryColGen), TDFDetail::TCCHelperTypes::TSlotAndEntry>;
+      lm->Book(std::make_shared<EntryCol_t>(entryColName, std::move(entryColGen), validColNames, lm.get()));
+      fValidCustomColumns.emplace_back(entryColName);
+
+      // Slot number column
+      auto slotColGen = [](unsigned int slot) { return slot; };
+      const auto slotColName = "__slot";
+      using SlotCol_t = TDFDetail::TCustomColumn<decltype(slotColGen), TDFDetail::TCCHelperTypes::TSlot>;
+      lm->Book(std::make_shared<SlotCol_t>(slotColName, std::move(slotColGen), validColNames, lm.get()));
+      fValidCustomColumns.emplace_back(slotColName);
+   }
+
    ColumnNames_t ConvertRegexToColumns(std::string_view columnNameRegexp)
    {
       const auto theRegexSize = columnNameRegexp.size();
@@ -1680,6 +1703,7 @@ protected:
               const ColumnNames_t &validColumns, TDataSource *ds)
       : fProxiedPtr(proxied), fImplWeakPtr(impl), fValidCustomColumns(validColumns), fDataSource(ds)
    {
+      AddDefaultColumns();
    }
 
    /// Only enabled when building a TInterface<TLoopManager>
@@ -1688,6 +1712,7 @@ protected:
       : fProxiedPtr(proxied), fImplWeakPtr(proxied->GetSharedPtr()), fValidCustomColumns(),
         fDataSource(proxied->GetDataSource())
    {
+      AddDefaultColumns();
    }
 
    const std::shared_ptr<Proxied> &GetProxiedPtr() const { return fProxiedPtr; }
