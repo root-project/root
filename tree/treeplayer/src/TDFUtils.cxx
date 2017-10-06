@@ -240,7 +240,7 @@ ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree,
 
 bool IsInternalColumn(std::string_view colName)
 {
-   return colName.find("__TDF_") == 0;
+   return colName.find("__") == 0;
 }
 
 } // end NS TDF
