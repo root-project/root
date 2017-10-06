@@ -14,7 +14,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TViewPubDataMembers                                                    //
+// TViewPubDataMembers                                                  //
 //                                                                      //
 //                                                                      //
 //                                                                      //
@@ -88,16 +88,14 @@ public:
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TViewPubDataMembersIter                                                //
+// TViewPubDataMembersIter                                              //
 //                                                                      //
-// Iterator of view of linked list.      `1234                               //
+// Iterator of view of linked list.      `                              //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 class TViewPubDataMembersIter : public TIterator,
-public std::iterator<std::bidirectional_iterator_tag,
-TObject*, std::ptrdiff_t,
-const TObject**, const TObject*&>
-{
+                                public std::iterator<std::bidirectional_iterator_tag, TObject *, std::ptrdiff_t,
+                                                     const TObject **, const TObject *&> {
 protected:
    const TList *fView;   //View we are iterating over.
    TIter        fClassIter;    //iterator over the classes
