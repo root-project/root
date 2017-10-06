@@ -128,6 +128,28 @@ TEST_F(TDFAndFriends, QualifiedBranchName)
       EXPECT_EQ(v, 2);
 }
 
+TEST_F(TDFAndFriends, FromDefine)
+{
+   TFile f1(kFile1);
+   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   t1->AddFriend("t2", kFile2);
+   TDataFrame d(*t1);
+
+   auto m = d.Define("yy", [](int y) { return y * y; }, {"y"}).Mean("yy");
+   EXPECT_DOUBLE_EQ(*m, 4.);
+}
+
+TEST_F(TDFAndFriends, FromJittedDefine)
+{
+   TFile f1(kFile1);
+   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   t1->AddFriend("t2", kFile2);
+   TDataFrame d(*t1);
+
+   auto m = d.Define("yy", "y * y").Mean("yy");
+   EXPECT_DOUBLE_EQ(*m, 4.);
+}
+
 // NOW MT!-------------
 #ifdef R__USE_IMT
 
