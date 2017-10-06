@@ -91,7 +91,7 @@ TEST_F(TDFAndFriends, FriendArrayByPointer)
    TFile f1(kFile1);
    TTree *t1 = static_cast<TTree *>(f1.Get("t"));
    TFile f3(kFile3);
-   TTree *t3 = static_cast<TTree *>(f2.Get("t3"));
+   TTree *t3 = static_cast<TTree *>(f3.Get("t3"));
    t1->AddFriend(t3);
    TDataFrame d(*t1);
 
