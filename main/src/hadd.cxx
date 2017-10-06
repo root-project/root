@@ -96,7 +96,7 @@ int main( int argc, char **argv )
 {
    if ( argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1]) ) {
       std::cout << "Usage: " << argv[0] << " [-f[fk][0-9]] [-k] [-T] [-O] [-a] \n"
-      "            [-n maxopenedfiles] [-cachesize size] [-v [verbosity]] \n"
+      "            [-n maxopenedfiles] [-cachesize size] [-j ncpus] [-v [verbosity]] \n"
       "            targetfile source1 [source2 source3 ...]\n" << std::endl;
       std::cout << "This program will add histograms from a list of root files and write them" << std::endl;
       std::cout << "   to a target root file. The target file is newly created and must not" << std::endl;
