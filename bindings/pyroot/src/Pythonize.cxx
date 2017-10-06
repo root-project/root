@@ -973,7 +973,9 @@ namespace {
       vi->vi_len = vi->vi_pos = 0;
       vi->vi_len = PySequence_Size( v );
 
+#ifndef R__WIN32 // prevent error LNK2001: unresolved external symbol __PyGC_generation0
       _PyObject_GC_TRACK( vi );
+#endif
       return (PyObject*)vi;
    }
 
