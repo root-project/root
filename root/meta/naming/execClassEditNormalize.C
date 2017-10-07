@@ -58,7 +58,7 @@ typedef cl cl_t;
 bool test(const std::string &input)
 {
    std::string output;
-   TClassEdit::GetNormalizedName(output,input.c_str());
+   TClassEdit::GetNormalizedName(output,input);
 
    if (input != output) {
       fprintf(stdout,"discrepancy:\n\texpected: %s\n\tgot: %s\n",input.c_str(),output.c_str());
@@ -70,7 +70,7 @@ bool test(const std::string &input)
 bool test(const std::string &input,const char *expected)
 {
    std::string output;
-   TClassEdit::GetNormalizedName(output,input.c_str());
+   TClassEdit::GetNormalizedName(output,input);
 
    if (output != expected) {
       fprintf(stdout,"discrepancy:\n\texpected: %s\n\tgot: %s\n",expected,output.c_str());
