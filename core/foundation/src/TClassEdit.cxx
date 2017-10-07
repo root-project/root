@@ -1280,7 +1280,7 @@ ROOT::ESTLType TClassEdit::IsSTLCont(std::string_view type)
       return ROOT::kNotSTL;
    }
 
-   return STLKind({type.data(),pos});
+   return STLKind(type.substr(0,pos));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
