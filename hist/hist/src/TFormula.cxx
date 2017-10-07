@@ -2007,7 +2007,7 @@ void TFormula::ProcessFormula(TString &formula)
          if (fun.fName.Contains("::")) // add support for nested namespaces
          {
             // look for last occurence of "::"
-            std::string name(fun.fName.Data());
+            std::string name(fun.fName);
             size_t index = name.rfind("::");
             assert(index != std::string::npos);
             TString className = fun.fName(0, fun.fName(0, index).Length());
@@ -2179,7 +2179,7 @@ void TFormula::ProcessFormula(TString &formula)
 
          // save copy of inputFormula in a std::strig for the unordered map
          // and also formula is same as FClingInput typically and it will be modified
-         std::string inputFormula = std::string(formula.Data());
+         std::string inputFormula = std::string(formula);
 
          // valid input formula - try to put into Cling
          TString argumentsPrototype = TString::Format("%s%s%s", (hasVariables ? "Double_t *x" : ""),
