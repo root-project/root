@@ -1977,7 +1977,7 @@ using namespace TMVA;
 MethodUnitTestWithROCLimits::MethodUnitTestWithROCLimits(const Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
                                                          double lowLimit, double upLimit,
                                                          const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */ ) :
-   UnitTest((string)methodTitle.Data(), __FILE__), _methodType(theMethod) , _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit), _VariableNames(0), _TreeVariableNames(0)
+   UnitTest((string)methodTitle, __FILE__), _methodType(theMethod) , _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit), _VariableNames(0), _TreeVariableNames(0)
 {
    _VariableNames  = new std::vector<TString>(0);
    _TreeVariableNames = new std::vector<TString>(0);
@@ -2410,7 +2410,7 @@ using namespace TMVA;
 RegressionUnitTestWithDeviation::RegressionUnitTestWithDeviation(const Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
                                                                  double lowFullLimit, double upFullLimit,double low90PercentLimit, double up90PercentLimit,
                                                                  const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */)
-   : UnitTest(string("Regression_")+(string)methodTitle.Data(), __FILE__), _methodType(theMethod) , _methodTitle(methodTitle), _methodOption(theOption),
+   : UnitTest(string("Regression_")+(string)methodTitle, __FILE__), _methodType(theMethod) , _methodTitle(methodTitle), _methodOption(theOption),
                                                                                                                                   _lowerFullDeviationLimit(lowFullLimit),  _upperFullDeviationLimit(upFullLimit), _lower90PercentDeviationLimit(low90PercentLimit), _upper90PercentDeviationLimit(up90PercentLimit)
 {
 }
@@ -2652,7 +2652,7 @@ using namespace TMVA;
 MethodUnitTestWithComplexData::MethodUnitTestWithComplexData(const TString& treestring, const TString& preparestring, const Types::EMVA& theMethod, const TString& methodTitle, const TString& theOption,
                                                              double lowLimit, double upLimit,
                                                              const std::string & /* xname */ ,const std::string & /* filename */ , std::ostream* /* sptr */) :
-   UnitTest(string("ComplexData_")+(string)methodTitle.Data()+(string)treestring.Data(), __FILE__),  _methodType(theMethod) , _treeString(treestring), _prepareString(preparestring), _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit)
+   UnitTest(string("ComplexData_")+(string)methodTitle+(string)treestring, __FILE__),  _methodType(theMethod) , _treeString(treestring), _prepareString(preparestring), _methodTitle(methodTitle), _methodOption(theOption), _upROCLimit(upLimit), _lowROCLimit(lowLimit)
 {
     theTree = nullptr;
     _theMethod = nullptr;
