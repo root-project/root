@@ -3108,7 +3108,7 @@ int GenerateFullDict(std::ostream &dictStream,
 
       if (CRD) {
          ROOT::TMetaUtils::Info(0, "Generating code for class %s\n", selClass.GetNormalizedName());
-         if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str().c_str() /* unqualified name without template arguement */)) {
+         if (TMetaUtils::IsStdClass(*CRD) && 0 != TClassEdit::STLKind(CRD->getName().str() /* unqualified name without template arguement */)) {
             // Register the collections
             // coverity[fun_call_w_exception] - that's just fine.
             Internal::RStl::Instance().GenerateTClassFor(selClass.GetNormalizedName(), CRD, interp, normCtxt);

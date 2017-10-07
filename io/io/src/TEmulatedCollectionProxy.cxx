@@ -131,7 +131,7 @@ TGenCollectionProxy *TEmulatedCollectionProxy::InitializeEx(Bool_t silent)
          if ( inside[0].find("__gnu_cxx::hash_") != std::string::npos ) {
             inside[0].replace(0,16,"std::");
          }
-         fSTL_type = TClassEdit::STLKind(inside[0].c_str());
+         fSTL_type = TClassEdit::STLKind(inside[0]);
          // Note: an emulated collection proxy is never really associative
          // since under-neath is actually an array.
 

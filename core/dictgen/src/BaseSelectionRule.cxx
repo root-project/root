@@ -318,7 +318,7 @@ BaseSelectionRule::EMatchType BaseSelectionRule::Match(const clang::NamedDecl *d
                D &&
                //ROOT::TMetaUtils::IsStdDropDefaultClass(*D)) {
                0 != TClassEdit::IsSTLCont(name)) {
-            TClassEdit::GetNormalizedName(auxName, name.c_str());
+            TClassEdit::GetNormalizedName(auxName, name);
             if (name.size() != auxName.size()) {
                auxName = TClassEdit::InsertStd(auxName.c_str());
                patternMatched = CheckPattern(auxName, pattern_value, fSubPatterns, isLinkdef);

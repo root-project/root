@@ -3919,7 +3919,7 @@ TClass *TCling::GenerateTClass(ClassInfo_t *classinfo, Bool_t silent /* = kFALSE
    TClass *cl = 0;
    std::string classname;
    info->FullName(classname,*fNormalizedCtxt); // Could we use Name()?
-   if (TClassEdit::IsSTLCont(classname.c_str())) {
+   if (TClassEdit::IsSTLCont(classname)) {
 #if 0
       Info("GenerateTClass","Will (try to) generate the compiled TClass for %s.",classname.c_str());
       // We need to build up the list of required headers, by

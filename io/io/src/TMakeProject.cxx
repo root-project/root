@@ -566,7 +566,7 @@ UInt_t TMakeProject::GenerateIncludeForTemplate(FILE *fp, const char *clname, ch
       std::vector<std::string> inside;
       int nestedLoc;
       TClassEdit::GetSplit( clname, inside, nestedLoc, TClassEdit::kLong64 );
-      Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
+      Int_t stlkind =  TClassEdit::STLKind(inside[0]);
       TClass *key = TClass::GetClass(inside[1].c_str());
       if (key) {
          TString what;
@@ -611,7 +611,7 @@ void TMakeProject::GeneratePostDeclaration(FILE *fp, const TVirtualStreamerInfo 
          std::vector<std::string> inside;
          int nestedLoc;
          TClassEdit::GetSplit( element->GetTypeName(), inside, nestedLoc, TClassEdit::kLong64 );
-         Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
+         Int_t stlkind =  TClassEdit::STLKind(inside[0]);
          TClass *key = TClass::GetClass(inside[1].c_str());
          TString what;
          if (strncmp(inside[1].c_str(),"pair<",strlen("pair<"))==0) {
@@ -656,7 +656,7 @@ TString TMakeProject::UpdateAssociativeToVector(const char *name)
       int nestedLoc;
       unsigned int narg = TClassEdit::GetSplit( name, inside, nestedLoc, TClassEdit::kLong64 );
       if (nestedLoc) --narg;
-      Int_t stlkind =  TMath::Abs(TClassEdit::STLKind(inside[0].c_str()));
+      Int_t stlkind =  TMath::Abs(TClassEdit::STLKind(inside[0]));
 
       for(unsigned int i = 1; i<narg; ++i) {
          inside[i] = UpdateAssociativeToVector( inside[i].c_str() );
