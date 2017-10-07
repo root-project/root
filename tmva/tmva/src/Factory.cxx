@@ -392,7 +392,7 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    // initialize methods
    IMethod* im;
    if (!boostNum) {
-      im = ClassifierFactory::Instance().Create( std::string(theMethodName.Data()),
+      im = ClassifierFactory::Instance().Create( std::string(theMethodName),
                                                  fJobName,
                                                  methodTitle,
                                                  loader->DefaultDataSetInfo(),
@@ -1125,7 +1125,7 @@ void TMVA::Factory::TrainAllMethods()
 
        // recreate
        m = dynamic_cast<MethodBase*>( ClassifierFactory::Instance()
-                   .Create( std::string(Types::Instance().GetMethodName(methodType).Data()),
+                   .Create( std::string(Types::Instance().GetMethodName(methodType)),
                       dataSetInfo, weightfile ) );
        if( m->GetMethodType() == Types::kCategory ){
       MethodCategory *methCat = (dynamic_cast<MethodCategory*>(m));

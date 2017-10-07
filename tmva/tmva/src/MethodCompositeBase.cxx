@@ -194,7 +194,7 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
          ((TMVA::MethodBoost*)this)->BookMethod( Types::Instance().GetMethodType( methodTypeName), methodName,  optionString );
       }
       fMethods.push_back(ClassifierFactory::Instance().Create(
-                                                              std::string(methodTypeName.Data()),jobName, methodName,DataInfo(),optionString));
+                                                              std::string(methodTypeName),jobName, methodName,DataInfo(),optionString));
 
       fMethodWeight.push_back(methodWeight);
       MethodBase* meth = dynamic_cast<MethodBase*>(fMethods.back());
@@ -231,8 +231,7 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
 void  TMVA::MethodCompositeBase::ReadWeightsFromStream( std::istream& istr )
 {
    TString var, dummy;
-   std::string methodName;
-   TString methodTitle=GetMethodName(),
+   TString methodName, methodTitle=GetMethodName(),
       jobName=GetJobName(),optionString=GetOptions();
    UInt_t methodNum; Double_t methodWeight;
    // and read the Weights (BDT coefficients)
