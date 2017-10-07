@@ -300,6 +300,9 @@ public:
    static Long64_t     GetFileCounter();
    static void         IncrementFileCounter();
 
+   static Bool_t       SetCacheFileDir(ROOT::Internal::TStringView cacheDir, Bool_t operateDisconnected = kTRUE,
+                                       Bool_t forceCacheread = kFALSE)
+     { return SetCacheFileDir(std::string_view(cacheDir), operateDisconnected, forceCacheread); }
    static Bool_t       SetCacheFileDir(std::string_view cacheDir, Bool_t operateDisconnected = kTRUE,
                                        Bool_t forceCacheread = kFALSE);
    static const char  *GetCacheFileDir();
