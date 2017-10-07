@@ -1656,7 +1656,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       csymbol.insert(0,"::");
    }
 
-   int stl = TClassEdit::IsSTLCont(classname.c_str());
+   int stl = TClassEdit::IsSTLCont(classname);
    bool bset = TClassEdit::IsSTLBitset(classname.c_str());
 
    bool isStd = TMetaUtils::IsStdClass(*decl);
@@ -1895,7 +1895,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
               ((stl > 0 && stl<ROOT::kSTLend) || (stl < 0 && stl>-ROOT::kSTLend)) && // is an stl container
               (stl != ROOT::kSTLbitset && stl !=-ROOT::kSTLbitset) ){     // is no bitset
       int idx = classname.find("<");
-      int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx).c_str()) : 0;
+      int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx)) : 0;
       const char* methodTCP=0;
       switch(stlType)  {
          case ROOT::kSTLvector:
@@ -2682,7 +2682,7 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
 
    std::string fullname;
    ROOT::TMetaUtils::GetQualifiedName(fullname,cl);
-   if (TClassEdit::IsSTLCont(fullname.c_str()) ) {
+   if (TClassEdit::IsSTLCont(fullname) ) {
       Internal::RStl::Instance().GenerateTClassFor(cl.GetNormalizedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()), interp, normCtxt);
       return;
    }

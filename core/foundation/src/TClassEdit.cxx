@@ -731,7 +731,7 @@ static bool IsDefElement(const char *elementName, const char* defaultElementName
       TClassEdit::GetNormalizedName(keypart,std::string_view(c.c_str()+pos,end-pos));
 
       std::string norm_key;
-      TClassEdit::GetNormalizedName(norm_key,k.c_str());
+      TClassEdit::GetNormalizedName(norm_key,k);
 
       if (keypart != norm_key) {
          return false;
