@@ -26,7 +26,7 @@ namespace {
       std::vector<std::string> inside;
       int num = TClassEdit::GetSplit(class_name.c_str(),inside,nested);
       if ( num > 1 )  {
-         return (ROOT::ESTLType)TClassEdit::STLKind(inside[0].c_str());
+         return (ROOT::ESTLType)TClassEdit::STLKind(inside[0]);
       }
       return ROOT::kNotSTL;
    }
