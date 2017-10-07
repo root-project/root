@@ -223,8 +223,9 @@ class TColumnValue {
 
    /// TColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a TDataFrame Define
    /// or a TDataSource. It stores which it is as an enum.
-   enum class EColumnKind { kTreeValue, kTreeArray, kCustomColumn, kDataSource };
-   EColumnKind fColumnKind;
+   enum class EColumnKind { kTreeValue, kTreeArray, kCustomColumn, kDataSource, kInvalid };
+   // Set to the correct value by MakeProxy or SetTmpColumn
+   EColumnKind fColumnKind = EColumnKind::kInvalid;
    /// The slot this value belongs to. Only needed when querying custom column values, it is set in `SetTmpColumn`.
    unsigned int fSlot = std::numeric_limits<unsigned int>::max();
 
@@ -305,6 +306,7 @@ public:
          fCustomColumns.pop_back();
          fDSValuePtrs.pop_back();
          break;
+      case EColumnKind::kInvalid: throw std::runtime_error("ColumnKind not set for this TColumnValue");
       }
    }
 };
