@@ -39,7 +39,7 @@ TEST(Cache, Contiguity)
    float *fPrec = nullptr;
    auto count = [&counter, &fPrec](float &ff) {
       if (1 == counter++) {
-         EXPECT_EQ(1U, std::distance(fPrec, &ff));
+         EXPECT_EQ(1, std::distance(fPrec, &ff));
       }
       fPrec = &ff;
    };

@@ -347,7 +347,7 @@ TEST_F(TDFCallbacksMT, Histo1DWithFillTOHelper)
    std::array<ULong64_t, gNSlots> is;
    is.fill(0ull);
    constexpr ULong64_t everyN = 1ull;
-   h.OnPartialResultSlot(everyN, [&is, &everyN](unsigned int slot, value_t &h_) {
+   h.OnPartialResultSlot(everyN, [&is](unsigned int slot, value_t &h_) {
       is[slot] += everyN;
       EXPECT_EQ(h_.GetEntries(), is[slot]);
    });
