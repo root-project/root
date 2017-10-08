@@ -611,6 +611,25 @@ TDataFrame::TDataFrame(std::string_view treeName, std::string_view filenameglob,
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe
+/// \param[in] treeName Name of the tree contained in the directory
+/// \param[in] filenames Collection of file names
+/// \param[in] defaultBranches Collection of default branches.
+///
+/// The default branches are looked at in case no branch is specified in the booking of actions or transformations.
+/// See TInterface for the documentation of the methods available.
+TDataFrame::TDataFrame(std::string_view treeName, const std::vector<std::string> &filenames,
+                       const ColumnNames_t &defaultBranches)
+   : TDF::TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
+{
+   std::string treeNameInt(treeName);
+   auto chain = std::make_shared<TChain>(treeNameInt.c_str());
+   for (auto &fileName : filenames)
+      chain->Add(TDFInternal::ToConstCharPtr(fileName));
+   GetProxiedPtr()->SetTree(chain);
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Build the dataframe
 /// \param[in] tree The tree or chain to be studied.
 /// \param[in] defaultBranches Collection of default column names to fall back to when none is specified.
 ///
