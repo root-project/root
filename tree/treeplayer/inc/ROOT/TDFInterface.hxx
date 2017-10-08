@@ -1400,7 +1400,8 @@ public:
       // if this is a TInterface<TLoopManager> on which `Define` has been called, users
       // are calling `Report` on a chain of the form LoopManager->Define->Define->..., which
       // certainly does not contain named filters.
-      if (std::is_same<Proxied, TLoopManager>::value && !fValidCustomColumns.empty())
+      // The number 2 takes into account the implicit columns __entry and __slot
+      if (std::is_same<Proxied, TLoopManager>::value && fValidCustomColumns.size() > 2)
          return;
 
       auto df = GetDataFrameChecked();
