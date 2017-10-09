@@ -35,6 +35,7 @@ class THistDrawingOptsBase: public TDrawingOptsBase<DERIVED> {
    TOptsAttrRef<TColor> fLineColorIndex{*this, "Hist.LineColor"};
 
 public:
+   THistDrawingOptsBase() = default;
    THistDrawingOptsBase(TPadBase &pad): TDrawingOptsBase<DERIVED>(pad) {}
 
    /// The color of the histogram line.
@@ -59,6 +60,7 @@ class THistDrawingOpts<1>: public THistDrawingOptsBase<THistDrawingOpts<1>> {
    TOptsAttrRef<long long> fStyle{*this, "Hist.1D.Style"};
 
 public:
+   THistDrawingOpts() = default;
    THistDrawingOpts(TPadBase &pad): THistDrawingOptsBase<THistDrawingOpts<1>>(pad) {}
 };
 
@@ -71,6 +73,7 @@ class THistDrawingOpts<2>: public THistDrawingOptsBase<THistDrawingOpts<1>> {
    TOptsAttrRef<long long> fStyle{*this, "Hist.1D.Style"};
 
 public:
+   THistDrawingOpts() = default;
    THistDrawingOpts(TPadBase &pad): THistDrawingOptsBase<THistDrawingOpts<1>>(pad) {}
 };
 
@@ -83,6 +86,7 @@ class THistDrawingOpts<3>: public THistDrawingOptsBase<THistDrawingOpts<1>> {
    TOptsAttrRef<long long> fStyle{*this, "Hist.1D.Style"};
 
 public:
+   THistDrawingOpts() = default;
    THistDrawingOpts(TPadBase &pad): THistDrawingOptsBase<THistDrawingOpts<1>>(pad) {}
 };
 
