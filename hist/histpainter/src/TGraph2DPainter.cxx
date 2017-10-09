@@ -997,16 +997,18 @@ void TGraph2DPainter::PaintPolyLine(Option_t * /* option */)
    }
 
    Int_t  it;
-   Double_t Xeps = (fXmax-fXmin)*0.0001;
-   Double_t Yeps = (fYmax-fYmin)*0.0001;
+   Double_t Xeps = (fXmax - fXmin) * 0.0001;
+   Double_t Yeps = (fYmax - fYmin) * 0.0001;
 
    Double_t *xm = new Double_t[fNpoints];
    Double_t *ym = new Double_t[fNpoints];
    Int_t    npd = 0;
 
    for (it=0; it<fNpoints; it++) {
-      if(fXmin - fX[it] > Xeps || fX[it] - fXmax > Xeps) continue;
-      if(fYmin - fY[it] > Yeps || fY[it] - fYmax > Yeps) continue;
+      if (fXmin - fX[it] > Xeps || fX[it] - fXmax > Xeps)
+         continue;
+      if (fYmin - fY[it] > Yeps || fY[it] - fYmax > Yeps)
+         continue;
       npd++;
       temp1[0] = fX[it];
       temp1[1] = fY[it];
@@ -1019,8 +1021,8 @@ void TGraph2DPainter::PaintPolyLine(Option_t * /* option */)
       if (Hoption.Logy) temp1[1] = TMath::Log10(temp1[1]);
       if (Hoption.Logz) temp1[2] = TMath::Log10(temp1[2]);
       view->WCtoNDC(temp1, &temp2[0]);
-      xm[npd-1] = temp2[0];
-      ym[npd-1] = temp2[1];
+      xm[npd - 1] = temp2[0];
+      ym[npd - 1] = temp2[1];
    }
    fGraph2D->SetLineStyle(fGraph2D->GetLineStyle());
    fGraph2D->SetLineWidth(fGraph2D->GetLineWidth());
