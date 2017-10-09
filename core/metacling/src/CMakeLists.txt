@@ -42,6 +42,7 @@ if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   set(cling_exports ??1Value@cling@@QAE@XZ
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D_K@Z
+      ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DPBX@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PB_N@Z
       ?EvaluateDynamicExpression@internal@runtime@cling@@YA?AVValue@3@PAVInterpreter@3@PAVDynamicExprInfo@123@PAVDeclContext@clang@@@Z
   )
