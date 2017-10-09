@@ -39,12 +39,13 @@ namespace Internal {
       if (std::string_view(start, end - start).compare("T") == 0) {
          // PRETTY_FUNCTION with gcc 7.1.0 gives :
          //   "static std::__cxx11::string ROOT::Internal::TTypeNameExtraction<T>::Get()
-         //    [with T = ROOT::Internal::TCheckHashRecurveRemoveConsistency; std::__cxx11::string = std::__cxx11::basic_string<char>]")
+         //    [with T = ROOT::Internal::TCheckHashRecurveRemoveConsistency; std::__cxx11::string =
+         //    std::__cxx11::basic_string<char>]")
 
          constexpr static const char withTtag[] = "[with T = ";
          const char *startWithT = strstr(start, withTtag);
          startWithT += sizeof(withTtag) - 1;
-         const char* endWithT = strstr(startWithT, ";");
+         const char *endWithT = strstr(startWithT, ";");
          if (!endWithT)
             return "";
          start = startWithT;
@@ -77,7 +78,7 @@ namespace Internal {
          R__instance.SetDelete(Delete);
          R__instance.SetDeleteArray(DeleteArray);
          R__instance.SetDestructor(Destruct);
-         R__instance.SetImplFile("",-1);
+         R__instance.SetImplFile("", -1);
    }
 
    void TCDGIILIBase::SetName(const std::string& name,

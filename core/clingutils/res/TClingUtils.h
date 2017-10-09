@@ -446,7 +446,7 @@ void WritePointersSTL(const AnnotatedRecordDecl &cl, const cling::Interpreter &i
 int GetClassVersion(const clang::RecordDecl *cl, const cling::Interpreter &interp);
 
 //______________________________________________________________________________
-std::pair<bool,int> GetTrivialIntegralReturnValue(const clang::FunctionDecl *funcCV, const cling::Interpreter &interp);
+std::pair<bool, int> GetTrivialIntegralReturnValue(const clang::FunctionDecl *funcCV, const cling::Interpreter &interp);
 
 //______________________________________________________________________________
 int IsSTLContainer(const AnnotatedRecordDecl &annotated);

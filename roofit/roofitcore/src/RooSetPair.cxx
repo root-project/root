@@ -30,7 +30,7 @@ RooSetPair is a utility class that stores a pair of RooArgSets
 
 using namespace std;
 
-ClassImp(RooSetPair); 
+ClassImp(RooSetPair);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// RooSetPair destructor.
@@ -40,5 +40,3 @@ RooSetPair::~RooSetPair()
    // Required since we overload TObject::Hash.
    ROOT::CallRecursiveRemoveIfNeeded(*this);
 }
-
-

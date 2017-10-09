@@ -466,13 +466,15 @@ public:
    /// @brief Return 'true' if we can guarantee that if this class (or any class in
    /// this class inheritance hierarchy) overload TObject::Hash it also starts
    /// the RecursiveRemove process from its own destructor.
-   Bool_t             HasConsistentHashMember() {
-      if (!fRuntimeProperties) SetRuntimeProperties();
+   Bool_t HasConsistentHashMember()
+   {
+      if (!fRuntimeProperties)
+         SetRuntimeProperties();
       return fRuntimeProperties.load() & ERuntimeProperties::kConsistentHash;
    }
    Bool_t             HasDictionary() const;
    static Bool_t      HasDictionarySelection(const char* clname);
-   Bool_t             HasLocalHashMember() const;
+   Bool_t HasLocalHashMember() const;
    void               GetMissingDictionaries(THashTable& result, bool recurse = false);
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;

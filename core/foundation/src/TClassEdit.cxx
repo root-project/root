@@ -1652,8 +1652,10 @@ string TClassEdit::ResolveTypedef(const char *tname, bool /* resolveAll */)
    //    vector<MyObjTypedef> return vector<MyObj>
    //
 
-   if ( tname==0 || tname[0]==0 ) return "";
-   if ( !gInterpreterHelper ) return tname;
+   if (tname == 0 || tname[0] == 0)
+      return "";
+   if (!gInterpreterHelper)
+      return tname;
 
    std::string result;
 

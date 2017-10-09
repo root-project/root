@@ -3490,7 +3490,8 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 /// In case of templates the idea is that everything between the outer
 /// '<' and '>' has to be skipped, e.g.: aap<pippo<noot>::klaas>::a_class
 
-TInterpreter::ECheckClassInfo TCling::CheckClassInfo(const char* name, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/ )
+TInterpreter::ECheckClassInfo
+TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/)
 {
    R__LOCKGUARD(gInterpreterMutex);
    static const char *anonEnum = "anonymous enum ";
@@ -3515,8 +3516,8 @@ TInterpreter::ECheckClassInfo TCling::CheckClassInfo(const char* name, Bool_t au
    // If we want to know if a class or a namespace with this name exists in the
    // interpreter and this is an enum in the type system, before or after loading
    // according to the autoload function argument, return kUnknown.
-   if (isClassOrNamespaceOnly &&
-       TEnum::GetEnum(name, autoload ? TEnum::kAutoload : TEnum::kNone)) return kUnknown;
+   if (isClassOrNamespaceOnly && TEnum::GetEnum(name, autoload ? TEnum::kAutoload : TEnum::kNone))
+      return kUnknown;
 
    const char *classname = name;
 
@@ -3590,13 +3591,13 @@ TInterpreter::ECheckClassInfo TCling::CheckClassInfo(const char* name, Bool_t au
             if (hasDictionary.IsValid() && implLineFunc.IsValid()) {
                int lineNumber = 0;
                bool success = false;
-               std::tie(success,lineNumber) =
+               std::tie(success, lineNumber) =
                   ROOT::TMetaUtils::GetTrivialIntegralReturnValue(implLineFunc.GetMethodDecl(), *fInterpreter);
                hasClassDefInline = success && (lineNumber == -1);
             }
          }
 
-         //fprintf(stderr,"CheckClassInfo: %s had dict=%d  inline=%d\n",name,hasDictionary.IsValid()
+         // fprintf(stderr,"CheckClassInfo: %s had dict=%d  inline=%d\n",name,hasDictionary.IsValid()
          // , hasClassDefInline);
 
          // We are now sure that the entry is not in fact an autoload entry.
@@ -3613,8 +3614,10 @@ TInterpreter::ECheckClassInfo TCling::CheckClassInfo(const char* name, Bool_t au
    }
 
    SetClassAutoloading(storeAutoload);
-   if (decl) return kKnown;
-   else return kUnknown;
+   if (decl)
+      return kKnown;
+   else
+      return kUnknown;
 
    // Setting up iterator part of TClingTypedefInfo is too slow.
    // Copy the lookup code instead:
@@ -5518,7 +5521,7 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
    std::vector<std::string> autoparseKeys;
    if (strchr(cls, '<')) {
       int nestedLoc = 0;
-      TClassEdit::GetSplit(cls+offset, autoparseKeys, nestedLoc, TClassEdit::kDropTrailStar);
+      TClassEdit::GetSplit(cls + offset, autoparseKeys, nestedLoc, TClassEdit::kDropTrailStar);
       // Check if we can skip the name of the template in the autoparses
       // Take all the scopes one by one. If all of them are in the AST, we do not
       // need to autoparse for that particular template.
@@ -5531,8 +5534,8 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          auto tokens = templateName.Tokenize("::");
          clang::NamedDecl* previousScopeAsNamedDecl = nullptr;
          clang::DeclContext* previousScopeAsContext = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
-         if (TClassEdit::IsStdClass(cls+offset))
-             previousScopeAsContext = fInterpreter->getSema().getStdNamespace();
+         if (TClassEdit::IsStdClass(cls + offset))
+            previousScopeAsContext = fInterpreter->getSema().getStdNamespace();
          auto nTokens = tokens->GetEntries();
          for (Int_t tk = 0; tk < nTokens; ++tk) {
             auto scopeObj = tokens->UncheckedAt(tk);

@@ -77,7 +77,7 @@ protected:
    TObject   *Remove(TObjLink *lnk);
 
 public:
-   ClassDefInline(TViewPubDataMembers,0)
+   ClassDefInline(TViewPubDataMembers, 0)
 };
 
 // Preventing warnings with -Weffc++ in GCC since it is a false positive for the TListIter destructor.

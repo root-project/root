@@ -308,8 +308,9 @@ inline ULong_t TObject::CheckedHash()
    // we guess-estimate that the version recording-then-testing-prior-check would start
    // saving cpu cycle when each object is inserted in average 1.5 times in a THashList/THashTable.
 
-   //if ( !fBits & kCheckedHash) {
-   if ( !CheckTObjectHashConsistency() ) fBits |= kInconsistent;
+   // if ( !fBits & kCheckedHash) {
+   if (!CheckTObjectHashConsistency())
+      fBits |= kInconsistent;
    //   fBits &= kChecked;
    //}
    return Hash();
@@ -327,7 +328,8 @@ inline ULong_t TObject::CheckedHash()
 /// Hash will always yield a not-found answer (Since anyway no hash
 /// can be guaranteed unique, there is always a check)
 
-inline Bool_t TObject::HasInconsistentHash() const {
+inline Bool_t TObject::HasInconsistentHash() const
+{
    return fBits & kInconsistent;
 }
 

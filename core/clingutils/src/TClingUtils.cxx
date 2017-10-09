@@ -2489,22 +2489,25 @@ int ROOT::TMetaUtils::GetClassVersion(const clang::RecordDecl *cl, const cling::
 /// is indeed a trivial function with just a return of a value.
 /// The second element contains the value (or -1 is case of failure)
 
-std::pair<bool,int> ROOT::TMetaUtils::GetTrivialIntegralReturnValue(const clang::FunctionDecl *funcCV, const cling::Interpreter& interp)
+std::pair<bool, int>
+ROOT::TMetaUtils::GetTrivialIntegralReturnValue(const clang::FunctionDecl *funcCV, const cling::Interpreter &interp)
 {
-   using res_t = std::pair<bool,int>;
+   using res_t = std::pair<bool, int>;
 
    const clang::CompoundStmt* FuncBody
       = llvm::dyn_cast_or_null<clang::CompoundStmt>(funcCV->getBody());
-   if (!FuncBody) return res_t{false,-1};
+   if (!FuncBody)
+      return res_t{false, -1};
    if (FuncBody->size() != 1) {
       // This is a non-ClassDef(), complex function - it might depend on state
       // and thus we'll need the runtime and cannot determine the result
       // statically.
-      return res_t{false,-1};
+      return res_t{false, -1};
    }
    const clang::ReturnStmt* RetStmt
       = llvm::dyn_cast<clang::ReturnStmt>(FuncBody->body_back());
-   if (!RetStmt) return res_t{false,-1};
+   if (!RetStmt)
+      return res_t{false, -1};
    const clang::Expr* RetExpr = RetStmt->getRetValue();
    // ClassDef controls the content of Class_Version() but not the return
    // expression which is CPP expanded from what the user provided as second
@@ -2513,14 +2516,13 @@ std::pair<bool,int> ROOT::TMetaUtils::GetTrivialIntegralReturnValue(const clang:
    // Go through ICE to be more general.
    llvm::APSInt RetRes;
    if (!RetExpr->isIntegerConstantExpr(RetRes, funcCV->getASTContext()))
-      return res_t{false,-1};
+      return res_t{false, -1};
    if (RetRes.isSigned()) {
-      return res_t{true,(Version_t)RetRes.getSExtValue()};
+      return res_t{true, (Version_t)RetRes.getSExtValue()};
    }
    // else
-   return res_t{true,(Version_t)RetRes.getZExtValue()};
+   return res_t{true, (Version_t)RetRes.getZExtValue()};
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Is this an STL container.

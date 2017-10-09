@@ -2007,7 +2007,8 @@ void TROOT::InitInterpreter()
    fgRootInit = kTRUE;
 
    // initialize gClassTable is not already done
-   if (!gClassTable) new TClassTable;
+   if (!gClassTable)
+      new TClassTable;
 
    // Initialize all registered dictionaries.
    for (std::vector<ModuleHeaderInfo_t>::const_iterator

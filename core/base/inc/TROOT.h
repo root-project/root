@@ -379,7 +379,8 @@ namespace ROOT {
    /// and obj.TestBit(kMustCleanup) is true.
    /// Note: this reset the kMustCleanup bit to allow
    /// harmless multiple call to this function.
-   inline void CallRecursiveRemoveIfNeeded(TObject &obj) {
+   inline void CallRecursiveRemoveIfNeeded(TObject &obj)
+   {
       if (obj.TestBit(kMustCleanup)) {
          TROOT *root = ROOT::Internal::gROOTLocal;
          if (root && root != &obj && root->MustClean()) {

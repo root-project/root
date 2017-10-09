@@ -3036,7 +3036,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       printf("TClass::GetClass: Header Parsing - The representation of %s was not found in the type system. A lookup in the interpreter is about to be tried: this can cause parsing. This can be avoided selecting %s in the linkdef/selection file.\n",normalizedName.c_str(), normalizedName.c_str());
    }
    if (normalizedName.length()) {
-      auto cci = gInterpreter->CheckClassInfo(normalizedName.c_str(), kTRUE /* autoload */, kTRUE /*Only class, structs and ns*/);
+      auto cci = gInterpreter->CheckClassInfo(normalizedName.c_str(), kTRUE /* autoload */,
+                                              kTRUE /*Only class, structs and ns*/);
 
       // We could have an interpreted class with an inline ClassDef, in this case we do not
       // want to create an 'interpreted' TClass but we want the one triggered via the call to
@@ -3047,11 +3048,12 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
          auto ci = gInterpreter->ClassInfo_Factory(normalizedName.c_str());
          auto funcDecl = gInterpreter->GetFunctionWithPrototype(ci, "Dictionary", "", false, ROOT::kExactMatch);
          auto method = gInterpreter->MethodInfo_Factory(funcDecl);
-         typedef void (*tcling_callfunc_Wrapper_t)(void*, int, void**, void*);
+         typedef void (*tcling_callfunc_Wrapper_t)(void *, int, void **, void *);
          auto funcPtr = (tcling_callfunc_Wrapper_t)gInterpreter->MethodInfo_InterfaceMethod(method);
 
          TClass *res = nullptr;
-         if (funcPtr) funcPtr(0,0,nullptr,&res);
+         if (funcPtr)
+            funcPtr(0, 0, nullptr, &res);
          // else
          //   We could fallback to the interpreted case ...
          //   For now just 'fail' (return nullptr)
@@ -3064,14 +3066,14 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
          // Get the normalized name based on the decl (currently the only way
          // to get the part to add or drop the default arguments as requested by the user)
          std::string alternative;
-         gInterpreter->GetInterpreterTypeName(normalizedName.c_str(),alternative,kTRUE);
+         gInterpreter->GetInterpreterTypeName(normalizedName.c_str(), alternative, kTRUE);
          const char *altname = alternative.c_str();
-         if ( strncmp(altname,"std::",5)==0 ) {
+         if (strncmp(altname, "std::", 5) == 0) {
             // For namespace (for example std::__1), GetInterpreterTypeName does
             // not strip std::, so we must do it explicitly here.
             altname += 5;
          }
-         if (altname != normalizedName && strcmp(altname,name) != 0) {
+         if (altname != normalizedName && strcmp(altname, name) != 0) {
             // altname now contains the full name of the class including a possible
             // namespace if there has been a using namespace statement.
 
@@ -3080,7 +3082,7 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
             // two different space layout.  To avoid an infinite recursion, we also
             // add the test on (altname != name)
 
-            return GetClass(altname,load);
+            return GetClass(altname, load);
          }
 
          TClass *ncl = gInterpreter->GenerateTClass(normalizedName.c_str(), /* emulation = */ kFALSE, silent);
@@ -5796,7 +5798,7 @@ Long_t TClass::Property() const
          kl->fStreamerImpl  = &TClass::StreamerExternal;
       }
 
-      if (const_cast<TClass*>(this)->GetClassMethodWithPrototype("Hash","",kTRUE)) {
+      if (const_cast<TClass *>(this)->GetClassMethodWithPrototype("Hash", "", kTRUE)) {
          kl->SetBit(kHasLocalHashMember);
       }
 
@@ -5850,9 +5852,8 @@ void TClass::SetRuntimeProperties()
    if (ROOT::Internal::TCheckHashRecurveRemoveConsistency::Check(*this))
       properties |= static_cast<UChar_t>(ERuntimeProperties::kConsistentHash);
 
-   const_cast<TClass*>(this)->fRuntimeProperties = properties;
+   const_cast<TClass *>(this)->fRuntimeProperties = properties;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Internal routine to set fStreamerImpl based on the value of
@@ -6956,21 +6957,19 @@ void TClass::RemoveStreamerInfo(Int_t slot)
 /// This routines is used for a small subset of the class for which we need
 /// the answer before gROOT is properly initialized.
 
-Bool_t ROOT::Internal::HasConsistentHashMember(const char* cname)
+Bool_t ROOT::Internal::HasConsistentHashMember(const char *cname)
 {
    // Hand selection of correct classes, those classes should be
    // cross-checked in testHashRecursiveRemove.cxx
    static const char *handVerified[] = {
-      "TEnvRec", "TDataType", "TObjArray", "TList", "THashList",
-      "TClass", "TCling", "TInterpreter", "TMethod",
-      "ROOT::Internal::TCheckHashRecurveRemoveConsistency",
-      "TDirectory", "TDirectoryFile", "TObject",
-      "TH1"
-   };
+      "TEnvRec",    "TDataType",      "TObjArray",    "TList",   "THashList",
+      "TClass",     "TCling",         "TInterpreter", "TMethod", "ROOT::Internal::TCheckHashRecurveRemoveConsistency",
+      "TDirectory", "TDirectoryFile", "TObject",      "TH1"};
 
    if (cname && cname[0]) {
-      for(auto cursor : handVerified) {
-         if (strcmp(cname,cursor) == 0) return true;
+      for (auto cursor : handVerified) {
+         if (strcmp(cname, cursor) == 0)
+            return true;
       }
    }
    return false;
@@ -7032,9 +7031,10 @@ Bool_t TClass::HasDefaultConstructor() const
 ///     if (cl->IsTObject() && cl->HasLocalHashMember())
 /// ~~~
 
-Bool_t  TClass::HasLocalHashMember() const
+Bool_t TClass::HasLocalHashMember() const
 {
-   if (fProperty==(-1)) Property();
+   if (fProperty == (-1))
+      Property();
    return TestBit(kHasLocalHashMember);
 }
 

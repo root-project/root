@@ -204,16 +204,17 @@ namespace ROOT {
       return slot;
    }
 
-   std::vector<std::unique_ptr<TClassRec> > &GetDelayedAddClass() {
-      static std::vector<std::unique_ptr<TClassRec> > delayedAddClass;
+   std::vector<std::unique_ptr<TClassRec>> &GetDelayedAddClass()
+   {
+      static std::vector<std::unique_ptr<TClassRec>> delayedAddClass;
       return delayedAddClass;
    }
 
-   std::vector<std::pair<const char*, const char*> > &GetDelayedAddClassAlternate() {
-      static std::vector<std::pair<const char*, const char*> > delayedAddClassAlternate;
+   std::vector<std::pair<const char *, const char *>> &GetDelayedAddClassAlternate()
+   {
+      static std::vector<std::pair<const char *, const char *>> delayedAddClassAlternate;
       return delayedAddClassAlternate;
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -231,13 +232,13 @@ TClassTable::TClassTable()
    memset(fgAlternate, 0, fgSize*sizeof(TClassAlt*));
    gClassTable = this;
 
-   for(auto &&r : GetDelayedAddClass()) {
+   for (auto &&r : GetDelayedAddClass()) {
       AddClass(r->fName, r->fId, *r->fInfo, r->fDict, r->fBits);
    };
    GetDelayedAddClass().clear();
 
-   for(auto &&r : GetDelayedAddClassAlternate()) {
-      AddAlternate(r.first,r.second);
+   for (auto &&r : GetDelayedAddClassAlternate()) {
+      AddAlternate(r.first, r.second);
    }
    GetDelayedAddClassAlternate().clear();
 }
@@ -752,9 +753,9 @@ void ROOT::AddClass(const char *cname, Version_t id,
 void ROOT::AddClassAlternate(const char *normName, const char *alternate)
 {
    if (!TROOT::Initialized() && !gClassTable) {
-      GetDelayedAddClassAlternate().emplace_back(normName,alternate);
+      GetDelayedAddClassAlternate().emplace_back(normName, alternate);
    } else {
-      TClassTable::AddAlternate(normName,alternate);
+      TClassTable::AddAlternate(normName, alternate);
    }
 }
 
