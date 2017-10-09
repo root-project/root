@@ -49,5 +49,17 @@ class Cache(unittest.TestCase):
            for i in xrange(4):
                self.assertEqual(float(i), e[i]);
 
+    def test_EntryAndSlotColumns(self):
+       tdf = TDataFrame(8)
+       c = tdf.Filter("tdfentry_ % 2 == 0").Define("myEntry","tdfentry_").Cache()
+       ds_entries = c.Take('UInt64_t')('tdfentry_')
+       ref_ds_entries = [0,1,2,3]
+       for e, eref in zip (ds_entries, ref_ds_entries):
+           self.assertEqual(e, eref)
+       old_entries = c.Take('UInt64_t')('tdfentry_')
+       ref_old_entries = [0,2,4,6]
+       for e, eref in zip (old_entries, ref_old_entries):
+           self.assertEqual(e, eref)
+
 if __name__ == '__main__':
     unittest.main()
