@@ -5522,7 +5522,11 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
       // Check if we can skip the name of the template in the autoparses
       // Take all the scopes one by one. If all of them are in the AST, we do not
       // need to autoparse for that particular template.
-      if (!autoparseKeys.empty()){
+      if (!autoparseKeys.empty() && !autoparseKeys[0].empty()) {
+         // autoparseKeys[0] is empty when the input is not a template instance.
+         // The case strchr(cls, '<') != 0 but still not a template instance can
+         // happens 'just' for string (GetSplit replaces the template by the short name
+         // and then use that for thew splitting)
          TString templateName(autoparseKeys[0]);
          auto tokens = templateName.Tokenize("::");
          clang::NamedDecl* previousScopeAsNamedDecl = nullptr;
