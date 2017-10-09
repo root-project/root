@@ -18,6 +18,7 @@
 
 #include "ROOT/TDrawable.hxx"
 #include "ROOT/THistDrawingOpts.hxx"
+#include "ROOT/THistImpl.hxx"
 #include "ROOT/TMenuItem.hxx"
 
 #include <memory>
@@ -99,6 +100,8 @@ private:
    bool UpdateOldHist();
 
 public:
+   THistDrawable();
+
    template <class HIST>
    THistDrawable(const std::shared_ptr<HIST> &hist, THistDrawingOpts<DIMENSIONS> opts)
       : fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl())), fOpts(opts)

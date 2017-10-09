@@ -55,6 +55,10 @@ void THistDrawableBase::PopulateMenu(TMenuItems &)
    // items.PopulateObjectMenu(GetOldHist(), GetOldHist()->IsA());
 }
 
+// GCC 5 needs to have that outlined - is that a compiler bug?
+template <int DIMENSIONS>
+THistDrawable<DIMENSIONS>::THistDrawable() = default;
+
 template <int DIMENSIONS>
 bool THistDrawable<DIMENSIONS>::UpdateOldHist()
 {
