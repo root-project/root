@@ -856,7 +856,7 @@ function(ROOT_INSTALL_HEADERS)
       add_custom_command(
         OUTPUT ${dst}
         COMMAND ${CMAKE_COMMAND} -E copy ${src} ${dst}
-        COMMENT "Copying header ${src} to /include"
+        COMMENT "Copying header ${src} to ${CMAKE_BINARY_DIR}/include"
         DEPENDS ${src})
       list(APPEND dst_list ${dst})
     endforeach()
