@@ -37,6 +37,7 @@ Use RooAbsCollection derived objects for public use
 
 #include "Riostream.h"
 #include "TBuffer.h"
+#include "TROOT.h"
 
 #include <algorithm>
 
@@ -363,9 +364,12 @@ void RooLinkedList::setHashTableSize(Int_t size)
 
 RooLinkedList::~RooLinkedList() 
 {
-  if (_htableName) {
-    delete _htableName ;
-    _htableName=0 ;
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+
+   if (_htableName) {
+      delete _htableName;
+      _htableName = 0;
   }
   if (_htableLink) {
     delete _htableLink ;

@@ -79,7 +79,10 @@ friend class TProtoClass;
 public:
    // TClass status bits
    enum EStatusBits {
+      kReservedLoading = BIT(7), // Internal status bits, set and reset only during initialization
+
       kClassSaved  = BIT(12),
+      kHasLocalHashMember = BIT(14),
       kIgnoreTObjectStreamer = BIT(15),
       kUnloaded    = BIT(16), // The library containing the dictionary for this class was
                               // loaded and has been unloaded from memory.
@@ -226,6 +229,17 @@ private:
    mutable std::atomic<Bool_t> fIsOffsetStreamerSet; //!saved remember if fOffsetStreamer has been set.
    mutable std::atomic<Bool_t> fVersionUsed;         //!Indicates whether GetClassVersion has been called
 
+   enum class ERuntimeProperties : UChar_t {
+      kNotInitialized = 0,
+      kSet = BIT(0),
+      // kInconsistent when kSet & !kConsistent.
+      kConsistentHash = BIT(1)
+   };
+   friend bool operator&(UChar_t l, ERuntimeProperties r) {
+      return l & static_cast<UChar_t>(r);
+   }
+   mutable std::atomic<UChar_t> fRuntimeProperties;    //! Properties that can only be evaluated at run-time
+
    mutable Long_t     fOffsetStreamer;  //!saved info to call Streamer
    Int_t              fStreamerType;    //!cached of the streaming method to use
    EState             fState;           //!Current 'state' of the class (Emulated,Interpreted,Loaded)
@@ -264,6 +278,8 @@ private:
 
    void SetStreamerImpl();
 
+   void SetRuntimeProperties();
+
    // Various implementation for TClass::Stramer
    static void StreamerExternal(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class);
    static void StreamerTObject(const TClass* pThis, void *object, TBuffer &b, const TClass *onfile_class);
@@ -282,7 +298,7 @@ private:
    static Bool_t HasNoInfoOrEmuOrFwdDeclaredDecl(const char*);
 
    // Internal status bits, set and reset only during initialization and thus under the protection of the global lock.
-   enum { kLoading = BIT(14), kUnloading = BIT(14) };
+   enum { kLoading = kReservedLoading, kUnloading = kReservedLoading };
    // Internal streamer type.
    enum EStreamerType {kDefault=0, kEmulatedStreamer=1, kTObject=2, kInstrumented=4, kForeign=8, kExternal=16};
 
@@ -446,8 +462,19 @@ public:
    TVirtualStreamerInfo     *GetStreamerInfoAbstractEmulated(Int_t version=0) const;
    TVirtualStreamerInfo     *FindStreamerInfoAbstractEmulated(UInt_t checksum) const;
    const std::type_info     *GetTypeInfo() const { return fTypeInfo; };
+
+   /// @brief Return 'true' if we can guarantee that if this class (or any class in
+   /// this class inheritance hierarchy) overload TObject::Hash it also starts
+   /// the RecursiveRemove process from its own destructor.
+   Bool_t HasConsistentHashMember()
+   {
+      if (!fRuntimeProperties)
+         SetRuntimeProperties();
+      return fRuntimeProperties.load() & ERuntimeProperties::kConsistentHash;
+   }
    Bool_t             HasDictionary() const;
    static Bool_t      HasDictionarySelection(const char* clname);
+   Bool_t HasLocalHashMember() const;
    void               GetMissingDictionaries(THashTable& result, bool recurse = false);
    void               IgnoreTObjectStreamer(Bool_t ignore=kTRUE);
    Bool_t             InheritsFrom(const char *cl) const;

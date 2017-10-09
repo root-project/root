@@ -63,6 +63,9 @@ TStatsFeedback::TStatsFeedback(TProof *proof)
 
 TStatsFeedback::~TStatsFeedback()
 {
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+
    fProof->Disconnect("Feedback(TList*)", this, "Feedback(TList*");
 }
 

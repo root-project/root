@@ -42,6 +42,7 @@ private:
    Int_t       fUsedSlots;     //Number of used slots
    Int_t       fRehashLevel;   //Average collision rate which triggers rehash
 
+   Int_t       GetCheckedHashValue(TObject *obj) const;
    Int_t       GetHashValue(const TObject *obj) const;
    Int_t       GetHashValue(TString &s) const { return s.Hash() % fSize; }
    Int_t       GetHashValue(const char *str) const { return ::Hash(str) % fSize; }
@@ -82,6 +83,12 @@ inline Float_t THashTable::AverageCollisions() const
       return ((Float_t)fEntries)/fUsedSlots;
    else
       return 0.0;
+}
+
+inline Int_t THashTable::GetCheckedHashValue(TObject *obj) const
+{
+   Int_t i = Int_t(obj->CheckedHash() % fSize); // need intermediary i for Linux g++
+   return i;
 }
 
 inline Int_t THashTable::GetHashValue(const TObject *obj) const

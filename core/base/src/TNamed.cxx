@@ -37,6 +37,15 @@ TNamed::TNamed(const TNamed &named) : TObject(named),fName(named.fName),fTitle(n
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// TNamed destructor.
+
+TNamed::~TNamed()
+{
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// TNamed assignment operator.
 
 TNamed& TNamed::operator=(const TNamed& rhs)

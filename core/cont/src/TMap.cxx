@@ -438,6 +438,15 @@ Class used by TMap to store (key,value) pairs.
 */
 
 ////////////////////////////////////////////////////////////////////////////////
+/// TPair destructor.
+
+TPair::~TPair()
+{
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Browse the pair.
 
 void TPair::Browse(TBrowser *b)

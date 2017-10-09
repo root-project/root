@@ -38,6 +38,7 @@
 #include "TGWindow.h"
 #include "TVirtualX.h"
 #include "TImage.h"
+#include "TROOT.h"
 #include <stdlib.h>
 
 TGGC *TGSelectedPicture::fgSelectedGC = 0;
@@ -295,6 +296,9 @@ TGPicturePool::~TGPicturePool()
       fPicList->Delete();
       delete fPicList;
    }
+
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

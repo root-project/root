@@ -101,6 +101,8 @@ TPave::TPave(Double_t x1, Double_t y1,Double_t x2, Double_t  y2,
 
 TPave::~TPave()
 {
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

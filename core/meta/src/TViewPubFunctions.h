@@ -77,7 +77,7 @@ protected:
    TObject   *Remove(TObjLink *lnk);
 
 public:
-   // ClassDef(THashList,0)  //Doubly linked list with hashtable for lookup
+   ClassDefInline(TViewPubFunctions, 0) // Doubly linked list with hashtable for lookup
 };
 
 // Preventing warnings with -Weffc++ in GCC since it is a false positive for the TListIter destructor.
@@ -121,7 +121,8 @@ public:
    Bool_t             operator!=(const TViewPubFunctionsIter &aIter) const;
    TObject           *operator*() const { return *fFuncIter; }
 
-   // ClassDef(TViewPubFunctionsIter,0)  //Linked list iterator
+   // ClassDefInline does not yet support non default constructible classes
+   // ClassDefInline(TViewPubFunctionsIter,0)  //Linked list iterator
 };
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
