@@ -87,6 +87,9 @@ class TOptsAttrAndUseCount {
    void Clear();
 
 public:
+   /// Default constructor: a default-constructed value that is unused.
+   TOptsAttrAndUseCount(): fVal(), fUseCount(0) {}
+
    /// Initialize with a value, setting use count to 1.
    TOptsAttrAndUseCount(const PRIMITIVE &val): fVal(val) {}
 
@@ -217,7 +220,7 @@ public:
 
 private:
    /// The `TCanvas` holding the `TDrawable` (or its `TPad`).
-   TCanvas *fCanvas; //-> always != nullptr
+   TCanvas *fCanvas = nullptr;
 
    /// Indexes of the `TCanvas`'s color table entries used by this options object.
    OptsAttrRefArr<TColor> fColorIdx;
@@ -279,6 +282,7 @@ protected:
    friend class TOptsAttrRef;
 
 public:
+   TDrawingOptsBaseNoDefault() = default;
    ~TDrawingOptsBaseNoDefault();
    TDrawingOptsBaseNoDefault(const TDrawingOptsBaseNoDefault &other);
    TDrawingOptsBaseNoDefault(TDrawingOptsBaseNoDefault &&other) = default;
@@ -298,6 +302,7 @@ extern template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<double>;
 template <class DERIVED>
 class TDrawingOptsBase: public TDrawingOptsBaseNoDefault {
 public:
+   TDrawingOptsBase() = default;
    /// Construct from the pad that holds our `TDrawable`.
    TDrawingOptsBase(TPadBase &pad): TDrawingOptsBaseNoDefault(pad)
    {
