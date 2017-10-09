@@ -150,7 +150,7 @@ protected:
 public:
    enum { kInitCapacity = 16, kInitHashTableCapacity = 17 };
 
-   virtual            ~TCollection() { }
+   virtual            ~TCollection();
    virtual void       Add(TObject *obj) = 0;
    void               AddVector(TObject *obj1, ...);
    virtual void       AddAll(const TCollection *col);

@@ -352,7 +352,7 @@ namespace Internal {
    // This mechanism was primarily intended to fix the issues with order in which
    // global TROOT and LLVM globals are initialized. TROOT was initializing
    // Cling, but Cling could not be used yet due to LLVM globals not being
-   // initialized yet.  The solution is to delay initializing the interpreter in
+   // Initialized yet.  The solution is to delay initializing the interpreter in
    // TROOT till after main() when all LLVM globals are initialized.
 
    // Technically, the mechanism used actually delay the interpreter
@@ -671,9 +671,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    ROOT::Internal::gROOTLocal = this;
    gDirectory = 0;
-
-   // initialize gClassTable is not already done
-   if (!gClassTable) new TClassTable;
 
    SetName(name);
    SetTitle(title);
@@ -2009,6 +2006,10 @@ void TROOT::InitInterpreter()
 
    fgRootInit = kTRUE;
 
+   // initialize gClassTable is not already done
+   if (!gClassTable)
+      new TClassTable;
+
    // Initialize all registered dictionaries.
    for (std::vector<ModuleHeaderInfo_t>::const_iterator
            li = GetModuleHeaderInfoBuffer().begin(),
@@ -2379,6 +2380,17 @@ const char *TROOT::GetGitDate()
       fGitDate.Form("%s %02d %4d, %02d:%02d:00", months[imonth-1], iday, iyear, ihour, imin);
    }
    return fGitDate;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove this object from the list of Cleanups.
+/// Typically RecursiveRemove is implemented by classes that can contain
+/// mulitple references to a same object or shared ownership of the object
+/// with others.
+
+void TROOT::RecursiveRemove(TObject *obj)
+{
+   fCleanups->RecursiveRemove(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -123,6 +123,7 @@ clang/LLVM technology.
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <tuple>
 #include <typeinfo>
 #include <unordered_map>
 #include <utility>
@@ -3473,7 +3474,10 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Checks if an entity with the specified name is defined in Cling.
-/// Returns kFALSE if the entity is not defined.
+/// Returns kUnknown if the entity is not defined.
+/// Returns kWithClassDefInline if the entity exists and has a ClassDefInline
+/// Returns kKnown if the entity is defined.
+///
 /// By default, structs, namespaces, classes, enums and unions are looked for.
 /// If the flag isClassOrNamespaceOnly is true, classes, structs and
 /// namespaces only are considered. I.e. if the name is an enum or a union,
@@ -3486,14 +3490,15 @@ void TCling::SetClassInfo(TClass* cl, Bool_t reload)
 /// In case of templates the idea is that everything between the outer
 /// '<' and '>' has to be skipped, e.g.: aap<pippo<noot>::klaas>::a_class
 
-Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/ )
+TInterpreter::ECheckClassInfo
+TCling::CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly /* = kFALSE*/)
 {
    R__LOCKGUARD(gInterpreterMutex);
    static const char *anonEnum = "anonymous enum ";
    static const int cmplen = strlen(anonEnum);
 
    if (0 == strncmp(name,anonEnum,cmplen)) {
-      return kFALSE;
+      return kUnknown;
    }
 
    // Avoid the double search below in case the name is a fundamental type
@@ -3504,15 +3509,15 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload, Bool_t isClassO
    if (fundType && fundType->GetType() < TVirtualStreamerInfo::kObject
        && fundType->GetType() > 0) {
       // Fundamental type, no a class.
-      return kFALSE;
+      return kUnknown;
    }
 
    // Migrated from within TClass::GetClass
    // If we want to know if a class or a namespace with this name exists in the
    // interpreter and this is an enum in the type system, before or after loading
-   // according to the autoload function argument, return false.
-   if (isClassOrNamespaceOnly &&
-       TEnum::GetEnum(name, autoload ? TEnum::kAutoload : TEnum::kNone)) return false;
+   // according to the autoload function argument, return kUnknown.
+   if (isClassOrNamespaceOnly && TEnum::GetEnum(name, autoload ? TEnum::kAutoload : TEnum::kNone))
+      return kUnknown;
 
    const char *classname = name;
 
@@ -3561,29 +3566,58 @@ Bool_t TCling::CheckClassInfo(const char* name, Bool_t autoload, Bool_t isClassO
             // the 'instantiation' of the forwarded type appended in
             // findscope.
             if (ROOT::TMetaUtils::IsSTLCont(*tmpltDecl)) {
-               // For STL Collection we return false.
+               // For STL Collection we return kUnknown.
                SetClassAutoloading(storeAutoload);
-               return kFALSE;
+               return kUnknown;
             }
          }
       }
       TClingClassInfo tci(fInterpreter, *type);
       if (!tci.IsValid()) {
          SetClassAutoloading(storeAutoload);
-         return kFALSE;
+         return kUnknown;
       }
       auto propertiesMask = isClassOrNamespaceOnly ? kIsClass | kIsStruct | kIsNamespace :
                                                      kIsClass | kIsStruct | kIsNamespace | kIsEnum | kIsUnion;
 
       if (tci.Property() & propertiesMask) {
+         bool hasClassDefInline = false;
+         if (isClassOrNamespaceOnly) {
+            // We do not need to check for ClassDefInline when this is called from
+            // TClass::Init, we only do it for the call from TClass::GetClass.
+            auto hasDictionary = tci.GetMethod("Dictionary", "", false, 0, ROOT::kExactMatch);
+            auto implLineFunc = tci.GetMethod("ImplFileLine", "", false, 0, ROOT::kExactMatch);
+
+            if (hasDictionary.IsValid() && implLineFunc.IsValid()) {
+               int lineNumber = 0;
+               bool success = false;
+               std::tie(success, lineNumber) =
+                  ROOT::TMetaUtils::GetTrivialIntegralReturnValue(implLineFunc.GetMethodDecl(), *fInterpreter);
+               hasClassDefInline = success && (lineNumber == -1);
+            }
+         }
+
+         // fprintf(stderr,"CheckClassInfo: %s had dict=%d  inline=%d\n",name,hasDictionary.IsValid()
+         // , hasClassDefInline);
+
          // We are now sure that the entry is not in fact an autoload entry.
          SetClassAutoloading(storeAutoload);
-         return kTRUE;
+         if (hasClassDefInline)
+            return kWithClassDefInline;
+         else
+            return kKnown;
+      } else {
+         // We are now sure that the entry is not in fact an autoload entry.
+         SetClassAutoloading(storeAutoload);
+         return kUnknown;
       }
    }
 
    SetClassAutoloading(storeAutoload);
-   return (decl);
+   if (decl)
+      return kKnown;
+   else
+      return kUnknown;
 
    // Setting up iterator part of TClingTypedefInfo is too slow.
    // Copy the lookup code instead:
@@ -5477,24 +5511,34 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
    //    R__LOCKGUARD(gInterpreterMutex);
 
    Int_t nHheadersParsed = 0;
+   unsigned long offset = 0;
+   if (strncmp(cls, "const ", 6) == 0) {
+      offset = 6;
+   }
 
    // Loop on the possible autoparse keys
    bool skipFirstEntry = false;
    std::vector<std::string> autoparseKeys;
    if (strchr(cls, '<')) {
       int nestedLoc = 0;
-      TClassEdit::GetSplit(cls, autoparseKeys, nestedLoc, TClassEdit::kDropTrailStar);
+      TClassEdit::GetSplit(cls + offset, autoparseKeys, nestedLoc, TClassEdit::kDropTrailStar);
       // Check if we can skip the name of the template in the autoparses
       // Take all the scopes one by one. If all of them are in the AST, we do not
       // need to autoparse for that particular template.
-      if (!autoparseKeys.empty()){
+      if (!autoparseKeys.empty() && !autoparseKeys[0].empty()) {
+         // autoparseKeys[0] is empty when the input is not a template instance.
+         // The case strchr(cls, '<') != 0 but still not a template instance can
+         // happens 'just' for string (GetSplit replaces the template by the short name
+         // and then use that for thew splitting)
          TString templateName(autoparseKeys[0]);
          auto tokens = templateName.Tokenize("::");
          clang::NamedDecl* previousScopeAsNamedDecl = nullptr;
          clang::DeclContext* previousScopeAsContext = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
-         if (TClassEdit::IsStdClass(cls))
-             previousScopeAsContext = fInterpreter->getSema().getStdNamespace();
-         for (auto const scopeObj : *tokens){
+         if (TClassEdit::IsStdClass(cls + offset))
+            previousScopeAsContext = fInterpreter->getSema().getStdNamespace();
+         auto nTokens = tokens->GetEntries();
+         for (Int_t tk = 0; tk < nTokens; ++tk) {
+            auto scopeObj = tokens->UncheckedAt(tk);
             auto scopeName = ((TObjString*) scopeObj)->String().Data();
             previousScopeAsNamedDecl = cling::utils::Lookup::Named(&fInterpreter->getSema(), scopeName, previousScopeAsContext);
             // Check if we have multiple nodes in the AST with this name

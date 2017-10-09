@@ -106,6 +106,7 @@ private:
 
 public:
    TEnvRec(): fName(), fType(), fValue(), fLevel(kEnvAll), fModified(kTRUE) { }
+   ~TEnvRec();
    const char *GetName() const { return fName; }
    const char *GetValue() const { return fValue; }
    const char *GetType() const { return fType; }

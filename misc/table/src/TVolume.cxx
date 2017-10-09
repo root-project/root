@@ -246,6 +246,9 @@ TVolume::~TVolume()
       SetPositionsList();
    }
    SafeDelete(fListOfShapes);
+
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

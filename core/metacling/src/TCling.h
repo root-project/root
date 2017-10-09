@@ -225,7 +225,9 @@ public: // Public Interface
    void    UpdateListOfGlobalFunctions();
    void    UpdateListOfTypes();
    void    SetClassInfo(TClass* cl, Bool_t reload = kFALSE);
-   Bool_t  CheckClassInfo(const char* name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE);
+
+   ECheckClassInfo CheckClassInfo(const char *name, Bool_t autoload, Bool_t isClassOrNamespaceOnly = kFALSE);
+
    Bool_t  CheckClassTemplate(const char *name);
    Long_t  Calc(const char* line, EErrorCode* error = 0);
    void    CreateListOfBaseClasses(TClass* cl) const;

@@ -15,6 +15,7 @@
 #include "TClass.h"
 #include "THashList.h"
 #include "TNamed.h"
+#include "TROOT.h"
 #include <string>
 #include <set>
 
@@ -48,9 +49,13 @@ public:
       fDeclFileSysName(fsdecl), fImplFileSysName(fsimpl),
       fSelected(kTRUE) { }
 
-   virtual ~TClassDocInfo() {}
+   virtual ~TClassDocInfo()
+   {
+      // Required since we overload TObject::Hash.
+      ROOT::CallRecursiveRemoveIfNeeded(*this);
+   }
 
-           TDictionary*    GetClass() const { return fClass; }
+   TDictionary *GetClass() const { return fClass; }
    virtual const char*     GetName() const;
            const char*     GetHtmlFileName() const { return fHtmlFileName; }
            const char*     GetDeclFileName() const { return fDeclFileName; }
