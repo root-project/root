@@ -168,4 +168,3 @@ TEST(TDataFrameInterface, JitDefaultColumns)
    auto minEntry = f.Min("tdfentry_");
    EXPECT_EQ(*maxEntry, *minEntry);
 }
-
