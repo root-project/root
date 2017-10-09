@@ -1400,7 +1400,7 @@ public:
       // if this is a TInterface<TLoopManager> on which `Define` has been called, users
       // are calling `Report` on a chain of the form LoopManager->Define->Define->..., which
       // certainly does not contain named filters.
-      // The number 2 takes into account the implicit columns __entry and __slot
+      // The number 2 takes into account the implicit columns for entry and slot number
       if (std::is_same<Proxied, TLoopManager>::value && fValidCustomColumns.size() > 2)
          return;
 
@@ -1451,14 +1451,14 @@ private:
 
       // Entry number column
       auto entryColGen = [](unsigned int, ULong64_t entry) { return entry; };
-      const auto entryColName = "__entry";
+      const auto entryColName = "tdfentry_";
       using EntryCol_t = TDFDetail::TCustomColumn<decltype(entryColGen), TDFDetail::TCCHelperTypes::TSlotAndEntry>;
       lm->Book(std::make_shared<EntryCol_t>(entryColName, std::move(entryColGen), validColNames, lm.get()));
       fValidCustomColumns.emplace_back(entryColName);
 
       // Slot number column
       auto slotColGen = [](unsigned int slot) { return slot; };
-      const auto slotColName = "__slot";
+      const auto slotColName = "tdfslot_";
       using SlotCol_t = TDFDetail::TCustomColumn<decltype(slotColGen), TDFDetail::TCCHelperTypes::TSlot>;
       lm->Book(std::make_shared<SlotCol_t>(slotColName, std::move(slotColGen), validColNames, lm.get()));
       fValidCustomColumns.emplace_back(slotColName);
@@ -1704,7 +1704,6 @@ protected:
               const ColumnNames_t &validColumns, TDataSource *ds)
       : fProxiedPtr(proxied), fImplWeakPtr(impl), fValidCustomColumns(validColumns), fDataSource(ds)
    {
-      AddDefaultColumns();
    }
 
    /// Only enabled when building a TInterface<TLoopManager>
