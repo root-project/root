@@ -24,7 +24,7 @@ namespace Experimental {
   */
 
 class TPadCoord {
-protected:
+public:
    template <class DERIVED>
    struct CoordSysBase {
       double fVal = 0.; ///< Coordinate value
@@ -60,7 +60,6 @@ protected:
       // no ==, !=
    };
 
-public:
    /// \defgroup PadCoordSystems TPad coordinate systems
    /// These define typesafe coordinates used by TPad to identify which coordinate system a coordinate is referring to.
    /// The origin (0,0) is in the `TPad`'s bottom left corner for all of them.
