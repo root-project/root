@@ -1022,7 +1022,7 @@ Bool_t PyROOT::TValueCppObjectConverter::SetArg(
 
       // get the constructor (i.e. __init__)
       PyObject* constructor = PyObject_GetAttr( (PyObject*)fObjProxy, PyStrings::gInit );
-      if( ! constructor ) return kFALSE; 
+      if( ! constructor ) return kFALSE;
 
       // call the constructor with the arguments in the given tuple
       PyObject* obj = PyObject_CallObject( constructor, pyobject );
@@ -1083,7 +1083,7 @@ Bool_t PyROOT::TRefCppObjectConverter::SetArg(
 
       // get the constructor (i.e. __init__)
       PyObject* constructor = PyObject_GetAttr( (PyObject*)fObjProxy, PyStrings::gInit );
-      if( ! constructor ) return kFALSE; 
+      if( ! constructor ) return kFALSE;
 
       // call the constructor with the arguments in the given tuple
       PyObject* obj = PyObject_CallObject( constructor, pyobject );
@@ -1689,6 +1689,7 @@ namespace {
       NFp_t( "std::string_view",          &CreateSTLStringViewConverter      ),
       NFp_t( "string_view",               &CreateSTLStringViewConverter      ),
       NFp_t( "experimental::basic_string_view<char,char_traits<char> >",&CreateSTLStringViewConverter),
+      NFp_t( "basic_string_view<char,char_traits<char> >",&CreateSTLStringViewConverter),
       NFp_t( "void*&",                    &CreateVoidPtrRefConverter         ),
       NFp_t( "void**",                    &CreateVoidPtrPtrConverter         ),
       NFp_t( "PyObject*",                 &CreatePyObjectConverter           ),
