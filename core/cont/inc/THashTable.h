@@ -87,7 +87,7 @@ inline Float_t THashTable::AverageCollisions() const
 
 inline Int_t THashTable::GetCheckedHashValue(TObject *obj) const
 {
-   Int_t i = Int_t(obj->CheckedHash() % fSize);  // need intermediary i for Linux g++
+   Int_t i = Int_t(obj->CheckedHash() % fSize); // need intermediary i for Linux g++
    return i;
 }
 

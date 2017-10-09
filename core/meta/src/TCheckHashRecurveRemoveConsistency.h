@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
- #ifndef ROOT_TCheckHashRecurveRemoveConsistency
- #define ROOT_TCheckHashRecurveRemoveConsistency
+#ifndef ROOT_TCheckHashRecurveRemoveConsistency
+#define ROOT_TCheckHashRecurveRemoveConsistency
 
 #include "TBaseClass.h"
 #include "TClass.h"
@@ -48,7 +48,8 @@ public:
 public:
    // Default constructors.  Adds object to the list of
    // cleanups.
-   TCheckHashRecurveRemoveConsistency() {
+   TCheckHashRecurveRemoveConsistency()
+   {
       SetBit(kMustCleanup);
       gROOT->GetListOfCleanups()->Add(this);
    }
@@ -59,28 +60,31 @@ public:
    // of cleanups).
    ~TCheckHashRecurveRemoveConsistency() = default;
 
-   void Add(TObject* obj) {
+   void Add(TObject *obj)
+   {
       obj->SetBit(kMustCleanup);
-      fCont.push_back(Value_t{obj->Hash(),obj});
+      fCont.push_back(Value_t{obj->Hash(), obj});
    }
 
-   void RecursiveRemove(TObject *obj) {
+   void RecursiveRemove(TObject *obj)
+   {
       // std::cout << "Recursive Remove called for: " << obj << '\n';
-      for(auto p = fCont.begin(); p != fCont.end(); ++p) {
+      for (auto p = fCont.begin(); p != fCont.end(); ++p) {
          if (p->fObjectPtr == obj) {
             // std::cout << " Found object with hash = " << p->fRecordedHash << '\n';
             // std::cout << " Current hash = " << obj->Hash() << '\n';
             if (p->fRecordedHash == obj->Hash())
                fCont.erase(p);
-            //else
-               //std::cout << " Error: the recorded hash and the one returned by Hash are distinct.\n";
+            // else
+            // std::cout << " Error: the recorded hash and the one returned by Hash are distinct.\n";
             break;
          }
       }
    }
 
-   void SlowRemove(TObject *obj) {
-      for(auto p = fCont.begin(); p != fCont.end(); ++p) {
+   void SlowRemove(TObject *obj)
+   {
+      for (auto p = fCont.begin(); p != fCont.end(); ++p) {
          if (p->fObjectPtr == obj) {
             fCont.erase(p);
             break;
@@ -88,19 +92,21 @@ public:
       }
    }
 
-   bool CheckRecursiveRemove(TClass &classRef) {
+   bool CheckRecursiveRemove(TClass &classRef)
+   {
       if (!classRef.HasDefaultConstructor() || classRef.Property() & kIsAbstract)
          return false; // okay that's probably a false negative ...
 
       auto size = fCont.size();
-      TObject *obj = (TObject *) classRef.DynamicCast(TObject::Class(), classRef.New(TClass::kDummyNew));
+      TObject *obj = (TObject *)classRef.DynamicCast(TObject::Class(), classRef.New(TClass::kDummyNew));
       Add(obj);
       delete obj;
 
       if (fCont.size() != size) {
-         //std::cerr << "Error: old= " << size << " new=" << fCont.size() << '\n';
-         //std::cerr << "Error " << classRef.GetName() <<
-         //   " or one of its base classes override TObject::Hash but does not call TROOT::CallRecursiveRemoveIfNeeded in its destructor.\n";
+         // std::cerr << "Error: old= " << size << " new=" << fCont.size() << '\n';
+         // std::cerr << "Error " << classRef.GetName() <<
+         //   " or one of its base classes override TObject::Hash but does not call TROOT::CallRecursiveRemoveIfNeeded
+         //   in its destructor.\n";
          SlowRemove(obj);
          return false;
       } else {
@@ -108,21 +114,24 @@ public:
       }
    }
 
-   TClass *FindMissingRecursiveRemove(TClass &classRef) {
+   TClass *FindMissingRecursiveRemove(TClass &classRef)
+   {
 
       if (classRef.HasLocalHashMember() && !CheckRecursiveRemove(classRef)) {
          return &classRef;
       }
 
-      for(auto base : ROOT::Detail::TRangeStaticCast<TBaseClass>(classRef.GetListOfBases())) {
-         TClass* baseCl = base->GetClassPointer();
+      for (auto base : ROOT::Detail::TRangeStaticCast<TBaseClass>(classRef.GetListOfBases())) {
+         TClass *baseCl = base->GetClassPointer();
          TClass *res = FindMissingRecursiveRemove(*baseCl);
-         if (res) return res;
+         if (res)
+            return res;
       }
       return nullptr;
    }
 
-   bool VerifyRecursiveRemove(const char *classname) {
+   bool VerifyRecursiveRemove(const char *classname)
+   {
       TClass *classPtr = TClass::GetClass(classname);
       if (classPtr)
          return VerifyRecursiveRemove(*classPtr);
@@ -130,7 +139,8 @@ public:
          return true;
    }
 
-   bool VerifyRecursiveRemove(TClass &classRef) {
+   bool VerifyRecursiveRemove(TClass &classRef)
+   {
       // If the class does not inherit from TObject, the setup is always 'correct'
       // (or more exactly does not matter).
       if (!classRef.IsTObject())
@@ -148,20 +158,22 @@ public:
          // we have no ClassDef and thus can not get a good message from TObject::Error.
          constexpr const char *funcName = "ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove";
          if (failing) {
-            ::Error(funcName,"The class %s overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.",
-               failing->GetName());
+            ::Error(funcName,
+                    "The class %s overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.",
+                    failing->GetName());
          } else {
-            ::Error(funcName,"The class %s "
-            "or one of its base classes override TObject::Hash but does not call TROOT::CallRecursiveRemoveIfNeeded in its destructor.\n",
-            classRef.GetName());
-
+            ::Error(funcName, "The class %s "
+                              "or one of its base classes override TObject::Hash but does not call "
+                              "TROOT::CallRecursiveRemoveIfNeeded in its destructor.\n",
+                    classRef.GetName());
          }
          return false;
       }
       return true;
    }
 
-   static bool Check(TClass &classRef) {
+   static bool Check(TClass &classRef)
+   {
       TCheckHashRecurveRemoveConsistency checker;
       return checker.VerifyRecursiveRemove(classRef);
    }

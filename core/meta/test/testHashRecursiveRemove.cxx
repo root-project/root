@@ -5,7 +5,7 @@
 
 #include "gtest/gtest.h"
 
-const char* gCode = R"CODE(
+const char *gCode = R"CODE(
 
    #include "TROOT.h"
    #include <iostream>
@@ -119,24 +119,22 @@ const char* gCode = R"CODE(
 
 )CODE";
 
-class WrongSetup : public TObject
-{
+class WrongSetup : public TObject {
 public:
-   virtual ULong_t     Hash() const { return 6; }
+   virtual ULong_t Hash() const { return 6; }
 
    ClassDefInline(WrongSetup, 2);
 };
 
-class InlineCompiledOnly : public TObject
-{
+class InlineCompiledOnly : public TObject {
 public:
-   virtual ULong_t     Hash() const { return 6; }
+   virtual ULong_t Hash() const { return 6; }
 
    ClassDefInline(InlineCompiledOnly, 2);
 };
 
-
-const char *gErrorOutput = R"OUTPUT(Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
+const char *gErrorOutput =
+   R"OUTPUT(Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SecondOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
@@ -144,34 +142,34 @@ Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemo
 Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class WrongSetup overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 )OUTPUT";
 
-
-void DeclareFailingClasses() {
+void DeclareFailingClasses()
+{
    gInterpreter->Declare(gCode);
 }
 
-TEST(HashRecursiveRemove,GetClassClassDefInline)
+TEST(HashRecursiveRemove, GetClassClassDefInline)
 {
    DeclareFailingClasses();
 
    auto getcl = TClass::GetClass("FirstOverload");
-   EXPECT_NE(nullptr,getcl);
+   EXPECT_NE(nullptr, getcl);
 
-   std::unique_ptr<TObject> obj((TObject*)getcl->New());
-   EXPECT_NE(nullptr,obj.get());
+   std::unique_ptr<TObject> obj((TObject *)getcl->New());
+   EXPECT_NE(nullptr, obj.get());
 
    auto isacl = obj->IsA();
-   EXPECT_NE(nullptr,isacl);
-   EXPECT_EQ(getcl,isacl);
+   EXPECT_NE(nullptr, isacl);
+   EXPECT_EQ(getcl, isacl);
 
    getcl = TClass::GetClass("WrongSetup");
-   EXPECT_NE(nullptr,getcl);
+   EXPECT_NE(nullptr, getcl);
    // EXPECT_NE(nullptr,TClass::GetClass("WrongSetup"));
    WrongSetup ws;
    isacl = ws.IsA();
-   EXPECT_NE(nullptr,isacl);
-   EXPECT_EQ(getcl,isacl);
+   EXPECT_NE(nullptr, isacl);
+   EXPECT_EQ(getcl, isacl);
    getcl = TClass::GetClass("WrongSetup");
-   EXPECT_EQ(getcl,isacl);
+   EXPECT_EQ(getcl, isacl);
 
 #if 0
    // Due to the fact that a compile ClassDefInline does not
@@ -185,19 +183,19 @@ TEST(HashRecursiveRemove,GetClassClassDefInline)
    //getcl = TClass::GetClass("InlineCompiledOnly");
    //EXPECT_NE(nullptr,getcl);
 #else
-   EXPECT_EQ(nullptr,TClassTable::GetDict("InlineCompiledOnly"));
+   EXPECT_EQ(nullptr, TClassTable::GetDict("InlineCompiledOnly"));
    getcl = TClass::GetClass("InlineCompiledOnly");
-   EXPECT_EQ(nullptr,getcl);
+   EXPECT_EQ(nullptr, getcl);
 #endif
    InlineCompiledOnly ico;
    isacl = ico.IsA();
-   EXPECT_NE(nullptr,isacl);
-   //EXPECT_EQ(getcl,isacl);
+   EXPECT_NE(nullptr, isacl);
+   // EXPECT_EQ(getcl,isacl);
    getcl = TClass::GetClass("InlineCompiledOnly");
-   EXPECT_EQ(getcl,isacl);
+   EXPECT_EQ(getcl, isacl);
 }
 
-TEST(HashRecursiveRemove,RootClasses)
+TEST(HashRecursiveRemove, RootClasses)
 {
    EXPECT_TRUE(TClass::GetClass("TObject")->HasConsistentHashMember());
    EXPECT_TRUE(TClass::GetClass("TNamed")->HasConsistentHashMember());
@@ -211,16 +209,16 @@ TEST(HashRecursiveRemove,RootClasses)
    EXPECT_TRUE(TClass::GetClass("THashList")->HasConsistentHashMember());
    EXPECT_TRUE(TClass::GetClass("TClass")->HasConsistentHashMember());
    EXPECT_FALSE(TClass::GetClass("TInterpreter")->HasConsistentHashMember());
-   //EXPECT_TRUE(TClass::GetClass("TCling")->HasConsistentHashMember());
+   // EXPECT_TRUE(TClass::GetClass("TCling")->HasConsistentHashMember());
    EXPECT_TRUE(TClass::GetClass("TMethod")->HasConsistentHashMember());
-   //EXPECT_TRUE(TClass::GetClass("ROOT::Internal::TCheckHashRecurveRemoveConsistency")->HasConsistentHashMember());
+   // EXPECT_TRUE(TClass::GetClass("ROOT::Internal::TCheckHashRecurveRemoveConsistency")->HasConsistentHashMember());
 }
 
-TEST(HashRecursiveRemove,FailingClasses)
+TEST(HashRecursiveRemove, FailingClasses)
 {
    testing::internal::CaptureStderr();
 
-   EXPECT_NE(nullptr,TClass::GetClass("FirstOverload"));
+   EXPECT_NE(nullptr, TClass::GetClass("FirstOverload"));
    EXPECT_FALSE(TClass::GetClass("FirstOverload")->HasConsistentHashMember());
    EXPECT_FALSE(TClass::GetClass("SecondOverload")->HasConsistentHashMember());
    EXPECT_FALSE(TClass::GetClass("SecondNoHash")->HasConsistentHashMember());
@@ -237,21 +235,21 @@ TEST(HashRecursiveRemove,FailingClasses)
    EXPECT_FALSE(WrongSetup::Class()->HasConsistentHashMember());
 
    std::string output = testing::internal::GetCapturedStderr();
-   EXPECT_EQ(gErrorOutput,output);
+   EXPECT_EQ(gErrorOutput, output);
 }
 
 bool CallCheckedHash(const char *clname)
 {
    auto cl = TClass::GetClass(clname);
-   EXPECT_NE(nullptr,cl);
+   EXPECT_NE(nullptr, cl);
 
-   std::unique_ptr<TObject> obj((TObject*)cl->New());
-   EXPECT_NE(nullptr,obj.get());
+   std::unique_ptr<TObject> obj((TObject *)cl->New());
+   EXPECT_NE(nullptr, obj.get());
 
    obj->CheckedHash();
    return !obj->HasInconsistentHash();
 }
-TEST(HashRecursiveRemove,CheckedHashRootClasses)
+TEST(HashRecursiveRemove, CheckedHashRootClasses)
 {
    EXPECT_TRUE(CallCheckedHash("TObject"));
    EXPECT_TRUE(CallCheckedHash("TNamed"));
@@ -264,16 +262,16 @@ TEST(HashRecursiveRemove,CheckedHashRootClasses)
    EXPECT_TRUE(CallCheckedHash("THashList"));
    EXPECT_TRUE(CallCheckedHash("TClass"));
    EXPECT_TRUE(CallCheckedHash("TMethod"));
-   //EXPECT_TRUE(CallCheckedHash("ROOT::Internal::TCheckHashRecurveRemoveConsistency"));
+   // EXPECT_TRUE(CallCheckedHash("ROOT::Internal::TCheckHashRecurveRemoveConsistency"));
 
-   TObject* h1 = (TObject*)gInterpreter->Calc("new TH1I(\"histo1\",\"histo title\", 100, -10., 10.);");
+   TObject *h1 = (TObject *)gInterpreter->Calc("new TH1I(\"histo1\",\"histo title\", 100, -10., 10.);");
    EXPECT_FALSE(h1->HasInconsistentHash());
    delete h1;
 }
 
-TEST(HashRecursiveRemove,CheckedHashFailingClasses)
+TEST(HashRecursiveRemove, CheckedHashFailingClasses)
 {
-   //testing::internal::CaptureStderr();
+   // testing::internal::CaptureStderr();
 
    EXPECT_FALSE(CallCheckedHash("FirstOverload"));
    EXPECT_FALSE(CallCheckedHash("SecondOverload"));
@@ -286,8 +284,8 @@ TEST(HashRecursiveRemove,CheckedHashFailingClasses)
    EXPECT_FALSE(CallCheckedHash("ThirdInCorrect"));
    EXPECT_FALSE(CallCheckedHash("WrongSetup"));
 
-   //std::string output = testing::internal::GetCapturedStderr();
-   //EXPECT_EQ(gErrorOutput,output);
+   // std::string output = testing::internal::GetCapturedStderr();
+   // EXPECT_EQ(gErrorOutput,output);
 }
 
 #include "THashList.h"
@@ -295,12 +293,12 @@ TEST(HashRecursiveRemove,CheckedHashFailingClasses)
 
 constexpr size_t kHowMany = 20000;
 
-TEST(HashRecursiveRemove,SimpleDelete)
+TEST(HashRecursiveRemove, SimpleDelete)
 {
    THashList cont;
 
-   for(size_t i = 0; i < kHowMany; ++i) {
-      TNamed *n = new TNamed(TString::Format("n%ld",i),TString(""));
+   for (size_t i = 0; i < kHowMany; ++i) {
+      TNamed *n = new TNamed(TString::Format("n%ld", i), TString(""));
       n->SetBit(kMustCleanup);
       cont.Add(n);
    }
@@ -309,18 +307,18 @@ TEST(HashRecursiveRemove,SimpleDelete)
    EXPECT_EQ(0, cont.GetSize());
 }
 
-TEST(HashRecursiveRemove,SimpleDirectRemove)
+TEST(HashRecursiveRemove, SimpleDirectRemove)
 {
    THashList cont;
    TList todelete;
 
-   for(size_t i = 0; i < kHowMany; ++i) {
-      TNamed *n = new TNamed(TString::Format("n%ld",i),TString(""));
+   for (size_t i = 0; i < kHowMany; ++i) {
+      TNamed *n = new TNamed(TString::Format("n%ld", i), TString(""));
       n->SetBit(kMustCleanup);
       cont.Add(n);
       todelete.Add(n);
    }
-   for(auto o : todelete) {
+   for (auto o : todelete) {
       cont.Remove(o);
       delete o;
    }
@@ -330,44 +328,46 @@ TEST(HashRecursiveRemove,SimpleDirectRemove)
    EXPECT_EQ(0, cont.GetSize());
 }
 
-TEST(HashRecursiveRemove,DeleteWithRecursiveRemove)
+TEST(HashRecursiveRemove, DeleteWithRecursiveRemove)
 {
    THashList cont;
    TList todelete;
 
-   for(size_t i = 0; i < kHowMany; ++i) {
-      TNamed *n = new TNamed(TString::Format("n%ld",i),TString(""));
+   for (size_t i = 0; i < kHowMany; ++i) {
+      TNamed *n = new TNamed(TString::Format("n%ld", i), TString(""));
       n->SetBit(kMustCleanup);
       cont.Add(n);
       todelete.Add(n);
    }
    gROOT->GetListOfCleanups()->Add(&cont);
 
-   for(auto o : todelete)
-     delete o;
+   for (auto o : todelete)
+      delete o;
 
    todelete.Clear("nodelete");
 
    EXPECT_EQ(0, cont.GetSize());
 }
 
-TEST(HashRecursiveRemove,DeleteBadHashWithRecursiveRemove)
+TEST(HashRecursiveRemove, DeleteBadHashWithRecursiveRemove)
 {
    THashList cont;
    TList todelete;
 
-   for(size_t i = 0; i < kHowMany / 4; ++i) {
+   for (size_t i = 0; i < kHowMany / 4; ++i) {
       TObject *o;
-      if (i%2) o = (TObject*)TClass::GetClass("FirstOverload")->New();
-      else o = new WrongSetup;
+      if (i % 2)
+         o = (TObject *)TClass::GetClass("FirstOverload")->New();
+      else
+         o = new WrongSetup;
       o->SetBit(kMustCleanup);
       cont.Add(o);
       todelete.Add(o);
    }
    gROOT->GetListOfCleanups()->Add(&cont);
 
-   for(auto o : todelete) {
-     delete o;
+   for (auto o : todelete) {
+      delete o;
    }
 
    EXPECT_EQ(0, cont.GetSize());
@@ -376,4 +376,4 @@ TEST(HashRecursiveRemove,DeleteBadHashWithRecursiveRemove)
 
    // Avoid spurrious/redundant error messages in case of failure.
    cont.Clear("nodelete");
-  }
+}

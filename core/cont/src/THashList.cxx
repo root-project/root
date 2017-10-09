@@ -278,11 +278,13 @@ void THashList::RecursiveRemove(TObject *obj)
    if (obj->HasInconsistentHash()) {
       // Remove obj in the list itself
       TObject *object = TList::Remove(obj);
-      if (object) fTable->RemoveSlow(object);
+      if (object)
+         fTable->RemoveSlow(object);
 
    } else if (fTable->FindObject(obj)) {
       TObject *object = TList::Remove(obj);
-      if (object) fTable->Remove(object);
+      if (object)
+         fTable->Remove(object);
    }
 
    // Scan again the list and invoke RecursiveRemove for all objects

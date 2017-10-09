@@ -77,7 +77,7 @@ protected:
    TObject   *Remove(TObjLink *lnk);
 
 public:
-   ClassDefInline(TViewPubFunctions,0)  //Doubly linked list with hashtable for lookup
+   ClassDefInline(TViewPubFunctions, 0) // Doubly linked list with hashtable for lookup
 };
 
 // Preventing warnings with -Weffc++ in GCC since it is a false positive for the TListIter destructor.

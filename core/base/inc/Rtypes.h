@@ -280,30 +280,34 @@ class ClassDefGenerateInitInstanceLocalInjector:
 // Common part of ClassDef definition.
 // DeclFileLine() is not part of it since CINT uses that as trigger for
 // the class comment string.
-#define _ClassDefBase_(name,id, virtual_keyword, overrd) \
-private: \
-   virtual_keyword  Bool_t CheckTObjectHashConsistency() const overrd { \
-      static std::atomic<UChar_t> recurseBlocker(0); \
-      if (R__likely(recurseBlocker >= 2)) { \
-         return ::ROOT::Internal::THashConsistencyHolder<name>::fgHashConsistency; \
-      } else if (recurseBlocker == 1) { \
-         return false; \
-      } else if (recurseBlocker++ == 0) { \
-         ::ROOT::Internal::THashConsistencyHolder<name>::fgHashConsistency = \
-            ::ROOT::Internal::HasConsistentHashMember(Class_Name()) \
-            || ::ROOT::Internal::HasConsistentHashMember(*IsA()); \
-         ++recurseBlocker; \
-         return ::ROOT::Internal::THashConsistencyHolder<name>::fgHashConsistency; \
-      } \
-      return false; /* unreacheable */ \
-   } \
-public: \
-   static Version_t Class_Version() { return id; } \
-   virtual_keyword TClass *IsA() const overrd { return name::Class(); } \
-   virtual_keyword void ShowMembers(TMemberInspector&insp) const overrd { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
-   void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
+#define _ClassDefBase_(name, id, virtual_keyword, overrd)                                                       \
+private:                                                                                                        \
+   virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd                                            \
+   {                                                                                                            \
+      static std::atomic<UChar_t> recurseBlocker(0);                                                            \
+      if (R__likely(recurseBlocker >= 2)) {                                                                     \
+         return ::ROOT::Internal::THashConsistencyHolder<name>::fgHashConsistency;                              \
+      } else if (recurseBlocker == 1) {                                                                         \
+         return false;                                                                                          \
+      } else if (recurseBlocker++ == 0) {                                                                       \
+         ::ROOT::Internal::THashConsistencyHolder<name>::fgHashConsistency =                                    \
+            ::ROOT::Internal::HasConsistentHashMember(Class_Name()) ||                                          \
+            ::ROOT::Internal::HasConsistentHashMember(*IsA());                                                  \
+         ++recurseBlocker;                                                                                      \
+         return ::ROOT::Internal::THashConsistencyHolder<name>::fgHashConsistency;                              \
+      }                                                                                                         \
+      return false; /* unreacheable */                                                                          \
+   }                                                                                                            \
+                                                                                                                \
+public:                                                                                                         \
+   static Version_t Class_Version() { return id; }                                                              \
+   virtual_keyword TClass *IsA() const overrd { return name::Class(); }                                         \
+   virtual_keyword void ShowMembers(TMemberInspector &insp) const overrd                                        \
+   {                                                                                                            \
+      ::ROOT::Class_ShowMembers(name::Class(), this, insp);                                                     \
+   }                                                                                                            \
+   void StreamerNVirtual(TBuffer &ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
    static const char *DeclFileName() { return __FILE__; }
-
 
 #define _ClassDefOutline_(name,id, virtual_keyword, overrd) \
    _ClassDefBase_(name,id, virtual_keyword, overrd)       \
@@ -408,13 +412,11 @@ public: \
 
 #define ClassDefT2(name,Tmpl)
 
-
-
-#define templateClassImpUnique(name,key) \
-   namespace ROOT { \
-      static TNamed *_R__UNIQUE_(_NAME2_(R__dummyholder,key)) = \
-         ::ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
-      R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyholder,key))); \
+#define templateClassImpUnique(name, key)                                                                           \
+   namespace ROOT {                                                                                                 \
+   static TNamed *                                                                                                  \
+      _R__UNIQUE_(_NAME2_(R__dummyholder, key)) = ::ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
+   R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyholder, key)));                                                          \
    }
 #define templateClassImp(name) templateClassImpUnique(name,default)
 
