@@ -15,27 +15,15 @@
 import ROOT
 
 # A simple helper function to fill a test tree: this makes the example stand-alone.
-fill_tree_code = '''
-void fill_tree(const char *fileName, const char *treeName)
-{
-   TFile f(fileName, "RECREATE");
-   TTree t(treeName, treeName);
-   int b1;
-   t.Branch("b1", &b1);
-   for (int i = 0; i < 10000; ++i) {
-      b1 = i;
-      t.Fill();
-   }
-   t.Write();
-   f.Close();
-   return;
-}
-'''
+def fill_tree(treeName, fileName):
+    tdf = ROOT.ROOT.Experimental.TDataFrame(10000)
+    tdf.Define("b1", "(int) tdfentry_").Snapshot(treeName, fileName)
+
+
 # We prepare an input tree to run on
 fileName = "tdf011_rootDataSource_py.root"
 treeName = "myTree"
-ROOT.gInterpreter.Declare(fill_tree_code)
-ROOT.fill_tree(fileName, treeName)
+fill_tree(treeName, fileName)
 
 # Create the data frame
 MakeRootDataFrame = ROOT.ROOT.Experimental.TDF.MakeRootDataFrame
