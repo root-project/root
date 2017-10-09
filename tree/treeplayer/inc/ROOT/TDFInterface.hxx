@@ -1684,8 +1684,8 @@ private:
       (void)expander1;
 
       // Add the defined columns
-      cachedTDF.fValidCustomColumns.assign(columnList.begin(), columnList.end());
-
+      auto &vc = cachedTDF.fValidCustomColumns;
+      vc.insert(vc.end(), columnList.begin(), columnList.end());
       return cachedTDF;
    }
 
