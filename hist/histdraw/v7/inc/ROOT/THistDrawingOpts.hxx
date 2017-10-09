@@ -70,7 +70,7 @@ public:
 template <>
 class THistDrawingOpts<2>: public THistDrawingOptsBase<THistDrawingOpts<1>> {
    enum class EStyle { kErrors, kBar, kText };
-   TOptsAttrRef<long long> fStyle{*this, "Hist.1D.Style"};
+   TOptsAttrRef<long long> fStyle{*this, "Hist.2D.Style"};
 
 public:
    THistDrawingOpts() = default;
@@ -83,7 +83,7 @@ public:
 template <>
 class THistDrawingOpts<3>: public THistDrawingOptsBase<THistDrawingOpts<1>> {
    enum class EStyle { kErrors, kBar, kText };
-   TOptsAttrRef<long long> fStyle{*this, "Hist.1D.Style"};
+   TOptsAttrRef<long long> fStyle{*this, "Hist.3D.Style"};
 
 public:
    THistDrawingOpts() = default;
