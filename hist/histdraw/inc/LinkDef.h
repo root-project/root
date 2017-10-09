@@ -14,8 +14,19 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<1> >+;
+#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<2> >+;
+#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<3> >+;
+#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<1> >+;
+#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<2> >+;
+#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<3> >+;
 #pragma link C++ class ROOT::Experimental::THistDrawingOpts<1>+;
 #pragma link C++ class ROOT::Experimental::THistDrawingOpts<2>+;
 #pragma link C++ class ROOT::Experimental::THistDrawingOpts<3>+;
+#pragma link C++ class ROOT::Experimental::THistDrawable<1>+;
+#pragma link C++ class ROOT::Experimental::THistDrawable<2>+;
+#pragma link C++ class ROOT::Experimental::THistDrawable<3>+;
+#pragma link C++ class ROOT::Experimental::THistDrawableBase+;
+#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<1> >+;
 
 #endif
