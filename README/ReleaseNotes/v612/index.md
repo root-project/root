@@ -151,6 +151,7 @@ large TClonesArray where each element contains another small vector container.
     in a small screen attached to the Mac with the graphics window on the Mac
     display. It was reported
     [here](https://root-forum.cern.ch/t/tcanvas-print-png-outputs-fraction-of-figure-when-canvas-size-is-declared/26011/44).
+  - Fix an issue with `TGraph2D` drawn as lines (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-9046)).
 
 ## 3D Graphics Libraries
 
