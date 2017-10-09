@@ -111,7 +111,7 @@ TEST(Cache, InternalColumnsSnapshot)
 {
    TDataFrame tdf(2);
    auto f = 0.f;
-   auto colName = "__TDF_MySecretCol_";
+   auto colName = "tdfMySecretcol_";
    auto orig = tdf.Define(colName, [&f]() { return f++; });
    auto cached = orig.Cache<float>({colName});
    auto snapshot = cached.Snapshot("t", "InternalColumnsSnapshot.root", "", {"RECREATE", ROOT::kZLIB, 0, 0, 99});
@@ -171,6 +171,24 @@ TEST(Cache, CollectionColumns)
    EXPECT_EQ(1, hv->GetMean());
    EXPECT_EQ(1, hl->GetMean());
    EXPECT_EQ(1, hd->GetMean());
+}
+
+TEST(Cache, evtCounter)
+{
+   TDataFrame tdf(4);
+   auto c = tdf.Alias("entry", "tdfentry_")
+               .Filter([](ULong64_t e) { return 0 == e % 2; }, {"entry"})
+               .Cache<ULong64_t>({"entry"});
+   std::vector<ULong64_t> evenE_ref{0, 2};
+   auto evenE = c.Take<ULong64_t>("entry");
+   for (auto i : {0, 1}) {
+      EXPECT_EQ(evenE->at(i), evenE_ref[i]);
+   }
+   std::vector<ULong64_t> allE_ref{0, 1};
+   auto allE = c.Alias("entry2", "tdfentry_").Take<ULong64_t>("entry2");
+   for (auto i : {0, 1}) {
+      EXPECT_EQ(allE->at(i), allE_ref[i]);
+   }
 }
 
 #ifdef R__B64
