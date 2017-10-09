@@ -5508,13 +5508,17 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
    //    R__LOCKGUARD(gInterpreterMutex);
 
    Int_t nHheadersParsed = 0;
+   unsigned long offset = 0;
+   if (strncmp(cls, "const ", 6) == 0) {
+      offset = 6;
+   }
 
    // Loop on the possible autoparse keys
    bool skipFirstEntry = false;
    std::vector<std::string> autoparseKeys;
    if (strchr(cls, '<')) {
       int nestedLoc = 0;
-      TClassEdit::GetSplit(cls, autoparseKeys, nestedLoc, TClassEdit::kDropTrailStar);
+      TClassEdit::GetSplit(cls+offset, autoparseKeys, nestedLoc, TClassEdit::kDropTrailStar);
       // Check if we can skip the name of the template in the autoparses
       // Take all the scopes one by one. If all of them are in the AST, we do not
       // need to autoparse for that particular template.
@@ -5523,7 +5527,7 @@ UInt_t TCling::AutoParseImplRecurse(const char *cls, bool topLevel)
          auto tokens = templateName.Tokenize("::");
          clang::NamedDecl* previousScopeAsNamedDecl = nullptr;
          clang::DeclContext* previousScopeAsContext = fInterpreter->getCI()->getASTContext().getTranslationUnitDecl();
-         if (TClassEdit::IsStdClass(cls))
+         if (TClassEdit::IsStdClass(cls+offset))
              previousScopeAsContext = fInterpreter->getSema().getStdNamespace();
          auto nTokens = tokens->GetSize();
          for (Int_t tk = 0; tk < nTokens; ++tk) {
