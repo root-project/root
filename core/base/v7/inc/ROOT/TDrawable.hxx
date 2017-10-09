@@ -52,11 +52,12 @@ namespace Internal {
 
 template <class T>
 class TUniWeakPtr {
-   union {
+   // Needs I/O support for union (or variant, actually) {
       std::unique_ptr<T> fUnique;
-      std::weak_ptr<T> fWeak;
-   };
-   bool fIsWeak; ///< fUnique or fWeak?
+      std::weak_ptr<T> fWeak; //! Cannot save for now :-(
+      T* fWeakForIO = nullptr; // Hack to allow streaming *out* of fWeak (reading is still broken because we don't set fWeak)
+   // };
+   bool fIsWeak = false; ///< fUnique or fWeak?
 
 public:
    /// \class Accessor
@@ -97,22 +98,22 @@ public:
       }
    };
 
-   TUniWeakPtr(const std::shared_ptr<T> &ptr): fWeak(ptr), fIsWeak(true) {}
+   TUniWeakPtr() = default;
+   TUniWeakPtr(const std::shared_ptr<T> &ptr): fWeak(ptr), fWeakForIO(ptr.get()), fIsWeak(true) {}
    TUniWeakPtr(std::unique_ptr<T> &&ptr): fUnique(std::move(ptr)), fIsWeak(false) {}
    TUniWeakPtr(TUniWeakPtr &&rhs): fIsWeak(rhs.fIsWeak)
    {
-      if (fIsWeak) {
-         fWeak.weak_ptr(std::move(rhs.fWeak));
-      } else
-         fWeak.unique_ptr(std::move(rhs.fUnique));
+      if (rhs.fIsWeak) {
+         fWeak = std::move(rhs.fWeak);
+         auto shptr = rhs.fWeak.lock();
+         fWeakForIO = shptr.get();
+      } else {
+         fUnique = std::move(rhs.fUnique);
+      }
    }
 
    ~TUniWeakPtr()
    {
-      if (fIsWeak)
-         fWeak.~weak_ptr();
-      else
-         fUnique.~unique_ptr();
    }
 
    Accessor Get() const { return Accessor(*this); }
