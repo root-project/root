@@ -58,9 +58,28 @@
 #pragma link C++ class ROOT::Experimental::TPad+;
 #pragma link C++ class ROOT::Experimental::TPadDrawable+;
 #pragma link C++ class ROOT::Experimental::TCanvas+;
+#pragma link C++ class ROOT::Experimental::TFrame+;
+#pragma link C++ class ROOT::Experimental::TPalette+;
+#pragma link C++ class ROOT::Experimental::TPadCoord+;
 #pragma link C++ class ROOT::Experimental::TPadCoord::Pixel+;
 #pragma link C++ class ROOT::Experimental::TPadCoord::Normal+;
 #pragma link C++ class ROOT::Experimental::TPadCoord::User+;
+#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Pixel>+;
+#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Normal>+;
+#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::User>+;
+#pragma link C++ class ROOT::Experimental::TColor+;
+#pragma link C++ class ROOT::Experimental::TOptsAttrRef<ROOT::Experimental::TColor>+;
+#pragma link C++ class ROOT::Experimental::TOptsAttrRef<long long>+;
+#pragma link C++ class ROOT::Experimental::TOptsAttrRef<double>+;
+#pragma link C++ class ROOT::Experimental::Internal::TOptsAttrTable<ROOT::Experimental::TColor>+;
+#pragma link C++ class ROOT::Experimental::Internal::TOptsAttrTable<long long>+;
+#pragma link C++ class ROOT::Experimental::Internal::TOptsAttrTable<double>+;
+#pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault+;
+#pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<ROOT::Experimental::TColor>+;
+#pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<long long>+;
+#pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<double>+;
+
+
 //#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Pixel>+;
 //#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Normal>+;
 //#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::User>+;
