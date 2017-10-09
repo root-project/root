@@ -1,4 +1,5 @@
 #include "ROOT/TDataFrame.hxx"
+#include "ROOT/TSeq.hxx"
 #include "TFile.h"
 #include "TROOT.h"
 #include "TSystem.h"
@@ -56,7 +57,49 @@ protected:
 };
 #endif
 
-/********* TESTS ***********/
+class TDFSnapshotArrays : public ::testing::Test {
+protected:
+   const static unsigned int kNEvents = 10u;
+   static const std::vector<std::string> kFileNames;
+
+   static void SetUpTestCase()
+   {
+      // write files containing c-arrays
+      const auto eventsPerFile = kNEvents / kFileNames.size();
+      auto curEvent = 0u;
+      for (const auto &fname : kFileNames) {
+         TFile f(fname.c_str(), "RECREATE");
+         TTree t("arrayTree", "arrayTree");
+         const unsigned int fixedSize = 4u;
+         float fixedSizeArr[fixedSize];
+         t.Branch("fixedSizeArr", fixedSizeArr, ("fixedSizeArr[" + std::to_string(fixedSize) + "]/F").c_str());
+         unsigned int size = 0u;
+         t.Branch("size", &size);
+         double varSizeArr[kNEvents + 1];
+         t.Branch("varSizeArr", varSizeArr, "varSizeArr[size]/D");
+         // for each event, fill array elements
+         for (auto i : ROOT::TSeqU(eventsPerFile)) {
+            for (auto j : ROOT::TSeqU(4))
+               fixedSizeArr[j] = curEvent * j;
+            size = eventsPerFile - i;
+            for (auto j : ROOT::TSeqU(size))
+               varSizeArr[j] = curEvent * j;
+            t.Fill();
+            ++curEvent;
+         }
+         t.Write();
+      }
+   }
+
+   static void TearDownTestCase()
+   {
+      for (const auto &fname : kFileNames)
+         gSystem->Unlink(fname.c_str());
+   }
+};
+const std::vector<std::string> TDFSnapshotArrays::kFileNames = {"test_snapshotarray1.root", "test_snapshotarray2.root"};
+
+/********* SINGLE THREAD TESTS ***********/
 void test_snapshot_update(TInterface<TLoopManager> &tdf)
 {
    // test snapshotting two trees to the same file with two snapshots and the "UPDATE" option
@@ -136,6 +179,55 @@ TEST_F(TDFSnapshot, Snapshot_action_with_options)
    test_snapshot_options(tdf);
 }
 
+void checkSnapshotArrayFile(TInterface<TLoopManager> &df, unsigned int kNEvents)
+{
+   // fixedSizeArr and varSizeArr are TResultProxy<vector<vector<T>>>
+   auto fixedSizeArr = df.Take<std::array_view<float>>("fixedSizeArr");
+   auto varSizeArr = df.Take<std::array_view<double>>("varSizeArr");
+   auto size = df.Take<unsigned int>("size");
+
+   // check contents of fixedSizeArr
+   const auto nEvents = fixedSizeArr->size();
+   const auto fixedSizeSize = fixedSizeArr->front().size();
+   EXPECT_EQ(nEvents, kNEvents);
+   EXPECT_EQ(fixedSizeSize, 4u);
+   for (auto i = 0u; i < nEvents; ++i) {
+      for (auto j = 0u; j < fixedSizeSize; ++j)
+         EXPECT_DOUBLE_EQ(fixedSizeArr->at(i).at(j), i * j);
+   }
+
+   // check contents of varSizeArr
+   for (auto i = 0u; i < nEvents; ++i) {
+      const auto &v = varSizeArr->at(i);
+      const auto thisSize = size->at(i);
+      EXPECT_EQ(thisSize, v.size());
+      for (auto j = 0u; j < thisSize; ++j)
+         EXPECT_DOUBLE_EQ(v[j], i * j);
+   }
+}
+
+TEST_F(TDFSnapshotArrays, SingleThread)
+{
+   TDataFrame tdf("arrayTree", kFileNames);
+   // template Snapshot
+   // "size" _must_ be listed before "varSizeArr"!
+   auto dt = tdf.Snapshot<std::array_view<float>, unsigned int, std::array_view<double>>(
+      "outTree", "test_snapshotarray_out.root", {"fixedSizeArr", "size", "varSizeArr"});
+
+   checkSnapshotArrayFile(dt, kNEvents);
+}
+
+TEST_F(TDFSnapshotArrays, SingleThreadJitted)
+{
+   TDataFrame tdf("arrayTree", kFileNames);
+   // jitted Snapshot
+   // "size" _must_ be listed before "varSizeArr"!
+   auto dj = tdf.Snapshot("outTree", "test_snapshotarray_out.root", {"fixedSizeArr", "size", "varSizeArr"});
+
+   checkSnapshotArrayFile(dj, kNEvents);
+}
+
+/********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
 TEST_F(TDFSnapshotMT, Snapshot_update)
 {
@@ -178,6 +270,44 @@ TEST(TDFSnapshotMore, ManyTasksPerThread)
    for (auto i = 0u; i < nInputFiles; ++i)
       gSystem->Unlink((inputFilePrefix + std::to_string(i) + ".root").c_str());
    gSystem->Unlink(outputFile);
+
+   ROOT::DisableImplicitMT();
+}
+
+void checkSnapshotArrayFileMT(TInterface<TLoopManager> &df, unsigned int kNEvents)
+{
+   // fixedSizeArr and varSizeArr are TResultProxy<vector<vector<T>>>
+   auto fixedSizeArr = df.Take<std::array_view<float>>("fixedSizeArr");
+   auto varSizeArr = df.Take<std::array_view<double>>("varSizeArr");
+   auto size = df.Take<unsigned int>("size");
+
+   // multi-thread execution might have scrambled events w.r.t. the original file, so we just check overall properties
+   const auto nEvents = fixedSizeArr->size();
+   EXPECT_EQ(nEvents, kNEvents);
+   // TODO check more!
+}
+
+TEST_F(TDFSnapshotArrays, MultiThread)
+{
+   ROOT::EnableImplicitMT(4);
+
+   TDataFrame tdf("arrayTree", kFileNames);
+   auto dt = tdf.Snapshot<std::array_view<float>, unsigned int, std::array_view<double>>(
+      "outTree", "test_snapshotarray_out.root", {"fixedSizeArr", "size", "varSizeArr"});
+
+   checkSnapshotArrayFileMT(dt, kNEvents);
+
+   ROOT::DisableImplicitMT();
+}
+
+TEST_F(TDFSnapshotArrays, MultiThreadJitted)
+{
+   ROOT::EnableImplicitMT(4);
+
+   TDataFrame tdf("arrayTree", kFileNames);
+   auto dj = tdf.Snapshot("outTree", "test_snapshotarray_out.root", {"fixedSizeArr", "size", "varSizeArr"});
+
+   checkSnapshotArrayFileMT(dj, kNEvents);
 
    ROOT::DisableImplicitMT();
 }
