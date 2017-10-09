@@ -119,7 +119,7 @@ TEST(TDataFrameInterface, GetColumnNamesFromScratch)
 {
    TDataFrame f(1);
    auto dummyGen = []() { return 1; };
-   auto names = f.Define("a", dummyGen).Define("b", dummyGen).Define("__TDF_Dummy", dummyGen).GetColumnNames();
+   auto names = f.Define("a", dummyGen).Define("b", dummyGen).Define("tdfDummy_", dummyGen).GetColumnNames();
    EXPECT_STREQ("a", names[0].c_str());
    EXPECT_STREQ("b", names[1].c_str());
    EXPECT_EQ(2U, names.size());
@@ -157,5 +157,15 @@ TEST(TDataFrameInterface, DefaultColumns)
       EXPECT_EQ(slot, 0U);
       i++;
    };
-   tdf.Foreach(checkSlotAndEntries, {"__slot", "__entry"});
+   tdf.Foreach(checkSlotAndEntries, {"tdfslot_", "tdfentry_"});
 }
+
+TEST(TDataFrameInterface, JitDefaultColumns)
+{
+   TDataFrame tdf(8);
+   auto f = tdf.Filter("tdfslot_ + tdfentry_ == 3");
+   auto maxEntry = f.Max("tdfentry_");
+   auto minEntry = f.Min("tdfentry_");
+   EXPECT_EQ(*maxEntry, *minEntry);
+}
+
