@@ -17,6 +17,9 @@ ROOT_ADD_GTEST(dataframe_utils dataframe/dataframe_utils.cxx LIBRARIES TreePlaye
 ROOT_ADD_GTEST(datasource_noncopiable dataframe/datasource_noncopiable.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(datasource_root dataframe/datasource_root.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(datasource_trivial dataframe/datasource_trivial.cxx LIBRARIES TreePlayer)
+configure_file(dataframe/TCsvDS_test_headers.csv . COPYONLY)
+configure_file(dataframe/TCsvDS_test_noheaders.csv . COPYONLY)
+ROOT_ADD_GTEST(datasource_csv dataframe/datasource_csv.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_PYUNITTEST(dataframe_histograms dataframe/dataframe_histograms.py)
 # ROOT_ADD_PYUNITTEST(dataframe_cache dataframe/dataframe_cache.py)
