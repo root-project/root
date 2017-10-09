@@ -253,6 +253,10 @@ TEST(HashRecursiveRemove,CheckedHashRootClasses)
    EXPECT_TRUE(CallCheckedHash("TClass"));
    EXPECT_TRUE(CallCheckedHash("TMethod"));
    //EXPECT_TRUE(CallCheckedHash("ROOT::Internal::TCheckHashRecurveRemoveConsistency"));
+
+   TObject* h1 = (TObject*)gInterpreter->Calc("new TH1I(\"histo1\",\"histo title\", 100, -10., 10.);");
+   EXPECT_FALSE(h1->HasInconsistentHash());
+   delete h1;
 }
 
 TEST(HashRecursiveRemove,CheckedHashFailingClasses)
