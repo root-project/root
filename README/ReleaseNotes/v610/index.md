@@ -685,3 +685,11 @@ Released on September 19, 2017
 ## HEAD of the v6-10-00-patches branch
 
 These changes will be part of the future 6.10/08
+
+### Core Libraries
+
+* Add support for XCode version 9 and clang version 5.
+
+### I/O Libraries
+
+* Add support for LZ4 as a compression format.
