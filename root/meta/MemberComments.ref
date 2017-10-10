@@ -2,7 +2,7 @@
 Processing /Users/pcanal/root_working/roottest/root/meta/runMemberComments.C...
 
 TH1F::Class()->GetListOfAllPublicDataMembers():
-OBJ: TList	TList	Doubly linked list : 0
+OBJ: TViewPubDataMembers	TViewPubDataMembers	 : 0
  OBJ: TDataMember	kNormal	 : 0
  OBJ: TDataMember	kPoisson	 : 0
  OBJ: TDataMember	kPoisson2	 : 0
