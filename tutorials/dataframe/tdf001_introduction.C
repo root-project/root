@@ -34,7 +34,7 @@ int tdf001_introduction()
    // We prepare an input tree to run on
    auto fileName = "tdf001_introduction.root";
    auto treeName = "myTree";
-   fill_tree(fileName, treeName);
+   fill_tree(treeName, fileName);
 
    // We read the tree from the file and create a TDataFrame, a class that
    // allows us to interact with the data contained in the tree.
