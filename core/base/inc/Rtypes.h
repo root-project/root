@@ -245,7 +245,11 @@ class ClassDefGenerateInitInstanceLocalInjector:
          SetInstance(R__instance, &New, &NewArray, &Delete, &DeleteArray, &Destruct);
          return &R__instance;
       }
-      static TClass *Dictionary() { fgIsA = GenerateInitInstanceLocal()->GetClass(); return fgIsA; }
+      // We need a reference to the template instance static member in a concrete function in order
+      // to force its instantiation (even before the function is actually run)
+      // Since we do have a reference to Dictionary (in T::Dictionary), using fgGenericInfo
+      // here will insure that it is initialized at process start or library load time.
+      static TClass *Dictionary() { fgIsA = fgGenericInfo->GetClass(); return fgIsA; }
       static TClass *Class() { SetfgIsA(fgIsA, &Dictionary); return fgIsA; }
       static const char* Name() {
          if (fgName.empty())
