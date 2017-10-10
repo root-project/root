@@ -173,7 +173,7 @@ TEST(HashRecursiveRemove, GetClassClassDefInline)
 
    EXPECT_NE(nullptr, TClassTable::GetDict("InlineCompiledOnly"));
    getcl = TClass::GetClass("InlineCompiledOnly");
-   EXPECT_NE(nullptr,getcl);
+   EXPECT_NE(nullptr, getcl);
    // EXPECT_NE(nullptr,TClass::GetClass("InlineCompiledOnly"));
    InlineCompiledOnly ico;
    isacl = ico.IsA();
