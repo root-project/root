@@ -110,6 +110,7 @@ ROOT_BUILD_OPTION(fitsio ON "Read images and data from FITS files, requires cfit
 ROOT_BUILD_OPTION(fortran OFF "Enable the Fortran components of ROOT")
 set(gcctoolchain "" CACHE PATH "Path for the gcctoolchain in case not the system gcc is used to build clang/LLVM")
 ROOT_BUILD_OPTION(gdml ON "GDML writer and reader")
+ROOT_BUILD_OPTION(geo ON "Enable the TGeo package")
 ROOT_BUILD_OPTION(genvector ON "Build the new libGenVector library")
 ROOT_BUILD_OPTION(geocad OFF "ROOT-CAD Interface")
 ROOT_BUILD_OPTION(gfal ON "GFAL support, requires libgfal")
