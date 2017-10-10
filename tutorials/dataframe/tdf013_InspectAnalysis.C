@@ -26,7 +26,8 @@ void tdf013_InspectAnalysis()
    // `heavyWork` is a lambda that fakes some interesting computation and just returns a normally distributed double
    TRandom r;
    auto heavyWork = [&r]() {
-      for (volatile int i = 0; i < 1000000; ++i);
+      for (volatile int i = 0; i < 1000000; ++i)
+         ;
       return r.Gaus();
    };
 
@@ -68,7 +69,8 @@ void tdf013_InspectAnalysis()
    // same order as they were registered). We now request that the partial result is drawn and the TBrowser's TPad is
    // updated every 50 events.
    h.OnPartialResult(50, [&browserPad](TH1D &hist) {
-      if (!browserPad) return; // in case root -b was invoked
+      if (!browserPad)
+         return; // in case root -b was invoked
       browserPad->cd();
       hist.Draw();
       browserPad->Update();
@@ -90,7 +92,7 @@ void tdf013_InspectAnalysis()
    // Magic numbers that yield good progress bars for nSlots = 1,2,4,8
    const auto everyN = nSlots == 8 ? 1000 : 100ull * nSlots;
    const auto barWidth = nEvents / everyN;
-   h.OnPartialResultSlot(everyN, [&barWidth, &progressBar, &barMutex](unsigned int /*slot*/, TH1D &/*partialHist*/) {
+   h.OnPartialResultSlot(everyN, [&barWidth, &progressBar, &barMutex](unsigned int /*slot*/, TH1D & /*partialHist*/) {
       std::lock_guard<std::mutex> l(barMutex); // lock_guard locks the mutex at construction, releases it at destruction
       progressBar.push_back('#');
       // re-print the line with the progress bar
@@ -110,10 +112,11 @@ void tdf013_InspectAnalysis()
    // Finally, some book-keeping: in the TMemFile that we are using as TBrowser directory, we substitute the partial
    // result with a clone of the final result (the "original" final result will be deleted at the end of the macro).
    tdfDirectory->Clear();
-   auto clone = static_cast<TH1D*>(h->Clone());
+   auto clone = static_cast<TH1D *>(h->Clone());
    clone->SetDirectory(nullptr);
    tdfDirectory->Add(clone);
-   if (!browserPad) return; // in case root -b was invoked
+   if (!browserPad)
+      return; // in case root -b was invoked
    browserPad->cd();
    clone->Draw();
 }
