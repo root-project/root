@@ -27,7 +27,7 @@ TEST(TCsvDS, ColTypeNames)
    EXPECT_STREQ("Married", colNames[3].c_str());
 
    EXPECT_STREQ("std::string", tds.GetTypeName("Name").c_str());
-   EXPECT_STREQ("int", tds.GetTypeName("Age").c_str());
+   EXPECT_STREQ("Long64_t", tds.GetTypeName("Age").c_str());
    EXPECT_STREQ("double", tds.GetTypeName("Height").c_str());
    EXPECT_STREQ("bool", tds.GetTypeName("Married").c_str());
 }
@@ -67,10 +67,10 @@ TEST(TCsvDS, ColumnReaders)
    TCsvDS tds(fileName0);
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
-   auto vals = tds.GetColumnReaders<int>("Age");
+   auto vals = tds.GetColumnReaders<Long64_t>("Age");
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
-   std::vector<int> ages = {60, 50, 40, 30, 1, -1};
+   std::vector<Long64_t> ages = {60, 50, 40, 30, 1, -1};
    for (auto &&range : ranges) {
       tds.InitSlot(slot, range.first);
       for (auto i : ROOT::TSeq<int>(range.first, range.second)) {

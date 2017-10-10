@@ -36,8 +36,8 @@ void TCsvDS::FillRecord(const std::string &line, Record &record)
    for (auto &col : columns) {
       auto &colType = fColTypes[fHeaders[i]];
 
-      if (colType == "int") {
-         record.emplace_back(new int(std::stoi(col))); // TODO: LONG?
+      if (colType == "Long64_t") {
+         record.emplace_back(new Long64_t(std::stoll(col)));
       } else if (colType == "double") {
          record.emplace_back(new double(std::stod(col)));
       } else if (colType == "bool") {
@@ -85,7 +85,7 @@ void TCsvDS::InferType(const std::string &col, unsigned int idxCol)
    int dummy;
 
    if (intRegex.Index(col, &dummy) != -1) {
-      type = "int";
+      type = "Long64_t";
    } else if (doubleRegex1.Index(col, &dummy) != -1 || doubleRegex2.Index(col, &dummy) != -1) {
       type = "double";
    } else if (trueRegex.Index(col, &dummy) != -1 || falseRegex.Index(col, &dummy) != -1) {
@@ -178,8 +178,8 @@ TCsvDS::~TCsvDS()
          void *p = record[i];
          auto &colType = fColTypes[fHeaders[i]];
 
-         if (colType == "int") {
-            delete static_cast<int *>(p);
+         if (colType == "Long64_t") {
+            delete static_cast<Long64_t *>(p);
          } else if (colType == "double") {
             delete static_cast<double *>(p);
          } else if (colType == "bool") {
