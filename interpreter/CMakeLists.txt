@@ -107,8 +107,6 @@ else()
 endif()
 set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
 set(BUILD_SHARED_LIBS "NO")
-#--- Do not build cling as part of llvm.
-set(LLVM_NOCLING "YES")
 
 set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
 set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")
