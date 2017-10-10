@@ -18,6 +18,7 @@
 #include "ROOT/TLogger.hxx"
 
 #include <algorithm>
+#include <cmath>
 #include <exception>
 #include <unordered_map>
 
@@ -37,7 +38,7 @@ TPalette::TPalette(bool interpolate, bool knownNormalized, const std::vector<TPa
       double low = fColors.front().fOrdinal;
       double prec = (high - low) * 1E-6;
 
-      auto reasonablyEqual = [&](double val, double expected) -> bool { return fabs(val - expected) < prec; };
+      auto reasonablyEqual = [&](double val, double expected) -> bool { return std::fabs(val - expected) < prec; };
       fNormalized = reasonablyEqual(low, 0.) && reasonablyEqual(high, 1.);
    }
 }
