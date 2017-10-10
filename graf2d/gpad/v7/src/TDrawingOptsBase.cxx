@@ -250,7 +250,8 @@ template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<TColor>;
 template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<long long>;
 template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<double>;
 
-TDrawingOptsBaseNoDefault::TDrawingOptsBaseNoDefault(TPadBase &pad): fCanvas(&pad.GetCanvas()) {}
+TDrawingOptsBaseNoDefault::TDrawingOptsBaseNoDefault(TPadBase &pad, string_view configPrefix):
+fCanvas(&pad.GetCanvas()) {}
 
 ROOT::Experimental::TPadBase &TDrawingOptsBaseNoDefault::GetDefaultCanvas()
 {
