@@ -29,7 +29,7 @@ namespace Experimental {
 
 class TDrawingOptsBaseNoDefault;
 template <class PRIMITIVE>
-class TOptsAttrRef;
+class TDrawingAttrRef;
 
 /** \class ROOT::Experimental::TCanvas
   A window's topmost `TPad`.
@@ -45,13 +45,13 @@ private:
    std::array<TPadCoord::Pixel, 2> fSize;
 
    /// Colors used by drawing options in the pad and any sub-pad.
-   Internal::TOptsAttrTable<TColor> fColorTable;
+   Internal::TDrawingAttrTable<TColor> fColorTable;
 
    /// Integers used by drawing options in the pad and any sub-pad.
-   Internal::TOptsAttrTable<long long> fIntAttrTable;
+   Internal::TDrawingAttrTable<long long> fIntAttrTable;
 
    /// Floating points used by drawing options in the pad and any sub-pad.
-   Internal::TOptsAttrTable<double> fFPAttrTable;
+   Internal::TDrawingAttrTable<double> fFPAttrTable;
 
    /// Modify counter, incremented every time canvas is changed
    uint64_t fModified; ///<!
@@ -71,18 +71,18 @@ private:
    ///\name Drawing options attribute handling
 
    /// Attribute table (non-const access).
-   Internal::TOptsAttrTable<TColor> &GetAttrTable(TColor *) { return fColorTable; }
-   Internal::TOptsAttrTable<long long> &GetAttrTable(long long *) { return fIntAttrTable; }
-   Internal::TOptsAttrTable<double> &GetAttrTable(double *) { return fFPAttrTable; }
+   Internal::TDrawingAttrTable<TColor> &GetAttrTable(TColor *) { return fColorTable; }
+   Internal::TDrawingAttrTable<long long> &GetAttrTable(long long *) { return fIntAttrTable; }
+   Internal::TDrawingAttrTable<double> &GetAttrTable(double *) { return fFPAttrTable; }
 
    /// Attribute table (const access).
-   const Internal::TOptsAttrTable<TColor> &GetAttrTable(TColor *) const { return fColorTable; }
-   const Internal::TOptsAttrTable<long long> &GetAttrTable(long long *) const { return fIntAttrTable; }
-   const Internal::TOptsAttrTable<double> &GetAttrTable(double *) const { return fFPAttrTable; }
+   const Internal::TDrawingAttrTable<TColor> &GetAttrTable(TColor *) const { return fColorTable; }
+   const Internal::TDrawingAttrTable<long long> &GetAttrTable(long long *) const { return fIntAttrTable; }
+   const Internal::TDrawingAttrTable<double> &GetAttrTable(double *) const { return fFPAttrTable; }
 
    friend class ROOT::Experimental::TDrawingOptsBaseNoDefault;
    template <class PRIMITIVE>
-   friend class ROOT::Experimental::TOptsAttrRef;
+   friend class ROOT::Experimental::TDrawingAttrRef;
    ///\}
 
 public:
