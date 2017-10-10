@@ -146,7 +146,8 @@ TCsvDS::TCsvDS(std::string_view fileName, bool readHeaders, char delimiter) // T
       if (std::getline(stream, line)) {
          FillHeaders(line);
       } else {
-         auto msg = "Error reading headers of CSV file " + fileName;
+         std::string msg = "Error reading headers of CSV file ";
+         msg += fileName;
          throw std::runtime_error(msg);
       }
    }
@@ -203,8 +204,9 @@ const std::vector<std::pair<ULong64_t, ULong64_t>> &TCsvDS::GetEntryRanges() con
 std::string TCsvDS::GetTypeName(std::string_view colName) const
 {
    if (!HasColumn(colName)) {
-      auto e = "The dataset does not have column " + colName;
-      throw std::runtime_error(e);
+      std::string msg = "The dataset does not have column ";
+      msg += colName;
+      throw std::runtime_error(msg);
    }
 
    return fColTypes.at(colName.data());
