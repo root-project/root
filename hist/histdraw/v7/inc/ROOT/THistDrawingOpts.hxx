@@ -32,8 +32,10 @@ style configuration file `rootstylerc` (e.g. $ROOTSYS/etc/system.rootstylerc or 
 template <class DERIVED>
 class THistDrawingOptsBase: public TDrawingOptsBase<DERIVED> {
    /// Index of the line color in TCanvas's color table.
-   TOptsAttrRef<TColor> fLineColorIndex{*this, "Hist.LineColor"};
-
+   //TOptsAttrRef<TColor> fLineColorIndex{*this, "Hist.Line.Color"};
+   //TOptsAttrRef<long long> fLineColorIndex{*this, "Hist.Line.Width"};
+   TLineDrawingOpts fLine{*this, "Hist", {kBlack, 3}};
+   
 public:
    THistDrawingOptsBase() = default;
    THistDrawingOptsBase(TPadBase &pad): TDrawingOptsBase<DERIVED>(pad) {}

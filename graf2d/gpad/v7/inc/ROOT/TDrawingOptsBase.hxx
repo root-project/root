@@ -222,6 +222,14 @@ private:
    /// The `TCanvas` holding the `TDrawable` (or its `TPad`).
    TCanvas *fCanvas = nullptr;
 
+   /// String vector specifying the prefixes used to select the right setting from the style file,
+   /// e.g. `{"1D", "Hist", "Line"}`.
+   /// \note Requires external string storage; usually, this parameter is passed as
+   /// ```
+   ///     TXYZDrawingOpts fOpts{*this, "Hist.Foo", {12, red}};
+   /// ```
+   std::vector<std::string_view> fConfigPrefix;
+
    /// Indexes of the `TCanvas`'s color table entries used by this options object.
    OptsAttrRefArr<TColor> fColorIdx;
 
@@ -243,7 +251,7 @@ private:
 
 protected:
    /// Construct from the pad that holds our `TDrawable`.
-   TDrawingOptsBaseNoDefault(TPadBase &pad);
+   TDrawingOptsBaseNoDefault(TPadBase &pad, const std::vector<string_view> &configPrefix);
 
    /// Default attributes need to register their values in a pad - they will take this pad!
    static TPadBase &GetDefaultCanvas();
@@ -287,6 +295,15 @@ public:
    TDrawingOptsBaseNoDefault(const TDrawingOptsBaseNoDefault &other);
    TDrawingOptsBaseNoDefault(TDrawingOptsBaseNoDefault &&other) = default;
 
+   std::string GetConfigPrefix() const {
+      std::string ret;
+      for (auto el: fConfigPrefix) {
+         ret += el;
+         ret += '.';
+      }
+      ret.erase(ret.end() - 1);
+   }
+
    /// Access to the attribute (non-const version).
    template <class PRIMITIVE>
    PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> ref) { return GetAttrsRefArr((PRIMITIVE*)nullptr).Get(GetCanvas(), ref); }
@@ -304,20 +321,29 @@ class TDrawingOptsBase: public TDrawingOptsBaseNoDefault {
 public:
    TDrawingOptsBase() = default;
    /// Construct from the pad that holds our `TDrawable`.
-   TDrawingOptsBase(TPadBase &pad): TDrawingOptsBaseNoDefault(pad)
+   TDrawingOptsBase(TPadBase &pad, const std::vector<string_view> &configPrefix):
+   TDrawingOptsBaseNoDefault(pad, []&configPrefix(){configPrefix.push_back("Line"); return configPrefix;})
    {
       if (&pad != &GetDefaultCanvas())
-         Default();
+         Default(configPrefix);
    }
 
    /// Retrieve the default drawing options for `DERIVED`. Can be used to query and adjust the
    /// default options.
-   static DERIVED &Default()
+   static DERIVED &Default(string_view configPrefix = {})
    {
-      static DERIVED defaultOpts(GetDefaultCanvas());
+      static DERIVED defaultOpts(GetDefaultCanvas(), configPrefix);
       return defaultOpts;
    }
 };
+
+class TLineDrawingOpts: public TDrawingOptsBase<TLineDrawingOpts> {
+public:
+   TLineDrawingOpts() = default;
+   /// Construct from the pad that holds our `TDrawable`.
+   TLineDrawingOpts(TPadBase &pad, string_view configPrefix): TDrawingOptsBase(pad, configPrefix)
+   {}                                                         
+}
 
 } // namespace Experimental
 } // namespace ROOT
