@@ -22,15 +22,26 @@ using namespace ROOT::Experimental;
 // TColor constexpr values:
 constexpr TColor::Alpha TColor::kOpaque;
 constexpr TColor::Alpha TColor::kTransparent;
-constexpr TColor::Predefined TColor::kRed;
-constexpr TColor::Predefined TColor::kGreen;
-constexpr TColor::Predefined TColor::kBlue;
-constexpr TColor::Predefined TColor::kWhite;
-constexpr TColor::Predefined TColor::kBlack;
+constexpr TColor::PredefinedRGB TColor::kRed;
+constexpr TColor::PredefinedRGB TColor::kGreen;
+constexpr TColor::PredefinedRGB TColor::kBlue;
+constexpr TColor::PredefinedRGB TColor::kWhite;
+constexpr TColor::PredefinedRGB TColor::kBlack;
+constexpr TColor::AutoTag TColor::kAuto;
+
 
 float TColor::GetPaletteOrdinal() const
 {
-   if (fIsRGBA)
+   if (fKind != EKind::kPalettePos)
       throw std::runtime_error("This color does not represent a palette ordinal!");
    return fRedOrPalettePos;
+}
+
+bool TColor::AssertNotPalettePos() const
+{
+   if (fKind == EKind::kPalettePos) {
+      throw std::runtime_error("This color does not represent a palette ordinal!");
+      return false;
+   }
+   return true;
 }
