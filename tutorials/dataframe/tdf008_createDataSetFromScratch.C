@@ -14,7 +14,7 @@ void tdf008_createDataSetFromScratch()
 
    // We now fill it with random numbers
    gRandom.SetSeed(1);
-   auto tdf_1 = tdf.Define("rnd", [&rnd]() { return gRandom.Gaus(); });
+   auto tdf_1 = tdf.Define("rnd", [&rnd]() { return gRandom->Gaus(); });
 
    // And we write out the dataset on disk
    tdf_1.Snapshot("randomNumbers", "tdf008_createDataSetFromScratch.root");
