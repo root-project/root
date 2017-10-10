@@ -1466,7 +1466,9 @@ void TClass::Init(const char *name, Version_t cversion,
             // information. Since it is transient, it is more than likely that the lack
             // will be harmles.
          } else {
-            ::Error("TClass::Init", "no interpreter information for class %s is available even though it has a TClass initialization routine.", fName.Data());
+            ::Error("TClass::Init", "no interpreter information for class %s is available even though it has a TClass "
+                                    "initialization routine.",
+                    fName.Data());
          }
       } else {
          // In this case we initialised this TClass instance starting from the fwd declared state
@@ -5553,7 +5555,7 @@ void TClass::LoadClassInfo() const
       } else {
          ::Error("TClass::LoadClassInfo", "no interpreter information for class %s is available"
                                           " even though it has a TClass initialization routine.",
-                  fName.Data());
+                 fName.Data());
       }
       return;
    }
