@@ -44,7 +44,7 @@ class TOptsAttrTable;
 template <class PRIMITIVE>
 class TOptsAttrRef {
 private:
-   size_t fIdx = (size_t)-1; ///<! The index in the relevant attribute table of `TCanvas`.
+   size_t fIdx = (size_t)-1; ///< The index in the relevant attribute table of `TCanvas`.
 
    /// Construct a reference given the index.
    explicit TOptsAttrRef(size_t idx): fIdx(idx) {}
