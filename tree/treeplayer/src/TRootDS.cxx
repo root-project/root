@@ -83,7 +83,7 @@ void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    TString setBranches;
    for (auto i : ROOT::TSeqU(fListOfBranches.size())) {
       auto colName = fListOfBranches[i].c_str();
-      auto &addr = fBranchAddresses.at(i).at(slot);
+      auto &addr = fBranchAddresses[i][slot];
       auto typeName = GetTypeName(colName);
       auto typeClass = TClass::GetClass(typeName.c_str());
       if (typeClass) {
