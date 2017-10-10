@@ -70,7 +70,7 @@ TEST(TCsvDS, ColumnReaders)
    auto vals = tds.GetColumnReaders<int>("Age");
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
-   std::vector<int> ages = { 60, 50, 40, 30, 1, -1 };
+   std::vector<int> ages = {60, 50, 40, 30, 1, -1};
    for (auto &&range : ranges) {
       tds.InitSlot(slot, range.first);
       for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
@@ -90,12 +90,12 @@ TEST(TCsvDS, ColumnReadersString)
    auto vals = tds.GetColumnReaders<std::string>("Name");
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
-   std::vector<std::string> names = { "Harry", "Bob,Bob", "\"Joe\"", "Tom", " John  ", " Mary Ann " };
+   std::vector<std::string> names = {"Harry", "Bob,Bob", "\"Joe\"", "Tom", " John  ", " Mary Ann "};
    for (auto &&range : ranges) {
       tds.InitSlot(slot, range.first);
       for (auto i : ROOT::TSeq<int>(range.first, range.second)) {
          tds.SetEntry(slot, i);
-         auto val = *((std::string*)*vals[slot]);
+         auto val = *((std::string *)*vals[slot]);
          EXPECT_EQ(names[i], val);
       }
       slot++;
