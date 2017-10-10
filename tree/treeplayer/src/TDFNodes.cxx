@@ -217,6 +217,7 @@ void TLoopManager::RunTreeReader()
    while (r.Next() && fNStopsReceived < fNChildren) {
       RunAndCheckFilters(0, r.GetCurrentEntry());
    }
+   fTree->GetEntry(0);
 }
 
 /// Run event loop over data accessed through a DataSource, in sequence.
