@@ -65,7 +65,7 @@ set(LLVM_TARGETS_TO_BUILD ${ROOT_CLING_TARGET} CACHE STRING "Semicolon-separated
 
 if(clingtest)
   message("-- cling test suite enabled: llvm / clang symbols in libCling will be visible!")
-  set(CLING_INCLUDE_TESTS ON CACHE BOOL "")
+  set(CLING_INCLUDE_TESTS ON CACHE BOOL "" FORCE)
 else()
   #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
