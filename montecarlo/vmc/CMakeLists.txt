@@ -3,6 +3,4 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-if(geo)
-  ROOT_STANDARD_LIBRARY_PACKAGE(VMC DEPENDENCIES EG Geom MathCore)
-endif()
+ROOT_STANDARD_LIBRARY_PACKAGE(VMC DEPENDENCIES EG Geom MathCore)
