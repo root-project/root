@@ -27,14 +27,14 @@ private:
 
    static TRegexp intRegex, doubleRegex1, doubleRegex2, trueRegex, falseRegex;
    
-   void FillHeaders(std::string &);
-   void FillRecord(std::string &, Record &);
+   void FillHeaders(const std::string &);
+   void FillRecord(const std::string &, Record &);
    void GenerateHeaders(size_t);
    std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &);
    void InferColTypes(std::vector<std::string> &);
-   void InferType(std::string &, unsigned int);
-   std::vector<std::string> ParseColumns(std::string &);
-   size_t ParseValue(std::string &, std::vector<std::string> &, size_t);
+   void InferType(const std::string &, unsigned int);
+   std::vector<std::string> ParseColumns(const std::string &);
+   size_t ParseValue(const std::string &, std::vector<std::string> &, size_t);
 
 public:
    TCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',');

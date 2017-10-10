@@ -18,7 +18,7 @@ TRegexp TCsvDS::doubleRegex2("^[-+]?[0-9]*\\.[0-9]+$");
 TRegexp TCsvDS::trueRegex("^true$");
 TRegexp TCsvDS::falseRegex("^false$");
 
-void TCsvDS::FillHeaders(std::string &line)
+void TCsvDS::FillHeaders(const std::string &line)
 {
    auto columns = ParseColumns(line);
    for (auto &col : columns) {
@@ -26,7 +26,7 @@ void TCsvDS::FillHeaders(std::string &line)
    }
 }
 
-void TCsvDS::FillRecord(std::string &line, Record &record)
+void TCsvDS::FillRecord(const std::string &line, Record &record)
 {
    std::istringstream lineStream(line);
    auto i = 0U;
@@ -79,7 +79,7 @@ void TCsvDS::InferColTypes(std::vector<std::string> &columns)
    }
 }
 
-void TCsvDS::InferType(std::string &col, unsigned int idxCol)
+void TCsvDS::InferType(const std::string &col, unsigned int idxCol)
 {
    std::string type;
    int dummy;
@@ -98,7 +98,7 @@ void TCsvDS::InferType(std::string &col, unsigned int idxCol)
    fColTypes[fHeaders[idxCol]] = type;
 }
 
-std::vector<std::string> TCsvDS::ParseColumns(std::string &line)
+std::vector<std::string> TCsvDS::ParseColumns(const std::string &line)
 {
    std::vector<std::string> columns;
 
@@ -109,7 +109,7 @@ std::vector<std::string> TCsvDS::ParseColumns(std::string &line)
    return columns;
 }
 
-size_t TCsvDS::ParseValue(std::string &line, std::vector<std::string> &columns, size_t i)
+size_t TCsvDS::ParseValue(const std::string &line, std::vector<std::string> &columns, size_t i)
 {
    std::stringstream val;
    bool quoted = false;
