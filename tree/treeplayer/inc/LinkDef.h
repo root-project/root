@@ -121,6 +121,7 @@
 #pragma link C++ class ROOT::Internal::TDF::TIgnoreErrorLevelRAII-;
 #pragma link C++ class ROOT::Experimental::TDF::TTrivialDS-;
 #pragma link C++ class ROOT::Experimental::TDF::TRootDS-;
+#pragma link C++ class ROOT::Experimental::TDF::TCsvDS-;
 
 #endif
 
