@@ -328,6 +328,7 @@ TEST(HashRecursiveRemove, DeleteWithRecursiveRemove)
       todelete.Add(n);
    }
    gROOT->GetListOfCleanups()->Add(&cont);
+   cont.SetBit(kMustCleanup);
 
    for (auto o : todelete)
       delete o;
@@ -353,6 +354,7 @@ TEST(HashRecursiveRemove, DeleteBadHashWithRecursiveRemove)
       todelete.Add(o);
    }
    gROOT->GetListOfCleanups()->Add(&cont);
+   cont.SetBit(kMustCleanup);
 
    for (auto o : todelete) {
       delete o;
