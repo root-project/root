@@ -31,37 +31,38 @@ class TPadBase;
 class TDrawingOptsBaseNoDefault;
 
 namespace Internal {
+
 template <class PRIMITIVE>
-class TOptsAttrTable;
+class TDrawingAttrTable;
 }
 
 /** class ROOT::Experimental::TOptsAttrRef
  The `TCanvas` keep track of `TColor`s, integer and floating point attributes used by the drawing options,
  making them accessible from other drawing options. The index into the table of the active attributes is
- wrapped into `TOptsAttrRef` to make them type-safe (i.e. distinct for `TColor`, `long long` and `double`).
+ wrapped into `TDrawingAttrRef` to make them type-safe (i.e. distinct for `TColor`, `long long` and `double`).
  */
 
 template <class PRIMITIVE>
-class TOptsAttrRef {
+class TDrawingAttrRef {
 private:
    size_t fIdx = (size_t)-1; ///< The index in the relevant attribute table of `TCanvas`.
 
    /// Construct a reference given the index.
-   explicit TOptsAttrRef(size_t idx): fIdx(idx) {}
+   explicit TDrawingAttrRef(size_t idx): fIdx(idx) {}
 
-   friend class Internal::TOptsAttrTable<PRIMITIVE>;
+   friend class Internal::TDrawingAttrTable<PRIMITIVE>;
 
 public:
    /// Construct an invalid reference.
-   TOptsAttrRef() = default;
+   TDrawingAttrRef() = default;
 
    /// Construct a reference from its options object, name, and set of string options.
    /// Initialized the PRIMITIVE to the default value, as available in TDrawingOptsBase::GetDefaultCanvas().
    /// The value of this attribute will be the index in the vector of strings; the default value is parsed by
    /// finding the configured string in the vector of strings. `optStrings` will only be used if
    /// `PRIMITIVE` is `long long`.
-   TOptsAttrRef(TDrawingOptsBaseNoDefault &opts, std::string_view name,
-                const std::vector<std::string_view> &optStrings = {});
+   TDrawingAttrRef(TDrawingOptsBaseNoDefault &opts, const TDrawingAttrName& name, const PRIMITIVE &deflt,
+      const std::vector<std::string_view> &optStrings = {});
 
    /// Get the underlying index.
    operator size_t() const { return fIdx; }
@@ -70,14 +71,14 @@ public:
    explicit operator bool() const { return fIdx != (size_t)-1; }
 };
 
-extern template class TOptsAttrRef<TColor>;
-extern template class TOptsAttrRef<long long>;
-extern template class TOptsAttrRef<double>;
+extern template class TDrawingAttrRef<TColor>;
+extern template class TDrawingAttrRef<long long>;
+extern template class TDrawingAttrRef<double>;
 
 namespace Internal {
 
 template <class PRIMITIVE>
-class TOptsAttrAndUseCount {
+class TDrawingAttrAndUseCount {
    /// The value.
    PRIMITIVE fVal;
    /// The value's use count.
@@ -88,10 +89,10 @@ class TOptsAttrAndUseCount {
 
 public:
    /// Default constructor: a default-constructed value that is unused.
-   TOptsAttrAndUseCount(): fVal(), fUseCount(0) {}
+   TDrawingAttrAndUseCount(): fVal(), fUseCount(0) {}
 
    /// Initialize with a value, setting use count to 1.
-   TOptsAttrAndUseCount(const PRIMITIVE &val): fVal(val) {}
+   TDrawingAttrAndUseCount(const PRIMITIVE &val): fVal(val) {}
 
    /// Create a value, initializing use count to 1.
    void Create(const PRIMITIVE &val);
@@ -113,14 +114,14 @@ public:
 };
 
 // Only these specializations are used and provided:
-extern template class TOptsAttrAndUseCount<TColor>;
-extern template class TOptsAttrAndUseCount<long long>;
-extern template class TOptsAttrAndUseCount<double>;
+extern template class TDrawingAttrAndUseCount<TColor>;
+extern template class TDrawingAttrAndUseCount<long long>;
+extern template class TDrawingAttrAndUseCount<double>;
 
 template <class PRIMITIVE>
-class TOptsAttrTable {
+class TDrawingAttrTable {
 public:
-   using value_type = Internal::TOptsAttrAndUseCount<PRIMITIVE>;
+   using value_type = Internal::TDrawingAttrAndUseCount<PRIMITIVE>;
 
 private:
    /// Table of attribute primitives. Slots can be freed and re-used.
@@ -130,26 +131,26 @@ private:
 public:
    /// Register an attribute with the table.
    /// \returns the index in the table.
-   TOptsAttrRef<PRIMITIVE> Register(const PRIMITIVE &val);
+   TDrawingAttrRef<PRIMITIVE> Register(const PRIMITIVE &val);
 
    /// Add a use of the attribute at table index idx.
-   void IncrUse(TOptsAttrRef<PRIMITIVE> idx) { fTable[idx].IncrUse(); }
+   void IncrUse(TDrawingAttrRef<PRIMITIVE> idx) { fTable[idx].IncrUse(); }
 
    /// Remove a use of the attribute at table index idx.
-   void DecrUse(TOptsAttrRef<PRIMITIVE> idx) { fTable[idx].DecrUse(); }
+   void DecrUse(TDrawingAttrRef<PRIMITIVE> idx) { fTable[idx].DecrUse(); }
 
    /// Update an existing attribute entry in the table.
-   void Update(TOptsAttrRef<PRIMITIVE> idx, const PRIMITIVE &val) { fTable[idx] = val; }
+   void Update(TDrawingAttrRef<PRIMITIVE> idx, const PRIMITIVE &val) { fTable[idx] = val; }
 
    /// Get the value at index `idx` (const version).
-   const PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> idx) const { return fTable[idx].Get(); }
+   const PRIMITIVE &Get(TDrawingAttrRef<PRIMITIVE> idx) const { return fTable[idx].Get(); }
 
    /// Get the value at index `idx` (non-const version).
-   PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> idx) { return fTable[idx].Get(); }
+   PRIMITIVE &Get(TDrawingAttrRef<PRIMITIVE> idx) { return fTable[idx].Get(); }
 
    /// Find the index belonging to the attribute at the given address and add a use.
    /// \returns the reference to `val`, which might be `IsInvalid()` if `val` is not part of this table.
-   TOptsAttrRef<PRIMITIVE> SameAs(const PRIMITIVE &val);
+   TDrawingAttrRef<PRIMITIVE> SameAs(const PRIMITIVE &val);
 
    /// Access to the underlying attribute table (non-const version).
    std::vector<value_type> &GetTable() { return fTable; }
@@ -158,9 +159,9 @@ public:
    const std::vector<value_type> &GetTable() const { return fTable; }
 };
 
-extern template class TOptsAttrTable<TColor>;
-extern template class TOptsAttrTable<long long>;
-extern template class TOptsAttrTable<double>;
+extern template class TDrawingAttrTable<TColor>;
+extern template class TDrawingAttrTable<long long>;
+extern template class TDrawingAttrTable<double>;
 } // namespace Internal
 
 class TLineAttrs {
