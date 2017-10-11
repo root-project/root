@@ -74,6 +74,8 @@
 #pragma link C++ class ROOT::Experimental::Internal::TDrawingAttrTable<ROOT::Experimental::TColor>+;
 #pragma link C++ class ROOT::Experimental::Internal::TDrawingAttrTable<long long>+;
 #pragma link C++ class ROOT::Experimental::Internal::TDrawingAttrTable<double>+;
+#pragma link C++ class ROOT::Experimental::TLineAttrs+;
+#pragma link C++ class ROOT::Experimental::TFillAttrs+;
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault+;
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<ROOT::Experimental::TColor>+;
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<long long>+;
