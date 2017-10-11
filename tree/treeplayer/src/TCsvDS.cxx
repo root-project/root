@@ -1,3 +1,76 @@
+// Author: Enric Tejedor CERN  10/2017
+
+/*************************************************************************
+ * Copyright (C) 1995-2017, Rene Brun and Fons Rademakers.               *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
+
+// clang-format off
+/** \class ROOT::Experimental::TDF::TCsvDS
+    \ingroup dataframe
+    \brief TDataFrame data source class for reading CSV files.
+
+The TCsvDS class implements a CSV file reader for TDataFrame.
+
+A TDataFrame that reads from a CSV file can be constructed using the factory method
+ROOT::Experimental::TDF::MakeCsvDataFrame, which accepts three parameters:
+1. Path to the CSV file.
+2. Boolean that specifies whether the first row of the CSV file contains headers or
+not (optional, default `true`). If `false`, header names will be automatically generated.
+3. Delimiter (optional, default ',').
+
+The types of the columns in the CSV file are automatically inferred. The supported
+types are:
+- Integer: stored as a 64-bit long long int.
+- Floating point number: stored with double precision.
+- Boolean: matches the literals `true` and `false`.
+- String: stored as an std::string, matches anything that does not fall into any of the
+previous types.
+
+These are some formatting rules expected by the TCsvDS implementation:
+- All records must have the same number of fields, in the same order.
+- Any field may be quoted.
+~~~
+    "1997","Ford","E350"
+~~~
+- Fields with embedded delimiters (e.g. comma) must be quoted.
+~~~
+    1997,Ford,E350,"Super, luxurious truck"
+~~~
+- Fields with double-quote characters must be quoted, and each of the embedded
+double-quote characters must be represented by a pair of double-quote characters.
+~~~
+    1997,Ford,E350,"Super, ""luxurious"" truck"
+~~~
+- Fields with embedded line breaks are not supported, even when quoted.
+~~~
+    1997,Ford,E350,"Go get one now
+    they are going fast"
+~~~
+- Spaces are considered part of a field and are not ignored.
+~~~
+    1997, Ford , E350
+    not same as
+    1997,Ford,E350
+    but same as
+    1997, "Ford" , E350
+~~~
+- If a header row is provided, it must contain column names for each of the fields.
+~~~
+    Year,Make,Model
+    1997,Ford,E350
+    2000,Mercury,Cougar
+~~~
+
+The current implementation of TCsvDS reads the entire CSV file content into memory before
+TDataFrame starts processing it. Therefore, before creating a CSV TDataFrame, it is
+important to check both how much memory is available and the size of the CSV file.
+*/
+// clang-format on
+
 #include <ROOT/RMakeUnique.hxx>
 #include <ROOT/TCsvDS.hxx>
 #include <ROOT/TDFUtils.hxx>
@@ -135,6 +208,12 @@ size_t TCsvDS::ParseValue(const std::string &line, std::vector<std::string> &col
    return i;
 }
 
+////////////////////////////////////////////////////////////////////////
+/// Constructor to create a CSV TDataSource for TDataFrame.
+/// \param[in] fileName Path of the CSV file.
+/// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
+///                        (default `true`).
+/// \param[in] delimiter Delimiter character (default ',').
 TCsvDS::TCsvDS(std::string_view fileName, bool readHeaders, char delimiter) // TODO: Let users specify types?
    : fFileName(fileName),
      fDelimiter(delimiter)
@@ -172,6 +251,8 @@ TCsvDS::TCsvDS(std::string_view fileName, bool readHeaders, char delimiter) // T
    }
 }
 
+////////////////////////////////////////////////////////////////////////
+/// Destructor.
 TCsvDS::~TCsvDS()
 {
    for (auto &record : fRecords) {
@@ -253,6 +334,12 @@ void TCsvDS::SetNSlots(unsigned int nSlots)
    fEntryRanges.back().second += remainder;
 }
 
+////////////////////////////////////////////////////////////////////////
+/// Factory method to create a CSV TDataFrame.
+/// \param[in] fileName Path of the CSV file.
+/// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
+///                        (default `true`).
+/// \param[in] delimiter Delimiter character (default ',').
 TDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter)
 {
    ROOT::Experimental::TDataFrame tdf(std::make_unique<TCsvDS>(fileName, readHeaders, delimiter));
