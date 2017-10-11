@@ -1,3 +1,4 @@
+#include <ROOT/RMakeUnique.hxx>
 #include <ROOT/TCsvDS.hxx>
 #include <ROOT/TDFUtils.hxx>
 #include <ROOT/TSeq.hxx>
@@ -250,6 +251,12 @@ void TCsvDS::SetNSlots(unsigned int nSlots)
       (void)i;
    }
    fEntryRanges.back().second += remainder;
+}
+
+TDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter)
+{
+   ROOT::Experimental::TDataFrame tdf(std::make_unique<TCsvDS>(fileName, readHeaders, delimiter));
+   return tdf;
 }
 
 } // ns TDF
