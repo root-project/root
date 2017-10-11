@@ -39,8 +39,8 @@ public:
    TTaskGroup &operator=(TTaskGroup &&other);
    ~TTaskGroup();
 
+   void Cancel();
    void Run(const std::function<void(void)> &closure);
-
    void Wait();
 };
 }

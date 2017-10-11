@@ -71,6 +71,17 @@ TTaskGroup::~TTaskGroup()
 }
 
 /////////////////////////////////////////////////////////////////////////////
+/// Cancel all submitted tasks immediately.
+void TTaskGroup::Cancel()
+{
+#ifdef R__USE_IMT
+   fCanRun = false;
+   ((tbb::task_group *)fTaskContainer)->cancel();
+   fCanRun = true;
+#endif
+}
+
+/////////////////////////////////////////////////////////////////////////////
 /// Add to the group an item of work which will be ran asynchronously.
 /// Adding many small items of work to the TTaskGroup is not efficient,
 /// unless they run for long enough. If the work to be done is little, look
