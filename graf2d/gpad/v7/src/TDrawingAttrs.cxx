@@ -39,7 +39,7 @@ static Internal::TDrawingOptsReader::Attrs_t &GetDefaultAttrConfig()
 }
 
 template <class PRIMITIVE>
-using ParsedAttrs_t = std::unordered_map<std::string, TOptsAttrRef<PRIMITIVE>>;
+using ParsedAttrs_t = std::unordered_map<std::string, TDrawingAttrRef<PRIMITIVE>>;
 using AllParsedAttrs_t = std::tuple<ParsedAttrs_t<TColor>, ParsedAttrs_t<long long>, ParsedAttrs_t<double>>;
 
 static AllParsedAttrs_t &GetParsedDefaultAttrs()
@@ -65,7 +65,7 @@ static ParsedAttrs_t<double> &GetParsedDefaultAttrsOfAKind(double *)
 } // unnamed namespace
 
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE>::TOptsAttrRef(TDrawingOptsBaseNoDefault &opts, std::string_view name,
+TDrawingAttrRef<PRIMITIVE>::TDrawingAttrRef(TDrawingOptsBaseNoDefault &opts, std::string_view name,
                                       const std::vector<std::string_view> &optStrings)
 {
    static constexpr PRIMITIVE *kNullPtr = (PRIMITIVE *)nullptr;
@@ -93,14 +93,14 @@ TOptsAttrRef<PRIMITIVE>::TOptsAttrRef(TDrawingOptsBaseNoDefault &opts, std::stri
 
 namespace ROOT {
 namespace Experimental {
-template class TOptsAttrRef<TColor>;
-template class TOptsAttrRef<long long>;
-template class TOptsAttrRef<double>;
+template class TDrawingAttrRef<TColor>;
+template class TDrawingAttrRef<long long>;
+template class TDrawingAttrRef<double>;
 } // namespace Experimental
 } // namespace ROOT
 
 template <class PRIMITIVE>
-void ROOT::Experimental::Internal::TOptsAttrAndUseCount<PRIMITIVE>::Clear()
+void ROOT::Experimental::Internal::TDrawingAttrAndUseCount<PRIMITIVE>::Clear()
 {
    if (fUseCount) {
       R__ERROR_HERE("Gpad") << "Refusing to clear a referenced primitive (use count " << fUseCount << ")!";
@@ -111,7 +111,7 @@ void ROOT::Experimental::Internal::TOptsAttrAndUseCount<PRIMITIVE>::Clear()
 }
 
 template <class PRIMITIVE>
-void ROOT::Experimental::Internal::TOptsAttrAndUseCount<PRIMITIVE>::Create(const PRIMITIVE &val)
+void ROOT::Experimental::Internal::TDrawingAttrAndUseCount<PRIMITIVE>::Create(const PRIMITIVE &val)
 {
    if (fUseCount) {
       R__ERROR_HERE("Gpad") << "Refusing to create a primitive over an existing one (use count " << fUseCount << ")!";
@@ -123,7 +123,7 @@ void ROOT::Experimental::Internal::TOptsAttrAndUseCount<PRIMITIVE>::Create(const
 }
 
 template <class PRIMITIVE>
-void ROOT::Experimental::Internal::TOptsAttrAndUseCount<PRIMITIVE>::IncrUse()
+void ROOT::Experimental::Internal::TDrawingAttrAndUseCount<PRIMITIVE>::IncrUse()
 {
    if (fUseCount == 0) {
       R__ERROR_HERE("Gpad") << "Refusing to increase use count on a non-existing primitive!";
@@ -133,7 +133,7 @@ void ROOT::Experimental::Internal::TOptsAttrAndUseCount<PRIMITIVE>::IncrUse()
 }
 
 template <class PRIMITIVE>
-void ROOT::Experimental::Internal::TOptsAttrAndUseCount<PRIMITIVE>::DecrUse()
+void ROOT::Experimental::Internal::TDrawingAttrAndUseCount<PRIMITIVE>::DecrUse()
 {
    if (fUseCount == 0) {
       R__ERROR_HERE("Gpad") << "Refusing to decrease use count on a non-existing primitive!";
@@ -145,12 +145,12 @@ void ROOT::Experimental::Internal::TOptsAttrAndUseCount<PRIMITIVE>::DecrUse()
 }
 
 // Available specialization:
-template class ROOT::Experimental::Internal::TOptsAttrAndUseCount<TColor>;
-template class ROOT::Experimental::Internal::TOptsAttrAndUseCount<long long>;
-template class ROOT::Experimental::Internal::TOptsAttrAndUseCount<double>;
+template class ROOT::Experimental::Internal::TDrawingAttrAndUseCount<TColor>;
+template class ROOT::Experimental::Internal::TDrawingAttrAndUseCount<long long>;
+template class ROOT::Experimental::Internal::TDrawingAttrAndUseCount<double>;
 
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE> Internal::TOptsAttrTable<PRIMITIVE>::Register(const PRIMITIVE &val)
+TDrawingAttrRef<PRIMITIVE> Internal::TDrawingAttrTable<PRIMITIVE>::Register(const PRIMITIVE &val)
 {
    auto isFree = [](const value_type &el) -> bool { return el.IsFree(); };
    auto iSlot = std::find_if(fTable.begin(), fTable.end(), isFree);
@@ -158,31 +158,31 @@ TOptsAttrRef<PRIMITIVE> Internal::TOptsAttrTable<PRIMITIVE>::Register(const PRIM
       iSlot->Create(val);
       std::ptrdiff_t offset = iSlot - fTable.begin();
       assert(offset >= 0 && "This offset cannot possibly be negative!");
-      return TOptsAttrRef<PRIMITIVE>{static_cast<size_t>(offset)};
+      return TDrawingAttrRef<PRIMITIVE>{static_cast<size_t>(offset)};
    }
    fTable.emplace_back(val);
-   return TOptsAttrRef<PRIMITIVE>{fTable.size() - 1};
+   return TDrawingAttrRef<PRIMITIVE>{fTable.size() - 1};
 }
 
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE> Internal::TOptsAttrTable<PRIMITIVE>::SameAs(const PRIMITIVE &val)
+TDrawingAttrRef<PRIMITIVE> Internal::TDrawingAttrTable<PRIMITIVE>::SameAs(const PRIMITIVE &val)
 {
    if (&fTable.front().Get() > &val || &fTable.back().Get() < &val)
-      return TOptsAttrRef<PRIMITIVE>{}; // not found.
+      return TDrawingAttrRef<PRIMITIVE>{}; // not found.
    std::ptrdiff_t offset = &val - &fTable.front().Get();
    assert(offset >= 0 && "Logic error, how can offset be < 0?");
-   TOptsAttrRef<PRIMITIVE> idx{static_cast<size_t>(offset)};
+   TDrawingAttrRef<PRIMITIVE> idx{static_cast<size_t>(offset)};
    IncrUse(idx);
-   return TOptsAttrRef<PRIMITIVE>{idx};
+   return TDrawingAttrRef<PRIMITIVE>{idx};
 }
 
 // Provide specializations promised by the header:
-template class Internal::TOptsAttrTable<TColor>;
-template class Internal::TOptsAttrTable<long long>;
-template class Internal::TOptsAttrTable<double>;
+template class Internal::TDrawingAttrTable<TColor>;
+template class Internal::TDrawingAttrTable<long long>;
+template class Internal::TDrawingAttrTable<double>;
 
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE>
+TDrawingAttrRef<PRIMITIVE>
 TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Register(TCanvas &canv, const PRIMITIVE &val)
 {
    fRefArray.push_back(canv.GetAttrTable((PRIMITIVE *)nullptr).Register(val));
@@ -190,22 +190,22 @@ TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Register(TCanvas &canv, co
 }
 
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE>
-TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::SameAs(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx)
+TDrawingAttrRef<PRIMITIVE>
+TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::SameAs(TCanvas &canv, TDrawingAttrRef<PRIMITIVE> idx)
 {
    canv.GetAttrTable((PRIMITIVE *)nullptr).IncrUse(idx);
    return idx;
 }
 
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE>
+TDrawingAttrRef<PRIMITIVE>
 TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::SameAs(TCanvas &canv, const PRIMITIVE &val)
 {
    return canv.GetAttrTable((PRIMITIVE *)nullptr).SameAs(val);
 }
 
 template <class PRIMITIVE>
-void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Update(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx,
+void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Update(TCanvas &canv, TDrawingAttrRef<PRIMITIVE> idx,
                                                                   const PRIMITIVE &val)
 {
    canv.GetAttrTable((PRIMITIVE *)nullptr).Update(idx, val);
@@ -227,13 +227,13 @@ void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::RegisterCopy(TCanvas 
 }
 
 template <class PRIMITIVE>
-const PRIMITIVE &TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Get(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx) const
+const PRIMITIVE &TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Get(TCanvas &canv, TDrawingAttrRef<PRIMITIVE> idx) const
 {
    return canv.GetAttrTable((PRIMITIVE *)nullptr).Get(idx);
 }
 
 template <class PRIMITIVE>
-PRIMITIVE &TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Get(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx)
+PRIMITIVE &TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Get(TCanvas &canv, TDrawingAttrRef<PRIMITIVE> idx)
 {
    return canv.GetAttrTable((PRIMITIVE *)nullptr).Get(idx);
 }
