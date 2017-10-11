@@ -79,10 +79,10 @@ public:
       void RegisterCopy(TCanvas &canv);
 
       /// Access to attribute (const version).
-      const PRIMITIVE &Get(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx) const;
+      const PRIMITIVE &Get(TCanvas &canv, TDrawingAttrRef<PRIMITIVE> idx) const;
 
       /// Access to attribute (non-const version).
-      PRIMITIVE &Get(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx);
+      PRIMITIVE &Get(TCanvas &canv, TDrawingAttrRef<PRIMITIVE> idx);
    };
 
 private:
