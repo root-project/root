@@ -173,6 +173,8 @@ struct TLineAttrs {
       long long fVal;
       explicit operator long long() const { return fVal; }
    };
+
+   TLineAttrs() = default;
    /// Construct from the pad that holds our `TDrawable`, passing the configuration name of this line attribute.
    TLineAttrs(TDrawingOptsBaseNoDefault &opts, const std::string &name, const TColor &col, Width width)
       : fColor(opts, name + ".Color", col), fWidth(opts, name + ".Width", (long long)width)
@@ -181,6 +183,8 @@ struct TLineAttrs {
 
 struct TFillAttrs {
    TDrawingAttrRef<TColor> fColor; ///< Line color
+
+   TFillAttrs() = default;
 
    /// Construct from the pad that holds our `TDrawable`, passing the configuration name of this line attribute.
    TFillAttrs(TDrawingOptsBaseNoDefault &opts, const std::string &name, const TColor &col)
