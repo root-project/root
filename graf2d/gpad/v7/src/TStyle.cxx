@@ -60,7 +60,9 @@ static TStyle GetInitialCurrent()
    if (iDefStyle == GetGlobalStyles().end()) {
       R__ERROR_HERE("Gpad") << "Cannot find initial default style named \"" << kDefaultStyleName
       << "\", using an empty one.";
-      return TStyle(kDefaultStyleName);
+      TStyle defStyle(kDefaultStyleName);
+      TStyle::Register(defStyle);
+      return defStyle;
    } else {
       return iDefStyle->second;
    }
