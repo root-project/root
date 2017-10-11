@@ -37,19 +37,20 @@ TDrawingOptsReader::Attrs_t TDrawingOptsReader::ReadDefaults()
    return ret;
 }
 
-ROOT::Experimental::TColor TDrawingOptsReader::ParseColor(std::string_view /*attr*/)
+ROOT::Experimental::TColor TDrawingOptsReader::ParseColor(std::string_view /*attr*/, const TColor &/*deflt*/)
 {
    // TODO: implement!
    return ROOT::Experimental::TColor::kBlack;
 }
 
-long long TDrawingOptsReader::ParseInt(std::string_view /*attr*/, std::vector<std::string_view> /*opts*/ /*= {}*/)
+long long TDrawingOptsReader::ParseInt(std::string_view /*attr*/, long long /*deflt*/,
+   std::vector<std::string_view> /*opts*/ /*= {}*/)
 {
    // TODO: implement!
    return 0;
 }
 
-double TDrawingOptsReader::ParseFP(std::string_view /*attr*/)
+double TDrawingOptsReader::ParseFP(std::string_view /*attr*/, double /*deflt*/)
 {
    // TODO: implement!
    return 0.;
