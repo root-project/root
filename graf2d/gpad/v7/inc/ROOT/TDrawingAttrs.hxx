@@ -93,7 +93,7 @@ public:
    TDrawingAttrAndUseCount(): fVal(), fUseCount(0) {}
 
    /// Initialize with a value, setting use count to 1.
-   TDrawingAttrAndUseCount(const PRIMITIVE &val): fVal(val) {}
+   explicit TDrawingAttrAndUseCount(const PRIMITIVE &val): fVal(val) {}
 
    /// Create a value, initializing use count to 1.
    void Create(const PRIMITIVE &val);
@@ -141,7 +141,7 @@ public:
    void DecrUse(TDrawingAttrRef<PRIMITIVE> idx) { fTable[idx].DecrUse(); }
 
    /// Update an existing attribute entry in the table.
-   void Update(TDrawingAttrRef<PRIMITIVE> idx, const PRIMITIVE &val) { fTable[idx] = val; }
+   void Update(TDrawingAttrRef<PRIMITIVE> idx, const PRIMITIVE &val) { fTable[idx] = value_type(val); }
 
    /// Get the value at index `idx` (const version).
    const PRIMITIVE &Get(TDrawingAttrRef<PRIMITIVE> idx) const { return fTable[idx].Get(); }
