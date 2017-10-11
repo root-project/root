@@ -203,7 +203,7 @@ template <class T>
    struct TTypeNameExtraction: TTypeNameExtractionBase {
       static std::string Get() {
 #ifdef _MSC_VER // Visual Studio
-# define R__TNE_PRETTY_FUNCTION __FUNCTION__
+# define R__TNE_PRETTY_FUNCTION __FUNCSIG__
 #else
 # define R__TNE_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #endif
