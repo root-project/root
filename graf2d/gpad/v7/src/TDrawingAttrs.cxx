@@ -13,12 +13,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TDrawingOptsAttrs.hxx"
+#include "ROOT/TDrawingAttrs.hxx"
 
 #include "ROOT/TCanvas.hxx"
 #include "ROOT/TColor.hxx"
 #include "ROOT/TLogger.hxx"
-#include "ROOT/TPad.hxx"
 
 #include "TDrawingOptsReader.hxx" // in src/
 
@@ -65,28 +64,28 @@ static ParsedAttrs_t<double> &GetParsedDefaultAttrsOfAKind(double *)
 } // unnamed namespace
 
 template <class PRIMITIVE>
-TDrawingAttrRef<PRIMITIVE>::TDrawingAttrRef(TDrawingOptsBaseNoDefault &opts, std::string_view name,
-                                      const std::vector<std::string_view> &optStrings)
+TDrawingAttrRef<PRIMITIVE>::TDrawingAttrRef(TDrawingOptsBaseNoDefault &opts, const std::string &attrName,
+   const PRIMITIVE &deflt, const std::vector<std::string_view> &optStrings)
 {
+   std::string fullName = opts.GetName() + "." + attrName;
    static constexpr PRIMITIVE *kNullPtr = (PRIMITIVE *)nullptr;
    auto &parsedAttrs = GetParsedDefaultAttrsOfAKind(kNullPtr);
    TCanvas &canv = opts.GetCanvas();
-   std::string strName(name);
-   if (&canv == &opts.GetDefaultCanvas()) {
+   if (TPadDrawingOpts::IsDefaultCanvas(canv)) {
       // We are a member of the default option object.
-      auto iIdx = parsedAttrs.find(strName);
+      auto iIdx = parsedAttrs.find(fullName);
       if (iIdx == parsedAttrs.end()) {
          // We haven't read the default yet, do that now:
-         PRIMITIVE val = Internal::TDrawingOptsReader(GetDefaultAttrConfig()).Parse(name, kNullPtr, optStrings);
+         PRIMITIVE val = Internal::TDrawingOptsReader(GetDefaultAttrConfig()).Parse(fullName, deflt, optStrings);
          fIdx = opts.Register(val);
-         parsedAttrs[strName] = *this;
+         parsedAttrs[fullName] = *this;
       } else {
          fIdx = opts.SameAs(iIdx->second);
       }
    } else {
-      auto &defCanv = static_cast<TCanvas &>(opts.GetDefaultCanvas());
+      auto &defCanv = static_cast<TCanvas &>(opts.GetDefaultCanvas(TStyle::GetCurrent()));
       const auto &defaultTable = defCanv.GetAttrTable((PRIMITIVE *)nullptr);
-      PRIMITIVE val = defaultTable.Get(parsedAttrs[strName]);
+      PRIMITIVE val = defaultTable.Get(parsedAttrs[fullName]);
       fIdx = opts.Register(val);
    }
 }
