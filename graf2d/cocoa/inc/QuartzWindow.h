@@ -71,6 +71,7 @@
 
 - (BOOL) fIsPixmap;
 - (BOOL) fIsOpenGLWidget;
+- (CGFloat) fScaleFactor;
 
 //Geometry.
 - (int) fX;
@@ -193,6 +194,7 @@
 
 - (BOOL) fIsPixmap;
 - (BOOL) fIsOpenGLWidget;
+- (CGFloat) fScaleFactor;
 
 @property (nonatomic, assign) CGContextRef fContext;
 

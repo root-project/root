@@ -41,6 +41,7 @@
 //to check in TGCocoa, what's the object.
 - (BOOL) fIsPixmap;
 - (BOOL) fIsOpenGLWidget;
+- (CGFloat) fScaleFactor;
 
 //Either [[NSGraphicsContext currentContext] graphicsPort]
 //or bitmap context (pixmap).

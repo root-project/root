@@ -62,10 +62,12 @@ void ConvertPointsROOTToCocoa(Int_t nPoints, const TPoint *xy, std::vector<TPoin
    assert(xy != 0 && "ConvertPointsROOTToCocoa, xy parameter is null");
    assert(drawable != 0 && "ConvertPointsROOTToCocoa, drawable parameter is null");
 
+   const auto scaleFactor = drawable.fScaleFactor;
+
    dst.resize(nPoints);
    for (Int_t i = 0; i < nPoints; ++i) {
-      dst[i].fX = xy[i].fX;
-      dst[i].fY = SCoord_t(X11::LocalYROOTToCocoa(drawable, xy[i].fY));
+      dst[i].fX = SCoord_t(xy[i].fX * scaleFactor);
+      dst[i].fY = SCoord_t(X11::LocalYROOTToCocoa(drawable, xy[i].fY) * scaleFactor);
    }
 }
 
@@ -202,6 +204,11 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
    //AA flag is not a part of a state.
    const Quartz::CGAAStateGuard aaCtxGuard(ctx, fUseFAAA);
 
+   if (drawable.fScaleFactor > 1.) {
+      // The CTM will be restored by 'ctxGuard'.
+      CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
+   }
+
    const TColor * const fillColor = gROOT->GetColor(GetFillColor());
    if (!fillColor) {
       Error("DrawFillArea", "Could not find TColor for index %d", GetFillColor());
@@ -303,7 +310,12 @@ void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
    //Convert to bottom-left-corner system.
    ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
 
+   if (drawable.fScaleFactor > 1.)
+      CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
+
    Quartz::DrawPolyLine(ctx, n, &fConvertedPoints[0]);
+
+   // CTM (current transformation matrix) is restored by 'ctxGuard's dtor.
 }
 
 
@@ -341,7 +353,10 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
 
    ConvertPointsROOTToCocoa(n, xy, fConvertedPoints, drawable);
 
-   Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], GetMarkerSize(), GetMarkerStyle());
+   if (drawable.fScaleFactor > 1.)
+      CGContextScaleCTM(ctx, 1. / drawable.fScaleFactor, 1. / drawable.fScaleFactor);
+
+   Quartz::DrawPolyMarker(ctx, n, &fConvertedPoints[0], GetMarkerSize() * drawable.fScaleFactor, GetMarkerStyle());
 }
 
 

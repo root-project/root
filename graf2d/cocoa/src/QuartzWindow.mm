@@ -1320,6 +1320,14 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
+- (CGFloat) fScaleFactor
+{
+   if (!self.screen)
+      return 1.;
+   return self.screen.backingScaleFactor;
+}
+
+//______________________________________________________________________________
 - (int) fX
 {
    return X11::GlobalXCocoaToROOT(self.frame.origin.x);
@@ -1929,6 +1937,12 @@ void print_mask_info(ULong_t mask)
 - (BOOL) fIsOpenGLWidget
 {
    return NO;
+}
+
+//______________________________________________________________________________
+- (CGFloat) fScaleFactor
+{
+   return self.fQuartzWindow.fScaleFactor;
 }
 
 //______________________________________________________________________________

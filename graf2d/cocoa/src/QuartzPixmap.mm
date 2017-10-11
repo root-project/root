@@ -55,7 +55,7 @@ namespace Quartz = ROOT::Quartz;
    assert(width > 0 && "resizeW:H:, Pixmap width must be positive");
    assert(height > 0 && "resizeW:H:, Pixmap height must be positive");
 
-   fScaleFactor = unsigned(scaleFactor + 0.5);
+   fScaleFactor = scaleFactor;
 
    std::vector<unsigned char> memory;
 
@@ -89,7 +89,6 @@ namespace Quartz = ROOT::Quartz;
       CGContextScaleCTM(ctx.Get(), fScaleFactor, fScaleFactor);
 
    fContext.Reset(ctx.Release());
-
 
    //sizes, data.
    fWidth = width;
@@ -156,6 +155,12 @@ namespace Quartz = ROOT::Quartz;
 - (BOOL) fIsOpenGLWidget
 {
    return NO;
+}
+
+//______________________________________________________________________________
+- (CGFloat) fScaleFactor
+{
+   return fScaleFactor;
 }
 
 //______________________________________________________________________________
@@ -359,7 +364,7 @@ namespace Quartz = ROOT::Quartz;
    if (fScaleFactor > 1) {
       //Ooops, and what should I do now???
       const unsigned scaledW = fWidth * fScaleFactor;
-      unsigned char *dst = data + y * fScaleFactor * scaledW * 4 + x * fScaleFactor * 4;
+      unsigned char *dst = data + unsigned(y * fScaleFactor * scaledW * 4) + unsigned(x * fScaleFactor * 4);
 
       for (unsigned i = 0; i < 2; ++i, dst += 4) {
          dst[0] = rgb[0];
@@ -732,6 +737,13 @@ namespace Quartz = ROOT::Quartz;
 - (BOOL) fIsOpenGLWidget
 {
    return NO;
+}
+
+//______________________________________________________________________________
+- (CGFloat) fScaleFactor
+{
+   // TODO: this is to be understood yet ...
+   return 1.;
 }
 
 //______________________________________________________________________________
