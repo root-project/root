@@ -52,6 +52,11 @@ protected:
 private:
   TGeoElement(const TGeoElement &other);
   TGeoElement &operator=(const TGeoElement &other);
+  void                      ComputeDerivedQuantities(); // Calculate properties for an atomic number
+  void                      ComputeCoulombFactor(); // Compute the Coulomb correction factor
+  void                      ComputeLradTsaiFactor(); // Compute the Tsai formula for the radiation length
+  Double_t                  fCoulomb;    // Coulomb correction factor
+  Double_t                  fRadTsai;    // Tsai formula for the radiation length
 
 public:
    // constructors
@@ -81,7 +86,10 @@ public:
    void                     SetDefined(Bool_t flag=kTRUE) {TObject::SetBit(kElemDefined,flag);}
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kElemUsed,flag);}
    static TGeoElementTable *GetElementTable();
-
+   // Coulomb correction factor
+   inline Double_t          GetfCoulomb() const {return fCoulomb;}
+   // Tsai formula for the radiation length
+   inline Double_t          GetfRadTsai() const {return fRadTsai;}
 
    ClassDef(TGeoElement, 2)              // base element class
 };
