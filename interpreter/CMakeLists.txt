@@ -20,6 +20,8 @@ if(cxx17)
 elseif(cxx14)
   set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "" FORCE)
 endif()
+# Disabling zlib support to LLVM, due to the issue that if ROOT has builtin_zlib=ON,
+# it could solve symbols from both zlibs: system and ROOT builtin.
 set(LLVM_ENABLE_ZLIB OFF CACHE BOOL "")
 
 # The llvm::ReverseIterate<bool>::value symbol from llvm's SmallPtrSet.h
