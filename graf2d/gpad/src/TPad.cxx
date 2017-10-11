@@ -6796,7 +6796,7 @@ void TPad::CloseToolTip(TObject *tip)
 
 void TPad::x3d(Option_t *type)
 {
-   ::Info("TPad::x3d()", "Fn is depreciated - use TPad::GetViewer3D() instead");
+   ::Info("TPad::x3d()", "This function is deprecated. Use %s->GetViewer3D(\"x3d\") instead",this->GetName());
 
    // Default on GetViewer3D is pad - for x3d it was x3d...
    if (!type || !type[0]) {
