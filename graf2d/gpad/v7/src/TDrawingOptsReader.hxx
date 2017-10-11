@@ -53,25 +53,25 @@ public:
    /// `TColor::kRed`.
    /// Prints an error and returns `TColor::kBlack` if the attribute string cannot be parsed or if the attribute has no
    /// entry in `fAttrs`.
-   TColor ParseColor(std::string_view attr);
+   TColor ParseColor(std::string_view attr, const TColor& deflt);
 
    /// Parse an integer attribute, or if `opts` is given, return the index of the string from the options file in
    /// `opts`. Returns `0` (and prints an error) if the string cannot be found in opts, or if the integer cannot be
    /// parsed or if the attribute has no entry in `fAttrs`.
-   long long ParseInt(std::string_view attr, std::vector<std::string_view> opts = {});
+   long long ParseInt(std::string_view attr, long long deflt, std::vector<std::string_view> opts = {});
 
    /// Parse a floating point attribute.
    /// Returns `0.` and prints an error if the attribute string cannot be parsed as a floating point number.
    /// Prints an error if the attribute has no entry in `fAttrs`.
-   double ParseFP(std::string_view attr);
+   double ParseFP(std::string_view attr, double deflt);
 
    /// Convenience overloads:
-   TColor Parse(std::string_view attr, const TColor *, std::vector<std::string_view> = {}) { return ParseColor(attr); }
-   long long Parse(std::string_view attr, const long long *, std::vector<std::string_view> opts = {})
+   TColor Parse(std::string_view attr, const TColor &deflt, std::vector<std::string_view> = {}) { return ParseColor(attr, deflt); }
+   long long Parse(std::string_view attr, long long deflt, std::vector<std::string_view> opts = {})
    {
-      return ParseInt(attr, opts);
+      return ParseInt(attr, deflt, opts);
    }
-   double Parse(std::string_view attr, const double *, std::vector<std::string_view> = {}) { return ParseFP(attr); }
+   double Parse(std::string_view attr, double deflt, std::vector<std::string_view> = {}) { return ParseFP(attr, deflt); }
 
    /// Adds attributes specified in `filename` to those already existing in `fAttrs`.
    /// Overwrites values for attributes that already exist in `attrs`!
