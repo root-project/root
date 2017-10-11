@@ -18,6 +18,7 @@
 
 #include <ROOT/TColor.hxx>
 #include <ROOT/TDrawingAttrs.hxx>
+#include <ROOT/TStyle.hxx>
 
 #include <RStringView.h>
 
@@ -89,13 +90,9 @@ private:
    /// The `TCanvas` holding the `TDrawable` (or its `TPad`).
    TCanvas *fCanvas = nullptr;
 
-   /// String vector specifying the prefixes used to select the right setting from the style file,
-   /// e.g. `{"1D", "Hist", "Line"}`.
-   /// \note Requires external string storage; usually, this parameter is passed as
-   /// ```
-   ///     TXYZDrawingOpts fOpts{*this, "Hist.Foo", {12, red}};
-   /// ```
-   std::vector<std::string_view> fConfigPrefix;
+   /// Name of these drawing options, e.g. "1D"; will cause a member `TLineAttr{*this, "Line"}` to
+   /// look for a style setting called "1D.Line.Color".
+   std::string fName;
 
    /// Indexes of the `TCanvas`'s color table entries used by this options object.
    OptsAttrRefArr<TColor> fColorIdx;
@@ -118,10 +115,17 @@ private:
 
 protected:
    /// Construct from the pad that holds our `TDrawable`.
-   TDrawingOptsBaseNoDefault(TPadBase &pad, const std::vector<string_view> &configPrefix);
+   TDrawingOptsBaseNoDefault(TPadBase &pad, std::string_view name);
 
-   /// Default attributes need to register their values in a pad - they will take this pad!
-   static TPadBase &GetDefaultCanvas();
+   /// Default attributes need to register their values in a pad - they will take this pad
+   /// for default attributes of a style, as identified by the style's name.
+   static TPadBase &GetDefaultCanvas(const TStyle &style);
+
+   /// Whether the canvas is one of the canvases used to store attribute defaults.
+   static bool IsDefaultCanvas(const TPadBase &canv);
+
+   /// Get the (style config) name of this option set.
+   const std::string &GetName() const { return fName; }
 
    /// The `TCanvas` holding the `TDrawable` (or its `TPad`) (non-const version).
    TCanvas &GetCanvas() { return *fCanvas; }
@@ -162,15 +166,6 @@ public:
    TDrawingOptsBaseNoDefault(const TDrawingOptsBaseNoDefault &other);
    TDrawingOptsBaseNoDefault(TDrawingOptsBaseNoDefault &&other) = default;
 
-   std::string GetConfigPrefix() const {
-      std::string ret;
-      for (auto el: fConfigPrefix) {
-         ret += el;
-         ret += '.';
-      }
-      ret.erase(ret.end() - 1);
-   }
-
    /// Access to the attribute (non-const version).
    template <class PRIMITIVE>
    PRIMITIVE &Get(TDrawingAttrRef<PRIMITIVE> ref) { return GetAttrsRefArr((PRIMITIVE*)nullptr).Get(GetCanvas(), ref); }
@@ -188,18 +183,29 @@ class TDrawingOptsBase: public TDrawingOptsBaseNoDefault {
 public:
    TDrawingOptsBase() = default;
    /// Construct from the pad that holds our `TDrawable`.
-   TDrawingOptsBase(TPadBase &pad, const std::vector<string_view> &configPrefix):
-   TDrawingOptsBaseNoDefault(pad, []&configPrefix(){configPrefix.push_back("Line"); return configPrefix;})
+   TDrawingOptsBase(TPadBase &pad, std::string_view name):
+   TDrawingOptsBaseNoDefault(pad, name)
    {
-      if (&pad != &GetDefaultCanvas())
-         Default(configPrefix);
+      if (!IsDefaultCanvas(pad))
+         Default();
+   }
+
+   /// Apply the given options to this option set.
+   void Apply(const DERIVED& other) {
+      static_cast<DERIVED&>(*this) = other;
+   }
+
+   /// Retrieve the default drawing options for the given style.
+   static DERIVED GetDefaultForStyle(const TStyle& style)
+   {
+      return DERIVED(GetDefaultCanvas(style));
    }
 
    /// Retrieve the default drawing options for `DERIVED`. Can be used to query and adjust the
    /// default options.
-   static DERIVED &Default(string_view configPrefix = {})
+   static DERIVED &Default()
    {
-      static DERIVED defaultOpts(GetDefaultCanvas(), configPrefix);
+      static DERIVED defaultOpts = GetDefaultForStyle(TStyle::GetCurrent());
       return defaultOpts;
    }
 };
