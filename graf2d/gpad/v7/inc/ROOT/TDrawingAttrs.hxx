@@ -36,25 +36,6 @@ template <class PRIMITIVE>
 class TDrawingAttrTable;
 }
 
-/** \class TDrawingAttrName
- Allows to add sub-parts, assembling a complete name. All sub-parts are separated by '.'.
- */
-class TDrawingAttrName {
-   std::string fName;
-
-public:
-   TDrawingAttrName() = default;
-   explicit TDrawingAttrName(std::string_view name): fName(name) {}
-   TDrawingAttrName operator+(std::string_view sub) const
-   {
-      std::string ret(fName);
-      ret += ".";
-      ret += sub;
-      return TDrawingAttrName(ret);
-   }
-   operator const std::string &() const { return fName; }
-};
-
 /** \class ROOT::Experimental::TDrawingAttrRef
  The `TCanvas` keep track of `TColor`s, integer and floating point attributes used by the drawing options,
  making them accessible from other drawing options. The index into the table of the active attributes is
@@ -75,13 +56,14 @@ public:
    /// Construct an invalid reference.
    TDrawingAttrRef() = default;
 
-   /// Construct a reference from its options object, name, and set of string options.
-   /// Initialized the PRIMITIVE to the default value, as available in TDrawingOptsBase::GetDefaultCanvas().
-   /// The value of this attribute will be the index in the vector of strings; the default value is parsed by
-   /// finding the configured string in the vector of strings. `optStrings` will only be used if
-   /// `PRIMITIVE` is `long long`.
-   TDrawingAttrRef(TDrawingOptsBaseNoDefault &opts, const TDrawingAttrName& name, const PRIMITIVE &deflt,
-      const std::vector<std::string_view> &optStrings = {});
+   /// Construct a reference from its options object, name, default value and set of string options.
+   ///
+   /// Initializes the PRIMITIVE to the default value, as available in TDrawingOptsBase::GetDefaultCanvas(),
+   /// or to `deflt` if no entry exists under the attribute name. The attribute name is `opts.GetName() + "." + attrName`.
+   /// `optStrings` is only be used if `PRIMITIVE` is `long long`; the style setting is expected to be one of
+   /// the strings, with the attribute's value the index of the string.
+   TDrawingAttrRef(TDrawingOptsBaseNoDefault &opts, const std::string &attrName, const PRIMITIVE &deflt,
+                   const std::vector<std::string_view> &optStrings = {});
 
    /// Get the underlying index.
    operator size_t() const { return fIdx; }
