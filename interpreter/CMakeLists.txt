@@ -20,6 +20,7 @@ if(cxx17)
 elseif(cxx14)
   set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "" FORCE)
 endif()
+set(LLVM_ENABLE_ZLIB OFF CACHE BOOL "")
 
 # The llvm::ReverseIterate<bool>::value symbol from llvm's SmallPtrSet.h
 # somehow lands in our cling libraries on OS X and doesn't get hidden
