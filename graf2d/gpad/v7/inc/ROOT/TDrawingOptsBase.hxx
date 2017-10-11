@@ -45,8 +45,9 @@ class TPadBase;
   the same primitives (through `SameAs()`), and until the last use has deregistered.
 
   In derived classes (e.g. drawing options for the class `MyFancyBox`), declare attribute members as
-     TDrawingAttrRef<TColor> fLineColor{*this, "MyFancyBoxLineColor"};
-  The attribute's value will be taken from the  will be initialized
+     TDrawingAttrRef<TColor> fLineColor{*this, "MyFancyBoxLineColor", kRed};
+  The attribute's initial value will be taken from the current style or, if that has no setting for
+  the attribute, from the argument passed to the constructor (`kRed` in the example above).
   */
 
 class TDrawingOptsBaseNoDefault {
