@@ -58,11 +58,11 @@ private:
 
 public:
    /// Constructor taking user coordinate system, position and extent.
-   TFrame(std::unique_ptr<Detail::TPadUserCoordBase> &&coords, const TPadPos &pos = DrawingOpts::Default().fPos,
+   explicit TFrame(std::unique_ptr<Detail::TPadUserCoordBase> &&coords, const TPadPos &pos = DrawingOpts::Default().fPos,
           const TPadExtent &size = DrawingOpts::Default().fSize);
 
    // Constructor taking position and extent.
-   TFrame(const TPadPos &pos = DrawingOpts::Default().fPos, const TPadExtent &size = DrawingOpts::Default().fSize)
+   explicit TFrame(const TPadPos &pos = DrawingOpts::Default().fPos, const TPadExtent &size = DrawingOpts::Default().fSize)
       : TFrame(nullptr, pos, size)
    {}
 
