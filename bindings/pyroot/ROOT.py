@@ -427,7 +427,7 @@ class ModuleFacade( types.ModuleType ):
    def __getattr2( self, name ):             # "running" getattr
     # handle "from ROOT import *" ... can be called multiple times
       if name == '__all__':
-         if sys.hexversion >= 0x3060000:
+         if sys.hexversion >= 0x3000000:
             raise ImportError('"from ROOT import *" is not supported in Python 3')
          if _is_ipython:
             import warnings
