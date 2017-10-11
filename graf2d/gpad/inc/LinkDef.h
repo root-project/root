@@ -68,12 +68,12 @@
 #pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Normal>+;
 #pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::User>+;
 #pragma link C++ class ROOT::Experimental::TColor+;
-#pragma link C++ class ROOT::Experimental::TOptsAttrRef<ROOT::Experimental::TColor>+;
-#pragma link C++ class ROOT::Experimental::TOptsAttrRef<long long>+;
-#pragma link C++ class ROOT::Experimental::TOptsAttrRef<double>+;
-#pragma link C++ class ROOT::Experimental::Internal::TOptsAttrTable<ROOT::Experimental::TColor>+;
-#pragma link C++ class ROOT::Experimental::Internal::TOptsAttrTable<long long>+;
-#pragma link C++ class ROOT::Experimental::Internal::TOptsAttrTable<double>+;
+#pragma link C++ class ROOT::Experimental::TDrawingAttrRef<ROOT::Experimental::TColor>+;
+#pragma link C++ class ROOT::Experimental::TDrawingAttrRef<long long>+;
+#pragma link C++ class ROOT::Experimental::TDrawingAttrRef<double>+;
+#pragma link C++ class ROOT::Experimental::Internal::TDrawingAttrTable<ROOT::Experimental::TColor>+;
+#pragma link C++ class ROOT::Experimental::Internal::TDrawingAttrTable<long long>+;
+#pragma link C++ class ROOT::Experimental::Internal::TDrawingAttrTable<double>+;
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault+;
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<ROOT::Experimental::TColor>+;
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<long long>+;
