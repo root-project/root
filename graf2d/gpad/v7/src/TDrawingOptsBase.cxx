@@ -30,7 +30,7 @@
 using namespace ROOT::Experimental;
 
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE>
+TDrawingAttrRef<PRIMITIVE>
 TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Register(TCanvas &canv, const PRIMITIVE &val)
 {
    fRefArray.push_back(canv.GetAttrTable((PRIMITIVE *)nullptr).Register(val));
@@ -38,22 +38,22 @@ TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Register(TCanvas &canv, co
 }
 
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE>
-TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::SameAs(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx)
+TDrawingAttrRef<PRIMITIVE>
+TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::SameAs(TCanvas &canv, TDrawingAttrRef<PRIMITIVE> idx)
 {
    canv.GetAttrTable((PRIMITIVE *)nullptr).IncrUse(idx);
    return idx;
 }
 
 template <class PRIMITIVE>
-TOptsAttrRef<PRIMITIVE>
+TDrawingAttrRef<PRIMITIVE>
 TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::SameAs(TCanvas &canv, const PRIMITIVE &val)
 {
    return canv.GetAttrTable((PRIMITIVE *)nullptr).SameAs(val);
 }
 
 template <class PRIMITIVE>
-void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Update(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx,
+void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Update(TCanvas &canv, TDrawingAttrRef<PRIMITIVE> idx,
                                                                   const PRIMITIVE &val)
 {
    canv.GetAttrTable((PRIMITIVE *)nullptr).Update(idx, val);
@@ -75,13 +75,13 @@ void TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::RegisterCopy(TCanvas 
 }
 
 template <class PRIMITIVE>
-const PRIMITIVE &TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Get(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx) const
+const PRIMITIVE &TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Get(TCanvas &canv, TDrawingAttrRef<PRIMITIVE> idx) const
 {
    return canv.GetAttrTable((PRIMITIVE *)nullptr).Get(idx);
 }
 
 template <class PRIMITIVE>
-PRIMITIVE &TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Get(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx)
+PRIMITIVE &TDrawingOptsBaseNoDefault::OptsAttrRefArr<PRIMITIVE>::Get(TCanvas &canv, TDrawingAttrRef<PRIMITIVE> idx)
 {
    return canv.GetAttrTable((PRIMITIVE *)nullptr).Get(idx);
 }
