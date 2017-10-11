@@ -70,7 +70,6 @@ check_include_file(sys/uio.h HAVE_SYS_UIO_H)
 check_include_file(termios.h HAVE_TERMIOS_H)
 check_include_file(unistd.h HAVE_UNISTD_H)
 check_include_file(valgrind/valgrind.h HAVE_VALGRIND_VALGRIND_H)
-check_include_file(zlib.h HAVE_ZLIB_H)
 check_include_file(fenv.h HAVE_FENV_H)
 check_symbol_exists(FE_ALL_EXCEPT "fenv.h" HAVE_DECL_FE_ALL_EXCEPT)
 check_symbol_exists(FE_INEXACT "fenv.h" HAVE_DECL_FE_INEXACT)
@@ -130,11 +129,6 @@ endif()
 # using MSan, since uninstrumented third party code may call MSan interceptors
 # like strlen, leading to false positives.
 if( NOT PURE_WINDOWS AND NOT LLVM_USE_SANITIZER MATCHES "Memory.*")
-  if (LLVM_ENABLE_ZLIB)
-    check_library_exists(z compress2 "" HAVE_LIBZ)
-  else()
-    set(HAVE_LIBZ 0)
-  endif()
   # Skip libedit if using ASan as it contains memory leaks.
   if (LLVM_ENABLE_LIBEDIT AND HAVE_HISTEDIT_H AND NOT LLVM_USE_SANITIZER MATCHES ".*Address.*")
     check_library_exists(edit el_init "" HAVE_LIBEDIT)
@@ -503,9 +497,9 @@ endif()
 
 if (LLVM_ENABLE_ZLIB )
   # Check if zlib is available in the system.
-  if ( NOT HAVE_ZLIB_H OR NOT HAVE_LIBZ )
-    set(LLVM_ENABLE_ZLIB 0)
-  endif()
+  find_package(ZLIB REQUIRED)
+  list(APPEND CMAKE_REQUIRED_LIBRARIES ${ZLIB_LIBRARY})
+  list(APPEND CMAKE_REQUIRED_INCLUDES ${ZLIB_INCLUDE_DIRS})
 endif()
 
 if (LLVM_ENABLE_DOXYGEN)
