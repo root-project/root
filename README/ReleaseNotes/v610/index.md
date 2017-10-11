@@ -693,3 +693,7 @@ These changes will be part of the future 6.10/08
 ### I/O Libraries
 
 * Add support for LZ4 as a compression format.
+
+### TDataFrame
+
+* Fix ROOT-9027: Multi-thread Snapshot action writes only part of the events for large input files
