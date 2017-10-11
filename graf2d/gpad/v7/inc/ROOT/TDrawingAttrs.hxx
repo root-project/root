@@ -165,16 +165,27 @@ extern template class TDrawingAttrTable<long long>;
 extern template class TDrawingAttrTable<double>;
 } // namespace Internal
 
-class TLineAttrs {
-   TOptsAttrRef<TColor> fColor{*this}
-public:
-   TLineAttrs(TPadBase &pad, const std::vector<string_view> &configPrefix) = default;
+struct TLineAttrs {
+   TDrawingAttrRef<TColor> fColor;    ///< Line color
+   TDrawingAttrRef<long long> fWidth; ///< Line width
 
-   /// Construct from the pad that holds our `TDrawable`, passing the parent config prefix.
-   /// TLineDrawingOpts will add a `"Line"` element to the config prefix.
-   TLineDrawingOpts(TPadBase &pad, string_view configPrefix):
-   TDrawingOptsBase(pad, AddPrefix(configPrefix, "Line"))
-   {}                                                         
+   struct Width {
+      long long fVal;
+      explicit operator long long() const { return fVal; }
+   };
+   /// Construct from the pad that holds our `TDrawable`, passing the configuration name of this line attribute.
+   TLineAttrs(TDrawingOptsBaseNoDefault &opts, const std::string &name, const TColor &col, Width width)
+      : fColor(opts, name + ".Color", col), fWidth(opts, name + ".Width", (long long)width)
+   {}
+};
+
+struct TFillAttrs {
+   TDrawingAttrRef<TColor> fColor; ///< Line color
+
+   /// Construct from the pad that holds our `TDrawable`, passing the configuration name of this line attribute.
+   TFillAttrs(TDrawingOptsBaseNoDefault &opts, const std::string &name, const TColor &col)
+      : fColor(opts, name + ".Color", col)
+   {}
 };
 
 } // namespace Experimental
