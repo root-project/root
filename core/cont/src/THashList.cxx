@@ -282,6 +282,7 @@ void THashList::RecursiveRemove(TObject *obj)
          fTable->RemoveSlow(object);
 
    } else if (fTable->FindObject(obj)) {
+      // Remove obj in the list itself
       TObject *object = TList::Remove(obj);
       if (object)
          fTable->Remove(object);
