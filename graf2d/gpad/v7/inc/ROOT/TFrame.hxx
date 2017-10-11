@@ -40,7 +40,7 @@ public:
       /// Size of the frame in parent TPad coordinates.
       TPadExtent fSize = {0.8_normal, 0.8_normal};
 
-      DrawingOpts(TPadBase &pad): TDrawingOptsBase<DrawingOpts>(pad) {}
+      DrawingOpts(TPadBase &pad): TDrawingOptsBase<DrawingOpts>(pad, "Frame") {}
    };
 
 private:

@@ -194,7 +194,7 @@ public:
 class TPadDrawingOpts: public TDrawingOptsBase<TPadDrawingOpts> {
    TPadPos fPos; ///< Offset with respect to parent TPad.
 public:
-   TPadDrawingOpts(TPadBase &parent): TDrawingOptsBase<TPadDrawingOpts>(parent) {}
+   TPadDrawingOpts(TPadBase &parent): TDrawingOptsBase<TPadDrawingOpts>(parent, "Pad") {}
 
    /// Set the position of this pad with respect to the parent pad.
    TPadDrawingOpts &At(const TPadPos &pos)
