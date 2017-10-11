@@ -64,9 +64,9 @@
 #endif
 
 #ifdef _WIN32
-#include "win32/afterbase.h"
 #include <io.h>
 #include <windows.h>
+#include "win32/afterbase.h"
 #define access _access
 #else
 #include "afterbase.h"
