@@ -22,8 +22,6 @@
 
 #include "TDrawingOptsReader.hxx" // in src/
 
-#include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <unordered_map>
 
@@ -98,14 +96,31 @@ template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<TColor>;
 template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<long long>;
 template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<double>;
 
-TDrawingOptsBaseNoDefault::TDrawingOptsBaseNoDefault(TPadBase &pad, string_view configPrefix):
-fCanvas(&pad.GetCanvas()) {}
+TDrawingOptsBaseNoDefault::TDrawingOptsBaseNoDefault(TPadBase &pad, std::string_view configPrefix):
+fCanvas(&pad.GetCanvas()), fName(configPrefix) {}
 
-ROOT::Experimental::TPadBase &TDrawingOptsBaseNoDefault::GetDefaultCanvas()
+ROOT::Experimental::TPadBase &TDrawingOptsBaseNoDefault::GetDefaultCanvas(const TStyle &style)
 {
-   static TCanvas sCanv;
-   return sCanv;
+   static std::unordered_map<std::string, TCanvas> sCanv;
+
+   auto iCanv = sCanv.find(style.GetName());
+   if (iCanv != sCanv.end())
+      return iCanv->second;
+
+   TCanvas &canv = sCanv[style.GetName()];
+   canv.SetTitle(style.GetName());
+   return canv;
 }
+
+bool TDrawingOptsBaseNoDefault::IsDefaultCanvas(const TPadBase &canvPad)
+{
+   if (const TCanvas* canv = dynamic_cast<const TCanvas*>(&canvPad)) {
+      if (TStyle* style = TStyle::Get(canv->GetTitle()))
+         return &GetDefaultCanvas(*style) == &canvPad;
+   }
+   return false;
+}
+
 
 TDrawingOptsBaseNoDefault::~TDrawingOptsBaseNoDefault()
 {
