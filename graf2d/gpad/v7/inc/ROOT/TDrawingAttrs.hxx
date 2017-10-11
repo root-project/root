@@ -36,7 +36,26 @@ template <class PRIMITIVE>
 class TDrawingAttrTable;
 }
 
-/** class ROOT::Experimental::TOptsAttrRef
+/** \class TDrawingAttrName
+ Allows to add sub-parts, assembling a complete name. All sub-parts are separated by '.'.
+ */
+class TDrawingAttrName {
+   std::string fName;
+
+public:
+   TDrawingAttrName() = default;
+   explicit TDrawingAttrName(std::string_view name): fName(name) {}
+   TDrawingAttrName operator+(std::string_view sub) const
+   {
+      std::string ret(fName);
+      ret += ".";
+      ret += sub;
+      return TDrawingAttrName(ret);
+   }
+   operator const std::string &() const { return fName; }
+};
+
+/** \class ROOT::Experimental::TDrawingAttrRef
  The `TCanvas` keep track of `TColor`s, integer and floating point attributes used by the drawing options,
  making them accessible from other drawing options. The index into the table of the active attributes is
  wrapped into `TDrawingAttrRef` to make them type-safe (i.e. distinct for `TColor`, `long long` and `double`).
