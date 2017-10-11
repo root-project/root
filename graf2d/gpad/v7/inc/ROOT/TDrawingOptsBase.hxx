@@ -29,7 +29,6 @@ namespace ROOT {
 namespace Experimental {
 class TCanvas;
 class TPadBase;
-class TDrawingOptsBaseNoDefault;
 
 /** \class ROOT::Experimental::TDrawingOptsBase
   Base class for drawing options. Implements access to the default and the default's initialization
