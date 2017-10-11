@@ -44,7 +44,7 @@ class TPadBase;
   the same primitives (through `SameAs()`), and until the last use has deregistered.
 
   In derived classes (e.g. drawing options for the class `MyFancyBox`), declare attribute members as
-     TOptsAttrRef<TColor> fLineColor{*this, "MyFancyBox.LineColor"};
+     TDrawingAttrRef<TColor> fLineColor{*this, "MyFancyBoxLineColor"};
   The attribute's value will be taken from the  will be initialized
   */
 
@@ -53,24 +53,24 @@ public:
    template <class PRIMITIVE>
    class OptsAttrRefArr {
       /// Indexes of the `TCanvas`'s attribute table entries used by the options object.
-      std::vector<TOptsAttrRef<PRIMITIVE>> fRefArray;
+      std::vector<TDrawingAttrRef<PRIMITIVE>> fRefArray;
 
    public:
       ~OptsAttrRefArr();
       /// Register an attribute.
       ///\returns the index of the new attribute.
-      TOptsAttrRef<PRIMITIVE> Register(TCanvas &canv, const PRIMITIVE &val);
+      TDrawingAttrRef<PRIMITIVE> Register(TCanvas &canv, const PRIMITIVE &val);
 
       /// Re-use an existing attribute.
       ///\returns the index of the attribute (i.e. valRef).
-      TOptsAttrRef<PRIMITIVE> SameAs(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx);
+      TDrawingAttrRef<PRIMITIVE> SameAs(TCanvas &canv, TDrawingAttrRef<PRIMITIVE> idx);
 
       /// Re-use an existing attribute.
       ///\returns the index of the attribute, might be `IsInvalid()` if `val` could not be found.
-      TOptsAttrRef<PRIMITIVE> SameAs(TCanvas &canv, const PRIMITIVE &val);
+      TDrawingAttrRef<PRIMITIVE> SameAs(TCanvas &canv, const PRIMITIVE &val);
 
       /// Update the attribute at index `idx` to the value `val`.
-      void Update(TCanvas &canv, TOptsAttrRef<PRIMITIVE> idx, const PRIMITIVE &val);
+      void Update(TCanvas &canv, TDrawingAttrRef<PRIMITIVE> idx, const PRIMITIVE &val);
 
       /// Clear all attribute references, removing their uses in `TCanvas`.
       void Release(TCanvas &canv);
@@ -130,31 +130,31 @@ protected:
    const TCanvas &GetCanvas() const { return *fCanvas; }
 
    template <class PRIMITIVE>
-   TOptsAttrRef<PRIMITIVE> Register(const PRIMITIVE &val)
+   TDrawingAttrRef<PRIMITIVE> Register(const PRIMITIVE &val)
    {
       return GetAttrsRefArr((PRIMITIVE *)nullptr).Register(GetCanvas(), val);
    }
 
    template <class PRIMITIVE>
-   void Update(TOptsAttrRef<PRIMITIVE> idx, const PRIMITIVE &val)
+   void Update(TDrawingAttrRef<PRIMITIVE> idx, const PRIMITIVE &val)
    {
       GetAttrsRefArr((PRIMITIVE *)nullptr).Update(GetCanvas(), idx, val);
    }
 
    template <class PRIMITIVE>
-   TOptsAttrRef<PRIMITIVE> SameAs(TOptsAttrRef<PRIMITIVE> idx)
+   TDrawingAttrRef<PRIMITIVE> SameAs(TDrawingAttrRef<PRIMITIVE> idx)
    {
       return GetAttrsRefArr((PRIMITIVE *)nullptr).SameAs(GetCanvas(), idx);
    }
 
    template <class PRIMITIVE>
-   TOptsAttrRef<PRIMITIVE> SameAs(const PRIMITIVE &val)
+   TDrawingAttrRef<PRIMITIVE> SameAs(const PRIMITIVE &val)
    {
       return GetAttrsRefArr((PRIMITIVE *)nullptr).SameAs(GetCanvas(), val);
    }
 
    template <class PRIMITIVE>
-   friend class TOptsAttrRef;
+   friend class TDrawingAttrRef;
 
 public:
    TDrawingOptsBaseNoDefault() = default;
@@ -173,10 +173,10 @@ public:
 
    /// Access to the attribute (non-const version).
    template <class PRIMITIVE>
-   PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> ref) { return GetAttrsRefArr((PRIMITIVE*)nullptr).Get(GetCanvas(), ref); }
+   PRIMITIVE &Get(TDrawingAttrRef<PRIMITIVE> ref) { return GetAttrsRefArr((PRIMITIVE*)nullptr).Get(GetCanvas(), ref); }
    /// Access to the attribute (const version).
    template <class PRIMITIVE>
-   const PRIMITIVE &Get(TOptsAttrRef<PRIMITIVE> ref) const { return GetAttrsRefArr((PRIMITIVE*)nullptr).Get(GetCanvas(), ref); }
+   const PRIMITIVE &Get(TDrawingAttrRef<PRIMITIVE> ref) const { return GetAttrsRefArr((PRIMITIVE*)nullptr).Get(GetCanvas(), ref); }
 };
 
 extern template class TDrawingOptsBaseNoDefault::OptsAttrRefArr<TColor>;
