@@ -1,6 +1,7 @@
 #ifndef ROOT_TCSVTDS
 #define ROOT_TCSVTDS
 
+#include "ROOT/TDataFrame.hxx"
 #include "ROOT/TDataSource.hxx"
 
 #include <map>
@@ -46,6 +47,8 @@ public:
    void SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
 };
+
+TDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',');
 
 } // ns TDF
 } // ns Experimental
