@@ -28,6 +28,8 @@ class TH1;
 namespace ROOT {
 namespace Experimental {
 
+class TPadBase;
+
 template <int DIMENSIONS, class PRECISION,
           template <int D_, class P_, template <class P__> class STORAGE> class... STAT>
 class THist;
@@ -103,13 +105,13 @@ public:
    THistDrawable();
 
    template <class HIST>
-   THistDrawable(const std::shared_ptr<HIST> &hist, THistDrawingOpts<DIMENSIONS> opts)
-      : fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl())), fOpts(opts)
+   THistDrawable(const std::shared_ptr<HIST> &hist, TPadBase& pad)
+      : fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl())), fOpts(pad)
    {}
 
    template <class HIST>
-   THistDrawable(std::unique_ptr<HIST> &&hist, THistDrawingOpts<DIMENSIONS> opts)
-      : fHistImpl(std::unique_ptr<HistImpl_t>(std::move(hist->TakeImpl()))), fOpts(opts)
+   THistDrawable(std::unique_ptr<HIST> &&hist, TPadBase& pad)
+      : fHistImpl(std::unique_ptr<HistImpl_t>(std::move(hist->TakeImpl()))), fOpts(pad)
    {}
 
    /// Paint the histogram
