@@ -76,7 +76,11 @@ class MethodDL : public MethodBase {
 private:
    // Key-Value vector type, contining the values for the training options
    using KeyValueVector_t = std::vector<std::map<TString, TString>>;
-
+#ifdef DNNCPU
+   using ArchitectureCpu_t = TMVA::DNN::TCpu<Double_t>;
+   using DeepNetCpu_t = TMVA::DNN::TDeepNet<ArchitectureCpu_t>;
+   std::unique_ptr<DeepNetCpu_t> fNet;
+#endif
    /*! The option handling methods */
    void DeclareOptions();
    void ProcessOptions();

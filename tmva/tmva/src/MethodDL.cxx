@@ -27,13 +27,13 @@
 
 #include "TFormula.h"
 #include "TString.h"
+#include "TMath.h"
 
 #include "TMVA/Configurable.h"
 #include "TMVA/IMethod.h"
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/MethodDL.h"
 #include "TMVA/Types.h"
-
 #include "TMVA/DNN/TensorDataLoader.h"
 #include "TMVA/DNN/DLMinimizers.h"
 
@@ -1126,9 +1126,10 @@ void MethodDL::TrainCpu()
       EInitialization I = this->GetWeightInitialization();
       ERegularization R = settings.regularization;
       Scalar_t weightDecay = settings.weightDecay;
-      DeepNet_t deepNet(batchSize, inputDepth, inputHeight, inputWidth, batchDepth, batchHeight, batchWidth, J, I, R,
-                        weightDecay);
 
+      fNet = std::unique_ptr<DeepNet_t>(new DeepNet_t(batchSize, inputDepth, inputHeight, inputWidth, batchDepth,
+                                                      batchHeight, batchWidth, J, I, R, weightDecay));
+      DeepNet_t &deepNet = *(fNet.get());
       // Initialize the vector of slave nets
       std::vector<DeepNet_t> nets{};
       nets.reserve(nThreads);
@@ -1252,8 +1253,44 @@ void MethodDL::TrainCpu()
 ////////////////////////////////////////////////////////////////////////////////
 Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
 {
-   // TODO
+#ifdef DNNCPU
+   using Architecture_t = DNN::TCpu<Double_t>;
+   using Matrix_t = typename Architecture_t::Matrix_t;
+
+   size_t nVariables = GetEvent()->GetNVariables();
+   int ntime = fNet->GetBatchHeight();
+   int nvar = fNet->GetBatchWidth();
+   int nb = fNet->GetBatchSize();
+   int noutput = fNet->GetOutputWidth();
+
+   std::vector<Matrix_t> X{};
+   Matrix_t YHat(nb, noutput);
+
+   // get current event
+   const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
+
+   for (int i = 0; i < nb; ++i) X.push_back(Matrix_t(ntime, nvar));
+
+   // need to fill lal lbatch with same event
+   for (int i = 0; i < nb; ++i) { // batch size loop
+      for (int j = 0; j < ntime; ++j) {
+         for (size_t k = 0; k < nvar; k++) {
+            int ivar = j * ntime + k;
+            R__ASSERT(ivar < nVariables);
+            X[i](j, k) = inputValues[ivar];
+         }
+      }
+   }
+
+   // perform the prediction
+   fNet->Prediction(YHat, X, fOutputFunction);
+
+   double mvaValue = YHat(0, 0);
+   return (TMath::IsNaN(mvaValue)) ? -999. : mvaValue;
+
+#else
    return 0.0;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
