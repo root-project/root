@@ -1328,9 +1328,11 @@ void TClass::Init(const char *name, Version_t cversion,
 {
    if (!gROOT)
       ::Fatal("TClass::TClass", "ROOT system not initialized");
-   if (!name || !name[0])
+   if (!name || !name[0]) {
       ::Error("TClass::Init", "The name parameter is invalid (null or empty)");
-
+      MakeZombie();
+      return;
+   }
    // Always strip the default STL template arguments (from any template argument or the class name)
    fName           = TClassEdit::ShortType(name, TClassEdit::kDropStlDefault).c_str();
    fClassVersion   = cversion;
