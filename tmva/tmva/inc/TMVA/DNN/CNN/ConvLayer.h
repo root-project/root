@@ -207,7 +207,6 @@ TConvLayer<Architecture_t>::~TConvLayer()
 template <typename Architecture_t>
 auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
 {
-   std::cout << "Conv Layer Forward" << std::endl;
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
 
       if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
@@ -233,7 +232,6 @@ auto TConvLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backw
                                           const std::vector<Matrix_t> &activations_backward,
                                           std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
 {
-  std::cout << "Conv Layer Backward" << std::endl;
    Architecture_t::ConvLayerBackward(
       gradients_backward, this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0), this->GetDerivatives(),
       this->GetActivationGradients(), this->GetWeightsAt(0), activations_backward, this->GetBatchSize(),
