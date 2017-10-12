@@ -1627,6 +1627,7 @@ namespace {
       NFp_t( "std::string_view",          &CreateSTLStringViewConverter      ),
       NFp_t( "string_view",               &CreateSTLStringViewConverter      ),
       NFp_t( "experimental::basic_string_view<char,char_traits<char> >",&CreateSTLStringViewConverter),
+      NFp_t( "basic_string_view<char,char_traits<char> >",&CreateSTLStringViewConverter),
       NFp_t( "void*&",                    &CreateVoidPtrRefConverter         ),
       NFp_t( "void**",                    &CreateVoidPtrPtrConverter         ),
       NFp_t( "PyObject*",                 &CreatePyObjectConverter           ),
