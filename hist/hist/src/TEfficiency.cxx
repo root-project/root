@@ -3589,10 +3589,10 @@ void TEfficiency::SetUseWeightedEvents(bool on)
 
    SetBit(kUseWeights,on);
 
-   // no need to set sumw2 should be already there
-   if (on) assert(fTotalHistogram->GetSumw2N() > 0 && fPassedHistogram->GetSumw2N() > 0 );
-   //fTotalHistogram->Sumw2(on);
-   //fPassedHistogram->Sumw2(on);
+   if (on && fTotalHistogram->GetSumw2N() == 0)
+      fTotalHistogram->Sumw2();
+   if (on && fPassedHistogram->GetSumw2N() == 0)
+      fPassedHistogram->Sumw2();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
