@@ -23,6 +23,7 @@ The following people have contributed to this new version:
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
  Sergey Linev, GSI,\
+ Timur Pocheptsov, CERN/SFT,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
@@ -164,6 +165,8 @@ large TClonesArray where each element contains another small vector container.
     display. It was reported
     [here](https://root-forum.cern.ch/t/tcanvas-print-png-outputs-fraction-of-figure-when-canvas-size-is-declared/26011/44).
   - Fix an issue with `TGraph2D` drawn as lines (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-9046)).
+  - ROOT Cocoa: fix rendering into bitmaps on high-dpi display. With retina display
+    the rendering of polylines was slow.
 
 ## 3D Graphics Libraries
 
