@@ -22,10 +22,8 @@
 
 namespace {
 using namespace ROOT::Experimental;
-// FIXME: this is probably worth documenting, thus not in unnamed namespace in source!
+// FIXME: Replace by array of TFrameAxis!
 class TPadUserCoordDefault: public Detail::TPadUserCoordBase {
-   bool fLogX = false;
-   bool fLogY = false;
 
 public:
    std::array<TPadCoord::Normal, 2> ToNormal(const std::array<TPadCoord::User, 2> &user) const override
