@@ -329,7 +329,7 @@ template <typename Architecture_t, typename Layer_t>
 TDeepNet<Architecture_t, Layer_t>::TDeepNet()
    : fLayers(), fBatchSize(0), fInputDepth(0), fInputHeight(0), fInputWidth(0), fBatchDepth(0), fBatchHeight(0),
      fBatchWidth(0), fJ(ELossFunction::kMeanSquaredError), fI(EInitialization::kZero), fR(ERegularization::kNone),
-     fWeightDecay(0.0), fIsTraining(true)
+     fIsTraining(true), fWeightDecay(0.0)
 {
    // Nothing to do here.
 }
@@ -340,8 +340,8 @@ TDeepNet<Architecture_t, Layer_t>::TDeepNet(size_t batchSize, size_t inputDepth,
                                             size_t batchDepth, size_t batchHeight, size_t batchWidth, ELossFunction J,
                                             EInitialization I, ERegularization R, Scalar_t weightDecay, bool isTraining)
    : fLayers(), fBatchSize(batchSize), fInputDepth(inputDepth), fInputHeight(inputHeight), fInputWidth(inputWidth),
-     fBatchDepth(batchDepth), fBatchHeight(batchHeight), fBatchWidth(batchWidth), fJ(J), fI(I), fR(R),
-     fWeightDecay(weightDecay), fIsTraining(isTraining)
+     fBatchDepth(batchDepth), fBatchHeight(batchHeight), fBatchWidth(batchWidth), fIsTraining(isTraining), fJ(J), fI(I),
+     fR(R), fWeightDecay(weightDecay)
 {
    // Nothing to do here.
 }
@@ -351,8 +351,8 @@ template <typename Architecture_t, typename Layer_t>
 TDeepNet<Architecture_t, Layer_t>::TDeepNet(const TDeepNet &deepNet)
    : fLayers(), fBatchSize(deepNet.fBatchSize), fInputDepth(deepNet.fInputDepth), fInputHeight(deepNet.fInputHeight),
      fInputWidth(deepNet.fInputWidth), fBatchDepth(deepNet.fBatchDepth), fBatchHeight(deepNet.fBatchHeight),
-     fBatchWidth(deepNet.fBatchWidth), fJ(deepNet.fJ), fI(deepNet.fI), fR(deepNet.fR),
-     fWeightDecay(deepNet.fWeightDecay), fIsTraining(deepNet.fIsTraining)
+     fBatchWidth(deepNet.fBatchWidth), fIsTraining(deepNet.fIsTraining), fJ(deepNet.fJ), fI(deepNet.fI), fR(deepNet.fR),
+     fWeightDecay(deepNet.fWeightDecay)
 {
    // Nothing to do here.
 }
@@ -803,14 +803,14 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input,
                                fLayers[fLayers.size() - 5]->GetOutput());
 
       // three layers are added, now pointer is on third layer
-      size_t weightsSize = fLayers.back()->GetWeights().size();
-      size_t biasesSize = fLayers.back()->GetBiases().size();
+      size_t _weightsSize = fLayers.back()->GetWeights().size();
+      size_t _biasesSize = fLayers.back()->GetBiases().size();
       for (size_t epoch = 0; epoch < epochs - 1; epoch++) {
          // fLayers[fLayers.size() - 3]->Forward(input,applyDropout);
-         for (size_t j = 0; j < weightsSize; j++) {
+         for (size_t j = 0; j < _weightsSize; j++) {
             Architecture_t::Copy(fLayers[fLayers.size() - 2]->GetWeightsAt(j), fLayers.back()->GetWeightsAt(j));
          }
-         for (size_t j = 0; j < biasesSize; j++) {
+         for (size_t j = 0; j < _biasesSize; j++) {
             Architecture_t::Copy(fLayers[fLayers.size() - 2]->GetBiasesAt(j), fLayers.back()->GetBiasesAt(j));
          }
          fLayers[fLayers.size() - 2]->Forward(fLayers[fLayers.size() - 3]->GetOutput(), applyDropout);

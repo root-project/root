@@ -748,7 +748,7 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
                              TString delim)
 {
-   int depth = 0;
+   //    int depth = 0;
    int stateSize = 0;
    int inputSize = 0;
    int timeSteps = 0;
@@ -801,8 +801,8 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
 ////////////////////////////////////////////////////////////////////////////////
 /// Pases the layer string and creates the appropriate lstm layer
 template <typename Architecture_t, typename Layer_t>
-void MethodDL::ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
-                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+void MethodDL::ParseLstmLayer(DNN::TDeepNet<Architecture_t, Layer_t> & /*deepNet*/,
+                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
                               TString delim)
 {
    // Split layer details
@@ -1087,7 +1087,7 @@ void MethodDL::TrainCpu()
    std::cout << "Train CPU Method" << std::endl;
    using Architecture_t = DNN::TCpu<Double_t>;
    using Scalar_t = Architecture_t::Scalar_t;
-   using Matrix_t = typename Architecture_t::Matrix_t;
+   //    using Matrix_t = typename Architecture_t::Matrix_t;
    using DeepNet_t = TMVA::DNN::TDeepNet<Architecture_t>;
    using TensorDataLoader_t = TTensorDataLoader<TMVAInput_t, Architecture_t>;
 
@@ -1098,12 +1098,12 @@ void MethodDL::TrainCpu()
    size_t nTestSamples = GetEventCollection(Types::kTesting).size();
 
    // Determine the number of outputs
-   size_t outputSize = 1;
-   if (fAnalysisType == Types::kRegression && GetNTargets() != 0) {
-      outputSize = GetNTargets();
-   } else if (fAnalysisType == Types::kMulticlass && DataInfo().GetNClasses() >= 2) {
-      outputSize = DataInfo().GetNClasses();
-   }
+   // //    size_t outputSize = 1;
+   // //    if (fAnalysisType == Types::kRegression && GetNTargets() != 0) {
+   // //       outputSize = GetNTargets();
+   // //    } else if (fAnalysisType == Types::kMulticlass && DataInfo().GetNClasses() >= 2) {
+   // //       outputSize = DataInfo().GetNClasses();
+   // //    }
 
    size_t trainingPhase = 1;
    for (TTrainingSettings &settings : this->GetTrainingSettings()) {
@@ -1280,9 +1280,9 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    // need to fill lal lbatch with same event
    for (int i = 0; i < nb; ++i) { // batch size loop
       for (int j = 0; j < ntime; ++j) {
-         for (size_t k = 0; k < nvar; k++) {
+         for (int k = 0; k < (Int_t)nvar; k++) {
             int ivar = j * ntime + k;
-            R__ASSERT(ivar < nVariables);
+            R__ASSERT(ivar < (Int_t)nVariables);
             X[i](j, k) = inputValues[ivar];
          }
       }
@@ -1300,13 +1300,13 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void MethodDL::AddWeightsXMLTo(void *parent) const
+void MethodDL::AddWeightsXMLTo(void * /*parent*/) const
 {
    // TODO
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void MethodDL::ReadWeightsFromXML(void *rootXML)
+void MethodDL::ReadWeightsFromXML(void * /*rootXML*/)
 {
    // TODO
 }

@@ -138,7 +138,7 @@ TDenseLayer<Architecture_t>::TDenseLayer(TDenseLayer<Architecture_t> *layer)
 //______________________________________________________________________________
 template <typename Architecture_t>
 TDenseLayer<Architecture_t>::TDenseLayer(const TDenseLayer &layer)
-   : VGeneralLayer<Architecture_t>(layer), fDropoutProbability(layer.fDropoutProbability), fDerivatives(), fF(layer.fF),
+   : VGeneralLayer<Architecture_t>(layer), fDerivatives(), fDropoutProbability(layer.fDropoutProbability), fF(layer.fF),
      fReg(layer.fReg), fWeightDecay(layer.fWeightDecay)
 {
    fDerivatives.emplace_back(layer.fBatchSize, layer.fWidth);
@@ -169,7 +169,8 @@ auto TDenseLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool app
 template <typename Architecture_t>
 auto TDenseLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
                                            const std::vector<Matrix_t> &activations_backward,
-                                           std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
+                                           std::vector<Matrix_t> & /*inp1*/, std::vector<Matrix_t> &
+                                           /*inp2*/) -> void
 {
    if (gradients_backward.size() == 0) {
       Matrix_t dummy(0, 0);

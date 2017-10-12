@@ -230,7 +230,8 @@ auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool appl
 template <typename Architecture_t>
 auto TConvLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
                                           const std::vector<Matrix_t> &activations_backward,
-                                          std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
+                                          std::vector<Matrix_t> & /*inp1*/, std::vector<Matrix_t> &
+                                          /*inp2*/) -> void
 {
    Architecture_t::ConvLayerBackward(
       gradients_backward, this->GetWeightGradientsAt(0), this->GetBiasGradientsAt(0), this->GetDerivatives(),
