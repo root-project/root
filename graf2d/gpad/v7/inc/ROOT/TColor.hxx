@@ -181,9 +181,9 @@ public:
 
    ///\{
    ///\name Default colors
-   static constexpr PredefinedRGB kRed{{0.5, 0., 0.}};
-   static constexpr PredefinedRGB kGreen{{0., 0.5, 0.}};
-   static constexpr PredefinedRGB kBlue{{0., 0, 0.5}};
+   static constexpr PredefinedRGB kRed{{1., 0., 0.}};
+   static constexpr PredefinedRGB kGreen{{0., 1., 0.}};
+   static constexpr PredefinedRGB kBlue{{0., 0, 1.}};
    static constexpr PredefinedRGB kWhite{{1., 1, 1.}};
    static constexpr PredefinedRGB kBlack{{0., 0., 0.}};
    static constexpr AutoTag kAuto{};
