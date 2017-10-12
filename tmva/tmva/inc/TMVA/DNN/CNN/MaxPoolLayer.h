@@ -185,8 +185,9 @@ auto TMaxPoolLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool a
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto TMaxPoolLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
-                                             const std::vector<Matrix_t> &activations_backward,
-                                             std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
+                                             const std::vector<Matrix_t> & /*activations_backward*/,
+                                             std::vector<Matrix_t> & /*inp1*/, std::vector<Matrix_t> &
+                                             /*inp2*/) -> void
 {
    Architecture_t::MaxPoolLayerBackward(gradients_backward, this->GetActivationGradients(), indexMatrix,
                                         this->GetBatchSize(), this->GetDepth(), this->GetNLocalViews());
