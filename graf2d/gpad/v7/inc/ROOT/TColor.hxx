@@ -131,21 +131,21 @@ public:
    /// For RGBA or auto colors, get the green component (0..1).
    float GetGreen() const {
       if (AssertNotPalettePos())
-         return fRedOrPalettePos;
+         return fGreen;
       return 0.;
    }
 
    /// For RGBA or auto colors, get the blue component (0..1).
    float GetBlue() const {
       if (AssertNotPalettePos())
-         return fRedOrPalettePos;
+         return fBlue;
       return 0.;
    }
 
    /// For RGBA or auto colors, get the alpha component (0..1).
    float GetAlpha() const {
       if (AssertNotPalettePos())
-         return fRedOrPalettePos;
+         return fAlpha;
       return 0.;
    }
 
@@ -158,25 +158,25 @@ public:
    /// For RGBA or auto colors, set the green component.
    void SetGreen(float g) {
       if (AssertNotPalettePos())
-         fRedOrPalettePos = g;
+         fGreen = g;
    }
 
    /// For RGBA or auto colors, set the blue component.
    void SetBlue(float b) {
       if (AssertNotPalettePos())
-         fRedOrPalettePos = b;
+         fBlue = b;
    }
 
    /// For RGBA or auto colors, set the alpha component.
    void SetAlpha(float a) {
       if (AssertNotPalettePos())
-         fRedOrPalettePos = a;
+         fAlpha = a;
    }
 
    /// For RGBA or auto colors, set the alpha component.
    void SetAlpha(Alpha a) {
       if (AssertNotPalettePos())
-         fRedOrPalettePos = (float)a;
+         fAlpha = (float)a;
    }
 
    ///\{
