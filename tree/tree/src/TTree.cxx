@@ -5724,7 +5724,7 @@ const char* TTree::GetFriendAlias(TTree* tree) const
          return fe->GetName();
       }
       // Case of a chain:
-      if (t->GetTree() == tree) {
+      if (t && t->GetTree() == tree) {
          return fe->GetName();
       }
    }
