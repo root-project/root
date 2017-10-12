@@ -24,6 +24,30 @@
 #include "CpuBuffer.h"
 #include <TMVA/Config.h>
 
+#if defined(DEBUG_TMVA_TCPUMATRIX)
+#define PrintMatrix(mat, text)                                                                             \
+   {                                                                                                       \
+      auto _dpointer = mat.GetRawDataPointer();                                                            \
+      if (_dpointer == NULL) {                                                                             \
+         std::cout << #mat << " is null pointer" << std::endl;                                             \
+         exit(1);                                                                                          \
+      }                                                                                                    \
+      auto _nrows = mat.GetNrows();                                                                        \
+      auto _ncols = mat.GetNcols();                                                                        \
+      std::cout << "---------------------" << text << " " << #mat << "(" << _nrows << "," << _ncols << ")" \
+                << "--------------------" << std::endl;                                                    \
+      for (auto _i = 0; _i < _nrows; _i++) {                                                               \
+         for (auto _j = 0; _j < _ncols; _j++) {                                                            \
+            std::cout << mat(_i, _j);                                                                      \
+            if (_j < _ncols - 1) std::cout << ",";                                                         \
+         }                                                                                                 \
+         std::cout << std::endl;                                                                           \
+      }                                                                                                    \
+   }
+#else
+#define PrintMatrix(mat, text)
+#endif
+
 namespace TMVA
 {
 namespace DNN
