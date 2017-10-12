@@ -423,8 +423,8 @@ void TList::Clear(Option_t *option)
                }
             }
          }
-         delete tlk;
       }
+      delete tlk;
    }
    fFirst = fLast = fCache = 0;
    fSize = 0;
