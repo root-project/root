@@ -92,9 +92,9 @@ TReshapeLayer<Architecture_t>::TReshapeLayer(size_t batchSize, size_t inputDepth
 {
    if (this->GetInputDepth() * this->GetInputHeight() * this->GetInputWidth() !=
        this->GetDepth() * this->GetHeight() * this->GetWidth()) {
-      std::cout << "Reshape Dimensions not compatible \n" 
-        << this->GetInputDepth() << " x " << this->GetInputHeight() << " x " << this->GetInputWidth() << " --> "
-        << this->GetDepth() << " x " << this->GetHeight() << " x " << this->GetWidth() << std::endl;
+      std::cout << "Reshape Dimensions not compatible \n"
+                << this->GetInputDepth() << " x " << this->GetInputHeight() << " x " << this->GetInputWidth() << " --> "
+                << this->GetDepth() << " x " << this->GetHeight() << " x " << this->GetWidth() << std::endl;
       return;
    }
 }

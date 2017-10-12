@@ -152,17 +152,26 @@ public:
 //
 // BasicRNNLayer Implementation
 //______________________________________________________________________________
-template<typename Architecture_t>
-TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSize, size_t inputSize,
-                                              size_t timeSteps, bool rememberState,
-                                              DNN::EActivationFunction f,
-                                              bool training, DNN::EInitialization fA)
-   //TODO inputDepth and outputDepth changed to batchSize??
-   : VGeneralLayer<Architecture_t>(batchSize, 1, timeSteps, inputSize, 1, timeSteps, stateSize, 2, {stateSize, stateSize}, {inputSize, stateSize},
-   1, {stateSize}, {1}, batchSize, timeSteps, stateSize, fA),
-   fTimeSteps(timeSteps), fStateSize(stateSize), fRememberState(rememberState), fWeightsInput(this->GetWeightsAt(0)), fF(f),
-   fState(batchSize, stateSize), fWeightsState(this->GetWeightsAt(1)), fBiases(this->GetBiasesAt(0)), fDerivatives(batchSize, stateSize),
-   fWeightInputGradients(this->GetWeightGradientsAt(0)), fWeightStateGradients(this->GetWeightGradientsAt(1)), fBiasGradients(this->GetBiasGradientsAt(0))
+template <typename Architecture_t>
+TBasicRNNLayer<Architecture_t>::TBasicRNNLayer(size_t batchSize, size_t stateSize, size_t inputSize, size_t timeSteps,
+                                               bool rememberState, DNN::EActivationFunction f, bool training,
+                                               DNN::EInitialization fA)
+   // TODO inputDepth and outputDepth changed to batchSize??
+   : VGeneralLayer<Architecture_t>(batchSize, 1, timeSteps, inputSize, 1, timeSteps, stateSize, 2,
+                                   {stateSize, stateSize}, {inputSize, stateSize}, 1, {stateSize}, {1}, batchSize,
+                                   timeSteps, stateSize, fA),
+     fTimeSteps(timeSteps),
+     fStateSize(stateSize),
+     fRememberState(rememberState),
+     fWeightsInput(this->GetWeightsAt(0)),
+     fF(f),
+     fState(batchSize, stateSize),
+     fWeightsState(this->GetWeightsAt(1)),
+     fBiases(this->GetBiasesAt(0)),
+     fDerivatives(batchSize, stateSize),
+     fWeightInputGradients(this->GetWeightGradientsAt(0)),
+     fWeightStateGradients(this->GetWeightGradientsAt(1)),
+     fBiasGradients(this->GetBiasGradientsAt(0))
 {
    // Nothing
 }
