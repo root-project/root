@@ -104,7 +104,13 @@ public:
    }
 
    /// Remove an object from the list of primitives.
-   // TODO: void Wipe();
+   // TODO: void Wipe(???);
+
+   /// Wipe the pad by clearing the list of primitives.
+   void Wipe()
+   {
+      fPrimitives.clear();
+   }
 
    /// Get the elements contained in the canvas.
    const Primitives_t &GetPrimitives() const { return fPrimitives; }
