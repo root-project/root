@@ -24,6 +24,11 @@ TCpuMatrix<AReal>::TCpuMatrix(size_t nRows, size_t nCols)
     : fBuffer(nRows * nCols), fNCols(nCols), fNRows(nRows)
 {
    Initialize();
+   for (size_t j = 0; j < fNCols; j++) {
+      for (size_t i = 0; i < fNRows; i++) {
+         (*this)(i, j) = 0;
+      }
+   }
 }
 
 //____________________________________________________________________________

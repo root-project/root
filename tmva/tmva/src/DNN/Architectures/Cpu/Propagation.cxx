@@ -273,8 +273,6 @@ template <typename AFloat>
 void TCpu<AFloat>::CalculateConvBiasGradients(TCpuMatrix<AFloat> &biasGradients, std::vector<TCpuMatrix<AFloat>> &df,
                                               size_t batchSize, size_t depth, size_t nLocalViews)
 {
-   std::cout << "Calculate Conv Bias Gradients method call" << std::endl;
-
    for (size_t i = 0; i < depth; i++) {
       AFloat sum = 0;
       for (size_t j = 0; j < nLocalViews; j++) {

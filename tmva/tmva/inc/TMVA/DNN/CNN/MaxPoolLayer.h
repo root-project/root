@@ -170,7 +170,6 @@ TMaxPoolLayer<Architecture_t>::~TMaxPoolLayer()
 template <typename Architecture_t>
 auto TMaxPoolLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
 {
-   std::cout << "Max Pool Layer Forward" << std::endl;
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
 
       if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
@@ -189,7 +188,6 @@ auto TMaxPoolLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_ba
                                              const std::vector<Matrix_t> &activations_backward,
                                              std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2) -> void
 {
-   std::cout << "Max Pool Layer Backward" << std::endl;
    Architecture_t::MaxPoolLayerBackward(gradients_backward, this->GetActivationGradients(), indexMatrix,
                                         this->GetBatchSize(), this->GetDepth(), this->GetNLocalViews());
 }

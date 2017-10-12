@@ -1254,6 +1254,12 @@ void MethodDL::TrainCpu()
 Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
 {
 #ifdef DNNCPU
+   // set the batch size to 1 for the evaluation
+   fNet->SetBatchSize(1);
+   // set also in the layers
+   auto &layers = fNet->GetLayers();
+   for (auto &l : layers) l->SetBatchSize(1);
+
    using Architecture_t = DNN::TCpu<Double_t>;
    using Matrix_t = typename Architecture_t::Matrix_t;
 
