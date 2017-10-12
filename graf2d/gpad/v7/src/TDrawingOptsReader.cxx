@@ -37,9 +37,11 @@ TDrawingOptsReader::Attrs_t TDrawingOptsReader::ReadDefaults()
    return ret;
 }
 
-ROOT::Experimental::TColor TDrawingOptsReader::ParseColor(std::string_view /*attr*/, const TColor &/*deflt*/)
+ROOT::Experimental::TColor TDrawingOptsReader::ParseColor(std::string_view attr, const TColor &deflt)
 {
-   // TODO: implement!
+   auto iAttr = fAttrs.find(std::string(attr);
+   if (iAttr == fAttrs.end())
+      return deflt;
    return ROOT::Experimental::TColor::kBlack;
 }
 
