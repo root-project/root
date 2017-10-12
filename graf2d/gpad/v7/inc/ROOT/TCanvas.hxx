@@ -91,6 +91,8 @@ public:
    /// Create a temporary TCanvas; for long-lived ones please use Create().
    TCanvas() = default;
 
+   ~TCanvas() { Wipe(); /* FIXME: this should become Attrs owned and referenced by the TPads */}
+
    const TCanvas &GetCanvas() const override { return *this; }
 
    /// Access to the top-most canvas, if any (non-const version).
