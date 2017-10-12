@@ -402,3 +402,10 @@ if(ROOT_python_FOUND)
                 ENVIRONMENT ${ROOT_environ})
   endforeach()
 endif()
+
+#---Download files for tutorials---------
+set(rootsite http://root.cern.ch/files)
+set(csvtimeout 60)
+set (tdf014_csv tdf014_CsvDataSource_MuRun2010B.csv)
+file(DOWNLOAD ${rootsite}/tutorials/${tdf014_csv} ${CMAKE_CURRENT_BINARY_DIR}/${tdf014_csv} TIMEOUT ${csvtimeout})
+
