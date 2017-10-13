@@ -96,12 +96,12 @@ void TCpu<AFloat>::Im2col(TCpuMatrix<AFloat> &A, TCpuMatrix<AFloat> &B, size_t i
          size_t currLocalViewPixel = 0;
 
          // within the local view
-         for (int m = 0; m < B.GetNrows(); m++) {
-            for (int k = i - fltHeight / 2; k <= i + (fltHeight - 1) / 2; k++) {
-               for (int l = j - fltWidth / 2; l <= j + (fltWidth - 1) / 2; l++) {
+         for (int m = 0; m < (Int_t)B.GetNrows(); m++) {
+            for (int k = i - fltHeight / 2; k <= Int_t(i + (fltHeight - 1) / 2); k++) {
+               for (int l = j - fltWidth / 2; l <= Int_t(j + (fltWidth - 1) / 2); l++) {
 
                   // Check the boundaries
-                  if (k < 0 || k >= imgHeight || l < 0 || l >= imgWidth)
+                  if (k < 0 || k >= (Int_t)imgHeight || l < 0 || l >= (Int_t)imgWidth)
                      A(currLocalView, currLocalViewPixel++) = 0;
                   else
                      A(currLocalView, currLocalViewPixel++) = B(m, k * imgWidth + l);
@@ -158,9 +158,9 @@ void TCpu<AFloat>::ConvLayerBackward(std::vector<TCpuMatrix<AFloat>> &activation
                                      size_t filterDepth, size_t filterHeight, size_t filterWidth, size_t nLocalViews)
 {
    // Update derivatives
-   size_t m, n;
-   m = activationGradients[0].GetNrows();
-   n = activationGradients[0].GetNcols();
+   //    size_t m, n;
+   //    m = activationGradients[0].GetNrows();
+   //    n = activationGradients[0].GetNcols();
 
    for (size_t i = 0; i < batchSize; i++) {
       // Compute element-wise product.
@@ -299,11 +299,11 @@ void TCpu<AFloat>::Downsample(TCpuMatrix<AFloat> &A, TCpuMatrix<AFloat> &B, cons
    for (int i = fltHeight / 2; i <= imgHeightBound; i += strideRows) {
       for (int j = fltWidth / 2; j <= imgWidthBound; j += strideCols) {
          // within local views
-         for (int m = 0; m < C.GetNrows(); m++) {
+         for (int m = 0; m < (Int_t)C.GetNrows(); m++) {
             AFloat value = -std::numeric_limits<AFloat>::max();
 
-            for (int k = i - fltHeight / 2; k <= i + (fltHeight - 1) / 2; k++) {
-               for (int l = j - fltWidth / 2; l <= j + (fltWidth - 1) / 2; l++) {
+            for (int k = i - fltHeight / 2; k <= Int_t(i + (fltHeight - 1) / 2); k++) {
+               for (int l = j - fltWidth / 2; l <= Int_t(j + (fltWidth - 1) / 2); l++) {
                   if (C(m, k * imgWidth + l) > value) {
                      value = C(m, k * imgWidth + l);
                      B(m, currLocalView) = k * imgWidth + l;
