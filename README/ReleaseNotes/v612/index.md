@@ -167,6 +167,7 @@ large TClonesArray where each element contains another small vector container.
   - Fix an issue with `TGraph2D` drawn as lines (reported [here](https://sft.its.cern.ch/jira/browse/ROOT-9046)).
   - ROOT Cocoa: fix rendering into bitmaps on high-dpi display. With retina display
     the rendering of polylines was slow.
+  - Fix a precision issue in `TGraph2D`. It was reported [here](https://root-forum.cern.ch/t/tgraph2d-plotting-issues/26562)
 
 ## 3D Graphics Libraries
 
