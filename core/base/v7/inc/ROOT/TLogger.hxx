@@ -113,6 +113,14 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
+#if defined(_MSC_VER)
+#define LOG_PRETTY_FUNCTION __FUNCSIG__
+#elif defined(__GNUC__) || defined(__clang__)
+#define LOG_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#else
+#define LOG_PRETTY_FUNCTION __func__
+#endif
+
 #define R__LOG_HERE(LEVEL, GROUP) \
    ROOT::Experimental::TLogEntry(LEVEL, GROUP).SetFile(__FILE__).SetLine(__LINE__).SetFunction(__PRETTY_FUNCTION__)
 
