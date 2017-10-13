@@ -116,6 +116,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject* obj)
        { "TLatex", false },
        { "TMathText", false },
        { "TPolyMarker3D", false },
+       { "TGraph2D", false },
        { 0, false }
    };
 
