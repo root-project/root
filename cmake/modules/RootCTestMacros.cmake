@@ -364,7 +364,7 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     )
 
   add_executable(${binary} ${unittests_SRC})
-  target_include_directories(${binary} PRIVATE ${ROOTTEST_DIR}/googletest/include)
+  target_include_directories(${binary} PRIVATE ${GTEST_INCLUDE_DIR})
   target_link_libraries(${binary} gtest gtest_main ${ARG_UNPARSED_ARGUMENTS})
 
   # Mark the test as known to fail.
