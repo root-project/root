@@ -148,6 +148,7 @@ public:
    virtual void          InitGaus(Double_t xmin=0, Double_t xmax=0);
    virtual void          InitPolynom(Double_t xmin=0, Double_t xmax=0);
    virtual Int_t         InsertPoint(); // *MENU*
+   virtual void          InsertPointBefore(Int_t ipoint, Double_t x, Double_t y);
    virtual Double_t      Integral(Int_t first=0, Int_t last=-1) const;
    virtual Bool_t        IsEditable() const {return !TestBit(kNotEditable);}
    virtual Int_t         IsInside(Double_t x, Double_t y) const;

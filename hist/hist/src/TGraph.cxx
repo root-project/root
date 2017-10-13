@@ -1721,17 +1721,30 @@ Int_t TGraph::InsertPoint()
       if (dpx * dpx + dpy * dpy < 25) ipoint = 0;
       else                      ipoint = fNpoints;
    }
+
+
+   InsertPointBefore(ipoint, gPad->AbsPixeltoX(px), gPad->AbsPixeltoY(py));
+
+   gPad->Modified();
+   return ipoint;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Insert a new point with coordinates (x,y) before the point number `ipoint`.
+
+void TGraph::InsertPointBefore(Int_t ipoint, Double_t x, Double_t y)
+{
    Double_t **ps = ExpandAndCopy(fNpoints + 1, ipoint);
    CopyAndRelease(ps, ipoint, fNpoints++, ipoint + 1);
 
    // To avoid redefinitions in descendant classes
    FillZero(ipoint, ipoint + 1);
 
-   fX[ipoint] = gPad->PadtoX(gPad->AbsPixeltoX(px));
-   fY[ipoint] = gPad->PadtoY(gPad->AbsPixeltoY(py));
-   gPad->Modified();
-   return ipoint;
+   fX[ipoint] = x;
+   fY[ipoint] = y;
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Integrate the TGraph data within a given (index) range.
