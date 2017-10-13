@@ -55,7 +55,7 @@ namespace TMVA {
 #ifdef R__USE_IMT
       ROOT::TThreadExecutor fPool;
 #endif
-
+      
    public:
 
       static Config& Instance();
@@ -72,6 +72,7 @@ namespace TMVA {
 
       Bool_t DrawProgressBar() const { return fDrawProgressBar; }
       void   SetDrawProgressBar( Bool_t d ) { fDrawProgressBar = d; }
+      ROOT::TThreadExecutor &GetThreadExecutor() { return fPool; }
 
 #ifdef R__USE_IMT
       ROOT::TThreadExecutor &GetThreadExecutor() { return fPool; }
