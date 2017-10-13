@@ -119,6 +119,7 @@ public:
       case EKind::kAuto:
          return true; // is that what we need?
       }
+      return false;
    }
 
    /// For RGBA or auto colors, get the red component (0..1).
