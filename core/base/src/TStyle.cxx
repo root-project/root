@@ -1505,7 +1505,7 @@ void TStyle::SaveSource(const char *filename, Option_t *option)
    Int_t lenfname = strlen(fname);
    char *sname = new char[lenfname + 1];
    Int_t i = 0;
-   while ((fname[i] != '.') && (i < lenfname)) {
+   while ((i < lenfname) && (fname[i] != '.')) {
       sname[i] = fname[i];
       i++;
    }
