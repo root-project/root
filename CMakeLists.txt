@@ -327,7 +327,7 @@ add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                           etc/dictpch/allHeaders.h
                           etc/dictpch/allCppflags.txt
                    COMMAND ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${CMAKE_SOURCE_DIR} . ${__clingetcpch} -- ${CMAKE_CXX_FLAGS_SEPARATE}
-                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py ${__allFiles})
+                   DEPENDS ${CMAKE_SOURCE_DIR}/build/unix/makepchinput.py move_headers ClingUtils)
 
 get_property(incdirs DIRECTORY PROPERTY INCLUDE_DIRECTORIES)
 foreach(d ${incdirs})
@@ -350,7 +350,7 @@ add_custom_command(OUTPUT etc/allDict.cxx.pch
                            rootcling)
 add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
 set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
-add_dependencies(onepcm ${__allTargets})
+add_dependencies(onepcm rootcling)
 install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
 
