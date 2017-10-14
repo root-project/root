@@ -1954,6 +1954,7 @@ void TROOT::InitInterpreter()
       // Can't use gSystem->DynFindSymbol() because that iterates over all *known*
       // libraries which is not the same!
       LLVMEnablePrettyStackTraceAddr = dlsym(RTLD_DEFAULT, "LLVMEnablePrettyStackTrace");
+      // FIXME: When we configure with -Dclingtest=On we intentionally export the symbols. Silence this error.
       if (LLVMEnablePrettyStackTraceAddr) {
          Error("InitInterpreter()", "LLVM SYMBOLS ARE EXPOSED TO CLING! "
                "This will cause problems; please hide them or dlopen() them "
