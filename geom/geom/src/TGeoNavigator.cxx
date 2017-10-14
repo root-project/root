@@ -2218,7 +2218,7 @@ Int_t TGeoNavigator::GetTouchedCluster(Int_t start, Double_t *point,
    }
 
    Int_t jst=0, i, j;
-   while ((ovlps[jst]<=check_list[start]) && (jst<novlps))  jst++;
+   while ((jst<novlps) && (ovlps[jst]<=check_list[start]))  jst++;
    if (jst==novlps) return 0;
    for (i=start; i<ncheck; i++) {
       for (j=jst; j<novlps; j++) {

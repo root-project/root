@@ -454,7 +454,7 @@ Double_t TGeoParaboloid::Safety(const Double_t *point, Bool_t in) const
 
 void TGeoParaboloid::SetParaboloidDimensions(Double_t rlo, Double_t rhi, Double_t dz)
 {
-   if ((rlo<0) || (rlo<0) || (dz<=0) || TMath::Abs(rlo-rhi)<TGeoShape::Tolerance()) {
+   if ((rlo<0) || (rhi<0) || (dz<=0) || TMath::Abs(rlo-rhi)<TGeoShape::Tolerance()) {
       SetShapeBit(kGeoRunTimeShape);
       Error("SetParaboloidDimensions", "Dimensions of %s invalid: check (rlo>=0) (rhi>=0) (rlo!=rhi) dz>0",GetName());
       return;
