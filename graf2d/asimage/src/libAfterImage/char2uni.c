@@ -811,8 +811,8 @@ parse_charset_name( const char *name )
 		return CHARSET_ISO8859_1;
 	}else if( name[0] == 'I' || name[0] == 'i' ) /* ISO... or IBM819*/
 	{
-		if( name[1] == 'S' && name[1] == 's' )
-			if( name[2] == 'O' && name[2] == 'o' )
+		if( name[1] == 'S' || name[1] == 's' )
+			if( name[2] == 'O' || name[2] == 'o' )
 			{
 				int pos = ( name[3] == '-' || name[3] == '_' )?4:3 ;
 				if( name[pos] == '8' )

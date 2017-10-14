@@ -373,7 +373,7 @@ start_image_decoding( ASVisual *asv,ASImage *im, ASFlagType filter,
 
 		if( bevel->left_outline == 0 && bevel->right_outline == 0 &&
 			bevel->top_outline == 0 && bevel->bottom_outline == 0 &&
-			bevel->left_inline == 0 && bevel->left_inline == 0 &&
+			bevel->left_inline == 0 && bevel->right_inline == 0 &&
 			bevel->top_inline == 0 && bevel->bottom_inline == 0 )
 			imdec->bevel = bevel = NULL ;
 	}

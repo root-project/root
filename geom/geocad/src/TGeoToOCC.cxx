@@ -524,10 +524,10 @@ TopoDS_Shape TGeoToOCC::OCC_Cuttub(Double_t rmin, Double_t rmax, Double_t dz,
    BRepBuilderAPI_Transform theTR(TR);
    theTR.Perform(tubs, Standard_True);
    tubs=theTR.Shape();
-   if ((Nhigh[0]>-1e-4)||(Nhigh[0]<1e-4)) nhigh0=0;
-   if ((Nhigh[1]>-1e-4)||(Nhigh[1]<1e-4)) nhigh1=0;
-   if ((Nlow[0]>-1e-4)||(Nlow[0]<1e-4)) nlow0=0;
-   if ((Nlow[1]>-1e-4)||(Nlow[1]<1e-4)) nlow1=0;
+   if ((Nhigh[0]>-1e-4)&&(Nhigh[0]<1e-4)) nhigh0=0;
+   if ((Nhigh[1]>-1e-4)&&(Nhigh[1]<1e-4)) nhigh1=0;
+   if ((Nlow[0]>-1e-4)&&(Nlow[0]<1e-4)) nlow0=0;
+   if ((Nlow[1]>-1e-4)&&(Nlow[1]<1e-4)) nlow1=0;
    Handle(Geom_Plane) pH = new Geom_Plane (gp_Pnt(0,0,dz), gp_Dir(nhigh0,nhigh1,Nhigh[2]));
    Handle(Geom_Plane) pL = new Geom_Plane (gp_Pnt(0,0,-dz), gp_Dir(nlow0,nlow1,Nlow[2]));
 
