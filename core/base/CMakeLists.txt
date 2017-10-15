@@ -17,6 +17,19 @@ if(root7)
 endif()
 ROOT_GLOB_SOURCES(sources RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/src src/*.cxx ${root7src})
 
+# libCore is linked against zlib (based on the location returned by find_package or builtin_zlib). The dictionary of
+# libCore, G__Core.cxx, should contain the include path to zlib.h in order to keep the symbol and header files in sync.
+# The includePath variable of the dictionary is empty, but we do not notice it because, by chance, G__MathMore adds
+# the same includePath for GSL. OTOH, if we have a small test case which works only with libCore.so we never give a
+# chance MathMore's dictionary to hide the problem and thus we pick up the system zlib.h.
+#
+# FIXME: Using include_directories is too intrusive as it does much more than what we want, that is, it will add this
+# include path not only in the dictionary but as part of the compilation lines. It is harmless but suboptimal: we need a
+# mechanism throough which we can express that we only need the path in the dictionary.
+#
+# NOTE: We cannot use set_property(TARGET G__Core ...) becase this has to happen before registering the target.
+include_directories(${ZLIB_INCLUDE_DIR})
+
 ROOT_GENERATE_DICTIONARY(G__Core
                          ${Base_dict_headers}
                          ${Base_v7_dict_headers}
