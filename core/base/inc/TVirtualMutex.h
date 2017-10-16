@@ -109,9 +109,9 @@ public:
 #define R__LOCKGUARD_NAMED(name,mutex) TLockGuard _NAME2_(R__guard,name)(mutex)
 #define R__LOCKGUARD_UNLOCK(name) _NAME2_(R__guard,name).UnLock()
 #else
-#define R__LOCKGUARD(mutex)  if (mutex) { }
-#define R__LOCKGUARD_NAMED(name,mutex) if (mutex) { }
-#define R__LOCKGUARD2(mutex) if (mutex) { }
+#define R__LOCKGUARD(mutex)  (void)mutex; { }
+#define R__LOCKGUARD_NAMED(name,mutex) (void)mutex; { }
+#define R__LOCKGUARD2(mutex) (void)mutex; { }
 #define R__LOCKGUARD_UNLOCK(name) { }
 #endif
 
