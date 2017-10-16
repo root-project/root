@@ -129,8 +129,8 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
 /// is provided, a Fatal error will be issued if the Buffer attempts to
 /// expand.
 
-TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
-   TBuffer(mode,bufsiz,buf,adopt,reallocfunc),
+TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocStateFun_t reallocfunc, void *reallocdata) :
+   TBuffer(mode,bufsiz,buf,adopt,reallocfunc,reallocdata),
    fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
    fInfo(0), fInfoStack()
 {

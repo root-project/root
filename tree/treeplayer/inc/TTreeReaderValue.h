@@ -15,7 +15,7 @@
 
 ////////////////////////////////////////////////////////////////////////////
 //                                                                        //
-// TTreeReaderValue                                                    //
+// TTreeReaderValue                                                       //
 //                                                                        //
 // A simple interface for reading data from trees or chains.              //
 //                                                                        //
@@ -89,8 +89,9 @@ namespace Internal {
       void NotifyNewTree(TTree* newTree);
 
       virtual void CreateProxy();
-      const char* GetBranchDataType(TBranch* branch,
-                                    TDictionary* &dict) const;
+      static const char* GetBranchDataType(TBranch* branch,
+                                           TDictionary* &dict,
+                                           TDictionary const *curDict);
 
       virtual const char* GetDerivedTypeName() const = 0;
 

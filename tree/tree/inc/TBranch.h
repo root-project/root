@@ -52,6 +52,11 @@ namespace ROOT {
   namespace Internal {
     class TBranchIMTHelper; ///< A helper class for managing IMT work during TTree:Fill operations.
   }
+  namespace Experimental {
+    namespace Internal {
+      class TBulkBranchRead; ///< A helper class for bulk IO (multiple events per call) operations.
+    }
+  }
 }
 
 class TBranch : public TNamed , public TAttFill {
@@ -59,6 +64,7 @@ class TBranch : public TNamed , public TAttFill {
 protected:
    friend class TTreeCloner;
    friend class TTree;
+   friend class ROOT::Experimental::Internal::TBulkBranchRead;
 
    // TBranch status bits
    enum EStatusBits {
@@ -107,6 +113,7 @@ protected:
    TBuffer    *fEntryBuffer;      ///<! Buffer used to directly pass the content without streaming
    TBuffer    *fTransientBuffer;  ///<! Pointer to the current transient buffer.
    TList      *fBrowsables;       ///<! List of TVirtualBranchBrowsables used for Browse()
+   std::unique_ptr<ROOT::Experimental::Internal::TBulkBranchRead> fBulk; ///<! Helper for performing bulk IO
 
    Bool_t      fSkipZip;          ///<! After being read, the buffer will not be unzipped.
 
@@ -123,13 +130,19 @@ protected:
    void     SetSkipZip(Bool_t skip = kTRUE) { fSkipZip = skip; }
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
-   TBasket *GetFreshBasket();
+   TBasket *GetFreshBasket(TBuffer *user_buffer);
    Int_t    WriteBasket(TBasket* basket, Int_t where) { return WriteBasketImpl(basket, where, nullptr); }
 
    TString  GetRealFileName() const;
 
 private:
-   Int_t FillEntryBuffer(TBasket* basket,TBuffer* buf, Int_t& lnew);
+   Int_t    GetBasketAndFirst(TBasket*& basket, Long64_t& first, TBuffer* user_buffer);
+   TBasket *GetBasketImpl(Int_t basket, TBuffer* user_buffer);
+   Int_t    GetEntriesFastSerializedHelper(Long64_t entry, bool checkDeserializeType, TBuffer &user_buf, TLeaf* &leaf, Long64_t &first, TBuffer* &buf, Int_t &bufbegin, Int_t &N);
+   Int_t    GetEntriesFast(Long64_t, TBuffer&, bool);
+   Int_t    GetEntriesSerialized(Long64_t N, TBuffer& user_buf, bool checkDeserializeType) {return GetEntriesSerialized(N, user_buf, nullptr, checkDeserializeType);}
+   Int_t    GetEntriesSerialized(Long64_t, TBuffer&, TBuffer*, bool);
+   Int_t    FillEntryBuffer(TBasket* basket,TBuffer* buf, Int_t& lnew);
    Int_t    WriteBasketImpl(TBasket* basket, Int_t where, ROOT::Internal::TBranchIMTHelper *);
    TBranch(const TBranch&) = delete;             // not implemented
    TBranch& operator=(const TBranch&) = delete;  // not implemented
@@ -154,11 +167,12 @@ public:
            Int_t     FlushOneBasket(UInt_t which);
 
    virtual char     *GetAddress() const {return fAddress;}
-           TBasket  *GetBasket(Int_t basket);
+           TBasket  *GetBasket(Int_t basket) {return GetBasketImpl(basket, nullptr);}
            Int_t    *GetBasketBytes() const {return fBasketBytes;}
            Long64_t *GetBasketEntry() const {return fBasketEntry;}
    virtual Long64_t  GetBasketSeek(Int_t basket) const;
    virtual Int_t     GetBasketSize() const {return fBasketSize;}
+           ROOT::Experimental::Internal::TBulkBranchRead &GetBulkRead() const {return *fBulk;}
    virtual TList    *GetBrowsables();
    virtual const char* GetClassName() const;
            Int_t     GetCompressionAlgorithm() const;
@@ -225,6 +239,7 @@ public:
    virtual void      SetStatus(Bool_t status=1);
    virtual void      SetTree(TTree *tree) { fTree = tree;}
    virtual void      SetupAddresses();
+   Bool_t            SupportsBulkRead() const;
    virtual void      UpdateAddress() {;}
    virtual void      UpdateFile();
 

@@ -89,7 +89,7 @@ public:
 
    TBufferFile(TBuffer::EMode mode);
    TBufferFile(TBuffer::EMode mode, Int_t bufsiz);
-   TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
+   TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocStateFun_t reallocfunc = 0, void *reallocdata = nullptr);
    virtual ~TBufferFile();
 
    Int_t    GetMapCount() const { return fMapCount; }

@@ -14,6 +14,7 @@
 #include "TFunctionHolder.h"
 #include "Converters.h"
 #include "TMemoryRegulator.h"
+#include "NumpyInterface.h"
 #include "Utility.h"
 
 // ROOT
@@ -1723,7 +1724,6 @@ namespace PyROOT {      // workaround for Intel icc on Linux
       }
    };
 
-
 // TChain overrides TTree's SetBranchAddress, so set it again (the python method only forwards
 //   onto a TTree*, so the C++ virtual function call will make sure the right method is used)
    class TChainSetBranchAddress : public TTreeSetBranchAddress {
@@ -2545,7 +2545,7 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
 
       return kTRUE;
    }
-
+   
    else if ( name == "TTree" ) {
    // allow direct browsing of the tree
       Utility::AddToClass( pyclass, "__getattr__", (PyCFunction) TTreeGetAttr, METH_O );
@@ -2569,6 +2569,11 @@ Bool_t PyROOT::Pythonize( PyObject* pyclass, const std::string& name )
          pyclass, const_cast< char* >( method->GetName().c_str() ), (PyObject*)method );
       Py_DECREF( method ); method = 0;
 
+   }
+
+   else if ( name == "TBranch" ) {
+   // add Python-only FillNumpyArray method
+      Utility::AddToClass( pyclass, "FillNumpyArray", (PyCFunction) FillNumpyArray, METH_VARARGS );
    }
 
    else if ( name == "TChain" ) {

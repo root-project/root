@@ -21,7 +21,9 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+#include <atomic>
 
+#include "TDataType.h"
 #include "TLeaf.h"
 #include "TBranchElement.h"
 
@@ -33,11 +35,15 @@ protected:
    char               *fAbsAddress;   ///<! Absolute leaf Address
    Int_t               fID;           ///<  element serial number in fInfo
    Int_t               fType;         ///<  leaf type
+   mutable std::atomic<DeserializeType> fDeserializeTypeCache{kInvalid}; ///<! Cache of the type of deserialization.
+   mutable std::atomic<EDataType> fDataTypeCache{EDataType::kOther_t}; ///<! Cache of the EDataType of deserialization.
 
 public:
    TLeafElement();
    TLeafElement(TBranch *parent, const char *name, Int_t id, Int_t type);
    virtual ~TLeafElement();
+
+   virtual DeserializeType GetDeserializeType() const;
 
    virtual Int_t    GetLen() const {return ((TBranchElement*)fBranch)->GetNdata()*fLen;}
    TMethodCall     *GetMethodCall(const char *name);
@@ -49,6 +55,8 @@ public:
    virtual Long64_t     GetValueLong64(Int_t i = 0) const { return ((TBranchElement*)fBranch)->GetTypedValue<Long64_t>(i, fLen, kFALSE); }
    virtual LongDouble_t GetValueLongDouble(Int_t i = 0) const { return ((TBranchElement*)fBranch)->GetTypedValue<LongDouble_t>(i, fLen, kFALSE); }
    template<typename T> T GetTypedValueSubArray(Int_t i=0, Int_t j=0) const {return ((TBranchElement*)fBranch)->GetTypedValue<T>(i, j, kTRUE);}
+
+   virtual bool     ReadBasketFast(TBuffer&, Long64_t);
 
    virtual void    *GetValuePointer() const { return ((TBranchElement*)fBranch)->GetValuePointer(); }
    virtual Bool_t   IsOnTerminalBranch() const;

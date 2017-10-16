@@ -212,7 +212,7 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       const char* brDataType = "{UNDETERMINED}";
       if (br) {
          TDictionary* brDictUnused = 0;
-         brDataType = GetBranchDataType(br, brDictUnused);
+         brDataType = GetBranchDataType(br, brDictUnused, fDict);
       }
       Error("TTreeReaderValueBase::CreateProxy()", "The template argument type T of %s accessing branch %s (which contains data of type %s) is not known to ROOT. You will need to create a dictionary for it.",
             GetDerivedTypeName(), fBranchName.Data(), brDataType);
@@ -375,8 +375,8 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
       }
    }
 
-   if (!myLeaf && !fHaveStaticClassOffsets) {
-      const char* branchActualTypeName = GetBranchDataType(branch, branchActualType);
+   if (!myLeaf && !fStaticClassOffsets.size()) {
+      const char* branchActualTypeName = GetBranchDataType(branch, branchActualType, fDict);
 
       if (!branchActualType) {
          Error("TTreeReaderValueBase::CreateProxy()", "The branch %s contains data of type %s, which does not have a dictionary.",
@@ -450,7 +450,8 @@ void ROOT::Internal::TTreeReaderValueBase::CreateProxy() {
 /// its type name should be returned.
 
 const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* branch,
-                                           TDictionary* &dict) const
+                                           TDictionary* &dict,
+                                           TDictionary const *curDict)
 {
    dict = 0;
    if (branch->IsA() == TBranchElement::Class()) {
@@ -463,10 +464,10 @@ const char* ROOT::Internal::TTreeReaderValueBase::GetBranchDataType(TBranch* bra
          dict = TDictionary::GetDictionary(((TDataType*)dict)->GetTypeName());
          if (dict->IsA() != TDataType::Class()) {
             // Might be a class.
-            if (dict != fDict) {
+            if (dict != curDict) {
                dict = TClass::GetClass(brElement->GetTypeName());
             }
-            if (dict != fDict) {
+            if (dict != curDict) {
                dict = brElement->GetCurrentClass();
             }
          }
