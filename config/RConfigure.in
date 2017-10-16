@@ -36,6 +36,7 @@
 #@hasstodstringview@ R__HAS_STOD_STRING_VIEW /**/
 #@hasstdapply@ R__HAS_STD_APPLY /**/
 #@hasstdinvoke@ R__HAS_STD_INVOKE /**/
+#@has_found_attribute_always_inline@ R__HAS_ATTRIBUTE_ALWAYS_INLINE /**/
 #@hasllvm@ R__EXTERN_LLVMDIR @llvmdir@
 #@useimt@ R__USE_IMT   /**/
 #@memory_term@ R__COMPLETE_MEM_TERMINATION /**/

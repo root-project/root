@@ -526,6 +526,11 @@
 
 #endif
 
+#ifdef R__HAS_ATTRIBUTE_ALWAYS_INLINE
+#define R__ALWAYS_INLINE inline __attribute__((always_inline))
+#else
+#define R__ALWAYS_INLINE inline
+#endif
 
 /*---- unlikely / likely expressions -----------------------------------------*/
 // These are meant to use in cases like:
