@@ -958,7 +958,7 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
       /* early consistency check */
       UChar_t *bufcur = (UChar_t *) (src + keylen);
       Int_t nin, nbuf;
-      if(R__unzip_header(&nin, bufcur, &nbuf)!=0) {
+      if(objlen > nbytes-keylen && R__unzip_header(&nin, bufcur, &nbuf)!=0) {
          Error("UnzipBuffer", "Inconsistency found in header (nin=%d, nbuf=%d)", nin, nbuf);
          uzlen = -1;
          return uzlen;
@@ -1000,7 +1000,7 @@ Int_t TTreeCacheUnzip::UnzipBuffer(char **dest, char *src)
                Info("UnzipBuffer", "oldcase objlen :%d ", objlen);
 
             //buffer was very likely not compressed in an old version
-            memcpy( *dest + keylen, src + keylen, objlen);
+            memcpy(*dest + keylen, src + keylen, objlen);
             uzlen += objlen;
             return uzlen;
          }
