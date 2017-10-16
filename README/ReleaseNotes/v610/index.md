@@ -682,9 +682,7 @@ Released on September 19, 2017
 *   [ROOT-8980] - variadic template warning in genreflex prohibits use in CMS build system
 
 
-## HEAD of the v6-10-00-patches branch
-
-These changes will be part of the future 6.10/08
+## Release 6.10/08
 
 ### Core Libraries
 
@@ -694,6 +692,19 @@ These changes will be part of the future 6.10/08
 
 * Add support for LZ4 as a compression format.
 
-### TDataFrame
+## Bugs and Issues fixed in this release
 
-* Fix ROOT-9027: Multi-thread Snapshot action writes only part of the events for large input files
+*   [[ROOT-8995](https://sft.its.cern.ch/jira/browse/ROOT-8995)] - Read branch error in TTree::GetEntry
+*   [[ROOT-9007](https://sft.its.cern.ch/jira/browse/ROOT-9007)] - PyROOT segfault in MethodProxy.cxx for ROOT 6.10/02
+*   [[ROOT-9015](https://sft.its.cern.ch/jira/browse/ROOT-9015)] - Root complication fails with XCode 9 in MacOS 10.12.6
+*   [[ROOT-9022](https://sft.its.cern.ch/jira/browse/ROOT-9022)] - compile error with -Dgminimal=ON
+*   [[ROOT-9027](https://sft.its.cern.ch/jira/browse/ROOT-9027)] - Multi-thread Snapshot action writes only part of the events for large input files
+*   [[ROOT-9031](https://sft.its.cern.ch/jira/browse/ROOT-9031)] - CMake dev warning CMP0068
+*   [[ROOT-9032](https://sft.its.cern.ch/jira/browse/ROOT-9032)] - Can't compile 6.10/06 with Clang 5.0.0 due to TBB
+*   [[ROOT-9037](https://sft.its.cern.ch/jira/browse/ROOT-9037)] - TDataFrame ctor does not compile if std::string is passed as filename
+*   [[ROOT-9055](https://sft.its.cern.ch/jira/browse/ROOT-9055)] - ROOT_GENERATE_DICTIONARY finds header files in /usr/bin failing the build in centos
+
+## HEAD of the v6-10-00-patches branch
+
+These changes will be part of the future 6.10/10
+
