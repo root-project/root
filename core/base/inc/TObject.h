@@ -129,8 +129,10 @@ public:
    virtual Bool_t      IsFolder() const;
    virtual Bool_t      IsEqual(const TObject *obj) const;
    virtual Bool_t      IsSortable() const { return kFALSE; }
-           Bool_t      IsOnHeap() const { return TestBit(kIsOnHeap); }
-           Bool_t      IsZombie() const { return TestBit(kZombie); }
+
+   R__ALWAYS_INLINE Bool_t IsOnHeap() const { return TestBit(kIsOnHeap); }
+   R__ALWAYS_INLINE Bool_t IsZombie() const { return TestBit(kZombie); }
+
    virtual Bool_t      Notify();
    virtual void        ls(Option_t *option="") const;
    virtual void        Paint(Option_t *option="");
@@ -167,7 +169,7 @@ public:
    void     SetBit(UInt_t f, Bool_t set);
    void     SetBit(UInt_t f) { fBits |= f & kBitMask; }
    void     ResetBit(UInt_t f) { fBits &= ~(f & kBitMask); }
-   Bool_t   TestBit(UInt_t f) const { return (Bool_t) ((fBits & f) != 0); }
+   R__ALWAYS_INLINE Bool_t TestBit(UInt_t f) const { return (Bool_t) ((fBits & f) != 0); }
    Int_t    TestBits(UInt_t f) const { return (Int_t) (fBits & f); }
    void     InvertBit(UInt_t f) { fBits ^= f & kBitMask; }
 
