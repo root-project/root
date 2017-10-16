@@ -115,10 +115,8 @@ public:
 
 #if defined(_MSC_VER)
 #define R__LOG_PRETTY_FUNCTION __FUNCSIG__
-#elif defined(__GNUC__) || defined(__clang__)
-#define R__LOG_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #else
-#define R__LOG_PRETTY_FUNCTION __func__
+#define R__LOG_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #endif
 
 #define R__LOG_HERE(LEVEL, GROUP) \
