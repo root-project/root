@@ -182,7 +182,7 @@ struct TLineAttrs {
 };
 
 struct TFillAttrs {
-   TDrawingAttrRef<TColor> fColor; ///< Line color
+   TDrawingAttrRef<TColor> fColor; ///< Fill color
 
    TFillAttrs() = default;
 
