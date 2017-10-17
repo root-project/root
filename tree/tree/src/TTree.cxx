@@ -8383,9 +8383,11 @@ Int_t TTree::SetCacheSizeAux(Bool_t autocache /* = kTRUE */, Long64_t cacheSize 
       return 0;
    }
 
+#ifdef R__USE_IMT
    if(TTreeCacheUnzip::IsParallelUnzip() && file->GetCompressionLevel() > 0)
       pf = new TTreeCacheUnzip(this, cacheSize);
    else
+#endif
       pf = new TTreeCache(this, cacheSize);
 
    pf->SetAutoCreated(autocache);
