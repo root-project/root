@@ -133,13 +133,6 @@ class TResultProxy {
 
    std::shared_ptr<TDFInternal::TActionBase *> GetActionPtrPtr() const { return fActionPtrPtr; }
 
-   void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&c) {
-      auto lm = fImplWeakPtr.lock();
-      if (!lm)
-         throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
-      lm->RegisterCallback(everyNEvents, std::move(c));
-   }
-
 public:
    using Value_t = T; ///< Convenience alias to simplify access to proxied type
    static constexpr ULong64_t kOnce = 0ull; ///< Convenience definition to express a callback must be executed once
@@ -221,14 +214,18 @@ public:
    /// OnPartialResultSlot.
    TResultProxy<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T&)> callback)
    {
+      auto lm = fImplWeakPtr.lock();
+      if (!lm)
+         throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
+      const auto nSlots = lm->GetNSlots();
       auto actionPtrPtr = fActionPtrPtr.get();
-      auto c = [actionPtrPtr, callback](unsigned int slot) {
-         if (slot != 0)
+      auto c = [nSlots, actionPtrPtr, callback](unsigned int slot) {
+         if (slot != nSlots - 1)
             return;
          auto partialResult = static_cast<Value_t*>((*actionPtrPtr)->PartialUpdate(slot));
          callback(*partialResult);
       };
-      RegisterCallback(everyNEvents, std::move(c));
+      lm->RegisterCallback(everyNEvents, std::move(c));
       return *this;
    }
 
@@ -263,12 +260,15 @@ public:
    /// \endcode
    TResultProxy<T> &OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T&)> callback)
    {
+      auto lm = fImplWeakPtr.lock();
+      if (!lm)
+         throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
       auto actionPtrPtr = fActionPtrPtr.get();
       auto c = [actionPtrPtr, callback](unsigned int slot) {
          auto partialResult = static_cast<Value_t*>((*actionPtrPtr)->PartialUpdate(slot));
          callback(slot, *partialResult);
       };
-      RegisterCallback(everyNEvents, std::move(c));
+      lm->RegisterCallback(everyNEvents, std::move(c));
       return *this;
    }
 };
