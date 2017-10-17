@@ -646,6 +646,7 @@ Int_t TTreeCacheUnzip::CreateTasks()
       Int_t accusz = 0;
       std::vector<std::vector<Int_t>> basketIndices;
       std::vector<Int_t> indices;
+      if (fUnzipGroupSize <= 0) fUnzipGroupSize = 102400;
       for (Int_t i = 0; i < fNseek; i++) {
          while (accusz < fUnzipGroupSize) {
             accusz += fSeekLen[i];
