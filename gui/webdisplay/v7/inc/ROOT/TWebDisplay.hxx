@@ -43,7 +43,6 @@ private:
       WebConn() : fHandle(0) {}
    };
 
-
    std::shared_ptr<TWebDisplayManager>  fMgr{};     ///<!  display manager
    unsigned                             fId{0};     ///<!  unique identifier
    TDisplayWSHandler               *fWSHandler{nullptr};  ///<!  specialize websocket handler for all incoming connections
@@ -59,6 +58,8 @@ public:
    ~TWebDisplay();
 
    unsigned GetId() const { return fId; }
+
+   bool Show(const std::string &where);
 
 };
 

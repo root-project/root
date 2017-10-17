@@ -20,6 +20,8 @@
 #include <string>
 #include <list>
 
+#include "THttpEngine.h"
+
 #include <ROOT/TWebDisplay.hxx>
 
 class THttpServer;
@@ -55,9 +57,7 @@ public:
 
    void CloseDisplay(TWebDisplay *display);
 
-   /// Create custom instance with independent communication channel(s)
-   // static std::shared_ptr<TWebDisplayManager> Create();
-
+   bool Show(TWebDisplay *display, const std::string &where, bool first_time = false);
 };
 
 } // namespace Experimental
