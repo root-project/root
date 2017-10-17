@@ -17,6 +17,10 @@
 #define ROOT7_TWebDisplayManager
 
 #include <memory>
+#include <string>
+#include <list>
+
+#include <ROOT/TWebDisplay.hxx>
 
 class THttpServer;
 
@@ -29,16 +33,27 @@ namespace Experimental {
 
 class TWebDisplayManager {
 private:
-   THttpServer    *fServer{0};   ///<!  central communication with the all used displays
+   THttpServer    *fServer{0};      ///<!  central communication with the all used displays
+   std::string     fAddr{};         ///<!   HTTP address of the server
+   std::list<std::shared_ptr<TWebDisplay>> fDisplays{}; ///<! list of existing displays
+   unsigned                      fIdCnt{0};   ///<! counter for identifiers
+
+   bool CreateHttpServer(bool with_http = false);
+
+   static std::shared_ptr<ROOT::Experimental::TWebDisplayManager> sInstance;
 
 public:
    /// Create a temporary TCanvas
    TWebDisplayManager() = default;
 
-   ~TWebDisplayManager() {}
+   ~TWebDisplayManager();
 
    /// Returns central instance, which used by standard ROOT widgets like Canvas or FitPanel
-   static const std::shared_ptr<TWebDisplayManager> &Get();
+   static const std::shared_ptr<TWebDisplayManager> &Instance() { return sInstance; }
+
+   std::shared_ptr<TWebDisplay> CreateDisplay();
+
+   void CloseDisplay(TWebDisplay *display);
 
    /// Create custom instance with independent communication channel(s)
    // static std::shared_ptr<TWebDisplayManager> Create();

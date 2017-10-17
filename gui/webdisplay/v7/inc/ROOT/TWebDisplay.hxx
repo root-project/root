@@ -17,6 +17,10 @@
 #define ROOT7_TWebDisplay
 
 #include <memory>
+#include <list>
+
+class THttpCallArg;
+class THttpWSEngine;
 
 namespace ROOT {
 namespace Experimental {
@@ -25,14 +29,36 @@ namespace Experimental {
   Central handle to open web-based windows like Canvas or FitPanel.
   */
 
+class TWebDisplayManager;
+class TDisplayWSHandler;
+
 class TWebDisplay {
+
+friend class TWebDisplayManager;
+friend class TDisplayWSHandler;
 private:
 
+   struct WebConn {
+      THttpWSEngine *fHandle; ///<! websocket handle
+      WebConn() : fHandle(0) {}
+   };
+
+
+   std::shared_ptr<TWebDisplayManager>  fMgr{};     ///<!  display manager
+   unsigned                             fId{0};     ///<!  unique identifier
+   TDisplayWSHandler               *fWSHandler{nullptr};  ///<!  specialize websocket handler for all incoming connections
+   std::list<WebConn>                 fConn{};     ///<! list of all accepted connections
+
+   void SetId(unsigned id) { fId = id; }
+
+   bool ProcessWS(THttpCallArg *arg);
+
 public:
-   /// Create a temporary TCanvas
    TWebDisplay() = default;
 
-   ~TWebDisplay() {}
+   ~TWebDisplay();
+
+   unsigned GetId() const { return fId; }
 
 };
 
