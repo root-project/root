@@ -807,6 +807,7 @@ Int_t TTreeCacheUnzip::GetUnzipBuffer(char **buf, Long64_t pos, Int_t len, Bool_
       // Cache is invalidated and we need to wait for all unzipping tasks to befinished before fill new baskets in cache.
 #ifdef R__USE_IMT
       if(fUnzipTaskGroup) {
+         fUnzipTaskGroup->Cancel();
          fUnzipTaskGroup.reset();
       }
 #endif
