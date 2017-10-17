@@ -444,7 +444,7 @@ void TLoopManager::Report() const
 void TLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f)
 {
    if (everyNEvents == 0ull)
-      fCallbacksOnce.emplace_back(1ull, std::move(f), fNSlots);
+      fCallbacksOnce.emplace_back(std::move(f), fNSlots);
    else
       fCallbacks.emplace_back(everyNEvents, std::move(f), fNSlots);
 }
