@@ -33,6 +33,7 @@ namespace Experimental {
   Central handle to open web-based windows like Canvas or FitPanel.
   */
 
+
 class TWebDisplayManager {
 private:
    THttpServer    *fServer{0};      ///<!  central communication with the all used displays
@@ -51,7 +52,7 @@ public:
    ~TWebDisplayManager();
 
    /// Returns central instance, which used by standard ROOT widgets like Canvas or FitPanel
-   static const std::shared_ptr<TWebDisplayManager> &Instance() { return sInstance; }
+   static std::shared_ptr<TWebDisplayManager> &Instance() { return sInstance; }
 
    std::shared_ptr<TWebDisplay> CreateDisplay();
 
