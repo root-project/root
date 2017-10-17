@@ -100,15 +100,18 @@ Bool_t TTreeCacheUnzip::UnzipState::IsFinished(Int_t index) const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if the basket is unzipped already.
+/// Check if the basket is unzipped already. We must make sure the length in
+/// fUnzipLen is larger than 0.
 
 Bool_t TTreeCacheUnzip::UnzipState::IsUnzipped(Int_t index) const {
    return (fUnzipStatus[index].load() == kFinished) && (fUnzipChunks[index].get()) && (fUnzipLen[index] > 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Reset all baskets' state arrays. This function is only called by main thread.
-/// Other threads should not call this function since it is not thread-safe.
+/// Reset all baskets' state arrays. This function is only called by main
+/// thread and parallel processing from upper layers should be disabled such
+/// as IMT in TTree::GetEntry(). Other threads should not call this function 
+/// since it is not thread-safe.
 
 void TTreeCacheUnzip::UnzipState::Reset(Int_t oldSize, Int_t newSize) {
    std::vector<Int_t>       aUnzipLen    = std::vector<Int_t>(newSize, 0);
@@ -562,7 +565,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t index)
    }
 
    if ((myCycle != fCycle) || !fIsTransferred)  {
-      fUnzipState.SetFinished(index); // Set it as not done
+      fUnzipState.SetFinished(index); // Set it as not done, main thread will take charge
       return 1;
    }
 
@@ -579,7 +582,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t index)
    readbuf = ReadBufferExt(locbuff, rdoffs, rdlen, loc);
 
    if (readbuf <= 0) {
-      fUnzipState.SetFinished(index); // Set it as not done
+      fUnzipState.SetFinished(index); // Set it as not done, main thread will take charge
       if (locbuff) delete [] locbuff;
       return -1;
    }
@@ -595,7 +598,7 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t index)
            if (gDebug > 0)
                    Info("UnzipCache", "Block %d is too big, skipping.", index);
 
-           fUnzipState.SetFinished(index); // Set it as done
+           fUnzipState.SetFinished(index); // Set it as not done, main thread will take charge
            if (locbuff) delete [] locbuff;
            return 0;
    }
@@ -605,14 +608,14 @@ Int_t TTreeCacheUnzip::UnzipCache(Int_t index)
    Int_t loclen = UnzipBuffer(&ptr, locbuff);
    if ((loclen > 0) && (loclen == objlen + keylen)) {
       if ((myCycle != fCycle) || !fIsTransferred) {
-         fUnzipState.SetFinished(index); // Set it as not done
+         fUnzipState.SetFinished(index); // Set it as not done, main thread will take charge
          if (locbuff) delete [] locbuff;
          return 1;
       }
-      fUnzipState.SetUnzipped(index, ptr, loclen);
+      fUnzipState.SetUnzipped(index, ptr, loclen); // Set it as done
       fNUnzip++;
    } else {
-      fUnzipState.SetFinished(index);
+      fUnzipState.SetFinished(index); // Set it as not done, main thread will take charge
    }
 
    if (locbuff) delete [] locbuff;
