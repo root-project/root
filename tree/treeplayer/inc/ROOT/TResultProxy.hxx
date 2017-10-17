@@ -238,8 +238,8 @@ public:
    /// \param[in] a callable with signature `void(unsigned int, Value_t&)` where Value_t is the type of the value contained in this TResultProxy
    /// \return this TResultProxy, to allow chaining of OnPartialResultSlot with other calls
    ///
-   /// See `RegisterCallback` for a generic explanation of the callback mechanism.
-   /// Compared to `RegisterCallback`, this method has two major differences:
+   /// See `OnPartialResult` for a generic explanation of the callback mechanism.
+   /// Compared to `OnPartialResult`, this method has two major differences:
    /// - all worker threads invoke the callback once every specified number of events. The event count is per-thread,
    ///   and callback invocation might happen concurrently (i.e. the callback must be thread-safe)
    /// - the callable must take an extra `unsigned int` parameter corresponding to a multi-thread "processing slot":
