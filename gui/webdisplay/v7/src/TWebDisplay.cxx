@@ -26,12 +26,13 @@
 namespace ROOT {
 namespace Experimental {
 
+/// just wrapper to deliver WS call-backs to the TWebDisplay class
 
 class TDisplayWSHandler : public THttpWSHandler {
 public:
    TWebDisplay *fDispl; ///<! back-pointer to display
 
-   TDisplayWSHandler(TWebDisplay *displ);
+   TDisplayWSHandler(TWebDisplay *displ) : THttpWSHandler("name","title"), fDispl(displ) {}
    ~TDisplayWSHandler() { fDispl = nullptr; }
 
    virtual Bool_t ProcessWS(THttpCallArg *arg) override
@@ -51,9 +52,28 @@ ROOT::Experimental::TWebDisplay::~TWebDisplay()
       fMgr->CloseDisplay(this);
 
    if (fWSHandler) {
-      // do something
+      delete fWSHandler;
+      fWSHandler = nullptr;
    }
 }
+
+// TODO: add callback which executed when exactly this window is opened and connection is established
+
+bool ROOT::Experimental::TWebDisplay::Show(const std::string &where)
+{
+   if (!fMgr) return false;
+
+   bool first_time = false;
+
+   if (!fWSHandler) {
+      fWSHandler = new TDisplayWSHandler(this);
+      fWSHandler->SetName(Form("win%u",GetId()));
+      first_time = true;
+   }
+
+   return fMgr->Show(this, where, first_time);
+}
+
 
 bool ROOT::Experimental::TWebDisplay::ProcessWS(THttpCallArg *arg)
 {
