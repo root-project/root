@@ -27,6 +27,8 @@ else()
   set(nmcxxflags "${CMAKE_CXX_FLAGS}")
 endif()
 
+string(REPLACE "-std=c++14" "" nmcxxflags "${nmcxxflags}")
+
 # Build iconv
 
 add_custom_command( OUTPUT ${iconvliba} ${iconvdlla}
