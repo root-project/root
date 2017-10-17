@@ -21,6 +21,11 @@ elseif(cxx14)
   set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "" FORCE)
 endif()
 
+if(builtin_zlib)
+  set(ZLIB_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include CACHE BOOL "" FORCE)
+  set(ZLIB_LIBRARY ${CMAKE_BINARY_DIR}/lib/libZLIB.a CACHE BOOL "" FORCE)
+endif()
+
 # The llvm::ReverseIterate<bool>::value symbol from llvm's SmallPtrSet.h
 # somehow lands in our cling libraries on OS X and doesn't get hidden
 # by visibility-inlines-hidden, so we suddenly have a global weak symbol
