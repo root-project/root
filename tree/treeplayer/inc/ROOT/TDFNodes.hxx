@@ -86,16 +86,14 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
 
    using Callback_t = std::function<void(unsigned int)>;
-   class TLoopCallback {
+   class TCallback {
       const Callback_t fFun;
       const ULong64_t fEveryN;
       std::vector<ULong64_t> fCounters;
 
    public:
-      TLoopCallback(ULong64_t everyN, Callback_t &&f, unsigned int nSlots)
-         : fFun(std::move(f)), fEveryN(everyN), fCounters(nSlots, 0ull)
-      {
-      }
+      TCallback(ULong64_t everyN, Callback_t &&f, unsigned int nSlots)
+         : fFun(std::move(f)), fEveryN(everyN), fCounters(nSlots, 0ull) {}
 
       void operator()(unsigned int slot)
       {
@@ -105,6 +103,22 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
             c = 0ull;
             fFun(slot);
          }
+      }
+   };
+
+   class TOneTimeCallback {
+      const Callback_t fFun;
+      std::vector<int> fHasBeenCalled; // std::vector<bool> is thread-unsafe for our purposes (and generally evil)
+
+   public:
+      TOneTimeCallback(Callback_t &&f, unsigned int nSlots) : fFun(std::move(f)), fHasBeenCalled(nSlots, 0) {}
+
+      void operator()(unsigned int slot)
+      {
+         if (fHasBeenCalled[slot] == 1)
+            return;
+         fFun(slot);
+         fHasBeenCalled[slot] = 1;
       }
    };
 
@@ -130,8 +144,8 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    const std::unique_ptr<TDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    ColumnNames_t fDefinedDataSourceColumns;        ///< List of data-source columns that have been `Define`d so far
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
-   std::vector<TLoopCallback> fCallbacks; ///< Registered callbacks
-   std::vector<TLoopCallback> fCallbacksOnce; ///< Registered callbacks to invoke just once before running the loop
+   std::vector<TCallback> fCallbacks; ///< Registered callbacks
+   std::vector<TOneTimeCallback> fCallbacksOnce; ///< Registered callbacks to invoke just once before running the loop
 
    void RunEmptySourceMT();
    void RunEmptySource();
