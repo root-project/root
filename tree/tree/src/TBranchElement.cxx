@@ -5347,7 +5347,7 @@ void TBranchElement::Streamer(TBuffer& R__b)
       // The fAddress and fObject data members are not persistent,
       // therefore we do not own anything.
       // Also clear the bit possibly set by the schema evolution.
-      ResetBit(kDeleteObject|kCache|kOwnOnfileObj|kAddressSet);
+      ResetBit(kDeleteObject|kCache|kOwnOnfileObj|kAddressSet|kDecomposedObj);
       // Fixup a case where the TLeafElement was missing
       if ((fType == 0) && (fLeaves.GetEntriesFast() == 0)) {
          TLeaf* leaf = new TLeafElement(this, GetTitle(), fID, fStreamerType);
