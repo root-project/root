@@ -279,14 +279,14 @@ TEST(HashRecursiveRemove, CheckedHashFailingClasses)
 #include "THashList.h"
 #include "TROOT.h"
 
-constexpr size_t kHowMany = 20000;
+constexpr unsigned int kHowMany = 20000;
 
 TEST(HashRecursiveRemove, SimpleDelete)
 {
    THashList cont;
 
-   for (size_t i = 0; i < kHowMany; ++i) {
-      TNamed *n = new TNamed(TString::Format("n%ld", i), TString(""));
+   for (unsigned int i = 0; i < kHowMany; ++i) {
+      TNamed *n = new TNamed(TString::Format("n%u", i), TString(""));
       n->SetBit(kMustCleanup);
       cont.Add(n);
    }
@@ -300,8 +300,8 @@ TEST(HashRecursiveRemove, SimpleDirectRemove)
    THashList cont;
    TList todelete;
 
-   for (size_t i = 0; i < kHowMany; ++i) {
-      TNamed *n = new TNamed(TString::Format("n%ld", i), TString(""));
+   for (unsigned int i = 0; i < kHowMany; ++i) {
+      TNamed *n = new TNamed(TString::Format("n%u", i), TString(""));
       n->SetBit(kMustCleanup);
       cont.Add(n);
       todelete.Add(n);
@@ -321,8 +321,8 @@ TEST(HashRecursiveRemove, DeleteWithRecursiveRemove)
    THashList cont;
    TList todelete;
 
-   for (size_t i = 0; i < kHowMany; ++i) {
-      TNamed *n = new TNamed(TString::Format("n%ld", i), TString(""));
+   for (unsigned int i = 0; i < kHowMany; ++i) {
+      TNamed *n = new TNamed(TString::Format("n%u", i), TString(""));
       n->SetBit(kMustCleanup);
       cont.Add(n);
       todelete.Add(n);
