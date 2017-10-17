@@ -336,7 +336,20 @@ TEST_F(TDFCallbacksMT, ExecuteOncePerSlot)
    std::atomic_uint callCount(0u);
    c.OnPartialResultSlot(c.kOnce, [&callCount](unsigned int, ULong64_t) { callCount++; });
    *c;
-   EXPECT_EQ(callCount, gNSlots * 2); // TDF spawns two tasks per slot
+   // depending on how tasks are dispatched to worker threads and how quickly threads push and pop slot numbers from
+   // TSlotStack, the callback might be executed 1 to nSlots times.
+   EXPECT_LE(callCount, gNSlots);
+   EXPECT_GT(callCount, 0u);
+}
+
+TEST_F(TDFCallbacksMT, ExecuteOnce)
+{
+   // OnPartialResult(kOnce)
+   auto c = tdf.Count();
+   std::atomic_uint callCount(0u);
+   c.OnPartialResult(c.kOnce, [&callCount](ULong64_t) { callCount++; });
+   *c;
+   EXPECT_EQ(callCount, 1u);
 }
 
 TEST_F(TDFCallbacksMT, Histo1DWithFillTOHelper)
@@ -370,4 +383,18 @@ TEST_F(TDFCallbacksMT, Histo1DWithFillHelper)
    *h;
    EXPECT_EQ(gNEvents, std::accumulate(is.begin(), is.end(), 0ull));
 }
+
+TEST(TDFCallbacksMTMore, LessTasksThanWorkers)
+{
+   ROOT::EnableImplicitMT(4);
+   TDataFrame d(1);
+   auto c = d.Count();
+   std::atomic_uint counter(0u);
+   c.OnPartialResult(c.kOnce, [&counter](ULong64_t) { counter++; });
+   *c;
+   EXPECT_EQ(counter, 1u);
+
+   ROOT::DisableImplicitMT();
+}
+
 #endif
