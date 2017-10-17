@@ -22,6 +22,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <cstdlib>
 
 namespace ROOT {
 namespace Experimental {
@@ -105,6 +106,7 @@ bool ROOT::Experimental::TWebDisplay::ProcessWS(THttpCallArg *arg)
 
       WebConn newconn;
       newconn.fHandle = wshandle;
+      newconn.fConnId = ++fConnCnt; // unique connection id
       fConn.push_back(newconn);
 
       // CheckDataToSend();
@@ -147,6 +149,28 @@ bool ROOT::Experimental::TWebDisplay::ProcessWS(THttpCallArg *arg)
 
    // here processing of received data should be performed
    // this is task for the implemented windows
+
+   const char *buf = (const char *)arg->GetPostData();
+   char *str_end = 0;
+
+   unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
+   assert(str_end != 0 && *str_end != ':' && "missing number of acknowledged operations");
+
+   unsigned long nchannel = std::strtoul(str_end+1, &str_end, 10);
+   assert(str_end != 0 && *str_end != ':' && "missing channel number");
+
+   unsigned processed_len = (str_end + 1 - buf);
+
+   assert(processed_len <= arg->GetPostDataLength() && "corrupted buffer");
+
+   std::string cdata(str_end+1, arg->GetPostDataLength() - processed_len);
+
+   conn->fSendCredits += ackn_oper;
+
+   if (nchannel == 1) fDataCallback(conn->fConnId, cdata);
+   else if (nchannel > 1) conn->fCallBack(conn->fConnId, cdata);
+
+   CheckDataToSend();
 
 
 /*
@@ -223,3 +247,63 @@ bool ROOT::Experimental::TWebDisplay::ProcessWS(THttpCallArg *arg)
    return true;
 }
 
+void ROOT::Experimental::TWebDisplay::SendDataViaConnection(ROOT::Experimental::TWebDisplay::WebConn &conn, int chid, const std::string &data)
+{
+   assert(conn.fSendCredits>0 && "No credits to send data via connection");
+
+   std::string buf;
+   buf.reserve(data.length() + 100);
+
+   buf.append(std::to_string(conn.fRecvCount));
+   buf.append(":");
+   conn.fRecvCount = 0; // we confirm how many packages was received
+   conn.fSendCredits--;
+
+   if (chid >= 0) {
+      buf.append(std::to_string(chid));
+      buf.append(":");
+   }
+
+   // TODO: should we add extra : just as placeholder for any kind of custom data??
+   buf.append(data);
+
+   conn.fHandle->SendCharStar(buf.c_str());
+}
+
+/// Check if data to any connection can be send
+void ROOT::Experimental::TWebDisplay::CheckDataToSend(bool only_once)
+{
+   bool isany = false;
+
+   do {
+      isany = false;
+
+      for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
+         if ((iter->fSendCredits > 0) && (iter->fQueue.size() > 0)) {
+            SendDataViaConnection(*iter, 1, iter->fQueue.front());
+            iter->fQueue.pop_front();
+            isany = true;
+         }
+      }
+
+   } while (isany && !only_once);
+}
+
+
+/// Sends data to specified connection
+/// If connid==0, data will be send to all connections for channel 1
+void ROOT::Experimental::TWebDisplay::Send(const std::string &data, unsigned connid)
+{
+   for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
+      if (connid && connid != iter->fConnId) connid++;
+
+      if ((iter->fQueue.size()==0) && (iter->fSendCredits>0)) {
+         SendDataViaConnection(*iter, 1, data);
+      } else {
+         assert(iter->fQueue.size() < fMaxQueueLength && "Maximum queue length achieved");
+         iter->fQueue.push_back(data);
+      }
+   }
+
+   CheckDataToSend();
+}

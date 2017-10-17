@@ -19,6 +19,9 @@
 #include <ROOT/TDisplayItem.hxx>
 #include <ROOT/TMenuItem.hxx>
 
+#include <ROOT/TWebDisplay.hxx>
+#include <ROOT/TWebDisplayManager.hxx>
+
 #include <memory>
 #include <string>
 #include <vector>
@@ -958,3 +961,103 @@ std::string TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &ca
 //    drawable->Paint(*this);
 //  }
 //}
+
+
+// ==========================================================================================================
+
+// new implementation of canvas painter, using TWebDisplay
+
+
+namespace ROOT {
+namespace Experimental {
+
+
+class TNewPainter : public Internal::TVirtualCanvasPainter  {
+private:
+
+   /// The canvas we are painting. It might go out of existence while painting.
+   const TCanvas &fCanvas;       ///<!  Canvas
+
+   bool fBatchMode;                                  ///<! indicate if canvas works in batch mode (can be independent from gROOT->isBatch())
+
+   TPadDisplayItem fDisplayList; ///!< full list of items to display
+
+   std::shared_ptr<TWebDisplay>  fDisplay;           ///!< configured display
+
+   /// Disable copy construction.
+   TNewPainter(const TNewPainter &) = delete;
+
+   /// Disable assignment.
+   TNewPainter &operator=(const TNewPainter &) = delete;
+
+public:
+
+   TNewPainter(const TCanvas &canv, bool batch_mode) :
+      fCanvas(canv), fBatchMode(batch_mode), fDisplayList(), fDisplay() {}
+
+   virtual ~TNewPainter() {}
+
+   /// returns true is canvas used in batch mode
+   virtual bool IsBatchMode() const { return fBatchMode; }
+
+   virtual void AddDisplayItem(TDisplayItem *item) override
+   {
+      fDisplayList.Add(item);
+   }
+
+   virtual void CanvasUpdated(uint64_t, bool, ROOT::Experimental::CanvasCallback_t) override
+   {
+
+   }
+
+   /// return true if canvas modified since last painting
+   virtual bool IsCanvasModified(uint64_t) const override
+   {
+      return true;
+   }
+
+   /// perform special action when drawing is ready
+   virtual void DoWhenReady(const std::string &, const std::string &, bool, CanvasCallback_t) override {
+
+   }
+
+   virtual void NewDisplay(const std::string &where) override {
+      if (!fDisplay)
+         fDisplay = TWebDisplayManager::Instance()->CreateDisplay();
+
+      fDisplay->Show(where);
+   }
+
+
+   /** \class CanvasPainterGenerator
+          Creates TCanvasPainter objects.
+        */
+
+   class NewGeneratorImpl : public Generator {
+      public:
+         /// Create a new TCanvasPainter to paint the given TCanvas.
+         std::unique_ptr<TVirtualCanvasPainter> Create(const ROOT::Experimental::TCanvas &canv, bool batch_mode) const override
+         {
+            return std::make_unique<TNewPainter>(canv, batch_mode);
+         }
+         ~NewGeneratorImpl() = default;
+
+         /// Set TVirtualCanvasPainter::fgGenerator to a new GeneratorImpl object.
+         static void SetGlobalPainter()
+         {
+            if (TVirtualCanvasPainter::fgGenerator) {
+               R__ERROR_HERE("NewPainter") << "Generator is already set! Skipping second initialization.";
+               return;
+            }
+            TVirtualCanvasPainter::fgGenerator.reset(new NewGeneratorImpl());
+         }
+
+         /// Release the GeneratorImpl object.
+         static void ResetGlobalPainter() { TVirtualCanvasPainter::fgGenerator.reset(); }
+      };
+
+};
+
+} // namespace Experimental
+} // namespace ROOT
+
