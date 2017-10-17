@@ -434,13 +434,12 @@ void TMVA::DataSet::InitSampling( Float_t fraction, Float_t weight, UInt_t seed 
 
    // first, clear the lists
    std::vector< std::pair< Float_t, Long64_t >* > evtList;
-   std::vector< std::pair< Float_t, Long64_t >* >::iterator it;
 
    Int_t treeIdx = TreeIndex( GetCurrentType() );
 
    if (fSamplingEventList.size() < UInt_t(treeIdx+1) ) fSamplingEventList.resize(treeIdx+1);
    if (fSamplingSelected.size() < UInt_t(treeIdx+1) ) fSamplingSelected.resize(treeIdx+1);
-//    for (it = fSamplingEventList.at(treeIdx).begin(); it != fSamplingEventList.at(treeIdx).end(); it++ ) delete (*it);
+
    fSamplingEventList.at(treeIdx).clear();
    fSamplingSelected.at(treeIdx).clear();
 
