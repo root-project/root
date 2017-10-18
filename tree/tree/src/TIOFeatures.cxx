@@ -149,7 +149,7 @@ bool TIOFeatures::Set(EIOFeatures input_bits)
       }
       return kFALSE;
    }
-   fIOBits |= static_cast<UChar_t>(bits);
+   fIOBits |= bits;
    return kTRUE;
 }
 
