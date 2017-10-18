@@ -9,8 +9,8 @@ import sys, os, unittest
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 import ROOT
-from ROOT import gROOT, gApplication, gSystem, gInterpreter, gDirectory, TLorentzVector,\
-                 TCanvas, TString, TList, TH1D, TObjArray, TVectorF, TObjString 
+from ROOT import gROOT, gApplication, gSystem, gInterpreter, gDirectory
+from ROOT import TLorentzVector, TCanvas, TString, TList, TH1D, TObjArray, TVectorF, TObjString
 from common import *
 
 __all__ = [
@@ -383,7 +383,7 @@ class Basic5PythonizationTestCase( MyTestCase ):
       """Test TObjArray iterator-based copying"""
 
       a = TObjArray()
-      b = list( a )  
+      b = list( a )
 
       self.assertEqual( b, [] )
 
@@ -399,7 +399,7 @@ class Basic6ReturnValueTestCase( MyTestCase ):
       """Test returning all sort of interger types"""
 
       gROOT.LoadMacro( 'ReturnValues.C' )
-      
+
       tests = ROOT.testIntegerResults()
       for type in ["short", "int", "long", "longlong"]:
         for name, value in [("PlusOne", 1), ("MinusOne", -1)]:

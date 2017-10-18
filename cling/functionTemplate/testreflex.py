@@ -1,10 +1,10 @@
-from ROOT import *
+from ROOT import gSystem, Cintex
 from sys import stdout
 
 def printme(o):
     print "t now %g %d %d" % (o.get(Double)(), o.get(int)(), o.get(float)())
     print "t now %g" % (o.getfloat())
-    stdout.flush() 
+    stdout.flush()
 
 gSystem.Load("libCintex")
 Cintex.Enable()
@@ -13,7 +13,7 @@ sortedMethods = [ item for item in t.__dict__.keys() if item[0:2] != '__' ]
 sortedMethods.sort()
 print "# just a comment"
 print sortedMethods
-stdout.flush() 
+stdout.flush()
 o = t()
 printme(o)
 o.set(12)
