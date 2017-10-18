@@ -43,8 +43,6 @@ private:
 
    bool CreateHttpServer(bool with_http = false);
 
-   static std::shared_ptr<ROOT::Experimental::TWebDisplayManager> sInstance;
-
 public:
    /// Create a temporary TCanvas
    TWebDisplayManager() = default;
@@ -52,7 +50,7 @@ public:
    ~TWebDisplayManager();
 
    /// Returns central instance, which used by standard ROOT widgets like Canvas or FitPanel
-   static std::shared_ptr<TWebDisplayManager> &Instance() { return sInstance; }
+   static std::shared_ptr<TWebDisplayManager> &Instance();
 
    std::shared_ptr<TWebDisplay> CreateDisplay();
 

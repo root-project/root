@@ -153,8 +153,13 @@ bool ROOT::Experimental::TWebDisplay::ProcessWS(THttpCallArg *arg)
    const char *buf = (const char *)arg->GetPostData();
    char *str_end = 0;
 
+   printf("Get portion of data %d %s\n", arg->GetPostDataLength(), buf);
+
    unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
    assert(str_end != 0 && *str_end != ':' && "missing number of acknowledged operations");
+
+   unsigned long can_send = std::strtoul(str_end+1, &str_end, 10);
+   assert(str_end != 0 && *str_end != ':' && "missing can_send counter");
 
    unsigned long nchannel = std::strtoul(str_end+1, &str_end, 10);
    assert(str_end != 0 && *str_end != ':' && "missing channel number");

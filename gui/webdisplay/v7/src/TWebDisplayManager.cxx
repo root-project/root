@@ -27,8 +27,6 @@
 
 
 
-std::shared_ptr<ROOT::Experimental::TWebDisplayManager> ROOT::Experimental::TWebDisplayManager::sInstance;
-
 //const std::shared_ptr<ROOT::Experimental::TWebDisplayManager> &ROOT::Experimental::TWebDisplayManager::Instance()
 //{
 //   static std::shared_ptr<ROOT::Experimental::TWebDisplayManager> sManager;
@@ -39,6 +37,13 @@ std::shared_ptr<ROOT::Experimental::TWebDisplayManager> ROOT::Experimental::TWeb
 //{
 //   return std::make_shared<ROOT::Experimental::TWebDisplayManager>();
 //}
+
+std::shared_ptr<ROOT::Experimental::TWebDisplayManager> &ROOT::Experimental::TWebDisplayManager::Instance()
+{
+   static std::shared_ptr<TWebDisplayManager> sInstance = std::make_shared<ROOT::Experimental::TWebDisplayManager>();
+   return sInstance;
+}
+
 
 ROOT::Experimental::TWebDisplayManager::~TWebDisplayManager()
 {
@@ -89,11 +94,15 @@ std::shared_ptr<ROOT::Experimental::TWebDisplay> ROOT::Experimental::TWebDisplay
 {
    std::shared_ptr<ROOT::Experimental::TWebDisplay> display = std::make_shared<ROOT::Experimental::TWebDisplay>();
 
-   display->SetId(++fIdCnt); // set unique ID
+   if (!display) printf("Display not created!!!\n");
+
+   printf("Use count %lu get %p\n", display.use_count(), display.get());
+
+   display.get()->SetId(++fIdCnt); // set unique ID
 
    fDisplays.push_back(display);
 
-   display->fMgr = sInstance;
+   display->fMgr = Instance();
 
    return std::move(display);
 }
