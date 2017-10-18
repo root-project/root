@@ -834,7 +834,7 @@ int testGausFit() {
    //f2->SetParameters(0,1,1);
 
    // fill an histogram
-   int nbin = 10000;
+   int nbin = 2000;
    TH1D * h2 = new TH1D("h2","h2",nbin,-5.,5.);
 //      h1->FillRandom(fname.c_str(),100);
    for (int i = 0; i < 10000000; ++i)
@@ -861,7 +861,7 @@ int testGausFit() {
     iret |= FitUsingNewFitter<GSL_FR>(h2,f2);
     iret |= FitUsingNewFitter<GSL_PR>(h2,f2);
     iret |= FitUsingNewFitter<GSL_BFGS>(h2,f2);
-    iret |= FitUsingNewFitter<GSL_BFGS2>(h2,f2);
+//    iret |= FitUsingNewFitter<GSL_BFGS2>(h2,f2); // Too long for a test!
 
 
    // test also fitting a TGraphErrors with histogram data
@@ -891,7 +891,7 @@ int testGausFit() {
    iret |= FitUsingNewFitter<GSL_FR>(h2,f2,useGrad);
    iret |= FitUsingNewFitter<GSL_PR>(h2,f2,useGrad);
    iret |= FitUsingNewFitter<GSL_BFGS>(h2,f2,useGrad);
-   iret |= FitUsingNewFitter<GSL_BFGS2>(h2,f2,useGrad);
+//   iret |= FitUsingNewFitter<GSL_BFGS2>(h2,f2,useGrad); // Too long for a test!
 
 
    // test LS algorithm
@@ -1032,7 +1032,7 @@ int testLargeTreeFit(int nevt = 1000) {
    int iret = 0;
    iret |= FitUsingNewFitter<MINUIT2>(&t1,f2);
    iret |= FitUsingNewFitter<TMINUIT>(&t1,f2);
-   iret |= FitUsingNewFitter<GSL_BFGS2>(&t1,f2);
+//   iret |= FitUsingNewFitter<GSL_BFGS2>(&t1,f2); // Too long for a test!
 
 
 
@@ -1116,7 +1116,7 @@ int testFitPerf() {
 
 
   nfit = 1;
- iret |= testLargeTreeRooFit(500);
+ iret |= testLargeTreeRooFit(250);
  iret |= testLargeTreeFit(500);
 
 
