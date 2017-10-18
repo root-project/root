@@ -19,8 +19,8 @@
 #include <ROOT/TDisplayItem.hxx>
 #include <ROOT/TMenuItem.hxx>
 
-#include <ROOT/TWebDisplay.hxx>
-#include <ROOT/TWebDisplayManager.hxx>
+#include <ROOT/TWebWindow.hxx>
+#include <ROOT/TWebWindowsManager.hxx>
 
 #include <memory>
 #include <string>
@@ -965,7 +965,7 @@ std::string TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &ca
 
 // ==========================================================================================================
 
-// new implementation of canvas painter, using TWebDisplay
+// new implementation of canvas painter, using TWebWindow
 
 
 namespace ROOT {
@@ -982,7 +982,7 @@ private:
 
    TPadDisplayItem fDisplayList; ///!< full list of items to display
 
-   std::shared_ptr<TWebDisplay>  fDisplay;           ///!< configured display
+   std::shared_ptr<TWebWindow>  fDisplay;           ///!< configured display
 
    /// Disable copy construction.
    TNewPainter(const TNewPainter &) = delete;
@@ -1029,7 +1029,7 @@ public:
 
    virtual void NewDisplay(const std::string &where) override {
       if (!fDisplay) {
-         fDisplay = TWebDisplayManager::Instance()->CreateDisplay();
+         fDisplay = TWebWindowsManager::Instance()->CreateDisplay();
 
          using std::placeholders::_1;
          using std::placeholders::_2;
