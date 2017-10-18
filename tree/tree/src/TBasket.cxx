@@ -221,8 +221,7 @@ Int_t TBasket::GetEntryPointer(Int_t entry)
 {
    Int_t offset;
    Int_t *entryOffset = GetEntryOffset();
-   if (entryOffset)
-      offset = entryOffset[entry];
+   if (entryOffset)  offset = entryOffset[entry];
    else              offset = fKeylen + entry*fNevBufSize;
    fBufferRef->SetBufferOffset(offset);
    return offset;
