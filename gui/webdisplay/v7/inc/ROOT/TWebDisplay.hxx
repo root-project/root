@@ -1,4 +1,4 @@
-/// \file ROOT/TWebDisplay.hxx
+/// \file ROOT/TWebWindow.hxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <s.linev@gsi.de>
 /// \date 2017-10-16
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TWebDisplay
-#define ROOT7_TWebDisplay
+#ifndef ROOT7_TWebWindow
+#define ROOT7_TWebWindow
 
 #include <memory>
 #include <list>
@@ -27,19 +27,19 @@ class THttpWSEngine;
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::TWebDisplayManager
+/** \class ROOT::Experimental::TWebWindowsManager
   Central handle to open web-based windows like Canvas or FitPanel.
   */
 
 using WebDisplayDataCallback_t = std::function<void(unsigned,const std::string&)>;
 
-class TWebDisplayManager;
-class TDisplayWSHandler;
+class TWebWindowsManager;
+class TWebWindowWSHandler;
 
-class TWebDisplay {
+class TWebWindow {
 
-friend class TWebDisplayManager;
-friend class TDisplayWSHandler;
+friend class TWebWindowsManager;
+friend class TWebWindowWSHandler;
 private:
 
    struct WebConn {
@@ -52,9 +52,9 @@ private:
       WebConn() = default;
    };
 
-   std::shared_ptr<TWebDisplayManager>  fMgr{};     ///<!  display manager
+   std::shared_ptr<TWebWindowsManager>  fMgr{};     ///<!  display manager
    unsigned                             fId{0};     ///<!  unique identifier
-   TDisplayWSHandler               *fWSHandler{nullptr};  ///<!  specialize websocket handler for all incoming connections
+   TWebWindowWSHandler               *fWSHandler{nullptr};  ///<!  specialize websocket handler for all incoming connections
    unsigned                           fConnCnt{0};  ///<!  counter of new connections to assign ids
    std::list<WebConn>                 fConn{};     ///<! list of all accepted connections
    static const unsigned       fMaxQueueLength{10}; ///<!  maximal number of queue entries
@@ -69,9 +69,9 @@ private:
    void CheckDataToSend(bool only_once = false);
 
 public:
-   TWebDisplay() = default;
+   TWebWindow() = default;
 
-   ~TWebDisplay();
+   ~TWebWindow();
 
    unsigned GetId() const { return fId; }
 

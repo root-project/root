@@ -1,4 +1,4 @@
-/// \file TWebDisplay.cxx
+/// \file TWebWindow.cxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <s.linev@gsi.de>
 /// \date 2017-10-16
@@ -13,9 +13,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TWebDisplay.hxx"
+#include "ROOT/TWebWindow.hxx"
 
-#include "ROOT/TWebDisplayManager.hxx"
+#include "ROOT/TWebWindowsManager.hxx"
 
 #include "THttpEngine.h"
 #include "THttpCallArg.h"
@@ -27,14 +27,14 @@
 namespace ROOT {
 namespace Experimental {
 
-/// just wrapper to deliver WS call-backs to the TWebDisplay class
+/// just wrapper to deliver WS call-backs to the TWebWindow class
 
-class TDisplayWSHandler : public THttpWSHandler {
+class TWebWindowWSHandler : public THttpWSHandler {
 public:
-   TWebDisplay *fDispl; ///<! back-pointer to display
+   TWebWindow *fDispl; ///<! back-pointer to display
 
-   TDisplayWSHandler(TWebDisplay *displ) : THttpWSHandler("name","title"), fDispl(displ) {}
-   ~TDisplayWSHandler() { fDispl = nullptr; }
+   TWebWindowWSHandler(TWebWindow *displ) : THttpWSHandler("name","title"), fDispl(displ) {}
+   ~TWebWindowWSHandler() { fDispl = nullptr; }
 
    virtual Bool_t ProcessWS(THttpCallArg *arg) override
    {
@@ -47,7 +47,7 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
-ROOT::Experimental::TWebDisplay::~TWebDisplay()
+ROOT::Experimental::TWebWindow::~TWebWindow()
 {
    if (fMgr)
       fMgr->CloseDisplay(this);
@@ -60,14 +60,14 @@ ROOT::Experimental::TWebDisplay::~TWebDisplay()
 
 // TODO: add callback which executed when exactly this window is opened and connection is established
 
-bool ROOT::Experimental::TWebDisplay::Show(const std::string &where)
+bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 {
    if (!fMgr) return false;
 
    bool first_time = false;
 
    if (!fWSHandler) {
-      fWSHandler = new TDisplayWSHandler(this);
+      fWSHandler = new TWebWindowWSHandler(this);
       fWSHandler->SetName(Form("win%u",GetId()));
       first_time = true;
    }
@@ -76,7 +76,7 @@ bool ROOT::Experimental::TWebDisplay::Show(const std::string &where)
 }
 
 
-bool ROOT::Experimental::TWebDisplay::ProcessWS(THttpCallArg *arg)
+bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
 {
    if (!arg)
       return kTRUE;
@@ -252,7 +252,7 @@ bool ROOT::Experimental::TWebDisplay::ProcessWS(THttpCallArg *arg)
    return true;
 }
 
-void ROOT::Experimental::TWebDisplay::SendDataViaConnection(ROOT::Experimental::TWebDisplay::WebConn &conn, int chid, const std::string &data)
+void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::TWebWindow::WebConn &conn, int chid, const std::string &data)
 {
    assert(conn.fSendCredits>0 && "No credits to send data via connection");
 
@@ -276,7 +276,7 @@ void ROOT::Experimental::TWebDisplay::SendDataViaConnection(ROOT::Experimental::
 }
 
 /// Check if data to any connection can be send
-void ROOT::Experimental::TWebDisplay::CheckDataToSend(bool only_once)
+void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
 {
    bool isany = false;
 
@@ -297,7 +297,7 @@ void ROOT::Experimental::TWebDisplay::CheckDataToSend(bool only_once)
 
 /// Sends data to specified connection
 /// If connid==0, data will be send to all connections for channel 1
-void ROOT::Experimental::TWebDisplay::Send(const std::string &data, unsigned connid)
+void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned connid)
 {
    for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
       if (connid && connid != iter->fConnId) connid++;

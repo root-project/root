@@ -12,8 +12,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class ROOT::Experimental::TWebDisplay;
-#pragma link C++ class ROOT::Experimental::TWebDisplayManager;
+#pragma link C++ class ROOT::Experimental::TWebWindow;
+#pragma link C++ class ROOT::Experimental::TWebWindowsManager;
 
 
 #endif
