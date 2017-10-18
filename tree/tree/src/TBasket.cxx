@@ -907,7 +907,7 @@ void TBasket::Streamer(TBuffer &b)
                                    CanGenerateOffsetArray();
       // We currently believe that in all cases when offsets can be generated, then the
       // displacement array must be zero.
-      if (mustGenerateOffsets) assert(fDisplacement == nullptr);
+      assert(!mustGenerateOffsets || fDisplacement == nullptr);
       if (fHeaderOnly) {
          flag = mustGenerateOffsets ? 80 : 0;
          b << flag;
@@ -1035,9 +1035,10 @@ Int_t TBasket::WriteBuffer()
       Bool_t hasOffsetBit = fIOBits & static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap);
       if (!CanGenerateOffsetArray()) {
          // If we have set the offset map flag, but cannot dynamically generate the map, then
-         // we should at least convert the offset array to a size array.
+         // we should at least convert the offset array to a size array.  Note that we always
+         // write out (fNevBuf+1) entries to match the original case.
          if (hasOffsetBit) {
-            for (Int_t idx = 1; idx < fNevBuf + 1; idx++) {
+            for (Int_t idx = fNevBuf; idx > 0; idx--) {
                entryOffset[idx] -= entryOffset[idx - 1];
             }
             entryOffset[0] = 0;
