@@ -12,13 +12,8 @@ warnings.filterwarnings('ignore', message=r'Module .*? is being added to sys\.pa
 
 
 # add local pytest dir to sys.path to make pytest available
-# if it is not already installed in the system
-try:
-   import pytest
-   import pytest_cov
-except:
-   toplevel = os.path.dirname(os.path.realpath(__file__))
-   sys.path.insert(0, os.path.join(toplevel, 'pytest'))
+toplevel = os.path.dirname(os.path.realpath(__file__))
+sys.path.insert(0, os.path.join(toplevel, 'pytest'))
 
 
 if sys.hexversion >= 0x3000000:
@@ -49,20 +44,15 @@ if 'FIXCLING' in os.environ:
 
 def run_pytest(test_file=None):
     # add local pytest dir to sys.path
-    try:
-        import pytest
-        import pytest_cov
-    except:
-        toplevel = os.path.dirname(os.path.realpath(__file__))
-        sys.path.insert(0, os.path.join(toplevel, 'pytest'))
-        import pytest
-        import pytest_cov
-
+    toplevel = os.path.dirname(os.path.realpath(__file__))
+    sys.path.insert(0, os.path.join(toplevel, 'pytest'))
+    import pytest
+    import pytest_cov
     # file to run, if any (search used otherwise)
     if '-i' in sys.argv:
         args = filter(lambda x: not x in (test_file, '-i'), sys.argv)
     else:
-        args = ['--color=no', '--result-log=stdout']
+        args = ['--color=no', '--result-log=stdout', '--minimal=yes']
     if test_file: args += [test_file]
     # actual test run
     return pytest.main(args, plugins=[pytest_cov])
