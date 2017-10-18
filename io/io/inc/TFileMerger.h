@@ -22,6 +22,9 @@ class TList;
 class TFile;
 class TDirectory;
 
+namespace ROOT {
+class TIOFeatures;
+}  // namespace ROOT
 
 class TFileMerger : public TObject {
 private:
@@ -39,6 +42,7 @@ protected:
    Bool_t         fCompressionChange;///< True if the output and input have different compression level (default kFALSE)
    Int_t          fPrintLevel;       ///< How much information to print out at run time
    TString        fMergeOptions;     ///< Options (in string format) to be passed down to the Merge functions
+   ROOT::TIOFeatures *fIOFeatures{nullptr}; ///< IO features to use in the output file.
    TString        fMsgPrefix;        ///< Prefix to be used when printing informational message (default TFileMerger)
 
    Int_t          fMaxOpenedFiles;  ///< Maximum number of files opened at the same time by the TFileMerger
@@ -83,6 +87,7 @@ public:
    const char *GetMergeOptions() { return fMergeOptions; }
    void        SetMergeOptions(const TString &options) { fMergeOptions = options; }
    void        SetMergeOptions(const std::string_view &options) { fMergeOptions = options; }
+   void        SetIOFeatures(ROOT::TIOFeatures &features) { fIOFeatures = &features; }
    void        AddObjectNames(const char *name) {fObjectNames += name; fObjectNames += " ";}
    const char *GetObjectNames() const {return fObjectNames.Data();}
    void        ClearObjectNames() {fObjectNames.Clear();}
