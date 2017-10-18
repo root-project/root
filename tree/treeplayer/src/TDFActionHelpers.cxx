@@ -116,27 +116,12 @@ template void FillHelper::Exec(unsigned int, const std::vector<char> &, const st
 template void FillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
 template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
-MinHelper::MinHelper(const std::shared_ptr<double> &minVPtr, const unsigned int nSlots)
-   : fResultMin(minVPtr), fMins(nSlots, std::numeric_limits<double>::max())
-{
-}
-
-void MinHelper::Exec(unsigned int slot, double v)
-{
-   fMins[slot] = std::min(v, fMins[slot]);
-}
-
-void MinHelper::Finalize()
-{
-   *fResultMin = std::numeric_limits<double>::max();
-   for (auto &m : fMins) *fResultMin = std::min(m, *fResultMin);
-}
-
-template void MinHelper::Exec(unsigned int, const std::vector<float> &);
-template void MinHelper::Exec(unsigned int, const std::vector<double> &);
-template void MinHelper::Exec(unsigned int, const std::vector<char> &);
-template void MinHelper::Exec(unsigned int, const std::vector<int> &);
-template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+// TODO
+// template void MinHelper::Exec(unsigned int, const std::vector<float> &);
+// template void MinHelper::Exec(unsigned int, const std::vector<double> &);
+// template void MinHelper::Exec(unsigned int, const std::vector<char> &);
+// template void MinHelper::Exec(unsigned int, const std::vector<int> &);
+// template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 MaxHelper::MaxHelper(const std::shared_ptr<double> &maxVPtr, const unsigned int nSlots)
    : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<double>::lowest())
