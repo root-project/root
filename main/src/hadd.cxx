@@ -71,6 +71,7 @@
  */
 
 #include "RConfig.h"
+#include "ROOT/TIOFeatures.hxx"
 #include <string>
 #include "TFile.h"
 #include "THashList.h"
@@ -120,6 +121,8 @@ int main( int argc, char **argv )
                    "   to request to use the system maximum." << std::endl;
       std::cout << "If the option -cachesize is used, hadd will resize (or disable if 0) the\n"
                    "   prefetching cache use to speed up I/O operations." << std::endl;
+      std::cout << "If the option -experimental-io-features is used (and an argument provided), then\n"
+                   "   the corresponding experimental feature will be enabled for output trees." << std::endl;
       std::cout << "When -the -f option is specified, one can also specify the compression level of\n"
                    "   the target file.  By default the compression level is 1." <<std::endl;
       std::cout << "If \"-fk\" is specified, the target file contain the baskets with the same\n"
@@ -144,6 +147,7 @@ int main( int argc, char **argv )
       return 1;
    }
 
+   ROOT::TIOFeatures features;
    Bool_t append = kFALSE;
    Bool_t force = kFALSE;
    Bool_t skip_errors = kFALSE;
@@ -271,6 +275,20 @@ int main( int argc, char **argv )
             }
          }
          ++ffirst;
+      } else if (!strcmp(argv[a], "-experimental-io-features")) {
+         if (a+1 >= argc) {
+            std::cerr << "Error: no IO feature was specified after -experimental-io-features; ignoring\n";
+         } else {
+            std::stringstream ss;
+            ss.str(argv[++a]);
+            ++ffirst;
+            std::string item;
+            while (std::getline(ss, item, ',')) {
+               if (!features.Set(item)) {
+                  std::cerr << "Ignoring unknown feature request: " << item << std::endl;
+               }
+            }
+         }
       } else if ( strcmp(argv[a],"-n") == 0 ) {
          if (a+1 >= argc) {
             std::cerr << "Error: no maximum number of opened was provided after -n.\n";
@@ -455,6 +473,7 @@ int main( int argc, char **argv )
       }
       merger.SetNotrees(noTrees);
       merger.SetMergeOptions(cacheSize);
+      merger.SetIOFeatures(features);
       Bool_t status;
       if (append)
          status = merger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kAll);
