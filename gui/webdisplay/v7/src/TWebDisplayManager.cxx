@@ -1,4 +1,4 @@
-/// \file TWebDisplayManager.cxx
+/// \file TWebWindowsManager.cxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <s.linev@gsi.de>
 /// \date 2017-10-16
@@ -13,7 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TWebDisplayManager.hxx"
+#include "ROOT/TWebWindowsManager.hxx"
 
 #include <cassert>
 #include <cstdio>
@@ -27,25 +27,25 @@
 
 
 
-//const std::shared_ptr<ROOT::Experimental::TWebDisplayManager> &ROOT::Experimental::TWebDisplayManager::Instance()
+//const std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWebWindowsManager::Instance()
 //{
-//   static std::shared_ptr<ROOT::Experimental::TWebDisplayManager> sManager;
+//   static std::shared_ptr<ROOT::Experimental::TWebWindowsManager> sManager;
 //   return sManager;
 //}
 
-//static std::shared_ptr<ROOT::Experimental::TWebDisplayManager> ROOT::Experimental::TWebDisplayManager::Create()
+//static std::shared_ptr<ROOT::Experimental::TWebWindowsManager> ROOT::Experimental::TWebWindowsManager::Create()
 //{
-//   return std::make_shared<ROOT::Experimental::TWebDisplayManager>();
+//   return std::make_shared<ROOT::Experimental::TWebWindowsManager>();
 //}
 
-std::shared_ptr<ROOT::Experimental::TWebDisplayManager> &ROOT::Experimental::TWebDisplayManager::Instance()
+std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWebWindowsManager::Instance()
 {
-   static std::shared_ptr<TWebDisplayManager> sInstance = std::make_shared<ROOT::Experimental::TWebDisplayManager>();
+   static std::shared_ptr<TWebWindowsManager> sInstance = std::make_shared<ROOT::Experimental::TWebWindowsManager>();
    return sInstance;
 }
 
 
-ROOT::Experimental::TWebDisplayManager::~TWebDisplayManager()
+ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 {
    if (fServer) {
       delete fServer;
@@ -55,7 +55,7 @@ ROOT::Experimental::TWebDisplayManager::~TWebDisplayManager()
 
 
 
-bool ROOT::Experimental::TWebDisplayManager::CreateHttpServer(bool with_http)
+bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
    if (!fServer)
       fServer = new THttpServer("dummy");
@@ -90,9 +90,9 @@ bool ROOT::Experimental::TWebDisplayManager::CreateHttpServer(bool with_http)
    return false;
 }
 
-std::shared_ptr<ROOT::Experimental::TWebDisplay> ROOT::Experimental::TWebDisplayManager::CreateDisplay()
+std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsManager::CreateDisplay()
 {
-   std::shared_ptr<ROOT::Experimental::TWebDisplay> display = std::make_shared<ROOT::Experimental::TWebDisplay>();
+   std::shared_ptr<ROOT::Experimental::TWebWindow> display = std::make_shared<ROOT::Experimental::TWebWindow>();
 
    if (!display) printf("Display not created!!!\n");
 
@@ -107,7 +107,7 @@ std::shared_ptr<ROOT::Experimental::TWebDisplay> ROOT::Experimental::TWebDisplay
    return std::move(display);
 }
 
-void ROOT::Experimental::TWebDisplayManager::CloseDisplay(ROOT::Experimental::TWebDisplay *display)
+void ROOT::Experimental::TWebWindowsManager::CloseDisplay(ROOT::Experimental::TWebWindow *display)
 {
    // TODO: close all active connections of the display
 
@@ -137,7 +137,7 @@ void ROOT::Experimental::TWebDisplayManager::CloseDisplay(ROOT::Experimental::TW
 ///
 ///  Canvas can be displayed in several different places
 
-bool ROOT::Experimental::TWebDisplayManager::Show(ROOT::Experimental::TWebDisplay *display, const std::string &where, bool first_time)
+bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow *display, const std::string &where, bool first_time)
 {
 
    if (!CreateHttpServer()) {

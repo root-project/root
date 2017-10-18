@@ -1,4 +1,4 @@
-/// \file ROOT/TWebDisplayManager.hxx
+/// \file ROOT/TWebWindowsManager.hxx
 /// \ingroup WebGui ROOT7
 /// \author Sergey Linev <s.linev@gsi.de>
 /// \date 2017-10-16
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TWebDisplayManager
-#define ROOT7_TWebDisplayManager
+#ifndef ROOT7_TWebWindowsManager
+#define ROOT7_TWebWindowsManager
 
 #include <memory>
 #include <string>
@@ -22,41 +22,41 @@
 
 #include "THttpEngine.h"
 
-#include <ROOT/TWebDisplay.hxx>
+#include <ROOT/TWebWindow.hxx>
 
 class THttpServer;
 
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::TWebDisplayManager
+/** \class ROOT::Experimental::TWebWindowsManager
   Central handle to open web-based windows like Canvas or FitPanel.
   */
 
 
-class TWebDisplayManager {
+class TWebWindowsManager {
 private:
    THttpServer    *fServer{0};      ///<!  central communication with the all used displays
    std::string     fAddr{};         ///<!   HTTP address of the server
-   std::list<std::shared_ptr<TWebDisplay>> fDisplays{}; ///<! list of existing displays
+   std::list<std::shared_ptr<TWebWindow>> fDisplays{}; ///<! list of existing displays
    unsigned                      fIdCnt{0};   ///<! counter for identifiers
 
    bool CreateHttpServer(bool with_http = false);
 
 public:
    /// Create a temporary TCanvas
-   TWebDisplayManager() = default;
+   TWebWindowsManager() = default;
 
-   ~TWebDisplayManager();
+   ~TWebWindowsManager();
 
    /// Returns central instance, which used by standard ROOT widgets like Canvas or FitPanel
-   static std::shared_ptr<TWebDisplayManager> &Instance();
+   static std::shared_ptr<TWebWindowsManager> &Instance();
 
-   std::shared_ptr<TWebDisplay> CreateDisplay();
+   std::shared_ptr<TWebWindow> CreateDisplay();
 
-   void CloseDisplay(TWebDisplay *display);
+   void CloseDisplay(TWebWindow *display);
 
-   bool Show(TWebDisplay *display, const std::string &where, bool first_time = false);
+   bool Show(TWebWindow *display, const std::string &where, bool first_time = false);
 };
 
 } // namespace Experimental
