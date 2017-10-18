@@ -136,3 +136,21 @@ TEST(TypeTraits, CallableTraits)
                                  CallableTraits<decltype(stdFun2)>::arg_types_nodecay>();
    ::testing::StaticAssertTypeEq<Dummy, CallableTraits<decltype(stdFun2)>::ret_type>();
 }
+
+template<typename F, typename R = typename CallableTraits<F>::ret_type>
+constexpr bool HasRetType(F) { return true; }
+template<typename F, typename...Args>
+constexpr bool HasRetType(F, Args...) { return false; }
+
+TEST(TypeTraits, SFINAEOnCallableTraits)
+{
+   EXPECT_FALSE(HasRetType(int(42)));
+   EXPECT_FALSE(HasRetType(std::vector<int>()));
+   EXPECT_TRUE(HasRetType(freeFun1));
+   EXPECT_TRUE(HasRetType(freeFun2));
+   EXPECT_TRUE(HasRetType(Functor1()));
+   EXPECT_TRUE(HasRetType(Functor2()));
+   EXPECT_TRUE(HasRetType(std::function<void(int)>(Functor1())));
+   EXPECT_TRUE(HasRetType([]() { return 42; }));
+   EXPECT_TRUE(HasRetType([]() { return Dummy(); }));
+}
