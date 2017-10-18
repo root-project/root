@@ -975,14 +975,56 @@ namespace Experimental {
 class TNewPainter : public Internal::TVirtualCanvasPainter  {
 private:
 
+   struct WebConn {
+      unsigned fConnId{0};     ///<! connection id
+      bool fDrawReady{false};  ///!< when first drawing is performed
+      std::string fGetMenu{};  ///<! object id for menu request
+      uint64_t fSend{0};          ///<! indicates version send to connection
+      uint64_t fDelivered{0};    ///<! indicates version confirmed from canvas
+      WebConn() = default;
+   };
+
+   struct WebCommand {
+      std::string       fId{};            ///<! command identifier
+      std::string       fName{};          ///<! command name
+      std::string       fArg{};           ///<! command arg
+      bool              fRunning{false};  ///<! true when command submitted
+      CanvasCallback_t  fCallback{};      ///<! callback function associated with command
+      unsigned          fConnId{0};       ///<! connection id was used to send command
+      WebCommand() = default;
+   };
+
+   struct WebUpdate {
+      uint64_t            fVersion{0};   ///<! canvas version
+      CanvasCallback_t    fCallback{};   ///<! callback function associated with command
+      WebUpdate() = default;
+   };
+
+   typedef std::list<WebConn> WebConnList;
+
+   typedef std::list<WebCommand> WebCommandsList;
+
+   typedef std::list<WebUpdate> WebUpdatesList;
+
+   typedef std::vector<ROOT::Experimental::Detail::TMenuItem> MenuItemsVector;
+
    /// The canvas we are painting. It might go out of existence while painting.
    const TCanvas &fCanvas;       ///<!  Canvas
 
-   bool fBatchMode;                                  ///<! indicate if canvas works in batch mode (can be independent from gROOT->isBatch())
+   bool fBatchMode;             ///<! indicate if canvas works in batch mode (can be independent from gROOT->isBatch())
 
-   TPadDisplayItem fDisplayList; ///!< full list of items to display
+   std::shared_ptr<TWebWindow>  fDisplay; ///!< configured display
 
-   std::shared_ptr<TWebWindow>  fDisplay;           ///!< configured display
+   WebConnList fWebConn;            ///<! connections list
+   TPadDisplayItem fDisplayList;    ///!< full list of items to display
+   WebCommandsList fCmds;           ///!< list of submitted commands
+   uint64_t fCmdsCnt;               ///!< commands counter
+   std::string fWaitingCmdId;       ///!< command id waited for completion
+
+   uint64_t fSnapshotVersion;      ///!< version of snapshot
+   std::string fSnapshot;          ///!< last produced snapshot
+   uint64_t fSnapshotDelivered;    ///!< minimal version delivered to all connections
+   WebUpdatesList fUpdatesLst;     ///!< list of callbacks for canvas update
 
    /// Disable copy construction.
    TNewPainter(const TNewPainter &) = delete;
@@ -993,9 +1035,15 @@ private:
 public:
 
    TNewPainter(const TCanvas &canv, bool batch_mode) :
-      fCanvas(canv), fBatchMode(batch_mode), fDisplayList(), fDisplay() {}
+      fCanvas(canv), fBatchMode(batch_mode), fDisplay(),
+      fWebConn(), fDisplayList(), fCmds(), fCmdsCnt(0), fWaitingCmdId(),
+      fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0), fUpdatesLst() {}
 
-   virtual ~TNewPainter() {}
+   virtual ~TNewPainter()
+   {
+      CancelCommands();
+      CancelUpdates();
+   }
 
    /// returns true is canvas used in batch mode
    virtual bool IsBatchMode() const { return fBatchMode; }
@@ -1005,9 +1053,160 @@ public:
       fDisplayList.Add(item);
    }
 
-   virtual void CanvasUpdated(uint64_t, bool, ROOT::Experimental::CanvasCallback_t) override
+   bool WaitWhenCanvasPainted(uint64_t ver)
    {
+      // simple polling loop until specified version delivered to the clients
 
+      uint64_t cnt = 0;
+      bool had_connection = false;
+
+      while (true) {
+         if (fWebConn.size() > 0)
+            had_connection = true;
+         if ((fWebConn.size() == 0) && (had_connection || (cnt > 1000)))
+            return false; // wait ~1 min if no new connection established
+         if (fSnapshotDelivered >= ver) {
+            printf("PAINT READY!!!\n");
+            return true;
+         }
+         gSystem->ProcessEvents();
+         gSystem->Sleep((++cnt < 500) ? 1 : 100); // increase sleep interval when do very often
+      }
+
+      return false;
+   }
+
+   /////////////////////////////////////////////////////////////////////////////////////////////
+   /// Cancel all pending Canvas::Update()
+
+   void CancelUpdates()
+   {
+      fSnapshotDelivered = 0;
+      auto iter = fUpdatesLst.begin();
+      while (iter != fUpdatesLst.end()) {
+         auto curr = iter;
+         iter++;
+         curr->fCallback(false);
+         fUpdatesLst.erase(curr);
+      }
+   }
+
+   void CancelCommands(unsigned connid = 0)
+   {
+      auto iter = fCmds.begin();
+      while (iter != fCmds.end()) {
+         auto next = iter;
+         next++;
+         if (connid || (iter->fConnId == connid)) {
+            if (fWaitingCmdId == iter->fId)
+               fWaitingCmdId.clear();
+            iter->fCallback(false);
+            fCmds.erase(iter);
+         }
+      }
+   }
+
+
+   void CheckDataToSend()
+   {
+      uint64_t min_delivered = 0;
+
+      for (auto &&conn : fWebConn) {
+
+         if (conn.fDelivered && (!min_delivered || (min_delivered < conn.fDelivered)))
+            min_delivered = conn.fDelivered;
+
+         // check if direct data sending is possible
+         if (!fDisplay->CanSend(conn.fConnId, true)) continue;
+
+         TString buf;
+
+         if (conn.fDrawReady && (fCmds.size() > 0) && !fCmds.front().fRunning) {
+            WebCommand &cmd = fCmds.front();
+            cmd.fRunning = true;
+            buf = "CMD:";
+            buf.Append(cmd.fId);
+            buf.Append(":");
+            buf.Append(cmd.fName);
+            cmd.fConnId = conn.fConnId;
+         } else if (!conn.fGetMenu.empty()) {
+            TDrawable *drawable = FindDrawable(fCanvas, conn.fGetMenu);
+
+            printf("Request menu for object %s found drawable %p\n", conn.fGetMenu.c_str(), drawable);
+
+            if (drawable) {
+
+               ROOT::Experimental::TMenuItems items;
+
+               drawable->PopulateMenu(items);
+
+               // FIXME: got problem with std::list<TMenuItem>, can be generic TBufferJSON
+               buf = "MENU:";
+               buf.Append(conn.fGetMenu);
+               buf.Append(":");
+               buf.Append(items.ProduceJSON());
+            }
+
+            conn.fGetMenu = "";
+         } else if (conn.fSend != fSnapshotVersion) {
+            // buf = "JSON";
+            // buf  += TBufferJSON::ConvertToJSON(Canvas(), 3);
+
+            conn.fSend = fSnapshotVersion;
+            buf = "SNAP:";
+            buf += TString::ULLtoa(fSnapshotVersion, 10);
+            buf += ":";
+            buf += fSnapshot;
+         }
+
+         if (buf.Length() > 0) {
+            // sending of data can be moved into separate thread - not to block user code
+            fDisplay->Send(buf.Data(), conn.fConnId);
+         }
+      }
+
+      // if there are updates submitted, but all connections disappeared - cancel all updates
+      if ((fWebConn.size() == 0) && fSnapshotDelivered)
+         return CancelUpdates();
+
+      if (fSnapshotDelivered != min_delivered) {
+         fSnapshotDelivered = min_delivered;
+
+         auto iter = fUpdatesLst.begin();
+         while (iter != fUpdatesLst.end()) {
+            auto curr = iter;
+            iter++;
+            if (curr->fVersion <= fSnapshotDelivered) {
+               curr->fCallback(true);
+               fUpdatesLst.erase(curr);
+            }
+         }
+      }
+   }
+
+   virtual void CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental::CanvasCallback_t callback) override
+   {
+      if (ver && fSnapshotDelivered && (ver <= fSnapshotDelivered)) {
+         // if given canvas version was already delivered to clients, can return immediately
+         if (callback)
+            callback(true);
+         return;
+      }
+
+      fSnapshotVersion = ver;
+      fSnapshot = CreateSnapshot(fCanvas);
+
+      CheckDataToSend();
+
+      if (callback) {
+         WebUpdate item;
+         item.fVersion = ver;
+         item.fCallback = callback;
+         fUpdatesLst.push_back(item);
+      }
+
+      if (!async)
+         WaitWhenCanvasPainted(ver);
    }
 
    /// return true if canvas modified since last painting
@@ -1021,11 +1220,108 @@ public:
 
    }
 
-   void ProcessData(unsigned chid, const std::string &arg)
+   void ProcessData(unsigned connid, const std::string &arg)
    {
-      printf("Got data %u %s\n", chid, arg.c_str());
-   }
+      if (arg == "CONN_READY") {
+         // indication that new connection appeared
 
+         WebConn newconn;
+         newconn.fConnId = connid;
+
+         fWebConn.push_back(newconn);
+         printf("websocket is ready %u\n", connid);
+
+         CheckDataToSend();
+         return;
+      }
+
+      WebConn *conn(0);
+      auto iter = fWebConn.begin();
+      while (iter!=fWebConn.end()) {
+         if (iter->fConnId == connid) {
+            conn = &(*iter);
+            break;
+         }
+         ++iter;
+      }
+
+      if (!conn) return; // no connection found
+
+      printf("Get data %u %s\n", connid, arg.c_str());
+
+      if (arg == "CONN_CLOSED") {
+         // connection is closed
+
+         fWebConn.erase(iter);
+
+        // if there are no other connections - cancel all submitted commands
+        CancelCommands(connid);
+
+      } else if (arg.find("READY") == 0) {
+
+      } else if (arg.find("SNAPDONE:") == 0) {
+         std::string cdata = arg;
+         cdata.erase(0, 9);
+         conn->fDrawReady = kTRUE;                       // at least first drawing is performed
+         conn->fDelivered = (uint64_t)std::stoll(cdata); // delivered version of the snapshot
+      } else if (arg.find("RREADY:") == 0) {
+         conn->fDrawReady = kTRUE; // at least first drawing is performed
+      } else if (arg.find("GETMENU:") == 0) {
+         std::string cdata = arg;
+         cdata.erase(0, 8);
+         conn->fGetMenu = cdata;
+      } else if (arg == "QUIT") {
+         if (gApplication)
+            gApplication->Terminate(0);
+         return;
+      } else if (arg == "RELOAD") {
+         conn->fSend = 0; // reset send version, causes new data sending
+      } else if (arg == "INTERRUPT") {
+         gROOT->SetInterrupt();
+      } else if (arg.find("REPLY:") == 0) {
+         std::string cdata = arg;
+         cdata.erase(0, 6);
+         const char *sid = cdata.c_str();
+         const char *separ = strchr(sid, ':');
+         std::string id;
+         if (separ)
+            id.append(sid, separ - sid);
+         if (fCmds.size() == 0) {
+            printf("Get REPLY without command\n");
+         } else if (!fCmds.front().fRunning) {
+            printf("Front command is not running when get reply\n");
+         } else if (fCmds.front().fId != id) {
+            printf("Mismatch with front command and ID in REPLY\n");
+         } else {
+            bool res = FrontCommandReplied(separ + 1);
+            PopFrontCommand(res);
+         }
+      } else if (arg.find("SAVE:") == 0) {
+         std::string cdata = arg;
+         cdata.erase(0,5);
+         SaveCreatedFile(cdata);
+      } else if (arg.find("OBJEXEC:") == 0) {
+         std::string cdata = arg;
+         cdata.erase(0, 8);
+         size_t pos = cdata.find(':');
+
+         if ((pos != std::string::npos) && (pos > 0)) {
+            std::string id(cdata, 0, pos);
+            cdata.erase(0, pos + 1);
+            TDrawable *drawable = FindDrawable(fCanvas, id);
+            if (drawable && (cdata.length() > 0)) {
+               printf("Execute %s for drawable %p\n", cdata.c_str(), drawable);
+               drawable->Execute(cdata);
+            } else if (id == TDisplayItem::MakeIDFromPtr((void *)&fCanvas)) {
+               printf("Execute %s for canvas itself (ignore for the moment)\n", cdata.c_str());
+            }
+         }
+      } else {
+         printf("Got not recognized reply %s\n", arg.c_str());
+      }
+
+      CheckDataToSend();
+   }
 
    virtual void NewDisplay(const std::string &where) override {
       if (!fDisplay) {
@@ -1038,6 +1334,122 @@ public:
       }
 
       fDisplay->Show(where);
+   }
+
+   std::string CreateSnapshot(const ROOT::Experimental::TCanvas &can)
+   {
+
+      fDisplayList.Clear();
+
+      fDisplayList.SetObjectIDAsPtr((void *)&can);
+
+      ::TPad *dummy = new ::TPad(); // just provide old class where all kind of info (size, ranges) already provided
+
+      auto *snap = new ROOT::Experimental::TUniqueDisplayItem<::TPad>(dummy);
+      snap->SetObjectIDAsPtr((void *)&can);
+      fDisplayList.Add(snap);
+
+      for (auto &&drawable : can.GetPrimitives()) {
+
+         drawable->Paint(*this);
+
+         fDisplayList.Last()->SetObjectIDAsPtr(&(*drawable));
+
+         // ROOT::Experimental::TDisplayItem *sub = drawable->CreateSnapshot(can);
+         // if (!sub) continue;
+         // sub->SetObjectIDAsPtr(&(*drawable));
+         // lst.Add(sub);
+      }
+
+      TString res = TBufferJSON::ConvertToJSON(&fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+
+      fDisplayList.Clear();
+
+      return std::string(res.Data());
+   }
+
+   ROOT::Experimental::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can,
+                                                const std::string &id)
+   {
+      std::string search = id;
+      size_t pos = search.find("#");
+      // exclude extra specifier, later can be used for menu and commands execution
+      if (pos != std::string::npos) search.resize(pos);
+
+      for (auto &&drawable : can.GetPrimitives()) {
+
+         if (search == ROOT::Experimental::TDisplayItem::MakeIDFromPtr(&(*drawable)))
+            return &(*drawable);
+      }
+
+      return nullptr;
+   }
+
+   /// Method called when GUI sends file to save on local disk
+   /// File coded with base64 coding
+   void SaveCreatedFile(std::string &reply)
+   {
+      size_t pos = reply.find(":");
+      if ((pos == std::string::npos) || (pos==0)) {
+         Error("SaveCreatedFile", "Not found : separator");
+         return;
+      }
+
+      std::string fname(reply, 0, pos);
+      reply.erase(0, pos+1);
+
+      std::string binary = base64_decode(reply);
+      std::ofstream ofs(fname);
+      ofs.write(binary.c_str(), binary.length());
+      ofs.close();
+
+      Info("SaveCreatedFile", "Create file %s len %d", fname.c_str(), (int)binary.length());
+   }
+
+
+   bool FrontCommandReplied(const std::string &reply)
+   {
+      WebCommand &cmd = fCmds.front();
+
+      cmd.fRunning = false;
+
+      bool result = false;
+
+      if ((cmd.fName == "SVG") || (cmd.fName == "PNG") || (cmd.fName == "JPEG")) {
+         if (reply.length() == 0) {
+            R__ERROR_HERE("FrontCommandReplied") << "Fail to produce image" << cmd.fArg;
+         } else {
+            std::string content = base64_decode(reply);
+            std::ofstream ofs(cmd.fArg);
+            ofs.write(content.c_str(), content.length());
+            ofs.close();
+            printf("Create %s file %s len %d\n", cmd.fName.c_str(), cmd.fArg.c_str(), (int)content.length());
+            result = true;
+         }
+      } else {
+         R__ERROR_HERE("FrontCommandReplied") << "Unknown command " << cmd.fName;
+      }
+
+      return result;
+   }
+
+   /////////////////////////////////////////////////////////////////////////////////////////////
+   /// Remove front command from the command queue
+   /// If necessary, configured call-back will be invoked
+
+   void PopFrontCommand(bool result)
+   {
+      if (fCmds.size() == 0)
+         return;
+
+      // simple condition, which will be checked in waiting loop
+      if (!fWaitingCmdId.empty() && (fWaitingCmdId == fCmds.front().fId))
+         fWaitingCmdId.clear();
+
+      if (fCmds.front().fCallback)
+         fCmds.front().fCallback(result);
+
+      fCmds.pop_front();
    }
 
 
