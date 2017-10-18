@@ -281,6 +281,7 @@ in order to enhance rays.
 #include "TMath.h"
 #include "TEnv.h"
 #include "TGeoParallelWorld.h"
+#include "TGeoRegion.h"
 
 // statics and globals
 
@@ -325,6 +326,7 @@ TGeoManager::TGeoManager()
       fMatrices = 0;
       fNodes = 0;
       fOverlaps = 0;
+      fRegions = 0;
       fNNodes = 0;
       fMaxVisNodes = 10000;
       fVolumes = 0;
@@ -427,6 +429,7 @@ void TGeoManager::Init()
    fMatrices = new TObjArray(256);
    fNodes = new TObjArray(30);
    fOverlaps = new TObjArray(256);
+   fRegions = new TObjArray(256);
    fNNodes = 0;
    fMaxVisNodes = 10000;
    fVolumes = new TObjArray(256);
@@ -522,6 +525,7 @@ TGeoManager::TGeoManager(const TGeoManager& gm) :
   fMedia(gm.fMedia),
   fNodes(gm.fNodes),
   fOverlaps(gm.fOverlaps),
+  fRegions(gm.fRegions),
   fBits(gm.fBits),
   fCurrentNavigator(gm.fCurrentNavigator),
   fCurrentVolume(gm.fCurrentVolume),
@@ -606,6 +610,7 @@ TGeoManager& TGeoManager::operator=(const TGeoManager& gm)
       fMedia=gm.fMedia;
       fNodes=gm.fNodes;
       fOverlaps=gm.fOverlaps;
+      fRegions=gm.fRegions;
       fBits=gm.fBits;
       fCurrentNavigator=gm.fCurrentNavigator;
       fCurrentVolume = gm.fCurrentVolume;
@@ -662,6 +667,7 @@ TGeoManager::~TGeoManager()
    SafeDelete(fNodes);
    SafeDelete(fTopNode);
    if (fOverlaps) {fOverlaps->Delete(); SafeDelete(fOverlaps);}
+   if (fRegions) {fRegions->Delete(); SafeDelete(fRegions);}
    if (fMaterials) {fMaterials->Delete(); SafeDelete(fMaterials);}
    SafeDelete(fElementTable);
    if (fMedia) {fMedia->Delete(); SafeDelete(fMedia);}
@@ -706,6 +712,15 @@ Int_t TGeoManager::AddOverlap(const TNamed *ovlp)
    Int_t size = fOverlaps->GetEntriesFast();
    fOverlaps->Add((TObject*)ovlp);
    return size;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a new region of volumes.
+Int_t TGeoManager::AddRegion(TGeoRegion *region)
+{
+  Int_t size = fRegions->GetEntriesFast();
+  fRegions->Add(region);
+  return size;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

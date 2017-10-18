@@ -78,6 +78,8 @@
 #pragma link C++ class TGeoNodeMatrix+;
 #pragma link C++ class TGeoNodeOffset+;
 #pragma link C++ class TGeoManager-;
+#pragma link C++ class TGeoRegionCut+;
+#pragma link C++ class TGeoRegion+;
 #pragma link C++ class TVirtualGeoPainter+;
 #pragma link C++ class TVirtualGeoTrack+;
 #pragma link C++ class TVirtualGeoConverter+;

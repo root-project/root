@@ -113,6 +113,7 @@ When most solids or volumes are added to the geometry they
 #include "TGeoElement.h"
 #include "TGeoShape.h"
 #include "TGeoCompositeShape.h"
+#include "TGeoRegion.h"
 #include "TGDMLParse.h"
 #include <stdlib.h>
 #include <string>
@@ -1868,9 +1869,40 @@ XMLNodePointer_t TGDMLParse::BooSolid(TXMLEngine* gdml, XMLNodePointer_t node, X
 ///User data to be processed
 XMLNodePointer_t TGDMLParse::UsrProcess(TXMLEngine* gdml, XMLNodePointer_t node)
 {
-   Warning("ParseGDML", "<userinfo> not supported yet. Skipping.");
    XMLNodePointer_t child = gdml->GetChild(node);
-   while (child != 0) {
+   TString nodename, auxtype, auxtypec, auxvalue, auxvaluec, auxunit, auxunitc;
+   double value = 0.;
+   TGeoRegion *region;
+   while (child) {
+      region = nullptr;
+      nodename = gdml->GetNodeName(child);
+      if (nodename == "auxiliary") {
+         auxtype = gdml->GetAttr(child, "auxtype");
+         auxvalue = gdml->GetAttr(child, "auxvalue");
+         if (auxtype == "Region") {
+            auxvalue = NameShort(auxvalue);
+            region = new TGeoRegion(auxvalue);
+         }
+      }
+      XMLNodePointer_t subchild = gdml->GetChild(child);
+      while (subchild) {
+        auxtypec = gdml->GetAttr(subchild, "auxtype");
+        auxvaluec = gdml->GetAttr(subchild, "auxvalue");
+        auxunitc = gdml->GetAttr(subchild, "auxunit");
+        if (auxtypec == "volume") {
+           auxvaluec = NameShort(auxvaluec);
+           if (region) region->AddVolume(auxvaluec);
+        }
+        if (auxtypec.Contains("cut")) {
+           value = Value(auxvaluec) * GetScaleVal(auxunitc);
+           if (region) region->AddCut(auxtypec, value);
+        }
+        subchild = gdml->GetNext(subchild);
+      }
+      if (region) {
+        gGeoManager->AddRegion(region);
+        // region->Print();
+      }
       child = gdml->GetNext(child);
    }
    return child;
