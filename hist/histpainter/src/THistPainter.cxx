@@ -6398,7 +6398,7 @@ void THistPainter::PaintFunction(Option_t *)
       TVirtualPad *padsave = gPad;
       if (obj->InheritsFrom(TF2::Class())) {
          if (obj->TestBit(TF2::kNotDraw) == 0) {
-            if (Hoption.Lego || Hoption.Surf) {
+            if (Hoption.Lego || Hoption.Surf || Hoption.Error >= 100) {
                TF2 *f2 = (TF2*)obj;
                f2->SetMinimum(fH->GetMinimum());
                f2->SetMaximum(fH->GetMaximum());

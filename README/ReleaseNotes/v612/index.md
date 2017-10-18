@@ -175,8 +175,11 @@ large TClonesArray where each element contains another small vector container.
   - ROOT Cocoa: fix rendering into bitmaps on high-dpi display. With retina display
     the rendering of polylines was slow.
   - Fix a precision issue in `TGraph2D`. It was reported [here](https://root-forum.cern.ch/t/tgraph2d-plotting-issues/26562)
-  -  New method `TGraph::InsertPointBefore(Int_t ipoint, Double_t x, Double_t y)`
-     to insert a new point with coordinates (x,y) before the point number `ipoint`.
+  - New method `TGraph::InsertPointBefore(Int_t ipoint, Double_t x, Double_t y)`
+    to insert a new point with coordinates (x,y) before the point number `ipoint`.
+  - When a 2D histogram was drawn with error bars and has a function in its list
+    it was impossible to rotate it interactively. This problem was reported
+    [here](https://root-forum.cern.ch/t/2d-histogram-fit-draws-to-wrong-scale/26369).
 
 ## 3D Graphics Libraries
 
