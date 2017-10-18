@@ -120,11 +120,12 @@ BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &m
 }
 
 // Max action
-template <typename BranchType, typename PrevNodeType>
-TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &maxV, const unsigned int nSlots,
-                          TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Max *)
+template <typename BranchType, typename PrevNodeType, typename ActionResultType>
+TActionBase *
+BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &maxV, const unsigned int nSlots,
+             TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Max *)
 {
-   using Helper_t = MaxHelper;
+   using Helper_t = MaxHelper<ActionResultType>;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
    auto action = std::make_shared<Action_t>(Helper_t(maxV, nSlots), bl, prevNode);
    loopManager.Book(action);
@@ -254,6 +255,9 @@ struct TMinReturnType<T, true>
 /// The aliased type is `double` if `T == TInferType`, `U` if `T == container<U>`, `T` otherwise.
 template <typename T>
 using MinReturnType_t = typename TMinReturnType<T>::type;
+
+template<typename T>
+using MaxReturnType_t = MinReturnType_t<T>;
 
 } // namespace TDF
 } // namespace Internal
@@ -1384,10 +1388,11 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<double> Max(std::string_view columnName = "")
+   TResultProxy<TDFInternal::MaxReturnType_t<T>> Max(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
-      auto maxV = std::make_shared<double>(std::numeric_limits<double>::lowest());
+      using RetType_t = TDFInternal::MaxReturnType_t<T>;
+      auto maxV = std::make_shared<RetType_t>(std::numeric_limits<RetType_t>::lowest());
       return CreateAction<TDFInternal::ActionTypes::Max, T>(userColumns, maxV);
    }
 
