@@ -144,6 +144,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
 
    assert(conn != 0 && "Get websocket data without valid connection - ignore!!!");
 
+   // TODO: move to THttpServer, workaround for LongPolling socket
    if (conn->fHandle->PreviewData(arg))
       return true;
 
@@ -174,6 +175,8 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
    std::string cdata(str_end+1, arg->GetPostDataLength() - processed_len);
 
    conn->fSendCredits += ackn_oper;
+   conn->fRecvCount++;
+   conn->fClientCredits = (int) can_send;
 
    if (nchannel == 0) {
       // special default channel for basic communications
@@ -226,11 +229,19 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
       isany = false;
 
       for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
-         if ((iter->fSendCredits > 0) && (iter->fQueue.size() > 0)) {
+         if (iter->fSendCredits <= 0) continue;
+
+         if (iter->fQueue.size() > 0) {
             SendDataViaConnection(*iter, 1, iter->fQueue.front());
             iter->fQueue.pop_front();
             isany = true;
+         } else if ((iter->fClientCredits < 3) && (iter->fRecvCount > 1)) {
+            // give more credits to the client
+            printf("Send keep alive to client recv:%d client:%d\n", iter->fRecvCount, iter->fClientCredits);
+            SendDataViaConnection(*iter, 0, "KEEPALIVE");
+            isany = true;
          }
+
       }
 
    } while (isany && !only_once);
