@@ -45,6 +45,7 @@ private:
    struct WebConn {
       THttpWSEngine *fHandle{nullptr};       ///<! websocket handle
       unsigned       fConnId{0};             ///<! connection id (unique inside the window)
+      bool           fReady{false};          ///<! when first ready is appears
       int            fRecvCount{0};          ///<! number of received packets, should return back with next sending
       int            fSendCredits{0};        ///<! how many send operation can be performed without confirmation from other side
       std::list<std::string> fQueue{};       ///<! small output queue for data which should be send via the connection (including channel)
@@ -78,6 +79,8 @@ public:
    unsigned NumConnections() const { return fConn.size(); }
 
    bool Show(const std::string &where);
+
+   bool CanSend(unsigned connid, bool direct = true) const;
 
    void Send(const std::string &data, unsigned connid = 0);
 
