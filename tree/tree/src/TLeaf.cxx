@@ -164,7 +164,7 @@ Int_t *TLeaf::GenerateOffsetArrayBase(Int_t base, Int_t events) const
       return nullptr;
    }
 
-   Long64_t orig_entry = std::max(fBranch->GetReadEntry(), 0LL); // -1 indicates to start at the beginning?
+   Long64_t orig_entry = std::max(fBranch->GetReadEntry(), 0LL); // -1 indicates to start at the beginning
    Long64_t orig_leaf_entry = fLeafCount->GetBranch()->GetReadEntry();
    Int_t len = 0;
    for (Int_t idx = 0, offset = base; idx < events; idx++) {
