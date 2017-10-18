@@ -19,6 +19,11 @@
 
 namespace ROOT {
 
+namespace Detail {
+template <typename T> constexpr bool HasCallOp(decltype(&T::operator())*) { return true; }
+template <typename T> constexpr bool HasCallOp(...) { return false; }
+}
+
 /// ROOT type_traits extensions
 namespace TypeTraits {
 
@@ -77,24 +82,28 @@ struct TypeList {
 };
 
 /// Extract types from the signature of a callable object.
+template <typename T, bool HasCallOp = ROOT::Detail::HasCallOp<T>(nullptr)>
+struct CallableTraits {};
+
+// Extract signature of operator() and delegate to the appropriate CallableTraits overloads
 template <typename T>
-struct CallableTraits {
+struct CallableTraits<T, true> {
    using arg_types = typename CallableTraits<decltype(&T::operator())>::arg_types;
    using arg_types_nodecay = typename CallableTraits<decltype(&T::operator())>::arg_types_nodecay;
    using ret_type = typename CallableTraits<decltype(&T::operator())>::ret_type;
 };
 
-// lambdas and std::function
+// lambdas, std::function, const member functions
 template <typename R, typename T, typename... Args>
-struct CallableTraits<R (T::*)(Args...) const> {
+struct CallableTraits<R (T::*)(Args...) const, false> {
    using arg_types = TypeList<typename std::decay<Args>::type...>;
    using arg_types_nodecay = TypeList<Args...>;
    using ret_type = R;
 };
 
-// mutable lambdas and functor classes
+// mutable lambdas and functor classes, non-const member functions
 template <typename R, typename T, typename... Args>
-struct CallableTraits<R (T::*)(Args...)> {
+struct CallableTraits<R (T::*)(Args...), false> {
    using arg_types = TypeList<typename std::decay<Args>::type...>;
    using arg_types_nodecay = TypeList<Args...>;
    using ret_type = R;
@@ -102,7 +111,7 @@ struct CallableTraits<R (T::*)(Args...)> {
 
 // function pointers
 template <typename R, typename... Args>
-struct CallableTraits<R (*)(Args...)> {
+struct CallableTraits<R (*)(Args...), false> {
    using arg_types = TypeList<typename std::decay<Args>::type...>;
    using arg_types_nodecay = TypeList<Args...>;
    using ret_type = R;
@@ -110,7 +119,7 @@ struct CallableTraits<R (*)(Args...)> {
 
 // free functions
 template <typename R, typename... Args>
-struct CallableTraits<R(Args...)> {
+struct CallableTraits<R(Args...), false> {
    using arg_types = TypeList<typename std::decay<Args>::type...>;
    using arg_types_nodecay = TypeList<Args...>;
    using ret_type = R;
