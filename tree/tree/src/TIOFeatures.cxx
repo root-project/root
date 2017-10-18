@@ -38,7 +38,7 @@ using namespace ROOT;
  * Example usage:
  * ~~~{.cpp}
  * ROOT::TIOFeatures features;
- * features.Set(ROOT::EIOFeatures::kGenerateOffsetMap);
+ * features.Set(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap);
  * ttree_ref.SetIOFeatures(features);
  * ~~~
  *
