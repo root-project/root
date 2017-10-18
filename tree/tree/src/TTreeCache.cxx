@@ -829,7 +829,7 @@ Bool_t TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len)
 
    if (iter != fMissCache->fEntries.end()) {
       if (len > iter->fIO.fLen) {
-         fNMissReadMiss++;
+         ++fNMissReadMiss;
          return kFALSE;
       }
       auto offset = iter->fIndex;
