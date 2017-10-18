@@ -17,8 +17,12 @@ try:
 except ImportError:
    import subprocess as commands
    def WEXITSTATUS(arg): return arg
+
 import ROOT
-from ROOT import gROOT, TClass, TObject, TH1I, TVector3, TGraph, PyROOT, Long, TFile, TMatrixD
+from ROOT import gROOT, gInterpreter, PyROOT
+from ROOT import Long, TClass, TObject, TFile
+from ROOT import TH1I, TVector3, TGraph, TMatrixD
+
 from common import *
 
 __all__ = [
@@ -101,7 +105,7 @@ class Regression03OldCrashers( MyTestCase ):
 
       gROOT.LoadMacro( "Marco.C" )
       ns = ROOT.ns
-      
+
       self.assert_( ns.MyClass )
 
    def test4VerifyNoLoop( self ):
@@ -109,7 +113,7 @@ class Regression03OldCrashers( MyTestCase ):
 
       gROOT.LoadMacro( "Scott3.C+" )
       MyTooSmartClass = ROOT.MyTooSmartClass
-      
+
       a = MyTooSmartClass()
       self.assertRaises( AttributeError, getattr, a, 'DoesNotExist' )
 
@@ -131,7 +135,7 @@ class Regression04Threading( MyTestCase ):
 
    hasThread = gROOT.IsBatch() and 5 or 6   # can't test if no display ...
    noThread  = 5
-   
+
    def test1SpecialCasegROOT( self ):
       """Test the special role that gROOT plays vis-a-vis threading"""
 
@@ -164,8 +168,10 @@ class Regression04Threading( MyTestCase ):
       if self.hasThread == self.noThread:
          cmd += " - -b"
 
-      stat, out = commands.getstatusoutput( cmd % "from ROOT import *" )
-      self.assertEqual( WEXITSTATUS(stat), self.hasThread )
+      # Do not test 'from ROOT import *' on Python 3.x, since it's not supported
+      if sys.hexversion < 0x300000:
+         stat, out = commands.getstatusoutput( cmd % "from ROOT import *" )
+         self.assertEqual( WEXITSTATUS(stat), self.hasThread )
 
       stat, out = commands.getstatusoutput( cmd % "from ROOT import gROOT" )
       self.assertEqual( WEXITSTATUS(stat), self.noThread )
@@ -180,9 +186,6 @@ class Regression04Threading( MyTestCase ):
       if self.hasThread == self.noThread:
          cmd += " - -b"
 
-      stat, out = commands.getstatusoutput( (cmd % 'from ROOT import *;') + ' - -b' )
-      self.assertEqual( WEXITSTATUS(stat), self.noThread )
-
       stat, out = commands.getstatusoutput(
          cmd % 'import ROOT; ROOT.PyConfig.StartGuiThread = 0;' )
       self.assertEqual( WEXITSTATUS(stat), self.noThread )
@@ -195,14 +198,19 @@ class Regression04Threading( MyTestCase ):
          cmd % 'from ROOT import PyConfig; PyConfig.StartGuiThread = 1; from ROOT import gDebug;' )
       self.assertEqual( WEXITSTATUS(stat), self.hasThread )
 
-      stat, out = commands.getstatusoutput(
-         cmd % 'from ROOT import gROOT; gROOT.SetBatch( 1 ); from ROOT import *;' )
-      self.assertEqual( WEXITSTATUS(stat), self.noThread )
+      # Do not test 'from ROOT import *' on Python 3.x, since it's not supported
+      if sys.hexversion < 0x300000:
+         stat, out = commands.getstatusoutput( (cmd % 'from ROOT import *;') + ' - -b' )
+         self.assertEqual( WEXITSTATUS(stat), self.noThread )
 
-      if not gROOT.IsBatch():               # can't test if no display ...
          stat, out = commands.getstatusoutput(
-            cmd % 'from ROOT import gROOT; gROOT.SetBatch( 0 ); from ROOT import *;' )
-         self.assertEqual( WEXITSTATUS(stat), self.hasThread )
+            cmd % 'from ROOT import gROOT; gROOT.SetBatch( 1 ); from ROOT import *;' )
+         self.assertEqual( WEXITSTATUS(stat), self.noThread )
+
+         if not gROOT.IsBatch():               # can't test if no display ...
+            stat, out = commands.getstatusoutput(
+               cmd % 'from ROOT import gROOT; gROOT.SetBatch( 0 ); from ROOT import *;' )
+            self.assertEqual( WEXITSTATUS(stat), self.hasThread )
 
 
 ### Test the proper resolution of a template with namespaced parameter =======
@@ -264,7 +272,7 @@ class Regression08CheckEnumExactMatch( MyTestCase ):
       """Be able to pass enums as function arguments"""
 
       gROOT.LoadMacro( "Till.C+" )
-     
+
       a = ROOT.Monkey()
       self.assertEqual( ROOT.fish, a.testEnum1( ROOT.fish ) )
       self.assertEqual( ROOT.cow,  a.testEnum2( ROOT.cow ) )

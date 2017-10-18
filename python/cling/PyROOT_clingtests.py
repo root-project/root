@@ -8,7 +8,7 @@
 import os, sys, unittest
 sys.path.append( os.path.join( os.getcwd(), os.pardir ) )
 
-from ROOT import *
+from ROOT import ROOT, gROOT
 from common import FIXCLING
 
 __all__ = [
