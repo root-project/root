@@ -6765,111 +6765,133 @@ Bool_t TTree::Notify()
 ///
 /// if option ="d" an analysis report is printed.
 
-void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t minComp, Option_t *option)
+//_____________________________________________________________________________
+void TTree::OptimizeBaskets(ULong64_t maxMemory, Float_t /* minComp */, Option_t *option)
 {
-   //Flush existing baskets if the file is writable
    if (this->GetDirectory()->IsWritable()) this->FlushBaskets();
 
    TString opt( option );
    opt.ToLower();
    Bool_t pDebug = opt.Contains("d");
+
    TObjArray *leaves = this->GetListOfLeaves();
    Int_t nleaves = leaves->GetEntries();
-   Double_t treeSize = (Double_t)this->GetTotBytes();
+   Long64_t treeSize = this->GetTotBytes();
 
    if (nleaves == 0 || treeSize == 0) {
       // We're being called too early, we really have nothing to do ...
       return;
    }
-   Double_t aveSize = treeSize/nleaves;
-   UInt_t bmin = 512;
-   UInt_t bmax = 256000;
-   Double_t memFactor = 1;
-   Int_t i, oldMemsize,newMemsize,oldBaskets,newBaskets;
-   i = oldMemsize = newMemsize = oldBaskets = newBaskets = 0;
 
-   //we make two passes
-   //one pass to compute the relative branch buffer sizes
-   //a second pass to compute the absolute values
-   for (Int_t pass =0;pass<2;pass++) {
-      oldMemsize = 0;  //to count size of baskets in memory with old buffer size
-      newMemsize = 0;  //to count size of baskets in memory with new buffer size
-      oldBaskets = 0;  //to count number of baskets with old buffer size
-      newBaskets = 0;  //to count number of baskets with new buffer size
-      for (i=0;i<nleaves;i++) {
-         TLeaf *leaf = (TLeaf*)leaves->At(i);
-         TBranch *branch = leaf->GetBranch();
-         Double_t totBytes = (Double_t)branch->GetTotBytes();
-         Double_t idealFactor = totBytes/aveSize;
-         UInt_t sizeOfOneEntry;
-         if (branch->GetEntries() == 0) {
-            // There is no data, so let's make a guess ...
-            sizeOfOneEntry = aveSize;
-         } else {
-            sizeOfOneEntry = 1+(UInt_t)(totBytes / (Double_t)branch->GetEntries());
-         }
-         Int_t oldBsize = branch->GetBasketSize();
-         oldMemsize += oldBsize;
-         oldBaskets += 1+Int_t(totBytes/oldBsize);
-         Int_t nb = branch->GetListOfBranches()->GetEntries();
-         if (nb > 0) {
-            newBaskets += 1+Int_t(totBytes/oldBsize);
-            continue;
-         }
-         Double_t bsize = oldBsize*idealFactor*memFactor; //bsize can be very large !
-         if (bsize < 0) bsize = bmax;
-         if (bsize > bmax) bsize = bmax;
-         UInt_t newBsize = UInt_t(bsize);
-         if (pass) { // only on the second pass so that it doesn't interfere with scaling
-            newBsize = newBsize + (branch->GetEntries() * sizeof(Int_t) * 2); // make room for meta data
-            // We used ATLAS fully-split xAOD for testing, which is a rather unbalanced TTree, 10K branches,
-            // with 8K having baskets smaller than 512 bytes. To achieve good I/O performance ATLAS uses auto-flush 100,
-            // resulting in the smallest baskets being ~300-400 bytes, so this change increases their memory by about 8k*150B =~ 1MB,
-            // at the same time it significantly reduces the number of total baskets because it ensures that all 100 entries can be
-            // stored in a single basket (the old optimization tended to make baskets too small). In a toy example with fixed sized
-            // structures we found a factor of 2 fewer baskets needed in the new scheme.
-            // rounds up, increases basket size to ensure all entries fit into single basket as intended
-            newBsize = newBsize - newBsize%512 + 512;
-         }
-         if (newBsize < sizeOfOneEntry) newBsize = sizeOfOneEntry;
-         if (newBsize < bmin) newBsize = bmin;
-         if (newBsize > 10000000) newBsize = bmax;
-         if (pass) {
-            if (pDebug) Info("OptimizeBaskets", "Changing buffer size from %6d to %6d bytes for %s\n",oldBsize,newBsize,branch->GetName());
-            branch->SetBasketSize(newBsize);
-         }
-         newMemsize += newBsize;
-         // For this number to be somewhat accurate when newBsize is 'low'
-         // we do not include any space for meta data in the requested size (newBsize) even-though SetBasketSize will
-         // not let it be lower than 100+TBranch::fEntryOffsetLen.
-         newBaskets += 1+Int_t(totBytes/newBsize);
-         if (pass == 0) continue;
-         //Reset the compression level in case the compression factor is small
-         Double_t comp = 1;
-         if (branch->GetZipBytes() > 0) comp = totBytes/Double_t(branch->GetZipBytes());
-         if (comp > 1 && comp < minComp) {
-            if (pDebug) Info("OptimizeBaskets", "Disabling compression for branch : %s\n",branch->GetName());
-            branch->SetCompressionSettings(0);
-         }
-      }
-      // coverity[divide_by_zero] newMemsize can not be zero as there is at least one leaf
-      memFactor = Double_t(maxMemory)/Double_t(newMemsize);
-      if (memFactor > 100) memFactor = 100;
-      Double_t bmin_new = bmin*memFactor;
-      Double_t bmax_new = bmax*memFactor;
-      static const UInt_t hardmax = 1*1024*1024*1024; // Really, really never give more than 1Gb to a single buffer.
+   Long64_t oldMemsize, newMemsize;
+   Int_t oldBaskets, newBaskets;
+   oldMemsize = 0; // to count size of baskets in memory with old buffer size
+   newMemsize = 0; // to count size of baskets in memory with new buffer size
+   oldBaskets = 0; // to count number of baskets with old buffer size
+   newBaskets = 0; // to count number of baskets with new buffer size
 
-      // Really, really never go lower than 8 bytes (we use this number
-      // so that the calculation of the number of basket is consistent
-      // but in fact SetBasketSize will not let the size go below
-      // TBranch::fEntryOffsetLen + (100 + strlen(branch->GetName())
-      // (The 2nd part being a slight over estimate of the key length.
-      static const UInt_t hardmin = 8;
-      bmin = (bmin_new > hardmax) ? hardmax : ( bmin_new < hardmin ? hardmin : (UInt_t)bmin_new );
-      bmax = (bmax_new > hardmax) ? bmin : (UInt_t)bmax_new;
+   std::vector<Int_t> vBaS;    // vector holding Basket size
+   std::vector<Int_t> vBaSAvg; // vector holding single Basket estimate (tight fit)
+   std::vector<Int_t> vNBaS;   // vector holding Number of baskets
+   std::vector<Int_t> vBaES;   // vector holding estimated entry size
+
+   std::unordered_set<TBranch *> branchesWithLeaves;
+   for (Int_t i = 0; i < nleaves; ++i) {
+      TLeaf *leaf = (TLeaf *)leaves->At(i);
+      TBranch *branch = leaf->GetBranch();
+      branchesWithLeaves.insert(branch);
    }
+
+   // summing up size of all Branches and make initial basket size to aim for a single basket
+   ULong64_t ts = 0;
+   for (auto br : branchesWithLeaves) {
+      Long64_t totbytes = br->GetTotBytes();
+      Int_t nbask = br->GetWriteBasket();
+      Long64_t nentry = br->GetEntries();
+
+      if (totbytes <= 0 || nbask <= 0 || nentry <= 0) {
+         totbytes = Double_t(treeSize) / branchesWithLeaves.size();
+         nbask = 1 + totbytes / br->GetBasketSize();
+         nentry = TMath::Max((Long64_t)1, GetEntries());
+      }
+
+      Double_t aveEntSize = Double_t(totbytes) / nentry;
+
+      if (br->GetEntryOffsetLen()) {
+         totbytes -= sizeof(Int_t) * (nentry + 2);
+      }
+
+      Long64_t bigbasket = totbytes * 1.5;
+
+      if (br->GetEntryOffsetLen()) {
+         bigbasket += 2 * sizeof(Int_t) * (nentry + 2);
+         totbytes += 2 * sizeof(Int_t) * (nentry + 2);
+      }
+
+      if ((bigbasket % 512)) {
+         bigbasket += 512 - bigbasket % 512;
+      }
+
+      ts += bigbasket;
+      vBaS.push_back(bigbasket);
+      vBaSAvg.push_back(totbytes);
+      vNBaS.push_back(1);
+      vBaES.push_back(aveEntSize);
+      oldMemsize += br->GetBasketSize();
+      oldBaskets += nbask;
+   }
+
    if (pDebug) {
-      Info("OptimizeBaskets", "oldMemsize = %d,  newMemsize = %d\n",oldMemsize, newMemsize);
+      Info("OptimizingBaskets", "Sizes starting from: %llu  goal is: %llu\n", ts, maxMemory);
+   }
+
+   while (ts > maxMemory) {
+      // search for the biggest
+      Int_t ind = 0;
+      Int_t indBig = -1;
+      Int_t valBig = 0;
+      Int_t newBsize = 0;
+      for (const auto &v : vBaS) {
+         Int_t sz = Double_t(vBaSAvg[ind]) / (1 + vNBaS[ind]);
+         if ((sz % 512)) {
+            sz += 512 - sz % 512;
+         }
+         if (v > valBig && sz < v && sz >= vBaES[ind]) {
+            valBig = v;
+            indBig = ind;
+            newBsize = sz;
+         }
+         ind++;
+      }
+      if (indBig < 0) break;
+      // record new basket size and count, adjust total size count
+
+      ts -= (vBaS[indBig] - newBsize);
+      vBaS[indBig] = newBsize;
+      vNBaS[indBig] += 1;
+
+      if (pDebug) {
+         Info("OptimizeBaskets", "nbas: %d\tbsize: %d\n", vNBaS[indBig], vBaS[indBig]);
+      }
+   }
+
+   for (const auto &v : vBaS) {
+      newMemsize += v;
+   }
+
+   for (const auto &n : vNBaS) {
+      newBaskets += n;
+   }
+
+   // setting calculated basket sizes.
+   Int_t i = 0;
+   for (auto br : branchesWithLeaves) {
+      br->TBranch::SetBasketSize(vBaS[i]);
+      ++i;
+   }
+
+   if (pDebug) {
+      Info("OptimizeBaskets", "oldMemsize = %lld,  newMemsize = %lld\n", oldMemsize, newMemsize);
       Info("OptimizeBaskets", "oldBaskets = %d,  newBaskets = %d\n",oldBaskets, newBaskets);
    }
 }
