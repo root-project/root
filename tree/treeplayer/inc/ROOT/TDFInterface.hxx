@@ -107,11 +107,12 @@ TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<::TH1D>
 }
 
 // Min action
-template <typename BranchType, typename PrevNodeType>
-TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &minV, const unsigned int nSlots,
-                          TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Min *)
+template <typename BranchType, typename PrevNodeType, typename ActionResultType>
+TActionBase *
+BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &minV, const unsigned int nSlots,
+             TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Min *)
 {
-   using Helper_t = MinHelper;
+   using Helper_t = MinHelper<ActionResultType>;
    using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
    auto action = std::make_shared<Action_t>(Helper_t(minV, nSlots), bl, prevNode);
    loopManager.Book(action);
@@ -232,6 +233,27 @@ void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const uns
    delete rOnHeap;
    delete actionPtrPtrOnHeap;
 }
+
+/// The contained `type` alias is `double` if `T == TInferType`, `U` if `T == std::container<U>`, `T` otherwise.
+template <typename T, bool Container = TTraits::IsContainer<T>::value>
+struct TMinReturnType {
+   using type = T;
+};
+
+template <>
+struct TMinReturnType<TDFDetail::TInferType, false> {
+   using type = double;
+};
+
+template <typename T>
+struct TMinReturnType<T, true>
+{
+   using type = TTraits::TakeFirstParameter_t<T>;
+};
+
+/// The aliased type is `double` if `T == TInferType`, `U` if `T == container<U>`, `T` otherwise.
+template <typename T>
+using MinReturnType_t = typename TMinReturnType<T>::type;
 
 } // namespace TDF
 } // namespace Internal
@@ -1343,10 +1365,11 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<double> Min(std::string_view columnName = "")
+   TResultProxy<TDFInternal::MinReturnType_t<T>> Min(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
-      auto minV = std::make_shared<double>(std::numeric_limits<double>::max());
+      using RetType_t = TDFInternal::MinReturnType_t<T>;
+      auto minV = std::make_shared<RetType_t>(std::numeric_limits<RetType_t>::max());
       return CreateAction<TDFInternal::ActionTypes::Min, T>(userColumns, minV);
    }
 
