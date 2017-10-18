@@ -91,6 +91,14 @@ or will be set to the address of the histogram read from the file.
       Error in <TBasket::Streamer>: The value of fNevBufSize is incorrect (-72) ; trying to recover by setting it to zero
       ```
 
+- Added an experimental feature that allows the IO libraries to skip writing out redundant information for some
+   split classes, resulting in disk space savings.  This is disabled by default and may be enabled by setting:
+   ```
+   ROOT::TIOFeatures features;
+   features.Set(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap);
+   ttree_ref.SetIOFeatures(features);
+   ```
+
 ## TTree Libraries
 
 - Resolved O(N^2) scaling problem in ```TTree::Draw()``` observed when a branch that contains a
