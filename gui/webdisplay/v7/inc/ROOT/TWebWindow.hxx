@@ -48,6 +48,7 @@ private:
       bool           fReady{false};          ///<! when first ready is appears
       int            fRecvCount{0};          ///<! number of received packets, should return back with next sending
       int            fSendCredits{0};        ///<! how many send operation can be performed without confirmation from other side
+      int            fClientCredits{0};      ///<! last received information about credits on client side, helps to resubmit credits back to client
       std::list<std::string> fQueue{};       ///<! small output queue for data which should be send via the connection (including channel)
       WebDisplayDataCallback_t fCallBack{};  ///<! additional data callback
       WebConn() = default;
