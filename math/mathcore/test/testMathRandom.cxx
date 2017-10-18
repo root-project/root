@@ -21,7 +21,7 @@
 
 using namespace ROOT::Math;
 
-const long long  NR = 1E7;
+const long long  NR = 1E6;
 double minPValue = 1.E-3;
 
 bool showPlots = false; 
