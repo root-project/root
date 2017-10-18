@@ -325,10 +325,10 @@ THttpServer *TCanvasPainter::gServer = 0;
 /** \class TCanvasPainterReg
   Registers TCanvasPainterGenerator as generator with ROOT::Experimental::Internal::TVirtualCanvasPainter.
   */
-struct TCanvasPainterReg {
-   TCanvasPainterReg() { TCanvasPainter::GeneratorImpl::SetGlobalPainter(); }
-   ~TCanvasPainterReg() { TCanvasPainter::GeneratorImpl::ResetGlobalPainter(); }
-} canvasPainterReg;
+//struct TCanvasPainterReg {
+//   TCanvasPainterReg() { TCanvasPainter::GeneratorImpl::SetGlobalPainter(); }
+//   ~TCanvasPainterReg() { TCanvasPainter::GeneratorImpl::ResetGlobalPainter(); }
+//} canvasPainterReg;
 
 /// \}
 
@@ -1021,9 +1021,21 @@ public:
 
    }
 
+   void ProcessData(unsigned chid, const std::string &arg)
+   {
+      printf("Got data %u %s\n", chid, arg.c_str());
+   }
+
+
    virtual void NewDisplay(const std::string &where) override {
-      if (!fDisplay)
+      if (!fDisplay) {
          fDisplay = TWebDisplayManager::Instance()->CreateDisplay();
+
+         using std::placeholders::_1;
+         using std::placeholders::_2;
+         WebDisplayDataCallback_t func = std::bind(&TNewPainter::ProcessData, this, _1, _2);
+         fDisplay->SetDataCallBack(func);
+      }
 
       fDisplay->Show(where);
    }
@@ -1033,14 +1045,14 @@ public:
           Creates TCanvasPainter objects.
         */
 
-   class NewGeneratorImpl : public Generator {
+   class GeneratorImpl : public Generator {
       public:
          /// Create a new TCanvasPainter to paint the given TCanvas.
          std::unique_ptr<TVirtualCanvasPainter> Create(const ROOT::Experimental::TCanvas &canv, bool batch_mode) const override
          {
             return std::make_unique<TNewPainter>(canv, batch_mode);
          }
-         ~NewGeneratorImpl() = default;
+         ~GeneratorImpl() = default;
 
          /// Set TVirtualCanvasPainter::fgGenerator to a new GeneratorImpl object.
          static void SetGlobalPainter()
@@ -1049,7 +1061,7 @@ public:
                R__ERROR_HERE("NewPainter") << "Generator is already set! Skipping second initialization.";
                return;
             }
-            TVirtualCanvasPainter::fgGenerator.reset(new NewGeneratorImpl());
+            TVirtualCanvasPainter::fgGenerator.reset(new GeneratorImpl());
          }
 
          /// Release the GeneratorImpl object.
@@ -1057,6 +1069,12 @@ public:
       };
 
 };
+
+struct TNewCanvasPainterReg {
+   TNewCanvasPainterReg() { TNewPainter::GeneratorImpl::SetGlobalPainter(); }
+   ~TNewCanvasPainterReg() { TNewPainter::GeneratorImpl::ResetGlobalPainter(); }
+} newCanvasPainterReg;
+
 
 } // namespace Experimental
 } // namespace ROOT
