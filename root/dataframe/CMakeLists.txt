@@ -14,6 +14,7 @@ ROOTTEST_ADD_TEST(missingBranches
                   MACRO test_missingBranches.C
                   ERRREF test_missingBranches.eref)
 
+if(NOT CMAKE_BUILD_TYPE STREQUAL "Debug")
 ROOTTEST_GENERATE_EXECUTABLE(test_hugeTDF test_hugeTDF.cxx
                              COMPILE_FLAGS "-O2"  # too slow otherwise
                              LIBRARIES ${DFLIBRARIES})
@@ -21,6 +22,7 @@ ROOTTEST_ADD_TEST(test_hugeTDF
                   EXEC test_hugeTDF
                   LABELS longtest
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
+endif()
 
 ROOTTEST_GENERATE_EXECUTABLE(test_columnoverride test_columnoverride.cxx LIBRARIES ${DFLIBRARIES})
 ROOTTEST_ADD_TEST(test_columnoverride
