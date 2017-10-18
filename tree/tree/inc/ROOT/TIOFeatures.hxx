@@ -30,7 +30,7 @@ namespace ROOT {
 // to BITS(kIOFeatureCount).
 //
 enum class EIOFeatures {
-  kSupported = 0  // Union of all known, supported, and enabled-by-default features (currently none).
+   kSupported = 0  // Union of all known, supported, and enabled-by-default features (currently none).
 };
 
 
@@ -43,8 +43,8 @@ namespace Experimental {
 // the "ROOT-IO-wide" level and not restricted to TBasket -- even if all the currently-foreseen
 // usage of this mechanism somehow involves baskets currently.
 enum class EIOFeatures {
-  kGenerateOffsetMap = BIT(0),
-  kSupported = kGenerateOffsetMap  // Union of all features in this enum.
+   kGenerateOffsetMap = BIT(0),
+   kSupported = kGenerateOffsetMap  // Union of all features in this enum.
 };
 
 
@@ -52,7 +52,7 @@ enum class EIOFeatures {
 // NOTE: the intent is that there is never an IO feature that goes into the ROOT:: namespace
 // but is unsupported.
 enum class EIOUnsupportedFeatures {
-  kUnsupported = 0  // Union of all features in this enum.
+   kUnsupported = 0  // Union of all features in this enum.
 };
 
 
