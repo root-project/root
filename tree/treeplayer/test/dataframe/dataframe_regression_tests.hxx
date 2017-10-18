@@ -117,8 +117,8 @@ TEST(TEST_CATEGORY, EmptyTree)
    std::atomic_int fc(0);
    d.Foreach([&fc]() { ++fc; });
 
-   EXPECT_DOUBLE_EQ(*min, std::numeric_limits<double>::max());
-   EXPECT_DOUBLE_EQ(*max, std::numeric_limits<double>::lowest());
+   EXPECT_DOUBLE_EQ(*min, std::numeric_limits<int>::max());
+   EXPECT_DOUBLE_EQ(*max, std::numeric_limits<int>::lowest());
    EXPECT_DOUBLE_EQ(*mean, 0);
    EXPECT_EQ(h->GetEntries(), 0);
    EXPECT_EQ(*c, 0U);
