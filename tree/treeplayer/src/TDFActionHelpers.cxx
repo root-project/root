@@ -123,29 +123,11 @@ template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, 
 // template void MinHelper::Exec(unsigned int, const std::vector<int> &);
 // template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-MaxHelper::MaxHelper(const std::shared_ptr<double> &maxVPtr, const unsigned int nSlots)
-   : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<double>::lowest())
-{
-}
-
-void MaxHelper::Exec(unsigned int slot, double v)
-{
-   fMaxs[slot] = std::max(v, fMaxs[slot]);
-}
-
-void MaxHelper::Finalize()
-{
-   *fResultMax = std::numeric_limits<double>::lowest();
-   for (auto &m : fMaxs) {
-      *fResultMax = std::max(m, *fResultMax);
-   }
-}
-
-template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
-template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
-template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
-template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
-template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 MeanHelper::MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
    : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0), fPartialMeans(nSlots)

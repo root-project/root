@@ -468,34 +468,44 @@ public:
 // extern template void MinHelper::Exec(unsigned int, const std::vector<int> &);
 // extern template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
+template <typename ResultType>
 class MaxHelper {
-   const std::shared_ptr<double> fResultMax;
-   std::vector<double> fMaxs;
+   const std::shared_ptr<ResultType> fResultMax;
+   std::vector<ResultType> fMaxs;
 
 public:
-   MaxHelper(const std::shared_ptr<double> &maxVPtr, const unsigned int nSlots);
    MaxHelper(MaxHelper &&) = default;
    MaxHelper(const MaxHelper &) = delete;
+   MaxHelper(const std::shared_ptr<ResultType> &maxVPtr, const unsigned int nSlots)
+      : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<ResultType>::lowest()) {}
+
    void InitSlot(TTreeReader *, unsigned int) {}
-   void Exec(unsigned int slot, double v);
+   void Exec(unsigned int slot, ResultType v) { fMaxs[slot] = std::max(v, fMaxs[slot]); }
 
    template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
    void Exec(unsigned int slot, const T &vs)
    {
       for (auto &&v : vs)
-         fMaxs[slot] = std::max((double)v, fMaxs[slot]);
+         fMaxs[slot] = std::max((ResultType)v, fMaxs[slot]);
    }
 
-   void Finalize();
+   void Finalize()
+   {
+      *fResultMax = std::numeric_limits<ResultType>::lowest();
+      for (auto &m : fMaxs) {
+         *fResultMax = std::max(m, *fResultMax);
+      }
+   }
 
-   double &PartialUpdate(unsigned int slot) { return fMaxs[slot]; }
+   ResultType &PartialUpdate(unsigned int slot) { return fMaxs[slot]; }
 };
 
-extern template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
-extern template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
-extern template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
-extern template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
-extern template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+// TODO
+// extern template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
+// extern template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
+// extern template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
+// extern template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
+// extern template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 class MeanHelper {
    const std::shared_ptr<double> fResultMean;
