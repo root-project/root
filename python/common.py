@@ -62,7 +62,7 @@ def run_pytest(test_file=None):
     if '-i' in sys.argv:
         args = filter(lambda x: not x in (test_file, '-i'), sys.argv)
     else:
-        args = ['--color=no', '--result-log=stdout']
+        args = ['--result-log=stdout']
     if test_file: args += [test_file]
     # actual test run
     return pytest.main(args, plugins=[pytest_cov])
