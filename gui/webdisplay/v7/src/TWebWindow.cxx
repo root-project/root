@@ -119,6 +119,9 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
 
       // UInt_t connid = 0;
 
+      if (conn && fDataCallback)
+         fDataCallback(conn->fConnId, "CONN_CLOSED");
+
       if (conn && conn->fHandle) {
          // connid = conn->fHandle->GetId();
          conn->fHandle->ClearHandle();
@@ -172,83 +175,20 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
 
    conn->fSendCredits += ackn_oper;
 
-   if (nchannel == 1) fDataCallback(conn->fConnId, cdata);
-   else if (nchannel > 1) conn->fCallBack(conn->fConnId, cdata);
+   if (nchannel == 0) {
+      // special default channel for basic communications
+      if (cdata == "READY") {
+         if (!conn->fReady) fDataCallback(conn->fConnId, "CONN_READY");
+         conn->fReady = true;
+      }
+   } else if (nchannel == 1) {
+      fDataCallback(conn->fConnId, cdata);
+   } else if (nchannel > 1) {
+      conn->fCallBack(conn->fConnId, cdata);
+   }
 
    CheckDataToSend();
 
-
-/*
-
-   std::string cdata((const char *)arg->GetPostData(), arg->GetPostDataLength());
-
-   if (cdata.find("READY") == 0) {
-      conn->fReady = kTRUE;
-      CheckDataToSend();
-   } else if (cdata.find("SNAPDONE:") == 0) {
-      cdata.erase(0, 9);
-      conn->fReady = kTRUE;
-      conn->fDrawReady = kTRUE;                       // at least first drawing is performed
-      conn->fDelivered = (uint64_t)std::stoll(cdata); // delivered version of the snapshot
-      CheckDataToSend();
-   } else if (cdata.find("RREADY:") == 0) {
-      conn->fReady = kTRUE;
-      conn->fDrawReady = kTRUE; // at least first drawing is performed
-      CheckDataToSend();
-   } else if (cdata.find("GETMENU:") == 0) {
-      conn->fReady = kTRUE;
-      cdata.erase(0, 8);
-      conn->fGetMenu = cdata;
-      CheckDataToSend();
-   } else if (cdata == "QUIT") {
-      if (gApplication)
-         gApplication->Terminate(0);
-   } else if (cdata == "RELOAD") {
-      conn->fSend = 0; // reset send version, causes new data sending
-      CheckDataToSend();
-   } else if (cdata == "INTERRUPT") {
-      gROOT->SetInterrupt();
-   } else if (cdata.find("REPLY:") == 0) {
-      cdata.erase(0, 6);
-      const char *sid = cdata.c_str();
-      const char *separ = strchr(sid, ':');
-      std::string id;
-      if (separ)
-         id.append(sid, separ - sid);
-      if (fCmds.size() == 0) {
-         Error("ProcessWS", "Get REPLY without command");
-      } else if (!fCmds.front().fRunning) {
-         Error("ProcessWS", "Front command is not running when get reply");
-      } else if (fCmds.front().fId != id) {
-         Error("ProcessWS", "Mismatch with front command and ID in REPLY");
-      } else {
-         bool res = FrontCommandReplied(separ + 1);
-         PopFrontCommand(res);
-      }
-      conn->fReady = kTRUE;
-      CheckDataToSend();
-   } else if (cdata.find("SAVE:") == 0) {
-      cdata.erase(0,5);
-      SaveCreatedFile(cdata);
-   } else if (cdata.find("OBJEXEC:") == 0) {
-      cdata.erase(0, 8);
-      size_t pos = cdata.find(':');
-
-      if ((pos != std::string::npos) && (pos > 0)) {
-         std::string id(cdata, 0, pos);
-         cdata.erase(0, pos + 1);
-         ROOT::Experimental::TDrawable *drawable = FindDrawable(fCanvas, id);
-         if (drawable && (cdata.length() > 0)) {
-            printf("Execute %s for drawable %p\n", cdata.c_str(), drawable);
-            drawable->Execute(cdata);
-         } else if (id == ROOT::Experimental::TDisplayItem::MakeIDFromPtr((void *)&fCanvas)) {
-            printf("Execute %s for canvas itself (ignore for the moment)\n", cdata.c_str());
-         }
-      }
-   } else if (cdata == "KEEPALIVE") {
-      // do nothing, it is just keep alive message for websocket
-   }
-*/
    return true;
 }
 
@@ -260,6 +200,8 @@ void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::T
    buf.reserve(data.length() + 100);
 
    buf.append(std::to_string(conn.fRecvCount));
+   buf.append(":");
+   buf.append(std::to_string(conn.fSendCredits));
    buf.append(":");
    conn.fRecvCount = 0; // we confirm how many packages was received
    conn.fSendCredits--;
@@ -294,13 +236,29 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
    } while (isany && !only_once);
 }
 
+// returns true if sending via specified connection can be performed
+// if direct==true, requires that direct sending (without queue) is possible
+
+bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct) const
+{
+   for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
+      if (connid && connid != iter->fConnId) continue;
+
+      if (direct && ((iter->fQueue.size()>0) || (iter->fSendCredits==0))) return false;
+
+      if (iter->fQueue.size() >= fMaxQueueLength) return false;
+   }
+
+   return true;
+}
+
 
 /// Sends data to specified connection
 /// If connid==0, data will be send to all connections for channel 1
 void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned connid)
 {
    for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
-      if (connid && connid != iter->fConnId) connid++;
+      if (connid && connid != iter->fConnId) continue;
 
       if ((iter->fQueue.size()==0) && (iter->fSendCredits>0)) {
          SendDataViaConnection(*iter, 1, data);
