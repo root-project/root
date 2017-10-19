@@ -30,8 +30,8 @@ struct TypeList {
 } // end ns TypeTraits
 
 namespace Detail {
-template <typename T> constexpr auto HasCallOp(int goodOverload) -> decltype(&T::operator(), true) { return true; }
-template <typename T> constexpr bool HasCallOp(char badOverload) { return false; }
+template <typename T> constexpr auto HasCallOp(int /*goodOverload*/) -> decltype(&T::operator(), true) { return true; }
+template <typename T> constexpr bool HasCallOp(char /*badOverload*/) { return false; }
 
 /// Extract types from the signature of a callable object. See CallableTraits.
 template <typename T, bool HasCallOp = ROOT::Detail::HasCallOp<T>(0)>
