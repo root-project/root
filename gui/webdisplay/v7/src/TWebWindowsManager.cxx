@@ -90,7 +90,7 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
    return false;
 }
 
-std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsManager::CreateDisplay()
+std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsManager::CreateWindow(bool batch_mode)
 {
    std::shared_ptr<ROOT::Experimental::TWebWindow> display = std::make_shared<ROOT::Experimental::TWebWindow>();
 
@@ -98,7 +98,9 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 
    printf("Use count %lu get %p\n", display.use_count(), display.get());
 
-   display.get()->SetId(++fIdCnt); // set unique ID
+   display->SetBatchMode(batch_mode);
+
+   display->SetId(++fIdCnt); // set unique ID
 
    fDisplays.push_back(display);
 
@@ -150,21 +152,17 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    if (first_time)
       fServer->Register("/web7gui", handler);
 
+   bool batch_mode = display->IsBatchMode();
+
    TString addr;
+   addr.Form("/web7gui/%s/%s", handler->GetName(), (batch_mode ? "?batch_mode" : ""));
 
    bool is_native = where.empty() || (where == "native"), is_qt5 = (where == "qt5"), ic_cef = (where == "cef");
 
    Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
 
-   // TODO: batch mode and other URL parameters belong to the TCanvas
-   bool batch_mode = false;
-
    if (symbol_qt5 && (is_native || is_qt5)) {
       typedef void (*FunctionQt5)(const char *, void *, bool);
-
-      addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas&no_root_json%s&qt5", handler->GetName(),
-                (batch_mode ? "&batch_mode" : ""));
-      // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
 
       printf("Show canvas in Qt5 window:  %s\n", addr.Data());
 
@@ -181,9 +179,6 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || ic_cef)) {
       typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *);
 
-      // addr.Form("/web7gui/%s/draw.htm?cef_canvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
-      addr.Form("/web7gui/%s/draw.htm?cef_canvas&no_root_json%s", handler->GetName(), (batch_mode ? "&batch_mode" : ""));
-
       printf("Show canvas in CEF window:  %s\n", addr.Data());
 
       FunctionCef3 func = (FunctionCef3)symbol_cef;
@@ -197,7 +192,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       return false;
    }
 
-   addr.Form("%s/web7gui/%s/draw.htm?webcanvas", fAddr.c_str(), handler->GetName());
+   addr = fAddr + addr;
 
    TString exec;
 

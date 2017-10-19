@@ -52,7 +52,7 @@ public:
    /// Returns central instance, which used by standard ROOT widgets like Canvas or FitPanel
    static std::shared_ptr<TWebWindowsManager> &Instance();
 
-   std::shared_ptr<TWebWindow> CreateDisplay();
+   std::shared_ptr<TWebWindow> CreateWindow(bool batch_mode = false);
 
    void CloseDisplay(TWebWindow *display);
 
