@@ -460,7 +460,9 @@ public:
    ///
    /// An exception is thrown if the name of the new column is already in use.
    template <typename F, typename NEEDED_INFO = TDFDetail::TCCHelperTypes::TNothing,
-             typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
+             typename std::enable_if<!std::is_convertible<F, std::string>::value &&
+                                        !std::is_same<typename TTraits::CallableTraits<F>::ret_type, void>::value,
+                                     int>::type = 0>
    TInterface<Proxied> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       auto loopManager = GetDataFrameChecked();
@@ -488,6 +490,21 @@ public:
       newInterface.fValidCustomColumns.emplace_back(name);
       return newInterface;
    }
+
+   /// \cond HIDDEN_SYMBOLS
+   // This overload is chosen when the callable passed to Define or DefineSlot returns void.
+   // It simply fires a compile-time error. This is preferable to a static_assert in the main `Define` overload because
+   // this way compilation of `Define` has no way to continue after throwing the error.
+   template <typename F, typename NEEDED_INFO = TDFDetail::TCCHelperTypes::TNothing,
+             typename std::enable_if<!std::is_convertible<F, std::string>::value &&
+                                        std::is_same<typename TTraits::CallableTraits<F>::ret_type, void>::value,
+                                     int>::type = 0>
+   TInterface<Proxied> Define(std::string_view, F, const ColumnNames_t & = {})
+   {
+      static_assert(sizeof(F) < 0, "Callable cannot return `void`!");
+      return *this; // never reached
+   }
+   /// \endcond
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column with a value dependent on the processing slot.
