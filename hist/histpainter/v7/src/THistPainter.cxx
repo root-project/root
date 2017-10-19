@@ -45,8 +45,8 @@ public:
       assert(dynamic_cast<THistDrawable<2> *>(&drw) && "Wrong drawable type");
       THistDrawable<2> &hd = static_cast<THistDrawable<2> &>(drw);
 
-      ROOT::Experimental::TDisplayItem *res = new TOrdinaryDisplayItem<TH1>(hd.GetOldHist());
-      res->SetOption("col");
+      ROOT::Experimental::TDisplayItem *res = new ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::THistDrawable<2>>(&hd);
+      // res->SetOption("col");
 
       canv.AddDisplayItem(res);
 
