@@ -35,7 +35,7 @@
 
 static int gDebugProxy = 0; // if kTRUE - use debug & profile interface
 
-static enum { kDebugProfile = -123, kDebugTrace = -1234 };
+enum { kDebugProfile = -123, kDebugTrace = -1234 };
 
 static unsigned int total = 0;
 static double total_time = 0;

@@ -1115,7 +1115,7 @@ void do_anadist_getkey(TUrl *u, TString &key)
 /// Create the plot for the histogram, and save to 'fnout'.
 /// Format determined by th extension of fnout.
 
-int do_anadist_plot(TH1D *h1d, const char */*fnout*/)
+int do_anadist_plot(TH1D *h1d, const char * /*fnout*/)
 {
    Printf("do_anadist_plot: will be doing a plot here ... ");
 
