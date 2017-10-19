@@ -169,7 +169,6 @@ bool TIOFeatures::Set(EIOFeatures input_bits)
 /// and returns kFALSE.
 bool TIOFeatures::Set(const std::string &value)
 {
-   TBasket::EIOBits bits = static_cast<TBasket::EIOBits>(0);
    TClass *cl = TBasket::Class();
    if (cl == nullptr) {
       Error("Set", "Could not retrieve TBasket's class");
@@ -180,19 +179,13 @@ bool TIOFeatures::Set(const std::string &value)
       Error("Set", "Could not locate TBasket::EIOBits enum");
       return kFALSE;
    }
-   bool foundConstant = false;
    for (auto constant : ROOT::Detail::TRangeStaticCast<TEnumConstant>(eIOBits->GetConstants())) {
       if (!strcmp(constant->GetName(), value.c_str())) {
-         foundConstant = true;
-         bits = static_cast<TBasket::EIOBits>(constant->GetValue());
-         break;
+         return Set(static_cast<EIOFeatures>(constant->GetValue()));
       }
    }
-   if (!foundConstant) {
-      Error("Set", "Could not locate %s in TBasket::EIOBits", value.c_str());
-      return kFALSE;
-   }
-   return Set(static_cast<EIOFeatures>(bits));
+   Error("Set", "Could not locate %s in TBasket::EIOBits", value.c_str());
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////
