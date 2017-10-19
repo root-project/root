@@ -93,7 +93,6 @@ char *dlerror() {
 FARPROC dlsym(void *library, const char *function_name)
 {
    HMODULE hMods[1024];
-   HANDLE hProcess;
    DWORD cbNeeded;
    FARPROC address = NULL;
    unsigned int i;

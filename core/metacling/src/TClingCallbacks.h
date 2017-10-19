@@ -63,10 +63,10 @@ public:
                                    llvm::StringRef FileName,
                                    bool /*IsAngled*/,
                                    clang::CharSourceRange /*FilenameRange*/,
-                                   const clang::FileEntry */*File*/,
+                                   const clang::FileEntry * /*File*/,
                                    llvm::StringRef /*SearchPath*/,
                                    llvm::StringRef /*RelativePath*/,
-                                   const clang::Module */*Imported*/);
+                                   const clang::Module * /*Imported*/);
 
    // Preprocessor callbacks used to handle special cases like for example:
    // #include "myMacro.C+"
