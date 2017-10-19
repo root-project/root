@@ -1325,7 +1325,7 @@ public:
 
    virtual void NewDisplay(const std::string &where) override {
       if (!fDisplay) {
-         fDisplay = TWebWindowsManager::Instance()->CreateDisplay();
+         fDisplay = TWebWindowsManager::Instance()->CreateWindow(false);
 
          using std::placeholders::_1;
          using std::placeholders::_2;
