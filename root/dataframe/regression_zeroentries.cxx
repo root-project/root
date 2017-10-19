@@ -36,8 +36,8 @@ int main() {
    std::atomic_int fc(0);
    d.Foreach([&fc]() { ++fc; });
 
-   assert(*min == std::numeric_limits<double>::max());
-   assert(*max == std::numeric_limits<double>::lowest());
+   assert(*min == std::numeric_limits<int>::max());
+   assert(*max == std::numeric_limits<int>::lowest());
    assert(*mean == 0);
    assert(h->GetEntries() == 0);
    assert(*c == 0);
