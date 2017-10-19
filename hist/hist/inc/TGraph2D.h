@@ -92,7 +92,7 @@ public:
    virtual void          Clear(Option_t *option="");
    virtual void          DirectoryAutoAdd(TDirectory *);
    Int_t                 DistancetoPrimitive(Int_t px, Int_t py);
-   virtual void          Draw(Option_t *option="");
+   virtual void          Draw(Option_t *option="P0");
    void                  ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual TObject      *FindObject(const char *name) const;
    virtual TObject      *FindObject(const TObject *obj) const;
