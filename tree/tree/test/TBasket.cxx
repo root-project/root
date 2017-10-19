@@ -263,7 +263,6 @@ TEST(TBasket, TestVarLengthArrays)
       saved_t1->GetEntry(idx);
       Int_t expected_elem = idx % 9;
       EXPECT_EQ(expected_elem, saved_elem);
-      ASSERT_NE(saved_sample, nullptr);
       for (idx2 = 0; idx2 < expected_elem; idx2++) {
          EXPECT_EQ(saved_sample[idx2], sample[idx2]);
       }
@@ -391,8 +390,6 @@ TEST(TBasket, TestSettingIOBits)
       Int_t expected_elem = idx % 9;
       EXPECT_EQ(expected_elem, saved_elem);
       EXPECT_EQ(expected_elem, saved_elem2);
-      ASSERT_NE(saved_sample, nullptr);
-      ASSERT_NE(saved_sample2, nullptr);
       for (idx2 = 0; idx2 < expected_elem; idx2++) {
          EXPECT_EQ(saved_sample2[idx2], sample[idx2]);
          EXPECT_EQ(saved_sample[idx2], sample[idx2]);
