@@ -20,10 +20,9 @@ Path locking class allowing shared and exclusive locks
 #include "TSystem.h"
 #if defined(R__WIN32) && !defined(R__WINGCC)
 #include <io.h>
-#define lseek(fd, offset, origin) _lseek(fd, offset, origin)
-#define close(fd) _close(fd)
-#define open(fd, oflag, pmode) _open(fd, oflag, pmode)
-#define open(fd, oflag) _open(fd, oflag)
+#define lseek _lseek
+#define close _close
+#define open _open
 #define O_CREAT _O_CREAT
 #define O_RDWR _O_RDWR
 #else

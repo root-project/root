@@ -2913,7 +2913,7 @@ void TBufferJSON::ReadTString(TString & /*s*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads a std::string
 
-void TBufferJSON::ReadStdString(std::string */*s*/)
+void TBufferJSON::ReadStdString(std::string * /*s*/)
 {
 }
 
