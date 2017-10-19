@@ -551,8 +551,7 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
    if ((uri == 0) || (strlen(uri) == 0))
       return kFALSE;
 
-   TString fname = uri;
-
+   TString fname(uri);
    TIter iter(&fLocations);
    TObject *obj(0);
    while ((obj = iter()) != 0) {
@@ -690,13 +689,9 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          arg->fContent = handler->GetDefaultPageContent();
 
          if (arg->fContent.Index("file:")==0) {
-
             TString fname = arg->fContent.Data() + 5;
             arg->fContent.Clear();
-            TString repl = fJSROOT;
-            if (!repl.EndsWith("/"))
-               repl += "/";
-            fname.ReplaceAll("$jsrootsys/", repl);
+            fname.ReplaceAll("$jsrootsys", fJSROOTSYS);
 
             Int_t len(0);
             char *buf = ReadFileContent(fname.Data(), len);
