@@ -750,6 +750,20 @@ void TCollection::SetOwner(Bool_t enable)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set this collection to use a RW lock upon access, making it thread safe.
+/// Return the previous state.
+///
+/// Note: To test whether the usage is enabled do:
+///    collection->TestBit(TCollection::kUseRWLock);
+
+bool TCollection::UseRWLock()
+{
+   bool prev = TestBit(TCollection::kUseRWLock);
+   SetBit(TCollection::kUseRWLock);
+   return prev;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Copy a TIter. This involves allocating a new TIterator of the right
 /// sub class and assigning it with the original.
 
