@@ -75,6 +75,13 @@ protected:
 public:
    virtual ~THttpWSHandler();
 
+   /// Provides content of default web page for registered web-socket handler
+   /// Can be content of HTML page or file name, where content should be taken
+   /// For instance, file:/home/user/test.htm or file:$jsrootsys/files/canvas.htm
+   /// If not specified, default index.htm page will be shown
+   /// Used by the webcanvas
+   virtual TString GetDefaultPageContent() { return ""; }
+
    virtual Bool_t ProcessWS(THttpCallArg *arg) = 0;
 
    ClassDef(THttpWSHandler, 0) // abstract class for handling websocket requests
