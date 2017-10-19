@@ -117,6 +117,17 @@ const char *gCode = R"CODE(
       ClassDefInline(WrongSetup, 2);
    };
 
+   // This example is valid according to C++11, 9.2/16: In addition, if class T has a user-declared constructor (12.1),
+   // every non-static data member of class T shall have a name different from T.
+   //
+   class Rho: public TObject
+   {
+      public:
+      Float_t Rho; // rho energy density
+      Float_t Edges[2]; // pseudorapidity range edges
+
+      ClassDef(Rho, 1)
+   };
 )CODE";
 
 class WrongSetup : public TObject {

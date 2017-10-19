@@ -290,15 +290,15 @@ private:                                                                        
    {                                                                                                            \
       static std::atomic<UChar_t> recurseBlocker(0);                                                            \
       if (R__likely(recurseBlocker >= 2)) {                                                                     \
-         return ::ROOT::Internal::THashConsistencyHolder<name>::fgHashConsistency;                              \
+         return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;                   \
       } else if (recurseBlocker == 1) {                                                                         \
          return false;                                                                                          \
       } else if (recurseBlocker++ == 0) {                                                                       \
-         ::ROOT::Internal::THashConsistencyHolder<name>::fgHashConsistency =                                    \
+         ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency =                         \
             ::ROOT::Internal::HasConsistentHashMember(Class_Name()) ||                                          \
             ::ROOT::Internal::HasConsistentHashMember(*IsA());                                                  \
          ++recurseBlocker;                                                                                      \
-         return ::ROOT::Internal::THashConsistencyHolder<name>::fgHashConsistency;                              \
+         return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;                   \
       }                                                                                                         \
       return false; /* unreacheable */                                                                          \
    }                                                                                                            \
@@ -330,11 +330,11 @@ public: \
    static const char *ImplFileName() { return 0; }                                                               \
    static const char *Class_Name()                                                                               \
    {                                                                                                             \
-      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name();                          \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name();               \
    }                                                                                                             \
    static TClass *Dictionary()                                                                                   \
    {                                                                                                             \
-      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();                    \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();         \
    }                                                                                                             \
    static TClass *Class() { return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); } \
    virtual_keyword void Streamer(TBuffer &R__b) overrd { ::ROOT::Internal::DefaultStreamer(R__b, name::Class(), this); }
