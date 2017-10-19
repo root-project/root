@@ -680,19 +680,48 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
 
-      if (fDefaultPageCont.Length() == 0) {
-         Int_t len = 0;
-         char *buf = ReadFileContent(fDefaultPage.Data(), len);
-         if (len > 0)
-            fDefaultPageCont.Append(buf, len);
-         free(buf);
+      THttpWSHandler *handler(0);
+
+      if (arg->fFileName.IsNull())
+         handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
+
+      if (handler) {
+
+         arg->fContent = handler->GetDefaultPageContent();
+
+         if (arg->fContent.Index("file:")==0) {
+
+            TString fname = arg->fContent.Data() + 5;
+            arg->fContent.Clear();
+            TString repl = fJSROOT;
+            if (!repl.EndsWith("/"))
+               repl += "/";
+            fname.ReplaceAll("$jsrootsys/", repl);
+
+            Int_t len(0);
+            char *buf = ReadFileContent(fname.Data(), len);
+            if (len > 0)
+               arg->fContent.Append(buf, len);
+            free(buf);
+         }
       }
 
-      if (fDefaultPageCont.Length() == 0) {
+      if (arg->fContent.Length() == 0) {
+
+         if (fDefaultPageCont.Length() == 0) {
+            Int_t len = 0;
+            char *buf = ReadFileContent(fDefaultPage.Data(), len);
+            if (len > 0)
+               fDefaultPageCont.Append(buf, len);
+            free(buf);
+         }
+
+         arg->fContent = fDefaultPageCont;
+      }
+
+      if (arg->fContent.Length() == 0) {
          arg->Set404();
       } else {
-         arg->fContent = fDefaultPageCont;
-
          // replace all references on JSROOT
          if (fJSROOT.Length() > 0) {
             TString repl = TString("=\"") + fJSROOT;
