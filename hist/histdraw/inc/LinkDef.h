@@ -32,5 +32,7 @@
 #pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::THistDrawable<2>>+;
 #pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::THistDrawable<3>>+;
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<1> >+;
+#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<2>>+;
+#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<3>>+;
 
 #endif
