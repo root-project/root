@@ -169,7 +169,7 @@ bool TIOFeatures::Set(EIOFeatures input_bits)
 /// and returns kFALSE.
 bool TIOFeatures::Set(const std::string &value)
 {
-   TBasket::EIOBits bits;
+   TBasket::EIOBits bits = static_cast<TBasket::EIOBits>(0);
    TClass *cl = TBasket::Class();
    if (cl == nullptr) {
       Error("Set", "Could not retrieve TBasket's class");
