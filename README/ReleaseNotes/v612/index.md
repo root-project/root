@@ -188,6 +188,9 @@ large TClonesArray where each element contains another small vector container.
   - When a 2D histogram was drawn with error bars and has a function in its list
     it was impossible to rotate it interactively. This problem was reported
     [here](https://root-forum.cern.ch/t/2d-histogram-fit-draws-to-wrong-scale/26369).
+  - As more and more people are using `TGraph2D` for random cloud of points, the default
+    drawing option implying Delaunay triangulation was not appropriate. The default
+    drawing option is now change to `P0`.
 
 ## 3D Graphics Libraries
 

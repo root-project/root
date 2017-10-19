@@ -680,20 +680,20 @@ Int_t TGraph2D::DistancetoPrimitive(Int_t px, Int_t py)
 ////////////////////////////////////////////////////////////////////////////////
 /// Specific drawing options can be used to paint a TGraph2D:
 ///
-///   "TRI"  : The Delaunay triangles are drawn using filled area.
-///            An hidden surface drawing technique is used. The surface is
-///            painted with the current fill area color. The edges of each
-///            triangles are painted with the current line color.
-///   "TRIW" : The Delaunay triangles are drawn as wire frame
-///   "TRI1" : The Delaunay triangles are painted with color levels. The edges
-///            of each triangles are painted with the current line color.
-///   "TRI2" : the Delaunay triangles are painted with color levels.
-///   "P"    : Draw a marker at each vertex
-///   "P0"   : Draw a circle at each vertex. Each circle background is white.
-///   "PCOL" : Draw a marker at each vertex. The color of each marker is
-///            defined according to its Z position.
-///   "CONT" : Draw contours
-///   "LINE" : Draw a 3D polyline
+///  - "TRI"  : The Delaunay triangles are drawn using filled area.
+///             An hidden surface drawing technique is used. The surface is
+///             painted with the current fill area color. The edges of each
+///             triangles are painted with the current line color.
+///  - "TRIW" : The Delaunay triangles are drawn as wire frame
+///  - "TRI1" : The Delaunay triangles are painted with color levels. The edges
+///             of each triangles are painted with the current line color.
+///  - "TRI2" : the Delaunay triangles are painted with color levels.
+///  - "P"    : Draw a marker at each vertex
+///  - "P0"   : Draw a circle at each vertex. Each circle background is white.
+///  - "PCOL" : Draw a marker at each vertex. The color of each marker is
+///             defined according to its Z position.
+///  - "CONT" : Draw contours
+///  - "LINE" : Draw a 3D polyline
 ///
 /// A TGraph2D can be also drawn with ANY options valid to draw a 2D histogram.
 ///
