@@ -181,7 +181,6 @@ public:
    ROOTRequestInterceptor(QObject *p = Q_NULLPTR) : QWebEngineUrlRequestInterceptor(p) {}
    virtual void interceptRequest(QWebEngineUrlRequestInfo &info)
    {
-
       QUrl url = info.requestUrl();
 
       QByteArray ba = url.toString().toLatin1();
@@ -203,8 +202,10 @@ extern "C" void webgui_start_browser_in_qt5(const char *url, void *http_serv, bo
       nhandler++;
    }
 
+   const char *suffix = strchr(url,"?") ? "&qt5" : "?qt5";
+
    snprintf(protocol, sizeof(protocol), "roothandler%d", nhandler);
-   snprintf(fullurl, sizeof(fullurl), "%s%s", protocol, url);
+   snprintf(fullurl, sizeof(fullurl), "%s://dummy:8080%s%s", protocol, url, suffix);
 
    printf("Start %s\n", fullurl);
 

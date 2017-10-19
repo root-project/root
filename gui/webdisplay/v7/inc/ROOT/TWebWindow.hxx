@@ -55,6 +55,7 @@ private:
    };
 
    std::shared_ptr<TWebWindowsManager>  fMgr{};     ///<!  display manager
+   bool                         fBatchMode{false};  ///<!  batch mode
    unsigned                             fId{0};     ///<!  unique identifier
    TWebWindowWSHandler               *fWSHandler{nullptr};  ///<!  specialize websocket handler for all incoming connections
    unsigned                           fConnCnt{0};  ///<!  counter of new connections to assign ids
@@ -62,6 +63,7 @@ private:
    static const unsigned       fMaxQueueLength{10}; ///<!  maximal number of queue entries
    WebDisplayDataCallback_t        fDataCallback{}; ///<!  main callback when data over channel 1 is arrived
 
+   void SetBatchMode(bool mode) { fBatchMode = mode; }
    void SetId(unsigned id) { fId = id; }
 
    bool ProcessWS(THttpCallArg *arg);
@@ -75,6 +77,7 @@ public:
 
    ~TWebWindow();
 
+   bool IsBatchMode() const { return fBatchMode; }
    unsigned GetId() const { return fId; }
 
    unsigned NumConnections() const { return fConn.size(); }

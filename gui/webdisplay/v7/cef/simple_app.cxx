@@ -213,6 +213,8 @@ SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpS
 {
    fUrl = "rootscheme://rootserver";
    fUrl.append(url);
+   if (url.find("?") != std::string::npos) fUrl.append("&cef3");
+                                      else fUrl.append("?cef3");
    gHandlingServer = serv;
    printf("Assign url %s\n", fUrl.c_str());
 }

@@ -36,6 +36,11 @@ public:
    TWebWindowWSHandler(TWebWindow *displ) : THttpWSHandler("name","title"), fDispl(displ) {}
    ~TWebWindowWSHandler() { fDispl = nullptr; }
 
+   virtual TString GetDefaultPageContent() override
+   {
+      return "file:$jsrootsys/files/canvas.htm";
+   }
+
    virtual Bool_t ProcessWS(THttpCallArg *arg) override
    {
       return fDispl->ProcessWS(arg);
