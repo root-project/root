@@ -71,10 +71,10 @@ important to check both how much memory is available and the size of the CSV fil
 */
 // clang-format on
 
-#include <ROOT/RMakeUnique.hxx>
-#include <ROOT/TCsvDS.hxx>
 #include <ROOT/TDFUtils.hxx>
 #include <ROOT/TSeq.hxx>
+#include <ROOT/TCsvDS.hxx>
+#include <ROOT/RMakeUnique.hxx>
 
 #include <algorithm>
 #include <iostream>
