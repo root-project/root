@@ -514,7 +514,7 @@ public:
    /// \param[in] name The name of the custom column.
    /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the
    /// temporary value. Returns the value that will be assigned to the custom column.
-   /// \param[in] columns Names of the columns/branches in input to the producer function.
+   /// \param[in] columns Names of the columns/branches in input to the producer function (excluding the slot number).
    ///
    /// This alternative implementation of `Define` is meant as a helper in writing thread-safe custom columns.
    /// The expression must be a callable of signature R(unsigned int, T1, T2, ...) where `T1, T2...` are the types
@@ -522,11 +522,45 @@ public:
    /// representing a "slot number". TDataFrame guarantees that different threads will invoke the expression with
    /// different slot numbers - slot numbers will range from zero to ROOT::GetImplicitMTPoolSize()-1.
    ///
+   /// The following two calls are equivalent, although `DefineSlot` is slightly more performant:
+   /// ~~~{.cpp}
+   /// int function(unsigned int, double, double);
+   /// Define("x", function, {"tdfslot_", "column1", "column2"})
+   /// DefineSlot("x", function, {"column1", "column2"})
+   /// ~~~
+   ///
    /// See Define for more information.
    template <typename F>
    TInterface<Proxied> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       return Define<F, TDFDetail::TCCHelperTypes::TSlot>(name, std::move(expression), columns);
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Creates a custom column with a value dependent on the processing slot and the current entry.
+   /// \param[in] name The name of the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
+   ///
+   /// This alternative implementation of `Define` is meant as a helper in writing entry-specific, thread-safe custom
+   /// columns. The expression must be a callable of signature R(unsigned int, ULong64_t, T1, T2, ...) where `T1, T2...`
+   /// are the types of the columns that the expression takes as input. The first parameter is reserved for an unsigned
+   /// integer representing a "slot number". TDataFrame guarantees that different threads will invoke the expression with
+   /// different slot numbers - slot numbers will range from zero to ROOT::GetImplicitMTPoolSize()-1. The second parameter
+   /// is reserved for a `ULong64_t` representing the current entry being processed by the current thread.
+   ///
+   /// The following two `Define`s are equivalent, although `DefineSlotEntry` is slightly more performant:
+   /// ~~~{.cpp}
+   /// int function(unsigned int, ULong64_t, double, double);
+   /// Define("x", function, {"tdfslot_", "tdfentry_", "column1", "column2"})
+   /// DefineSlotEntry("x", function, {"column1", "column2"})
+   /// ~~~
+   ///
+   /// See Define for more information.
+   template <typename F>
+   TInterface<Proxied> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
+   {
+      return Define<F, TDFDetail::TCCHelperTypes::TSlotAndEntry>(name, std::move(expression), columns);
    }
 
    ////////////////////////////////////////////////////////////////////////////
