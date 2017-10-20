@@ -126,6 +126,9 @@ public:
    /** return length of posted with request data */
    Long_t GetPostDataLength() const { return fPostDataLength; }
 
+   /** returns post data as TString */
+   TString GetPostDataAsString() const { return TString((const char *) GetPostData(), GetPostDataLength()); }
+
    /** returns path name from request URL */
    const char *GetPathName() const { return fPathName.Data(); }
 
