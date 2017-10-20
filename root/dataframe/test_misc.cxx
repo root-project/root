@@ -72,6 +72,7 @@ void FillTree(const char* filename, const char* treeName) {
    return;
 }
 
+// check that value has both same value and same type as ref
 template<class T>
 void CheckRes(const T& v, const T& ref, const char* msg) {
    if (v!=ref) {
@@ -79,7 +80,7 @@ void CheckRes(const T& v, const T& ref, const char* msg) {
    }
 }
 
-int main() {
+void test_misc() {
    // Prepare an input tree to run on
    auto fileName = "test_misc.root";
    auto treeName = "myTree";
@@ -291,8 +292,9 @@ int main() {
          std::cout << i << std::endl;
       }
    }
-
-   return 0;
 }
 
-void test_misc(){main();}
+int main() {
+   test_misc();
+   return 0;
+}
