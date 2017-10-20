@@ -15,13 +15,50 @@
 #include "THttpCallArg.h"
 
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// THttpWSHandler                                                       //
-//                                                                      //
-// Abstract class for processing websocket requests                     //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////
+///
+/// THttpWSHandler
+///
+/// Class for user-side handling of websocket with THttpServer
+/// 1. Create derived from  THttpWSHandler class and implement
+///     ProcessWS() method, where all web sockets request handled.
+/// 2. Register instance of derived class to running THttpServer
+///
+///        TUserWSHandler *handler = new TUserWSHandler("name1","title");
+///        THttpServer *server = new THttpServer("http:8090");
+///        server->Register("/subfolder", handler)
+///
+/// 3. Now server can accept web socket connection from outside.
+///    For instance, from JavaScirpt one can connect to it with code:
+///
+///        var ws = new WebSocket("ws://hostname:8090/subfolder/name1/root.websocket")
+///
+/// 4. In the ProcessWS(THttpCallArg *arg) method following code should be implemented:
+///
+///     if (strcmp(arg->GetMethod(), "WS_CONNECT") == 0) {
+///         return true;  // to accept incoming request
+///      }
+///
+///      if (strcmp(arg->GetMethod(), "WS_READY") == 0) {
+///          fWSId = arg->GetWSId(); // fWSId should be member of the user class
+///          return true; // connection established
+///      }
+///
+///     if (strcmp(arg->GetMethod(), "WS_CLOSE") == 0) {
+///         fWSId = 0;
+///         return true; // confirm close of socket
+///     }
+///
+///     if (strcmp(arg->GetMethod(), "WS_DATA") == 0) {
+///         // received data stored as POST data
+///         std::string str((const char *)arg->GetPostData(), arg->GetPostDataLength());
+///         std::cout << "got string " << str << std::endl;
+///         // immediately send data back using websocket id
+///         SendCharStarWS(fWSId, "our reply");
+///         return true;
+///     }
+///
+///////////////////////////////////////////////////////////////////////////
 
 ClassImp(THttpWSHandler);
 

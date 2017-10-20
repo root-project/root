@@ -30,7 +30,6 @@ private:
 
    Bool_t DirecltyHandle(THttpCallArg *arg);
 
-
 protected:
 
    TList    fEngines;         ///<!  list of of engines in use, cleaned automatically at the end
