@@ -35,6 +35,7 @@ thus preventing starvation.
 #include "ROOT/TSpinMutex.hxx"
 #include "TMutex.h"
 #include "TError.h"
+#include <assert.h>
 
 using namespace ROOT;
 
@@ -75,7 +76,21 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::ReadLock()
       std::unique_lock<MutexT> lock(fMutex);
 
       // Wait for writers, if any
-      if (fWriter && fRecurseCounts.IsNotCurrentWriter(local)) fCond.wait(lock, [this] { return !fWriter; });
+      if (fWriter && fRecurseCounts.IsNotCurrentWriter(local)) {
+         auto readerCount = fRecurseCounts.GetLocalReadersCount(local);
+         if (readerCount == 0)
+            fCond.wait(lock, [this] { return !fWriter; });
+         // else
+         //   There is a writer **but** we have outstanding readers
+         //   locks, this must mean that the writer is actually
+         //   waiting on this thread to release its read locks.
+         //   This can be done in only two ways:
+         //     * request the writer lock
+         //     * release the reader lock
+         //   Either way, this thread needs to proceed to
+         //   be able to reach a point whether it does one
+         //   of the two.
+      }
 
       fRecurseCounts.IncrementReadCount(local);
 
