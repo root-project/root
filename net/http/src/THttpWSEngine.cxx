@@ -1,5 +1,5 @@
 // $Id$
-// Author: Sergey Linev   21/12/2013
+// Author: Sergey Linev   20/10/2017
 
 /*************************************************************************
  * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
@@ -9,32 +9,40 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "THttpEngine.h"
-
-#include <string.h>
+#include "THttpWSEngine.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// THttpEngine                                                          //
+// THttpWSEngine                                                        //
 //                                                                      //
-// Abstract class for implementing http protocol for THttpServer        //
+// Internal instance used to exchange WS functionality between          //
+// THttpServer and THttpWSHandler. Normally should not be used directly //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(THttpEngine);
+
+ClassImp(THttpWSEngine);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// normal constructor
 
-THttpEngine::THttpEngine(const char *name, const char *title)
-   : TNamed(name, title), fServer(0)
+THttpWSEngine::THttpWSEngine(const char *name, const char *title)
+   : TNamed(name, title)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-THttpEngine::~THttpEngine()
+THttpWSEngine::~THttpWSEngine()
 {
-   fServer = 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Envelope for sending string via the websocket
+
+void THttpWSEngine::SendCharStar(const char *str)
+{
+   if (str) Send(str, strlen(str));
+}
+
