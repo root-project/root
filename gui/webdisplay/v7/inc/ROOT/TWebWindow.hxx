@@ -72,6 +72,8 @@ private:
 
    void CheckDataToSend(bool only_once = false);
 
+   void Cleanup();
+
 public:
    TWebWindow() = default;
 
@@ -82,14 +84,17 @@ public:
 
    unsigned NumConnections() const { return fConn.size(); }
 
+   void CloseConnections() { Send("CLOSE", 0, 0); }
+
+   void CloseConnection(unsigned connid) { if (connid) Send("CLOSE", connid, 0); }
+
    bool Show(const std::string &where);
 
    bool CanSend(unsigned connid, bool direct = true) const;
 
-   void Send(const std::string &data, unsigned connid = 0);
+   void Send(const std::string &data, unsigned connid = 0, unsigned chid = 1);
 
    void SetDataCallBack(WebDisplayDataCallback_t &func) { fDataCallback = func; }
-
 
 };
 
