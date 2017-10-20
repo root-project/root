@@ -9,6 +9,7 @@
 
 #include "THttpServer.h"
 #include "THttpEngine.h"
+#include "THttpWSEngine.h"
 #include "THttpCallArg.h"
 #include "TRootSniffer.h"
 #include "TString.h"

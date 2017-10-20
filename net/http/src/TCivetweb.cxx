@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "THttpServer.h"
+#include "THttpWSEngine.h"
 #include "TUrl.h"
 
 //////////////////////////////////////////////////////////////////////////

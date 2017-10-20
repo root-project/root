@@ -1,5 +1,5 @@
 // $Id$
-// Author: Sergey Linev   21/12/2013
+// Author: Sergey Linev   20/10/2017
 
 /*************************************************************************
  * Copyright (C) 1995-2013, Rene Brun and Fons Rademakers.               *
@@ -9,32 +9,26 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "THttpEngine.h"
-
-#include <string.h>
+#include "THttpWSHandler.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// THttpEngine                                                          //
+// THttpWSHandler                                                       //
 //                                                                      //
-// Abstract class for implementing http protocol for THttpServer        //
+// Abstract class for processing websocket requests                     //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(THttpEngine);
+ClassImp(THttpWSHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// normal constructor
 
-THttpEngine::THttpEngine(const char *name, const char *title)
-   : TNamed(name, title), fServer(0)
+THttpWSHandler::THttpWSHandler(const char *name, const char *title) :
+   TNamed(name, title)
 {
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-THttpEngine::~THttpEngine()
+THttpWSHandler::~THttpWSHandler()
 {
-   fServer = 0;
 }

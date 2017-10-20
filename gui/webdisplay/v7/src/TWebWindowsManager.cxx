@@ -19,7 +19,7 @@
 #include <cstdio>
 
 #include "THttpServer.h"
-#include "THttpEngine.h"
+#include "THttpWSHandler.h"
 
 #include "TSystem.h"
 #include "TRandom.h"

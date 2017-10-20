@@ -15,7 +15,6 @@
 #include "TNamed.h"
 
 class THttpServer;
-class THttpCallArg;
 
 class THttpEngine : public TNamed {
 protected:
@@ -41,52 +40,6 @@ public:
 
    ClassDef(THttpEngine, 0) // abstract class which should provide http-based protocol for server
 };
-
-// ====================================================================
-
-class THttpWSEngine : public TNamed {
-
-protected:
-   THttpWSEngine(const char *name, const char *title);
-
-public:
-   virtual ~THttpWSEngine();
-
-   virtual UInt_t GetId() const = 0;
-
-   virtual void ClearHandle() = 0;
-
-   virtual void Send(const void *buf, int len) = 0;
-
-   virtual void SendCharStar(const char *str);
-
-   virtual Bool_t PreviewData(THttpCallArg *) { return kFALSE; }
-
-   ClassDef(THttpWSEngine, 0) // abstract class for working with WebSockets-like protocol
-};
-
-// ====================================================================
-
-class THttpWSHandler : public TNamed {
-
-protected:
-   THttpWSHandler(const char *name, const char *title);
-
-public:
-   virtual ~THttpWSHandler();
-
-   /// Provides content of default web page for registered web-socket handler
-   /// Can be content of HTML page or file name, where content should be taken
-   /// For instance, file:/home/user/test.htm or file:$jsrootsys/files/canvas.htm
-   /// If not specified, default index.htm page will be shown
-   /// Used by the webcanvas
-   virtual TString GetDefaultPageContent() { return ""; }
-
-   virtual Bool_t ProcessWS(THttpCallArg *arg) = 0;
-
-   ClassDef(THttpWSHandler, 0) // abstract class for handling websocket requests
-};
-
 
 
 #endif
