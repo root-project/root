@@ -1041,6 +1041,7 @@ public:
    {
       CancelCommands();
       CancelUpdates();
+      if (fDisplay) fDisplay->CloseConnections();
    }
 
    /// returns true is canvas used in batch mode

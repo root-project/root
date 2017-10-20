@@ -54,6 +54,23 @@ public:
 
 ROOT::Experimental::TWebWindow::~TWebWindow()
 {
+   Cleanup();
+}
+
+
+void ROOT::Experimental::TWebWindow::Cleanup()
+{
+   for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
+      if (iter->fHandle) {
+         iter->fHandle->ClearHandle();
+         delete iter->fHandle;
+         iter->fHandle = nullptr;
+      }
+   }
+
+   fConn.clear();
+
+
    if (fMgr)
       fMgr->CloseDisplay(this);
 
@@ -62,6 +79,7 @@ ROOT::Experimental::TWebWindow::~TWebWindow()
       fWSHandler = nullptr;
    }
 }
+
 
 // TODO: add callback which executed when exactly this window is opened and connection is established
 
@@ -202,6 +220,8 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
 
 void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::TWebWindow::WebConn &conn, int chid, const std::string &data)
 {
+   if (!conn.fHandle) return;
+
    assert(conn.fSendCredits>0 && "No credits to send data via connection");
 
    std::string buf;
@@ -237,7 +257,7 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
          if (iter->fSendCredits <= 0) continue;
 
          if (iter->fQueue.size() > 0) {
-            SendDataViaConnection(*iter, 1, iter->fQueue.front());
+            SendDataViaConnection(*iter, -1, iter->fQueue.front());
             iter->fQueue.pop_front();
             isany = true;
          } else if ((iter->fClientCredits < 3) && (iter->fRecvCount > 1)) {
@@ -271,16 +291,16 @@ bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct) const
 
 /// Sends data to specified connection
 /// If connid==0, data will be send to all connections for channel 1
-void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned connid)
+void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned connid, unsigned chid)
 {
    for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
       if (connid && connid != iter->fConnId) continue;
 
       if ((iter->fQueue.size()==0) && (iter->fSendCredits>0)) {
-         SendDataViaConnection(*iter, 1, data);
+         SendDataViaConnection(*iter, chid, data);
       } else {
          assert(iter->fQueue.size() < fMaxQueueLength && "Maximum queue length achieved");
-         iter->fQueue.push_back(data);
+         iter->fQueue.push_back(std::to_string(chid)+":" + data);
       }
    }
 
