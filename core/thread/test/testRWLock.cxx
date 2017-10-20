@@ -458,7 +458,7 @@ TEST(RWLock, concurrentResetRestoreSpin)
 
 TEST(RWLock, LargeconcurrentResetRestore)
 {
-   concurrentResetRestore(gRWMutex, 20, gRepetition / 1000);
+   concurrentResetRestore(gRWMutex, 20, gRepetition / 40000);
 }
 
 // TEST(RWLock, LargeconcurrentResetRestoreSpin)
@@ -473,7 +473,7 @@ TEST(RWLock, concurrentResetRestoreTL)
 
 TEST(RWLock, LargeconcurrentResetRestoreTL)
 {
-   concurrentResetRestore(gRWMutexTL, 20, gRepetition / 1000);
+   concurrentResetRestore(gRWMutexTL, 20, gRepetition / 40000);
 }
 
 
@@ -491,7 +491,7 @@ TEST(RWLock, concurrentReadsAndWritesSpin)
 
 TEST(RWLock, LargeconcurrentReadsAndWrites)
 {
-   concurrentReadsAndWrites(gRWMutex, 10, 20, gRepetition / 1000);
+   concurrentReadsAndWrites(gRWMutex, 10, 20, gRepetition / 10000);
 }
 
 // TEST(RWLock, LargeconcurrentReadsAndWritesSpin)
@@ -506,5 +506,5 @@ TEST(RWLock, concurrentReadsAndWritesTL)
 
 TEST(RWLock, LargeconcurrentReadsAndWritesTL)
 {
-   concurrentReadsAndWrites(gRWMutexTL, 10, 20, gRepetition / 1000);
+   concurrentReadsAndWrites(gRWMutexTL, 10, 20, gRepetition / 10000);
 }
