@@ -8,6 +8,7 @@
 
 #include "gtest/gtest.h"
 
+#include <algorithm> // std::sort
 #include <chrono>
 #include <thread>
 #include <set>
@@ -324,6 +325,18 @@ TEST(TEST_CATEGORY, DefineSlotCheckMT)
    std::set<H_t> s(ids.begin(), ids.end());
    EXPECT_EQ(nSlots, s.size());
    EXPECT_TRUE(s.end() == s.find(0));
+}
+
+TEST(TEST_CATEGORY, DefineSlotEntry)
+{
+   const auto nEntries = 8u;
+   TDataFrame df(nEntries);
+   auto es = df.DefineSlotEntry("e", [](unsigned int, ULong64_t e) { return e; }).Take<ULong64_t>("e");
+   auto entries = *es;
+   std::sort(entries.begin(), entries.end());
+   for (auto i = 0u; i < nEntries; ++i) {
+      EXPECT_EQ(i, entries[i]);
+   }
 }
 
 // This tests the interface but we need to run it both w/ and w/o implicit mt
