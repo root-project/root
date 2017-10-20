@@ -17,9 +17,7 @@
 
 #include "ROOT/TWebWindowsManager.hxx"
 
-#include "THttpEngine.h"
 #include "THttpCallArg.h"
-#include "THttpWSEngine.h"
 #include "THttpWSHandler.h"
 
 #include <cassert>
@@ -62,16 +60,7 @@ ROOT::Experimental::TWebWindow::~TWebWindow()
 
 void ROOT::Experimental::TWebWindow::Cleanup()
 {
-   for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
-      if (iter->fHandle) {
-         iter->fHandle->ClearHandle();
-         delete iter->fHandle;
-         iter->fHandle = nullptr;
-      }
-   }
-
    fConn.clear();
-
 
    if (fMgr)
       fMgr->CloseDisplay(this);
@@ -103,14 +92,14 @@ bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 
 bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
 {
-   if (!arg)
+   if (!arg || (arg->GetWSId()==0))
       return kTRUE;
 
    // try to identify connection for given WS request
    WebConn *conn = 0;
    auto iter = fConn.begin();
    while (iter != fConn.end()) {
-      if (iter->fHandle && (iter->fHandle->GetId() == arg->GetWSId()) && arg->GetWSId()) {
+      if (iter->fWSId == arg->GetWSId()) {
          conn = &(*iter);
          break;
       }
@@ -125,12 +114,10 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
    }
 
    if (strcmp(arg->GetMethod(), "WS_READY") == 0) {
-      THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(arg->TakeWSHandle());
-
       assert(conn == 0  && "WSHandle with given websocket id exists!!!");
 
       WebConn newconn;
-      newconn.fHandle = wshandle;
+      newconn.fWSId = arg->GetWSId();
       newconn.fConnId = ++fConnCnt; // unique connection id
       fConn.push_back(newconn);
 
@@ -147,13 +134,6 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
       if (conn && fDataCallback)
          fDataCallback(conn->fConnId, "CONN_CLOSED");
 
-      if (conn && conn->fHandle) {
-         // connid = conn->fHandle->GetId();
-         conn->fHandle->ClearHandle();
-         delete conn->fHandle;
-         conn->fHandle = 0;
-      }
-
       if (conn)
          fConn.erase(iter);
 
@@ -168,10 +148,6 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
    assert(strcmp(arg->GetMethod(), "WS_DATA") == 0 && "WS_DATA request expected!");
 
    assert(conn != 0 && "Get websocket data without valid connection - ignore!!!");
-
-   // TODO: move to THttpServer, workaround for LongPolling socket
-   if (conn->fHandle->PreviewData(arg))
-      return true;
 
    if (arg->GetPostDataLength() <= 0)
       return true;
@@ -222,7 +198,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
 
 void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::TWebWindow::WebConn &conn, int chid, const std::string &data)
 {
-   if (!conn.fHandle) return;
+   if (!conn.fWSId || !fWSHandler) return;
 
    assert(conn.fSendCredits>0 && "No credits to send data via connection");
 
@@ -244,7 +220,7 @@ void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::T
    // TODO: should we add extra : just as placeholder for any kind of custom data??
    buf.append(data);
 
-   conn.fHandle->SendCharStar(buf.c_str());
+   fWSHandler->SendCharStarWS(conn.fWSId, buf.c_str());
 }
 
 /// Check if data to any connection can be send
