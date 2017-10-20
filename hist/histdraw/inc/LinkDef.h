@@ -15,12 +15,12 @@
 #pragma link off all functions;
 
 #pragma link C++ class ROOT::Experimental::THistCoreAttrs+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<1> >+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<2> >+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<3> >+;
-#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<1> >+;
-#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<2> >+;
-#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<3> >+;
+#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<1>>+;
+#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<2>>+;
+#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<3>>+;
+#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<1>>+;
+#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<2>>+;
+#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<3>>+;
 #pragma link C++ class ROOT::Experimental::THistDrawingOpts<1>+;
 #pragma link C++ class ROOT::Experimental::THistDrawingOpts<2>+;
 #pragma link C++ class ROOT::Experimental::THistDrawingOpts<3>+;

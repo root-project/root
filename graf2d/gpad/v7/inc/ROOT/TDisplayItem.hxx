@@ -71,14 +71,14 @@ public:
 template <class T>
 class TOrdinaryDisplayItem : public TDisplayItem {
 protected:
-   T *fSnapshot;
+   const T *fSnapshot;
 
 public:
-   TOrdinaryDisplayItem(T *addr) : TDisplayItem(), fSnapshot(addr) { SetKind(1); }
+   TOrdinaryDisplayItem(const T *addr) : TDisplayItem(), fSnapshot(addr) { SetKind(1); }
    TOrdinaryDisplayItem(const TOrdinaryDisplayItem<T> &&rhs) : TDisplayItem(rhs), fSnapshot(rhs.fSnapshot) {}
    virtual ~TOrdinaryDisplayItem() { fSnapshot = 0; }
 
-   T *GetSnapshot() const { return fSnapshot; }
+   const T *GetSnapshot() const { return fSnapshot; }
 };
 
 // unique pointer of specified class with ownership
