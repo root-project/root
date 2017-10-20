@@ -863,7 +863,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
       if (handler) {
-         handler->ProcessWS(arg);
+         handler->DirecltyHandle(arg);
       } else {
          arg->Set404();
       }
@@ -881,7 +881,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          // if accepted, reply with connection id, which must be used in the following communications
          arg->SetMethod("WS_CONNECT");
 
-         if (handler && handler->ProcessWS(arg)) {
+         if (handler && handler->DirecltyHandle(arg)) {
             arg->SetMethod("WS_READY");
 
             TLongPollEngine *handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
@@ -889,7 +889,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
             arg->SetWSId(handle->GetId());
             arg->SetWSHandle(handle);
 
-            if (handler->ProcessWS(arg)) {
+            if (handler->DirecltyHandle(arg)) {
                arg->SetContent(TString::Format("%u", arg->GetWSId()));
                arg->SetContentType("text/plain");
             }
@@ -921,7 +921,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
                arg->SetPostData(buf, len / 2);
             }
          }
-         if (handler && !handler->ProcessWS(arg))
+         if (handler && !handler->DirecltyHandle(arg))
             arg->Set404();
       }
       return;
@@ -930,11 +930,11 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
       // ROOT emulation of websocket
       THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
-      if (!handler || !handler->ProcessWS(arg))
+      if (!handler || !handler->DirecltyHandle(arg))
          arg->Set404();
       if (!arg->Is404() && (arg->fMethod == "WS_CONNECT") && arg->fWSHandle) {
          arg->SetMethod("WS_READY");
-         if (handler->ProcessWS(arg)) {
+         if (handler->DirecltyHandle(arg)) {
             arg->SetContent(TString::Format("%u", arg->GetWSId()));
             arg->SetContentType("text/plain");
          } else {

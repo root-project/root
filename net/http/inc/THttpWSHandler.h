@@ -14,11 +14,27 @@
 
 #include "TNamed.h"
 
+#include "TList.h"
+
 class THttpCallArg;
+class THttpWSEngine;
+class THttpServer;
 
 class THttpWSHandler : public TNamed {
 
+friend class THttpServer;
+
+private:
+
+   THttpWSEngine *FindEngine(UInt_t id) const;
+
+   Bool_t DirecltyHandle(THttpCallArg *arg);
+
+
 protected:
+
+   TList    fEngines;         ///<!  list of of engines in use, cleaned automatically at the end
+
    THttpWSHandler(const char *name, const char *title);
 
 public:
@@ -30,6 +46,15 @@ public:
    /// If not specified, default index.htm page will be shown
    /// Used by the webcanvas
    virtual TString GetDefaultPageContent() { return ""; }
+
+   /// Return kTRUE if websocket with given ID exists
+   Bool_t HasWS(UInt_t wsid) const { return FindEngine(wsid) != 0; }
+
+   void CloseWS(UInt_t wsid);
+
+   void SendWS(UInt_t wsid, const void *buf, int len);
+
+   void SendCharStarWS(UInt_t wsid, const char *str);
 
    virtual Bool_t ProcessWS(THttpCallArg *arg) = 0;
 
