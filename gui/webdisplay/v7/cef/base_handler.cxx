@@ -7,12 +7,11 @@
 
 #include "base_handler.h"
 
+#include "TString.h"
 #include "THttpServer.h"
-#include "THttpEngine.h"
 #include "THttpWSEngine.h"
 #include "THttpCallArg.h"
-#include "TRootSniffer.h"
-#include "TString.h"
+// #include "TRootSniffer.h"
 
 #include <sstream>
 #include <string>
@@ -64,7 +63,7 @@ public:
 
    virtual void Send(const void * /*buf*/, int /*len*/)
    {
-      Error("TLongPollEngine::Send", "Should never be called, only text is supported");
+      Error("Send", "Should never be called, only text is supported");
    }
 
    virtual void SendCharStar(const char *buf)
