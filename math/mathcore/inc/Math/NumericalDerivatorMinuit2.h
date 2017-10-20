@@ -38,6 +38,7 @@ class NumericalDerivatorMinuit2 {
 public:
 
    NumericalDerivatorMinuit2();
+   NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other);
    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level);
    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter);
    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy);

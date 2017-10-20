@@ -75,7 +75,7 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunc
 }
   
 // copy constructor
-NumericalDerviatorMinuit2::NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other) :
+NumericalDerviatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::NumericalDerivatorMinuit2 &other) :
     fGrd(other.fGrd),
     fG2(other.fG2),
     fGstep(other.fGStep),
