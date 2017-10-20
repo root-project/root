@@ -58,6 +58,10 @@ Min b2: 0
 Min dv: -1
 Max b2: 361
 Max dv: 19
+Sum b2: 2470
+Sum dv: 1490
+Sum b2 init: 2471
+Sum dv init: 1491
 Mean b2: 123.5
 Mean dv: 5.13793
 0

@@ -169,12 +169,16 @@ void test_misc() {
    std::cout << "Define Histo entries: " << h7->GetEntries() << std::endl;
    std::cout << "Define Histo mean: " << h7->GetMean() << std::endl;
 
-   // TEST 9: Get minimum, maximum, mean
+   // TEST 9: Get minimum, maximum, sum, mean
    ROOT::Experimental::TDataFrame d8(treeName, fileName, {"b2"});
    auto min_b2 = d8.Min();
    auto min_dv = d8.Min("dv");
    auto max_b2 = d8.Max();
    auto max_dv = d8.Max("dv");
+   auto sum_b2 = d8.Sum();
+   auto sum_dv = d8.Sum("dv");
+   auto sum_b2_init = d8.Sum<int>("b2", 1);
+   auto sum_dv_init = d8.Sum<std::vector<double>>("dv", 1.);
    auto mean_b2 = d8.Mean();
    auto mean_dv = d8.Mean("dv");
 
@@ -182,6 +186,10 @@ void test_misc() {
    auto min_dvv = *min_dv;
    auto max_b2v = *max_b2;
    auto max_dvv = *max_dv;
+   auto sum_b2v = *sum_b2;
+   auto sum_dvv = *sum_dv;
+   auto sum_b2_initv = *sum_b2_init;
+   auto sum_dv_initv = *sum_dv_init;
    auto mean_b2v = *mean_b2;
    auto mean_dvv = *mean_dv;
 
@@ -189,6 +197,10 @@ void test_misc() {
    CheckRes(min_dvv, -1., "Min of vector<double>");
    CheckRes(max_b2v, 361., "Max of ints");
    CheckRes(max_dvv, 19., "Max of vector<double>");
+   CheckRes(sum_b2v, 2470., "Sum of ints");
+   CheckRes(sum_dvv, 1490., "Sum of vector<double>");
+   CheckRes(sum_b2_initv, 2471, "Sum of ints with init");
+   CheckRes(sum_dv_initv, 1491., "Sum of vector<double> with init");
    CheckRes(mean_b2v, 123.5, "Mean of ints");
    CheckRes(mean_dvv, 5.1379310344827588963, "Mean of vector<double>");
 
@@ -196,6 +208,10 @@ void test_misc() {
    std::cout << "Min dv: " << *min_dv << std::endl;
    std::cout << "Max b2: " << *max_b2 << std::endl;
    std::cout << "Max dv: " << *max_dv << std::endl;
+   std::cout << "Sum b2: " << *sum_b2 << std::endl;
+   std::cout << "Sum dv: " << *sum_dv << std::endl;
+   std::cout << "Sum b2 init: " << *sum_b2_init << std::endl;
+   std::cout << "Sum dv init: " << *sum_dv_init << std::endl;
    std::cout << "Mean b2: " << *mean_b2 << std::endl;
    std::cout << "Mean dv: " << *mean_dv << std::endl;
 
