@@ -1,18 +1,18 @@
 ## Compilation with CEF support (https://bitbucket.org/chromiumembedded/cef)     
 
-1. Current code tested with CEF3 3071, should work with other releases
+1. Current code tested with CEF3 3163, should work with other releases
 
 2  Download binary code from http://opensource.spotify.com/cefbuilds/index.html and 
    unpack it in directory without spaces and special symbols: 
   
      [shell] mkdir /d/cef
      [shell] cd /d/cef/
-     [shell] wget http://opensource.spotify.com/cefbuilds/cef_binary_3.3071.1649.g98725e6_linux64.tar.bz2 
-     [shell] tar xjf cef_binary_3.3071.1649.g98725e6_linux64.tar.bz2
+     [shell] wget http://opensource.spotify.com/cefbuilds/cef_binary_3.3163.1671.g700dc25_linux64.tar.bz2 
+     [shell] tar xjf cef_binary_3.3163.1671.g700dc25_linux64.tar.bz2
 
 3. Set `CEF_PATH` shell variable to unpacked directory:
   
-     [shell] export CEF_PATH=/d/cef/cef_binary_3.3071.1649.g98725e6_linux64
+     [shell] export CEF_PATH=/d/cef/cef_binary_3.3163.1671.g700dc25_linux64
      
 4. Install prerequicities - see comments in $CEF_PATH/CMakeLists.txt. 
    For the linux it is `build-essential`, `libgtk2.0-dev`, `libgtkglext1-dev`
@@ -26,10 +26,10 @@
      [shell] make -j8
 
 6. Compile ROOT from the same shell (CEF_PATH variable should be set)
+   Check that files icudtl.dat, natives_blob.bin, snapshot_blob.bin copied into ROOT binaries directory
 
 7. Run ROOT from the same shell (CEF_PATH and JSROOTSYS variables should be set)
 
-8. Only single canvas is supported at the moment, one get different warnings       
 
 
 ## Using CEF in batch mode on Linux

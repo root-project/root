@@ -231,10 +231,9 @@ void SimpleApp::OnRegisterCustomSchemes(CefRawPtr<CefSchemeRegistrar> registrar)
 
 void SimpleApp::OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line)
 {
-   std::string name = process_type.ToString();
-   std::string prog = command_line->GetProgram().ToString();
-
-   printf("Start process %s %s\n", name.c_str(), prog.c_str());
+   // std::string name = process_type.ToString();
+   // std::string prog = command_line->GetProgram().ToString();
+   // printf("Start process %s %s\n", name.c_str(), prog.c_str());
 }
 
 void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line)
@@ -242,8 +241,8 @@ void SimpleApp::OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_lin
 
    std::string newprog = fCefMain;
    command_line->SetProgram(newprog);
-   std::string prog = command_line->GetProgram().ToString();
 
+   // std::string prog = command_line->GetProgram().ToString();
    // if (fBatch) command_line->AppendArgument("--root-batch");
    // printf("OnBeforeChildProcessLaunch %s\n", prog.c_str());
 }
@@ -394,11 +393,12 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
 
    if (batch_mode) settings.windowless_rendering_enabled = true;
 
-   //TString plog = "cef.log";
-   //cef_string_ascii_to_utf16(plog.Data(), plog.Length(), &settings.log_file);
+   TString plog = "cef.log";
+   cef_string_ascii_to_utf16(plog.Data(), plog.Length(), &settings.log_file);
    settings.log_severity = LOGSEVERITY_INFO; // LOGSEVERITY_VERBOSE;
    //settings.uncaught_exception_stack_size = 100;
    //settings.ignore_certificate_errors = true;
+   // settings.remote_debugging_port = 7890;
 
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
