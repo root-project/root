@@ -251,6 +251,8 @@ struct Min {
 };
 struct Max {
 };
+struct Sum {
+};
 struct Mean {
 };
 struct Fill {
