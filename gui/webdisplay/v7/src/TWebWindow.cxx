@@ -306,3 +306,13 @@ void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned conn
 
    CheckDataToSend();
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Waits until provided check function returns non-zero value
+/// Runs application mainloop in background
+/// timelimit (in seconds) defines how long to wait (0 - for ever)
+
+bool ROOT::Experimental::TWebWindow::WaitFor(WebWindowWaitFunc_t check, double timelimit)
+{
+   return fMgr->WaitFor(check, timelimit);
+}

@@ -24,7 +24,7 @@
 #include "TSystem.h"
 #include "TRandom.h"
 #include "TString.h"
-
+#include "TStopwatch.h"
 
 
 //const std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWebWindowsManager::Instance()
@@ -215,3 +215,28 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    return true;
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Waits until provided check function returns non-zero value
+/// Runs application mainloop in background
+/// timelimit (in seconds) defines how long to wait (0 - for ever)
+
+bool ROOT::Experimental::TWebWindowsManager::WaitFor(WebWindowWaitFunc_t check, double timelimit)
+{
+   TStopwatch tm;
+   tm.Start();
+   double spent(0);
+   int res(0), cnt(0);
+
+   while ((res = check(spent)) == 0) {
+      gSystem->ProcessEvents();
+      gSystem->Sleep(10);
+
+      spent = tm.RealTime();
+      tm.Continue();
+      if ((timelimit>0) && (spent>timelimit)) return false;
+      cnt++;
+   }
+   printf("WAITING RES %d tm %4.2f cnt %d\n", res, spent, cnt);
+
+   return (res>0);
+}
