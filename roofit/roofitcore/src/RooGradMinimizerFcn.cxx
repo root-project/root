@@ -24,7 +24,7 @@
 #include <iostream>
 
 #include "RooFit.h"
-#include "RooMinimizerFcn.h"
+#include "RooGradMinimizerFcn.h"
 
 #include "Riostream.h"
 
@@ -38,8 +38,11 @@
 #include "RooAbsRealLValue.h"
 #include "RooMsgService.h"
 
-#include "RooMinimizer.h"
+//#include "RooMinimizer.h"
 #include "RooGradMinimizer.h"
+
+#include "Minuit2/MnStrategy.h"
+#include "Math/Minimizer.h"
 
 using namespace std;
 
@@ -94,7 +97,13 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* co
   _initConstParamList = (RooArgList*) _constParamList->snapshot(kFALSE) ;
 
   // Create derivator
-  ROOT::Math::NumericalDerivatorMinuit2 _gradf(*this, *_context->fitter());
+  ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(_context->fitter()->GetMinimizer()->Strategy()));
+  ROOT::Math::NumericalDerivatorMinuit2 derivator(*this,
+                                                  strategy.GradientStepTolerance(),
+                                                  strategy.GradientTolerance(),
+                                                  strategy.GradientNCycles(),
+                                                  _context->fitter()->GetMinimizer()->ErrorDef());
+  _gradf = derivator;
 }
 
 
@@ -381,6 +390,13 @@ Bool_t RooGradMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings
   return 0 ;  
 
 }
+
+
+void SynchronizeGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) {
+  _gradf.SetInitialGradient(parameters);
+
+}
+
 
 Double_t RooGradMinimizerFcn::GetPdfParamVal(Int_t index)
 {

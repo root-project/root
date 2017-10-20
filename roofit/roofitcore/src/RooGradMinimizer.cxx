@@ -202,4 +202,22 @@ void RooGradMinimizer::optimizeConst(Int_t flag)
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return underlying ROOT fitter object
+
+ROOT::Fit::Fitter* RooMinimizer::fitter()
+{
+  return _theFitter ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return underlying ROOT fitter object
+
+const ROOT::Fit::Fitter* RooMinimizer::fitter() const
+{
+  return _theFitter ;
+}
+
+
 

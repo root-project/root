@@ -45,7 +45,8 @@ set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
              RooVectorDataStore.h RooUnitTest.h RooExtendedBinding.h RooAbsMoment.h RooFirstMoment.h RooSecondMoment.h
              RooTestStatMPDriver.h
              RooTimer.h
-             RooJsonListFile.h)
+             RooJsonListFile.h
+        RooGradMinimizer.h RooGradMinimizerFcn.h)
 
 #ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
 #                              HEADERS ${headers1} ${headers2} ${headers3} ${headers4}

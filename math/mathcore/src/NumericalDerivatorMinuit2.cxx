@@ -31,8 +31,10 @@
 #include <iostream>
 #include <TMath.h>
 #include <cassert>
+#include "Fit/ParameterSettings.h"
 
 #include <Math/Minimizer.h>  // needed here because in Fitter is only a forward declaration
+//#include "Minuit2/MnStrategy.h"
 
 
 namespace ROOT {
@@ -45,7 +47,9 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2() :
    fNCycles(2), 
    fVal(0), 
    fN(0),
-   Up(1)
+   Up(1),
+   eps(std::numeric_limits<double>::epsilon()),
+   eps2(std::sqrt(eps))
 {}
 
 
@@ -54,7 +58,9 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunc
     fStepTolerance(step_tolerance),
     fGradTolerance(grad_tolerance),
     fNCycles(ncycles),
-    Up(error_level)
+    Up(error_level),
+    eps(std::numeric_limits<double>::epsilon()),
+    eps2(std::sqrt(eps))
 {
   // constructor with function, and tolerances (coordinates must be specified for differentiate function, not constructor)
 //    fStepTolerance=step_tolerance;
@@ -75,38 +81,59 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunc
 }
   
 // copy constructor
-NumericalDerviatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::NumericalDerivatorMinuit2 &other) :
+NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::NumericalDerivatorMinuit2 &other) :
     fGrd(other.fGrd),
     fG2(other.fG2),
-    fGstep(other.fGStep),
+    fGstep(other.fGstep),
     fFunction(other.fFunction),
-    _strategy(other._strategy),
+//    _strategy(other._strategy),
     fStepTolerance(other.fStepTolerance),
     fGradTolerance(other.fGradTolerance),
     fNCycles(other.fNCycles),
     fVal(other.fVal),
     fN(other.fN),
-    Up(other.Up)
+    Up(other.Up),
+    eps(other.eps),
+    eps2(other.eps2)
 {}
+
+ROOT::Math::NumericalDerivatorMinuit2& NumericalDerivatorMinuit2::operator=(const ROOT::Math::NumericalDerivatorMinuit2 &other) {
+  if(&other != this) {
+    fGrd = other.fGrd;
+    fG2 = other.fG2;
+    fGstep = other.fGstep;
+    fFunction = other.fFunction;
+    fStepTolerance = other.fStepTolerance;
+    fGradTolerance = other.fGradTolerance;
+    fNCycles = other.fNCycles;
+    fVal = other.fVal;
+    fN = other.fN;
+    Up = other.Up;
+    eps = other.eps;
+    eps2 = other.eps2;
+  }
+  return *this;
+}
+
 
   // MODIFIED: ctors with higher level arguments
 // The parameters can be extracted from a ROOT::Fit::Fitter object, for
 // simpler initialization.
-NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter) :
-    NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(f, fitter,  ROOT::Minuit2::MnStrategy(fitter.GetMinimizer()->Strategy()))
-{}
+//NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter) :
+//    NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(f, fitter,  ROOT::Minuit2::MnStrategy(fitter.GetMinimizer()->Strategy()))
+//{}
+//
+//NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy) :
+//    NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(f,
+//                                                         strategy.GradientStepTolerance(),
+//                                                         strategy.GradientTolerance(),
+//                                                         strategy.GradientNCycles(),
+//                                                         fitter.GetMinimizer()->ErrorDef()
+//    )
+//{}
 
-NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy) :
-    NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(f,
-                                                         strategy.GradientStepTolerance(),
-                                                         strategy.GradientTolerance(),
-                                                         strategy.GradientNCycles(),
-                                                         fitter.GetMinimizer()->ErrorDef()
-    )
-{}
 
-
-  void NumericalDerivatorMinuit2::SetStepTolerance(double value) {
+void NumericalDerivatorMinuit2::SetStepTolerance(double value) {
     fStepTolerance = value;
 }
 
@@ -146,11 +173,6 @@ const double* NumericalDerivatorMinuit2::Differentiate(const double* cx) {
     double grad_tolerance = fGradTolerance;
     const ROOT::Math::IBaseFunctionMultiDim &f = *fFunction;
     fVal = f(x); //value of function at given points
-
-    // DIFFERS: eps, eps2
-    // Minuit2 determines machine precision itself in MnMachinePrecision.cxx
-    double eps = std::numeric_limits<double>::epsilon();
-    double eps2 = std::sqrt(eps);//1.e-8; //sqrt(epsilon)
 
     // MODIFIED: Up
     // In Minuit2, this depends on the type of function to minimize, e.g.
@@ -238,11 +260,20 @@ const double* NumericalDerivatorMinuit2::Differentiate(const double* cx) {
 // MODIFIED:
 // This function was not implemented as in Minuit2. Now it copies the behavior
 // of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
-void NumericalDerivatorMinuit2::SetInitialGradient() {
+void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) {
    // set an initial gradient using some given steps 
    // (used in the first iteration)
 
-  for (unsigned int i = 0; i < fN; ++i)  {
+//    Bool_t oldFixed = parameters[index].IsFixed();
+//    Double_t oldVar = parameters[index].Value();
+//    Double_t oldVerr = parameters[index].StepSize();
+//    Double_t oldVlo = parameters[index].LowerLimit();
+//    Double_t oldVhi = parameters[index].UpperLimit();
+
+
+  unsigned ix = 0;
+  for (auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter, ++ix) {
+//  for (unsigned int i = 0; i < fN; ++i)  {
     //   //double eps2 = TMath::Sqrt(fEpsilon);
     //   //double gsmin = 8.*eps2*(fabs(x[i])) + eps2;
     // double dirin = s[i];
@@ -254,40 +285,65 @@ void NumericalDerivatorMinuit2::SetInitialGradient() {
     // fG2[i] = g2;
     // fGstep[i] = gstep;
     
-    unsigned int exOfIn = Trafo().ExtOfInt(i);
+//    unsigned int exOfIn = Trafo().ExtOfInt(i);
+//    auto parameter = Trafo().Parameter(exOfIn);
+    // this should just be the parameter in the RooFit space ("external" in
+    // Minuit terms, since we're calculating the "external" gradient here)
+    // We get it from the loop.
 
-    double var = par.Vec()(i);
-    double werr = Trafo().Parameter(exOfIn).Error();
-    double sav = Trafo().Int2ext(i, var);
-    double sav2 = sav + werr;
-    if(Trafo().Parameter(exOfIn).HasLimits()) {
-       if(Trafo().Parameter(exOfIn).HasUpperLimit() &&
-          sav2 > Trafo().Parameter(exOfIn).UpperLimit())
-          sav2 = Trafo().Parameter(exOfIn).UpperLimit();
+//    double var = par.Vec()(i);
+    // I'm guessing par.Vec()(i) should give the value of variable i...
+    double var = parameter->Value();
+
+    // Judging by the ParameterSettings.h constructor argument name "err",
+    // I'm guessing what MINUIT calls "Error" is stepsize on the ROOT side.
+//    double werr = parameter->Error();
+    double werr = parameter->StepSize();
+
+//    double sav = Trafo().Int2ext(i, var);
+    // Int2Ext is not necessary, we're doing everything externally here
+//    double sav2 = sav + werr;
+    double sav2 = var + werr;
+
+//    if(parameter->HasLimits()) {  // this if statement in MINUIT is superfluous
+    if(parameter->HasUpperLimit() && sav2 > parameter->UpperLimit()) {
+      sav2 = parameter->UpperLimit();
     }
-    double var2 = Trafo().Ext2int(exOfIn, sav2);
-    double vplu = var2 - var;
-    sav2 = sav - werr;
-    if(Trafo().Parameter(exOfIn).HasLimits()) {
-       if(Trafo().Parameter(exOfIn).HasLowerLimit() &&
-          sav2 < Trafo().Parameter(exOfIn).LowerLimit())
-          sav2 = Trafo().Parameter(exOfIn).LowerLimit();
+
+//    double var2 = Trafo().Ext2int(exOfIn, sav2);
+    // Ext2int is not necessary, we're doing everything externally here
+//    double vplu = var2 - var;
+    double vplu = sav2 - var;
+
+//    sav2 = sav - werr;
+    sav2 = var - werr;
+
+//    if(parameter->HasLimits()) {  // this if statement in MINUIT is superfluous
+    if(parameter->HasLowerLimit() && sav2 < parameter->LowerLimit()) {
+      sav2 = parameter->LowerLimit();
     }
-    var2 = Trafo().Ext2int(exOfIn, sav2);
-    double vmin = var2 - var;
-    double gsmin = 8.*Precision().Eps2()*(fabs(var) + Precision().Eps2());
+
+//    var2 = Trafo().Ext2int(exOfIn, sav2);
+    // Ext2int is not necessary, we're doing everything externally here
+//    double vmin = var2 - var;
+    double vmin = sav2 - var;
+
+    double gsmin = 8. * eps2 * (fabs(var) + eps2);
     // protect against very small step sizes which can cause dirin to zero and then nan values in grd
     double dirin = std::max(0.5*(fabs(vplu) + fabs(vmin)),  gsmin );
-    double g2 = 2.0*fFcn.ErrorDef()/(dirin*dirin);
+
+//    double g2 = 2.0*fFcn.ErrorDef()/(dirin*dirin);
+    // ErrorDef is the same as Up, which we already have in here
+    double g2 = 2.0*Up/(dirin*dirin);
+
     double gstep = std::max(gsmin, 0.1*dirin);
     double grd = g2*dirin;
-    if(Trafo().Parameter(exOfIn).HasLimits()) {
+    if(parameter->IsBound()) {
        if(gstep > 0.5) gstep = 0.5;
     }
-    gr(i) = grd;
-    gr2(i) = g2;
-    gst(i) = gstep;
-
+    fGrd[ix] = grd;
+    fG2[ix] = g2;
+    fGstep[ix] = gstep;
   }
 }
 

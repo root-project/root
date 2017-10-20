@@ -28,6 +28,8 @@
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 
+#include "RooGradMinimizer.h"
+
 #include <iostream>
 #include <fstream>
 
@@ -63,11 +65,12 @@ class RooGradMinimizerFcn : public ROOT::Math::IMultiGradFunction {
   Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings>& parameters, 
 		     Bool_t optConst, Bool_t verbose);
   void BackProp(const ROOT::Fit::FitResult &results);  
-  void ApplyCovarianceMatrix(TMatrixDSym& V); 
+  void ApplyCovarianceMatrix(TMatrixDSym& V);
 
   Int_t evalCounter() const { return _evalCounter ; }
   void zeroEvalCount() { _evalCounter = 0 ; }
 
+  void SynchronizeGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters);
 
  private:
   
@@ -92,8 +95,6 @@ private:
   RooAbsReal *_funct;
   RooGradMinimizer *_context;
 
-	ROOT::Math::NumericalDerivatorMinuit2 _gradf;
-
   mutable double _maxFCN;
   mutable int _numBadNLL;
   mutable int _printEvalErrors;
@@ -108,6 +109,8 @@ private:
   RooArgList* _constParamList;
   RooArgList* _initFloatParamList;
   RooArgList* _initConstParamList;
+
+  ROOT::Math::NumericalDerivatorMinuit2 _gradf;
 
 };
 
