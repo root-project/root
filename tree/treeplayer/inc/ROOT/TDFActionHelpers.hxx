@@ -440,7 +440,7 @@ public:
    MinHelper(const std::shared_ptr<ResultType> &minVPtr, const unsigned int nSlots)
       : fResultMin(minVPtr), fMins(nSlots, std::numeric_limits<ResultType>::max()) {}
 
-   void Exec(unsigned int slot, const ResultType &v) { fMins[slot] = std::min(v, fMins[slot]); }
+   void Exec(unsigned int slot, ResultType v) { fMins[slot] = std::min(v, fMins[slot]); }
 
    void InitSlot(TTreeReader *, unsigned int) {}
 
