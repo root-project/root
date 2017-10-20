@@ -44,7 +44,7 @@ friend class TWebWindowWSHandler;
 private:
 
    struct WebConn {
-      THttpWSEngine *fHandle{nullptr};       ///<! websocket handle
+      unsigned       fWSId{0};               ///<! websocket id
       unsigned       fConnId{0};             ///<! connection id (unique inside the window)
       bool           fReady{false};          ///<! when first ready is appears
       int            fRecvCount{0};          ///<! number of received packets, should return back with next sending
