@@ -35,21 +35,21 @@
 ///
 /// 4. In the ProcessWS(THttpCallArg *arg) method following code should be implemented:
 ///
-///     if (strcmp(arg->GetMethod(), "WS_CONNECT") == 0) {
+///     if (arg->IsMethod("WS_CONNECT")) {
 ///         return true;  // to accept incoming request
 ///      }
 ///
-///      if (strcmp(arg->GetMethod(), "WS_READY") == 0) {
+///      if (arg->IsMethod("WS_READY")) {
 ///          fWSId = arg->GetWSId(); // fWSId should be member of the user class
 ///          return true; // connection established
 ///      }
 ///
-///     if (strcmp(arg->GetMethod(), "WS_CLOSE") == 0) {
+///     if (arg->IsMethod("WS_CLOSE")) {
 ///         fWSId = 0;
 ///         return true; // confirm close of socket
 ///     }
 ///
-///     if (strcmp(arg->GetMethod(), "WS_DATA") == 0) {
+///     if (arg->IsMethod("WS_DATA")) {
 ///         // received data stored as POST data
 ///         std::string str((const char *)arg->GetPostData(), arg->GetPostDataLength());
 ///         std::cout << "got string " << str << std::endl;
@@ -100,12 +100,12 @@ Bool_t THttpWSHandler::DirecltyHandle(THttpCallArg *arg)
 
    THttpWSEngine* engine = FindEngine(arg->GetWSId());
 
-   if (strcmp(arg->GetMethod(), "WS_CONNECT") == 0) {
+   if (arg->IsMethod("WS_CONNECT")) {
       // accept all requests, in future one could limit number of connections
       return ProcessWS(arg);
    }
 
-   if (strcmp(arg->GetMethod(), "WS_READY") == 0) {
+   if (arg->IsMethod("WS_READY")) {
 
       if (engine) {
          Error("DirecltyHandle","WS engine with similar id exists %u\n", arg->GetWSId());
@@ -127,7 +127,7 @@ Bool_t THttpWSHandler::DirecltyHandle(THttpCallArg *arg)
       return kTRUE;
    }
 
-   if (strcmp(arg->GetMethod(), "WS_CLOSE") == 0) {
+   if (arg->IsMethod("WS_CLOSE")) {
       // connection is closed, one can remove handle
 
       if (engine) {
