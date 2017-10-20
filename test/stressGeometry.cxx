@@ -145,18 +145,18 @@ const Int_t versions[NG] =  {5, //aleph
                              3, //wa91
                              3, //sdc
                              4, //integral
-                             3, //ams
+                             4, //ams
                              3, //brahms
-                             4, //gem
+                             5, //gem
                              3, //tesla
                              3, //btev
-                             5, //cdf
+                             6, //cdf
                              4, //hades2
                              4, //lhcbfull
                              4, //star
                              4, //sld
                              4, //cms
-                             5, //alice3
+                             6, //alice3
                              4, //babar2
                              3, //belle
                              5}; //atlas

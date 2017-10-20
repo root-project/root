@@ -1586,7 +1586,7 @@ Double_t TGeoTubeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
          // We may cross again a phi of rmin boundary
          // check first if we are on phi1 or phi2
          Double_t un;
-         if (TMath::Abs(point[1]-s1*r) < TMath::Abs(point[1]-s2*r)) {
+         if (point[0]*c1 + point[1]*s1 > point[0]*c2 + point[1]*s2) {
             un = dir[0]*s1-dir[1]*c1;
             if (un < 0) return 0.0;
             if (cdfi>=0) return TGeoShape::Big();
