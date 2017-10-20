@@ -459,10 +459,11 @@ public:
    /// * column aliasing, i.e. changing the name of a branch/column
    ///
    /// An exception is thrown if the name of the new column is already in use.
-   template <typename F, typename NEEDED_INFO = TDFDetail::TCCHelperTypes::TNothing,
-             typename std::enable_if<!std::is_convertible<F, std::string>::value &&
-                                        !std::is_same<typename TTraits::CallableTraits<F>::ret_type, void>::value,
-                                     int>::type = 0>
+   template <
+      typename F, typename NEEDED_INFO = TDFDetail::TCCHelperTypes::TNothing,
+      typename std::enable_if<!std::is_convertible<F, std::string>::value &&
+                                 std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
+                              int>::type = 0>
    TInterface<Proxied> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
       auto loopManager = GetDataFrameChecked();
@@ -495,13 +496,15 @@ public:
    // This overload is chosen when the callable passed to Define or DefineSlot returns void.
    // It simply fires a compile-time error. This is preferable to a static_assert in the main `Define` overload because
    // this way compilation of `Define` has no way to continue after throwing the error.
-   template <typename F, typename NEEDED_INFO = TDFDetail::TCCHelperTypes::TNothing,
-             typename std::enable_if<!std::is_convertible<F, std::string>::value &&
-                                        std::is_same<typename TTraits::CallableTraits<F>::ret_type, void>::value,
-                                     int>::type = 0>
+   template <
+      typename F, typename NEEDED_INFO = TDFDetail::TCCHelperTypes::TNothing,
+      typename std::enable_if<!std::is_convertible<F, std::string>::value &&
+                                 !std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
+                              int>::type = 0>
    TInterface<Proxied> Define(std::string_view, F, const ColumnNames_t & = {})
    {
-      static_assert(sizeof(F) < 0, "Callable cannot return `void`!");
+      static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
+                    "Error in `Define`: type returned by expression is not default-constructible");
       return *this; // never reached
    }
    /// \endcond
