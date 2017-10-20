@@ -129,18 +129,11 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
    if (strcmp(arg->GetMethod(), "WS_CLOSE") == 0) {
       // connection is closed, one can remove handle
 
-      // UInt_t connid = 0;
-
       if (conn && fDataCallback)
          fDataCallback(conn->fConnId, "CONN_CLOSED");
 
       if (conn)
          fConn.erase(iter);
-
-      // if there are no other connections - cancel all submitted commands
-      // CancelCommands((fWebConn.size() == 0), connid);
-
-      // CheckDataToSend(); // check if data should be send via other connections
 
       return true;
    }
@@ -158,7 +151,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
    const char *buf = (const char *)arg->GetPostData();
    char *str_end = 0;
 
-   printf("Get portion of data %d %s\n", arg->GetPostDataLength(), buf);
+   printf("Get portion of data %d %s\n", (int) arg->GetPostDataLength(), buf);
 
    unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
    assert(str_end != 0 && *str_end != ':' && "missing number of acknowledged operations");

@@ -500,6 +500,7 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
 void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
 {
    if (arg == "CONN_READY") {
+      // special argument from TWebWindow itself
       // indication that new connection appeared
 
       WebConn newconn;
@@ -529,6 +530,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
    printf("Get data %u %s\n", connid, arg.c_str());
 
    if (arg == "CONN_CLOSED") {
+      // special argument from TWebWindow itself
       // connection is closed
 
       fWebConn.erase(iter);
