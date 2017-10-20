@@ -8,7 +8,6 @@
 /// \author Danilo Piparo
 /// \date August 2017
 
-
 #include "TROOT.h"
 #include "ROOT/TFuture.hxx"
 
@@ -26,7 +25,10 @@ void mt303_AsyncSimple()
    ROOT::EnableImplicitMT(1);
 
    auto wi0 = ROOT::Experimental::Async(workItem0);
-   auto wi1 = ROOT::Experimental::Async([](){printf("Running workItem1...\n"); return 1;});
+   auto wi1 = ROOT::Experimental::Async([]() {
+      printf("Running workItem1...\n");
+      return 1;
+   });
 
    printf("Running something in the \"main\" thread\n");
 
@@ -34,7 +36,10 @@ void mt303_AsyncSimple()
    std::cout << "The result of the work item 1 is " << wi1.get() << std::endl;
 
    printf("All work completed.\n");
-
 }
 
-int main(){mt303_AsyncSimple(); return 0;}
+int main()
+{
+   mt303_AsyncSimple();
+   return 0;
+}
