@@ -459,55 +459,11 @@ public:
    /// * column aliasing, i.e. changing the name of a branch/column
    ///
    /// An exception is thrown if the name of the new column is already in use.
-   template <
-      typename F, typename NEEDED_INFO = TDFDetail::TCCHelperTypes::TNothing,
-      typename std::enable_if<!std::is_convertible<F, std::string>::value &&
-                                 std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
-                              int>::type = 0>
+   template <typename F, typename std::enable_if<!std::is_convertible<F, std::string>::value, int>::type = 0>
    TInterface<Proxied> Define(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      auto loopManager = GetDataFrameChecked();
-      TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
-                                     fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
-
-      using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
-      using ColTypesTmp_t = typename TDFInternal::RemoveFirstParameterIf<
-         std::is_same<NEEDED_INFO, TDFDetail::TCCHelperTypes::TSlot>::value, ArgTypes_t>::type;
-      using ColTypes_t = typename TDFInternal::RemoveFirstTwoParametersIf<
-         std::is_same<NEEDED_INFO, TDFDetail::TCCHelperTypes::TSlotAndEntry>::value, ColTypesTmp_t>::type;
-
-      constexpr auto nColumns = ColTypes_t::list_size;
-      const auto validColumnNames =
-         TDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
-      if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
-                                              ColTypes_t(), *fDataSource);
-      using NewCol_t = TDFDetail::TCustomColumn<F, NEEDED_INFO>;
-
-      // Here we check if the return type is a pointer. In this case, we assume it points to valid memory
-      // and we treat the column as if it came from a data source, i.e. it points to valid memory.
-      loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
-      TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
-      newInterface.fValidCustomColumns.emplace_back(name);
-      return newInterface;
+      return DefineImpl<F, TDFDetail::TCCHelperTypes::TNothing>(name, std::move(expression), columns);
    }
-
-   /// \cond HIDDEN_SYMBOLS
-   // This overload is chosen when the callable passed to Define or DefineSlot returns void.
-   // It simply fires a compile-time error. This is preferable to a static_assert in the main `Define` overload because
-   // this way compilation of `Define` has no way to continue after throwing the error.
-   template <
-      typename F, typename NEEDED_INFO = TDFDetail::TCCHelperTypes::TNothing,
-      typename std::enable_if<!std::is_convertible<F, std::string>::value &&
-                                 !std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
-                              int>::type = 0>
-   TInterface<Proxied> Define(std::string_view, F, const ColumnNames_t & = {})
-   {
-      static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
-                    "Error in `Define`: type returned by expression is not default-constructible");
-      return *this; // never reached
-   }
-   /// \endcond
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column with a value dependent on the processing slot.
@@ -533,7 +489,7 @@ public:
    template <typename F>
    TInterface<Proxied> DefineSlot(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return Define<F, TDFDetail::TCCHelperTypes::TSlot>(name, std::move(expression), columns);
+      return DefineImpl<F, TDFDetail::TCCHelperTypes::TSlot>(name, std::move(expression), columns);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -560,7 +516,7 @@ public:
    template <typename F>
    TInterface<Proxied> DefineSlotEntry(std::string_view name, F expression, const ColumnNames_t &columns = {})
    {
-      return Define<F, TDFDetail::TCCHelperTypes::TSlotAndEntry>(name, std::move(expression), columns);
+      return DefineImpl<F, TDFDetail::TCCHelperTypes::TSlotAndEntry>(name, std::move(expression), columns);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1664,6 +1620,52 @@ private:
                                                 tree, nSlots, customColumns, fDataSource, actionPtrPtrOnHeap);
       lm->Jit(toJit);
       return resultProxy;
+   }
+
+   template <typename F, typename ExtraArgs>
+   typename std::enable_if<std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
+                           TInterface<Proxied>>::type
+   DefineImpl(std::string_view name, F &&expression, const ColumnNames_t &columns)
+   {
+      auto loopManager = GetDataFrameChecked();
+      TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
+                                     fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+
+      using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
+      using ColTypesTmp_t = typename TDFInternal::RemoveFirstParameterIf<
+         std::is_same<ExtraArgs, TDFDetail::TCCHelperTypes::TSlot>::value, ArgTypes_t>::type;
+      using ColTypes_t = typename TDFInternal::RemoveFirstTwoParametersIf<
+         std::is_same<ExtraArgs, TDFDetail::TCCHelperTypes::TSlotAndEntry>::value, ColTypesTmp_t>::type;
+
+      constexpr auto nColumns = ColTypes_t::list_size;
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, nColumns, columns, fValidCustomColumns, fDataSource);
+      if (fDataSource)
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                              ColTypes_t(), *fDataSource);
+      using NewCol_t = TDFDetail::TCustomColumn<F, ExtraArgs>;
+
+      // Here we check if the return type is a pointer. In this case, we assume it points to valid memory
+      // and we treat the column as if it came from a data source, i.e. it points to valid memory.
+      loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
+      TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      newInterface.fValidCustomColumns.emplace_back(name);
+      return newInterface;
+   }
+
+   // This overload is chosen when the callable passed to Define or DefineSlot returns void.
+   // It simply fires a compile-time error. This is preferable to a static_assert in the main `Define` overload because
+   // this way compilation of `Define` has no way to continue after throwing the error.
+   template <
+      typename F, typename ExtraArgs,
+      typename std::enable_if<!std::is_convertible<F, std::string>::value &&
+                                 !std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
+                              int>::type = 0>
+   TInterface<Proxied> DefineImpl(std::string_view, F, const ColumnNames_t & = {})
+   {
+      static_assert(std::is_default_constructible<typename TTraits::CallableTraits<F>::ret_type>::value,
+                    "Error in `Define`: type returned by expression is not default-constructible");
+      return *this; // never reached
    }
 
    ////////////////////////////////////////////////////////////////////////////
