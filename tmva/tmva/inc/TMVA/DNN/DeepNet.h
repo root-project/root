@@ -308,6 +308,9 @@ public:
    inline Scalar_t GetWeightDecay() const { return fWeightDecay; }
 
    /*! Setters */
+   // FIXME many of these won't work as the data structure storing activations
+   // and gradients have not changed in all the layers, also params in layers
+   // have not changed either
    inline void SetBatchSize(size_t batchSize) { fBatchSize = batchSize; }
    inline void SetInputDepth(size_t inputDepth) { fInputDepth = inputDepth; }
    inline void SetInputHeight(size_t inputHeight) { fInputHeight = inputHeight; }

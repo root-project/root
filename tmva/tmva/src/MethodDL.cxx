@@ -528,12 +528,16 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
    // Add the dense layer, initialize the weights and biases and copy
    TDenseLayer<Architecture_t> *denseLayer = deepNet.AddDenseLayer(width, activationFunction);
    denseLayer->Initialize();
-   TDenseLayer<Architecture_t> *copyDenseLayer = new TDenseLayer<Architecture_t>(*denseLayer);
+
+   // add same layer to fNet
+   fNet->AddDenseLayer(width, activationFunction);
+
+   //TDenseLayer<Architecture_t> *copyDenseLayer = new TDenseLayer<Architecture_t>(*denseLayer);
 
    // add the copy to all slave nets
-   for (size_t i = 0; i < nets.size(); i++) {
-      nets[i].AddDenseLayer(copyDenseLayer);
-   }
+   //for (size_t i = 0; i < nets.size(); i++) {
+   //   nets[i].AddDenseLayer(copyDenseLayer);
+   //}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -622,12 +626,17 @@ void MethodDL::ParseConvLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
    TConvLayer<Architecture_t> *convLayer = deepNet.AddConvLayer(depth, fltHeight, fltWidth, strideRows, strideCols,
                                                                 zeroPadHeight, zeroPadWidth, activationFunction);
    convLayer->Initialize();
-   TConvLayer<Architecture_t> *copyConvLayer = new TConvLayer<Architecture_t>(*convLayer);
 
-   // add the copy to all slave nets
-   for (size_t i = 0; i < nets.size(); i++) {
-      nets[i].AddConvLayer(copyConvLayer);
-   }
+   // Add same layer to fNet
+   fNet->AddConvLayer(depth, fltHeight, fltWidth, strideRows, strideCols,
+                      zeroPadHeight, zeroPadWidth, activationFunction);
+
+   //TConvLayer<Architecture_t> *copyConvLayer = new TConvLayer<Architecture_t>(*convLayer);
+
+   //// add the copy to all slave nets
+   //for (size_t i = 0; i < nets.size(); i++) {
+   //   nets[i].AddConvLayer(copyConvLayer);
+   //}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -678,12 +687,16 @@ void MethodDL::ParseMaxPoolLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
    // Add the Max pooling layer
    TMaxPoolLayer<Architecture_t> *maxPoolLayer =
       deepNet.AddMaxPoolLayer(frameHeight, frameWidth, strideRows, strideCols);
-   TMaxPoolLayer<Architecture_t> *copyMaxPoolLayer = new TMaxPoolLayer<Architecture_t>(*maxPoolLayer);
 
-   // add the copy to all slave nets
-   for (size_t i = 0; i < nets.size(); i++) {
-      nets[i].AddMaxPoolLayer(copyMaxPoolLayer);
-   }
+   // Add the same layer to fNet
+   fNet->AddMaxPoolLayer(frameHeight, frameWidth, strideRows, strideCols);
+
+   //TMaxPoolLayer<Architecture_t> *copyMaxPoolLayer = new TMaxPoolLayer<Architecture_t>(*maxPoolLayer);
+
+   //// add the copy to all slave nets
+   //for (size_t i = 0; i < nets.size(); i++) {
+   //   nets[i].AddMaxPoolLayer(copyMaxPoolLayer);
+   //}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -733,12 +746,16 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
 
    // Add the reshape layer
    TReshapeLayer<Architecture_t> *reshapeLayer = deepNet.AddReshapeLayer(depth, height, width, flattening);
-   TReshapeLayer<Architecture_t> *copyReshapeLayer = new TReshapeLayer<Architecture_t>(*reshapeLayer);
 
-   // add the copy to all slave nets
-   for (size_t i = 0; i < nets.size(); i++) {
-      nets[i].AddReshapeLayer(copyReshapeLayer);
-   }
+   // Add the same layer to fNet
+   fNet->AddReshapeLayer(depth, height, width, flattening);
+
+   //TReshapeLayer<Architecture_t> *copyReshapeLayer = new TReshapeLayer<Architecture_t>(*reshapeLayer);
+
+   //// add the copy to all slave nets
+   //for (size_t i = 0; i < nets.size(); i++) {
+   //   nets[i].AddReshapeLayer(copyReshapeLayer);
+   //}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -790,12 +807,16 @@ void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
    TBasicRNNLayer<Architecture_t> *basicRNNLayer = deepNet.AddBasicRNNLayer(stateSize, inputSize,
                                                                         timeSteps, rememberState);
    basicRNNLayer->Initialize();
-   TBasicRNNLayer<Architecture_t> *copyRNNLayer = new TBasicRNNLayer<Architecture_t>(*basicRNNLayer);
+    
+   // Add same layer to fNet
+   fNet->AddBasicRNNLayer(stateSize, inputSize, timeSteps, rememberState);
 
-   // add the copy to all slave nets
-   for (size_t i = 0; i < nets.size(); i++) {
-      nets[i].AddBasicRNNLayer(copyRNNLayer);
-   }
+   //TBasicRNNLayer<Architecture_t> *copyRNNLayer = new TBasicRNNLayer<Architecture_t>(*basicRNNLayer);
+
+   //// add the copy to all slave nets
+   //for (size_t i = 0; i < nets.size(); i++) {
+   //   nets[i].AddBasicRNNLayer(copyRNNLayer);
+   //}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1127,9 +1148,15 @@ void MethodDL::TrainCpu()
       ERegularization R = settings.regularization;
       Scalar_t weightDecay = settings.weightDecay;
 
-      fNet = std::unique_ptr<DeepNet_t>(new DeepNet_t(batchSize, inputDepth, inputHeight, inputWidth, batchDepth,
+      //fNet = std::unique_ptr<DeepNet_t>(new DeepNet_t(batchSize, inputDepth, inputHeight, inputWidth, batchDepth,
+      //                                                batchHeight, batchWidth, J, I, R, weightDecay));
+      //DeepNet_t &deepNet = *(fNet.get());
+
+      DeepNet_t deepNet(batchSize, inputDepth, inputHeight, inputWidth, batchDepth, batchHeight, batchWidth, J, I, R, weightDecay);
+
+      fNet = std::unique_ptr<DeepNet_t>(new DeepNet_t(1, inputDepth, inputHeight, inputWidth, batchDepth, 
                                                       batchHeight, batchWidth, J, I, R, weightDecay));
-      DeepNet_t &deepNet = *(fNet.get());
+
       // Initialize the vector of slave nets
       std::vector<DeepNet_t> nets{};
       nets.reserve(nThreads);
@@ -1138,8 +1165,8 @@ void MethodDL::TrainCpu()
          nets.push_back(deepNet);
       }
 
-      // Add all appropriate layers
-      CreateDeepNet(deepNet, nets);
+      // Add all appropriate layers to deepNet and copies to fNet
+      CreateDeepNet(deepNet, nets); 
 
       // Loading the training and testing datasets
       TensorDataLoader_t trainingData(GetEventCollection(Types::kTraining), nTrainingSamples, deepNet.GetBatchSize(),
@@ -1240,6 +1267,15 @@ void MethodDL::TrainCpu()
             }
          }
       }
+
+      // Copy weights from deepNet to fNet
+      for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
+         const auto & fLayer = fNet->GetLayerAt(i); 
+         const auto & dLayer = deepNet.GetLayerAt(i); 
+         fLayer->CopyWeights(dLayer->GetWeights()); 
+         fLayer->CopyBiases(dLayer->GetBiases());
+      } 
+
    }
 
 #else  // DNNCPU flag not set.
@@ -1254,12 +1290,6 @@ void MethodDL::TrainCpu()
 Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
 {
 #ifdef DNNCPU
-   // set the batch size to 1 for the evaluation
-   fNet->SetBatchSize(1);
-   // set also in the layers
-   auto &layers = fNet->GetLayers();
-   for (auto &l : layers) l->SetBatchSize(1);
-
    using Architecture_t = DNN::TCpu<Double_t>;
    using Matrix_t = typename Architecture_t::Matrix_t;
 
