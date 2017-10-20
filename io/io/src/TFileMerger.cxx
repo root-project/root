@@ -404,6 +404,7 @@ Bool_t TFileMerger::MergeRecursive(TDirectory *target, TList *sourcelist, Int_t 
    ((THashList*)target->GetListOfKeys())->Rehash(nguess);
 
    TFileMergeInfo info(target);
+   info.fIOFeatures = fIOFeatures;
    info.fOptions = fMergeOptions;
    if (fFastMethod && ((type&kKeepCompression) || !fCompressionChange) ) {
       info.fOptions.Append(" fast");

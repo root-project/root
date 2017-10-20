@@ -35,19 +35,26 @@
 
 class TDirectory;
 
+namespace ROOT {
+class TIOFeatures;
+}
+
 class TFileMergeInfo {
 private:
+   using TIOFeatures = ROOT::TIOFeatures;
+
    TFileMergeInfo() = delete;
    TFileMergeInfo(const TFileMergeInfo&) = delete;
    TFileMergeInfo& operator=(const TFileMergeInfo&) = delete;
 
 public:
-   TDirectory  *fOutputDirectory;  // Target directory where the merged object will be written.
-   Bool_t       fIsFirst;          // True if this is the first call to Merge for this series of object.
-   TString      fOptions;          // Additional text based option being passed down to customize the merge.
-   TObject     *fUserData;         // Place holder to pass extra information.  This object will be deleted at the end of each series of objects.
+   TDirectory  *fOutputDirectory{nullptr}; // Target directory where the merged object will be written.
+   Bool_t       fIsFirst{kTRUE};           // True if this is the first call to Merge for this series of object.
+   TString      fOptions;                  // Additional text based option being passed down to customize the merge.
+   TObject     *fUserData{nullptr};        // Place holder to pass extra information.  This object will be deleted at the end of each series of objects.
+   TIOFeatures *fIOFeatures{nullptr};      // Any ROOT IO features that should be explicitly enabled.
 
-   TFileMergeInfo(TDirectory *outputfile) : fOutputDirectory(outputfile), fIsFirst(kTRUE), fOptions(), fUserData(0) {}
+   TFileMergeInfo(TDirectory *outputfile) : fOutputDirectory(outputfile) {}
    virtual ~TFileMergeInfo() { delete fUserData; } ;
 
    void Reset() { fIsFirst = kTRUE; delete fUserData; fUserData = 0; }
