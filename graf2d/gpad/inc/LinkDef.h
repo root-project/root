@@ -80,7 +80,7 @@
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<ROOT::Experimental::TColor>+;
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<long long>+;
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<double>+;
-
+#pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TCanvas>+;
 
 //#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Pixel>+;
 //#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Normal>+;

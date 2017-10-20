@@ -32,8 +32,8 @@
 #include "THttpServer.h"
 #include "TSystem.h"
 #include "TList.h"
-#include "TRandom.h"
 #include "TPad.h"
+#include "TRandom.h"
 #include "TROOT.h"
 #include "TApplication.h"
 #include "TClass.h"
@@ -929,9 +929,7 @@ std::string TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &ca
 
    fDisplayList.SetObjectIDAsPtr((void *)&can);
 
-   TPad *dummy = new TPad(); // just provide old class where all kind of info (size, ranges) already provided
-
-   auto *snap = new ROOT::Experimental::TUniqueDisplayItem<TPad>(dummy);
+   auto *snap = new ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TCanvas>(&can);
    snap->SetObjectIDAsPtr((void *)&can);
    fDisplayList.Add(snap);
 
@@ -976,11 +974,11 @@ class TNewPainter : public Internal::TVirtualCanvasPainter  {
 private:
 
    struct WebConn {
-      unsigned fConnId{0};     ///<! connection id
-      bool fDrawReady{false};  ///!< when first drawing is performed
-      std::string fGetMenu{};  ///<! object id for menu request
+      unsigned fConnId{0};        ///<! connection id
+      bool fDrawReady{false};     ///!< when first drawing is performed
+      std::string fGetMenu{};     ///<! object id for menu request
       uint64_t fSend{0};          ///<! indicates version send to connection
-      uint64_t fDelivered{0};    ///<! indicates version confirmed from canvas
+      uint64_t fDelivered{0};     ///<! indicates version confirmed from canvas
       WebConn() = default;
    };
 
@@ -1009,9 +1007,9 @@ private:
    typedef std::vector<ROOT::Experimental::Detail::TMenuItem> MenuItemsVector;
 
    /// The canvas we are painting. It might go out of existence while painting.
-   const TCanvas &fCanvas;       ///<!  Canvas
+   const TCanvas &fCanvas;           ///<!  Canvas
 
-   bool fBatchMode;             ///<! indicate if canvas works in batch mode (can be independent from gROOT->isBatch())
+   bool fBatchMode;                  ///<! indicate if canvas works in batch mode (can be independent from gROOT->isBatch())
 
    std::shared_ptr<TWebWindow>  fDisplay; ///!< configured display
 
@@ -1210,14 +1208,49 @@ public:
    }
 
    /// return true if canvas modified since last painting
-   virtual bool IsCanvasModified(uint64_t) const override
+   virtual bool IsCanvasModified(uint64_t id) const override
    {
-      return true;
+      return fSnapshotDelivered != id;
    }
 
    /// perform special action when drawing is ready
-   virtual void DoWhenReady(const std::string &, const std::string &, bool, CanvasCallback_t) override {
+   virtual void DoWhenReady(const std::string &name, const std::string &arg, bool async, CanvasCallback_t callback) override {
+      if (!async && !fWaitingCmdId.empty()) {
+         Error("DoWhenReady", "Fail to submit sync command when previous is still awaited - use async");
+         async = true;
+      }
 
+      WebCommand cmd;
+      cmd.fId = TString::ULLtoa(++fCmdsCnt, 10);
+      cmd.fName = name;
+      cmd.fArg = arg;
+      cmd.fRunning = false;
+      cmd.fCallback = callback;
+      fCmds.push_back(cmd);
+
+      if (!async)
+         fWaitingCmdId = cmd.fId;
+
+      CheckDataToSend();
+
+      if (async)
+         return;
+
+      uint64_t cnt = 0;
+      bool had_connection = false;
+
+      while (true) {
+         if (fWebConn.size() > 0)
+            had_connection = true;
+         if ((fWebConn.size() == 0) && (had_connection || (cnt > 1000)))
+            return; // wait ~1 min if no new connection established
+         if (fWaitingCmdId.empty()) {
+            printf("Command %s waiting READY!!!\n", name.c_str());
+            return;
+         }
+         gSystem->ProcessEvents();
+         gSystem->Sleep((++cnt < 500) ? 1 : 100); // increase sleep interval when do very often
+      }
    }
 
    void ProcessData(unsigned connid, const std::string &arg)
@@ -1343,9 +1376,7 @@ public:
 
       fDisplayList.SetObjectIDAsPtr((void *)&can);
 
-      ::TPad *dummy = new ::TPad(); // just provide old class where all kind of info (size, ranges) already provided
-
-      auto *snap = new ROOT::Experimental::TUniqueDisplayItem<::TPad>(dummy);
+      auto *snap = new ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TCanvas>(&can);
       snap->SetObjectIDAsPtr((void *)&can);
       fDisplayList.Add(snap);
 
