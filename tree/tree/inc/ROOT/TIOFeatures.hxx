@@ -76,6 +76,7 @@ public:
    bool Test(EIOFeatures bits) const;
    bool Test(Experimental::EIOFeatures bits) const;
    bool Test(Experimental::EIOUnsupportedFeatures bits) const;
+   void Print() const;
 
    // The number of known, defined IO features (supported / unsupported / experimental).
    static constexpr int kIOFeatureCount = 1;
