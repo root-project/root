@@ -14,13 +14,13 @@
 #include <future>
 #include <iostream>
 
-
-int Fibonacci(int n) {
-   if( n<2 ) {
+int Fibonacci(int n)
+{
+   if (n < 2) {
       return n;
    } else {
-      auto fut1 = ROOT::Experimental::Async(Fibonacci, n-1);
-      auto fut2 = ROOT::Experimental::Async(Fibonacci, n-2);
+      auto fut1 = ROOT::Experimental::Async(Fibonacci, n - 1);
+      auto fut2 = ROOT::Experimental::Async(Fibonacci, n - 2);
       auto res = fut1.get() + fut2.get();
       return res;
    }
@@ -32,7 +32,10 @@ void mt304_AsyncNested()
    ROOT::EnableImplicitMT(4);
 
    std::cout << "Fibonacci(33) = " << Fibonacci(33) << std::endl;
-
 }
 
-int main(){mt304_AsyncNested(); return 0;}
+int main()
+{
+   mt304_AsyncNested();
+   return 0;
+}
