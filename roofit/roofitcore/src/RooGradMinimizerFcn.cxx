@@ -54,7 +54,7 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* co
 { 
 
   _evalCounter = 0 ;
-  
+
   // Examine parameter list
   RooArgSet* paramSet = _funct->getParameters(RooArgSet());
   RooArgList paramList(*paramSet);
@@ -93,6 +93,8 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* co
   _initFloatParamList = (RooArgList*) _floatParamList->snapshot(kFALSE) ;
   _initConstParamList = (RooArgList*) _constParamList->snapshot(kFALSE) ;
 
+  // Create derivator
+  ROOT::Math::NumericalDerivatorMinuit2 _gradf(*this, *_context->fitter());
 }
 
 
@@ -108,12 +110,13 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(const RooGradMinimizerFcn& other) : ROO
   _nDim(other._nDim),
   _logfile(other._logfile),
   _verbose(other._verbose),
-  _floatParamVec(other._floatParamVec)
+  _floatParamVec(other._floatParamVec),
+  _gradf(other._gradf)
 {  
   _floatParamList = new RooArgList(*other._floatParamList) ;
   _constParamList = new RooArgList(*other._constParamList) ;
   _initFloatParamList = (RooArgList*) other._initFloatParamList->snapshot(kFALSE) ;
-  _initConstParamList = (RooArgList*) other._initConstParamList->snapshot(kFALSE) ;  
+  _initConstParamList = (RooArgList*) other._initConstParamList->snapshot(kFALSE) ;
 }
 
 

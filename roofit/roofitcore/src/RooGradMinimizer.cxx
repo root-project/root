@@ -124,6 +124,9 @@ RooGradMinimizer::RooGradMinimizer(RooAbsReal& function)
   // Declare our parameters to MINUIT
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
+
+  // Send the parameters to the gradient calculator as well
+  _fcn->SynchronizeGradient(_theFitter->Config().ParamsSettings());
 }
 
 

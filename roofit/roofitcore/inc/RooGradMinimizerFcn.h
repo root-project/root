@@ -21,6 +21,7 @@
 #include "Math/IFunction.h"
 #include "Fit/ParameterSettings.h"
 #include "Fit/FitResult.h"
+#include "Math/NumericalDerivatorMinuit2.h"
 
 #include "TMatrixDSym.h"
 
@@ -90,6 +91,8 @@ private:
   
   RooAbsReal *_funct;
   RooGradMinimizer *_context;
+
+	ROOT::Math::NumericalDerivatorMinuit2 _gradf;
 
   mutable double _maxFCN;
   mutable int _numBadNLL;

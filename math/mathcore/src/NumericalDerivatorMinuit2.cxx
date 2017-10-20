@@ -73,9 +73,23 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunc
     }
     fVal = 0;
 }
+  
+// copy constructor
+NumericalDerviatorMinuit2::NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other) :
+    fGrd(other.fGrd),
+    fG2(other.fG2),
+    fGstep(other.fGStep),
+    fFunction(other.fFunction),
+    _strategy(other._strategy),
+    fStepTolerance(other.fStepTolerance),
+    fGradTolerance(other.fGradTolerance),
+    fNCycles(other.fNCycles),
+    fVal(other.fVal),
+    fN(other.fN),
+    Up(other.Up)
+{}
 
-
-// MODIFIED: ctors with higher level arguments
+  // MODIFIED: ctors with higher level arguments
 // The parameters can be extracted from a ROOT::Fit::Fitter object, for
 // simpler initialization.
 NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter) :
@@ -223,21 +237,11 @@ const double* NumericalDerivatorMinuit2::Differentiate(const double* cx) {
 
 // MODIFIED:
 // This function was not implemented as in Minuit2. Now it copies the behavior
-// of InitialGradientCalculator.
-// 
-// In the ROOT minimizer, in Math/Minimizer.h, SetVariables shows that different
-// calls are used to set different types of parameters: bound vs fixed vs
-// "regular" parameters. Something like that should be used here as well.
-// SetVariables is fed a std::vector of ROOT::Fit::ParameterSettings objects,
-// see Fit/FitConfig.h. These are stored in fSettings in a FitConfig object.
-// In RooMinimizerFcn, this kind of information is normally synchronized with
-// Minuit before each minimization call through RooMinimizerFcn::Synchronize.
-// To use this kind of information in this derivator, it also has to be
-// synchronized to here.
+// of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
 void NumericalDerivatorMinuit2::SetInitialGradient() {
    // set an initial gradient using some given steps 
    // (used in the first iteration)
- 
+
   for (unsigned int i = 0; i < fN; ++i)  {
     //   //double eps2 = TMath::Sqrt(fEpsilon);
     //   //double gsmin = 8.*eps2*(fabs(x[i])) + eps2;
