@@ -106,14 +106,14 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
       ++iter;
    }
 
-   if (strcmp(arg->GetMethod(), "WS_CONNECT") == 0) {
+   if (arg->IsMethod("WS_CONNECT")) {
 
       // accept all requests, in future one could limit number of connections
       // arg->Set404(); // refuse connection
       return true;
    }
 
-   if (strcmp(arg->GetMethod(), "WS_READY") == 0) {
+   if (arg->IsMethod("WS_READY")) {
       assert(conn == 0  && "WSHandle with given websocket id exists!!!");
 
       WebConn newconn;
@@ -126,7 +126,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
       return true;
    }
 
-   if (strcmp(arg->GetMethod(), "WS_CLOSE") == 0) {
+   if (arg->IsMethod("WS_CLOSE")) {
       // connection is closed, one can remove handle
 
       if (conn && fDataCallback)
@@ -138,7 +138,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
       return true;
    }
 
-   assert(strcmp(arg->GetMethod(), "WS_DATA") == 0 && "WS_DATA request expected!");
+   assert(arg->IsMethod("WS_DATA") && "WS_DATA request expected!");
 
    assert(conn != 0 && "Get websocket data without valid connection - ignore!!!");
 
