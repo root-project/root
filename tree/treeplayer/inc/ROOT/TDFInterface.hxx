@@ -132,6 +132,19 @@ BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &m
    return action.get();
 }
 
+// Sum action
+template <typename BranchType, typename PrevNodeType, typename ActionResultType>
+TActionBase *
+BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &sumV, const unsigned int nSlots,
+             TLoopManager &loopManager, PrevNodeType &prevNode, ActionTypes::Sum *)
+{
+   using Helper_t = SumHelper<ActionResultType>;
+   using Action_t = TAction<Helper_t, PrevNodeType, TTraits::TypeList<BranchType>>;
+   auto action = std::make_shared<Action_t>(Helper_t(sumV, nSlots), bl, prevNode);
+   loopManager.Book(action);
+   return action.get();
+}
+
 // Mean action
 template <typename BranchType, typename PrevNodeType>
 TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<double> &meanV, const unsigned int nSlots,
@@ -258,6 +271,9 @@ using MinReturnType_t = typename TMinReturnType<T>::type;
 
 template<typename T>
 using MaxReturnType_t = MinReturnType_t<T>;
+
+template<typename T>
+using SumReturnType_t = MinReturnType_t<T>;
 
 } // namespace TDF
 } // namespace Internal
@@ -1432,6 +1448,16 @@ public:
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
       auto meanV = std::make_shared<double>(0);
       return CreateAction<TDFInternal::ActionTypes::Mean, T>(userColumns, meanV);
+   }
+
+   template <typename T = TDFDetail::TInferType>
+   TResultProxy<TDFInternal::SumReturnType_t<T>>
+   Sum(std::string_view columnName = "",
+       const TDFInternal::SumReturnType_t<T> &initValue = TDFInternal::SumReturnType_t<T>{})
+   {
+      const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      auto sumV = std::make_shared<TDFInternal::SumReturnType_t<T>>(initValue);
+      return CreateAction<TDFInternal::ActionTypes::Sum, T>(userColumns, sumV);
    }
 
    ////////////////////////////////////////////////////////////////////////////
