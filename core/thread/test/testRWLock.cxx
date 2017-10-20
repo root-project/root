@@ -181,6 +181,62 @@ void Reentrant(T &m)
    m.ReadUnLock();
 }
 
+template <typename T>
+void ResetRestore(T &m, size_t repeat = 1)
+{
+   do {
+      m.ReadLock();
+      m.Restore( m.Reset() );
+      m.ReadUnLock();
+
+      m.ReadLock();
+      m.ReadLock();
+      m.ReadLock();
+      m.Restore( m.Reset() );
+      m.ReadUnLock();
+      m.ReadUnLock();
+      m.ReadUnLock();
+
+      m.WriteLock();
+      m.Restore( m.Reset() );
+      m.WriteUnLock();
+
+
+      m.ReadLock();
+      m.ReadLock();
+      m.ReadLock();
+      m.WriteLock();
+      m.ReadLock();
+      m.ReadLock();
+      m.WriteLock();
+      m.ReadLock();
+      m.Restore( m.Reset() );
+      m.ReadUnLock();
+      m.WriteUnLock();
+      m.ReadUnLock();
+      m.ReadUnLock();
+      m.WriteUnLock();
+      m.ReadUnLock();
+      m.ReadUnLock();
+      m.ReadUnLock();
+   } while ( --repeat > 0 );
+}
+
+void concurrentResetRestore(TVirtualRWMutex *m, size_t nthreads, size_t repetition)
+{
+   // ROOT::EnableThreadSafety();
+
+   std::vector<std::thread> threads;
+
+   for (size_t i = 0; i < nthreads; ++i) {
+      threads.push_back(std::thread([&]() { ResetRestore(*m, repetition); }));
+   }
+
+   for (auto &&th : threads) {
+      th.join();
+   }
+}
+
 constexpr size_t gRepetition = 10000000;
 
 auto gMutex = new TMutex(kTRUE);
@@ -368,6 +424,60 @@ TEST(RWLock, ReentrantTL)
 {
    Reentrant(*gReentrantRWMutexTL);
 }
+
+TEST(RWLock, ResetRestoreSpin)
+{
+   ResetRestore(*gReentrantRWMutexSM);
+}
+
+TEST(RWLock, ResetRestore)
+{
+   ResetRestore(*gReentrantRWMutex);
+}
+
+TEST(RWLock, ResetRestoreTLSpin)
+{
+   ResetRestore(*gReentrantRWMutexSMTL);
+}
+
+TEST(RWLock, ResetRestoreTL)
+{
+   ResetRestore(*gReentrantRWMutexTL);
+}
+
+
+TEST(RWLock, concurrentResetRestore)
+{
+   concurrentResetRestore(gRWMutex, 2, gRepetition / 10000);
+}
+
+TEST(RWLock, concurrentResetRestoreSpin)
+{
+   concurrentResetRestore(gRWMutexSpin, 2, gRepetition / 10000);
+}
+
+TEST(RWLock, LargeconcurrentResetRestore)
+{
+   concurrentResetRestore(gRWMutex, 20, gRepetition / 1000);
+}
+
+// TEST(RWLock, LargeconcurrentResetRestoreSpin)
+// {
+//    concurrentResetRestore(gRWMutexSpin,20,gRepetition / 1000);
+// }
+
+TEST(RWLock, concurrentResetRestoreTL)
+{
+   concurrentResetRestore(gRWMutexTL, 2, gRepetition / 10000);
+}
+
+TEST(RWLock, LargeconcurrentResetRestoreTL)
+{
+   concurrentResetRestore(gRWMutexTL, 20, gRepetition / 1000);
+}
+
+
+
 
 TEST(RWLock, concurrentReadsAndWrites)
 {
