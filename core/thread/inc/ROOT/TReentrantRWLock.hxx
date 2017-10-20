@@ -50,6 +50,10 @@ struct UniqueLockRecurseCount {
    template <typename MutexT>
    void DecrementReadCount(local_t &local, MutexT &) { DecrementReadCount(local); }
 
+   void ResetReadCount(local_t &local, int newvalue) {
+      local->fReadersCount = newvalue;
+   }
+
    bool IsNotCurrentWriter(local_t &local) { return !local->fIsWriter; }
 
    void SetIsWriter(local_t &local)
@@ -95,6 +99,10 @@ struct RecurseCounts {
    {
       std::unique_lock<MutexT> lock(mutex);
       DecrementReadCount(local);
+   }
+
+   void ResetReadCount(local_t &local, int newvalue) {
+      fReadersCount[local] = newvalue;
    }
 
    bool IsNotCurrentWriter(local_t &local) { return fWriterThread != local; }
