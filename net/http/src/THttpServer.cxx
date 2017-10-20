@@ -25,6 +25,8 @@
 #include "TRegexp.h"
 
 #include "THttpEngine.h"
+#include "THttpWSEngine.h"
+#include "THttpWSHandler.h"
 #include "TRootSniffer.h"
 #include "TRootSnifferStore.h"
 

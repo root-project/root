@@ -19,6 +19,8 @@
 
 #include "THttpEngine.h"
 #include "THttpCallArg.h"
+#include "THttpWSEngine.h"
+#include "THttpWSHandler.h"
 
 #include <cassert>
 #include <cstring>
