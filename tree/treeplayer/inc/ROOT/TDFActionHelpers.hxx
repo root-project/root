@@ -507,6 +507,36 @@ public:
 // extern template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
 // extern template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
+template <typename ResultType>
+class SumHelper {
+   const std::shared_ptr<ResultType> fResultSum;
+   std::vector<ResultType> fSums;
+
+public:
+   SumHelper(SumHelper &&) = default;
+   SumHelper(const SumHelper &) = delete;
+   SumHelper(const std::shared_ptr<ResultType> &sumVPtr, const unsigned int nSlots)
+      : fResultSum(sumVPtr), fSums(nSlots, *sumVPtr - *sumVPtr) {}
+
+   void InitSlot(TTreeReader *, unsigned int) {}
+   void Exec(unsigned int slot, ResultType v) { fSums[slot] += v; }
+
+   template <typename T, typename std::enable_if<IsContainer<T>::value, int>::type = 0>
+   void Exec(unsigned int slot, const T &vs)
+   {
+      for (auto &&v : vs)
+         fSums[slot] += static_cast<ResultType>(v);
+   }
+
+   void Finalize()
+   {
+      for (auto &m : fSums)
+         *fResultSum += m;
+   }
+
+   ResultType &PartialUpdate(unsigned int slot) { return fSums[slot]; }
+};
+
 class MeanHelper {
    const std::shared_ptr<double> fResultMean;
    std::vector<ULong64_t> fCounts;
