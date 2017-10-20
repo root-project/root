@@ -1450,6 +1450,17 @@ public:
       return CreateAction<TDFInternal::ActionTypes::Mean, T>(userColumns, meanV);
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Return the sum of processed column values (*lazy action*)
+   /// \tparam T The type of the branch/column.
+   /// \param[in] columnName The name of the branch/column.
+   /// \param[in] initValue Optional initial value for the sum. If not present, the column values must be default-constructible.
+   ///
+   /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
+   /// template specialization of this method.
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is
+   /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
    TResultProxy<TDFInternal::SumReturnType_t<T>>
    Sum(std::string_view columnName = "",
