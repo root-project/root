@@ -31,7 +31,8 @@ namespace Experimental {
   Central handle to open web-based windows like Canvas or FitPanel.
   */
 
-using WebDisplayDataCallback_t = std::function<void(unsigned,const std::string&)>;
+using WebWindowDataCallback_t = std::function<void(unsigned,const std::string&)>;
+using WebWindowWaitFunc_t = std::function<int(double)>;
 
 class TWebWindowsManager;
 class TWebWindowWSHandler;
@@ -50,7 +51,7 @@ private:
       int            fSendCredits{0};        ///<! how many send operation can be performed without confirmation from other side
       int            fClientCredits{0};      ///<! last received information about credits on client side, helps to resubmit credits back to client
       std::list<std::string> fQueue{};       ///<! small output queue for data which should be send via the connection (including channel)
-      WebDisplayDataCallback_t fCallBack{};  ///<! additional data callback
+      WebWindowDataCallback_t fCallBack{};   ///<! additional data callback for extra channels
       WebConn() = default;
    };
 
@@ -61,7 +62,7 @@ private:
    unsigned                           fConnCnt{0};  ///<!  counter of new connections to assign ids
    std::list<WebConn>                 fConn{};     ///<! list of all accepted connections
    static const unsigned       fMaxQueueLength{10}; ///<!  maximal number of queue entries
-   WebDisplayDataCallback_t        fDataCallback{}; ///<!  main callback when data over channel 1 is arrived
+   WebWindowDataCallback_t        fDataCallback{}; ///<!  main callback when data over channel 1 is arrived
 
    void SetBatchMode(bool mode) { fBatchMode = mode; }
    void SetId(unsigned id) { fId = id; }
@@ -94,7 +95,9 @@ public:
 
    void Send(const std::string &data, unsigned connid = 0, unsigned chid = 1);
 
-   void SetDataCallBack(WebDisplayDataCallback_t &func) { fDataCallback = func; }
+   void SetDataCallBack(WebWindowDataCallback_t &func) { fDataCallback = func; }
+
+   bool WaitFor(WebWindowWaitFunc_t check, double tm);
 
 };
 

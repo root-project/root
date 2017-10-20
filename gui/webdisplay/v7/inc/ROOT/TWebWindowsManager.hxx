@@ -57,6 +57,8 @@ public:
    void CloseDisplay(TWebWindow *display);
 
    bool Show(TWebWindow *display, const std::string &where, bool first_time = false);
+
+   bool WaitFor(WebWindowWaitFunc_t check, double tm);
 };
 
 } // namespace Experimental
