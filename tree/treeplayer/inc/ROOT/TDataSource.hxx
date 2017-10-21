@@ -82,10 +82,12 @@ public:
    /// \brief Convenience method called at the start of the data processing associated to a slot.
    /// \param[in] slot The data processing slot wihch needs to be initialised
    /// \param[in] firstEntry The first entry of the range that the task will process.
+   /// This method might be called multiple times per thread per event-loop.
    virtual void InitSlot(unsigned int /*slot*/, ULong64_t /*firstEntry*/) {}
 
    /// \brief Convenience method called at the end of the data processing associated to a slot.
    /// \param[in] slot The data processing slot wihch needs to be finalised
+   /// This method might be called multiple times per thread per event-loop.
    virtual void FinaliseSlot(unsigned int /*slot*/) {}
 
 protected:
