@@ -263,7 +263,10 @@ TMVA::CvSplitBootstrappedStratified::SplitSets (std::vector<TMVA::Event*>& oldSe
 ///
 
 TMVA::CvSplitCrossEvaluationExpr::CvSplitCrossEvaluationExpr (DataSetInfo & dsi, TString expr)
-   : fDsi(dsi), fSplitFormula("", expr), fParValues(fSplitFormula.GetNpar()), fIdxFormulaParNumFolds(std::numeric_limits<UInt_t>::max())
+   : fDsi(dsi),
+     fIdxFormulaParNumFolds(std::numeric_limits<UInt_t>::max()),
+     fSplitFormula("", expr),
+     fParValues(fSplitFormula.GetNpar())
 {
    if (not fSplitFormula.IsValid()) {
       throw std::runtime_error("Split expression \"" + std::string(fSplitExpr.Data()) + "\" is not a valid TFormula.");

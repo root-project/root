@@ -133,10 +133,10 @@ private:
 private:
    DataSetInfo & fDsi;
 
+   std::vector< std::pair<Int_t, Int_t> > fFormulaParIdxToDsiSpecIdx; //! Maps parameter indicies in splitExpr to their spectator index in the datasetinfo.
+   Int_t fIdxFormulaParNumFolds; //! Keeps track of the index of reserved par "NumFolds" in splitExpr.
    TString fSplitExpr; //! Expression used to split data into folds. Should output values between 0 and numFolds.
    TFormula fSplitFormula; //! TFormula for splitExpr.
-   Int_t fIdxFormulaParNumFolds; //! Keeps track of the index of reserved par "NumFolds" in splitExpr.
-   std::vector< std::pair<Int_t, Int_t> > fFormulaParIdxToDsiSpecIdx; //! Maps parameter indicies in splitExpr to their spectator index in the datasetinfo.
 
    std::vector<Double_t> fParValues;
 };
