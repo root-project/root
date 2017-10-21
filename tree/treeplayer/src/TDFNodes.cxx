@@ -224,6 +224,7 @@ void TLoopManager::RunTreeReader()
 void TLoopManager::RunDataSource()
 {
    assert(fDataSource != nullptr);
+   fDataSource->Init();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty()) {
       InitNodeSlots(nullptr, 0u);
@@ -238,6 +239,7 @@ void TLoopManager::RunDataSource()
       fDataSource->FinaliseSlot(0u);
       ranges = fDataSource->GetEntryRanges();
    }
+   fDataSource->Finalise();
 }
 
 /// Run event loop over data accessed through a DataSource, in parallel.
@@ -263,11 +265,13 @@ void TLoopManager::RunDataSourceMT()
       slotStack.ReturnSlot(slot);
    };
 
+   fDataSource->Init();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty()) {
       pool.Foreach(runOnRange, ranges);
       ranges = fDataSource->GetEntryRanges();
    }
+   fDataSource->Finalise();
 #endif // not implemented otherwise (never called)
 }
 
