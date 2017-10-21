@@ -224,16 +224,20 @@ void TLoopManager::RunTreeReader()
 void TLoopManager::RunDataSource()
 {
    assert(fDataSource != nullptr);
-   const auto &rangePairs = fDataSource->GetEntryRanges();
-   InitNodeSlots(nullptr, 0);
-   fDataSource->InitSlot(0, 0);
-   // we are running single-thread, so all ranges are squashed together
-   const auto lastEntry = rangePairs.back().second;
-   for (ULong64_t i = 0ull; i < lastEntry; ++i) {
-      fDataSource->SetEntry(0, i);
-      RunAndCheckFilters(0, i);
+   auto ranges = fDataSource->GetEntryRanges();
+   while (!ranges.empty()) {
+      InitNodeSlots(nullptr, 0u);
+      fDataSource->InitSlot(0u, 0ull);
+      for (const auto &range : ranges) {
+         auto end = range.second;
+         for (auto entry = range.first; entry < end; ++entry) {
+            fDataSource->SetEntry(0u, entry);
+            RunAndCheckFilters(0u, entry);
+         }
+      }
+      fDataSource->FinaliseSlot(0u);
+      ranges = fDataSource->GetEntryRanges();
    }
-   fDataSource->FinaliseSlot(0);
 }
 
 /// Run event loop over data accessed through a DataSource, in parallel.
@@ -241,25 +245,29 @@ void TLoopManager::RunDataSourceMT()
 {
 #ifdef R__USE_IMT
    assert(fDataSource != nullptr);
-   auto rangePairs = fDataSource->GetEntryRanges();
    TSlotStack slotStack(fNSlots);
+   ROOT::TThreadExecutor pool;
 
    // Each task works on a subrange of entries
-   auto doWork = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
+   auto runOnRange = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
       const auto slot = slotStack.GetSlot();
       InitNodeSlots(nullptr, slot);
       fDataSource->InitSlot(slot, range.first);
-      for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
-         fDataSource->SetEntry(slot, currEntry);
-         RunAndCheckFilters(slot, currEntry);
+      const auto end = range.second;
+      for (auto entry = range.first; entry < end; ++entry) {
+         fDataSource->SetEntry(slot, entry);
+         RunAndCheckFilters(slot, entry);
       }
       CleanUpTask(slot);
       fDataSource->FinaliseSlot(slot);
       slotStack.ReturnSlot(slot);
    };
 
-   ROOT::TThreadExecutor pool;
-   pool.Foreach(doWork, rangePairs);
+   auto ranges = fDataSource->GetEntryRanges();
+   while (!ranges.empty()) {
+      pool.Foreach(runOnRange, ranges);
+      ranges = fDataSource->GetEntryRanges();
+   }
 #endif // not implemented otherwise (never called)
 }
 

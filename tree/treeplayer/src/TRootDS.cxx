@@ -99,12 +99,10 @@ void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    fChains[slot].reset(chain);
 }
 
-const std::vector<std::pair<ULong64_t, ULong64_t>> &TRootDS::GetEntryRanges() const
+std::vector<std::pair<ULong64_t, ULong64_t>> TRootDS::GetEntryRanges()
 {
-   if (fEntryRanges.empty()) {
-      throw std::runtime_error("No ranges are available. Did you set the number of slots?");
-   }
-   return fEntryRanges;
+   auto entryRanges(std::move(fEntryRanges)); // empty fEntryRanges
+   return entryRanges;
 }
 
 void TRootDS::SetEntry(unsigned int slot, ULong64_t entry)

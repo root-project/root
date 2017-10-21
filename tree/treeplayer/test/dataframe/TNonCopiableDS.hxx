@@ -31,7 +31,11 @@ public:
    const std::vector<std::string> &GetColumnNames() const { return fColNames; };
    bool HasColumn(std::string_view colName) const { return colName == fColNames[0]; };
    std::string GetTypeName(std::string_view) const { return "TNonCopiable"; };
-   const std::vector<std::pair<ULong64_t, ULong64_t>> &GetEntryRanges() const { return fEntryRanges; };
+   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges()
+   {
+      auto entryRanges(std::move(fEntryRanges)); // empty fEntryRanges
+      return entryRanges;
+   };
    void SetEntry(unsigned int, ULong64_t){};
    void SetNSlots(unsigned int){};
 };

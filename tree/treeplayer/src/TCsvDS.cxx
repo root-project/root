@@ -278,9 +278,10 @@ const std::vector<std::string> &TCsvDS::GetColumnNames() const
    return fHeaders;
 }
 
-const std::vector<std::pair<ULong64_t, ULong64_t>> &TCsvDS::GetEntryRanges() const
+std::vector<std::pair<ULong64_t, ULong64_t>> TCsvDS::GetEntryRanges()
 {
-   return fEntryRanges;
+   auto entryRanges(std::move(fEntryRanges)); // empty fEntryRanges
+   return entryRanges;
 }
 
 std::string TCsvDS::GetTypeName(std::string_view colName) const

@@ -40,12 +40,10 @@ std::string TTrivialDS::GetTypeName(std::string_view) const
    return "ULong64_t";
 }
 
-const std::vector<std::pair<ULong64_t, ULong64_t>> &TTrivialDS::GetEntryRanges() const
+std::vector<std::pair<ULong64_t, ULong64_t>> TTrivialDS::GetEntryRanges()
 {
-   if (fEntryRanges.empty()) {
-      throw std::runtime_error("No ranges are available. Did you set the number of slots?");
-   }
-   return fEntryRanges;
+   auto ranges(std::move(fEntryRanges)); // empty fEntryRanges
+   return ranges;
 }
 
 void TTrivialDS::SetEntry(unsigned int slot, ULong64_t entry)
