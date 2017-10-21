@@ -36,6 +36,11 @@ class TDataSource {
 public:
    virtual ~TDataSource() = default;
 
+   /// \brief Inform TDataSource of the number of processing slots (i.e. worker threads) used by the associated TDataFrame.
+   /// Slots numbers are used to simplify parallel execution: TDataFrame guarantees that different threads will always
+   /// pass different slot values when calling methods concurrently.
+   virtual void SetNSlots(unsigned int nSlots) = 0;
+
    /// \brief Returns a reference to the collection of the dataset's column names
    virtual const std::vector<std::string> &GetColumnNames() const = 0;
 
@@ -75,9 +80,12 @@ public:
    /// be labelled by different "slot" values.
    virtual void SetEntry(unsigned int slot, ULong64_t entry) = 0;
 
-   /// \brief Convenience method to set the number of slots
-   /// For some implementation it's necessary to know the number of slots in advance for optimisation purposes.
-   virtual void SetNSlots(unsigned int nSlots) = 0;
+   /// \brief Convenience method called before starting an event-loop.
+   /// This method might be called multiple times over the lifetime of a TDataSource, since
+   /// users can run multiple event-loops with the same TDataFrame.
+   /// Ideally, `Init` should set the state of the TDataSource so that multiple identical event-loops
+   /// will produce identical results.
+   virtual void Init() {}
 
    /// \brief Convenience method called at the start of the data processing associated to a slot.
    /// \param[in] slot The data processing slot wihch needs to be initialised
@@ -89,6 +97,10 @@ public:
    /// \param[in] slot The data processing slot wihch needs to be finalised
    /// This method might be called multiple times per thread per event-loop.
    virtual void FinaliseSlot(unsigned int /*slot*/) {}
+
+   /// \brief Convenience method called after concluding an event-loop.
+   /// See Init for more details.
+   virtual void Finalise() {}
 
 protected:
    /// type-erased vector of pointers to pointers to column values - one per slot
