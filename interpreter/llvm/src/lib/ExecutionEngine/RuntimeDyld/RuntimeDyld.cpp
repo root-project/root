@@ -12,13 +12,13 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ExecutionEngine/RuntimeDyld.h"
-#include "RuntimeDyldCheckerImpl.h"
 #include "RuntimeDyldCOFF.h"
+#include "RuntimeDyldCheckerImpl.h"
 #include "RuntimeDyldELF.h"
 #include "RuntimeDyldImpl.h"
 #include "RuntimeDyldMachO.h"
-#include "llvm/Object/ELFObjectFile.h"
 #include "llvm/Object/COFF.h"
+#include "llvm/Object/ELFObjectFile.h"
 #include "llvm/Support/ManagedStatic.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/MutexGuard.h"
@@ -128,7 +128,10 @@ void RuntimeDyldImpl::resolveRelocations() {
   );
 
   // First, resolve relocations associated with external symbols.
-  resolveExternalSymbols();
+  if (auto Err = resolveExternalSymbols()) {
+    HasError = true;
+    ErrorStr = toString(std::move(Err));
+  }
 
   // Iterate over all outstanding relocations
   for (auto it = Relocations.begin(), e = Relocations.end(); it != e; ++it) {
@@ -243,9 +246,11 @@ RuntimeDyldImpl::loadObjectImpl(const object::ObjectFile &Obj) {
           continue;
         // Then check the symbol resolver to see if there's a definition
         // elsewhere in this logical dylib.
-        if (auto Sym = Resolver.findSymbolInLogicalDylib(Name))
+        if (auto Sym = Resolver.findSymbolInLogicalDylib(Name)) {
           if (Sym.getFlags().isStrongDefinition())
             continue;
+        } else if (auto Err = Sym.takeError())
+          return std::move(Err);
         // else
         JITSymFlags &= ~JITSymbolFlags::Weak;
       }
@@ -705,7 +710,7 @@ RuntimeDyldImpl::emitSection(const ObjectFile &Obj,
   unsigned Alignment = (unsigned)Alignment64 & 0xffffffffL;
   unsigned PaddingSize = 0;
   unsigned StubBufSize = 0;
-  bool IsRequired = isRequiredForExecution(Section) || ProcessAllSections;
+  bool IsRequired = isRequiredForExecution(Section);
   bool IsVirtual = Section.isVirtual();
   bool IsZeroInit = isZeroInit(Section);
   bool IsReadOnly = isReadOnlyData(Section);
@@ -745,8 +750,8 @@ RuntimeDyldImpl::emitSection(const ObjectFile &Obj,
     Alignment = std::max(Alignment, getStubAlignment());
 
   // Some sections, such as debug info, don't need to be loaded for execution.
-  // Leave those where they are.
-  if (IsRequired) {
+  // Process those only if explicitly requested.
+  if (IsRequired || ProcessAllSections) {
     Allocate = DataSize + PaddingSize + StubBufSize;
     if (!Allocate)
       Allocate = 1;
@@ -789,6 +794,10 @@ RuntimeDyldImpl::emitSection(const ObjectFile &Obj,
 
   Sections.push_back(
       SectionEntry(Name, Addr, DataSize, Allocate, (uintptr_t)pData));
+
+  // Debug info sections are linked as if their load address was zero
+  if (!IsRequired)
+    Sections.back().setLoadAddress(0);
 
   if (Checker)
     Checker->registerSection(Obj.getFileName(), SectionID);
@@ -949,7 +958,7 @@ void RuntimeDyldImpl::resolveRelocationList(const RelocationList &Relocs,
   }
 }
 
-void RuntimeDyldImpl::resolveExternalSymbols() {
+Error RuntimeDyldImpl::resolveExternalSymbols() {
   while (!ExternalSymbolRelocations.empty()) {
     StringMap<RelocationList>::iterator i = ExternalSymbolRelocations.begin();
 
@@ -967,10 +976,24 @@ void RuntimeDyldImpl::resolveExternalSymbols() {
         // This is an external symbol, try to get its address from the symbol
         // resolver.
         // First search for the symbol in this logical dylib.
-        Addr = Resolver.findSymbolInLogicalDylib(Name.data()).getAddress();
+        if (auto Sym = Resolver.findSymbolInLogicalDylib(Name.data())) {
+          if (auto AddrOrErr = Sym.getAddress())
+            Addr = *AddrOrErr;
+          else
+            return AddrOrErr.takeError();
+        } else if (auto Err = Sym.takeError())
+          return Err;
+
         // If that fails, try searching for an external symbol.
-        if (!Addr)
-          Addr = Resolver.findSymbol(Name.data()).getAddress();
+        if (!Addr) {
+          if (auto Sym = Resolver.findSymbol(Name.data())) {
+            if (auto AddrOrErr = Sym.getAddress())
+              Addr = *AddrOrErr;
+            else
+              return AddrOrErr.takeError();
+          } else if (auto Err = Sym.takeError())
+            return Err;
+        }
         // The call to getSymbolAddress may have caused additional modules to
         // be loaded, which may have added new entries to the
         // ExternalSymbolRelocations map.  Consquently, we need to update our
@@ -1005,6 +1028,8 @@ void RuntimeDyldImpl::resolveExternalSymbols() {
 
     ExternalSymbolRelocations.erase(i);
   }
+
+  return Error::success();
 }
 
 //===----------------------------------------------------------------------===//

@@ -30,6 +30,7 @@ elseif( CMAKE_HOST_UNIX )
 endif( MSVC OR MINGW )
 
 add_llvm_library(LLVMSupport
+  AMDGPUCodeObjectMetadata.cpp
   APFloat.cpp
   APInt.cpp
   APSInt.cpp
@@ -39,6 +40,7 @@ add_llvm_library(LLVMSupport
   Allocator.cpp
   BinaryStreamError.cpp
   BinaryStreamReader.cpp
+  BinaryStreamRef.cpp
   BinaryStreamWriter.cpp
   BlockFrequency.cpp
   BranchProbability.cpp
@@ -56,7 +58,6 @@ add_llvm_library(LLVMSupport
   DebugCounter.cpp
   DeltaAlgorithm.cpp
   DAGDeltaAlgorithm.cpp
-  Dwarf.cpp
   Error.cpp
   ErrorHandling.cpp
   FileUtilities.cpp
@@ -131,7 +132,6 @@ add_llvm_library(LLVMSupport
   Process.cpp
   Program.cpp
   RWMutex.cpp
-  SearchForAddressOfSpecialSymbol.cpp
   Signals.cpp
   TargetRegistry.cpp
   ThreadLocal.cpp

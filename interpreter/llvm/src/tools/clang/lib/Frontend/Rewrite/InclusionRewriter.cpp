@@ -140,7 +140,7 @@ void InclusionRewriter::WriteLineInfo(StringRef Filename, int Line,
 }
 
 void InclusionRewriter::WriteImplicitModuleImport(const Module *Mod) {
-  OS << "#pragma clang module import " << Mod->getFullModuleName()
+  OS << "#pragma clang module import " << Mod->getFullModuleName(true)
      << " /* clang -frewrite-includes: implicit import */" << MainEOL;
 }
 
@@ -177,7 +177,9 @@ void InclusionRewriter::FileSkipped(const FileEntry &/*SkippedFile*/,
 /// directives. It does not say whether the file has been included, but it
 /// provides more information about the directive (hash location instead
 /// of location inside the included file). It is assumed that the matching
-/// FileChanged() or FileSkipped() is called after this.
+/// FileChanged() or FileSkipped() is called after this (or neither is
+/// called if this #include results in an error or does not textually include
+/// anything).
 void InclusionRewriter::InclusionDirective(SourceLocation HashLoc,
                                            const Token &/*IncludeTok*/,
                                            StringRef /*FileName*/,
@@ -187,9 +189,6 @@ void InclusionRewriter::InclusionDirective(SourceLocation HashLoc,
                                            StringRef /*SearchPath*/,
                                            StringRef /*RelativePath*/,
                                            const Module *Imported) {
-  assert(LastInclusionLocation.isInvalid() &&
-         "Another inclusion directive was found before the previous one "
-         "was processed");
   if (Imported) {
     auto P = ModuleIncludes.insert(
         std::make_pair(HashLoc.getRawEncoding(), Imported));
@@ -472,15 +471,15 @@ void InclusionRewriter::Process(FileID FileId,
             else if (const IncludedFile *Inc = FindIncludeAtLocation(Loc)) {
               const Module *Mod = FindEnteredModule(Loc);
               if (Mod)
-                OS << "#pragma clang module begin " << Mod->getFullModuleName()
-                   << "\n";
+                OS << "#pragma clang module begin "
+                   << Mod->getFullModuleName(true) << "\n";
 
               // Include and recursively process the file.
               Process(Inc->Id, Inc->FileType);
 
               if (Mod)
-                OS << "#pragma clang module end /*" << Mod->getFullModuleName()
-                   << "*/\n";
+                OS << "#pragma clang module end /*"
+                   << Mod->getFullModuleName(true) << "*/\n";
 
               // Add line marker to indicate we're returning from an included
               // file.

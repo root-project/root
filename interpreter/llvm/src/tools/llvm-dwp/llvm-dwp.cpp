@@ -182,8 +182,8 @@ static Expected<CompileUnitIdentifiers> getCUIdentifiers(StringRef Abbrev,
       ID.Signature = InfoData.getU64(&Offset);
       break;
     default:
-      DWARFFormValue::skipValue(Form, InfoData, &Offset, Version, AddrSize,
-                                Format);
+      DWARFFormValue::skipValue(Form, InfoData, &Offset,
+                                DWARFFormParams({Version, AddrSize, Format}));
     }
   }
   return ID;
@@ -373,7 +373,7 @@ handleCompressedSection(std::deque<SmallString<32>> &UncompressedSections,
     return createError(Name, Dec.takeError());
 
   UncompressedSections.emplace_back();
-  if (Error E = Dec->decompress(UncompressedSections.back()))
+  if (Error E = Dec->resizeAndDecompress(UncompressedSections.back()))
     return createError(Name, std::move(E));
 
   Name = Name.substr(2); // Drop ".z"

@@ -23,8 +23,8 @@
 #include "llvm/ADT/PointerUnion.h"
 #include "llvm/ADT/Twine.h"
 #include "llvm/ADT/ilist_node.h"
-#include "llvm/IR/GlobalObject.h"
 #include "llvm/IR/Attributes.h"
+#include "llvm/IR/GlobalObject.h"
 #include "llvm/IR/OperandTraits.h"
 #include "llvm/IR/Value.h"
 #include <cassert>
@@ -66,7 +66,7 @@ public:
   GlobalVariable(const GlobalVariable &) = delete;
   GlobalVariable &operator=(const GlobalVariable &) = delete;
 
-  ~GlobalVariable() override {
+  ~GlobalVariable() {
     dropAllReferences();
 
     // FIXME: needed by operator delete
@@ -77,8 +77,6 @@ public:
   void *operator new(size_t s) {
     return User::operator new(s, 1);
   }
-
-  void *operator new(size_t, unsigned) = delete;
 
   /// Provide fast operand accessors
   DECLARE_TRANSPARENT_OPERAND_ACCESSORS(Value);
@@ -235,8 +233,15 @@ public:
     Attrs = A;
   }
 
+  /// Check if section name is present
+  bool hasImplicitSection() const {
+    return getAttributes().hasAttribute("bss-section") ||
+           getAttributes().hasAttribute("data-section") ||
+           getAttributes().hasAttribute("rodata-section");
+  }
+
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return V->getValueID() == Value::GlobalVariableVal;
   }
 };

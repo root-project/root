@@ -43,6 +43,7 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/iterator.h"
 #include "llvm/ADT/iterator_range.h"
+#include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Function.h"
@@ -652,17 +653,23 @@ public:
     /// Make an existing internal ref edge into a call edge.
     ///
     /// This may form a larger cycle and thus collapse SCCs into TargetN's SCC.
-    /// If that happens, the deleted SCC pointers are returned. These SCCs are
-    /// not in a valid state any longer but the pointers will remain valid
-    /// until destruction of the parent graph instance for the purpose of
-    /// clearing cached information.
+    /// If that happens, the optional callback \p MergedCB will be invoked (if
+    /// provided) on the SCCs being merged away prior to actually performing
+    /// the merge. Note that this will never include the target SCC as that
+    /// will be the SCC functions are merged into to resolve the cycle. Once
+    /// this function returns, these merged SCCs are not in a valid state but
+    /// the pointers will remain valid until destruction of the parent graph
+    /// instance for the purpose of clearing cached information. This function
+    /// also returns 'true' if a cycle was formed and some SCCs merged away as
+    /// a convenience.
     ///
     /// After this operation, both SourceN's SCC and TargetN's SCC may move
     /// position within this RefSCC's postorder list. Any SCCs merged are
     /// merged into the TargetN's SCC in order to preserve reachability analyses
     /// which took place on that SCC.
-    SmallVector<SCC *, 1> switchInternalEdgeToCall(Node &SourceN,
-                                                   Node &TargetN);
+    bool switchInternalEdgeToCall(
+        Node &SourceN, Node &TargetN,
+        function_ref<void(ArrayRef<SCC *> MergedSCCs)> MergeCB = {});
 
     /// Make an existing internal call edge between separate SCCs into a ref
     /// edge.
@@ -902,7 +909,7 @@ public:
   /// This sets up the graph and computes all of the entry points of the graph.
   /// No function definitions are scanned until their nodes in the graph are
   /// requested during traversal.
-  LazyCallGraph(Module &M);
+  LazyCallGraph(Module &M, TargetLibraryInfo &TLI);
 
   LazyCallGraph(LazyCallGraph &&G);
   LazyCallGraph &operator=(LazyCallGraph &&RHS);
@@ -959,6 +966,22 @@ public:
 
     return insertInto(F, N);
   }
+
+  /// Get the sequence of known and defined library functions.
+  ///
+  /// These functions, because they are known to LLVM, can have calls
+  /// introduced out of thin air from arbitrary IR.
+  ArrayRef<Function *> getLibFunctions() const {
+    return LibFunctions.getArrayRef();
+  }
+
+  /// Test whether a function is a known and defined library function tracked by
+  /// the call graph.
+  ///
+  /// Because these functions are known to LLVM they are specially modeled in
+  /// the call graph and even when all IR-level references have been removed
+  /// remain active and reachable.
+  bool isLibFunction(Function &F) const { return LibFunctions.count(&F); }
 
   ///@{
   /// \name Pre-SCC Mutation API
@@ -1094,6 +1117,11 @@ private:
   /// These are all of the RefSCCs which have no children.
   SmallVector<RefSCC *, 4> LeafRefSCCs;
 
+  /// Defined functions that are also known library functions which the
+  /// optimizer can reason about and therefore might introduce calls to out of
+  /// thin air.
+  SmallSetVector<Function *, 4> LibFunctions;
+
   /// Helper to insert a new function, with an already looked-up entry in
   /// the NodeMap.
   Node &insertInto(Function &F, Node *&MappedN);
@@ -1210,8 +1238,8 @@ public:
   ///
   /// This just builds the set of entry points to the call graph. The rest is
   /// built lazily as it is walked.
-  LazyCallGraph run(Module &M, ModuleAnalysisManager &) {
-    return LazyCallGraph(M);
+  LazyCallGraph run(Module &M, ModuleAnalysisManager &AM) {
+    return LazyCallGraph(M, AM.getResult<TargetLibraryAnalysis>(M));
   }
 };
 

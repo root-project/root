@@ -238,7 +238,10 @@ def HasEVA       :    Predicate<"Subtarget->hasEVA()">,
                       AssemblerPredicate<"FeatureEVA,FeatureMips32r2">;
 def HasMSA : Predicate<"Subtarget->hasMSA()">,
              AssemblerPredicate<"FeatureMSA">;
-
+def HasMadd4 : Predicate<"!Subtarget->disableMadd4()">,
+               AssemblerPredicate<"!FeatureMadd4">;
+def HasMT  : Predicate<"Subtarget->hasMT()">,
+             AssemblerPredicate<"FeatureMT">;
 
 //===----------------------------------------------------------------------===//
 // Mips GPR size adjectives.
@@ -380,6 +383,10 @@ class ASE_MSA64 {
   list<Predicate> InsnPredicates = [HasMSA, HasMips64];
 }
 
+class ASE_MT {
+  list <Predicate> InsnPredicates = [HasMT];
+}
+
 // Class used for separating microMIPSr6 and microMIPS (r3) instruction.
 // It can be used only on instructions that doesn't inherit PredicateControl.
 class ISA_MICROMIPS_NOT_32R6_64R6 : PredicateControl {
@@ -388,6 +395,10 @@ class ISA_MICROMIPS_NOT_32R6_64R6 : PredicateControl {
 
 class ASE_NOT_DSP {
   list<Predicate> InsnPredicates = [NotDSP];
+}
+
+class MADD4 {
+  list<Predicate> AdditionalPredicates = [HasMadd4];
 }
 
 //===----------------------------------------------------------------------===//
@@ -2912,6 +2923,10 @@ include "MipsMSAInstrInfo.td"
 // EVA
 include "MipsEVAInstrFormats.td"
 include "MipsEVAInstrInfo.td"
+
+// MT
+include "MipsMTInstrFormats.td"
+include "MipsMTInstrInfo.td"
 
 // Micromips
 include "MicroMipsInstrFormats.td"

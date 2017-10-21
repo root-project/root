@@ -10,8 +10,8 @@
 //===----------------------------------------------------------------------===//
 
 #include "FuzzerCorpus.h"
-#include "FuzzerInternal.h"
 #include "FuzzerIO.h"
+#include "FuzzerInternal.h"
 #include "FuzzerMutate.h"
 #include "FuzzerRandom.h"
 #include "FuzzerShmem.h"
@@ -22,9 +22,6 @@
 #include <set>
 
 #if defined(__has_include)
-#if __has_include(<sanitizer / coverage_interface.h>)
-#include <sanitizer/coverage_interface.h>
-#endif
 #if __has_include(<sanitizer / lsan_interface.h>)
 #include <sanitizer/lsan_interface.h>
 #endif
@@ -117,7 +114,6 @@ Fuzzer::Fuzzer(UserCallback CB, InputCorpus &Corpus, MutationDispatcher &MD,
     : CB(CB), Corpus(Corpus), MD(MD), Options(Options) {
   if (EF->__sanitizer_set_death_callback)
     EF->__sanitizer_set_death_callback(StaticDeathCallback);
-  InitializeTraceState();
   assert(!F);
   F = this;
   TPC.ResetMaps();
@@ -301,7 +297,9 @@ void Fuzzer::SetMaxInputLen(size_t MaxInputLen) {
   this->MaxInputLen = MaxInputLen;
   this->MaxMutationLen = MaxInputLen;
   AllocateCurrentUnitData();
-  Printf("INFO: -max_len is not provided, using %zd\n", MaxInputLen);
+  Printf("INFO: -max_len is not provided; "
+         "libFuzzer will not generate inputs larger than %zd bytes\n",
+         MaxInputLen);
 }
 
 void Fuzzer::SetMaxMutationLen(size_t MaxMutationLen) {
@@ -346,11 +344,8 @@ void Fuzzer::RereadOutputCorpus(size_t MaxSize) {
     if (U.size() > MaxSize)
       U.resize(MaxSize);
     if (!Corpus.HasUnit(U)) {
-      if (size_t NumFeatures = RunOne(U)) {
-        CheckExitOnSrcPosOrItem();
-        Corpus.AddToCorpus(U, NumFeatures);
+      if (RunOne(U.data(), U.size()))
         Reloaded = true;
-      }
     }
   }
   if (Reloaded)
@@ -375,10 +370,7 @@ void Fuzzer::ShuffleAndMinimize(UnitVector *InitialCorpus) {
   ExecuteCallback(&dummy, 0);
 
   for (const auto &U : *InitialCorpus) {
-    if (size_t NumFeatures = RunOne(U)) {
-      CheckExitOnSrcPosOrItem();
-      Corpus.AddToCorpus(U, NumFeatures);
-    }
+    RunOne(U.data(), U.size());
     TryDetectingAMemoryLeak(U.data(), U.size(),
                             /*DuringInitialCorpusExecution*/ true);
   }
@@ -390,18 +382,7 @@ void Fuzzer::ShuffleAndMinimize(UnitVector *InitialCorpus) {
   }
 }
 
-size_t Fuzzer::RunOne(const uint8_t *Data, size_t Size) {
-  if (!Size) return 0;
-  TotalNumberOfRuns++;
-
-  ExecuteCallback(Data, Size);
-
-  size_t NumUpdatesBefore = Corpus.NumFeatureUpdates();
-  TPC.CollectFeatures([&](size_t Feature) {
-    Corpus.AddFeature(Feature, Size, Options.Shrink);
-  });
-  size_t NumUpdatesAfter = Corpus.NumFeatureUpdates();
-
+void Fuzzer::PrintPulseAndReportSlowInput(const uint8_t *Data, size_t Size) {
   auto TimeOfUnit =
       duration_cast<seconds>(UnitStopTime - UnitStartTime).count();
   if (!(TotalNumberOfRuns & (TotalNumberOfRuns - 1)) &&
@@ -413,7 +394,41 @@ size_t Fuzzer::RunOne(const uint8_t *Data, size_t Size) {
     Printf("Slowest unit: %zd s:\n", TimeOfLongestUnitInSeconds);
     WriteUnitToFileWithPrefix({Data, Data + Size}, "slow-unit-");
   }
-  return NumUpdatesAfter - NumUpdatesBefore;
+}
+
+bool Fuzzer::RunOne(const uint8_t *Data, size_t Size, bool MayDeleteFile,
+                    InputInfo *II) {
+  if (!Size) return false;
+
+  ExecuteCallback(Data, Size);
+
+  UniqFeatureSetTmp.clear();
+  size_t FoundUniqFeaturesOfII = 0;
+  size_t NumUpdatesBefore = Corpus.NumFeatureUpdates();
+  TPC.CollectFeatures([&](size_t Feature) {
+    if (Corpus.AddFeature(Feature, Size, Options.Shrink))
+      UniqFeatureSetTmp.push_back(Feature);
+    if (Options.ReduceInputs && II)
+      if (std::binary_search(II->UniqFeatureSet.begin(),
+                             II->UniqFeatureSet.end(), Feature))
+        FoundUniqFeaturesOfII++;
+  });
+  PrintPulseAndReportSlowInput(Data, Size);
+  size_t NumNewFeatures = Corpus.NumFeatureUpdates() - NumUpdatesBefore;
+  if (NumNewFeatures) {
+    Corpus.AddToCorpus({Data, Data + Size}, NumNewFeatures, MayDeleteFile,
+                       UniqFeatureSetTmp);
+    CheckExitOnSrcPosOrItem();
+    return true;
+  }
+  if (II && FoundUniqFeaturesOfII &&
+      FoundUniqFeaturesOfII == II->UniqFeatureSet.size() &&
+      II->U.size() > Size) {
+    Corpus.Replace(II, {Data, Data + Size});
+    CheckExitOnSrcPosOrItem();
+    return true;
+  }
+  return false;
 }
 
 size_t Fuzzer::GetCurrentUnitInFuzzingThead(const uint8_t **Data) const {
@@ -441,6 +456,7 @@ static bool LooseMemeq(const uint8_t *A, const uint8_t *B, size_t Size) {
 }
 
 void Fuzzer::ExecuteCallback(const uint8_t *Data, size_t Size) {
+  TotalNumberOfRuns++;
   assert(InFuzzingThread());
   if (SMR.IsClient())
     SMR.WriteByteArray(Data, Size);
@@ -491,10 +507,10 @@ void Fuzzer::WriteUnitToFileWithPrefix(const Unit &U, const char *Prefix) {
     Printf("Base64: %s\n", Base64(U).c_str());
 }
 
-void Fuzzer::PrintStatusForNewUnit(const Unit &U) {
+void Fuzzer::PrintStatusForNewUnit(const Unit &U, const char *Text) {
   if (!Options.PrintNEW)
     return;
-  PrintStats("NEW   ", "");
+  PrintStats(Text, "");
   if (Options.Verbosity) {
     Printf(" L: %zd ", U.size());
     MD.PrintMutationSequence();
@@ -505,7 +521,8 @@ void Fuzzer::PrintStatusForNewUnit(const Unit &U) {
 void Fuzzer::ReportNewCoverage(InputInfo *II, const Unit &U) {
   II->NumSuccessfullMutations++;
   MD.RecordSuccessfulMutationSequence();
-  PrintStatusForNewUnit(U);
+  PrintStatusForNewUnit(U, II->Reduced ? "REDUCE" :
+                                         "NEW   ");
   WriteToOutputCorpus(U);
   NumberOfNewUnitsAdded++;
   TPC.PrintNewPCs();
@@ -590,16 +607,10 @@ void Fuzzer::MutateAndTestOne() {
     assert(NewSize > 0 && "Mutator returned empty unit");
     assert(NewSize <= CurrentMaxMutationLen && "Mutator return overisized unit");
     Size = NewSize;
-    if (i == 0)
-      StartTraceRecording();
     II.NumExecutedMutations++;
-    if (size_t NumFeatures = RunOne(CurrentUnitData, Size)) {
-      Corpus.AddToCorpus({CurrentUnitData, CurrentUnitData + Size}, NumFeatures,
-                         /*MayDeleteFile=*/true);
+    if (RunOne(CurrentUnitData, Size, /*MayDeleteFile=*/true, &II))
       ReportNewCoverage(&II, {CurrentUnitData, CurrentUnitData + Size});
-      CheckExitOnSrcPosOrItem();
-    }
-    StopTraceRecording();
+
     TryDetectingAMemoryLeak(CurrentUnitData, Size,
                             /*DuringInitialCorpusExecution*/ false);
   }
@@ -636,7 +647,8 @@ void Fuzzer::MinimizeCrashLoop(const Unit &U) {
     for (int i = 0; i < Options.MutateDepth; i++) {
       size_t NewSize = MD.Mutate(CurrentUnitData, U.size(), MaxMutationLen);
       assert(NewSize > 0 && NewSize <= MaxMutationLen);
-      RunOne(CurrentUnitData, NewSize);
+      ExecuteCallback(CurrentUnitData, NewSize);
+      PrintPulseAndReportSlowInput(CurrentUnitData, NewSize);
       TryDetectingAMemoryLeak(CurrentUnitData, NewSize,
                               /*DuringInitialCorpusExecution*/ false);
     }

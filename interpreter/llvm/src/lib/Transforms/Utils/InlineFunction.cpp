@@ -12,7 +12,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/SmallPtrSet.h"
 #include "llvm/ADT/SmallSet.h"
@@ -28,13 +27,13 @@
 #include "llvm/Analysis/ProfileSummaryInfo.h"
 #include "llvm/Analysis/ValueTracking.h"
 #include "llvm/IR/Attributes.h"
-#include "llvm/IR/CallSite.h"
 #include "llvm/IR/CFG.h"
+#include "llvm/IR/CallSite.h"
 #include "llvm/IR/Constants.h"
+#include "llvm/IR/DIBuilder.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DebugInfo.h"
 #include "llvm/IR/DerivedTypes.h"
-#include "llvm/IR/DIBuilder.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Instructions.h"
@@ -43,6 +42,7 @@
 #include "llvm/IR/MDBuilder.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/CommandLine.h"
+#include "llvm/Transforms/Utils/Cloning.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include <algorithm>
 
@@ -1397,11 +1397,12 @@ static void updateCallerBFI(BasicBlock *CallSiteBlock,
 static void updateCallProfile(Function *Callee, const ValueToValueMapTy &VMap,
                               const Optional<uint64_t> &CalleeEntryCount,
                               const Instruction *TheCall,
-                              ProfileSummaryInfo *PSI) {
+                              ProfileSummaryInfo *PSI,
+                              BlockFrequencyInfo *CallerBFI) {
   if (!CalleeEntryCount.hasValue() || CalleeEntryCount.getValue() < 1)
     return;
   Optional<uint64_t> CallSiteCount =
-      PSI ? PSI->getProfileCount(TheCall, nullptr) : None;
+      PSI ? PSI->getProfileCount(TheCall, CallerBFI) : None;
   uint64_t CallCount =
       std::min(CallSiteCount.hasValue() ? CallSiteCount.getValue() : 0,
                CalleeEntryCount.getValue());
@@ -1637,7 +1638,7 @@ bool llvm::InlineFunction(CallSite CS, InlineFunctionInfo &IFI,
                       CalledFunc->front());
 
     updateCallProfile(CalledFunc, VMap, CalledFunc->getEntryCount(), TheCall,
-                      IFI.PSI);
+                      IFI.PSI, IFI.CallerBFI);
     // Update the profile count of callee.
     updateCalleeCount(IFI.CallerBFI, OrigBB, TheCall, CalledFunc, IFI.PSI);
 

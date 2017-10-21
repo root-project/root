@@ -124,6 +124,16 @@ bool IndexingContext::isTemplateImplicitInstantiation(const Decl *D) {
     TKind = FD->getTemplateSpecializationKind();
   } else if (auto *VD = dyn_cast<VarDecl>(D)) {
     TKind = VD->getTemplateSpecializationKind();
+  } else if (const auto *RD = dyn_cast<CXXRecordDecl>(D)) {
+    if (RD->getInstantiatedFromMemberClass())
+      TKind = RD->getTemplateSpecializationKind();
+  } else if (const auto *ED = dyn_cast<EnumDecl>(D)) {
+    if (ED->getInstantiatedFromMemberEnum())
+      TKind = ED->getTemplateSpecializationKind();
+  } else if (isa<FieldDecl>(D) || isa<TypedefNameDecl>(D) ||
+             isa<EnumConstantDecl>(D)) {
+    if (const auto *Parent = dyn_cast<Decl>(D->getDeclContext()))
+      return isTemplateImplicitInstantiation(Parent);
   }
   switch (TKind) {
     case TSK_Undeclared:
@@ -151,6 +161,16 @@ bool IndexingContext::shouldIgnoreIfImplicit(const Decl *D) {
   return true;
 }
 
+static const CXXRecordDecl *
+getDeclContextForTemplateInstationPattern(const Decl *D) {
+  if (const auto *CTSD =
+          dyn_cast<ClassTemplateSpecializationDecl>(D->getDeclContext()))
+    return CTSD->getTemplateInstantiationPattern();
+  else if (const auto *RD = dyn_cast<CXXRecordDecl>(D->getDeclContext()))
+    return RD->getInstantiatedFromMemberClass();
+  return nullptr;
+}
+
 static const Decl *adjustTemplateImplicitInstantiation(const Decl *D) {
   if (const ClassTemplateSpecializationDecl *
       SD = dyn_cast<ClassTemplateSpecializationDecl>(D)) {
@@ -159,6 +179,28 @@ static const Decl *adjustTemplateImplicitInstantiation(const Decl *D) {
     return FD->getTemplateInstantiationPattern();
   } else if (auto *VD = dyn_cast<VarDecl>(D)) {
     return VD->getTemplateInstantiationPattern();
+  } else if (const auto *RD = dyn_cast<CXXRecordDecl>(D)) {
+    return RD->getInstantiatedFromMemberClass();
+  } else if (const auto *ED = dyn_cast<EnumDecl>(D)) {
+    return ED->getInstantiatedFromMemberEnum();
+  } else if (isa<FieldDecl>(D) || isa<TypedefNameDecl>(D)) {
+    const auto *ND = cast<NamedDecl>(D);
+    if (const CXXRecordDecl *Pattern =
+            getDeclContextForTemplateInstationPattern(ND)) {
+      for (const NamedDecl *BaseND : Pattern->lookup(ND->getDeclName())) {
+        if (BaseND->isImplicit())
+          continue;
+        if (BaseND->getKind() == ND->getKind())
+          return BaseND;
+      }
+    }
+  } else if (const auto *ECD = dyn_cast<EnumConstantDecl>(D)) {
+    if (const auto *ED = dyn_cast<EnumDecl>(ECD->getDeclContext())) {
+      if (const EnumDecl *Pattern = ED->getInstantiatedFromMemberEnum()) {
+        for (const NamedDecl *BaseECD : Pattern->lookup(ECD->getDeclName()))
+          return BaseECD;
+      }
+    }
   }
   return nullptr;
 }
@@ -187,6 +229,12 @@ static bool isDeclADefinition(const Decl *D, const DeclContext *ContainerDC, AST
   return false;
 }
 
+/// Whether the given NamedDecl should be skipped because it has no name.
+static bool shouldSkipNamelessDecl(const NamedDecl *ND) {
+  return ND->getDeclName().isEmpty() && !isa<TagDecl>(ND) &&
+         !isa<ObjCCategoryDecl>(ND);
+}
+
 static const Decl *adjustParent(const Decl *Parent) {
   if (!Parent)
     return nullptr;
@@ -201,8 +249,8 @@ static const Decl *adjustParent(const Decl *Parent) {
     } else if (auto RD = dyn_cast<RecordDecl>(Parent)) {
       if (RD->isAnonymousStructOrUnion())
         continue;
-    } else if (auto FD = dyn_cast<FieldDecl>(Parent)) {
-      if (FD->getDeclName().isEmpty())
+    } else if (auto ND = dyn_cast<NamedDecl>(Parent)) {
+      if (shouldSkipNamelessDecl(ND))
         continue;
     }
     return Parent;
@@ -212,8 +260,10 @@ static const Decl *adjustParent(const Decl *Parent) {
 static const Decl *getCanonicalDecl(const Decl *D) {
   D = D->getCanonicalDecl();
   if (auto TD = dyn_cast<TemplateDecl>(D)) {
-    D = TD->getTemplatedDecl();
-    assert(D->isCanonicalDecl());
+    if (auto TTD = TD->getTemplatedDecl()) {
+      D = TTD;
+      assert(D->isCanonicalDecl());
+    }
   }
 
   return D;
@@ -273,9 +323,7 @@ bool IndexingContext::handleDeclOccurrence(const Decl *D, SourceLocation Loc,
                                            const DeclContext *ContainerDC) {
   if (D->isImplicit() && !isa<ObjCMethodDecl>(D))
     return true;
-  if (!isa<NamedDecl>(D) ||
-      (cast<NamedDecl>(D)->getDeclName().isEmpty() &&
-       !isa<TagDecl>(D) && !isa<ObjCCategoryDecl>(D)))
+  if (!isa<NamedDecl>(D) || shouldSkipNamelessDecl(cast<NamedDecl>(D)))
     return true;
 
   SourceManager &SM = Ctx->getSourceManager();

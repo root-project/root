@@ -510,7 +510,8 @@ class InstrItineraryData;
     bool canCombineStoreAndExtract(Type *VectorTy, Value *Idx,
                                    unsigned &Cost) const override;
 
-    bool canMergeStoresTo(EVT MemVT) const override {
+    bool canMergeStoresTo(unsigned AddressSpace, EVT MemVT,
+                          const SelectionDAG &DAG) const override {
       // Do not merge to larger than i32.
       return (MemVT.getSizeInBits() <= 32);
     }
@@ -601,6 +602,8 @@ class InstrItineraryData;
     SDValue LowerINTRINSIC_WO_CHAIN(SDValue Op, SelectionDAG &DAG,
                                     const ARMSubtarget *Subtarget) const;
     SDValue LowerBlockAddress(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerConstantPool(SDValue Op, SelectionDAG &DAG) const;
+    SDValue LowerGlobalAddress(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerGlobalAddressDarwin(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerGlobalAddressELF(SDValue Op, SelectionDAG &DAG) const;
     SDValue LowerGlobalAddressWindows(SDValue Op, SelectionDAG &DAG) const;

@@ -165,6 +165,9 @@ public:
     if (!TD)
       return true;
     CXXRecordDecl *RD = TD->getTemplatedDecl();
+    if (!RD->hasDefinition())
+      return true;
+    RD = RD->getDefinition();
     std::vector<const NamedDecl *> Symbols =
         RD->lookupDependentName(NameInfo.getName(), Filter);
     // FIXME: Improve overload handling.
@@ -227,7 +230,31 @@ public:
       SmallVector<SymbolRelation, 2> Relations;
       addCallRole(Roles, Relations);
       Stmt *Containing = getParentStmt();
-      if (E->isImplicit() || (Containing && isa<PseudoObjectExpr>(Containing)))
+
+      auto IsImplicitProperty = [](const PseudoObjectExpr *POE) -> bool {
+        const auto *E = POE->getSyntacticForm();
+        if (const auto *BinOp = dyn_cast<BinaryOperator>(E))
+          E = BinOp->getLHS();
+        const auto *PRE = dyn_cast<ObjCPropertyRefExpr>(E);
+        if (!PRE)
+          return false;
+        if (PRE->isExplicitProperty())
+          return false;
+        if (const ObjCMethodDecl *Getter = PRE->getImplicitPropertyGetter()) {
+          // Class properties that are explicitly defined using @property
+          // declarations are represented implicitly as there is no ivar for
+          // class properties.
+          if (Getter->isClassMethod() &&
+              Getter->getCanonicalDecl()->findPropertyDecl())
+            return false;
+        }
+        return true;
+      };
+      bool IsPropCall = Containing && isa<PseudoObjectExpr>(Containing);
+      // Implicit property message sends are not 'implicit'.
+      if ((E->isImplicit() || IsPropCall) &&
+          !(IsPropCall &&
+            IsImplicitProperty(cast<PseudoObjectExpr>(Containing))))
         Roles |= (unsigned)SymbolRole::Implicit;
 
       if (isDynamic(E)) {
@@ -243,11 +270,26 @@ public:
   }
 
   bool VisitObjCPropertyRefExpr(ObjCPropertyRefExpr *E) {
+    if (E->isClassReceiver())
+      IndexCtx.handleReference(E->getClassReceiver(), E->getReceiverLocation(),
+                               Parent, ParentDC);
     if (E->isExplicitProperty()) {
       SmallVector<SymbolRelation, 2> Relations;
       SymbolRoleSet Roles = getRolesForRef(E, Relations);
       return IndexCtx.handleReference(E->getExplicitProperty(), E->getLocation(),
                                       Parent, ParentDC, Roles, Relations, E);
+    } else if (const ObjCMethodDecl *Getter = E->getImplicitPropertyGetter()) {
+      // Class properties that are explicitly defined using @property
+      // declarations are represented implicitly as there is no ivar for class
+      // properties.
+      if (Getter->isClassMethod()) {
+        if (const auto *PD = Getter->getCanonicalDecl()->findPropertyDecl()) {
+          SmallVector<SymbolRelation, 2> Relations;
+          SymbolRoleSet Roles = getRolesForRef(E, Relations);
+          return IndexCtx.handleReference(PD, E->getLocation(), Parent,
+                                          ParentDC, Roles, Relations, E);
+        }
+      }
     }
 
     // No need to do a handleReference for the objc method, because there will

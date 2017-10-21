@@ -266,7 +266,7 @@ computeFunctionSummary(ModuleSummaryIndex &Index, const Module &M,
   // sample PGO, to enable the same inlines as the profiled optimized binary.
   for (auto &I : F.getImportGUIDs())
     CallGraphEdges[Index.getOrInsertValueInfo(I)].updateHotness(
-        CalleeInfo::HotnessType::Hot);
+        CalleeInfo::HotnessType::Critical);
 
   bool NonRenamableLocal = isNonRenamableLocal(F);
   bool NotEligibleForImport =
@@ -275,7 +275,7 @@ computeFunctionSummary(ModuleSummaryIndex &Index, const Module &M,
       // FIXME: refactor this to use the same code that inliner is using.
       F.isVarArg();
   GlobalValueSummary::GVFlags Flags(F.getLinkage(), NotEligibleForImport,
-                                    /* LiveRoot = */ false);
+                                    /* Live = */ false);
   auto FuncSummary = llvm::make_unique<FunctionSummary>(
       Flags, NumInsts, RefEdges.takeVector(), CallGraphEdges.takeVector(),
       TypeTests.takeVector(), TypeTestAssumeVCalls.takeVector(),
@@ -295,7 +295,7 @@ computeVariableSummary(ModuleSummaryIndex &Index, const GlobalVariable &V,
   findRefEdges(Index, &V, RefEdges, Visited);
   bool NonRenamableLocal = isNonRenamableLocal(V);
   GlobalValueSummary::GVFlags Flags(V.getLinkage(), NonRenamableLocal,
-                                    /* LiveRoot = */ false);
+                                    /* Live = */ false);
   auto GVarSummary =
       llvm::make_unique<GlobalVarSummary>(Flags, RefEdges.takeVector());
   if (NonRenamableLocal)
@@ -308,7 +308,7 @@ computeAliasSummary(ModuleSummaryIndex &Index, const GlobalAlias &A,
                     DenseSet<GlobalValue::GUID> &CantBePromoted) {
   bool NonRenamableLocal = isNonRenamableLocal(A);
   GlobalValueSummary::GVFlags Flags(A.getLinkage(), NonRenamableLocal,
-                                    /* LiveRoot = */ false);
+                                    /* Live = */ false);
   auto AS = llvm::make_unique<AliasSummary>(Flags, ArrayRef<ValueInfo>{});
   auto *Aliasee = A.getBaseObject();
   auto *AliaseeSummary = Index.getGlobalValueSummary(*Aliasee);
@@ -323,7 +323,7 @@ computeAliasSummary(ModuleSummaryIndex &Index, const GlobalAlias &A,
 static void setLiveRoot(ModuleSummaryIndex &Index, StringRef Name) {
   if (ValueInfo VI = Index.getValueInfo(GlobalValue::getGUID(Name)))
     for (auto &Summary : VI.getSummaryList())
-      Summary->setLiveRoot();
+      Summary->setLive(true);
 }
 
 ModuleSummaryIndex llvm::buildModuleSummaryIndex(
@@ -423,8 +423,8 @@ ModuleSummaryIndex llvm::buildModuleSummaryIndex(
             return;
           assert(GV->isDeclaration() && "Def in module asm already has definition");
           GlobalValueSummary::GVFlags GVFlags(GlobalValue::InternalLinkage,
-                                              /* NotEligibleToImport */ true,
-                                              /* LiveRoot */ true);
+                                              /* NotEligibleToImport = */ true,
+                                              /* Live = */ true);
           CantBePromoted.insert(GlobalValue::getGUID(Name));
           // Create the appropriate summary type.
           if (isa<Function>(GV)) {
@@ -447,6 +447,11 @@ ModuleSummaryIndex llvm::buildModuleSummaryIndex(
         });
   }
 
+  bool IsThinLTO = true;
+  if (auto *MD =
+          mdconst::extract_or_null<ConstantInt>(M.getModuleFlag("ThinLTO")))
+    IsThinLTO = MD->getZExtValue();
+
   for (auto &GlobalList : Index) {
     // Ignore entries for references that are undefined in the current module.
     if (GlobalList.second.SummaryList.empty())
@@ -455,6 +460,11 @@ ModuleSummaryIndex llvm::buildModuleSummaryIndex(
     assert(GlobalList.second.SummaryList.size() == 1 &&
            "Expected module's index to have one summary per GUID");
     auto &Summary = GlobalList.second.SummaryList[0];
+    if (!IsThinLTO) {
+      Summary->setNotEligibleToImport();
+      continue;
+    }
+
     bool AllRefsCanBeExternallyReferenced =
         llvm::all_of(Summary->refs(), [&](const ValueInfo &VI) {
           return !CantBePromoted.count(VI.getGUID());

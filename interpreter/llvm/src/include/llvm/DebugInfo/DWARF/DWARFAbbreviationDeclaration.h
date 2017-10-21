@@ -10,11 +10,11 @@
 #ifndef LLVM_DEBUGINFO_DWARFABBREVIATIONDECLARATION_H
 #define LLVM_DEBUGINFO_DWARFABBREVIATIONDECLARATION_H
 
-#include "llvm/ADT/iterator_range.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/iterator_range.h"
+#include "llvm/BinaryFormat/Dwarf.h"
 #include "llvm/Support/DataExtractor.h"
-#include "llvm/Support/Dwarf.h"
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
@@ -33,6 +33,7 @@ public:
 
     dwarf::Attribute Attr;
     dwarf::Form Form;
+
     /// The following field is used for ByteSize for non-implicit_const
     /// attributes and as value for implicit_const ones, indicated by
     /// Form == DW_FORM_implicit_const.
@@ -58,7 +59,7 @@ public:
     /// the ByteSize member.
     Optional<int64_t> getByteSize(const DWARFUnit &U) const;
   };
-  typedef SmallVector<AttributeSpec, 8> AttributeSpecVector;
+  using AttributeSpecVector = SmallVector<AttributeSpec, 8>;
 
   DWARFAbbreviationDeclaration();
 
@@ -67,8 +68,8 @@ public:
   dwarf::Tag getTag() const { return Tag; }
   bool hasChildren() const { return HasChildren; }
 
-  typedef iterator_range<AttributeSpecVector::const_iterator>
-  attr_iterator_range;
+  using attr_iterator_range =
+      iterator_range<AttributeSpecVector::const_iterator>;
 
   attr_iterator_range attributes() const {
     return attr_iterator_range(AttributeSpecs.begin(), AttributeSpecs.end());

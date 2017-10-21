@@ -41,19 +41,6 @@ using namespace llvm::msf;
 using namespace llvm::support;
 using namespace llvm::pdb;
 
-// This is PSGSIHDR struct defined in
-// https://github.com/Microsoft/microsoft-pdb/blob/master/PDB/dbi/gsi.h
-struct PublicsStream::HeaderInfo {
-  ulittle32_t SymHash;
-  ulittle32_t AddrMap;
-  ulittle32_t NumThunks;
-  ulittle32_t SizeOfThunk;
-  ulittle16_t ISectThunkTable;
-  char Padding[2];
-  ulittle32_t OffThunkTable;
-  ulittle32_t NumSections;
-};
-
 PublicsStream::PublicsStream(PDBFile &File,
                              std::unique_ptr<MappedBlockStream> Stream)
     : Pdb(File), Stream(std::move(Stream)) {}
@@ -72,7 +59,8 @@ Error PublicsStream::reload() {
   BinaryStreamReader Reader(*Stream);
 
   // Check stream size.
-  if (Reader.bytesRemaining() < sizeof(HeaderInfo) + sizeof(GSIHashHeader))
+  if (Reader.bytesRemaining() <
+      sizeof(PublicsStreamHeader) + sizeof(GSIHashHeader))
     return make_error<RawError>(raw_error_code::corrupt_file,
                                 "Publics Stream does not contain a header.");
 
@@ -105,10 +93,12 @@ Error PublicsStream::reload() {
                                            "Could not read a thunk map."));
 
   // Something called "section map" follows.
-  if (auto EC = Reader.readArray(SectionOffsets, Header->NumSections))
-    return joinErrors(std::move(EC),
-                      make_error<RawError>(raw_error_code::corrupt_file,
-                                           "Could not read a section map."));
+  if (Reader.bytesRemaining() > 0) {
+    if (auto EC = Reader.readArray(SectionOffsets, Header->NumSections))
+      return joinErrors(std::move(EC),
+                        make_error<RawError>(raw_error_code::corrupt_file,
+                                             "Could not read a section map."));
+  }
 
   if (Reader.bytesRemaining() > 0)
     return make_error<RawError>(raw_error_code::corrupt_file,
@@ -126,6 +116,15 @@ PublicsStream::getSymbols(bool *HadError) const {
   SymbolStream &SS = SymbolS.get();
 
   return SS.getSymbols(HadError);
+}
+
+Expected<const codeview::CVSymbolArray &>
+PublicsStream::getSymbolArray() const {
+  auto SymbolS = Pdb.getPDBSymbolStream();
+  if (!SymbolS)
+    return SymbolS.takeError();
+
+  return SymbolS->getSymbolArray();
 }
 
 Error PublicsStream::commit() { return Error::success(); }
