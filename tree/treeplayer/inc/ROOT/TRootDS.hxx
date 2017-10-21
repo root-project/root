@@ -32,7 +32,7 @@ public:
    const std::vector<std::string> &GetColumnNames() const;
    bool HasColumn(std::string_view colName) const;
    void InitSlot(unsigned int slot, ULong64_t firstEntry);
-   const std::vector<std::pair<ULong64_t, ULong64_t>> &GetEntryRanges() const;
+   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
    void SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
 };
