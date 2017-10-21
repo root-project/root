@@ -3070,6 +3070,9 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    //       a chain we get the chain's current tree.
    TTree* thistree = GetTree();
 
+   // We will use this to override the IO features on the cloned branches.
+   ROOT::TIOFeatures features = this->GetIOFeatures();;
+
    // Note: For a chain, the returned clone will be
    //       a clone of the chain's first tree.
    TTree* newtree = (TTree*) thistree->Clone();
@@ -3124,6 +3127,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
       if (branch && (newcomp > -1)) {
          branch->SetCompressionSettings(newcomp);
       }
+      branch->SetIOFeatures(features);
       if (!branch || !branch->TestBit(kDoNotProcess)) {
          continue;
       }
@@ -6675,7 +6679,12 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
    const char *options = info ? info->fOptions.Data() : "";
    if (info && info->fIsFirst && info->fOutputDirectory && info->fOutputDirectory->GetFile() != GetCurrentFile()) {
       TDirectory::TContext ctxt(info->fOutputDirectory);
+      TIOFeatures saved_features = fIOFeatures;
+      if (info->fIOFeatures) {
+          fIOFeatures = *(info->fIOFeatures);
+      }
       TTree *newtree = CloneTree(-1, options);
+      fIOFeatures = saved_features;
       if (newtree) {
          newtree->Write();
          delete newtree;
