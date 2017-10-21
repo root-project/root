@@ -289,6 +289,7 @@ int main( int argc, char **argv )
                }
             }
          }
+         ++ffirst;
       } else if ( strcmp(argv[a],"-n") == 0 ) {
          if (a+1 >= argc) {
             std::cerr << "Error: no maximum number of opened was provided after -n.\n";
