@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "NVPTXISelLowering.h"
 #include "MCTargetDesc/NVPTXBaseInfo.h"
 #include "NVPTX.h"
-#include "NVPTXISelLowering.h"
 #include "NVPTXSection.h"
 #include "NVPTXSubtarget.h"
 #include "NVPTXTargetMachine.h"
@@ -62,7 +62,6 @@
 #include <utility>
 #include <vector>
 
-#undef DEBUG_TYPE
 #define DEBUG_TYPE "nvptx-lower"
 
 using namespace llvm;
@@ -1548,7 +1547,9 @@ SDValue NVPTXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
 
           Chain = DAG.getMemIntrinsicNode(
               Op, dl, DAG.getVTList(MVT::Other, MVT::Glue), StoreOperands,
-              TheStoreType, MachinePointerInfo(), EltAlign);
+              TheStoreType, MachinePointerInfo(), EltAlign,
+              /* Volatile */ false, /* ReadMem */ false,
+              /* WriteMem */ true, /* Size */ 0);
           InFlag = Chain.getValue(1);
 
           // Cleanup.
@@ -1608,7 +1609,9 @@ SDValue NVPTXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
                                  theVal, InFlag };
       Chain = DAG.getMemIntrinsicNode(NVPTXISD::StoreParam, dl, CopyParamVTs,
                                       CopyParamOps, elemtype,
-                                      MachinePointerInfo());
+                                      MachinePointerInfo(), /* Align */ 0,
+                                      /* Volatile */ false, /* ReadMem */ false,
+                                      /* WriteMem */ true, /* Size */ 0);
 
       InFlag = Chain.getValue(1);
     }
@@ -1794,7 +1797,8 @@ SDValue NVPTXTargetLowering::LowerCall(TargetLowering::CallLoweringInfo &CLI,
             DAG.getConstant(Offsets[VecIdx], dl, MVT::i32), InFlag};
         SDValue RetVal = DAG.getMemIntrinsicNode(
             Op, dl, DAG.getVTList(LoadVTs), LoadOperands, TheLoadType,
-            MachinePointerInfo(), EltAlign);
+            MachinePointerInfo(), EltAlign, /* Volatile */ false,
+            /* ReadMem */ true, /* WriteMem */ false, /* Size */ 0);
 
         for (unsigned j = 0; j < NumElts; ++j) {
           SDValue Ret = RetVal.getValue(j);
@@ -2451,7 +2455,7 @@ SDValue NVPTXTargetLowering::LowerFormalArguments(
             // v2f16 was loaded as an i32. Now we must bitcast it back.
             else if (EltVT == MVT::v2f16)
               Elt = DAG.getNode(ISD::BITCAST, dl, MVT::v2f16, Elt);
-            // Extend the element if necesary (e.g. an i8 is loaded
+            // Extend the element if necessary (e.g. an i8 is loaded
             // into an i16 register)
             if (Ins[InsIdx].VT.isInteger() &&
                 Ins[InsIdx].VT.getSizeInBits() > LoadVT.getSizeInBits()) {

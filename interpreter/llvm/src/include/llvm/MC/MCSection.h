@@ -14,8 +14,8 @@
 #ifndef LLVM_MC_MCSECTION_H
 #define LLVM_MC_MCSECTION_H
 
-#include "llvm/ADT/ilist.h"
 #include "llvm/ADT/SmallVector.h"
+#include "llvm/ADT/ilist.h"
 #include "llvm/MC/MCFragment.h"
 #include "llvm/MC/SectionKind.h"
 #include <cassert>
@@ -167,7 +167,7 @@ public:
 
   MCSection::iterator getSubsectionInsertionPoint(unsigned Subsection);
 
-  void dump();
+  void dump() const;
 
   virtual void PrintSwitchToSection(const MCAsmInfo &MAI, const Triple &T,
                                     raw_ostream &OS,

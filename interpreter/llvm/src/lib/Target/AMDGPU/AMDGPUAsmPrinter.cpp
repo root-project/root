@@ -17,25 +17,25 @@
 //
 
 #include "AMDGPUAsmPrinter.h"
-#include "AMDGPUTargetMachine.h"
-#include "MCTargetDesc/AMDGPUTargetStreamer.h"
-#include "InstPrinter/AMDGPUInstPrinter.h"
-#include "Utils/AMDGPUBaseInfo.h"
 #include "AMDGPU.h"
 #include "AMDGPUSubtarget.h"
+#include "AMDGPUTargetMachine.h"
+#include "InstPrinter/AMDGPUInstPrinter.h"
+#include "MCTargetDesc/AMDGPUTargetStreamer.h"
 #include "R600Defines.h"
 #include "R600MachineFunctionInfo.h"
 #include "R600RegisterInfo.h"
 #include "SIDefines.h"
-#include "SIMachineFunctionInfo.h"
 #include "SIInstrInfo.h"
+#include "SIMachineFunctionInfo.h"
 #include "SIRegisterInfo.h"
+#include "Utils/AMDGPUBaseInfo.h"
+#include "llvm/BinaryFormat/ELF.h"
 #include "llvm/CodeGen/MachineFrameInfo.h"
 #include "llvm/IR/DiagnosticInfo.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCSectionELF.h"
 #include "llvm/MC/MCStreamer.h"
-#include "llvm/Support/ELF.h"
 #include "llvm/Support/MathExtras.h"
 #include "llvm/Support/TargetRegistry.h"
 #include "llvm/Target/TargetLoweringObjectFile.h"
@@ -268,19 +268,10 @@ bool AMDGPUAsmPrinter::runOnMachineFunction(MachineFunction &MF) {
                                  CurrentProgramInfo.ScratchSize,
                                  getFunctionCodeSize(MF));
 
-      OutStreamer->emitRawComment(" codeLenInByte = " +
-                                  Twine(getFunctionCodeSize(MF)), false);
-      OutStreamer->emitRawComment(
-        " NumSgprs: " + Twine(CurrentProgramInfo.NumSGPR), false);
-      OutStreamer->emitRawComment(
-        " NumVgprs: " + Twine(CurrentProgramInfo.NumVGPR), false);
-
       OutStreamer->emitRawComment(
         " FloatMode: " + Twine(CurrentProgramInfo.FloatMode), false);
       OutStreamer->emitRawComment(
         " IeeeMode: " + Twine(CurrentProgramInfo.IEEEMode), false);
-      OutStreamer->emitRawComment(
-        " ScratchSize: " + Twine(CurrentProgramInfo.ScratchSize), false);
       OutStreamer->emitRawComment(
         " LDSByteSize: " + Twine(CurrentProgramInfo.LDSSize) +
         " bytes/workgroup (compile time only)", false);
@@ -503,40 +494,37 @@ AMDGPUAsmPrinter::SIFunctionResourceInfo AMDGPUAsmPrinter::analyzeResourceUsage(
   Info.HasDynamicallySizedStack = FrameInfo.hasVarSizedObjects();
   Info.PrivateSegmentSize = FrameInfo.getStackSize();
 
-  if (!FrameInfo.hasCalls()) {
-    Info.UsesVCC = MRI.isPhysRegUsed(AMDGPU::VCC_LO) ||
-                   MRI.isPhysRegUsed(AMDGPU::VCC_HI);
 
-    // If there are no calls, MachineRegisterInfo can tell us the used register
-    // count easily.
+  Info.UsesVCC = MRI.isPhysRegUsed(AMDGPU::VCC_LO) ||
+                 MRI.isPhysRegUsed(AMDGPU::VCC_HI);
 
-    MCPhysReg HighestVGPRReg = AMDGPU::NoRegister;
-    for (MCPhysReg Reg : reverse(AMDGPU::VGPR_32RegClass.getRegisters())) {
-      if (MRI.isPhysRegUsed(Reg)) {
-        HighestVGPRReg = Reg;
-        break;
-      }
+  // If there are no calls, MachineRegisterInfo can tell us the used register
+  // count easily.
+
+  MCPhysReg HighestVGPRReg = AMDGPU::NoRegister;
+  for (MCPhysReg Reg : reverse(AMDGPU::VGPR_32RegClass.getRegisters())) {
+    if (MRI.isPhysRegUsed(Reg)) {
+      HighestVGPRReg = Reg;
+      break;
     }
-
-    MCPhysReg HighestSGPRReg = AMDGPU::NoRegister;
-    for (MCPhysReg Reg : reverse(AMDGPU::SGPR_32RegClass.getRegisters())) {
-      if (MRI.isPhysRegUsed(Reg)) {
-        HighestSGPRReg = Reg;
-        break;
-      }
-    }
-
-    // We found the maximum register index. They start at 0, so add one to get the
-    // number of registers.
-    Info.NumVGPR = HighestVGPRReg == AMDGPU::NoRegister ? 0 :
-      TRI.getHWRegIndex(HighestVGPRReg) + 1;
-    Info.NumExplicitSGPR = HighestSGPRReg == AMDGPU::NoRegister ? 0 :
-      TRI.getHWRegIndex(HighestSGPRReg) + 1;
-
-    return Info;
   }
 
-  llvm_unreachable("calls not implemented");
+  MCPhysReg HighestSGPRReg = AMDGPU::NoRegister;
+  for (MCPhysReg Reg : reverse(AMDGPU::SGPR_32RegClass.getRegisters())) {
+    if (MRI.isPhysRegUsed(Reg)) {
+      HighestSGPRReg = Reg;
+      break;
+    }
+  }
+
+  // We found the maximum register index. They start at 0, so add one to get the
+  // number of registers.
+  Info.NumVGPR = HighestVGPRReg == AMDGPU::NoRegister ? 0 :
+    TRI.getHWRegIndex(HighestVGPRReg) + 1;
+  Info.NumExplicitSGPR = HighestSGPRReg == AMDGPU::NoRegister ? 0 :
+    TRI.getHWRegIndex(HighestSGPRReg) + 1;
+
+  return Info;
 }
 
 void AMDGPUAsmPrinter::getSIProgramInfo(SIProgramInfo &ProgInfo,

@@ -19,6 +19,7 @@
 #include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/ADT/iterator_range.h"
+#include "llvm/BinaryFormat/ELF.h"
 #include "llvm/MC/SubtargetFeature.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Object/ELF.h"
@@ -29,7 +30,6 @@
 #include "llvm/Support/ARMAttributeParser.h"
 #include "llvm/Support/ARMBuildAttributes.h"
 #include "llvm/Support/Casting.h"
-#include "llvm/Support/ELF.h"
 #include "llvm/Support/Endian.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/ErrorHandling.h"
@@ -70,7 +70,7 @@ public:
 
   elf_symbol_iterator_range symbols() const;
 
-  static inline bool classof(const Binary *v) { return v->isELF(); }
+  static bool classof(const Binary *v) { return v->isELF(); }
 
   SubtargetFeatures getFeatures() const override;
 
@@ -235,6 +235,7 @@ protected:
   std::error_code getSectionName(DataRefImpl Sec,
                                  StringRef &Res) const override;
   uint64_t getSectionAddress(DataRefImpl Sec) const override;
+  uint64_t getSectionIndex(DataRefImpl Sec) const override;
   uint64_t getSectionSize(DataRefImpl Sec) const override;
   std::error_code getSectionContents(DataRefImpl Sec,
                                      StringRef &Res) const override;
@@ -388,7 +389,7 @@ public:
   const ELFFile<ELFT> *getELFFile() const { return &EF; }
 
   bool isDyldType() const { return isDyldELFObject; }
-  static inline bool classof(const Binary *v) {
+  static bool classof(const Binary *v) {
     return v->getType() == getELFType(ELFT::TargetEndianness == support::little,
                                       ELFT::Is64Bits);
   }
@@ -643,6 +644,17 @@ std::error_code ELFObjectFile<ELFT>::getSectionName(DataRefImpl Sec,
 template <class ELFT>
 uint64_t ELFObjectFile<ELFT>::getSectionAddress(DataRefImpl Sec) const {
   return getSection(Sec)->sh_addr;
+}
+
+template <class ELFT>
+uint64_t ELFObjectFile<ELFT>::getSectionIndex(DataRefImpl Sec) const {
+  auto SectionsOrErr = EF.sections();
+  handleAllErrors(std::move(SectionsOrErr.takeError()),
+                  [](const ErrorInfoBase &) {
+                    llvm_unreachable("unable to get section index");
+                  });
+  const Elf_Shdr *First = SectionsOrErr->begin();
+  return getSection(Sec) - First;
 }
 
 template <class ELFT>

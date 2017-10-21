@@ -16,8 +16,8 @@
 #define LLVM_TRANSFORMS_UTILS_VALUEMAPPER_H
 
 #include "llvm/ADT/ArrayRef.h"
-#include "llvm/IR/ValueMap.h"
 #include "llvm/IR/ValueHandle.h"
+#include "llvm/IR/ValueMap.h"
 
 namespace llvm {
 
@@ -116,7 +116,7 @@ static inline RemapFlags operator|(RemapFlags LHS, RemapFlags RHS) {
 /// - \a scheduleMapGlobalAliasee()
 /// - \a scheduleRemapFunction()
 ///
-/// Sometimes a callback needs a diferent mapping context.  Such a context can
+/// Sometimes a callback needs a different mapping context.  Such a context can
 /// be registered using \a registerAlternateMappingContext(), which takes an
 /// alternate \a ValueToValueMapTy and \a ValueMaterializer and returns a ID to
 /// pass into the schedule*() functions.

@@ -232,8 +232,7 @@ static bool processSwitch(SwitchInst *SI, LazyValueInfo *LVI) {
   pred_iterator PB = pred_begin(BB), PE = pred_end(BB);
   if (PB == PE) return false;
 
-  // Analyse each switch case in turn.  This is done in reverse order so that
-  // removing a case doesn't cause trouble for the iteration.
+  // Analyse each switch case in turn.
   bool Changed = false;
   for (auto CI = SI->case_begin(), CE = SI->case_end(); CI != CE;) {
     ConstantInt *Case = CI->getCaseValue();
@@ -291,7 +290,7 @@ static bool processSwitch(SwitchInst *SI, LazyValueInfo *LVI) {
       break;
     }
 
-    // Increment the case iterator sense we didn't delete it.
+    // Increment the case iterator since we didn't delete it.
     ++CI;
   }
 
@@ -305,7 +304,7 @@ static bool processSwitch(SwitchInst *SI, LazyValueInfo *LVI) {
 
 /// Infer nonnull attributes for the arguments at the specified callsite.
 static bool processCallSite(CallSite CS, LazyValueInfo *LVI) {
-  SmallVector<unsigned, 4> Indices;
+  SmallVector<unsigned, 4> ArgNos;
   unsigned ArgNo = 0;
 
   for (Value *V : CS.args()) {
@@ -318,18 +317,19 @@ static bool processCallSite(CallSite CS, LazyValueInfo *LVI) {
         LVI->getPredicateAt(ICmpInst::ICMP_EQ, V,
                             ConstantPointerNull::get(Type),
                             CS.getInstruction()) == LazyValueInfo::False)
-      Indices.push_back(ArgNo + AttributeList::FirstArgIndex);
+      ArgNos.push_back(ArgNo);
     ArgNo++;
   }
 
   assert(ArgNo == CS.arg_size() && "sanity check");
 
-  if (Indices.empty())
+  if (ArgNos.empty())
     return false;
 
   AttributeList AS = CS.getAttributes();
   LLVMContext &Ctx = CS.getInstruction()->getContext();
-  AS = AS.addAttribute(Ctx, Indices, Attribute::get(Ctx, Attribute::NonNull));
+  AS = AS.addParamAttribute(Ctx, ArgNos,
+                            Attribute::get(Ctx, Attribute::NonNull));
   CS.setAttributes(AS);
 
   return true;
@@ -442,9 +442,8 @@ static bool processAdd(BinaryOperator *AddOp, LazyValueInfo *LVI) {
 
   bool Changed = false;
   if (!NUW) {
-    ConstantRange NUWRange =
-            LRange.makeGuaranteedNoWrapRegion(BinaryOperator::Add, LRange,
-                                              OBO::NoUnsignedWrap);
+    ConstantRange NUWRange = ConstantRange::makeGuaranteedNoWrapRegion(
+        BinaryOperator::Add, LRange, OBO::NoUnsignedWrap);
     if (!NUWRange.isEmptySet()) {
       bool NewNUW = NUWRange.contains(LazyRRange());
       AddOp->setHasNoUnsignedWrap(NewNUW);
@@ -452,9 +451,8 @@ static bool processAdd(BinaryOperator *AddOp, LazyValueInfo *LVI) {
     }
   }
   if (!NSW) {
-    ConstantRange NSWRange =
-            LRange.makeGuaranteedNoWrapRegion(BinaryOperator::Add, LRange,
-                                              OBO::NoSignedWrap);
+    ConstantRange NSWRange = ConstantRange::makeGuaranteedNoWrapRegion(
+        BinaryOperator::Add, LRange, OBO::NoSignedWrap);
     if (!NSWRange.isEmptySet()) {
       bool NewNSW = NSWRange.contains(LazyRRange());
       AddOp->setHasNoSignedWrap(NewNSW);
@@ -552,7 +550,7 @@ static bool runImpl(Function &F, LazyValueInfo *LVI, const SimplifyQuery &SQ) {
         BBChanged = true;        
       }
     }
-    };
+    }
 
     FnChanged |= BBChanged;
   }

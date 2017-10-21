@@ -13,8 +13,8 @@
 #include "HexagonRegisterInfo.h"
 #include "HexagonSubtarget.h"
 #include "llvm/ADT/BitVector.h"
-#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineFunction.h"
@@ -350,6 +350,8 @@ int32_t HexagonSplitDoubleRegs::profit(const MachineInstr *MI) const {
                        MI->getOperand(2).getImm());
     case Hexagon::A4_combineri:
       ImmX++;
+      // Fall through into A4_combineir.
+      LLVM_FALLTHROUGH;
     case Hexagon::A4_combineir: {
       ImmX++;
       int64_t V = MI->getOperand(ImmX).getImm();

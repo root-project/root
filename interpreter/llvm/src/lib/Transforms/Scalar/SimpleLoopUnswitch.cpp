@@ -1,4 +1,4 @@
-//===-- SimpleLoopUnswitch.cpp - Hoist loop-invariant control flow --------===//
+//===- SimpleLoopUnswitch.cpp - Hoist loop-invariant control flow ---------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -8,24 +8,40 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Transforms/Scalar/SimpleLoopUnswitch.h"
+#include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/Sequence.h"
+#include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
+#include "llvm/ADT/Twine.h"
 #include "llvm/Analysis/AssumptionCache.h"
+#include "llvm/Analysis/LoopAnalysisManager.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
+#include "llvm/IR/BasicBlock.h"
+#include "llvm/IR/Constant.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/InstrTypes.h"
+#include "llvm/IR/Instruction.h"
 #include "llvm/IR/Instructions.h"
-#include "llvm/Support/CommandLine.h"
+#include "llvm/IR/Use.h"
+#include "llvm/IR/Value.h"
+#include "llvm/Pass.h"
+#include "llvm/Support/Casting.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/GenericDomTree.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
-#include "llvm/Transforms/Utils/Cloning.h"
-#include "llvm/Transforms/Utils/Local.h"
-#include "llvm/Transforms/Scalar/LoopPassManager.h"
 #include "llvm/Transforms/Utils/LoopUtils.h"
+#include <algorithm>
+#include <cassert>
+#include <iterator>
+#include <utility>
 
 #define DEBUG_TYPE "simple-loop-unswitch"
 
@@ -107,11 +123,62 @@ static void updateDTAfterUnswitch(BasicBlock *UnswitchedBB, BasicBlock *OldPH,
   // exit block.
   DT.changeImmediateDominator(UnswitchedNode, OldPHNode);
 
-  // Blocks reachable from the unswitched block may need to change their IDom
-  // as well.
+  // For everything that moves up the dominator tree, we need to examine the
+  // dominator frontier to see if it additionally should move up the dominator
+  // tree. This lambda appends the dominator frontier for a node on the
+  // worklist.
+  //
+  // Note that we don't currently use the IDFCalculator here for two reasons:
+  // 1) It computes dominator tree levels for the entire function on each run
+  //    of 'compute'. While this isn't terrible, given that we expect to update
+  //    relatively small subtrees of the domtree, it isn't necessarily the right
+  //    tradeoff.
+  // 2) The interface doesn't fit this usage well. It doesn't operate in
+  //    append-only, and builds several sets that we don't need.
+  //
+  // FIXME: Neither of these issues are a big deal and could be addressed with
+  // some amount of refactoring of IDFCalculator. That would allow us to share
+  // the core logic here (which is solving the same core problem).
   SmallSetVector<BasicBlock *, 4> Worklist;
-  for (auto *SuccBB : successors(UnswitchedBB))
-    Worklist.insert(SuccBB);
+  SmallVector<DomTreeNode *, 4> DomNodes;
+  SmallPtrSet<BasicBlock *, 4> DomSet;
+  auto AppendDomFrontier = [&](DomTreeNode *Node) {
+    assert(DomNodes.empty() && "Must start with no dominator nodes.");
+    assert(DomSet.empty() && "Must start with an empty dominator set.");
+
+    // First flatten this subtree into sequence of nodes by doing a pre-order
+    // walk.
+    DomNodes.push_back(Node);
+    // We intentionally re-evaluate the size as each node can add new children.
+    // Because this is a tree walk, this cannot add any duplicates.
+    for (int i = 0; i < (int)DomNodes.size(); ++i)
+      DomNodes.insert(DomNodes.end(), DomNodes[i]->begin(), DomNodes[i]->end());
+
+    // Now create a set of the basic blocks so we can quickly test for
+    // dominated successors. We could in theory use the DFS numbers of the
+    // dominator tree for this, but we want this to remain predictably fast
+    // even while we mutate the dominator tree in ways that would invalidate
+    // the DFS numbering.
+    for (DomTreeNode *InnerN : DomNodes)
+      DomSet.insert(InnerN->getBlock());
+
+    // Now re-walk the nodes, appending every successor of every node that isn't
+    // in the set. Note that we don't append the node itself, even though if it
+    // is a successor it does not strictly dominate itself and thus it would be
+    // part of the dominance frontier. The reason we don't append it is that
+    // the node passed in came *from* the worklist and so it has already been
+    // processed.
+    for (DomTreeNode *InnerN : DomNodes)
+      for (BasicBlock *SuccBB : successors(InnerN->getBlock()))
+        if (!DomSet.count(SuccBB))
+          Worklist.insert(SuccBB);
+
+    DomNodes.clear();
+    DomSet.clear();
+  };
+
+  // Append the initial dom frontier nodes.
+  AppendDomFrontier(UnswitchedNode);
 
   // Walk the worklist. We grow the list in the loop and so must recompute size.
   for (int i = 0; i < (int)Worklist.size(); ++i) {
@@ -120,20 +187,17 @@ static void updateDTAfterUnswitch(BasicBlock *UnswitchedBB, BasicBlock *OldPH,
     DomTreeNode *Node = DT[BB];
     assert(!DomChain.count(Node) &&
            "Cannot be dominated by a block you can reach!");
-    // If this block doesn't have an immediate dominator somewhere in the chain
-    // we hoisted over, then its position in the domtree hasn't changed. Either
-    // it is above the region hoisted and still valid, or it is below the
-    // hoisted block and so was trivially updated. This also applies to
-    // everything reachable from this block so we're completely done with the
-    // it.
+
+    // If this block had an immediate dominator somewhere in the chain
+    // we hoisted over, then its position in the domtree needs to move as it is
+    // reachable from a node hoisted over this chain.
     if (!DomChain.count(Node->getIDom()))
       continue;
 
-    // We need to change the IDom for this node but also walk its successors
-    // which could have similar dominance position.
     DT.changeImmediateDominator(Node, OldPHNode);
-    for (auto *SuccBB : successors(BB))
-      Worklist.insert(SuccBB);
+
+    // Now add this node's dominator frontier to the worklist as well.
+    AppendDomFrontier(Node);
   }
 }
 
@@ -174,7 +238,7 @@ static void rewritePHINodesForUnswitchedExitBlock(BasicBlock &UnswitchedBB,
     // When the loop exit is directly unswitched we just need to update the
     // incoming basic block. We loop to handle weird cases with repeated
     // incoming blocks, but expect to typically only have one operand here.
-    for (auto i : llvm::seq<int>(0, PN->getNumOperands())) {
+    for (auto i : seq<int>(0, PN->getNumOperands())) {
       assert(PN->getIncomingBlock(i) == &OldExitingBB &&
              "Found incoming block different from unique predecessor!");
       PN->setIncomingBlock(i, &OldPH);
@@ -688,9 +752,11 @@ PreservedAnalyses SimpleLoopUnswitchPass::run(Loop &L, LoopAnalysisManager &AM,
 }
 
 namespace {
+
 class SimpleLoopUnswitchLegacyPass : public LoopPass {
 public:
   static char ID; // Pass ID, replacement for typeid
+
   explicit SimpleLoopUnswitchLegacyPass() : LoopPass(ID) {
     initializeSimpleLoopUnswitchLegacyPassPass(
         *PassRegistry::getPassRegistry());
@@ -703,7 +769,8 @@ public:
     getLoopAnalysisUsage(AU);
   }
 };
-} // namespace
+
+} // end anonymous namespace
 
 bool SimpleLoopUnswitchLegacyPass::runOnLoop(Loop *L, LPPassManager &LPM) {
   if (skipLoop(L))

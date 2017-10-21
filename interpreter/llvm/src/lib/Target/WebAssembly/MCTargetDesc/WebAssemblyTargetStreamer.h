@@ -16,9 +16,9 @@
 #ifndef LLVM_LIB_TARGET_WEBASSEMBLY_MCTARGETDESC_WEBASSEMBLYTARGETSTREAMER_H
 #define LLVM_LIB_TARGET_WEBASSEMBLY_MCTARGETDESC_WEBASSEMBLYTARGETSTREAMER_H
 
+#include "llvm/BinaryFormat/Wasm.h"
 #include "llvm/CodeGen/MachineValueType.h"
 #include "llvm/MC/MCStreamer.h"
-#include "llvm/Support/Wasm.h"
 
 namespace llvm {
 
@@ -44,11 +44,9 @@ public:
   /// .endfunc
   virtual void emitEndFunc() = 0;
   /// .functype
-  virtual void emitIndirectFunctionType(StringRef name,
+  virtual void emitIndirectFunctionType(MCSymbol *Symbol,
                                         SmallVectorImpl<MVT> &Params,
-                                        SmallVectorImpl<MVT> &Results) {
-    llvm_unreachable("emitIndirectFunctionType not implemented");
-  }
+                                        SmallVectorImpl<MVT> &Results) = 0;
   /// .indidx
   virtual void emitIndIdx(const MCExpr *Value) = 0;
   /// .import_global
@@ -71,7 +69,7 @@ public:
   void emitGlobal(ArrayRef<wasm::Global> Globals) override;
   void emitStackPointer(uint32_t Index) override;
   void emitEndFunc() override;
-  void emitIndirectFunctionType(StringRef name,
+  void emitIndirectFunctionType(MCSymbol *Symbol,
                                 SmallVectorImpl<MVT> &Params,
                                 SmallVectorImpl<MVT> &Results) override;
   void emitIndIdx(const MCExpr *Value) override;
@@ -89,7 +87,7 @@ public:
   void emitGlobal(ArrayRef<wasm::Global> Globals) override;
   void emitStackPointer(uint32_t Index) override;
   void emitEndFunc() override;
-  void emitIndirectFunctionType(StringRef name,
+  void emitIndirectFunctionType(MCSymbol *Symbol,
                                 SmallVectorImpl<MVT> &Params,
                                 SmallVectorImpl<MVT> &Results) override;
   void emitIndIdx(const MCExpr *Value) override;
@@ -107,7 +105,7 @@ public:
   void emitGlobal(ArrayRef<wasm::Global> Globals) override;
   void emitStackPointer(uint32_t Index) override;
   void emitEndFunc() override;
-  void emitIndirectFunctionType(StringRef name,
+  void emitIndirectFunctionType(MCSymbol *Symbol,
                                 SmallVectorImpl<MVT> &Params,
                                 SmallVectorImpl<MVT> &Results) override;
   void emitIndIdx(const MCExpr *Value) override;

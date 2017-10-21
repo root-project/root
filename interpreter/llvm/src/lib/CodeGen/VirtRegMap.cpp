@@ -72,6 +72,17 @@ void VirtRegMap::grow() {
   Virt2SplitMap.resize(NumRegs);
 }
 
+void VirtRegMap::assignVirt2Phys(unsigned virtReg, MCPhysReg physReg) {
+  assert(TargetRegisterInfo::isVirtualRegister(virtReg) &&
+         TargetRegisterInfo::isPhysicalRegister(physReg));
+  assert(Virt2PhysMap[virtReg] == NO_PHYS_REG &&
+         "attempt to assign physical register to already mapped "
+         "virtual register");
+  assert(!getRegInfo().isReserved(physReg) &&
+         "Attempt to map virtReg to a reserved physReg");
+  Virt2PhysMap[virtReg] = physReg;
+}
+
 unsigned VirtRegMap::createSpillSlot(const TargetRegisterClass *RC) {
   unsigned Size = TRI->getSpillSize(*RC);
   unsigned Align = TRI->getSpillAlignment(*RC);
@@ -169,6 +180,7 @@ class VirtRegRewriter : public MachineFunctionPass {
   void addLiveInsForSubRanges(const LiveInterval &LI, unsigned PhysReg) const;
   void handleIdentityCopy(MachineInstr &MI) const;
   void expandCopyBundle(MachineInstr &MI) const;
+  bool subRegLiveThrough(const MachineInstr &MI, unsigned SuperPhysReg) const;
 
 public:
   static char ID;
@@ -404,6 +416,32 @@ void VirtRegRewriter::expandCopyBundle(MachineInstr &MI) const {
   }
 }
 
+/// Check whether (part of) \p SuperPhysReg is live through \p MI.
+/// \pre \p MI defines a subregister of a virtual register that
+/// has been assigned to \p SuperPhysReg.
+bool VirtRegRewriter::subRegLiveThrough(const MachineInstr &MI,
+                                        unsigned SuperPhysReg) const {
+  SlotIndex MIIndex = LIS->getInstructionIndex(MI);
+  SlotIndex BeforeMIUses = MIIndex.getBaseIndex();
+  SlotIndex AfterMIDefs = MIIndex.getBoundaryIndex();
+  for (MCRegUnitIterator Unit(SuperPhysReg, TRI); Unit.isValid(); ++Unit) {
+    const LiveRange &UnitRange = LIS->getRegUnit(*Unit);
+    // If the regunit is live both before and after MI,
+    // we assume it is live through.
+    // Generally speaking, this is not true, because something like
+    // "RU = op RU" would match that description.
+    // However, we know that we are trying to assess whether
+    // a def of a virtual reg, vreg, is live at the same time of RU.
+    // If we are in the "RU = op RU" situation, that means that vreg
+    // is defined at the same time as RU (i.e., "vreg, RU = op RU").
+    // Thus, vreg and RU interferes and vreg cannot be assigned to
+    // SuperPhysReg. Therefore, this situation cannot happen.
+    if (UnitRange.liveAt(AfterMIDefs) && UnitRange.liveAt(BeforeMIUses))
+      return true;
+  }
+  return false;
+}
+
 void VirtRegRewriter::rewrite() {
   bool NoSubRegLiveness = !MRI->subRegLivenessEnabled();
   SmallVector<unsigned, 8> SuperDeads;
@@ -441,7 +479,8 @@ void VirtRegRewriter::rewrite() {
             // A virtual register kill refers to the whole register, so we may
             // have to add <imp-use,kill> operands for the super-register.  A
             // partial redef always kills and redefines the super-register.
-            if (MO.readsReg() && (MO.isDef() || MO.isKill()))
+            if ((MO.readsReg() && (MO.isDef() || MO.isKill())) ||
+                (MO.isDef() && subRegLiveThrough(*MI, PhysReg)))
               SuperKills.push_back(PhysReg);
 
             if (MO.isDef()) {

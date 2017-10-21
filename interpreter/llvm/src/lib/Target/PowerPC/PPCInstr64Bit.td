@@ -683,6 +683,16 @@ def DIVDE : XOForm_1<31, 425, 0, (outs g8rc:$rT), (ins g8rc:$rA, g8rc:$rB),
                      "divde $rT, $rA, $rB", IIC_IntDivD,
                      [(set i64:$rT, (int_ppc_divde g8rc:$rA, g8rc:$rB))]>,
                      isPPC64, Requires<[HasExtDiv]>;
+
+let Predicates = [IsISA3_0] in {
+def MODSD : XForm_8<31, 777, (outs g8rc:$rT), (ins g8rc:$rA, g8rc:$rB),
+                        "modsd $rT, $rA, $rB", IIC_IntDivW,
+                        [(set i64:$rT, (srem i64:$rA, i64:$rB))]>;
+def MODUD : XForm_8<31, 265, (outs g8rc:$rT), (ins g8rc:$rA, g8rc:$rB),
+                        "modud $rT, $rA, $rB", IIC_IntDivW,
+                        [(set i64:$rT, (urem i64:$rA, i64:$rB))]>;
+}
+
 let Defs = [CR0] in
 def DIVDEo : XOForm_1<31, 425, 0, (outs g8rc:$rT), (ins g8rc:$rA, g8rc:$rB),
                       "divde. $rT, $rA, $rB", IIC_IntDivD,
@@ -735,12 +745,12 @@ def RLDICL_32_64 : MDForm_1<30, 0,
                             "rldicl $rA, $rS, $SH, $MBE", IIC_IntRotateDI,
                             []>, isPPC64;
 // End fast-isel.
-let isCodeGenOnly = 1 in
-def RLDICL_32 : MDForm_1<30, 0,
-                         (outs gprc:$rA),
-                         (ins gprc:$rS, u6imm:$SH, u6imm:$MBE),
-                         "rldicl $rA, $rS, $SH, $MBE", IIC_IntRotateDI,
-                         []>, isPPC64;
+let Interpretation64Bit = 1, isCodeGenOnly = 1 in
+defm RLDICL_32 : MDForm_1r<30, 0,
+                           (outs gprc:$rA),
+                           (ins gprc:$rS, u6imm:$SH, u6imm:$MBE),
+                           "rldicl", "$rA, $rS, $SH, $MBE", IIC_IntRotateDI,
+                           []>, isPPC64;
 defm RLDICR : MDForm_1r<30, 1,
                         (outs g8rc:$rA), (ins g8rc:$rS, u6imm:$SH, u6imm:$MBE),
                         "rldicr", "$rA, $rS, $SH, $MBE", IIC_IntRotateDI,
@@ -962,13 +972,15 @@ def LDMX : XForm_1<31, 309, (outs g8rc:$rD), (ins memrr:$src),
 
 // Support for medium and large code model.
 let hasSideEffects = 0 in {
+let isReMaterializable = 1 in {
 def ADDIStocHA: Pseudo<(outs g8rc:$rD), (ins g8rc_nox0:$reg, tocentry:$disp),
                        "#ADDIStocHA", []>, isPPC64;
+def ADDItocL: Pseudo<(outs g8rc:$rD), (ins g8rc_nox0:$reg, tocentry:$disp),
+                     "#ADDItocL", []>, isPPC64;
+}
 let mayLoad = 1 in
 def LDtocL: Pseudo<(outs g8rc:$rD), (ins tocentry:$disp, g8rc_nox0:$reg),
                    "#LDtocL", []>, isPPC64;
-def ADDItocL: Pseudo<(outs g8rc:$rD), (ins g8rc_nox0:$reg, tocentry:$disp),
-                     "#ADDItocL", []>, isPPC64;
 }
 
 // Support for thread-local storage.
@@ -983,6 +995,10 @@ def LDgotTprelL: Pseudo<(outs g8rc:$rD), (ins s16imm64:$disp, g8rc_nox0:$reg),
                         [(set i64:$rD,
                           (PPCldGotTprelL tglobaltlsaddr:$disp, i64:$reg))]>,
                  isPPC64;
+
+let isPseudo = 1, Defs = [CR7], Itinerary = IIC_LdStSync in
+def CFENCE8 : Pseudo<(outs), (ins g8rc:$cr), "#CFENCE8", []>;
+
 def : Pat<(PPCaddTls i64:$in, tglobaltlsaddr:$g),
           (ADD8TLS $in, tglobaltlsaddr:$g)>;
 def ADDIStlsgdHA: Pseudo<(outs g8rc:$rD), (ins g8rc_nox0:$reg, s16imm64:$disp),
@@ -997,7 +1013,9 @@ def ADDItlsgdL : Pseudo<(outs g8rc:$rD), (ins g8rc_nox0:$reg, s16imm64:$disp),
                  isPPC64;
 // LR8 is a true define, while the rest of the Defs are clobbers.  X3 is
 // explicitly defined when this op is created, so not mentioned here.
-let hasExtraSrcRegAllocReq = 1, hasExtraDefRegAllocReq = 1,
+// This is lowered to BL8_NOP_TLS by the assembly printer, so the size must be
+// correct because the branch select pass is relying on it.
+let hasExtraSrcRegAllocReq = 1, hasExtraDefRegAllocReq = 1, Size = 8,
     Defs = [X0,X4,X5,X6,X7,X8,X9,X10,X11,X12,LR8,CTR8,CR0,CR1,CR5,CR6,CR7] in
 def GETtlsADDR : Pseudo<(outs g8rc:$rD), (ins g8rc:$reg, tlsgd:$sym),
                         "#GETtlsADDR",

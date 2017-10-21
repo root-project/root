@@ -69,7 +69,7 @@ Error TpiStreamBuilder::finalize() {
 
   uint32_t Count = TypeRecords.size();
 
-  H->Version = *VerHeader;
+  H->Version = VerHeader;
   H->HeaderSize = sizeof(TpiStreamHeader);
   H->TypeIndexBegin = codeview::TypeIndex::FirstNonSimpleIndex;
   H->TypeIndexEnd = H->TypeIndexBegin + Count;
@@ -147,8 +147,8 @@ Error TpiStreamBuilder::commit(const msf::MSFLayout &Layout,
   if (auto EC = finalize())
     return EC;
 
-  auto InfoS =
-      WritableMappedBlockStream::createIndexedStream(Layout, Buffer, Idx);
+  auto InfoS = WritableMappedBlockStream::createIndexedStream(Layout, Buffer,
+                                                              Idx, Allocator);
 
   BinaryStreamWriter Writer(*InfoS);
   if (auto EC = Writer.writeObject(*Header))
@@ -159,8 +159,8 @@ Error TpiStreamBuilder::commit(const msf::MSFLayout &Layout,
       return EC;
 
   if (HashStreamIndex != kInvalidStreamIndex) {
-    auto HVS = WritableMappedBlockStream::createIndexedStream(Layout, Buffer,
-                                                              HashStreamIndex);
+    auto HVS = WritableMappedBlockStream::createIndexedStream(
+        Layout, Buffer, HashStreamIndex, Allocator);
     BinaryStreamWriter HW(*HVS);
     if (HashValueStream) {
       if (auto EC = HW.writeStreamRef(*HashValueStream))

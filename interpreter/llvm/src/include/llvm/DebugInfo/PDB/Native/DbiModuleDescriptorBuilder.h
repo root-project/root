@@ -11,9 +11,10 @@
 #define LLVM_DEBUGINFO_PDB_RAW_DBIMODULEDESCRIPTORBUILDER_H
 
 #include "llvm/ADT/StringRef.h"
-#include "llvm/DebugInfo/CodeView/ModuleDebugFileChecksumFragment.h"
-#include "llvm/DebugInfo/CodeView/ModuleDebugInlineeLinesFragment.h"
-#include "llvm/DebugInfo/CodeView/ModuleDebugLineFragment.h"
+#include "llvm/DebugInfo/CodeView/DebugChecksumsSubsection.h"
+#include "llvm/DebugInfo/CodeView/DebugInlineeLinesSubsection.h"
+#include "llvm/DebugInfo/CodeView/DebugLinesSubsection.h"
+#include "llvm/DebugInfo/CodeView/DebugSubsectionRecord.h"
 #include "llvm/DebugInfo/CodeView/SymbolRecord.h"
 #include "llvm/DebugInfo/PDB/Native/RawTypes.h"
 #include "llvm/Support/Error.h"
@@ -25,7 +26,7 @@ namespace llvm {
 class BinaryStreamWriter;
 
 namespace codeview {
-class ModuleDebugFragmentRecordBuilder;
+class DebugSubsectionRecordBuilder;
 }
 
 namespace msf {
@@ -46,24 +47,31 @@ public:
   DbiModuleDescriptorBuilder &
   operator=(const DbiModuleDescriptorBuilder &) = delete;
 
+  void setPdbFilePathNI(uint32_t NI);
   void setObjFileName(StringRef Name);
   void addSymbol(codeview::CVSymbol Symbol);
 
-  void addC13Fragment(std::unique_ptr<codeview::ModuleDebugLineFragment> Lines);
-  void addC13Fragment(
-      std::unique_ptr<codeview::ModuleDebugInlineeLineFragment> Inlinees);
-  void setC13FileChecksums(
-      std::unique_ptr<codeview::ModuleDebugFileChecksumFragment> Checksums);
+  void
+  addDebugSubsection(std::shared_ptr<codeview::DebugSubsection> Subsection);
+
+  void
+  addDebugSubsection(const codeview::DebugSubsectionRecord &SubsectionContents);
 
   uint16_t getStreamIndex() const;
   StringRef getModuleName() const { return ModuleName; }
   StringRef getObjFileName() const { return ObjFileName; }
+
+  unsigned getModuleIndex() const { return Layout.Mod; }
 
   ArrayRef<std::string> source_files() const {
     return makeArrayRef(SourceFiles);
   }
 
   uint32_t calculateSerializedLength() const;
+
+  /// Return the offset within the module symbol stream of the next symbol
+  /// record passed to addSymbol. Add four to account for the signature.
+  uint32_t getNextSymbolOffset() const { return SymbolByteSize + 4; }
 
   void finalize();
   Error finalizeMsfLayout();
@@ -78,17 +86,13 @@ private:
   msf::MSFBuilder &MSF;
 
   uint32_t SymbolByteSize = 0;
+  uint32_t PdbFilePathNI = 0;
   std::string ModuleName;
   std::string ObjFileName;
   std::vector<std::string> SourceFiles;
   std::vector<codeview::CVSymbol> Symbols;
 
-  std::unique_ptr<codeview::ModuleDebugFileChecksumFragment> ChecksumInfo;
-  std::vector<std::unique_ptr<codeview::ModuleDebugLineFragment>> LineInfo;
-  std::vector<std::unique_ptr<codeview::ModuleDebugInlineeLineFragment>>
-      Inlinees;
-
-  std::vector<std::unique_ptr<codeview::ModuleDebugFragmentRecordBuilder>>
+  std::vector<std::unique_ptr<codeview::DebugSubsectionRecordBuilder>>
       C13Builders;
 
   ModuleInfoHeader Layout;

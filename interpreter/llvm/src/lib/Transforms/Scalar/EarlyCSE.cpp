@@ -15,6 +15,7 @@
 #include "llvm/Transforms/Scalar/EarlyCSE.h"
 #include "llvm/ADT/Hashing.h"
 #include "llvm/ADT/ScopedHashTable.h"
+#include "llvm/ADT/SetVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/GlobalsModRef.h"
@@ -506,7 +507,7 @@ private:
     if (MemoryAccess *MA = MSSA->getMemoryAccess(Inst)) {
       // Optimize MemoryPhi nodes that may become redundant by having all the
       // same input values once MA is removed.
-      SmallVector<MemoryPhi *, 4> PhisToCheck;
+      SmallSetVector<MemoryPhi *, 4> PhisToCheck;
       SmallVector<MemoryAccess *, 8> WorkQueue;
       WorkQueue.push_back(MA);
       // Process MemoryPhi nodes in FIFO order using a ever-growing vector since
@@ -517,7 +518,7 @@ private:
 
         for (auto *U : WI->users())
           if (MemoryPhi *MP = dyn_cast<MemoryPhi>(U))
-            PhisToCheck.push_back(MP);
+            PhisToCheck.insert(MP);
 
         MSSAUpdater->removeMemoryAccess(WI);
 
@@ -561,13 +562,27 @@ bool EarlyCSE::isSameMemGeneration(unsigned EarlierGeneration,
   if (!MSSA)
     return false;
 
+  // If MemorySSA has determined that one of EarlierInst or LaterInst does not
+  // read/write memory, then we can safely return true here.
+  // FIXME: We could be more aggressive when checking doesNotAccessMemory(),
+  // onlyReadsMemory(), mayReadFromMemory(), and mayWriteToMemory() in this pass
+  // by also checking the MemorySSA MemoryAccess on the instruction.  Initial
+  // experiments suggest this isn't worthwhile, at least for C/C++ code compiled
+  // with the default optimization pipeline.
+  auto *EarlierMA = MSSA->getMemoryAccess(EarlierInst);
+  if (!EarlierMA)
+    return true;
+  auto *LaterMA = MSSA->getMemoryAccess(LaterInst);
+  if (!LaterMA)
+    return true;
+
   // Since we know LaterDef dominates LaterInst and EarlierInst dominates
   // LaterInst, if LaterDef dominates EarlierInst then it can't occur between
   // EarlierInst and LaterInst and neither can any other write that potentially
   // clobbers LaterInst.
   MemoryAccess *LaterDef =
       MSSA->getWalker()->getClobberingMemoryAccess(LaterInst);
-  return MSSA->dominates(LaterDef, MSSA->getMemoryAccess(EarlierInst));
+  return MSSA->dominates(LaterDef, EarlierMA);
 }
 
 bool EarlyCSE::processNode(DomTreeNode *Node) {
@@ -606,7 +621,7 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
         if (unsigned Count = replaceDominatedUsesWith(
                 CondInst, TorF, DT, BasicBlockEdge(Pred, BB))) {
           Changed = true;
-          NumCSECVP = NumCSECVP + Count;
+          NumCSECVP += Count;
         }
       }
     }
@@ -669,7 +684,7 @@ bool EarlyCSE::processNode(DomTreeNode *Node) {
           if (auto *KnownCond = AvailableValues.lookup(CondI)) {
             // Is the condition known to be true?
             if (isa<ConstantInt>(KnownCond) &&
-                cast<ConstantInt>(KnownCond)->isOneValue()) {
+                cast<ConstantInt>(KnownCond)->isOne()) {
               DEBUG(dbgs() << "EarlyCSE removing guard: " << *Inst << '\n');
               removeMSSA(Inst);
               Inst->eraseFromParent();

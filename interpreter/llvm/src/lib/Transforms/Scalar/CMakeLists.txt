@@ -13,6 +13,7 @@ add_llvm_library(LLVMScalarOpts
   GuardWidening.cpp
   GVN.cpp
   GVNHoist.cpp
+  GVNSink.cpp
   IVUsersPrinter.cpp
   InductiveRangeCheckElimination.cpp
   IndVarSimplify.cpp
@@ -21,7 +22,6 @@ add_llvm_library(LLVMScalarOpts
   LICM.cpp
   LoopAccessAnalysisPrinter.cpp
   LoopSink.cpp
-  LoadCombine.cpp
   LoopDeletion.cpp
   LoopDataPrefetch.cpp
   LoopDistribute.cpp

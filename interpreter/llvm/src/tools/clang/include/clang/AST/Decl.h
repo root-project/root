@@ -853,6 +853,7 @@ protected:
 
   class NonParmVarDeclBitfields {
     friend class VarDecl;
+    friend class ImplicitParamDecl;
     friend class ASTDeclReader;
 
     unsigned : NumVarDeclBits;
@@ -896,6 +897,10 @@ protected:
     /// declared in the same block scope. This controls whether we should merge
     /// the type of this declaration with its previous declaration.
     unsigned PreviousDeclInSameBlockScope : 1;
+
+    /// Defines kind of the ImplicitParamDecl: 'this', 'self', 'vtt', '_cmd' or
+    /// something else.
+    unsigned ImplicitParamKind : 3;
   };
 
   union {
@@ -958,9 +963,16 @@ public:
   /// hasLocalStorage - Returns true if a variable with function scope
   ///  is a non-static local variable.
   bool hasLocalStorage() const {
-    if (getStorageClass() == SC_None)
+    if (getStorageClass() == SC_None) {
+      // OpenCL v1.2 s6.5.3: The __constant or constant address space name is
+      // used to describe variables allocated in global memory and which are
+      // accessed inside a kernel(s) as read-only variables. As such, variables
+      // in constant address space cannot have local storage.
+      if (getType().getAddressSpace() == LangAS::opencl_constant)
+        return false;
       // Second check is for C++11 [dcl.stc]p4.
       return !isFileVarDecl() && getTSCSpec() == TSCS_unspecified;
+    }
 
     // Global Named Register (GNU extension)
     if (getStorageClass() == SC_Register && !isLocalVarDeclOrParm())
@@ -1371,20 +1383,50 @@ public:
 
 class ImplicitParamDecl : public VarDecl {
   void anchor() override;
+
 public:
+  /// Defines the kind of the implicit parameter: is this an implicit parameter
+  /// with pointer to 'this', 'self', '_cmd', virtual table pointers, captured
+  /// context or something else.
+  enum ImplicitParamKind : unsigned {
+    ObjCSelf,        /// Parameter for Objective-C 'self' argument
+    ObjCCmd,         /// Parameter for Objective-C '_cmd' argument
+    CXXThis,         /// Parameter for C++ 'this' argument
+    CXXVTT,          /// Parameter for C++ virtual table pointers
+    CapturedContext, /// Parameter for captured context
+    Other,           /// Other implicit parameter
+  };
+
+  /// Create implicit parameter.
   static ImplicitParamDecl *Create(ASTContext &C, DeclContext *DC,
                                    SourceLocation IdLoc, IdentifierInfo *Id,
-                                   QualType T);
+                                   QualType T, ImplicitParamKind ParamKind);
+  static ImplicitParamDecl *Create(ASTContext &C, QualType T,
+                                   ImplicitParamKind ParamKind);
 
   static ImplicitParamDecl *CreateDeserialized(ASTContext &C, unsigned ID);
 
   ImplicitParamDecl(ASTContext &C, DeclContext *DC, SourceLocation IdLoc,
-                    IdentifierInfo *Id, QualType Type)
-    : VarDecl(ImplicitParam, C, DC, IdLoc, IdLoc, Id, Type,
-              /*tinfo*/ nullptr, SC_None) {
+                    IdentifierInfo *Id, QualType Type,
+                    ImplicitParamKind ParamKind)
+      : VarDecl(ImplicitParam, C, DC, IdLoc, IdLoc, Id, Type,
+                /*TInfo=*/nullptr, SC_None) {
+    NonParmVarDeclBits.ImplicitParamKind = ParamKind;
     setImplicit();
   }
 
+  ImplicitParamDecl(ASTContext &C, QualType Type, ImplicitParamKind ParamKind)
+      : VarDecl(ImplicitParam, C, /*DC=*/nullptr, SourceLocation(),
+                SourceLocation(), /*Id=*/nullptr, Type,
+                /*TInfo=*/nullptr, SC_None) {
+    NonParmVarDeclBits.ImplicitParamKind = ParamKind;
+    setImplicit();
+  }
+
+  /// Returns the implicit parameter kind.
+  ImplicitParamKind getParameterKind() const {
+    return static_cast<ImplicitParamKind>(NonParmVarDeclBits.ImplicitParamKind);
+  }
   // Implement isa/cast/dyncast/etc.
   static bool classof(const Decl *D) { return classofKind(D->getKind()); }
   static bool classofKind(Kind K) { return K == ImplicitParam; }
@@ -1616,6 +1658,7 @@ private:
   unsigned HasImplicitReturnZero : 1;
   unsigned IsLateTemplateParsed : 1;
   unsigned IsConstexpr : 1;
+  unsigned InstantiationIsPending:1;
 
   /// \brief Indicates if the function uses __try.
   unsigned UsesSEHTry : 1;
@@ -1625,8 +1668,7 @@ private:
   unsigned HasSkippedBody : 1;
 
   /// Indicates if the function declaration will have a body, once we're done
-  /// parsing it.  (We don't set it to false when we're done parsing, in the
-  /// hopes this is simpler.)
+  /// parsing it.
   unsigned WillHaveBody : 1;
 
   /// \brief End part of this FunctionDecl's source range.
@@ -1711,6 +1753,7 @@ protected:
         IsDeleted(false), IsTrivial(false), IsDefaulted(false),
         IsExplicitlyDefaulted(false), HasImplicitReturnZero(false),
         IsLateTemplateParsed(false), IsConstexpr(isConstexprSpecified),
+        InstantiationIsPending(false),
         UsesSEHTry(false), HasSkippedBody(false), WillHaveBody(false),
         EndRangeLoc(NameInfo.getEndLoc()), TemplateOrSpecialization(),
         DNLoc(NameInfo.getInfo()) {}
@@ -1824,14 +1867,15 @@ public:
     return getBody(Definition);
   }
 
-  /// isThisDeclarationADefinition - Returns whether this specific
-  /// declaration of the function is also a definition. This does not
-  /// determine whether the function has been defined (e.g., in a
-  /// previous definition); for that information, use isDefined. Note
-  /// that this returns false for a defaulted function unless that function
-  /// has been implicitly defined (possibly as deleted).
+  /// Returns whether this specific declaration of the function is also a
+  /// definition that does not contain uninstantiated body.
+  ///
+  /// This does not determine whether the function has been defined (e.g., in a
+  /// previous definition); for that information, use isDefined.
+  ///
   bool isThisDeclarationADefinition() const {
-    return IsDeleted || Body || IsLateTemplateParsed;
+    return IsDeleted || IsDefaulted || Body || IsLateTemplateParsed ||
+      WillHaveBody || hasDefiningAttr();
   }
 
   /// doesThisDeclarationHaveABody - Returns whether this specific
@@ -1902,6 +1946,15 @@ public:
   bool isConstexpr() const { return IsConstexpr; }
   void setConstexpr(bool IC) { IsConstexpr = IC; }
 
+  /// \brief Whether the instantiation of this function is pending.
+  /// This bit is set when the decision to instantiate this function is made
+  /// and unset if and when the function body is created. That leaves out
+  /// cases where instantiation did not happen because the template definition
+  /// was not seen in this TU. This bit remains set in those cases, under the
+  /// assumption that the instantiation will happen in some other TU.
+  bool instantiationIsPending() const { return InstantiationIsPending; }
+  void setInstantiationIsPending(bool IC) { InstantiationIsPending = IC; }
+
   /// \brief Indicates the function uses __try.
   bool usesSEHTry() const { return UsesSEHTry; }
   void setUsesSEHTry(bool UST) { UsesSEHTry = UST; }
@@ -1967,7 +2020,10 @@ public:
   /// These functions have special behavior under C++1y [expr.new]:
   ///    An implementation is allowed to omit a call to a replaceable global
   ///    allocation function. [...]
-  bool isReplaceableGlobalAllocationFunction() const;
+  ///
+  /// If this function is an aligned allocation/deallocation function, return
+  /// true through IsAligned.
+  bool isReplaceableGlobalAllocationFunction(bool *IsAligned = nullptr) const;
 
   /// Compute the language linkage.
   LanguageLinkage getLanguageLinkage() const;

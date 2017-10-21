@@ -34,11 +34,6 @@
 // can use it?
 BUILTIN(__builtin_cpu_supports, "bcC*", "nc")
 
-// Win64-compatible va_list functions
-BUILTIN(__builtin_ms_va_start, "vc*&.", "nt")
-BUILTIN(__builtin_ms_va_end, "vc*&", "n")
-BUILTIN(__builtin_ms_va_copy, "vc*&c*&", "n")
-
 // Undefined Values
 //
 TARGET_BUILTIN(__builtin_ia32_undef128, "V2d", "nc", "")
@@ -343,8 +338,8 @@ TARGET_BUILTIN(__builtin_ia32_lfence, "v", "", "sse2")
 TARGET_HEADER_BUILTIN(_mm_lfence, "v", "h", "emmintrin.h", ALL_LANGUAGES, "sse2")
 TARGET_BUILTIN(__builtin_ia32_mfence, "v", "", "sse2")
 TARGET_HEADER_BUILTIN(_mm_mfence, "v", "h", "emmintrin.h", ALL_LANGUAGES, "sse2")
-TARGET_BUILTIN(__builtin_ia32_pause, "v", "", "sse2")
-TARGET_HEADER_BUILTIN(_mm_pause, "v", "h", "emmintrin.h", ALL_LANGUAGES, "sse2")
+TARGET_BUILTIN(__builtin_ia32_pause, "v", "", "")
+TARGET_HEADER_BUILTIN(_mm_pause, "v", "h", "emmintrin.h", ALL_LANGUAGES, "")
 TARGET_BUILTIN(__builtin_ia32_pmuludq128, "V2LLiV4iV4i", "", "sse2")
 TARGET_BUILTIN(__builtin_ia32_psraw128, "V8sV8sV8s", "", "sse2")
 TARGET_BUILTIN(__builtin_ia32_psrad128, "V4iV4iV4i", "", "sse2")
@@ -1107,6 +1102,9 @@ TARGET_BUILTIN(__builtin_ia32_vpconflictsi_512_mask, "V16iV16iV16iUs", "", "avx5
 TARGET_BUILTIN(__builtin_ia32_vplzcntd_512_mask, "V16iV16iV16iUs", "", "avx512cd")
 TARGET_BUILTIN(__builtin_ia32_vplzcntq_512_mask, "V8LLiV8LLiV8LLiUc", "", "avx512cd")
 
+TARGET_BUILTIN(__builtin_ia32_vpopcntd_512, "V16iV16i", "", "avx512vpopcntdq")
+TARGET_BUILTIN(__builtin_ia32_vpopcntq_512, "V8LLiV8LLi", "", "avx512vpopcntdq")
+
 TARGET_BUILTIN(__builtin_ia32_vpermi2varhi128_mask, "V8sV8sV8sV8sUc", "", "avx512vl,avx512bw")
 TARGET_BUILTIN(__builtin_ia32_vpermi2varhi256_mask, "V16sV16sV16sV16sUs", "", "avx512vl,avx512bw")
 TARGET_BUILTIN(__builtin_ia32_vpermt2varhi128_mask, "V8sV8sV8sV8sUc", "", "avx512vl,avx512bw")
@@ -1819,8 +1817,8 @@ TARGET_BUILTIN(__builtin_ia32_mwaitx, "vUiUiUi", "", "mwaitx")
 TARGET_BUILTIN(__builtin_ia32_clzero, "vv*", "", "clzero")
 
 // MSVC
-TARGET_HEADER_BUILTIN(_BitScanForward, "UcULi*ULi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
-TARGET_HEADER_BUILTIN(_BitScanReverse, "UcULi*ULi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
+TARGET_HEADER_BUILTIN(_BitScanForward, "UcUNi*UNi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
+TARGET_HEADER_BUILTIN(_BitScanReverse, "UcUNi*UNi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
 
 TARGET_HEADER_BUILTIN(_ReadWriteBarrier, "v", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
 TARGET_HEADER_BUILTIN(_ReadBarrier,      "v", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
@@ -1835,15 +1833,15 @@ TARGET_HEADER_BUILTIN(__stosb, "vUc*Ucz", "nh", "intrin.h", ALL_MS_LANGUAGES, ""
 TARGET_HEADER_BUILTIN(__int2c, "v",       "nr", "intrin.h", ALL_MS_LANGUAGES, "")
 TARGET_HEADER_BUILTIN(__ud2,   "v",       "nr", "intrin.h", ALL_MS_LANGUAGES, "")
 
-TARGET_HEADER_BUILTIN(__readfsbyte,  "UcULi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
-TARGET_HEADER_BUILTIN(__readfsword,  "UsULi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
-TARGET_HEADER_BUILTIN(__readfsdword, "ULiULi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
-TARGET_HEADER_BUILTIN(__readfsqword, "ULLiULi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
+TARGET_HEADER_BUILTIN(__readfsbyte,  "UcUNi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
+TARGET_HEADER_BUILTIN(__readfsword,  "UsUNi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
+TARGET_HEADER_BUILTIN(__readfsdword, "UNiUNi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
+TARGET_HEADER_BUILTIN(__readfsqword, "ULLiUNi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
 
-TARGET_HEADER_BUILTIN(__readgsbyte,  "UcULi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
-TARGET_HEADER_BUILTIN(__readgsword,  "UsULi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
-TARGET_HEADER_BUILTIN(__readgsdword, "ULiULi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
-TARGET_HEADER_BUILTIN(__readgsqword, "ULLiULi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
+TARGET_HEADER_BUILTIN(__readgsbyte,  "UcUNi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
+TARGET_HEADER_BUILTIN(__readgsword,  "UsUNi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
+TARGET_HEADER_BUILTIN(__readgsdword, "UNiUNi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
+TARGET_HEADER_BUILTIN(__readgsqword, "ULLiUNi", "nh", "intrin.h", ALL_MS_LANGUAGES, "")
 
 #undef BUILTIN
 #undef TARGET_BUILTIN

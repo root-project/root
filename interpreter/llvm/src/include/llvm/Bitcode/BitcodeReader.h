@@ -40,6 +40,14 @@ namespace llvm {
     return std::move(*Val);
   }
 
+  struct BitcodeFileContents;
+
+  /// Basic information extracted from a bitcode module to be used for LTO.
+  struct BitcodeLTOInfo {
+    bool IsThinLTO;
+    bool HasSummary;
+  };
+
   /// Represents a module in a bitcode file.
   class BitcodeModule {
     // This covers the identification (if present) and module blocks.
@@ -61,8 +69,8 @@ namespace llvm {
           IdentificationBit(IdentificationBit), ModuleBit(ModuleBit) {}
 
     // Calls the ctor.
-    friend Expected<std::vector<BitcodeModule>>
-    getBitcodeModuleList(MemoryBufferRef Buffer);
+    friend Expected<BitcodeFileContents>
+    getBitcodeFileContents(MemoryBufferRef Buffer);
 
     Expected<std::unique_ptr<Module>> getModuleImpl(LLVMContext &Context,
                                                     bool MaterializeAll,
@@ -88,16 +96,30 @@ namespace llvm {
     /// Read the entire bitcode module and return it.
     Expected<std::unique_ptr<Module>> parseModule(LLVMContext &Context);
 
-    /// Check if the given bitcode buffer contains a summary block.
-    Expected<bool> hasSummary();
+    /// Returns information about the module to be used for LTO: whether to
+    /// compile with ThinLTO, and whether it has a summary.
+    Expected<BitcodeLTOInfo> getLTOInfo();
 
     /// Parse the specified bitcode buffer, returning the module summary index.
     Expected<std::unique_ptr<ModuleSummaryIndex>> getSummary();
 
     /// Parse the specified bitcode buffer and merge its module summary index
     /// into CombinedIndex.
-    Error readSummary(ModuleSummaryIndex &CombinedIndex, unsigned ModuleId);
+    Error readSummary(ModuleSummaryIndex &CombinedIndex, StringRef ModulePath,
+                      uint64_t ModuleId);
   };
+
+  struct BitcodeFileContents {
+    std::vector<BitcodeModule> Mods;
+    StringRef Symtab, StrtabForSymtab;
+  };
+
+  /// Returns the contents of a bitcode file. This includes the raw contents of
+  /// the symbol table embedded in the bitcode file. Clients which require a
+  /// symbol table should prefer to use irsymtab::read instead of this function
+  /// because it creates a reader for the irsymtab and handles upgrading bitcode
+  /// files without a symbol table or with an old symbol table.
+  Expected<BitcodeFileContents> getBitcodeFileContents(MemoryBufferRef Buffer);
 
   /// Returns a list of modules in the specified bitcode buffer.
   Expected<std::vector<BitcodeModule>>
@@ -138,8 +160,8 @@ namespace llvm {
   Expected<std::unique_ptr<Module>> parseBitcodeFile(MemoryBufferRef Buffer,
                                                      LLVMContext &Context);
 
-  /// Check if the given bitcode buffer contains a summary block.
-  Expected<bool> hasGlobalValueSummary(MemoryBufferRef Buffer);
+  /// Returns LTO information for the specified bitcode file.
+  Expected<BitcodeLTOInfo> getBitcodeLTOInfo(MemoryBufferRef Buffer);
 
   /// Parse the specified bitcode buffer, returning the module summary index.
   Expected<std::unique_ptr<ModuleSummaryIndex>>
@@ -148,7 +170,7 @@ namespace llvm {
   /// Parse the specified bitcode buffer and merge the index into CombinedIndex.
   Error readModuleSummaryIndex(MemoryBufferRef Buffer,
                                ModuleSummaryIndex &CombinedIndex,
-                               unsigned ModuleId);
+                               uint64_t ModuleId);
 
   /// Parse the module summary index out of an IR file and return the module
   /// summary index object if found, or an empty summary if not. If Path refers

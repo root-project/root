@@ -44,15 +44,14 @@
 /// For more information, please refer to the design document:
 /// http://clang.llvm.org/docs/DataFlowSanitizerDesign.html
 
-#include "llvm/Transforms/Instrumentation.h"
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/DepthFirstIterator.h"
 #include "llvm/ADT/StringExtras.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/Analysis/ValueTracking.h"
-#include "llvm/IR/Dominators.h"
 #include "llvm/IR/DebugInfo.h"
+#include "llvm/IR/Dominators.h"
 #include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/InlineAsm.h"
 #include "llvm/IR/InstVisitor.h"
@@ -63,6 +62,7 @@
 #include "llvm/Pass.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/SpecialCaseList.h"
+#include "llvm/Transforms/Instrumentation.h"
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include <algorithm>
@@ -1470,6 +1470,7 @@ void DFSanVisitor::visitCallSite(CallSite CS) {
         }
 
         i = CS.arg_begin();
+        const unsigned ShadowArgStart = Args.size();
         for (unsigned n = FT->getNumParams(); n != 0; ++i, --n)
           Args.push_back(DFSF.getShadow(*i));
 
@@ -1504,6 +1505,15 @@ void DFSanVisitor::visitCallSite(CallSite CS) {
         CallInst *CustomCI = IRB.CreateCall(CustomF, Args);
         CustomCI->setCallingConv(CI->getCallingConv());
         CustomCI->setAttributes(CI->getAttributes());
+
+        // Update the parameter attributes of the custom call instruction to
+        // zero extend the shadow parameters. This is required for targets
+        // which consider ShadowTy an illegal type.
+        for (unsigned n = 0; n < FT->getNumParams(); n++) {
+          const unsigned ArgNo = ShadowArgStart + n;
+          if (CustomCI->getArgOperand(ArgNo)->getType() == DFSF.DFS.ShadowTy)
+            CustomCI->addParamAttr(ArgNo, Attribute::ZExt);
+        }
 
         if (!FT->getReturnType()->isVoidTy()) {
           LoadInst *LabelLoad = IRB.CreateLoad(DFSF.LabelReturnAlloca);

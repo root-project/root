@@ -12,6 +12,7 @@ clang_CXXMethod_isConst
 clang_CXXMethod_isPureVirtual
 clang_CXXMethod_isStatic
 clang_CXXMethod_isVirtual
+clang_EnumDecl_isScoped
 clang_Cursor_getArgument
 clang_Cursor_getNumTemplateArguments
 clang_Cursor_getTemplateArgumentKind
@@ -147,6 +148,7 @@ clang_findReferencesInFile
 clang_findReferencesInFileWithBlock
 clang_formatDiagnostic
 clang_free
+clang_getAddressSpace
 clang_getAllSkippedRanges
 clang_getArgType
 clang_getArrayElementType
@@ -174,6 +176,7 @@ clang_getCursorCompletionString
 clang_getCursorDefinition
 clang_getCursorDisplayName
 clang_getCursorExtent
+clang_getCursorExceptionSpecificationType
 clang_getCursorKind
 clang_getCursorKindSpelling
 clang_getCursorLanguage
@@ -209,6 +212,7 @@ clang_getElementType
 clang_getEnumConstantDeclUnsignedValue
 clang_getEnumConstantDeclValue
 clang_getEnumDeclIntegerType
+clang_getExceptionSpecificationType
 clang_getFieldDeclBitWidth
 clang_getExpansionLocation
 clang_getFile
@@ -259,6 +263,7 @@ clang_getTypeDeclaration
 clang_getTypeKindSpelling
 clang_getTypeSpelling
 clang_getTypedefDeclUnderlyingType
+clang_getTypedefName
 clang_hashCursor
 clang_indexLoc_getCXSourceLocation
 clang_indexLoc_getFileLocation
@@ -305,6 +310,7 @@ clang_remap_getFilenames
 clang_remap_getNumFiles
 clang_reparseTranslationUnit
 clang_saveTranslationUnit
+clang_suspendTranslationUnit
 clang_sortCodeCompletionResults
 clang_toggleCrashRecovery
 clang_tokenize

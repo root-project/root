@@ -61,17 +61,21 @@ bool index::isFunctionLocalSymbol(const Decl *D) {
   if (isa<ObjCTypeParamDecl>(D))
     return true;
 
+  if (isa<UsingDirectiveDecl>(D))
+    return false;
   if (!D->getParentFunctionOrMethod())
     return false;
 
   if (const NamedDecl *ND = dyn_cast<NamedDecl>(D)) {
     switch (ND->getFormalLinkage()) {
       case NoLinkage:
-      case VisibleNoLinkage:
       case InternalLinkage:
         return true;
+      case VisibleNoLinkage:
       case UniqueExternalLinkage:
+      case ModuleInternalLinkage:
         llvm_unreachable("Not a sema linkage");
+      case ModuleLinkage:
       case ExternalLinkage:
         return false;
     }
@@ -299,6 +303,10 @@ SymbolInfo index::getSymbolInfo(const Decl *D) {
       Info.Kind = SymbolKind::TypeAlias;
       Info.Lang = SymbolLanguage::CXX;
       break;
+    case Decl::Binding:
+      Info.Kind = SymbolKind::Variable;
+      Info.Lang = SymbolLanguage::CXX;
+      break;
     default:
       break;
     }
@@ -318,16 +326,7 @@ SymbolInfo index::getSymbolInfo(const Decl *D) {
   if (Info.Properties & (unsigned)SymbolProperty::Generic)
     Info.Lang = SymbolLanguage::CXX;
 
-  auto getExternalSymAttr = [](const Decl *D) -> ExternalSourceSymbolAttr* {
-    if (auto *attr = D->getAttr<ExternalSourceSymbolAttr>())
-      return attr;
-    if (auto *dcd = dyn_cast<Decl>(D->getDeclContext())) {
-      if (auto *attr = dcd->getAttr<ExternalSourceSymbolAttr>())
-        return attr;
-    }
-    return nullptr;
-  };
-  if (auto *attr = getExternalSymAttr(D)) {
+  if (auto *attr = D->getExternalSourceSymbolAttr()) {
     if (attr->getLanguage() == "Swift")
       Info.Lang = SymbolLanguage::Swift;
   }

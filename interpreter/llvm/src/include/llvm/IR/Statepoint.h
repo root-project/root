@@ -17,8 +17,8 @@
 #ifndef LLVM_IR_STATEPOINT_H
 #define LLVM_IR_STATEPOINT_H
 
-#include "llvm/ADT/iterator_range.h"
 #include "llvm/ADT/Optional.h"
+#include "llvm/ADT/iterator_range.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/CallSite.h"
@@ -62,7 +62,10 @@ bool isStatepoint(const Value *V);
 bool isStatepoint(const Value &V);
 
 bool isGCRelocate(ImmutableCallSite CS);
+bool isGCRelocate(const Value *V);
+
 bool isGCResult(ImmutableCallSite CS);
+bool isGCResult(const Value *V);
 
 /// Analogous to CallSiteBase, this provides most of the actual
 /// functionality for Statepoint and ImmutableStatepoint.  It is
@@ -228,24 +231,24 @@ public:
     return cast<ConstantInt>(NumVMSArgs)->getZExtValue();
   }
 
-  typename CallSiteTy::arg_iterator vm_state_begin() const {
+  typename CallSiteTy::arg_iterator deopt_begin() const {
     auto I = gc_transition_args_end() + 1;
     assert((getCallSite().arg_end() - I) >= 0);
     return I;
   }
-  typename CallSiteTy::arg_iterator vm_state_end() const {
-    auto I = vm_state_begin() + getNumTotalVMSArgs();
+  typename CallSiteTy::arg_iterator deopt_end() const {
+    auto I = deopt_begin() + getNumTotalVMSArgs();
     assert((getCallSite().arg_end() - I) >= 0);
     return I;
   }
 
   /// range adapter for vm state arguments
-  iterator_range<arg_iterator> vm_state_args() const {
-    return make_range(vm_state_begin(), vm_state_end());
+  iterator_range<arg_iterator> deopt_operands() const {
+    return make_range(deopt_begin(), deopt_end());
   }
 
   typename CallSiteTy::arg_iterator gc_args_begin() const {
-    return vm_state_end();
+    return deopt_end();
   }
   typename CallSiteTy::arg_iterator gc_args_end() const {
     return getCallSite().arg_end();
@@ -289,8 +292,8 @@ public:
     (void)arg_end();
     (void)gc_transition_args_begin();
     (void)gc_transition_args_end();
-    (void)vm_state_begin();
-    (void)vm_state_end();
+    (void)deopt_begin();
+    (void)deopt_end();
     (void)gc_args_begin();
     (void)gc_args_end();
   }
@@ -326,12 +329,12 @@ public:
 /// Currently, the only projections available are gc.result and gc.relocate.
 class GCProjectionInst : public IntrinsicInst {
 public:
-  static inline bool classof(const IntrinsicInst *I) {
+  static bool classof(const IntrinsicInst *I) {
     return I->getIntrinsicID() == Intrinsic::experimental_gc_relocate ||
       I->getIntrinsicID() == Intrinsic::experimental_gc_result;
   }
 
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<IntrinsicInst>(V) && classof(cast<IntrinsicInst>(V));
   }
 
@@ -370,11 +373,11 @@ public:
 /// Represents calls to the gc.relocate intrinsic.
 class GCRelocateInst : public GCProjectionInst {
 public:
-  static inline bool classof(const IntrinsicInst *I) {
+  static bool classof(const IntrinsicInst *I) {
     return I->getIntrinsicID() == Intrinsic::experimental_gc_relocate;
   }
 
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<IntrinsicInst>(V) && classof(cast<IntrinsicInst>(V));
   }
 
@@ -405,11 +408,11 @@ public:
 /// Represents calls to the gc.result intrinsic.
 class GCResultInst : public GCProjectionInst {
 public:
-  static inline bool classof(const IntrinsicInst *I) {
+  static bool classof(const IntrinsicInst *I) {
     return I->getIntrinsicID() == Intrinsic::experimental_gc_result;
   }
 
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<IntrinsicInst>(V) && classof(cast<IntrinsicInst>(V));
   }
 };

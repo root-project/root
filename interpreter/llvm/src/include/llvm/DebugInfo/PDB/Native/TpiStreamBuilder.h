@@ -58,6 +58,8 @@ public:
 
   Error finalizeMsfLayout();
 
+  uint32_t getRecordCount() const { return TypeRecords.size(); }
+
   Error commit(const msf::MSFLayout &Layout, WritableBinaryStreamRef Buffer);
 
   uint32_t calculateSerializedLength();
@@ -72,7 +74,7 @@ private:
 
   size_t TypeRecordBytes = 0;
 
-  Optional<PdbRaw_TpiVer> VerHeader;
+  PdbRaw_TpiVer VerHeader = PdbRaw_TpiVer::PdbTpiV80;
   std::vector<ArrayRef<uint8_t>> TypeRecords;
   std::vector<uint32_t> TypeHashes;
   std::vector<codeview::TypeIndexOffset> TypeIndexOffsets;

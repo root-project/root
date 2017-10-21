@@ -14,10 +14,10 @@
 /// uses, all of which are the only use of the def.
 ///
 ///===---------------------------------------------------------------------===//
+#include "llvm/ADT/Statistic.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineRegisterInfo.h"
 #include "llvm/CodeGen/Passes.h"
-#include "llvm/ADT/Statistic.h"
 #include "llvm/Support/Debug.h"
 
 #define DEBUG_TYPE "lrshrink"
@@ -103,7 +103,7 @@ bool LiveRangeShrink::runOnMachineFunction(MachineFunction &MF) {
   // register is used last. When moving instructions up, we need to
   // make sure all its defs (including dead def) will not cross its
   // last use when moving up.
-  DenseMap<unsigned, unsigned> UseMap;
+  DenseMap<unsigned, std::pair<unsigned, MachineInstr *>> UseMap;
 
   for (MachineBasicBlock &MBB : MF) {
     if (MBB.empty())
@@ -122,15 +122,19 @@ bool LiveRangeShrink::runOnMachineFunction(MachineFunction &MF) {
 
       unsigned CurrentOrder = IOM[&MI];
       unsigned Barrier = 0;
+      MachineInstr *BarrierMI = nullptr;
       for (const MachineOperand &MO : MI.operands()) {
         if (!MO.isReg() || MO.isDebug())
           continue;
         if (MO.isUse())
-          UseMap[MO.getReg()] = CurrentOrder;
+          UseMap[MO.getReg()] = std::make_pair(CurrentOrder, &MI);
         else if (MO.isDead() && UseMap.count(MO.getReg()))
           // Barrier is the last instruction where MO get used. MI should not
           // be moved above Barrier.
-          Barrier = std::max(Barrier, UseMap[MO.getReg()]);
+          if (Barrier < UseMap[MO.getReg()].first) {
+            Barrier = UseMap[MO.getReg()].first;
+            BarrierMI = UseMap[MO.getReg()].second;
+          }
       }
 
       if (!MI.isSafeToMove(nullptr, SawStore)) {
@@ -156,9 +160,10 @@ bool LiveRangeShrink::runOnMachineFunction(MachineFunction &MF) {
           continue;
         unsigned Reg = MO.getReg();
         // Do not move the instruction if it def/uses a physical register,
-        // unless it is a constant physical register.
-        if (TargetRegisterInfo::isPhysicalRegister(Reg) &&
-            !MRI.isConstantPhysReg(Reg)) {
+        // unless it is a constant physical register or a noreg.
+        if (!TargetRegisterInfo::isVirtualRegister(Reg)) {
+          if (!Reg || MRI.isConstantPhysReg(Reg))
+            continue;
           Insert = nullptr;
           break;
         }
@@ -169,7 +174,13 @@ bool LiveRangeShrink::runOnMachineFunction(MachineFunction &MF) {
             break;
           }
           DefMO = &MO;
-        } else if (MRI.hasOneNonDBGUse(Reg) && MRI.hasOneDef(Reg)) {
+        } else if (MRI.hasOneNonDBGUse(Reg) && MRI.hasOneDef(Reg) && DefMO &&
+                   MRI.getRegClass(DefMO->getReg()) ==
+                       MRI.getRegClass(MO.getReg())) {
+          // The heuristic does not handle different register classes yet
+          // (registers of different sizes, looser/tighter constraints). This
+          // is because it needs more accurate model to handle register
+          // pressure correctly.
           MachineInstr &DefInstr = *MRI.def_instr_begin(Reg);
           if (!DefInstr.isCopy())
             NumEligibleUse++;
@@ -179,6 +190,15 @@ bool LiveRangeShrink::runOnMachineFunction(MachineFunction &MF) {
           break;
         }
       }
+
+      // If Barrier equals IOM[I], traverse forward to find if BarrierMI is
+      // after Insert, if yes, then we should not hoist.
+      for (MachineInstr *I = Insert; I && IOM[I] == Barrier;
+           I = I->getNextNode())
+        if (I == BarrierMI) {
+          Insert = nullptr;
+          break;
+        }
       // Move the instruction when # of shrunk live range > 1.
       if (DefMO && Insert && NumEligibleUse > 1 && Barrier <= IOM[Insert]) {
         MachineBasicBlock::iterator I = std::next(Insert->getIterator());

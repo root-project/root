@@ -20,6 +20,7 @@
 #include "clang/Basic/TokenKinds.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/LexDiagnostic.h"
+#include "clang/Lex/LiteralSupport.h"
 #include "clang/Lex/MacroInfo.h"
 #include "clang/Lex/PPCallbacks.h"
 #include "clang/Lex/Preprocessor.h"
@@ -477,9 +478,9 @@ void Preprocessor::HandlePragmaSystemHeader(Token &SysHeaderTok) {
   // Emit a line marker.  This will change any source locations from this point
   // forward to realize they are in a system header.
   // Create a line note with this information.
-  SourceMgr.AddLineNote(SysHeaderTok.getLocation(), PLoc.getLine()+1,
+  SourceMgr.AddLineNote(SysHeaderTok.getLocation(), PLoc.getLine() + 1,
                         FilenameID, /*IsEntry=*/false, /*IsExit=*/false,
-                        /*IsSystem=*/true, /*IsExternC=*/false);
+                        SrcMgr::C_System);
 }
 
 /// HandlePragmaDependency - Handle \#pragma GCC dependency "foo" blah.
@@ -754,6 +755,125 @@ void Preprocessor::HandlePragmaIncludeAlias(Token &Tok) {
 
   // Now we can let the include handler know about this mapping
   getHeaderSearchInfo().AddIncludeAlias(OriginalSource, ReplaceFileName);
+}
+
+// Lex a component of a module name: either an identifier or a string literal;
+// for components that can be expressed both ways, the two forms are equivalent.
+static bool LexModuleNameComponent(
+    Preprocessor &PP, Token &Tok,
+    std::pair<IdentifierInfo *, SourceLocation> &ModuleNameComponent,
+    bool First) {
+  PP.LexUnexpandedToken(Tok);
+  if (Tok.is(tok::string_literal) && !Tok.hasUDSuffix()) {
+    StringLiteralParser Literal(Tok, PP);
+    if (Literal.hadError)
+      return true;
+    ModuleNameComponent = std::make_pair(
+        PP.getIdentifierInfo(Literal.GetString()), Tok.getLocation());
+  } else if (!Tok.isAnnotation() && Tok.getIdentifierInfo()) {
+    ModuleNameComponent =
+        std::make_pair(Tok.getIdentifierInfo(), Tok.getLocation());
+  } else {
+    PP.Diag(Tok.getLocation(), diag::err_pp_expected_module_name) << First;
+    return true;
+  }
+  return false;
+}
+
+static bool LexModuleName(
+    Preprocessor &PP, Token &Tok,
+    llvm::SmallVectorImpl<std::pair<IdentifierInfo *, SourceLocation>>
+        &ModuleName) {
+  while (true) {
+    std::pair<IdentifierInfo*, SourceLocation> NameComponent;
+    if (LexModuleNameComponent(PP, Tok, NameComponent, ModuleName.empty()))
+      return true;
+    ModuleName.push_back(NameComponent);
+
+    PP.LexUnexpandedToken(Tok);
+    if (Tok.isNot(tok::period))
+      return false;
+  }
+}
+
+void Preprocessor::HandlePragmaModuleBuild(Token &Tok) {
+  SourceLocation Loc = Tok.getLocation();
+
+  std::pair<IdentifierInfo *, SourceLocation> ModuleNameLoc;
+  if (LexModuleNameComponent(*this, Tok, ModuleNameLoc, true))
+    return;
+  IdentifierInfo *ModuleName = ModuleNameLoc.first;
+
+  LexUnexpandedToken(Tok);
+  if (Tok.isNot(tok::eod)) {
+    Diag(Tok, diag::ext_pp_extra_tokens_at_eol) << "pragma";
+    DiscardUntilEndOfDirective();
+  }
+
+  if (CurPTHLexer) {
+    // FIXME: Support this somehow?
+    Diag(Loc, diag::err_pp_module_build_pth);
+    return;
+  }
+
+  CurLexer->LexingRawMode = true;
+
+  auto TryConsumeIdentifier = [&](StringRef Ident) -> bool {
+    if (Tok.getKind() != tok::raw_identifier ||
+        Tok.getRawIdentifier() != Ident)
+      return false;
+    CurLexer->Lex(Tok);
+    return true;
+  };
+
+  // Scan forward looking for the end of the module.
+  const char *Start = CurLexer->getBufferLocation();
+  const char *End = nullptr;
+  unsigned NestingLevel = 1;
+  while (true) {
+    End = CurLexer->getBufferLocation();
+    CurLexer->Lex(Tok);
+
+    if (Tok.is(tok::eof)) {
+      Diag(Loc, diag::err_pp_module_build_missing_end);
+      break;
+    }
+
+    if (Tok.isNot(tok::hash) || !Tok.isAtStartOfLine()) {
+      // Token was part of module; keep going.
+      continue;
+    }
+
+    // We hit something directive-shaped; check to see if this is the end
+    // of the module build.
+    CurLexer->ParsingPreprocessorDirective = true;
+    CurLexer->Lex(Tok);
+    if (TryConsumeIdentifier("pragma") && TryConsumeIdentifier("clang") &&
+        TryConsumeIdentifier("module")) {
+      if (TryConsumeIdentifier("build"))
+        // #pragma clang module build -> entering a nested module build.
+        ++NestingLevel;
+      else if (TryConsumeIdentifier("endbuild")) {
+        // #pragma clang module endbuild -> leaving a module build.
+        if (--NestingLevel == 0)
+          break;
+      }
+      // We should either be looking at the EOD or more of the current directive
+      // preceding the EOD. Either way we can ignore this token and keep going.
+      assert(Tok.getKind() != tok::eof && "missing EOD before EOF");
+    }
+  }
+
+  CurLexer->LexingRawMode = false;
+
+  // Load the extracted text as a preprocessed module.
+  assert(CurLexer->getBuffer().begin() <= Start &&
+         Start <= CurLexer->getBuffer().end() &&
+         CurLexer->getBuffer().begin() <= End &&
+         End <= CurLexer->getBuffer().end() &&
+         "module source range not contained within same file buffer");
+  TheModuleLoader.loadModuleFromSource(Loc, ModuleName->getName(),
+                                       StringRef(Start, End - Start));
 }
 
 /// AddPragmaHandler - Add the specified pragma handler to the preprocessor.
@@ -1303,26 +1423,6 @@ public:
   }
 };
 
-static bool LexModuleName(
-    Preprocessor &PP, Token &Tok,
-    llvm::SmallVectorImpl<std::pair<IdentifierInfo *, SourceLocation>>
-        &ModuleName) {
-  while (true) {
-    PP.LexUnexpandedToken(Tok);
-    if (Tok.isAnnotation() || !Tok.getIdentifierInfo()) {
-      PP.Diag(Tok.getLocation(), diag::err_pp_expected_module_name)
-        << ModuleName.empty();
-      return true;
-    }
-
-    ModuleName.emplace_back(Tok.getIdentifierInfo(), Tok.getLocation());
-
-    PP.LexUnexpandedToken(Tok);
-    if (Tok.isNot(tok::period))
-      return false;
-  }
-}
-
 /// Handle the clang \#pragma module import extension. The syntax is:
 /// \code
 ///   #pragma clang module import some.module.name
@@ -1393,7 +1493,7 @@ struct PragmaModuleBeginHandler : public PragmaHandler {
     // be loaded or implicitly loadable.
     // FIXME: We could create the submodule here. We'd need to know whether
     // it's supposed to be explicit, but not much else.
-    Module *M = PP.getHeaderSearchInfo().getModuleMap().findModule(Current);
+    Module *M = PP.getHeaderSearchInfo().lookupModule(Current);
     if (!M) {
       PP.Diag(ModuleName.front().second,
               diag::err_pp_module_begin_no_module_map) << Current;
@@ -1407,6 +1507,14 @@ struct PragmaModuleBeginHandler : public PragmaHandler {
         return;
       }
       M = NewM;
+    }
+
+    // If the module isn't available, it doesn't make sense to enter it.
+    if (Preprocessor::checkModuleIsAvailable(
+            PP.getLangOpts(), PP.getTargetInfo(), PP.getDiagnostics(), M)) {
+      PP.Diag(BeginLoc, diag::note_pp_module_begin_here)
+        << M->getTopLevelModuleName();
+      return;
     }
 
     // Enter the scope of the submodule.
@@ -1433,6 +1541,39 @@ struct PragmaModuleEndHandler : public PragmaHandler {
       PP.EnterAnnotationToken(SourceRange(Loc), tok::annot_module_end, M);
     else
       PP.Diag(Loc, diag::err_pp_module_end_without_module_begin);
+  }
+};
+
+/// Handle the clang \#pragma module build extension.
+struct PragmaModuleBuildHandler : public PragmaHandler {
+  PragmaModuleBuildHandler() : PragmaHandler("build") {}
+
+  void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
+                    Token &Tok) override {
+    PP.HandlePragmaModuleBuild(Tok);
+  }
+};
+
+/// Handle the clang \#pragma module load extension.
+struct PragmaModuleLoadHandler : public PragmaHandler {
+  PragmaModuleLoadHandler() : PragmaHandler("load") {}
+
+  void HandlePragma(Preprocessor &PP, PragmaIntroducerKind Introducer,
+                    Token &Tok) override {
+    SourceLocation Loc = Tok.getLocation();
+
+    // Read the module name.
+    llvm::SmallVector<std::pair<IdentifierInfo *, SourceLocation>, 8>
+        ModuleName;
+    if (LexModuleName(PP, Tok, ModuleName))
+      return;
+
+    if (Tok.isNot(tok::eod))
+      PP.Diag(Tok, diag::ext_pp_extra_tokens_at_eol) << "pragma";
+
+    // Load the module, don't make it visible.
+    PP.getModuleLoader().loadModule(Loc, ModuleName, Module::Hidden,
+                                    /*IsIncludeDirective=*/false);
   }
 };
 
@@ -1665,6 +1806,8 @@ void Preprocessor::RegisterBuiltinPragmas() {
   ModuleHandler->AddPragma(new PragmaModuleImportHandler());
   ModuleHandler->AddPragma(new PragmaModuleBeginHandler());
   ModuleHandler->AddPragma(new PragmaModuleEndHandler());
+  ModuleHandler->AddPragma(new PragmaModuleBuildHandler());
+  ModuleHandler->AddPragma(new PragmaModuleLoadHandler());
 
   AddPragmaHandler("STDC", new PragmaSTDC_FENV_ACCESSHandler());
   AddPragmaHandler("STDC", new PragmaSTDC_CX_LIMITED_RANGEHandler());

@@ -41,6 +41,7 @@ public:
   Decl *Imported(Decl *From, Decl *To) override {
     if (auto ToTag = dyn_cast<TagDecl>(To)) {
       ToTag->setHasExternalLexicalStorage();
+      ToTag->setMustBuildLookupTable();
     } else if (auto ToNamespace = dyn_cast<NamespaceDecl>(To)) {
       ToNamespace->setHasExternalVisibleStorage();
     }
@@ -179,8 +180,3 @@ void ExternalASTMerger::FindExternalLexicalDecls(
       });
 }
 
-void ExternalASTMerger::CompleteType(TagDecl *Tag) {
-  SmallVector<Decl *, 0> Result;
-  FindExternalLexicalDecls(Tag, [](Decl::Kind) { return true; }, Result);
-  Tag->setHasExternalLexicalStorage(false);
-}

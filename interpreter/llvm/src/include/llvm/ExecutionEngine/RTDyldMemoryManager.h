@@ -14,10 +14,10 @@
 #ifndef LLVM_EXECUTIONENGINE_RTDYLDMEMORYMANAGER_H
 #define LLVM_EXECUTIONENGINE_RTDYLDMEMORYMANAGER_H
 
+#include "llvm-c/ExecutionEngine.h"
 #include "llvm/ExecutionEngine/JITSymbol.h"
 #include "llvm/ExecutionEngine/RuntimeDyld.h"
 #include "llvm/Support/CBindingWrapping.h"
-#include "llvm-c/ExecutionEngine.h"
 #include <cstddef>
 #include <cstdint>
 #include <string>
@@ -135,12 +135,13 @@ public:
   virtual void *getPointerToNamedFunction(const std::string &Name,
                                           bool AbortOnFailure = true);
 
-private:
+protected:
   struct EHFrame {
     uint8_t *Addr;
     size_t Size;
   };
-  std::vector<EHFrame> EHFrames;
+  typedef std::vector<EHFrame> EHFrameInfos;
+  EHFrameInfos EHFrames;
 };
 
 // Create wrappers for C Binding types (see CBindingWrapping.h).

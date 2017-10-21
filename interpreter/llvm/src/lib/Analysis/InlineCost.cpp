@@ -54,11 +54,6 @@ static cl::opt<int>
                           cl::init(45),
                           cl::desc("Threshold for inlining cold callsites"));
 
-static cl::opt<bool>
-    EnableGenericSwitchCost("inline-generic-switch-cost", cl::Hidden,
-                            cl::init(false),
-                            cl::desc("Enable generic switch cost model"));
-
 // We introduce this threshold to help performance of instrumentation based
 // PGO before we actually hook up inliner with analysis passes such as BPI and
 // BFI.
@@ -70,6 +65,12 @@ static cl::opt<int>
     HotCallSiteThreshold("hot-callsite-threshold", cl::Hidden, cl::init(3000),
                          cl::ZeroOrMore,
                          cl::desc("Threshold for hot callsites "));
+
+static cl::opt<int> ColdCallSiteRelFreq(
+    "cold-callsite-rel-freq", cl::Hidden, cl::init(2), cl::ZeroOrMore,
+    cl::desc("Maxmimum block frequency, expressed as a percentage of caller's "
+             "entry frequency, for a callsite to be cold in the absence of "
+             "profile information."));
 
 namespace {
 
@@ -176,6 +177,9 @@ class CallAnalyzer : public InstVisitor<CallAnalyzer, bool> {
 
   /// Return true if size growth is allowed when inlining the callee at CS.
   bool allowSizeGrowth(CallSite CS);
+
+  /// Return true if \p CS is a cold callsite.
+  bool isColdCallSite(CallSite CS, BlockFrequencyInfo *CallerBFI);
 
   // Custom analysis routines.
   bool analyzeBlock(BasicBlock *BB, SmallPtrSetImpl<const Value *> &EphValues);
@@ -636,6 +640,26 @@ bool CallAnalyzer::allowSizeGrowth(CallSite CS) {
   return true;
 }
 
+bool CallAnalyzer::isColdCallSite(CallSite CS, BlockFrequencyInfo *CallerBFI) {
+  // If global profile summary is available, then callsite's coldness is
+  // determined based on that.
+  if (PSI->hasProfileSummary())
+    return PSI->isColdCallSite(CS, CallerBFI);
+  if (!CallerBFI)
+    return false;
+
+  // In the absence of global profile summary, determine if the callsite is cold
+  // relative to caller's entry. We could potentially cache the computation of
+  // scaled entry frequency, but the added complexity is not worth it unless
+  // this scaling shows up high in the profiles.
+  const BranchProbability ColdProb(ColdCallSiteRelFreq, 100);
+  auto CallSiteBB = CS.getInstruction()->getParent();
+  auto CallSiteFreq = CallerBFI->getBlockFreq(CallSiteBB);
+  auto CallerEntryFreq =
+      CallerBFI->getBlockFreq(&(CS.getCaller()->getEntryBlock()));
+  return CallSiteFreq < CallerEntryFreq * ColdProb;
+}
+
 void CallAnalyzer::updateThreshold(CallSite CS, Function &Callee) {
   // If no size growth is allowed for this inlining, set Threshold to 0.
   if (!allowSizeGrowth(CS)) {
@@ -669,21 +693,33 @@ void CallAnalyzer::updateThreshold(CallSite CS, Function &Callee) {
       Threshold = MaxIfValid(Threshold, Params.HintThreshold);
     if (PSI) {
       BlockFrequencyInfo *CallerBFI = GetBFI ? &((*GetBFI)(*Caller)) : nullptr;
-      if (PSI->isHotCallSite(CS, CallerBFI)) {
-        DEBUG(dbgs() << "Hot callsite.\n");
-        Threshold = Params.HotCallSiteThreshold.getValue();
-      } else if (PSI->isFunctionEntryHot(&Callee)) {
-        DEBUG(dbgs() << "Hot callee.\n");
-        // If callsite hotness can not be determined, we may still know
-        // that the callee is hot and treat it as a weaker hint for threshold
-        // increase.
-        Threshold = MaxIfValid(Threshold, Params.HintThreshold);
-      } else if (PSI->isColdCallSite(CS, CallerBFI)) {
-        DEBUG(dbgs() << "Cold callsite.\n");
-        Threshold = MinIfValid(Threshold, Params.ColdCallSiteThreshold);
-      } else if (PSI->isFunctionEntryCold(&Callee)) {
-        DEBUG(dbgs() << "Cold callee.\n");
-        Threshold = MinIfValid(Threshold, Params.ColdThreshold);
+      // FIXME: After switching to the new passmanager, simplify the logic below
+      // by checking only the callsite hotness/coldness. The check for CallerBFI
+      // exists only because we do not have BFI available with the old PM.
+      //
+      // Use callee's hotness information only if we have no way of determining
+      // callsite's hotness information. Callsite hotness can be determined if
+      // sample profile is used (which adds hotness metadata to calls) or if
+      // caller's BlockFrequencyInfo is available.
+      if (CallerBFI || PSI->hasSampleProfile()) {
+        if (PSI->isHotCallSite(CS, CallerBFI)) {
+          DEBUG(dbgs() << "Hot callsite.\n");
+          Threshold = Params.HotCallSiteThreshold.getValue();
+        } else if (isColdCallSite(CS, CallerBFI)) {
+          DEBUG(dbgs() << "Cold callsite.\n");
+          Threshold = MinIfValid(Threshold, Params.ColdCallSiteThreshold);
+        }
+      } else {
+        if (PSI->isFunctionEntryHot(&Callee)) {
+          DEBUG(dbgs() << "Hot callee.\n");
+          // If callsite hotness can not be determined, we may still know
+          // that the callee is hot and treat it as a weaker hint for threshold
+          // increase.
+          Threshold = MaxIfValid(Threshold, Params.HintThreshold);
+        } else if (PSI->isFunctionEntryCold(&Callee)) {
+          DEBUG(dbgs() << "Cold callee.\n");
+          Threshold = MinIfValid(Threshold, Params.ColdThreshold);
+        }
       }
     }
   }
@@ -862,7 +898,7 @@ bool CallAnalyzer::simplifyCallSite(Function *F, CallSite CS) {
   // because we have to continually rebuild the argument list even when no
   // simplifications can be performed. Until that is fixed with remapping
   // inside of instsimplify, directly constant fold calls here.
-  if (!canConstantFoldCallTo(F))
+  if (!canConstantFoldCallTo(CS, F))
     return false;
 
   // Try to re-map the arguments to constants.
@@ -878,7 +914,7 @@ bool CallAnalyzer::simplifyCallSite(Function *F, CallSite CS) {
 
     ConstantArgs.push_back(C);
   }
-  if (Constant *C = ConstantFoldCall(F, ConstantArgs)) {
+  if (Constant *C = ConstantFoldCall(CS, F, ConstantArgs)) {
     SimplifiedValues[CS.getInstruction()] = C;
     return true;
   }
@@ -1003,83 +1039,74 @@ bool CallAnalyzer::visitSwitchInst(SwitchInst &SI) {
     if (isa<ConstantInt>(V))
       return true;
 
-  if (EnableGenericSwitchCost) {
-    // Assume the most general case where the swith is lowered into
-    // either a jump table, bit test, or a balanced binary tree consisting of
-    // case clusters without merging adjacent clusters with the same
-    // destination. We do not consider the switches that are lowered with a mix
-    // of jump table/bit test/binary search tree. The cost of the switch is
-    // proportional to the size of the tree or the size of jump table range.
-
-    // Exit early for a large switch, assuming one case needs at least one
-    // instruction.
-    // FIXME: This is not true for a bit test, but ignore such case for now to
-    // save compile-time.
-    int64_t CostLowerBound =
-        std::min((int64_t)INT_MAX,
-                 (int64_t)SI.getNumCases() * InlineConstants::InstrCost + Cost);
-
-    if (CostLowerBound > Threshold) {
-      Cost = CostLowerBound;
-      return false;
-    }
-
-    unsigned JumpTableSize = 0;
-    unsigned NumCaseCluster =
-        TTI.getEstimatedNumberOfCaseClusters(SI, JumpTableSize);
-
-    // If suitable for a jump table, consider the cost for the table size and
-    // branch to destination.
-    if (JumpTableSize) {
-      int64_t JTCost = (int64_t)JumpTableSize * InlineConstants::InstrCost +
-                       4 * InlineConstants::InstrCost;
-      Cost = std::min((int64_t)INT_MAX, JTCost + Cost);
-      return false;
-    }
-
-    // Considering forming a binary search, we should find the number of nodes
-    // which is same as the number of comparisons when lowered. For a given
-    // number of clusters, n, we can define a recursive function, f(n), to find
-    // the number of nodes in the tree. The recursion is :
-    // f(n) = 1 + f(n/2) + f (n - n/2), when n > 3,
-    // and f(n) = n, when n <= 3.
-    // This will lead a binary tree where the leaf should be either f(2) or f(3)
-    // when n > 3.  So, the number of comparisons from leaves should be n, while
-    // the number of non-leaf should be :
-    //   2^(log2(n) - 1) - 1
-    //   = 2^log2(n) * 2^-1 - 1
-    //   = n / 2 - 1.
-    // Considering comparisons from leaf and non-leaf nodes, we can estimate the
-    // number of comparisons in a simple closed form :
-    //   n + n / 2 - 1 = n * 3 / 2 - 1
-    if (NumCaseCluster <= 3) {
-      // Suppose a comparison includes one compare and one conditional branch.
-      Cost += NumCaseCluster * 2 * InlineConstants::InstrCost;
-      return false;
-    }
-    int64_t ExpectedNumberOfCompare = 3 * (uint64_t)NumCaseCluster / 2 - 1;
-    uint64_t SwitchCost =
-        ExpectedNumberOfCompare * 2 * InlineConstants::InstrCost;
-    Cost = std::min((uint64_t)INT_MAX, SwitchCost + Cost);
-    return false;
-  }
-
-  // Use a simple switch cost model where we accumulate a cost proportional to
-  // the number of distinct successor blocks. This fan-out in the CFG cannot
-  // be represented for free even if we can represent the core switch as a
-  // jumptable that takes a single instruction.
-  ///
+  // Assume the most general case where the switch is lowered into
+  // either a jump table, bit test, or a balanced binary tree consisting of
+  // case clusters without merging adjacent clusters with the same
+  // destination. We do not consider the switches that are lowered with a mix
+  // of jump table/bit test/binary search tree. The cost of the switch is
+  // proportional to the size of the tree or the size of jump table range.
+  //
   // NB: We convert large switches which are just used to initialize large phi
   // nodes to lookup tables instead in simplify-cfg, so this shouldn't prevent
   // inlining those. It will prevent inlining in cases where the optimization
   // does not (yet) fire.
-  SmallPtrSet<BasicBlock *, 8> SuccessorBlocks;
-  SuccessorBlocks.insert(SI.getDefaultDest());
-  for (auto Case : SI.cases())
-    SuccessorBlocks.insert(Case.getCaseSuccessor());
-  // Add cost corresponding to the number of distinct destinations. The first
-  // we model as free because of fallthrough.
-  Cost += (SuccessorBlocks.size() - 1) * InlineConstants::InstrCost;
+
+  // Maximum valid cost increased in this function.
+  int CostUpperBound = INT_MAX - InlineConstants::InstrCost - 1;
+
+  // Exit early for a large switch, assuming one case needs at least one
+  // instruction.
+  // FIXME: This is not true for a bit test, but ignore such case for now to
+  // save compile-time.
+  int64_t CostLowerBound =
+      std::min((int64_t)CostUpperBound,
+               (int64_t)SI.getNumCases() * InlineConstants::InstrCost + Cost);
+
+  if (CostLowerBound > Threshold) {
+    Cost = CostLowerBound;
+    return false;
+  }
+
+  unsigned JumpTableSize = 0;
+  unsigned NumCaseCluster =
+      TTI.getEstimatedNumberOfCaseClusters(SI, JumpTableSize);
+
+  // If suitable for a jump table, consider the cost for the table size and
+  // branch to destination.
+  if (JumpTableSize) {
+    int64_t JTCost = (int64_t)JumpTableSize * InlineConstants::InstrCost +
+                     4 * InlineConstants::InstrCost;
+
+    Cost = std::min((int64_t)CostUpperBound, JTCost + Cost);
+    return false;
+  }
+
+  // Considering forming a binary search, we should find the number of nodes
+  // which is same as the number of comparisons when lowered. For a given
+  // number of clusters, n, we can define a recursive function, f(n), to find
+  // the number of nodes in the tree. The recursion is :
+  // f(n) = 1 + f(n/2) + f (n - n/2), when n > 3,
+  // and f(n) = n, when n <= 3.
+  // This will lead a binary tree where the leaf should be either f(2) or f(3)
+  // when n > 3.  So, the number of comparisons from leaves should be n, while
+  // the number of non-leaf should be :
+  //   2^(log2(n) - 1) - 1
+  //   = 2^log2(n) * 2^-1 - 1
+  //   = n / 2 - 1.
+  // Considering comparisons from leaf and non-leaf nodes, we can estimate the
+  // number of comparisons in a simple closed form :
+  //   n + n / 2 - 1 = n * 3 / 2 - 1
+  if (NumCaseCluster <= 3) {
+    // Suppose a comparison includes one compare and one conditional branch.
+    Cost += NumCaseCluster * 2 * InlineConstants::InstrCost;
+    return false;
+  }
+
+  int64_t ExpectedNumberOfCompare = 3 * (int64_t)NumCaseCluster / 2 - 1;
+  int64_t SwitchCost =
+      ExpectedNumberOfCompare * 2 * InlineConstants::InstrCost;
+
+  Cost = std::min((int64_t)CostUpperBound, SwitchCost + Cost);
   return false;
 }
 

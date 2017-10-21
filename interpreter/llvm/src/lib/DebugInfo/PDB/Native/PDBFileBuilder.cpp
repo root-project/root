@@ -18,6 +18,7 @@
 #include "llvm/DebugInfo/PDB/Native/InfoStream.h"
 #include "llvm/DebugInfo/PDB/Native/InfoStreamBuilder.h"
 #include "llvm/DebugInfo/PDB/Native/PDBStringTableBuilder.h"
+#include "llvm/DebugInfo/PDB/Native/PublicsStreamBuilder.h"
 #include "llvm/DebugInfo/PDB/Native/RawError.h"
 #include "llvm/DebugInfo/PDB/Native/TpiStream.h"
 #include "llvm/DebugInfo/PDB/Native/TpiStreamBuilder.h"
@@ -32,6 +33,8 @@ using namespace llvm::support;
 
 PDBFileBuilder::PDBFileBuilder(BumpPtrAllocator &Allocator)
     : Allocator(Allocator) {}
+
+PDBFileBuilder::~PDBFileBuilder() {}
 
 Error PDBFileBuilder::initialize(uint32_t BlockSize) {
   auto ExpectedMsf = MSFBuilder::create(Allocator, BlockSize);
@@ -71,6 +74,12 @@ PDBStringTableBuilder &PDBFileBuilder::getStringTableBuilder() {
   return Strings;
 }
 
+PublicsStreamBuilder &PDBFileBuilder::getPublicsBuilder() {
+  if (!Publics)
+    Publics = llvm::make_unique<PublicsStreamBuilder>(*Msf);
+  return *Publics;
+}
+
 Error PDBFileBuilder::addNamedStream(StringRef Name, uint32_t Size) {
   auto ExpectedStream = Msf->addStream(Size);
   if (!ExpectedStream)
@@ -80,13 +89,21 @@ Error PDBFileBuilder::addNamedStream(StringRef Name, uint32_t Size) {
 }
 
 Expected<msf::MSFLayout> PDBFileBuilder::finalizeMsfLayout() {
+
+  if (Ipi && Ipi->getRecordCount() > 0) {
+    // In theory newer PDBs always have an ID stream, but by saying that we're
+    // only going to *really* have an ID stream if there is at least one ID
+    // record, we leave open the opportunity to test older PDBs such as those
+    // that don't have an ID stream.
+    auto &Info = getInfoBuilder();
+    Info.addFeature(PdbRaw_FeatureSig::VC140);
+  }
+
   uint32_t StringsLen = Strings.calculateSerializedSize();
 
   if (auto EC = addNamedStream("/names", StringsLen))
     return std::move(EC);
   if (auto EC = addNamedStream("/LinkInfo", 0))
-    return std::move(EC);
-  if (auto EC = addNamedStream("/src/headerblock", 0))
     return std::move(EC);
 
   if (Info) {
@@ -105,6 +122,14 @@ Expected<msf::MSFLayout> PDBFileBuilder::finalizeMsfLayout() {
     if (auto EC = Ipi->finalizeMsfLayout())
       return std::move(EC);
   }
+  if (Publics) {
+    if (auto EC = Publics->finalizeMsfLayout())
+      return std::move(EC);
+    if (Dbi) {
+      Dbi->setPublicsStreamIndex(Publics->getStreamIndex());
+      Dbi->setSymbolRecordStreamIndex(Publics->getRecordStreamIdx());
+    }
+  }
 
   return Msf->build();
 }
@@ -117,6 +142,7 @@ Expected<uint32_t> PDBFileBuilder::getNamedStreamIndex(StringRef Name) const {
 }
 
 Error PDBFileBuilder::commit(StringRef Filename) {
+  assert(!Filename.empty());
   auto ExpectedLayout = finalizeMsfLayout();
   if (!ExpectedLayout)
     return ExpectedLayout.takeError();
@@ -139,8 +165,8 @@ Error PDBFileBuilder::commit(StringRef Filename) {
   if (auto EC = Writer.writeArray(Layout.DirectoryBlocks))
     return EC;
 
-  auto DirStream =
-      WritableMappedBlockStream::createDirectoryStream(Layout, Buffer);
+  auto DirStream = WritableMappedBlockStream::createDirectoryStream(
+      Layout, Buffer, Allocator);
   BinaryStreamWriter DW(*DirStream);
   if (auto EC = DW.writeInteger<uint32_t>(Layout.StreamSizes.size()))
     return EC;
@@ -157,8 +183,8 @@ Error PDBFileBuilder::commit(StringRef Filename) {
   if (!ExpectedSN)
     return ExpectedSN.takeError();
 
-  auto NS = WritableMappedBlockStream::createIndexedStream(Layout, Buffer,
-                                                           *ExpectedSN);
+  auto NS = WritableMappedBlockStream::createIndexedStream(
+      Layout, Buffer, *ExpectedSN, Allocator);
   BinaryStreamWriter NSWriter(*NS);
   if (auto EC = Strings.commit(NSWriter))
     return EC;
@@ -180,6 +206,14 @@ Error PDBFileBuilder::commit(StringRef Filename) {
 
   if (Ipi) {
     if (auto EC = Ipi->commit(Layout, Buffer))
+      return EC;
+  }
+
+  if (Publics) {
+    auto PS = WritableMappedBlockStream::createIndexedStream(
+        Layout, Buffer, Publics->getStreamIndex(), Allocator);
+    BinaryStreamWriter PSWriter(*PS);
+    if (auto EC = Publics->commit(PSWriter))
       return EC;
   }
 

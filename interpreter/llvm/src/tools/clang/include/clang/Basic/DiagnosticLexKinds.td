@@ -181,10 +181,10 @@ def err_hex_constant_requires : Error<
 def ext_hex_constant_invalid : Extension<
   "hexadecimal floating constants are a C99 feature">, InGroup<C99>;
 def ext_hex_literal_invalid : Extension<
-  "hexadecimal floating literals are a C++1z feature">, InGroup<CXX1z>;
+  "hexadecimal floating literals are a C++17 feature">, InGroup<CXX17>;
 def warn_cxx1z_hex_literal : Warning<
   "hexadecimal floating literals are incompatible with "
-  "C++ standards before C++1z">,
+  "C++ standards before C++17">,
   InGroup<CXXPre1zCompatPedantic>, DefaultIgnore;
 def ext_binary_literal : Extension<
   "binary integer literals are a GNU extension">, InGroup<GNUBinaryLiteral>;
@@ -208,7 +208,7 @@ def warn_cxx98_compat_unicode_literal : Warning<
   "unicode literals are incompatible with C++98">,
   InGroup<CXX98Compat>, DefaultIgnore;
 def warn_cxx14_compat_u8_character_literal : Warning<
-  "unicode literals are incompatible with C++ standards before C++1z">,
+  "unicode literals are incompatible with C++ standards before C++17">,
   InGroup<CXXPre1zCompat>, DefaultIgnore;
 def warn_cxx11_compat_user_defined_literal : Warning<
   "identifier after literal will be treated as a user-defined literal suffix "
@@ -525,6 +525,12 @@ def err_pp_module_begin_without_module_end : Error<
 def err_pp_module_end_without_module_begin : Error<
   "no matching '#pragma clang module begin' for this "
   "'#pragma clang module end'">;
+def note_pp_module_begin_here : Note<
+  "entering module '%0' due to this pragma">;
+def err_pp_module_build_pth : Error<
+  "'#pragma clang module build' not supported in pretokenized header">;
+def err_pp_module_build_missing_end : Error<
+  "no matching '#pragma clang module endbuild' for this '#pragma clang module build'">;
 
 def err_defined_macro_name : Error<"'defined' cannot be used as a macro name">;
 def err_paste_at_start : Error<
@@ -662,6 +668,12 @@ def warn_mmap_mismatched_top_level_private : Warning<
   InGroup<PrivateModule>;
 def note_mmap_rename_top_level_private_as_submodule : Note<
   "make '%0' a submodule of '%1' to ensure it can be found by name">;
+def err_mmap_duplicate_header_attribute : Error<
+  "header attribute '%0' specified multiple times">;
+def err_mmap_invalid_header_attribute_value : Error<
+  "expected integer literal as value for header attribute '%0'">;
+def err_mmap_expected_header_attribute : Error<
+  "expected a header attribute name ('size' or 'mtime')">;
 
 def warn_auto_module_import : Warning<
   "treating #%select{include|import|include_next|__include_macros}0 as an "

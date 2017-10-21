@@ -7,14 +7,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-#define DEBUG_TYPE "hexbit"
-
 #include "HexagonBitTracker.h"
 #include "HexagonTargetMachine.h"
 #include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/DenseMap.h"
-#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineDominators.h"
@@ -41,6 +39,8 @@
 #include <limits>
 #include <utility>
 #include <vector>
+
+#define DEBUG_TYPE "hexbit"
 
 using namespace llvm;
 
@@ -1947,8 +1947,10 @@ bool BitSimplification::genStoreImmediate(MachineInstr *MI) {
   switch (Opc) {
     case Hexagon::S2_storeri_io:
       Align++;
+      LLVM_FALLTHROUGH;
     case Hexagon::S2_storerh_io:
       Align++;
+      LLVM_FALLTHROUGH;
     case Hexagon::S2_storerb_io:
       break;
     default:

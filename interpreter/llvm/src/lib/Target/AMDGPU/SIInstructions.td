@@ -174,6 +174,13 @@ def SI_MASK_BRANCH : VPseudoInstSI <
 
 let isTerminator = 1 in {
 
+ def SI_NON_UNIFORM_BRCOND_PSEUDO : CFPseudoInstSI <
+  (outs),
+  (ins SReg_64:$vcc, brtarget:$target),
+  [(brcond i1:$vcc, bb:$target)]> {
+    let Size = 12;
+}
+
 def SI_IF: CFPseudoInstSI <
   (outs SReg_64:$dst), (ins SReg_64:$vcc, brtarget:$target),
   [(set i64:$dst, (AMDGPUif i1:$vcc, bb:$target))], 1, 1> {
@@ -922,6 +929,14 @@ def : UMad24Pat<V_MAD_U32_U24>;
 defm : BFIPatterns <V_BFI_B32, S_MOV_B32, SReg_64>;
 def : ROTRPattern <V_ALIGNBIT_B32>;
 
+def : Pat<(i32 (trunc (srl i64:$src0, (and i32:$src1, (i32 31))))),
+          (V_ALIGNBIT_B32 (i32 (EXTRACT_SUBREG (i64 $src0), sub1)),
+                          (i32 (EXTRACT_SUBREG (i64 $src0), sub0)), $src1)>;
+
+def : Pat<(i32 (trunc (srl i64:$src0, (i32 ShiftAmt32Imm:$src1)))),
+          (V_ALIGNBIT_B32 (i32 (EXTRACT_SUBREG (i64 $src0), sub1)),
+                          (i32 (EXTRACT_SUBREG (i64 $src0), sub0)), $src1)>;
+
 /********** ====================== **********/
 /**********   Indirect addressing  **********/
 /********** ====================== **********/
@@ -1045,7 +1060,7 @@ def : Pat <
 
 class FPToI1Pat<Instruction Inst, int KOne, ValueType kone_type, ValueType vt, SDPatternOperator fp_to_int> : Pat <
   (i1 (fp_to_int (vt (VOP3Mods vt:$src0, i32:$src0_modifiers)))),
-  (i1 (Inst 0, (kone_type KOne), $src0_modifiers, $src0, DSTCLAMP.NONE, DSTOMOD.NONE))
+  (i1 (Inst 0, (kone_type KOne), $src0_modifiers, $src0, DSTCLAMP.NONE))
 >;
 
 def : FPToI1Pat<V_CMP_EQ_F32_e64, CONST.FP32_ONE, i32, f32, fp_to_uint>;

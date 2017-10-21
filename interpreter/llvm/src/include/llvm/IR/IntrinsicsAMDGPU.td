@@ -475,6 +475,33 @@ class AMDGPUBufferStore : Intrinsic <
 def int_amdgcn_buffer_store_format : AMDGPUBufferStore;
 def int_amdgcn_buffer_store : AMDGPUBufferStore;
 
+def int_amdgcn_tbuffer_load : Intrinsic <
+    [llvm_any_ty],    // overloaded for types f32/i32, v2f32/v2i32, v4f32/v4i32
+    [llvm_v4i32_ty,   // rsrc(SGPR)
+     llvm_i32_ty,     // vindex(VGPR)
+     llvm_i32_ty,     // voffset(VGPR)
+     llvm_i32_ty,     // soffset(SGPR)
+     llvm_i32_ty,     // offset(imm)
+     llvm_i32_ty,     // dfmt(imm)
+     llvm_i32_ty,     // nfmt(imm)
+     llvm_i1_ty,     // glc(imm)
+     llvm_i1_ty],    // slc(imm)
+    []>;
+
+def int_amdgcn_tbuffer_store : Intrinsic <
+    [],
+    [llvm_any_ty,    // vdata(VGPR), overloaded for types f32/i32, v2f32/v2i32, v4f32/v4i32
+     llvm_v4i32_ty,  // rsrc(SGPR)
+     llvm_i32_ty,    // vindex(VGPR)
+     llvm_i32_ty,    // voffset(VGPR)
+     llvm_i32_ty,    // soffset(SGPR)
+     llvm_i32_ty,    // offset(imm)
+     llvm_i32_ty,    // dfmt(imm)
+     llvm_i32_ty,    // nfmt(imm)
+     llvm_i1_ty,     // glc(imm)
+     llvm_i1_ty],    // slc(imm)
+    []>;
+
 class AMDGPUBufferAtomic : Intrinsic <
   [llvm_i32_ty],
   [llvm_i32_ty,       // vdata(VGPR)
@@ -565,6 +592,16 @@ def int_amdgcn_s_getreg :
   Intrinsic<[llvm_i32_ty], [llvm_i32_ty],
   [IntrReadMem, IntrSpeculatable]
 >;
+
+// int_amdgcn_s_getpc is provided to allow a specific style of position
+// independent code to determine the high part of its address when it is
+// known (through convention) that the code and any data of interest does
+// not cross a 4Gb address boundary. Use for any other purpose may not
+// produce the desired results as optimizations may cause code movement,
+// especially as we explicitly use IntrNoMem to allow optimizations.
+def int_amdgcn_s_getpc :
+  GCCBuiltin<"__builtin_amdgcn_s_getpc">,
+  Intrinsic<[llvm_i64_ty], [], [IntrNoMem, IntrSpeculatable]>;
 
 // __builtin_amdgcn_interp_mov <param>, <attr_chan>, <attr>, <m0>
 // param values: 0 = P10, 1 = P20, 2 = P0
@@ -692,6 +729,16 @@ def int_amdgcn_readfirstlane :
 def int_amdgcn_readlane :
   GCCBuiltin<"__builtin_amdgcn_readlane">,
   Intrinsic<[llvm_i32_ty], [llvm_i32_ty, llvm_i32_ty], [IntrNoMem, IntrConvergent]>;
+
+def int_amdgcn_alignbit : Intrinsic<[llvm_i32_ty],
+  [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty],
+  [IntrNoMem, IntrSpeculatable]
+>;
+
+def int_amdgcn_alignbyte : Intrinsic<[llvm_i32_ty],
+  [llvm_i32_ty, llvm_i32_ty, llvm_i32_ty],
+  [IntrNoMem, IntrSpeculatable]
+>;
 
 //===----------------------------------------------------------------------===//
 // CI+ Intrinsics

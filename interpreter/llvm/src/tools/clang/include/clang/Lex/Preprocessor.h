@@ -283,6 +283,44 @@ class Preprocessor {
   /// This is used when loading a precompiled preamble.
   std::pair<int, bool> SkipMainFilePreamble;
 
+  class PreambleConditionalStackStore {
+    enum State {
+      Off = 0,
+      Recording = 1,
+      Replaying = 2,
+    };
+
+  public:
+    PreambleConditionalStackStore() : ConditionalStackState(Off) {}
+
+    void startRecording() { ConditionalStackState = Recording; }
+    void startReplaying() { ConditionalStackState = Replaying; }
+    bool isRecording() const { return ConditionalStackState == Recording; }
+    bool isReplaying() const { return ConditionalStackState == Replaying; }
+
+    ArrayRef<PPConditionalInfo> getStack() const {
+      return ConditionalStack;
+    }
+
+    void doneReplaying() {
+      ConditionalStack.clear();
+      ConditionalStackState = Off;
+    }
+
+    void setStack(ArrayRef<PPConditionalInfo> s) {
+      if (!isRecording() && !isReplaying())
+        return;
+      ConditionalStack.clear();
+      ConditionalStack.append(s.begin(), s.end());
+    }
+
+    bool hasRecordedPreamble() const { return !ConditionalStack.empty(); }
+
+  private:
+    SmallVector<PPConditionalInfo, 4> ConditionalStack;
+    State ConditionalStackState;
+  } PreambleConditionalStack;
+
   /// \brief The current top of the stack that we're lexing from if
   /// not expanding a macro and we are lexing directly from source code.
   ///
@@ -1854,11 +1892,24 @@ private:
   void ReadMacroName(Token &MacroNameTok, MacroUse IsDefineUndef = MU_Other,
                      bool *ShadowFlag = nullptr);
 
+  /// ReadOptionalMacroParameterListAndBody - This consumes all (i.e. the
+  /// entire line) of the macro's tokens and adds them to MacroInfo, and while
+  /// doing so performs certain validity checks including (but not limited to):
+  ///   - # (stringization) is followed by a macro parameter
+  /// \param MacroNameTok - Token that represents the macro name
+  /// \param ImmediatelyAfterHeaderGuard - Macro follows an #ifdef header guard
+  /// 
+  ///  Either returns a pointer to a MacroInfo object OR emits a diagnostic and
+  ///  returns a nullptr if an invalid sequence of tokens is encountered.
+
+  MacroInfo *ReadOptionalMacroParameterListAndBody(
+      const Token &MacroNameTok, bool ImmediatelyAfterHeaderGuard);
+
   /// The ( starting an argument list of a macro definition has just been read.
-  /// Lex the rest of the arguments and the closing ), updating \p MI with
+  /// Lex the rest of the parameters and the closing ), updating \p MI with
   /// what we learn and saving in \p LastTok the last token read.
   /// Return true if an error occurs parsing the arg list.
-  bool ReadMacroDefinitionArgList(MacroInfo *MI, Token& LastTok);
+  bool ReadMacroParameterList(MacroInfo *MI, Token& LastTok);
 
   /// We just read a \#if or related directive and decided that the
   /// subsequent tokens are in the \#if'd out portion of the
@@ -1875,11 +1926,20 @@ private:
   /// \brief A fast PTH version of SkipExcludedConditionalBlock.
   void PTHSkipExcludedConditionalBlock();
 
+  /// Information about the result for evaluating an expression for a
+  /// preprocessor directive.
+  struct DirectiveEvalResult {
+    /// Whether the expression was evaluated as true or not.
+    bool Conditional;
+    /// True if the expression contained identifiers that were undefined.
+    bool IncludedUndefinedIds;
+  };
+
   /// \brief Evaluate an integer constant expression that may occur after a
-  /// \#if or \#elif directive and return it as a bool.
+  /// \#if or \#elif directive and return a \p DirectiveEvalResult object.
   ///
   /// If the expression is equivalent to "!defined(X)" return X in IfNDefMacro.
-  bool EvaluateDirectiveExpression(IdentifierInfo *&IfNDefMacro);
+  DirectiveEvalResult EvaluateDirectiveExpression(IdentifierInfo *&IfNDefMacro);
 
   /// \brief Install the standard preprocessor pragmas:
   /// \#pragma GCC poison/system_header/dependency and \#pragma once.
@@ -1910,7 +1970,7 @@ private:
 
   /// After reading "MACRO(", this method is invoked to read all of the formal
   /// arguments specified for the macro invocation.  Returns null on error.
-  MacroArgs *ReadFunctionLikeMacroArgs(Token &MacroName, MacroInfo *MI,
+  MacroArgs *ReadMacroCallArgumentList(Token &MacroName, MacroInfo *MI,
                                        SourceLocation &ExpansionEnd);
 
   /// \brief If an identifier token is read that is to be expanded
@@ -1994,20 +2054,24 @@ private:
   void HandleMicrosoftImportDirective(Token &Tok);
 
 public:
+  /// Check that the given module is available, producing a diagnostic if not.
+  /// \return \c true if the check failed (because the module is not available).
+  ///         \c false if the module appears to be usable.
+  static bool checkModuleIsAvailable(const LangOptions &LangOpts,
+                                     const TargetInfo &TargetInfo,
+                                     DiagnosticsEngine &Diags, Module *M);
+
   // Module inclusion testing.
   /// \brief Find the module that owns the source or header file that
   /// \p Loc points to. If the location is in a file that was included
   /// into a module, or is outside any module, returns nullptr.
   Module *getModuleForLocation(SourceLocation Loc);
 
-  /// \brief Find the module that contains the specified location, either
-  /// directly or indirectly.
-  Module *getModuleContainingLocation(SourceLocation Loc);
-
   /// \brief We want to produce a diagnostic at location IncLoc concerning a
   /// missing module import.
   ///
   /// \param IncLoc The location at which the missing import was detected.
+  /// \param M The desired module.
   /// \param MLoc A location within the desired module at which some desired
   ///        effect occurred (eg, where a desired entity was declared).
   ///
@@ -2015,9 +2079,35 @@ public:
   ///         Null if no such file could be determined or if a #include is not
   ///         appropriate.
   const FileEntry *getModuleHeaderToIncludeForDiagnostics(SourceLocation IncLoc,
+                                                          Module *M,
                                                           SourceLocation MLoc);
 
+  bool isRecordingPreamble() const {
+    return PreambleConditionalStack.isRecording();
+  }
+
+  bool hasRecordedPreamble() const {
+    return PreambleConditionalStack.hasRecordedPreamble();
+  }
+
+  ArrayRef<PPConditionalInfo> getPreambleConditionalStack() const {
+      return PreambleConditionalStack.getStack();
+  }
+
+  void setRecordedPreambleConditionalStack(ArrayRef<PPConditionalInfo> s) {
+    PreambleConditionalStack.setStack(s);
+  }
+
+  void setReplayablePreambleConditionalStack(ArrayRef<PPConditionalInfo> s) {
+    PreambleConditionalStack.startReplaying();
+    PreambleConditionalStack.setStack(s);
+  }
+
 private:
+  /// \brief After processing predefined file, initialize the conditional stack from
+  /// the preamble.
+  void replayPreambleConditionalStack();
+
   // Macro handling.
   void HandleDefineDirective(Token &Tok, bool ImmediatelyAfterTopLevelIfndef);
   void HandleUndefDirective();
@@ -2042,6 +2132,7 @@ public:
   void HandlePragmaPushMacro(Token &Tok);
   void HandlePragmaPopMacro(Token &Tok);
   void HandlePragmaIncludeAlias(Token &Tok);
+  void HandlePragmaModuleBuild(Token &Tok);
   IdentifierInfo *ParsePragmaPushOrPopMacro(Token &Tok);
 
   // Return true and store the first token only if any CommentHandler

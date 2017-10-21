@@ -8,14 +8,12 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/DebugInfo/PDB/Native/TpiStream.h"
+
 #include "llvm/ADT/iterator_range.h"
-#include "llvm/DebugInfo/CodeView/CVTypeVisitor.h"
-#include "llvm/DebugInfo/CodeView/TypeDeserializer.h"
+#include "llvm/DebugInfo/CodeView/LazyRandomTypeCollection.h"
 #include "llvm/DebugInfo/CodeView/TypeRecord.h"
-#include "llvm/DebugInfo/CodeView/TypeVisitorCallbackPipeline.h"
 #include "llvm/DebugInfo/MSF/MappedBlockStream.h"
 #include "llvm/DebugInfo/PDB/Native/PDBFile.h"
-#include "llvm/DebugInfo/PDB/Native/PDBTypeServerHandler.h"
 #include "llvm/DebugInfo/PDB/Native/RawConstants.h"
 #include "llvm/DebugInfo/PDB/Native/RawError.h"
 #include "llvm/DebugInfo/PDB/Native/RawTypes.h"
@@ -33,8 +31,7 @@ using namespace llvm::support;
 using namespace llvm::msf;
 using namespace llvm::pdb;
 
-TpiStream::TpiStream(const PDBFile &File,
-                     std::unique_ptr<MappedBlockStream> Stream)
+TpiStream::TpiStream(PDBFile &File, std::unique_ptr<MappedBlockStream> Stream)
     : Pdb(File), Stream(std::move(Stream)) {}
 
 TpiStream::~TpiStream() = default;
@@ -68,7 +65,13 @@ Error TpiStream::reload() {
                                 "TPI Stream Invalid number of hash buckets.");
 
   // The actual type records themselves come from this stream
-  if (auto EC = Reader.readArray(TypeRecords, Header->TypeRecordBytes))
+  if (auto EC =
+          Reader.readSubstream(TypeRecordsSubstream, Header->TypeRecordBytes))
+    return EC;
+
+  BinaryStreamReader RecordReader(TypeRecordsSubstream.StreamData);
+  if (auto EC =
+          RecordReader.readArray(TypeRecords, TypeRecordsSubstream.size()))
     return EC;
 
   // Hash indices, hash values, etc come from the hash stream.
@@ -78,7 +81,8 @@ Error TpiStream::reload() {
                                   "Invalid TPI hash stream index.");
 
     auto HS = MappedBlockStream::createIndexedStream(
-        Pdb.getMsfLayout(), Pdb.getMsfBuffer(), Header->HashStreamIndex);
+        Pdb.getMsfLayout(), Pdb.getMsfBuffer(), Header->HashStreamIndex,
+        Pdb.getAllocator());
     BinaryStreamReader HSR(*HS);
 
     // There should be a hash value for every type record, or no hashes at all.
@@ -91,9 +95,6 @@ Error TpiStream::reload() {
     HSR.setOffset(Header->HashValueBuffer.Off);
     if (auto EC = HSR.readArray(HashValues, NumHashValues))
       return EC;
-    std::vector<ulittle32_t> HashValueList;
-    for (auto I : HashValues)
-      HashValueList.push_back(I);
 
     HSR.setOffset(Header->IndexOffsetBuffer.Off);
     uint32_t NumTypeIndexOffsets =
@@ -110,6 +111,8 @@ Error TpiStream::reload() {
     HashStream = std::move(HS);
   }
 
+  Types = llvm::make_unique<LazyRandomTypeCollection>(
+      TypeRecords, getNumTypeRecords(), getTypeIndexOffsets());
   return Error::success();
 }
 
@@ -136,6 +139,10 @@ uint16_t TpiStream::getTypeHashStreamAuxIndex() const {
 
 uint32_t TpiStream::getNumHashBuckets() const { return Header->NumHashBuckets; }
 uint32_t TpiStream::getHashKeySize() const { return Header->HashKeySize; }
+
+BinarySubstreamRef TpiStream::getTypeRecordsSubstream() const {
+  return TypeRecordsSubstream;
+}
 
 FixedStreamArray<support::ulittle32_t> TpiStream::getHashValues() const {
   return HashValues;

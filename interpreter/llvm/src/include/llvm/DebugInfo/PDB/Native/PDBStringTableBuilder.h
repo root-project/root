@@ -16,7 +16,7 @@
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringRef.h"
-#include "llvm/DebugInfo/CodeView/StringTable.h"
+#include "llvm/DebugInfo/CodeView/DebugStringTableSubsection.h"
 #include "llvm/Support/Error.h"
 #include <vector>
 
@@ -41,8 +41,7 @@ public:
   uint32_t calculateSerializedSize() const;
   Error commit(BinaryStreamWriter &Writer) const;
 
-  codeview::StringTable &getStrings() { return Strings; }
-  const codeview::StringTable &getStrings() const { return Strings; }
+  void setStrings(const codeview::DebugStringTableSubsection &Strings);
 
 private:
   uint32_t calculateHashTableSize() const;
@@ -51,7 +50,7 @@ private:
   Error writeHashTable(BinaryStreamWriter &Writer) const;
   Error writeEpilogue(BinaryStreamWriter &Writer) const;
 
-  codeview::StringTable Strings;
+  codeview::DebugStringTableSubsection Strings;
 };
 
 } // end namespace pdb

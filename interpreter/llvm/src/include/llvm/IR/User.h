@@ -46,8 +46,6 @@ class User : public Value {
   template <unsigned>
   friend struct HungoffOperandTraits;
 
-  virtual void anchor();
-
   LLVM_ATTRIBUTE_ALWAYS_INLINE inline static void *
   allocateFixedOperandUser(size_t, unsigned, unsigned);
 
@@ -93,9 +91,11 @@ protected:
   /// should be called if there are no uses.
   void growHungoffUses(unsigned N, bool IsPhi = false);
 
+protected:
+  ~User() = default; // Use deleteValue() to delete a generic Instruction.
+
 public:
   User(const User &) = delete;
-  ~User() override = default;
 
   /// \brief Free memory allocated for User and Use objects.
   void operator delete(void *Usr);
@@ -288,7 +288,7 @@ public:
   void replaceUsesOfWith(Value *From, Value *To);
 
   // Methods for support type inquiry through isa, cast, and dyn_cast:
-  static inline bool classof(const Value *V) {
+  static bool classof(const Value *V) {
     return isa<Instruction>(V) || isa<Constant>(V);
   }
 };

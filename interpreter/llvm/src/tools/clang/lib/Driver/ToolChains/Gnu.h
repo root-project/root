@@ -284,7 +284,7 @@ public:
 
   void printVerboseInfo(raw_ostream &OS) const override;
 
-  bool IsUnwindTablesDefault() const override;
+  bool IsUnwindTablesDefault(const llvm::opt::ArgList &Args) const override;
   bool isPICDefault() const override;
   bool isPIEDefault() const override;
   bool isPICDefaultForced() const override;
@@ -341,7 +341,8 @@ public:
       : Generic_GCC(D, Triple, Args) {}
 
   void addClangTargetOptions(const llvm::opt::ArgList &DriverArgs,
-                             llvm::opt::ArgStringList &CC1Args) const override;
+                             llvm::opt::ArgStringList &CC1Args,
+                             Action::OffloadKind DeviceOffloadKind) const override;
 };
 
 } // end namespace toolchains

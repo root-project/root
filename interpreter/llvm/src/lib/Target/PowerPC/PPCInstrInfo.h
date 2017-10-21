@@ -162,6 +162,8 @@ public:
                              unsigned &SubIdx) const override;
   unsigned isLoadFromStackSlot(const MachineInstr &MI,
                                int &FrameIndex) const override;
+  bool isReallyTriviallyReMaterializable(const MachineInstr &MI,
+                                         AliasAnalysis *AA) const override;
   unsigned isStoreToStackSlot(const MachineInstr &MI,
                               int &FrameIndex) const override;
 
@@ -290,6 +292,7 @@ public:
     return Reg >= PPC::V0 && Reg <= PPC::V31;
   }
   const TargetRegisterClass *updatedRC(const TargetRegisterClass *RC) const;
+  static int getRecordFormOpcode(unsigned Opcode);
 };
 
 }

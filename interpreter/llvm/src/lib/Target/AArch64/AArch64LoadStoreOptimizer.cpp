@@ -16,10 +16,10 @@
 #include "AArch64Subtarget.h"
 #include "MCTargetDesc/AArch64AddressingModes.h"
 #include "llvm/ADT/BitVector.h"
-#include "llvm/ADT/iterator_range.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/iterator_range.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineFunction.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
@@ -388,6 +388,10 @@ static unsigned isMatchingStore(MachineInstr &LoadInst,
 }
 
 static unsigned getPreIndexedOpcode(unsigned Opc) {
+  // FIXME: We don't currently support creating pre-indexed loads/stores when
+  // the load or store is the unscaled version.  If we decide to perform such an
+  // optimization in the future the cases for the unscaled loads/stores will
+  // need to be added here.
   switch (Opc) {
   default:
     llvm_unreachable("Opcode has no pre-indexed equivalent!");
@@ -451,32 +455,42 @@ static unsigned getPostIndexedOpcode(unsigned Opc) {
   default:
     llvm_unreachable("Opcode has no post-indexed wise equivalent!");
   case AArch64::STRSui:
+  case AArch64::STURSi:
     return AArch64::STRSpost;
   case AArch64::STRDui:
+  case AArch64::STURDi:
     return AArch64::STRDpost;
   case AArch64::STRQui:
+  case AArch64::STURQi:
     return AArch64::STRQpost;
   case AArch64::STRBBui:
     return AArch64::STRBBpost;
   case AArch64::STRHHui:
     return AArch64::STRHHpost;
   case AArch64::STRWui:
+  case AArch64::STURWi:
     return AArch64::STRWpost;
   case AArch64::STRXui:
+  case AArch64::STURXi:
     return AArch64::STRXpost;
   case AArch64::LDRSui:
+  case AArch64::LDURSi:
     return AArch64::LDRSpost;
   case AArch64::LDRDui:
+  case AArch64::LDURDi:
     return AArch64::LDRDpost;
   case AArch64::LDRQui:
+  case AArch64::LDURQi:
     return AArch64::LDRQpost;
   case AArch64::LDRBBui:
     return AArch64::LDRBBpost;
   case AArch64::LDRHHui:
     return AArch64::LDRHHpost;
   case AArch64::LDRWui:
+  case AArch64::LDURWi:
     return AArch64::LDRWpost;
   case AArch64::LDRXui:
+  case AArch64::LDURXi:
     return AArch64::LDRXpost;
   case AArch64::LDRSWui:
     return AArch64::LDRSWpost;
@@ -795,6 +809,7 @@ AArch64LoadStoreOpt::promoteLoadFromStore(MachineBasicBlock::iterator LoadI,
   int LoadSize = getMemScale(*LoadI);
   int StoreSize = getMemScale(*StoreI);
   unsigned LdRt = getLdStRegOp(*LoadI).getReg();
+  const MachineOperand &StMO = getLdStRegOp(*StoreI);
   unsigned StRt = getLdStRegOp(*StoreI).getReg();
   bool IsStoreXReg = TRI->getRegClass(AArch64::GPR64RegClassID)->contains(StRt);
 
@@ -807,7 +822,13 @@ AArch64LoadStoreOpt::promoteLoadFromStore(MachineBasicBlock::iterator LoadI,
     // Remove the load, if the destination register of the loads is the same
     // register for stored value.
     if (StRt == LdRt && LoadSize == 8) {
-      StoreI->clearRegisterKills(StRt, TRI);
+      for (MachineInstr &MI : make_range(StoreI->getIterator(),
+                                         LoadI->getIterator())) {
+        if (MI.killsRegister(StRt, TRI)) {
+          MI.clearRegisterKills(StRt, TRI);
+          break;
+        }
+      }
       DEBUG(dbgs() << "Remove load instruction:\n    ");
       DEBUG(LoadI->print(dbgs()));
       DEBUG(dbgs() << "\n");
@@ -819,7 +840,7 @@ AArch64LoadStoreOpt::promoteLoadFromStore(MachineBasicBlock::iterator LoadI,
         BuildMI(*LoadI->getParent(), LoadI, LoadI->getDebugLoc(),
                 TII->get(IsStoreXReg ? AArch64::ORRXrs : AArch64::ORRWrs), LdRt)
             .addReg(IsStoreXReg ? AArch64::XZR : AArch64::WZR)
-            .addReg(StRt)
+            .add(StMO)
             .addImm(AArch64_AM::getShifterImm(AArch64_AM::LSL, 0));
   } else {
     // FIXME: Currently we disable this transformation in big-endian targets as
@@ -860,14 +881,14 @@ AArch64LoadStoreOpt::promoteLoadFromStore(MachineBasicBlock::iterator LoadI,
           BuildMI(*LoadI->getParent(), LoadI, LoadI->getDebugLoc(),
                   TII->get(IsStoreXReg ? AArch64::ANDXri : AArch64::ANDWri),
                   DestReg)
-              .addReg(StRt)
+              .add(StMO)
               .addImm(AndMaskEncoded);
     } else {
       BitExtMI =
           BuildMI(*LoadI->getParent(), LoadI, LoadI->getDebugLoc(),
                   TII->get(IsStoreXReg ? AArch64::UBFMXri : AArch64::UBFMWri),
                   DestReg)
-              .addReg(StRt)
+              .add(StMO)
               .addImm(Immr)
               .addImm(Imms);
     }
@@ -876,7 +897,10 @@ AArch64LoadStoreOpt::promoteLoadFromStore(MachineBasicBlock::iterator LoadI,
   // Clear kill flags between store and load.
   for (MachineInstr &MI : make_range(StoreI->getIterator(),
                                      BitExtMI->getIterator()))
-    MI.clearRegisterKills(StRt, TRI);
+    if (MI.killsRegister(StRt, TRI)) {
+      MI.clearRegisterKills(StRt, TRI);
+      break;
+    }
 
   DEBUG(dbgs() << "Promoting load by replacing :\n    ");
   DEBUG(StoreI->print(dbgs()));
@@ -1684,8 +1708,9 @@ bool AArch64LoadStoreOpt::optimizeBlock(MachineBasicBlock &MBB,
         ++NumPostFolded;
         break;
       }
-      // Don't know how to handle pre/post-index versions, so move to the next
-      // instruction.
+
+      // Don't know how to handle unscaled pre/post-index versions below, so
+      // move to the next instruction.
       if (TII->isUnscaledLdSt(Opc)) {
         ++MBBI;
         break;

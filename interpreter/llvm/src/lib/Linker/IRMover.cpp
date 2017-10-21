@@ -1157,6 +1157,11 @@ Error IRLinker::linkModuleFlagsMetadata() {
         mdconst::extract<ConstantInt>(DstOp->getOperand(0));
     unsigned DstBehaviorValue = DstBehavior->getZExtValue();
 
+    auto overrideDstValue = [&]() {
+      DstModFlags->setOperand(DstIndex, SrcOp);
+      Flags[ID].first = SrcOp;
+    };
+
     // If either flag has override behavior, handle it first.
     if (DstBehaviorValue == Module::Override) {
       // Diagnose inconsistent flags which both have override behavior.
@@ -1167,8 +1172,7 @@ Error IRLinker::linkModuleFlagsMetadata() {
       continue;
     } else if (SrcBehaviorValue == Module::Override) {
       // Update the destination flag to that of the source.
-      DstModFlags->setOperand(DstIndex, SrcOp);
-      Flags[ID].first = SrcOp;
+      overrideDstValue();
       continue;
     }
 
@@ -1203,6 +1207,15 @@ Error IRLinker::linkModuleFlagsMetadata() {
                     "': IDs have conflicting values");
       }
       continue;
+    }
+    case Module::Max: {
+      ConstantInt *DstValue =
+          mdconst::extract<ConstantInt>(DstOp->getOperand(2));
+      ConstantInt *SrcValue =
+          mdconst::extract<ConstantInt>(SrcOp->getOperand(2));
+      if (SrcValue->getZExtValue() > DstValue->getZExtValue())
+        overrideDstValue();
+      break;
     }
     case Module::Append: {
       MDNode *DstValue = cast<MDNode>(DstOp->getOperand(2));
@@ -1243,25 +1256,16 @@ Error IRLinker::linkModuleFlagsMetadata() {
   return Error::success();
 }
 
-// This function returns true if the triples match.
-static bool triplesMatch(const Triple &T0, const Triple &T1) {
-  // If vendor is apple, ignore the version number.
-  if (T0.getVendor() == Triple::Apple)
-    return T0.getArch() == T1.getArch() && T0.getSubArch() == T1.getSubArch() &&
-           T0.getVendor() == T1.getVendor() && T0.getOS() == T1.getOS();
-
-  return T0 == T1;
-}
-
-// This function returns the merged triple.
-static std::string mergeTriples(const Triple &SrcTriple,
-                                const Triple &DstTriple) {
-  // If vendor is apple, pick the triple with the larger version number.
-  if (SrcTriple.getVendor() == Triple::Apple)
-    if (DstTriple.isOSVersionLT(SrcTriple))
-      return SrcTriple.str();
-
-  return DstTriple.str();
+/// Return InlineAsm adjusted with target-specific directives if required.
+/// For ARM and Thumb, we have to add directives to select the appropriate ISA
+/// to support mixing module-level inline assembly from ARM and Thumb modules.
+static std::string adjustInlineAsm(const std::string &InlineAsm,
+                                   const Triple &Triple) {
+  if (Triple.getArch() == Triple::thumb || Triple.getArch() == Triple::thumbeb)
+    return ".text\n.balign 2\n.thumb\n" + InlineAsm;
+  if (Triple.getArch() == Triple::arm || Triple.getArch() == Triple::armeb)
+    return ".text\n.balign 4\n.arm\n" + InlineAsm;
+  return InlineAsm;
 }
 
 Error IRLinker::run() {
@@ -1289,22 +1293,25 @@ Error IRLinker::run() {
 
   Triple SrcTriple(SrcM->getTargetTriple()), DstTriple(DstM.getTargetTriple());
 
-  if (!SrcM->getTargetTriple().empty() && !triplesMatch(SrcTriple, DstTriple))
+  if (!SrcM->getTargetTriple().empty()&&
+      !SrcTriple.isCompatibleWith(DstTriple))
     emitWarning("Linking two modules of different target triples: " +
                 SrcM->getModuleIdentifier() + "' is '" +
                 SrcM->getTargetTriple() + "' whereas '" +
                 DstM.getModuleIdentifier() + "' is '" + DstM.getTargetTriple() +
                 "'\n");
 
-  DstM.setTargetTriple(mergeTriples(SrcTriple, DstTriple));
+  DstM.setTargetTriple(SrcTriple.merge(DstTriple));
 
   // Append the module inline asm string.
   if (!IsPerformingImport && !SrcM->getModuleInlineAsm().empty()) {
+    std::string SrcModuleInlineAsm = adjustInlineAsm(SrcM->getModuleInlineAsm(),
+                                                     SrcTriple);
     if (DstM.getModuleInlineAsm().empty())
-      DstM.setModuleInlineAsm(SrcM->getModuleInlineAsm());
+      DstM.setModuleInlineAsm(SrcModuleInlineAsm);
     else
       DstM.setModuleInlineAsm(DstM.getModuleInlineAsm() + "\n" +
-                              SrcM->getModuleInlineAsm());
+                              SrcModuleInlineAsm);
   }
 
   // Loop over all of the linked values to compute type mappings.

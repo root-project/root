@@ -134,6 +134,13 @@ public:
     assert(!FrameIndexExprs.empty() && "Expected an MMI entry");
     assert(!V.FrameIndexExprs.empty() && "Expected an MMI entry");
 
+    if (FrameIndexExprs.size()) {
+      auto *Expr = FrameIndexExprs.back().Expr;
+      // Get rid of duplicate non-fragment entries. More than one non-fragment
+      // dbg.declare makes no sense so ignore all but the first.
+      if (!Expr || !Expr->isFragment())
+        return;
+    }
     FrameIndexExprs.append(V.FrameIndexExprs.begin(), V.FrameIndexExprs.end());
     assert(all_of(FrameIndexExprs,
                   [](FrameIndexExpr &FIE) {
@@ -245,9 +252,6 @@ class DwarfDebug : public DebugHandlerBase {
   SmallVector<
       std::pair<std::unique_ptr<DwarfTypeUnit>, const DICompositeType *>, 1>
       TypeUnitsUnderConstruction;
-
-  /// Whether to emit the pubnames/pubtypes sections.
-  bool HasDwarfPubSections;
 
   /// Whether to use the GNU TLS opcode (instead of the standard opcode).
   bool UseGNUTLSOpcode;
@@ -415,11 +419,11 @@ class DwarfDebug : public DebugHandlerBase {
 
   /// Flags to let the linker know we have emitted new style pubnames. Only
   /// emit it here if we don't have a skeleton CU for split dwarf.
-  void addGnuPubAttributes(DwarfUnit &U, DIE &D) const;
+  void addGnuPubAttributes(DwarfCompileUnit &U, DIE &D) const;
 
   /// Create new DwarfCompileUnit for the given metadata node with tag
   /// DW_TAG_compile_unit.
-  DwarfCompileUnit &constructDwarfCompileUnit(const DICompileUnit *DIUnit);
+  DwarfCompileUnit &getOrCreateDwarfCompileUnit(const DICompileUnit *DIUnit);
 
   /// Construct imported_module or imported_declaration DIE.
   void constructAndAddImportedEntityDIE(DwarfCompileUnit &TheCU,
@@ -556,6 +560,8 @@ public:
   /// A helper function to check whether the DIE for a given Scope is
   /// going to be null.
   bool isLexicalScopeDIENull(LexicalScope *Scope);
+
+  bool hasDwarfPubSections(bool includeMinimalInlineScopes) const;
 };
 } // End of namespace llvm
 

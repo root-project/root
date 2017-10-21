@@ -43,6 +43,10 @@ public:
 
   /// \brief Replaces the whitespace in front of \p Tok. Only call once for
   /// each \c AnnotatedToken.
+  ///
+  /// \p StartOfTokenColumn is the column at which the token will start after
+  /// this replacement. It is needed for determining how \p Spaces is turned
+  /// into tabs and spaces for some format styles.
   void replaceWhitespace(FormatToken &Tok, unsigned Newlines, unsigned Spaces,
                          unsigned StartOfTokenColumn,
                          bool InPPDirective = false);
@@ -150,12 +154,11 @@ public:
     const Change *StartOfBlockComment;
     int IndentationOffset;
 
-    // A combination of nesting level and indent level, which are used in
+    // A combination of indent level and nesting level, which are used in
     // tandem to compute lexical scope, for the purposes of deciding
     // when to stop consecutive alignment runs.
-    std::pair<unsigned, unsigned>
-    nestingAndIndentLevel() const {
-      return std::make_pair(Tok->NestingLevel, Tok->IndentLevel);
+    std::pair<unsigned, unsigned> indentAndNestingLevel() const {
+      return std::make_pair(Tok->IndentLevel, Tok->NestingLevel);
     }
   };
 

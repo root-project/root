@@ -16,9 +16,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/LTO/Caching.h"
+#include "llvm/Bitcode/BitcodeReader.h"
 #include "llvm/CodeGen/CommandFlags.h"
 #include "llvm/IR/DiagnosticPrinter.h"
+#include "llvm/LTO/Caching.h"
 #include "llvm/LTO/LTO.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/FileSystem.h"
@@ -99,6 +100,11 @@ static cl::opt<bool> OptRemarksWithHotness(
     cl::desc("Whether to include hotness informations in the remarks.\n"
              "Has effect only if -pass-remarks-output is specified."));
 
+static cl::opt<bool>
+    UseNewPM("use-new-pm",
+             cl::desc("Run LTO passes using the new pass manager"),
+             cl::init(false), cl::Hidden);
+
 static void check(Error E, std::string Msg) {
   if (!E)
     return;
@@ -157,6 +163,8 @@ static int run(int argc, char **argv) {
         Res.FinalDefinitionInLinkageUnit = true;
       else if (C == 'x')
         Res.VisibleToRegularObj = true;
+      else if (C == 'r')
+        Res.LinkerRedefined = true;
       else {
         llvm::errs() << "invalid character " << C << " in resolution: " << R
                      << '\n';
@@ -196,6 +204,7 @@ static int run(int argc, char **argv) {
   Conf.AAPipeline = AAPipeline;
 
   Conf.OptLevel = OptLevel - '0';
+  Conf.UseNewPM = UseNewPM;
   switch (CGOptLevel) {
   case '0':
     Conf.CGOptLevel = CodeGenOpt::None;
@@ -290,6 +299,17 @@ static int run(int argc, char **argv) {
 static int dumpSymtab(int argc, char **argv) {
   for (StringRef F : make_range(argv + 1, argv + argc)) {
     std::unique_ptr<MemoryBuffer> MB = check(MemoryBuffer::getFile(F), F);
+    BitcodeFileContents BFC = check(getBitcodeFileContents(*MB), F);
+
+    if (BFC.Symtab.size() >= sizeof(irsymtab::storage::Header)) {
+      auto *Hdr = reinterpret_cast<const irsymtab::storage::Header *>(
+          BFC.Symtab.data());
+      outs() << "version: " << Hdr->Version << '\n';
+      if (Hdr->Version == irsymtab::storage::Header::kCurrentVersion)
+        outs() << "producer: " << Hdr->Producer.get(BFC.StrtabForSymtab)
+               << '\n';
+    }
+
     std::unique_ptr<InputFile> Input =
         check(InputFile::create(MB->getMemBufferRef()), F);
 
@@ -351,7 +371,7 @@ int main(int argc, char **argv) {
 
   // FIXME: This should use llvm::cl subcommands, but it isn't currently
   // possible to pass an argument not associated with a subcommand to a
-  // subcommand (e.g. -lto-use-new-pm).
+  // subcommand (e.g. -use-new-pm).
   if (argc < 2)
     return usage();
 

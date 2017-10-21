@@ -28,7 +28,6 @@ class CoroutineStmtBuilder : public CoroutineBodyStmt::CtorArgs {
   sema::FunctionScopeInfo &Fn;
   bool IsValid = true;
   SourceLocation Loc;
-  QualType RetType;
   SmallVector<Stmt *, 4> ParamMovesVector;
   const bool IsPromiseDependentType;
   CXXRecordDecl *PromiseRecordDecl = nullptr;
@@ -52,6 +51,9 @@ public:
   /// name lookup.
   bool buildDependentStatements();
 
+  /// \brief Build just parameter moves. To use for rebuilding in TreeTransform.
+  bool buildParameterMoves();
+
   bool isInvalid() const { return !this->IsValid; }
 
 private:
@@ -61,6 +63,7 @@ private:
   bool makeOnFallthrough();
   bool makeOnException();
   bool makeReturnObject();
+  bool makeGroDeclAndReturnStmt();
   bool makeReturnOnAllocFailure();
   bool makeParamMoves();
 };

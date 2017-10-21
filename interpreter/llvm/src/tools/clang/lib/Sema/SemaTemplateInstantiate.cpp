@@ -197,6 +197,7 @@ bool Sema::CodeSynthesisContext::isInstantiationRecord() const {
 
   case DefaultTemplateArgumentChecking:
   case DeclaringSpecialMember:
+  case DefiningSynthesizedFunction:
     return false;
   }
 
@@ -624,6 +625,17 @@ void Sema::PrintInstantiationStack() {
                    diag::note_in_declaration_of_implicit_special_member)
         << cast<CXXRecordDecl>(Active->Entity) << Active->SpecialMember;
       break;
+
+    case CodeSynthesisContext::DefiningSynthesizedFunction:
+      // FIXME: For synthesized members other than special members, produce a note.
+      auto *MD = dyn_cast<CXXMethodDecl>(Active->Entity);
+      auto CSM = MD ? getSpecialMember(MD) : CXXInvalid;
+      if (CSM != CXXInvalid) {
+        Diags.Report(Active->PointOfInstantiation,
+                     diag::note_member_synthesized_at)
+          << CSM << Context.getTagDeclType(MD->getParent());
+      }
+      break;
     }
   }
 }
@@ -666,6 +678,7 @@ Optional<TemplateDeductionInfo *> Sema::isSFINAEContext() const {
       return Active->DeductionInfo;
 
     case CodeSynthesisContext::DeclaringSpecialMember:
+    case CodeSynthesisContext::DefiningSynthesizedFunction:
       // This happens in a context unrelated to template instantiation, so
       // there is no SFINAE.
       return None;
@@ -1681,20 +1694,26 @@ TypeSourceInfo *Sema::SubstFunctionDeclType(TypeSourceInfo *T,
   return TLB.getTypeSourceInfo(Context, Result);
 }
 
+bool Sema::SubstExceptionSpec(SourceLocation Loc,
+                              FunctionProtoType::ExceptionSpecInfo &ESI,
+                              SmallVectorImpl<QualType> &ExceptionStorage,
+                              const MultiLevelTemplateArgumentList &Args) {
+  assert(ESI.Type != EST_Uninstantiated);
+
+  bool Changed = false;
+  TemplateInstantiator Instantiator(*this, Args, Loc, DeclarationName());
+  return Instantiator.TransformExceptionSpec(Loc, ESI, ExceptionStorage,
+                                             Changed);
+}
+
 void Sema::SubstExceptionSpec(FunctionDecl *New, const FunctionProtoType *Proto,
                               const MultiLevelTemplateArgumentList &Args) {
   FunctionProtoType::ExceptionSpecInfo ESI =
       Proto->getExtProtoInfo().ExceptionSpec;
-  assert(ESI.Type != EST_Uninstantiated);
-
-  TemplateInstantiator Instantiator(*this, Args, New->getLocation(),
-                                    New->getDeclName());
 
   SmallVector<QualType, 4> ExceptionStorage;
-  bool Changed = false;
-  if (Instantiator.TransformExceptionSpec(
-          New->getTypeSourceInfo()->getTypeLoc().getLocEnd(), ESI,
-          ExceptionStorage, Changed))
+  if (SubstExceptionSpec(New->getTypeSourceInfo()->getTypeLoc().getLocEnd(),
+                         ESI, ExceptionStorage, Args))
     // On error, recover by dropping the exception specification.
     ESI.Type = EST_None;
 
@@ -2028,7 +2047,7 @@ Sema::InstantiateClass(SourceLocation PointOfInstantiation,
 
   // The instantiation is visible here, even if it was first declared in an
   // unimported module.
-  Instantiation->setHidden(false);
+  Instantiation->setVisibleDespiteOwningModule();
 
   // FIXME: This loses the as-written tag kind for an explicit instantiation.
   Instantiation->setTagKind(Pattern->getTagKind());
@@ -2232,7 +2251,7 @@ bool Sema::InstantiateEnum(SourceLocation PointOfInstantiation,
 
   // The instantiation is visible here, even if it was first declared in an
   // unimported module.
-  Instantiation->setHidden(false);
+  Instantiation->setVisibleDespiteOwningModule();
 
   // Enter the scope of this instantiation. We don't use
   // PushDeclContext because we don't have a scope.
@@ -2339,6 +2358,25 @@ namespace {
     ClassTemplatePartialSpecializationDecl *Partial;
     TemplateArgumentList *Args;
   };
+}
+
+bool Sema::usesPartialOrExplicitSpecialization(
+    SourceLocation Loc, ClassTemplateSpecializationDecl *ClassTemplateSpec) {
+  if (ClassTemplateSpec->getTemplateSpecializationKind() ==
+      TSK_ExplicitSpecialization)
+    return true;
+
+  SmallVector<ClassTemplatePartialSpecializationDecl *, 4> PartialSpecs;
+  ClassTemplateSpec->getSpecializedTemplate()
+                   ->getPartialSpecializations(PartialSpecs);
+  for (unsigned I = 0, N = PartialSpecs.size(); I != N; ++I) {
+    TemplateDeductionInfo Info(Loc);
+    if (!DeduceTemplateArguments(PartialSpecs[I],
+                                 ClassTemplateSpec->getTemplateArgs(), Info))
+      return true;
+  }
+
+  return false;
 }
 
 /// Get the instantiation pattern to use to instantiate the definition of a

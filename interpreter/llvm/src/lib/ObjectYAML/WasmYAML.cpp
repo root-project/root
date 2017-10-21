@@ -12,9 +12,10 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ObjectYAML/WasmYAML.h"
-#include "llvm/Object/Wasm.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/Support/Casting.h"
-#include "llvm/Support/MipsABIFlags.h"
+#include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/YAMLTraits.h"
 
 namespace llvm {
 
@@ -22,7 +23,7 @@ namespace WasmYAML {
 
 // Declared here rather than in the header to comply with:
 // http://llvm.org/docs/CodingStandards.html#provide-a-virtual-method-anchor-for-classes-in-headers
-Section::~Section() {}
+Section::~Section() = default;
 
 } // end namespace WasmYAML
 
@@ -47,14 +48,24 @@ static void commonSectionMapping(IO &IO, WasmYAML::Section &Section) {
   IO.mapOptional("Relocations", Section.Relocations);
 }
 
+static void sectionMapping(IO &IO, WasmYAML::NameSection &Section) {
+  commonSectionMapping(IO, Section);
+  IO.mapRequired("Name", Section.Name);
+  IO.mapOptional("FunctionNames", Section.FunctionNames);
+}
+
+static void sectionMapping(IO &IO, WasmYAML::LinkingSection &Section) {
+  commonSectionMapping(IO, Section);
+  IO.mapRequired("Name", Section.Name);
+  IO.mapRequired("DataSize", Section.DataSize);
+  IO.mapRequired("DataAlignment", Section.DataAlignment);
+  IO.mapRequired("SymbolInfo", Section.SymbolInfos);
+}
+
 static void sectionMapping(IO &IO, WasmYAML::CustomSection &Section) {
   commonSectionMapping(IO, Section);
   IO.mapRequired("Name", Section.Name);
-  if (Section.Name == "name") {
-    IO.mapOptional("FunctionNames", Section.FunctionNames);
-  } else {
-    IO.mapRequired("Payload", Section.Payload);
-  }
+  IO.mapRequired("Payload", Section.Payload);
 }
 
 static void sectionMapping(IO &IO, WasmYAML::TypeSection &Section) {
@@ -121,11 +132,29 @@ void MappingTraits<std::unique_ptr<WasmYAML::Section>>::mapping(
     IO.mapRequired("Type", SectionType);
 
   switch (SectionType) {
-  case wasm::WASM_SEC_CUSTOM:
-    if (!IO.outputting())
-      Section.reset(new WasmYAML::CustomSection());
-    sectionMapping(IO, *cast<WasmYAML::CustomSection>(Section.get()));
+  case wasm::WASM_SEC_CUSTOM: {
+    StringRef SectionName;
+    if (IO.outputting()) {
+      auto CustomSection = cast<WasmYAML::CustomSection>(Section.get());
+      SectionName = CustomSection->Name;
+    } else {
+      IO.mapRequired("Name", SectionName);
+    }
+    if (SectionName == "linking") {
+      if (!IO.outputting())
+        Section.reset(new WasmYAML::LinkingSection());
+      sectionMapping(IO, *cast<WasmYAML::LinkingSection>(Section.get()));
+    } else if (SectionName == "name") {
+      if (!IO.outputting())
+        Section.reset(new WasmYAML::NameSection());
+      sectionMapping(IO, *cast<WasmYAML::NameSection>(Section.get()));
+    } else {
+      if (!IO.outputting())
+        Section.reset(new WasmYAML::CustomSection(SectionName));
+      sectionMapping(IO, *cast<WasmYAML::CustomSection>(Section.get()));
+    }
     break;
+  }
   case wasm::WASM_SEC_TYPE:
     if (!IO.outputting())
       Section.reset(new WasmYAML::TypeSection());
@@ -316,9 +345,16 @@ void MappingTraits<wasm::WasmInitExpr>::mapping(IO &IO,
 
 void MappingTraits<WasmYAML::DataSegment>::mapping(
     IO &IO, WasmYAML::DataSegment &Segment) {
-  IO.mapRequired("Index", Segment.Index);
+  IO.mapOptional("SectionOffset", Segment.SectionOffset);
+  IO.mapRequired("MemoryIndex", Segment.MemoryIndex);
   IO.mapRequired("Offset", Segment.Offset);
   IO.mapRequired("Content", Segment.Content);
+}
+
+void MappingTraits<WasmYAML::SymbolInfo>::mapping(IO &IO,
+                                                  WasmYAML::SymbolInfo &Info) {
+  IO.mapRequired("Name", Info.Name);
+  IO.mapRequired("Flags", Info.Flags);
 }
 
 void ScalarEnumerationTraits<WasmYAML::ValueType>::enumeration(
@@ -366,9 +402,10 @@ void ScalarEnumerationTraits<WasmYAML::TableType>::enumeration(
 void ScalarEnumerationTraits<WasmYAML::RelocType>::enumeration(
     IO &IO, WasmYAML::RelocType &Type) {
 #define WASM_RELOC(name, value) IO.enumCase(Type, #name, wasm::name);
-#include "llvm/Support/WasmRelocs/WebAssembly.def"
+#include "llvm/BinaryFormat/WasmRelocs/WebAssembly.def"
 #undef WASM_RELOC
 }
 
 } // end namespace yaml
+
 } // end namespace llvm

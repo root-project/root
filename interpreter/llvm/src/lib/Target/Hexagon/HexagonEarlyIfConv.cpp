@@ -59,15 +59,13 @@
 //         J2_jump <BB#6>, %PC<imp-def,dead>
 //     Successors according to CFG: BB#6 BB#3
 
-#define DEBUG_TYPE "hexagon-eif"
-
 #include "Hexagon.h"
 #include "HexagonInstrInfo.h"
 #include "HexagonSubtarget.h"
 #include "llvm/ADT/DenseSet.h"
-#include "llvm/ADT/iterator_range.h"
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/iterator_range.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
 #include "llvm/CodeGen/MachineBranchProbabilityInfo.h"
 #include "llvm/CodeGen/MachineDominators.h"
@@ -89,6 +87,8 @@
 #include "llvm/Target/TargetRegisterInfo.h"
 #include <cassert>
 #include <iterator>
+
+#define DEBUG_TYPE "hexagon-eif"
 
 using namespace llvm;
 

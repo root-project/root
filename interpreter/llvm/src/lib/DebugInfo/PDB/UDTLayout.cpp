@@ -1,4 +1,4 @@
-//===- UDTLayout.cpp --------------------------------------------*- C++ -*-===//
+//===- UDTLayout.cpp ------------------------------------------------------===//
 //
 //                     The LLVM Compiler Infrastructure
 //
@@ -8,20 +8,25 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/DebugInfo/PDB/UDTLayout.h"
-
+#include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/BitVector.h"
 #include "llvm/ADT/STLExtras.h"
+#include "llvm/DebugInfo/PDB/IPDBRawSymbol.h"
 #include "llvm/DebugInfo/PDB/IPDBSession.h"
 #include "llvm/DebugInfo/PDB/PDBSymbol.h"
 #include "llvm/DebugInfo/PDB/PDBSymbolData.h"
-#include "llvm/DebugInfo/PDB/PDBSymbolExe.h"
 #include "llvm/DebugInfo/PDB/PDBSymbolFunc.h"
 #include "llvm/DebugInfo/PDB/PDBSymbolTypeBaseClass.h"
 #include "llvm/DebugInfo/PDB/PDBSymbolTypeBuiltin.h"
 #include "llvm/DebugInfo/PDB/PDBSymbolTypePointer.h"
 #include "llvm/DebugInfo/PDB/PDBSymbolTypeUDT.h"
 #include "llvm/DebugInfo/PDB/PDBSymbolTypeVTable.h"
-
-#include <utility>
+#include "llvm/DebugInfo/PDB/PDBTypes.h"
+#include "llvm/Support/Casting.h"
+#include <algorithm>
+#include <cassert>
+#include <cstdint>
+#include <memory>
 
 using namespace llvm;
 using namespace llvm::pdb;
@@ -176,18 +181,18 @@ void UDTLayoutBase::initializeChildren(const PDBSymbol &Sym) {
       else
         Bases.push_back(std::move(Base));
     }
-
     else if (auto Data = unique_dyn_cast<PDBSymbolData>(Child)) {
       if (Data->getDataKind() == PDB_DataKind::Member)
         Members.push_back(std::move(Data));
       else
-        Other.push_back(std::move(Child));
+        Other.push_back(std::move(Data));
     } else if (auto VT = unique_dyn_cast<PDBSymbolTypeVTable>(Child))
       VTables.push_back(std::move(VT));
     else if (auto Func = unique_dyn_cast<PDBSymbolFunc>(Child))
       Funcs.push_back(std::move(Func));
-    else
+    else {
       Other.push_back(std::move(Child));
+    }
   }
 
   // We don't want to have any re-allocations in the list of bases, so make

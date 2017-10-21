@@ -214,7 +214,7 @@ CrossWindowsToolChain::CrossWindowsToolChain(const Driver &D,
   }
 }
 
-bool CrossWindowsToolChain::IsUnwindTablesDefault() const {
+bool CrossWindowsToolChain::IsUnwindTablesDefault(const ArgList &Args) const {
   // FIXME: all non-x86 targets need unwind tables, however, LLVM currently does
   // not know how to emit them.
   return getArch() == llvm::Triple::x86_64;
@@ -238,8 +238,15 @@ AddClangSystemIncludeArgs(const llvm::opt::ArgList &DriverArgs,
   const Driver &D = getDriver();
   const std::string &SysRoot = D.SysRoot;
 
-  if (DriverArgs.hasArg(options::OPT_nostdlibinc))
+  auto AddSystemAfterIncludes = [&]() {
+    for (const auto &P : DriverArgs.getAllArgValues(options::OPT_isystem_after))
+      addSystemInclude(DriverArgs, CC1Args, P);
+  };
+
+  if (DriverArgs.hasArg(options::OPT_nostdinc)) {
+    AddSystemAfterIncludes();
     return;
+  }
 
   addSystemInclude(DriverArgs, CC1Args, SysRoot + "/usr/local/include");
   if (!DriverArgs.hasArg(options::OPT_nobuiltininc)) {
@@ -247,8 +254,7 @@ AddClangSystemIncludeArgs(const llvm::opt::ArgList &DriverArgs,
     llvm::sys::path::append(ResourceDir, "include");
     addSystemInclude(DriverArgs, CC1Args, ResourceDir);
   }
-  for (const auto &P : DriverArgs.getAllArgValues(options::OPT_isystem_after))
-    addSystemInclude(DriverArgs, CC1Args, P);
+  AddSystemAfterIncludes();
   addExternCSystemInclude(DriverArgs, CC1Args, SysRoot + "/usr/include");
 }
 
@@ -258,7 +264,7 @@ AddClangCXXStdlibIncludeArgs(const llvm::opt::ArgList &DriverArgs,
   const llvm::Triple &Triple = getTriple();
   const std::string &SysRoot = getDriver().SysRoot;
 
-  if (DriverArgs.hasArg(options::OPT_nostdlibinc) ||
+  if (DriverArgs.hasArg(options::OPT_nostdinc) ||
       DriverArgs.hasArg(options::OPT_nostdincxx))
     return;
 
