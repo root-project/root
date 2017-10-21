@@ -10,7 +10,7 @@
 #ifndef LLVM_DEBUGINFO_PDB_RAW_PDBDBISTREAM_H
 #define LLVM_DEBUGINFO_PDB_RAW_PDBDBISTREAM_H
 
-#include "llvm/DebugInfo/CodeView/ModuleDebugFragment.h"
+#include "llvm/DebugInfo/CodeView/DebugSubsection.h"
 #include "llvm/DebugInfo/MSF/MappedBlockStream.h"
 #include "llvm/DebugInfo/PDB/Native/DbiModuleDescriptor.h"
 #include "llvm/DebugInfo/PDB/Native/DbiModuleList.h"
@@ -19,8 +19,6 @@
 #include "llvm/DebugInfo/PDB/Native/RawTypes.h"
 #include "llvm/DebugInfo/PDB/PDBTypes.h"
 #include "llvm/Support/BinaryStreamArray.h"
-#include "llvm/Support/BinaryStreamArray.h"
-#include "llvm/Support/BinaryStreamRef.h"
 #include "llvm/Support/BinaryStreamRef.h"
 #include "llvm/Support/Endian.h"
 #include "llvm/Support/Error.h"
@@ -65,6 +63,13 @@ public:
 
   PDB_Machine getMachineType() const;
 
+  BinarySubstreamRef getSectionContributionData() const;
+  BinarySubstreamRef getSecMapSubstreamData() const;
+  BinarySubstreamRef getModiSubstreamData() const;
+  BinarySubstreamRef getFileInfoSubstreamData() const;
+  BinarySubstreamRef getTypeServerMapSubstreamData() const;
+  BinarySubstreamRef getECSubstreamData() const;
+
   /// If the given stream type is present, returns its stream index. If it is
   /// not present, returns InvalidStreamIndex.
   uint32_t getDebugStreamIndex(DbgHeaderType Type) const;
@@ -78,6 +83,8 @@ public:
   FixedStreamArray<SecMapEntry> getSectionMap() const;
   void visitSectionContributions(ISectionContribVisitor &Visitor) const;
 
+  Expected<StringRef> getECName(uint32_t NI) const;
+
 private:
   Error initializeSectionContributionData();
   Error initializeSectionHeadersData();
@@ -89,16 +96,19 @@ private:
 
   PDBStringTable ECNames;
 
-  BinaryStreamRef SecContrSubstream;
-  BinaryStreamRef SecMapSubstream;
-  BinaryStreamRef TypeServerMapSubstream;
-  BinaryStreamRef ECSubstream;
+  BinarySubstreamRef SecContrSubstream;
+  BinarySubstreamRef SecMapSubstream;
+  BinarySubstreamRef ModiSubstream;
+  BinarySubstreamRef FileInfoSubstream;
+  BinarySubstreamRef TypeServerMapSubstream;
+  BinarySubstreamRef ECSubstream;
 
   DbiModuleList Modules;
 
   FixedStreamArray<support::ulittle16_t> DbgStreams;
 
-  PdbRaw_DbiSecContribVer SectionContribVersion;
+  PdbRaw_DbiSecContribVer SectionContribVersion =
+      PdbRaw_DbiSecContribVer::DbiSecContribVer60;
   FixedStreamArray<SectionContrib> SectionContribs;
   FixedStreamArray<SectionContrib2> SectionContribs2;
   FixedStreamArray<SecMapEntry> SectionMap;

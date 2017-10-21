@@ -26,6 +26,8 @@ public:
     AMDGPUFrameLowering(D, StackAl, LAO, TransAl) {}
   ~SIFrameLowering() override = default;
 
+  void emitEntryFunctionPrologue(MachineFunction &MF,
+                                 MachineBasicBlock &MBB) const;
   void emitPrologue(MachineFunction &MF,
                     MachineBasicBlock &MBB) const override;
   void emitEpilogue(MachineFunction &MF,
@@ -58,6 +60,10 @@ private:
 
   /// \brief Emits debugger prologue.
   void emitDebuggerPrologue(MachineFunction &MF, MachineBasicBlock &MBB) const;
+
+public:
+  bool hasFP(const MachineFunction &MF) const override;
+  bool hasSP(const MachineFunction &MF) const;
 };
 
 } // end namespace llvm

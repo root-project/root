@@ -18,6 +18,7 @@
 #include "clang/Basic/LLVM.h"
 #include "llvm/ADT/IntrusiveRefCntPtr.h"
 #include "llvm/ADT/StringRef.h"
+#include <vector>
 
 namespace clang {
   class DiagnosticsEngine;
@@ -32,7 +33,7 @@ namespace clang {
       DIAG_START_FRONTEND      = DIAG_START_DRIVER          +  200,
       DIAG_START_SERIALIZATION = DIAG_START_FRONTEND        +  100,
       DIAG_START_LEX           = DIAG_START_SERIALIZATION   +  120,
-      DIAG_START_PARSE         = DIAG_START_LEX             +  300,
+      DIAG_START_PARSE         = DIAG_START_LEX             +  400,
       DIAG_START_AST           = DIAG_START_PARSE           +  500,
       DIAG_START_COMMENT       = DIAG_START_AST             +  110,
       DIAG_START_SEMA          = DIAG_START_COMMENT         +  100,
@@ -262,6 +263,13 @@ public:
   /// errors, such as those errors that involve C++ access control,
   /// are not SFINAE errors.
   static SFINAEResponse getDiagnosticSFINAEResponse(unsigned DiagID);
+
+  /// \brief Get the string of all diagnostic flags.
+  ///
+  /// \returns A list of all diagnostics flags as they would be written in a
+  /// command line invocation including their `no-` variants. For example:
+  /// `{"-Wempty-body", "-Wno-empty-body", ...}`
+  static std::vector<std::string> getDiagnosticFlags();
 
   /// \brief Get the set of all diagnostic IDs in the group with the given name.
   ///

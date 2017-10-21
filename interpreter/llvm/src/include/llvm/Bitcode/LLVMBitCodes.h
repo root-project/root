@@ -22,7 +22,7 @@
 
 namespace llvm {
 namespace bitc {
-// The only top-level block types are MODULE, IDENTIFICATION and STRTAB.
+// The only top-level block types are MODULE, IDENTIFICATION, STRTAB and SYMTAB.
 enum BlockIDs {
   // Blocks
   MODULE_BLOCK_ID = FIRST_APPLICATION_BLOCKID,
@@ -55,6 +55,12 @@ enum BlockIDs {
   METADATA_KIND_BLOCK_ID,
 
   STRTAB_BLOCK_ID,
+
+  FULL_LTO_GLOBALVAL_SUMMARY_BLOCK_ID,
+
+  SYMTAB_BLOCK_ID,
+
+  SYNC_SCOPE_NAMES_BLOCK_ID,
 };
 
 /// Identification block contains a string that describes the producer details,
@@ -168,6 +174,10 @@ enum OperandBundleTagCode {
   OPERAND_BUNDLE_TAG = 1, // TAG: [strchr x N]
 };
 
+enum SyncScopeNameCode {
+  SYNC_SCOPE_NAME = 1,
+};
+
 // Value symbol table codes.
 enum ValueSymtabCodes {
   VST_CODE_ENTRY = 1,   // VST_ENTRY: [valueid, namechar x N]
@@ -238,6 +248,14 @@ enum GlobalValueSummarySymtabCodes {
   // summaries, but it can also appear in per-module summaries for PGO data.
   // [valueid, guid]
   FS_VALUE_GUID = 16,
+  // The list of local functions with CFI jump tables. Function names are
+  // strings in strtab.
+  // [n * name]
+  FS_CFI_FUNCTION_DEFS = 17,
+  // The list of external functions with CFI jump tables. Function names are
+  // strings in strtab.
+  // [n * name]
+  FS_CFI_FUNCTION_DECLS = 18,
 };
 
 enum MetadataCodes {
@@ -390,12 +408,6 @@ enum AtomicOrderingCodes {
   ORDERING_RELEASE = 4,
   ORDERING_ACQREL = 5,
   ORDERING_SEQCST = 6
-};
-
-/// Encoded SynchronizationScope values.
-enum AtomicSynchScopeCodes {
-  SYNCHSCOPE_SINGLETHREAD = 0,
-  SYNCHSCOPE_CROSSTHREAD = 1
 };
 
 /// Markers and flags for call instruction.
@@ -559,6 +571,10 @@ enum ComdatSelectionKindCodes {
 
 enum StrtabCodes {
   STRTAB_BLOB = 1,
+};
+
+enum SymtabCodes {
+  SYMTAB_BLOB = 1,
 };
 
 } // End bitc namespace

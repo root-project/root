@@ -238,7 +238,7 @@ SystemZTTIImpl::getPopcntSupport(unsigned TyWidth) {
   return TTI::PSK_Software;
 }
 
-void SystemZTTIImpl::getUnrollingPreferences(Loop *L,
+void SystemZTTIImpl::getUnrollingPreferences(Loop *L, ScalarEvolution &SE,
                                              TTI::UnrollingPreferences &UP) {
   // Find out if L contains a call, what the machine instruction count
   // estimate is, and how many stores there are.
@@ -302,7 +302,7 @@ unsigned SystemZTTIImpl::getNumberOfRegisters(bool Vector) {
   return 0;
 }
 
-unsigned SystemZTTIImpl::getRegisterBitWidth(bool Vector) {
+unsigned SystemZTTIImpl::getRegisterBitWidth(bool Vector) const {
   if (!Vector)
     return 64;
   if (ST->hasVector())
@@ -325,6 +325,30 @@ int SystemZTTIImpl::getArithmeticInstrCost(
 
   unsigned ScalarBits = Ty->getScalarSizeInBits();
 
+  // Div with a constant which is a power of 2 will be converted by
+  // DAGCombiner to use shifts. With vector shift-element instructions, a
+  // vector sdiv costs about as much as a scalar one.
+  const unsigned SDivCostEstimate = 4;
+  bool SDivPow2 = false;
+  bool UDivPow2 = false;
+  if ((Opcode == Instruction::SDiv || Opcode == Instruction::UDiv) &&
+      Args.size() == 2) {
+    const ConstantInt *CI = nullptr;
+    if (const Constant *C = dyn_cast<Constant>(Args[1])) {
+      if (C->getType()->isVectorTy())
+        CI = dyn_cast_or_null<const ConstantInt>(C->getSplatValue());
+      else
+        CI = dyn_cast<const ConstantInt>(C);
+    }
+    if (CI != nullptr &&
+        (CI->getValue().isPowerOf2() || (-CI->getValue()).isPowerOf2())) {
+      if (Opcode == Instruction::SDiv)
+        SDivPow2 = true;
+      else
+        UDivPow2 = true;
+    }
+  }
+
   if (Ty->isVectorTy()) {
     assert (ST->hasVector() && "getArithmeticInstrCost() called with vector type.");
     unsigned VF = Ty->getVectorNumElements();
@@ -333,9 +357,12 @@ int SystemZTTIImpl::getArithmeticInstrCost(
     // These vector operations are custom handled, but are still supported
     // with one instruction per vector, regardless of element size.
     if (Opcode == Instruction::Shl || Opcode == Instruction::LShr ||
-        Opcode == Instruction::AShr) {
+        Opcode == Instruction::AShr || UDivPow2) {
       return NumVectors;
     }
+
+    if (SDivPow2)
+      return (NumVectors * SDivCostEstimate);
 
     // These FP operations are supported with a single vector instruction for
     // double (base implementation assumes float generally costs 2). For
@@ -345,6 +372,9 @@ int SystemZTTIImpl::getArithmeticInstrCost(
         Opcode == Instruction::FMul || Opcode == Instruction::FDiv) {
       switch (ScalarBits) {
       case 32: {
+        // The vector enhancements facility 1 provides v4f32 instructions.
+        if (ST->hasVectorEnhancements1())
+          return NumVectors;
         // Return the cost of multiple scalar invocation plus the cost of
         // inserting and extracting the values.
         unsigned ScalarCost = getArithmeticInstrCost(Opcode, Ty->getScalarType());
@@ -394,6 +424,11 @@ int SystemZTTIImpl::getArithmeticInstrCost(
     if (Opcode == Instruction::Xor && ScalarBits == 1)
       // 2 * ipm sequences ; xor ; shift ; compare
       return 7;
+
+    if (UDivPow2)
+      return 1;
+    if (SDivPow2)
+      return SDivCostEstimate;
 
     // An extra extension for narrow types is needed.
     if ((Opcode == Instruction::SDiv || Opcode == Instruction::SRem))
@@ -747,15 +782,14 @@ int SystemZTTIImpl::
 getVectorInstrCost(unsigned Opcode, Type *Val, unsigned Index) {
   // vlvgp will insert two grs into a vector register, so only count half the
   // number of instructions.
-  if (Opcode == Instruction::InsertElement &&
-      Val->getScalarType()->isIntegerTy(64))
+  if (Opcode == Instruction::InsertElement && Val->isIntOrIntVectorTy(64))
     return ((Index % 2 == 0) ? 1 : 0);
 
   if (Opcode == Instruction::ExtractElement) {
     int Cost = ((Val->getScalarSizeInBits() == 1) ? 2 /*+test-under-mask*/ : 1);
 
     // Give a slight penalty for moving out of vector pipeline to FXU unit.
-    if (Index == 0 && Val->getScalarType()->isIntegerTy())
+    if (Index == 0 && Val->isIntOrIntVectorTy())
       Cost += 1;
 
     return Cost;

@@ -37,6 +37,11 @@ def HasFullFP16      : Predicate<"Subtarget->hasFullFP16()">,
                                  AssemblerPredicate<"FeatureFullFP16", "fullfp16">;
 def HasSPE           : Predicate<"Subtarget->hasSPE()">,
                                  AssemblerPredicate<"FeatureSPE", "spe">;
+def HasFuseAES       : Predicate<"Subtarget->hasFuseAES()">,
+                                 AssemblerPredicate<"FeatureFuseAES",
+                                 "fuse-aes">;
+def HasSVE           : Predicate<"Subtarget->hasSVE()">,
+                                 AssemblerPredicate<"FeatureSVE", "sve">;
 
 def IsLE             : Predicate<"Subtarget->isLittleEndian()">;
 def IsBE             : Predicate<"!Subtarget->isLittleEndian()">;
@@ -313,10 +318,13 @@ def AArch64umaxv    : SDNode<"AArch64ISD::UMAXV", SDT_AArch64UnaryVec>;
 //===----------------------------------------------------------------------===//
 
 // AArch64 Instruction Predicate Definitions.
-def IsDarwin  : Predicate<"Subtarget->isTargetDarwin()">;
-def IsNotDarwin: Predicate<"!Subtarget->isTargetDarwin()">;
-def ForCodeSize   : Predicate<"Subtarget->getForCodeSize()">;
-def NotForCodeSize   : Predicate<"!Subtarget->getForCodeSize()">;
+// We could compute these on a per-module basis but doing so requires accessing
+// the Function object through the <Target>Subtarget and objections were raised
+// to that (see post-commit review comments for r301750).
+let RecomputePerFunction = 1 in {
+  def ForCodeSize   : Predicate<"MF->getFunction()->optForSize()">;
+  def NotForCodeSize   : Predicate<"!MF->getFunction()->optForSize()">;
+}
 
 include "AArch64InstrFormats.td"
 
@@ -436,7 +444,7 @@ def MSRpstateImm4 : MSRpstateImm0_15;
 // TPIDR_EL0.  Add pseudo op so we can mark it as not having any side effects.
 let hasSideEffects = 0 in
 def MOVbaseTLS : Pseudo<(outs GPR64:$dst), (ins),
-                       [(set GPR64:$dst, AArch64threadpointer)]>, Sched<[]>;
+                       [(set GPR64:$dst, AArch64threadpointer)]>, Sched<[WriteSys]>;
 
 // The cycle counter PMC register is PMCCNTR_EL0.
 let Predicates = [HasPerfMon] in
@@ -708,10 +716,10 @@ def : InstAlias<"negs $dst, $src$shift",
 defm UDIV : Div<0, "udiv", udiv>;
 defm SDIV : Div<1, "sdiv", sdiv>;
 
-def : Pat<(int_aarch64_udiv GPR32:$Rn, GPR32:$Rm), (UDIVWr $Rn, $Rm)>;
-def : Pat<(int_aarch64_udiv GPR64:$Rn, GPR64:$Rm), (UDIVXr $Rn, $Rm)>;
-def : Pat<(int_aarch64_sdiv GPR32:$Rn, GPR32:$Rm), (SDIVWr $Rn, $Rm)>;
-def : Pat<(int_aarch64_sdiv GPR64:$Rn, GPR64:$Rm), (SDIVXr $Rn, $Rm)>;
+def : Pat<(int_aarch64_udiv GPR32:$Rn, GPR32:$Rm), (UDIVWr GPR32:$Rn, GPR32:$Rm)>;
+def : Pat<(int_aarch64_udiv GPR64:$Rn, GPR64:$Rm), (UDIVXr GPR64:$Rn, GPR64:$Rm)>;
+def : Pat<(int_aarch64_sdiv GPR32:$Rn, GPR32:$Rm), (SDIVWr GPR32:$Rn, GPR32:$Rm)>;
+def : Pat<(int_aarch64_sdiv GPR64:$Rn, GPR64:$Rm), (SDIVXr GPR64:$Rn, GPR64:$Rm)>;
 
 // Variable shift
 defm ASRV : Shift<0b10, "asr", sra>;
@@ -729,7 +737,7 @@ def : ShiftAlias<"rorv", RORVWr, GPR32>;
 def : ShiftAlias<"rorv", RORVXr, GPR64>;
 
 // Multiply-add
-let AddedComplexity = 7 in {
+let AddedComplexity = 5 in {
 defm MADD : MulAccum<0, "madd", add>;
 defm MSUB : MulAccum<1, "msub", sub>;
 
@@ -746,7 +754,7 @@ def : Pat<(i32 (mul (ineg GPR32:$Rn), GPR32:$Rm)),
           (MSUBWrrr GPR32:$Rn, GPR32:$Rm, WZR)>;
 def : Pat<(i64 (mul (ineg GPR64:$Rn), GPR64:$Rm)),
           (MSUBXrrr GPR64:$Rn, GPR64:$Rm, XZR)>;
-} // AddedComplexity = 7
+} // AddedComplexity = 5
 
 let AddedComplexity = 5 in {
 def SMADDLrrr : WideMulAccum<0, 0b001, "smaddl", add, sext>;
@@ -5298,6 +5306,31 @@ def AESErr   : AESTiedInst<0b0100, "aese",   int_aarch64_crypto_aese>;
 def AESDrr   : AESTiedInst<0b0101, "aesd",   int_aarch64_crypto_aesd>;
 def AESMCrr  : AESInst<    0b0110, "aesmc",  int_aarch64_crypto_aesmc>;
 def AESIMCrr : AESInst<    0b0111, "aesimc", int_aarch64_crypto_aesimc>;
+
+// Pseudo instructions for AESMCrr/AESIMCrr with a register constraint required
+// for AES fusion on some CPUs.
+let hasSideEffects = 0, mayStore = 0, mayLoad = 0 in {
+def AESMCrrTied: Pseudo<(outs V128:$Rd), (ins V128:$Rn), [], "$Rn = $Rd">,
+                        Sched<[WriteV]>;
+def AESIMCrrTied: Pseudo<(outs V128:$Rd), (ins V128:$Rn), [], "$Rn = $Rd">,
+                         Sched<[WriteV]>;
+}
+
+// Only use constrained versions of AES(I)MC instructions if they are paired with
+// AESE/AESD.
+def : Pat<(v16i8 (int_aarch64_crypto_aesmc
+            (v16i8 (int_aarch64_crypto_aese (v16i8 V128:$src1),
+                                            (v16i8 V128:$src2))))),
+          (v16i8 (AESMCrrTied (v16i8 (AESErr (v16i8 V128:$src1),
+                                             (v16i8 V128:$src2)))))>,
+          Requires<[HasFuseAES]>;
+
+def : Pat<(v16i8 (int_aarch64_crypto_aesimc
+            (v16i8 (int_aarch64_crypto_aesd (v16i8 V128:$src1),
+                                            (v16i8 V128:$src2))))),
+          (v16i8 (AESIMCrrTied (v16i8 (AESDrr (v16i8 V128:$src1),
+                                              (v16i8 V128:$src2)))))>,
+          Requires<[HasFuseAES]>;
 
 def SHA1Crrr     : SHATiedInstQSV<0b000, "sha1c",   int_aarch64_crypto_sha1c>;
 def SHA1Prrr     : SHATiedInstQSV<0b001, "sha1p",   int_aarch64_crypto_sha1p>;

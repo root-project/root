@@ -12,9 +12,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+#include "SIMachineScheduler.h"
 #include "AMDGPU.h"
 #include "SIInstrInfo.h"
-#include "SIMachineScheduler.h"
 #include "SIRegisterInfo.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallVector.h"
@@ -38,7 +38,7 @@
 
 using namespace llvm;
 
-#define DEBUG_TYPE "misched"
+#define DEBUG_TYPE "machine-scheduler"
 
 // This scheduler implements a different scheduling algorithm than
 // GenericScheduler.

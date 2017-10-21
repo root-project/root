@@ -15,8 +15,15 @@
 
 using namespace llvm;
 
-BinaryStreamWriter::BinaryStreamWriter(WritableBinaryStreamRef S)
-    : Stream(S), Offset(0) {}
+BinaryStreamWriter::BinaryStreamWriter(WritableBinaryStreamRef Ref)
+    : Stream(Ref) {}
+
+BinaryStreamWriter::BinaryStreamWriter(WritableBinaryStream &Stream)
+    : Stream(Stream) {}
+
+BinaryStreamWriter::BinaryStreamWriter(MutableArrayRef<uint8_t> Data,
+                                       llvm::support::endianness Endian)
+    : Stream(Data, Endian) {}
 
 Error BinaryStreamWriter::writeBytes(ArrayRef<uint8_t> Buffer) {
   if (auto EC = Stream.writeBytes(Offset, Buffer))
@@ -76,6 +83,8 @@ Error BinaryStreamWriter::padToAlignment(uint32_t Align) {
   uint32_t NewOffset = alignTo(Offset, Align);
   if (NewOffset > getLength())
     return make_error<BinaryStreamError>(stream_error_code::stream_too_short);
-  Offset = NewOffset;
+  while (Offset < NewOffset)
+    if (auto EC = writeInteger('\0'))
+      return EC;
   return Error::success();
 }

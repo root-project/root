@@ -238,6 +238,36 @@ def FeatureSDWA : SubtargetFeature<"sdwa",
   "Support SDWA (Sub-DWORD Addressing) extension"
 >;
 
+def FeatureSDWAOmod : SubtargetFeature<"sdwa-omod",
+  "HasSDWAOmod",
+  "true",
+  "Support OMod with SDWA (Sub-DWORD Addressing) extension"
+>;
+
+def FeatureSDWAScalar : SubtargetFeature<"sdwa-scalar",
+  "HasSDWAScalar",
+  "true",
+  "Support scalar register with SDWA (Sub-DWORD Addressing) extension"
+>;
+
+def FeatureSDWASdst : SubtargetFeature<"sdwa-sdst",
+  "HasSDWASdst",
+  "true",
+  "Support scalar dst for VOPC with SDWA (Sub-DWORD Addressing) extension"
+>;
+
+def FeatureSDWAMac : SubtargetFeature<"sdwa-mav",
+  "HasSDWAMac",
+  "true",
+  "Support v_mac_f32/f16 with SDWA (Sub-DWORD Addressing) extension"
+>;
+
+def FeatureSDWAOutModsVOPC : SubtargetFeature<"sdwa-out-mods-vopc",
+  "HasSDWAOutModsVOPC",
+  "true",
+  "Support clamp for VOPC with SDWA (Sub-DWORD Addressing) extension"
+>;
+
 def FeatureDPP : SubtargetFeature<"dpp",
   "HasDPP",
   "true",
@@ -365,6 +395,13 @@ def FeatureFlatForGlobal : SubtargetFeature<"flat-for-global",
   "Force to generate flat instruction for global"
 >;
 
+def FeatureAutoWaitcntBeforeBarrier : SubtargetFeature <
+  "auto-waitcnt-before-barrier",
+  "AutoWaitcntBeforeBarrier",
+  "true",
+  "Hardware automatically inserts waitcnt before barrier"
+>;
+
 // Dummy feature used to disable assembler instructions.
 def FeatureDisable : SubtargetFeature<"",
   "FeatureDisable","true",
@@ -414,8 +451,8 @@ def FeatureVolcanicIslands : SubtargetFeatureGeneration<"VOLCANIC_ISLANDS",
    FeatureWavefrontSize64, FeatureFlatAddressSpace, FeatureGCN,
    FeatureGCN3Encoding, FeatureCIInsts, Feature16BitInsts,
    FeatureSMemRealTime, FeatureVGPRIndexMode, FeatureMovrel,
-   FeatureScalarStores, FeatureInv2PiInlineImm, FeatureSDWA,
-   FeatureDPP
+   FeatureScalarStores, FeatureInv2PiInlineImm,
+   FeatureSDWA, FeatureSDWAOutModsVOPC, FeatureSDWAMac, FeatureDPP
   ]
 >;
 
@@ -426,6 +463,7 @@ def FeatureGFX9 : SubtargetFeatureGeneration<"GFX9",
    FeatureSMemRealTime, FeatureScalarStores, FeatureInv2PiInlineImm,
    FeatureApertureRegs, FeatureGFX9Insts, FeatureVOP3P, FeatureVGPRIndexMode,
    FeatureFastFMAF32, FeatureDPP,
+   FeatureSDWA, FeatureSDWAOmod, FeatureSDWAScalar, FeatureSDWASdst,
    FeatureFlatInstOffsets, FeatureFlatGlobalInsts, FeatureFlatScratchInsts
   ]
 >;
@@ -440,6 +478,16 @@ class SubtargetFeatureISAVersion <int Major, int Minor, int Stepping,
   Implies
 >;
 
+def FeatureISAVersion6_0_0 : SubtargetFeatureISAVersion <6,0,0,
+  [FeatureSouthernIslands,
+   FeatureFastFMAF32,
+   HalfRate64Ops,
+   FeatureLDSBankCount32]>;
+
+def FeatureISAVersion6_0_1 : SubtargetFeatureISAVersion <6,0,1,
+  [FeatureSouthernIslands,
+   FeatureLDSBankCount32]>;
+
 def FeatureISAVersion7_0_0 : SubtargetFeatureISAVersion <7,0,0,
   [FeatureSeaIslands,
    FeatureLDSBankCount32]>;
@@ -451,6 +499,10 @@ def FeatureISAVersion7_0_1 : SubtargetFeatureISAVersion <7,0,1,
    FeatureFastFMAF32]>;
 
 def FeatureISAVersion7_0_2 : SubtargetFeatureISAVersion <7,0,2,
+  [FeatureSeaIslands,
+   FeatureLDSBankCount16]>;
+
+def FeatureISAVersion7_0_3 : SubtargetFeatureISAVersion <7,0,3,
   [FeatureSeaIslands,
    FeatureLDSBankCount16]>;
 
@@ -482,8 +534,23 @@ def FeatureISAVersion8_1_0 : SubtargetFeatureISAVersion <8,1,0,
    FeatureLDSBankCount16,
    FeatureXNACK]>;
 
-def FeatureISAVersion9_0_0 : SubtargetFeatureISAVersion <9,0,0,[]>;
-def FeatureISAVersion9_0_1 : SubtargetFeatureISAVersion <9,0,1,[]>;
+def FeatureISAVersion9_0_0 : SubtargetFeatureISAVersion <9,0,0,
+  [FeatureGFX9,
+   FeatureLDSBankCount32]>;
+
+def FeatureISAVersion9_0_1 : SubtargetFeatureISAVersion <9,0,1,
+  [FeatureGFX9,
+   FeatureLDSBankCount32,
+   FeatureXNACK]>;
+
+def FeatureISAVersion9_0_2 : SubtargetFeatureISAVersion <9,0,2,
+  [FeatureGFX9,
+   FeatureLDSBankCount32]>;
+
+def FeatureISAVersion9_0_3 : SubtargetFeatureISAVersion <9,0,3,
+  [FeatureGFX9,
+   FeatureLDSBankCount32,
+   FeatureXNACK]>;
 
 //===----------------------------------------------------------------------===//
 // Debugger related subtarget features.
@@ -534,10 +601,12 @@ def AMDGPUAsmVariants {
   int VOP3_ID = 1;
   string SDWA = "SDWA";
   int SDWA_ID = 2;
+  string SDWA9 = "SDWA9";
+  int SDWA9_ID = 3;
   string DPP = "DPP";
-  int DPP_ID = 3;
+  int DPP_ID = 4;
   string Disable = "Disable";
-  int Disable_ID = 4;
+  int Disable_ID = 5;
 }
 
 def DefaultAMDGPUAsmParserVariant : AsmParserVariant {
@@ -555,6 +624,12 @@ def SDWAAsmParserVariant : AsmParserVariant {
   let Name = AMDGPUAsmVariants.SDWA;
 }
 
+def SDWA9AsmParserVariant : AsmParserVariant {
+  let Variant = AMDGPUAsmVariants.SDWA9_ID;
+  let Name = AMDGPUAsmVariants.SDWA9;
+}
+
+
 def DPPAsmParserVariant : AsmParserVariant {
   let Variant = AMDGPUAsmVariants.DPP_ID;
   let Name = AMDGPUAsmVariants.DPP;
@@ -567,6 +642,7 @@ def AMDGPU : Target {
   let AssemblyParserVariants = [DefaultAMDGPUAsmParserVariant,
                                 VOP3AsmParserVariant,
                                 SDWAAsmParserVariant,
+                                SDWA9AsmParserVariant,
                                 DPPAsmParserVariant];
   let AssemblyWriters = [AMDGPUAsmWriter];
 }
@@ -599,7 +675,11 @@ def isCIVI : Predicate <
   "Subtarget->getGeneration() >= AMDGPUSubtarget::SEA_ISLANDS">,
   AssemblerPredicate<"FeatureCIInsts">;
 
-def HasFlatAddressSpace : Predicate<"Subtarget->hasFlatAddressSpace()">;
+def HasFlatAddressSpace : Predicate<"Subtarget->hasFlatAddressSpace()">,
+  AssemblerPredicate<"FeatureFlatAddressSpace">;
+
+def HasFlatGlobalInsts : Predicate<"Subtarget->hasFlatGlobalInsts()">,
+  AssemblerPredicate<"FeatureFlatGlobalInsts">;
 
 def Has16BitInsts : Predicate<"Subtarget->has16BitInsts()">,
   AssemblerPredicate<"Feature16BitInsts">;
@@ -607,7 +687,10 @@ def HasVOP3PInsts : Predicate<"Subtarget->hasVOP3PInsts()">,
   AssemblerPredicate<"FeatureVOP3P">;
 
 def HasSDWA : Predicate<"Subtarget->hasSDWA()">,
-  AssemblerPredicate<"FeatureSDWA">;
+  AssemblerPredicate<"FeatureSDWA,FeatureVolcanicIslands">;
+
+def HasSDWA9 : Predicate<"Subtarget->hasSDWA()">,
+  AssemblerPredicate<"FeatureSDWA,FeatureGFX9">;
 
 def HasDPP : Predicate<"Subtarget->hasDPP()">,
   AssemblerPredicate<"FeatureDPP">;

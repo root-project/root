@@ -12,12 +12,18 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/ObjectYAML/ELFYAML.h"
+#include "llvm/ADT/StringRef.h"
+#include "llvm/BinaryFormat/ELF.h"
 #include "llvm/Support/Casting.h"
+#include "llvm/Support/ErrorHandling.h"
 #include "llvm/Support/MipsABIFlags.h"
+#include "llvm/Support/YAMLTraits.h"
+#include <cassert>
+#include <cstdint>
 
 namespace llvm {
 
-ELFYAML::Section::~Section() {}
+ELFYAML::Section::~Section() = default;
 
 namespace yaml {
 
@@ -372,6 +378,7 @@ void ScalarEnumerationTraits<ELFYAML::ELF_SHT>::enumeration(
   ECase(SHT_GROUP);
   ECase(SHT_SYMTAB_SHNDX);
   ECase(SHT_LOOS);
+  ECase(SHT_LLVM_ODRTAB);
   ECase(SHT_GNU_ATTRIBUTES);
   ECase(SHT_GNU_HASH);
   ECase(SHT_GNU_verdef);
@@ -423,12 +430,6 @@ void ScalarBitSetTraits<ELFYAML::ELF_SHF>::bitset(IO &IO,
   switch (Object->Header.Machine) {
   case ELF::EM_ARM:
     BCase(SHF_ARM_PURECODE);
-    break;
-  case ELF::EM_AMDGPU:
-    BCase(SHF_AMDGPU_HSA_GLOBAL);
-    BCase(SHF_AMDGPU_HSA_READONLY);
-    BCase(SHF_AMDGPU_HSA_CODE);
-    BCase(SHF_AMDGPU_HSA_AGENT);
     break;
   case ELF::EM_HEXAGON:
     BCase(SHF_HEX_GPREL);
@@ -513,40 +514,41 @@ void ScalarEnumerationTraits<ELFYAML::ELF_REL>::enumeration(
 #define ELF_RELOC(X, Y) IO.enumCase(Value, #X, ELF::X);
   switch (Object->Header.Machine) {
   case ELF::EM_X86_64:
-#include "llvm/Support/ELFRelocs/x86_64.def"
+#include "llvm/BinaryFormat/ELFRelocs/x86_64.def"
     break;
   case ELF::EM_MIPS:
-#include "llvm/Support/ELFRelocs/Mips.def"
+#include "llvm/BinaryFormat/ELFRelocs/Mips.def"
     break;
   case ELF::EM_HEXAGON:
-#include "llvm/Support/ELFRelocs/Hexagon.def"
+#include "llvm/BinaryFormat/ELFRelocs/Hexagon.def"
     break;
   case ELF::EM_386:
   case ELF::EM_IAMCU:
-#include "llvm/Support/ELFRelocs/i386.def"
+#include "llvm/BinaryFormat/ELFRelocs/i386.def"
     break;
   case ELF::EM_AARCH64:
-#include "llvm/Support/ELFRelocs/AArch64.def"
+#include "llvm/BinaryFormat/ELFRelocs/AArch64.def"
     break;
   case ELF::EM_ARM:
-#include "llvm/Support/ELFRelocs/ARM.def"
+#include "llvm/BinaryFormat/ELFRelocs/ARM.def"
     break;
   case ELF::EM_RISCV:
-#include "llvm/Support/ELFRelocs/RISCV.def"
+#include "llvm/BinaryFormat/ELFRelocs/RISCV.def"
     break;
   case ELF::EM_LANAI:
-#include "llvm/Support/ELFRelocs/Lanai.def"
+#include "llvm/BinaryFormat/ELFRelocs/Lanai.def"
     break;
   case ELF::EM_AMDGPU:
-#include "llvm/Support/ELFRelocs/AMDGPU.def"
+#include "llvm/BinaryFormat/ELFRelocs/AMDGPU.def"
     break;
   case ELF::EM_BPF:
-#include "llvm/Support/ELFRelocs/BPF.def"
+#include "llvm/BinaryFormat/ELFRelocs/BPF.def"
     break;
   default:
     llvm_unreachable("Unsupported architecture");
   }
 #undef ELF_RELOC
+  IO.enumFallback<Hex32>(Value);
 }
 
 void ScalarEnumerationTraits<ELFYAML::MIPS_AFL_REG>::enumeration(
@@ -648,6 +650,7 @@ void MappingTraits<ELFYAML::FileHeader>::mapping(IO &IO,
 }
 
 namespace {
+
 struct NormalizedOther {
   NormalizedOther(IO &)
       : Visibility(ELFYAML::ELF_STV(0)), Other(ELFYAML::ELF_STO(0)) {}
@@ -659,7 +662,8 @@ struct NormalizedOther {
   ELFYAML::ELF_STV Visibility;
   ELFYAML::ELF_STO Other;
 };
-}
+
+} // end anonymous namespace
 
 void MappingTraits<ELFYAML::Symbol>::mapping(IO &IO, ELFYAML::Symbol &Symbol) {
   IO.mapOptional("Name", Symbol.Name, StringRef());
@@ -782,6 +786,7 @@ StringRef MappingTraits<std::unique_ptr<ELFYAML::Section>>::validate(
 }
 
 namespace {
+
 struct NormalizedMips64RelType {
   NormalizedMips64RelType(IO &)
       : Type(ELFYAML::ELF_REL(ELF::R_MIPS_NONE)),
@@ -802,7 +807,8 @@ struct NormalizedMips64RelType {
   ELFYAML::ELF_REL Type3;
   ELFYAML::ELF_RSS SpecSym;
 };
-}
+
+} // end anonymous namespace
 
 void MappingTraits<ELFYAML::Relocation>::mapping(IO &IO,
                                                  ELFYAML::Relocation &Rel) {
@@ -843,4 +849,5 @@ LLVM_YAML_STRONG_TYPEDEF(uint32_t, MIPS_AFL_ASE)
 LLVM_YAML_STRONG_TYPEDEF(uint32_t, MIPS_AFL_FLAGS1)
 
 } // end namespace yaml
+
 } // end namespace llvm

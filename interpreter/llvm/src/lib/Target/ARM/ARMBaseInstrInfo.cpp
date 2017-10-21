@@ -21,9 +21,9 @@
 #include "MCTargetDesc/ARMAddressingModes.h"
 #include "MCTargetDesc/ARMBaseInfo.h"
 #include "llvm/ADT/DenseMap.h"
+#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/SmallSet.h"
 #include "llvm/ADT/SmallVector.h"
-#include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/Triple.h"
 #include "llvm/CodeGen/LiveVariables.h"
 #include "llvm/CodeGen/MachineBasicBlock.h"
@@ -558,11 +558,66 @@ bool ARMBaseInstrInfo::DefinesPredicate(
   return Found;
 }
 
-static bool isCPSRDefined(const MachineInstr *MI) {
-  for (const auto &MO : MI->operands())
+bool ARMBaseInstrInfo::isCPSRDefined(const MachineInstr &MI) {
+  for (const auto &MO : MI.operands())
     if (MO.isReg() && MO.getReg() == ARM::CPSR && MO.isDef() && !MO.isDead())
       return true;
   return false;
+}
+
+bool ARMBaseInstrInfo::isAddrMode3OpImm(const MachineInstr &MI,
+                                        unsigned Op) const {
+  const MachineOperand &Offset = MI.getOperand(Op + 1);
+  return Offset.getReg() != 0;
+}
+
+// Load with negative register offset requires additional 1cyc and +I unit
+// for Cortex A57
+bool ARMBaseInstrInfo::isAddrMode3OpMinusReg(const MachineInstr &MI,
+                                             unsigned Op) const {
+  const MachineOperand &Offset = MI.getOperand(Op + 1);
+  const MachineOperand &Opc = MI.getOperand(Op + 2);
+  assert(Opc.isImm());
+  assert(Offset.isReg());
+  int64_t OpcImm = Opc.getImm();
+
+  bool isSub = ARM_AM::getAM3Op(OpcImm) == ARM_AM::sub;
+  return (isSub && Offset.getReg() != 0);
+}
+
+bool ARMBaseInstrInfo::isLdstScaledReg(const MachineInstr &MI,
+                                       unsigned Op) const {
+  const MachineOperand &Opc = MI.getOperand(Op + 2);
+  unsigned OffImm = Opc.getImm();
+  return ARM_AM::getAM2ShiftOpc(OffImm) != ARM_AM::no_shift;
+}
+
+// Load, scaled register offset, not plus LSL2
+bool ARMBaseInstrInfo::isLdstScaledRegNotPlusLsl2(const MachineInstr &MI,
+                                                  unsigned Op) const {
+  const MachineOperand &Opc = MI.getOperand(Op + 2);
+  unsigned OffImm = Opc.getImm();
+
+  bool isAdd = ARM_AM::getAM2Op(OffImm) == ARM_AM::add;
+  unsigned Amt = ARM_AM::getAM2Offset(OffImm);
+  ARM_AM::ShiftOpc ShiftOpc = ARM_AM::getAM2ShiftOpc(OffImm);
+  if (ShiftOpc == ARM_AM::no_shift) return false; // not scaled
+  bool SimpleScaled = (isAdd && ShiftOpc == ARM_AM::lsl && Amt == 2);
+  return !SimpleScaled;
+}
+
+// Minus reg for ldstso addr mode
+bool ARMBaseInstrInfo::isLdstSoMinusReg(const MachineInstr &MI,
+                                        unsigned Op) const {
+  unsigned OffImm = MI.getOperand(Op + 2).getImm();
+  return ARM_AM::getAM2Op(OffImm) == ARM_AM::sub;
+}
+
+// Load, scaled register offset
+bool ARMBaseInstrInfo::isAm2ScaledReg(const MachineInstr &MI,
+                                      unsigned Op) const {
+  unsigned OffImm = MI.getOperand(Op + 2).getImm();
+  return ARM_AM::getAM2ShiftOpc(OffImm) != ARM_AM::no_shift;
 }
 
 static bool isEligibleForITBlock(const MachineInstr *MI) {
@@ -590,7 +645,7 @@ static bool isEligibleForITBlock(const MachineInstr *MI) {
   case ARM::tSUBi3: // SUB (immediate) T1
   case ARM::tSUBi8: // SUB (immediate) T2
   case ARM::tSUBrr: // SUB (register) T1
-    return !isCPSRDefined(MI);
+    return !ARMBaseInstrInfo::isCPSRDefined(*MI);
   }
 }
 
@@ -610,12 +665,14 @@ bool ARMBaseInstrInfo::isPredicable(const MachineInstr &MI) const {
   const ARMFunctionInfo *AFI =
       MI.getParent()->getParent()->getInfo<ARMFunctionInfo>();
 
+  // Neon instructions in Thumb2 IT blocks are deprecated, see ARMARM.
+  // In their ARM encoding, they can't be encoded in a conditional form.
+  if ((MI.getDesc().TSFlags & ARMII::DomainMask) == ARMII::DomainNEON)
+    return false;
+
   if (AFI->isThumb2Function()) {
     if (getSubtarget().restrictIT())
       return isV8EligibleForIT(&MI);
-  } else { // non-Thumb
-    if ((MI.getDesc().TSFlags & ARMII::DomainMask) == ARMII::DomainNEON)
-      return false;
   }
 
   return true;
@@ -1794,9 +1851,9 @@ isProfitableToIfCvt(MachineBasicBlock &MBB,
 }
 
 bool ARMBaseInstrInfo::
-isProfitableToIfCvt(MachineBasicBlock &,
+isProfitableToIfCvt(MachineBasicBlock &TBB,
                     unsigned TCycles, unsigned TExtra,
-                    MachineBasicBlock &,
+                    MachineBasicBlock &FBB,
                     unsigned FCycles, unsigned FExtra,
                     BranchProbability Probability) const {
   if (!TCycles)
@@ -1806,14 +1863,46 @@ isProfitableToIfCvt(MachineBasicBlock &,
   // Here we scale up each component of UnpredCost to avoid precision issue when
   // scaling TCycles/FCycles by Probability.
   const unsigned ScalingUpFactor = 1024;
-  unsigned TUnpredCost = Probability.scale(TCycles * ScalingUpFactor);
-  unsigned FUnpredCost =
-      Probability.getCompl().scale(FCycles * ScalingUpFactor);
-  unsigned UnpredCost = TUnpredCost + FUnpredCost;
-  UnpredCost += 1 * ScalingUpFactor; // The branch itself
-  UnpredCost += Subtarget.getMispredictionPenalty() * ScalingUpFactor / 10;
 
-  return (TCycles + FCycles + TExtra + FExtra) * ScalingUpFactor <= UnpredCost;
+  unsigned PredCost = (TCycles + FCycles + TExtra + FExtra) * ScalingUpFactor;
+  unsigned UnpredCost;
+  if (!Subtarget.hasBranchPredictor()) {
+    // When we don't have a branch predictor it's always cheaper to not take a
+    // branch than take it, so we have to take that into account.
+    unsigned NotTakenBranchCost = 1;
+    unsigned TakenBranchCost = Subtarget.getMispredictionPenalty();
+    unsigned TUnpredCycles, FUnpredCycles;
+    if (!FCycles) {
+      // Triangle: TBB is the fallthrough
+      TUnpredCycles = TCycles + NotTakenBranchCost;
+      FUnpredCycles = TakenBranchCost;
+    } else {
+      // Diamond: TBB is the block that is branched to, FBB is the fallthrough
+      TUnpredCycles = TCycles + TakenBranchCost;
+      FUnpredCycles = FCycles + NotTakenBranchCost;
+      // The branch at the end of FBB will disappear when it's predicated, so
+      // discount it from PredCost.
+      PredCost -= 1 * ScalingUpFactor;
+    }
+    // The total cost is the cost of each path scaled by their probabilites
+    unsigned TUnpredCost = Probability.scale(TUnpredCycles * ScalingUpFactor);
+    unsigned FUnpredCost = Probability.getCompl().scale(FUnpredCycles * ScalingUpFactor);
+    UnpredCost = TUnpredCost + FUnpredCost;
+    // When predicating assume that the first IT can be folded away but later
+    // ones cost one cycle each
+    if (Subtarget.isThumb2() && TCycles + FCycles > 4) {
+      PredCost += ((TCycles + FCycles - 4) / 4) * ScalingUpFactor;
+    }
+  } else {
+    unsigned TUnpredCost = Probability.scale(TCycles * ScalingUpFactor);
+    unsigned FUnpredCost =
+      Probability.getCompl().scale(FCycles * ScalingUpFactor);
+    UnpredCost = TUnpredCost + FUnpredCost;
+    UnpredCost += 1 * ScalingUpFactor; // The branch itself
+    UnpredCost += Subtarget.getMispredictionPenalty() * ScalingUpFactor / 10;
+  }
+
+  return PredCost <= UnpredCost;
 }
 
 bool
@@ -3349,6 +3438,22 @@ ARMBaseInstrInfo::getVLDMDefCycle(const InstrItineraryData *ItinData,
   return DefCycle;
 }
 
+bool ARMBaseInstrInfo::isLDMBaseRegInList(const MachineInstr &MI) const {
+  unsigned BaseReg = MI.getOperand(0).getReg();
+  for (unsigned i = 1, sz = MI.getNumOperands(); i < sz; ++i) {
+    const auto &Op = MI.getOperand(i);
+    if (Op.isReg() && Op.getReg() == BaseReg)
+      return true;
+  }
+  return false;
+}
+unsigned
+ARMBaseInstrInfo::getLDMVariableDefsSize(const MachineInstr &MI) const {
+  // ins GPR:$Rn, pred:$p (2xOp), reglist:$regs, variable_ops
+  // (outs GPR:$wb), (ins GPR:$Rn, pred:$p (2xOp), reglist:$regs, variable_ops)
+  return MI.getNumOperands() + 1 - MI.getDesc().getNumOperands();
+}
+
 int
 ARMBaseInstrInfo::getLDMDefCycle(const InstrItineraryData *ItinData,
                                  const MCInstrDesc &DefMCID,
@@ -4119,7 +4224,8 @@ unsigned ARMBaseInstrInfo::getPredicationCost(const MachineInstr &MI) const {
 
   const MCInstrDesc &MCID = MI.getDesc();
 
-  if (MCID.isCall() || MCID.hasImplicitDefOfPhysReg(ARM::CPSR)) {
+  if (MCID.isCall() || (MCID.hasImplicitDefOfPhysReg(ARM::CPSR) &&
+                        !Subtarget.cheapPredicableCPSRDef())) {
     // When predicated, CPSR is an additional source operand for CPSR updating
     // instructions, this apparently increases their latencies.
     return 1;
@@ -4148,7 +4254,8 @@ unsigned ARMBaseInstrInfo::getInstrLatency(const InstrItineraryData *ItinData,
   }
 
   const MCInstrDesc &MCID = MI.getDesc();
-  if (PredCost && (MCID.isCall() || MCID.hasImplicitDefOfPhysReg(ARM::CPSR))) {
+  if (PredCost && (MCID.isCall() || (MCID.hasImplicitDefOfPhysReg(ARM::CPSR) &&
+                                     !Subtarget.cheapPredicableCPSRDef()))) {
     // When predicated, CPSR is an additional source operand for CPSR updating
     // instructions, this apparently increases their latencies.
     *PredCost = 1;
