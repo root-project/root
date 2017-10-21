@@ -32,6 +32,7 @@
 #pragma link C++ class TEntryListBlock+;
 #pragma link C++ class TEventList-;
 #pragma link C++ class TFriendElement+;
+#pragma link C++ class ROOT::TIOFeatures+;
 #pragma link C++ class TTreeFriendLeafIter;
 #pragma link C++ class TLeaf-;
 #pragma link C++ class TLeafElement+;
