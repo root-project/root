@@ -354,7 +354,7 @@ const TMVA::Ranking * TMVA::MethodCrossEvaluation::CreateRanking()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t TMVA::MethodCrossEvaluation::HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets )
+Bool_t TMVA::MethodCrossEvaluation::HasAnalysisType( Types::EAnalysisType /*type*/, UInt_t /*numberClasses*/, UInt_t /*numberTargets*/ )
 {
    return kTRUE;
    // if (fEncapsulatedMethods.size() == 0) {return kFALSE;}
