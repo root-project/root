@@ -41,7 +41,7 @@ public:
    TCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',');
    ~TCsvDS();
    const std::vector<std::string> &GetColumnNames() const;
-   const std::vector<std::pair<ULong64_t, ULong64_t>> &GetEntryRanges() const;
+   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
    std::string GetTypeName(std::string_view colName) const;
    bool HasColumn(std::string_view colName) const;
    void SetEntry(unsigned int slot, ULong64_t entry);
