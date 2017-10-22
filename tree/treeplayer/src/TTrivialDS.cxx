@@ -58,8 +58,11 @@ void TTrivialDS::SetNSlots(unsigned int nSlots)
    fNSlots = nSlots;
    fCounter.resize(fNSlots);
    fCounterAddr.resize(fNSlots);
+}
 
-   auto chunkSize = fSize / fNSlots;
+void TTrivialDS::Init()
+{
+   const auto chunkSize = fSize / fNSlots;
    auto start = 0UL;
    auto end = 0UL;
    for (auto i : ROOT::TSeqUL(fNSlots)) {

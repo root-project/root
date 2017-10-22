@@ -27,6 +27,7 @@ public:
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
    void SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
+   void Init();
 };
 
 TDataFrame MakeTrivialDataFrame(ULong64_t size);

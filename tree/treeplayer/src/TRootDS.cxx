@@ -121,9 +121,13 @@ void TRootDS::SetNSlots(unsigned int nSlots)
    fBranchAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
 
    fChains.resize(fNSlots);
-   auto nentries = fModelChain.GetEntries();
-   auto chunkSize = nentries / fNSlots;
-   auto reminder = 1U == fNSlots ? 0 : nentries % fNSlots;
+}
+
+void TRootDS::Init()
+{
+   const auto nentries = fModelChain.GetEntries();
+   const auto chunkSize = nentries / fNSlots;
+   const auto reminder = 1U == fNSlots ? 0 : nentries % fNSlots;
    auto start = 0UL;
    auto end = 0UL;
    for (auto i : ROOT::TSeqU(fNSlots)) {

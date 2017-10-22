@@ -46,6 +46,7 @@ public:
    bool HasColumn(std::string_view colName) const;
    void SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
+   void Init();
 };
 
 TDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',');
