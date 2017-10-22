@@ -217,14 +217,16 @@ void THashList::Delete(Option_t *option)
       TList removeDirectory; // need to deregister these from their directory
 
       while (fFirst) {
-         TObjLink *tlk = fFirst;
-         fFirst = fFirst->Next();
+         auto tlk = fFirst;
+         fFirst = fFirst->NextSP();
          fSize--;
          // remove object from table
          fTable->Remove(tlk->GetObject());
 
          // delete only heap objects
          auto obj = tlk->GetObject();
+         // In case somebody else access it.
+         tlk->SetObject(nullptr);
          if (obj && !obj->TestBit(kNotDeleted))
             Error("Delete", "A list is accessing an object (%p) already deleted (list name = %s)",
                   obj, GetName());
@@ -233,9 +235,11 @@ void THashList::Delete(Option_t *option)
          else if (obj && obj->IsA()->GetDirectoryAutoAdd())
             removeDirectory.Add(obj);
 
-         delete tlk;
+         // tlk reference count goes down 1.
       }
-      fFirst = fLast = fCache = 0;
+      fFirst.reset();
+      fLast.reset();
+      fCache.reset();
       fSize  = 0;
 
       // These objects cannot expect to have a valid TDirectory anymore;
@@ -307,15 +311,19 @@ void THashList::RecursiveRemove(TObject *obj)
 {
    if (!obj) return;
 
-   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+   R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
 
    if (obj->HasInconsistentHash()) {
+      R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
       // Remove obj in the list itself
       TObject *object = TList::Remove(obj);
       if (object)
          fTable->RemoveSlow(object);
 
    } else if (fTable->FindObject(obj)) {
+      R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
       // Remove obj in the list itself
       TObject *object = TList::Remove(obj);
       if (object)
