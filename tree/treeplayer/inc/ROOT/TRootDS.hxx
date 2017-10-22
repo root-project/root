@@ -35,7 +35,7 @@ public:
    std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
    void SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
-   void Init();
+   void Initialise();
 };
 
 TDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob);

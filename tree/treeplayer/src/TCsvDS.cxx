@@ -321,7 +321,7 @@ void TCsvDS::SetNSlots(unsigned int nSlots)
    fColAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
 }
 
-void TCsvDS::Init()
+void TCsvDS::Initialise()
 {
    const auto nRecords = fRecords.size();
    const auto chunkSize = nRecords / fNSlots;
