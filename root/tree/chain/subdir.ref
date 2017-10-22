@@ -9,11 +9,11 @@ OBJ: TChain	tree	 : 0
 ******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             874 bytes  File  Size =        395 *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
-*Entries :        3 : Total  Size=        548 bytes  File Size  =         82 *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
 Trying subdir.root/data2.root
@@ -24,11 +24,11 @@ OBJ: TChain	tree	 : 0
 ******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             874 bytes  File  Size =        395 *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
-*Entries :        3 : Total  Size=        548 bytes  File Size  =         82 *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
 TChain::Add
@@ -41,11 +41,11 @@ OBJ: TChain	tree	 : 0
 ******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             874 bytes  File  Size =        395 *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
-*Entries :        3 : Total  Size=        548 bytes  File Size  =         82 *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
 ******************************************************************************
@@ -53,11 +53,11 @@ OBJ: TChain	tree	 : 0
 ******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             874 bytes  File  Size =        395 *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
-*Entries :        3 : Total  Size=        548 bytes  File Size  =         82 *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
 Trying subdir.root/data*.root/tree
@@ -69,11 +69,11 @@ OBJ: TChain	tree	 : 0
 ******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             874 bytes  File  Size =        395 *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
-*Entries :        3 : Total  Size=        548 bytes  File Size  =         82 *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
 ******************************************************************************
@@ -81,11 +81,11 @@ OBJ: TChain	tree	 : 0
 ******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             874 bytes  File  Size =        395 *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
-*Entries :        3 : Total  Size=        548 bytes  File Size  =         82 *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
 Trying subdir.root/data1.root/tree
@@ -96,11 +96,11 @@ OBJ: TChain	tree	 : 0
 ******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             874 bytes  File  Size =        395 *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
-*Entries :        3 : Total  Size=        548 bytes  File Size  =         82 *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
 Trying subdir.root/data2.root
@@ -111,10 +111,10 @@ OBJ: TChain	tree	 : 0
 ******************************************************************************
 ******************************************************************************
 *Tree    :tree      : tree                                                   *
-*Entries :        3 : Total =             874 bytes  File  Size =        395 *
+*Entries :        3 : Total =             896 bytes  File  Size =        395 *
 *        :          : Tree compression factor =   1.00                       *
 ******************************************************************************
 *Br    0 :var       : var/I                                                  *
-*Entries :        3 : Total  Size=        548 bytes  File Size  =         82 *
+*Entries :        3 : Total  Size=        559 bytes  File Size  =         82 *
 *Baskets :        1 : Basket Size=        100 bytes  Compression=   1.00     *
 *............................................................................*
