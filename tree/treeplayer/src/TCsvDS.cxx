@@ -319,10 +319,13 @@ void TCsvDS::SetNSlots(unsigned int nSlots)
    const auto nColumns = fHeaders.size();
    // Initialise the entire set of addresses
    fColAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
+}
 
-   auto nRecords = fRecords.size();
-   auto chunkSize = nRecords / fNSlots;
-   auto remainder = 1U == fNSlots ? 0 : nRecords % fNSlots;
+void TCsvDS::Init()
+{
+   const auto nRecords = fRecords.size();
+   const auto chunkSize = nRecords / fNSlots;
+   const auto remainder = 1U == fNSlots ? 0 : nRecords % fNSlots;
    auto start = 0UL;
    auto end = 0UL;
 
