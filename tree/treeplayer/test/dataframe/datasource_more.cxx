@@ -1,6 +1,8 @@
 #include <ROOT/TDataFrame.hxx>
+#include <ROOT/RMakeUnique.hxx>
 
 #include "TNonCopiableDS.hxx"
+#include "TStreamingDS.hxx"
 
 #include "gtest/gtest.h"
 
@@ -18,4 +20,28 @@ TEST(TNonCopiableDS, UseNonCopiableColumnType)
    NonCopiableDS::NonCopiable_t dummy;
 
    EXPECT_EQ(dummy.fValue, m);
+}
+
+TEST(TStreamingDS, MultipleEntryRanges)
+{
+   TDataFrame tdf(std::make_unique<TStreamingDS>());
+   auto c = tdf.Count();
+   auto ansmin = tdf.Min<int>("ans");
+   auto ansmax = tdf.Max("ans");
+   EXPECT_EQ(*c, 4ull);
+   EXPECT_EQ(*ansmin, *ansmax);
+   EXPECT_EQ(*ansmin, 42);
+}
+
+TEST(TStreamingDS, MultipleEntryRangesMT)
+{
+   ROOT::EnableImplicitMT(2);
+   TDataFrame tdf(std::make_unique<TStreamingDS>());
+   auto c = tdf.Count();
+   auto ansmin = tdf.Min<int>("ans");
+   auto ansmax = tdf.Max("ans");
+   EXPECT_EQ(*c, 8ull); // TStreamingDS provides 4 entries per slot
+   EXPECT_EQ(*ansmin, *ansmax);
+   EXPECT_EQ(*ansmin, 42);
+   ROOT::DisableImplicitMT();
 }
