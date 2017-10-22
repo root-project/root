@@ -97,7 +97,7 @@ public:
   }
 
   void WriteMemoryWithType(std::string_view name, const void* address, TClass* cl) final {
-    fOldFile->WriteObjectAny(address, cl, name.to_string().c_str());
+    fOldFile->WriteObjectAny(address, cl, std::string(name).c_str());
   }
 };
 }
@@ -144,7 +144,7 @@ OpenV6TFile(std::string_view name, const char* mode,
     }
   } setCacheDirRAII(opts.fCachedRead);
 
-  auto v6storage = std::make_unique<TV6Storage>(name.to_string(), GetV6TFileOpts(mode, opts));
+  auto v6storage = std::make_unique<TV6Storage>(std::string(name), GetV6TFileOpts(mode, opts));
 
   using namespace ROOT::Experimental::Internal;
   return std::unique_ptr<TFileStorageInterface>{std::move(v6storage)};
@@ -191,7 +191,7 @@ std::string ROOT::Experimental::TFile::SetCacheDir(std::string_view path) {
   std::lock_guard<std::mutex> lock(GetCacheDirMutex());
 
   std::string ret = ::TFile::GetCacheFileDir();
-  ::TFile::SetCacheFileDir(path.to_string().c_str());
+  ::TFile::SetCacheFileDir(std::string(path).c_str());
   return ret;
 }
 
