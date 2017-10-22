@@ -123,7 +123,7 @@ void TRootDS::SetNSlots(unsigned int nSlots)
    fChains.resize(fNSlots);
 }
 
-void TRootDS::Init()
+void TRootDS::Initialise()
 {
    const auto nentries = fModelChain.GetEntries();
    const auto chunkSize = nentries / fNSlots;

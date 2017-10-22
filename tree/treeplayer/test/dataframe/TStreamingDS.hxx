@@ -32,7 +32,7 @@ public:
       return std::move(ranges);
    }
    void SetEntry(unsigned int, ULong64_t) {}
-   void Init() { fCounter = 0; }
+   void Initialise() { fCounter = 0; }
 protected:
    std::vector<void *> GetColumnReadersImpl(std::string_view name, const std::type_info &t) {
       if (t != typeid(int) && std::string(name) != "ans")

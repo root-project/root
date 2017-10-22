@@ -83,9 +83,9 @@ public:
    /// \brief Convenience method called before starting an event-loop.
    /// This method might be called multiple times over the lifetime of a TDataSource, since
    /// users can run multiple event-loops with the same TDataFrame.
-   /// Ideally, `Init` should set the state of the TDataSource so that multiple identical event-loops
+   /// Ideally, `Initialise` should set the state of the TDataSource so that multiple identical event-loops
    /// will produce identical results.
-   virtual void Init() {}
+   virtual void Initialise() {}
 
    /// \brief Convenience method called at the start of the data processing associated to a slot.
    /// \param[in] slot The data processing slot wihch needs to be initialised
@@ -99,7 +99,7 @@ public:
    virtual void FinaliseSlot(unsigned int /*slot*/) {}
 
    /// \brief Convenience method called after concluding an event-loop.
-   /// See Init for more details.
+   /// See Initialise for more details.
    virtual void Finalise() {}
 
 protected:

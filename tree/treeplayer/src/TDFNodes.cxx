@@ -224,7 +224,7 @@ void TLoopManager::RunTreeReader()
 void TLoopManager::RunDataSource()
 {
    assert(fDataSource != nullptr);
-   fDataSource->Init();
+   fDataSource->Initialise();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty()) {
       InitNodeSlots(nullptr, 0u);
@@ -265,7 +265,7 @@ void TLoopManager::RunDataSourceMT()
       slotStack.ReturnSlot(slot);
    };
 
-   fDataSource->Init();
+   fDataSource->Initialise();
    auto ranges = fDataSource->GetEntryRanges();
    while (!ranges.empty()) {
       pool.Foreach(runOnRange, ranges);

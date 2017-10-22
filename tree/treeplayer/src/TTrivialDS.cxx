@@ -60,7 +60,7 @@ void TTrivialDS::SetNSlots(unsigned int nSlots)
    fCounterAddr.resize(fNSlots);
 }
 
-void TTrivialDS::Init()
+void TTrivialDS::Initialise()
 {
    const auto chunkSize = fSize / fNSlots;
    auto start = 0UL;
