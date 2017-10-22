@@ -24,13 +24,29 @@ namespace TDF {
 /**
 \class ROOT::Experimental::TDF::TDataSource
 \ingroup dataframe
-\brief The TDataSource interface dictates how a TDataFrame interface to an arbitrary data format should look like.
+\brief TDataSource defines an API that TDataFrame can use to read arbitrary data formats.
 
-A TDataSource allows to seamlessly provide an adaptor for any kind of data set
-or data format to the TDataFrame. Another way to imagine it is a veritable
-"cursor".
-The data sources are not supposed to be used as they are from the user but
-rather as a way to plug a dataset into a TDataFrame.
+A concrete TDataSource implementation (i.e. a class that inherits from TDataSource and implements all of its pure
+methods) provides an adaptor that TDataFrame can leverage to read any kind of tabular data formats.
+TDataFrame calls into TDataSource to retrieve information about the data, retrieve (thread-local) readers or "cursors"
+for selected columns and to advance the readers to the desired data entry.
+
+The sequence of calls that TDataFrame (or any other client of a TDataSource) performs is the following:
+
+1) SetNSlots: inform TDataSource of the desired level of parallelism
+2) GetColumnReaders: retrieve from TDataSource per-thread readers for the desired columns
+3) Initialise: inform TDataSource that an event-loop is about to start
+4) GetEntryRanges: retrieve from TDataSource a set of ranges of entries that can be processed concurrently
+5) InitSlot: inform TDataSource that a certain thread is about to start working on a certain range of entries
+6) SetEntry: inform TDataSource that a certain thread is about to start working on a certain entry
+7) FinaliseSlot: inform TDataSource that a certain thread finished working on a certain range of entries
+8) Finalise: inform TDataSource that an event-loop finished
+
+TDataSource implementations must support running multiple event-loops consecutively (although sequentially) on the same dataset.
+Method 1 is called once per TDataSource object, typically when it is associated to a TDataFrame.
+Method 2 can be called several times, potentially with the same arguments, also in-between event-loops, but not during an event-loop.
+Methods 3,8 are called once per event-loop, right before starting and right after finishing.
+Methods 5,6,7 can be called concurrently from multiple threads, multiple times per event-loop.
 */
 class TDataSource {
 public:
