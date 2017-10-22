@@ -55,6 +55,7 @@ TEST(TRootTDS, EntryRanges)
 {
    TRootDS tds(treeName, fileGlob);
    tds.SetNSlots(3U);
+   tds.Init();
 
    // Still dividing in equal parts...
    auto ranges = tds.GetEntryRanges();
@@ -74,6 +75,7 @@ TEST(TRootTDS, ColumnReaders)
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<int>("i");
+   tds.Init();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    for (auto &&range : ranges) {
