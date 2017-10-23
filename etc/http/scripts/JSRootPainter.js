@@ -158,13 +158,13 @@
                         100, 103, 105, 104,   0,  // 20..24
                           3,   4,   2,   1, 106,  // 25..29
                           6,   7,   5, 102, 101], // 30..34
-          root_fonts: ['Arial', 'Times New Roman',
+          root_fonts: ['Arial', 'iTimes New Roman',
                        'bTimes New Roman', 'biTimes New Roman', 'Arial',
                        'oArial', 'bArial', 'boArial', 'Courier New',
                        'oCourier New', 'bCourier New', 'boCourier New',
-                       'Symbol', 'Times New Roman', 'Wingdings', 'Symbol', 'Verdana'],
+                       'Symbol', 'Times New Roman', 'Wingdings', 'iSymbol', 'Verdana'],
           // taken from https://www.math.utah.edu/~beebe/fonts/afm-widths.html
-          root_fonts_aver_width: [ 0.537, 0.514,
+          root_fonts_aver_width: [ 0.537, 0.510,
                                    0.535, 0.520, 0.537,
                                    0.54, 0.556, 0.56, 0.6,
                                    0.6, 0.6, 0.6,
@@ -257,7 +257,7 @@
                 '#equiv': '\u2261',
                 '#approx': '\u2248', // should be \u2245 ?
                 '#3dots': '\u2026',
-                '#cbar': '\u007C',
+                '#cbar': '\x7C',
                 '#topbar': '\xAF',
                 '#downleftarrow': '\u21B5',
                 '#aleph': '\u2135',
@@ -284,7 +284,7 @@
                 '#trademark': '\u2122',
                 '#prod': '\u220F',
                 '#surd': '\u221A',
-                '#upoint': '\u22C5',
+                '#upoint': '\u02D9',
                 '#corner': '\xAC',
                 '#wedge': '\u2227',
                 '#vee': '\u2228',
@@ -298,13 +298,13 @@
                 '#copyright': '\xA9',
                 '#void3': '\u2122',
                 '#sum': '\u2211',
-                '#arctop': '',
-                '#lbar': '',
-                '#arcbottom': '',
+                '#arctop': '\u239B',
+                '#lbar': '\u23B8',
+                '#arcbottom': '\u239D',
                 '#void8': '',
                 '#bottombar': '\u230A',
-                '#arcbar': '',
-                '#ltbar': '',
+                '#arcbar': '\u23A7',
+                '#ltbar': '\u23A8',
                 '#AA': '\u212B',
                 '#aa': '\u00E5',
                 '#void06': '',
@@ -321,13 +321,14 @@
                 '#tilde': '\u02DC',
                 '#slash': '\u2044',
                 '#hbar': '\u0127',
-                '#box': '',
-                '#Box': '',
-                '#parallel': '',
+                '#box': '\u25FD',
+                '#Box': '\u2610',
+                '#parallel': '\u2225',
                 '#perp': '\u22A5',
-                '#odot': '',
+                '#odot': '\u2299',
                 '#left': '',
-                '#right': ''
+                '#right': '',
+                '{}': ''
           },
           math_symbols_map: {
                 '#LT':"\\langle",
@@ -821,6 +822,10 @@
       return (this.color == 'none');
    }
 
+   TAttFillHandler.prototype.isSolid = function() {
+      return this.pattern === 1001;
+   }
+
    // method used when color or pattern were changed with OpenUi5 widgets
    TAttFillHandler.prototype.verifyDirectChange = function(painter) {
       if ((this.color !== 'none') && (this.pattern < 1001)) this.color = 'none';
@@ -847,12 +852,17 @@
          delete this.antialias;
       }
 
+      if ((this.pattern == 1000) && (this.colorindx===0)) {
+         this.color = 'white';
+         return true;
+      }
+
       if (this.pattern < 1001) {
          this.color = 'none';
          return true;
       }
 
-      if ((this.pattern === 1001) && (this.colorindx===0) && (this.kind===1)) {
+      if (this.isSolid() && (this.colorindx===0) && (this.kind===1)) {
          this.color = 'none';
          return true;
       }
@@ -860,7 +870,7 @@
       this.color = JSROOT.Painter.root_colors[this.colorindx];
       if (typeof this.color != 'string') this.color = "none";
 
-      if (this.pattern === 1001) return true;
+      if (this.isSolid()) return true;
 
       if ((this.pattern >= 4000) && (this.pattern <= 4100)) {
          // special transparent colors (use for subpads)
@@ -868,7 +878,7 @@
          return true;
       }
 
-      if (!svg || svg.empty() || (this.pattern < 3000) || (this.pattern > 3025)) return false;
+      if (!svg || svg.empty() || (this.pattern < 3000)) return false;
 
       var id = "pat_" + this.pattern + "_" + this.colorindx;
 
@@ -882,60 +892,119 @@
 
       if (!defs.select("."+id).empty()) return true;
 
-      var patt = defs.append('svg:pattern').attr("id",id).attr("class",id).attr("patternUnits","userSpaceOnUse");
+      var lines = "", lfill = null, fills = "", fills2 = "", w = 2, h = 2;
 
       switch (this.pattern) {
-        case 3001:
-          patt.attr("width", 2).attr("height", 2);
-          patt.append('svg:rect').attr("x", 0).attr("y", 0).attr("width", 1).attr("height", 1);
-          patt.append('svg:rect').attr("x", 1).attr("y", 1).attr("width", 1).attr("height", 1);
-          break;
-        case 3002:
-          patt.attr("width", 4).attr("height", 2);
-          patt.append('svg:rect').attr("x", 1).attr("y", 0).attr("width", 1).attr("height", 1);
-          patt.append('svg:rect').attr("x", 3).attr("y", 1).attr("width", 1).attr("height", 1);
-          break;
-        case 3003:
-          patt.attr("width", 4).attr("height", 4);
-          patt.append('svg:rect').attr("x", 2).attr("y", 1).attr("width", 1).attr("height", 1);
-          patt.append('svg:rect').attr("x", 0).attr("y", 3).attr("width", 1).attr("height", 1);
-          break;
-        case 3005:
-          patt.attr("width", 8).attr("height", 8);
-          patt.append("svg:line").attr("x1", 0).attr("y1", 0).attr("x2", 8).attr("y2", 8);
-          break;
-        case 3006:
-          patt.attr("width", 4).attr("height", 4);
-          patt.append("svg:line").attr("x1", 1).attr("y1", 0).attr("x2", 1).attr("y2", 3);
-          break;
-        case 3007:
-          patt.attr("width", 4).attr("height", 4);
-          patt.append("svg:line").attr("x1", 0).attr("y1", 1).attr("x2", 3).attr("y2", 1);
-          break;
-        case 3010: // bricks
-          patt.attr("width", 10).attr("height", 10);
-          patt.append("svg:line").attr("x1", 0).attr("y1", 2).attr("x2", 10).attr("y2", 2);
-          patt.append("svg:line").attr("x1", 0).attr("y1", 7).attr("x2", 10).attr("y2", 7);
-          patt.append("svg:line").attr("x1", 2).attr("y1", 0).attr("x2", 2).attr("y2", 2);
-          patt.append("svg:line").attr("x1", 7).attr("y1", 2).attr("x2", 7).attr("y2", 7);
-          patt.append("svg:line").attr("x1", 2).attr("y1", 7).attr("x2", 2).attr("y2", 10);
-          break;
-        case 3021: // stairs
-        case 3022:
-          patt.attr("width", 10).attr("height", 10);
-          patt.append("svg:line").attr("x1", 0).attr("y1", 5).attr("x2", 5).attr("y2", 5);
-          patt.append("svg:line").attr("x1", 5).attr("y1", 5).attr("x2", 5).attr("y2", 0);
-          patt.append("svg:line").attr("x1", 5).attr("y1", 10).attr("x2", 10).attr("y2", 10);
-          patt.append("svg:line").attr("x1", 10).attr("y1", 10).attr("x2", 10).attr("y2", 5);
-          break;
-        default: /* == 3004 */
-          patt.attr("width", 8).attr("height", 8);
-          patt.append("svg:line").attr("x1", 8).attr("y1", 0).attr("x2", 0).attr("y2", 8);
-          break;
+         case 3001: w = h = 2; fills = "M0,0h1v1h-1zM1,1h1v1h-1z"; break;
+         case 3002: w = 4; h = 2; fills = "M1,0h1v1h-1zM3,1h1v1h-1z"; break;
+         case 3003: w = h = 4; fills = "M2,1h1v1h-1zM0,3h1v1h-1z"; break;
+         case 3004: w = h = 8; lines = "M8,0L0,8"; break;
+         case 3005: w = h = 8; lines = "M0,0L8,8"; break;
+         case 3006: w = h = 4; lines = "M1,0v4"; break;
+         case 3007: w = h = 4; lines = "M0,1h4"; break;
+         case 3008:
+            w = h = 10;
+            fills = "M0,3v-3h3ZM7,0h3v3ZM0,7v3h3ZM7,10h3v-3ZM5,2l3,3l-3,3l-3,-3Z";
+            lines = "M0,3l5,5M3,10l5,-5M10,7l-5,-5M7,0l-5,5";
+            break;
+         case 3009: w = 12; h = 12; lines = "M0,0A6,6,0,0,0,12,0M6,6A6,6,0,0,0,12,12M6,6A6,6,0,0,1,0,12"; lfill = "none"; break;
+         case 3010: w = h = 10; lines = "M0,2h10M0,7h10M2,0v2M7,2v5M2,7v3"; break; // bricks
+         case 3011: w = 9; h = 18; lines = "M5,0v8M2,1l6,6M8,1l-6,6M9,9v8M6,10l3,3l-3,3M0,9v8M3,10l-3,3l3,3"; lfill = "none"; break;
+         case 3012: w = 10; h = 20; lines = "M5,1A4,4,0,0,0,5,9A4,4,0,0,0,5,1M0,11A4,4,0,0,1,0,19M10,11A4,4,0,0,0,10,19"; lfill = "none"; break;
+         case 3013: w = h = 7; lines = "M0,0L7,7M7,0L0,7"; lfill = "none"; break;
+         case 3014: w = h = 16; lines = "M0,0h16v16h-16v-16M0,12h16M12,0v16M4,0v8M4,4h8M0,8h8M8,4v8"; lfill = "none"; break;
+         case 3015: w = 6; h = 12; lines = "M2,1A2,2,0,0,0,2,5A2,2,0,0,0,2,1M0,7A2,2,0,0,1,0,11M6,7A2,2,0,0,0,6,11"; lfill = "none"; break;
+         case 3016: w = 12; h = 7; lines = "M0,1A3,2,0,0,1,3,3A3,2,0,0,0,9,3A3,2,0,0,1,12,1"; lfill = "none"; break;
+         case 3017: w = h = 4; lines = "M3,1l-2,2"; break;
+         case 3018: w = h = 4; lines = "M1,1l2,2"; break;
+         case 3019:
+            w = h = 12;
+            lines = "M1,6A5,5,0,0,0,11,6A5,5,0,0,0,1,6h-1h1A5,5,0,0,1,6,11v1v-1" +
+                    "A5,5,0,0,1,11,6h1h-1A5,5,0,0,1,6,1v-1v1A5,5,0,0,1,1,6";
+            lfill = "none";
+            break;
+         case 3020: w = 7; h = 12; lines = "M1,0A2,3,0,0,0,3,3A2,3,0,0,1,3,9A2,3,0,0,0,1,12"; lfill = "none"; break;
+         case 3021: w = h = 8; lines = "M8,2h-2v4h-4v2M2,0v2h-2"; lfill = "none"; break; // left stairs
+         case 3022: w = h = 8; lines = "M0,2h2v4h4v2M6,0v2h2"; lfill = "none"; break; // right stairs
+         case 3023: w = h = 8; fills = "M4,0h4v4zM8,4v4h-4z"; fills2 = "M4,0L0,4L4,8L8,4Z"; break;
+         case 3024: w = h = 16; fills = "M0,8v8h2v-8zM8,0v8h2v-8M4,14v2h12v-2z"; fills2 = "M0,2h8v6h4v-6h4v12h-12v-6h-4z"; break;
+         case 3025: w = h = 18; fills = "M5,13v-8h8ZM18,0v18h-18l5,-5h8v-8Z"; break;
+         default:
+            var code = this.pattern % 1000,
+                k = code % 10, j = ((code - k) % 100) / 10, i = (code - j*10 - k)/100;
+            if (!i) break;
+
+            var sz = i*12;  // axis distance between lines
+
+            w = h = 6*sz; // we use at least 6 steps
+
+            function produce(dy,swap) {
+               var pos = [], step = sz, y1 = 0, y2, max = h;
+
+               // reduce step for smaller angles to keep normal distance approx same
+               if (Math.abs(dy)<3) step = Math.round(sz/12*9);
+               if (dy==0) { step = Math.round(sz/12*8); y1 = step/2; }
+               else if (dy>0) max -= step; else y1 = step;
+
+               while(y1<=max) {
+                  y2 = y1 + dy*step;
+                  if (y2 < 0) {
+                     var x2 = Math.round(y1/(y1-y2)*w);
+                     pos.push(0,y1,x2,0);
+                     pos.push(w,h-y1,w-x2,h);
+                  } else if (y2 > h) {
+                     var x2 = Math.round((h-y1)/(y2-y1)*w);
+                     pos.push(0,y1,x2,h);
+                     pos.push(w,h-y1,w-x2,0);
+                  } else {
+                     pos.push(0,y1,w,y2);
+                  }
+                  y1+=step;
+               }
+               for (var k=0;k<pos.length;k+=4)
+                  if (swap) lines += "M"+pos[k+1]+","+pos[k]+"L"+pos[k+3]+","+pos[k+2];
+                       else lines += "M"+pos[k]+","+pos[k+1]+"L"+pos[k+2]+","+pos[k+3];
+            }
+
+            switch (j) {
+               case 0: produce(0); break;
+               case 1: produce(1); break;
+               case 2: produce(2); break;
+               case 3: produce(3); break;
+               case 4: produce(6); break;
+               case 6: produce(3,true); break;
+               case 7: produce(2,true); break;
+               case 8: produce(1,true); break;
+               case 9: produce(0,true); break;
+            }
+
+            switch (k) {
+               case 0: if (j) produce(0); break;
+               case 1: produce(-1); break;
+               case 2: produce(-2); break;
+               case 3: produce(-3); break;
+               case 4: produce(-6); break;
+               case 6: produce(-3,true); break;
+               case 7: produce(-2,true); break;
+               case 8: produce(-1,true); break;
+               case 9: if (j!=9) produce(0,true); break;
+            }
+
+            break;
       }
 
-      patt.selectAll('line').style('stroke',line_color).style("stroke-width",1);
-      patt.selectAll('rect').style("fill",line_color);
+      if (!fills && !lines) return false;
+
+      var patt = defs.append('svg:pattern').attr("id",id).attr("class",id).attr("patternUnits","userSpaceOnUse")
+                     .attr("width", w).attr("height", h);
+
+      if (fills2) {
+         var col = d3.rgb(line_color);
+         col.r = Math.round((col.r+255)/2); col.g = Math.round((col.g+255)/2); col.b = Math.round((col.b+255)/2);
+         patt.append("svg:path").attr("d", fills2).style("fill", col);
+      }
+      if (fills) patt.append("svg:path").attr("d", fills).style("fill", line_color);
+      if (lines) patt.append("svg:path").attr("d", lines).style('stroke', line_color).style("stroke-width", 1).style("fill", lfill);
 
       return true;
    }
@@ -1216,6 +1285,322 @@
    }
 
    // ==============================================================================
+
+   function LongPollSocket(addr) {
+      this.path = addr;
+      this.connid = null;
+      this.req = null;
+
+      this.nextrequest("", "connect");
+   }
+
+   LongPollSocket.prototype.nextrequest = function(data, kind) {
+      var url = this.path, sync = "";
+      if (kind === "connect") {
+         url+="?connect";
+         this.connid = "connect";
+      } else
+         if (kind === "close") {
+            if ((this.connid===null) || (this.connid==="close")) return;
+            url+="?connection="+this.connid + "&close";
+            this.connid = "close";
+            if (JSROOT.browser.qt5) sync = ";sync"; // use sync mode to close qt5 webengine
+         } else
+            if ((this.connid===null) || (typeof this.connid!=='number')) {
+               return console.error("No connection");
+            } else {
+               url+="?connection="+this.connid;
+               if (kind==="dummy") url+="&dummy";
+            }
+
+      if (data) {
+         // special workaround to avoid POST request, which is not supported in WebEngine
+         var post = "&post=";
+         for (var k=0;k<data.length;++k) post+=data.charCodeAt(k).toString(16);
+         url += post;
+      }
+
+      var req = JSROOT.NewHttpRequest(url, "text" + sync, function(res) {
+         if (res===null) res = this.response; // workaround for WebEngine - it does not handle content correctly
+         if (this.handle.req === this) {
+            this.handle.req = null; // get response for existing dummy request
+            if (res == "<<nope>>") res = "";
+         }
+         this.handle.processreq(res);
+      });
+
+      req.handle = this;
+      if (kind==="dummy") this.req = req; // remember last dummy request, wait for reply
+      req.send();
+   }
+
+   LongPollSocket.prototype.processreq = function(res) {
+      if (res===null) {
+         if (typeof this.onerror === 'function') this.onerror("receive data with connid " + (this.connid || "---"));
+         // if (typeof this.onclose === 'function') this.onclose();
+         this.connid = null;
+         return;
+      }
+
+      if (this.connid==="connect") {
+         this.connid = parseInt(res);
+         console.log('Get new longpoll connection with id ' + this.connid);
+         if (typeof this.onopen == 'function') this.onopen();
+      } else if (this.connid==="close") {
+         if (typeof this.onclose == 'function') this.onclose();
+         return;
+      } else {
+         if ((typeof this.onmessage==='function') && res)
+            this.onmessage({ data: res });
+      }
+      if (!this.req) this.nextrequest("","dummy"); // send new poll request when necessary
+   }
+
+   LongPollSocket.prototype.send = function(str) {
+      this.nextrequest(str);
+   }
+
+   LongPollSocket.prototype.close = function() {
+      this.nextrequest("", "close");
+   }
+
+   function Cef3QuerySocket(addr) {
+      // make very similar to longpoll
+      // create persistent CEF requests which could be use from client application at eny time
+
+      if (!window || !('cefQuery' in window)) return null;
+
+      this.path = addr;
+      this.connid = null;
+      this.nextrequest("","connect");
+   }
+
+   Cef3QuerySocket.prototype.nextrequest = function(data, kind) {
+      var req = { request: "", persistent: false };
+      if (kind === "connect") {
+         req.request = "connect";
+         req.persistent = true; // this initial request will be used for all messages from the server
+         this.connid = "connect";
+      } else if (kind === "close") {
+         if ((this.connid===null) || (this.connid==="close")) return;
+         req.request = this.connid + '::close';
+         this.connid = "close";
+      } else if ((this.connid===null) || (typeof this.connid!=='number')) {
+         return console.error("No connection");
+      } else {
+         req.request = this.connid + '::post';
+         if (data) req.request += "::" + data;
+      }
+
+      if (!req.request) return console.error("No CEF request");
+
+      req.request = this.path + "::" + req.request; // URL always preceed any command
+
+      req.onSuccess = this.onSuccess.bind(this);
+      req.onFailure = this.onFailure.bind(this);
+
+      this.cefid = window.cefQuery(req); // equvalent to req.send
+
+      return this;
+   }
+
+   Cef3QuerySocket.prototype.onFailure = function(error_code, error_message) {
+      console.log("CEF_ERR: " + error_code);
+      if (typeof this.onerror === 'function') this.onerror("failure with connid " + (this.connid || "---"));
+      this.connid = null;
+   }
+
+   Cef3QuerySocket.prototype.onSuccess = function(response) {
+      if (!response) return; // normal situation when request does not send any reply
+
+      if (this.connid==="connect") {
+         this.connid = parseInt(response);
+         console.log('Get new CEF connection with id ' + this.connid);
+         if (typeof this.onopen == 'function') this.onopen();
+      } else if (this.connid==="close") {
+         if (typeof this.onclose == 'function') this.onclose();
+      } else {
+         if ((typeof this.onmessage==='function') && response)
+            this.onmessage({ data: response });
+      }
+   }
+
+   Cef3QuerySocket.prototype.send = function(str) {
+      this.nextrequest(str);
+   }
+
+   Cef3QuerySocket.prototype.close = function() {
+      this.nextrequest("", "close");
+      if (this.cefid) window.cefQueryCancel(this.cefid);
+      delete this.cefid;
+   }
+
+   // client communication handle for TWebWindow
+
+   function WebWindowHandle(socket_kind) {
+      if (socket_kind=='cefquery' && (!window || !('cefQuery' in window))) socket_kind = 'longpoll';
+
+      this.kind = socket_kind;
+      this.state = 0;
+      this.cansend = 10;
+      this.ackn = 10;
+   }
+
+   /// Set object which hanldes different socket callbacks like OnWebsocketMsg, OnWebsocketOpened, OnWebsocketClosed
+   WebWindowHandle.prototype.SetReceiver = function(obj) {
+      this.receiver = obj;
+   }
+
+   WebWindowHandle.prototype.Cleanup = function() {
+      delete this.receiver;
+      this.Close(true);
+   }
+
+   WebWindowHandle.prototype.Close = function(force) {
+      if (this.timerid) {
+         clearTimeout(this.timerid);
+         delete this.timerid;
+      }
+
+      if (this._websocket && this.state > 0) {
+         this.state = force ? -1 : 0; // -1 prevent socket from reopening
+         this._websocket.onclose = null; // hide normal handler
+         this._websocket.close();
+         delete this._websocket;
+      }
+   }
+
+   WebWindowHandle.prototype.Send = function(msg, chid) {
+      if (!this._websocket || (this.state<=0)) return false;
+
+      if (isNaN(chid) || (chid===undefined)) chid = 1; // when not configured, channel 1 is used - main widget
+
+      if (this.cansend <= 0) console.error('should be queued before sending');
+
+      var prefix = this.ackn + ":" + this.cansend + ":" + chid + ":";
+      this.ackn = 0;
+      this.cansend--; // decrease number of allowed sebd packets
+
+      this._websocket.send(prefix + msg);
+      if (this.kind === "websocket") {
+         if (this.timerid) clearTimeout(this.timerid);
+         this.timerid = setTimeout(this.KeepAlive.bind(this), 10000);
+      }
+      return true;
+   }
+
+   WebWindowHandle.prototype.KeepAlive = function() {
+      delete this.timerid;
+      this.Send("KEEPALIVE", 0);
+   }
+
+   WebWindowHandle.prototype.Connect = function(href) {
+      // create websocket for current object (canvas)
+      // via websocket one recieved many extra information
+
+      this.Close();
+
+      var pthis = this;
+
+      function retry_open(first_time) {
+
+         if (pthis.state != 0) return;
+
+         if (!first_time) console.log("try open websocket again");
+
+         if (pthis._websocket) pthis._websocket.close();
+         delete pthis._websocket;
+
+         var path = window.location.href, conn = null;
+
+         if (path && path.lastIndexOf("/")>0) path = path.substr(0, path.lastIndexOf("/")+1);
+         if (!href) href = path;
+
+         console.log('Opening web socket at ' + href);
+
+         if (pthis.kind == 'cefquery') {
+            if (href.indexOf("rootscheme://rootserver")==0) href = href.substr(23);
+            console.log('configure cefquery ' + href);
+            conn = new Cef3QuerySocket(href);
+         } else if ((pthis.kind !== 'longpoll') && first_time) {
+            href = href.replace("http://", "ws://").replace("https://", "wss://");
+            href += "root.websocket";
+            console.log('configure websocket ' + href);
+            conn = new WebSocket(href);
+         } else {
+            href += "root.longpoll";
+            console.log('configure longpoll ' + href);
+            conn = new LongPollSocket(href);
+         }
+
+         if (!conn) return;
+
+         pthis._websocket = conn;
+
+         conn.onopen = function() {
+            console.log('websocket initialized');
+            pthis.state = 1;
+            pthis.Send("READY", 0); // need to confirm connection
+            if (pthis.receiver && typeof pthis.receiver.OnWebsocketOpened == 'function')
+               pthis.receiver.OnWebsocketOpened(pthis);
+         }
+
+         conn.onmessage = function(e) {
+            var msg = e.data;
+            if (typeof msg != 'string') return console.log("unsupported message kind: " + (typeof msg));
+
+            var i1 = msg.indexOf(":"),
+                credit = parseInt(msg.substr(0,i1)),
+                i2 = msg.indexOf(":", i1+1),
+                cansend = parseInt(msg.substr(i1+1,i2-i1)),
+                i3 = msg.indexOf(":", i2+1),
+                chid = parseInt(msg.substr(i2+1,i3-i2));
+
+            // console.log('msg(20)', msg.substr(0,20), credit, cansend, chid, i3);
+
+            pthis.ackn++;            // count number of received packets,
+            pthis.cansend += credit; // how many packets client can send
+
+            msg = msg.substr(i3+1);
+
+            if (chid == 0) {
+               console.log('GET chid=0 message', msg);
+               if (msg == "CLOSE") {
+                  pthis.Close(true); // force closing of socket
+                  if (pthis.receiver && typeof pthis.receiver.OnWebsocketClosed == 'function')
+                     pthis.receiver.OnWebsocketClosed(pthis);
+               }
+            } else if (pthis.receiver && typeof pthis.receiver.OnWebsocketMsg == 'function')
+               pthis.receiver.OnWebsocketMsg(pthis, msg);
+
+            if (pthis.ackn > 7)
+               pthis.Send('READY', 0); // send dummy message to server
+         }
+
+         conn.onclose = function() {
+            delete pthis._websocket;
+            if (pthis.state > 0) {
+               console.log('websocket closed');
+               pthis.state = 0;
+               if (pthis.receiver && typeof pthis.receiver.OnWebsocketClosed == 'function')
+                  pthis.receiver.OnWebsocketClosed(pthis);
+            }
+         }
+
+         conn.onerror = function (err) {
+            console.log("err "+err);
+            if (pthis.receiver && typeof pthis.receiver.OnWebsocketError == 'function')
+               pthis.receiver.OnWebsocketError(pthis, err);
+         }
+
+         setTimeout(retry_open, 3000); // after 3 seconds try again
+
+      } // retry_open
+
+      retry_open(true); // call for the first time
+   }
+
+   // ========================================================================================
 
    function TBasePainter() {
       this.divid = null; // either id of element (preferable) or element itself
@@ -1527,7 +1912,7 @@
 
    TObjectPainter.prototype.Cleanup = function() {
       // generic method to cleanup painters
-      // first of all, remove object drawaing and in case of main painter - also main HTML components
+      // first of all, remove object drawing and in case of main painter - also main HTML components
 
       this.RemoveDrawG();
 
@@ -1564,9 +1949,10 @@
    }
 
    TObjectPainter.prototype.MatchObjectType = function(arg) {
-      if ((arg === undefined) || (arg === null) || (this.draw_object===null)) return false;
-      if (typeof arg === 'string') return this.draw_object._typename === arg;
-      return (typeof arg === 'object') && (this.draw_object._typename === arg._typename);
+      if (!arg || !this.draw_object) return false;
+      if (typeof arg === 'string') return (this.draw_object._typename === arg);
+      if (arg._typename) return (this.draw_object._typename === arg._typename);
+      return this.draw_object._typename.match(arg);
    }
 
    TObjectPainter.prototype.SetItemName = function(name, opt, hpainter) {
@@ -1780,12 +2166,14 @@
    }
 
    TObjectPainter.prototype.pad_width = function(pad_name) {
-      var res = this.svg_pad(pad_name).property("draw_width");
+      var res = this.svg_pad(pad_name);
+      res = res.empty() ? 0 : res.property("draw_width");
       return isNaN(res) ? 0 : res;
    }
 
    TObjectPainter.prototype.pad_height = function(pad_name) {
-      var res = this.svg_pad(pad_name).property("draw_height");
+      var res = this.svg_pad(pad_name);
+      res = res.empty() ? 0 : res.property("draw_height");
       return isNaN(res) ? 0 : res;
    }
 
@@ -1793,7 +2181,7 @@
       var res = this.svg_frame();
       if (res.empty()) return 0;
       res = res.property(name);
-      return (res===undefined) || isNaN(res) ? 0 : res;
+      return ((res===undefined) || isNaN(res)) ? 0 : res;
    }
 
    TObjectPainter.prototype.frame_x = function() {
@@ -2464,273 +2852,6 @@
          menu.addchk((Math.abs(value - val) < step/2), entry, val, set_func);
       }
       menu.add("endsub:");
-   }
-
-
-   var LongPollSocket = function(addr) {
-
-      this.path = addr;
-      this.connid = null;
-      this.req = null;
-
-      this.nextrequest = function(data, kind) {
-         var url = this.path, sync = "";
-         if (kind === "connect") {
-            url+="?connect";
-            this.connid = "connect";
-         } else
-         if (kind === "close") {
-            if ((this.connid===null) || (this.connid==="close")) return;
-            url+="?connection="+this.connid + "&close";
-            this.connid = "close";
-            if (JSROOT.browser.qt5) sync = ";sync"; // use sync mode to close qt5 webengine
-         } else
-         if ((this.connid===null) || (typeof this.connid!=='number')) {
-            return console.error("No connection");
-         } else {
-            url+="?connection="+this.connid;
-            if (kind==="dummy") url+="&dummy";
-         }
-
-         if (data) {
-            // special workaround to avoid POST request, which is not supported in WebEngine
-            var post = "&post=";
-            for (var k=0;k<data.length;++k) post+=data.charCodeAt(k).toString(16);
-            url += post;
-         }
-
-         var req = JSROOT.NewHttpRequest(url, "text" + sync, function(res) {
-            if (res===null) res = this.response; // workaround for WebEngine - it does not handle content correctly
-            if (this.handle.req === this) {
-               this.handle.req = null; // get response for existing dummy request
-               if (res == "<<nope>>") res = "";
-            }
-            this.handle.processreq(res);
-         });
-
-         req.handle = this;
-         if (kind==="dummy") this.req = req; // remember last dummy request, wait for reply
-         req.send();
-      }
-
-      this.processreq = function(res) {
-
-         if (res===null) {
-            if (typeof this.onerror === 'function') this.onerror("receive data with connid " + (this.connid || "---"));
-            // if (typeof this.onclose === 'function') this.onclose();
-            this.connid = null;
-            return;
-         }
-
-         if (this.connid==="connect") {
-            this.connid = parseInt(res);
-            console.log('Get new longpoll connection with id ' + this.connid);
-            if (typeof this.onopen == 'function') this.onopen();
-         } else
-         if (this.connid==="close") {
-            if (typeof this.onclose == 'function') this.onclose();
-            return;
-         } else {
-            if ((typeof this.onmessage==='function') && res)
-               this.onmessage({ data: res });
-         }
-         if (!this.req) this.nextrequest("","dummy"); // send new poll request when necessary
-      }
-
-      this.send = function(str) { this.nextrequest(str); }
-
-      this.close = function() { this.nextrequest("", "close"); }
-
-      this.nextrequest("", "connect");
-
-      return this;
-   }
-
-   var Cef3QuerySocket = function(addr) {
-      // make very similar to longpoll
-      // create persistent CEF requests which could be use from client application at eny time
-
-      if (!window || !('cefQuery' in window)) return null;
-
-      this.path = addr;
-      this.connid = null;
-
-      this.nextrequest = function(data, kind) {
-         var req = { request: "", persistent: false };
-         if (kind === "connect") {
-            req.request = "connect";
-            req.persistent = true; // this initial request will be used for all messages from the server
-            this.connid = "connect";
-         } else
-         if (kind === "close") {
-            if ((this.connid===null) || (this.connid==="close")) return;
-            req.request = this.connid + '::close';
-            this.connid = "close";
-         } else
-         if ((this.connid===null) || (typeof this.connid!=='number')) {
-            return console.error("No connection");
-         } else {
-            req.request = this.connid + '::post';
-            if (data) req.request += "::" + data;
-         }
-
-         if (!req.request) return console.error("No CEF request");
-
-         req.request = this.path + "::" + req.request; // URL always preceed any command
-
-         req.onSuccess = this.onSuccess.bind(this);
-         req.onFailure = this.onFailure.bind(this);
-
-         this.cefid = window.cefQuery(req); // equvalent to req.send
-
-         return this;
-      }
-
-      this.onFailure = function(error_code, error_message) {
-         console.log("CEF_ERR: " + error_code);
-         if (typeof this.onerror === 'function') this.onerror("failure with connid " + (this.connid || "---"));
-         this.connid = null;
-      };
-
-      this.onSuccess = function(response) {
-         if (!response) return; // normal situation when request does not send any reply
-
-         if (this.connid==="connect") {
-            this.connid = parseInt(response);
-            console.log('Get new CEF connection with id ' + this.connid);
-            if (typeof this.onopen == 'function') this.onopen();
-         } else
-         if (this.connid==="close") {
-            if (typeof this.onclose == 'function') this.onclose();
-         } else {
-            if ((typeof this.onmessage==='function') && response)
-               this.onmessage({ data: response });
-         }
-      }
-
-      this.send = function(str) { this.nextrequest(str); }
-
-      this.close = function() {
-         this.nextrequest("", "close");
-         if (this.cefid) window.cefQueryCancel(this.cefid);
-         delete this.cefid;
-      }
-
-      this.nextrequest("","connect");
-
-      return this;
-   }
-
-   TObjectPainter.prototype.SendWebsocket = function(msg) {
-      if (!this._websocket) return false;
-      this._websocket.send(msg);
-      if (this._websocket_kind !== "websocket") return true;
-      if (this._websocket_timer) clearTimeout(this._websocket_timer);
-      this._websocket_timer = setTimeout(this.KeepAliveWebsocket.bind(this), 10000);
-      return true;
-   }
-
-   TObjectPainter.prototype.KeepAliveWebsocket = function() {
-      delete this._websocket_timer;
-      this.SendWebsocket("KEEPALIVE");
-   }
-
-   TObjectPainter.prototype.CloseWebsocket = function(force) {
-      if (this._websocket && this._websocket_state > 0) {
-         this._websocket_state = force ? -1 : 0; // -1 prevent socket from reopening
-         this._websocket.onclose = null; // hide normal handler
-         this._websocket.close();
-         delete this._websocket;
-      }
-   }
-
-   TObjectPainter.prototype.OpenWebsocket = function(socket_kind) {
-      // create websocket for current object (canvas)
-      // via websocket one recieved many extra information
-
-      delete this._websocket;
-
-      if (socket_kind=='cefquery' && (!window || !('cefQuery' in window))) socket_kind = 'longpoll';
-
-      this._websocket_kind = socket_kind;
-      this._websocket_state = 0;
-
-      var pthis = this;
-
-      function retry_open(first_time) {
-
-         if (pthis._websocket_state != 0) return;
-
-         if (!first_time) console.log("try open websocket again");
-
-         if (pthis._websocket) pthis._websocket.close();
-         delete pthis._websocket;
-
-         var path = window.location.href, conn = null;
-
-         if (pthis._websocket_kind == 'cefquery') {
-            var pos = path.indexOf("draw.htm");
-            if (pos < 0) return;
-            path = path.substr(0,pos);
-
-            if (path.indexOf("rootscheme://rootserver")==0) path = path.substr(23);
-            console.log('configure cefquery ' + path);
-            conn = new Cef3QuerySocket(path);
-         } else if ((pthis._websocket_kind !== 'longpoll') && first_time) {
-            path = path.replace("http://", "ws://");
-            path = path.replace("https://", "wss://");
-            var pos = path.indexOf("draw.htm");
-            if (pos < 0) return;
-            path = path.substr(0,pos) + "root.websocket";
-            console.log('configure websocket ' + path);
-            conn = new WebSocket(path);
-         } else {
-            var pos = path.indexOf("draw.htm");
-            if (pos < 0) return;
-            path = path.substr(0,pos) + "root.longpoll";
-            console.log('configure longpoll ' + path);
-            conn = new LongPollSocket(path);
-         }
-
-         if (!conn) return;
-
-         pthis._websocket = conn;
-
-         conn.onopen = function() {
-            console.log('websocket initialized');
-            pthis._websocket_state = 1;
-            if (typeof pthis.OnWebsocketOpened == 'function')
-               pthis.OnWebsocketOpened(conn);
-         }
-
-         conn.onmessage = function (e) {
-            var msg = e.data;
-            if (typeof msg != 'string') return console.log("unsupported message kind: " + (typeof msg));
-
-            if (typeof pthis.OnWebsocketMsg == 'function')
-               pthis.OnWebsocketMsg(conn, msg);
-         }
-
-         conn.onclose = function() {
-            delete pthis._websocket;
-            if (pthis._websocket_state > 0) {
-               console.log('websocket closed');
-               pthis._websocket_state = 0;
-               if (typeof pthis.OnWebsocketClosed == 'function')
-                  pthis.OnWebsocketClosed();
-            }
-         }
-
-         conn.onerror = function (err) {
-            console.log("err "+err);
-            // conn.close();
-         }
-
-         setTimeout(retry_open, 3000); // after 3 seconds try again
-
-      } // retry_open
-
-      retry_open(true); // call for the first time
    }
 
    TObjectPainter.prototype.ExecuteMenuCommand = function(method) {
@@ -4130,16 +4251,317 @@
 
    // ===========================================================
 
-   function TFramePainter(tframe) {
-      TObjectPainter.call(this, tframe);
+   function TooltipHandler(obj) {
+      JSROOT.TObjectPainter.call(this, obj);
       this.tooltip_enabled = true;  // this is internally used flag to temporary disbale/enable tooltib
       this.tooltip_allowed = (JSROOT.gStyle.Tooltip > 0); // this is interactively changed property
    }
 
-   TFramePainter.prototype = Object.create(TObjectPainter.prototype);
+   TooltipHandler.prototype = Object.create(TObjectPainter.prototype);
+
+   TooltipHandler.prototype.hints_layer = function() {
+      // return layer where frame tooltips are shown
+      // only canvas info_layer can be used while other pads can overlay
+
+      var canp = this.pad_painter();
+      return canp ? canp.svg_layer("info_layer") : d3.select(null);
+   }
+
+   TooltipHandler.prototype.IsTooltipShown = function() {
+      // return true if tooltip is shown, use to prevent some other action
+      if (!this.tooltip_allowed || !this.tooltip_enabled) return false;
+      return ! (this.hints_layer().select(".objects_hints").empty());
+   }
+
+   TooltipHandler.prototype.ProcessTooltipEvent = function(pnt, enabled) {
+      // make central function which let show selected hints for the object
+
+      if (enabled !== undefined) this.tooltip_enabled = enabled;
+
+      var hints = [], nhints = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false,
+          textheight = 11, hmargin = 3, wmargin = 3, hstep = 1.2,
+          frame_rect = this.GetFrameRect(),
+          pad_width = this.pad_width(),
+          pp = this.pad_painter(true),
+          font = JSROOT.Painter.getFontDetails(160, textheight),
+          status_func = this.GetShowStatusFunc(),
+          disable_tootlips = !this.tooltip_allowed || !this.tooltip_enabled;
+
+      if ((pnt === undefined) || (disable_tootlips && !status_func)) pnt = null;
+      if (pnt && disable_tootlips) pnt.disabled = true; // indicate that highlighting is not required
+
+      // collect tooltips from pad painter - it has list of all drawn objects
+      if (pp) hints = pp.GetTooltips(pnt);
+
+      if (pnt && pnt.touch) textheight = 15;
+
+      for (var n=0; n < hints.length; ++n) {
+         var hint = hints[n];
+         if (!hint) continue;
+         if (!hint.lines || (hint.lines.length===0)) {
+            hints[n] = null; continue;
+         }
+
+         // check if fully duplicated hint already exists
+         for (var k=0;k<n;++k) {
+            var hprev = hints[k], diff = false;
+            if (!hprev || (hprev.lines.length !== hint.lines.length)) continue;
+            for (var l=0;l<hint.lines.length && !diff;++l)
+               if (hprev.lines[l] !== hint.lines[l]) diff = true;
+            if (!diff) { hints[n] = null; break; }
+         }
+         if (!hints[n]) continue;
+
+         nhints++;
+
+         for (var l=0;l<hint.lines.length;++l)
+            maxlen = Math.max(maxlen, hint.lines[l].length);
+
+         hint.height = Math.round(hint.lines.length*textheight*hstep + 2*hmargin - textheight*(hstep-1));
+
+         if ((hint.color1!==undefined) && (hint.color1!=='none')) {
+            if ((lastcolor1!==0) && (lastcolor1 !== hint.color1)) usecolor1 = true;
+            lastcolor1 = hint.color1;
+         }
+      }
+
+      var layer = this.hints_layer(),
+          hintsg = layer.select(".objects_hints"); // group with all tooltips
+
+      if (status_func) {
+         var title = "", name = "", coordinates = "", info = "";
+         if (pnt) coordinates = Math.round(pnt.x)+","+Math.round(pnt.y);
+         var hint = null, best_dist2 = 1e10, best_hint = null;
+         // try to select hint with exact match of the position when several hints available
+         if (hints && hints.length>0)
+            for (var k=0;k<hints.length;++k) {
+               if (!hints[k]) continue;
+               if (!hint) hint = hints[k];
+               if (hints[k].exact && (!hint || !hint.exact)) { hint = hints[k]; break; }
+
+               if (!pnt || (hints[k].x===undefined) || (hints[k].y===undefined)) continue;
+
+               var dist2 = (pnt.x-hints[k].x)*(pnt.x-hints[k].x) + (pnt.y-hints[k].y)*(pnt.y-hints[k].y);
+               if (dist2<best_dist2) { best_dist2 = dist2; best_hint = hints[k]; }
+            }
+
+         if ((!hint || !hint.exact) && (best_dist2 < 400)) hint = best_hint;
+
+         if (hint) {
+            name = (hint.lines && hint.lines.length>1) ? hint.lines[0] : hint.name;
+            title = hint.title || "";
+            info = hint.line;
+            if (!info && hint.lines) info = hint.lines.slice(1).join(' ');
+         }
+
+         status_func(name, title, info, coordinates);
+      }
+
+      // end of closing tooltips
+      if (!pnt || disable_tootlips || (hints.length===0) || (maxlen===0) || (nhints > 15)) {
+         hintsg.remove();
+         return;
+      }
+
+      // we need to set pointer-events=none for all elements while hints
+      // placed in front of so-called interactive rect in frame, used to catch mouse events
+
+      if (hintsg.empty())
+         hintsg = layer.append("svg:g")
+                       .attr("class", "objects_hints")
+                       .style("pointer-events","none");
+
+      var frame_shift = { x: 0, y: 0 }, trans = frame_rect.transform || "";
+      if (!pp.iscan) {
+         pp.CalcAbsolutePosition(this.svg_pad(), frame_shift);
+         trans = "translate(" + frame_shift.x + "," + frame_shift.y + ") " + trans;
+      }
+
+      // copy transform attributes from frame itself
+      hintsg.attr("transform", trans);
+
+      hintsg.property("last_point", pnt);
+
+      var viewmode = hintsg.property('viewmode') || "",
+          actualw = 0, posx = pnt.x + frame_rect.hint_delta_x;
+
+      if (nhints > 1) {
+         // if there are many hints, place them left or right
+
+         var bleft = 0.5, bright = 0.5;
+
+         if (viewmode=="left") bright = 0.7; else
+         if (viewmode=="right") bleft = 0.3;
+
+         if (posx <= bleft*frame_rect.width) {
+            viewmode = "left";
+            posx = 20;
+         } else if (posx >= bright*frame_rect.width) {
+            viewmode = "right";
+            posx = frame_rect.width - 60;
+         } else {
+            posx = hintsg.property('startx');
+         }
+      } else {
+         viewmode = "single";
+         posx += 15;
+      }
+
+      if (viewmode !== hintsg.property('viewmode')) {
+         hintsg.property('viewmode', viewmode);
+         hintsg.selectAll("*").remove();
+      }
+
+      var curry = 10, // normal y coordinate
+          gapy = 10,  // y coordinate, taking into account all gaps
+          gapminx = -1111, gapmaxx = -1111,
+          minhinty = -frame_shift.y,
+          maxhinty = this.pad_height("") - frame_rect.y - frame_shift.y;
+
+      function FindPosInGap(y) {
+         for (var n=0;(n<hints.length) && (y < maxhinty); ++n) {
+            var hint = hints[n];
+            if (!hint) continue;
+            if ((hint.y>=y-5) && (hint.y <= y+hint.height+5)) {
+               y = hint.y+10;
+               n = -1;
+            }
+         }
+         return y;
+      }
+
+      for (var n=0; n < hints.length; ++n) {
+         var hint = hints[n],
+             group = hintsg.select(".painter_hint_"+n);
+         if (hint===null) {
+            group.remove();
+            continue;
+         }
+
+         var was_empty = group.empty(), dx = 0, dy = 0;
+
+         if (was_empty)
+            group = hintsg.append("svg:svg")
+                          .attr("class", "painter_hint_"+n)
+                          .attr('opacity', 0) // use attribute, not style to make animation with d3.transition()
+                          .style('overflow','hidden')
+                          .style("pointer-events","none");
+
+         if (viewmode == "single") {
+            curry = pnt.touch ? (pnt.y - hint.height - 5) : Math.min(pnt.y + 15, maxhinty - hint.height - 3) + frame_rect.hint_delta_y;
+         } else {
+            gapy = FindPosInGap(gapy);
+            if ((gapminx === -1111) && (gapmaxx === -1111)) gapminx = gapmaxx = hint.x;
+            gapminx = Math.min(gapminx, hint.x);
+            gapmaxx = Math.min(gapmaxx, hint.x);
+         }
+
+         group.attr("x", posx)
+              .attr("y", curry)
+              .property("curry", curry)
+              .property("gapy", gapy);
+
+         curry += hint.height + 5;
+         gapy += hint.height + 5;
+
+         if (!was_empty)
+            group.selectAll("*").remove();
+
+         group.attr("width", 60)
+              .attr("height", hint.height);
+
+         var r = group.append("rect")
+                      .attr("x",0)
+                      .attr("y",0)
+                      .attr("width", 60)
+                      .attr("height", hint.height)
+                      .attr("fill","lightgrey")
+                      .style("pointer-events","none");
+
+         if (nhints > 1) {
+            var col = usecolor1 ? hint.color1 : hint.color2;
+            if ((col !== undefined) && (col!=='none'))
+               r.attr("stroke", col).attr("stroke-width", hint.exact ? 3 : 1);
+         }
+
+         if (hint.lines != null) {
+            for (var l=0;l<hint.lines.length;l++)
+               if (hint.lines[l]!==null) {
+                  var txt = group.append("svg:text")
+                                 .attr("text-anchor", "start")
+                                 .attr("x", wmargin)
+                                 .attr("y", hmargin + l*textheight*hstep)
+                                 .attr("dy", ".8em")
+                                 .attr("fill","black")
+                                 .style("pointer-events","none")
+                                 .call(font.func)
+                                 .text(hint.lines[l]);
+
+                  var box = this.GetBoundarySizes(txt.node());
+
+                  actualw = Math.max(actualw, box.width);
+               }
+         }
+
+         function translateFn() {
+            // We only use 'd', but list d,i,a as params just to show can have them as params.
+            // Code only really uses d and t.
+            return function(d, i, a) {
+               return function(t) {
+                  return t < 0.8 ? "0" : (t-0.8)*5;
+               };
+            };
+         }
+
+         if (was_empty)
+            if (JSROOT.gStyle.TooltipAnimation > 0)
+               group.transition().duration(JSROOT.gStyle.TooltipAnimation).attrTween("opacity", translateFn());
+            else
+               group.attr('opacity',1);
+      }
+
+      actualw += 2*wmargin;
+
+      var svgs = hintsg.selectAll("svg");
+
+      if ((viewmode == "right") && (posx + actualw > frame_rect.width - 20)) {
+         posx = frame_rect.width - actualw - 20;
+         svgs.attr("x", posx);
+      }
+
+      if ((viewmode == "single") && (posx + actualw > pad_width - frame_rect.x) && (posx > actualw+20)) {
+         posx -= (actualw + 20);
+         svgs.attr("x", posx);
+      }
+
+      // if gap not very big, apply gapy coordinate to open view on the histogram
+      if ((viewmode !== "single") && (gapy < maxhinty) && (gapy !== curry)) {
+         if ((gapminx <= posx+actualw+5) && (gapmaxx >= posx-5))
+            svgs.attr("y", function() { return d3.select(this).property('gapy'); });
+      } else if ((viewmode !== 'single') && (curry > maxhinty)) {
+         var shift = Math.max((maxhinty - curry - 10), minhinty);
+         if (shift<0)
+            svgs.attr("y", function() { return d3.select(this).property('curry') + shift; });
+      }
+
+      if (actualw > 10)
+         svgs.attr("width",actualw)
+             .select('rect').attr("width", actualw);
+
+      hintsg.property('startx', posx);
+   }
+
+   // ===============================================
+
+
+   function TFramePainter(tframe) {
+      TooltipHandler.call(this, tframe);
+   }
+
+   TFramePainter.prototype = Object.create(TooltipHandler.prototype);
 
    TFramePainter.prototype.GetTipName = function(append) {
-      var res = TObjectPainter.prototype.GetTipName.call(this) || "TFrame";
+      var res = TooltipHandler.prototype.GetTipName.call(this) || "TFrame";
       if (append) res+=append;
       return res;
    }
@@ -4220,7 +4642,7 @@
                     .property('interactive_set', null);
       }
       this.draw_g = null;
-      TObjectPainter.prototype.Cleanup.call(this);
+      TooltipHandler.prototype.Cleanup.call(this);
    }
 
    TFramePainter.prototype.Redraw = function() {
@@ -4406,305 +4828,18 @@
       return true;
    }
 
-   JSROOT.saveSvgAsPng = function(el, options, call_back) {
-      JSROOT.AssertPrerequisites("savepng", function() {
-         JSROOT.saveSvgAsPng(el, options, call_back);
-      });
-   }
+   TFramePainter.prototype.GetFrameRect = function() {
+      // returns frame rectangle plus extra info for hint display
 
-   TFramePainter.prototype.hints_layer = function() {
-      // return layer where frame tooltips are shown
-      // only canvas info_layer can be used while other pads can overlay
-
-      var canp = this.pad_painter();
-      return canp ? canp.svg_layer("info_layer") : d3.select(null);
-   }
-
-   TFramePainter.prototype.IsTooltipShown = function() {
-      // return true if tooltip is shown, use to prevent some other action
-      if (!this.tooltip_allowed || !this.tooltip_enabled) return false;
-      return ! (this.hints_layer().select(".objects_hints").empty());
-   }
-
-   TFramePainter.prototype.ProcessTooltipEvent = function(pnt, enabled) {
-
-      if (enabled !== undefined) this.tooltip_enabled = enabled;
-
-      var hints = [], nhints = 0, maxlen = 0, lastcolor1 = 0, usecolor1 = false,
-          textheight = 11, hmargin = 3, wmargin = 3, hstep = 1.2,
-          height = this.frame_height(),
-          width = this.frame_width(),
-          pad_width = this.pad_width(),
-          frame_x = this.frame_x(),
-          pp = this.pad_painter(true),
-          font = JSROOT.Painter.getFontDetails(160, textheight),
-          status_func = this.GetShowStatusFunc(),
-          disable_tootlips = !this.tooltip_allowed || !this.tooltip_enabled;
-
-      if ((pnt === undefined) || (disable_tootlips && !status_func)) pnt = null;
-      if (pnt && disable_tootlips) pnt.disabled = true; // indicate that highlighting is not required
-
-      // collect tooltips from pad painter - it has list of all drawn objects
-      if (pp) hints = pp.GetTooltips(pnt);
-
-      if (pnt && pnt.touch) textheight = 15;
-
-      for (var n=0; n < hints.length; ++n) {
-         var hint = hints[n];
-         if (!hint) continue;
-         if (!hint.lines || (hint.lines.length===0)) {
-            hints[n] = null; continue;
-         }
-
-         // check if fully duplicated hint already exists
-         for (var k=0;k<n;++k) {
-            var hprev = hints[k], diff = false;
-            if (!hprev || (hprev.lines.length !== hint.lines.length)) continue;
-            for (var l=0;l<hint.lines.length && !diff;++l)
-               if (hprev.lines[l] !== hint.lines[l]) diff = true;
-            if (!diff) { hints[n] = null; break; }
-         }
-         if (!hints[n]) continue;
-
-         nhints++;
-
-         for (var l=0;l<hint.lines.length;++l)
-            maxlen = Math.max(maxlen, hint.lines[l].length);
-
-         hint.height = Math.round(hint.lines.length*textheight*hstep + 2*hmargin - textheight*(hstep-1));
-
-         if ((hint.color1!==undefined) && (hint.color1!=='none')) {
-            if ((lastcolor1!==0) && (lastcolor1 !== hint.color1)) usecolor1 = true;
-            lastcolor1 = hint.color1;
-         }
+      return {
+         x: this.frame_x(),
+         y: this.frame_y(),
+         width: this.frame_width(),
+         height: this.frame_height(),
+         transform: this.draw_g ? this.draw_g.attr("transform") : "",
+         hint_delta_x: 0,
+         hint_delta_y: 0
       }
-
-      var layer = this.hints_layer(),
-          hintsg = layer.select(".objects_hints"); // group with all tooltips
-
-      if (status_func) {
-         var title = "", name = "", coordinates = "", info = "";
-         if (pnt) coordinates = Math.round(pnt.x)+","+Math.round(pnt.y);
-         var hint = null, best_dist2 = 1e10, best_hint = null;
-         // try to select hint with exact match of the position when several hints available
-         if (hints && hints.length>0)
-            for (var k=0;k<hints.length;++k) {
-               if (!hints[k]) continue;
-               if (!hint) hint = hints[k];
-               if (hints[k].exact && (!hint || !hint.exact)) { hint = hints[k]; break; }
-
-               if (!pnt || (hints[k].x===undefined) || (hints[k].y===undefined)) continue;
-
-               var dist2 = (pnt.x-hints[k].x)*(pnt.x-hints[k].x) + (pnt.y-hints[k].y)*(pnt.y-hints[k].y);
-               if (dist2<best_dist2) { best_dist2 = dist2; best_hint = hints[k]; }
-            }
-
-         if ((!hint || !hint.exact) && (best_dist2 < 400)) hint = best_hint;
-
-         if (hint) {
-            name = (hint.lines && hint.lines.length>1) ? hint.lines[0] : hint.name;
-            title = hint.title || "";
-            info = hint.line;
-            if (!info && hint.lines) info = hint.lines.slice(1).join(' ');
-         }
-
-         status_func(name, title, info, coordinates);
-      }
-
-      // end of closing tooltips
-      if (!pnt || disable_tootlips || (hints.length===0) || (maxlen===0) || (nhints > 15)) {
-         hintsg.remove();
-         return;
-      }
-
-      // we need to set pointer-events=none for all elements while hints
-      // placed in front of so-called interactive rect in frame, used to catch mouse events
-
-      if (hintsg.empty())
-         hintsg = layer.append("svg:g")
-                       .attr("class", "objects_hints")
-                       .style("pointer-events","none");
-
-      var frame_shift = { x: 0, y: 0 }, trans = this.draw_g.attr("transform");
-      if (!pp.iscan) {
-         pp.CalcAbsolutePosition(this.svg_pad(), frame_shift);
-         trans = "translate(" + frame_shift.x + "," + frame_shift.y + ") " + trans;
-      }
-
-      // copy transform attributes from frame itself
-      hintsg.attr("transform", trans);
-
-      hintsg.property("last_point", pnt);
-
-      var viewmode = hintsg.property('viewmode');
-      if (viewmode === undefined) viewmode = "";
-
-      var actualw = 0, posx = pnt.x + 15;
-
-      if (nhints > 1) {
-         // if there are many hints, place them left or right
-
-         var bleft = 0.5, bright = 0.5;
-
-         if (viewmode=="left") bright = 0.7; else
-         if (viewmode=="right") bleft = 0.3;
-
-         if (pnt.x <= bleft*width) {
-            viewmode = "left";
-            posx = 20;
-         } else
-         if (pnt.x >= bright*width) {
-            viewmode = "right";
-            posx = width - 60;
-         } else {
-            posx = hintsg.property('startx');
-         }
-      } else {
-         viewmode = "single";
-      }
-
-      if (viewmode !== hintsg.property('viewmode')) {
-         hintsg.property('viewmode', viewmode);
-         hintsg.selectAll("*").remove();
-      }
-
-      var curry = 10, // normal y coordinate
-          gapy = 10,  // y coordinate, taking into account all gaps
-          gapminx = -1111, gapmaxx = -1111,
-          minhinty = -frame_shift.y,
-          maxhinty = this.pad_height("") - this.draw_g.property('draw_y') - frame_shift.y;
-
-      function FindPosInGap(y) {
-         for (var n=0;(n<hints.length) && (y < maxhinty); ++n) {
-            var hint = hints[n];
-            if (!hint) continue;
-            if ((hint.y>=y-5) && (hint.y <= y+hint.height+5)) {
-               y = hint.y+10;
-               n = -1;
-            }
-         }
-         return y;
-      }
-
-      for (var n=0; n < hints.length; ++n) {
-         var hint = hints[n],
-             group = hintsg.select(".painter_hint_"+n);
-         if (hint===null) {
-            group.remove();
-            continue;
-         }
-
-         var was_empty = group.empty();
-
-         if (was_empty)
-            group = hintsg.append("svg:svg")
-                          .attr("class", "painter_hint_"+n)
-                          .attr('opacity',0) // use attribute, not style to make animation with d3.transition()
-                          .style('overflow','hidden').style("pointer-events","none");
-
-         if (viewmode == "single") {
-            curry = pnt.touch ? (pnt.y - hint.height - 5) : Math.min(pnt.y + 15, maxhinty - hint.height - 3);
-         } else {
-            gapy = FindPosInGap(gapy);
-            if ((gapminx === -1111) && (gapmaxx === -1111)) gapminx = gapmaxx = hint.x;
-            gapminx = Math.min(gapminx, hint.x);
-            gapmaxx = Math.min(gapmaxx, hint.x);
-         }
-
-         group.attr("x", posx)
-              .attr("y", curry)
-              .property("curry", curry)
-              .property("gapy", gapy);
-
-         curry += hint.height + 5;
-         gapy += hint.height + 5;
-
-         if (!was_empty)
-            group.selectAll("*").remove();
-
-         group.attr("width", 60)
-              .attr("height", hint.height);
-
-         var r = group.append("rect")
-                      .attr("x",0)
-                      .attr("y",0)
-                      .attr("width", 60)
-                      .attr("height", hint.height)
-                      .attr("fill","lightgrey")
-                      .style("pointer-events","none");
-
-         if (nhints > 1) {
-            var col = usecolor1 ? hint.color1 : hint.color2;
-            if ((col !== undefined) && (col!=='none'))
-               r.attr("stroke", col).attr("stroke-width", hint.exact ? 3 : 1);
-         }
-
-         if (hint.lines != null) {
-            for (var l=0;l<hint.lines.length;l++)
-               if (hint.lines[l]!==null) {
-                  var txt = group.append("svg:text")
-                                 .attr("text-anchor", "start")
-                                 .attr("x", wmargin)
-                                 .attr("y", hmargin + l*textheight*hstep)
-                                 .attr("dy", ".8em")
-                                 .attr("fill","black")
-                                 .style("pointer-events","none")
-                                 .call(font.func)
-                                 .text(hint.lines[l]);
-
-                  var box = this.GetBoundarySizes(txt.node());
-
-                  actualw = Math.max(actualw, box.width);
-               }
-         }
-
-         function translateFn() {
-            // We only use 'd', but list d,i,a as params just to show can have them as params.
-            // Code only really uses d and t.
-            return function(d, i, a) {
-               return function(t) {
-                  return t < 0.8 ? "0" : (t-0.8)*5;
-               };
-            };
-         }
-
-         if (was_empty)
-            if (JSROOT.gStyle.TooltipAnimation > 0)
-               group.transition().duration(JSROOT.gStyle.TooltipAnimation).attrTween("opacity", translateFn());
-            else
-               group.attr('opacity',1);
-      }
-
-      actualw += 2*wmargin;
-
-      var svgs = hintsg.selectAll("svg");
-
-      if ((viewmode == "right") && (posx + actualw > width - 20)) {
-         posx = width - actualw - 20;
-         svgs.attr("x", posx);
-      }
-
-      if ((viewmode == "single") && (posx + actualw > pad_width - frame_x) && (posx > actualw+20)) {
-         posx -= (actualw + 20);
-         svgs.attr("x", posx);
-      }
-
-
-      // if gap not very big, apply gapy coordinate to open view on the histogram
-      if ((viewmode !== "single") && (gapy < maxhinty) && (gapy !== curry)) {
-         if ((gapminx <= posx+actualw+5) && (gapmaxx >= posx-5))
-            svgs.attr("y", function() { return d3.select(this).property('gapy'); });
-      } else if ((viewmode !== 'single') && (curry > maxhinty)) {
-         var shift = Math.max((maxhinty - curry - 10), minhinty);
-         if (shift<0)
-            svgs.attr("y", function() { return d3.select(this).property('curry') + shift; });
-      }
-
-      if (actualw > 10)
-         svgs.attr("width", actualw)
-             .select('rect').attr("width", actualw);
-
-      hintsg.property('startx', posx);
    }
 
    TFramePainter.prototype.ProcessFrameClick = function(pnt) {
@@ -4995,7 +5130,7 @@
          btns = this.svg_layer("btns_layer", this.this_pad_name);
       } else {
          svg_pad = svg_can.select(".primitives_layer")
-             .append("g")
+             .append("svg:svg") // here was g before, svg used to blend all drawin outside
              .attr("class", "root_pad")
              .attr("pad", this.this_pad_name) // set extra attribute  to mark pad name
              .property('pad_painter', this) // this is custom property
@@ -5022,8 +5157,15 @@
          if (this.pad.fBorderMode == 0) this.lineatt.color = 'none';
       }
 
-      svg_pad.attr("transform", "translate(" + x + "," + y + ")")
+      svg_pad
+              //.attr("transform", "translate(" + x + "," + y + ")") // is not handled for SVG
              .attr("display", pad_visible ? null : "none")
+             .attr("viewBox", "0 0 " + w + " " + h) // due to svg
+             .attr("preserveAspectRatio", "none")   // due to svg, we do not preserve relative ratio
+             .attr("x", x)    // due to svg
+             .attr("y", y)   // due to svg
+             .attr("width", w)    // due to svg
+             .attr("height", h)   // due to svg
              .property('draw_x', x) // this is to make similar with canvas
              .property('draw_y', y)
              .property('draw_width', w)
@@ -5725,7 +5867,6 @@
        return svg;
    }
 
-
    TPadPainter.prototype.SaveAsPng = function(full_canvas, filename) {
       if (!filename) {
          filename = this.this_pad_name;
@@ -6054,6 +6195,7 @@
    function TCanvasPainter(canvas) {
       // used for online canvas painter
       TPadPainter.call(this, canvas, true);
+      this._websocket = null;
    }
 
    TCanvasPainter.prototype = Object.create(TPadPainter.prototype);
@@ -6189,16 +6331,40 @@
       this.CloseWebsocket(true);
    }
 
-   TCanvasPainter.prototype.OnWebsocketOpened = function(conn) {
-      // indicate that we are ready to recieve any following commands
-      this.SendWebsocket('READY');
+   TCanvasPainter.prototype.SendWebsocket = function(msg, chid) {
+      if (this._websocket)
+         this._websocket.Send(msg, chid);
    }
 
-   TCanvasPainter.prototype.OnWebsocketClosed = function() {
+   TCanvasPainter.prototype.CloseWebsocket = function(force) {
+      if (this._websocket) {
+         this._websocket.Close(force);
+         this._websocket.Cleanup();
+         delete this._websocket;
+      }
+   }
+
+   TCanvasPainter.prototype.OpenWebsocket = function(socket_kind) {
+      // create websocket for current object (canvas)
+      // via websocket one recieved many extra information
+
+      this.CloseWebsocket();
+
+      this._websocket = new JSROOT.WebWindowHandle(socket_kind);
+      this._websocket.SetReceiver(this);
+      this._websocket.Connect();
+   }
+
+   TCanvasPainter.prototype.OnWebsocketOpened = function(handle) {
+      // indicate that we are ready to recieve any following commands
+   }
+
+   TCanvasPainter.prototype.OnWebsocketClosed = function(handle) {
       if (window) window.close(); // close window when socket disapper
    }
 
-   TCanvasPainter.prototype.OnWebsocketMsg = function(conn, msg) {
+   TCanvasPainter.prototype.OnWebsocketMsg = function(handle, msg) {
+
       if (msg == "CLOSE") {
          this.OnWebsocketClosed();
          this.CloseWebsocket(true);
@@ -6206,10 +6372,9 @@
          msg = msg.substr(5);
          var p1 = msg.indexOf(":"),
              snapid = msg.substr(0,p1),
-             snap = JSROOT.parse(msg.substr(p1+1)),
-             pthis = this;
+             snap = JSROOT.parse(msg.substr(p1+1));
          this.RedrawPadSnap(snap, function() {
-            conn.send("SNAPDONE:" + snapid); // send ready message back when drawing completed
+            handle.Send("SNAPDONE:" + snapid); // send ready message back when drawing completed
          });
       } else if (msg.substr(0,6)=='SNAP6:') {
          // This is snapshot, produced with ROOT6, handled slighly different
@@ -6231,14 +6396,13 @@
             var ranges = pthis.GetAllRanges();
             if (ranges) ranges = ":" + ranges;
             // if (ranges) console.log("ranges: " + ranges);
-            conn.send("RREADY:" + snapid + ranges); // send ready message back when drawing completed
+            handle.Send("RREADY:" + snapid + ranges); // send ready message back when drawing completed
          });
 
       } else if (msg.substr(0,4)=='JSON') {
          var obj = JSROOT.parse(msg.substr(4));
          // console.log("get JSON ", msg.length-4, obj._typename);
          this.RedrawObject(obj);
-         conn.send('READY'); // send ready message back
 
       } else if (msg.substr(0,5)=='MENU:') {
          // this is menu with exact identifier for object
@@ -6247,7 +6411,6 @@
              menuid = msg.substr(0,p1),
              lst = JSROOT.parse(msg.substr(p1+1));
          // console.log("get MENUS ", typeof lst, 'nitems', lst.length, msg.length-4);
-         conn.send('READY'); // send ready message back
          if (typeof this._getmenu_callback == 'function')
             this._getmenu_callback(lst, menuid);
       } else if (msg.substr(0,4)=='CMD:') {
@@ -6258,19 +6421,17 @@
              reply = "REPLY:" + cmdid + ":";
          if ((cmd == "SVG") || (cmd == "PNG") || (cmd == "JPEG")) {
             this.CreateImage(cmd.toLowerCase(), function(res) {
-               conn.send(reply + res);
+               handle.Send(reply + res);
             });
          } else {
             console.log('Unrecognized command ' + cmd);
-            conn.send(reply);
+            handle.Send(reply);
          }
       } else if ((msg.substr(0,7)=='DXPROJ:') || (msg.substr(0,7)=='DYPROJ:')) {
          var kind = msg[1],
              hist = JSROOT.parse(msg.substr(7));
-         conn.send('READY'); // special message, confirm that sending is ready
          this.DrawProjection(kind, hist);
       } else if (msg.substr(0,5)=='SHOW:') {
-         conn.send('READY'); // confirm that sending is ready
          var that = msg.substr(5),
              on = that[that.length-1] == '1';
          this.ShowSection(that.substr(0,that.length-2), on);
@@ -6464,8 +6625,10 @@
    JSROOT.addDrawFunc({ name: "TSlider", icon: "img_canvas", func: JSROOT.Painter.drawPad });
    JSROOT.addDrawFunc({ name: "TFrame", icon: "img_frame", func: JSROOT.Painter.drawFrame });
    JSROOT.addDrawFunc({ name: "TPaveText", icon: "img_pavetext", prereq: "hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TPavesText", icon: "img_pavetext", prereq: "hist", func: "JSROOT.Painter.drawPave" });
    JSROOT.addDrawFunc({ name: "TPaveStats", icon: "img_pavetext", prereq: "hist", func: "JSROOT.Painter.drawPave" });
    JSROOT.addDrawFunc({ name: "TPaveLabel", icon: "img_pavelabel", prereq: "hist", func: "JSROOT.Painter.drawPave" });
+   JSROOT.addDrawFunc({ name: "TDiamond", icon: "img_pavelabel", prereq: "hist", func: "JSROOT.Painter.drawPave" });
    JSROOT.addDrawFunc({ name: "TLatex", icon: "img_text", prereq: "more2d", func: "JSROOT.Painter.drawText", direct: true });
    JSROOT.addDrawFunc({ name: "TMathText", icon: "img_text", prereq: "more2d", func: "JSROOT.Painter.drawText", direct: true });
    JSROOT.addDrawFunc({ name: "TText", icon: "img_text", prereq: "more2d", func: "JSROOT.Painter.drawText", direct: true });
@@ -6504,9 +6667,14 @@
    JSROOT.addDrawFunc({ name: "TSpline3", icon: "img_tf1", prereq: "more2d", func: "JSROOT.Painter.drawSpline" });
    JSROOT.addDrawFunc({ name: "TSpline5", icon: "img_tf1", prereq: "more2d", func: "JSROOT.Painter.drawSpline" });
    JSROOT.addDrawFunc({ name: "TEllipse", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawEllipse", direct: true });
+   JSROOT.addDrawFunc({ name: "TArc", sameas: 'TEllipse' });
+   JSROOT.addDrawFunc({ name: "TCrown", sameas: 'TEllipse' });
+   JSROOT.addDrawFunc({ name: "TPie", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawPie", direct: true });
    JSROOT.addDrawFunc({ name: "TLine", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawLine", direct: true });
    JSROOT.addDrawFunc({ name: "TArrow", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawArrow", direct: true });
    JSROOT.addDrawFunc({ name: "TPolyLine", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawPolyLine", direct: true });
+   JSROOT.addDrawFunc({ name: "TCurlyLine", sameas: 'TPolyLine' });
+   JSROOT.addDrawFunc({ name: "TCurlyArc", sameas: 'TPolyLine' });
    JSROOT.addDrawFunc({ name: "TGaxis", icon: "img_graph", prereq: "hist", func: "JSROOT.Painter.drawGaxis" });
    JSROOT.addDrawFunc({ name: "TLegend", icon: "img_pavelabel", prereq: "hist", func: "JSROOT.Painter.drawPave" });
    JSROOT.addDrawFunc({ name: "TBox", icon: 'img_graph', prereq: "more2d", func: "JSROOT.Painter.drawBox", direct: true });
@@ -6541,6 +6709,9 @@
    JSROOT.addDrawFunc({ name: "Session", icon: "img_globe" });
    JSROOT.addDrawFunc({ name: "kind:TopFolder", icon: "img_base" });
    JSROOT.addDrawFunc({ name: "kind:Folder", icon: "img_folder", icon2: "img_folderopen", noinspect:true });
+
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::TCanvas", icon: "img_canvas", prereq: "v7", func: "JSROOT.v7.drawCanvas", opt: "", expand_item: "fPrimitives" });
+
 
    JSROOT.getDrawHandle = function(kind, selector) {
       // return draw handle for specified item kind
@@ -6982,6 +7153,7 @@
 
    JSROOT.LongPollSocket = LongPollSocket;
    JSROOT.Cef3QuerySocket = Cef3QuerySocket;
+   JSROOT.WebWindowHandle = WebWindowHandle;
    JSROOT.DrawOptions = DrawOptions;
    JSROOT.ColorPalette = ColorPalette;
    JSROOT.TAttLineHandler = TAttLineHandler;
@@ -6989,6 +7161,7 @@
    JSROOT.TAttMarkerHandler = TAttMarkerHandler;
    JSROOT.TBasePainter = TBasePainter;
    JSROOT.TObjectPainter = TObjectPainter;
+   JSROOT.TooltipHandler = TooltipHandler;
    JSROOT.TFramePainter = TFramePainter;
    JSROOT.TPadPainter = TPadPainter;
    JSROOT.TCanvasPainter = TCanvasPainter;

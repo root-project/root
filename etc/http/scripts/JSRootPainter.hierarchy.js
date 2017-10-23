@@ -394,6 +394,8 @@
 
                if (inparent) {
                   item._value = "{ prnt }";
+                  item._vclass = 'h_value_num';
+                  item._more = false;
                   simple = true;
                } else {
                   item._obj = fld;
@@ -2156,51 +2158,6 @@
       d3.select('body').style('min-height','100%').style('margin',0).style('overflow',"hidden");
 
       myDiv.style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
-
-      var socket_kind = null, use_openui = true;
-      if (JSROOT.GetUrlOption("webcanvas")!==null) socket_kind = "websocket"; else
-      if (JSROOT.GetUrlOption("longpollcanvas")!==null) socket_kind = "longpoll"; else
-      if (JSROOT.GetUrlOption("cef_canvas")!==null) socket_kind = "cefquery";
-      if (JSROOT.GetUrlOption("qt5")!==null) JSROOT.browser.qt5 = true;
-
-      if (drawing && socket_kind) {
-
-         var painter = new JSROOT.TCanvasPainter(null);
-         painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
-         if (painter.batch_mode) JSROOT.BatchMode = true;
-
-         if (window) {
-            window.onbeforeunload = painter.WindowBeforeUnloadHanlder.bind(painter);
-            if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
-         }
-
-         if (use_openui && !painter.batch_mode) {
-
-            painter._configured_socket_kind = socket_kind;
-            painter.use_openui = true;
-
-            return JSROOT.AssertPrerequisites('openui5', function() {
-            
-               var oData = { canvas_painter: painter };
-               var oModel = new sap.ui.model.json.JSONModel(oData);
-               sap.ui.getCore().setModel(oModel, "TopCanvasId--MainPanel");
-               
-               new JSROOT.sap.ui.xmlview({
-                  id: "TopCanvasId",
-                  viewName: "sap.ui.jsroot.view.Canvas"
-               }).placeAt(myDiv.attr("id"));
-            });
-         };
-
-         painter.SetDivId(myDiv.attr("id"), -1); // just assign id, nothing else is happens
-
-         painter.OpenWebsocket(socket_kind); // when connection activated, ROOT must send new instance of the canvas
-
-         if (!painter.batch_mode) JSROOT.RegisterForResize(painter);
-
-         return;
-      }
-
 
       var hpainter = new JSROOT.HierarchyPainter('root', null);
 

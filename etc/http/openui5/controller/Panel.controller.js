@@ -122,6 +122,8 @@ sap.ui.define([
       },
 
       onExit: function() {
+         console.log("Exit from JSROOT Panel", this.getView().getId());
+
          if (this.object_painter) {
             this.object_painter.Cleanup();
             delete this.object_painter;
