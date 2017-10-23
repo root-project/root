@@ -28,7 +28,7 @@ private:
 
    THttpWSEngine *FindEngine(UInt_t id) const;
 
-   Bool_t DirecltyHandle(THttpCallArg *arg);
+   Bool_t HandleWS(THttpCallArg *arg);
 
 protected:
 

@@ -94,7 +94,7 @@ THttpWSEngine *THttpWSHandler::FindEngine(UInt_t id) const
    return 0;
 }
 
-Bool_t THttpWSHandler::DirecltyHandle(THttpCallArg *arg)
+Bool_t THttpWSHandler::HandleWS(THttpCallArg *arg)
 {
    if (!arg->GetWSId()) return ProcessWS(arg);
 
@@ -108,7 +108,7 @@ Bool_t THttpWSHandler::DirecltyHandle(THttpCallArg *arg)
    if (arg->IsMethod("WS_READY")) {
 
       if (engine) {
-         Error("DirecltyHandle","WS engine with similar id exists %u\n", arg->GetWSId());
+         Error("HandleWS","WS engine with similar id exists %u\n", arg->GetWSId());
          fEngines.Remove(engine);
          delete engine;
       }
