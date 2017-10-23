@@ -14,6 +14,10 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+// need to correctly generate dictionary for display items, used in v7 histpainter,
+// but currently histpainter does not creates dictionary at all
+#pragma extra_include "ROOT/TDisplayItem.hxx";
+
 #pragma link C++ class ROOT::Experimental::THistCoreAttrs+;
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<1>>+;
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<2>>+;

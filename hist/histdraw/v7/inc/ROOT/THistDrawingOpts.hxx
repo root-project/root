@@ -36,7 +36,7 @@ struct THistCoreAttrs {
    //TDrawingAttrRef<long long> fLineColorIndex{*this, "Hist.Line.Width"};
    TLineAttrs fLine; ///< The histogram line attributes
    TFillAttrs fFill; ///< The histogram fill attributes
-   
+
    THistCoreAttrs() = default;
    THistCoreAttrs(TDrawingOptsBaseNoDefault &opts, const std::string &name):
       fLine{opts, name + ".Line", TColor::kBlack, TLineAttrs::Width{3}},
@@ -86,8 +86,6 @@ public:
  */
 template <>
 class THistDrawingOpts<1>: public THistDrawingOptsBase<THistDrawingOpts<1>> {
-   THistCoreAttrs fHistAttrs{*this, "Hist"}; ///< Basic histogram attributes (line, fill etc)
-
    enum class EStyle { kBar, kText };
    TDrawingAttrRef<long long> fStyle{*this, "Style", 0, {"hist", "bar", "text"}};
 
