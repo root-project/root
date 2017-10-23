@@ -72,6 +72,10 @@
  */
 
 
+// Global value of the compression level for the old compression algorithm.
+// NOTE: Not thread-safe.
+int gCompressionLevel = 6;
+
 /* ===========================================================================
  *  Prototypes for local functions
  */
@@ -321,7 +325,7 @@ ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize)
     R__bi_init(&state);
     state.t_state = R__get_thread_tree_state();
     R__ct_init(state.t_state, &att, &method);
-    R__lm_init(&state,(level != 0 ? level : 1), &flags);
+    R__lm_init(&state,(gCompressionLevel != 0 ? gCompressionLevel : 1), &flags);
     R__Deflate(&state,&(state.error_flag));
     state.R__window_size = 0L; /* was updated by lm_init() */
 
