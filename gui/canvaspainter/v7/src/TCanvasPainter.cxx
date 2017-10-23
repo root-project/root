@@ -618,7 +618,7 @@ void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
    fWindow->Show(where);
 }
 
-#include <fstream>
+// #include <fstream>
 
 std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &can)
 {
@@ -645,12 +645,12 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
    TString res = TBufferJSON::ConvertToJSON(&fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
 
-   TBufferJSON::ExportToFile("canv.json", &fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+//   TBufferJSON::ExportToFile("canv.json", &fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
 
    fDisplayList.Clear();
 
-   std::ofstream ofs("snap.json");
-   ofs << res.Data() << std::endl;
+//   std::ofstream ofs("snap.json");
+//   ofs << res.Data() << std::endl;
 
    return std::string(res.Data());
 }
