@@ -29,7 +29,7 @@ public:
       for (auto i = 0u; i < fNSlots; ++i)
          ranges[i] = std::make_pair(fCounter*fNSlots + i, fCounter*fNSlots + i + 1);
       ++fCounter;
-      return std::move(ranges);
+      return ranges;
    }
    void SetEntry(unsigned int, ULong64_t) {}
    void Initialise() { fCounter = 0; }
