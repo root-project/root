@@ -26,7 +26,7 @@
              singleContainerFullSize="false" >
              <f:content>
                 <Label text="Style" />
-                <Select selectedKey="{/style}">
+                <Select selectedKey="{/style}" title="Line style">
                  <items>
                    <core:Item text="none" key="0"/>
                    <core:Item text="1" key="1"/>
@@ -42,7 +42,7 @@
                  </items>
                </Select>
                 <Label text="Width"/>
-                <Select selectedKey="{/width}">
+                <Select selectedKey="{/width}" title="Line width">
                  <items>
                    <core:Item text="1" key="1"/>
                    <core:Item text="2" key="2"/>
@@ -52,8 +52,8 @@
                    <core:Item text="6" key="6"/>
                  </items>
                </Select>
-                <Label text="Color" />
-                <Button text="{/color}" press="processTAttLine_Color"/>
+                <Label text="Color"/>
+                <Button text="{/color}" title="Line color" press="processTAttLine_Color"/>
              </f:content>
           </f:SimpleForm>
        </VBox>

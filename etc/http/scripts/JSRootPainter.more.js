@@ -110,6 +110,8 @@
                 this.AxisToSvg("x", polyline.fX[n], isndc) + "," +
                 this.AxisToSvg("y", polyline.fY[n], isndc);
 
+      if (polyline._typename != "TPolyLine") fillatt.color = "none";
+
       if (fillatt.color!=='none') cmd+="Z";
 
       this.draw_g
@@ -136,6 +138,47 @@
           rx = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR1, false) - x,
           ry = y - this.AxisToSvg("y", ellipse.fY1 + ellipse.fR2, false);
 
+      if (ellipse._typename == "TCrown") {
+         if (ellipse.fR1 <= 0) {
+            // handle same as ellipse with equal radius
+            rx = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR2, false) - x;
+         } else {
+            var rx1 = rx, ry2 = ry,
+                ry1 = y - this.AxisToSvg("y", ellipse.fY1 + ellipse.fR1, false),
+                rx2 = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR2, false) - x;
+
+            var elem = this.draw_g
+                          .attr("transform","translate("+x+","+y+")")
+                          .append("svg:path")
+                          .call(this.lineatt.func).call(this.fillatt.func);
+
+            if ((ellipse.fPhimin == 0) && (ellipse.fPhimax == 360)) {
+               elem.attr("d", "M-"+rx1+",0" +
+                              "A"+rx1+","+ry1+",0,1,0,"+rx1+",0" +
+                              "A"+rx1+","+ry1+",0,1,0,-"+rx1+",0" +
+                              "M-"+rx2+",0" +
+                              "A"+rx2+","+ry2+",0,1,0,"+rx2+",0" +
+                              "A"+rx2+","+ry2+",0,1,0,-"+rx2+",0");
+
+            } else {
+               var large_arc = (ellipse.fPhimax-ellipse.fPhimin>=180) ? 1 : 0;
+
+               var a1 = ellipse.fPhimin*Math.PI/180, a2 = ellipse.fPhimax*Math.PI/180,
+                   dx1 = rx1 * Math.cos(a1), dy1 = ry1 * Math.sin(a1),
+                   dx2 = rx1 * Math.cos(a2), dy2 = ry1 * Math.sin(a2),
+                   dx3 = rx2 * Math.cos(a1), dy3 = ry2 * Math.sin(a1),
+                   dx4 = rx2 * Math.cos(a2), dy4 = ry2 * Math.sin(a2);
+
+               elem.attr("d", "M"+Math.round(dx2)+","+Math.round(dy2)+
+                              "A"+rx1+","+ry1+",0,"+large_arc+",0,"+Math.round(dx1)+","+Math.round(dy1)+
+                              "L"+Math.round(dx3)+","+Math.round(dy3) +
+                              "A"+rx2+","+ry2+",0,"+large_arc+",1,"+Math.round(dx4)+","+Math.round(dy4)+"Z");
+            }
+
+            return;
+         }
+      }
+
       if ((ellipse.fPhimin == 0) && (ellipse.fPhimax == 360) && (ellipse.fTheta == 0)) {
             // this is simple case, which could be drawn with svg:ellipse
          this.draw_g.append("svg:ellipse")
@@ -159,13 +202,64 @@
           y2 = -dx2*st - dy2*ct;
 
       this.draw_g
-         .attr("transform","translate("+Math.round(x)+","+Math.round(y)+")")
+         .attr("transform","translate("+x+","+y+")")
          .append("svg:path")
          .attr("d", "M0,0" +
                     "L" + Math.round(x1) + "," + Math.round(y1) +
-                    "A" + Math.round(rx) + "," + Math.round(ry) + "," + Math.round(-ellipse.fTheta) + ",1,0," + Math.round(x2) + "," + Math.round(y2) +
+                    "A"+rx+ ","+ry + "," + Math.round(-ellipse.fTheta) + ",1,0," + Math.round(x2) + "," + Math.round(y2) +
                     "Z")
          .call(this.lineatt.func).call(this.fillatt.func);
+   }
+
+   // ==============================================================================
+
+   function drawPie() {
+      var pie = this.GetObject();
+
+      // create svg:g container for ellipse drawing
+      this.CreateG();
+
+      var xc = this.AxisToSvg("x", pie.fX, false),
+          yc = this.AxisToSvg("y", pie.fY, false),
+          rx = this.AxisToSvg("x", pie.fX + pie.fRadius, false) - xc,
+          ry = this.AxisToSvg("y", pie.fY + pie.fRadius, false) - yc;
+
+      this.draw_g.attr("transform","translate("+xc+","+yc+")");
+
+      // Draw the slices
+      var nb, slice, title, value, total, lineatt, fillatt;
+      nb = pie.fPieSlices.length;
+
+      total = 0;
+      for (var n=0;n<nb; n++) {
+         slice = pie.fPieSlices[n];
+         total = total + slice.fValue;
+      }
+
+      var af = (pie.fAngularOffset*Math.PI)/180.;
+      var x1 = rx*Math.cos(af);
+      var y1 = ry*Math.sin(af);
+      var x2, y2, a = af;
+
+      for (var n=0;n<nb; n++) {
+         slice = pie.fPieSlices[n];
+         lineatt = new JSROOT.TAttLineHandler(slice);
+         fillatt = this.createAttFill(slice);
+         value   = slice.fValue;
+         a       = a + ((2*Math.PI)/total)*value;
+         x2      = rx*Math.cos(a);
+         y2      = ry*Math.sin(a);
+         title   = slice.fTitle;
+         this.draw_g
+             .append("svg:path")
+             .attr("d", "M0,0L"+x1+","+y1+"A"+
+                         rx+","+ry+",0,0,0,"+x2+","+y2+
+                        "Z")
+             .call(lineatt.func)
+             .call(fillatt.func);
+         x1 = x2;
+         y1 = y2;
+      }
    }
 
    // =============================================================================
@@ -183,19 +277,42 @@
       var x1 = this.AxisToSvg("x", box.fX1, false),
           x2 = this.AxisToSvg("x", box.fX2, false),
           y1 = this.AxisToSvg("y", box.fY1, false),
-          y2 = this.AxisToSvg("y", box.fY2, false);
+          y2 = this.AxisToSvg("y", box.fY2, false),
+          xx = Math.min(x1,x2), yy = Math.min(y1,y2),
+          ww = Math.abs(x2-x1), hh = Math.abs(y1-y2);
 
       // if box filled, contour line drawn only with "L" draw option:
       if ((fillatt.color != 'none') && !draw_line) lineatt.color = "none";
 
       this.draw_g
           .append("svg:rect")
-          .attr("x", Math.min(x1,x2))
-          .attr("y", Math.min(y1,y2))
-          .attr("width", Math.abs(x2-x1))
-          .attr("height", Math.abs(y1-y2))
+          .attr("x", xx).attr("y", yy)
+          .attr("width", ww)
+          .attr("height", hh)
           .call(lineatt.func)
           .call(fillatt.func);
+
+      if (box.fBorderMode && box.fBorderSize && (fillatt.color!=='none')) {
+         var pww = box.fBorderSize, phh = box.fBorderSize,
+             side1 = "M"+xx+","+yy + "h"+ww + "l"+(-pww)+","+phh + "h"+(2*pww-ww) +
+                     "v"+(hh-2*phh)+ "l"+(-pww)+","+phh + "z",
+             side2 = "M"+(xx+ww)+","+(yy+hh) + "v"+(-hh) + "l"+(-pww)+","+phh + "v"+(hh-2*phh)+
+                     "h"+(2*pww-ww) + "l"+(-pww)+","+phh + "z";
+
+         if (box.fBorderMode<0) { var s = side1; side1 = side2; side2 = s; }
+
+         this.draw_g.append("svg:path")
+                    .attr("d", side1)
+                    .style("stroke","none")
+                    .call(fillatt.func)
+                    .style("fill", d3.rgb(fillatt.color).brighter(0.5).toString());
+
+         this.draw_g.append("svg:path")
+             .attr("d", side2)
+             .style("stroke","none")
+             .call(fillatt.func)
+             .style("fill", d3.rgb(fillatt.color).darker(0.5).toString());
+      }
    }
 
    // =============================================================================
@@ -244,12 +361,12 @@
    // ======================================================================================
 
    function drawArrow() {
-      var arrow = this.GetObject();
+      var arrow = this.GetObject(),
+          wsize = Math.max(3, Math.round(Math.max(this.pad_width(), this.pad_height()) * arrow.fArrowSize)),
+          hsize = Math.round(wsize * Math.tan(arrow.fAngle/2*Math.PI/180));
+
       if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(arrow);
       if (!this.fillatt) this.fillatt = this.createAttFill(arrow);
-
-      var wsize = Math.max(3, Math.round(Math.max(this.pad_width(), this.pad_height()) * arrow.fArrowSize)),
-          hsize = Math.round(wsize * Math.tan(arrow.fAngle/2*Math.PI/180));
 
       // create svg:g container for line drawing
       this.CreateG();
@@ -259,27 +376,37 @@
           x2 = this.AxisToSvg("x", arrow.fX2, false),
           y2 = this.AxisToSvg("y", arrow.fY2, false),
           right_arrow = "M0,0" + "L"+wsize+","+hsize + "L0,"+(2*hsize),
-          left_arrow =  "M"+wsize+",0" + "L0,"+hsize + "L"+wsize+"," + (2*hsize),
+          left_arrow =  "M"+wsize+",0" + "L0,"+hsize + "L"+wsize+","+(2*hsize),
           m_start = null, m_mid = null, m_end = null, defs = null,
-          oo = arrow.fOption, len = oo.length;
+          oo = arrow.fOption, oolen = oo.length;
 
       if (oo.indexOf("<")==0) {
          var closed = (oo.indexOf("<|") == 0);
          if (!defs) defs = this.draw_g.append("defs");
          m_start = "jsroot_arrowmarker_" +  JSROOT.id_counter++;
-         var beg = defs.append("svg:marker")
+         var mbeg = defs.append("svg:marker")
                        .attr("id", m_start)
                        .attr("markerWidth", wsize)
                        .attr("markerHeight", 2*hsize)
-                       .attr("refX", "0")
+                       .attr("refX", 0)
                        .attr("refY", hsize)
                        .attr("orient", "auto")
-                       .attr("markerUnits", "userSpaceOnUse")
-                       .append("svg:path")
+                       .attr("markerUnits", "userSpaceOnUse");
+         var pbeg = mbeg.append("svg:path")
                        .style("fill","none")
-                       .attr("d", left_arrow + (closed ? " Z" : ""))
+                       .attr("d", left_arrow + (closed ? "Z" : ""))
                        .call(this.lineatt.func);
-         if (closed) beg.call(this.fillatt.func);
+         if (closed) {
+            pbeg.call(this.fillatt.func);
+            if ((this.fillatt.color == this.lineatt.color) && this.fillatt.isSolid()) pbeg.style('stroke-width',1);
+            var dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx + dy*dy);
+            if (len>wsize) {
+               var ratio = wsize/len;
+               x1 += ratio*dx;
+               y1 += ratio*dy;
+               mbeg.attr("refX", wsize);
+            }
+         }
       }
 
       var midkind = 0;
@@ -293,7 +420,7 @@
          if (!defs) defs = this.draw_g.append("defs");
          m_mid = "jsroot_arrowmarker_" + JSROOT.id_counter++;
 
-         var mid = defs.append("svg:marker")
+         var pmid = defs.append("svg:marker")
                       .attr("id", m_mid)
                       .attr("markerWidth", wsize)
                       .attr("markerHeight", 2*hsize)
@@ -304,35 +431,48 @@
                       .append("svg:path")
                       .style("fill","none")
                       .attr("d", ((midkind % 10 == 1) ? right_arrow : left_arrow) +
-                            ((midkind > 10) ? " Z" : ""))
+                            ((midkind > 10) ? "Z" : ""))
                             .call(this.lineatt.func);
-         if (midkind > 10) mid.call(this.fillatt.func);
+         if (midkind > 10) {
+            pmid.call(this.fillatt.func);
+            if ((this.fillatt.color == this.lineatt.color) && this.fillatt.isSolid()) pmid.style('stroke-width',1);
+         }
       }
 
-      if (oo.lastIndexOf(">") == len-1) {
-         var closed = (oo.lastIndexOf("|>") == len-2) && (len>1);
+      if (oo.lastIndexOf(">") == oolen-1) {
+         var closed = (oo.lastIndexOf("|>") == oolen-2) && (oolen>1);
          if (!defs) defs = this.draw_g.append("defs");
          m_end = "jsroot_arrowmarker_" + JSROOT.id_counter++;
-         var end = defs.append("svg:marker")
+         var mend = defs.append("svg:marker")
                        .attr("id", m_end)
                        .attr("markerWidth", wsize)
                        .attr("markerHeight", 2*hsize)
                        .attr("refX", wsize)
                        .attr("refY", hsize)
                        .attr("orient", "auto")
-                       .attr("markerUnits", "userSpaceOnUse")
-                       .append("svg:path")
+                       .attr("markerUnits", "userSpaceOnUse");
+         var pend = mend.append("svg:path")
                        .style("fill","none")
-                       .attr("d", right_arrow + (closed ? " Z" : ""))
+                       .attr("d", right_arrow + (closed ? "Z" : ""))
                        .call(this.lineatt.func);
-         if (closed) end.call(this.fillatt.func);
+         if (closed) {
+            pend.call(this.fillatt.func);
+            if ((this.fillatt.color == this.lineatt.color) && this.fillatt.isSolid()) pend.style('stroke-width',1);
+            var dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx + dy*dy);
+            if (len>wsize) {
+               var ratio = wsize/len;
+               x2 -= ratio*dx;
+               y2 -= ratio*dy;
+               mend.attr("refX", 0);
+            }
+         }
       }
 
       var path = this.draw_g
            .append("svg:path")
-           .attr("d",  "M"+x1+","+y1 +
+           .attr("d",  "M"+Math.round(x1)+","+Math.round(y1) +
                        ((m_mid == null) ? "" : "L" + Math.round(x1/2+x2/2) + "," + Math.round(y1/2+y2/2)) +
-                       "L"+x2+","+y2)
+                       "L"+Math.round(x2)+","+Math.round(y2))
             .call(this.lineatt.func);
 
       if (m_start) path.style("marker-start","url(#" + m_start + ")");
@@ -654,12 +794,10 @@
 
    TGraphPainter.prototype.DecodeOptions = function(opt) {
 
-      var d = new JSROOT.DrawOptions(opt);
-
-      var res = { Line:0, Curve:0, Rect:0, Mark:0, Bar:0, OutRange: 0,  EF:0, Fill:0,
-                  Errors: 0, MainError: 1, Ends: 1, Axis: "AXIS", original: opt };
-
-      var graph = this.GetObject();
+      var graph = this.GetObject(),
+          d = new JSROOT.DrawOptions(opt),
+          res = { Line:0, Curve:0, Rect:0, Mark:0, Bar:0, OutRange: 0,  EF:0, Fill:0,
+                  Errors: 0, MainError: 1, Ends: 1, Axis: "", original: opt };
 
       if (this.has_errors) res.Errors = 1;
 
@@ -702,6 +840,14 @@
       if (graph._typename == 'TGraphErrors') {
          if (d3.max(graph.fEX) < 1.0e-300 && d3.max(graph.fEY) < 1.0e-300)
             res.Errors = 0;
+      }
+
+      if (!res.Axis) {
+         // check if axis should be drawn
+         // either graph drawn directly or
+         // graph is first object in list of primitives
+         var pad = this.root_pad();
+         if (!pad || !pad.fPrimitives || (pad.fPrimitives.arr[0] === graph)) res.Axis = "AXIS";
       }
 
       return res;
@@ -814,12 +960,12 @@
       return optbins;
    }
 
-   TGraphPainter.prototype.TooltipText = function(d, asarray) {
+   TGraphPainter.prototype.TooltipText = function(d) {
       var pmain = this.main_painter(), lines = [];
 
       lines.push(this.GetTipName());
 
-      if (d) {
+      if (d && pmain) {
          lines.push("x = " + pmain.AxisAsText("x", d.x));
          lines.push("y = " + pmain.AxisAsText("y", d.y));
 
@@ -829,23 +975,50 @@
          if ((this.options.Errors || (this.options.EF > 0)) && (pmain.y_kind=='normal') && ('eylow' in d) && ((d.eylow!=0) || (d.eyhigh!=0)))
             lines.push("error y = -" + pmain.AxisAsText("y", d.eylow) + "/+" + pmain.AxisAsText("y", d.eyhigh));
       }
-      if (asarray) return lines;
+      return lines;
+   }
 
-      var res = "";
-      for (var n=0;n<lines.length;++n) res += ((n>0 ? "\n" : "") + lines[n]);
-      return res;
+   TGraphPainter.prototype.get_main = function() {
+      var pmain = this.main_painter();
+
+      if (pmain && pmain.grx && pmain.gry) return pmain;
+
+      pmain = {
+          pad_layer: true,
+          pad: this.root_pad(),
+          pw: this.pad_width(),
+          ph: this.pad_height(),
+          grx: function(value) {
+             if (this.pad.fLogx)
+                value = (value>0) ? JSROOT.log10(value) : this.pad.fUxmin;
+             else
+                value = (value - this.pad.fX1) / (this.pad.fX2 - this.pad.fX1);
+             return value*this.pw;
+          },
+          gry: function(value) {
+             if (this.pad.fLogy)
+                value = (value>0) ? JSROOT.log10(value) : this.pad.fUymin;
+             else
+                value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
+             return (1-value)*this.ph;
+          }
+      }
+
+      return pmain.pad ? pmain : null;
    }
 
    TGraphPainter.prototype.DrawBins = function() {
 
-      this.CreateG(true);
-
       var pthis = this,
-          pmain = this.main_painter(),
+          pmain = this.get_main(),
           w = this.frame_width(),
           h = this.frame_height(),
           graph = this.GetObject(),
           excl_width = 0;
+
+      if (!pmain) return;
+
+      this.CreateG(!pmain.pad_layer);
 
       if (this.options._pfc || this.options._plc || this.options._pmc) {
          if (!this.pallette && JSROOT.Painter.GetColorPalette)
@@ -870,9 +1043,8 @@
          this.lineatt = new JSROOT.TAttLineHandler(graph, undefined, true);
       if (!this.fillatt)
          this.fillatt = this.createAttFill(graph, undefined, undefined, 1);
-      this.fillatt.used = false;
+      this.fillatt.used = false; // mark used only when really used
 
-      if (this.fillatt) this.fillatt.used = false; // mark used only when really used
       this.draw_kind = "none"; // indicate if special svg:g were created for each bin
       this.marker_size = 0; // indicate if markers are drawn
 
@@ -1210,7 +1382,7 @@
       var res = { name: this.GetObject().fName, title: this.GetObject().fTitle,
                   x: d.grx1, y: d.gry1,
                   color1: this.lineatt.color,
-                  lines: this.TooltipText(d, true),
+                  lines: this.TooltipText(d),
                   rect: best, d3bin: findbin  };
 
       if (this.fillatt && this.fillatt.used) res.color2 = this.fillatt.color;
@@ -1257,11 +1429,8 @@
    }
 
    TGraphPainter.prototype.ProcessTooltip = function(pnt) {
-
       var hint = this.ExtractTooltip(pnt);
-
       if (!pnt || !pnt.disabled) this.ShowTooltip(hint);
-
       return hint;
    }
 
@@ -1384,7 +1553,7 @@
                   x: best.bin ? pmain.grx(best.bin.x) : best.linex,
                   y: best.bin ? pmain.gry(best.bin.y) : best.liney,
                   color1: this.lineatt.color,
-                  lines: this.TooltipText(best.bin, true),
+                  lines: this.TooltipText(best.bin),
                   usepath: true };
 
       res.ismark = ismark;
@@ -1709,19 +1878,19 @@
       return this;
    }
 
-   JSROOT.Painter.drawGraph = function(divid, graph, opt) {
+   function drawGraph(divid, graph, opt) {
 
       var painter = new TGraphPainter(graph);
 
-      painter.options = painter.DecodeOptions(opt);
-
       painter.SetDivId(divid, -1); // just to get access to existing elements
+
+      painter.options = painter.DecodeOptions(opt);
 
       painter.CreateBins();
 
       painter.CreateStat();
 
-      if (!painter.main_painter()) {
+      if (!painter.main_painter() && painter.options.Axis) {
          if (!graph.fHistogram)
             graph.fHistogram = painter.CreateHistogram();
          JSROOT.draw(divid, graph.fHistogram, painter.options.Axis, painter.PerformDrawing.bind(painter, divid));
@@ -1735,26 +1904,28 @@
    // ==============================================================
 
    function TGraphPolargramPainter(polargram) {
-      JSROOT.TObjectPainter.call(this, polargram);
+      JSROOT.TooltipHandler.call(this, polargram);
       this.$polargram = true; // indicate that this is polargram
+      this.zoom_rmin = this.zoom_rmax = 0;
    }
 
-   TGraphPolargramPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+   TGraphPolargramPainter.prototype = Object.create(JSROOT.TooltipHandler.prototype);
 
    TGraphPolargramPainter.prototype.translate = function(angle, radius, keep_float) {
+      var _rx = this.r(radius), _ry = _rx/this.szx*this.szy,
+          pos = {
+            x: _rx * Math.cos(-angle - this.angle),
+            y: _ry * Math.sin(-angle - this.angle),
+            rx: _rx,
+            ry: _ry
+         };
 
-      var rx = this.r(radius),
-          ry = rx/this.szx*this.szy;
-
-      var pos = {
-         x: rx * Math.cos(-angle - this.angle),
-         y: ry * Math.sin(-angle - this.angle)
+      if (!keep_float) {
+         pos.x = Math.round(pos.x);
+         pos.y = Math.round(pos.y);
+         pos.rx =  Math.round(pos.rx);
+         pos.ry =  Math.round(pos.ry);
       }
-
-      if (!keep_float) { pos.x = Math.round(pos.x); pos.y = Math.round(pos.y); }
-      pos.rx = rx;
-      pos.ry = ry;
-
       return pos;
    }
 
@@ -1767,22 +1938,107 @@
       return radius.toFixed((this.ndig > 0) ? this.ndig : 0);
    }
 
+   TGraphPolargramPainter.prototype.AxisAsText = function(axis, value) {
+
+      if (axis == "r") {
+         if (value === Math.round(value)) return value.toString();
+         if (this.ndig>10) return value.toExponential(4);
+         return value.toFixed(this.ndig+2);
+      }
+
+      value *= 180/Math.PI;
+      return (value === Math.round(value)) ? value.toString() : value.toFixed(1);
+   }
+
+   TGraphPolargramPainter.prototype.MouseEvent = function(kind) {
+      var layer = this.svg_layer("primitives_layer"),
+          interactive = layer.select(".interactive_ellipse");
+      if (interactive.empty()) return;
+
+      var pnt = null;
+
+      if (kind !== 'leave') {
+         var pos = d3.mouse(interactive.node());
+         pnt = { x: pos[0], y: pos[1], touch: false };
+      }
+
+      this.ProcessTooltipEvent(pnt);
+   }
+
+   TGraphPolargramPainter.prototype.GetFrameRect = function() {
+      var pad = this.root_pad(),
+          w = this.pad_width(),
+          h = this.pad_height(),
+          rect = {};
+
+      rect.szx = Math.round(Math.max(0.1, 0.5 - Math.max(pad.fLeftMargin, pad.fRightMargin))*w);
+      rect.szy = Math.round(Math.max(0.1, 0.5 - Math.max(pad.fBottomMargin, pad.fTopMargin))*h);
+
+      rect.width = 2*rect.szx;
+      rect.height = 2*rect.szy;
+      rect.midx = Math.round(w/2);
+      rect.midy = Math.round(h/2);
+      rect.x = rect.midx - rect.szx;
+      rect.y = rect.midy - rect.szy;
+
+      rect.hint_delta_x = rect.szx;
+      rect.hint_delta_y = rect.szy;
+
+      rect.transform = "translate(" + rect.x + "," + rect.y + ")";
+
+      return rect;
+   }
+
+   TGraphPolargramPainter.prototype.MouseWheel = function() {
+      d3.event.stopPropagation();
+      d3.event.preventDefault();
+
+      this.ProcessTooltipEvent(null); // remove all tooltips
+
+      var polar = this.GetObject();
+
+      if (!d3.event || !polar) return;
+
+      var delta = d3.event.wheelDelta ? -d3.event.wheelDelta : (d3.event.deltaY || d3.event.detail);
+      if (!delta) return;
+
+      delta = (delta<0) ? -0.2 : 0.2;
+
+      var rmin = this.scale_rmin, rmax = this.scale_rmax, range = rmax - rmin;
+
+      // rmin -= delta*range;
+      rmax += delta*range;
+
+      if ((rmin<polar.fRwrmin) || (rmax>polar.fRwrmax)) rmin = rmax = 0;
+
+      if ((this.zoom_rmin != rmin) || (this.zoom_rmax != rmax)) {
+         this.zoom_rmin = rmin;
+         this.zoom_rmax = rmax;
+         this.RedrawPad();
+      }
+   }
+
    TGraphPolargramPainter.prototype.Redraw = function() {
       if (!this.is_main_painter()) return;
 
-      var pad = this.root_pad(), polar = this.GetObject(),
-          w = this.pad_width(), h = this.pad_height(),
-          midx = Math.round(w/2), midy = Math.round(h/2),
-          szx = Math.round(Math.max(0.1, 0.5 - Math.max(pad.fLeftMargin, pad.fRightMargin))*w),
-          szy = Math.round(Math.max(0.1, 0.5 - Math.max(pad.fBottomMargin, pad.fTopMargin))*h);
+      var pad = this.root_pad(),
+          polar = this.GetObject(),
+          rect = this.GetFrameRect();
 
       this.CreateG();
 
-      this.draw_g.attr("transform", "translate(" + midx + "," + midy + ")");
+      this.draw_g.attr("transform", "translate(" + rect.midx + "," + rect.midy + ")");
+      this.szx = rect.szx;
+      this.szy = rect.szy;
 
-      this.r = d3.scaleLinear().domain([polar.fRwrmin, polar.fRwrmax]).range([ 0, szx ]);
-      this.szx = szx;
-      this.szy = szy;
+      this.scale_rmin = polar.fRwrmin;
+      this.scale_rmax = polar.fRwrmax;
+      if (this.zoom_rmin != this.zoom_rmax) {
+         this.scale_rmin = this.zoom_rmin;
+         this.scale_rmax = this.zoom_rmax;
+      }
+
+      this.r = d3.scaleLinear().domain([this.scale_rmin, this.scale_rmax]).range([ 0, this.szx ]);
       this.angle = polar.fAxisAngle || 0;
 
       var ticks = this.r.ticks(5),
@@ -1790,7 +2046,6 @@
 
       if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(polar);
       if (!this.gridatt) this.gridatt = new JSROOT.TAttLineHandler({ fLineColor: polar.fLineColor, fLineStyle: 2, fLineWidth: 1 });
-
 
       var range = Math.abs(polar.fRwrmax - polar.fRwrmin);
       this.ndig = (range <= 0) ? -3 : Math.round(JSROOT.log10(ticks.length / range));
@@ -1809,15 +2064,15 @@
 
       var exclude_last = false;
 
-      if (ticks[ticks.length-1] < polar.fRwrmax) {
+      if ((ticks[ticks.length-1] < polar.fRwrmax) && (this.zoom_rmin == this.zoom_rmax)) {
          ticks.push(polar.fRwrmax);
          exclude_last = true;
       }
 
-      this.StartTextDrawing(polar.fRadialLabelFont, Math.round(polar.fRadialTextSize * szy * 2));
+      this.StartTextDrawing(polar.fRadialLabelFont, Math.round(polar.fRadialTextSize * this.szy * 2));
 
       for (var n=0;n<ticks.length;++n) {
-         var rx = this.r(ticks[n]), ry = rx/szx*szy;
+         var rx = this.r(ticks[n]), ry = rx/this.szx*this.szy;
          this.draw_g.append("ellipse")
              .attr("cx",0)
              .attr("cy",0)
@@ -1827,15 +2082,15 @@
              .call(this.lineatt.func);
 
          if ((n < ticks.length-1) || !exclude_last)
-            this.DrawText({ align: 23, x: Math.round(rx), y: Math.round(polar.fRadialTextSize * szy * 0.5),
+            this.DrawText({ align: 23, x: Math.round(rx), y: Math.round(polar.fRadialTextSize * this.szy * 0.5),
                             text: this.format(ticks[n]), color: this.get_color[polar.fRadialLabelColor], latex: 0 });
 
          if ((nminor>1) && ((n < ticks.length-1) || !exclude_last)) {
             var dr = (ticks[1] - ticks[0]) / nminor;
             for (var nn=1;nn<nminor;++nn) {
                var gridr = ticks[n] + dr*nn;
-               if (gridr>polar.fRwrmax) break;
-               rx = this.r(gridr); ry = rx/szx*szy;
+               if (gridr > this.scale_rmax) break;
+               rx = this.r(gridr); ry = rx/this.szx*this.szy;
                this.draw_g.append("ellipse")
                    .attr("cx",0)
                    .attr("cy",0)
@@ -1845,12 +2100,11 @@
                    .call(this.gridatt.func);
             }
          }
-
       }
 
       this.FinishTextDrawing();
 
-      var fontsize = Math.round(polar.fPolarTextSize * szy * 2);
+      var fontsize = Math.round(polar.fPolarTextSize * this.szy * 2);
       this.StartTextDrawing(polar.fPolarLabelFont, fontsize);
 
       var nmajor = polar.fNdivPol % 100;
@@ -1864,15 +2118,17 @@
          this.draw_g.append("line")
              .attr("x1",0)
              .attr("y1",0)
-             .attr("x2", Math.round(szx*Math.cos(angle)))
-             .attr("y2", Math.round(szy*Math.sin(angle)))
+             .attr("x2", Math.round(this.szx*Math.cos(angle)))
+             .attr("y2", Math.round(this.szy*Math.sin(angle)))
              .call(this.lineatt.func);
 
          var aindx = Math.round(16 -angle/Math.PI*4) % 8; // index in align table, here absolute angle is important
 
-         this.DrawText({ align: aligns[aindx], x: Math.round((szx+fontsize)*Math.cos(angle)), y: Math.round((szy + fontsize/szx*szy)*(Math.sin(angle))),
-                       text: lbls[n],
-                       color: this.get_color[polar.fPolarLabelColor], latex: 1 });
+         this.DrawText({ align: aligns[aindx],
+                         x: Math.round((this.szx+fontsize)*Math.cos(angle)),
+                         y: Math.round((this.szy + fontsize/this.szx*this.szy)*(Math.sin(angle))),
+                         text: lbls[n],
+                          color: this.get_color[polar.fPolarLabelColor], latex: 1 });
       }
 
       this.FinishTextDrawing();
@@ -1886,10 +2142,36 @@
             this.draw_g.append("line")
                 .attr("x1",0)
                 .attr("y1",0)
-                .attr("x2", Math.round(szx*Math.cos(angle)))
-                .attr("y2", Math.round(szy*Math.sin(angle)))
+                .attr("x2", Math.round(this.szx*Math.cos(angle)))
+                .attr("y2", Math.round(this.szy*Math.sin(angle)))
                 .call(this.gridatt.func);
          }
+
+
+      if (JSROOT.BatchMode) return;
+
+      var layer = this.svg_layer("primitives_layer"),
+          interactive = layer.select(".interactive_ellipse");
+
+      if (interactive.empty())
+         interactive = layer.append("g")
+                            .classed("most_upper_primitives", true)
+                            .append("ellipse")
+                            .classed("interactive_ellipse", true)
+                            .attr("cx",0)
+                            .attr("cy",0)
+                            .style("fill", "none")
+                            .style("pointer-events","visibleFill")
+                            .on('mouseenter', this.MouseEvent.bind(this,'enter'))
+                            .on('mousemove', this.MouseEvent.bind(this,'move'))
+                            .on('mouseleave', this.MouseEvent.bind(this,'leave'));
+
+      interactive.attr("rx", this.szx).attr("ry", this.szy);
+
+      d3.select(interactive.node().parentNode).attr("transform", this.draw_g.attr("transform"));
+
+      if (JSROOT.gStyle.Zooming && JSROOT.gStyle.ZoomWheel)
+         interactive.on("wheel", this.MouseWheel.bind(this));
    }
 
    JSROOT.Painter.drawGraphPolargram = function(divid, polargram, opt) {
@@ -1952,6 +2234,9 @@
       var mpath = "", epath = "", lpath = "", bins = [];
 
       for (var n=0;n<graph.fNpoints;++n) {
+
+         if (graph.fY[n] > main.scale_rmax) continue;
+
          if (this.options.err) {
             var pos1 = main.translate(graph.fX[n], graph.fY[n] - graph.fEY[n]),
                 pos2 = main.translate(graph.fX[n], graph.fY[n] + graph.fEY[n]);
@@ -1960,7 +2245,7 @@
             pos1 = main.translate(graph.fX[n] + graph.fEX[n], graph.fY[n]);
             pos2 = main.translate(graph.fX[n] - graph.fEX[n], graph.fY[n]);
 
-            epath += "M" + pos1.x + "," + pos1.y + "A" + pos2.rx + "," + pos2.ry+ ",0,0,1," +pos2.x + "," + pos2.y;
+            epath += "M" + pos1.x + "," + pos1.y + "A" + pos2.rx + "," + pos2.ry+ ",0,0,1," + pos2.x + "," + pos2.y;
          }
 
          var pos = main.translate(graph.fX[n], graph.fY[n]);
@@ -2025,6 +2310,81 @@
       polargram.fRwrmax = rmax + (rmax-rmin)*0.1;
 
       return polargram;
+   }
+
+   TGraphPolarPainter.prototype.ExtractTooltip = function(pnt) {
+      if (!pnt) return null;
+
+      var graph = this.GetObject(),
+          main = this.main_painter(),
+          best_dist2 = 1e10, bestindx = -1, bestpos = null;
+
+      for (var n=0;n<graph.fNpoints;++n) {
+         var pos = main.translate(graph.fX[n], graph.fY[n]);
+
+         var dist2 = (pos.x-pnt.x)*(pos.x-pnt.x) + (pos.y-pnt.y)*(pos.y-pnt.y);
+         if (dist2<best_dist2) { best_dist2 = dist2; bestindx = n; bestpos = pos; }
+      }
+
+      var match_distance = 5;
+      if (this.markeratt && this.markeratt.used) match_distance = this.markeratt.GetFullSize();
+
+      if (Math.sqrt(best_dist2) > match_distance) return null;
+
+      var res = { name: this.GetObject().fName, title: this.GetObject().fTitle,
+                  x: bestpos.x, y: bestpos.y,
+                  color1: this.markeratt && this.markeratt.used ? this.markeratt.color : this.lineatt.color,
+                  exact: Math.sqrt(best_dist2) < 4,
+                  lines: [ this.GetTipName() ],
+                  binindx: bestindx,
+                  menu_dist: match_distance,
+                  radius: match_distance
+                };
+
+      res.lines.push("r = " + main.AxisAsText("r", graph.fY[bestindx]));
+      res.lines.push("phi = " + main.AxisAsText("phi",graph.fX[bestindx]));
+
+      if (graph.fEY && graph.fEY[bestindx])
+         res.lines.push("error r = " + main.AxisAsText("r", graph.fEY[bestindx]));
+
+      if (graph.fEX && graph.fEX[bestindx])
+         res.lines.push("error phi = " + main.AxisAsText("phi", graph.fEX[bestindx]));
+
+      return res;
+   }
+
+   TGraphPolarPainter.prototype.ShowTooltip = function(hint) {
+
+      if (!this.draw_g) return;
+
+      var ttcircle = this.draw_g.select(".tooltip_bin");
+
+      if (!hint) {
+         ttcircle.remove();
+         return;
+      }
+
+      if (ttcircle.empty())
+         ttcircle = this.draw_g.append("svg:ellipse")
+                             .attr("class","tooltip_bin")
+                             .style("pointer-events","none");
+
+      hint.changed = ttcircle.property("current_bin") !== hint.binindx;
+
+      if (hint.changed)
+         ttcircle.attr("cx", hint.x)
+               .attr("cy", hint.y)
+               .attr("rx", Math.round(hint.radius))
+               .attr("ry", Math.round(hint.radius))
+               .style("fill", "none")
+               .style("stroke", hint.color1)
+               .property("current_bin", hint.binindx);
+   }
+
+   TGraphPolarPainter.prototype.ProcessTooltip = function(pnt) {
+      var hint = this.ExtractTooltip(pnt);
+      if (!pnt || !pnt.disabled) this.ShowTooltip(hint);
+      return hint;
    }
 
    TGraphPolarPainter.prototype.PerformDrawing = function(divid) {
@@ -2995,11 +3355,13 @@
    JSROOT.Painter.drawPolyLine = drawPolyLine;
    JSROOT.Painter.drawArrow = drawArrow;
    JSROOT.Painter.drawEllipse = drawEllipse;
+   JSROOT.Painter.drawPie = drawPie;
    JSROOT.Painter.drawBox = drawBox;
    JSROOT.Painter.drawMarker = drawMarker;
    JSROOT.Painter.drawPolyMarker = drawPolyMarker;
    JSROOT.Painter.drawWebPainting = drawWebPainting;
    JSROOT.Painter.drawRooPlot = drawRooPlot;
+   JSROOT.Painter.drawGraph = drawGraph;
 
    JSROOT.TF1Painter = TF1Painter;
    JSROOT.TGraphPainter = TGraphPainter;

@@ -1,4 +1,5 @@
 <mvc:View
+   class="sapUiSizeCompact"
    height="100%"
    controllerName="sap.ui.jsroot.controller.Ged"
    xmlns:mvc="sap.ui.core.mvc"

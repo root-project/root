@@ -114,6 +114,8 @@ sap.ui.define([
          //to get access to the global model
          // this.getView().addDependent(this.methodDialog);
 
+         this.methodDialog.addStyleClass("sapUiSizeCompact");
+
          this.methodDialog.open();
       },
 
