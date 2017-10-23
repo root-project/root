@@ -15,7 +15,9 @@ Set(ZipNewHeaders
 )
 
 Set(ZipOldSource
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/Bits.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZDeflate.c
+  ${CMAKE_CURRENT_SOURCE_DIR}/src/ZTrees.c
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZInflate.c
 )
 

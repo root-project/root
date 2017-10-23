@@ -7,6 +7,7 @@
  For conditions of distribution and use, see copyright notice in zlib.h
 
  */
+#include "Bits.h"
 
 /*
  *  trees.c by Jean-loup Gailly
@@ -331,7 +332,7 @@ local void R__set_file_type  OF((tree_internal_state *t_state));
 
 #else /* DEBUG */
 #  define send_code(c, tree) \
-{ if (verbose>1) fprintf(stderr,"\ncd %3d ",(c)); \
+{ R__error("\ncd %3d ",(c)); \
 R__send_bits(state,tree[c].Code, tree[c].Len); }
 #endif
 
@@ -957,7 +958,7 @@ ulg R__flush_block(bits_internal_state *state, char *buf, ulg stored_len, int eo
 #ifdef FORCE_METHOD
    if (level == 1 && eof && compressed_len == 0L) { /* force stored file */
 #else
-      if (stored_len <= opt_lenb && eof && t_state->compressed_len == 0L && R__seekable()) {
+      if (stored_len <= opt_lenb && eof && t_state->compressed_len == 0L && 0) {
 #endif
          /* Since LIT_BUFSIZE <= 2*WSIZE, the input data must be there: */
          if (buf == (char *) NULL) { R__error ("block vanished"); *errorflag = 1; }
@@ -1153,5 +1154,4 @@ ulg R__flush_block(bits_internal_state *state, char *buf, ulg stored_len, int eo
          }
 #endif
 #endif
-         if (verbose) { }
       }
