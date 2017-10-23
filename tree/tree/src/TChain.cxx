@@ -154,18 +154,19 @@ TChain::TChain(const char* name, const char* title)
    fFiles = new TObjArray(fTreeOffsetLen);
    fStatus = new TList();
    fTreeOffset[0]  = 0;
-   gROOT->GetListOfSpecials()->Add(this);
    fFile = 0;
 
    // Reset PROOF-related bits
    ResetBit(kProofUptodate);
    ResetBit(kProofLite);
 
-   // Add to the global list
+   R__LOCKGUARD(gROOTMutex);
+
+   // Add to the global lists
+   gROOT->GetListOfSpecials()->Add(this);
    gROOT->GetListOfDataSets()->Add(this);
 
    // Make sure we are informed if the TFile is deleted.
-   R__LOCKGUARD(gROOTMutex);
    gROOT->GetListOfCleanups()->Add(this);
 }
 
@@ -202,10 +203,12 @@ TChain::~TChain()
    delete[] fTreeOffset;
    fTreeOffset = 0;
 
-   if (rootAlive) gROOT->GetListOfSpecials()->Remove(this);
-
-   // Remove from the global list
-   if (rootAlive) gROOT->GetListOfDataSets()->Remove(this);
+   // Remove from the global lists
+   if (rootAlive) {
+      R__LOCKGUARD(gROOTMutex);
+      gROOT->GetListOfSpecials()->Remove(this);
+      gROOT->GetListOfDataSets()->Remove(this);
+   }
 
    // This is the same as fFile, don't delete it a second time.
    fDirectory = 0;
