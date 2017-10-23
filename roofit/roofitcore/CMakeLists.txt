@@ -46,7 +46,7 @@ set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
              RooTestStatMPDriver.h
              RooTimer.h
              RooJsonListFile.h
-        RooGradMinimizer.h RooGradMinimizerFcn.h)
+             RooGradMinimizerFcn.h RooGradMinimizer.h)
 
 #ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
 #                              HEADERS ${headers1} ${headers2} ${headers3} ${headers4}
@@ -60,11 +60,11 @@ if(UNIX AND NOT APPLE)
     ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
             HEADERS ${headers1} ${headers2} ${headers3} ${headers4}
             DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-            DEPENDENCIES Core Hist Graf Matrix Tree Minuit RIO MathCore Foam rt)
+            DEPENDENCIES Core Hist Graf Matrix Tree Minuit Minuit2 RIO MathCore Foam rt)
 
 else()
     ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
             HEADERS ${headers1} ${headers2} ${headers3} ${headers4}
             DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-            DEPENDENCIES Core Hist Graf Matrix Tree Minuit RIO MathCore Foam)
+            DEPENDENCIES Core Hist Graf Matrix Tree Minuit Minuit2 RIO MathCore Foam)
 endif()

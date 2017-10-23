@@ -55,7 +55,7 @@ schedule parallel calculation of gradient components.
 #include "RooMsgService.h"
 #include "RooPlot.h"
 
-#include "RooMinimizer.h"
+//#include "RooMinimizer.h"
 #include "RooGradMinimizer.h"
 #include "RooGradMinimizerFcn.h"
 #include "RooFitResult.h"
@@ -203,9 +203,32 @@ void RooGradMinimizer::optimizeConst(Int_t flag)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
+Int_t RooGradMinimizer::evalCounter() const {
+  return fitterFcn()->evalCounter() ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void RooGradMinimizer::zeroEvalCount() {
+  fitterFcn()->zeroEvalCount() ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+inline Int_t RooGradMinimizer::getNPar() const { return fitterFcn()->NDim() ; }
+inline std::ofstream* RooGradMinimizer::logfile() { return fitterFcn()->GetLogFile(); }
+inline Double_t& RooGradMinimizer::maxFCN() { return fitterFcn()->GetMaxFCN() ; }
+
+
+const RooGradMinimizerFcn* RooGradMinimizer::fitterFcn() const {  return ( fitter()->GetFCN() ? (dynamic_cast<RooGradMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
+RooGradMinimizerFcn* RooGradMinimizer::fitterFcn() { return ( fitter()->GetFCN() ? (dynamic_cast<RooGradMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return underlying ROOT fitter object
 
-ROOT::Fit::Fitter* RooMinimizer::fitter()
+ROOT::Fit::Fitter* RooGradMinimizer::fitter()
 {
   return _theFitter ;
 }
@@ -214,7 +237,7 @@ ROOT::Fit::Fitter* RooMinimizer::fitter()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return underlying ROOT fitter object
 
-const ROOT::Fit::Fitter* RooMinimizer::fitter() const
+const ROOT::Fit::Fitter* RooGradMinimizer::fitter() const
 {
   return _theFitter ;
 }

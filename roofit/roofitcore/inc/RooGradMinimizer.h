@@ -25,7 +25,7 @@
 
 #include "Fit/Fitter.h"
 //#include "RooMinimizerFcn.h"
-#include "RooGradMinimizerFcn.h"
+//#include "RooGradMinimizerFcn.h"
 
 class RooAbsReal ;
 class RooFitResult ;
@@ -34,6 +34,8 @@ class RooRealVar ;
 class RooArgSet ;
 class TH2F ;
 class RooPlot ;
+
+class RooGradMinimizerFcn;
 
 class RooGradMinimizer : public TObject {
 public:
@@ -58,8 +60,8 @@ public:
 
   void saveStatus(const char* label, Int_t status) { _statusHistory.push_back(std::pair<std::string,int>(label,status)) ; }
 
-  Int_t evalCounter() const { return fitterFcn()->evalCounter() ; }
-  void zeroEvalCount() { fitterFcn()->zeroEvalCount() ; }
+  Int_t evalCounter() const; // { return fitterFcn()->evalCounter() ; }
+  void zeroEvalCount(); // { fitterFcn()->zeroEvalCount() ; }
 
   ROOT::Fit::Fitter* fitter() ;
   const ROOT::Fit::Fitter* fitter() const ;
@@ -68,12 +70,12 @@ protected:
 
   friend class RooAbsPdf ;
 
-  inline Int_t getNPar() const { return fitterFcn()->NDim() ; }
-  inline std::ofstream* logfile() { return fitterFcn()->GetLogFile(); }
-  inline Double_t& maxFCN() { return fitterFcn()->GetMaxFCN() ; }
+  inline Int_t getNPar() const; // { return fitterFcn()->NDim() ; }
+  inline std::ofstream* logfile(); // { return fitterFcn()->GetLogFile(); }
+  inline Double_t& maxFCN(); // { return fitterFcn()->GetMaxFCN() ; }
   
-  const RooGradMinimizerFcn* fitterFcn() const {  return ( fitter()->GetFCN() ? (dynamic_cast<RooGradMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
-  RooGradMinimizerFcn* fitterFcn() { return ( fitter()->GetFCN() ? (dynamic_cast<RooGradMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
+  const RooGradMinimizerFcn* fitterFcn() const; // {  return ( fitter()->GetFCN() ? (dynamic_cast<RooGradMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
+  RooGradMinimizerFcn* fitterFcn(); // { return ( fitter()->GetFCN() ? (dynamic_cast<RooGradMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
 
 private:
 
