@@ -265,7 +265,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else               bufmax = kMAXZIPBUF;
-         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
+         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, static_cast<ROOT::ECompressionAlgorithm>(cxAlgorithm));
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
@@ -356,7 +356,7 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else               bufmax = kMAXZIPBUF;
-         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
+         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, static_cast<ROOT::ECompressionAlgorithm>(cxAlgorithm));
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
