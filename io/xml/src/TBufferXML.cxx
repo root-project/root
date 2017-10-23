@@ -462,7 +462,8 @@ void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
       int dataSize = Length();
       int compressedSize = 0;
       R__zipMultipleAlgorithm(compressionLevel, &dataSize, Buffer(), &zipBufferSize,
-                              fZipBuffer, &compressedSize, compressionAlgorithm);
+                              fZipBuffer, &compressedSize,
+                              static_cast<ROOT::ECompressionAlgorithm>(compressionAlgorithm));
       if (compressedSize > 0) {
         src = fZipBuffer;
         srcSize = compressedSize;

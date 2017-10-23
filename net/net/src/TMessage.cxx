@@ -332,7 +332,8 @@ Int_t TMessage::Compress()
          bufmax = messlen - nzip;
       else
          bufmax = kMAXZIPBUF;
-      R__zipMultipleAlgorithm(compressionLevel, &bufmax, messbuf, &bufmax, bufcur, &nout, compressionAlgorithm);
+      R__zipMultipleAlgorithm(compressionLevel, &bufmax, messbuf, &bufmax, bufcur, &nout,
+                              static_cast<ROOT::ECompressionAlgorithm>(compressionAlgorithm));
       if (nout == 0 || nout >= messlen) {
          //this happens when the buffer cannot be compressed
          delete [] fBufComp;
