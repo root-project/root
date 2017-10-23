@@ -33,6 +33,7 @@ TEST(TStreamingDS, MultipleEntryRanges)
    EXPECT_EQ(*ansmin, 42);
 }
 
+#ifdef R__USE_IMT
 TEST(TStreamingDS, MultipleEntryRangesMT)
 {
    ROOT::EnableImplicitMT(2);
@@ -45,3 +46,4 @@ TEST(TStreamingDS, MultipleEntryRangesMT)
    EXPECT_EQ(*ansmin, 42);
    ROOT::DisableImplicitMT();
 }
+#endif
