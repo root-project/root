@@ -33,26 +33,20 @@ void execTestMissCache() {
    TNtuple * in_tree = (TNtuple*) in_file->Get("in_tree");
 
    // set cache on input file (mimic TEventIterTree::GetTrees)
-   TTreeCache *fTreeCache = 0;
-   int fCacheSize = 100000;
+   TTreeCache *treeCache = nullptr;
+   int cacheSize = 100000;
 
-   TTree * main = (TTree*) in_tree;
+   TTree *main = static_cast<TTree*>(in_tree);
    TFile *curfile = main->GetCurrentFile();
-   if (!fTreeCache) {
-      main->SetCacheSize(fCacheSize);
-      fTreeCache = (TTreeCache *)curfile->GetCacheRead(main);
-      if (fCacheSize < 0) fCacheSize = main->GetCacheSize();
-   } else {
-      curfile->SetCacheRead(fTreeCache, main);
-      fTreeCache->UpdateBranches(main);
-   }
-   if (!fTreeCache) {
+   main->SetCacheSize(cacheSize);
+   treeCache = (TTreeCache *)curfile->GetCacheRead(main);
+   if (!treeCache) {
       printf("Error! No tree cache present");
       return;
    }
 
    // Have no branches in the primary cache at all.
-   fTreeCache->StopLearningPhase();
+   treeCache->StopLearningPhase();
 
    float a, b, c;
    main->SetBranchAddress("a", &a);
@@ -64,18 +58,18 @@ void execTestMissCache() {
    }
 
    printf("Disabled miss cache:\n");
-   printf("Miss efficiency: %.2f\n", fTreeCache->GetMissEfficiency());
-   printf("Miss relative efficiency: %.2f\n", fTreeCache->GetMissEfficiencyRel());
+   printf("Miss efficiency: %.2f\n", treeCache->GetMissEfficiency());
+   printf("Miss relative efficiency: %.2f\n", treeCache->GetMissEfficiencyRel());
 
    // Re-read cache, enabling the miss cache.
-   fTreeCache->SetOptimizeMisses(true);
+   treeCache->SetOptimizeMisses(true);
    main->SetBranchStatus("c", false);
    for (Long64_t idx=0; idx<entries; idx++) {
       main->GetEntry(idx);
    }
 
    printf("Enabled miss cache:\n");
-   printf("Miss efficiency: %.2f\n", fTreeCache->GetMissEfficiency());
-   printf("Miss relative efficiency: %.2f\n", fTreeCache->GetMissEfficiencyRel());
+   printf("Miss efficiency: %.2f\n", treeCache->GetMissEfficiency());
+   printf("Miss relative efficiency: %.2f\n", treeCache->GetMissEfficiencyRel());
 }
 
