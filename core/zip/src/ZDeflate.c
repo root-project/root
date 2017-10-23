@@ -653,7 +653,7 @@ ulg R__Deflate(bits_internal_state *state,int *errorflag)
     /* extern ulg R__isize; */ /* byte length of input file, for debug only */
 #endif
 
-    if (level <= 3) return R__Deflate_fast(state,errorflag); /* optimized for speed */
+    if (gCompressionLevel <= 3) return R__Deflate_fast(state,errorflag); /* optimized for speed */
 
     /* Process the input block. */
     while (state->lookahead != 0) {

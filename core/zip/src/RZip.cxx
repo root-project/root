@@ -110,7 +110,7 @@ static void R__zipOld(int cxlevel, int *srcsize, char *src, int *tgtsize, char *
     ush att      = (ush)UNKNOWN;
     ush flags    = 0;
     if (cxlevel > 9) cxlevel = 9;
-    level        = cxlevel;
+    gCompressionLevel = cxlevel;
 
     *irep        = 0;
     /* error_flag   = 0; */
@@ -140,7 +140,7 @@ static void R__zipOld(int cxlevel, int *srcsize, char *src, int *tgtsize, char *
     if (0 != R__bi_init(&state) ) return;       /* initialize bit routines */
     state.t_state = R__get_thread_tree_state();
     if (0 != R__ct_init(state.t_state,&att, &method)) return; /* initialize tree routines */
-    if (0 != R__lm_init(&state,level, &flags)) return; /* initialize compression */
+    if (0 != R__lm_init(&state, gCompressionLevel, &flags)) return; /* initialize compression */
     R__Deflate(&state,&state.error_flag);                  /* compress data */
     if (state.error_flag != 0) return;
 

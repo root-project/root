@@ -66,8 +66,6 @@ typedef unsigned long ulg;      /* unsigned 32-bit value */
 #define STORE 0                 /* Store method */
 #define DEFLATE 8               /* Deflation method*/
 
-static int level=6;             /* Compression level */
-
 /* Diagnostic functions */
 #ifdef DEBUG
 # ifdef MSDOS
@@ -94,6 +92,8 @@ static int level=6;             /* Compression level */
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+extern int gCompressionLevel;          /* Compression level */
 
 typedef struct bits_internal_state bits_internal_state;
 typedef struct tree_internal_state tree_internal_state;
