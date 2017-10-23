@@ -956,7 +956,7 @@ ulg R__flush_block(bits_internal_state *state, char *buf, ulg stored_len, int eo
     * the whole file is transformed into a stored file:
     */
 #ifdef FORCE_METHOD
-   if (level == 1 && eof && compressed_len == 0L) { /* force stored file */
+   if (gCompressionLevel == 1 && eof && compressed_len == 0L) { /* force stored file */
 #else
       if (stored_len <= opt_lenb && eof && t_state->compressed_len == 0L && 0) {
 #endif
@@ -970,7 +970,7 @@ ulg R__flush_block(bits_internal_state *state, char *buf, ulg stored_len, int eo
 #endif /* PGP */
 
 #ifdef FORCE_METHOD
-         if (level == 2 && buf != (char*)NULL) { /* force stored block */
+         if (gCompressionLevel == 2 && buf != (char*)NULL) { /* force stored block */
 #else
             if (stored_len+4 <= opt_lenb && buf != (char*)NULL) {
                /* 4: two words for the lengths */
@@ -988,7 +988,7 @@ ulg R__flush_block(bits_internal_state *state, char *buf, ulg stored_len, int eo
                R__copy_block(state, buf, (unsigned)stored_len, 1); /* with header */
 
 #ifdef FORCE_METHOD
-            } else if (level == 3) { /* force static trees */
+            } else if (gCompressionLevel == 3) { /* force static trees */
 #else
             } else if (static_lenb == opt_lenb) {
 #endif
@@ -1062,7 +1062,7 @@ ulg R__flush_block(bits_internal_state *state, char *buf, ulg stored_len, int eo
             t_state->flags = 0, t_state->flag_bit = 1;
          }
          /* Try to guess if it is profitable to stop the current block here */
-         if (level > 2 && (t_state->last_lit & 0xfff) == 0) {
+         if (gCompressionLevel > 2 && (t_state->last_lit & 0xfff) == 0) {
             /* Compute an upper bound for the compressed length */
             ulg out_length = (ulg)t_state->last_lit*8L;
             ulg in_length = (ulg)state->R__strstart-state->R__block_start;
