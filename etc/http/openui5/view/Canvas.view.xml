@@ -1,4 +1,4 @@
-<mvc:View height="100%" controllerName="sap.ui.jsroot.controller.Canvas"
+<mvc:View height="100%" class="sapUiSizeCompact" controllerName="sap.ui.jsroot.controller.Canvas"
    xmlns:mvc="sap.ui.core.mvc" xmlns:l="sap.ui.layout" xmlns="sap.m">
    <Page title="" showNavButton="false" showFooter="false"
       showSubHeader="false" id="CanvasMainPage">

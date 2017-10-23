@@ -34,7 +34,7 @@
       kDoNotUseBufferMap: JSROOT.BIT(22) // If set, at least one of the entry in the branch will use the buffer's map of classname and objects.
    }
 
-   JSROOT.TSelector = function() {
+    function TSelector() {
       // class to read data from TTree
       this.branches = []; // list of branches to read
       this.names = []; // list of member names for each branch in tgtobj
@@ -43,7 +43,7 @@
       this.tgtobj = {};
    }
 
-   JSROOT.TSelector.prototype.AddBranch = function(branch, name, direct) {
+   TSelector.prototype.AddBranch = function(branch, name, direct) {
       // Add branch to the selector
       // Either branch name or branch itself should be specified
       // Second parameter defines member name in the tgtobj
@@ -58,32 +58,32 @@
       return this.branches.length-1;
    }
 
-   JSROOT.TSelector.prototype.indexOfBranch = function(branch) {
+   TSelector.prototype.indexOfBranch = function(branch) {
       return this.branches.indexOf(branch);
    }
 
-   JSROOT.TSelector.prototype.nameOfBranch = function(indx) {
+   TSelector.prototype.nameOfBranch = function(indx) {
       return this.names[indx];
    }
 
-   JSROOT.TSelector.prototype.ShowProgress = function(value) {
+   TSelector.prototype.ShowProgress = function(value) {
       // this function can be used to check current TTree progress
    }
 
-   JSROOT.TSelector.prototype.Abort = function() {
+   TSelector.prototype.Abort = function() {
       // call this function to abort processing
       this.break_execution = -1111;
    }
 
-   JSROOT.TSelector.prototype.Begin = function(tree) {
+   TSelector.prototype.Begin = function(tree) {
       // function called before start processing
    }
 
-   JSROOT.TSelector.prototype.Process = function(entry) {
+   TSelector.prototype.Process = function(entry) {
       // function called when next entry extracted from the tree
    }
 
-   JSROOT.TSelector.prototype.Terminate = function(res) {
+   TSelector.prototype.Terminate = function(res) {
       // function called at the very end of processing
    }
 
@@ -112,7 +112,7 @@
       return plain ? 2 : 1;
    }
 
-   JSROOT.ArrayIterator = function(arr, select, tgtobj) {
+   function ArrayIterator(arr, select, tgtobj) {
       // class used to iterate over all array indexes until number value
 
       this.object = arr;
@@ -128,7 +128,7 @@
          this.select = []; // empty array, undefined for each dimension means iterate over all indexes
    }
 
-   JSROOT.ArrayIterator.prototype.next = function() {
+   ArrayIterator.prototype.next = function() {
       var obj, typ, cnt = this.cnt, seltyp;
 
       if (cnt >= 0) {
@@ -146,11 +146,7 @@
 
       while (true) {
 
-         if (cnt < 0) {
-            obj = this.object;
-         } else {
-            obj = (this.arr[cnt])[this.indx[cnt]];
-         }
+         obj = (cnt < 0) ? this.object : (this.arr[cnt])[this.indx[cnt]];
 
          typ = obj ? typeof obj : "any";
 
@@ -158,8 +154,7 @@
             if (obj._typename !== undefined) {
                if (JSROOT.IsRootCollection(obj)) { obj = obj.arr; typ = "array"; }
                                             else typ = "any";
-            } else
-            if (!isNaN(obj.length) && (JSROOT.CheckArrayPrototype(obj)>0)) {
+            } else if (!isNaN(obj.length) && (JSROOT.CheckArrayPrototype(obj)>0)) {
                typ = "array";
             } else {
                typ = "any";
@@ -222,7 +217,7 @@
       return false;
    }
 
-   JSROOT.ArrayIterator.prototype.reset = function() {
+   ArrayIterator.prototype.reset = function() {
       this.arr = [];
       this.indx = [];
       delete this.fastarr;
@@ -232,7 +227,7 @@
 
    // ============================================================================
 
-   JSROOT.TDrawVariable = function(globals) {
+   function TDrawVariable(globals) {
       // object with single variable in TTree::Draw expression
       this.globals = globals;
 
@@ -246,7 +241,7 @@
       this.buf = []; // buffer accumulates temporary values
    }
 
-   JSROOT.TDrawVariable.prototype.Parse = function(tree,selector,code,only_branch,branch_mode) {
+   TDrawVariable.prototype.Parse = function(tree,selector,code,only_branch,branch_mode) {
       // when only_branch specified, its placed in the front of the expression
 
       function is_start_symbol(symb) {
@@ -375,7 +370,7 @@
                      arriter.push(parseInt(sub));
                   } else {
                      // try to compile code as draw variable
-                     var subvar = new JSROOT.TDrawVariable(this.globals);
+                     var subvar = new TDrawVariable(this.globals);
                      if (!subvar.Parse(tree,selector, sub)) return false;
                      arriter.push(subvar);
                   }
@@ -419,11 +414,11 @@
       return true;
    }
 
-   JSROOT.TDrawVariable.prototype.is_dummy = function() {
+   TDrawVariable.prototype.is_dummy = function() {
       return (this.branches.length === 0) && !this.func;
    }
 
-   JSROOT.TDrawVariable.prototype.Produce = function(obj) {
+   TDrawVariable.prototype.Produce = function(obj) {
       // after reading tree braches into the object, calculate variable value
 
       this.length = 1;
@@ -452,7 +447,7 @@
             // plain array, can be used as is
             arrs[n] = arg[name];
          } else {
-            var iter = new JSROOT.ArrayIterator(arg[name], this.brarray[n], obj);
+            var iter = new ArrayIterator(arg[name], this.brarray[n], obj);
             arrs[n] = [];
             while (iter.next()) arrs[n].push(iter.value);
          }
@@ -491,11 +486,11 @@
       if (!this.kind) this.kind = typeof this.value[0];
    }
 
-   JSROOT.TDrawVariable.prototype.get = function(indx) {
+   TDrawVariable.prototype.get = function(indx) {
       return this.isarray ? this.value[indx] : this.value;
    }
 
-   JSROOT.TDrawVariable.prototype.AppendArray = function(tgtarr) {
+   TDrawVariable.prototype.AppendArray = function(tgtarr) {
       // append array to the buffer
 
       this.buf = this.buf.concat(tgtarr[this.branches[0]]);
@@ -503,8 +498,8 @@
 
    // =============================================================================
 
-   JSROOT.TDrawSelector = function(callback) {
-      JSROOT.TSelector.call(this);
+   function TDrawSelector(callback) {
+      TSelector.call(this);
 
       this.ndim = 0;
       this.vars = []; // array of expression variables
@@ -523,9 +518,9 @@
       this.aver_diff = 0;
    }
 
-   JSROOT.TDrawSelector.prototype = Object.create(JSROOT.TSelector.prototype);
+   TDrawSelector.prototype = Object.create(TSelector.prototype);
 
-   JSROOT.TDrawSelector.prototype.ParseParameters = function(tree, args, expr) {
+   TDrawSelector.prototype.ParseParameters = function(tree, args, expr) {
 
       if (!expr || (typeof expr !== "string")) return "";
 
@@ -598,11 +593,9 @@
          }
          if (harg === "dump") {
             args.dump = true;
-         } else
-         if (pos<0) {
+         } else if (pos<0) {
             this.hist_name = harg;
-         } else
-         if ((harg[0]=="(") && (harg[harg.length-1]==")"))  {
+         } else  if ((harg[0]=="(") && (harg[harg.length-1]==")"))  {
             harg = harg.substr(1,harg.length-2).split(",");
             var isok = true;
             for (var n=0;n<harg.length;++n) {
@@ -622,7 +615,7 @@
       return expr;
    }
 
-   JSROOT.TDrawSelector.prototype.ParseDrawExpression = function(tree, args) {
+   TDrawSelector.prototype.ParseDrawExpression = function(tree, args) {
 
       // parse complete expression
       var expr = this.ParseParameters(tree, args, args.expr), cut = "";
@@ -669,12 +662,12 @@
       var is_direct = !cut;
 
       for (var n=0;n<this.ndim;++n) {
-         this.vars[n] = new JSROOT.TDrawVariable(this.globals);
+         this.vars[n] = new TDrawVariable(this.globals);
          if (!this.vars[n].Parse(tree, this, names[n])) return false;
          if (!this.vars[n].direct_branch) is_direct = false;
       }
 
-      this.cut = new JSROOT.TDrawVariable(this.globals);
+      this.cut = new TDrawVariable(this.globals);
       if (cut)
          if (!this.cut.Parse(tree, this, cut)) return false;
 
@@ -695,7 +688,7 @@
       return true;
    }
 
-   JSROOT.TDrawSelector.prototype.DrawOnlyBranch = function(tree, branch, expr, args) {
+   TDrawSelector.prototype.DrawOnlyBranch = function(tree, branch, expr, args) {
       this.ndim = 1;
 
       if (expr.indexOf("dump")==0) expr = ";" + expr;
@@ -726,25 +719,25 @@
          return true;
       }
 
-      this.vars[0] = new JSROOT.TDrawVariable(this.globals);
+      this.vars[0] = new TDrawVariable(this.globals);
       if (!this.vars[0].Parse(tree, this, expr, branch, args.direct_branch)) return false;
       this.hist_title = "drawing branch '" + branch.fName + (expr ? "' expr:'" + expr : "") + "'  from " + tree.fName;
 
-      this.cut = new JSROOT.TDrawVariable(this.globals);
+      this.cut = new TDrawVariable(this.globals);
 
       if (this.vars[0].direct_branch) this.ProcessArrays = this.ProcessArraysFunc;
 
       return true;
    }
 
-   JSROOT.TDrawSelector.prototype.Begin = function(tree) {
+   TDrawSelector.prototype.Begin = function(tree) {
       this.globals.entries = tree.fEntries;
 
       if (this.monitoring)
          this.lasttm = new Date().getTime();
    }
 
-   JSROOT.TDrawSelector.prototype.ShowProgress = function(value) {
+   TDrawSelector.prototype.ShowProgress = function(value) {
       // this function should be defined not here
 
       if (typeof document == 'undefined' || !JSROOT.progress) return;
@@ -783,7 +776,7 @@
       this.last_progress = value;
    }
 
-   JSROOT.TDrawSelector.prototype.GetBitsBins = function(nbits, res) {
+   TDrawSelector.prototype.GetBitsBins = function(nbits, res) {
       res.nbins = res.max = nbits;
       res.fLabels = JSROOT.Create("THashList");
       for (var k=0;k<nbits;++k) {
@@ -795,7 +788,7 @@
       return res;
    }
 
-   JSROOT.TDrawSelector.prototype.GetMinMaxBins = function(axisid, nbins) {
+   TDrawSelector.prototype.GetMinMaxBins = function(axisid, nbins) {
 
       var res = { min: 0, max: 0, nbins: nbins, k: 1., fLabels: null, title: "" };
 
@@ -846,12 +839,10 @@
             if (s.fString === "") s.fString = "<empty>";
             res.fLabels.Add(s);
          }
-      } else
-      if ((axisid === 0) && (this.hist_name === "bits") && (this.hist_args.length <= 1)) {
+      } else if ((axisid === 0) && (this.hist_name === "bits") && (this.hist_args.length <= 1)) {
          this.Fill1DHistogram = this.FillBitsHistogram;
          return this.GetBitsBins(this.hist_args[0] || 32, res);
-      } else
-      if (axisid*3 + 2 < this.hist_args.length) {
+      } else if (axisid*3 + 2 < this.hist_args.length) {
          res.nbins = this.hist_args[axisid*3];
          res.min = this.hist_args[axisid*3+1];
          res.max = this.hist_args[axisid*3+2];
@@ -900,7 +891,7 @@
       return res;
    }
 
-   JSROOT.TDrawSelector.prototype.CreateHistogram = function() {
+   TDrawSelector.prototype.CreateHistogram = function() {
       if (this.hist || !this.vars[0].buf) return;
 
       if (this.dump_values) {
@@ -969,7 +960,7 @@
       delete this.cut.buf;
    }
 
-   JSROOT.TDrawSelector.prototype.FillTBitsHistogram = function(xvalue, weight) {
+   TDrawSelector.prototype.FillTBitsHistogram = function(xvalue, weight) {
       if (!weight || !xvalue || !xvalue.fNbits || !xvalue.fAllBits) return;
 
       var sz = Math.min(xvalue.fNbits+1, xvalue.fNbytes*8);
@@ -987,7 +978,7 @@
       }
    }
 
-   JSROOT.TDrawSelector.prototype.FillBitsHistogram = function(xvalue, weight) {
+   TDrawSelector.prototype.FillBitsHistogram = function(xvalue, weight) {
       if (!weight) return;
 
       for (var bit=0,mask=1;bit<this.x.nbins;++bit) {
@@ -996,7 +987,7 @@
       }
    }
 
-   JSROOT.TDrawSelector.prototype.Fill1DHistogram = function(xvalue, weight) {
+   TDrawSelector.prototype.Fill1DHistogram = function(xvalue, weight) {
       var bin = this.x.GetBin(xvalue);
       this.hist.fArray[bin] += weight;
 
@@ -1007,7 +998,7 @@
       }
    }
 
-   JSROOT.TDrawSelector.prototype.Fill2DHistogram = function(xvalue, yvalue, weight) {
+   TDrawSelector.prototype.Fill2DHistogram = function(xvalue, yvalue, weight) {
       var xbin = this.x.GetBin(xvalue),
           ybin = this.y.GetBin(yvalue);
 
@@ -1022,7 +1013,7 @@
       }
    }
 
-   JSROOT.TDrawSelector.prototype.Fill3DHistogram = function(xvalue, yvalue, zvalue, weight) {
+   TDrawSelector.prototype.Fill3DHistogram = function(xvalue, yvalue, zvalue, weight) {
       var xbin = this.x.GetBin(xvalue),
           ybin = this.y.GetBin(yvalue),
           zbin = this.z.GetBin(zvalue);
@@ -1042,7 +1033,7 @@
       }
    }
 
-   JSROOT.TDrawSelector.prototype.DumpValue = function(v1, v2, v3, v4) {
+   TDrawSelector.prototype.DumpValue = function(v1, v2, v3, v4) {
       var obj;
       switch (this.ndim) {
          case 1: obj = { x: v1, weight: v2 }; break;
@@ -1057,7 +1048,7 @@
       this.hist.push(obj);
    }
 
-   JSROOT.TDrawSelector.prototype.ProcessArraysFunc = function(entry) {
+   TDrawSelector.prototype.ProcessArraysFunc = function(entry) {
       // function used when all branches can be read as array
       // most typical usage - histogramming of single branch
 
@@ -1105,7 +1096,7 @@
       }
    }
 
-   JSROOT.TDrawSelector.prototype.ProcessDump = function(entry) {
+   TDrawSelector.prototype.ProcessDump = function(entry) {
       // simple dump of the branch - no need to analyze something
 
       var res = this.leaf ? this.tgtobj.br0[this.leaf] : this.tgtobj.br0;
@@ -1121,7 +1112,7 @@
       }
    }
 
-   JSROOT.TDrawSelector.prototype.Process = function(entry) {
+   TDrawSelector.prototype.Process = function(entry) {
 
       this.globals.entry = entry; // can be used in any expression
 
@@ -1163,8 +1154,7 @@
             this.CreateHistogram();
             this.arr_limit = 0;
          }
-      } else
-      if (this.hist) {
+      } else if (this.hist) {
          switch(this.ndim) {
             case 1:
                for (var n0=0;n0<var0.length;++n0)
@@ -1193,7 +1183,7 @@
       }
    }
 
-   JSROOT.TDrawSelector.prototype.Terminate = function(res) {
+   TDrawSelector.prototype.Terminate = function(res) {
       if (res && !this.hist) this.CreateHistogram();
 
       this.ShowProgress();
@@ -1213,8 +1203,8 @@
           arr = (s_i && s_i.fElements) ? s_i.fElements.arr : null;
       if (!arr) return null;
 
-      var match_name = branch.fName;
-      var pos = match_name.indexOf("[");
+      var match_name = branch.fName,
+          pos = match_name.indexOf("[");
       if (pos>0) match_name = match_name.substr(0, pos);
       pos = match_name.lastIndexOf(".");
       if (pos>0) match_name = match_name.substr(pos+1);
@@ -1253,7 +1243,6 @@
           elem = null;
       if (!arr) return "";
 
-
       for (var k=0;k<arr.length;++k) {
          if (arr[k].fTypeName === "BASE") {
             var res = JSROOT.IO.DefineMemberTypeName(file, arr[k].fName, member_name);
@@ -1285,9 +1274,8 @@
 
       var s_elem = JSROOT.IO.FindBrachStreamerElement(branch, tree.$file);
 
-      if ((branch.fType === JSROOT.BranchType.kBaseClassNode) && s_elem && (s_elem.fTypeName==="BASE")) {
+      if ((branch.fType === JSROOT.BranchType.kBaseClassNode) && s_elem && (s_elem.fTypeName==="BASE"))
           return s_elem.fName;
-      }
 
       if (branch.fType === JSROOT.BranchType.kObjectNode) {
          if (s_elem && ((s_elem.fType === JSROOT.IO.kObject) || (s_elem.fType === JSROOT.IO.kAny)))
@@ -1485,18 +1473,14 @@
              child_scan = 0, // scan child branches after main branch is appended
              item_cnt = null, item_cnt2 = null, object_class = "";
 
-
          if (branch.fBranchCount) {
 
             item_cnt = FindInHandle(branch.fBranchCount);
 
-            if (!item_cnt) {
+            if (!item_cnt)
                item_cnt = AddBranchForReading(branch.fBranchCount, target_object, "$counter" + namecnt++, true);
-               // console.log('Add counter branch', branch.fBranchCount.fName, 'as', item_cnt ? item_cnt.name : "---");
-            }
 
             if (!item_cnt) { console.error('Cannot add counter branch', branch.fBranchCount.fName); return null; }
-
 
             var BranchCount2 = branch.fBranchCount2;
 
@@ -1654,9 +1638,7 @@
 
              return item; // this kind of branch does not have baskets and not need to be read
 
-          } else
-
-          if (is_brelem && (nb_leaves === 1) && (leaf.fName === branch.fName) && (branch.fID==-1)) {
+          } else if (is_brelem && (nb_leaves === 1) && (leaf.fName === branch.fName) && (branch.fID==-1)) {
 
              elem = JSROOT.IO.CreateStreamerElement(target_name, branch.fClassName);
 
@@ -1681,23 +1663,20 @@
 
              // only STL containers here
              // if (!elem.fSTLtype) elem = null;
-          } else
-          if (is_brelem && (nb_leaves <= 1)) {
+          } else if (is_brelem && (nb_leaves <= 1)) {
 
              elem = JSROOT.IO.FindBrachStreamerElement(branch, handle.file);
 
              // this is basic type - can try to solve problem differently
-             if (!elem && branch.fStreamerType && (branch.fStreamerType < 20)) {
+             if (!elem && branch.fStreamerType && (branch.fStreamerType < 20))
                 elem = JSROOT.IO.CreateStreamerElement(target_name, branch.fStreamerType);
-             }
-          } else
-          if (nb_leaves === 1) {
+
+          } else if (nb_leaves === 1) {
               // no special constrains for the leaf names
 
              elem = CreateLeafElem(leaf, target_name);
 
-          } else
-          if ((branch._typename === "TBranch") && (nb_leaves > 1)) {
+          } else if ((branch._typename === "TBranch") && (nb_leaves > 1)) {
              // branch with many elementary leaves
 
              var arr = new Array(nb_leaves), isok = true;
@@ -1746,12 +1725,10 @@
              if (snames.length === 1) {
                 // no point in the name - just plain array of objects
                 member.get = function(arr,n) { return arr[n]; }
-             } else
-             if (read_mode === "$child$") {
+             } else if (read_mode === "$child$") {
                 console.error('target name contains point, but suppose to be direct child', target_name);
                 return null;
-             } else
-             if (snames.length === 2) {
+             } else if (snames.length === 2) {
                 target_name = member.name = snames[1];
                 member.name1 = snames[0];
                 member.subtype1 = read_mode;
@@ -1810,8 +1787,7 @@
                 }
              }
 
-          } else
-          if (item_cnt) {
+          } else if (item_cnt) {
 
              handle.process_arrays = false;
 
@@ -1949,7 +1925,7 @@
       }
 
       // main loop to add all branches from selector for reading
-      for (var nn = 0; nn < selector.branches.length; ++nn) {
+      for (var nn=0; nn<selector.branches.length; ++nn) {
 
          var item = AddBranchForReading(selector.branches[nn], undefined, selector.names[nn], selector.directs[nn]);
 
@@ -1961,7 +1937,7 @@
 
       // check if simple reading can be performed and there are direct data in branch
 
-      for (var h=1;(h < handle.arr.length) && handle.simple_read;++h) {
+      for (var h=1; (h < handle.arr.length) && handle.simple_read; ++h) {
 
          var item = handle.arr[h], item0 = handle.arr[0];
 
@@ -2014,9 +1990,9 @@
             selector.tgtarr = {}; // object with arrays
 
             for(var nn=0;nn<handle.arr.length;++nn) {
-               var item = handle.arr[nn];
+               var item = handle.arr[nn],
+                   elem = JSROOT.IO.CreateStreamerElement(item.name, item.type);
 
-               var elem = JSROOT.IO.CreateStreamerElement(item.name, item.type);
                elem.fType = item.type + JSROOT.IO.kOffsetL;
                elem.fArrayLength = 10;
                elem.fArrayDim = 1;
@@ -2421,7 +2397,7 @@
       if (args.expr === "testio")
          return this.IOTest(args, result_callback);
 
-      var selector = new JSROOT.TDrawSelector(result_callback);
+      var selector = new TDrawSelector(result_callback);
 
       if (args.branch) {
          if (!selector.DrawOnlyBranch(this, args.branch, args.expr, args)) selector = null;
@@ -2479,7 +2455,7 @@
 
       function TestNextBranch() {
 
-         var selector = new JSROOT.TSelector;
+         var selector = new TSelector;
 
          selector.AddBranch(args.branches[args.nbr], "br0");
 
@@ -2510,12 +2486,10 @@
 
          JSROOT.progress("br " + args.nbr + "/" + args.branches.length + " " + args.names[args.nbr]);
 
-         var br = args.branches[args.nbr];
-
-         var object_class = JSROOT.IO.GetBranchObjectClass(br, tree),
-             num = br.fEntries;
-
-         var skip_branch = (!br.fLeaves || (br.fLeaves.arr.length === 0));
+         var br = args.branches[args.nbr],
+             object_class = JSROOT.IO.GetBranchObjectClass(br, tree),
+             num = br.fEntries,
+             skip_branch = (!br.fLeaves || (br.fLeaves.arr.length === 0));
 
          if (object_class) skip_branch = (args.nchilds[args.nbr]>100);
 
@@ -2550,9 +2524,7 @@
 
    // ===========================================================================
 
-
    if (JSROOT.Painter)
-
    JSROOT.Painter.CreateBranchItem = function(node, branch, tree, parent_branch) {
       if (!node || !branch) return false;
 
@@ -2606,7 +2578,7 @@
                  });
               }
 
-            for (var i=0; i < bobj.fBranches.arr.length; ++i)
+            for (var i=0; i<bobj.fBranches.arr.length; ++i)
                JSROOT.Painter.CreateBranchItem(bnode, bobj.fBranches.arr[i], bobj.$tree, bobj);
 
             var object_class = JSROOT.IO.GetBranchObjectClass(bobj, bobj.$tree, true),
@@ -2630,12 +2602,10 @@
             return true;
          }
          return true;
-      } else
-      if (nb_leaves === 1) {
+      } else if (nb_leaves === 1) {
          subitem._icon = "img_leaf";
          subitem._more = false;
-      } else
-      if (nb_leaves > 1) {
+      } else if (nb_leaves > 1) {
          subitem._childs = [];
          for (var j = 0; j < nb_leaves; ++j) {
             branch.fLeaves.arr[j].$branch = branch; // keep branch pointer for drawing
@@ -2658,22 +2628,20 @@
       node._childs = [];
       node._tree = obj;  // set reference, will be used later by TTree::Draw
 
-      for ( var i = 0; i < obj.fBranches.arr.length; ++i)
+      for (var i=0; i<obj.fBranches.arr.length; ++i)
          JSROOT.Painter.CreateBranchItem(node, obj.fBranches.arr[i], obj);
 
       return true;
    }
 
-
- if (JSROOT.Painter)
+   if (JSROOT.Painter)
    JSROOT.Painter.drawTree = function(divid, obj, opt) {
       // this is function called from JSROOT.draw()
       // just envelope for real TTree::Draw method which do the main job
       // Can be also used for the branch and leaf object
 
-      var painter = new JSROOT.TObjectPainter(obj);
-
-      var tree = obj, args = opt;
+      var painter = new JSROOT.TObjectPainter(obj),
+          tree = obj, args = opt;
 
       if (obj._typename == "TBranchFunc") {
          // fictional object, created only in browser
@@ -2681,8 +2649,7 @@
          if (opt && opt.indexOf("dump")==0) args.expr += ">>" + opt; else
          if (opt) args.expr += opt;
          tree = obj.branch.$tree;
-      } else
-      if (obj.$branch) {
+      } else if (obj.$branch) {
          // this is drawing of the single leaf from the branch
          args = { expr: "." + obj.fName + (opt || ""), branch: obj.$branch };
          if ((args.branch.fType === JSROOT.BranchType.kClonesNode) || (args.branch.fType === JSROOT.BranchType.kSTLNode)) {
@@ -2692,8 +2659,7 @@
          }
 
          tree = obj.$branch.$tree;
-      } else
-      if (obj.$tree) {
+      } else if (obj.$tree) {
          // this is drawing of the branch
 
          // if generic object tried to be drawn without specifying any options, it will be just dump
@@ -2754,6 +2720,10 @@
 
       return painter;
    }
+
+   JSROOT.TSelector = TSelector;
+   JSROOT.TDrawVariable = TDrawVariable;
+   JSROOT.TDrawSelector = TDrawSelector;
 
    return JSROOT;
 
