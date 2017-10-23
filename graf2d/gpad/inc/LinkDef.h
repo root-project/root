@@ -81,6 +81,13 @@
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<long long>+;
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<double>+;
 #pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TCanvas>+;
+#pragma link C++ class ROOT::Experimental::TText+;
+#pragma link C++ class ROOT::Experimental::TextDrawingOpts+;
+#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::TextDrawingOpts>+;
+#pragma link C++ class ROOT::Experimental::TTextDrawable+;
+#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::TText>+;
+#pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TTextDrawable>+;
+
 
 //#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Pixel>+;
 //#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Normal>+;
