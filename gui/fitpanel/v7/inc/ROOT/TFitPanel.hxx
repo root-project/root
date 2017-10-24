@@ -46,6 +46,8 @@ public:
 
    void Hide();
 
+   void DoFit(const std::string &dname, const std::string &mname);
+
 };
 
 } // namespace Experimental
