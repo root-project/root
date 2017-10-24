@@ -38,7 +38,7 @@ public:
 
    virtual TString GetDefaultPageContent() override
    {
-      return "file:$jsrootsys/files/canvas.htm";
+      return fDispl->fDefaultPage.c_str();
    }
 
    virtual Bool_t ProcessWS(THttpCallArg *arg) override
