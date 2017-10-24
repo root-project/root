@@ -766,7 +766,8 @@ def mainfunction(text):
         json.dump(json_data, fout, indent=1, sort_keys=True)
 
     print(time.time() - starttime)
-    timeout = findTimeout()
+    timeout = 2*findTimeout()
+
     # Call commmand that executes the notebook and creates a new notebook with the output
     r = subprocess.call(["jupyter", "nbconvert", "--ExecutePreprocessor.timeout=%d" % timeout,  "--to=notebook", "--execute",  outPathName])
     if r != 0:
