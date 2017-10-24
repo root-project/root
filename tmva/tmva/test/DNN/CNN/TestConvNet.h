@@ -43,13 +43,12 @@ auto testIm2col(typename Architecture::Matrix_t &A, typename Architecture::Matri
                 size_t imgWidth, size_t fltHeight, size_t fltWidth, size_t strideRows, size_t strideCols,
                 size_t zeroPaddingHeight, size_t zeroPaddingWidth) -> bool
 {
-   using Matrix_t = typename Architecture::Matrix_t;
 
    size_t m, n;
    m = B.GetNrows();
    n = B.GetNcols();
 
-   Matrix_t ATr(m, n);
+   typename Architecture::Matrix_t ATr(m, n);
    Architecture::Im2col(ATr, A, imgHeight, imgWidth, fltHeight, fltWidth, strideRows, strideCols, zeroPaddingHeight,
                         zeroPaddingWidth);
 
@@ -71,13 +70,12 @@ template <typename Architecture>
 auto testRotateWeights(typename Architecture::Matrix_t &A, typename Architecture::Matrix_t &B, size_t filterDepth,
                        size_t filterHeight, size_t filterWidth, size_t numFilters) -> bool
 {
-   using Matrix_t = typename Architecture::Matrix_t;
 
    size_t m, n;
    m = B.GetNrows();
    n = B.GetNcols();
 
-   Matrix_t ARot(m, n);
+   typename Architecture::Matrix_t ARot(m, n);
    Architecture::RotateWeights(ARot, A, filterDepth, filterHeight, filterWidth, numFilters);
 
    for (size_t i = 0; i < m; i++) {
@@ -100,19 +98,17 @@ auto testDownsample(const typename Architecture::Matrix_t &A, const typename Arc
                     size_t fltWidth, size_t strideRows, size_t strideCols) -> bool
 {
 
-   using Matrix_t = typename Architecture::Matrix_t;
-
    size_t m1, n1;
    m1 = B.GetNrows();
    n1 = B.GetNcols();
 
-   Matrix_t ADown(m1, n1);
+   typename Architecture::Matrix_t ADown(m1, n1);
 
    size_t m2, n2;
    m2 = ind.GetNrows();
    n2 = ind.GetNcols();
 
-   Matrix_t AInd(m2, n2);
+   typename Architecture::Matrix_t AInd(m2, n2);
 
    Architecture::Downsample(ADown, AInd, A, imgHeight, imgWidth, fltHeight, fltWidth, strideRows, strideCols);
 
@@ -143,13 +139,11 @@ auto testFlatten(std::vector<typename Architecture::Matrix_t> &A, const typename
                  size_t nRows, size_t nCols) -> bool
 {
 
-   using Matrix_t = typename Architecture::Matrix_t;
-
    size_t m, n;
    m = B.GetNrows();
    n = B.GetNcols();
 
-   Matrix_t AFlat(m, n);
+   typename Architecture::Matrix_t AFlat(m, n);
    Architecture::Flatten(AFlat, A, size, nRows, nCols);
 
    for (size_t i = 0; i < m; i++) {
