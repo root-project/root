@@ -23,7 +23,7 @@ R__LOAD_LIBRARY(libGpad);
 #include "ROOT/TFile.hxx"
 #include "ROOT/TCanvas.hxx"
 #include "ROOT/TColor.hxx"
-//#include "ROOT/TDirectory.hxx"
+#include "ROOT/TDirectory.hxx"
 #include "ROOT/TText.hxx"
 
 void text()
@@ -36,7 +36,10 @@ void text()
   auto text = std::make_shared<ROOT::Experimental::TText>("Hello World");
   canvas->Draw(text).SetFillColor(Experimental::TColor::kRed);
 
-   canvas->Show("opera");
+  // Register the text with ROOT: now it lives even after draw() ends.
+  Experimental::TDirectory::Heap().Add("text", text);
+
+  canvas->Show("opera");
 
   TFile *f = TFile::Open("canv7.root", "recreate");
   f->WriteObject(canvas.get(), "canv_text");
