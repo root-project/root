@@ -12,6 +12,7 @@
 #include "Bits.h"
 #include "ZipLZMA.h"
 #include "ZipLZ4.h"
+#include "ZipZSTD.h"
 
 #include "zlib.h"
 
@@ -97,6 +98,8 @@ void R__zipMultipleAlgorithm(int cxlevel, int *srcsize, char *src, int *tgtsize,
   } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kLZ4) {
      R__zipLZ4(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
+  } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kZSTD) {
+     R__zipZSTD(cxlevel, srcsize, src, tgtsize, tgt, irep);
   } else if (compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kOldCompressionAlgo || compressionAlgorithm == ROOT::RCompressionSetting::EAlgorithm::kUseGlobal) {
      R__zipOld(cxlevel, srcsize, src, tgtsize, tgt, irep);
      return;
@@ -266,10 +269,15 @@ static int is_valid_header_lz4(unsigned char *src)
    return src[0] == 'L' && src[1] == '4';
 }
 
+static int is_valid_header_zstd(unsigned char *src)
+{
+   return src[0] == 'Z' && src[1] == 'S' && src[2] == '\1';
+}
+
 static int is_valid_header(unsigned char *src)
 {
    return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) ||
-          is_valid_header_lz4(src);
+          is_valid_header_lz4(src) || is_valid_header_zstd(src);
 }
 
 int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
