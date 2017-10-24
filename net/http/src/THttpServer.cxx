@@ -862,11 +862,8 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
       THttpWSHandler *handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
 
-      if (handler) {
-         handler->HandleWS(arg);
-      } else {
+      if (!handler || !handler->HandleWS(arg))
          arg->Set404();
-      }
 
       return;
    } else if (filename == "root.longpoll") {
