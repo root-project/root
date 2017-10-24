@@ -19,4 +19,8 @@
 #pragma link C++ class TTreeInput;
 #pragma link C++ class TAdvancedGraphicsDialog;
 
+#ifdef ROOT7_TFitPanel
+#pragma link C++ class ROOT::Experimental::TFitPanel+;
+#endif
+
 #endif
