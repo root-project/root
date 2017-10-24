@@ -17,6 +17,8 @@
 
 #include <ROOT/TWebWindowsManager.hxx>
 
+#include "TString.h"
+#include "TROOT.h"
 
 void ROOT::Experimental::TFitPanel::Show(const std::string &where)
 {
@@ -52,4 +54,19 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
       return;
    }
 
+   if (arg.find("DOFIT:")==0) {
+      TString exec;
+      exec.Form("((ROOT::Experimental::TFitPanel *) %p)->DoFit(%s);", this, arg.c_str()+6);
+      printf("Execute %s\n", exec.Data());
+      gROOT->ProcessLine(exec.Data());
+      return;
+   }
 }
+
+/// method called from the UI
+void ROOT::Experimental::TFitPanel::DoFit(const std::string &dname, const std::string &mname)
+{
+   printf("DoFit %s %s\n", dname.c_str(), mname.c_str());
+
+}
+
