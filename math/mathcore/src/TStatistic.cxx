@@ -24,7 +24,8 @@ Named, streamable, storable and mergeable.
 
 
 #include "TStatistic.h"
-
+#include "TCollection.h"
+#include "TROOT.h"
 
 templateClassImp(TStatistic);
 
@@ -32,7 +33,7 @@ templateClassImp(TStatistic);
 /// Constructor from a vector of values
 
 TStatistic::TStatistic(const char *name, Int_t n, const Double_t *val, const Double_t *w)
-         : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.)
+   : fName(name), fN(0), fW(0.), fW2(0.), fM(0.), fM2(0.), fMin(1e15), fMax(-1e15)
 {
    if (n > 0) {
       for (Int_t i = 0; i < n; i++) {
@@ -64,6 +65,11 @@ void TStatistic::Fill(Double_t val, Double_t w) {
 
    fN++;
 
+   if (fN == 1 || val < fMin)
+      fMin = val;
+   if (fN == 1 || val > fMax)
+      fMax = val;
+
    Double_t tW = fW + w;
    fM += w * val; 
 
@@ -85,8 +91,8 @@ void TStatistic::Fill(Double_t val, Double_t w) {
 void TStatistic::Print(Option_t *) const {
    // Print this parameter content
    TROOT::IndentLevel();
-   Printf(" OBJ: TStatistic\t %s = %.5g +- %.4g \t RMS = %.5g \t N = %lld",
-          fName.Data(), GetMean(), GetMeanErr(), GetRMS(), fN);
+   Printf(" OBJ: TStatistic\t %s = %.5g +- %.4g \t RMS = %.5g \t N = %lld \t range: %.5g - %.5g", fName.Data(),
+          GetMean(), GetMeanErr(), GetRMS(), fN, fMin, fMax);
 }
 
 
@@ -109,6 +115,10 @@ Int_t TStatistic::Merge(TCollection *in) {
          fW  += c->fW;
          fW2 += c->fW2;
          fN  += c->fN;
+         if (c->fMin < fMin)
+            fMin = c->fMin;
+         if (c->fMax > fMax)
+            fMax = c->fMax;
          n++;
       }
    }
