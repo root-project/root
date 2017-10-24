@@ -79,6 +79,7 @@ bool ZSTDDecompressionEngine::SetTraining(const void *buffer, size_t size) {
    return fDict.get() != nullptr;
 }
 
+/*
 void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
 {
    ZSTDCompressionEngine zstd(cxlevel);
@@ -86,3 +87,4 @@ void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, i
    *irep = zstd.StreamFull(srcsize, src);
    if (*irep < 0) {*irep = 0;}
 }
+*/

@@ -18,7 +18,7 @@ namespace Internal {
 class ZSTDCompressionEngine final: public CompressionEngine {
 
 public:
-   ZSTDCompressionEngine(int level) : CompressionEngine(level) {}
+   ZSTDCompressionEngine(int level) : CompressionEngine(level), fCtx(ZSTD_createCCtx(), &ZSTD_freeCCtx) {}
 
    virtual ~ZSTDCompressionEngine() {}
 

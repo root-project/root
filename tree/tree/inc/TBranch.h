@@ -58,6 +58,7 @@ class TTreeCache;
 
 namespace ROOT {
   namespace Internal {
+    class CompressionEngine;
     class TBranchIMTHelper; ///< A helper class for managing IMT work during TTree:Fill operations.
   }
 }
@@ -122,6 +123,9 @@ protected:
    TBuffer    *fTransientBuffer;  ///<! Pointer to the current transient buffer.
    TList      *fBrowsables;       ///<! List of TVirtualBranchBrowsables used for Browse()
    BulkObj     fBulk;             ///<! Helper for performing bulk IO
+   // TODO: This should be an array of training for different basket ranges (think: fast merge).
+   std::unique_ptr<ROOT::Internal::CompressionEngine> fCompression; ///<! Compression engine for writing.
+   std::unique_ptr<std::vector<char>> fCompTraining; ///<  Buffer of compression training data
 
    Bool_t      fSkipZip;          ///<! After being read, the buffer will not be unzipped.
 
@@ -188,6 +192,7 @@ public:
    virtual TList    *GetBrowsables();
    virtual const char* GetClassName() const;
            Int_t     GetCompressionAlgorithm() const;
+           ROOT::Internal::CompressionEngine *GetCompressionEngine() {return fCompression.get();}
            Int_t     GetCompressionLevel() const;
            Int_t     GetCompressionSettings() const;
    TDirectory       *GetDirectory() const {return fDirectory;}

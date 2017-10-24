@@ -24,6 +24,7 @@
 #include "TVirtualMutex.h"
 #include "TVirtualPerfStats.h"
 #include "TTimeStamp.h"
+#include "ROOT/Compression.hxx"
 #include "ROOT/TIOFeatures.hxx"
 #include "RZip.h"
 
@@ -1133,6 +1134,7 @@ Int_t TBasket::WriteBuffer()
    fCycle = fBranch->GetWriteBasket();
    Int_t cxlevel = fBranch->GetCompressionLevel();
    ROOT::RCompressionSetting::EAlgorithm::EValues cxAlgorithm = static_cast<ROOT::RCompressionSetting::EAlgorithm::EValues>(fBranch->GetCompressionAlgorithm());
+   auto engine = fBranch->GetCompressionEngine();
    if (cxlevel > 0) {
       Int_t nbuffers = 1 + (fObjlen - 1) / kMAXZIPBUF;
       Int_t buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
@@ -1159,7 +1161,13 @@ Int_t TBasket::WriteBuffer()
          // NOTE this is declared with C linkage, so it shouldn't except.  Also, when
          // USE_IMT is defined, we are guaranteed that the compression buffer is unique per-branch.
          // (see fCompressedBufferRef in constructor).
-         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
+         if (engine) {
+            engine->SetTarget(objbuf, bufmax);
+            nout = engine->StreamFull(bufcur, bufmax);
+            if (nout < 0) nout = 0;
+         } else {
+            R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, static_cast<ROOT::ECompressionAlgorithm>(cxAlgorithm));
+         }
 #ifdef R__USE_IMT
          sentry.lock();
 #endif  // R__USE_IMT
