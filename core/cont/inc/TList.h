@@ -122,11 +122,9 @@ private:
    TObjLink   *fPrev;
    TObject    *fObject;
 
-   TObjLink(const TObjLink&);            // not implemented
-   TObjLink& operator=(const TObjLink&); // not implemented
-
-protected:
-   TObjLink() : fNext(NULL), fPrev(NULL), fObject(NULL) { fNext = fPrev = this; }
+   TObjLink(const TObjLink&) = delete;
+   TObjLink& operator=(const TObjLink&) = delete;
+   TObjLink() = delete;
 
 public:
    TObjLink(TObject *obj) : fNext(NULL), fPrev(NULL), fObject(obj) { }
