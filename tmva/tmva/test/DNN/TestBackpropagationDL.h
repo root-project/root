@@ -62,7 +62,7 @@ auto evaluate_net_bias(TDeepNet<Architecture> &net, typename Architecture::Matri
 }
    
 // TODO pass as function params
-size_t batchSize = 2, timeSteps = 1, inputSize = 2, outputSize = 2;
+size_t tbatchSize = 2, timeSteps = 1, inputSize = 2, outputSize = 2;
 
 /*! Generate a random net, perform forward and backward propagation and check
  *  the weight gradients using numerical differentiation. Returns the maximum
@@ -78,13 +78,14 @@ auto testBackpropagationWeightsLinear(typename Architecture::Scalar_t dx)
    // using FCLayer_t  = TDenseLayer<Architecture>;
 
    // Random net.
-   Net_t net(batchSize, timeSteps, batchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   Net_t net(tbatchSize, timeSteps, tbatchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError,
+             EInitialization::kGauss);
    // FCLayer_t* l1 = net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
    net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
 
    // Random training data.
-   std::vector<Matrix_t> X(timeSteps, Matrix_t(batchSize, inputSize));    // T x B x D
-   Matrix_t Y(batchSize, outputSize), weights(batchSize, 1);
+   std::vector<Matrix_t> X(timeSteps, Matrix_t(tbatchSize, inputSize)); // T x B x D
+   Matrix_t Y(tbatchSize, outputSize), weights(tbatchSize, 1);
    net.Initialize();
    randomBatch(X[0]);
    randomMatrix(Y);
@@ -144,12 +145,13 @@ auto testBackpropagationL1Regularization(typename Architecture::Scalar_t dx)
    // using FCLayer_t  = TDenseLayer<Architecture>;
 
    // Random net.
-   Net_t net(batchSize, timeSteps, batchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   Net_t net(tbatchSize, timeSteps, tbatchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError,
+             EInitialization::kGauss);
    // FCLayer_t* l1 = net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
    net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
    // Random training data.
-   std::vector<Matrix_t> X(timeSteps, Matrix_t(batchSize, inputSize));    // T x B x D
-   Matrix_t Y(batchSize, outputSize), weights(batchSize, 1);
+   std::vector<Matrix_t> X(timeSteps, Matrix_t(tbatchSize, inputSize)); // T x B x D
+   Matrix_t Y(tbatchSize, outputSize), weights(tbatchSize, 1);
    net.Initialize();
    // Random training data.
    randomBatch(X[0]);
@@ -218,13 +220,14 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
    using Net_t    = TDeepNet<Architecture>;
    // using FCLayer_t  = TDenseLayer<Architecture>;
 
-   Net_t net(batchSize, timeSteps, batchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   Net_t net(tbatchSize, timeSteps, tbatchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError,
+             EInitialization::kGauss);
    // FCLayer_t* l1 = net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
    net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
 
    // Random training data.
-   std::vector<Matrix_t> X(timeSteps, Matrix_t(batchSize, inputSize));    // T x B x D
-   Matrix_t Y(batchSize, outputSize), weights(batchSize, 1);
+   std::vector<Matrix_t> X(timeSteps, Matrix_t(tbatchSize, inputSize)); // T x B x D
+   Matrix_t Y(tbatchSize, outputSize), weights(tbatchSize, 1);
    net.Initialize();
    // Random training data.
    randomBatch(X[0]);
@@ -290,13 +293,14 @@ auto testBackpropagationBiasesLinear(typename Architecture::Scalar_t dx)
    using Matrix_t = typename Architecture::Matrix_t;
    // using FCLayer_t  = TDenseLayer<Architecture>;
 
-   Net_t net(batchSize, timeSteps, batchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
+   Net_t net(tbatchSize, timeSteps, tbatchSize, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError,
+             EInitialization::kGauss);
    // FCLayer_t* l1 = net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
    net.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
 
    // Random training data.
-   std::vector<Matrix_t> X(timeSteps, Matrix_t(batchSize, inputSize));    // T x B x D
-   Matrix_t Y(batchSize, outputSize), weights(batchSize, 1);
+   std::vector<Matrix_t> X(timeSteps, Matrix_t(tbatchSize, inputSize)); // T x B x D
+   Matrix_t Y(tbatchSize, outputSize), weights(tbatchSize, 1);
    net.Initialize();
    // Random training data.
    randomBatch(X[0]);
