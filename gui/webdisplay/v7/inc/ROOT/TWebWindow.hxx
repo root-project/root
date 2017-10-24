@@ -92,6 +92,8 @@ public:
 
    unsigned NumConnections() const { return fConn.size(); }
 
+   bool IsSameManager(const std::shared_ptr<TWebWindow> &win) const { return win->fMgr == fMgr; }
+
    void CloseConnections() { Send("CLOSE", 0, 0); }
 
    void CloseConnection(unsigned connid) { if (connid) Send("CLOSE", connid, 0); }

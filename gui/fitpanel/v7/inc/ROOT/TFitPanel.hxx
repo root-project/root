@@ -23,10 +23,10 @@ namespace Experimental {
 
 class TFitPanel  {
 
-   std::string   fTitle{};                 ///<! title
-   unsigned fConnId{0};                  ///<! connection id
+   std::string     fTitle{};              ///<! title
+   unsigned       fConnId{0};             ///<! connection id
 
-   std::shared_ptr<TWebWindow>  fWindow{}; ///!< configured display
+   std::shared_ptr<TWebWindow> fWindow{}; ///!< configured display
 
    /// Disable copy construction.
    TFitPanel(const TFitPanel &) = delete;
@@ -41,6 +41,8 @@ public:
    TFitPanel(const std::string &title = "Fit panel") : fTitle(title) {}
 
    virtual ~TFitPanel() { printf("Fit panel destructor!!!\n"); }
+
+   std::shared_ptr<TWebWindow> GetWindow();
 
    void Show(const std::string &where = "");
 

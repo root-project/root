@@ -20,24 +20,32 @@
 #include "TString.h"
 #include "TROOT.h"
 
+
+std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TFitPanel::GetWindow()
+{
+   if (!fWindow) {
+      fWindow = TWebWindowsManager::Instance()->CreateWindow(false);
+
+      fWindow->SetPanelName("FitPanel");
+
+      fWindow->SetDataCallBack(std::bind(&TFitPanel::ProcessData, this, std::placeholders::_1, std::placeholders::_2));
+   }
+
+   return fWindow;
+}
+
+
 void ROOT::Experimental::TFitPanel::Show(const std::string &where)
 {
-   if (fWindow) return;
-
-   fWindow = TWebWindowsManager::Instance()->CreateWindow(false);
-
-   fWindow->SetPanelName("FitPanel");
-
-   fWindow->SetDataCallBack(std::bind(&TFitPanel::ProcessData, this, std::placeholders::_1, std::placeholders::_2));
-
-   fWindow->Show(where);
+   GetWindow()->Show(where);
 }
 
 void ROOT::Experimental::TFitPanel::Hide()
 {
    if (!fWindow) return;
-}
 
+   fWindow->CloseConnections();
+}
 
 void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::string &arg)
 {
