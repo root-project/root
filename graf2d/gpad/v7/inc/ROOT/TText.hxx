@@ -53,25 +53,7 @@ public:
 };
 
 
-struct TTextCoreAttrs {
-   /// Index of the line color in TCanvas's color table.
-   //TDrawingAttrRef<TColor> fLineColorIndex{*this, "Hist.Line.Color"};
-   //TDrawingAttrRef<long long> fLineColorIndex{*this, "Hist.Line.Width"};
-   TLineAttrs fLine; ///< The histogram line attributes
-   TFillAttrs fFill; ///< The histogram fill attributes
-
-   TTextCoreAttrs() = default;
-   TTextCoreAttrs(TDrawingOptsBaseNoDefault &opts, const std::string &name):
-      fLine{opts, name + ".Line", TColor::kBlack, TLineAttrs::Width{3}},
-      fFill{opts, name + ".Fill", TColor::kWhite}
-      {}
-};
-
-
-
 class TextDrawingOpts : public TDrawingOptsBase<TextDrawingOpts> {
-    // TLineAttrs fLine; ///< The line attributes
-   //TTextCoreAttrs fAttr{*this, "Text"}; ///< The fill attributes
 
    TLineAttrs fLine{*this, "Text.Line", TColor::kBlack, TLineAttrs::Width{3} }; ///< The line attributes
    TFillAttrs fFill{*this, "Text.Fill", TColor::kWhite }; ///< The fill attributes
