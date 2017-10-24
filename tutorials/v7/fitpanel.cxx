@@ -23,7 +23,7 @@ R__LOAD_LIBRARY(libGpad);
 #include "ROOT/TDirectory.hxx"
 
 
-void fitpanel() {
+void fitpanel0() {
   using namespace ROOT;
 
   // Create the histogram.
@@ -51,3 +51,30 @@ void fitpanel() {
 
   // canvas->Show();
 }
+
+void fitpanel() {
+
+   using namespace ROOT;
+
+   // Create the histogram.
+   Experimental::TAxisConfig xaxis(10, 0., 10.);
+   auto pHist = std::make_shared<Experimental::TH1D>(xaxis);
+
+   // Fill a few points.
+   pHist->Fill(1);
+   pHist->Fill(2);
+   pHist->Fill(2);
+   pHist->Fill(3);
+
+   auto canvas = Experimental::TCanvas::Create("Canvas Title");
+   canvas->Draw(pHist).SetLineColor(Experimental::TColor::kRed);
+
+   canvas->Show("opera");
+
+   auto panel = std::make_shared<ROOT::Experimental::TFitPanel>("FitPanel Title");
+
+   Experimental::TDirectory::Heap().Add("fitpanel", panel);
+
+   canvas->AddPanel(panel);
+}
+

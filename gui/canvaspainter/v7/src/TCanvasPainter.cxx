@@ -242,6 +242,8 @@ private:
 
    int CheckWaitingCmd(const std::string &cmdname, double);
 
+   void ProcessPanel(std::shared_ptr<TWebWindow> win, bool res);
+
 public:
 
    TCanvasPainter(const TCanvas &canv, bool batch_mode) :
@@ -271,6 +273,8 @@ public:
    virtual void DoWhenReady(const std::string &name, const std::string &arg, bool async, CanvasCallback_t callback) override;
 
    virtual void NewDisplay(const std::string &where) override;
+
+   virtual bool AddPanel(std::shared_ptr<TWebWindow>) override;
 
    /** \class CanvasPainterGenerator
           Creates TCanvasPainter objects.
@@ -618,6 +622,29 @@ void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
    fWindow->Show(where);
 }
 
+
+/// append window and panel inside canvas window
+
+bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> win)
+{
+   printf("TCanvasPainter::AddPanel %p\n", win.get());
+
+   if (!win || (win->NumConnections() > 0)) return false;
+
+   assert(IsSameManager(win) && "Same web window manager should be used");
+
+   CanvasCallback_t func = std::bind(&TCanvasPainter::ProcessPanel, this, win, std::placeholders::_1);
+
+   DoWhenReady("ADDPANEL", "FitPanel", true, func);
+
+   return true;
+}
+
+void ROOT::Experimental::TCanvasPainter::ProcessPanel(std::shared_ptr<TWebWindow> win, bool res)
+{
+   printf("PROCESS PANEL res %s\n", res ? "true" : "false");
+}
+
 // #include <fstream>
 
 std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &can)
@@ -712,6 +739,9 @@ bool ROOT::Experimental::TCanvasPainter::FrontCommandReplied(const std::string &
          printf("Create %s file %s len %d\n", cmd.fName.c_str(), cmd.fArg.c_str(), (int)content.length());
          result = true;
       }
+   } else if (cmd.fName == "ADDPANEL") {
+      printf("Get reply for ADDPANEL %s\n", reply.c_str());
+      result = (reply == "true");
    } else {
       R__ERROR_HERE("FrontCommandReplied") << "Unknown command " << cmd.fName;
    }

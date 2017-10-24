@@ -117,6 +117,13 @@ public:
    /// Close all canvas displays
    void Hide();
 
+   /// Insert panel into the canvas, canvas should be shown at this moment
+   template <class PANEL>
+   bool AddPanel(std::shared_ptr<PANEL> &panel) {
+      if (!fPainter) return false;
+      return fPainter->AddPanel(panel->GetWindow());
+   }
+
    // Indicates that primitives list was changed or any primitive was modified
    void Modified() { fModified++; }
 

@@ -54,7 +54,6 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 }
 
 
-
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
    if (!fServer)
@@ -94,9 +93,7 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 {
    std::shared_ptr<ROOT::Experimental::TWebWindow> display = std::make_shared<ROOT::Experimental::TWebWindow>();
 
-   if (!display) printf("Display not created!!!\n");
-
-   printf("Use count %lu get %p\n", display.use_count(), display.get());
+   if (!display) printf("Window not created!!!\n");
 
    display->SetBatchMode(batch_mode);
 
