@@ -13,6 +13,7 @@
 
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/TDataSource.hxx"
+#include "ROOT/TDFInterface.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/RArrayView.hxx"
 #include "ROOT/TSpinMutex.hxx"
