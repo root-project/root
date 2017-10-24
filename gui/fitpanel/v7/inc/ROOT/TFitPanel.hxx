@@ -40,7 +40,7 @@ public:
 
    TFitPanel(const std::string &title = "Fit panel") : fTitle(title) {}
 
-   virtual ~TFitPanel() {}
+   virtual ~TFitPanel() { printf("Fit panel destructor!!!\n"); }
 
    void Show(const std::string &where = "");
 

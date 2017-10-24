@@ -24,6 +24,8 @@ void ROOT::Experimental::TFitPanel::Show(const std::string &where)
 
    fWindow = TWebWindowsManager::Instance()->CreateWindow(false);
 
+   fWindow->SetDefaultPage("file:$jsrootsys/files/panel.htm");
+
    WebWindowDataCallback_t func = std::bind(&TFitPanel::ProcessData, this, std::placeholders::_1, std::placeholders::_2);
    fWindow->SetDataCallBack(func);
 
@@ -38,5 +40,17 @@ void ROOT::Experimental::TFitPanel::Hide()
 
 void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::string &arg)
 {
-}
+   if (arg == "CONN_READY") {
+      fConnId = connid;
+      printf("Connection established %u\n", fConnId);
+      fWindow->Send("SHOW:FitPanel", fConnId);
+      return;
+   }
 
+   if (arg == "CONN_CLOSED") {
+      printf("Connection closed\n");
+      fConnId = 0;
+      return;
+   }
+
+}
