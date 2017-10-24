@@ -10,8 +10,16 @@
  *************************************************************************/
 
 #include "Compression.h"
+#include "ROOT/Compression.hxx"
 
 namespace ROOT {
+
+namespace Internal {
+
+CompressionEngine::~CompressionEngine() {}
+DecompressionEngine::~DecompressionEngine() {}
+
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
