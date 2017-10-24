@@ -57,6 +57,7 @@ private:
 
    std::shared_ptr<TWebWindowsManager>  fMgr{};     ///<!  display manager
    bool                         fBatchMode{false};  ///<!  batch mode
+   std::string                    fDefaultPage{};   ///<! HTML page (or file name) returned when window URL is opened
    unsigned                             fId{0};     ///<!  unique identifier
    TWebWindowWSHandler               *fWSHandler{nullptr};  ///<!  specialize websocket handler for all incoming connections
    unsigned                           fConnCnt{0};  ///<!  counter of new connections to assign ids
@@ -82,6 +83,8 @@ public:
 
    bool IsBatchMode() const { return fBatchMode; }
    unsigned GetId() const { return fId; }
+
+   void SetDefaultPage(const std::string &page) { fDefaultPage = page; }
 
    unsigned NumConnections() const { return fConn.size(); }
 
