@@ -215,7 +215,7 @@ void test_snapshot_options(RInterface<RLoopManager> &tdf)
    opts.fCompressionLevel = 6;
 
    const auto outfile = "snapshot_test_opts.root";
-   for (auto algorithm : {ROOT::kZLIB, ROOT::kLZMA, ROOT::kLZ4}) {
+   for (auto algorithm : {ROOT::kZLIB, ROOT::kLZMA, ROOT::kLZ4, ROOT::kZSTD}) {
       opts.fCompressionAlgorithm = algorithm;
 
       auto s = tdf.Snapshot<int>("t", outfile, {"ans"}, opts);
