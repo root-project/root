@@ -98,37 +98,34 @@ public:
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-TCompressionLayer<Architecture_t>::TCompressionLayer(size_t batchSize, size_t visibleUnits,
-                           size_t hiddenUnits, Scalar_t dropoutProbability, EActivationFunction f,
-                           std::vector<Matrix_t> weights, std::vector<Matrix_t> biases)
-   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits}, {visibleUnits},2,{hiddenUnits,visibleUnits},
-   {1,1}, batchSize, hiddenUnits, 1, EInitialization::kZero),
-   fVisibleUnits(visibleUnits), fDropoutProbability(dropoutProbability),
-   fType(2), fHiddenUnits(hiddenUnits), fF(f)
+TCompressionLayer<Architecture_t>::TCompressionLayer(size_t batchSize, size_t visibleUnits, size_t hiddenUnits,
+                                                     Scalar_t dropoutProbability, EActivationFunction f,
+                                                     std::vector<Matrix_t> weights, std::vector<Matrix_t> biases)
+   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits}, {visibleUnits}, 2,
+                                   {hiddenUnits, visibleUnits}, {1, 1}, batchSize, hiddenUnits, 1,
+                                   EInitialization::kZero),
+     fVisibleUnits(visibleUnits), fHiddenUnits(hiddenUnits), fDropoutProbability(dropoutProbability), fType(2), fF(f)
 
- {
+{
    Architecture_t::Copy(this->GetWeightsAt(0),weights[0]);
    Architecture_t::Copy(this->GetBiasesAt(0),biases[0]);
  }
 //______________________________________________________________________________
-template <typename Architecture_t>
-TCompressionLayer<Architecture_t>::TCompressionLayer(TCompressionLayer<Architecture_t> *layer)
-   : VGeneralLayer<Architecture_t>(layer),
-   fVisibleUnits(layer->GetVisibleUnits()),fType(2),
-   fDropoutProbability(layer->GetDropoutProbability()),
-   fHiddenUnits(layer->GetHiddenUnits()),fF(layer->GetActivationFunction())
-{
-   Architecture_t::Copy(this->GetWeightsAt(0), layer->weights[0]);
-   Architecture_t::Copy(this->GetBiasesAt(0), layer->biases[0]);
-   // Output Tensor will be created in General Layer
+ template <typename Architecture_t>
+ TCompressionLayer<Architecture_t>::TCompressionLayer(TCompressionLayer<Architecture_t> *layer)
+    : VGeneralLayer<Architecture_t>(layer), fVisibleUnits(layer->GetVisibleUnits()),
+      fHiddenUnits(layer->GetHiddenUnits()), fDropoutProbability(layer->GetDropoutProbability()), fType(2),
+      fF(layer->GetActivationFunction())
+ {
+    Architecture_t::Copy(this->GetWeightsAt(0), layer->weights[0]);
+    Architecture_t::Copy(this->GetBiasesAt(0), layer->biases[0]);
+    // Output Tensor will be created in General Layer
 }
 //______________________________________________________________________________
 template <typename Architecture_t>
 TCompressionLayer<Architecture_t>::TCompressionLayer(const TCompressionLayer &compress)
-   : VGeneralLayer<Architecture_t>(compress),
-   fVisibleUnits(compress.fVisibleUnits),fType(2),
-   fDropoutProbability(compress.fDropoutProbability),
-   fHiddenUnits(compress.fHiddenUnits),fF(compress.fF)
+   : VGeneralLayer<Architecture_t>(compress), fVisibleUnits(compress.fVisibleUnits),
+     fHiddenUnits(compress.fHiddenUnits), fDropoutProbability(compress.fDropoutProbability), fType(2), fF(compress.fF)
 
 {
    Architecture_t::Copy(this->GetWeightsAt(0), compress.weights[0]);
@@ -141,7 +138,8 @@ template <typename Architecture_t> TCompressionLayer<Architecture_t>::~TCompress
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TCompressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void {
+auto TCompressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool /*applyDropout*/) -> void
+{
 
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
 
@@ -153,10 +151,10 @@ auto TCompressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bo
 }
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto inline TCompressionLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
-                                                        const std::vector<Matrix_t> &activations_backward,
-                                                        std::vector<Matrix_t> &inp1,
-                                                        std::vector<Matrix_t> &inp2) -> void
+auto inline TCompressionLayer<Architecture_t>::Backward(std::vector<Matrix_t> & /*gradients_backward*/,
+                                                        const std::vector<Matrix_t> & /*activations_backward*/,
+                                                        std::vector<Matrix_t> & /*inp1*/, std::vector<Matrix_t> &
+                                                        /*inp2*/) -> void
 
 {
 }
@@ -170,10 +168,8 @@ auto TCompressionLayer<Architecture_t>::Print() const
                << "Hidden units " << this->GetHiddenUnits() << "\n";
 
       std::cout<<"Compressed Input: "<<std::endl;
-      for(size_t j=0; j<this->GetWeightsAt(0).GetNrows(); j++)
-      {
-         for(size_t k=0; k<this->GetWeightsAt(0).GetNcols(); k++)
-         {
+      for (Int_t j = 0; j < this->GetWeightsAt(0).GetNrows(); j++) {
+         for (Int_t k = 0; k < this->GetWeightsAt(0).GetNcols(); k++) {
             std::cout<<this->GetWeightsAt(0)(j,k)<<"\t";
          }
          std::cout<<std::endl;

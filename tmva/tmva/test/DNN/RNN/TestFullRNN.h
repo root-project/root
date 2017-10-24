@@ -68,12 +68,11 @@ auto testFullRNN(size_t batchSize, size_t stateSize,
 {
    using Matrix_t   = typename Architecture::Matrix_t;
    using Tensor_t   = std::vector<Matrix_t>;
-   using RNNLayer_t = TBasicRNNLayer<Architecture>; 
-   using FCLayer_t  = TDenseLayer<Architecture>;
-   using Reshape_t  = TReshapeLayer<Architecture>;
+   // using RNNLayer_t = TBasicRNNLayer<Architecture>;
+   // using FCLayer_t  = TDenseLayer<Architecture>;
+   // using Reshape_t  = TReshapeLayer<Architecture>;
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t   = typename Architecture::Scalar_t; 
-   using MLP_t      = TNet<Architecture>;    
  
    // check, denselayer takes only first one as input, 
    // so make sure time = 1, in the current case
@@ -92,9 +91,12 @@ auto testFullRNN(size_t batchSize, size_t stateSize,
    }
 
    Net_t rnn(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);
-   RNNLayer_t* layer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps, false);
-   Reshape_t* reshape = rnn.AddReshapeLayer(1, 1, stateSize, true);
-   FCLayer_t* classifier = rnn.AddDenseLayer(outputSize, EActivationFunction::kIdentity); 
+   //    RNNLayer_t* layer = rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps, false);
+   //    Reshape_t* reshape = rnn.AddReshapeLayer(1, 1, stateSize, true);
+   //    FCLayer_t* classifier = rnn.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
+   rnn.AddBasicRNNLayer(stateSize, inputSize, timeSteps, false);
+   rnn.AddReshapeLayer(1, 1, stateSize, true);
+   rnn.AddDenseLayer(outputSize, EActivationFunction::kIdentity);
 
    Matrix_t W(batchSize, 1);
    for (size_t i = 0; i < batchSize; ++i) W(i, 0) = 1.0;

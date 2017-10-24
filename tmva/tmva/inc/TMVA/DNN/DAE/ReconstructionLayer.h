@@ -127,19 +127,16 @@ public:
 //______________________________________________________________________________
 
 template <typename Architecture_t>
-TReconstructionLayer<Architecture_t>::TReconstructionLayer(size_t batchSize, size_t visibleUnits,
-                           size_t hiddenUnits, Scalar_t learningRate, EActivationFunction f, std::vector<Matrix_t> weights,
-                           std::vector<Matrix_t> biases,
-                           Scalar_t corruptionLevel, Scalar_t dropoutProbability)
-   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits},{visibleUnits},2, {hiddenUnits,visibleUnits},
-   {1,1}, batchSize, visibleUnits, 1, EInitialization::kZero),
-   fVisibleUnits(visibleUnits),
-   fHiddenUnits(hiddenUnits),
-   fVBiasError(visibleUnits, 1),
-   fHBiasError(hiddenUnits, 1),
-   fType(3), fF(f), fCorruptionLevel(corruptionLevel),
-   fDropoutProbability(dropoutProbability),
-   fLearningRate(learningRate)
+TReconstructionLayer<Architecture_t>::TReconstructionLayer(size_t batchSize, size_t visibleUnits, size_t hiddenUnits,
+                                                           Scalar_t learningRate, EActivationFunction f,
+                                                           std::vector<Matrix_t> weights, std::vector<Matrix_t> biases,
+                                                           Scalar_t corruptionLevel, Scalar_t dropoutProbability)
+   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits}, {visibleUnits}, 2,
+                                   {hiddenUnits, visibleUnits}, {1, 1}, batchSize, visibleUnits, 1,
+                                   EInitialization::kZero),
+     fVisibleUnits(visibleUnits), fHiddenUnits(hiddenUnits), fVBiasError(visibleUnits, 1), fHBiasError(hiddenUnits, 1),
+     fLearningRate(learningRate), fType(3), fF(f), fCorruptionLevel(corruptionLevel),
+     fDropoutProbability(dropoutProbability)
 
 {
    Architecture_t::Copy(this->GetWeightsAt(0),weights[0]);
@@ -150,15 +147,10 @@ TReconstructionLayer<Architecture_t>::TReconstructionLayer(size_t batchSize, siz
 //______________________________________________________________________________
 template <typename Architecture_t>
 TReconstructionLayer<Architecture_t>::TReconstructionLayer(TReconstructionLayer<Architecture_t> *layer)
-   : VGeneralLayer<Architecture_t>(layer),
-   fVisibleUnits(layer->GetVisibleUnits()),
-   fHiddenUnits(layer->GetHiddenUnits()),
-   fHBiasError(layer->GetHiddenUnits(), 1),
-   fVBiasError(layer->GetVisibleUnits(), 1),fType(3),
-   fF(layer->GetActivationFunction()),
-   fCorruptionLevel(layer->GetCorruptionLevel()),
-   fDropoutProbability(layer->GetDropoutProbability()),
-   fLearningRate(layer->GetLearningRate())
+   : VGeneralLayer<Architecture_t>(layer), fVisibleUnits(layer->GetVisibleUnits()),
+     fHiddenUnits(layer->GetHiddenUnits()), fHBiasError(layer->GetHiddenUnits(), 1),
+     fVBiasError(layer->GetVisibleUnits(), 1), fType(3), fF(layer->GetActivationFunction()),
+     fCorruptionLevel(layer->GetCorruptionLevel()), fDropoutProbability(layer->GetDropoutProbability())
 
 {
    Architecture_t::Copy(this->GetWeightsAt(0),layer->weights[0]);
@@ -197,8 +189,7 @@ template <typename Architecture_t> TReconstructionLayer<Architecture_t>::~TRecon
 // Input here should be compressedInput
 // reconstruction step
 template <typename Architecture_t>
-auto TReconstructionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout)
--> void
+auto TReconstructionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool /*applyDropout*/) -> void
 {
    std::cout<<"Reconstruction Forward starts "<<std::endl;
    for (size_t i = 0; i < this->GetBatchSize(); i++)
@@ -219,10 +210,9 @@ auto TReconstructionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input,
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TReconstructionLayer<Architecture_t>::Backward(std::vector<Matrix_t> &compressedInput,
-                                                     const std::vector<Matrix_t> &gradient,
-                                                     std::vector<Matrix_t> &corruptedInput,
-                                                     std::vector<Matrix_t> &input)
--> void
+                                                           const std::vector<Matrix_t> & /*gradient*/,
+                                                           std::vector<Matrix_t> &corruptedInput,
+                                                           std::vector<Matrix_t> &input) -> void
 {
    for (size_t i = 0; i < this->GetBatchSize(); i++)
    {
@@ -247,13 +237,11 @@ auto TReconstructionLayer<Architecture_t>::Print() const
    std::cout<<"Reconstructed Input: "<<std::endl;
    for(size_t i=0; i<this->GetBatchSize(); i++)
    {
-      for(size_t j=0; j<this->GetOutputAt(i).GetNrows(); j++)
-      {
-         for(size_t k=0; k<this->GetOutputAt(i).GetNcols(); k++)
-            {
-               std::cout<<this->GetOutputAt(i)(j,k)<<"\t";
-	    }
-            std::cout<<std::endl;
+      for (Int_t j = 0; j < this->GetOutputAt(i).GetNrows(); j++) {
+         for (Int_t k = 0; k < this->GetOutputAt(i).GetNcols(); k++) {
+            std::cout << this->GetOutputAt(i)(j, k) << "\t";
+         }
+         std::cout << std::endl;
       }
       std::cout<<std::endl;
    }

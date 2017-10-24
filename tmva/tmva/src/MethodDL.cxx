@@ -474,7 +474,7 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
 /// Pases the layer string and creates the appropriate dense layer
 template <typename Architecture_t, typename Layer_t>
 void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
-                               std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                               std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
                                TString delim)
 {
    int width = 0;
@@ -544,7 +544,7 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
 /// Pases the layer string and creates the appropriate convolutional layer
 template <typename Architecture_t, typename Layer_t>
 void MethodDL::ParseConvLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
-                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                              std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
                               TString delim)
 {
    int depth = 0;
@@ -643,7 +643,7 @@ void MethodDL::ParseConvLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
 /// Pases the layer string and creates the appropriate max pool layer
 template <typename Architecture_t, typename Layer_t>
 void MethodDL::ParseMaxPoolLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
-                                 std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                                 std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
                                  TString delim)
 {
 
@@ -685,8 +685,8 @@ void MethodDL::ParseMaxPoolLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
    }
 
    // Add the Max pooling layer
-   TMaxPoolLayer<Architecture_t> *maxPoolLayer =
-      deepNet.AddMaxPoolLayer(frameHeight, frameWidth, strideRows, strideCols);
+   // TMaxPoolLayer<Architecture_t> *maxPoolLayer =
+   deepNet.AddMaxPoolLayer(frameHeight, frameWidth, strideRows, strideCols);
 
    // Add the same layer to fNet
    fNet->AddMaxPoolLayer(frameHeight, frameWidth, strideRows, strideCols);
@@ -703,7 +703,7 @@ void MethodDL::ParseMaxPoolLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
 /// Pases the layer string and creates the appropriate reshape layer
 template <typename Architecture_t, typename Layer_t>
 void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
-                                 std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                                 std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
                                  TString delim)
 {
    int depth = 0;
@@ -745,7 +745,8 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
    }
 
    // Add the reshape layer
-   TReshapeLayer<Architecture_t> *reshapeLayer = deepNet.AddReshapeLayer(depth, height, width, flattening);
+   // TReshapeLayer<Architecture_t> *reshapeLayer =
+   deepNet.AddReshapeLayer(depth, height, width, flattening);
 
    // Add the same layer to fNet
    fNet->AddReshapeLayer(depth, height, width, flattening);
@@ -762,7 +763,7 @@ void MethodDL::ParseReshapeLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet
 /// Pases the layer string and creates the appropriate rnn layer
 template <typename Architecture_t, typename Layer_t>
 void MethodDL::ParseRnnLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
-                             std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> &nets, TString layerString,
+                             std::vector<DNN::TDeepNet<Architecture_t, Layer_t>> & /*nets*/, TString layerString,
                              TString delim)
 {
    //    int depth = 0;
