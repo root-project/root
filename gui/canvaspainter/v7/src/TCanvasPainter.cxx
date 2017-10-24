@@ -609,8 +609,8 @@ void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
    if (!fWindow) {
       fWindow = TWebWindowsManager::Instance()->CreateWindow(false);
 
-      //using std::placeholders::_1;
-      //using std::placeholders::_2;
+      fWindow->SetDefaultPage("file:$jsrootsys/files/canvas.htm");
+
       WebWindowDataCallback_t func = std::bind(&TCanvasPainter::ProcessData, this, std::placeholders::_1, std::placeholders::_2);
       fWindow->SetDataCallBack(func);
    }
