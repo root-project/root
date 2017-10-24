@@ -46,7 +46,7 @@ private:
    struct WebConn {
       unsigned       fWSId{0};               ///<! websocket id
       unsigned       fConnId{0};             ///<! connection id (unique inside the window)
-      bool           fReady{false};          ///<! when first ready is appears
+      int            fReady{0};              ///<! 0 - not ready, 1..9 - interim, 10 - done
       int            fRecvCount{0};          ///<! number of received packets, should return back with next sending
       int            fSendCredits{0};        ///<! how many send operation can be performed without confirmation from other side
       int            fClientCredits{0};      ///<! last received information about credits on client side, helps to resubmit credits back to client
@@ -58,12 +58,14 @@ private:
    std::shared_ptr<TWebWindowsManager>  fMgr{};     ///<!  display manager
    bool                         fBatchMode{false};  ///<!  batch mode
    std::string                    fDefaultPage{};   ///<! HTML page (or file name) returned when window URL is opened
+   std::string                    fPanelName{};     ///<! panel name which should be shown in the window
    unsigned                             fId{0};     ///<!  unique identifier
    TWebWindowWSHandler               *fWSHandler{nullptr};  ///<!  specialize websocket handler for all incoming connections
    unsigned                           fConnCnt{0};  ///<!  counter of new connections to assign ids
-   std::list<WebConn>                 fConn{};     ///<! list of all accepted connections
+   std::list<WebConn>                 fConn{};      ///<! list of all accepted connections
+   unsigned                           fConnLimit{0}; ///<! number of allowed active connections
    static const unsigned       fMaxQueueLength{10}; ///<!  maximal number of queue entries
-   WebWindowDataCallback_t        fDataCallback{}; ///<!  main callback when data over channel 1 is arrived
+   WebWindowDataCallback_t        fDataCallback{};  ///<!  main callback when data over channel 1 is arrived
 
    void SetBatchMode(bool mode) { fBatchMode = mode; }
    void SetId(unsigned id) { fId = id; }
@@ -86,6 +88,8 @@ public:
 
    void SetDefaultPage(const std::string &page) { fDefaultPage = page; }
 
+   void SetPanelName(const std::string &name);
+
    unsigned NumConnections() const { return fConn.size(); }
 
    void CloseConnections() { Send("CLOSE", 0, 0); }
@@ -98,7 +102,7 @@ public:
 
    void Send(const std::string &data, unsigned connid = 0, unsigned chid = 1);
 
-   void SetDataCallBack(WebWindowDataCallback_t &func) { fDataCallback = func; }
+   void SetDataCallBack(WebWindowDataCallback_t func) { fDataCallback = func; }
 
    bool WaitFor(WebWindowWaitFunc_t check, double tm);
 

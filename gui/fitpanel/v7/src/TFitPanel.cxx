@@ -24,10 +24,9 @@ void ROOT::Experimental::TFitPanel::Show(const std::string &where)
 
    fWindow = TWebWindowsManager::Instance()->CreateWindow(false);
 
-   fWindow->SetDefaultPage("file:$jsrootsys/files/panel.htm");
+   fWindow->SetPanelName("FitPanel");
 
-   WebWindowDataCallback_t func = std::bind(&TFitPanel::ProcessData, this, std::placeholders::_1, std::placeholders::_2);
-   fWindow->SetDataCallBack(func);
+   fWindow->SetDataCallBack(std::bind(&TFitPanel::ProcessData, this, std::placeholders::_1, std::placeholders::_2));
 
    fWindow->Show(where);
 }

@@ -71,6 +71,17 @@ void ROOT::Experimental::TWebWindow::Cleanup()
    }
 }
 
+void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
+{
+   assert(fConn.size()==0 && "Cannot configure panel when connection exists");
+
+   fPanelName = name;
+
+   SetDefaultPage("file:$jsrootsys/files/panel.htm");
+
+   fConnLimit = 1;
+}
+
 
 // TODO: add callback which executed when exactly this window is opened and connection is established
 
@@ -108,8 +119,9 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
 
    if (arg->IsMethod("WS_CONNECT")) {
 
-      // accept all requests, in future one could limit number of connections
-      // arg->Set404(); // refuse connection
+      // refuse connection when limit exceed limit
+      if (fConnLimit && (fConn.size()>=fConnLimit)) return false;
+
       return true;
    }
 
@@ -174,9 +186,24 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
 
    if (nchannel == 0) {
       // special default channel for basic communications
-      if (cdata == "READY") {
-         if (!conn->fReady) fDataCallback(conn->fConnId, "CONN_READY");
-         conn->fReady = true;
+      if ((cdata == "READY") && !conn->fReady) {
+         if (fPanelName.length()) {
+            // initialization not yet finished, appropriate panel should be started
+            Send(std::string("SHOWPANEL:") + fPanelName, conn->fConnId);
+            conn->fReady = 5;
+         } else {
+            fDataCallback(conn->fConnId, "CONN_READY");
+            conn->fReady = 10;
+         }
+      }
+   } else if (fPanelName.length() && (conn->fReady < 10)) {
+      if (cdata == "PANEL_READY") {
+         printf("Get panel ready %s !!!\n", fPanelName.c_str());
+         fDataCallback(conn->fConnId, "CONN_READY");
+         conn->fReady = 10;
+      } else {
+         fDataCallback(conn->fConnId, "CONN_CLOSED");
+         fConn.erase(iter);
       }
    } else if (nchannel == 1) {
       fDataCallback(conn->fConnId, cdata);
