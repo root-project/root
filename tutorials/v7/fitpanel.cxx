@@ -20,6 +20,7 @@ R__LOAD_LIBRARY(libGpad);
 #include "ROOT/THist.hxx"
 #include "ROOT/TCanvas.hxx"
 #include "ROOT/TFitPanel.hxx"
+#include "ROOT/TDirectory.hxx"
 
 
 void fitpanel() {
@@ -38,6 +39,10 @@ void fitpanel() {
 
   auto panel = std::make_shared<ROOT::Experimental::TFitPanel>("FitPanel Title");
   panel->Show("opera");
+
+  // Register the histogram with ROOT: now it lives even after draw() ends.
+  Experimental::TDirectory::Heap().Add("fitpanel", panel);
+
 
   // Create a canvas to be displayed.
   // auto canvas = Experimental::TCanvas::Create("Canvas Title");
