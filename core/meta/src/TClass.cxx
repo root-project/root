@@ -6982,6 +6982,7 @@ Bool_t ROOT::Internal::HasConsistentHashMember(const char *cname)
    static const char *handVerified[] = {
       "TEnvRec",    "TDataType",      "TObjArray",    "TList",   "THashList",
       "TClass",     "TCling",         "TInterpreter", "TMethod", "ROOT::Internal::TCheckHashRecurveRemoveConsistency",
+      "TCheckHashRecurveRemoveConsistency",
       "TDirectory", "TDirectoryFile", "TObject",      "TH1"};
 
    if (cname && cname[0]) {
