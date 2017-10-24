@@ -186,6 +186,7 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w);
    static  void     AddDirectory(Bool_t add=kTRUE);
    static  Bool_t   AddDirectoryStatus();
+   virtual Int_t Adjust(Double_t autosize = -1., Int_t nrms = -1);
    virtual void     Browse(TBrowser *b);
    virtual Bool_t   CanExtendAllAxes() const;
    virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = 0) const;
@@ -429,6 +430,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const;
    virtual void     UpdateBinContent(Int_t bin, Double_t content);
    virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { return fSumw2.fN ? fSumw2.fArray[bin] : RetrieveBinContent(bin); }
+   virtual void MoveBinContent(Int_t from, Int_t to, Bool_t add = kFALSE);
 };
 
 namespace cling {

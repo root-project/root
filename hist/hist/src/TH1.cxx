@@ -1321,6 +1321,130 @@ Int_t TH1::AutoP2FindLimits()
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Tool to adjust an histogram to improve the equilibrium of a plot.
+///
+/// This function acts in two cases:
+/// 1. In the case there are a lot of empty bins at least on one of the sides,
+///    it re-defines bin boudaries in such a way that there is at most 5%
+///    of empty bins on each sides, so centering the facto the histogram.
+///    The 5% can be changed via the variable 'Hist.Binning.Auto.Side'.
+/// 2. In the case the boundaries are wider than 'mean +- nstd * rms', with
+///    'nstd' controlled by 'Hist.Binning.Auto.StdDev' with default 4.
+///
+/// This function just moves the bin content, there is no memory allocation.
+/// The freed parts of the relevant arrays are just left unused.
+///
+/// Although this function has been implemented for the power of 2 autobinning
+/// algorithm, it can be used on any histogram.
+///
+/// Return 1 if an adjustement has been applied, 0 otherwise.
+///
+
+Int_t TH1::Adjust(Double_t autoside, Int_t nrms)
+{
+
+   Int_t rc = 0;
+
+   // Current boundaries
+   Double_t xmin = fXaxis.GetXmin();
+   Double_t xmax = fXaxis.GetXmax();
+
+   // Number of bins free on each side
+   if (autoside < 0.)
+      autoside = gEnv->GetValue("Hist.Binning.Auto.Side", 0.05);
+   Int_t nbside = (Int_t) (GetNbinsX() * autoside);
+
+   // Flag
+   Bool_t adjust = kFALSE;
+
+   // Find minimum bin
+   Int_t jmi = 1;
+   while (RetrieveBinContent(jmi) <= 0.) {
+      jmi++;
+   }
+   if (jmi > nbside) {
+      jmi -= nbside;
+      if (jmi > 1)
+         adjust = kTRUE;
+   }
+
+   // Find maximum bin
+   Int_t jma = GetNbinsX();
+   while (RetrieveBinContent(jma) <= 0.) {
+      jma--;
+   }
+   if (jma < GetNbinsX() - nbside) {
+      jma += nbside;
+      if (jma < GetNbinsX())
+         adjust = kTRUE;
+   }
+
+   // Mean and StdDev
+   Double_t xmea = GetMean();
+   Double_t xrms = GetStdDev();
+
+   if (nrms < 0)
+      nrms = gEnv->GetValue("Hist.Binning.Auto.StdDev", 4);
+   Double_t xmidis = xmea - nrms * xrms;
+   Double_t xmadis = xmea + nrms * xrms;
+
+   // Act
+   if (adjust || (xmin < xmidis || xmax > xmadis)) {
+      Double_t xxmi = (xmin < xmidis) ? xmidis : xmin;
+      Double_t xxma = (xmax > xmadis) ? xmadis : xmax;
+
+      while (GetBinLowEdge(jmi) < xxmi) {
+         jmi++;
+      }
+      jmi--;
+      while (GetBinLowEdge(jma) + GetBinWidth(jma) > xxma) {
+         jma--;
+      }
+      jma++;
+
+      Double_t xnmi = GetBinLowEdge(jmi);
+      Double_t xnma = GetBinLowEdge(jma) + GetBinWidth(jma);
+
+      Int_t nbins = jma - jmi + 1;
+
+      // Underflow
+      Int_t i = 0;
+      for (Int_t j = 1; j < jmi; j++) {
+         MoveBinContent(j, i, kTRUE);
+      }
+      // Main content
+      for (Int_t j = jmi; j <= jma; j++) {
+         i = j - jmi + 1;
+         MoveBinContent(j, i, kFALSE);
+      }
+      // Overflow
+      i = nbins + 1;
+      UpdateBinContent(i, 0.);
+      if (fSumw2.fN)
+         fSumw2.fArray[i] = 0.;
+      for (Int_t j = jma + 1; j <= GetNbinsX() + 1; j++) {
+         MoveBinContent(j, i, kTRUE);
+      }
+      SetBins(nbins, xnmi, xnma);
+   }
+   return rc;
+}
+
+void TH1::MoveBinContent(Int_t from, Int_t to, Bool_t add)
+{
+   Double_t xto = (add) ? RetrieveBinContent(to) + RetrieveBinContent(from) : RetrieveBinContent(from);
+   UpdateBinContent(to, xto);
+   if (fSumw2.fN) {
+      if (add) {
+         fSumw2.fArray[to] += fSumw2.fArray[from];
+      } else {
+         fSumw2.fArray[to] = fSumw2.fArray[from];
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Fill histogram with all entries in the buffer.
 ///
 ///  - action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
