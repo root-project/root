@@ -61,11 +61,9 @@ void TReference<Real_t>::UpdateParams(
    }
 
   //updating fHBiases
-   for(Int_t  i = 0; i < fHBiases.GetNrows(); i++)
-   {
+   for (Int_t i = 0; i < fHBiases.GetNrows(); i++) {
       HBiasError(i,0) = 0;
-      for(Int_t j = 0; j < fVBiases.GetNrows(); j++)
-      {
+      for (Int_t j = 0; j < fVBiases.GetNrows(); j++) {
          HBiasError(i, 0) += fWeights(i, j) * VBiasError(j, 0);
       }
       HBiasError(i, 0) *= y(i, 0) * (1 - y(i, 0));
@@ -73,10 +71,8 @@ void TReference<Real_t>::UpdateParams(
    }
 
    //updating weights
-   for(Int_t i = 0; i < fHBiases.GetNrows(); i++)
-   {
-      for(Int_t j = 0; j< fVBiases.GetNrows(); j++)
-      {
+   for (Int_t i = 0; i < fHBiases.GetNrows(); i++) {
+      for (Int_t j = 0; j < fVBiases.GetNrows(); j++) {
          fWeights(i, j) += learningRate * (HBiasError(i, 0) * tildeX(j, 0) +
                                           VBiasError(j, 0) * y(i, 0)) / fBatchSize;
       }
