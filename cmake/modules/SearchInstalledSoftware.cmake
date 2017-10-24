@@ -243,6 +243,43 @@ if(builtin_xxhash)
   add_subdirectory(builtins/xxhash)
 endif()
 
+#---Check for ZSTD-------------------------------------------------------------------
+# Potentially, this if() block will enable builtin_zstd.
+if (NOT builtin_zstd)
+  message(STATUS "Looking for ZSTD")
+  find_package(ZSTD)
+  if (NOT ZSTD_FOUND)
+    message(STATUS "System ZSTD not found. Switching on builtin_zstd option")
+    set(builtin_zstd ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
+if (builtin_zstd)
+  set(zstd_version v1.4.0)
+  message(STATUS "Building ZSTD version ${zstd_version} included in ROOT itself")
+  set(ZSTD_URL https://github.com/facebook/zstd/archive/${zstd_version}.tar.gz)
+  set(ZSTD_SHA256 63be339137d2b683c6d19a9e34f4fb684790e864fee13c7dd40e197a64c705c1)
+  set(ZSTD_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zstd${CMAKE_STATIC_LIBRARY_SUFFIX})
+  if(NOT MSVC)
+    set(ZSTD_C_FLAGS "-fPIC -Wno-unused-variable -O3")
+  endif()
+  ExternalProject_Add(
+    ZSTD
+    URL ${ZSTD_URL}
+    URL_HASH SHA256=${ZSTD_SHA256}
+    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    SOURCE_SUBDIR build/cmake
+    CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+               -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+               -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+               -DCMAKE_C_FLAGS=${ZSTD_C_FLAGS}
+               -DCMAKE_AR=${CMAKE_AR}
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+    BUILD_BYPRODUCTS ${ZSTD_LIBRARIES})
+  set(ZSTD_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+  set(ZSTD_DEFINITIONS -DBUILTIN_ZSTD)
+endif()
+
 #---Check for LZ4--------------------------------------------------------------------
 if(NOT builtin_lz4)
   message(STATUS "Looking for LZ4")
