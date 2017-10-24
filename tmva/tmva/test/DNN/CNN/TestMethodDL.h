@@ -154,9 +154,11 @@ void testMethodDL(TString architectureStr)
 void testMethodDL_DNN(TString architectureStr)
 {
    TFile *input(0);
-   TString fname = "/Users/vladimirilievski/Desktop/Vladimir/GSoC/ROOT-CI/common-version/root/tmva/tmva/test/DNN/CNN/"
-                   "dataset/tmva_class_example.root";
-   input = TFile::Open(fname);
+   // TString fname = "/Users/vladimirilievski/Desktop/Vladimir/GSoC/ROOT-CI/common-version/root/tmva/tmva/test/DNN/CNN/"
+   //                 "dataset/tmva_class_example.root";
+   TString fname = "http://root.cern.ch/files/tmva_class_example.root";
+   TString fopt = "CACHEREAD";
+   input = TFile::Open(fname,fopt);
 
    // Register the training and test trees
    TTree *signalTree = (TTree *)input->Get("TreeS");
@@ -194,7 +196,7 @@ void testMethodDL_DNN(TString architectureStr)
    TString inputLayoutString("InputLayout=1|1|4");
 
    // Batch Layout
-   TString batchLayoutString("BatchLayout=1|256|4");
+   TString batchLayoutString("BatchLayout=256|1|4");
 
    // General layout.
    TString layoutString("Layout=DENSE|128|TANH,DENSE|128|TANH,DENSE|128|TANH,DENSE|1|LINEAR");
