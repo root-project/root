@@ -36,6 +36,8 @@
 #include "TArrayD.h"
 #include "Foption.h"
 
+#include "TStatistic.h"
+
 #include "TVectorFfwd.h"
 #include "TVectorDfwd.h"
 
@@ -96,6 +98,7 @@ protected:
     TList        *fFunctions;       ///<->Pointer to list of functions (fits and user)
     Int_t         fBufferSize;      ///< fBuffer size
     Double_t     *fBuffer;          ///<[fBufferSize] entry buffer
+    TStatistic fXstat;              ///< Statistic about X in fBuffer (max, min, mean, rms, ...)
     TDirectory   *fDirectory;       ///<!Pointer to directory holding this histogram
     Int_t         fDimension;       ///<!Histogram dimension (1, 2 or 3 dim)
     Double_t     *fIntegral;        ///<!Integral of bins used by GetRandom
@@ -129,6 +132,10 @@ protected:
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
    Bool_t   IsEmpty() const { return fTsumw == 0 && GetEntries() == 0; } //need to use GetEntries() in case of buffer histograms
 
+   Double_t AutoP2GetMax(Double_t x);
+   Double_t AutoP2GetMin(Double_t x);
+   Int_t AutoP2GetBins(Int_t n);
+   virtual Int_t AutoP2FindLimits();
 
    virtual Double_t DoIntegral(Int_t ix1, Int_t ix2, Int_t iy1, Int_t iy2, Int_t iz1, Int_t iz2, Double_t & err,
                                Option_t * opt, Bool_t doerr = kFALSE) const;
@@ -145,14 +152,19 @@ protected:
 public:
    // TH1 status bits
    enum EStatusBits {
-      kNoStats     = BIT(9),  ///< don't draw stats box
+      kNoStats = BIT(9),      ///< don't draw stats box
       kUserContour = BIT(10), ///< user specified contour levels
-    //kCanRebin    = BIT(11), ///< FIXME DEPRECATED - to be removed, replaced by SetCanExtend / CanExtendAllAxes
-      kLogX        = BIT(15), ///< X-axis in log scale
-      kIsZoomed    = BIT(16), ///< bit set when zooming on Y axis
-      kNoTitle     = BIT(17), ///< don't draw the histogram title
-      kIsAverage   = BIT(18), ///< Bin contents are average (used by Add)
-      kIsNotW      = BIT(19)  ///< Histogram is forced to be not weighted even when the histogram is filled with weighted different than 1.
+      // kCanRebin    = BIT(11), ///< FIXME DEPRECATED - to be removed, replaced by SetCanExtend / CanExtendAllAxes
+      kLogX = BIT(15),      ///< X-axis in log scale
+      kIsZoomed = BIT(16),  ///< bit set when zooming on Y axis
+      kNoTitle = BIT(17),   ///< don't draw the histogram title
+      kIsAverage = BIT(18), ///< Bin contents are average (used by Add)
+      kIsNotW = BIT(19),    ///< Histogram is forced to be not weighted even when the histogram is filled with weighted
+                            /// different than 1.
+      // Autobin options
+      kAutoBinPTwo = BIT(20),      ///< Use Power(2)-based algorithm for autobinning
+      kAutoBinAdjust = BIT(21),    ///< When using Power(2)-based algorithm, adjust range before drawing
+      kAutoBinIsAdjusted = BIT(22) ///< When using Power(2)-based algorithm, signals that adjustment was already done
    };
    // size of statistics data (size of  array used in GetStats()/ PutStats )
    // s[0]  = sumw       s[1]  = sumw2

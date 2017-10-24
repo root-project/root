@@ -17,6 +17,7 @@
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TEnv.h"
 #include "TClass.h"
 #include "TMath.h"
 #include "THashList.h"
@@ -545,7 +546,7 @@ ClassImp(TH1);
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram default constructor.
 
-TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
+TH1::TH1() : TNamed(), TAttLine(), TAttFill(), TAttMarker(), fXstat("fBuffer")
 {
    fDirectory     = 0;
    fFunctions     = new TList;
@@ -566,6 +567,9 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fXaxis.SetParent(this);
    fYaxis.SetParent(this);
    fZaxis.SetParent(this);
+   ResetBit(TH1::kAutoBinPTwo);
+   ResetBit(TH1::kAutoBinAdjust);
+   ResetBit(TH1::kAutoBinIsAdjusted);
    UseCurrentStyle();
 }
 
@@ -631,8 +635,8 @@ TH1::~TH1()
 ///  TH1F *h1 = (TH1F*)gDirectory->FindObject(name);
 /// ~~~
 
-TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t xup)
-    :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
+TH1::TH1(const char *name, const char *title, Int_t nbins, Double_t xlow, Double_t xup)
+   : TNamed(name, title), TAttLine(), TAttFill(), TAttMarker(), fXstat("fBuffer")
 {
    Build();
    if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
@@ -653,8 +657,8 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
 /// \param[in] xbins array of low-edges for each bin.
 ///            This is an array of size nbins+1
 
-TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
-    :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
+TH1::TH1(const char *name, const char *title, Int_t nbins, const Float_t *xbins)
+   : TNamed(name, title), TAttLine(), TAttFill(), TAttMarker(), fXstat("fBuffer")
 {
    Build();
    if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
@@ -675,8 +679,8 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
 /// \param[in] xbins array of low-edges for each bin.
 ///        This is an array of size nbins+1
 
-TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
-    :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
+TH1::TH1(const char *name, const char *title, Int_t nbins, const Double_t *xbins)
+   : TNamed(name, title), TAttLine(), TAttFill(), TAttMarker(), fXstat("fBuffer")
 {
    Build();
    if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
@@ -689,7 +693,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
 /// Copy constructor.
 /// The list of functions is not copied. (Use Clone if needed)
 
-TH1::TH1(const TH1 &h) : TNamed(), TAttLine(), TAttFill(), TAttMarker()
+TH1::TH1(const TH1 &h) : TNamed(), TAttLine(), TAttFill(), TAttMarker(), fXstat("fBuffer")
 {
    ((TH1&)h).Copy(*this);
 }
@@ -735,6 +739,10 @@ void TH1::Build()
    fXaxis.SetParent(this);
    fYaxis.SetParent(this);
    fZaxis.SetParent(this);
+
+   ResetBit(TH1::kAutoBinPTwo);
+   ResetBit(TH1::kAutoBinAdjust);
+   ResetBit(TH1::kAutoBinIsAdjusted);
 
    SetTitle(fTitle.Data());
 
@@ -1221,6 +1229,98 @@ void TH1::AddDirectory(Bool_t add)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary function to get the next power of 2 value larger then x
+///
+/// Used by the autobin power of 2 algorithm
+
+Double_t TH1::AutoP2GetMax(Double_t x)
+{
+   Double_t neg = (x < 0) ? -1. : 1.;
+   Double_t y = neg * x;
+   Double_t xn = TMath::Log2(y);
+   Int_t nn = (Int_t)xn;
+   if (neg < 0) {
+      nn--;
+   } else {
+      if (xn > 0)
+         nn++;
+   }
+   Double_t r = neg * TMath::Power(2, nn);
+   return r;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary function to get the next power of 2 value smaller then x
+///
+/// Used by the autobin power of 2 algorithm
+
+Double_t TH1::AutoP2GetMin(Double_t x)
+{
+   Double_t neg = (x < 0) ? -1. : 1. / 2.;
+   return neg * AutoP2GetMax(neg * x);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary function to get the next power of 2 integer value larger then n
+///
+/// Used by the autobin power of 2 algorithm
+
+Int_t TH1::AutoP2GetBins(Int_t n)
+{
+   Double_t ln2 = TMath::Log2(n);
+   if ((ln2 - (Int_t)ln2) > 0.)
+      return (Int_t)TMath::Power(2, (Int_t)ln2 + 1);
+   return n;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Buffer-based estimate of the histogram range using the power of 2 algorithm.
+///
+/// Used by the autobin power of 2 algorithm.
+///
+/// Works on internal inputs: fXstat, fXmin, fXmax, NBinsX (from fXaxis), ...
+/// Result save internally in fXaxis.
+///
+/// Overloaded by TH2 and TH3.
+///
+/// Return -1 if internal inputs are incosistent, 0 otherwise.
+///
+
+Int_t TH1::AutoP2FindLimits()
+{
+   // We need meaningful raw limits
+   Double_t xmi = fXstat.GetMin();
+   Double_t xma = fXstat.GetMax();
+   if (xmi >= xma)
+      return -1;
+
+   THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this, xmi, xma);
+   Double_t xhmi = fXaxis.GetXmin();
+   Double_t xhma = fXaxis.GetXmax();
+
+   // Now adjust
+   if (TMath::Abs(xhma) > TMath::Abs(xhmi)) {
+      // Start from the upper limit
+      xhma = AutoP2GetMax(xhma);
+      xhmi = xhma - AutoP2GetMax(xhma - xhmi);
+   } else {
+      // Start from the lower limit
+      xhmi = AutoP2GetMin(xhmi);
+      xhma = xhmi + AutoP2GetMax(xhma - xhmi);
+   }
+
+   // Round the bins to the next power of 2; take into account the possible inflation
+   // of the range
+   Double_t rr = (xhma - xhmi) / (xma - xmi);
+   Int_t nb = AutoP2GetBins((Int_t)(rr * GetNbinsX()));
+
+   // Set everything and project
+   SetBins(nb, xhmi, xhma);
+
+   // Done
+   return 0;
+}
+
 /// Fill histogram with all entries in the buffer.
 ///
 ///  - action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
@@ -1264,21 +1364,22 @@ Int_t TH1::BufferEmpty(Int_t action)
       fBuffer = buffer;
    }
    if (CanExtendAllAxes() || (fXaxis.GetXmax() <= fXaxis.GetXmin())) {
-      //find min, max of entries in buffer
-      Double_t xmin = fBuffer[2];
-      Double_t xmax = xmin;
-      for (Int_t i=1;i<nbentries;i++) {
-         Double_t x = fBuffer[2*i+2];
-         if (x < xmin) xmin = x;
-         if (x > xmax) xmax = x;
-      }
       if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
+         Int_t rc = -1;
+         if (TestBit(TH1::kAutoBinPTwo)) {
+            if ((rc = AutoP2FindLimits()) < 0)
+               Warning("BufferEmpty",
+                       "incosistency found by power-of-2 autobin algorithm: fallback to standard method");
+         }
+         if (rc < 0)
+            THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this, fXstat.GetMin(), fXstat.GetMax());
       } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
-         if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
+         if (fXstat.GetMin() < fXaxis.GetXmin())
+            ExtendAxis(fXstat.GetMin(), &fXaxis);
+         if (fXstat.GetMax() >= fXaxis.GetXmax())
+            ExtendAxis(fXstat.GetMax(), &fXaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }
@@ -1295,8 +1396,8 @@ Int_t TH1::BufferEmpty(Int_t action)
    if (action > 0) {
       delete [] fBuffer;
       fBuffer = 0;
-      fBufferSize = 0;}
-   else {
+      fBufferSize = 0;
+   } else {
       // if number of entries is consistent with buffer - set it negative to avoid
       // refilling the histogram every time BufferEmpty(0) is called
       // In case it is not consistent, by setting fBuffer[0]=0 is like resetting the buffer
@@ -1345,6 +1446,10 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
    fBuffer[2*nbentries+1] = w;
    fBuffer[2*nbentries+2] = x;
    fBuffer[0] += 1;
+
+   // Save statistics
+   fXstat.Fill(x, w);
+
    return -2;
 }
 
