@@ -37,6 +37,9 @@ Bool_t TH1Merger::operator() () {
    if (type == kAllNoLimits)
       return BufferMerge();
 
+   if (type == kAutoP2HaveLimits || (type == kAutoP2NeedLimits && AutoP2BufferMerge()))
+      return AutoP2Merge();
+
    // this is the mixed case - more complicated 
    if (type == kHasNewLimits) {
       // we need to define some new axes     
@@ -78,8 +81,9 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
    Bool_t sameLimitsY = kTRUE;
    Bool_t sameLimitsZ = kTRUE;
    Bool_t foundLabelHist = kFALSE;
-   Bool_t haveWeights = kFALSE; 
-   
+   Bool_t haveWeights = kFALSE;
+   Bool_t isAutoP2 = kFALSE;
+
    // TAxis newXAxis;
    // TAxis newYAxis;
    // TAxis newZAxis;
@@ -87,7 +91,9 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
    TIter next(&fInputList);
    TH1 * h = fH0;  // start with fH0
 
-   int dimension = fH0->GetDimension(); 
+   int dimension = fH0->GetDimension();
+
+   isAutoP2 = fH0->TestBit(TH1::kAutoBinPTwo) ? kTRUE : kFALSE;
 
    // start looping on the histograms 
 
@@ -111,7 +117,18 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
       allHaveLimits = allHaveLimits && hasLimits;
       allSameLimits &= allHaveLimits;
 
-      
+      if (isAutoP2 && !h->TestBit(TH1::kAutoBinPTwo)) {
+         Error("Merge", "Cannot merge histogram - some are in autobin-power-of-2 mode, but not %s!", h->GetName());
+         return kNotCompatible;
+      }
+      if (!isAutoP2 && h->TestBit(TH1::kAutoBinPTwo)) {
+         Error("Merge", "Cannot merge histogram - %s is in autobin-power-of-2 mode, but not the previous ones",
+               h->GetName());
+         return kNotCompatible;
+      }
+      if (isAutoP2)
+         continue;
+
       if (hasLimits) {
          h->BufferEmpty();
 
@@ -270,8 +287,16 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
    }
 
    // in case of weighted histogram set Sumw2() on fH0 is is not weighted
-   if (haveWeights && fH0->GetSumw2N() == 0) fH0->Sumw2(); 
-   
+   if (haveWeights && fH0->GetSumw2N() == 0)
+      fH0->Sumw2();
+
+   // AutoP2
+   if (isAutoP2) {
+      if (allHaveLimits)
+         return kAutoP2HaveLimits;
+      return kAutoP2NeedLimits;
+   }
+
    // return the type of merge
    if (allHaveLabels) return kAllLabel;
    if (allSameLimits) return kAllSameAxes;
@@ -369,7 +394,186 @@ void TH1Merger::DefineNewAxes() {
 
 }
 
-Bool_t TH1Merger::BufferMerge() { 
+void TH1Merger::CopyBuffer(TH1 *hsrc, TH1 *hdes)
+{
+   // Check inputs
+   if (!hsrc || !hsrc->fBuffer || !hdes || !hdes->fBuffer) {
+      void *p1 = hsrc ? hsrc->fBuffer : 0;
+      void *p2 = hdes ? hdes->fBuffer : 0;
+      Warning("TH1Merger::CopyMerge", "invalid inputs: %p, %p, %p, %p -> do nothing", hsrc, hdes, p1, p2);
+   }
+
+   // Entries from buffers have to be filled one by one
+   // because FillN doesn't resize histograms.
+   Int_t nbentries = (Int_t)hsrc->fBuffer[0];
+   if (hdes->fDimension == 1) {
+      for (Int_t i = 0; i < nbentries; i++)
+         hdes->Fill(hsrc->fBuffer[2 * i + 2], hsrc->fBuffer[2 * i + 1]);
+   }
+   if (hdes->fDimension == 2) {
+      auto h2 = dynamic_cast<TH2 *>(hdes);
+      R__ASSERT(h2);
+      for (Int_t i = 0; i < nbentries; i++)
+         h2->Fill(hsrc->fBuffer[3 * i + 2], hsrc->fBuffer[3 * i + 3], hsrc->fBuffer[3 * i + 1]);
+   }
+   if (hdes->fDimension == 3) {
+      auto h3 = dynamic_cast<TH3 *>(hdes);
+      R__ASSERT(h3);
+      for (Int_t i = 0; i < nbentries; i++)
+         h3->Fill(hsrc->fBuffer[4 * i + 2], hsrc->fBuffer[4 * i + 3], hsrc->fBuffer[4 * i + 4],
+                  hsrc->fBuffer[4 * i + 1]);
+   }
+}
+
+Bool_t TH1Merger::AutoP2BufferMerge()
+{
+
+   TH1 *href = 0, *hist = 0;
+   TIter nextref(&fInputList);
+   if (TH1Merger::AxesHaveLimits(fH0)) {
+      href = fH0;
+   } else {
+      while ((hist = (TH1 *)nextref()) && !href) {
+         if (TH1Merger::AxesHaveLimits(hist))
+            href = hist;
+      }
+   }
+   Bool_t resetfH0 = kFALSE;
+   if (!href) {
+      // Merge all histograms to fH0 and do a final projection
+      href = fH0;
+   } else {
+      if (href != fH0) {
+         // Temporary add fH0 to the list for buffer merging
+         fInputList.Add(fH0);
+         resetfH0 = kTRUE;
+      }
+   }
+   TIter next(&fInputList);
+   while ((hist = (TH1 *)next())) {
+      if (!TH1Merger::AxesHaveLimits(hist) && hist->fBuffer) {
+         if (gDebug)
+            Info("AutoP2BufferMerge", "merging buffer of %s into %s", hist->GetName(), href->GetName());
+         CopyBuffer(hist, href);
+         fInputList.Remove(hist);
+      }
+   }
+   // Final projection
+   if (href->fBuffer)
+      href->BufferEmpty(1);
+   // Reset fH0, if already added, to avoid double counting
+   if (resetfH0)
+      fH0->Reset("ICES");
+   // Done, all histos have been processed
+   return kTRUE;
+}
+
+Bool_t TH1Merger::AutoP2Merge()
+{
+
+   Double_t stats[TH1::kNstat], totstats[TH1::kNstat];
+   for (Int_t i = 0; i < TH1::kNstat; i++) {
+      totstats[i] = stats[i] = 0;
+   }
+
+   TIter next(&fInputList);
+   TH1 *hist = 0;
+   // Calculate boundaries and bins
+   Double_t xmin = 0., xmax = 0., binw = 0.;
+   if (!(fH0->IsEmpty())) {
+      hist = fH0;
+   } else {
+      while ((hist = (TH1 *)next())) {
+         if (!hist->IsEmpty())
+            break;
+      }
+   }
+   xmin = hist->GetXaxis()->GetXmin();
+   xmax = hist->GetXaxis()->GetXmax();
+   if (hist->GetXaxis()->GetNbins())
+      binw = (xmax - xmin) / hist->GetXaxis()->GetNbins();
+
+   while ((hist = (TH1 *)next())) {
+      if (hist->GetXaxis()->GetXmin() > xmin)
+         xmin = hist->GetXaxis()->GetXmin();
+      if (hist->GetXaxis()->GetXmax() < xmax)
+         xmax = hist->GetXaxis()->GetXmax();
+      Double_t wbinw = (hist->GetXaxis()->GetNbins())
+                          ? (hist->GetXaxis()->GetXmax() - hist->GetXaxis()->GetXmin()) / hist->GetXaxis()->GetNbins()
+                          : 0.;
+      if (wbinw > binw)
+         binw = wbinw;
+   }
+
+   // Check consistency
+   if (xmin >= xmax || binw <= 0.) {
+      Warning("TH1Merger::AutoP2Merge", "incosistent boundaries/bins: %f, %f, %f -> do nothing", xmin, xmax, binw);
+      return kFALSE;
+   }
+   Double_t xnbins = (xmax - xmin) / binw;
+   Int_t nbins = (Int_t)xnbins;
+   if ((xnbins - nbins) > .001) {
+      Warning("TH1Merger::AutoP2Merge", "incosistent nbins: %f -> do nothing", xnbins);
+      return kFALSE;
+   }
+
+   // Prepare stats
+   fH0->GetStats(totstats);
+   // Clone fH0 and add it to the list
+   if (!fH0->IsEmpty())
+      fInputList.Add(fH0->Clone());
+
+   // reset fH0
+   fH0->Reset("ICES");
+   // Set the new boundaries
+   fH0->SetBins(nbins, xmin, xmax);
+
+   next.Reset();
+   Double_t nentries = 0.;
+   while ((hist = (TH1 *)next())) {
+      // process only if the histogram has limits; otherwise it was processed before
+      // in the case of an existing buffer (see if statement just before)
+
+      if (gDebug)
+         Info("TH1Merger::AutoP2Merge", "merging histogram %s into %s (entries: %f)", hist->GetName(), fH0->GetName(),
+              hist->GetEntries());
+
+      // skip empty histograms
+      if (hist->IsEmpty())
+         continue;
+
+      // import statistics
+      hist->GetStats(stats);
+      for (Int_t i = 0; i < TH1::kNstat; i++)
+         totstats[i] += stats[i];
+      nentries += hist->GetEntries();
+
+      // Int_t nx = hist->GetXaxis()->GetNbins();
+      // loop on bins of the histogram and do the merge
+      for (Int_t ibin = 0; ibin < hist->fNcells; ibin++) {
+
+         Double_t cu = hist->RetrieveBinContent(ibin);
+         Double_t e1sq = TMath::Abs(cu);
+         if (fH0->fSumw2.fN)
+            e1sq = hist->GetBinErrorSqUnchecked(ibin);
+
+         Double_t xu = hist->GetBinCenter(ibin);
+         Int_t jbin = fH0->FindBin(xu);
+
+         fH0->AddBinContent(jbin, cu);
+         if (fH0->fSumw2.fN)
+            fH0->fSumw2.fArray[jbin] += e1sq;
+      }
+   }
+   // copy merged stats
+   fH0->PutStats(totstats);
+   fH0->SetEntries(nentries);
+
+   return kTRUE;
+}
+
+Bool_t TH1Merger::BufferMerge()
+{
 
    TIter next(&fInputList); 
    while (TH1* hist = (TH1*)next()) {
@@ -378,28 +582,7 @@ Bool_t TH1Merger::BufferMerge() {
 
          if (gDebug)
             Info("TH1Merger::BufferMerge","Merging histogram %s into %s",hist->GetName(), fH0->GetName() );
-
-
-         // case of no limits
-         // Entries from buffers have to be filled one by one
-         // because FillN doesn't resize histograms.
-         Int_t nbentries = (Int_t)hist->fBuffer[0];
-         if (fH0->fDimension  == 1) {
-            for (Int_t i = 0; i < nbentries; i++)
-               fH0->Fill(hist->fBuffer[2*i + 2], hist->fBuffer[2*i + 1]);
-         }
-         if (fH0->fDimension == 2) {
-            auto h2 = dynamic_cast<TH2*>(fH0);
-            R__ASSERT(h2);
-            for (Int_t i = 0; i < nbentries; i++)
-               h2->Fill(hist->fBuffer[3*i + 2], hist->fBuffer[3*i + 3],hist->fBuffer[3*i + 1] );
-         }
-         if (fH0->fDimension == 3) {
-            auto h3 = dynamic_cast<TH3*>(fH0);
-            R__ASSERT(h3);
-            for (Int_t i = 0; i < nbentries; i++)
-               h3->Fill(hist->fBuffer[4*i + 2], hist->fBuffer[4*i + 3],hist->fBuffer[4*i + 4], hist->fBuffer[4*i + 1] );
-         }
+         CopyBuffer(hist, fH0);
          fInputList.Remove(hist);
       }
    }
