@@ -50,6 +50,7 @@
 #include "ROOT/TBulkBranchRead.hxx"
 
 #include "ROOT/TIOFeatures.hxx"
+#include "ROOT/ZSTDEngine.hxx"
 
 #include <atomic>
 #include <cstddef>
@@ -1116,6 +1117,25 @@ Int_t TBranch::FlushBaskets()
    Int_t nbytes = 0;
 
    Int_t maxbasket = fWriteBasket + 1;
+   if (fIOFeatures.Test(ROOT::Experimental::EIOFeatures::kCompressionTraining) &&
+         GetCompressionAlgorithm() == ROOT::ECompressionAlgorithm::kZSTD && !fCompression.get()) {
+      // TODO: Refactor training interface to allow multiple baskets of training.
+      TBasket *writeBasket = static_cast<TBasket*>(fBaskets.UncheckedAt(fWriteBasket));
+      if (writeBasket) {
+         TBuffer *writeBuffer = writeBasket->GetBufferRef();
+         fCompression.reset(new ROOT::Internal::ZSTDCompressionEngine(GetCompressionLevel()));
+         if (fCompression->Train(writeBuffer->Buffer(), writeBuffer->Length())) {
+            void *trainingBuffer = nullptr;
+            size_t trainingSize = 0;
+            // TODO: check return values.
+            fCompression->GetTraining(trainingBuffer, trainingSize);
+            fCompTraining.reset(new std::vector<char>);
+            fCompTraining->reserve(trainingSize);
+            memcpy(&(*fCompTraining)[0], trainingBuffer, trainingSize);
+         }
+      }
+   }
+
    // The following protection is not necessary since we should always
    // have fWriteBasket < fBasket.GetSize()
    //if (fBaskets.GetSize() < maxbasket) {
