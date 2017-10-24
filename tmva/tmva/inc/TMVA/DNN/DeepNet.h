@@ -746,7 +746,7 @@ auto TDeepNet<Architecture_t, Layer_t>::PreTrain(std::vector<Matrix_t> &input,
    std::vector<Matrix_t> inp1;
    std::vector<Matrix_t> inp2;
    size_t numOfHiddenLayers = sizeof(numHiddenUnitsPerLayer) / sizeof(numHiddenUnitsPerLayer[0]);
-   size_t batchSize = this->GetBatchSize();
+   // size_t batchSize = this->GetBatchSize();
    size_t visibleUnits = (size_t)input[0].GetNrows();
 
    AddCorruptionLayer(visibleUnits, numHiddenUnitsPerLayer[0], dropoutProbability, corruptionLevel);
