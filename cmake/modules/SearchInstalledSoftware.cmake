@@ -219,6 +219,39 @@ if(builtin_xxhash)
   add_subdirectory(builtins/xxhash)
 endif()
 
+#---Check for ZSTD-------------------------------------------------------------------
+# Potentially, this if() block will enable builtin_zstd.
+if (NOT builtin_zstd)
+  message(STATUS "Looking for ZSTD")
+  find_package(ZSTD)
+  if (ZSTD_FOUND)
+    message(STATUS "System ZSTD found; using that.")
+  else()
+    message(STATUS "System ZSTD not found. Switching on builtin_zstd option")
+    set(builtin_zstd ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
+if (builtin_zstd)
+  set(zstd_version v1.3.2)
+  message(STATUS "Building ZSTD version ${zstd_version} included in ROOT itself")
+  set(ZSTD_URL https://github.com/facebook/zstd/archive/v1.3.2.tar.gz)
+  set(ZSTD_SHA256 ac5054a3c64e6510bc1ae890d05e3d271cc33ceebc9d06ac9f08105766d2798a)
+  set(ZSTD_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zstd${CMAKE_STATIC_LIBRARY_SUFFIX})
+  ExternalProject_Add(
+    ZSTD
+    URL ${ZSTD_URL}
+    URL_HASH SHA256=${ZSTD_SHA256}
+    INSTALL_DIR ${CMAKE_BINARY_DIR}
+    BUILD_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> MOREFLAGS=-fPIC make"
+    CONFIGURE_COMMAND "" 
+    INSTALL_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> make install"
+    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+    BUILD_BYPRODUCTS ${ZSTD_LIBRARIES})
+  set(ZSTD_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
+  set(ZSTD_DEFINITIONS -DBUILTIN_ZSTD)
+endif()
+
 #---Check for LZ4--------------------------------------------------------------------
 if(NOT builtin_lz4)
   message(STATUS "Looking for LZ4")
