@@ -133,11 +133,11 @@ void TReference<AReal>::Im2col(TMatrixT<AReal> &A, TMatrixT<AReal> &B, size_t im
 
          // within the local view
          for (int m = 0; m < B.GetNrows(); m++) {
-            for (int k = i - fltHeight / 2; k <= i + (fltHeight - 1) / 2; k++) {
-               for (int l = j - fltWidth / 2; l <= j + (fltWidth - 1) / 2; l++) {
+            for (Int_t k = i - Int_t(fltHeight) / 2; k <= i + (Int_t(fltHeight) - 1) / 2; k++) {
+               for (Int_t l = j - Int_t(fltWidth) / 2; l <= j + (Int_t(fltWidth) - 1) / 2; l++) {
 
                   // Check the boundaries
-                  if (k < 0 || k >= imgHeight || l < 0 || l >= imgWidth)
+                  if (k < 0 || k >= Int_t(imgHeight) || l < 0 || l >= Int_t(imgWidth))
                      A(currLocalView, currLocalViewPixel++) = 0;
                   else
                      A(currLocalView, currLocalViewPixel++) = B(m, k * imgWidth + l);
@@ -260,8 +260,8 @@ void TReference<AReal>::CalculateConvWeightGradients(TMatrixT<AReal> &weight_gra
                                                      size_t filterHeight, size_t filterWidth, size_t nLocalViews)
 {
    // reinitialize the weight gradients to 0
-   for (size_t i = 0; i < weight_gradients.GetNrows(); i++) {
-      for (size_t j = 0; j < weight_gradients.GetNcols(); j++) {
+   for (Int_t i = 0; i < weight_gradients.GetNrows(); i++) {
+      for (Int_t j = 0; j < weight_gradients.GetNcols(); j++) {
          weight_gradients(i, j) = 0;
       }
    }
@@ -337,8 +337,8 @@ void TReference<AReal>::Downsample(TMatrixT<AReal> &A, TMatrixT<AReal> &B, const
          for (int m = 0; m < C.GetNrows(); m++) {
             AReal value = -std::numeric_limits<AReal>::max();
 
-            for (int k = i - fltHeight / 2; k <= i + (fltHeight - 1) / 2; k++) {
-               for (int l = j - fltWidth / 2; l <= j + (fltWidth - 1) / 2; l++) {
+            for (int k = i - Int_t(fltHeight) / 2; k <= i + (Int_t(fltHeight) - 1) / 2; k++) {
+               for (int l = j - Int_t(fltWidth) / 2; l <= j + (Int_t(fltWidth) - 1) / 2; l++) {
                   if (C(m, k * imgWidth + l) > value) {
                      value = C(m, k * imgWidth + l);
                      B(m, currLocalView) = k * imgWidth + l;
@@ -381,12 +381,12 @@ void TReference<AReal>::MaxPoolLayerBackward(std::vector<TMatrixT<AReal>> &activ
 template <typename AReal>
 void TReference<AReal>::Reshape(TMatrixT<AReal> &A, const TMatrixT<AReal> &B)
 {
-   size_t nColsA = A.GetNcols();
-   size_t nColsB = B.GetNcols();
+   auto nColsA = A.GetNcols();
+   auto nColsB = B.GetNcols();
 
-   for (size_t i = 0; i < A.GetNrows(); i++) {
-      for (size_t j = 0; j < A.GetNcols(); j++) {
-         size_t nElem = i * nColsA + j;
+   for (Int_t i = 0; i < A.GetNrows(); i++) {
+      for (Int_t j = 0; j < A.GetNcols(); j++) {
+         auto nElem = i * nColsA + j;
          A(i, j) = B(nElem / nColsB, (nElem - 1) % nColsB);
       }
    }
@@ -425,18 +425,18 @@ template <typename AReal>
 void TReference<AReal>::Rearrange(std::vector<TMatrixT<AReal>> &out, const std::vector<TMatrixT<AReal>> &in)
 {
    // B x T x D out --- T x B x D in*/
-   size_t B = out.size();
-   size_t T = out[0].GetNrows();
-   size_t D = out[0].GetNcols();
-   if ((T != in.size()) || (B != in[0].GetNrows()) || (D != in[0].GetNcols())) {
+   auto B = out.size();
+   auto T = out[0].GetNrows();
+   auto D = out[0].GetNcols();
+   if ((T != (Int_t)in.size()) || (Int_t(B) != in[0].GetNrows()) || (D != in[0].GetNcols())) {
       std::cout << "Incompatible Dimensions\n"
                 << in.size() << "x" << in[0].GetNrows() << "x" << in[0].GetNcols() << " --> " << B << "x" << T << "x"
                 << D << "\n";
       return;
    }
    for (size_t i = 0; i < B; ++i) {
-      for (size_t j = 0; j < T; ++j) {
-         for (size_t k = 0; k < D; ++k) {
+      for (Int_t j = 0; j < T; ++j) {
+         for (Int_t k = 0; k < D; ++k) {
             out[i](j, k) = in[j](i, k);
          }
       }
