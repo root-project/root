@@ -56,6 +56,7 @@ add_subdirectory(imt)
 add_subdirectory(zip)
 add_subdirectory(lzma)
 add_subdirectory(lz4)
+add_subdirectory(zstd)
 
 if(NOT WIN32)
   add_subdirectory(newdelete)
@@ -115,6 +116,7 @@ set(objectlibs $<TARGET_OBJECTS:Base>
                $<TARGET_OBJECTS:Foundation>
                $<TARGET_OBJECTS:Lzma>
                $<TARGET_OBJECTS:Lz4>
+               $<TARGET_OBJECTS:Zstd>
                $<TARGET_OBJECTS:Zip>
                $<TARGET_OBJECTS:Meta>
                $<TARGET_OBJECTS:GuiCore>
