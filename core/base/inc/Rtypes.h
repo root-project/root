@@ -295,7 +295,7 @@ private:                                                                        
          return false;                                                                                          \
       } else if (recurseBlocker++ == 0) {                                                                       \
          ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency =                         \
-            ::ROOT::Internal::HasConsistentHashMember(Class_Name()) ||                                          \
+            ::ROOT::Internal::HasConsistentHashMember(_QUOTE_(name)) ||                                          \
             ::ROOT::Internal::HasConsistentHashMember(*IsA());                                                  \
          ++recurseBlocker;                                                                                      \
          return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;                   \
