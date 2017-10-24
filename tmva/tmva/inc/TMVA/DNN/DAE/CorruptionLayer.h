@@ -97,24 +97,22 @@ public:
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-TCorruptionLayer<Architecture_t>::TCorruptionLayer(size_t batchSize, size_t visibleUnits,
-                           size_t hiddenUnits,
-                           Scalar_t dropoutProbability, Scalar_t corruptionLevel)
-   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits}, {visibleUnits},
-   2, {hiddenUnits,visibleUnits}, {1,1}, batchSize, visibleUnits, 1, EInitialization::kUniform),
-   fVisibleUnits(visibleUnits), fDropoutProbability(dropoutProbability),
-   fType(1), fCorruptionLevel(corruptionLevel), fHiddenUnits(hiddenUnits)
+TCorruptionLayer<Architecture_t>::TCorruptionLayer(size_t batchSize, size_t visibleUnits, size_t hiddenUnits,
+                                                   Scalar_t dropoutProbability, Scalar_t corruptionLevel)
+   : VGeneralLayer<Architecture_t>(batchSize, 1, 1, 0, 0, 0, 0, 1, {hiddenUnits}, {visibleUnits}, 2,
+                                   {hiddenUnits, visibleUnits}, {1, 1}, batchSize, visibleUnits, 1,
+                                   EInitialization::kUniform),
+     fVisibleUnits(visibleUnits), fHiddenUnits(hiddenUnits), fDropoutProbability(dropoutProbability), fType(1),
+     fCorruptionLevel(corruptionLevel)
 
 {
 }
 //______________________________________________________________________________
 template <typename Architecture_t>
 TCorruptionLayer<Architecture_t>::TCorruptionLayer(TCorruptionLayer<Architecture_t> *layer)
-   : VGeneralLayer<Architecture_t>(layer),
-   fVisibleUnits(layer->GetVisibleUnits()),fType(1),
-   fHiddenUnits(layer->GetHiddenUnits()),
-   fDropoutProbability(layer->GetDropoutProbability()),
-   fCorruptionLevel(layer->GetCorruptionLevel())
+   : VGeneralLayer<Architecture_t>(layer), fVisibleUnits(layer->GetVisibleUnits()),
+     fHiddenUnits(layer->GetHiddenUnits()), fDropoutProbability(layer->GetDropoutProbability()), fType(1),
+     fCorruptionLevel(layer->GetCorruptionLevel())
 {
   // Output Tensor will be created in General Layer
 }
@@ -152,11 +150,10 @@ auto TCorruptionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, boo
 }
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto inline TCorruptionLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_backward,
-                                                     const std::vector<Matrix_t> &activations_backward,
-                                                     std::vector<Matrix_t> &inp1,
-                                                     std::vector<Matrix_t> &inp2)
--> void
+auto inline TCorruptionLayer<Architecture_t>::Backward(std::vector<Matrix_t> & /*gradients_backward*/,
+                                                       const std::vector<Matrix_t> & /*activations_backward*/,
+                                                       std::vector<Matrix_t> & /*inp1*/, std::vector<Matrix_t> &
+                                                       /*inp2*/) -> void
 {
 }
 
@@ -171,10 +168,8 @@ auto TCorruptionLayer<Architecture_t>::Print() const
    std::cout<<"Corrupted Output: "<<std::endl;
    for(size_t i=0; i<this->GetBatchSize(); i++)
    {
-      for(size_t j=0; j<this->GetOutputAt(i).GetNrows(); j++)
-      {
-         for(size_t k=0; k<this->GetOutputAt(i).GetNcols(); k++)
-         {
+      for (Int_t j = 0; j < this->GetOutputAt(i).GetNrows(); j++) {
+         for (Int_t k = 0; k < this->GetOutputAt(i).GetNcols(); k++) {
             std::cout<<this->GetOutputAt(i)(j,k)<<"\t";
       	 }
          std::cout<<std::endl;

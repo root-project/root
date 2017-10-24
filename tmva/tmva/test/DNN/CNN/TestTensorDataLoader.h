@@ -177,10 +177,10 @@ auto testIdentity() -> typename Architecture_t::Scalar_t
 
    Scalar_t maximumError = 0.0;
    for (auto b : loader) {
-      auto inputTensor = b.GetInput();
+      auto linputTensor = b.GetInput();
       auto outputMatrix = b.GetOutput();
       auto weightMatrix = b.GetWeights();
-      Scalar_t error = convNet.Loss(inputTensor, outputMatrix, weightMatrix);
+      Scalar_t error = convNet.Loss(linputTensor, outputMatrix, weightMatrix);
       maximumError = std::max(error, maximumError);
    }
 
@@ -283,12 +283,12 @@ void testDataLoaderDataSet()
    convNet.Initialize();
 
    for (auto b : loader) {
-      auto inputTensor = b.GetInput();
+      auto linputTensor = b.GetInput();
       auto outputMatrix = b.GetOutput();
       auto weightMatrix = b.GetWeights();
 
-      convNet.Forward(inputTensor);
-      convNet.Backward(inputTensor, outputMatrix, weightMatrix);
+      convNet.Forward(linputTensor);
+      convNet.Backward(linputTensor, outputMatrix, weightMatrix);
    }
 }
 

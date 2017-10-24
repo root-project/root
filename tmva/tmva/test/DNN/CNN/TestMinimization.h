@@ -37,9 +37,8 @@ using namespace TMVA::DNN;
 using namespace TMVA::DNN::CNN;
 
 template <typename Architecture_t>
-auto testMinimization(typename Architecture_t::Scalar_t momentum, bool nestorov) -> typename Architecture_t::Scalar_t
+auto testMinimization(typename Architecture_t::Scalar_t momentum, bool nestorov) -> void
 {
-   using Matrix_t = typename Architecture_t::Matrix_t;
    using DeepNet_t = TDeepNet<Architecture_t>;
    using DataLoader_t = TTensorDataLoader<TensorInput, Architecture_t>;
 
@@ -134,6 +133,7 @@ auto testMinimization(typename Architecture_t::Scalar_t momentum, bool nestorov)
          minimizer.Step(convNet, nets, batches);
       }
    }
+   // no returning then putting this void
 }
 
 #endif

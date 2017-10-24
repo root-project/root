@@ -136,10 +136,9 @@ TLogisticRegressionLayer<Architecture_t>::TLogisticRegressionLayer(const TLogist
 //______________________________________________________________________________
 template <typename Architecture_t>
 auto inline TLogisticRegressionLayer<Architecture_t>::Backward(std::vector<Matrix_t> &inputLabel,
-                                                     const std::vector<Matrix_t> &inp1,
-                                                     std::vector<Matrix_t> &input,
-                                                     std::vector<Matrix_t> &inp2)
--> void
+                                                               const std::vector<Matrix_t> & /*inp1*/,
+                                                               std::vector<Matrix_t> &input, std::vector<Matrix_t> &
+                                                               /*inp2*/) -> void
 {
    for(size_t i=0; i<this->GetBatchSize(); i++)
    {
@@ -166,8 +165,7 @@ auto inline TLogisticRegressionLayer<Architecture_t>::Backward(std::vector<Matri
 
 //______________________________________________________________________________
 template <typename Architecture_t>
-auto TLogisticRegressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout)
--> void
+auto TLogisticRegressionLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool /*applyDropout*/) -> void
 {
    for(size_t i=0; i<this->GetTestDataBatchSize(); i++)
    {
@@ -191,13 +189,11 @@ auto TLogisticRegressionLayer<Architecture_t>::Print() const
             std::cout<<"output: "<<std::endl;
             for(size_t i=0; i<this->GetOutput().size(); i++)
             {
-                for(size_t j=0; j<this->GetOutputAt(i).GetNrows(); j++)
-                {
-                   for(size_t k=0; k<this->GetOutputAt(i).GetNcols(); k++)
-                   {
-                      std::cout<<this->GetOutputAt(i)(j,k)<<"\t";
-                   }
-                   std::cout<<std::endl;
+               for (Int_t j = 0; j < this->GetOutputAt(i).GetNrows(); j++) {
+                  for (Int_t k = 0; k < this->GetOutputAt(i).GetNcols(); k++) {
+                     std::cout << this->GetOutputAt(i)(j, k) << "\t";
+                  }
+                  std::cout << std::endl;
                  }
             }
 }
