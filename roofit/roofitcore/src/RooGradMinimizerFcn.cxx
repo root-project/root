@@ -384,16 +384,19 @@ Bool_t RooGradMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings
 
   updateFloatVec() ;
 
+  // If the gradient is initialized, synchronize it as well. If not, it will be
+  // synchronized from InitGradient when DoDerivative is called the first time.
+  if (_grad_initialized) {
+    SynchronizeGradient(parameters);
+  }
+
   return 0 ;  
 
 }
 
 
-void RooGradMinimizerFcn::SynchronizeGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) {
+void RooGradMinimizerFcn::SynchronizeGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const {
 //  _gradf.updateParameters(parameters);
-  if (!_grad_initialized) {
-    InitGradient();
-  }
   _gradf.SetInitialGradient(parameters);
 }
 
@@ -606,7 +609,7 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
 
 // it's not actually const, it mutates mutables, but it has to be defined
 // const because it's called from DoDerivative, which insists on constness
-void RooGradMinimizerFcn::InitGradient const () {
+void RooGradMinimizerFcn::InitGradient() const {
   // Create derivator
   ROOT::Fit::Fitter *fitter = _context->fitter();
   if (!fitter) {
@@ -626,6 +629,8 @@ void RooGradMinimizerFcn::InitGradient const () {
   _gradf = derivator;
   _grad.resize(_nDim);
   _grad_params.resize(_nDim);
+
+  SynchronizeGradient(fitter->Config().ParamsSettings());
 
   _grad_initialized = true;
 }

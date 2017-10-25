@@ -264,7 +264,7 @@ std::vector<double> NumericalDerivatorMinuit2::operator()(const double* x) {
     // MODIFIED:
 // This function was not implemented as in Minuit2. Now it copies the behavior
 // of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
-void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) {
+void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const {
    // set an initial gradient using some given steps 
    // (used in the first iteration)
 

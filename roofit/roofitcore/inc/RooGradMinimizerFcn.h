@@ -71,7 +71,7 @@ class RooGradMinimizerFcn : public ROOT::Math::IMultiGradFunction {
   Int_t evalCounter() const { return _evalCounter ; }
   void zeroEvalCount() { _evalCounter = 0 ; }
 
-  void SynchronizeGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters);
+  void SynchronizeGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
 
  private:
   
@@ -116,7 +116,7 @@ private:
   mutable ROOT::Math::NumericalDerivatorMinuit2 _gradf;
   mutable std::vector<double> _grad;
   mutable std::vector<double> _grad_params;
-  bool _grad_initialized;
+  mutable bool _grad_initialized;
 
   void InitGradient() const;
 };

@@ -61,13 +61,17 @@ public:
 
   void SetInitialValues(const double* g, const double* g2, const double* s);
 
-  void SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters);
+  void SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
 
 private:
 
-  std::vector <double> fGrd;
-  std::vector <double> fG2;
-  std::vector <double> fGstep;
+  // these are mutable because SetInitialGradient must be const because it's called
+  // from InitGradient which is const because DoDerivative must be const because the
+  // ROOT::Math::IMultiGradFunction interface requires this
+  mutable std::vector <double> fGrd;
+  mutable std::vector <double> fG2;
+  mutable std::vector <double> fGstep;
+
   const ROOT::Math::IBaseFunctionMultiDim* fFunction;
   double fStepTolerance;
   double fGradTolerance;
