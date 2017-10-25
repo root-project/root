@@ -918,8 +918,11 @@ void RooAbsCollection::printValue(ostream& os) const
     } else {
       first2 = kFALSE ;
     }
-    os << arg->GetName() ;
-
+    if (arg->IsA()->InheritsFrom(RooStringVar::Class())) {
+       os << '\'' << ((RooStringVar *)arg)->getVal() << '\'';
+    } else {
+       os << arg->GetName();
+    }
   }
   os << ")" ;
 }

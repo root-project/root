@@ -61,6 +61,7 @@ instantiate objects.
 #include "RooRealSumPdf.h"
 #include "RooConstVar.h"
 #include "RooDerivative.h"
+#include "RooStringVar.h"
 #include "TROOT.h"
 
 using namespace RooFit ;
@@ -1731,11 +1732,16 @@ RooArgSet RooFactoryWSTool::asSET(const char* arg)
 
   char* save ;
   char* tok = strtok_r(tmp,",{}",&save) ;
+  int i(0);
   while(tok) {
 
     // If arg is a numeric string, make a RooConst() of it here
     if (tok[0]=='.' || tok[0]=='+' || tok[0] == '-' || isdigit(tok[0])) {
       s.add(RooConst(atof(tok))) ;
+    } else if (tok[0] == '\'') {
+       tok[strlen(tok) - 1] = 0;
+       RooStringVar *sv = new RooStringVar(Form("string_set_item%03d", i++), "string_set_item", tok + 1);
+       s.add(*sv);
     } else {
       RooAbsArg* aarg = ws().arg(tok) ;
       if (aarg) {
@@ -1768,6 +1774,10 @@ RooArgList RooFactoryWSTool::asLIST(const char* arg)
     // If arg is a numeric string, make a RooConst() of it here
     if (tok[0]=='.' || tok[0]=='+' || tok[0] == '-' || isdigit(tok[0])) {
       l.add(RooConst(atof(tok))) ;
+    } else if (tok[0] == '\'') {
+       tok[strlen(tok) - 1] = 0;
+       RooStringVar *sv = new RooStringVar("listarg", "listarg", tok + 1);
+       l.add(*sv);
     } else {
       RooAbsArg* aarg = ws().arg(tok) ;
       if (aarg) {

@@ -37,9 +37,9 @@ in the input dataset.
 #include "RooAbsReal.h"
 #include "RooRealVar.h"
 #include "RooRandom.h"
-#include "RooDataSet.h"
 #include "RooHist.h"
 #include "RooMsgService.h"
+#include "RooChangeTracker.h"
 
 #include "TError.h"
 
@@ -68,20 +68,15 @@ ClassImp(RooNDKeysPdf);
 /// The optional weight arguments allows to specify an observable or function
 /// expression in observables that specifies the weight of each event.
 
-RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
-            const RooArgList& varList, RooDataSet& data,
-            TString options, Double_t rho, Double_t nSigma, Bool_t rotate) :
-  RooAbsPdf(name,title),
-  _varList("varList","List of variables",this),
-  _data(data),
-  _options(options),
-  _widthFactor(rho),
-  _nSigma(nSigma),
-  _weights(&_weights0),
-  _rotate(rotate)
+RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooAbsData &data,
+                           TString options, Double_t rho, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+   : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
+     _rhoList("rhoList", "List of rho parameters", this), _dataP(0), _data(data), _options(options), _widthFactor(rho),
+     _nSigma(nSigma), _weights(&_weights0), _rotate(rotate), _sortInput(sortInput), _nAdpt(1), _tracker(0)
 {
   // Constructor
   _varItr    = _varList.createIterator() ;
+  _rhoItr = _rhoList.createIterator();
 
   TIterator* varItr = varList.createIterator() ;
   RooAbsArg* var ;
@@ -102,27 +97,51 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
-            const RooArgList& varList, RooDataSet& data, const TVectorD& rho,
-            TString options, Double_t nSigma, Bool_t rotate) :
-  RooAbsPdf(name,title),
-  _varList("varList","List of variables",this),
-  _data(data),
-  _options(options),
-  _widthFactor(-1.0),
-  _nSigma(nSigma),
-  _weights(&_weights0),
-  _rotate(rotate)
+RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist,
+                           TString options, Double_t rho, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+   : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
+     _rhoList("rhoList", "List of rho parameters", this), _dataP(createDatasetFromHist(varList, hist)), _data(*_dataP),
+     _options(options), _widthFactor(rho), _nSigma(nSigma), _weights(&_weights0), _rotate(rotate),
+     _sortInput(sortInput), _nAdpt(1), _tracker(0)
+{
+   _varItr = _varList.createIterator();
+   _rhoItr = _rhoList.createIterator();
+
+   TIterator *varItr = varList.createIterator();
+   RooAbsArg *var;
+   for (Int_t i = 0; (var = (RooAbsArg *)varItr->Next()); ++i) {
+      if (!dynamic_cast<RooAbsReal *>(var)) {
+         coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
+                               << " is not of type RooAbsReal" << endl;
+         assert(0);
+      }
+      _varList.add(*var);
+      _varName.push_back(var->GetName());
+   }
+   delete varItr;
+
+   createPdf();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
+RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooAbsData &data,
+                           const TVectorD &rho, TString options, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+   : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
+     _rhoList("rhoList", "List of rho parameters", this), _dataP(0), _data(data), _options(options), _widthFactor(-1.0),
+     _nSigma(nSigma), _weights(&_weights0), _rotate(rotate), _sortInput(sortInput), _nAdpt(1), _tracker(0)
 {
   _varItr    = _varList.createIterator() ;
+  _rhoItr = _rhoList.createIterator();
 
   TIterator* varItr = varList.createIterator() ;
   RooAbsArg* var ;
   for (Int_t i=0; (var = (RooAbsArg*)varItr->Next()); ++i) {
     if (!dynamic_cast<RooAbsReal*>(var)) {
-      coutE(InputArguments) << "RhhNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
-             << " is not of type RooAbsReal" << endl ;
-      R__ASSERT(0) ;
+       coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
+                             << " is not of type RooAbsReal" << endl;
+       R__ASSERT(0);
     }
     _varList.add(*var) ;
     _varName.push_back(var->GetName());
@@ -131,16 +150,19 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 
   // copy rho widths
   if( _varList.getSize() != rho.GetNrows() ) {
-    coutE(InputArguments) << "ERROR:  RhhNDKeysPdf::RhhNDKeysPdf() : The vector-size of rho is different from that of varList."
-           << "Unable to create the PDF." << endl;
-    R__ASSERT ( _varList.getSize()==rho.GetNrows() );
+     coutE(InputArguments)
+        << "ERROR:  RooNDKeysPdf::RooNDKeysPdf() : The vector-size of rho is different from that of varList."
+        << "Unable to create the PDF." << endl;
+     R__ASSERT(_varList.getSize() == rho.GetNrows());
   }
 
   // negative width factor will serve as a switch in initialize()
   // negative value means that a vector has been provided as input,
   // and that _rho has already been set ...
   _rho.resize( rho.GetNrows() );
-  for  (Int_t j=0; j<rho.GetNrows(); j++) { _rho[j]=rho[j]; /*cout<<"RooNDKeysPdf c'tor, _rho["<<j<<"]="<<_rho[j]<<endl;*/ }
+  for (Int_t j = 0; j < rho.GetNrows(); j++) {
+     _rho[j] = rho[j]; /*cout<<"RooNDKeysPdf ctor, _rho["<<j<<"]="<<_rho[j]<<endl;*/
+  }
 
   createPdf(); // calls initialize ...
 }
@@ -149,131 +171,236 @@ RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
 /// Backward compatibility constructor for (1-dim) RooKeysPdf. If you are a new user,
 /// please use the first constructor form.
 
-RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title,
-                           RooAbsReal& x, RooDataSet& data,
-                           Mirror mirror, Double_t rho, Double_t nSigma, Bool_t rotate) :
-  RooAbsPdf(name,title),
-  _varList("varList","List of variables",this),
-  _data(data),
-  _options("a"),
-  _widthFactor(rho),
-  _nSigma(nSigma),
-  _weights(&_weights0),
-  _rotate(rotate)
+RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const RooAbsData &data,
+                           const RooArgList &rhoList, TString options, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+   : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
+     _rhoList("rhoList", "List of rho parameters", this), _dataP(0), _data(data), _options(options), _widthFactor(-1.0),
+     _nSigma(nSigma), _weights(&_weights0), _rotate(rotate), _sortInput(sortInput), _nAdpt(1)
 {
-  _varItr = _varList.createIterator() ;
+   _varItr = _varList.createIterator();
+   _rhoItr = _rhoList.createIterator();
 
-  _varList.add(x) ;
-  _varName.push_back(x.GetName());
+   TIterator *varItr = varList.createIterator();
+   RooAbsArg *var;
+   for (Int_t i = 0; (var = (RooAbsArg *)varItr->Next()); ++i) {
+      if (!dynamic_cast<RooAbsReal *>(var)) {
+         coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
+                               << " is not of type RooAbsReal" << endl;
+         assert(0);
+      }
+      _varList.add(*var);
+      _varName.push_back(var->GetName());
+   }
+   delete varItr;
 
-  if (mirror!=NoMirror) {
-    if (mirror!=MirrorBoth)
-      coutW(InputArguments) << "RooNDKeysPdf::RooNDKeysPdf() : Warning : asymmetric mirror(s) no longer supported." << endl;
-    _options="m";
-  }
+   TIterator *rhoItr = rhoList.createIterator();
+   RooAbsArg *rho;
+   _rho.resize(rhoList.getSize(), 1.0);
 
-  createPdf();
+   for (Int_t i = 0; (rho = (RooAbsArg *)rhoItr->Next()); ++i) {
+      if (!dynamic_cast<RooAbsReal *>(rho)) {
+         coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: parameter " << rho->GetName()
+                               << " is not of type RooRealVar" << endl;
+         assert(0);
+      }
+      _rhoList.add(*rho);
+      _rho[i] = (dynamic_cast<RooAbsReal *>(rho))->getVal();
+   }
+   delete rhoItr;
+
+   // copy rho widths
+   if ((_varList.getSize() != _rhoList.getSize())) {
+      coutE(InputArguments) << "ERROR:  RooNDKeysPdf::RooNDKeysPdf() : The size of rhoList is different from varList."
+                            << "Unable to create the PDF." << endl;
+      assert(_varList.getSize() == _rhoList.getSize());
+   }
+
+   // keep track of changes in rho parameters
+   _tracker = new RooChangeTracker("tracker", "track rho parameters", _rhoList, true); // check for value updates
+   (void)_tracker->hasChanged(true); // first evaluation always true for new parameters (?)
+
+   createPdf();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
+RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, const RooArgList &varList, const TH1 &hist,
+                           const RooArgList &rhoList, TString options, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+   : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
+     _rhoList("rhoList", "List of rho parameters", this), _dataP(createDatasetFromHist(varList, hist)), _data(*_dataP),
+     _options(options), _widthFactor(-1), _nSigma(nSigma), _weights(&_weights0), _rotate(rotate), _sortInput(sortInput),
+     _nAdpt(1)
+{
+   _varItr = _varList.createIterator();
+   _rhoItr = _rhoList.createIterator();
+
+   TIterator *varItr = varList.createIterator();
+   RooAbsArg *var;
+   for (Int_t i = 0; (var = (RooAbsArg *)varItr->Next()); ++i) {
+      if (!dynamic_cast<RooAbsReal *>(var)) {
+         coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: variable " << var->GetName()
+                               << " is not of type RooAbsReal" << endl;
+         assert(0);
+      }
+      _varList.add(*var);
+      _varName.push_back(var->GetName());
+   }
+   delete varItr;
+
+   // copy rho widths
+   TIterator *rhoItr = rhoList.createIterator();
+   RooAbsArg *rho;
+   _rho.resize(rhoList.getSize(), 1.0);
+
+   for (Int_t i = 0; (rho = (RooAbsArg *)rhoItr->Next()); ++i) {
+      if (!dynamic_cast<RooAbsReal *>(rho)) {
+         coutE(InputArguments) << "RooNDKeysPdf::ctor(" << GetName() << ") ERROR: parameter " << rho->GetName()
+                               << " is not of type RooRealVar" << endl;
+         assert(0);
+      }
+      _rhoList.add(*rho);
+      _rho[i] = (dynamic_cast<RooAbsReal *>(rho))->getVal();
+   }
+   delete rhoItr;
+
+   if ((_varList.getSize() != _rhoList.getSize())) {
+      coutE(InputArguments) << "ERROR:  RooNDKeysPdf::RooNDKeysPdf() : The size of rhoList is different from varList."
+                            << "Unable to create the PDF." << endl;
+      assert(_varList.getSize() == _rhoList.getSize());
+   }
+
+   // keep track of changes in rho parameters
+   _tracker = new RooChangeTracker("tracker", "track rho parameters", _rhoList, true); // check for value updates
+   (void)_tracker->hasChanged(true); // first evaluation always true for new parameters (?)
+
+   createPdf();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Constructor
+
+RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, const RooAbsData &data, Mirror mirror,
+                           Double_t rho, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+   : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
+     _rhoList("rhoList", "List of rho parameters", this), _dataP(0), _data(data), _options("a"), _widthFactor(rho),
+     _nSigma(nSigma), _weights(&_weights0), _rotate(rotate), _sortInput(sortInput), _nAdpt(1), _tracker(0)
+{
+   _varItr = _varList.createIterator();
+   _rhoItr = _rhoList.createIterator();
+
+   _varList.add(x);
+   _varName.push_back(x.GetName());
+
+   if (mirror != NoMirror) {
+      if (mirror != MirrorBoth)
+         coutW(InputArguments) << "RooNDKeysPdf::RooNDKeysPdf() : Warning : asymmetric mirror(s) no longer supported."
+                               << endl;
+      _options = "m";
+   }
+
+   createPdf();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Backward compatibility constructor for Roo2DKeysPdf. If you are a new user,
 /// please use the first constructor form.
 
-RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal& x, RooAbsReal & y,
-                           RooDataSet& data, TString options, Double_t rho, Double_t nSigma, Bool_t rotate) :
-  RooAbsPdf(name,title),
-  _varList("varList","List of variables",this),
-  _data(data),
-  _options(options),
-  _widthFactor(rho),
-  _nSigma(nSigma),
-  _weights(&_weights0),
-  _rotate(rotate)
+RooNDKeysPdf::RooNDKeysPdf(const char *name, const char *title, RooAbsReal &x, RooAbsReal &y, const RooAbsData &data,
+                           TString options, Double_t rho, Double_t nSigma, Bool_t rotate, Bool_t sortInput)
+   : RooAbsPdf(name, title), _varList("varList", "List of variables", this),
+     _rhoList("rhoList", "List of rho parameters", this), _dataP(0), _data(data), _options(options), _widthFactor(rho),
+     _nSigma(nSigma), _weights(&_weights0), _rotate(rotate), _sortInput(sortInput), _nAdpt(1), _tracker(0)
 {
-  _varItr = _varList.createIterator() ;
+   _varItr = _varList.createIterator();
+   _rhoItr = _rhoList.createIterator();
 
-  _varList.add(RooArgSet(x,y)) ;
-  _varName.push_back(x.GetName());
-  _varName.push_back(y.GetName());
+   _varList.add(RooArgSet(x, y));
+   _varName.push_back(x.GetName());
+   _varName.push_back(y.GetName());
 
-  createPdf();
+   createPdf();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor
 
-RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf& other, const char* name) :
-  RooAbsPdf(other,name),
-  _varList("varList",this,other._varList),
-  _data(other._data),
-  _options(other._options),
-  _widthFactor(other._widthFactor),
-  _nSigma(other._nSigma),
-  _weights(&_weights0),
-  _rotate(other._rotate)
+RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf &other, const char *name)
+   : RooAbsPdf(other, name), _varList("varList", this, other._varList), _rhoList("rhoList", this, other._rhoList),
+     _dataP(other._dataP != NULL ? new RooDataSet(*other._dataP) : NULL),
+     _data(other._dataP != NULL ? *_dataP : other._data), _options(other._options), _widthFactor(other._widthFactor),
+     _nSigma(other._nSigma), _weights(&_weights0), _rotate(other._rotate), _sortInput(other._sortInput),
+     _nAdpt(other._nAdpt)
 {
-  _varItr      = _varList.createIterator() ;
+   _tracker = (other._tracker != NULL ? new RooChangeTracker(*other._tracker) : NULL);
+   // if (_tracker!=NULL) { _tracker->hasChanged(true); }
 
-  _fixedShape  = other._fixedShape;
-  _mirror      = other._mirror;
-  _debug       = other._debug;
-  _verbose     = other._verbose;
-  _sqrt2pi     = other._sqrt2pi;
-  _nDim        = other._nDim;
-  _nEvents     = other._nEvents;
-  _nEventsM    = other._nEventsM;
-  _nEventsW    = other._nEventsW;
-  _d           = other._d;
-  _n           = other._n;
-  _dataPts     = other._dataPts;
-  _dataPtsR    = other._dataPtsR;
-  _weights0    = other._weights0;
-  _weights1    = other._weights1;
-  if (_options.Contains("a")) { _weights = &_weights1; }
-  //_sortIdcs    = other._sortIdcs;
-  _sortTVIdcs  = other._sortTVIdcs;
-  _varName     = other._varName;
-  _rho         = other._rho;
-  _x           = other._x;
-  _x0          = other._x0 ;
-  _x1          = other._x1 ;
-  _x2          = other._x2 ;
-  _xDatLo      = other._xDatLo;
-  _xDatHi      = other._xDatHi;
-  _xDatLo3s    = other._xDatLo3s;
-  _xDatHi3s    = other._xDatHi3s;
-  _mean        = other._mean;
-  _sigma       = other._sigma;
+   _varItr = _varList.createIterator();
+   _rhoItr = _rhoList.createIterator();
 
-  // BoxInfo
-  _netFluxZ    = other._netFluxZ;
-  _nEventsBW   = other._nEventsBW;
-  _nEventsBMSW = other._nEventsBMSW;
-  _xVarLo      = other._xVarLo;
-  _xVarHi      = other._xVarHi;
-  _xVarLoM3s   = other._xVarLoM3s;
-  _xVarLoP3s   = other._xVarLoP3s;
-  _xVarHiM3s   = other._xVarHiM3s;
-  _xVarHiP3s   = other._xVarHiP3s;
-  _bpsIdcs     = other._bpsIdcs;
-  _sIdcs       = other._sIdcs;
-  _bIdcs       = other._bIdcs;
-  _bmsIdcs     = other._bmsIdcs;
+   _fixedShape = other._fixedShape;
+   _mirror = other._mirror;
+   _debug = other._debug;
+   _verbose = other._verbose;
+   _sqrt2pi = other._sqrt2pi;
+   _nDim = other._nDim;
+   _nEvents = other._nEvents;
+   _nEventsM = other._nEventsM;
+   _nEventsW = other._nEventsW;
+   _d = other._d;
+   _n = other._n;
+   _dataPts = other._dataPts;
+   _dataPtsR = other._dataPtsR;
+   _weights0 = other._weights0;
+   _weights1 = other._weights1;
+   if (_options.Contains("a")) {
+      _weights = &_weights1;
+   }
+   //_sortIdcs    = other._sortIdcs;
+   _sortTVIdcs = other._sortTVIdcs;
+   _varName = other._varName;
+   _rho = other._rho;
+   _x = other._x;
+   _x0 = other._x0;
+   _x1 = other._x1;
+   _x2 = other._x2;
+   _xDatLo = other._xDatLo;
+   _xDatHi = other._xDatHi;
+   _xDatLo3s = other._xDatLo3s;
+   _xDatHi3s = other._xDatHi3s;
+   _mean = other._mean;
+   _sigma = other._sigma;
 
-  _rangeBoxInfo= other._rangeBoxInfo ;
-  _fullBoxInfo = other._fullBoxInfo ;
+   // BoxInfo
+   _netFluxZ = other._netFluxZ;
+   _nEventsBW = other._nEventsBW;
+   _nEventsBMSW = other._nEventsBMSW;
+   _xVarLo = other._xVarLo;
+   _xVarHi = other._xVarHi;
+   _xVarLoM3s = other._xVarLoM3s;
+   _xVarLoP3s = other._xVarLoP3s;
+   _xVarHiM3s = other._xVarHiM3s;
+   _xVarHiP3s = other._xVarHiP3s;
+   _bpsIdcs = other._bpsIdcs;
+   _ibNoSort = other._ibNoSort;
+   _sIdcs = other._sIdcs;
+   _bIdcs = other._bIdcs;
+   _bmsIdcs = other._bmsIdcs;
 
-  _idx         = other._idx;
-  _minWeight   = other._minWeight;
-  _maxWeight   = other._maxWeight;
-  _wMap        = other._wMap;
+   _rangeBoxInfo = other._rangeBoxInfo;
+   _fullBoxInfo = other._fullBoxInfo;
 
-  _covMat      = new TMatrixDSym(*other._covMat);
-  _corrMat     = new TMatrixDSym(*other._corrMat);
-  _rotMat      = new TMatrixD(*other._rotMat);
-  _sigmaR      = new TVectorD(*other._sigmaR);
-  _dx          = new TVectorD(*other._dx);
-  _sigmaAvgR   = other._sigmaAvgR;
+   _idx = other._idx;
+   _minWeight = other._minWeight;
+   _maxWeight = other._maxWeight;
+   _wMap = other._wMap;
+
+   _covMat = new TMatrixDSym(*other._covMat);
+   _corrMat = new TMatrixDSym(*other._corrMat);
+   _rotMat = new TMatrixD(*other._rotMat);
+   _sigmaR = new TVectorD(*other._sigmaR);
+   _dx = new TVectorD(*other._dx);
+   _sigmaAvgR = other._sigmaAvgR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -281,11 +408,17 @@ RooNDKeysPdf::RooNDKeysPdf(const RooNDKeysPdf& other, const char* name) :
 RooNDKeysPdf::~RooNDKeysPdf()
 {
   if (_varItr)    delete _varItr;
+  if (_rhoItr)
+     delete _rhoItr;
   if (_covMat)    delete _covMat;
   if (_corrMat)   delete _corrMat;
   if (_rotMat)    delete _rotMat;
   if (_sigmaR)    delete _sigmaR;
   if (_dx)        delete _dx;
+  if (_dataP)
+     delete _dataP;
+  if (_tracker)
+     delete _tracker;
 
   // delete all the boxinfos map
   while ( !_rangeBoxInfo.empty() ) {
@@ -325,7 +458,6 @@ void RooNDKeysPdf::createPdf(Bool_t firstCall) const
   // store indices and weights of events with high enough weights
   loadWeightSet();
 
-
   // store indices of events in variable boundaries and box shell.
 //calculateShell(&_fullBoxInfo);
   // calculate normalization needed in analyticalIntegral()
@@ -336,7 +468,6 @@ void RooNDKeysPdf::createPdf(Bool_t firstCall) const
 
   // determine static and/or adaptive bandwidth
   calculateBandWidth();
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -366,6 +497,13 @@ void RooNDKeysPdf::setOptions() const
     coutW(InputArguments) << "RooNDKeysPdf::setOptions() : Warning : nSigma = " << _nSigma << " < 2.0. "
            << "Calculated normalization could be too large."
            << endl;
+  }
+
+  // number of adaptive width iterations. Default is 1.
+  if (_options.Contains("a")) {
+     if (!sscanf(_options.Data(), "%d%*s", &_nAdpt)) {
+        _nAdpt = 1;
+     }
   }
 }
 
@@ -512,47 +650,15 @@ void RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
     _sigma[j] = sqrt(_x2[j]/_x0[j]-_mean[j]*_mean[j]);
   }
 
-  TMatrixDSym covMatRho(_nDim); // covariance matrix times rho parameters
   for (Int_t j=0; j<_nDim; j++) {
     for (Int_t k=0; k<_nDim; k++) {
       (*_covMat)(j,k) = mat(j,k)/_x0[j] - _mean[j]*_mean[k];
-      covMatRho(j,k) = (mat(j,k)/_x0[j] - _mean[j]*_mean[k]) * _rho[j] * _rho[k];
     }
   }
-
-  // find decorrelation matrix and eigenvalues (R)
-  TMatrixDSymEigen evCalculatorRho(covMatRho);
-  *_rotMat = evCalculatorRho.GetEigenVectors();
-  *_rotMat = _rotMat->T(); // transpose
-  *_sigmaR = evCalculatorRho.GetEigenValues();
-
-
-  // set rho = 1 because sigmaR now contains rho
-  for (Int_t j=0; j<_nDim; j++) { _rho[j] = 1.; }
-
-  for (Int_t j=0; j<_nDim; j++) { (*_sigmaR)[j] = sqrt((*_sigmaR)[j]); }
 
   for (Int_t j=0; j<_nDim; j++) {
     for (Int_t k=0; k<_nDim; k++)
       (*_corrMat)(j,k) = (*_covMat)(j,k)/(_sigma[j]*_sigma[k]) ;
-  }
-
-  if (_verbose) {
-    //_covMat->Print();
-    _rotMat->Print();
-    _corrMat->Print();
-    _sigmaR->Print();
-  }
-
-  if (!_rotate) {
-    _rotMat->Print();
-    _sigmaR->Print();
-    TMatrixD haar(_nDim,_nDim);
-    TMatrixD unit(TMatrixD::kUnit,haar);
-    *_rotMat = unit;
-    for (Int_t j=0; j<_nDim; j++) { (*_sigmaR)[j] = _sigma[j]; }
-    _rotMat->Print();
-    _sigmaR->Print();
   }
 
   // use raw sigmas (without rho) for sigmaAvgR
@@ -561,20 +667,45 @@ void RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
   for (Int_t j=0; j<_nDim; j++) { sigmaRraw[j] = sqrt(sigmaRraw[j]); }
 
   _sigmaAvgR=1.;
-  //for (Int_t j=0; j<_nDim; j++) { _sigmaAvgR *= (*_sigmaR)[j]; }
   for (Int_t j=0; j<_nDim; j++) { _sigmaAvgR *= sigmaRraw[j]; }
   _sigmaAvgR = TMath::Power(_sigmaAvgR, 1./_d) ;
 
-  for (Int_t i=0; i<_nEvents; i++) {
+  // find decorrelation matrix and eigenvalues (R)
+  if (_nDim > 1 && _rotate) {
+     // new: rotation matrix now independent of rho evaluation
+     *_rotMat = evCalculator.GetEigenVectors();
+     *_rotMat = _rotMat->T(); // transpose
+  } else {
+     TMatrixD haar(_nDim, _nDim);
+     TMatrixD unit(TMatrixD::kUnit, haar);
+     *_rotMat = unit;
+  }
 
-    TVectorD& pointR = _dataPtsR[i];
-    pointR *= *_rotMat;
+  // update sigmas (rho dependent)
+  updateRho();
+
+  //// rho no longer used after this.
+  //// Now set rho = 1 because sigmaR now contains rho
+  // for (Int_t j=0; j<_nDim; j++) { _rho[j] = 1.; }  // reset: important!
+
+  if (_verbose) {
+     //_covMat->Print();
+     _rotMat->Print();
+     _corrMat->Print();
+     _sigmaR->Print();
+  }
+
+  if (_nDim > 1 && _rotate) {
+     // apply rotation
+     for (Int_t i = 0; i < _nEvents; i++) {
+        TVectorD &pointR = _dataPtsR[i];
+        pointR *= *_rotMat;
+     }
   }
 
   coutI(Contents) << "RooNDKeysPdf::loadDataSet(" << this << ")"
-        << "\n Number of events in dataset: " << _nEvents
-        << "\n Weighted number of events in dataset: " << _nEventsW
-        << endl;
+                  << "\n Number of events in dataset: " << _nEvents
+                  << "\n Weighted number of events in dataset: " << _nEventsW << endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -587,11 +718,11 @@ void RooNDKeysPdf::loadDataSet(Bool_t firstCall) const
 void RooNDKeysPdf::mirrorDataSet() const
 {
   for (Int_t j=0; j<_nDim; j++) {
-    _xDatLo3s[j] = _xDatLo[j] + _nSigma * (_rho[j] * _n * _sigma[j]);
-    _xDatHi3s[j] = _xDatHi[j] - _nSigma * (_rho[j] * _n * _sigma[j]);
+     _xDatLo3s[j] = _xDatLo[j] + _nSigma * (_n * _sigma[j]);
+     _xDatHi3s[j] = _xDatHi[j] - _nSigma * (_n * _sigma[j]);
 
-    //cout<<"xDatLo3s["<<j<<"]="<<_xDatLo3s[j]<<endl;
-    //cout<<"xDatHi3s["<<j<<"]="<<_xDatHi3s[j]<<endl;
+     // cout<<"xDatLo3s["<<j<<"]="<<_xDatLo3s[j]<<endl;
+     // cout<<"xDatHi3s["<<j<<"]="<<_xDatHi3s[j]<<endl;
   }
 
   vector<Double_t> dummy(_nDim,0.);
@@ -657,7 +788,9 @@ void RooNDKeysPdf::mirrorDataSet() const
       _dataPts.push_back(epoints[m]);
       //_weights0.push_back(_weights0[i]);
       for (Int_t j=0; j<_nDim; j++) { pointR[j] = (epoints[m])[j]; }
-      pointR *= *_rotMat;
+      if (_nDim > 1 && _rotate) {
+         pointR *= *_rotMat;
+      }
       _dataPtsR.push_back(pointR);
     }
 
@@ -698,10 +831,10 @@ void RooNDKeysPdf::calculateShell(BoxInfo* bi) const
       bi->netFluxZ = bi->netFluxZ && kTRUE;
     } else { bi->netFluxZ = kFALSE; }
 
-    bi->xVarLoM3s[j] = bi->xVarLo[j] - _nSigma * (_rho[j] * _n * _sigma[j]);
-    bi->xVarLoP3s[j] = bi->xVarLo[j] + _nSigma * (_rho[j] * _n * _sigma[j]);
-    bi->xVarHiM3s[j] = bi->xVarHi[j] - _nSigma * (_rho[j] * _n * _sigma[j]);
-    bi->xVarHiP3s[j] = bi->xVarHi[j] + _nSigma * (_rho[j] * _n * _sigma[j]);
+    bi->xVarLoM3s[j] = bi->xVarLo[j] - _nSigma * (_n * _sigma[j]);
+    bi->xVarLoP3s[j] = bi->xVarLo[j] + _nSigma * (_n * _sigma[j]);
+    bi->xVarHiM3s[j] = bi->xVarHi[j] - _nSigma * (_n * _sigma[j]);
+    bi->xVarHiP3s[j] = bi->xVarHi[j] + _nSigma * (_n * _sigma[j]);
 
     //cout<<"bi->xVarLoM3s["<<j<<"]="<<bi->xVarLoM3s[j]<<endl;
     //cout<<"bi->xVarLoP3s["<<j<<"]="<<bi->xVarLoP3s[j]<<endl;
@@ -785,14 +918,24 @@ void RooNDKeysPdf::calculatePreNorm(BoxInfo* bi) const
 
 void RooNDKeysPdf::sortDataIndices(BoxInfo* bi) const
 {
-  itVec itrVecR;
-  vector<TVectorD>::iterator dpRItr = _dataPtsR.begin();
-  for (Int_t i=0; dpRItr!=_dataPtsR.end(); ++dpRItr, ++i) {
-    if (bi) {
-      if (bi->bpsIdcs.find(i)!=bi->bpsIdcs.end())
-      //if (_wMap.find(i)!=_wMap.end())
-   itrVecR.push_back(itPair(i,dpRItr));
-    } else itrVecR.push_back(itPair(i,dpRItr));
+   // will loop over all events by default
+   if (!_sortInput) {
+      _ibNoSort.clear();
+      for (unsigned int i = 0; i < _dataPtsR.size(); ++i) {
+         _ibNoSort[i] = kTRUE;
+      }
+      return;
+   }
+
+   itVec itrVecR;
+   vector<TVectorD>::iterator dpRItr = _dataPtsR.begin();
+   for (Int_t i = 0; dpRItr != _dataPtsR.end(); ++dpRItr, ++i) {
+      if (bi) {
+         if (bi->bpsIdcs.find(i) != bi->bpsIdcs.end())
+            // if (_wMap.find(i)!=_wMap.end())
+            itrVecR.push_back(itPair(i, dpRItr));
+      } else
+         itrVecR.push_back(itPair(i, dpRItr));
   }
 
   for (Int_t j=0; j<_nDim; j++) {
@@ -819,38 +962,56 @@ void RooNDKeysPdf::calculateBandWidth() const
       cxcoutD(Eval) << "RooNDKeysPdf::calculateBandWidth() Using static bandwidth." << endl;
   }
 
+  // fixed width approximation
   for (Int_t i=0; i<_nEvents; i++) {
     vector<Double_t>& weight = _weights0[i];
-    for (Int_t j=0; j<_nDim; j++) {
-      weight[j] = _rho[j] * _n * (*_sigmaR)[j] ;
-      //cout<<"j: "<<j<<", rho="<<_rho[j]<<", _n: "<<_n<<", sigmaR="<<(*_sigmaR)[j]<<", weight="<<weight[j]<<endl;
+    for (Int_t j = 0; j < _nDim; j++) {
+       weight[j] = _n * (*_sigmaR)[j];
+       // cout<<"j: "<<j<<", _n: "<<_n<<", sigmaR="<<(*_sigmaR)[j]<<", weight="<<weight[j]<<endl;
     }
   }
 
-
   // adaptive width
-  if(_options.Contains("a")) {
-    cxcoutD(Eval) << "RooNDKeysPdf::calculateBandWidth() Using adaptive bandwidth." << endl;
+  if (_options.Contains("a")) {
+     cxcoutD(Eval) << "RooNDKeysPdf::calculateBandWidth() Using adaptive bandwidth." << endl;
 
-    double sqrt12=sqrt(12.);
-    double sqrtSigmaAvgR=sqrt(_sigmaAvgR);
+     double sqrt12 = sqrt(12.);
+     double sqrtSigmaAvgR = sqrt(_sigmaAvgR);
 
-    vector<Double_t> dummy(_nDim,0.);
-    _weights1.resize(_nEvents,dummy);
+     vector<Double_t> dummy(_nDim, 0.);
+     _weights1.resize(_nEvents, dummy);
 
-    for(Int_t i=0; i<_nEvents; ++i) {
+     std::vector<std::vector<Double_t>> *weights_prev(0);
+     std::vector<std::vector<Double_t>> *weights_new(0);
 
-      vector<Double_t>& x = _dataPts[i];
-      Double_t f =  TMath::Power( gauss(x,_weights0)/_nEventsW , -1./(2.*_d) ) ;
+     // cout << "Number of adaptive iterations: " << _nAdpt << endl;
 
-      vector<Double_t>& weight = _weights1[i];
-      for (Int_t j=0; j<_nDim; j++) {
-   Double_t norm = (_rho[j]*_n*(*_sigmaR)[j]) / sqrtSigmaAvgR ;
-   //cout<<"norm["<<j<<"]="<<norm<<endl;
-   weight[j] = norm * f / sqrt12 ;  //  note additional factor of sqrt(12) compared with HEP-EX/0011057
-      }
-    }
-    _weights = &_weights1;
+     for (Int_t k = 1; k <= _nAdpt; ++k) {
+
+        // cout << "  Cycle: " << k << endl;
+
+        // if multiple adaptive iterations, need to swap weight sets
+        if (k % 2) {
+           weights_prev = &_weights0;
+           weights_new = &_weights1;
+        } else {
+           weights_prev = &_weights1;
+           weights_new = &_weights0;
+        }
+
+        for (Int_t i = 0; i < _nEvents; ++i) {
+           vector<Double_t> &x = _dataPts[i];
+           Double_t f = TMath::Power(gauss(x, *weights_prev) / _nEventsW, -1. / (2. * _d));
+
+           vector<Double_t> &weight = (*weights_new)[i];
+           for (Int_t j = 0; j < _nDim; j++) {
+              Double_t norm = (_n * (*_sigmaR)[j]) / sqrtSigmaAvgR;
+              weight[j] = norm * f / sqrt12; //  note additional factor of sqrt(12) compared with HEP-EX/0011057
+           }
+        }
+     }
+     // this is the latest updated weights set
+     _weights = weights_new;
   }
 }
 
@@ -863,39 +1024,46 @@ Double_t RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& wei
 
   Double_t z=0.;
   map<Int_t,Bool_t> ibMap;
-  ibMap.clear();
 
-  // determine loop range for event x
-  loopRange(x,ibMap);
+  // determine input loop range for event x
+  if (_sortInput) {
+     loopRange(x, ibMap);
+  }
 
-  map<Int_t,Bool_t>::iterator ibMapItr = ibMap.begin();
+  map<Int_t, Bool_t>::iterator ibMapItr, ibMapEnd;
+  ibMapItr = (_sortInput ? ibMap.begin() : _ibNoSort.begin());
+  ibMapEnd = (_sortInput ? ibMap.end() : _ibNoSort.end());
 
-  for (; ibMapItr!=ibMap.end(); ++ibMapItr) {
-    Int_t i = (*ibMapItr).first;
+  for (; ibMapItr != ibMapEnd; ++ibMapItr) {
+     Int_t i = (*ibMapItr).first;
 
-    Double_t g(1.);
+     Double_t g(1.);
 
-    if(i>=(Int_t)_idx.size()) {continue;} //---> 1.myline
+     if (i >= (Int_t)_idx.size()) {
+        continue;
+     } //---> 1.myline
 
-    const vector<Double_t>& point  = _dataPts[i];
-    const vector<Double_t>& weight = weights[_idx[i]];
+     const vector<Double_t> &point = _dataPts[i];
+     const vector<Double_t> &weight = weights[_idx[i]];
 
-    for (Int_t j=0; j<_nDim; j++) {
-      (*_dx)[j] = x[j]-point[j];
-    }
+     for (Int_t j = 0; j < _nDim; j++) {
+        (*_dx)[j] = x[j] - point[j];
+     }
 
-    if (_nDim>1) {
-      *_dx *= *_rotMat; // rotate to decorrelated frame!
-    }
+     if (_nDim > 1 && _rotate) {
+        *_dx *= *_rotMat; // rotate to decorrelated frame!
+     }
 
-    for (Int_t j=0; j<_nDim; j++) {
-      Double_t r = (*_dx)[j];  //x[j] - point[j];
-      Double_t c = 1./(2.*weight[j]*weight[j]);
+     for (Int_t j = 0; j < _nDim; j++) {
+        Double_t r = (*_dx)[j]; // x[j] - point[j];
+        Double_t c = 1. / (2. * weight[j] * weight[j]);
 
-      g *= exp( -c*r*r );
-      g *= 1./(_sqrt2pi*weight[j]);
-    }
-    z += (g*_wMap[_idx[i]]);
+        // cout << "j = " << j << " x[j] = " << point[j] << " w = " << weight[j] << endl;
+
+        g *= exp(-c * r * r);
+        g *= 1. / (_sqrt2pi * weight[j]);
+     }
+     z += (g * _wMap[_idx[i]]);
   }
   return z;
 }
@@ -905,18 +1073,23 @@ Double_t RooNDKeysPdf::gauss(vector<Double_t>& x, vector<vector<Double_t> >& wei
 
 void RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) const
 {
-  TVectorD xRm(_nDim);
-  TVectorD xRp(_nDim);
+   ibMap.clear();
+   TVectorD xRm(_nDim);
+   TVectorD xRp(_nDim);
 
-  for (Int_t j=0; j<_nDim; j++) { xRm[j] = xRp[j] = x[j]; }
+   for (Int_t j = 0; j < _nDim; j++) {
+      xRm[j] = xRp[j] = x[j];
+   }
 
-  xRm *= *_rotMat;
-  xRp *= *_rotMat;
-  for (Int_t j=0; j<_nDim; j++) {
-    xRm[j] -= _nSigma * (_rho[j] * _n * (*_sigmaR)[j]);
-    xRp[j] += _nSigma * (_rho[j] * _n * (*_sigmaR)[j]);
-    //cout<<"xRm["<<j<<"]="<<xRm[j]<<endl;
-    //cout<<"xRp["<<j<<"]="<<xRp[j]<<endl;
+   if (_nDim > 1 && _rotate) {
+      xRm *= *_rotMat;
+      xRp *= *_rotMat;
+   }
+   for (Int_t j = 0; j < _nDim; j++) {
+      xRm[j] -= _nSigma * (_n * (*_sigmaR)[j]);
+      xRp[j] += _nSigma * (_n * (*_sigmaR)[j]);
+      // cout<<"xRm["<<j<<"]="<<xRm[j]<<endl;
+      // cout<<"xRp["<<j<<"]="<<xRp[j]<<endl;
   }
 
   vector<TVectorD> xvecRm(1,xRm);
@@ -928,9 +1101,10 @@ void RooNDKeysPdf::loopRange(vector<Double_t>& x, map<Int_t,Bool_t>& ibMap) cons
     ibMap.clear();
     itVec::iterator lo = lower_bound(_sortTVIdcs[j].begin(), _sortTVIdcs[j].end(),
                  itPair(0,xvecRm.begin()), SorterTV_L2H(j));
-    itVec::iterator hi = upper_bound(_sortTVIdcs[j].begin(), _sortTVIdcs[j].end(),
-                 itPair(0,xvecRp.begin()), SorterTV_L2H(j));
-    itVec::iterator it=lo;
+    itVec::iterator hi =
+       upper_bound(_sortTVIdcs[j].begin(), _sortTVIdcs[j].end(), itPair(0, xvecRp.begin()), SorterTV_L2H(j));
+    itVec::iterator it = lo;
+
     if (j==0) {
       if (_nDim==1) { for (it=lo; it!=hi; ++it) ibMap[(*it).first] = kTRUE; }
       else { for (it=lo; it!=hi; ++it) ibMapRT[(*it).first] = kTRUE; }
@@ -986,11 +1160,17 @@ void RooNDKeysPdf::boxInfoInit(BoxInfo* bi, const char* rangeName, Int_t /*code*
 
 Double_t RooNDKeysPdf::evaluate() const
 {
-  _varItr->Reset() ;
-  RooAbsReal* var ;
-  const RooArgSet* nset = _varList.nset() ;
-  for(Int_t j=0; (var=(RooAbsReal*)_varItr->Next()); ++j) {
-    _x[j] = var->getVal(nset);
+   if (_tracker != NULL && _tracker->hasChanged(kTRUE)) {
+      updateRho(); // update internal rho parameters
+      // redetermine static and/or adaptive bandwidth
+      calculateBandWidth();
+   }
+
+   _varItr->Reset();
+   RooAbsReal *var;
+   const RooArgSet *nset = _varList.nset();
+   for (Int_t j = 0; (var = (RooAbsReal *)_varItr->Next()); ++j) {
+      _x[j] = var->getVal(nset);
   }
 
   Double_t val = gauss(_x,*_weights);
@@ -1108,4 +1288,143 @@ Double_t RooNDKeysPdf::analyticalIntegral(Int_t code, const char* rangeName) con
     cxcoutD(Eval) << "RooNDKeysPdf::analyticalIntegral() : Final normalization : " << norm << " " << bi->nEventsBW << endl;
     return norm;
   }
+}
+
+RooDataSet *
+   ////////////////////////////////////////////////////////////////////////////////
+
+   RooNDKeysPdf::createDatasetFromHist(const RooArgList &varList, const TH1 &hist) const
+{
+   std::vector<RooRealVar *> varVec;
+   RooArgSet varsAndWeightSet;
+
+   TIterator *varItr = varList.createIterator();
+   RooAbsArg *var;
+   for (Int_t i = 0; (var = (RooAbsArg *)varItr->Next()); ++i) {
+      if (!dynamic_cast<RooRealVar *>(var)) {
+         coutE(InputArguments) << "RooNDKeysPdf::createDatasetFromHist(" << GetName() << ") WARNING: variable "
+                               << var->GetName() << " is not of type RooRealVar. Skip." << endl;
+         continue;
+      }
+      varsAndWeightSet.add(*var);                       // used for dataset creation
+      varVec.push_back(static_cast<RooRealVar *>(var)); // used for setting the variables.
+   }
+   delete varItr;
+
+   /// Add weight
+   RooRealVar weight("weight", "event weight", 0);
+   varsAndWeightSet.add(weight);
+
+   /// determine histogram dimensionality
+   unsigned int histndim(0);
+   std::string classname = hist.ClassName();
+   if (classname.find("TH1") == 0) {
+      histndim = 1;
+   } else if (classname.find("TH2") == 0) {
+      histndim = 2;
+   } else if (classname.find("TH3") == 0) {
+      histndim = 3;
+   }
+   assert(histndim == varVec.size());
+
+   if (histndim > 3 || histndim <= 0) {
+      coutE(InputArguments) << "RooNDKeysPdf::createDatasetFromHist(" << GetName()
+                            << ") ERROR: input histogram dimension not between [1-3]: " << histndim << endl;
+      assert(0);
+   }
+
+   /// dataset creation
+   RooDataSet *dataFromHist = new RooDataSet("datasetFromHist", "datasetFromHist", varsAndWeightSet, weight.GetName());
+
+   /// dataset filling
+   for (int i = 1; i <= hist.GetXaxis()->GetNbins(); ++i) {
+      // 1 or more dimension
+
+      Double_t xval = hist.GetXaxis()->GetBinCenter(i);
+      varVec[0]->setVal(xval);
+
+      if (varVec.size() == 1) {
+         Double_t fval = hist.GetBinContent(i);
+         weight.setVal(fval);
+         dataFromHist->add(varsAndWeightSet, fval);
+      } else { // 2 or more dimensions
+
+         for (int j = 1; j <= hist.GetYaxis()->GetNbins(); ++j) {
+            Double_t yval = hist.GetYaxis()->GetBinCenter(j);
+            varVec[1]->setVal(yval);
+
+            if (varVec.size() == 2) {
+               Double_t fval = hist.GetBinContent(i, j);
+               weight.setVal(fval);
+               dataFromHist->add(varsAndWeightSet, fval);
+            } else { // 3 dimensions
+
+               for (int k = 1; k <= hist.GetZaxis()->GetNbins(); ++k) {
+                  Double_t zval = hist.GetZaxis()->GetBinCenter(k);
+                  varVec[2]->setVal(zval);
+
+                  Double_t fval = hist.GetBinContent(i, j, k);
+                  weight.setVal(fval);
+                  dataFromHist->add(varsAndWeightSet, fval);
+               }
+            }
+         }
+      }
+   }
+
+   return dataFromHist;
+}
+
+TMatrixD
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Return evaluated weights
+
+   RooNDKeysPdf::getWeights(const int &k) const
+{
+   TMatrixD mref(_nEvents, _nDim + 1);
+
+   cxcoutD(Eval) << "RooNDKeysPdf::getWeights() Return evaluated weights." << endl;
+
+   for (Int_t i = 0; i < _nEvents; ++i) {
+      vector<Double_t> &x = _dataPts[i];
+      for (Int_t j = 0; j < _nDim; j++) {
+         mref(i, j) = x[j];
+      }
+
+      vector<Double_t> &weight = (*_weights)[i];
+      mref(i, _nDim) = weight[k];
+   }
+
+   return mref;
+}
+
+void
+   ////////////////////////////////////////////////////////////////////////////////
+
+   RooNDKeysPdf::updateRho() const
+{
+   _rhoItr->Reset();
+   RooAbsReal *rho(0);
+   for (Int_t j = 0; (rho = (RooAbsReal *)_rhoItr->Next()); ++j) {
+      _rho[j] = rho->getVal();
+   }
+
+   if (_nDim > 1 && _rotate) {
+      TMatrixDSym covMatRho(_nDim); // covariance matrix times rho parameters
+      for (Int_t j = 0; j < _nDim; j++) {
+         for (Int_t k = 0; k < _nDim; k++) {
+            covMatRho(j, k) = (*_covMat)(j, k) * _rho[j] * _rho[k];
+         }
+      }
+      // find decorrelation matrix and eigenvalues (R)
+      TMatrixDSymEigen evCalculatorRho(covMatRho);
+      *_sigmaR = evCalculatorRho.GetEigenValues();
+      for (Int_t j = 0; j < _nDim; j++) {
+         (*_sigmaR)[j] = sqrt((*_sigmaR)[j]);
+      }
+   } else {
+      for (Int_t j = 0; j < _nDim; j++) {
+         (*_sigmaR)[j] = (_sigma[j] * _rho[j]);
+      } // * rho
+   }
 }

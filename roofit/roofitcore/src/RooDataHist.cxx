@@ -1201,10 +1201,10 @@ Double_t RooDataHist::weight(const RooArgSet& bin, Int_t intOrder, Bool_t correc
     if (correctForBinSize) {
       //calculatePartialBinVolume(*get()) ;
       //cout << "binw[" << idx << "] = " << _wgt[idx] <<  " / " << _binv[idx] << endl ;
-      return _wgt[idx] / _binv[idx] ;
+      return get_wgt(idx) / _binv[idx];
     } else {
       //cout << "binw[" << idx << "] = " << _wgt[idx] << endl ;
-      return _wgt[idx] ;
+      return get_wgt(idx);
     }
   }
 
@@ -1363,8 +1363,8 @@ Double_t RooDataHist::interpolateDim(RooRealVar& dim, const RooAbsBinning* binni
       dim.setBinFast(ibin,*binning) ;
       //cout << "INRANGE: dim.getVal(ibin=" << ibin << ") = " << dim.getVal() << endl ;
       xarr[i-fbinLo] = dim.getVal() ;
-      Int_t idx = calcTreeIndex() ;      
-      yarr[i-fbinLo] = _wgt[idx] ; 
+      Int_t idx = calcTreeIndex();
+      yarr[i - fbinLo] = get_wgt(idx);
       if (correctForBinSize) yarr[i-fbinLo] /=  _binv[idx] ;
     } else if (i>=fbinM) {
       // Overflow: mirror
@@ -1377,8 +1377,9 @@ Double_t RooDataHist::interpolateDim(RooRealVar& dim, const RooAbsBinning* binni
       } else {
 	Int_t idx = calcTreeIndex() ;      
 	xarr[i-fbinLo] = 2*dim.getMax()-dim.getVal() ;
-	yarr[i-fbinLo] = _wgt[idx] ; 
-	if (correctForBinSize) yarr[i-fbinLo] /=  _binv[idx] ;
+   yarr[i - fbinLo] = get_wgt(idx);
+   if (correctForBinSize)
+      yarr[i - fbinLo] /= _binv[idx];
       }
     } else {
       // Underflow: mirror
@@ -1391,8 +1392,9 @@ Double_t RooDataHist::interpolateDim(RooRealVar& dim, const RooAbsBinning* binni
       } else {
 	Int_t idx = calcTreeIndex() ;      
 	xarr[i-fbinLo] = 2*dim.getMin()-dim.getVal() ;
-	yarr[i-fbinLo] = _wgt[idx] ; 
-	if (correctForBinSize) yarr[i-fbinLo] /=  _binv[idx] ;
+   yarr[i - fbinLo] = get_wgt(idx);
+   if (correctForBinSize)
+      yarr[i - fbinLo] /= _binv[idx];
       }
     }
     //cout << "ibin = " << ibin << endl ;
@@ -1573,7 +1575,8 @@ Double_t RooDataHist::sum(Bool_t correctForBinSize, Bool_t inverseBinCor) const
     
     Double_t theBinVolume = correctForBinSize ? (inverseBinCor ? 1/_binv[i] : _binv[i]) : 1.0 ;
     // cout << "total += " << _wgt[i] << "*" << theBinVolume << endl ;
-    Double_t y = _wgt[i]*theBinVolume - carry;
+    // Double_t y = _wgt[i]*theBinVolume - carry;
+    Double_t y = get_wgt(i) * theBinVolume - carry;
     Double_t t = total + y;
     carry = (t - total) - y;
     total = t;
@@ -1653,8 +1656,9 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet, Bo
     
     if (!skip) {
       Double_t theBinVolume = correctForBinSize ? (inverseBinCor ? 1/(*_pbinv)[i] : (*_pbinv)[i] ) : 1.0 ;
-//       cout << "adding bin[" << ibin << "] to sum wgt = " << _wgt[ibin] << " binv = " << theBinVolume << endl ;
-      Double_t y = _wgt[ibin]*theBinVolume - carry;
+      //       cout << "adding bin[" << ibin << "] to sum wgt = " << _wgt[ibin] << " binv = " << theBinVolume << endl ;
+      // Double_t y = _wgt[ibin]*theBinVolume - carry;
+      Double_t y = get_wgt(ibin) * theBinVolume - carry;
       Double_t t = total + y;
       carry = (t - total) - y;
       total = t;
@@ -1761,8 +1765,8 @@ Double_t RooDataHist::sum(const RooArgSet& sumSet, const RooArgSet& sliceSet,
     if (0. == corrPartial) continue;
     const Double_t corr = correctForBinSize ? (inverseBinCor ? 1. / _binv[ibin] : _binv[ibin] ) : 1.0;
     //cout << "adding bin[" << ibin << "] to sum wgt = " << _wgt[ibin] << " binv = " << theBinVolume << " _binv[" << ibin << "] " << _binv[ibin] << endl;
-    
-    const Double_t y = _wgt[ibin] * corr * corrPartial - carry;
+    // const Double_t y = _wgt[ibin] * corr * corrPartial - carry;
+    const Double_t y = get_wgt(ibin) * corr * corrPartial - carry;
     const Double_t t = total + y;
     carry = (t - total) - y;
     total = t;
@@ -1846,10 +1850,11 @@ Double_t RooDataHist::sumEntries() const
   Double_t n(0), carry(0);
   for (i=0 ; i<_arrSize ; i++) {
     if (!_binValid || _binValid[i]) {
-      Double_t y = _wgt[i] - carry;
-      Double_t t = n + y;
-      carry = (t - n) - y;
-      n = t;
+       // Double_t y = _wgt[i] - carry;
+       Double_t y = get_wgt(i) - carry;
+       Double_t t = n + y;
+       carry = (t - n) - y;
+       n = t;
     }
   }
   return n ;

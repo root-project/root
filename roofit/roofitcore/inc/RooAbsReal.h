@@ -73,7 +73,7 @@ public:
 
   virtual Double_t getValV(const RooArgSet* set=0) const ;
 
-  Double_t getPropagatedError(const RooFitResult& fr) ;
+  Double_t getPropagatedError(const RooFitResult &fr, const RooArgSet &nset = RooArgSet());
 
   Bool_t operator==(Double_t value) const ;
   virtual Bool_t operator==(const RooAbsArg& other) ;
@@ -468,6 +468,7 @@ protected:
 
 
   friend class RooRealSumPdf ;
+  friend class RooRealSumFunc;
   friend class RooAddPdf ;
   friend class RooAddModel ;
   void selectComp(Bool_t flag) { 

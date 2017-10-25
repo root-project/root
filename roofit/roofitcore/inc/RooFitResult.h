@@ -53,6 +53,8 @@ public:
 
   static RooFitResult* lastMinuitFit(const RooArgList& varList=RooArgList()) ;
 
+  static RooFitResult *prefitResult(const RooArgList &paramList);
+
   // Printing interface (human readable)
   virtual void printValue(std::ostream& os) const ;
   virtual void printName(std::ostream& os) const ;
@@ -170,6 +172,7 @@ protected:
   void fillCorrMatrix() ;
   void fillCorrMatrix(const std::vector<double>& globalCC, const TMatrixDSym& corrs, const TMatrixDSym& covs) ;
   void fillLegacyCorrMatrix() const ;
+  void fillPrefitCorrMatrix();
   void setStatusHistory(std::vector<std::pair<std::string,int> >& hist) { _statusHistory = hist ; }
 
   Double_t correlation(Int_t row, Int_t col) const;
