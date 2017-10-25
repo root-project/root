@@ -128,12 +128,15 @@ RooRealVar::RooRealVar(const char *name, const char *title,
 		       const char *unit) :
   RooAbsRealLValue(name, title, unit), _error(-1), _asymErrLo(1), _asymErrHi(-1), _sharedProp(0)
 {
-  _value = value ;
-  _fast = kTRUE ;
+    _fast = kTRUE ;
+    _binning = new RooUniformBinning(minValue,maxValue,100) ;
+    setRange(minValue,maxValue) ;
 
-  _binning = new RooUniformBinning(minValue,maxValue,100) ;
-  setRange(minValue,maxValue) ;
-  TRACE_CREATE
+    Double_t clipValue ;
+    inRange(value,0,&clipValue) ;
+    _value = clipValue ;
+
+    TRACE_CREATE
 }
 
 
