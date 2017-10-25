@@ -15,6 +15,8 @@
 
 #include "ROOT/TWebWindowsManager.hxx"
 
+#include <ROOT/TLogger.hxx>
+
 #include <cassert>
 #include <cstdio>
 
@@ -91,9 +93,14 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 
 std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsManager::CreateWindow(bool batch_mode)
 {
+   if (!CreateHttpServer()) {
+      R__ERROR_HERE("CreateWindow") << "Cannot create http server";
+      return nullptr;
+   }
+
    std::shared_ptr<ROOT::Experimental::TWebWindow> display = std::make_shared<ROOT::Experimental::TWebWindow>();
 
-   if (!display) printf("Window not created!!!\n");
+   if (!display) { printf("Window not created!!!\n"); return nullptr; }
 
    display->SetBatchMode(batch_mode);
 
@@ -102,6 +109,10 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
    fDisplays.push_back(display);
 
    display->fMgr = Instance();
+
+   display->CreateWSHandler();
+
+   fServer->Register("/web7gui", (THttpWSHandler *) display->fWSHandler);
 
    return std::move(display);
 }
@@ -136,7 +147,7 @@ void ROOT::Experimental::TWebWindowsManager::CloseDisplay(ROOT::Experimental::TW
 ///
 ///  Canvas can be displayed in several different places
 
-bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow *display, const std::string &where, bool first_time)
+bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow *display, const std::string &where)
 {
 
    if (!CreateHttpServer()) {
@@ -145,10 +156,6 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    }
 
    THttpWSHandler *handler = (THttpWSHandler *) display->fWSHandler;
-
-   if (first_time)
-      fServer->Register("/web7gui", handler);
-
    bool batch_mode = display->IsBatchMode();
 
    TString addr;

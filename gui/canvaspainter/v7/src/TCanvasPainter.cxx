@@ -629,13 +629,30 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> wi
 {
    printf("TCanvasPainter::AddPanel %p\n", win.get());
 
-   if (!win || (win->NumConnections() > 0)) return false;
+   if (!fWindow) {
+      R__ERROR_HERE("AddPanel") << "Canvas not yet shown";
+      return false;
+   }
 
-   assert(IsSameManager(win) && "Same web window manager should be used");
+   std::string addr = fWindow->RelativeAddr(win);
+
+   if (addr.length() == 0) {
+      R__ERROR_HERE("AddPanel") << "Canvas not able to acquire channel";
+      return false;
+   }
+
+   // connection is assigned, but can be refused by the client later
+   // therefore handle may be removed later
 
    CanvasCallback_t func = std::bind(&TCanvasPainter::ProcessPanel, this, win, std::placeholders::_1);
 
-   DoWhenReady("ADDPANEL", "FitPanel", true, func);
+   std::string cmd("ADDPANEL:");
+   cmd.append(addr);
+
+   printf("Sending cmd %s\n", cmd.c_str());
+
+   /// one could use async mode
+   DoWhenReady(cmd, "AddPanel", true, func);
 
    return true;
 }
@@ -739,7 +756,7 @@ bool ROOT::Experimental::TCanvasPainter::FrontCommandReplied(const std::string &
          printf("Create %s file %s len %d\n", cmd.fName.c_str(), cmd.fArg.c_str(), (int)content.length());
          result = true;
       }
-   } else if (cmd.fName == "ADDPANEL") {
+   } else if (cmd.fName.find("ADDPANEL:") == 0) {
       printf("Get reply for ADDPANEL %s\n", reply.c_str());
       result = (reply == "true");
    } else {

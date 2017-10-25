@@ -50,6 +50,7 @@ private:
       int            fRecvCount{0};          ///<! number of received packets, should return back with next sending
       int            fSendCredits{0};        ///<! how many send operation can be performed without confirmation from other side
       int            fClientCredits{0};      ///<! last received information about credits on client side, helps to resubmit credits back to client
+      unsigned       fNewChannelCnt{2};      ///<! counter of new channels, starts from 2
       std::list<std::string> fQueue{};       ///<! small output queue for data which should be send via the connection (including channel)
       WebWindowDataCallback_t fCallBack{};   ///<! additional data callback for extra channels
       WebConn() = default;
@@ -70,13 +71,13 @@ private:
    void SetBatchMode(bool mode) { fBatchMode = mode; }
    void SetId(unsigned id) { fId = id; }
 
+   void CreateWSHandler();
+
    bool ProcessWS(THttpCallArg *arg);
 
    void SendDataViaConnection(WebConn &conn, int chid, const std::string &data);
 
    void CheckDataToSend(bool only_once = false);
-
-   void Cleanup();
 
 public:
    TWebWindow() = default;
@@ -92,8 +93,6 @@ public:
 
    unsigned NumConnections() const { return fConn.size(); }
 
-   bool IsSameManager(const std::shared_ptr<TWebWindow> &win) const { return win->fMgr == fMgr; }
-
    void CloseConnections() { Send("CLOSE", 0, 0); }
 
    void CloseConnection(unsigned connid) { if (connid) Send("CLOSE", connid, 0); }
@@ -103,6 +102,8 @@ public:
    bool CanSend(unsigned connid, bool direct = true) const;
 
    void Send(const std::string &data, unsigned connid = 0, unsigned chid = 1);
+
+   std::string RelativeAddr(std::shared_ptr<TWebWindow> &win);
 
    void SetDataCallBack(WebWindowDataCallback_t func) { fDataCallback = func; }
 

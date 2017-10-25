@@ -25,6 +25,7 @@
 #include <ROOT/TWebWindow.hxx>
 
 class THttpServer;
+class THttpWSHandler;
 
 namespace ROOT {
 namespace Experimental {
@@ -35,7 +36,9 @@ namespace Experimental {
 
 
 class TWebWindowsManager {
+
 private:
+
    THttpServer    *fServer{0};      ///<!  central communication with the all used displays
    std::string     fAddr{};         ///<!   HTTP address of the server
    std::list<std::shared_ptr<TWebWindow>> fDisplays{}; ///<! list of existing displays
@@ -56,7 +59,7 @@ public:
 
    void CloseDisplay(TWebWindow *display);
 
-   bool Show(TWebWindow *display, const std::string &where, bool first_time = false);
+   bool Show(TWebWindow *display, const std::string &where);
 
    bool WaitFor(WebWindowWaitFunc_t check, double tm);
 };
