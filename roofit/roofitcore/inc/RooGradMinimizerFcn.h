@@ -28,11 +28,8 @@
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 
-
 #include <iostream>
 #include <fstream>
-
-//#include "RooGradMinimizer.h"
 
 class RooGradMinimizer;
 

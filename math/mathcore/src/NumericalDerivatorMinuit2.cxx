@@ -71,6 +71,7 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunc
     fGrd.resize(fN);
     fGstep.resize(fN);
     fG2.resize(fN);
+    _parameter_has_limits.resize(fN);
 
     for (unsigned int i = 0; i<fN; i++) {
         fGrd[i]=0.1;
@@ -85,6 +86,7 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::Numerical
     fGrd(other.fGrd),
     fG2(other.fG2),
     fGstep(other.fGstep),
+    _parameter_has_limits(other._parameter_has_limits),
     fFunction(other.fFunction),
 //    _strategy(other._strategy),
     fStepTolerance(other.fStepTolerance),
@@ -102,6 +104,7 @@ ROOT::Math::NumericalDerivatorMinuit2& NumericalDerivatorMinuit2::operator=(cons
     fGrd = other.fGrd;
     fG2 = other.fG2;
     fGstep = other.fGstep;
+    _parameter_has_limits = other._parameter_has_limits;
     fFunction = other.fFunction;
     fStepTolerance = other.fStepTolerance;
     fGradTolerance = other.fGradTolerance;
@@ -195,10 +198,12 @@ std::vector<double> NumericalDerivatorMinuit2::Differentiate(const double* cx) {
           double optstp = std::sqrt(dfmin/(std::abs(fG2[i])+epspri));
           double step = std::max(optstp, std::abs(0.1*fGstep[i])); //had to cast to double again
 
-          // DIFFERS: in Minuit2 we have here the following condition:
-          // if(Trafo().Parameter(Trafo().ExtOfInt(i)).HasLimits()) {
-          //   if(step > 0.5) step = 0.5;
-          // }
+          // MODIFIED: in Minuit2 we have here the following condition:
+          //   if(Trafo().Parameter(Trafo().ExtOfInt(i)).HasLimits()) {
+          // We replaced it by this:
+          if (_parameter_has_limits[i]) {
+            if(step > 0.5) step = 0.5;
+          }
           // See the discussion above NumericalDerivatorMinuit2::SetInitialGradient
           // below on how to pass parameter information to this derivator.
 
@@ -261,7 +266,19 @@ std::vector<double> NumericalDerivatorMinuit2::operator()(const double* x) {
 }
 
 
-    // MODIFIED:
+void NumericalDerivatorMinuit2::SetParameterHasLimits(std::vector<ROOT::Fit::ParameterSettings>& parameters) const {
+  if (_parameter_has_limits.size() != fN) {
+    _parameter_has_limits.resize(fN);
+  }
+
+  unsigned ix = 0;
+  for (auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter, ++ix) {
+    _parameter_has_limits[ix] = parameter->IsBound();
+  }
+}
+
+
+// MODIFIED:
 // This function was not implemented as in Minuit2. Now it copies the behavior
 // of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
 void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const {

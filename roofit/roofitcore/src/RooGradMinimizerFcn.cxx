@@ -398,6 +398,7 @@ Bool_t RooGradMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings
 void RooGradMinimizerFcn::SynchronizeGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const {
 //  _gradf.updateParameters(parameters);
   _gradf.SetInitialGradient(parameters);
+  _gradf.SetParameterHasLimits(parameters);
 }
 
 

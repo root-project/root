@@ -62,6 +62,7 @@ public:
   void SetInitialValues(const double* g, const double* g2, const double* s);
 
   void SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
+  void SetParameterHasLimits(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
 
 private:
 
@@ -71,6 +72,8 @@ private:
   mutable std::vector <double> fGrd;
   mutable std::vector <double> fG2;
   mutable std::vector <double> fGstep;
+  // same story for SetParameterHasLimits
+  mutable std::vector <bool> _parameter_has_limits;
 
   const ROOT::Math::IBaseFunctionMultiDim* fFunction;
   double fStepTolerance;
