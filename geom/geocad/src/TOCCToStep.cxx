@@ -171,7 +171,7 @@ TDF_Label TOCCToStep::GetLabelOfVolume(TGeoVolume * v)
 TGeoVolume * TOCCToStep::GetVolumeOfLabel(TDF_Label fLabel)
 {
    map <TGeoVolume *,TDF_Label>::iterator it;
-   for(it = fTree.begin(); it != fTree.end(); it++)
+   for(it = fTree.begin(); it != fTree.end(); ++it)
       if (it->second.IsEqual(fLabel))
          return it->first;
    return 0;

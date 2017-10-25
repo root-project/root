@@ -283,7 +283,7 @@ void SelectionRules::SetDeep(bool deep)
    // Loop on rules. If name or pattern exist, add a {pattern,name}* rule to go deep
    std::string patternString;
    for (std::list<ClassSelectionRule>::iterator classRuleIt = fClassSelectionRules.begin();
-        classRuleIt != fClassSelectionRules.end(); classRuleIt++){
+        classRuleIt != fClassSelectionRules.end(); ++classRuleIt){
        if (classRuleIt->HasAttributeWithName("pattern") &&
            classRuleIt->GetAttributeValue("pattern",patternString)){
           // If the pattern already does not end with *
