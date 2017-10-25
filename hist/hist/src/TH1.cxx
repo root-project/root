@@ -567,9 +567,6 @@ TH1::TH1() : TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fXaxis.SetParent(this);
    fYaxis.SetParent(this);
    fZaxis.SetParent(this);
-   ResetBit(TH1::kAutoBinPTwo);
-   ResetBit(TH1::kAutoBinAdjust);
-   ResetBit(TH1::kAutoBinIsAdjusted);
    UseCurrentStyle();
 }
 
@@ -739,10 +736,6 @@ void TH1::Build()
    fXaxis.SetParent(this);
    fYaxis.SetParent(this);
    fZaxis.SetParent(this);
-
-   ResetBit(TH1::kAutoBinPTwo);
-   ResetBit(TH1::kAutoBinAdjust);
-   ResetBit(TH1::kAutoBinIsAdjusted);
 
    SetTitle(fTitle.Data());
 
