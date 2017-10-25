@@ -226,7 +226,6 @@ template <typename T>
 class ClassDefGenerateInitInstanceLocalInjector:
    public TCDGIILIBase {
       static atomic_TClass_ptr fgIsA;
-      static std::string fgName;
       static ::ROOT::TGenericClassInfo *fgGenericInfo;
    public:
       static void *New(void *p) { return p ? new(p) T : new T; };
@@ -252,16 +251,15 @@ class ClassDefGenerateInitInstanceLocalInjector:
       static TClass *Dictionary() { fgIsA = fgGenericInfo->GetClass(); return fgIsA; }
       static TClass *Class() { SetfgIsA(fgIsA, &Dictionary); return fgIsA; }
       static const char* Name() {
-         if (fgName.empty())
-            SetName(TTypeNameExtraction<T>::Get(), fgName);
-         return fgName.c_str();
+         static std::string gName;
+         if (gName.empty())
+            SetName(TTypeNameExtraction<T>::Get(), gName);
+         return gName.c_str();
       }
    };
 
    template<typename T>
    atomic_TClass_ptr ClassDefGenerateInitInstanceLocalInjector<T>::fgIsA{};
-   template<typename T>
-   std::string ClassDefGenerateInitInstanceLocalInjector<T>::fgName{};
    template<typename T>
    ::ROOT::TGenericClassInfo *ClassDefGenerateInitInstanceLocalInjector<T>::fgGenericInfo {
       ClassDefGenerateInitInstanceLocalInjector<T>::GenerateInitInstanceLocal()
