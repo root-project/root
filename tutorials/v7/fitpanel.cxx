@@ -71,6 +71,8 @@ void fitpanel() {
 
    canvas->Show("opera");
 
+   canvas->Update(); // need to ensure canvas is drawn
+
    auto panel = std::make_shared<ROOT::Experimental::TFitPanel>("FitPanel Title");
 
    Experimental::TDirectory::Heap().Add("fitpanel", panel);
