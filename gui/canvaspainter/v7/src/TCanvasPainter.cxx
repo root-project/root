@@ -242,8 +242,6 @@ private:
 
    int CheckWaitingCmd(const std::string &cmdname, double);
 
-   void ProcessPanel(std::shared_ptr<TWebWindow> win, bool res);
-
 public:
 
    TCanvasPainter(const TCanvas &canv, bool batch_mode) :
@@ -637,29 +635,20 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> wi
    std::string addr = fWindow->RelativeAddr(win);
 
    if (addr.length() == 0) {
-      R__ERROR_HERE("AddPanel") << "Canvas not able to acquire channel";
+      R__ERROR_HERE("AddPanel") << "Cannot attach panel to canvas";
       return false;
    }
 
    // connection is assigned, but can be refused by the client later
    // therefore handle may be removed later
 
-   CanvasCallback_t func = std::bind(&TCanvasPainter::ProcessPanel, this, win, std::placeholders::_1);
-
    std::string cmd("ADDPANEL:");
    cmd.append(addr);
 
-   printf("Sending cmd %s\n", cmd.c_str());
-
    /// one could use async mode
-   DoWhenReady(cmd, "AddPanel", true, func);
+   DoWhenReady(cmd, "AddPanel", true, nullptr);
 
    return true;
-}
-
-void ROOT::Experimental::TCanvasPainter::ProcessPanel(std::shared_ptr<TWebWindow> win, bool res)
-{
-   printf("PROCESS PANEL res %s\n", res ? "true" : "false");
 }
 
 // #include <fstream>
