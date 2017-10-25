@@ -43,4 +43,9 @@
 #pragma link C++ function TMVA::CreateVariableTransform;
 #pragma link C++ function TMVA::DataLoaderCopy;
 
+#pragma link C++ function TMVA::DataLoaderCopyMP;
+
+#pragma link C++ class std::map<TString, Double_t>+;
+
+
 #endif

@@ -853,17 +853,62 @@ TMVA::DataLoader* TMVA::DataLoader::MakeCopy(TString name)
 
 void TMVA::DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src)
 {
+
    for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Sbegin();treeinfo!=src->DataInput().Send();treeinfo++)
    {
-      des->AddSignalTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
+      des->AddSignalTree((*treeinfo).GetTree(), (*treeinfo).GetWeight(), (*treeinfo).GetTreeType());
    }
 
    for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Bbegin();treeinfo!=src->DataInput().Bend();treeinfo++)
    {
-      des->AddBackgroundTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
+      des->AddBackgroundTree((*treeinfo).GetTree(), (*treeinfo).GetWeight(), (*treeinfo).GetTreeType());
    }
 }
+std::vector<std::shared_ptr<TFile>> TMVA::DataLoaderCopyMP(TMVA::DataLoader *des, TMVA::DataLoader *src)
+{
+   std::vector<std::shared_ptr<TFile>> vec_files;
+   std::map<TString, std::shared_ptr<TFile>> map_files;
+   for (std::vector<TreeInfo>::const_iterator treeinfo = src->DataInput().Sbegin(); treeinfo != src->DataInput().Send();
+        ++treeinfo) {
+      TTree *stree = treeinfo->GetTree();
+      TString sfileName = stree->GetCurrentFile()->GetName();
+      std::shared_ptr<TFile> sfile;
+      if (map_files.find(sfileName) == map_files.end()) {
+         sfile = std::shared_ptr<TFile>(TFile::Open(sfileName));
+         map_files[sfileName] = sfile;
+         vec_files.push_back(sfile);
+      } else {
+         sfile = map_files[sfileName];
+      }
 
+      TTree *signalTree = (TTree *)sfile->Get(stree->GetName());
+      des->AddSignalTree(signalTree);
+   }
+   for (std::vector<TreeInfo>::const_iterator treeinfo = src->DataInput().Bbegin(); treeinfo != src->DataInput().Bend();
+        ++treeinfo) {
+      TTree *btree = treeinfo->GetTree();
+      TString bfileName = btree->GetCurrentFile()->GetName();
+      std::shared_ptr<TFile> bfile;
+      if (map_files.find(bfileName) == map_files.end()) {
+         bfile = std::shared_ptr<TFile>(TFile::Open(bfileName));
+         map_files[bfileName] = bfile;
+         vec_files.push_back(bfile);
+      } else {
+         bfile = map_files[bfileName];
+      }
+
+      TTree *backgroundTree = (TTree *)bfile->Get(btree->GetName());
+      des->AddBackgroundTree(backgroundTree);
+   }
+
+   return vec_files;
+}
+void TMVA::DataLoaderCopyMPCloseFiles(std::vector<std::shared_ptr<TFile>> files)
+{
+   for (auto file : files) {
+      file->Close();
+   }
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// returns the correlation matrix of datasets
 

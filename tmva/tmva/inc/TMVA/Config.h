@@ -1,4 +1,4 @@
-// @(#)root/tmva $Id$   
+// @(#)root/tmva $Id$
 // Author: Andreas Hoecker, Joerg Stelzer, Fredrik Tegenfeldt, Helge Voss
 
 /**********************************************************************************
@@ -47,7 +47,7 @@ namespace TMVA {
    class MsgLogger;
 
    class Config {
-               
+
    public:
 
       static Config& Instance();
@@ -64,6 +64,9 @@ namespace TMVA {
 
       Bool_t DrawProgressBar() const { return fDrawProgressBar; }
       void   SetDrawProgressBar( Bool_t d ) { fDrawProgressBar = d; }
+
+      UInt_t NWorkers() const { return fNWorkers; }
+      void SetNWorkers(UInt_t n) { fNWorkers = n; }
 
    public:
 
@@ -97,8 +100,7 @@ namespace TMVA {
          TString fWeightFileExtension;
          TString fOptionsReferenceFileDir;
       } fIONames; // Customisable weight file properties
-         
-      
+
    private:
 
       // private constructor
@@ -110,7 +112,7 @@ namespace TMVA {
       static std::atomic<Config*> fgConfigPtr;
 #else
       static Config* fgConfigPtr;
-#endif                  
+#endif
    private:
 
 #if __cplusplus > 199711L
@@ -118,15 +120,17 @@ namespace TMVA {
       std::atomic<Bool_t> fSilent;                // no output at all
       std::atomic<Bool_t> fWriteOptionsReference; // if set true: Configurable objects write file with option reference
       std::atomic<Bool_t> fDrawProgressBar;       // draw progress bar to indicate training evolution
+      std::atomic<UInt_t> fNWorkers;
 #else
       Bool_t fUseColoredConsole;     // coloured standard output
       Bool_t fSilent;                // no output at all
       Bool_t fWriteOptionsReference; // if set true: Configurable objects write file with option reference
       Bool_t fDrawProgressBar;       // draw progress bar to indicate training evolution
+      UInt_t fNWorkers;
 #endif
       mutable MsgLogger* fLogger;   // message logger
       MsgLogger& Log() const { return *fLogger; }
-         
+
       ClassDef(Config,0); // Singleton class for global configuration settings
    };
 

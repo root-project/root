@@ -14,11 +14,13 @@
 #include "TMultiGraph.h"
 #include "TString.h"
 #include "TSystem.h"
+#include "ROOT/TProcessExecutor.hxx"
 
 #include <iostream>
 #include <memory>
 #include <vector>
 
+using namespace std;
 /*! \class TMVA::HyperParameterOptimisationResult
 \ingroup TMVA
 
@@ -64,12 +66,11 @@ void TMVA::HyperParameterOptimisationResult::Print() const
 
 }
 
-TMVA::HyperParameterOptimisation::HyperParameterOptimisation(TMVA::DataLoader *dataloader):Envelope("HyperParameterOptimisation",dataloader),
-    fFomType("Separation"),
-    fFitType("Minuit"),
-    fNumFolds(5),
-    fResults(),
-    fClassifier(new TMVA::Factory("HyperParameterOptimisation","!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=Classification"))
+TMVA::HyperParameterOptimisation::HyperParameterOptimisation(TMVA::DataLoader *dataloader)
+   : Envelope("HyperParameterOptimisation", dataloader), fFomType("Separation"), fFitType("Minuit"), fNumFolds(4),
+     fResults(), fClassifier(new TMVA::Factory(
+                    "HyperParameterOptimisation",
+                    "!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=Classification"))
 {
     fFoldStatus=kFALSE;
 }
@@ -88,37 +89,50 @@ void TMVA::HyperParameterOptimisation::SetNumFolds(UInt_t i)
 
 void TMVA::HyperParameterOptimisation::Evaluate()
 {
-    TString methodName    = fMethod.GetValue<TString>("MethodName");
-    TString methodTitle   = fMethod.GetValue<TString>("MethodTitle");
-    TString methodOptions = fMethod.GetValue<TString>("MethodOptions");
+   cout << "Number of Workers : " << TMVA::gConfig().NWorkers() << endl;
+   TString methodName = fMethod.GetValue<TString>("MethodName");
+   TString methodTitle = fMethod.GetValue<TString>("MethodTitle");
+   TString methodOptions = fMethod.GetValue<TString>("MethodOptions");
 
-    if(!fFoldStatus)
-    {
-        fDataLoader->MakeKFoldDataSet(fNumFolds);
-        fFoldStatus=kTRUE;
-    }
-    fResults.fMethodName = methodName;
+   if (!fFoldStatus) {
+      fDataLoader->MakeKFoldDataSet(fNumFolds);
+      fFoldStatus = kTRUE;
+   }
+   fResults.fMethodName = methodName;
+   auto workItem = [&](UInt_t workerID) {
 
-    for(UInt_t i = 0; i < fNumFolds; ++i) {
+      TString foldTitle = methodTitle;
 
-        TString foldTitle = methodTitle;
-        foldTitle += "_opt";
-        foldTitle += i+1;
+      foldTitle += "_opt";
+      foldTitle += workerID + 1;
 
-        Event::SetIsTraining(kTRUE);
-        fDataLoader->PrepareFoldDataSet(i, TMVA::Types::kTraining);
+      Event::SetIsTraining(kTRUE);
+      fDataLoader->PrepareFoldDataSet(workerID, TMVA::Types::kTraining);
 
-        auto smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
+      auto smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
 
-        auto params=smethod->OptimizeTuningParameters(fFomType,fFitType);
-        fResults.fFoldParameters.push_back(params);
+      auto params = smethod->OptimizeTuningParameters(fFomType, fFitType);
 
-        smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
+      smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
 
-        fClassifier->DeleteAllMethods();
+      fClassifier->DeleteAllMethods();
 
-        fClassifier->fMethodsMap.clear();
+      fClassifier->fMethodsMap.clear();
 
-    }
+      return params;
 
+   };
+   vector<map<TString, Double_t>> res;
+   auto nWorkers = TMVA::gConfig().NWorkers();
+   if (nWorkers > 1) {
+      ROOT::TProcessExecutor workers(nWorkers);
+      res = workers.Map(workItem, ROOT::TSeqI(fNumFolds));
+   } else {
+      for (UInt_t i = 0; i < fNumFolds; ++i) {
+         res.push_back(workItem(i));
+      }
+   }
+   for (auto results : res) {
+      fResults.fFoldParameters.push_back(results);
+   }
 }
