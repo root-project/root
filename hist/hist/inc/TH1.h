@@ -129,9 +129,8 @@ protected:
    static Bool_t    SameLimitsAndNBins(const TAxis& axis1, const TAxis& axis2);
    Bool_t   IsEmpty() const { return fTsumw == 0 && GetEntries() == 0; } //need to use GetEntries() in case of buffer histograms
 
-   Double_t AutoP2GetMax(Double_t x);
-   Double_t AutoP2GetMin(Double_t x);
-   Int_t AutoP2GetBins(Int_t n);
+   inline static Double_t AutoP2GetPower2(Double_t x, Bool_t next = kTRUE);
+   inline static Int_t AutoP2GetBins(Int_t n);
    virtual Int_t AutoP2FindLimits(Double_t min, Double_t max);
 
    virtual Double_t DoIntegral(Int_t ix1, Int_t ix2, Int_t iy1, Int_t iy2, Int_t iz1, Int_t iz2, Double_t & err,
@@ -183,7 +182,7 @@ public:
    virtual void     AddBinContent(Int_t bin, Double_t w);
    static  void     AddDirectory(Bool_t add=kTRUE);
    static  Bool_t   AddDirectoryStatus();
-   virtual Int_t Adjust(Double_t autosize = -1., Int_t nrms = -1);
+   virtual Int_t    Adjust(Double_t autosize = -1., Int_t nrms = -1);
    virtual void     Browse(TBrowser *b);
    virtual Bool_t   CanExtendAllAxes() const;
    virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = 0) const;
@@ -427,7 +426,7 @@ protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const;
    virtual void     UpdateBinContent(Int_t bin, Double_t content);
    virtual Double_t GetBinErrorSqUnchecked(Int_t bin) const { return fSumw2.fN ? fSumw2.fArray[bin] : RetrieveBinContent(bin); }
-   virtual void MoveBinContent(Int_t from, Int_t to, Bool_t add = kFALSE);
+   virtual void     MoveBinContent(Int_t from, Int_t to, Bool_t add = kFALSE);
 };
 
 namespace cling {

@@ -14,6 +14,7 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <sstream>
+#include <cmath>
 
 #include "Riostream.h"
 #include "TROOT.h"
@@ -1222,35 +1223,21 @@ void TH1::AddDirectory(Bool_t add)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Auxilliary function to get the next power of 2 value larger then x
+/// Auxilliary function to get the power of 2 next (larger) or previous (smaller)
+/// a given x
+///
+///    next = kTRUE  : next larger
+///    next = kFALSE : previous smaller
 ///
 /// Used by the autobin power of 2 algorithm
 
-Double_t TH1::AutoP2GetMax(Double_t x)
+inline Double_t TH1::AutoP2GetPower2(Double_t x, Bool_t next)
 {
-   Double_t neg = (x < 0) ? -1. : 1.;
-   Double_t y = neg * x;
-   Double_t xn = TMath::Log2(y);
-   Int_t nn = (Int_t)xn;
-   if (neg < 0) {
-      nn--;
-   } else {
-      if (xn > 0)
-         nn++;
-   }
-   Double_t r = neg * TMath::Power(2, nn);
-   return r;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Auxilliary function to get the next power of 2 value smaller then x
-///
-/// Used by the autobin power of 2 algorithm
-
-Double_t TH1::AutoP2GetMin(Double_t x)
-{
-   Double_t neg = (x < 0) ? -1. : 1. / 2.;
-   return neg * AutoP2GetMax(neg * x);
+   Int_t nn;
+   Double_t f2 = std::frexp(x, &nn);
+   return ((next && x > 0.) || (!next && x <= 0.))
+          ? std::ldexp(std::copysign(1., f2), nn)
+          : std::ldexp(std::copysign(1., f2), --nn);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1258,11 +1245,11 @@ Double_t TH1::AutoP2GetMin(Double_t x)
 ///
 /// Used by the autobin power of 2 algorithm
 
-Int_t TH1::AutoP2GetBins(Int_t n)
+inline Int_t TH1::AutoP2GetBins(Int_t n)
 {
-   Double_t ln2 = TMath::Log2(n);
-   if ((ln2 - (Int_t)ln2) > 0.)
-      return (Int_t)TMath::Power(2, (Int_t)ln2 + 1);
+   Int_t nn;
+   Double_t f2 = std::frexp(n, &nn);
+   if (TMath::Abs(f2 - .5) > 0.001) return (Int_t) std::ldexp(1., nn);
    return n;
 }
 
@@ -1293,18 +1280,18 @@ Int_t TH1::AutoP2FindLimits(Double_t xmi, Double_t xma)
    // Now adjust
    if (TMath::Abs(xhma) > TMath::Abs(xhmi)) {
       // Start from the upper limit
-      xhma = AutoP2GetMax(xhma);
-      xhmi = xhma - AutoP2GetMax(xhma - xhmi);
+      xhma = TH1::AutoP2GetPower2(xhma);
+      xhmi = xhma - TH1::AutoP2GetPower2(xhma - xhmi);
    } else {
       // Start from the lower limit
-      xhmi = AutoP2GetMin(xhmi);
-      xhma = xhmi + AutoP2GetMax(xhma - xhmi);
+      xhmi = TH1::AutoP2GetPower2(xhmi, kFALSE);
+      xhma = xhmi + TH1::AutoP2GetPower2(xhma - xhmi);
    }
 
    // Round the bins to the next power of 2; take into account the possible inflation
    // of the range
    Double_t rr = (xhma - xhmi) / (xma - xmi);
-   Int_t nb = AutoP2GetBins((Int_t)(rr * GetNbinsX()));
+   Int_t nb = TH1::AutoP2GetBins((Int_t)(rr * GetNbinsX()));
 
    // Set everything and project
    SetBins(nb, xhmi, xhma);
