@@ -3,19 +3,29 @@
 
 #include "RConfig.h"
 #include "ROOT/ZSTDEngine.hxx"
+#include "RZip.h"
 
 using namespace ROOT::Internal;
 
 
 ssize_t ZSTDCompressionEngine::StreamFull(const void *buffer, size_t size) {
-  size_t retval = fDict ? ZSTD_compress_usingCDict(fCtx.get(), fCur, fCap, buffer, size, fDict.get()) :
-                          ZSTD_compressCCtx(fCtx.get(), fCur, fCap, buffer, size, 2*fLevel);
+   if (R__unlikely(fCap < kROOTHeaderSize)) return -1;
+   char *originalLocation = fCur;
+   fCur += kROOTHeaderSize;
+   fCap -= kROOTHeaderSize;
+
+   size_t retval = fDict.get() ? ZSTD_compress_usingCDict(fCtx.get(), fCur, fCap, buffer, size, fDict.get()) :
+                                 ZSTD_compressCCtx(fCtx.get(), fCur, fCap, buffer, size, 2*fLevel);
    if (R__unlikely(ZSTD_isError(retval))) {
       return -1;
    }
+
    fCur += retval;
    fCap -= retval;
-   return static_cast<ssize_t>(retval);
+
+   WriteROOTHeader(originalLocation, "ZS", Version(), retval, size);
+   // Note: return size should include header.
+   return static_cast<ssize_t>(retval+kROOTHeaderSize);
 }
 
 void ZSTDCompressionEngine::Reset() {
@@ -58,8 +68,13 @@ bool ZSTDCompressionEngine::SetTraining(const void *, size_t) {
 }
 
 ssize_t ZSTDDecompressionEngine::StreamFull(const void *buffer, size_t size) {
-   size_t retval = fDict ? ZSTD_decompress_usingDDict(fCtx.get(), fCur, fCap, buffer, size, fDict.get()) :
-                           ZSTD_decompressDCtx(fCtx.get(), fCur, fCap, buffer, size);
+   // Find the start of the ZSTD block by skipping the ROOT header.
+   const char *src = static_cast<const char*>(buffer);
+   src += CompressionEngine::kROOTHeaderSize;
+   size -= CompressionEngine::kROOTHeaderSize;
+
+   size_t retval = fDict ? ZSTD_decompress_usingDDict(fCtx.get(), fCur, fCap, src, size, fDict.get()) :
+                           ZSTD_decompressDCtx(fCtx.get(), fCur, fCap, src, size);
    if (R__unlikely(ZSTD_isError(retval))) {
       return -1;
    }
@@ -78,13 +93,3 @@ bool ZSTDDecompressionEngine::SetTraining(const void *buffer, size_t size) {
    fDict.reset(ZSTD_createDDict(buffer, size));
    return fDict.get() != nullptr;
 }
-
-/*
-void R__zipZSTD(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep)
-{
-   ZSTDCompressionEngine zstd(cxlevel);
-   zstd.SetTarget(tgt, tgtsize);
-   *irep = zstd.StreamFull(srcsize, src);
-   if (*irep < 0) {*irep = 0;}
-}
-*/
