@@ -4361,6 +4361,11 @@ int RootClingMain(int argc,
          interpPtr->setCallbacks(std::move(callBacks));
       }
    } else {
+#ifdef R__FAST_MATH
+      // Same setting as in TCling.cxx.
+      clingArgsC.push_back("-ffast-math");
+#endif
+
       owningInterpPtr.reset(new cling::Interpreter(clingArgsC.size(), &clingArgsC[0],
                                                    resourceDir.c_str()));
       interpPtr = owningInterpPtr.get();
