@@ -111,8 +111,14 @@ private:
   RooArgList* _initFloatParamList;
   RooArgList* _initConstParamList;
 
-  ROOT::Math::NumericalDerivatorMinuit2 _gradf;
+  // Before using any of the following members, call InitGradient!
+  // this all needs to be mutable since ROOT::Math::IMultiGradFunction insists on DoDerivative being const
+  mutable ROOT::Math::NumericalDerivatorMinuit2 _gradf;
+  mutable std::vector<double> _grad;
+  mutable std::vector<double> _grad_params;
+  bool _grad_initialized;
 
+  void InitGradient() const;
 };
 
 #endif

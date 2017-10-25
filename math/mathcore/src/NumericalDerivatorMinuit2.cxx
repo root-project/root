@@ -157,7 +157,7 @@ void NumericalDerivatorMinuit2::SetInitialValues(const double* g, const double* 
     }
 }
 
-const double* NumericalDerivatorMinuit2::Differentiate(const double* cx) {
+std::vector<double> NumericalDerivatorMinuit2::Differentiate(const double* cx) {
     // std::cout <<"Start:" << std::endl;
     // for (unsigned int i = 0; i<fN; i++) {
     //     std::cout << "fGrd[" << i <<"] = " << fGrd[i] << std::endl;
@@ -253,11 +253,15 @@ const double* NumericalDerivatorMinuit2::Differentiate(const double* cx) {
     //     std::cout << "fGstep[" << i <<"] = " << fGstep[i] << std::endl;
     // }
     
-    return &fGrd[0];
+    return fGrd;
+}
+
+std::vector<double> NumericalDerivatorMinuit2::operator()(const double* x) {
+  return NumericalDerivatorMinuit2::Differentiate(x);
 }
 
 
-// MODIFIED:
+    // MODIFIED:
 // This function was not implemented as in Minuit2. Now it copies the behavior
 // of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
 void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) {

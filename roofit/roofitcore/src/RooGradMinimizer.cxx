@@ -114,9 +114,10 @@ RooGradMinimizer::RooGradMinimizer(RooAbsReal& function)
 
   if (_theFitter) delete _theFitter ;
   _theFitter = new ROOT::Fit::Fitter;
-  //  RooMinimizer *theRooMinimizer = dynamic_cast<RooMinimizer*>(this);
-  _fcn = new RooGradMinimizerFcn(_func,this,_verbose);
   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+
+  _fcn = new RooGradMinimizerFcn(_func,this,_verbose);
+
   // default max number of calls
   _theFitter->Config().MinimizerOptions().SetMaxIterations(500*_fcn->NDim());
   _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(500*_fcn->NDim());

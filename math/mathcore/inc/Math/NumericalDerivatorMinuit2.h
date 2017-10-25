@@ -39,46 +39,47 @@ namespace Math {
 class NumericalDerivatorMinuit2 {
 public:
 
-   NumericalDerivatorMinuit2();
-   NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other);
-   NumericalDerivatorMinuit2& operator=(const NumericalDerivatorMinuit2 &other);
-   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level);
-//   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter);
-//   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy);
-   virtual ~NumericalDerivatorMinuit2();
-   const double* Differentiate(const double* x);
-   double GetFValue() const {
-      return fVal;
-   }
-   const double * GetG2() {
-      return &fG2[0];
-   }
-   void SetStepTolerance(double value);
-   void SetGradTolerance(double value);
-   void SetNCycles(int value);
-   
-   void SetInitialValues(const double* g, const double* g2, const double* s);
-       
-   void SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters);
+  NumericalDerivatorMinuit2();
+  NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other);
+  NumericalDerivatorMinuit2& operator=(const NumericalDerivatorMinuit2 &other);
+  NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level);
+  //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter);
+  //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy);
+  virtual ~NumericalDerivatorMinuit2();
+
+  std::vector<double> Differentiate(const double* x);
+  std::vector<double> operator() (const double* x);
+  double GetFValue() const {
+    return fVal;
+  }
+  const double * GetG2() {
+    return &fG2[0];
+  }
+  void SetStepTolerance(double value);
+  void SetGradTolerance(double value);
+  void SetNCycles(int value);
+
+  void SetInitialValues(const double* g, const double* g2, const double* s);
+
+  void SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters);
 
 private:
 
-    std::vector <double> fGrd;
-    std::vector <double> fG2;
-    std::vector <double> fGstep;
-    const ROOT::Math::IBaseFunctionMultiDim* fFunction;
-//    ROOT::Minuit2::MnStrategy _strategy;
-    double fStepTolerance;
-    double fGradTolerance;
-    double fNCycles;
-    double fVal;
-    unsigned int fN;
-    double Up;
+  std::vector <double> fGrd;
+  std::vector <double> fG2;
+  std::vector <double> fGstep;
+  const ROOT::Math::IBaseFunctionMultiDim* fFunction;
+  double fStepTolerance;
+  double fGradTolerance;
+  double fNCycles;
+  double fVal;
+  unsigned int fN;
+  double Up;
 
-    // DIFFERS: eps, eps2
-    // Minuit2 determines machine precision itself in MnMachinePrecision.cxx
-    double eps;
-    double eps2;
+  // DIFFERS: eps, eps2
+  // Minuit2 determines machine precision itself in MnMachinePrecision.cxx
+  double eps;
+  double eps2;
 
 };
 

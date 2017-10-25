@@ -45,6 +45,8 @@
 #include "Fit/Fitter.h"
 #include "Math/Minimizer.h"
 
+#include <algorithm> // std::equal
+
 using namespace std;
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* context,
@@ -54,7 +56,7 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* co
   _maxFCN(-1e30), _numBadNLL(0),  
   _printEvalErrors(10), _doEvalErrorWall(kTRUE),
   _nDim(0), _logfile(0),
-  _verbose(verbose)
+  _verbose(verbose), _grad_initialized(false)
 { 
 
   _evalCounter = 0 ;
@@ -97,17 +99,6 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* co
   _initFloatParamList = (RooArgList*) _floatParamList->snapshot(kFALSE) ;
   _initConstParamList = (RooArgList*) _constParamList->snapshot(kFALSE) ;
 
-  // Create derivator
-  ROOT::Fit::Fitter *fitter = _context->fitter();
-  ROOT::Math::Minimizer *minimizer = fitter->GetMinimizer();
-
-  ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(minimizer->Strategy()));
-  ROOT::Math::NumericalDerivatorMinuit2 derivator(*this,
-                                                  strategy.GradientStepTolerance(),
-                                                  strategy.GradientTolerance(),
-                                                  strategy.GradientNCycles(),
-                                                  minimizer->ErrorDef());
-  _gradf = derivator;
 }
 
 
@@ -124,7 +115,9 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(const RooGradMinimizerFcn& other) : ROO
   _logfile(other._logfile),
   _verbose(other._verbose),
   _floatParamVec(other._floatParamVec),
-  _gradf(other._gradf)
+  _gradf(other._gradf),
+  _grad(other._grad),
+  _grad_params(other._grad_params), _grad_initialized(other._grad_initialized)
 {  
   _floatParamList = new RooArgList(*other._floatParamList) ;
   _constParamList = new RooArgList(*other._constParamList) ;
@@ -398,6 +391,9 @@ Bool_t RooGradMinimizerFcn::Synchronize(std::vector<ROOT::Fit::ParameterSettings
 
 void RooGradMinimizerFcn::SynchronizeGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) {
 //  _gradf.updateParameters(parameters);
+  if (!_grad_initialized) {
+    InitGradient();
+  }
   _gradf.SetInitialGradient(parameters);
 }
 
@@ -608,9 +604,45 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
   return fvalue;
 }
 
+// it's not actually const, it mutates mutables, but it has to be defined
+// const because it's called from DoDerivative, which insists on constness
+void RooGradMinimizerFcn::InitGradient const () {
+  // Create derivator
+  ROOT::Fit::Fitter *fitter = _context->fitter();
+  if (!fitter) {
+    throw std::runtime_error("In RooGradMinimizerFcn::RooGradMinimizerFcn: fitter is null!");
+  }
+  ROOT::Math::Minimizer *minimizer = fitter->GetMinimizer();
+  if (!minimizer) {
+    throw std::runtime_error("In RooGradMinimizerFcn::RooGradMinimizerFcn: minimizer is null! Must initialize minimizer in the fitter before initializing the gradient function.");
+  }
+
+  ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(minimizer->Strategy()));
+  ROOT::Math::NumericalDerivatorMinuit2 derivator(*this,
+                                                  strategy.GradientStepTolerance(),
+                                                  strategy.GradientTolerance(),
+                                                  strategy.GradientNCycles(),
+                                                  minimizer->ErrorDef());
+  _gradf = derivator;
+  _grad.resize(_nDim);
+  _grad_params.resize(_nDim);
+
+  _grad_initialized = true;
+}
 
 
 double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int icoord) const {
+  if (!_grad_initialized) {
+    InitGradient();
+  }
+  // check whether the derivative was already calculated for this set of parameters
+  if (std::equal(_grad_params.begin(), _grad_params.end(), x)) {
+    return _grad[icoord];
+  }
+  // if not, set the _grad_params to the current input parameters
+  std::vector<double> new_grad_params(x, x + _nDim);
+  _grad_params = new_grad_params;
+
   // Set the parameter values for this iteration
   // EGP TODO: this is already done in DoEval as well; find efficient way to do only once
   for (int index = 0; index < _nDim; index++) {
@@ -621,17 +653,7 @@ double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int icoord) c
   // Calculate the function for these parameters
   RooAbsReal::setHideOffset(kFALSE) ; // EGP TODO: check whether this is necessary
 
-  ///// EGP TODO: REPLACE BELOW DERIVATIVE CALCULATION WITH THE FANCY MINUIT TYPE STUFF
-  double dx = max(1e-5 * x[icoord], 1e-8);
-  double fvalue_0 = _funct->getVal();
-
-  if (_logfile) (*_logfile) << x[icoord] << " " ;
-  SetPdfParamVal(icoord,x[icoord] + dx);
-
-  double fvalue_dx = _funct->getVal();
-
-  double derivative_i_value = (fvalue_dx - fvalue_0) / dx; //######## OI THIS IS WHERE WE COMPUTE THE GRADIENT####
-  ///// EGP TODO: REPLACE ABOVE DERIVATIVE CALCULATION WITH THE FANCY MINUIT TYPE STUFF
+  _grad = _gradf(x);
 
   RooAbsReal::setHideOffset(kTRUE) ; // EGP TODO: check whether this is necessary
 
@@ -640,10 +662,10 @@ double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int icoord) c
   // EGP TOOO: update this when changing the derivative algorithm
   // Count the function calls necessary for this derivative and use that.
   // Except when the derivative itself calls DoEval where the counter is already updated!
-  _evalCounter += 2;
+//  _evalCounter += 2;
 
-  cout << "grad value " << derivative_i_value;
-  return derivative_i_value;
+  cout << "grad value " << _grad[icoord];
+  return _grad[icoord];
 }
 
 
