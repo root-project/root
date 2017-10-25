@@ -16,6 +16,7 @@
 #include "ROOT/TWebWindow.hxx"
 
 #include "ROOT/TWebWindowsManager.hxx"
+#include <ROOT/TLogger.hxx>
 
 #include "THttpCallArg.h"
 #include "THttpWSHandler.h"
@@ -54,12 +55,6 @@ public:
 
 ROOT::Experimental::TWebWindow::~TWebWindow()
 {
-   Cleanup();
-}
-
-
-void ROOT::Experimental::TWebWindow::Cleanup()
-{
    fConn.clear();
 
    if (fMgr)
@@ -70,6 +65,7 @@ void ROOT::Experimental::TWebWindow::Cleanup()
       fWSHandler = nullptr;
    }
 }
+
 
 void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 {
@@ -85,19 +81,18 @@ void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 
 // TODO: add callback which executed when exactly this window is opened and connection is established
 
-bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
+void ROOT::Experimental::TWebWindow::CreateWSHandler()
 {
-   if (!fMgr) return false;
-
-   bool first_time = false;
-
    if (!fWSHandler) {
       fWSHandler = new TWebWindowWSHandler(this);
-      fWSHandler->SetName(Form("win%u",GetId()));
-      first_time = true;
+      fWSHandler->SetName(Form("win%u", GetId()));
    }
+}
 
-   return fMgr->Show(this, where, first_time);
+
+bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
+{
+   return fMgr->Show(this, where);
 }
 
 
@@ -270,6 +265,22 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
    } while (isany && !only_once);
 }
 
+/// Returns relative address for the window to use when establish connection from the client
+
+std::string ROOT::Experimental::TWebWindow::RelativeAddr(std::shared_ptr<TWebWindow> &win)
+{
+   if (fMgr != win->fMgr) {
+      R__ERROR_HERE("RelativeAddr") << "Same web window manager should be used";
+      return "";
+   }
+
+   std::string res("../");
+   res.append(win->fWSHandler->GetName());
+   return res;
+}
+
+
+
 // returns true if sending via specified connection can be performed
 // if direct==true, requires that direct sending (without queue) is possible
 
@@ -288,7 +299,7 @@ bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct) const
 
 
 /// Sends data to specified connection
-/// If connid==0, data will be send to all connections for channel 1
+/// If connid==0, data will be send to all connections
 void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned connid, unsigned chid)
 {
    for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
