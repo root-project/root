@@ -48,9 +48,9 @@ private:
 class ZSTDDecompressionEngine final : public DecompressionEngine {
 
 public:
-   ZSTDDecompressionEngine() {}
+   ZSTDDecompressionEngine() : fCtx(ZSTD_createDCtx(), &ZSTD_freeDCtx) {}
 
-   virtual ~ZSTDDecompressionEngine();
+   virtual ~ZSTDDecompressionEngine() {}
 
    virtual bool VersionCompat(char version) const override {return version == '\1';}
 

@@ -294,7 +294,7 @@ int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
 
   /*   C H E C K   H E A D E R   */
   if (!is_valid_header(src)) {
-     fprintf(stderr, "Error R__unzip_header: error in header.  Values: %c%c\n", src[0], src[1]);
+     fprintf(stderr, "Error R__unzip_header: error in header.  Values: %x%x\n", src[0], src[1]);
      return 1;
   }
 
@@ -376,7 +376,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
   } else if (is_valid_header_zstd(src)) {
      ROOT::Internal::ZSTDDecompressionEngine zstd;
      zstd.SetTarget(tgt, *tgtsize);
-     int retval = zstd.Stream(src, *srcsize);
+     int retval = zstd.StreamFull(src, *srcsize);
      if (retval < 0) retval = 0;
      *irep = retval;
      return;
