@@ -1165,6 +1165,7 @@ TCling::TCling(const char *name, const char *title)
    }
 
 #ifdef R__FAST_MATH
+   // Same setting as in rootcling_impl.cxx.
    interpArgs.push_back("-ffast-math");
 #endif
 
