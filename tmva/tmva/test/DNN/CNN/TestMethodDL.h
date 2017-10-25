@@ -30,10 +30,12 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "TString.h"
+#include "TROOT.h"
 
 #include "TMVA/MethodDL.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Factory.h"
+#include "TMVA/Config.h"
 
 #include <iostream>
 
@@ -153,6 +155,10 @@ void testMethodDL(TString architectureStr)
 //______________________________________________________________________________
 void testMethodDL_DNN(TString architectureStr)
 {
+
+   ROOT::EnableImplicitMT(1);
+   TMVA::Config::Instance();
+   
    TFile *input(0);
    // TString fname = "/Users/vladimirilievski/Desktop/Vladimir/GSoC/ROOT-CI/common-version/root/tmva/tmva/test/DNN/CNN/"
    //                 "dataset/tmva_class_example.root";
@@ -199,7 +205,7 @@ void testMethodDL_DNN(TString architectureStr)
    TString batchLayoutString("BatchLayout=256|1|4");
 
    // General layout.
-   TString layoutString("Layout=DENSE|128|TANH,DENSE|128|TANH,DENSE|128|TANH,DENSE|1|LINEAR");
+   TString layoutString("Layout=RESHAPE|1|1|128|FLAT,DENSE|128|TANH,DENSE|128|TANH,DENSE|128|TANH,DENSE|1|LINEAR");
 
    // Training strategies.
    TString training0("LearningRate=1e-1,Momentum=0.9,Repetitions=1,"
