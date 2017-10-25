@@ -76,7 +76,7 @@ GetArgcArgv(std::string &s, char **argv)
 
    while (1) {
       while (isspace(*bp)) {
-         bp++;
+         ++bp;
       }
       if (*bp == '\n' || *bp == '\0') {
          *bp = '\0';
@@ -84,7 +84,7 @@ GetArgcArgv(std::string &s, char **argv)
       }
       if (*bp == '\"') {
          quote = 1;
-         bp++;
+         ++bp;
       }
       argv[argc++] = &(*bp);
 
@@ -93,18 +93,18 @@ GetArgcArgv(std::string &s, char **argv)
             if (*bp == '\"') {
                quote = 0;
                *bp = '\0';
-               bp++;
+               ++bp;
                break;
             }
-            bp++;
+            ++bp;
             continue;
          }
          if (isspace(*bp)) {
             *bp = '\0';
-            bp++;
+            ++bp;
             break;
          }
-         bp++;
+         ++bp;
       }
    }
 }

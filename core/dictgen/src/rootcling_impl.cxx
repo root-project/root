@@ -469,7 +469,7 @@ void AnnotateFieldDecl(clang::FieldDecl &decl,
          BaseSelectionRule::AttributesMap_t attrMap(it->GetAttributes());
          BaseSelectionRule::AttributesMap_t::iterator iter;
          std::string userDefinedProperty;
-         for (iter = attrMap.begin(); iter != attrMap.end(); iter++) {
+         for (iter = attrMap.begin(); iter != attrMap.end(); ++iter) {
             const std::string &name = iter->first;
             const std::string &value = iter->second;
 
@@ -2976,7 +2976,7 @@ int  ExtractClassesListAndDeclLines(RScanner &scan,
 void ExtractSelectedNamespaces(RScanner &scan, std::list<std::string> &nsList)
 {
    for (RScanner::NamespaceColl_t::const_iterator selNsIter = scan.fSelectedNamespaces.begin();
-         selNsIter != scan.fSelectedNamespaces.end(); selNsIter++) {
+         selNsIter != scan.fSelectedNamespaces.end(); ++selNsIter) {
       nsList.push_back(ROOT::TMetaUtils::GetQualifiedName(* selNsIter->GetNamespaceDecl()));
    }
 }
@@ -5106,7 +5106,7 @@ namespace genreflex {
    {
       unsigned int numberOfHeaders = 0;
       for (std::vector<std::string>::iterator it = headersNames.begin();
-            it != headersNames.end(); it++) {
+            it != headersNames.end(); ++it) {
          const std::string headername(*it);
          if (ROOT::TMetaUtils::IsHeaderName(headername)) {
             numberOfHeaders++;
@@ -5192,7 +5192,7 @@ namespace genreflex {
       ofilesnames.reserve(headersNames.size());
 
       for (std::vector<std::string>::const_iterator it = headersNames.begin();
-            it != headersNames.end(); it++) {
+            it != headersNames.end(); ++it) {
          std::string ofilename(*it);
          header2outputName(ofilename);
          ofilesnames.push_back(ofilename);
@@ -5206,7 +5206,7 @@ namespace genreflex {
                        const std::string &optName = "")
    {
       for (std::vector<std::string>::const_iterator it = argsToBeAdded.begin();
-            it != argsToBeAdded.end(); it++) {
+            it != argsToBeAdded.end(); ++it) {
          argvVector.push_back(string2charptr(optName + *it));
       }
    }
@@ -5218,7 +5218,7 @@ namespace genreflex {
                             const std::string &optName = "")
    {
       for (std::vector<std::string>::const_iterator it = argsToBeAdded.begin();
-            it != argsToBeAdded.end(); it++) {
+            it != argsToBeAdded.end(); ++it) {
          if (optName.length()) {
             argvVector.push_back(string2charptr(optName));
          }

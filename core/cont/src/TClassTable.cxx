@@ -135,7 +135,7 @@ namespace ROOT {
 
       void Print() {
          Info("TMapTypeToClassRec::Print", "printing the typeinfo map in TClassTable");
-         for (const_iterator iter = fMap.begin(); iter != fMap.end(); iter++) {
+         for (const_iterator iter = fMap.begin(); iter != fMap.end(); ++iter) {
             printf("Key: %40s 0x%lx\n", iter->first.c_str(), (unsigned long)iter->second);
          }
       }

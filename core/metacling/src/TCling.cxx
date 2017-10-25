@@ -756,7 +756,7 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
    //(0) prepare file name
    TString fileName = "AutoDict_";
    std::string::const_iterator sIt;
-   for (sIt = className.begin(); sIt != className.end(); sIt++) {
+   for (sIt = className.begin(); sIt != className.end(); ++sIt) {
       if (*sIt == '<' || *sIt == '>' ||
             *sIt == ' ' || *sIt == '*' ||
             *sIt == ',' || *sIt == '&' ||
