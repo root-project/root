@@ -25,6 +25,12 @@ public:
    virtual ~CompressionEngine();
 
    /**
+    * ROOT's block framing format adds a 9-byte header to all
+    * full compression blocks.
+    */
+   static constexpr unsigned kROOTHeaderSize = 9;
+
+   /**
     * The file-format version written by this compression engine.
     */
    virtual char Version() const = 0;
@@ -101,6 +107,12 @@ public:
    virtual bool SetTraining(const void * /*training*/, size_t /*size*/) {return false;}
 
 protected:
+
+   /**
+    * Write the ROOT-specific header at a given location.
+    */
+   static void WriteROOTHeader(void *buffer, const char alg[2], char version, int deflate_size, int inflate_size);
+
    char   *fBuffer{nullptr}; // The "destination" buffer for compressed data.
    char   *fCur{nullptr};    // Current offset within the destination buffer.
    size_t  fSize{0};         // The total size of the destination buffer.
