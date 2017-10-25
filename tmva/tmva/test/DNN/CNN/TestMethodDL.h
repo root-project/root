@@ -205,7 +205,7 @@ void testMethodDL_DNN(TString architectureStr)
    TString batchLayoutString("BatchLayout=256|1|4");
 
    // General layout.
-   TString layoutString("Layout=RESHAPE|1|1|128|FLAT,DENSE|128|TANH,DENSE|128|TANH,DENSE|128|TANH,DENSE|1|LINEAR");
+   TString layoutString("Layout=RESHAPE|1|1|4|FLAT,DENSE|128|TANH,DENSE|128|TANH,DENSE|128|TANH,DENSE|1|LINEAR");
 
    // Training strategies.
    TString training0("LearningRate=1e-1,Momentum=0.9,Repetitions=1,"
