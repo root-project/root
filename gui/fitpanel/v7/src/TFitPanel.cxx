@@ -52,7 +52,7 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
    if (arg == "CONN_READY") {
       fConnId = connid;
       printf("Connection established %u\n", fConnId);
-      fWindow->Send("SHOW:FitPanel", fConnId);
+      fWindow->Send("INITDONE", fConnId);
       return;
    }
 
