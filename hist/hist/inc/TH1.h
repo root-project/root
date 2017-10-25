@@ -36,8 +36,6 @@
 #include "TArrayD.h"
 #include "Foption.h"
 
-#include "TStatistic.h"
-
 #include "TVectorFfwd.h"
 #include "TVectorDfwd.h"
 
@@ -98,7 +96,6 @@ protected:
     TList        *fFunctions;       ///<->Pointer to list of functions (fits and user)
     Int_t         fBufferSize;      ///< fBuffer size
     Double_t     *fBuffer;          ///<[fBufferSize] entry buffer
-    TStatistic fXstat;              ///< Statistic about X in fBuffer (max, min, mean, rms, ...)
     TDirectory   *fDirectory;       ///<!Pointer to directory holding this histogram
     Int_t         fDimension;       ///<!Histogram dimension (1, 2 or 3 dim)
     Double_t     *fIntegral;        ///<!Integral of bins used by GetRandom
@@ -135,7 +132,7 @@ protected:
    Double_t AutoP2GetMax(Double_t x);
    Double_t AutoP2GetMin(Double_t x);
    Int_t AutoP2GetBins(Int_t n);
-   virtual Int_t AutoP2FindLimits();
+   virtual Int_t AutoP2FindLimits(Double_t min, Double_t max);
 
    virtual Double_t DoIntegral(Int_t ix1, Int_t ix2, Int_t iy1, Int_t iy2, Int_t iz1, Int_t iz2, Double_t & err,
                                Option_t * opt, Bool_t doerr = kFALSE) const;

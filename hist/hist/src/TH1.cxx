@@ -546,7 +546,7 @@ ClassImp(TH1);
 ////////////////////////////////////////////////////////////////////////////////
 /// Histogram default constructor.
 
-TH1::TH1() : TNamed(), TAttLine(), TAttFill(), TAttMarker(), fXstat("fBuffer")
+TH1::TH1() : TNamed(), TAttLine(), TAttFill(), TAttMarker()
 {
    fDirectory     = 0;
    fFunctions     = new TList;
@@ -636,7 +636,7 @@ TH1::~TH1()
 /// ~~~
 
 TH1::TH1(const char *name, const char *title, Int_t nbins, Double_t xlow, Double_t xup)
-   : TNamed(name, title), TAttLine(), TAttFill(), TAttMarker(), fXstat("fBuffer")
+   : TNamed(name, title), TAttLine(), TAttFill(), TAttMarker()
 {
    Build();
    if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
@@ -658,7 +658,7 @@ TH1::TH1(const char *name, const char *title, Int_t nbins, Double_t xlow, Double
 ///            This is an array of size nbins+1
 
 TH1::TH1(const char *name, const char *title, Int_t nbins, const Float_t *xbins)
-   : TNamed(name, title), TAttLine(), TAttFill(), TAttMarker(), fXstat("fBuffer")
+   : TNamed(name, title), TAttLine(), TAttFill(), TAttMarker()
 {
    Build();
    if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
@@ -680,7 +680,7 @@ TH1::TH1(const char *name, const char *title, Int_t nbins, const Float_t *xbins)
 ///        This is an array of size nbins+1
 
 TH1::TH1(const char *name, const char *title, Int_t nbins, const Double_t *xbins)
-   : TNamed(name, title), TAttLine(), TAttFill(), TAttMarker(), fXstat("fBuffer")
+   : TNamed(name, title), TAttLine(), TAttFill(), TAttMarker()
 {
    Build();
    if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
@@ -693,7 +693,7 @@ TH1::TH1(const char *name, const char *title, Int_t nbins, const Double_t *xbins
 /// Copy constructor.
 /// The list of functions is not copied. (Use Clone if needed)
 
-TH1::TH1(const TH1 &h) : TNamed(), TAttLine(), TAttFill(), TAttMarker(), fXstat("fBuffer")
+TH1::TH1(const TH1 &h) : TNamed(), TAttLine(), TAttFill(), TAttMarker()
 {
    ((TH1&)h).Copy(*this);
 }
@@ -1278,7 +1278,8 @@ Int_t TH1::AutoP2GetBins(Int_t n)
 ///
 /// Used by the autobin power of 2 algorithm.
 ///
-/// Works on internal inputs: fXstat, fXmin, fXmax, NBinsX (from fXaxis), ...
+/// Works on arguments (min and max from fBuffer) and internal inputs: fXmin,
+/// fXmax, NBinsX (from fXaxis), ...
 /// Result save internally in fXaxis.
 ///
 /// Overloaded by TH2 and TH3.
@@ -1286,11 +1287,9 @@ Int_t TH1::AutoP2GetBins(Int_t n)
 /// Return -1 if internal inputs are incosistent, 0 otherwise.
 ///
 
-Int_t TH1::AutoP2FindLimits()
+Int_t TH1::AutoP2FindLimits(Double_t xmi, Double_t xma)
 {
    // We need meaningful raw limits
-   Double_t xmi = fXstat.GetMin();
-   Double_t xma = fXstat.GetMax();
    if (xmi >= xma)
       return -1;
 
@@ -1488,22 +1487,28 @@ Int_t TH1::BufferEmpty(Int_t action)
       fBuffer = buffer;
    }
    if (CanExtendAllAxes() || (fXaxis.GetXmax() <= fXaxis.GetXmin())) {
+      //find min, max of entries in buffer
+      Double_t xmin = fBuffer[2];
+      Double_t xmax = xmin;
+      for (Int_t i=1;i<nbentries;i++) {
+         Double_t x = fBuffer[2*i+2];
+         if (x < xmin) xmin = x;
+         if (x > xmax) xmax = x;
+      }
       if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
          Int_t rc = -1;
          if (TestBit(TH1::kAutoBinPTwo)) {
-            if ((rc = AutoP2FindLimits()) < 0)
+            if ((rc = AutoP2FindLimits(xmin, xmax)) < 0)
                Warning("BufferEmpty",
                        "incosistency found by power-of-2 autobin algorithm: fallback to standard method");
          }
          if (rc < 0)
-            THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this, fXstat.GetMin(), fXstat.GetMax());
+            THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this, xmin, xmax);
       } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
-         if (fXstat.GetMin() < fXaxis.GetXmin())
-            ExtendAxis(fXstat.GetMin(), &fXaxis);
-         if (fXstat.GetMax() >= fXaxis.GetXmax())
-            ExtendAxis(fXstat.GetMax(), &fXaxis);
+         if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin, &fXaxis);
+         if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax, &fXaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }
@@ -1570,9 +1575,6 @@ Int_t TH1::BufferFill(Double_t x, Double_t w)
    fBuffer[2*nbentries+1] = w;
    fBuffer[2*nbentries+2] = x;
    fBuffer[0] += 1;
-
-   // Save statistics
-   fXstat.Fill(x, w);
 
    return -2;
 }
