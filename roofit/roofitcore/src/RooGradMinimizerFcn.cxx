@@ -603,7 +603,7 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
   }
 
   _evalCounter++ ;
-  cout<< "func eval "<<fvalue<<endl;
+  std::cout << "func eval #" << _evalCounter << ", value: " << fvalue << std::endl;
   return fvalue;
 }
 
@@ -620,6 +620,7 @@ void RooGradMinimizerFcn::InitGradient() const {
     throw std::runtime_error("In RooGradMinimizerFcn::RooGradMinimizerFcn: minimizer is null! Must initialize minimizer in the fitter before initializing the gradient function.");
   }
 
+  std::cout << "RooGradMinimizerFcn using strategy " << minimizer->Strategy() << std::endl;
   ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(minimizer->Strategy()));
   ROOT::Math::NumericalDerivatorMinuit2 derivator(*this,
                                                   strategy.GradientStepTolerance(),
@@ -642,6 +643,7 @@ double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int icoord) c
   }
   // check whether the derivative was already calculated for this set of parameters
   if (std::equal(_grad_params.begin(), _grad_params.end(), x)) {
+    std::cout << "grad value (cached) " << _grad[icoord] << std::endl;
     return _grad[icoord];
   }
   // if not, set the _grad_params to the current input parameters
@@ -669,8 +671,13 @@ double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int icoord) c
   // Except when the derivative itself calls DoEval where the counter is already updated!
 //  _evalCounter += 2;
 
-  cout << "grad value " << _grad[icoord];
+  std::cout << "grad value " << _grad[icoord] << std::endl;
   return _grad[icoord];
+}
+
+
+void RooGradMinimizerFcn::SetVerbose(Bool_t flag) {
+  _verbose = flag;
 }
 
 

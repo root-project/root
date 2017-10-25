@@ -174,6 +174,18 @@ Int_t RooGradMinimizer::migrad()
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Change the MINUIT internal printing level
+
+Int_t RooGradMinimizer::setPrintLevel(Int_t newLevel)
+{
+  Int_t ret = _printLevel ;
+  _theFitter->Config().MinimizerOptions().SetPrintLevel(newLevel+1);
+  _printLevel = newLevel+1 ;
+  return ret ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// If flag is true, perform constant term optimization on
 /// function being minimized.
 
@@ -240,5 +252,11 @@ const ROOT::Fit::Fitter* RooGradMinimizer::fitter() const
   return _theFitter ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+void RooGradMinimizer::setVerbose(Bool_t flag) {
+  _verbose = flag;
+  fitterFcn()->SetVerbose(flag);
+}
 
 

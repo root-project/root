@@ -45,6 +45,9 @@ public:
 
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
   enum PrintLevel { None=-1, Reduced=0, Normal=1, ExtraForProblem=2, Maximum=3 } ;
+
+  Int_t setPrintLevel(Int_t newLevel);
+
   void optimizeConst(Int_t flag) ;
 
   RooFitResult* fit(const char* options) ;
@@ -65,7 +68,9 @@ public:
 
   ROOT::Fit::Fitter* fitter() ;
   const ROOT::Fit::Fitter* fitter() const ;
-  
+
+  void setVerbose(Bool_t flag=kTRUE);
+
 protected:
 
   friend class RooAbsPdf ;

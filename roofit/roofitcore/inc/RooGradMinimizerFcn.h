@@ -58,7 +58,7 @@ class RooGradMinimizerFcn : public ROOT::Math::IMultiGradFunction {
   void SetPrintEvalErrors(Int_t numEvalErrors) { _printEvalErrors = numEvalErrors ; }
   Bool_t SetLogFile(const char* inLogfile);
   std::ofstream* GetLogFile() { return _logfile; }
-  void SetVerbose(Bool_t flag=kTRUE) { _verbose = flag ; }
+  void SetVerbose(Bool_t flag=kTRUE);
 
   Double_t& GetMaxFCN() { return _maxFCN; }
   Int_t GetNumInvalidNLL() { return _numBadNLL; }
