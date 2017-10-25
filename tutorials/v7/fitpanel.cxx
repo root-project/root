@@ -38,7 +38,8 @@ void fitpanel0() {
 
 
   auto panel = std::make_shared<ROOT::Experimental::TFitPanel>("FitPanel Title");
-  panel->Show("opera");
+  // panel->Show("opera");
+  panel->Show();
 
   // Register the histogram with ROOT: now it lives even after draw() ends.
   Experimental::TDirectory::Heap().Add("fitpanel", panel);
@@ -69,7 +70,8 @@ void fitpanel() {
    auto canvas = Experimental::TCanvas::Create("Canvas Title");
    canvas->Draw(pHist).SetLineColor(Experimental::TColor::kRed);
 
-   canvas->Show("opera");
+   // canvas->Show("opera");
+   canvas->Show();
 
    canvas->Update(); // need to ensure canvas is drawn
 

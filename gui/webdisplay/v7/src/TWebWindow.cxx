@@ -276,6 +276,7 @@ std::string ROOT::Experimental::TWebWindow::RelativeAddr(std::shared_ptr<TWebWin
 
    std::string res("../");
    res.append(win->fWSHandler->GetName());
+   res.append("/");
    return res;
 }
 

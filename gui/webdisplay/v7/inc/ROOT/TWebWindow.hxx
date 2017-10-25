@@ -50,7 +50,6 @@ private:
       int            fRecvCount{0};          ///<! number of received packets, should return back with next sending
       int            fSendCredits{0};        ///<! how many send operation can be performed without confirmation from other side
       int            fClientCredits{0};      ///<! last received information about credits on client side, helps to resubmit credits back to client
-      unsigned       fNewChannelCnt{2};      ///<! counter of new channels, starts from 2
       std::list<std::string> fQueue{};       ///<! small output queue for data which should be send via the connection (including channel)
       WebWindowDataCallback_t fCallBack{};   ///<! additional data callback for extra channels
       WebConn() = default;
