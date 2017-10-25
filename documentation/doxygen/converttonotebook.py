@@ -766,12 +766,14 @@ def mainfunction(text):
         json.dump(json_data, fout, indent=1, sort_keys=True)
 
     print(time.time() - starttime)
-    timeout = 2*findTimeout()
+    timeout = findTimeout()
 
     # Call commmand that executes the notebook and creates a new notebook with the output
     r = subprocess.call(["jupyter", "nbconvert", "--ExecutePreprocessor.timeout=%d" % timeout,  "--to=notebook", "--execute",  outPathName])
     if r != 0:
         sys.stderr.write("NOTEBOOK_CONVERSION_WARNING: Nbconvert failed for notebook %s with return code %s\n" %(outname,r))
+        # If notebook conversion did not work, try again without the option --execute
+        subprocess.call(["jupyter", "nbconvert", "--ExecutePreprocessor.timeout=%d" % timeout,  "--to=notebook",  outPathName])
     else:
         if isJsroot:
             subprocess.call(["jupyter", "trust",  os.path.join(outdir, outnameconverted)])
