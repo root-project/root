@@ -273,10 +273,15 @@ static int is_valid_header_lz4(unsigned char *src)
    return src[0] == 'L' && src[1] == '4';
 }
 
+static int is_valid_header_zstd(unsigned char *src)
+{
+   return src[0] == 'Z' && src[1] == 'S' && src[2] == '\1';
+}
+
 static int is_valid_header(unsigned char *src)
 {
    return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) ||
-          is_valid_header_lz4(src);
+          is_valid_header_lz4(src) || is_valid_header_zstd(src);
 }
 
 int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
@@ -289,7 +294,7 @@ int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
 
   /*   C H E C K   H E A D E R   */
   if (!is_valid_header(src)) {
-     fprintf(stderr, "Error R__unzip_header: error in header.  Values: %x%x\n", src[0], src[1]);
+     fprintf(stderr, "Error R__unzip_header: error in header.  Values: %c%c\n", src[0], src[1]);
      return 1;
   }
 
@@ -358,7 +363,7 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
 
   /*   D E C O M P R E S S   D A T A  */
 
-  /* ZLIB and other standard compression algorithms */
+  /* New zlib format */
   if (is_valid_header_zlib(src)) {
      R__unzipZLIB(srcsize, src, tgtsize, tgt, irep);
      return;
@@ -367,6 +372,13 @@ void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
      return;
   } else if (is_valid_header_lz4(src)) {
      R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
+     return;
+  } else if (is_valid_header_zstd(src)) {
+     ROOT::Internal::ZSTDDecompressionEngine zstd;
+     zstd.SetTarget(tgt, *tgtsize);
+     int retval = zstd.Stream(src, *srcsize);
+     if (retval < 0) retval = 0;
+     *irep = retval;
      return;
   }
 
