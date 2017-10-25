@@ -117,6 +117,7 @@ When most solids or volumes are added to the geometry they
 #include "TGDMLParse.h"
 #include <stdlib.h>
 #include <string>
+#include <locale>
 
 ClassImp(TGDMLParse);
 
