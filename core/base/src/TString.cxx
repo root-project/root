@@ -2274,9 +2274,9 @@ TObjArray *TString::Tokenize(const TString &delim) const
    start = -1;
    std::list<Int_t>::const_iterator it;
 #ifndef R__HPUX
-   for (it = splitIndex.begin(); it != splitIndex.end(); it++) {
+   for (it = splitIndex.begin(); it != splitIndex.end(); ++it) {
 #else
-   for (it = splitIndex.begin(); it != (std::list<Int_t>::const_iterator) splitIndex.end(); it++) {
+   for (it = splitIndex.begin(); it != (std::list<Int_t>::const_iterator) splitIndex.end(); ++it) {
 #endif
       Int_t stop = *it;
       if (stop - 1 >= start + 1) {

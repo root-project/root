@@ -905,7 +905,7 @@ void TGeoManager::ClearNavigators()
    if (fMultiThread) fgMutex.lock();
    TGeoNavigatorArray *arr = 0;
    for (NavigatorsMap_t::iterator it = fNavigators.begin();
-        it != fNavigators.end(); it++) {
+        it != fNavigators.end(); ++it) {
       arr = (*it).second;
       if (arr) delete arr;
    }

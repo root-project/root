@@ -625,7 +625,7 @@ XMLNodePointer_t TGDMLWrite::CreateElementN(TGeoElement * element, XMLNodePointe
          fGdmlE->AddChild(materials, isoNode);
       }
       //loop through asoc array of isotopes
-      for (NameListI::iterator itr = wCounter.begin(); itr != wCounter.end(); itr++) {
+      for (NameListI::iterator itr = wCounter.begin(); itr != wCounter.end(); ++itr) {
          if (itr->second > 1) {
             Info("CreateMixtureN", "WARNING! 2 equal isotopes in one element. Check: %s isotope of %s element",
                  itr->first.Data(), name);
@@ -686,7 +686,7 @@ XMLNodePointer_t TGDMLWrite::CreateMixtureN(TGeoMixture * mixture, XMLNodePointe
       fGdmlE->AddChild(materials, elmNode);
    }
    //loop through asoc array
-   for (NameListI::iterator itr = wCounter.begin(); itr != wCounter.end(); itr++) {
+   for (NameListI::iterator itr = wCounter.begin(); itr != wCounter.end(); ++itr) {
       if (itr->second > 1) {
          Info("CreateMixtureN", "WARNING! 2 equal elements in one material. Check: %s element of %s material",
               itr->first.Data(), mname.Data());
