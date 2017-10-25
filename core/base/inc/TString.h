@@ -784,12 +784,12 @@ inline Bool_t operator!=(const char *s1, const TSubString &s2)
 
 #ifndef WIN32
 // To avoid ambiguities.
-inline Bool_t operator==(const char *s1, std::string_view &s2)
+inline Bool_t operator==(const char *s1, const std::string_view &s2)
 {
   return std::string_view(s1) == s2;
 }
 
-inline Bool_t operator==(std::string_view &s1, const char *s2)
+inline Bool_t operator==(const std::string_view &s1, const char *s2)
 {
   return s1 == std::string_view(s2);
 }
