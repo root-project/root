@@ -39,11 +39,10 @@ class ClassificationResult : public TObject {
    friend class Classification;
 
 private:
-   OptionMap fMethod;       //
-   TString fDataLoaderName; //
-   Bool_t fMulticlass;      //
-   std::map<UInt_t, std::vector<std::tuple<Float_t, Float_t, Bool_t>>>
-      fMvaTrain; // Mvas for two-class classification
+   OptionMap fMethod;                                                             //
+   TString fDataLoaderName;                                                       //
+   Bool_t fMulticlass;                                                            //
+   std::map<UInt_t, std::vector<std::tuple<Float_t, Float_t, Bool_t>>> fMvaTrain; // Mvas for two-class classification
    std::map<UInt_t, std::vector<std::tuple<Float_t, Float_t, Bool_t>>>
       fMvaTest;                      // Mvas for two-class and multiclass classification
    std::vector<TString> fClassNames; //
@@ -70,11 +69,11 @@ public:
 };
 
 class Classification : public Envelope {
-   std::vector<ClassificationResult> fResults;   //!
-   std::vector<IMethod *> fIMethods;             //! vector of objects with booked methods
-   Types::EAnalysisType fAnalysisType;           //!
-   Bool_t fCorrelations;                         //!
-   Bool_t fROC;                                  //!
+   std::vector<ClassificationResult> fResults; //!
+   std::vector<IMethod *> fIMethods;           //! vector of objects with booked methods
+   Types::EAnalysisType fAnalysisType;         //!
+   Bool_t fCorrelations;                       //!
+   Bool_t fROC;                                //!
 public:
    explicit Classification(DataLoader *loader, TFile *file, TString options);
    explicit Classification(DataLoader *loader, TString options);
