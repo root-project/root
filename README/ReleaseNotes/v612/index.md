@@ -191,6 +191,13 @@ large TClonesArray where each element contains another small vector container.
   - As more and more people are using `TGraph2D` for random cloud of points, the default
     drawing option implying Delaunay triangulation was not appropriate. The default
     drawing option is now change to `P0`.
+  - It is now possible to set the value of `MaxDigits` on individual axis as
+    requested [here](https://sft.its.cern.ch/jira/browse/ROOT-35).
+    For example, to accept 6 digits number like 900000 on the X axis of the
+    histogram `h` call:
+```{.cpp}
+    h->GetXaxis()->SetMaxDigits(6);
+```
 
 ## 3D Graphics Libraries
 
