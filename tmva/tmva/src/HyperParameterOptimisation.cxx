@@ -29,21 +29,25 @@
 
 */
 
+//_______________________________________________________________________
 TMVA::HyperParameterOptimisationResult::HyperParameterOptimisationResult()
    : fROCAVG(0.0), fROCCurves(std::make_shared<TMultiGraph>())
 {
 }
 
+//_______________________________________________________________________
 TMVA::HyperParameterOptimisationResult::~HyperParameterOptimisationResult()
 {
 }
 
+//_______________________________________________________________________
 TMultiGraph *TMVA::HyperParameterOptimisationResult::GetROCCurves(Bool_t /* fLegend */)
 {
 
     return fROCCurves.get();
 }
 
+//_______________________________________________________________________
 void TMVA::HyperParameterOptimisationResult::Print() const
 {
     TMVA::MsgLogger::EnableOutput();
@@ -64,6 +68,7 @@ void TMVA::HyperParameterOptimisationResult::Print() const
 
 }
 
+//_______________________________________________________________________
 TMVA::HyperParameterOptimisation::HyperParameterOptimisation(TMVA::DataLoader *dataloader):Envelope("HyperParameterOptimisation",dataloader),
     fFomType("Separation"),
     fFitType("Minuit"),
@@ -74,11 +79,13 @@ TMVA::HyperParameterOptimisation::HyperParameterOptimisation(TMVA::DataLoader *d
     fFoldStatus=kFALSE;
 }
 
+//_______________________________________________________________________
 TMVA::HyperParameterOptimisation::~HyperParameterOptimisation()
 {
     fClassifier=nullptr;
 }
 
+//_______________________________________________________________________
 void TMVA::HyperParameterOptimisation::SetNumFolds(UInt_t i)
 {
     fNumFolds=i;
@@ -86,39 +93,40 @@ void TMVA::HyperParameterOptimisation::SetNumFolds(UInt_t i)
     fFoldStatus=kTRUE;
 }
 
+//_______________________________________________________________________
 void TMVA::HyperParameterOptimisation::Evaluate()
 {
-    TString methodName    = fMethod.GetValue<TString>("MethodName");
-    TString methodTitle   = fMethod.GetValue<TString>("MethodTitle");
-    TString methodOptions = fMethod.GetValue<TString>("MethodOptions");
+   for (auto &meth : fMethods) {
 
-    if(!fFoldStatus)
-    {
-        fDataLoader->MakeKFoldDataSet(fNumFolds);
-        fFoldStatus=kTRUE;
-    }
-    fResults.fMethodName = methodName;
+      TString methodName = meth.GetValue<TString>("MethodName");
+      TString methodTitle = meth.GetValue<TString>("MethodTitle");
+      TString methodOptions = meth.GetValue<TString>("MethodOptions");
 
-    for(UInt_t i = 0; i < fNumFolds; ++i) {
+      if (!fFoldStatus) {
+         fDataLoader->MakeKFoldDataSet(fNumFolds);
+         fFoldStatus = kTRUE;
+      }
+      fResults.fMethodName = methodName;
 
-        TString foldTitle = methodTitle;
-        foldTitle += "_opt";
-        foldTitle += i+1;
+      for (UInt_t i = 0; i < fNumFolds; ++i) {
 
-        Event::SetIsTraining(kTRUE);
-        fDataLoader->PrepareFoldDataSet(i, TMVA::Types::kTraining);
+         TString foldTitle = methodTitle;
+         foldTitle += "_opt";
+         foldTitle += i + 1;
 
-        auto smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
+         Event::SetIsTraining(kTRUE);
+         fDataLoader->PrepareFoldDataSet(i, TMVA::Types::kTraining);
 
-        auto params=smethod->OptimizeTuningParameters(fFomType,fFitType);
-        fResults.fFoldParameters.push_back(params);
+         auto smethod = fClassifier->BookMethod(fDataLoader.get(), methodName, methodTitle, methodOptions);
 
-        smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
+         auto params = smethod->OptimizeTuningParameters(fFomType, fFitType);
+         fResults.fFoldParameters.push_back(params);
 
-        fClassifier->DeleteAllMethods();
+         smethod->Data()->DeleteResults(smethod->GetMethodName(), Types::kTraining, Types::kClassification);
 
-        fClassifier->fMethodsMap.clear();
+         fClassifier->DeleteAllMethods();
 
-    }
-
+         fClassifier->fMethodsMap.clear();
+      }
+   }
 }

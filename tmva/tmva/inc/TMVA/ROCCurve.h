@@ -47,6 +47,8 @@ class MsgLogger;
 class ROCCurve {
 
 public:
+   ROCCurve(const std::vector<std::tuple<Float_t, Float_t, Bool_t>> &mvas);
+
    ROCCurve(const std::vector<Float_t> &mvaValues, const std::vector<Bool_t> &mvaTargets,
             const std::vector<Float_t> &mvaWeights);
 
@@ -64,9 +66,10 @@ public:
    Double_t GetROCIntegral(const UInt_t points = 41);
    TGraph *GetROCCurve(const UInt_t points = 100); // n divisions = #points -1
 
+   const std::vector<std::tuple<Float_t, Float_t, Bool_t>> GetMvas() const { return fMva; }
 private:
    mutable MsgLogger *fLogger; //! message logger
-   MsgLogger &Log() const { return *fLogger; }
+   MsgLogger &Log() const;
 
    TGraph *fGraph;
 
