@@ -42,6 +42,16 @@
 
    THistPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
 
+   // function ensure that frame is drawn on the canvas
+   THistPainter.prototype.PrepareFrame = function(divid) {
+      this.SetDivId(divid, -1);
+
+      if (!this.frame_painter())
+         JSROOT.v7.drawFrame(divid, null);
+
+      this.SetDivId(divid);
+   }
+
    THistPainter.prototype.GetHisto = function() {
       var obj = this.GetObject(), histo = null;
       if (obj && obj.fHistImpl)
@@ -1714,7 +1724,7 @@
       // create painter and add it to canvas
       var painter = new TH1Painter(histo);
 
-      painter.SetDivId(divid);
+      painter.PrepareFrame(divid);
 
       painter.options = { Hist: 1, Bar: 0, Error: 0, errorX: 0, Zero: 0, Mark: 0, Line: 0, Text: 0, Lego: 0, Surf: 0,
                           fBarOffset: 0, fBarWidth: 1000, fMarkerSize: 1, BaseLine: false };
@@ -3563,7 +3573,7 @@
       // create painter and add it to canvas
       var painter = new TH2Painter(obj);
 
-      painter.SetDivId(divid);
+      painter.PrepareFrame(divid);
 
       painter.options = { Hist: 0, Bar: 0, Error: 0, errorX: 0, Zero: 0, Mark: 0, Line: 0, Text: 1, Lego: 0, Surf: 0,
                           fBarOffset: 0, fBarWidth: 1000, BaseLine: false,

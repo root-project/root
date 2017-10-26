@@ -1435,6 +1435,9 @@
       delete this.cefid;
    }
 
+   // ========================================================================================
+
+
    // client communication handle for TWebWindow
 
    function WebWindowHandle(socket_kind) {
@@ -1454,6 +1457,11 @@
    WebWindowHandle.prototype.Cleanup = function() {
       delete this.receiver;
       this.Close(true);
+   }
+
+   WebWindowHandle.prototype.InvokeReceiver = function(method, arg) {
+      if (this.receiver && (typeof this.receiver[method] == 'function'))
+         this.receiver[method](this, arg);
    }
 
    WebWindowHandle.prototype.Close = function(force) {
@@ -1494,6 +1502,16 @@
       this.Send("KEEPALIVE", 0);
    }
 
+   /// method opens relative path with the same kind of socket
+   WebWindowHandle.prototype.CreateRelative = function(relative) {
+      if (!relative || !this.kind || !this.href) return null;
+
+      var handle = new WebWindowHandle(this.kind);
+      console.log('Try to connect ', this.href + relative);
+      handle.Connect(this.href + relative);
+      return handle;
+   }
+
    WebWindowHandle.prototype.Connect = function(href) {
       // create websocket for current object (canvas)
       // via websocket one recieved many extra information
@@ -1515,6 +1533,7 @@
 
          if (path && path.lastIndexOf("/")>0) path = path.substr(0, path.lastIndexOf("/")+1);
          if (!href) href = path;
+         pthis.href = href;
 
          console.log('Opening web socket at ' + href);
 
@@ -1541,8 +1560,7 @@
             console.log('websocket initialized');
             pthis.state = 1;
             pthis.Send("READY", 0); // need to confirm connection
-            if (pthis.receiver && typeof pthis.receiver.OnWebsocketOpened == 'function')
-               pthis.receiver.OnWebsocketOpened(pthis);
+            pthis.InvokeReceiver('OnWebsocketOpened');
          }
 
          conn.onmessage = function(e) {
@@ -1567,11 +1585,11 @@
                console.log('GET chid=0 message', msg);
                if (msg == "CLOSE") {
                   pthis.Close(true); // force closing of socket
-                  if (pthis.receiver && typeof pthis.receiver.OnWebsocketClosed == 'function')
-                     pthis.receiver.OnWebsocketClosed(pthis);
+                  pthis.InvokeReceiver('OnWebsocketClosed');
                }
-            } else if (pthis.receiver && typeof pthis.receiver.OnWebsocketMsg == 'function')
-               pthis.receiver.OnWebsocketMsg(pthis, msg);
+            } else {
+               pthis.InvokeReceiver('OnWebsocketMsg', msg);
+            }
 
             if (pthis.ackn > 7)
                pthis.Send('READY', 0); // send dummy message to server
@@ -1582,15 +1600,13 @@
             if (pthis.state > 0) {
                console.log('websocket closed');
                pthis.state = 0;
-               if (pthis.receiver && typeof pthis.receiver.OnWebsocketClosed == 'function')
-                  pthis.receiver.OnWebsocketClosed(pthis);
+               pthis.InvokeReceiver('OnWebsocketClosed');
             }
          }
 
          conn.onerror = function (err) {
             console.log("err "+err);
-            if (pthis.receiver && typeof pthis.receiver.OnWebsocketError == 'function')
-               pthis.receiver.OnWebsocketError(pthis, err);
+            pthis.InvokeReceiver('OnWebsocketError', err);
          }
 
          setTimeout(retry_open, 3000); // after 3 seconds try again
