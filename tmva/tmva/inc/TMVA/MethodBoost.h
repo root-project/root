@@ -52,8 +52,13 @@ namespace TMVA {
    class Factory;  // DSMTEST
    class Reader;   // DSMTEST
    class DataSetManager;  // DSMTEST
-
+   namespace Experimental {
+   class Classification;
+   }
    class MethodBoost : public MethodCompositeBase {
+      friend class Factory; // DSMTEST
+      friend class Reader;  // DSMTEST
+      friend class Experimental::Classification;
 
    public :
 
@@ -186,9 +191,6 @@ namespace TMVA {
       std::vector<Float_t> *fMVAvalues;       // mva values for the last trained method
 
       DataSetManager*    fDataSetManager;     // DSMTEST
-      friend class Factory;                   // DSMTEST
-      friend class Reader;                    // DSMTEST      
-
       TString fHistoricOption;    //historic variable, only needed for "CompatibilityOptions" 
       Bool_t fHistoricBoolOption; //historic variable, only needed for "CompatibilityOptions" 
 

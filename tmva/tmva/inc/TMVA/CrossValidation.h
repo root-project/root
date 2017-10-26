@@ -28,6 +28,18 @@
 
 #include <TMVA/Envelope.h>
 
+/*! \class TMVA::CrossValidationResult
+ * Class to save the results of cross validation,
+ * the metric for the classification ins ROC and you can ROC curves
+ * ROC integrals, ROC average and ROC standard deviation.
+\ingroup TMVA
+*/
+
+/*! \class TMVA::CrossValidation
+ * Class to perform cross validation, splitting the dataloader into folds.
+\ingroup TMVA
+*/
+
 namespace TMVA {
 
    class CrossValidationResult {
@@ -73,9 +85,9 @@ namespace TMVA {
 
 
    class CrossValidation : public Envelope {
-      UInt_t                 fNumFolds;     //!
-      CrossValidationResult  fResults;      //!
-      Bool_t                 fFoldStatus;   //!
+      UInt_t fNumFolds;                            //!
+      std::vector<CrossValidationResult> fResults; //!
+      Bool_t fFoldStatus;                          //!
    public:
       explicit CrossValidation(DataLoader *loader);
       ~CrossValidation();
@@ -86,7 +98,7 @@ namespace TMVA {
       virtual void Evaluate();
 //    void EvaluateFold(UInt_t fold);//used in ParallelExecution
 
-      const CrossValidationResult& GetResults() const;
+      const std::vector<CrossValidationResult> &GetResults() const;
 
    private:
       std::unique_ptr<Factory> fClassifier;

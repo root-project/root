@@ -53,6 +53,7 @@ namespace TMVA {
    class DataSetManager;
    class VariableTransformBase;
    class VarTransformHandler;
+   class Classification;
 
    class DataLoader : public Configurable {
       friend class Factory;
