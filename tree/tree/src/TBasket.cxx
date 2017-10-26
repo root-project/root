@@ -600,6 +600,8 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
       Int_t nin, nbuf;
       Int_t nout = 0, noutot = 0, nintot = 0;
 
+      auto engine = fBranch->GetDecompressionEngine();
+
       // Unzip all the compressed objects in the compressed object buffer.
       while (1) {
          // Check the header for errors.
@@ -613,7 +615,13 @@ Int_t TBasket::ReadBasketBuffers(Long64_t pos, Int_t len, TFile *file)
             goto AfterBuffer;
          }
 
-         R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout);
+         if (engine) {
+            engine->SetTarget(rawUncompressedObjectBuffer, nbuf);
+            nout = engine->StreamFull(rawCompressedObjectBuffer, nin);
+            if (nout < 0) nout = 0;
+         } else {
+            R__unzip(&nin, rawCompressedObjectBuffer, &nbuf, (unsigned char*) rawUncompressedObjectBuffer, &nout);
+         }
          if (!nout) break;
          noutot += nout;
          nintot += nin;
@@ -1162,8 +1170,8 @@ Int_t TBasket::WriteBuffer()
          // USE_IMT is defined, we are guaranteed that the compression buffer is unique per-branch.
          // (see fCompressedBufferRef in constructor).
          if (engine) {
-            engine->SetTarget(objbuf, bufmax);
-            nout = engine->StreamFull(bufcur, bufmax);
+            engine->SetTarget(bufcur, bufmax);
+            nout = engine->StreamFull(objbuf, bufmax);
             if (nout < 0) nout = 0;
          } else {
             R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, static_cast<ROOT::ECompressionAlgorithm>(cxAlgorithm));
