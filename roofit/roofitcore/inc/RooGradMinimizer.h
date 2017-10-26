@@ -59,6 +59,8 @@ public:
 
   Int_t minimize(const char* type, const char* alg=0) ;
 
+  void setMinimizerType(const char* type);
+
   static void cleanup() ;
 
   void saveStatus(const char* label, Int_t status) { _statusHistory.push_back(std::pair<std::string,int>(label,status)) ; }
@@ -84,21 +86,21 @@ protected:
 
 private:
 
-  Int_t       _printLevel ;
+  Int_t       _printLevel = 1;
   Int_t       _status ;
-  Bool_t      _optConst ;
-  Bool_t      _profile ;
+  Bool_t      _optConst = kFALSE;
+  Bool_t      _profile = kFALSE;
   RooAbsReal* _func ;
 
-  Bool_t      _verbose ;
+  Bool_t      _verbose = kFALSE;
   TStopwatch  _timer ;
   TStopwatch  _cumulTimer ;
-  Bool_t      _profileStart ;
+  Bool_t      _profileStart = kFALSE;
 
-  TMatrixDSym* _extV ;
+  TMatrixDSym* _extV = 0;
 
   RooGradMinimizerFcn *_fcn;
-  std::string _minimizerType;
+  std::string _minimizerType = "Minuit2";
 
   static ROOT::Fit::Fitter *_theFitter ;
 

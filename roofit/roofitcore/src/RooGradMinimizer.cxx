@@ -103,14 +103,7 @@ RooGradMinimizer::RooGradMinimizer(RooAbsReal& function)
   RooSentinel::activate() ;
 
   // Store function reference
-  _extV = 0 ;
   _func = &function ;
-  _optConst = kFALSE ;
-  _verbose = kFALSE ;
-  _profile = kFALSE ;
-  _profileStart = kFALSE ;
-  _printLevel = 1 ;
-  _minimizerType = "Minuit"; // default minimizer
 
   if (_theFitter) delete _theFitter ;
   _theFitter = new ROOT::Fit::Fitter;
@@ -234,6 +227,15 @@ inline Double_t& RooGradMinimizer::maxFCN() { return fitterFcn()->GetMaxFCN() ; 
 
 const RooGradMinimizerFcn* RooGradMinimizer::fitterFcn() const {  return ( fitter()->GetFCN() ? (dynamic_cast<RooGradMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
 RooGradMinimizerFcn* RooGradMinimizer::fitterFcn() { return ( fitter()->GetFCN() ? (dynamic_cast<RooGradMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Choose the minimizer algorithm.
+
+void RooGradMinimizer::setMinimizerType(const char* type)
+{
+  _minimizerType = type;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return underlying ROOT fitter object

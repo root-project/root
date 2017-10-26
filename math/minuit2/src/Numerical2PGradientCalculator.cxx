@@ -73,9 +73,11 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    // calculate numerical gradient from MinimumParameters object
    // the algorithm takes correctly care when the gradient is approximatly zero
 
-   //    std::cout<<"########### Numerical2PDerivative"<<std::endl;
-   //    std::cout<<"initial grd: "<<Gradient.Grad()<<std::endl;
-   //    std::cout<<"position: "<<par.Vec()<<std::endl;
+   std::cout<<"\n\n########### Numerical2PDerivative : START"<<std::endl;
+   std::cout<<"grd: "<<Gradient.Grad()<<"\t";
+   std::cout<<"G2: "<<Gradient.G2()<<"\t";
+   std::cout<<"Gstep: "<<Gradient.Gstep()<<"\t";
+   std::cout<<"position: "<<par.Vec()<< std::endl<< std::endl;
 
    assert(par.IsValid());
 
@@ -230,6 +232,12 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    std::cout << "fcn(x) = " << fcnmin << std::endl;
    std::cout << "Computed gradient in N2PGC " << grd << std::endl;
 #endif
+
+   std::cout<<"\n\n########### Numerical2PDerivative : END"<<std::endl;
+   std::cout<<"grd: "<<Gradient.Grad()<<"\t";
+   std::cout<<"G2: "<<Gradient.G2()<<"\t";
+   std::cout<<"Gstep: "<<Gradient.Gstep()<<"\t";
+   std::cout<<"position: "<<par.Vec()<< std::endl<< std::endl;
 
    return FunctionGradient(grd, g2, gstep);
 }

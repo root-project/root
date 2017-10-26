@@ -161,12 +161,12 @@ void NumericalDerivatorMinuit2::SetInitialValues(const double* g, const double* 
 }
 
 std::vector<double> NumericalDerivatorMinuit2::Differentiate(const double* cx) {
-     std::cout <<"Start:" << std::endl;
-     for (unsigned int i = 0; i<fN; i++) {
-         std::cout << "fGrd[" << i <<"] = " << fGrd[i] << "\t";
-         std::cout << "fG2[" << i <<"] = " << fG2[i] << "\t";
-         std::cout << "fGstep[" << i <<"] = " << fGstep[i] << std::endl;
-      }
+    std::cout << std::endl << "Start:" << std::endl;
+    for (unsigned int i = 0; i<fN; i++) {
+      std::cout << "fGrd[" << i <<"] = " << fGrd[i] << "\t";
+      std::cout << "fG2[" << i <<"] = " << fG2[i] << "\t";
+      std::cout << "fGstep[" << i <<"] = " << fGstep[i] << std::endl;
+    }
     assert(fFunction != 0);
     std::vector<double> vx(fFunction->NDim());
     assert (vx.size() > 0);
@@ -252,12 +252,12 @@ std::vector<double> NumericalDerivatorMinuit2::Differentiate(const double* cx) {
        }
     }
     
-     std::cout <<"End:" << std::endl;
-     for (unsigned int i = 0; i<fN; i++) {
-         std::cout << "fGrd[" << i <<"] = " << fGrd[i] << "\t";
-         std::cout << "fG2[" << i <<"] = " << fG2[i] << "\t";
-         std::cout << "fGstep[" << i <<"] = " << fGstep[i] << std::endl;
-     }
+    std::cout << std::endl <<"End:" << std::endl;
+    for (unsigned int i = 0; i<fN; i++) {
+      std::cout << "fGrd[" << i <<"] = " << fGrd[i] << "\t";
+      std::cout << "fG2[" << i <<"] = " << fG2[i] << "\t";
+      std::cout << "fGstep[" << i <<"] = " << fGstep[i] << std::endl;
+    }
     
     return fGrd;
 }
