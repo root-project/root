@@ -4945,7 +4945,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
    // Don't load any rootmaps when we have are running in modules mode
    // because we don't want to rely on those forward declarations here.
    // This functionality is replaced by the 'link' attribute in the modulemap.
-   if (getenv("ROOT_MODULES")) return 0;
+   //if (getenv("ROOT_MODULES")) return 0;
 
    R__LOCKGUARD(gInterpreterMutex);
    // open the [system].rootmap files

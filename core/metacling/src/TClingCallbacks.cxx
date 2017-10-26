@@ -371,7 +371,7 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
      fIsAutoloadingRecursively = true;
 
      bool lookupSuccess = false;
-     if (SemaR.getLangOpts().Modules) {
+     if (false && SemaR.getLangOpts().Modules) {
         if (TCling__AutoParseCallback(Name.str().c_str())) {
            lookupSuccess = FE || SemaR.LookupName(R, S);
         }
