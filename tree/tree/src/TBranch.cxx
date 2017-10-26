@@ -1129,9 +1129,8 @@ Int_t TBranch::FlushBaskets()
             size_t trainingSize = 0;
             // TODO: check return values.
             fCompression->GetTraining(trainingBuffer, trainingSize);
-            fCompTraining.reset(new std::vector<char>);
-            fCompTraining->reserve(trainingSize);
-            memcpy(&(*fCompTraining)[0], trainingBuffer, trainingSize);
+            fCompTraining.resize(trainingSize);
+            memcpy(&fCompTraining[0], trainingBuffer, trainingSize);
          }
       }
    }
@@ -1321,6 +1320,33 @@ TList* TBranch::GetBrowsables() {
 const char * TBranch::GetClassName() const
 {
    return "";
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return a decompression engine associated with this branch, if any.
+///
+/// If null is returned, this branch will utilize a transient per-basket compression
+/// engine.
+
+ROOT::Internal::DecompressionEngine*
+TBranch::GetDecompressionEngine()
+{
+   if (fDecompression.get()) return fDecompression.get();
+
+   if (!fIOFeatures.Test(ROOT::Experimental::EIOFeatures::kCompressionTraining) ||
+       GetCompressionAlgorithm() != ROOT::ECompressionAlgorithm::kZSTD) {
+      return false;
+   }
+   // Compression training is not available until after the first event cluster.
+   if (fCompTraining.size() == 0) return false;
+
+   // Ok, we should utilize a decompression engine but one doesn't exist yet.
+   // Create it, using the dictionaries from the TBranch.
+   Printf("Decompression engine has %lu bytes of training.", fCompTraining.size());
+   // TODO: Check results of both of these.
+   fDecompression.reset(new ROOT::Internal::ZSTDDecompressionEngine());
+   fDecompression->SetTraining(&fCompTraining[0], fCompTraining.size());
+   return fDecompression.get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
