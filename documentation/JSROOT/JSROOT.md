@@ -44,6 +44,7 @@ To automate files loading and objects drawing, one can provide number of URL par
 - interactive - enable/disable interactive functions 0-disable all, 1-enable all
 - noselect - hide file-selection part in the browser (only when file name is specified)
 - mathjax - use MathJax for latex output
+- latex - 'off', 'symbols', 'normal', 'mathjax', 'alwaysmath' control of TLatex processor
 - style - name of TStyle object to define global JSROOT style
 - toolbar - show canvas tool buttons 'off', 'on' and 'popup'
 
@@ -87,6 +88,7 @@ List of supported classes and draw options:
 [*](https://root.cern/js/latest/examples.htm#th1_star),
 [l](https://root.cern/js/latest/examples.htm#th1_l),
 [lf2](https://root.cern/js/latest/examples.htm#th1_lf2),
+[a](https://root.cern/js/latest/examples.htm#th1_a),
 [e](https://root.cern/js/latest/examples.htm#th1_e),
 [e0](https://root.cern/js/latest/examples.htm#th1_e0),
 [e1](https://root.cern/js/latest/examples.htm#th1_e1),
@@ -139,7 +141,8 @@ List of supported classes and draw options:
 - TProfile2D : [example](https://root.cern/js/latest/examples.htm#misc_profile2d)
 - THStack : [example](https://root.cern/js/latest/examples.htm#thstack)
 - TF1 : [example](https://root.cern/js/latest/examples.htm#tf1_canv)
-- TF2 : [example](https://root.cern/js/latest/examples.htm#misc_tf2)
+- TF2 : [example](https://root.cern/js/latest/examples.htm#tf2_tf2)
+- TSpline : [example](https://root.cern/js/latest/examples.htm#misc_spline)
 - TGraph : [dflt](https://root.cern/js/latest/examples.htm#tgraph),
 [L](https://root.cern/js/latest/examples.htm#tgraph_l),
 [P](https://root.cern/js/latest/examples.htm#tgraph_p),
@@ -160,6 +163,7 @@ List of supported classes and draw options:
 [5](https://root.cern/js/latest/examples.htm#tgrapherrors_5),
 - TGraphAsymmErrors : [dflt](https://root.cern/js/latest/examples.htm#tgraphasymmerrors),
 [z](https://root.cern/js/latest/examples.htm#tgraphasymmerrors_z) and other from TGraphErrors
+- TGraphPolar : [example](https://root.cern/js/latest/examples.htm#tgraphpolar)
 - TMultiGraph : [example](https://root.cern/js/latest/examples.htm#tmultigraph_c3), [exclusion](https://root.cern/js/latest/examples.htm#tmultigraph_exclusion)
 - TGraph2D : [example](https://root.cern/js/latest/examples.htm#tgraph2d)
 - TLatex : [example](https://root.cern/js/latest/examples.htm#tlatex_latex)
@@ -519,7 +523,8 @@ Here, the default location of JSROOT is specified. One could have a local copy o
 
 In URL string with JSRootCore.js script one can specify which JSROOT functionality should be loaded:
 
-    + '2d' normal drawing for objects like TH1/TCanvas/TGraph
+    + '2d' basic drawing functionality, support TPad/TCanvas/TFrame
+    + 'hist' histograms drawing
     + 'more2d' more classes for 2D drawing like TH2/TF1/TEllipse
     + '3d' 3D drawing for 2D/3D histograms
     + 'geo' 3D drawing of TGeo classes
@@ -527,6 +532,7 @@ In URL string with JSRootCore.js script one can specify which JSROOT functionali
     + 'tree' TTree functionality
     + 'math' advanced mathemathical functions
     + 'mathjax' loads MathJax.js and use it for latex output
+    + 'openui5' load and configure OpenUI5 toolkit
     + 'gui' default gui for offline/online applications
     + 'load' name of user script(s) to load
     + 'onload' name of function to call when scripts loading completed
@@ -595,6 +601,13 @@ Here is complete [running example](https://root.cern/js/latest/api.htm#custom_ht
        JSROOT.draw("drawing", obj, "lego");
     }).send();
 
+In very seldom cases one need to access painter object, created in JSROOT.draw() function. This can be done via
+call back (forth argument) like: 
+
+    JSROOT.draw("drawing", obj, "colz", function(painter) {
+       console.log('Object type in painter', painter.GetObject()._typename);
+    });
+
 One is also able to update the drawing with a new version of the object:
 
     // after some interval request object again
@@ -618,7 +631,7 @@ To correctly cleanup JSROOT drawings from HTML element, one should call:
 
 ### File API
 
-JSROOT defines the JSROOT.TFile class, which can be used to access binary ROOT files.
+JSROOT defines the TFile class, which can be used to access binary ROOT files.
 One should always remember that all I/O operations are asynchronous in JSROOT.
 Therefore, callback functions are used to react when the I/O operation completed.
 For example, reading an object from a file and displaying it will look like:
@@ -747,3 +760,41 @@ create SVG output. For example, open create SVG image with lego plot, one should
         });
      });               
  
+
+### Use with OpenUI5
+
+[OpenUI5](http://openui5.org/) is  a web toolkit for developers to ease and speed up the development of full-blown HTML5 web applications. Since version 5.3.0 JSROOT provides possibility to use OpenUI5 functionality together with JSROOT.
+
+First problem is bootstraping of OpenUI5. Most easy solution - specify openui5 URL parameter when loading JSROOT:
+
+   
+      <script type="text/javascript" 
+              src="https://root.cern/js/latest/scripts/JSRootCore.min.js?openui5&onload=doInit">
+      </script>
+ 
+ JSROOT uses https://openui5.hana.ondemand.com to load latest stable version of OpenUI5. After loading is completed, 
+ specified initialization function will be called, where `JSROOT.sap` can be used as normal `sap` variable.
+ Simple way to start any custom application is:
+ 
+      <script type="text/javascript">
+         function doInit() {
+            jQuery.sap.registerModulePath("sap.m.sample.NavContainer", "./");
+            new JSROOT.sap.m.App ({
+              pages: [
+                new JSROOT.sap.m.Page({
+                  title: "Nav Container",
+                    enableScrolling : true,
+                    content: [ new sap.ui.core.ComponentContainer({
+                         name : "sap.m.sample.NavContainer"
+                    })]
+                })
+              ]
+            }).placeAt("content");
+         } 
+      </script>
+
+There are small details when using OpenUI5 with THttpServer. First of all, location of JSROOT scripts should be specified 
+as `jsrootsys/scripts/JSRootCore.js`. And when trying to access files from local disk, one should specify `/currentdir/` folder:
+
+    jQuery.sap.registerModulePath("sap.m.sample.NavContainer", "/currentdir/");
+    
