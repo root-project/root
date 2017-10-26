@@ -4537,6 +4537,7 @@ Pixmap_t TGWin32::ReadGIF(int x0, int y0, const char *file, Window_t id)
    if (fread(GIFarr, filesize, 1, fd) != 1) {
       fclose(fd);
       Error("ReadGIF", "GIF file read failed");
+      free(GIFarr);
       return pic;
    }
    fclose(fd);
