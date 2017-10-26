@@ -53,3 +53,4 @@ distclean::     distclean-$(MODNAME)
 
 # Optimize dictionary with stl containers.
 $(COREDO): NOOPT = $(OPT)
+$(CONTO):  CXXFLAGS += -I$(FOUNDATIONDIRR)

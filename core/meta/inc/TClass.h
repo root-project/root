@@ -124,14 +124,7 @@ public:
 
 private:
 
-   class TSpinLockGuard {
-      // Trivial spin lock guard
-   public:
-      TSpinLockGuard(std::atomic_flag& aflag);
-      ~TSpinLockGuard();
-   private:
-      std::atomic_flag& fAFlag;
-   };
+
 
    class TDeclNameRegistry {
       // A class which is used to collect decl names starting from normalised
