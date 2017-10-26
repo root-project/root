@@ -574,8 +574,7 @@ public:
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
    virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
 
-
-   ClassDef(TTree, 20)  //Tree descriptor (the main ROOT I/O class)
+   ClassDef(TTree, 20) // Tree descriptor (the main ROOT I/O class)
 };
 
 //////////////////////////////////////////////////////////////////////////
