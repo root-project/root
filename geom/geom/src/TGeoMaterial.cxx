@@ -265,10 +265,9 @@ TGeoMaterial::~TGeoMaterial()
 /// Connect user-defined extension to the material. The material "grabs" a copy, so
 /// the original object can be released by the producer. Release the previously
 /// connected extension if any.
-///==========================================================================
+///
 /// NOTE: This interface is intended for user extensions and is guaranteed not
 /// to be used by TGeo
-///==========================================================================
 
 void TGeoMaterial::SetUserExtension(TGeoExtension *ext)
 {
@@ -281,10 +280,9 @@ void TGeoMaterial::SetUserExtension(TGeoExtension *ext)
 /// Connect framework defined extension to the material. The material "grabs" a copy,
 /// so the original object can be released by the producer. Release the previously
 /// connected extension if any.
-///==========================================================================
+///
 /// NOTE: This interface is intended for the use by TGeo and the users should
 ///       NOT connect extensions using this method
-///==========================================================================
 
 void TGeoMaterial::SetFWExtension(TGeoExtension *ext)
 {

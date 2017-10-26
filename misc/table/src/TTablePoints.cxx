@@ -84,15 +84,12 @@ TTablePoints::TTablePoints(TTableSorter *sorter, Int_t keyIndex,Option_t *opt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*Compute distance from point px,py to a 3-D points *-*-*-*-*-*-*
-///*-*          =====================================================
-///*-*
-///*-*  Compute the closest distance of approach from point px,py to each segment
-///*-*  of the polyline.
-///*-*  Returns when the distance found is below DistanceMaximum.
-///*-*  The distance is computed in pixels units.
-///*-*
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Compute distance from point px,py to a 3-D points.
+///
+/// Compute the closest distance of approach from point px,py to each segment
+/// of the polyline.
+/// Returns when the distance found is below DistanceMaximum.
+/// The distance is computed in pixels units.
 
 Int_t TTablePoints::DistancetoPrimitive(Int_t /*px*/, Int_t /*py*/)
 {

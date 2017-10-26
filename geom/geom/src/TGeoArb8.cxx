@@ -23,15 +23,15 @@ ClassImp(TGeoArb8);
 /** \class TGeoArb8
 \ingroup Geometry_classes
 
-An arbitrary trapezoid with less than 8 vertices standing on.
-
-two paralel planes perpendicular to Z axis. Parameters :
+An arbitrary trapezoid with less than 8 vertices standing on
+two parallel planes perpendicular to Z axis. Parameters :
   - dz - half length in Z;
   - xy[8][2] - vector of (x,y) coordinates of vertices
      - first four points (xy[i][j], i<4, j<2) are the (x,y)
        coordinates of the vertices sitting on the -dz plane;
      - last four points (xy[i][j], i>=4, j<2) are the (x,y)
        coordinates of the vertices sitting on the +dz plane;
+
 The order of defining the vertices of an arb8 is the following :
   - point 0 is connected with points 1,3,4
   - point 1 is connected with points 0,2,5
@@ -41,6 +41,7 @@ The order of defining the vertices of an arb8 is the following :
   - point 5 is connected with points 1,4,6
   - point 6 is connected with points 2,5,7
   - point 7 is connected with points 3,4,6
+
 Points can be identical in order to create shapes with less than
 8 vertices.
 
@@ -139,7 +140,7 @@ End_Macro
 */
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Default ctor.
+/// Default constructor.
 
 TGeoArb8::TGeoArb8()
 {
@@ -203,7 +204,7 @@ TGeoArb8::TGeoArb8(const char *name, Double_t dz, Double_t *vertices)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///copy constructor
+/// Copy constructor.
 
 TGeoArb8::TGeoArb8(const TGeoArb8& ga8) :
   TGeoBBox(ga8),
@@ -217,7 +218,7 @@ TGeoArb8::TGeoArb8(const TGeoArb8& ga8) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///assignment operator
+/// Assignment operator.
 
 TGeoArb8& TGeoArb8::operator=(const TGeoArb8& ga8)
 {
@@ -451,7 +452,7 @@ Double_t TGeoArb8::GetClosestEdge(const Double_t *point, Double_t *vert, Int_t &
       }
    }
    isegment = isegmin;
-//   safe = TMath::Sqrt(safe);
+   // safe = TMath::Sqrt(safe);
    return umin;
 }
 
@@ -522,15 +523,15 @@ void TGeoArb8::ComputeNormal(const Double_t *point, const Double_t *dir, Double_
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Test if point is inside this shape.
-/// first check Z range
 
 Bool_t TGeoArb8::Contains(const Double_t *point) const
 {
+   // first check Z range
    if (TMath::Abs(point[2]) > fDz) return kFALSE;
    // compute intersection between Z plane containing point and the arb8
    Double_t poly[8];
-//   memset(&poly[0], 0, 8*sizeof(Double_t));
-   //SetPlaneVertices(point[2], &poly[0]);
+   // memset(&poly[0], 0, 8*sizeof(Double_t));
+   // SetPlaneVertices(point[2], &poly[0]);
    Double_t cf = 0.5*(fDz-point[2])/fDz;
    Int_t i;
    for (i=0; i<4; i++) {
@@ -847,12 +848,12 @@ Double_t TGeoArb8::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2
-///--- first compute rmin/rmax
 
 void TGeoArb8::GetBoundingCylinder(Double_t *param) const
 {
+   // first compute rmin/rmax
    Double_t rmaxsq = 0;
    Double_t rsq;
    Int_t i;
@@ -960,7 +961,7 @@ Bool_t TGeoArb8::GetPointsOnFacet(Int_t /*index*/, Int_t /*npoints*/, Double_t *
 /*
    if (index<0 || index>6) return kFALSE;
    if (index==0) {
-   // Just generate same number of points on each facet
+      // Just generate same number of points on each facet
       Int_t npts = npoints/6.;
       Int_t count = 0;
       for (Int_t ifacet=0; ifacet<6; ifacet++) {
@@ -1434,7 +1435,7 @@ TGeoTrap::TGeoTrap(const char *name, Double_t dz, Double_t theta, Double_t phi, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// destructor
+/// Destructor.
 
 TGeoTrap::~TGeoTrap()
 {
@@ -1446,13 +1447,13 @@ TGeoTrap::~TGeoTrap()
 Double_t TGeoTrap::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
    if (iact<3 && safe) {
-   // compute safe distance
+      // compute safe distance
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
    // compute distance to get outside this shape
-//   return TGeoArb8::DistFromInside(point, dir, iact, step, safe);
+   // return TGeoArb8::DistFromInside(point, dir, iact, step, safe);
 
 // compute distance to plane ipl :
 // ipl=0 : points 0,4,1,5
@@ -1499,12 +1500,12 @@ Double_t TGeoTrap::DistFromInside(const Double_t *point, const Double_t *dir, In
 Double_t TGeoTrap::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
    if (iact<3 && safe) {
-   // compute safe distance
+      // compute safe distance
       *safe = Safety(point, kFALSE);
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
    }
-// Check if the bounding box is crossed within the requested distance
+   // Check if the bounding box is crossed within the requested distance
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
    // compute distance to get outside this shape
@@ -1609,7 +1610,7 @@ Double_t TGeoTrap::DistFromOutside(const Double_t *point, const Double_t *dir, I
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Divide this trapezoid shape belonging to volume "voldiv" into ndiv volumes
+/// Divide this trapezoid shape belonging to volume "voldiv" into ndiv volumes
 /// called divname, from start position with the given step. Only Z divisions
 /// are supported. For Z divisions just return the pointer to the volume to be
 /// divided. In case a wrong division axis is supplied, returns pointer to
@@ -1703,7 +1704,7 @@ Double_t TGeoTrap::Safety(const Double_t *point, Bool_t in) const
    Double_t safe = TGeoShape::Big();
    Double_t saf[5];
    Double_t norm[3]; // normal to current facette
-   Int_t i,j;       // current facette index
+   Int_t i, j;       // current facette index
    Double_t x0, y0, z0=-fDz, x1, y1, z1=fDz, x2, y2;
    Double_t ax, ay, az=z1-z0, bx, by;
    Double_t fn;
@@ -1951,7 +1952,7 @@ TGeoGtra::~TGeoGtra()
 Double_t TGeoGtra::DistFromInside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
    if (iact<3 && safe) {
-   // compute safe distance
+      // compute safe distance
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();
@@ -1966,7 +1967,7 @@ Double_t TGeoGtra::DistFromInside(const Double_t *point, const Double_t *dir, In
 Double_t TGeoGtra::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
    if (iact<3 && safe) {
-   // compute safe distance
+      // compute safe distance
       *safe = Safety(point, kTRUE);
       if (iact==0) return TGeoShape::Big();
       if (iact==1 && step<*safe) return TGeoShape::Big();

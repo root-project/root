@@ -67,7 +67,7 @@ namespace {
 ClassImp(TRandom3);
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Default constructor
 /// If seed is 0, the seed is automatically computed via a TUUID object.
 /// In this case the seed is guaranteed to be unique in space and time.
 
@@ -79,8 +79,7 @@ TRandom3::TRandom3(UInt_t seed)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ==================
+/// Default destructor
 
 TRandom3::~TRandom3()
 {

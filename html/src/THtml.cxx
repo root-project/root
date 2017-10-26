@@ -2061,8 +2061,7 @@ const char* THtml::GetHtmlFileName(const char* classname) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*Return pointer to class with name*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*      =================================
+/// Return pointer to class with name.
 
 TClass *THtml::GetClass(const char *name1) const
 {
