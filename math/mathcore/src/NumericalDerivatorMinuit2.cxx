@@ -161,12 +161,12 @@ void NumericalDerivatorMinuit2::SetInitialValues(const double* g, const double* 
 }
 
 std::vector<double> NumericalDerivatorMinuit2::Differentiate(const double* cx) {
-    // std::cout <<"Start:" << std::endl;
-    // for (unsigned int i = 0; i<fN; i++) {
-    //     std::cout << "fGrd[" << i <<"] = " << fGrd[i] << std::endl;
-    //     //std::cout << "fG2[" << i <<"] = " << fG2[i] << std::endl;
-    //     std::cout << "fGstep[" << i <<"] = " << fGstep[i] << std::endl;
-    //  }
+     std::cout <<"Start:" << std::endl;
+     for (unsigned int i = 0; i<fN; i++) {
+         std::cout << "fGrd[" << i <<"] = " << fGrd[i] << "\t";
+         std::cout << "fG2[" << i <<"] = " << fG2[i] << "\t";
+         std::cout << "fGstep[" << i <<"] = " << fGstep[i] << std::endl;
+      }
     assert(fFunction != 0);
     std::vector<double> vx(fFunction->NDim());
     assert (vx.size() > 0);
@@ -184,19 +184,20 @@ std::vector<double> NumericalDerivatorMinuit2::Differentiate(const double* cx) {
     // _theFitter->GetMinimizer()->ErrorDef() in the initialization call.
     // const double Up = 1;
 
-    double dfmin = double(8.*eps2*(std::abs(fVal)+Up)); //had to cast to double, otherwise "statement has no effect"
+    // MODIFIED: two redundant double casts removed, for dfmin and for epspri
+    double dfmin = 8. * eps2 * (std::abs(fVal) + Up);
     double vrysml = 8.*eps*eps;
     unsigned int ncycle = fNCycles;
 
     for (int i = 0; i < int(fN); i++) {
 
-       double xtf=x[i]; //current value of coordinate x(i) (looping on i)
-       double epspri = eps2 + std::abs(double(fGrd[i]*eps2)); //had to cast to double because I am using std::abs instead of fabs
+       double xtf = x[i];
+       double epspri = eps2 + std::abs(fGrd[i] * eps2);
        double step_old = 0.;
        for (unsigned int j = 0; j < ncycle; ++ j) {
           
           double optstp = std::sqrt(dfmin/(std::abs(fG2[i])+epspri));
-          double step = std::max(optstp, std::abs(0.1*fGstep[i])); //had to cast to double again
+          double step = std::max(optstp, std::abs(0.1*fGstep[i]));
 
           // MODIFIED: in Minuit2 we have here the following condition:
           //   if(Trafo().Parameter(Trafo().ExtOfInt(i)).HasLimits()) {
@@ -251,12 +252,12 @@ std::vector<double> NumericalDerivatorMinuit2::Differentiate(const double* cx) {
        }
     }
     
-    // std::cout <<"End:" << std::endl;
-    // for (unsigned int i = 0; i<fN; i++) {
-    //     std::cout << "fGrd[" << i <<"] = " << fGrd[i] << std::endl;
-    //     //std::cout << "fG2[" << i <<"] = " << fG2[i] << std::endl;
-    //     std::cout << "fGstep[" << i <<"] = " << fGstep[i] << std::endl;
-    // }
+     std::cout <<"End:" << std::endl;
+     for (unsigned int i = 0; i<fN; i++) {
+         std::cout << "fGrd[" << i <<"] = " << fGrd[i] << "\t";
+         std::cout << "fG2[" << i <<"] = " << fG2[i] << "\t";
+         std::cout << "fGstep[" << i <<"] = " << fGstep[i] << std::endl;
+     }
     
     return fGrd;
 }
