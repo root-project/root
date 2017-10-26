@@ -2371,9 +2371,6 @@
       }
    }
 
-
-
-
    function drawFrame(divid, obj) {
       var p = new TFramePainter(obj);
       p.SetDivId(divid, 2);
@@ -3120,10 +3117,11 @@
          if (this.enlarge_main('verify'))
             this.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
 
-         var fp = drawFrame(this.divid, null);
+         var pthis = this;
 
          this.DrawNextSnap(snap.fPrimitives, 0, function() {
-            if (fp) fp.AddInteractive();
+            var fp = pthis.frame_painter();
+            if (fp) fp.AddInteractive(); // TODO: do it directly in the frame painter
             JSROOT.CallBack(call_back);
          });
 
@@ -3824,6 +3822,55 @@
             this.CreateImage(cmd.toLowerCase(), function(res) {
                handle.Send(reply + res);
             });
+         } else if (cmd.indexOf("ADDPANEL:") == 0) {
+            var relative_path = cmd.substr(9);
+            console.log('request panel = ' + relative_path);
+            if (!this.ActivatePanel) {
+               handle.Send(reply + "false");
+            } else {
+
+               var conn = new JSROOT.WebWindowHandle(handle.kind);
+
+               // set interim receiver until first message arrives
+               conn.SetReceiver({
+                  cpainter: this,
+
+                  OnWebsocketOpened: function(hhh) {
+                     console.log('Panel socket connected');
+                  },
+
+                  OnWebsocketMsg: function(panel_handle, msg) {
+
+                     var panel_name = (msg.indexOf("SHOWPANEL:")==0) ? msg.substr(10) : "";
+                     console.log('Panel get message ' + msg + " show " + panel_name);
+
+                     this.cpainter.ActivatePanel(panel_name, panel_handle, function(res) {
+                        handle.Send(reply + (res ? "true" : "false"));
+                     });
+                  },
+
+                  OnWebsocketClosed: function(hhh) {
+                     // if connection failed,
+                     handle.Send(reply + "false");
+                  },
+
+                  OnWebsocketError: function(hhh) {
+                     // if connection failed,
+                     handle.Send(reply + "false");
+                  }
+
+               });
+
+               var addr = handle.href;
+               if (relative_path.indexOf("../")==0) {
+                  var ddd = addr.lastIndexOf("/",addr.length-2);
+                  addr = addr.substr(0,ddd) + relative_path.substr(2);
+               } else {
+                  addr += relative_path;
+               }
+               // only when connection established, panel will be activated
+               conn.Connect(addr);
+            }
          } else {
             console.log('Unrecognized command ' + cmd);
             handle.Send(reply);
@@ -3917,8 +3964,10 @@
          painter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
 
       // if (nocanvas && opt.indexOf("noframe") < 0)
-      var fp = drawFrame(divid, null);
+      // var fp = drawFrame(divid, null);
+
       painter.DrawPrimitives(0, function() {
+         var fp = painter.frame_painter();
          if (fp) fp.AddInteractive();
          painter.DrawingReady();
       });
@@ -3928,6 +3977,7 @@
 
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::THistDrawable<1>", icon: "img_histo1d", prereq: "v7hist", func: "JSROOT.v7.drawHist1", opt: "" });
    JSROOT.addDrawFunc({ name: "ROOT::Experimental::THistDrawable<2>", icon: "img_histo2d", prereq: "v7hist", func: "JSROOT.v7.drawHist2", opt: "" });
+   JSROOT.addDrawFunc({ name: "ROOT::Experimental::TTextDrawable", icon: "img_text", prereq: "v7more", func: "JSROOT.v7.drawText", opt: "", direct: true });
 
 
    JSROOT.v7.TAxisPainter = TAxisPainter;
