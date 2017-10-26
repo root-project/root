@@ -94,6 +94,7 @@ TMVA::CrossValidation::CrossValidation(TMVA::DataLoader *dataloader):TMVA::Envel
 fNumFolds(5),fClassifier(new TMVA::Factory("CrossValidation","!V:!ROC:Silent:!ModelPersistence:!Color:!DrawProgressBar:AnalysisType=Classification"))
 {
    fFoldStatus=kFALSE;
+   ParseOptions();
 }
 
 //_______________________________________________________________________

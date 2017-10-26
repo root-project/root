@@ -44,6 +44,12 @@ auto tupleSort = [](std::tuple<Float_t, Float_t, Bool_t> _a, std::tuple<Float_t,
    return std::get<0>(_a) < std::get<0>(_b);
 };
 
+//_______________________________________________________________________
+TMVA::ROCCurve::ROCCurve(std::vector<std::tuple<Float_t, Float_t, Bool_t>> mvas)
+   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(NULL), fMva(mvas)
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
@@ -120,6 +126,13 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vecto
 TMVA::ROCCurve::~ROCCurve() {
    delete fLogger;
    if(fGraph) delete fGraph;
+}
+
+TMVA::MsgLogger &TMVA::ROCCurve::Log() const
+{
+   if (!fLogger)
+      fLogger = new TMVA::MsgLogger("ROCCurve");
+   return *fLogger;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

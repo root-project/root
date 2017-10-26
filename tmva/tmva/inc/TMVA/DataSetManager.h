@@ -47,8 +47,11 @@ namespace TMVA {
    class DataSetFactory; // DSMTEST
    class MsgLogger;
    class Factory;
+   class Envelop;
    class DataSetManager:public TObject {
       friend class Factory;
+      friend class Envelop;
+
    public:
 
       // private default constructor
