@@ -91,6 +91,8 @@ a 'using namespace std;' has been applied to and with:
 #include <vector>
 #include <memory>
 
+#include "TSpinLockGuard.h"
+
 #ifdef WIN32
 #include <io.h>
 #include "Windows4Root.h"
@@ -170,7 +172,7 @@ void TClass::TDeclNameRegistry::AddQualifiedName(const char *name)
    std::string s(beginCharPtr, endCharPtr);
    if (fVerbLevel>1)
       printf("TDeclNameRegistry::AddQualifiedName Adding key %s for class/namespace %s\n", s.c_str(), name);
-   TClass::TSpinLockGuard slg(fSpinLock);
+   ROOT::Internal::TSpinLockGuard slg(fSpinLock);
    fClassNamesSet.insert(s);
 }
 
@@ -180,7 +182,7 @@ Bool_t TClass::TDeclNameRegistry::HasDeclName(const char *name) const
 {
    Bool_t found = false;
    {
-      TClass::TSpinLockGuard slg(fSpinLock);
+      ROOT::Internal::TSpinLockGuard slg(fSpinLock);
       found = fClassNamesSet.find(name) != fClassNamesSet.end();
    }
    return found;
@@ -197,22 +199,6 @@ TClass::TDeclNameRegistry::~TDeclNameRegistry()
          printf(" - %s\n", key.c_str());
       }
    }
-}
-
-// Implementation of the spinlock guard in the registry
-
-////////////////////////////////////////////////////////////////////////////////
-
-TClass::TSpinLockGuard::TSpinLockGuard(std::atomic_flag& aflag):fAFlag(aflag)
-{
-   while (fAFlag.test_and_set(std::memory_order_acquire));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-TClass::TSpinLockGuard::~TSpinLockGuard()
-{
-   fAFlag.clear(std::memory_order_release);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
