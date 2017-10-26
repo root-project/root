@@ -18,8 +18,26 @@
 
 #include <ROOT/TWebWindow.hxx>
 
+#include <vector>
+
 namespace ROOT {
 namespace Experimental {
+
+struct ComboBoxItem {
+   std::string fId{};
+   std::string fName{};
+   ComboBoxItem() = default;
+   ComboBoxItem(const std::string &id, const std::string &name) : fId(id), fName(name) {}
+};
+
+struct TFitPanelModel {
+   std::vector<ComboBoxItem> fDataNames{};
+   std::string fSelectDataId{};
+   std::vector<ComboBoxItem> fModelNames{};
+   std::string fSelectModelId{};
+   TFitPanelModel() = default;
+};
+
 
 class TFitPanel  {
 

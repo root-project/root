@@ -19,7 +19,7 @@
 
 #include "TString.h"
 #include "TROOT.h"
-
+#include "TBufferJSON.h"
 
 std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TFitPanel::GetWindow()
 {
@@ -53,6 +53,22 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
       fConnId = connid;
       printf("Connection established %u\n", fConnId);
       fWindow->Send("INITDONE", fConnId);
+
+      TFitPanelModel model;
+      model.fDataNames.push_back(ComboBoxItem("1","RootData1"));
+      model.fDataNames.push_back(ComboBoxItem("2","RootData2"));
+      model.fDataNames.push_back(ComboBoxItem("3","RootData3"));
+      model.fSelectDataId = "1";
+
+      model.fModelNames.push_back(ComboBoxItem("1","RootModel1"));
+      model.fModelNames.push_back(ComboBoxItem("2","RootModel2"));
+      model.fModelNames.push_back(ComboBoxItem("3","RootModel3"));
+      model.fSelectModelId = "3";
+
+      TString json = TBufferJSON::ConvertToJSON(&model, gROOT->GetClass("ROOT::Experimental::TFitPanelModel"));
+
+      fWindow->Send(std::string("MODEL:") + json.Data(), fConnId);
+
       return;
    }
 
