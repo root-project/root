@@ -3536,7 +3536,7 @@ void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Test for shape navigation methods. Summary for test numbers:
-///  1: DistFromInside/Outside. Sample points inside the shape. Generate
+///  - 1: DistFromInside/Outside. Sample points inside the shape. Generate
 ///    directions randomly in cos(theta). Compute DistFromInside and move the
 ///    point with bigger distance. Compute DistFromOutside back from new point.
 ///    Plot d-(d1+d2)
@@ -3556,14 +3556,14 @@ void TGeoManager::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Opt
 ///  checked by user to get report, then TGeoVolume::CheckOverlaps(0.01, "s") can
 ///  be called for the suspicious volumes.
 ///
-/// STAGE2 : normal overlap checking using the shapes mesh - fills the list of
+/// STAGE 2: normal overlap checking using the shapes mesh - fills the list of
 ///  overlaps.
 ///
-/// STAGE3 : shooting NRAYS rays from VERTEX and counting the total number of
+/// STAGE 3: shooting NRAYS rays from VERTEX and counting the total number of
 ///  crossings per volume (rays propagated from boundary to boundary until
 ///  geometry exit). Timing computed and results stored in a histo.
 ///
-/// STAGE4 : shooting 1 mil. random rays inside EACH volume and calling
+/// STAGE 4: shooting 1 mil. random rays inside EACH volume and calling
 ///  FindNextBoundary() + Safety() for each call. The timing is normalized by the
 ///  number of crossings computed at stage 2 and presented as percentage.
 ///  One can get a picture on which are the most "burned" volumes during

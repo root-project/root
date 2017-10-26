@@ -446,7 +446,7 @@ void TGeoNodeCache::MasterToLocalBomb(const Double_t *master, Double_t *local) c
 
 ClassImp(TGeoCacheState);
 
-/** \class TGeoCacheState -
+/** \class TGeoCacheState
 \ingroup Geometry_classes
 
 Class storing the state of the cache at a given moment

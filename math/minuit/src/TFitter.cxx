@@ -31,8 +31,7 @@ extern void F3Fit(Int_t &npar, Double_t *gin, Double_t &f, Double_t *u, Int_t fl
 ClassImp(TFitter);
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ===================
+/// Default constructor
 
 TFitter::TFitter(Int_t maxpar)
 {
@@ -44,8 +43,7 @@ TFitter::TFitter(Int_t maxpar)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ==================
+/// Default destructor
 
 TFitter::~TFitter()
 {

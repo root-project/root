@@ -35,7 +35,7 @@
 // ROOT
 #include "Rtypes.h"
 
-/*! \class TMVA::kNN:Node
+/*! \class TMVA::kNN::Node
 \ingroup TMVA
 This file contains binary tree and global function template
 that searches tree for k-nearest neigbors

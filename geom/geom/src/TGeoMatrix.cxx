@@ -612,7 +612,7 @@ void TGeoMatrix::SetDefaultName()
    SetName(name);
 }
 
-/** \class TGeoTranslation -
+/** \class TGeoTranslation
 \ingroup Geometry_classes
 
 Class describing translations. A translation is
@@ -993,8 +993,8 @@ void TGeoRotation::FastRotZ(const Double_t *sincos)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Returns rotation angle about Z axis in degrees. If the rotation is a pure
-///    rotation about Z, fixX parameter does not matter, otherwise its meaning is:
+/// Returns rotation angle about Z axis in degrees. If the rotation is a pure
+/// rotation about Z, fixX parameter does not matter, otherwise its meaning is:
 ///    - fixX = true  : result is the phi angle of the projection of the rotated X axis in the un-rotated XY
 ///    - fixX = false : result is the phi angle of the projection of the rotated Y axis - 90 degrees
 

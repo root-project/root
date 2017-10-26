@@ -259,8 +259,7 @@ void FillData(BinData & dv, const TH1 * hfit, TF1 * func)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   -*-*-*-*Compute rough values of parameters for an  exponential
-///           ===================================================
+/// Compute rough values of parameters for an exponential
 
 void InitExpo(const ROOT::Fit::BinData & data, TF1 * f1)
 {
@@ -298,9 +297,8 @@ void InitExpo(const ROOT::Fit::BinData & data, TF1 * f1)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///   -*-*-*-*Compute Initial values of parameters for a gaussian
-///           derivaed from function H1InitGaus defined in TH1.cxx
-///           ===================================================
+/// Compute Initial values of parameters for a gaussian
+/// derived from function H1InitGaus defined in TH1.cxx
 
 void InitGaus(const ROOT::Fit::BinData & data, TF1 * f1)
 {
@@ -381,9 +379,8 @@ void InitGaus(const ROOT::Fit::BinData & data, TF1 * f1)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///   -*-*-*-*Compute Initial values of parameters for a gaussian
-///           derivaed from function H1InitGaus defined in TH1.cxx
-///           ===================================================
+/// Compute Initial values of parameters for a gaussian
+/// derived from function H1InitGaus defined in TH1.cxx
 
 void Init2DGaus(const ROOT::Fit::BinData & data, TF1 * f1)
 {

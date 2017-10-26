@@ -772,6 +772,7 @@ INPUT                  = . \
                          ../../geom/geom \
                          ../../geom/geombuilder/ \
                          ../../geom/geompainter/ \
+                         ../../geom/vecgeom/ \
                          ../../graf2d/asimage/ \
                          ../../graf2d/cocoa/ \
                          ../../graf2d/fitsio/ \

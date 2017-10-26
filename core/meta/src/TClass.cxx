@@ -5363,10 +5363,10 @@ void TClass::DeleteArray(void *ary, Bool_t dtorOnly)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the splitability of this class:
-///   -1: Use the default calculation
-///    0: Disallow splitting
-///    1: Always allow splitting.
-///    2: Disallow splitting of the class and splitting of any it's derived classes.
+///  - -1: Use the default calculation
+///  -  0: Disallow splitting
+///  -  1: Always allow splitting.
+///  -  2: Disallow splitting of the class and splitting of any it's derived classes.
 
 void TClass::SetCanSplit(Int_t splitmode)
 {

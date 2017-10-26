@@ -2413,18 +2413,19 @@ const char *TWinNTSystem::DirName(const char *pathname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-/// Return the drive letter in pathname. DriveName of 'c:/user/root' is 'c'//
-///   Input:                                                               //
-///      pathname - the string containing file name                        //
-///   Return:                                                              //
-///     = Letter presenting the drive letter in the file name              //
-///     = The current drive if the pathname has no drive assigment         //
-///     = 0 if pathname is an empty string  or uses UNC syntax             //
-///   Note:                                                                //
-///      It doesn't chech whether pathname presents the 'real filename     //
-///      This subroutine looks for 'single letter' is follows with a ':'   //
-/////////////////////////////////////////////////////////////////////////////
+/// Return the drive letter in pathname. DriveName of 'c:/user/root' is 'c'
+///
+///   Input:
+///     - pathname - the string containing file name
+///
+///   Return:
+///     - Letter representing the drive letter in the file name
+///     - The current drive if the pathname has no drive assigment
+///     - 0 if pathname is an empty string  or uses UNC syntax
+///
+///   Note:
+///      It doesn't check whether pathname represents a 'real' filename.
+///      This subroutine looks for 'single letter' followed by a ':'.
 
 const char TWinNTSystem::DriveName(const char *pathname)
 {

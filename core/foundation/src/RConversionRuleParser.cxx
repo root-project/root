@@ -458,9 +458,7 @@ namespace ROOT
    }
 
    /////////////////////////////////////////////////////////////////////////////
-   ///-----------------------------------------------------------------------
    /// Write down the sources
-   ///-----------------------------------------------------------------------
 
    static void WriteAutoVariables( const std::list<std::string>& target,
                                    const SourceTypeList_t& source,
