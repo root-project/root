@@ -3071,7 +3071,8 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    TTree* thistree = GetTree();
 
    // We will use this to override the IO features on the cloned branches.
-   ROOT::TIOFeatures features = this->GetIOFeatures();;
+   ROOT::TIOFeatures features = this->GetIOFeatures();
+   ;
 
    // Note: For a chain, the returned clone will be
    //       a clone of the chain's first tree.
@@ -6681,7 +6682,7 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
       TDirectory::TContext ctxt(info->fOutputDirectory);
       TIOFeatures saved_features = fIOFeatures;
       if (info->fIOFeatures) {
-          fIOFeatures = *(info->fIOFeatures);
+         fIOFeatures = *(info->fIOFeatures);
       }
       TTree *newtree = CloneTree(-1, options);
       fIOFeatures = saved_features;

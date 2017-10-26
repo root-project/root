@@ -199,7 +199,7 @@ void TIOFeatures::Print() const
       Error("Print", "Could not retrieve TBasket's class");
       return;
    }
-   TEnum *eIOBits = static_cast<TEnum*>(cl->GetListOfEnums()->FindObject("EIOBits"));
+   TEnum *eIOBits = static_cast<TEnum *>(cl->GetListOfEnums()->FindObject("EIOBits"));
    if (eIOBits == nullptr) {
       Error("Print", "Could not locate TBasket::EIOBits enum");
       return;
