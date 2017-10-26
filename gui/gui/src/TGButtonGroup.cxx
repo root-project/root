@@ -31,7 +31,7 @@
 //    The button group is a parent widget of a number of buttons,       //
 //    i.e. the button group is the parent argument in the button        //
 //    constructor. The buttons are assigned identifiers 1, 2, 3 etc.    //
-///   in the order they are created or you can specify button id in     //
+//    in the order they are created or you can specify button id in     //
 //    the button constructor. A TGButtonGroup can display a frame and   //
 //    a title because it inherits from TGGroupFrame.                    //
 //                                                                      //

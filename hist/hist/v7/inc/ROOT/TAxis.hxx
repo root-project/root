@@ -30,7 +30,7 @@ namespace ROOT {
 namespace Experimental {
 
 /**
- \class TAxisBase ROOT7
+ \class TAxisBase
  Histogram axis base class. Keeps track of the number of bins and overflow
  handling. Offers bin iteration.
 

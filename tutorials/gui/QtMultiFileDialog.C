@@ -19,7 +19,7 @@
 /// The "QtFileDialog.C" macro provides the simplified version of the "QtMultiFileDialog.C"
 ///
 /// Option: you can change the look and feel of the Qt file dialog
-/// ======= by providing the optional parameter "style":
+///         by providing the optional parameter "style":
 ///         The number of the available styles is defined by your local
 ///         Qt installation.
 ///         Try: "windows", "motif", "kde", "platinum" etc

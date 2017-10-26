@@ -244,7 +244,7 @@ void TSpectrum3::SetResolution(Double_t resolution)
 ///  - numberIterationsX-maximal x width of clipping window
 ///  - numberIterationsY-maximal y width of clipping window
 ///  - numberIterationsZ-maximal z width of clipping window
-///    for details we refer to manual                  //
+///    for details we refer to manual
 ///  - direction- direction of change of clipping window
 ///    - possible values=kBackIncreasingWindow, kBackDecreasingWindow
 ///  - filterType-determines the algorithm of the filtering
