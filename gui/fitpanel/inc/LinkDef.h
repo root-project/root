@@ -20,6 +20,9 @@
 #pragma link C++ class TAdvancedGraphicsDialog;
 
 #ifdef ROOT7_TFitPanel
+#pragma link C++ struct ROOT::Experimental::ComboBoxItem+;
+#pragma link C++ class std::vector<ROOT::Experimental::ComboBoxItem>+;
+#pragma link C++ struct ROOT::Experimental::TFitPanelModel+;
 #pragma link C++ class ROOT::Experimental::TFitPanel+;
 #endif
 
