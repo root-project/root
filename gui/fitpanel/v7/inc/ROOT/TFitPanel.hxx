@@ -18,6 +18,10 @@
 
 #include <ROOT/TWebWindow.hxx>
 
+#include <ROOT/TCanvas.hxx>
+
+#include "ROOT/THist.hxx"
+
 #include <vector>
 
 namespace ROOT {
@@ -46,6 +50,10 @@ class TFitPanel  {
 
    std::shared_ptr<TWebWindow> fWindow{}; ///!< configured display
 
+   std::shared_ptr<TCanvas> fCanvas{};    ///!< canvas used to display results
+
+   std::shared_ptr<TH1D>  fFitHist{};     ///!< histogram created when fit is performed
+
    /// Disable copy construction.
    TFitPanel(const TFitPanel &) = delete;
 
@@ -60,11 +68,14 @@ public:
 
    virtual ~TFitPanel() { printf("Fit panel destructor!!!\n"); }
 
+   // method required when any panel want to be inserted into the TCanvas
    std::shared_ptr<TWebWindow> GetWindow();
 
    void Show(const std::string &where = "");
 
    void Hide();
+
+   void UseCanvas(std::shared_ptr<TCanvas> &canv);
 
    void DoFit(const std::string &dname, const std::string &mname);
 

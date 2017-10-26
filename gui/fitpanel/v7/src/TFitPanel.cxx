@@ -16,6 +16,8 @@
 #include "ROOT/TFitPanel.hxx"
 
 #include <ROOT/TWebWindowsManager.hxx>
+#include <ROOT/TLogger.hxx>
+#include "ROOT/TDirectory.hxx"
 
 #include "TString.h"
 #include "TROOT.h"
@@ -87,10 +89,56 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
    }
 }
 
+void ROOT::Experimental::TFitPanel::UseCanvas(std::shared_ptr<TCanvas> &canv)
+{
+   if (fCanvas) {
+      R__ERROR_HERE("ShowIn") << "FitPanel already bound to the canvas - change is not yet supported";
+      return;
+   }
+
+   fCanvas = canv;
+}
+
+
 /// method called from the UI
 void ROOT::Experimental::TFitPanel::DoFit(const std::string &dname, const std::string &mname)
 {
    printf("DoFit %s %s\n", dname.c_str(), mname.c_str());
 
-}
+   bool first_time = false;
 
+   if (!fCanvas) {
+      fCanvas = Experimental::TCanvas::Create("FitPanel Canvas");
+      first_time = true;
+   }
+
+   if (!fFitHist) {
+
+      // Create the histogram.
+      auto xaxis = std::make_shared<ROOT::Experimental::TAxisConfig>(10, 0., 10.);
+
+      fFitHist = std::make_shared<ROOT::Experimental::TH1D>(*xaxis.get());
+
+      // Fill a few points.
+      fFitHist->Fill(5);
+      fFitHist->Fill(6);
+      fFitHist->Fill(6);
+      fFitHist->Fill(7);
+
+      fCanvas->Draw(fFitHist).SetLineColor(Experimental::TColor::kBlue);
+
+      // workaround to keep histogram in the lists
+      ROOT::Experimental::TDirectory::Heap().Add("fitaxis", xaxis);
+
+      if (first_time) {
+         fCanvas->Show("opera");
+         fCanvas->Update();
+      } else {
+         printf("Call modified\n");
+         fCanvas->Modified();
+         printf("Call Update\n");
+         fCanvas->Update();
+         printf("Done Update\n");
+      }
+   }
+}
