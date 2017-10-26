@@ -228,8 +228,12 @@ void TAttAxis::SetLabelSize(Float_t size)
 
 void TAttAxis::SetNdivisions(Int_t n, Bool_t optim)
 {
-   fNdivisions = n;
-   if (!optim) fNdivisions = -abs(n);
+   Int_t ndiv                     = (n%1000000);
+   Bool_t isOptimized             = optim && (ndiv>0);
+   Int_t current_maxDigits        = abs(fNdivisions)/1000000;
+   fNdivisions                    = abs(ndiv) + current_maxDigits*1000000;
+   if (!isOptimized) fNdivisions  = -fNdivisions;
+
    if (gPad) gPad->Modified();
 }
 
@@ -241,6 +245,33 @@ void TAttAxis::SetNdivisions(Int_t n1, Int_t n2, Int_t n3, Bool_t optim)
    SetNdivisions(n1+100*n2+10000*n3, optim);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// This function sets the maximum number of digits permitted for the axis labels
+/// above which the notation with 10^N is used.
+///
+/// For example, to accept 6 digits number like 900000 on the X axis of the
+/// histogram `h` call:
+///
+/// ~~~ {.cpp}
+///   h->GetXaxis()->SetMaxDigits(6);
+/// ~~~
+///
+/// The default value is 5.
+///
+/// The default value for all axis can be set with the static function
+/// `TGaxis::SetMaxDigits`.
+
+void TAttAxis::SetMaxDigits(Int_t maxDigits)
+{
+   Bool_t isOptimized             = fNdivisions>0;
+   Int_t absDiv                   = abs(fNdivisions);
+   Int_t current_maxDigits        = absDiv/1000000;
+   Int_t current_Ndivisions       = absDiv - (current_maxDigits*1000000);
+   fNdivisions                    = (current_Ndivisions + (maxDigits*1000000));
+   if (!isOptimized) fNdivisions  = -fNdivisions;
+
+   if (gPad) gPad->Modified();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set tick mark length
