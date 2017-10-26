@@ -1069,7 +1069,7 @@ Int_t TBasket::WriteBuffer()
    fHeaderOnly = kTRUE;
    fCycle = fBranch->GetWriteBasket();
    Int_t cxlevel = fBranch->GetCompressionLevel();
-   Int_t cxAlgorithm = fBranch->GetCompressionAlgorithm();
+   ROOT::ECompressionAlgorithm cxAlgorithm = static_cast<ROOT::ECompressionAlgorithm>(fBranch->GetCompressionAlgorithm());
    if (cxlevel > 0) {
       Int_t nbuffers = 1 + (fObjlen - 1) / kMAXZIPBUF;
       Int_t buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap
@@ -1096,7 +1096,7 @@ Int_t TBasket::WriteBuffer()
          // NOTE this is declared with C linkage, so it shouldn't except.  Also, when
          // USE_IMT is defined, we are guaranteed that the compression buffer is unique per-branch.
          // (see fCompressedBufferRef in constructor).
-         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, static_cast<ROOT::ECompressionAlgorithm>(cxAlgorithm));
+         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
 #ifdef R__USE_IMT
          sentry.lock();
 #endif  // R__USE_IMT

@@ -253,7 +253,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
    fObjlen    = lbuf - fKeylen;
 
    Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
-   Int_t cxAlgorithm = GetFile() ? GetFile()->GetCompressionAlgorithm() : 0;
+   ROOT::ECompressionAlgorithm cxAlgorithm = static_cast<ROOT::ECompressionAlgorithm>(GetFile() ? GetFile()->GetCompressionAlgorithm() : 0);
    if (cxlevel > 0 && fObjlen > 256) {
       Int_t nbuffers = 1 + (fObjlen - 1)/kMAXZIPBUF;
       Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
@@ -265,7 +265,7 @@ TKey::TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* moth
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else               bufmax = kMAXZIPBUF;
-         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, static_cast<ROOT::ECompressionAlgorithm>(cxAlgorithm));
+         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
@@ -344,7 +344,7 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
    fObjlen    = lbuf - fKeylen;
 
    Int_t cxlevel = GetFile() ? GetFile()->GetCompressionLevel() : 0;
-   Int_t cxAlgorithm = GetFile() ? GetFile()->GetCompressionAlgorithm() : 0;
+   ROOT::ECompressionAlgorithm cxAlgorithm = static_cast<ROOT::ECompressionAlgorithm>(GetFile() ? GetFile()->GetCompressionAlgorithm() : 0);
    if (cxlevel > 0 && fObjlen > 256) {
       Int_t nbuffers = 1 + (fObjlen - 1)/kMAXZIPBUF;
       Int_t buflen = TMath::Max(512,fKeylen + fObjlen + 9*nbuffers + 28); //add 28 bytes in case object is placed in a deleted gap
@@ -356,7 +356,7 @@ TKey::TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, T
       for (Int_t i = 0; i < nbuffers; ++i) {
          if (i == nbuffers - 1) bufmax = fObjlen - nzip;
          else               bufmax = kMAXZIPBUF;
-         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, static_cast<ROOT::ECompressionAlgorithm>(cxAlgorithm));
+         R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          if (nout == 0 || nout >= fObjlen) { //this happens when the buffer cannot be compressed
             fBuffer = fBufferRef->Buffer();
             Create(fObjlen);
