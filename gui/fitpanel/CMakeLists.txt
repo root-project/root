@@ -5,7 +5,7 @@
 if(root7)
     set(FitPanel_v7_src v7/src/)
     ROOT_GLOB_HEADERS(FitPanel_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/T*.hxx)
-    set(FitPanel_v7_depend ROOTWebDisplay)
+    set(FitPanel_v7_depend ROOTWebDisplay ROOTHistDraw)
 endif()
 
 
