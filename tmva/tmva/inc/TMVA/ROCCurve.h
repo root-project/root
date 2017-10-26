@@ -47,7 +47,7 @@ class MsgLogger;
 class ROCCurve {
 
 public:
-   ROCCurve(std::vector<std::tuple<Float_t, Float_t, Bool_t>> mvas);
+   ROCCurve(const std::vector<std::tuple<Float_t, Float_t, Bool_t>> &mvas);
 
    ROCCurve(const std::vector<Float_t> &mvaValues, const std::vector<Bool_t> &mvaTargets,
             const std::vector<Float_t> &mvaWeights);
