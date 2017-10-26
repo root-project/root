@@ -63,7 +63,7 @@ namespace mathtext {
 
       for(std::vector<std::string>::const_iterator iterator =
           str_split.begin();
-          iterator != str_split.end(); iterator++) {
+          iterator != str_split.end(); ++iterator) {
          // ONLY LEVEL 0 superscript and subscript are interpreted,
          // and they are ignored afterwards.
          if(level == 0 && delimiter_level == 0) {
@@ -345,7 +345,7 @@ namespace mathtext {
       std::string code = raw_code;
 
       for(std::string::iterator iterator = code.begin();
-          iterator != code.end(); iterator++) {
+          iterator != code.end(); ++iterator) {
          if(*iterator == escape_character) {
             *iterator = '\\';
          }

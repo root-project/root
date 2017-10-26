@@ -236,7 +236,7 @@ void TGLScene::TSceneInfo::DumpDrawStats()
          std::map<TClass*, UInt_t>::const_iterator it = fByShapeCnt.begin();
          while (it != fByShapeCnt.end()) {
             out += Form("\t%-20s  %u\n", it->first->GetName(), it->second);
-            it++;
+            ++it;
          }
       }
       Info("TGLScene::DumpDrawStats()", "%s",out.Data());
