@@ -517,7 +517,7 @@ A15SDOptimizer::optimizeAllLanesPattern(MachineInstr *MI, unsigned Reg) {
   MachineBasicBlock::iterator InsertPt(MI);
   DebugLoc DL = MI->getDebugLoc();
   MachineBasicBlock &MBB = *MI->getParent();
-  InsertPt++;
+  ++InsertPt;
   unsigned Out;
 
   // DPair has the same length as QPR and also has two DPRs as subreg.

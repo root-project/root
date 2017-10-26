@@ -207,7 +207,7 @@ readExponent(StringRef::iterator begin, StringRef::iterator end)
 
   isNegative = (*p == '-');
   if (*p == '-' || *p == '+') {
-    p++;
+    ++p;
     assert(p != end && "Exponent has no digits");
   }
 
@@ -251,7 +251,7 @@ totalExponent(StringRef::iterator p, StringRef::iterator end,
 
   negative = *p == '-';
   if (*p == '-' || *p == '+') {
-    p++;
+    ++p;
     assert(p != end && "Exponent has no digits");
   }
 
@@ -295,7 +295,7 @@ skipLeadingZeroesAndAnyDot(StringRef::iterator begin, StringRef::iterator end,
   StringRef::iterator p = begin;
   *dot = end;
   while (p != end && *p == '0')
-    p++;
+    ++p;
 
   if (p != end && *p == '.') {
     *dot = p++;
@@ -303,7 +303,7 @@ skipLeadingZeroesAndAnyDot(StringRef::iterator begin, StringRef::iterator end,
     assert(end - begin != 1 && "Significand has no digits");
 
     while (p != end && *p == '0')
-      p++;
+      ++p;
   }
 
   return p;
@@ -370,7 +370,7 @@ interpretDecimal(StringRef::iterator begin, StringRef::iterator end,
     if (p != begin) {
       do
         do
-          p--;
+          --p;
         while (p != begin && *p == '0');
       while (p != begin && *p == '.');
     }
@@ -403,7 +403,7 @@ trailingHexadecimalFraction(StringRef::iterator p, StringRef::iterator end,
 
   // Otherwise we need to find the first non-zero digit.
   while (p != end && (*p == '0' || *p == '.'))
-    p++;
+    ++p;
 
   assert(p != end && "Invalid trailing hexadecimal fraction!");
 
@@ -2299,7 +2299,7 @@ IEEEFloat::convertFromHexadecimalString(StringRef s,
     if (hex_value == -1U)
       break;
 
-    p++;
+    ++p;
 
     // Store the number while we have space.
     if (bitPos) {
@@ -2514,7 +2514,7 @@ IEEEFloat::convertFromDecimalString(StringRef str, roundingMode rounding_mode) {
 
       do {
         if (*p == '.') {
-          p++;
+          ++p;
           if (p == str.end()) {
             break;
           }
@@ -2584,7 +2584,7 @@ IEEEFloat::opStatus IEEEFloat::convertFromString(StringRef str,
   size_t slen = str.size();
   sign = *p == '-' ? 1 : 0;
   if (*p == '-' || *p == '+') {
-    p++;
+    ++p;
     slen--;
     assert(slen && "String has no digits");
   }

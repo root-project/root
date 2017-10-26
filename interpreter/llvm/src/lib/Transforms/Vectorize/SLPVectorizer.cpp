@@ -3235,7 +3235,7 @@ bool BoUpSLP::BlockScheduling::extendSchedulingRegion(Value *V) {
         DEBUG(dbgs() << "SLP:  extend schedule region start to " << *I << "\n");
         return true;
       }
-      UpIter++;
+      ++UpIter;
     }
     if (DownIter != LowerEnd) {
       if (&*DownIter == I) {
@@ -3246,7 +3246,7 @@ bool BoUpSLP::BlockScheduling::extendSchedulingRegion(Value *V) {
         DEBUG(dbgs() << "SLP:  extend schedule region end to " << *I << "\n");
         return true;
       }
-      DownIter++;
+      ++DownIter;
     }
     assert((UpIter != UpperEnd || DownIter != LowerEnd) &&
            "instruction not found in block");
@@ -4939,7 +4939,7 @@ bool SLPVectorizerPass::vectorizeChainsInBlock(BasicBlock *BB, BoUpSLP &R) {
 
   VisitedInstrs.clear();
 
-  for (BasicBlock::iterator it = BB->begin(), e = BB->end(); it != e; it++) {
+  for (BasicBlock::iterator it = BB->begin(), e = BB->end(); it != e; ++it) {
     // We may go through BB multiple times so skip the one we have checked.
     if (!VisitedInstrs.insert(&*it).second)
       continue;

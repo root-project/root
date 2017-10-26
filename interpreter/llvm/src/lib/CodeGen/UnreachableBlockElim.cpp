@@ -168,7 +168,7 @@ bool UnreachableMachineBlockElim::runOnMachineFunction(MachineFunction &F) {
               start->RemoveOperand(i-1);
             }
 
-          start++;
+          ++start;
         }
 
         BB->removeSuccessor(BB->succ_begin());

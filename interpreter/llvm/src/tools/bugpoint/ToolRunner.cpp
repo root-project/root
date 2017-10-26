@@ -382,7 +382,7 @@ static void lexCommand(std::string &Message, const std::string &CommandLine,
 
   // first argument is the PATH.
   // Skip repeated whitespace, leading whitespace and trailing whitespace.
-  for (std::size_t Pos = 0u; Pos <= CommandLine.size(); ++Pos) {
+  for (std::size_t Pos = 0u; Pos < CommandLine.size(); ++Pos) {
     if ('\\' == CommandLine[Pos]) {
       if (Pos + 1 < CommandLine.size())
         Token.push_back(CommandLine[++Pos]);

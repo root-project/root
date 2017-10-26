@@ -1217,7 +1217,7 @@ void HoistSpillHelper::getVisitOrders(
 #ifndef NDEBUG
   DEBUG(dbgs() << "Orders size is " << Orders.size() << "\n");
   SmallVector<MachineDomTreeNode *, 32>::reverse_iterator RIt = Orders.rbegin();
-  for (; RIt != Orders.rend(); RIt++)
+  for (; RIt != Orders.rend(); ++RIt)
     DEBUG(dbgs() << "BB" << (*RIt)->getBlock()->getNumber() << ",");
   DEBUG(dbgs() << "\n");
 #endif
@@ -1260,7 +1260,7 @@ void HoistSpillHelper::runHoistSpills(
   // children have already been visited and the spill locations in the
   // subtrees of all the children have been determined.
   SmallVector<MachineDomTreeNode *, 32>::reverse_iterator RIt = Orders.rbegin();
-  for (; RIt != Orders.rend(); RIt++) {
+  for (; RIt != Orders.rend(); ++RIt) {
     MachineBasicBlock *Block = (*RIt)->getBlock();
 
     // If Block contains an original spill, simply continue.

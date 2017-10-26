@@ -544,7 +544,7 @@ bool HexagonStoreWidening::processStoreGroup(InstrGroup &Group) {
     OG.clear();
     NG.clear();
 
-    bool Succ = selectStores(I++, E, OG, CollectedSize, MaxWideSize) &&
+    bool Succ = selectStores(++I, E, OG, CollectedSize, MaxWideSize) &&
                 createWideStores(OG, NG, CollectedSize)              &&
                 replaceStores(OG, NG);
     if (!Succ)

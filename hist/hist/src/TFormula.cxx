@@ -1738,7 +1738,7 @@ void TFormula::ExtractFunctors(TString &formula)
          Int_t tmp = i;
          i++;
          TString param = "";
-         while (formula[i] != ']' && i < formula.Length()) {
+         while (i < formula.Length() && formula[i] != ']') {
             param.Append(formula[i++]);
          }
          i++;
@@ -1807,7 +1807,7 @@ void TFormula::ExtractFunctors(TString &formula)
          // std::cout << "character : " << i << " " << formula[i] << " is not an operator and is alpha " <<
          // std::endl;
 
-         while (IsFunctionNameChar(formula[i]) && i < formula.Length()) {
+         while (i < formula.Length() && IsFunctionNameChar(formula[i])) {
             // need special case for separting operator  ":" from scope operator "::"
             if (formula[i] == ':' && ((i + 1) < formula.Length())) {
                if (formula[i + 1] == ':') {
@@ -2235,7 +2235,7 @@ void TFormula::ProcessFormula(TString &formula)
    // check that all formula components arematched otherwise emit an error
    if (!fClingInitialized) {
       Bool_t allFunctorsMatched = true;
-      for(list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); it++)
+      for(list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); ++it)
          {
          if (!it->fFound) {
             allFunctorsMatched = false;
@@ -2745,7 +2745,7 @@ void TFormula::SetParameter(const char *name, Double_t value)
    fParams[name].fFound = true;
    fClingParameters[fParams[name].fArrayPos] = value;
    fAllParametersSetted = true;
-   for(map<TString,TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); it++)
+   for(map<TString,TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); ++it)
       {
       if (!it->second.fFound) {
          fAllParametersSetted = false;
@@ -2778,7 +2778,7 @@ void TFormula::SetParameters(const pair<TString,Double_t> *params,const Int_t si
       fClingParameters[fParams[p.first].fArrayPos] = p.second;
    }
    fAllParametersSetted = true;
-   for(map<TString,TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); it++)
+   for(map<TString,TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); ++it)
       {
       if (!it->second.fFound) {
          fAllParametersSetted = false;

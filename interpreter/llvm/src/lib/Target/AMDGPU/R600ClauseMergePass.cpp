@@ -89,10 +89,10 @@ void R600ClauseMergePass::cleanPotentialDisabledCFAlu(
     MachineInstr &CFAlu) const {
   int CntIdx = TII->getOperandIdx(AMDGPU::CF_ALU, AMDGPU::OpName::COUNT);
   MachineBasicBlock::iterator I = CFAlu, E = CFAlu.getParent()->end();
-  I++;
+  ++I;
   do {
     while (I != E && !isCFAlu(*I))
-      I++;
+      ++I;
     if (I == E)
       return;
     MachineInstr &MI = *I++;

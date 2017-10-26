@@ -450,7 +450,7 @@ unsigned APInt::getBitsNeeded(StringRef str, uint8_t radix) {
   StringRef::iterator p = str.begin();
   unsigned isNegative = *p == '-';
   if (*p == '-' || *p == '+') {
-    p++;
+    ++p;
     slen--;
     assert(slen && "String is only a sign, needs a value.");
   }
@@ -1821,7 +1821,7 @@ void APInt::fromString(unsigned numbits, StringRef str, uint8_t radix) {
   size_t slen = str.size();
   bool isNeg = *p == '-';
   if (*p == '-' || *p == '+') {
-    p++;
+    ++p;
     slen--;
     assert(slen && "String is only a sign, needs a value.");
   }

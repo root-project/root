@@ -188,7 +188,7 @@ bool AArch64VectorByElementOpt::reuseDUP(MachineInstr &MI, unsigned DupOpcode,
                                          unsigned *DestReg) const {
   for (MachineBasicBlock::iterator MII = MI, MIE = MI.getParent()->begin();
        MII != MIE;) {
-    MII--;
+    --MII;
     MachineInstr *CurrentMI = &*MII;
 
     if (CurrentMI->getOpcode() == DupOpcode &&

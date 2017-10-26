@@ -1408,9 +1408,9 @@ bool MipsFastISel::fastLowerArguments() {
       // Allocating an FGR32 also allocates the super-register AFGR64, and
       // ABI rules require us to skip the corresponding GPR32.
       if (NextGPR32 != GPR32ArgRegs.end())
-        NextGPR32++;
+        ++NextGPR32;
       if (NextAFGR64 != AFGR64ArgRegs.end())
-        NextAFGR64++;
+        ++NextAFGR64;
       break;
 
     case MVT::f64:
@@ -1427,11 +1427,11 @@ bool MipsFastISel::fastLowerArguments() {
       // Allocating an FGR32 also allocates the super-register AFGR64, and
       // ABI rules require us to skip the corresponding GPR32 pair.
       if (NextGPR32 != GPR32ArgRegs.end())
-        NextGPR32++;
+        ++NextGPR32;
       if (NextGPR32 != GPR32ArgRegs.end())
-        NextGPR32++;
+        ++NextGPR32;
       if (NextFGR32 != FGR32ArgRegs.end())
-        NextFGR32++;
+        ++NextFGR32;
       break;
 
     default:
