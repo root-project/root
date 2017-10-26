@@ -95,3 +95,5 @@ $(COREDO): CXXFLAGS += $(PCREINC)
 ifeq ($(ARCH),linuxicc)
 $(COREDO):     CXXFLAGS += -wd191
 endif
+
+$(BASEO):  CXXFLAGS += -I$(FOUNDATIONDIRR)

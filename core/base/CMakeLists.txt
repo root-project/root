@@ -6,6 +6,8 @@ if(testing)
     add_subdirectory(test)
 endif()
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
+
 ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/GuiTypes.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/MessageTypes.h

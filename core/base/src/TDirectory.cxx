@@ -26,6 +26,8 @@
 #include "TThreadSlots.h"
 #include "TMethod.h"
 
+#include "TSpinLockGuard.h"
+
 Bool_t TDirectory::fgAddDirectory = kTRUE;
 
 const Int_t  kMaxLen = 2048;
@@ -43,6 +45,8 @@ ClassImp(TDirectory);
 
 TDirectory::TDirectory() : TNamed(), fMother(0),fList(0),fContext(0)
 {
+   // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
+   std::atomic_flag_clear( &fSpinLock );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,6 +65,9 @@ TDirectory::TDirectory() : TNamed(), fMother(0),fList(0),fContext(0)
 TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classname*/, TDirectory* initMotherDir)
    : TNamed(name, title), fMother(0), fList(0),fContext(0)
 {
+   // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
+   std::atomic_flag_clear( &fSpinLock );
+
    if (initMotherDir==0) initMotherDir = gDirectory;
 
    if (strchr(name,'/')) {
@@ -84,6 +91,9 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classna
 
 TDirectory::TDirectory(const TDirectory &directory) : TNamed(directory)
 {
+   // MSVC doesn't support fSpinLock=ATOMIC_FLAG_INIT; in the class definition
+   std::atomic_flag_clear( &fSpinLock );
+
    directory.Copy(*this);
 }
 
@@ -1222,7 +1232,8 @@ void TDirectory::DecodeNameCycle(const char *buffer, char *name, Short_t &cycle,
 /// Register a TContext pointing to this TDirectory object
 
 void TDirectory::RegisterContext(TContext *ctxt) {
-   R__LOCKGUARD(gROOTMutex);
+   ROOT::Internal::TSpinLockGuard slg(fSpinLock);
+
    if (fContext) {
       TContext *current = fContext;
       while(current->fNext) {
@@ -1251,7 +1262,8 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * 
 /// UnRegister a TContext pointing to this TDirectory object
 
 void TDirectory::UnregisterContext(TContext *ctxt) {
-   R__LOCKGUARD(gROOTMutex);
+   ROOT::Internal::TSpinLockGuard slg(fSpinLock);
+
    if (ctxt==fContext) {
       fContext = ctxt->fNext;
       if (fContext) fContext->fPrevious = 0;
