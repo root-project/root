@@ -307,7 +307,7 @@ void TGLAxisPainter::RnrLines() const
    TGLVector3 pos;
    TMVec_t::const_iterator it = fTMVec.begin();
    Int_t nt =  fTMVec.size()-1;
-   it++;
+   ++it;
    for (Int_t t = 1; t < nt; ++t, ++it) {
       pos = fDir * ((*it).first);
       for (Int_t dim = 0; dim < fTMNDim; dim++) {
