@@ -303,7 +303,7 @@ vecgeom::cxx::VUnplacedVolume* TGeoVGShape::Convert(TGeoShape const *const shape
    // THE SIMPLE XTRU
    if (shape->IsA() == TGeoXtru::Class()) {
       TGeoXtru *p = (TGeoXtru *)(shape);
-      // analyse convertability
+      // analyse convertibility
       if (p->GetNz() == 2) {
          // add check on scaling and distortions
          size_t Nvert = (size_t)p->GetNvert();
