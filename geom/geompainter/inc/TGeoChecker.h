@@ -29,7 +29,7 @@ class TStopwatch;
 
 ///////////////////////////////////////////////////////////////////////////
 // TGeoChecker - A simple checker generating random points inside a      //
-//   geometry. Generates a tree of points on the surfaces coresponding   //
+//   geometry. Generates a tree of points on the surfaces corresponding  //
 //   to the safety of each generated point                               //
 //                                                                       //
 ///////////////////////////////////////////////////////////////////////////
