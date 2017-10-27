@@ -82,26 +82,26 @@ int execTestMultiMerge()
    result += testMergedFile("mzfile1-4.root",206,4992, kIs32bits ? 2 : 0);
    result += testMergedFile("mlz4file1-4.root",406,5029, kIs32bits ? 2 : 0);
    result += testMergedFile("mzlibfile1-4.root",106,4917, kIs32bits ? 2 : 0);
-   result += testSimpleFile("hsimple.root",25000,1,414415, kIs32bits ? (10 + fastMath*10) : (8 + fastMath*10));
-   result += testSimpleFile("hsimple9.root",25000,9,432029,3 + fastMath*27);
-   result += testSimpleFile("hsimple101.root",25000,101,414590, kIs32bits ? 12 : (3 + fastMath*14));
-   result += testSimpleFile("hsimple106.root",25000,106,432127,3 + fastMath*20);
-   result += testSimpleFile("hsimple109.root",25000,109,432038,3 + fastMath*28);
-   result += testSimpleFile("hsimple9x2.root",2*25000,9,851123,9 + fastMath*56);
-   result += testSimpleFile("hsimple109x2.root",2*25000,109,851134,9 + fastMath*52);
-   result += testSimpleFile("hsimple209.root",25000,209,394077,8 + fastMath*24);
-   result += testSimpleFile("hsimple401.root",25000,401,416534,8 + fastMath*31);
-   result += testSimpleFile("hsimple406.root",25000,406,516373,8);
-   result += testSimpleFile("hsimple409.root",25000,409,516321,8);
-   result += testSimpleFile("hsimpleK.root",6*25000,209,2298976,16 + fastMath*120);
+   result += testSimpleFile("hsimple.root",25000,1,414600, kIs32bits ? (10 + fastMath*10) : (8 + fastMath*10));
+   result += testSimpleFile("hsimple9.root",25000,9,432213,3 + fastMath*27);
+   result += testSimpleFile("hsimple101.root",25000,101,414782, kIs32bits ? 12 : (3 + fastMath*14));
+   result += testSimpleFile("hsimple106.root",25000,106,432316,3 + fastMath*20);
+   result += testSimpleFile("hsimple109.root",25000,109,432223,3 + fastMath*28);
+   result += testSimpleFile("hsimple9x2.root",2*25000,9,851322,9 + fastMath*56);
+   result += testSimpleFile("hsimple109x2.root",2*25000,109,851334,9 + fastMath*52);
+   result += testSimpleFile("hsimple209.root",25000,209,394258,8 + fastMath*24);
+   result += testSimpleFile("hsimple401.root",25000,401,416730,8 + fastMath*31);
+   result += testSimpleFile("hsimple406.root",25000,406,516561,8);
+   result += testSimpleFile("hsimple409.root",25000,409,516510,8);
+   result += testSimpleFile("hsimpleK.root",6*25000,209,2299133,16 + fastMath*120);
    if (lzma_version_number() < 50020010) {
       // lzma v5.2.0 produced larger files ...
       // but even older version (eg v5.0.0) produced smaller files ...
-      result += testSimpleFile("hsimpleK202.root",12*25000,202,4631252,700);
+      result += testSimpleFile("hsimpleK202.root",12*25000,202,4631377,700);
    } else {
-      result += testSimpleFile("hsimpleK202.root",12*25000,202,4631252,16 + fastMath*104);
+      result += testSimpleFile("hsimpleK202.root",12*25000,202,4631377,16 + fastMath*104);
    }
-   result += testSimpleFile("hsimpleK409.root",24*25000,409,12046517,16);
-   result += testSimpleFile("hsimpleF.root",30*25000,9,12582457,hsimpleFTolerance + fastMath*1090);
+   result += testSimpleFile("hsimpleK409.root",24*25000,409,12046712,16);
+   result += testSimpleFile("hsimpleF.root",30*25000,9,12582666,hsimpleFTolerance + fastMath*1090);
    return result;
 }
