@@ -214,7 +214,7 @@ public:
 } // namespace
 
 SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *serv, bool isbatch)
-   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUrl(url), fCefMain(cef_main), fBatch(isbatch)
+   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUrl(url), fCefMain(cef_main), fBatch(isbatch), fRect()
 {
    gHandlingServer = serv;
 }
@@ -281,10 +281,10 @@ void SimpleApp::OnContextInitialized()
 
    CefRegisterSchemeHandlerFactory("rootscheme", "rootserver", new ROOTSchemeHandlerFactory());
 
-   StartWindow(fUrl, fBatch);
+   StartWindow(fUrl, fBatch, fRect);
 }
 
-void SimpleApp::StartWindow(const std::string &addr, bool batch)
+void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 {
    CEF_REQUIRE_UI_THREAD();
 
@@ -303,6 +303,8 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch)
       CefRefPtr<OsrHandler> handler(new OsrHandler(gHandlingServer));
 
       CefWindowInfo window_info;
+
+      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect);
 
       window_info.SetAsWindowless(0);
 
@@ -341,6 +343,8 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch)
       // Information used when creating the native window.
       CefWindowInfo window_info;
 
+      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect);
+
 #if defined(OS_WIN)
       // On Windows we need to specify certain flags that will be passed to
       // CreateWindowEx().
@@ -370,7 +374,7 @@ public:
 };
 
 extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, bool batch_mode, const char *rootsys,
-                                             const char *cef_path)
+                                             const char *cef_path, unsigned width, unsigned height)
 {
    if (gCefApp) {
       printf("Starting next CEF window\n");
@@ -378,7 +382,8 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
       if (gHandlingServer != (THttpServer *)http_serv) {
          printf("CEF plugin do not allow to use other THttpServer instance\n");
       } else {
-         gCefApp->get()->StartWindow(url, batch_mode);
+         CefRect rect(0,0, width, height);
+         gCefApp->get()->StartWindow(url, batch_mode, rect);
       }
       return;
    }
@@ -432,6 +437,7 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
    // It will create the first browser instance in OnContextInitialized() after
    // CEF has initialized.
    gCefApp = new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), (THttpServer *)http_serv, batch_mode));
+   gCefApp->get()->SetRect(width, height);
 
    // Initialize CEF for the browser process.
    CefInitialize(main_args, settings, gCefApp->get(), NULL);

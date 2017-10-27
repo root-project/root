@@ -181,12 +181,12 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    const char *cef_path = gSystem->Getenv("CEF_PATH");
    const char *rootsys = gSystem->Getenv("ROOTSYS");
    if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || ic_cef)) {
-      typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *);
+      typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
 
       printf("Show canvas in CEF window:  %s\n", addr.Data());
 
       FunctionCef3 func = (FunctionCef3)symbol_cef;
-      func(addr.Data(), fServer, batch_mode, rootsys, cef_path);
+      func(addr.Data(), fServer, batch_mode, rootsys, cef_path, display->GetWidth(), display->GetHeight());
 
       return true;
    }
