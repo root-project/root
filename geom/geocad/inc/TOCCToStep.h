@@ -32,7 +32,7 @@ private:
    STEPCAFControl_Writer    fWriter; //the step file pointer
    Handle(TDocStd_Document) fDoc;    //the step document element
    LabelMap_t               fTree;   //tree of Label's volumes
-   TDF_Label                fLabel;  //label of the OCC shape elemet
+   TDF_Label                fLabel;  //label of the OCC shape element
    TGeoToOCC                  fRootShape;
    TopoDS_Shape             fShape;  //OCC shape (translated root shape)
 
