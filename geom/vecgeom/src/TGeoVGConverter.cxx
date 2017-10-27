@@ -35,7 +35,7 @@ TGeoVGConverter::~TGeoVGConverter()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Main geometry convertion method.
+/// Main geometry conversion method.
 /// Convert all geometry shapes connected to volumes to VecGeom shapes
 
 void TGeoVGConverter::ConvertGeometry()
