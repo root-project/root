@@ -12,14 +12,6 @@
 #ifndef ROOT_TGeoMediumEditor
 #define ROOT_TGeoMediumEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoMediumEditor                                                    //
-//                                                                      //
-//  Editor for a TGeoMedium.                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 
@@ -45,10 +37,10 @@ protected:
    Bool_t               fIsModified;        // Modified flag
    TGTextEntry         *fMedName;           // Medium name text entry
    TGNumberEntry       *fMedId;             // Number entry for medium id
-//   TGComboBox          *fMatList;           // Combo box for all materials
+//   TGComboBox          *fMatList;         // Combo box for all materials
    TGeoMaterial        *fSelectedMaterial;  // Selected material
    TGLabel             *fLSelMaterial;      // Selected material label
-   TGPictureButton     *fBSelMaterial;        // Button for selecting a material
+   TGPictureButton     *fBSelMaterial;      // Button for selecting a material
    TGTextButton        *fEditMaterial;      // Check button for material editing
    TGCheckButton       *fMedSensitive;      // Check button for sensitivity
    TGComboBox          *fMagfldOption;      // Combo box with magnetic field options
