@@ -131,14 +131,11 @@ void ROOT::Experimental::TFitPanel::DoFit(const std::string &dname, const std::s
       ROOT::Experimental::TDirectory::Heap().Add("fitaxis", xaxis);
 
       if (first_time) {
-         fCanvas->Show("opera");
-         fCanvas->Update();
+         fCanvas->Show();
+         //fCanvas->Update();
       } else {
-         printf("Call modified\n");
          fCanvas->Modified();
-         printf("Call Update\n");
-         fCanvas->Update();
-         printf("Done Update\n");
+         //fCanvas->Update();
       }
    }
 }
