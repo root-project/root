@@ -293,7 +293,7 @@ private:                                                                        
          return false;                                                                                          \
       } else if (recurseBlocker++ == 0) {                                                                       \
          ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency =                         \
-            ::ROOT::Internal::HasConsistentHashMember(_QUOTE_(name)) ||                                          \
+            ::ROOT::Internal::HasConsistentHashMember(_QUOTE_(name)) ||                                         \
             ::ROOT::Internal::HasConsistentHashMember(*IsA());                                                  \
          ++recurseBlocker;                                                                                      \
          return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;                   \
@@ -328,11 +328,11 @@ public: \
    static const char *ImplFileName() { return 0; }                                                               \
    static const char *Class_Name()                                                                               \
    {                                                                                                             \
-      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name();               \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name();                          \
    }                                                                                                             \
    static TClass *Dictionary()                                                                                   \
    {                                                                                                             \
-      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();         \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();                    \
    }                                                                                                             \
    static TClass *Class() { return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); } \
    virtual_keyword void Streamer(TBuffer &R__b) overrd { ::ROOT::Internal::DefaultStreamer(R__b, name::Class(), this); }
