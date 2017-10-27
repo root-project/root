@@ -12,14 +12,6 @@
 #ifndef ROOT_TGeoVolumeEditor
 #define ROOT_TGeoVolumeEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoVolumeEditor                                                    //
-//                                                                      //
-//  Editor for a TGeoVolume.                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 
@@ -52,19 +44,15 @@ protected:
    Bool_t               fIsDivided;         // Flag that the volume is divided
    TGShutter           *fCategories;        // Categories shutter
    TGTextEntry         *fVolumeName;        // Volume name text entry
-//   TGComboBox          *fShapeList;         // All-shapes combo box
    TGeoShape           *fSelectedShape;     // Selected shape
    TGLabel             *fLSelShape;         // Selected shape label
    TGPictureButton     *fBSelShape;         // Button for selecting a shape
-//   TGComboBox          *fMediaList;         // All-media combo box
    TGeoMedium          *fSelectedMedium;    // Selected medium
    TGLabel             *fLSelMedium;        // Selected medium label
-   TGPictureButton     *fBSelMedium;      // Button for selecting a medium
-//   TGComboBox          *fVolumeList;        // All-volume combo box
+   TGPictureButton     *fBSelMedium;        // Button for selecting a medium
    TGeoVolume          *fSelectedVolume;    // Selected volume
    TGLabel             *fLSelVolume;        // Selected volume label
    TGPictureButton     *fBSelVolume;        // Button for selecting a volume
-//   TGComboBox          *fMatrixList;        // All-matrix combo box
    TGeoMatrix          *fSelectedMatrix;    // Selected matrix
    TGLabel             *fLSelMatrix;        // Selected matrix label
    TGPictureButton     *fBSelMatrix;        // Button for selecting a matrix
