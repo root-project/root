@@ -21,12 +21,12 @@ protected :
    Double_t              fX;        // X half-length
    Double_t              fY;        // Y half-length
    Double_t              fZ;        // Z half-length
-   Double_t              fAlpha;     // angle w.r.t Y from the center of low Y to the high Y
-   Double_t              fTheta;     // polar angle of segment between low and hi Z surfaces
-   Double_t              fPhi;       // azimuthal angle of segment between low and hi Z surfaces
-   Double_t              fTxy;       // tangent of XY section angle
-   Double_t              fTxz;       // tangent of XZ section angle
-   Double_t              fTyz;       // tangent of XZ section angle
+   Double_t              fAlpha;    // angle w.r.t Y from the center of low Y to the high Y
+   Double_t              fTheta;    // polar angle of segment between low and hi Z surfaces
+   Double_t              fPhi;      // azimuthal angle of segment between low and hi Z surfaces
+   Double_t              fTxy;      // tangent of XY section angle
+   Double_t              fTxz;      // tangent of XZ section angle
+   Double_t              fTyz;      // tangent of XZ section angle
 
 // methods
 public:

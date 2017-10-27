@@ -1280,7 +1280,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint recursively a node and its content accordind to visualization options.
+/// Paint recursively a node and its content according to visualization options.
 
 void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option, TGeoMatrix* global)
 {
@@ -1288,7 +1288,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option, TGeoMatrix* global
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint recursively a node and its content accordind to visualization options.
+/// Paint recursively a node and its content according to visualization options.
 
 void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* global)
 {
@@ -1458,7 +1458,7 @@ Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t *  option ) con
       return addDaughters;
    }
 
-   // For non-composite shapes we are the main paint method & perform the negotation
+   // For non-composite shapes we are the main paint method & perform the negotiation
    // with the viewer here
    if (!shape.IsComposite()) {
       // Does viewer prefer local frame positions?
@@ -1814,7 +1814,7 @@ void TGeoPainter::Raytrace(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Shoot npoints randomly in a box of 1E-5 arround current point.
+/// Shoot npoints randomly in a box of 1E-5 around current point.
 /// Return minimum distance to points outside.
 
 TGeoNode *TGeoPainter::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil,
