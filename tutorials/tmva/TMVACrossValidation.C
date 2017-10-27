@@ -62,8 +62,9 @@ void TMVACrossValidation()
 
    // Run cross-validation and print results
    cv.Evaluate();
-   TMVA::CrossValidationResult results = cv.GetResults();
-   results.Print();
+   auto results = cv.GetResults();
+   for (auto r : results)
+      r.Print();
 }
 
 int main()
