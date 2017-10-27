@@ -12,14 +12,6 @@
 #ifndef ROOT_TGeoTabManager
 #define ROOT_TGeoTabManager
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTabManager                                                      //
-//                                                                      //
-//  Manager for editor tabs                                             //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGFrame.h"
 
 #include "TMap.h"
