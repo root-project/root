@@ -22,7 +22,7 @@ public:
    };
 
    enum EGeoVisibilityAtt {
-      kVisOverride      = BIT(0),           // volume's vis. attributes are overidden
+      kVisOverride      = BIT(0),           // volume's vis. attributes are overridden
       kVisNone          = BIT(1),           // the volume/node is invisible, as well as daughters
       kVisThis          = BIT(2),           // this volume/node is visible
       kVisDaughters     = BIT(3),           // all leaves are visible
@@ -37,7 +37,7 @@ public:
    };                          // visibility attributes
 
    enum EGeoActivityAtt   {
-      kActOverride      = BIT(8),           // volume's activity attributes are overidden
+      kActOverride      = BIT(8),           // volume's activity attributes are overridden
       kActNone          = BIT(9),           // the volume/node is ignored by tracking, as well as daughters
       kActThis          = BIT(10),           // this volume/node is active for tracking
       kActDaughters     = BIT(11)            // all leaves are active
