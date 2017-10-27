@@ -2,98 +2,98 @@
 Processing runmemleak.C+...
 ******************************************************************************
 *Tree    :MonoData  : branch=mono class=TMyData                              *
-*Entries :        2 : Total =         9414923 bytes  File  Size =     128056 *
+*Entries :        2 : Total =         9415198 bytes  File  Size =     128056 *
 *        :          : Tree compression factor =  76.06                       *
 ******************************************************************************
 *Branch  :mono                                                               *
 *Entries :        2 : BranchElement (see below)                              *
 *............................................................................*
 *Br    0 :fUniqueID : UInt_t                                                 *
-*Entries :        2 : Total  Size=        678 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        689 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    1 :fBits     : UInt_t                                                 *
-*Entries :        2 : Total  Size=        666 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        677 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    2 :fModel    : TString                                                *
-*Entries :        2 : Total  Size=        680 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        691 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    3 :fCommL    : const TObjArray*                                       *
-*Entries :        2 : Total  Size=       7684 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=       7695 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    4 :fSDay     : Long_t                                                 *
-*Entries :        2 : Total  Size=        662 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        673 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    5 :fEDay     : Long_t                                                 *
-*Entries :        2 : Total  Size=        662 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        673 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    6 :fParamFile : TString                                               *
-*Entries :        2 : Total  Size=        856 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        867 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    7 :fCoeffDate : Long_t                                                *
-*Entries :        2 : Total  Size=        692 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        703 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    8 :fNrSrcs   : Int_t                                                  *
-*Entries :        2 : Total  Size=        666 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        677 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br    9 :fPeriodGroupStr : TString                                          *
-*Entries :        2 : Total  Size=        728 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        739 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   10 :fDotsHalfLife : Double_t                                           *
-*Entries :        2 : Total  Size=        710 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        721 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   11 :fWindow   : Int_t                                                  *
-*Entries :        2 : Total  Size=        666 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        677 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   12 :fFitVarType : TString                                              *
-*Entries :        2 : Total  Size=        712 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        723 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   13 :fWorkingDir : TString                                              *
-*Entries :        2 : Total  Size=        792 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        803 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   14 :fSmoothCoeffFile : TString                                         *
-*Entries :        2 : Total  Size=        862 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        873 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   15 :fUse      : TArrayD                                                *
-*Entries :        2 : Total  Size=       2196 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=       2207 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   16 :fSsize    : TArrayD                                                *
-*Entries :        2 : Total  Size=       2208 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=       2219 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   17 :fNrho     : TArrayD                                                *
-*Entries :        2 : Total  Size=     148130 bytes  File Size  =       1892 *
+*Entries :        2 : Total  Size=     148141 bytes  File Size  =       1892 *
 *Baskets :        2 : Basket Size=      32000 bytes  Compression=  78.03     *
 *............................................................................*
 *Br   18 :fNrhoInv  : TArrayD                                                *
-*Entries :        2 : Total  Size=     148148 bytes  File Size  =       3546 *
+*Entries :        2 : Total  Size=     148159 bytes  File Size  =       3546 *
 *Baskets :        2 : Basket Size=      32000 bytes  Compression=  41.64     *
 *............................................................................*
 *Br   19 :fPnts     : TArrayD*                                               *
-*Entries :        2 : Total  Size=      33102 bytes  File Size  =        652 *
+*Entries :        2 : Total  Size=      33113 bytes  File Size  =        652 *
 *Baskets :        2 : Basket Size=      32000 bytes  Compression=  50.02     *
 *............................................................................*
 *Br   20 :fCalcVarRed : Int_t                                                *
-*Entries :        2 : Total  Size=        690 bytes  One basket in memory    *
+*Entries :        2 : Total  Size=        701 bytes  One basket in memory    *
 *Baskets :        0 : Basket Size=      32000 bytes  Compression=   1.00     *
 *............................................................................*
 *Br   21 :fSmoothMonoM : TMap*                                               *
-*Entries :        2 : Total  Size=    9060358 bytes  File Size  =     117332 *
+*Entries :        2 : Total  Size=    9060369 bytes  File Size  =     117332 *
 *Baskets :        2 : Basket Size=      32000 bytes  Compression=  77.22     *
 *............................................................................*
 Info in <memleak>: branch has 2 entries
