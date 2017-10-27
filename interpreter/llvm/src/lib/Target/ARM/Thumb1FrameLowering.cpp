@@ -293,9 +293,9 @@ void Thumb1FrameLowering::emitPrologue(MachineFunction &MF,
     MachineBasicBlock::iterator OldMBBI = MBBI;
     // Skip a run of tMOVr instructions
     while (MBBI != MBB.end() && MBBI->getOpcode() == ARM::tMOVr)
-      ++MBBI;
+      MBBI++;
     if (MBBI != MBB.end() && MBBI->getOpcode() == ARM::tPUSH) {
-      ++MBBI;
+      MBBI++;
     } else {
       // We have reached an instruction which is not a push, so the previous
       // run of tMOVr instructions (which may have been empty) was not part of
