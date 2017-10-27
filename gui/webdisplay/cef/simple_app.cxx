@@ -41,7 +41,8 @@ public:
 
    virtual ~TCefHttpCallArg()
    {
-      if (fDD != 1) printf("FAAAAAAAAAAAAAIL %d\n", fDD);
+      if (fDD != 1)
+         printf("FAAAAAAAAAAAAAIL %d\n", fDD);
       fDD = -1;
    }
 
@@ -98,7 +99,8 @@ public:
          char *data_ = (char *)GetContent();
          // Copy the next block of data into the buffer.
          int transfer_size = GetContentLength() - offset_;
-         if (transfer_size > bytes_to_read) transfer_size = bytes_to_read;
+         if (transfer_size > bytes_to_read)
+            transfer_size = bytes_to_read;
          memcpy(data_out, data_ + offset_, transfer_size);
          offset_ += transfer_size;
 
@@ -137,7 +139,8 @@ public:
    {
       // Allow the window to close if the browser says it's OK.
       CefRefPtr<CefBrowser> browser = browser_view_->GetBrowser();
-      if (browser) return browser->GetHost()->TryCloseBrowser();
+      if (browser)
+         return browser->GetHost()->TryCloseBrowser();
       return true;
    }
 
@@ -270,7 +273,6 @@ void SimpleApp::OnBrowserCreated(CefRefPtr<CefBrowser> browser)
 }
 */
 
-
 void SimpleApp::OnContextInitialized()
 {
    CEF_REQUIRE_UI_THREAD();
@@ -288,8 +290,10 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch)
 
    std::string url = "rootscheme://rootserver";
    url.append(addr);
-   if (url.find("?") != std::string::npos) url.append("&cef3");
-                                      else url.append("?cef3");
+   if (url.find("?") != std::string::npos)
+      url.append("&cef3");
+   else
+      url.append("?cef3");
 
    // Specify CEF browser settings here.
    CefBrowserSettings browser_settings;
@@ -371,7 +375,7 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
    if (gCefApp) {
       printf("Starting next CEF window\n");
 
-      if (gHandlingServer != (THttpServer *) http_serv) {
+      if (gHandlingServer != (THttpServer *)http_serv) {
          printf("CEF plugin do not allow to use other THttpServer instance\n");
       } else {
          gCefApp->get()->StartWindow(url, batch_mode);
@@ -414,13 +418,14 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
    settings.no_sandbox = true;
    // settings.single_process = true;
 
-   if (batch_mode) settings.windowless_rendering_enabled = true;
+   if (batch_mode)
+      settings.windowless_rendering_enabled = true;
 
    TString plog = "cef.log";
    cef_string_ascii_to_utf16(plog.Data(), plog.Length(), &settings.log_file);
    settings.log_severity = LOGSEVERITY_INFO; // LOGSEVERITY_VERBOSE;
-   //settings.uncaught_exception_stack_size = 100;
-   //settings.ignore_certificate_errors = true;
+   // settings.uncaught_exception_stack_size = 100;
+   // settings.ignore_certificate_errors = true;
    // settings.remote_debugging_port = 7890;
 
    // SimpleApp implements application-level callbacks for the browser process.
