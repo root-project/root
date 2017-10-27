@@ -9,40 +9,40 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-////////////////////////////////////////////////////////////////////////////////
-// TGeoToOCC Class                                                              //
-// --------------------                                                       //
-//                                                                            //
-//   This class contains implementation of converting ROOT's                  //
-//   geometry shapes to OpenCascade shapes.                                   //                                                                        //
-//   Each ROOT shape is translated in the corrispondent OCC shape using the   //
-//   following methods:                                                       //
-//                                                                            //
-// TGeoBBox               ->           OCC_Box(..)                            //
-// TGeoSphere             ->           OCC_Sphere(..)                         //
-// TGeoArb8               ->           OCC_Arb8(..)                           //
-// TGeoConeSeg            ->           OCC_Cones(..)                          //
-// TGeoCone               ->           OCC_Cones(..)                          //
-// TGeoPara               ->           OCC_ParaTrap(..)                       //
-// TGeoTrap               ->           OCC_ParaTrap(..)                       //
-// TGeoGtra               ->           OCC_ParaTrap(..)                       //
-// TGeoTrd1               ->           OCC_Trd(..)                            //
-// TGeoTrd2               ->           OCC_Trd(..)                            //
-// TGeoTubeSeg            ->           OCC_Tube(..)                           //
-// TGeoCtub               ->           OCC_Cuttub(..)                         //
-// TGeoTube               ->           OCC_TubeSeg(..)                        //
-// TGeoPcon               ->           OCC_Pcon(..)                           //
-// TGeoTorus              ->           OCC_Torus(..)                          //
-// TGeoPgon               ->           OCC_Pgon(..)                           //
-// TGeoEltu               ->           OCC_Eltu(..)                           //
-// TGeoHype               ->           OCC_Hype(..)                           //
-// TGeoXtru               ->           OCC_Xtru(..)                           //
-// TGeoCompositeShape     ->           OCC_CompositeShape(..)                 //
-//                                                                            //
-// A log file is created in /tmp/TGeoCad.log                                  //
-//                                                                            //
-////////////////////////////////////////////////////////////////////////////////
+/** \class TGeoToOCC
+\ingroup Geometry_cad
 
+This class contains implementation of converting ROOT's
+geometry shapes to OpenCascade shapes.
+Each ROOT shape is translated in the corrispondent OCC shape using the
+following methods:
+
+~~~
+TGeoBBox               ->           OCC_Box(..)
+TGeoSphere             ->           OCC_Sphere(..)
+TGeoArb8               ->           OCC_Arb8(..)
+TGeoConeSeg            ->           OCC_Cones(..)
+TGeoCone               ->           OCC_Cones(..)
+TGeoPara               ->           OCC_ParaTrap(..)
+TGeoTrap               ->           OCC_ParaTrap(..)
+TGeoGtra               ->           OCC_ParaTrap(..)
+TGeoTrd1               ->           OCC_Trd(..)
+TGeoTrd2               ->           OCC_Trd(..)
+TGeoTubeSeg            ->           OCC_Tube(..)
+TGeoCtub               ->           OCC_Cuttub(..)
+TGeoTube               ->           OCC_TubeSeg(..)
+TGeoPcon               ->           OCC_Pcon(..)
+TGeoTorus              ->           OCC_Torus(..)
+TGeoPgon               ->           OCC_Pgon(..)
+TGeoEltu               ->           OCC_Eltu(..)
+TGeoHype               ->           OCC_Hype(..)
+TGeoXtru               ->           OCC_Xtru(..)
+TGeoCompositeShape     ->           OCC_CompositeShape(..)
+~~~
+
+A log file is created in `/tmp/TGeoCad.log`
+
+*/
 
 #include "TGeoToOCC.h"
 
