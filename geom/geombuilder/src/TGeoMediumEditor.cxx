@@ -9,11 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//
-//  TGeoMediumEditor - Editor class for TGeo tracking media
-//
-//______________________________________________________________________________
+/** \class TGeoMediumEditor
+\ingroup Geometry_builder
+
+Editor class for TGeo tracking media.
+
+*/
 
 #include "TGeoMediumEditor.h"
 #include "TGeoTabManager.h"
