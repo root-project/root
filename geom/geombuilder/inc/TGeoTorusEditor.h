@@ -11,14 +11,6 @@
 #ifndef ROOT_TGeoTorusEditor
 #define ROOT_TGeoTorusEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTorusEditor                                                      //
-//                                                                      //
-//  Editor for a TGeoTorus.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 
@@ -56,7 +48,7 @@ protected:
    TGTextButton        *fUndo;              // Undo-Button
    TGCheckButton       *fDelayed;           // Check button for delayed draw
 
-   virtual void ConnectSignals2Slots();   // Connect the signals to the slots
+   virtual void ConnectSignals2Slots();     // Connect the signals to the slots
    Bool_t       IsDelayed() const;
 
 public:
