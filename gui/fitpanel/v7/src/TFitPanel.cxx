@@ -31,6 +31,8 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TFitPanel::G
       fWindow->SetPanelName("FitPanel");
 
       fWindow->SetDataCallBack(std::bind(&TFitPanel::ProcessData, this, std::placeholders::_1, std::placeholders::_2));
+
+      fWindow->SetGeometry(300,500); // configure predefined geometry
    }
 
    return fWindow;
