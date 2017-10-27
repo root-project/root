@@ -14,9 +14,9 @@
 
 Editor for a TGeoTrap.
 
-\image html geom_box_pic.png
+\image html geom_trap_pic.png
 
-\image html geom_box_ed.png
+\image html geom_trap_ed.png
 
 */
 
