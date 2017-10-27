@@ -615,6 +615,8 @@ void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 
       WebWindowDataCallback_t func = std::bind(&TCanvasPainter::ProcessData, this, std::placeholders::_1, std::placeholders::_2);
       fWindow->SetDataCallBack(func);
+
+      // fWindow->SetGeometry(500,300);
    }
 
    fWindow->Show(where);
