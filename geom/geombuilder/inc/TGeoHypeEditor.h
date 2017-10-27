@@ -11,14 +11,6 @@
 #ifndef ROOT_TGeoHypeEditor
 #define ROOT_TGeoHypeEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoHypeEditor                                                      //
-//                                                                      //
-//  Editor for a TGeoHype.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 
