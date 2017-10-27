@@ -9,11 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//
-//  TGeoTranslationEditor, TGeoRotationEditor, TGeoCombiTransEditor
-//     Editors for different types of TGeo matrices.
-//______________________________________________________________________________
+/** \class TGeoTranslationEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoTranslation.
+
+*/
 
 #include "TGeoMatrixEditor.h"
 #include "TGeoTabManager.h"
@@ -279,13 +280,12 @@ void TGeoTranslationEditor::DoDz()
    DoModified();
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoRotationEditor                                                  //
-//                                                                      //
-//  Editor for a TGeoRotation.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TGeoRotationEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoRotation.
+
+*/
 
 ClassImp(TGeoRotationEditor);
 
@@ -587,14 +587,12 @@ void TGeoRotationEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
 
+/** \class TGeoCombiTransEditor
+\ingroup Geometry_builder
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoCombiTransEditor                                                //
-//                                                                      //
-//  Editor for a TGeoCombiTrans.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+Editor for a TGeoCombiTrans.
+
+*/
 
 ClassImp(TGeoCombiTransEditor);
 

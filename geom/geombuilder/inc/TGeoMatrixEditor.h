@@ -12,13 +12,6 @@
 #ifndef ROOT_TGeoTranslationEditor
 #define ROOT_TGeoTranslationEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTranslationEditor                                               //
-//                                                                      //
-//  Editor for a TGeoTranslation.                                       //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
@@ -76,13 +69,6 @@ public:
    ClassDef(TGeoTranslationEditor,0)   // TGeoTranslation editor
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoRotationEditor                                                  //
-//                                                                      //
-//  Editor for a TGeoRotation.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGeoRotationEditor : public TGeoGedFrame {
 
@@ -134,13 +120,6 @@ public:
    ClassDef(TGeoRotationEditor,0)   // TGeoRotation editor
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoCombiTransEditor                                                //
-//                                                                      //
-//  Editor for a TGeoCombiTrans.                                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGeoCombiTransEditor : public TGeoGedFrame {
 
