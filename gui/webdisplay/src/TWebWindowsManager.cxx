@@ -134,7 +134,7 @@ void ROOT::Experimental::TWebWindowsManager::CloseDisplay(ROOT::Experimental::TW
 
 
 //////////////////////////////////////////////////////////////////////////
-/// Create new display for the canvas
+/// Create new display for the window
 /// Parameter \par where specified  which program could be used for display creation
 /// Possible values:
 ///
@@ -145,7 +145,7 @@ void ROOT::Experimental::TWebWindowsManager::CloseDisplay(ROOT::Experimental::TW
 ///           one could also specify $url in program name, which will be replaced with canvas URL
 ///  native - either any available local display or default browser
 ///
-///  Canvas can be displayed in several different places
+///  If allowed, same window can be displayed several times (like for TCanvas)
 
 bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow *display, const std::string &where)
 {
@@ -166,12 +166,12 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
 
    if (symbol_qt5 && (is_native || is_qt5)) {
-      typedef void (*FunctionQt5)(const char *, void *, bool);
+      typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
 
       printf("Show canvas in Qt5 window:  %s\n", addr.Data());
 
       FunctionQt5 func = (FunctionQt5)symbol_qt5;
-      func(addr.Data(), fServer, batch_mode);
+      func(addr.Data(), fServer, batch_mode, display->GetWidth(), display->GetHeight());
       return false;
    }
 

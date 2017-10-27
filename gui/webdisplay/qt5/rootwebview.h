@@ -21,14 +21,19 @@
 class RootWebView : public QWebEngineView {
    Q_OBJECT
 protected:
+   unsigned fWidth;
+   unsigned fHeight;
+
    virtual void closeEvent(QCloseEvent *);
 
 public slots:
    void onWindowCloseRequested();
 
 public:
-   RootWebView(QWidget *parent = 0);
+   RootWebView(QWidget *parent = 0, unsigned width = 0, unsigned height = 0);
    virtual ~RootWebView();
+
+   virtual QSize  sizeHint() const;
 };
 
 #endif

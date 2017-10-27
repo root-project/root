@@ -16,7 +16,10 @@
 #include "rootwebview.h"
 #include "rootwebpage.h"
 
-RootWebView::RootWebView(QWidget *parent) : QWebEngineView(parent)
+RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height) :
+   QWebEngineView(parent),
+   fWidth(width),
+   fHeight(height)
 {
    setPage(new RootWebPage());
 
@@ -32,6 +35,13 @@ RootWebView::RootWebView(QWidget *parent) : QWebEngineView(parent)
 RootWebView::~RootWebView()
 {
 }
+
+QSize RootWebView::sizeHint() const
+{
+   if (fWidth && fHeight) return QSize(fWidth, fHeight);
+   return QWebEngineView::sizeHint();
+}
+
 
 void RootWebView::closeEvent(QCloseEvent *)
 {
