@@ -147,7 +147,7 @@ void ROOT::Experimental::TWebWindowsManager::CloseDisplay(ROOT::Experimental::TW
 ///
 ///  If allowed, same window can be displayed several times (like for TCanvas)
 
-bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow *display, const std::string &where)
+bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow *display, const std::string &_where)
 {
 
    if (!CreateHttpServer()) {
@@ -160,6 +160,13 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    TString addr;
    addr.Form("/web7gui/%s/%s", handler->GetName(), (batch_mode ? "?batch_mode" : ""));
+
+   std::string where = _where;
+   if (where.empty()) {
+      const char *cwhere = gSystem->Getenv("WEBGUI_WHERE");
+      if (cwhere)
+         where = cwhere;
+   }
 
    bool is_native = where.empty() || (where == "native"), is_qt5 = (where == "qt5"), ic_cef = (where == "cef");
 
@@ -200,12 +207,25 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    TString exec;
 
-   if (!is_native && !ic_cef && !is_qt5 && (where != "browser")) {
-      if (where.find("$url") != std::string::npos) {
+   if ((where == "chrome") || (where == "chromium")) {
+      // see https://peter.sh/experiments/chromium-command-line-switches/
+      exec = where.c_str();
+      if (display->GetWidth() && display->GetHeight())
+         exec.Append(TString::Format(" --window-size=%u,%u", display->GetWidth(), display->GetHeight()));
+      if (batch_mode)
+         exec.Append(" --headless");
+      exec.Append(" --app="); // use app mode
+      exec.Append(addr.Data());
+      exec.Append(" &");
+   } else if (!is_native && !ic_cef && !is_qt5 && (where != "browser")) {
+      if (where.find("$") != std::string::npos) {
          exec = where.c_str();
          exec.ReplaceAll("$url", addr);
+         exec.ReplaceAll("$w", std::to_string(display->GetWidth() ? display->GetWidth() : 800).c_str());
+         exec.ReplaceAll("$h", std::to_string(display->GetHeight() ? display->GetHeight() : 600).c_str());
       } else {
          exec.Form("%s %s &", where.c_str(), addr.Data());
+         // if (batch_mode) exec.Append(" --headless");
       }
    } else if (gSystem->InheritsFrom("TMacOSXSystem")) {
       exec.Form("open %s", addr.Data());
