@@ -25,7 +25,7 @@ the geometry as a whole.
 
 #### TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z)
 
-This method can be called direcly from the TGeoManager class and print a
+This method can be called directly from the TGeoManager class and print a
 report on how a given point is classified by the modeller: which is the
 full path to the deepest node containing it, and the (under)estimation
 of the distance to the closest boundary (safety).
@@ -41,7 +41,7 @@ classified as belonging to visible volumes.
 
 Can be called and acts in the same way as the previous, but instead of points,
 rays having random isotropic directions are generated from the given point.
-A raytracing algorithm propagates all rays untill they exit geometry, plotting
+A raytracing algorithm propagates all rays until they exit geometry, plotting
 all segments crossing visible nodes in the same color as these.
 
 #### TGeoChecker::Test(Int_t npoints)
@@ -57,7 +57,7 @@ lego plot for a given volume, in a given theta/phi range.
 #### TGeoChecker::Weight(Double_t precision)
 
 Implementation of TGeoVolume::Weight(). Estimates the total weight of a given
-volume by matrial sampling. Accepts as input the desired precision.
+volume by material sampling. Accepts as input the desired precision.
 */
 
 #include "TVirtualPad.h"
@@ -448,7 +448,7 @@ void TGeoChecker::CheckBoundaryReference(Int_t icheck)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Geometry checking. Opional overlap checkings (by sampling and by mesh). Optional
+/// Geometry checking. Optional overlap checkings (by sampling and by mesh). Optional
 /// boundary crossing check + timing per volume.
 ///
 /// STAGE 1: extensive overlap checking by sampling per volume. Stdout need to be
@@ -513,7 +513,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    // Generate rays from vertex in phi=[0,2*pi] theta=[0,pi]
 //   Int_t ntracks = 1000000;
    printf("====================================================================\n");
-   printf("STAGE 3: Propagating %i tracks starting from vertex\n and conting number of boundary crossings...\n", ntracks);
+   printf("STAGE 3: Propagating %i tracks starting from vertex\n and counting number of boundary crossings...\n", ntracks);
    printf("====================================================================\n");
    Int_t nbound = 0;
    Double_t theta, phi;
@@ -1055,7 +1055,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
          mat2->MasterToLocal(point, local1);
          extrude = shape2->Contains(local1);
          if (extrude) {
-            // skip points on mother mesh that have no neghbourhood ouside mother
+            // skip points on mother mesh that have no neighborhood outside mother
             safety = shape1->Safety(local,kTRUE);
             if (safety>1E-6) {
                extrude = kFALSE;
@@ -1575,7 +1575,7 @@ void TGeoChecker::PrintOverlaps() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw point (x,y,z) over the picture of the daughers of the volume containing this point.
+/// Draw point (x,y,z) over the picture of the daughters of the volume containing this point.
 /// Generates a report regarding the path to the node containing this point and the distance to
 /// the closest boundary.
 
@@ -2324,7 +2324,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// shoot npoints randomly in a box of 1E-5 arround current point.
+/// shoot npoints randomly in a box of 1E-5 around current point.
 /// return minimum distance to points outside
 /// make sure that path to current node is updated
 /// get the response of tgeo
