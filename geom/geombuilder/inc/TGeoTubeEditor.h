@@ -11,14 +11,6 @@
 #ifndef ROOT_TGeoTubeEditor
 #define ROOT_TGeoTubeEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTubeEditor                                                      //
-//                                                                      //
-//  Editor for a TGeoTube.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 
@@ -76,13 +68,6 @@ public:
    ClassDef(TGeoTubeEditor,0)   // TGeoTube editor
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTubeSegEditor                                                   //
-//                                                                      //
-//  Editor for a tube segment.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGDoubleVSlider;
 
@@ -115,14 +100,6 @@ public:
 
    ClassDef(TGeoTubeSegEditor,0)   // TGeoTubeSeg editor
 };
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoCtubEditor                                                      //
-//                                                                      //
-//  Editor for a tube segment cut with 2 planes.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGeoCtubEditor : public TGeoTubeSegEditor {
 
