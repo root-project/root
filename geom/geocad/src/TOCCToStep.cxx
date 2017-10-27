@@ -9,6 +9,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/** \class TOCCToStep
+\ingroup Geometry_cad
+
 //////////////////////////////////////////////////////////////////////////
 // TOCCToStep Class                                                     //
 //                                                                      //
