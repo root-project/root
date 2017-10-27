@@ -11,14 +11,6 @@
 #ifndef ROOT_TGeoTrd2Editor
 #define ROOT_TGeoTrd2Editor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTrd2Editor                                                      //
-//                                                                      //
-//  Editor for a TGeoTrd2.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 

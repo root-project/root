@@ -9,21 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTrd2Editor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/trd2_pic.gif">
+/** \class TGeoTrd2Editor
+\ingroup Geometry_builder
+
+Editor for a TGeoTrd2.
+
+\image html geom_trd2_pic.png
+
+\image html geom_trd2_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/trd2_ed.jpg">
-*/
-//End_Html
 
 #include "TGeoTrd2Editor.h"
 #include "TGeoTabManager.h"
@@ -78,7 +73,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
    fEDx1 = new TGNumberEntry(f1, 0., 5, kTRD2_X1);
    fEDx1->SetNumAttr(TGNumberFormat::kNEAPositive);
    nef = (TGTextEntry*)fEDx1->GetNumberEntry();
-   nef->SetToolTipText("Enter the half-lenth in X1");
+   nef->SetToolTipText("Enter the half-length in X1");
    fEDx1->Associate(this);
    f1->AddFrame(fEDx1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
@@ -90,7 +85,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
    fEDx2 = new TGNumberEntry(f1, 0., 5, kTRD2_X2);
    fEDx2->SetNumAttr(TGNumberFormat::kNEAPositive);
    nef = (TGTextEntry*)fEDx2->GetNumberEntry();
-   nef->SetToolTipText("Enter the  half-lenth in X2");
+   nef->SetToolTipText("Enter the  half-length in X2");
    fEDx2->Associate(this);
    f1->AddFrame(fEDx2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
@@ -102,7 +97,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
    fEDy1 = new TGNumberEntry(f2, 0., 5, kTRD2_Y1);
    fEDy1->SetNumAttr(TGNumberFormat::kNEAPositive);
    nef = (TGTextEntry*)fEDy1->GetNumberEntry();
-   nef->SetToolTipText("Enter the half-lenth in Y1");
+   nef->SetToolTipText("Enter the half-length in Y1");
    fEDy1->Associate(this);
    f2->AddFrame(fEDy1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
@@ -114,7 +109,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
    fEDy2 = new TGNumberEntry(f2, 0., 5, kTRD2_Y2);
    fEDy2->SetNumAttr(TGNumberFormat::kNEAPositive);
    nef = (TGTextEntry*)fEDy2->GetNumberEntry();
-   nef->SetToolTipText("Enter the half-lenth in Y2");
+   nef->SetToolTipText("Enter the half-length in Y2");
    fEDy2->Associate(this);
    f2->AddFrame(fEDy2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
@@ -126,7 +121,7 @@ TGeoTrd2Editor::TGeoTrd2Editor(const TGWindow *p, Int_t width,
    fEDz = new TGNumberEntry(f3, 0., 5, kTRD2_Z);
    fEDz->SetNumAttr(TGNumberFormat::kNEAPositive);
    nef = (TGTextEntry*)fEDz->GetNumberEntry();
-   nef->SetToolTipText("Enter the  half-lenth in Z");
+   nef->SetToolTipText("Enter the  half-length in Z");
    fEDz->Associate(this);
    f3->AddFrame(fEDz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
