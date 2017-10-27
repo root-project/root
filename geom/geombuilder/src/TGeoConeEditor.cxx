@@ -9,21 +9,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoConeEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/cone_pic.gif">
+/** \class TGeoConeEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoCone.
+
+\image html geom_cone_pic.png
+
+\image html geom_cone_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/cone_ed.jpg">
-*/
-//End_Html
+
 
 #include "TGeoConeEditor.h"
 #include "TGeoTabManager.h"
@@ -263,7 +259,7 @@ void TGeoConeEditor::DoApply()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Slot for modifing current parameters.
+///Slot for modifying current parameters.
 
 void TGeoConeEditor::DoModified()
 {
@@ -367,21 +363,16 @@ void TGeoConeEditor::DoDz()
    if (!IsDelayed()) DoApply();
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoConeSegEditor                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/cons_pic.gif">
+/** \class TGeoConeSegEditor
+\ingroup Geometry_builder
+
+Editor for a cone segment.
+
+\image html geom_cons_pic.png
+
+\image html geom_cons_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/cons_ed.jpg">
-*/
-//End_Html
 
 ClassImp(TGeoConeSegEditor);
 

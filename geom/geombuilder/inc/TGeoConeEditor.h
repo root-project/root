@@ -11,14 +11,6 @@
 #ifndef ROOT_TGeoConeEditor
 #define ROOT_TGeoConeEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoConeEditor                                                      //
-//                                                                      //
-//  Editor for a TGeoCone.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 
@@ -82,13 +74,6 @@ public:
    ClassDef(TGeoConeEditor,0)   // TGeoCone editor
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoConeSegEditor                                                   //
-//                                                                      //
-//  Editor for a cone segment.                                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGDoubleVSlider;
 
