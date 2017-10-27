@@ -36,7 +36,6 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TFitPanel::G
    return fWindow;
 }
 
-
 void ROOT::Experimental::TFitPanel::Show(const std::string &where)
 {
    GetWindow()->Show(where);
@@ -44,7 +43,8 @@ void ROOT::Experimental::TFitPanel::Show(const std::string &where)
 
 void ROOT::Experimental::TFitPanel::Hide()
 {
-   if (!fWindow) return;
+   if (!fWindow)
+      return;
 
    fWindow->CloseConnections();
 }
@@ -57,14 +57,14 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
       fWindow->Send("INITDONE", fConnId);
 
       TFitPanelModel model;
-      model.fDataNames.push_back(ComboBoxItem("1","RootData1"));
-      model.fDataNames.push_back(ComboBoxItem("2","RootData2"));
-      model.fDataNames.push_back(ComboBoxItem("3","RootData3"));
+      model.fDataNames.push_back(ComboBoxItem("1", "RootData1"));
+      model.fDataNames.push_back(ComboBoxItem("2", "RootData2"));
+      model.fDataNames.push_back(ComboBoxItem("3", "RootData3"));
       model.fSelectDataId = "1";
 
-      model.fModelNames.push_back(ComboBoxItem("1","RootModel1"));
-      model.fModelNames.push_back(ComboBoxItem("2","RootModel2"));
-      model.fModelNames.push_back(ComboBoxItem("3","RootModel3"));
+      model.fModelNames.push_back(ComboBoxItem("1", "RootModel1"));
+      model.fModelNames.push_back(ComboBoxItem("2", "RootModel2"));
+      model.fModelNames.push_back(ComboBoxItem("3", "RootModel3"));
       model.fSelectModelId = "3";
 
       TString json = TBufferJSON::ConvertToJSON(&model, gROOT->GetClass("ROOT::Experimental::TFitPanelModel"));
@@ -80,9 +80,9 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
       return;
    }
 
-   if (arg.find("DOFIT:")==0) {
+   if (arg.find("DOFIT:") == 0) {
       TString exec;
-      exec.Form("((ROOT::Experimental::TFitPanel *) %p)->DoFit(%s);", this, arg.c_str()+6);
+      exec.Form("((ROOT::Experimental::TFitPanel *) %p)->DoFit(%s);", this, arg.c_str() + 6);
       printf("Execute %s\n", exec.Data());
       gROOT->ProcessLine(exec.Data());
       return;
@@ -98,7 +98,6 @@ void ROOT::Experimental::TFitPanel::UseCanvas(std::shared_ptr<TCanvas> &canv)
 
    fCanvas = canv;
 }
-
 
 /// method called from the UI
 void ROOT::Experimental::TFitPanel::DoFit(const std::string &dname, const std::string &mname)
@@ -132,10 +131,10 @@ void ROOT::Experimental::TFitPanel::DoFit(const std::string &dname, const std::s
 
       if (first_time) {
          fCanvas->Show();
-         //fCanvas->Update();
+         // fCanvas->Update();
       } else {
          fCanvas->Modified();
-         //fCanvas->Update();
+         // fCanvas->Update();
       }
    }
 }
