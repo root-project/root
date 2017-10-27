@@ -9,21 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoPconEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/pcon_pic.gif">
+/** \class TGeoPconEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoPcon.
+
+\image html geom_pcon_pic.png
+
+\image html geom_pcon_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/pcon_ed.jpg">
-*/
-//End_Html
 
 #include "TGeoPconEditor.h"
 #include "TGeoTabManager.h"
@@ -465,6 +460,13 @@ void TGeoPconEditor::DoUndo()
    fUndo->SetEnabled(kFALSE);
    fApply->SetEnabled(kFALSE);
 }
+
+/** \class TGeoPconSection
+\ingroup Geometry_builder
+
+Utility frame used by TGeoPcon editor.
+
+*/
 
 ClassImp(TGeoPconSection);
 

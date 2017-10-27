@@ -11,14 +11,6 @@
 #ifndef ROOT_TGeoPconEditor
 #define ROOT_TGeoPconEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoPconEditor                                                      //
-//                                                                      //
-//  Editor for a TGeoPcon.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 
@@ -86,13 +78,6 @@ public:
    ClassDef(TGeoPconEditor,0)   // TGeoPcon editor
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoPconSection                                                     //
-//                                                                      //
-//  Utility frame used by TGeoPcon editor.                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
 
 class TGeoPconSection : public TGCompositeFrame, public TGWidget  {
 
