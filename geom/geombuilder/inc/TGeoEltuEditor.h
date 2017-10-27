@@ -11,14 +11,6 @@
 #ifndef ROOT_TGeoEltuEditor
 #define ROOT_TGeoEltuEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoEltuEditor                                                      //
-//                                                                      //
-//  Editor for a TGeoEltu.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 
