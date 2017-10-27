@@ -187,12 +187,11 @@ sap.ui.define([
          if (new_state && p) p.SelectObjectPainter(p);
       },
 
-      showLeftArea : function(panel_name) {
-         var split = this.getView().byId("MainAreaSplitter");
-         if (!split) return;
+      showPanelInLeftArea : function(panel_name, panel_handle, call_back) {
 
+         var split = this.getView().byId("MainAreaSplitter");
          var curr = this.getView().getModel().getProperty("/LeftArea");
-         if (curr == panel_name) return;
+         if (!split || (curr === panel_name)) return JSROOT.CallBack(call_back, false);
 
          // first need to remove existing
          if (curr) split.removeContentArea(split.getContentAreas()[0]);
@@ -200,7 +199,45 @@ sap.ui.define([
          this.getView().getModel().setProperty("/LeftArea", panel_name);
          this.getView().getModel().setProperty("/GedIcon", (panel_name=="Ged") ? "sap-icon://accept" : "");
 
-         if (!panel_name) return;
+         if (!panel_handle || !panel_name) return JSROOT.CallBack(call_back, false);
+
+         var oLd = new SplitterLayoutData({
+            resizable : true,
+            size      : "250px",
+            maxSize   : "500px"
+         });
+
+         var panelid = "LeftPanelId";
+
+         var oModel = new JSROOT.sap.ui.model.json.JSONModel({
+            handle: panel_handle
+         });
+         sap.ui.getCore().setModel(oModel, panelid);
+
+         var oContent = sap.ui.xmlview({
+            id: panelid,
+            viewName : "sap.ui.jsroot.view." + panel_name,
+            layoutData: oLd,
+            height: panel_name=="Panel" ? "100%" : undefined
+         });
+
+         split.insertContentArea(oContent, 0);
+
+         JSROOT.CallBack(call_back, true);
+      },
+
+      showLeftArea : function(panel_name, call_back) {
+         var split = this.getView().byId("MainAreaSplitter");
+         var curr = this.getView().getModel().getProperty("/LeftArea");
+         if (!split || (curr === panel_name)) return JSROOT.CallBack(call_back, false);
+
+         // first need to remove existing
+         if (curr) split.removeContentArea(split.getContentAreas()[0]);
+
+         this.getView().getModel().setProperty("/LeftArea", panel_name);
+         this.getView().getModel().setProperty("/GedIcon", (panel_name=="Ged") ? "sap-icon://accept" : "");
+
+         if (!panel_name) return JSROOT.CallBack(call_back, false);
 
          var oLd = new SplitterLayoutData({
             resizable : true,
@@ -215,6 +252,8 @@ sap.ui.define([
          });
 
          split.insertContentArea(oContent, 0);
+
+         JSROOT.CallBack(call_back, true);
 
          return oContent.getController(); // return controller of new panel
       },
