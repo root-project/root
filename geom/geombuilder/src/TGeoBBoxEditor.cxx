@@ -10,7 +10,7 @@
  *************************************************************************/
 
 /** \class TGeoBBoxEditor
-\ingroup Geometry_classes
+\ingroup Geometry_builder
 
 Editor for a TGeoBBox.
 
