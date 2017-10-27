@@ -12,7 +12,13 @@
 /** \class TGeoRegion
 \ingroup Geometry_classes
 
-  Regions are groups of volumes having a common set of user tracking cuts.
+Regions are groups of volumes having a common set of user tracking cuts.
+
+Class wrapper for regions used by Monte Carlo packages
+A region is composed by a list of logical volumes and defines a set
+of cuts. Used mainly to transport region information stored in
+GDML format to the clients requiring it from the transient geometry.
+
 */
 
 #include "TGeoRegion.h"
