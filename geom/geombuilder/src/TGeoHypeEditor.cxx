@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-/** \class TGeoEltuEditor
+/** \class TGeoHypeEditor
 \ingroup Geometry_builder
 
 Editor for a TGeoHype.
