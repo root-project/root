@@ -33,7 +33,7 @@ GEOMH1       := TGeoAtt.h TGeoStateInfo.h TGeoBoolNode.h \
                 TGeoBuilder.h TGeoNavigator.h TVirtualGeoConverter.h
 GEOMH2       := TGeoPatternFinder.h TGeoCache.h TVirtualMagField.h \
                 TGeoUniformMagField.h TGeoGlobalMagField.h TGeoBranchArray.h \
-                TGeoExtension.h TGeoParallelWorld.h
+                TGeoExtension.h TGeoParallelWorld.h TGeoRegion.h
 GEOMH3       := TGeoRCPtr.h
 GEOMH1       := $(patsubst %,$(MODDIRI)/%,$(GEOMH1))
 GEOMH2       := $(patsubst %,$(MODDIRI)/%,$(GEOMH2))
