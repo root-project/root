@@ -206,6 +206,15 @@ if(gnuinstall)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DR__HAVE_CONFIG")
 endif()
 
+# Enable ThinLTO for clang in release build modes if the current clang version
+# supports it. We don't add it to Release mode because it increases build times.
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  if(NOT ${uppercase_CMAKE_BUILD_TYPE} STREQUAL DEBUG)
+    ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS "-flto=thin")
+    ROOT_ADD_C_FLAG(CMAKE_C_FLAGS "-flto=thin")
+  endif()
+endif()
+
 #---Check if we use the new libstdc++ CXX11 ABI-----------------------------------------------------
 # Necessary to compile check_cxx_source_compiles this early
 include(CheckCXXSourceCompiles)
