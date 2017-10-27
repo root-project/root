@@ -540,7 +540,7 @@ public:
           LastAlu.back() = nullptr;
         if (MI->getOpcode() == AMDGPU::CF_ALU)
           LastAlu.back() = &*MI;
-        ++I;
+        I++;
         bool RequiresWorkAround =
             CFStack.requiresWorkAroundForInst(MI->getOpcode());
         switch (MI->getOpcode()) {

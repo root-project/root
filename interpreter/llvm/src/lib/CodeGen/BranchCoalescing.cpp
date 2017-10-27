@@ -373,7 +373,7 @@ void BranchCoalescing::moveAndUpdatePHIs(MachineBasicBlock *SourceMBB,
   }
 
   // Update all PHI instructions in SourceMBB and move to top of TargetMBB
-  for (MachineBasicBlock::iterator Iter = MI; Iter != ME; ++Iter) {
+  for (MachineBasicBlock::iterator Iter = MI; Iter != ME; Iter++) {
     MachineInstr &PHIInst = *Iter;
     for (unsigned i = 2, e = PHIInst.getNumOperands() + 1; i != e; i += 2) {
       MachineOperand &MO = PHIInst.getOperand(i);

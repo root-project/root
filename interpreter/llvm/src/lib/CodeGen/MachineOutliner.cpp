@@ -774,7 +774,7 @@ struct InstructionMapper {
                             const TargetRegisterInfo &TRI,
                             const TargetInstrInfo &TII) {
     for (MachineBasicBlock::iterator It = MBB.begin(), Et = MBB.end(); It != Et;
-         ++It) {
+         It++) {
 
       // Keep track of where this instruction is in the module.
       switch(TII.getOutliningType(*It)) {
@@ -1170,7 +1170,7 @@ bool MachineOutliner::outline(Module &M,
     MachineBasicBlock::iterator EndIt = Mapper.InstrList[EndIdx];
     assert(EndIt != MBB->end() && "EndIt out of bounds!");
 
-    ++EndIt; // Erase needs one past the end index.
+    EndIt++; // Erase needs one past the end index.
 
     // Does this candidate have a function yet?
     if (!OF.MF) {

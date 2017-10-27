@@ -548,7 +548,7 @@ AliasSet &AliasSetTracker::mergeAllAliasSets() {
   // without worrying about iterator invalidation.
   std::vector<AliasSet *> ASVector;
   ASVector.reserve(SaturationThreshold);
-  for (iterator I = begin(), E = end(); I != E; ++I)
+  for (iterator I = begin(), E = end(); I != E; I++)
     ASVector.push_back(&*I);
 
   // Copy all instructions and pointers into a new set, and forward all other

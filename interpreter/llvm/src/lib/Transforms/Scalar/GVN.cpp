@@ -2239,7 +2239,7 @@ void GVN::addDeadBlock(BasicBlock *BB) {
   // For the dead blocks' live successors, update their phi nodes by replacing
   // the operands corresponding to dead blocks with UndefVal.
   for(SmallSetVector<BasicBlock *, 4>::iterator I = DF.begin(), E = DF.end();
-        I != E; ++I) {
+        I != E; I++) {
     BasicBlock *B = *I;
     if (DeadBlocks.count(B))
       continue;

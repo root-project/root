@@ -704,7 +704,7 @@ void ScheduleDAGInstrs::insertBarrierChain(Value2SUsMap &map) {
 
     // Remove also the BarrierChain from list if present.
     if (SUItr != SUEE && *SUItr == BarrierChain)
-      ++SUItr;
+      SUItr++;
 
     // Remove all SUs that are now successors of BarrierChain.
     if (SUItr != sus.begin())

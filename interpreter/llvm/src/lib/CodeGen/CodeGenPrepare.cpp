@@ -599,11 +599,11 @@ bool CodeGenPrepare::splitIndirectCriticalEdges(Function &F) {
       // Now, clean up - the direct block shouldn't get the indirect value,
       // and vice versa.
       DirPHI->removeIncomingValue(IBRPred);
-      ++Direct;
+      Direct++;
 
       // Advance the pointer here, to avoid invalidation issues when the old
       // PHI is erased.
-      ++Indirect;
+      Indirect++;
 
       PHINode *NewIndPHI = PHINode::Create(IndPHI->getType(), 1, "ind", IndPHI);
       NewIndPHI->addIncoming(IndPHI->getIncomingValueForBlock(IBRPred),
@@ -1438,7 +1438,7 @@ SinkShiftAndTruncate(BinaryOperator *ShiftI, Instruction *User, ConstantInt *CI,
 
       // Sink the trunc
       BasicBlock::iterator TruncInsertPt = TruncUserBB->getFirstInsertionPt();
-      ++TruncInsertPt;
+      TruncInsertPt++;
       assert(TruncInsertPt != TruncUserBB->end());
 
       InsertedTrunc = CastInst::Create(TruncI->getOpcode(), InsertedShift,

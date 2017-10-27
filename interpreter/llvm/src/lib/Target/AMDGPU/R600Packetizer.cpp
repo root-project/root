@@ -69,7 +69,7 @@ private:
   DenseMap<unsigned, unsigned> getPreviousVector(MachineBasicBlock::iterator I)
       const {
     DenseMap<unsigned, unsigned> Result;
-    --I;
+    I--;
     if (!TII->isALUInstr(I->getOpcode()) && !I->isBundle())
       return Result;
     MachineBasicBlock::instr_iterator BI = I.getInstrIterator();

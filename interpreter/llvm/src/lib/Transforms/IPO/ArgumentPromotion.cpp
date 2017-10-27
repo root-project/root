@@ -481,7 +481,7 @@ static bool prefixIn(const IndicesVector &Indices,
   std::set<IndicesVector>::iterator Low;
   Low = Set.upper_bound(Indices);
   if (Low != Set.begin())
-    --Low;
+    Low--;
   // Low is now the last element smaller than or equal to Indices. This means
   // it points to a prefix of Indices (possibly Indices itself), if such
   // prefix exists.
@@ -501,7 +501,7 @@ static void markIndicesSafe(const IndicesVector &ToMark,
   Low = Safe.upper_bound(ToMark);
   // Guard against the case where Safe is empty
   if (Low != Safe.begin())
-    --Low;
+    Low--;
   // Low is now the last element smaller than or equal to Indices. This
   // means it points to a prefix of Indices (possibly Indices itself), if
   // such prefix exists.

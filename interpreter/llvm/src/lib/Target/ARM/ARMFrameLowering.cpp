@@ -835,11 +835,11 @@ void ARMFrameLowering::emitEpilogue(MachineFunction &MF,
 
     // Increment past our save areas.
     if (MBBI != MBB.end() && AFI->getDPRCalleeSavedAreaSize()) {
-      ++MBBI;
+      MBBI++;
       // Since vpop register list cannot have gaps, there may be multiple vpop
       // instructions in the epilogue.
       while (MBBI != MBB.end() && MBBI->getOpcode() == ARM::VLDMDIA_UPD)
-        ++MBBI;
+        MBBI++;
     }
     if (AFI->getDPRCalleeSavedGapSize()) {
       assert(AFI->getDPRCalleeSavedGapSize() == 4 &&
@@ -847,8 +847,8 @@ void ARMFrameLowering::emitEpilogue(MachineFunction &MF,
       emitSPUpdate(isARM, MBB, MBBI, dl, TII, AFI->getDPRCalleeSavedGapSize());
     }
 
-    if (AFI->getGPRCalleeSavedArea2Size()) ++MBBI;
-    if (AFI->getGPRCalleeSavedArea1Size()) ++MBBI;
+    if (AFI->getGPRCalleeSavedArea2Size()) MBBI++;
+    if (AFI->getGPRCalleeSavedArea1Size()) MBBI++;
   }
 
   if (ArgRegsSaveSize)

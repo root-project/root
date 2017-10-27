@@ -1824,9 +1824,9 @@ bool IfConverter::IfConvertDiamondCommon(
   else {
     do {
       assert(DI2 != MBB2.begin());
-      --DI2;
+      DI2--;
     } while (DI2->isBranch() || DI2->isDebugValue());
-    ++DI2;
+    DI2++;
   }
   while (NumDups2 != 0) {
     // NumDups2 only counted non-dbg_value instructions, so this won't

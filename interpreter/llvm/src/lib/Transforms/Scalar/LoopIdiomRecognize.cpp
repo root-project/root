@@ -1110,7 +1110,7 @@ static bool detectPopcountIdiom(Loop *CurLoop, BasicBlock *PreCondBB,
     CountInst = nullptr;
     for (BasicBlock::iterator Iter = LoopEntry->getFirstNonPHI()->getIterator(),
                               IterE = LoopEntry->end();
-         Iter != IterE; ++Iter) {
+         Iter != IterE; Iter++) {
       Instruction *Inst = &*Iter;
       if (Inst->getOpcode() != Instruction::Add)
         continue;

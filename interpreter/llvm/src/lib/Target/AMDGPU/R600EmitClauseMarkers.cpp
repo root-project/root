@@ -274,7 +274,7 @@ private:
       //
       // XXX: These checks have not been implemented yet.
       if (TII->mustBeLastInClause(I->getOpcode())) {
-        ++I;
+        I++;
         break;
       }
 
