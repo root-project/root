@@ -33,6 +33,8 @@ public:
 
    virtual void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) OVERRIDE;
 
+   void StartWindow(const std::string &url, bool batch);
+
    // CefRenderProcessHandler methods
    // virtual void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,
    //                              CefRefPtr<CefV8Context> context) OVERRIDE;
