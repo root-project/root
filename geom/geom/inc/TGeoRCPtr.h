@@ -102,7 +102,7 @@ public:
       return fPtr;
    }
 
-   //Some overloaded operators to facilitate dealing with an TGeoRCPtr as a convetional C pointer.
+   //Some overloaded operators to facilitate dealing with an TGeoRCPtr as a conventional C pointer.
    //Without these operators, one can still use the less transparent Get() method to access the pointer.
    T* operator->() const {return fPtr;}   //x->member
    T &operator*() const {return *fPtr;}   //*x, (*x).member
