@@ -66,6 +66,8 @@ private:
    unsigned                           fConnLimit{0}; ///<! number of allowed active connections
    static const unsigned       fMaxQueueLength{10}; ///<!  maximal number of queue entries
    WebWindowDataCallback_t        fDataCallback{};  ///<!  main callback when data over channel 1 is arrived
+   unsigned                             fWidth{0};  ///<! initial window width when displayed
+   unsigned                             fHeight{0}; ///<! initial window height when displayed
 
    void SetBatchMode(bool mode) { fBatchMode = mode; }
    void SetId(unsigned id) { fId = id; }
@@ -89,6 +91,19 @@ public:
    void SetDefaultPage(const std::string &page) { fDefaultPage = page; }
 
    void SetPanelName(const std::string &name);
+
+   /// Set window geometry. Will be applied when supported by used web display
+   void SetGeometry(unsigned width, unsigned height)
+   {
+      fWidth = width;
+      fHeight = height;
+   }
+
+   /// returns initial window width (0 - default)
+   unsigned GetWidth() const { return fWidth; }
+
+   /// returns initial window height (0 - default)
+   unsigned GetHeight() const { return fHeight; }
 
    unsigned NumConnections() const { return fConn.size(); }
 
