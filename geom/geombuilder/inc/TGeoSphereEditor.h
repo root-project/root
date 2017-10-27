@@ -11,14 +11,6 @@
 #ifndef ROOT_TGeoSphereEditor
 #define ROOT_TGeoSphereEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoSphereEditor                                                      //
-//                                                                     //
-//  Editor for a TGeoSphere.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 

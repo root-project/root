@@ -9,21 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoSphereEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/sphe_pic.gif">
+/** \class TGeoSphereEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoSphere.
+
+\image html geom_sphe_pic.png
+
+\image html geom_sphe_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/sphe_ed.jpg">
-*/
-//End_Html
 
 #include "TGeoSphereEditor.h"
 #include "TGeoTabManager.h"
