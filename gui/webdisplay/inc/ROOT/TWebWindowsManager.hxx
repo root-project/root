@@ -34,15 +34,13 @@ namespace Experimental {
   Central handle to open web-based windows like Canvas or FitPanel.
   */
 
-
 class TWebWindowsManager {
 
 private:
-
-   THttpServer    *fServer{0};      ///<!  central communication with the all used displays
-   std::string     fAddr{};         ///<!   HTTP address of the server
+   THttpServer *fServer{0};                            ///<!  central communication with the all used displays
+   std::string fAddr{};                                ///<!   HTTP address of the server
    std::list<std::shared_ptr<TWebWindow>> fDisplays{}; ///<! list of existing displays
-   unsigned                      fIdCnt{0};   ///<! counter for identifiers
+   unsigned fIdCnt{0};                                 ///<! counter for identifiers
 
    bool CreateHttpServer(bool with_http = false);
 

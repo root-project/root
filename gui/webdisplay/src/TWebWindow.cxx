@@ -34,21 +34,13 @@ class TWebWindowWSHandler : public THttpWSHandler {
 public:
    TWebWindow *fDispl; ///<! back-pointer to display
 
-   TWebWindowWSHandler(TWebWindow *displ) : THttpWSHandler("name","title"), fDispl(displ) {}
+   TWebWindowWSHandler(TWebWindow *displ) : THttpWSHandler("name", "title"), fDispl(displ) {}
    ~TWebWindowWSHandler() { fDispl = nullptr; }
 
-   virtual TString GetDefaultPageContent() override
-   {
-      return fDispl->fDefaultPage.c_str();
-   }
+   virtual TString GetDefaultPageContent() override { return fDispl->fDefaultPage.c_str(); }
 
-   virtual Bool_t ProcessWS(THttpCallArg *arg) override
-   {
-      return fDispl->ProcessWS(arg);
-   }
-
+   virtual Bool_t ProcessWS(THttpCallArg *arg) override { return fDispl->ProcessWS(arg); }
 };
-
 
 } // namespace Experimental
 } // namespace ROOT
@@ -66,10 +58,9 @@ ROOT::Experimental::TWebWindow::~TWebWindow()
    }
 }
 
-
 void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 {
-   assert(fConn.size()==0 && "Cannot configure panel when connection exists");
+   assert(fConn.size() == 0 && "Cannot configure panel when connection exists");
 
    fPanelName = name;
 
@@ -77,7 +68,6 @@ void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 
    fConnLimit = 1;
 }
-
 
 // TODO: add callback which executed when exactly this window is opened and connection is established
 
@@ -89,16 +79,14 @@ void ROOT::Experimental::TWebWindow::CreateWSHandler()
    }
 }
 
-
 bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 {
    return fMgr->Show(this, where);
 }
 
-
 bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
 {
-   if (!arg || (arg->GetWSId()==0))
+   if (!arg || (arg->GetWSId() == 0))
       return kTRUE;
 
    // try to identify connection for given WS request
@@ -115,13 +103,14 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
    if (arg->IsMethod("WS_CONNECT")) {
 
       // refuse connection when limit exceed limit
-      if (fConnLimit && (fConn.size()>=fConnLimit)) return false;
+      if (fConnLimit && (fConn.size() >= fConnLimit))
+         return false;
 
       return true;
    }
 
    if (arg->IsMethod("WS_READY")) {
-      assert(conn == 0  && "WSHandle with given websocket id exists!!!");
+      assert(conn == 0 && "WSHandle with given websocket id exists!!!");
 
       WebConn newconn;
       newconn.fWSId = arg->GetWSId();
@@ -158,26 +147,26 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
    const char *buf = (const char *)arg->GetPostData();
    char *str_end = 0;
 
-   printf("Get portion of data %d %s\n", (int) arg->GetPostDataLength(), buf);
+   printf("Get portion of data %d %s\n", (int)arg->GetPostDataLength(), buf);
 
    unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
    assert(str_end != 0 && *str_end != ':' && "missing number of acknowledged operations");
 
-   unsigned long can_send = std::strtoul(str_end+1, &str_end, 10);
+   unsigned long can_send = std::strtoul(str_end + 1, &str_end, 10);
    assert(str_end != 0 && *str_end != ':' && "missing can_send counter");
 
-   unsigned long nchannel = std::strtoul(str_end+1, &str_end, 10);
+   unsigned long nchannel = std::strtoul(str_end + 1, &str_end, 10);
    assert(str_end != 0 && *str_end != ':' && "missing channel number");
 
    unsigned processed_len = (str_end + 1 - buf);
 
    assert(processed_len <= arg->GetPostDataLength() && "corrupted buffer");
 
-   std::string cdata(str_end+1, arg->GetPostDataLength() - processed_len);
+   std::string cdata(str_end + 1, arg->GetPostDataLength() - processed_len);
 
    conn->fSendCredits += ackn_oper;
    conn->fRecvCount++;
-   conn->fClientCredits = (int) can_send;
+   conn->fClientCredits = (int)can_send;
 
    if (nchannel == 0) {
       // special default channel for basic communications
@@ -211,11 +200,13 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
    return true;
 }
 
-void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::TWebWindow::WebConn &conn, int chid, const std::string &data)
+void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::TWebWindow::WebConn &conn, int chid,
+                                                           const std::string &data)
 {
-   if (!conn.fWSId || !fWSHandler) return;
+   if (!conn.fWSId || !fWSHandler)
+      return;
 
-   assert(conn.fSendCredits>0 && "No credits to send data via connection");
+   assert(conn.fSendCredits > 0 && "No credits to send data via connection");
 
    std::string buf;
    buf.reserve(data.length() + 100);
@@ -247,7 +238,8 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
       isany = false;
 
       for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
-         if (iter->fSendCredits <= 0) continue;
+         if (iter->fSendCredits <= 0)
+            continue;
 
          if (iter->fQueue.size() > 0) {
             SendDataViaConnection(*iter, -1, iter->fQueue.front());
@@ -259,7 +251,6 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
             SendDataViaConnection(*iter, 0, "KEEPALIVE");
             isany = true;
          }
-
       }
 
    } while (isany && !only_once);
@@ -280,37 +271,38 @@ std::string ROOT::Experimental::TWebWindow::RelativeAddr(std::shared_ptr<TWebWin
    return res;
 }
 
-
-
 // returns true if sending via specified connection can be performed
 // if direct==true, requires that direct sending (without queue) is possible
 
 bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct) const
 {
    for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
-      if (connid && connid != iter->fConnId) continue;
+      if (connid && connid != iter->fConnId)
+         continue;
 
-      if (direct && ((iter->fQueue.size()>0) || (iter->fSendCredits==0))) return false;
+      if (direct && ((iter->fQueue.size() > 0) || (iter->fSendCredits == 0)))
+         return false;
 
-      if (iter->fQueue.size() >= fMaxQueueLength) return false;
+      if (iter->fQueue.size() >= fMaxQueueLength)
+         return false;
    }
 
    return true;
 }
-
 
 /// Sends data to specified connection
 /// If connid==0, data will be send to all connections
 void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned connid, unsigned chid)
 {
    for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
-      if (connid && connid != iter->fConnId) continue;
+      if (connid && connid != iter->fConnId)
+         continue;
 
-      if ((iter->fQueue.size()==0) && (iter->fSendCredits>0)) {
+      if ((iter->fQueue.size() == 0) && (iter->fSendCredits > 0)) {
          SendDataViaConnection(*iter, chid, data);
       } else {
          assert(iter->fQueue.size() < fMaxQueueLength && "Maximum queue length achieved");
-         iter->fQueue.push_back(std::to_string(chid)+":" + data);
+         iter->fQueue.push_back(std::to_string(chid) + ":" + data);
       }
    }
 

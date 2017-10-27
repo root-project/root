@@ -31,8 +31,8 @@ public:
    // CefBrowserProcessHandler methods:
    virtual void OnContextInitialized() OVERRIDE;
 
-   virtual void OnBeforeCommandLineProcessing(const CefString &process_type,
-                                              CefRefPtr<CefCommandLine> command_line) OVERRIDE;
+   virtual void
+   OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line) OVERRIDE;
 
    virtual void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) OVERRIDE;
 
