@@ -565,11 +565,13 @@ void TGeoMaterial::FillMaterialEvolution(TObjArray *population, Double_t precisi
    elemrn->FillPopulation(population, precision);
 }
 
+/** \class TGeoMixture
+\ingroup Geometry_classes
 
-/*************************************************************************
- * TGeoMixture - mixtures of elements
- *
- *************************************************************************/
+Mixtures of elements.
+
+*/
+
 ClassImp(TGeoMixture);
 
 ////////////////////////////////////////////////////////////////////////////////
