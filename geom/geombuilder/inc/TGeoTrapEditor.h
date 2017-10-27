@@ -11,14 +11,6 @@
 #ifndef ROOT_TGeoTrapEditor
 #define ROOT_TGeoTrapEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTrapEditor                                                      //
-//                                                                      //
-//  Editor for a TGeoTrap.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 
@@ -112,7 +104,7 @@ public:
    virtual void   DoApply();
    virtual void   DoUndo();
 
-   ClassDef(TGeoGtraEditor,0)   // TGeoGtra editor
+   ClassDef(TGeoGtraEditor,0)   // TGeoTrap editor
 };
 
 #endif
