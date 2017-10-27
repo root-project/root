@@ -28,14 +28,13 @@
 #include "TString.h"
 #include "TStopwatch.h"
 
-
-//const std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWebWindowsManager::Instance()
+// const std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWebWindowsManager::Instance()
 //{
 //   static std::shared_ptr<ROOT::Experimental::TWebWindowsManager> sManager;
 //   return sManager;
 //}
 
-//static std::shared_ptr<ROOT::Experimental::TWebWindowsManager> ROOT::Experimental::TWebWindowsManager::Create()
+// static std::shared_ptr<ROOT::Experimental::TWebWindowsManager> ROOT::Experimental::TWebWindowsManager::Create()
 //{
 //   return std::make_shared<ROOT::Experimental::TWebWindowsManager>();
 //}
@@ -46,7 +45,6 @@ std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWe
    return sInstance;
 }
 
-
 ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 {
    if (fServer) {
@@ -54,7 +52,6 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
       fServer = 0;
    }
 }
-
 
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
@@ -78,7 +75,8 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
          http_port = (int)(8800 + 1000 * gRandom->Rndm(1));
 
       // TODO: ensure that port can be used
-      // TODO: replace TString::Format with more adequate implementation like https://stackoverflow.com/questions/4668760
+      // TODO: replace TString::Format with more adequate implementation like
+      // https://stackoverflow.com/questions/4668760
       if (fServer->CreateEngine(TString::Format("http:%d?websocket_timeout=10000", http_port))) {
          fAddr = "http://localhost:";
          fAddr.append(std::to_string(http_port));
@@ -100,7 +98,10 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 
    std::shared_ptr<ROOT::Experimental::TWebWindow> display = std::make_shared<ROOT::Experimental::TWebWindow>();
 
-   if (!display) { printf("Window not created!!!\n"); return nullptr; }
+   if (!display) {
+      printf("Window not created!!!\n");
+      return nullptr;
+   }
 
    display->SetBatchMode(batch_mode);
 
@@ -112,7 +113,7 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 
    display->CreateWSHandler();
 
-   fServer->Register("/web7gui", (THttpWSHandler *) display->fWSHandler);
+   fServer->Register("/web7gui", (THttpWSHandler *)display->fWSHandler);
 
    return std::move(display);
 }
@@ -122,7 +123,7 @@ void ROOT::Experimental::TWebWindowsManager::CloseDisplay(ROOT::Experimental::TW
    // TODO: close all active connections of the display
 
    if (display->fWSHandler)
-      fServer->Unregister((THttpWSHandler *) display->fWSHandler);
+      fServer->Unregister((THttpWSHandler *)display->fWSHandler);
 
    for (auto displ = fDisplays.begin(); displ != fDisplays.end(); displ++) {
       if (displ->get() == display) {
@@ -131,7 +132,6 @@ void ROOT::Experimental::TWebWindowsManager::CloseDisplay(ROOT::Experimental::TW
       }
    }
 }
-
 
 //////////////////////////////////////////////////////////////////////////
 /// Create new display for the window
@@ -155,7 +155,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       return false;
    }
 
-   THttpWSHandler *handler = (THttpWSHandler *) display->fWSHandler;
+   THttpWSHandler *handler = (THttpWSHandler *)display->fWSHandler;
    bool batch_mode = display->IsBatchMode();
 
    TString addr;
@@ -238,10 +238,11 @@ bool ROOT::Experimental::TWebWindowsManager::WaitFor(WebWindowWaitFunc_t check, 
 
       spent = tm.RealTime();
       tm.Continue();
-      if ((timelimit>0) && (spent>timelimit)) return false;
+      if ((timelimit > 0) && (spent > timelimit))
+         return false;
       cnt++;
    }
    printf("WAITING RES %d tm %4.2f cnt %d\n", res, spent, cnt);
 
-   return (res>0);
+   return (res > 0);
 }

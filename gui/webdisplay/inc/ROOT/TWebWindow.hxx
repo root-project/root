@@ -31,7 +31,7 @@ namespace Experimental {
   Central handle to open web-based windows like Canvas or FitPanel.
   */
 
-using WebWindowDataCallback_t = std::function<void(unsigned,const std::string&)>;
+using WebWindowDataCallback_t = std::function<void(unsigned, const std::string &)>;
 using WebWindowWaitFunc_t = std::function<int(double)>;
 
 class TWebWindowsManager;
@@ -39,35 +39,37 @@ class TWebWindowWSHandler;
 
 class TWebWindow {
 
-friend class TWebWindowsManager;
-friend class TWebWindowWSHandler;
-private:
+   friend class TWebWindowsManager;
+   friend class TWebWindowWSHandler;
 
+private:
    struct WebConn {
-      unsigned       fWSId{0};               ///<! websocket id
-      unsigned       fConnId{0};             ///<! connection id (unique inside the window)
-      int            fReady{0};              ///<! 0 - not ready, 1..9 - interim, 10 - done
-      int            fRecvCount{0};          ///<! number of received packets, should return back with next sending
-      int            fSendCredits{0};        ///<! how many send operation can be performed without confirmation from other side
-      int            fClientCredits{0};      ///<! last received information about credits on client side, helps to resubmit credits back to client
-      std::list<std::string> fQueue{};       ///<! small output queue for data which should be send via the connection (including channel)
-      WebWindowDataCallback_t fCallBack{};   ///<! additional data callback for extra channels
+      unsigned fWSId{0};   ///<! websocket id
+      unsigned fConnId{0}; ///<! connection id (unique inside the window)
+      int fReady{0};       ///<! 0 - not ready, 1..9 - interim, 10 - done
+      int fRecvCount{0};   ///<! number of received packets, should return back with next sending
+      int fSendCredits{0}; ///<! how many send operation can be performed without confirmation from other side
+      int fClientCredits{
+         0}; ///<! last received information about credits on client side, helps to resubmit credits back to client
+      std::list<std::string>
+         fQueue{}; ///<! small output queue for data which should be send via the connection (including channel)
+      WebWindowDataCallback_t fCallBack{}; ///<! additional data callback for extra channels
       WebConn() = default;
    };
 
-   std::shared_ptr<TWebWindowsManager>  fMgr{};     ///<!  display manager
-   bool                         fBatchMode{false};  ///<!  batch mode
-   std::string                    fDefaultPage{};   ///<! HTML page (or file name) returned when window URL is opened
-   std::string                    fPanelName{};     ///<! panel name which should be shown in the window
-   unsigned                             fId{0};     ///<!  unique identifier
-   TWebWindowWSHandler               *fWSHandler{nullptr};  ///<!  specialize websocket handler for all incoming connections
-   unsigned                           fConnCnt{0};  ///<!  counter of new connections to assign ids
-   std::list<WebConn>                 fConn{};      ///<! list of all accepted connections
-   unsigned                           fConnLimit{0}; ///<! number of allowed active connections
-   static const unsigned       fMaxQueueLength{10}; ///<!  maximal number of queue entries
-   WebWindowDataCallback_t        fDataCallback{};  ///<!  main callback when data over channel 1 is arrived
-   unsigned                             fWidth{0};  ///<! initial window width when displayed
-   unsigned                             fHeight{0}; ///<! initial window height when displayed
+   std::shared_ptr<TWebWindowsManager> fMgr{}; ///<!  display manager
+   bool fBatchMode{false};                     ///<!  batch mode
+   std::string fDefaultPage{};                 ///<! HTML page (or file name) returned when window URL is opened
+   std::string fPanelName{};                   ///<! panel name which should be shown in the window
+   unsigned fId{0};                            ///<!  unique identifier
+   TWebWindowWSHandler *fWSHandler{nullptr};   ///<!  specialize websocket handler for all incoming connections
+   unsigned fConnCnt{0};                       ///<!  counter of new connections to assign ids
+   std::list<WebConn> fConn{};                 ///<! list of all accepted connections
+   unsigned fConnLimit{0};                     ///<! number of allowed active connections
+   static const unsigned fMaxQueueLength{10};  ///<!  maximal number of queue entries
+   WebWindowDataCallback_t fDataCallback{};    ///<!  main callback when data over channel 1 is arrived
+   unsigned fWidth{0};                         ///<! initial window width when displayed
+   unsigned fHeight{0};                        ///<! initial window height when displayed
 
    void SetBatchMode(bool mode) { fBatchMode = mode; }
    void SetId(unsigned id) { fId = id; }
@@ -109,7 +111,11 @@ public:
 
    void CloseConnections() { Send("CLOSE", 0, 0); }
 
-   void CloseConnection(unsigned connid) { if (connid) Send("CLOSE", connid, 0); }
+   void CloseConnection(unsigned connid)
+   {
+      if (connid)
+         Send("CLOSE", connid, 0);
+   }
 
    bool Show(const std::string &where);
 
@@ -122,7 +128,6 @@ public:
    void SetDataCallBack(WebWindowDataCallback_t func) { fDataCallback = func; }
 
    bool WaitFor(WebWindowWaitFunc_t check, double tm);
-
 };
 
 } // namespace Experimental
