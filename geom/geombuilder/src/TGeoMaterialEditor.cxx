@@ -9,13 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//
-//  TGeoMaterialEditor, TGeoMixtureEditor
-// =======================================
-//
-//   Editors for materials and mixtures.
-//______________________________________________________________________________
+/** \class TGeoMaterialEditor
+\ingroup Geometry_builder
+
+Editors for materials.
+
+
+*/
 
 #include "TGeoMaterialEditor.h"
 #include "TGeoTabManager.h"
@@ -152,14 +152,14 @@ TGeoMaterialEditor::TGeoMaterialEditor(const TGWindow *p, Int_t width,
    f1->AddFrame(fMatRadLen, new TGLayoutHints(kLHintsRight, 2, 2, 1, 1));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
 
-   // Number entry for absorbtion length
+   // Number entry for absorption length
    f1 = new TGCompositeFrame(compxyz, 118, 10, kHorizontalFrame |
                              kLHintsExpandX | kFixedWidth | kOwnBackground);
    f1->AddFrame(new TGLabel(f1, "AbsLen"), new TGLayoutHints(kLHintsLeft, 1, 1, 6, 0));
    fMatAbsLen = new TGNumberEntry(f1, 0., 5, kMATERIAL_ABS);
    fMatAbsLen->Resize(90, fMaterialName->GetDefaultHeight());
    nef = (TGTextEntry*)fMatAbsLen->GetNumberEntry();
-   nef->SetToolTipText("Absorbtion length");
+   nef->SetToolTipText("Absorption length");
    fMatAbsLen->Associate(this);
    f1->AddFrame(fMatAbsLen, new TGLayoutHints(kLHintsRight, 2, 2, 1, 1));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 1, 1));
@@ -321,7 +321,7 @@ void TGeoMaterialEditor::DoDensity()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Slot for radiation/absorbtion length.
+/// Slot for radiation/absorption length.
 
 void TGeoMaterialEditor::DoRadAbs()
 {
@@ -383,6 +383,13 @@ void TGeoMaterialEditor::DoModified()
 {
    fApply->SetEnabled();
 }
+
+/** \class TGeoMixtureEditor
+\ingroup Geometry_builder
+
+Editors for mixtures.
+
+*/
 
 ClassImp(TGeoMixtureEditor);
 
