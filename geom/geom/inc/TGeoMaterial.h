@@ -130,11 +130,6 @@ public:
 //***** Need to add classes and globals to LinkDef.h *****
 };
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoMixture - mixtures of elements                                     //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoMixture : public TGeoMaterial
 {
