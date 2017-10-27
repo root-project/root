@@ -12,14 +12,6 @@
 #ifndef ROOT_TGeoNodeEditor
 #define ROOT_TGeoNodeEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoNodeEditor                                                    //
-//                                                                      //
-//  Editor for a TGeoNode.                                            //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 

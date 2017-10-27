@@ -9,11 +9,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//
-//  TGeoNodeEditor - Editor class for TGeoNode objects
-//
-//______________________________________________________________________________
+/** \class TGeoNodeEditor
+\ingroup Geometry_builder
+
+Editor class for TGeoNode objects.
+
+*/
 
 #include "TGeoNodeEditor.h"
 #include "TGedEditor.h"
