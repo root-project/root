@@ -205,12 +205,13 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          exec = where.c_str();
          exec.ReplaceAll("$url", addr);
       } else {
-         exec.Form("%s %s", where.c_str(), addr.Data());
+         exec.Form("%s %s &", where.c_str(), addr.Data());
       }
-   } else if (gSystem->InheritsFrom("TMacOSXSystem"))
+   } else if (gSystem->InheritsFrom("TMacOSXSystem")) {
       exec.Form("open %s", addr.Data());
-   else
+   } else {
       exec.Form("xdg-open %s &", addr.Data());
+   }
 
    printf("Show canvas in browser with cmd:  %s\n", exec.Data());
 
