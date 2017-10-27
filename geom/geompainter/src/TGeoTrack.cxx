@@ -298,7 +298,7 @@ Int_t TGeoTrack::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw this track overimposed on a geometry, according to option.
+/// Draw this track over-imposed on a geometry, according to option.
 /// Options (case sensitive):
 ///  - default : track without daughters
 ///  - /D      : track and first level descendents only
