@@ -9,42 +9,40 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoManagerEditor                                                    //
-//
-//////////////////////////////////////////////////////////////////////////
-/*
-   Editor for TGeoManager class. Provides also builder functionality for the
-   main TGeo objects: TGeoVolume, TGeoShape - derived classes, TGeoMaterial,
-   TGeoMatrix - derived transformations and TGeoMedium.
-   The GUI represents the main entry point for editing geometry classes. It
-   can be started either by:
-   1. TGeoManager::Edit(). The method must be used when starting from a new
-   geometry.
-   2. Left-click on the 40x40 pixels top-right corner of a pad containing a
-   drawn volume. The region is always accesible when drawing geometry elements
-   and allows also restoring the manager editor in the "Style" tab of the GED
-   editor anytime.
+/** \class TGeoManagerEditor
+\ingroup Geometry_builder
 
-   The TGeoManager editor is vertically split by a TGShutter widget into the
-   following categories:
+Editor for TGeoManager class. Provides also builder functionality for the
+main TGeo objects: TGeoVolume, TGeoShape - derived classes, TGeoMaterial,
+TGeoMatrix - derived transformations and TGeoMedium.
+The GUI represents the main entry point for editing geometry classes. It
+can be started either by:
 
-   - General. This allows changing the name/title of the geometry, setting the
-   top volume, closing the geometry and saving the geometry in a file. The name
-   of the geometry file is formed by geometry_name.C/.root depending if the geometry
-   need to be saved as a C macro or a .root file.
-   - Shapes. The category provide buttons for creation of all supported shapes. The
-   new shape name is chosen by the interface, but can be changed from the shape
-   editor GUI. Existing shapes can be browsed and edited from the same category.
-   - Volumes. The category allows the creation of a new volume having a given name,
-   shape and medium. For creating a volume assembly only the name is relevant.
-   Existing volumes can be browsed or edited from this category.
-   - Materials. Allows creation of new materials/mixtures or editing existing ones.
-   - Media. The same for creation/editing of tracking media (materials having a set
-   of properties related to tracking)
-   - Matrices. Allows creation of translations, rotations or combined transformations.
-   Existing matrices can also be browser/edited.
+  1. TGeoManager::Edit(). The method must be used when starting from a new
+     geometry.
+  2. Left-click on the 40x40 pixels top-right corner of a pad containing a
+     drawn volume. The region is always accesible when drawing geometry elements
+     and allows also restoring the manager editor in the "Style" tab of the GED
+     editor anytime.
+
+The TGeoManager editor is vertically split by a TGShutter widget into the
+following categories:
+
+  - General. This allows changing the name/title of the geometry, setting the
+    top volume, closing the geometry and saving the geometry in a file. The name
+    of the geometry file is formed by geometry_name.C/.root depending if the geometry
+    need to be saved as a C macro or a .root file.
+  - Shapes. The category provide buttons for creation of all supported shapes. The
+    new shape name is chosen by the interface, but can be changed from the shape
+    editor GUI. Existing shapes can be browsed and edited from the same category.
+  - Volumes. The category allows the creation of a new volume having a given name,
+    shape and medium. For creating a volume assembly only the name is relevant.
+    Existing volumes can be browsed or edited from this category.
+  - Materials. Allows creation of new materials/mixtures or editing existing ones.
+  - Media. The same for creation/editing of tracking media (materials having a set
+    of properties related to tracking)
+  - Matrices. Allows creation of translations, rotations or combined transformations.
+    Existing matrices can also be browser/edited.
 */
 
 #include "TVirtualPad.h"
@@ -243,7 +241,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fShapeButton[13] = new TGPictureButton(f1, fClient->GetPicture("geoctub_t.xpm"), kCREATE_CTUB);
    fShapeButton[13]->SetToolTipText("Create a cut tube");
    fShapeButton[14] = new TGPictureButton(f1, fClient->GetPicture("geoeltu_t.xpm"), kCREATE_ELTU);
-   fShapeButton[14]->SetToolTipText("Create an eliptical tube");
+   fShapeButton[14]->SetToolTipText("Create an elliptical tube");
    fShapeButton[15] = new TGPictureButton(f1, fClient->GetPicture("geotorus_t.xpm"), kCREATE_TORUS);
    fShapeButton[15]->SetToolTipText("Create a toroidal tube with a phi range");
    fShapeButton[16] = new TGPictureButton(f1, fClient->GetPicture("geopcon_t.xpm"), kCREATE_PCON);
@@ -342,7 +340,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
    fVolumeButton[0] = new TGPictureButton(f1, fClient->GetPicture("geovolume_t.xpm"), kCREATE_VOLUME);
    fVolumeButton[0]->SetToolTipText("Create a new volume from shape and medium");
    fVolumeButton[1] = new TGPictureButton(f1, fClient->GetPicture("geoassembly_t.xpm"), kCREATE_ASSEMBLY);
-   fVolumeButton[1]->SetToolTipText("Create a new volume assemby having the selected name");
+   fVolumeButton[1]->SetToolTipText("Create a new volume assembly having the selected name");
    for (ipict=0; ipict<2; ipict++) f1->AddFrame(fVolumeButton[ipict],lhb);
    container->AddFrame(f1, lhf1);
    // List of volumes
@@ -604,7 +602,7 @@ TGeoManagerEditor::TGeoManagerEditor(const TGWindow *p, Int_t width,
 
    fVolumeTab = CreateEditorTabSubFrame("Volume");
 
-   // Set the fTab and dissconnect editor from the canvas.
+   // Set the fTab and disconnect editor from the canvas.
    fTab = fGedEditor->GetTab();
    TCanvas* edCanvas = fGedEditor->GetCanvas();
    fGedEditor->DisconnectFromCanvas();
@@ -991,7 +989,7 @@ void TGeoManagerEditor::DoCreateCtub()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create an eliptical tube.
+/// Create an elliptical tube.
 
 void TGeoManagerEditor::DoCreateEltu()
 {
@@ -1353,7 +1351,7 @@ void TGeoManagerEditor::DoSelectVolume()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Slot for seting top geometry volume.
+/// Slot for setting top geometry volume.
 
 void TGeoManagerEditor::DoSelectTopVolume()
 {
