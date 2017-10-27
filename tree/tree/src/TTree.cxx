@@ -3128,7 +3128,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
       if (branch && (newcomp > -1)) {
          branch->SetCompressionSettings(newcomp);
       }
-      branch->SetIOFeatures(features);
+      if (branch) branch->SetIOFeatures(features);
       if (!branch || !branch->TestBit(kDoNotProcess)) {
          continue;
       }
