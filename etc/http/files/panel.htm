@@ -1,0 +1,101 @@
+<!--  this file used for display different panels in ROOT7 -->
+<!DOCTYPE html>
+<html lang="en">
+   <head>
+      <meta charset="UTF-8">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <title>ROOT7 web panel</title>
+      <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
+   </head>
+   
+   <style>
+      html { height: 100%; }
+      body { min-height: 100%; margin: 0; overflow: hidden }
+      #PanelDiv {
+         position: absolute;
+         left: 0;
+         top: 0;
+         bottom: 0;
+         right: 0;
+         padding: 1
+      }
+   </style>
+
+   <body>
+      <div id="PanelDiv">
+         loading scripts...
+      </div>
+   </body>
+   
+   <script type='text/javascript'>
+
+      var panel_name = "", panel_handle = null;
+   
+      function ShowOpenui5Panel() {
+         
+         if (!panel_name || !panel_handle || !JSROOT.sap) return false;
+            
+         var panelid = "TopPanelId";
+
+         var oModel = new JSROOT.sap.ui.model.json.JSONModel({
+            handle: panel_handle   
+         });
+         
+         sap.ui.getCore().setModel(oModel, panelid);
+            
+         JSROOT.sap.ui.xmlview({
+            id: panelid,
+            viewName : "sap.ui.jsroot.view." + panel_name,
+            // layoutData: oLd,
+            // height: "100%"
+         }).placeAt("PanelDiv");
+
+         return true;
+         
+         // return oContent.getController(); // return controller of new panel
+      }
+   
+      function InitV7Panel() {
+         
+         var socket_kind = "websocket", use_openui = true;
+         if (JSROOT.GetUrlOption("longpoll")!==null) socket_kind = "longpoll"; else
+         if (JSROOT.GetUrlOption("cef3")!==null) socket_kind = "cefquery"; else
+         if (JSROOT.GetUrlOption("qt5")!==null) { JSROOT.browser.qt5 = true; socket_kind = "longpoll"; }
+
+         console.log('Try to open web socket ' +  socket_kind);
+         
+         var handle = new JSROOT.WebWindowHandle(socket_kind);
+
+         // set interim receiver until openui5 panel is not yet ready
+         handle.SetReceiver({                  
+            OnWebsocketOpened: function(handle) {
+               console.log('Connected');
+            },
+                  
+            OnWebsocketMsg: function(handle, msg) {
+                console.log('Get message ' + msg + ' handle ' + !!handle);
+                panel_handle = handle;
+                panel_name = (msg.indexOf("SHOWPANEL:")==0) ? msg.substr(10) : "";
+                if (panel_name)
+                   ShowOpenui5Panel();
+                else
+                   handle.Close();
+            },
+            
+            OnWebsocketClosed: function(handle) {
+               // when connection closed, close panel as well
+               panel_handle = null;
+               if (window) window.close();
+            }
+         });
+         
+         handle.Connect(); // try to connect server
+         
+         JSROOT.AssertPrerequisites('openui5', ShowOpenui5Panel); // load openui5 functionality concurently
+      }
+      
+      JSROOT.AssertPrerequisites("2d", InitV7Panel, "PanelDiv");
+
+   </script>
+
+</html>
