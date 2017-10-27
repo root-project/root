@@ -9,21 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoParaEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/para_pic.gif">
+/** \class TGeoParaEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoPara.
+
+\image html geom_para_pic.png
+
+\image html geom_para_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/para_ed.jpg">
-*/
-//End_Html
 
 #include "TGeoParaEditor.h"
 #include "TGeoTabManager.h"
@@ -63,7 +58,7 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
    MakeTitle("Name");
    fShapeName = new TGTextEntry(this, new TGTextBuffer(50), kPARA_NAME);
    fShapeName->Resize(135, fShapeName->GetDefaultHeight());
-   fShapeName->SetToolTipText("Enter the parallelipiped name");
+   fShapeName->SetToolTipText("Enter the parallelepiped name");
    fShapeName->Associate(this);
    AddFrame(fShapeName, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
 
@@ -76,7 +71,7 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
    fEDx->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEDx->Resize(100, fEDx->GetDefaultHeight());
    nef = (TGTextEntry*)fEDx->GetNumberEntry();
-   nef->SetToolTipText("Enter the half-lenth in X");
+   nef->SetToolTipText("Enter the half-length in X");
    fEDx->Associate(this);
    f1->AddFrame(fEDx, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
@@ -88,7 +83,7 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
    fEDy->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEDy->Resize(100, fEDy->GetDefaultHeight());
    nef = (TGTextEntry*)fEDy->GetNumberEntry();
-   nef->SetToolTipText("Enter the half-lenth in Y");
+   nef->SetToolTipText("Enter the half-length in Y");
    fEDy->Associate(this);
    f1->AddFrame(fEDy, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
@@ -100,7 +95,7 @@ TGeoParaEditor::TGeoParaEditor(const TGWindow *p, Int_t width,
    fEDz->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEDz->Resize(100, fEDz->GetDefaultHeight());
    nef = (TGTextEntry*)fEDz->GetNumberEntry();
-   nef->SetToolTipText("Enter the half-lenth in Z");
+   nef->SetToolTipText("Enter the half-length in Z");
    fEDz->Associate(this);
    f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
