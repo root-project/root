@@ -214,7 +214,8 @@ public:
 } // namespace
 
 SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *serv, bool isbatch)
-   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUrl(url), fCefMain(cef_main), fBatch(isbatch), fRect()
+   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUrl(url), fCefMain(cef_main),
+     fBatch(isbatch), fRect()
 {
    gHandlingServer = serv;
 }
@@ -304,7 +305,8 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
       CefWindowInfo window_info;
 
-      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect);
+      if (!rect.IsEmpty())
+         window_info.SetAsChild(NULL, rect);
 
       window_info.SetAsWindowless(0);
 
@@ -343,7 +345,8 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
       // Information used when creating the native window.
       CefWindowInfo window_info;
 
-      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect);
+      if (!rect.IsEmpty())
+         window_info.SetAsChild(NULL, rect);
 
 #if defined(OS_WIN)
       // On Windows we need to specify certain flags that will be passed to
@@ -382,7 +385,7 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
       if (gHandlingServer != (THttpServer *)http_serv) {
          printf("CEF plugin do not allow to use other THttpServer instance\n");
       } else {
-         CefRect rect(0,0, width, height);
+         CefRect rect(0, 0, width, height);
          gCefApp->get()->StartWindow(url, batch_mode, rect);
       }
       return;
