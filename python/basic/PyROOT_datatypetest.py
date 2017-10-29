@@ -115,6 +115,8 @@ class TestClassDATATYPES:
             assert round(c.m_double_array2[k] + 16.*k, 8) == 0
 
         # out-of-bounds checks
+        raises(IndexError, c.m_char_array.__getitem__,   self.N)
+        raises(IndexError, c.m_uchar_array.__getitem__,  self.N)
         raises(IndexError, c.m_short_array.__getitem__,  self.N)
         raises(IndexError, c.m_ushort_array.__getitem__, self.N)
         raises(IndexError, c.m_int_array.__getitem__,    self.N)
@@ -864,6 +866,7 @@ class TestClassDATATYPES:
 
         c = CppyyTestData()
         for func in ['get_bool_array',   'get_bool_array2',
+                     'get_uchar_array',  'get_uchar_array2',
                      'get_ushort_array', 'get_ushort_array2',
                      'get_int_array',    'get_int_array2',
                      'get_uint_array',   'get_uint_array2',
