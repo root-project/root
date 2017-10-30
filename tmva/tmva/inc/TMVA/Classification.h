@@ -194,6 +194,8 @@ protected:
    Double_t GetROCIntegral(TString methodname, TString methodtitle, UInt_t iClass = 0);
 
    ClassificationResult &GetResults(TString methodname, TString methodtitle);
+   void MergeFiles();
+
    ClassDef(Classification, 0);
 };
 } // namespace Experimental

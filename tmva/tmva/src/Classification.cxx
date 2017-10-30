@@ -46,7 +46,6 @@
 #include <TObjString.h>
 #include <TSystem.h>
 #include <TCanvas.h>
-
 #include <iostream>
 #include <memory>
 
@@ -264,12 +263,25 @@ void TMVA::Experimental::Classification::Evaluate()
          TMVA::gConfig().SetDrawProgressBar(kFALSE);
          auto methodname = fMethods[workerID].GetValue<TString>("MethodName");
          auto methodtitle = fMethods[workerID].GetValue<TString>("MethodTitle");
+         auto meth = GetMethod(methodname, methodtitle);
+         if (!IsSilentFile()) {
+            auto fname = Form(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
+            auto f = new TFile(fname, "RECREATE");
+            f->mkdir(fDataLoader->GetName());
+            SetFile(f);
+            meth->SetFile(f);
+         }
          TrainMethod(methodname, methodtitle);
          TestMethod(methodname, methodtitle);
+         if (!IsSilentFile()) {
+            GetFile()->Close();
+         }
          return GetResults(methodname, methodtitle);
       };
 
       fResults = fWorkers.Map(executor, ROOT::TSeqI(fMethods.size()));
+      if (!IsSilentFile())
+         MergeFiles();
    }
 
    fROC = roc;
@@ -1053,4 +1065,57 @@ Double_t TMVA::Experimental::Classification::GetROCIntegral(TString methodname, 
    delete rocCurve;
 
    return rocIntegral;
+}
+
+//_______________________________________________________________________
+void TMVA::Experimental::Classification::MergeFiles()
+{
+
+   fFile->mkdir(fDataLoader->GetName());
+   TTree *TrainTree = 0;
+   TTree *TestTree = 0;
+   TFile *ifile = 0;
+   TFile *ofile = 0;
+   for (UInt_t i = 0; i < fMethods.size(); i++) {
+      auto methodname = fMethods[i].GetValue<TString>("MethodName");
+      auto methodtitle = fMethods[i].GetValue<TString>("MethodTitle");
+      auto fname = Form(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
+      TDirectoryFile *ds = 0;
+      if (i == 0) {
+         ifile = new TFile(fname);
+         ds = (TDirectoryFile *)ifile->Get(fDataLoader->GetName());
+      } else {
+         ofile = new TFile(fname);
+         ds = (TDirectoryFile *)ofile->Get(fDataLoader->GetName());
+      }
+      auto tmptrain = (TTree *)ds->Get("TrainTree");
+      auto tmptest = (TTree *)ds->Get("TestTree");
+      fFile->cd();
+      fFile->cd(fDataLoader->GetName());
+      if (i == 0) {
+         TrainTree = tmptrain->CopyTree("");
+         TestTree = tmptest->CopyTree("");
+      } else {
+         Float_t mva = 0;
+         auto trainbranch = TrainTree->Branch(methodtitle.Data(), &mva);
+         tmptrain->SetBranchAddress(methodtitle.Data(), &mva);
+         auto entries = tmptrain->GetEntries();
+         for (UInt_t ev = 0; ev < entries; ev++) {
+            tmptrain->GetEntry(ev);
+            trainbranch->Fill();
+         }
+         auto testbranch = TestTree->Branch(methodtitle.Data(), &mva);
+         tmptest->SetBranchAddress(methodtitle.Data(), &mva);
+         entries = tmptest->GetEntries();
+         for (UInt_t ev = 0; ev < entries; ev++) {
+            tmptest->GetEntry(ev);
+            testbranch->Fill();
+         }
+         ofile->Close();
+         gSystem->Unlink(fname);
+      }
+   }
+   TrainTree->Write();
+   TestTree->Write();
+   ifile->Close();
 }
