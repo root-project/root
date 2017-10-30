@@ -589,12 +589,12 @@ class SnapshotHelper {
    std::unique_ptr<TFile> fOutputFile;
    std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
    bool fIsFirstEvent{true};
-   const Detail::TDF::ColumnNames_t fBranchNames;
+   const ColumnNames_t fBranchNames;
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitSlot`)
 
 public:
    SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
-                  const Detail::TDF::ColumnNames_t &bnames, const TSnapshotOptions &options)
+                  const ColumnNames_t &bnames, const TSnapshotOptions &options)
       : fOutputFile(TFile::Open(std::string(filename).c_str(), options.fMode.c_str(), /*ftitle=*/"",
                                 ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
         fBranchNames(bnames)
@@ -671,14 +671,13 @@ class SnapshotHelperMT {
    const std::string fDirName;        // name of TFile subdirectory in which output must be written (possibly empty)
    const std::string fTreeName;       // name of output tree
    const TSnapshotOptions fOptions;   // struct holding options to pass down to TFile and TTree in this action
-   const Detail::TDF::ColumnNames_t fBranchNames;
+   const ColumnNames_t fBranchNames;
    std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitSlot`)
 
 public:
    using BranchTypes_t = TypeList<BranchTypes...>;
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
-                    std::string_view treename, const Detail::TDF::ColumnNames_t &bnames,
-                    const TSnapshotOptions &options)
+                    std::string_view treename, const ColumnNames_t &bnames, const TSnapshotOptions &options)
       : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(
                             std::string(filename).c_str(), options.fMode.c_str(),
                             ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
