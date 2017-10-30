@@ -150,13 +150,13 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
    printf("Get portion of data %d %s\n", (int)arg->GetPostDataLength(), buf);
 
    unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
-   assert(str_end != 0 && *str_end != ':' && "missing number of acknowledged operations");
+   assert(str_end != 0 && *str_end == ':' && "missing number of acknowledged operations");
 
    unsigned long can_send = std::strtoul(str_end + 1, &str_end, 10);
-   assert(str_end != 0 && *str_end != ':' && "missing can_send counter");
+   assert(str_end != 0 && *str_end == ':' && "missing can_send counter");
 
    unsigned long nchannel = std::strtoul(str_end + 1, &str_end, 10);
-   assert(str_end != 0 && *str_end != ':' && "missing channel number");
+   assert(str_end != 0 && *str_end == ':' && "missing channel number");
 
    unsigned processed_len = (str_end + 1 - buf);
 
