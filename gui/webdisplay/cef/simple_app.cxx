@@ -6,8 +6,6 @@
 
 #include <string>
 
-#include "gui_handler.h"
-#include "osr_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_scheme.h"
 #include "include/views/cef_browser_view.h"
@@ -215,7 +213,10 @@ public:
 
 SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *serv, bool isbatch)
    : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUrl(url), fCefMain(cef_main),
-     fBatch(isbatch), fRect()
+     fBatch(isbatch), fRect(),
+     fOsrHandler(),
+     fUseViewes(false),
+     fGuiHandler()
 {
    gHandlingServer = serv;
 }
@@ -301,7 +302,8 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
    if (batch) {
 
-      CefRefPtr<OsrHandler> handler(new OsrHandler(gHandlingServer));
+      if (!fOsrHandler) fOsrHandler = new OsrHandler(gHandlingServer);
+      // CefRefPtr<OsrHandler> handler(new OsrHandler(gHandlingServer));
 
       CefWindowInfo window_info;
 
@@ -313,7 +315,7 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
       printf("Create OSR browser %s\n", url.c_str());
 
       // Create the first browser window.
-      CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings, NULL);
+      CefBrowserHost::CreateBrowser(window_info, fOsrHandler, url, browser_settings, NULL);
 
       return;
    }
@@ -326,18 +328,24 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
    CefRefPtr<CefCommandLine> command_line = CefCommandLine::GetGlobalCommandLine();
 
-   bool use_views = command_line->HasSwitch("use-views");
+   // bool use_views = command_line->HasSwitch("use-views");
 #else
-   bool use_views = false;
+   // bool use_views = false;
 #endif
 
-   // SimpleHandler implements browser-level callbacks.
-   CefRefPtr<GuiHandler> handler(new GuiHandler(gHandlingServer, use_views));
 
-   if (use_views) {
+   if (!fGuiHandler) {
+      fUseViewes = false;
+      fGuiHandler = new GuiHandler(gHandlingServer, fUseViewes);
+   }
+
+   // SimpleHandler implements browser-level callbacks.
+   // CefRefPtr<GuiHandler> handler(new GuiHandler(gHandlingServer, use_views));
+
+   if (fUseViewes) {
       // Create the BrowserView.
       CefRefPtr<CefBrowserView> browser_view =
-         CefBrowserView::CreateBrowserView(handler, url, browser_settings, NULL, NULL);
+         CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, NULL, NULL);
 
       // Create the Window. It will show itself after creation.
       CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view));
@@ -355,7 +363,7 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 #endif
 
       // Create the first browser window.
-      CefBrowserHost::CreateBrowser(window_info, handler, url, browser_settings, NULL);
+      CefBrowserHost::CreateBrowser(window_info, fGuiHandler, url, browser_settings, NULL);
    }
 }
 
