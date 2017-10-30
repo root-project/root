@@ -213,10 +213,7 @@ public:
 
 SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *serv, bool isbatch)
    : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUrl(url), fCefMain(cef_main),
-     fBatch(isbatch), fRect(),
-     fOsrHandler(),
-     fUseViewes(false),
-     fGuiHandler()
+     fBatch(isbatch), fRect(), fOsrHandler(), fUseViewes(false), fGuiHandler()
 {
    gHandlingServer = serv;
 }
@@ -302,7 +299,8 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
    if (batch) {
 
-      if (!fOsrHandler) fOsrHandler = new OsrHandler(gHandlingServer);
+      if (!fOsrHandler)
+         fOsrHandler = new OsrHandler(gHandlingServer);
       // CefRefPtr<OsrHandler> handler(new OsrHandler(gHandlingServer));
 
       CefWindowInfo window_info;
@@ -328,11 +326,10 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
    CefRefPtr<CefCommandLine> command_line = CefCommandLine::GetGlobalCommandLine();
 
-   // bool use_views = command_line->HasSwitch("use-views");
+// bool use_views = command_line->HasSwitch("use-views");
 #else
-   // bool use_views = false;
+// bool use_views = false;
 #endif
-
 
    if (!fGuiHandler) {
       fUseViewes = false;

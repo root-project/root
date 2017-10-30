@@ -185,23 +185,23 @@ private:
    DISALLOW_COPY_AND_ASSIGN(RootMessageHandler);
 };
 
-//BaseHandler *g_instance = NULL;
+// BaseHandler *g_instance = NULL;
 
 } // namespace
 
 BaseHandler::BaseHandler(THttpServer *serv) : fServer(serv), is_closing_(false)
 {
-   //DCHECK(!g_instance);
-   //g_instance = this;
+   // DCHECK(!g_instance);
+   // g_instance = this;
 }
 
 BaseHandler::~BaseHandler()
 {
-   //g_instance = NULL;
+   // g_instance = NULL;
 }
 
 // static
-//BaseHandler *BaseHandler::GetInstance()
+// BaseHandler *BaseHandler::GetInstance()
 //{
 //   return g_instance;
 //}
@@ -320,5 +320,6 @@ void BaseHandler::CloseAllBrowsers(bool force_close)
       return;
 
    BrowserList::const_iterator it = browser_list_.begin();
-   for (; it != browser_list_.end(); ++it) (*it)->GetHost()->CloseBrowser(force_close);
+   for (; it != browser_list_.end(); ++it)
+      (*it)->GetHost()->CloseBrowser(force_close);
 }
