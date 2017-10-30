@@ -158,6 +158,8 @@ std::string base64_decode(std::string const &encoded_string)
 namespace ROOT {
 namespace Experimental {
 
+std::unique_ptr<Internal::TVirtualCanvasPainter::Generator> Internal::TVirtualCanvasPainter::fgGenerator = nullptr;
+
 class TCanvasPainter : public Internal::TVirtualCanvasPainter  {
 private:
 

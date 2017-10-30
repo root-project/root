@@ -23,6 +23,8 @@
 #include "TROOT.h"
 #include "TBufferJSON.h"
 
+ROOT::Experimental::Internal::THistPainterBase<1> *ROOT::Experimental::Internal::THistPainterBase<1>::fgPainter = nullptr;
+
 std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TFitPanel::GetWindow()
 {
    if (!fWindow) {
