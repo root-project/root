@@ -68,6 +68,13 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::ReadLock()
       --fReaderReservation;
 
       fRecurseCounts.IncrementReadCount(local, fMutex);
+
+   } else if (! fRecurseCounts.IsNotCurrentWriter(local)) {
+
+    --fReaderReservation;
+    fRecurseCounts.IncrementReadCount(local);
+    ++fReaders;
+
    } else {
       // A writer claimed the RW lock, we will need to wait on the
       // internal lock
