@@ -73,13 +73,13 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    // calculate numerical gradient from MinimumParameters object
    // the algorithm takes correctly care when the gradient is approximatly zero
 
-  std::cout<<"\n\n########### Numerical2PDerivative : START"<<std::endl;
-  for (unsigned int i = 0; i < (par.Vec()).size(); i++) {
-    std::cout << "fGrd[" << i <<"] = " << Gradient.Grad()(i) << "\t";
-    std::cout << "fG2[" << i <<"] = " << Gradient.G2()(i) << "\t";
-    std::cout << "fGstep[" << i <<"] = " << Gradient.Gstep()(i) << "\t";
-    std::cout << "position[" << i <<"] = " << par.Vec()(i) << std::endl << std::endl;
-  }
+//  std::cout<<"\n\n########### Numerical2PDerivative : START"<<std::endl;
+//  for (unsigned int i = 0; i < (par.Vec()).size(); i++) {
+//    std::cout << "fGrd[" << i <<"] = " << Gradient.Grad()(i) << "\t";
+//    std::cout << "fG2[" << i <<"] = " << Gradient.G2()(i) << "\t";
+//    std::cout << "fGstep[" << i <<"] = " << Gradient.Gstep()(i) << "\t";
+//    std::cout << "position[" << i <<"] = " << par.Vec()(i) << std::endl << std::endl;
+//  }
 
    assert(par.IsValid());
 
@@ -235,13 +235,13 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    std::cout << "Computed gradient in N2PGC " << grd << std::endl;
 #endif
 
-  std::cout<<"\n\n########### Numerical2PDerivative : END"<<std::endl;
-  for (unsigned int i = 0; i < (par.Vec()).size(); i++) {
-    std::cout << "fGrd[" << i <<"] = " << Gradient.Grad()(i) << "\t";
-    std::cout << "fG2[" << i <<"] = " << Gradient.G2()(i) << "\t";
-    std::cout << "fGstep[" << i <<"] = " << Gradient.Gstep()(i) << "\t";
-    std::cout << "position[" << i <<"] = " << par.Vec()(i) << std::endl << std::endl;
-  }
+//  std::cout<<"\n\n########### Numerical2PDerivative : END"<<std::endl;
+//  for (unsigned int i = 0; i < (par.Vec()).size(); i++) {
+//    std::cout << "fGrd[" << i <<"] = " << Gradient.Grad()(i) << "\t";
+//    std::cout << "fG2[" << i <<"] = " << Gradient.G2()(i) << "\t";
+//    std::cout << "fGstep[" << i <<"] = " << Gradient.Gstep()(i) << "\t";
+//    std::cout << "position[" << i <<"] = " << par.Vec()(i) << std::endl << std::endl;
+//  }
 
    return FunctionGradient(grd, g2, gstep);
 }
