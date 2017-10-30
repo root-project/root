@@ -7,7 +7,6 @@
 
 #include "include/cef_app.h"
 
-
 #include "gui_handler.h"
 #include "osr_handler.h"
 
@@ -21,9 +20,9 @@ protected:
    bool fBatch;          ///!< indicate batch mode
    CefRect fRect;        ///!< original width
 
-   CefRefPtr<OsrHandler> fOsrHandler;  ///!< batch-mode handler
-   bool                  fUseViewes;   ///!< is viewes are used
-   CefRefPtr<GuiHandler> fGuiHandler;  ///!< normal handler
+   CefRefPtr<OsrHandler> fOsrHandler; ///!< batch-mode handler
+   bool fUseViewes;                   ///!< is viewes are used
+   CefRefPtr<GuiHandler> fGuiHandler; ///!< normal handler
 
 public:
    SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *server = 0, bool isbatch = false);
