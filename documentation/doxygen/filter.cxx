@@ -275,8 +275,13 @@ void FilterTutorial()
    int incond = 0;
 
    // Extract the macro name
-   int i1      = gFileName.rfind('/')+1;
-   int i2      = gFileName.rfind('C');
+   int i1 = gFileName.rfind('/')+1;
+   int i2;
+   if (gPython) {
+      i2 = gFileName.rfind('y');
+   } else {
+      i2 = gFileName.rfind('C');
+   }
    gMacroName  = gFileName.substr(i1,i2-i1+1);
    gImageName  = StringFormat("%s.%s", gMacroName.c_str(), gImageType.c_str()); // Image name
    gOutputName = StringFormat("%s.out", gMacroName.c_str()); // output name
