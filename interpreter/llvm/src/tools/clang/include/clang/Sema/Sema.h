@@ -1176,7 +1176,7 @@ public:
   ASTContext &getASTContext() const { return Context; }
   ASTConsumer &getASTConsumer() const { return Consumer; }
   ASTMutationListener *getASTMutationListener() const;
-  ExternalSemaSource* getExternalSource() const { return ExternalSource; }
+  ExternalSemaSource* getExternalSource() const;
 
   ///\brief Registers an external source. If an external source already exists,
   /// creates a multiplex external source and appends to it.

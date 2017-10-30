@@ -334,6 +334,12 @@ ASTMutationListener *Sema::getASTMutationListener() const {
   return getASTConsumer().GetASTMutationListener();
 }
 
+ExternalSemaSource *Sema::getExternalSource() const {
+  if (MultiplexExternalSource)
+    return MultiplexExternalSource.get();
+  return ExternalSource;
+}
+
 ///\brief Registers an external source. If an external source already exists,
 /// creates a multiplex external source and appends to it.
 ///
