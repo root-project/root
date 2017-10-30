@@ -458,7 +458,7 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
 
    // wait 100 seconds that canvas is painted
    if (!async)
-      fWindow->WaitFor(std::bind(&TCanvasPainter::CheckDeliveredVersion, this, ver, std::placeholders::_1), 100);
+      fWindow->WaitFor([this, ver](double tm) { return CheckDeliveredVersion(ver, tm); }, 100);
 }
 
 ///////////////////////////////////////////////////
@@ -613,8 +613,7 @@ void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 
       fWindow->SetDefaultPage("file:$jsrootsys/files/canvas.htm");
 
-      WebWindowDataCallback_t func = std::bind(&TCanvasPainter::ProcessData, this, std::placeholders::_1, std::placeholders::_2);
-      fWindow->SetDataCallBack(func);
+      fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
 
       // fWindow->SetGeometry(500,300);
    }
