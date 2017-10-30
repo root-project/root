@@ -1464,14 +1464,15 @@ void TDirectoryFile::Save()
    SaveSelf();
 
    // recursively save all sub-directories
-   if (fList) {
-      TObject *idcur;
-      TIter    next(fList);
-      while ((idcur = next())) {
-         if (idcur->InheritsFrom(TDirectoryFile::Class())) {
-            TDirectoryFile *dir = (TDirectoryFile*)idcur;
+   if (fList && fList->FirstLink()) {
+      auto lnk = fList->FirstLink()->shared_from_this();
+      while (lnk) {
+         TObject *idcur = lnk->GetObject();
+         if (idcur && idcur->InheritsFrom(TDirectoryFile::Class())) {
+            TDirectoryFile *dir = (TDirectoryFile *)idcur;
             dir->Save();
          }
+         lnk = lnk->NextSP();
       }
    }
 }
