@@ -544,17 +544,23 @@ void RooGradMinimizerFcn::updateFloatVec()
 
 double RooGradMinimizerFcn::DoEval(const double *x) const 
 {
+  Bool_t parameters_changed = kFALSE;
 
   // Set the parameter values for this iteration
   for (int index = 0; index < _nDim; index++) {
     if (_logfile) (*_logfile) << x[index] << " " ;
-    SetPdfParamVal(index,x[index]);
+    // also check whether the function was already evaluated for this set of parameters
+    parameters_changed |= SetPdfParamVal(index,x[index]);
   }
 
   // Calculate the function for these parameters  
   RooAbsReal::setHideOffset(kFALSE) ;
   double fvalue = _funct->getVal();
   RooAbsReal::setHideOffset(kTRUE) ;
+
+  if (!parameters_changed) {
+    return fvalue;
+  }
 
   if (RooAbsPdf::evalError() || RooAbsReal::numEvalErrors()>0 || fvalue>1e30) {
 

@@ -138,12 +138,23 @@ RooGradMinimizer::~RooGradMinimizer()
 }
 
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Change MINUIT strategy to istrat. Accepted codes
 /// are 0,1,2 and represent MINUIT strategies for dealing
 /// most efficiently with fast FCNs (0), expensive FCNs (2)
 /// and 'intermediate' FCNs (1)
+
+void RooGradMinimizer::setStrategy(Int_t istrat) {
+  _theFitter->Config().MinimizerOptions().SetStrategy(istrat);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Execute MIGRAD. Changes in parameter values
+/// and calculated errors are automatically
+/// propagated back the RooRealVars representing
+/// the floating parameters in the MINUIT operation
+
 Int_t RooGradMinimizer::migrad()
 {
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
@@ -161,6 +172,138 @@ Int_t RooGradMinimizer::migrad()
   _fcn->BackProp(_theFitter->Result());
 
   saveStatus("MIGRAD",_status) ;
+
+  return _status ;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Execute HESSE. Changes in parameter values
+/// and calculated errors are automatically
+/// propagated back the RooRealVars representing
+/// the floating parameters in the MINUIT operation
+
+Int_t RooGradMinimizer::hesse()
+{
+  if (_theFitter->GetMinimizer()==0) {
+    coutW(Minimization) << "RooGaussMinimizer::hesse: Error, run Migrad before Hesse!"
+                        << endl ;
+    _status = -1;
+  }
+  else {
+
+    _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
+                      _optConst,_verbose) ;
+    //    profileStart() ;
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
+    RooAbsReal::clearEvalErrorLog() ;
+
+    _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+    bool ret = _theFitter->CalculateHessErrors();
+    _status = ((ret) ? _theFitter->Result().Status() : -1);
+
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
+    //    profileStop() ;
+    _fcn->BackProp(_theFitter->Result());
+
+    saveStatus("HESSE",_status) ;
+
+  }
+
+  return _status ;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Execute MINOS. Changes in parameter values
+/// and calculated errors are automatically
+/// propagated back the RooRealVars representing
+/// the floating parameters in the MINUIT operation
+
+Int_t RooGradMinimizer::minos()
+{
+  if (_theFitter->GetMinimizer()==0) {
+    coutW(Minimization) << "RooGaussMinimizer::minos: Error, run Migrad before Minos!"
+                        << endl ;
+    _status = -1;
+  }
+  else {
+
+    _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
+                      _optConst,_verbose) ;
+    //    profileStart() ;
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
+    RooAbsReal::clearEvalErrorLog() ;
+
+    _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+    bool ret = _theFitter->CalculateMinosErrors();
+    _status = ((ret) ? _theFitter->Result().Status() : -1);
+
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
+    //    profileStop() ;
+    _fcn->BackProp(_theFitter->Result());
+
+    saveStatus("MINOS",_status) ;
+
+  }
+
+  return _status ;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Execute MINOS for given list of parameters. Changes in parameter values
+/// and calculated errors are automatically
+/// propagated back the RooRealVars representing
+/// the floating parameters in the MINUIT operation
+
+Int_t RooGradMinimizer::minos(const RooArgSet& minosParamList)
+{
+  if (_theFitter->GetMinimizer()==0) {
+    coutW(Minimization) << "RooMinimizer::minos: Error, run Migrad before Minos!"
+                        << endl ;
+    _status = -1;
+  }
+  else if (minosParamList.getSize()>0) {
+
+    _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
+                      _optConst,_verbose) ;
+    profileStart() ;
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
+    RooAbsReal::clearEvalErrorLog() ;
+
+    // get list of parameters for Minos
+    TIterator* aIter = minosParamList.createIterator() ;
+    RooAbsArg* arg ;
+    std::vector<unsigned int> paramInd;
+    while((arg=(RooAbsArg*)aIter->Next())) {
+      RooAbsArg* par = _fcn->GetFloatParamList()->find(arg->GetName());
+      if (par && !par->isConstant()) {
+        Int_t index = _fcn->GetFloatParamList()->index(par);
+        paramInd.push_back(index);
+      }
+    }
+    delete aIter ;
+
+    if (paramInd.size()) {
+      // set the parameter indeces
+      _theFitter->Config().SetMinosErrors(paramInd);
+
+      _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+      bool ret = _theFitter->CalculateMinosErrors();
+      _status = ((ret) ? _theFitter->Result().Status() : -1);
+      // to avoid that following minimization computes automatically the Minos errors
+      _theFitter->Config().SetMinosErrors(kFALSE);
+
+    }
+
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
+    profileStop() ;
+    _fcn->BackProp(_theFitter->Result());
+
+    saveStatus("MINOS",_status) ;
+
+  }
 
   return _status ;
 }
@@ -202,6 +345,33 @@ void RooGradMinimizer::optimizeConst(Int_t flag)
 
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
 
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Start profiling timer
+
+void RooGradMinimizer::profileStart()
+{
+  if (_profile) {
+    _timer.Start() ;
+    _cumulTimer.Start(_profileStart?kFALSE:kTRUE) ;
+    _profileStart = kTRUE ;
+  }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Stop profiling timer and report results of last session
+
+void RooGradMinimizer::profileStop()
+{
+  if (_profile) {
+    _timer.Stop() ;
+    _cumulTimer.Stop() ;
+    coutI(Minimization) << "Command timer: " ; _timer.Print() ;
+    coutI(Minimization) << "Session timer: " ; _cumulTimer.Print() ;
+  }
 }
 
 

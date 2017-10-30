@@ -47,6 +47,7 @@ public:
   enum PrintLevel { None=-1, Reduced=0, Normal=1, ExtraForProblem=2, Maximum=3 } ;
 
   Int_t setPrintLevel(Int_t newLevel);
+  void setStrategy(Int_t strat);
 
   void optimizeConst(Int_t flag) ;
 
@@ -76,6 +77,9 @@ public:
 protected:
 
   friend class RooAbsPdf ;
+
+  void profileStart() ;
+  void profileStop() ;
 
   inline Int_t getNPar() const; // { return fitterFcn()->NDim() ; }
   inline std::ofstream* logfile(); // { return fitterFcn()->GetLogFile(); }
