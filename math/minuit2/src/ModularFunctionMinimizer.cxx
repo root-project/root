@@ -128,19 +128,14 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase& fcn, c
    // Create in this acase an AnalyticalGradient calculator
    // Create the minuit FCN wrapper (MnUserFcn) containing the trasformation (int<->ext)
 
-       std::cout << "DEBUGGERIJ: create MnUserFcn" <<std::endl;
    MnUserFcn mfcn(fcn, st.Trafo());
-       std::cout << "DEBUGGERIJ: create AnalyticalGradientCalculator" <<std::endl;
    AnalyticalGradientCalculator gc(fcn, st.Trafo());
 
-       std::cout << "DEBUGGERIJ: create st.VariableParameters" <<std::endl;
    unsigned int npar = st.VariableParameters();
    if(maxfcn == 0) maxfcn = 200 + 100*npar + 5*npar*npar;
 
-       std::cout << "DEBUGGERIJ: create mnseeds" <<std::endl;
    MinimumSeed mnseeds = SeedGenerator()(mfcn, gc, st, strategy);
 
-       std::cout << "DEBUGGERIJ: call Minimize" <<std::endl;
    return Minimize(mfcn, gc, mnseeds, strategy, maxfcn, toler);
 }
 
@@ -149,7 +144,6 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const MnFcn& mfcn, const Grad
    // Interface used by all the others for the minimization using the base MinimumBuilder class
    // According to the contained type of MinimumBuilder the right type will be used
 
-   std::cout << "DEBUGGERIJ: create mb Builder" <<std::endl;
    const MinimumBuilder & mb = Builder();
    //std::cout << typeid(&mb).Name() << std::endl;
    double effective_toler = toler * mfcn.Up();   // scale tolerance with Up()
@@ -168,7 +162,6 @@ FunctionMinimum ModularFunctionMinimizer::Minimize(const MnFcn& mfcn, const Grad
 
 
 
-   std::cout << "DEBUGGERIJ: call mb.Minimum" <<std::endl;
    return mb.Minimum(mfcn, gc, seed, strategy, maxfcn, effective_toler);
 }
 

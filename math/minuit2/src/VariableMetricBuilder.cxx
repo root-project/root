@@ -112,8 +112,6 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    int ipass = 0;
    bool iterate = false;
 
-  std::cout << "DEBUGGERIJ: start mb.Minimum iteration loop" <<std::endl;
-
   do {
 
       iterate = false;
@@ -154,11 +152,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
          std::cout<<"MnMigrad will verify convergence and Error matrix. "<< std::endl;
          std::cout<<"dcov is =  "<<  min.Error().Dcovar() << std::endl;
 #endif
-        std::cout << "DEBUGGERIJ: in mb.Minimum iteration loop: do Hesse" <<std::endl;
-
          MinimumState st = MnHesse(strategy)(fcn, min.State(), min.Seed().Trafo(),maxfcn);
-
-        std::cout << "DEBUGGERIJ: in mb.Minimum iteration loop: done with Hesse" <<std::endl;
 
         if (printLevel > 1) {
             MnPrint::PrintState(std::cout, st, "VariableMetric: After Hessian  ");
@@ -203,8 +197,6 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
       if (ipass == 0) maxfcn_eff = int(maxfcn*1.3);
       ipass++;
    }  while ( iterate );
-
-  std::cout << "DEBUGGERIJ: end mb.Minimum iteration loop" <<std::endl;
 
    // Add latest state (Hessian calculation)
    // and check edm (add a factor of 10 in tolerance )

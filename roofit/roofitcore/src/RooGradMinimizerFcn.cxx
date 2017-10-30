@@ -610,7 +610,7 @@ double RooGradMinimizerFcn::DoEval(const double *x) const
   }
 
   _evalCounter++ ;
-  std::cout << "func eval #" << _evalCounter << ", value: " << fvalue << std::endl;
+//  std::cout << "func eval #" << _evalCounter << ", value: " << fvalue << std::endl;
   return fvalue;
 }
 
@@ -627,7 +627,7 @@ void RooGradMinimizerFcn::InitGradient() const {
     throw std::runtime_error("In RooGradMinimizerFcn::RooGradMinimizerFcn: minimizer is null! Must initialize minimizer in the fitter before initializing the gradient function.");
   }
 
-  std::cout << "RooGradMinimizerFcn using strategy " << minimizer->Strategy() << std::endl;
+//  std::cout << "RooGradMinimizerFcn using strategy " << minimizer->Strategy() << std::endl;
   ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(minimizer->Strategy()));
   ROOT::Math::NumericalDerivatorMinuit2 derivator(*this,
                                                   strategy.GradientStepTolerance(),
@@ -658,27 +658,16 @@ double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int icoord) c
   _grad_params = new_grad_params;
 
   // Set the parameter values for this iteration
-  // EGP TODO: this is already done in DoEval as well; find efficient way to do only once
+  // TODO: this is already done in DoEval as well; find efficient way to do only once
   for (int index = 0; index < _nDim; index++) {
     if (_logfile) (*_logfile) << x[index] << " " ;
     SetPdfParamVal(index,x[index]);
   }
 
   // Calculate the function for these parameters
-  RooAbsReal::setHideOffset(kFALSE) ; // EGP TODO: check whether this is necessary
-
   _grad = _gradf(x);
 
-  RooAbsReal::setHideOffset(kTRUE) ; // EGP TODO: check whether this is necessary
-
-  // EGP TODO: decide whether to do error handling and logging, like in DoEval
-
-  // EGP TOOO: update this when changing the derivative algorithm
-  // Count the function calls necessary for this derivative and use that.
-  // Except when the derivative itself calls DoEval where the counter is already updated!
-//  _evalCounter += 2;
-
-  std::cout << "grad value " << _grad[icoord] << std::endl;
+//  std::cout << "grad value " << _grad[icoord] << std::endl;
   return _grad[icoord];
 }
 
