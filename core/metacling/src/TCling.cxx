@@ -3068,12 +3068,13 @@ void TCling::RecursiveRemove(TObject* obj)
    // to RecursiveRemove will take the write lock and performance
    // of many threads trying to access the write lock at the same
    // time is relatively bad.
-   R__LOCKGUARD(gInterpreterMutex);
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
    // Note that fgSetOfSpecials is supposed to be updated by TClingCallbacks::tryFindROOTSpecialInternal
    // (but isn't at the moment).
    if (obj->IsOnHeap() && fgSetOfSpecials && !((std::set<TObject*>*)fgSetOfSpecials)->empty()) {
       std::set<TObject*>::iterator iSpecial = ((std::set<TObject*>*)fgSetOfSpecials)->find(obj);
       if (iSpecial != ((std::set<TObject*>*)fgSetOfSpecials)->end()) {
+         R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
          DeleteGlobal(obj);
          ((std::set<TObject*>*)fgSetOfSpecials)->erase(iSpecial);
       }
