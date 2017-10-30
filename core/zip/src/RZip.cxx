@@ -18,11 +18,18 @@
 #include <stdio.h>
 #include <assert.h>
 
+// The size of the ROOT block framing headers for compression:
+// - 3 bytes to identify the compression algorithm and version.
+// - 3 bytes to identify the deflated buffer size.
+// - 3 bytes to identify the inflated buffer size.
+#define HDRSIZE 9
+
 /**
  * Forward decl's
  */
 static void R__zipOld(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgrt, int *irep);
 static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgrt, int *irep);
+static void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep);
 
 /* ===========================================================================
    R__ZipMode is used to select the compression algorithm when R__zip is called
@@ -54,8 +61,6 @@ unsigned long R__crc32(unsigned long crc, const unsigned char* buf, unsigned int
 {
    return crc32(crc, buf, len);
 }
-
-#define HDRSIZE 9
 
 /* int  *srcsize, *tgtsize, *irep;   source and target sizes, replay */
 /* char *tgt, *src;                  source and target buffers */
@@ -174,7 +179,6 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
     unsigned l_in_size, l_out_size;
     *irep = 0;
 
-    /* error_flag   = 0; */
     if (*tgtsize <= 0) {
        R__error("target buffer too small");
        return;
@@ -232,4 +236,176 @@ static void R__zipZLIB(int cxlevel, int *srcsize, char *src, int *tgtsize, char 
 void R__zip(int cxlevel, int *srcsize, char *src, int *tgtsize, char *tgt, int *irep) {
    R__zipMultipleAlgorithm(cxlevel, srcsize, src, tgtsize, tgt, irep,
                            ROOT::ECompressionAlgorithm::kUseGlobalCompressionSetting);
+}
+
+/**
+ * Below are the routines for unzipping (inflating) buffers.
+ */
+
+static int is_valid_header_zlib(unsigned char *src)
+{
+   return src[0] == 'Z' && src[1] == 'L' && src[2] == Z_DEFLATED;
+}
+
+static int is_valid_header_old(unsigned char *src)
+{
+   return src[0] == 'C' && src[1] == 'S' && src[2] == Z_DEFLATED;
+}
+
+static int is_valid_header_lzma(unsigned char *src)
+{
+   return src[0] == 'X' && src[1] == 'Z' && src[2] == 0;
+}
+
+static int is_valid_header_lz4(unsigned char *src)
+{
+   return src[0] == 'L' && src[1] == '4';
+}
+
+static int is_valid_header(unsigned char *src)
+{
+   return is_valid_header_zlib(src) || is_valid_header_old(src) || is_valid_header_lzma(src) ||
+          is_valid_header_lz4(src);
+}
+
+int R__unzip_header(int *srcsize, uch *src, int *tgtsize)
+{
+  // Reads header envelope, and determines target size.
+  // Returns 0 in case of success.
+
+  *srcsize = 0;
+  *tgtsize = 0;
+
+  /*   C H E C K   H E A D E R   */
+  if (!is_valid_header(src)) {
+     fprintf(stderr, "Error R__unzip_header: error in header.  Values: %x%x\n", src[0], src[1]);
+     return 1;
+  }
+
+  *srcsize = HDRSIZE + ((long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16));
+  *tgtsize = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
+
+  return 0;
+}
+
+
+/***********************************************************************
+ *                                                                     *
+ * Name: R__unzip                                    Date:    20.01.95 *
+ * Author: E.Chernyaev (IHEP/Protvino)               Revised:          *
+ *                                                                     *
+ * Function: In memory ZIP decompression. Can be issued from FORTRAN.  *
+ *           Written for DELPHI collaboration (CERN)                   *
+ *                                                                     *
+ * Input: scrsize - size of input buffer                               *
+ *        src     - input buffer                                       *
+ *        tgtsize - size of target buffer                              *
+ *                                                                     *
+ * Output: tgt - target buffer (decompressed)                          *
+ *         irep - size of decompressed data                            *
+ *                0 - if error                                         *
+ *                                                                     *
+ ***********************************************************************/
+// N.B. (Brian) - I have kept the original note out of complete awe of the
+// age of the original code...
+void R__unzip(int *srcsize, uch *src, int *tgtsize, uch *tgt, int *irep)
+{
+  long isize;
+  uch  *ibufptr,*obufptr;
+  long  ibufcnt, obufcnt;
+
+  *irep = 0L;
+
+  /*   C H E C K   H E A D E R   */
+
+  if (*srcsize < HDRSIZE) {
+    fprintf(stderr,"R__unzip: too small source\n");
+    return;
+  }
+
+  /*   C H E C K   H E A D E R   */
+  if (!is_valid_header(src)) {
+     fprintf(stderr, "Error R__unzip: error in header\n");
+     return;
+  }
+
+  ibufptr = src + HDRSIZE;
+  ibufcnt = (long)src[3] | ((long)src[4] << 8) | ((long)src[5] << 16);
+  isize   = (long)src[6] | ((long)src[7] << 8) | ((long)src[8] << 16);
+  obufptr = tgt;
+  obufcnt = *tgtsize;
+
+  if (obufcnt < isize) {
+    fprintf(stderr,"R__unzip: too small target\n");
+    return;
+  }
+
+  if (ibufcnt + HDRSIZE != *srcsize) {
+    fprintf(stderr,"R__unzip: discrepancy in source length\n");
+    return;
+  }
+
+  /*   D E C O M P R E S S   D A T A  */
+
+  /* ZLIB and other standard compression algorithms */
+  if (is_valid_header_zlib(src)) {
+     R__unzipZLIB(srcsize, src, tgtsize, tgt, irep);
+     return;
+  } else if (is_valid_header_lzma(src)) {
+     R__unzipLZMA(srcsize, src, tgtsize, tgt, irep);
+     return;
+  } else if (is_valid_header_lz4(src)) {
+     R__unzipLZ4(srcsize, src, tgtsize, tgt, irep);
+     return;
+  }
+
+  /* Old zlib format */
+  if (R__Inflate(&ibufptr, &ibufcnt, &obufptr, &obufcnt)) {
+    fprintf(stderr,"R__unzip: error during decompression\n");
+    return;
+  }
+
+  /* if (obufptr - tgt != isize) {
+    There are some rare cases when a few more bytes are required */
+  if (obufptr - tgt > *tgtsize) {
+    fprintf(stderr,"R__unzip: discrepancy (%ld) with initial size: %ld, tgtsize=%d\n",
+            (long)(obufptr - tgt),isize,*tgtsize);
+    *irep = obufptr - tgt;
+    return;
+  }
+
+  *irep = isize;
+}
+
+void R__unzipZLIB(int *srcsize, unsigned char *src, int *tgtsize, unsigned char *tgt, int *irep)
+{
+     z_stream stream; /* decompression stream */
+     int err = 0;
+
+     stream.next_in = (Bytef *)(&src[HDRSIZE]);
+     stream.avail_in = (uInt)(*srcsize) - HDRSIZE;
+     stream.next_out = (Bytef *)tgt;
+     stream.avail_out = (uInt)(*tgtsize);
+     stream.zalloc = (alloc_func)0;
+     stream.zfree = (free_func)0;
+     stream.opaque = (voidpf)0;
+
+     err = inflateInit(&stream);
+     if (err != Z_OK) {
+        fprintf(stderr, "R__unzip: error %d in inflateInit (zlib)\n", err);
+        return;
+     }
+
+     while ((err = inflate(&stream, Z_FINISH)) != Z_STREAM_END) {
+        if (err != Z_OK) {
+           inflateEnd(&stream);
+           fprintf(stderr, "R__unzip: error %d in inflate (zlib)\n", err);
+           return;
+        }
+     }
+
+     inflateEnd(&stream);
+
+     *irep = stream.total_out;
+     return;
 }
