@@ -305,6 +305,8 @@ PyROOT::TPyBufferFactory::~TPyBufferFactory()
 }
 
 const char* getBoolFormat()   { return "b";}
+const char* getCharFormat()   { return "b";}
+const char* getUCharFormat()  { return "B";}
 const char* getShortFormat()  { return "h";}
 const char* getUShortFormat() { return "H";}
 const char* getIntFormat()    { return "i";}
