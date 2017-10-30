@@ -242,6 +242,12 @@ int  R__mem_read     OF((bits_internal_state *state, char *b,    unsigned bsize)
     /* ulg tgtsize, srcsize;   target and source sizes */
 ulg R__memcompress(char *tgt, ulg tgtsize, char *src, ulg srcsize);
 
+
+/**
+ * Decompress a deflated entry.
+ */
+int R__Inflate(uch** ibufptr, long*  ibufcnt, uch** obufptr, long*  obufcnt);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
