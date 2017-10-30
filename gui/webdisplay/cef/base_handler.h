@@ -39,7 +39,7 @@ public:
    virtual ~BaseHandler();
 
    // Provide access to the single global instance of this object.
-   static BaseHandler *GetInstance();
+   // static BaseHandler *GetInstance();
 
    // CefClient methods:
    virtual CefRefPtr<CefLifeSpanHandler> GetLifeSpanHandler() OVERRIDE { return this; }
