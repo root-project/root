@@ -17,27 +17,43 @@
 
 This is the base class for the ROOT Random number generators. 
 This class defines the ROOT Random number interface and it should not be instantiated directly but used via its derived classes 
-(e.g. TRandom1, TRandom2 or TRandom3). 
-Note that this class implements also a very simple generator (linear congruential) with periodicity = 10**9
+The derived class are : 
+- TRandom1  based on the RANLUX algorithm, has mathematically proven random proprieties
+  and a period of about 10**171. It is however slower than the others.
+- TRandom2  is based on the Tausworthe generator of L'Ecuyer, and it has the advantage
+of being fast and using only 3 words (of 32 bits) for the state. The period is 10**26.
+- TRandom3  is based on the "Mersenne Twister generator", and is currently the recommended one,
+since it has quite good random proprieties (period of about 10**6000 ) and it is fast. However it 
+fails some of the tests of the TestU)1 suite. In addition this generator provide only random number with 
+32 bits random. 
+- Generator based on the template TRandomGen<Engine> class.  Convenient typedef's available also at the ROOT prompts are for 
+ generator of the MIXMAX family (based on ROOT::Math::MixMaxEngine) and of the std random (based on ROOT::Math::StdEngine )
+   - TRandomMixMax : MIXMAX generator based on a state of N=240.  This generator provides 61 bits random 
+   - TRandomMixMax17 :  MIXMAX generator based on a state of N=17. This generator has a fast seeding time
+   compared to N=240
+   - TRandomMixMax256 :  MIXMAX generator based on a state of N=256, based on a Matrix with m=0 and s=-1
+   - TRandomMT64   :  Generator based on a the Mersenne-Twister generator with 64 bits, 
+  using the implementation provided by the standard library ( std::mt19937_64 )
+   - TRandomRanlux48 : Generator based on a the RanLux generator with 48 bits, 
+  using the implementation provided by the standard library (std::ranlux4)
+
+Note also that this class implements also a very simple generator (linear congruential) with periodicity = 10**9
 which is known to have defects (the lower random bits are correlated)
 and therefore should NOT be used in any statistical study.
-One should use instead TRandom1, TRandom2 or TRandom3.
-TRandom3, is based on the "Mersenne Twister generator", and is the recommended one,
-since it has good random proprieties (period of about 10**6000 ) and it is fast.
-TRandom1, based on the RANLUX algorithm, has mathematically proven random proprieties
-and a period of about 10**171. It is however slower than the others.
-TRandom2, is based on the Tausworthe generator of L'Ecuyer, and it has the advantage
-of being fast and using only 3 words (of 32 bits) for the state. The period is 10**26.
 
 The following table shows some timings (in nanoseconds/call)
-for the random numbers obtained using an Intel Pentium 3.0 GHz running Linux
-and using the gcc 3.2.3 compiler
+for the random numbers obtained using a 2.6 GHz Intel Core i7 CPU:
 
--   TRandom           34   ns/call     (BAD Generator)
--   TRandom1          242  ns/call
--   TRandom2          37   ns/call
--   TRandom3          45   ns/call
 
+-   TRandom            3   ns/call     (BAD Generator)
+-   TRandom1          82   ns/call
+-   TRandom2           7   ns/call
+-   TRandom3           5   ns/call
+-   TRandomMixMax      6   ns/call
+-   TRandomMixMax17    6   ns/call
+-   TRandomMixMax256  10   ns/call
+-   TRandomMT64        9   ns/call
+-   TRandomRanlux48  270  ns/call
 
 The following methods are provided to generate random numbers disctributed according to some basic distributions:
 
