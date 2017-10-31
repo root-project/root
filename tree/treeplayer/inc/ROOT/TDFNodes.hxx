@@ -14,7 +14,7 @@
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/TDataSource.hxx"
 #include "ROOT/TDFUtils.hxx"
-#include "ROOT/RArrayView.hxx"
+#include "ROOT/TArrayBranch.hxx"
 #include "ROOT/TSpinMutex.hxx"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
@@ -230,8 +230,8 @@ value for the column via the `Get` method.
 **/
 template <typename T>
 class TColumnValue {
-   // following line is equivalent to pseudo-code: ProxyParam_t == array_view<U> ? U : T
-   // ReaderValueOrArray_t is a TTreeReaderValue<T> unless T is array_view<U>
+   // following line is equivalent to pseudo-code: ProxyParam_t == TArrayBranch<U> ? U : T
+   // ReaderValueOrArray_t is a TTreeReaderValue<T> unless T is TArrayBranch<U>
    using ProxyParam_t = typename std::conditional<std::is_same<ReaderValueOrArray_t<T>, TTreeReaderValue<T>>::value, T,
                                                   TakeFirstParameter_t<T>>::type;
 
@@ -247,9 +247,9 @@ class TColumnValue {
    // The vectors are used as very small stacks (1-2 elements typically) that fill in case of interleaved task execution
    // i.e. when more than one task needs readers in this worker thread.
 
-   /// Owning ptrs to a TTreeReaderValue. Used for non-temporary columns when T != std::array_view<U>
+   /// Owning ptrs to a TTreeReaderValue. Used for non-temporary columns when T != TArrayBranch<U>
    std::vector<std::unique_ptr<TTreeReaderValue<T>>> fReaderValues;
-   /// Owning ptrs to a TTreeReaderArray. Used for non-temporary columns when T == std::array_view<U>.
+   /// Owning ptrs to a TTreeReaderArray. Used for non-temporary columns when T == TArrayBranch<U>.
    std::vector<std::unique_ptr<TTreeReaderArray<ProxyParam_t>>> fReaderArrays;
    /// Non-owning ptrs to the value of a custom column.
    std::vector<T *> fCustomValuePtrs;
@@ -258,7 +258,7 @@ class TColumnValue {
    /// Non-owning ptrs to the node responsible for the custom column. Needed when querying custom values.
    std::vector<TCustomColumnBase *> fCustomColumns;
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
-   /// in contiguous memory. Only used when T == std::array_view<U>.
+   /// in contiguous memory. Only used when T == TArrayBranch<U>.
    bool fArrayHasBeenChecked = false;
 
 public:
@@ -283,11 +283,11 @@ public:
    T &Get(Long64_t entry);
 
    template <typename U = T, typename std::enable_if<!std::is_same<ProxyParam_t, U>::value, int>::type = 0>
-   std::array_view<ProxyParam_t> Get(Long64_t)
+   TArrayBranch<ProxyParam_t> Get(Long64_t)
    {
       auto &readerArray = *fReaderArrays.back();
-      // We only use TTreeReaderArrays to read columns that users flagged as type `array_view`, so we need to check
-      // that the branch stores the array as contiguous memory that we can actually wrap in an `array_view`.
+      // We only use TTreeReaderArrays to read columns that users flagged as type `TArrayBranch`, so we need to check
+      // that the branch stores the array as contiguous memory that we can actually wrap in an `TArrayBranch`.
       // Currently we need the first entry to have been loaded to perform the check
       // TODO Move check to `MakeProxy` once Axel implements this kind of check in TTreeReaderArray using TBranchProxy
       if (!fArrayHasBeenChecked) {
@@ -296,7 +296,7 @@ public:
                std::string exceptionText = "Branch ";
                exceptionText += readerArray.GetBranchName();
                exceptionText +=
-                  " hangs from a non-split branch. For this reason, it cannot be accessed via an array_view."
+                  " hangs from a non-split branch. For this reason, it cannot be accessed via a TArrayBranch."
                   " Please read the top level branch instead.";
                throw std::runtime_error(exceptionText);
             }
@@ -304,7 +304,7 @@ public:
          }
       }
 
-      return std::array_view<ProxyParam_t>(readerArray.begin(), readerArray.end());
+      return TArrayBranch<ProxyParam_t>(readerArray);
    }
 
    void Reset()

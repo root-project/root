@@ -283,20 +283,20 @@ namespace TDF {
 template <typename T, typename COLL = std::vector<T>>
 struct TakeRealTypes {
    // We cannot put in the output collection C arrays: the ownership is not defined.
-   // We therefore proceed to check if T is an array_view
+   // We therefore proceed to check if T is an TArrayBranch
    // If yes, we check what type is the output collection and we rebuild it.
-   // E.g. if a vector<V> was the selected collection, where V is array_view<T>,
+   // E.g. if a vector<V> was the selected collection, where V is TArrayBranch<T>,
    // the collection becomes vector<vector<T>>.
-   static constexpr auto isAV = TDFInternal::IsArrayView_t<T>::value;
+   static constexpr auto isAB = TDFInternal::IsTArrayBranch_t<T>::value;
    using RealT_t = typename TDFInternal::ValueType<T>::value_type;
    using VTColl_t = std::vector<RealT_t>;
 
    using NewC0_t =
-      typename std::conditional<isAV && TDFInternal::IsVector_t<COLL>::value, std::vector<VTColl_t>, COLL>::type;
+      typename std::conditional<isAB && TDFInternal::IsVector_t<COLL>::value, std::vector<VTColl_t>, COLL>::type;
    using NewC1_t =
-      typename std::conditional<isAV && TDFInternal::IsList_t<NewC0_t>::value, std::list<VTColl_t>, NewC0_t>::type;
+      typename std::conditional<isAB && TDFInternal::IsList_t<NewC0_t>::value, std::list<VTColl_t>, NewC0_t>::type;
    using NewC2_t =
-      typename std::conditional<isAV && TDFInternal::IsDeque_t<NewC1_t>::value, std::deque<VTColl_t>, NewC1_t>::type;
+      typename std::conditional<isAB && TDFInternal::IsDeque_t<NewC1_t>::value, std::deque<VTColl_t>, NewC1_t>::type;
    using RealColl_t = NewC2_t;
 };
 
@@ -922,7 +922,7 @@ public:
    /// \tparam COLL The type of collection used to store the values.
    /// \param[in] column The name of the column to collect the values of.
    ///
-   /// If the type of the column is std::array_view<T>, i.e. in the ROOT dataset this is
+   /// If the type of the column is TArrayBranch<T>, i.e. in the ROOT dataset this is
    /// a C-style array, the type stored in the return container is a std::vector<T> to
    /// guarantee the lifetime of the data involved.
    /// This action is *lazy*: upon invocation of this method the calculation is

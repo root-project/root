@@ -83,9 +83,8 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
             type = "bool";
          if (title[title.size() - 3] == ']') {
             // title has the form "varname[size]/X", i.e. it refers to an array (doesn't matter if size is fixed or not)
-            // TDataFrame reads it as an array_view
-            // TODO change array_view to span when available
-            return "std::array_view<" + type + ">";
+            // TDataFrame reads it as a TArrayBranch
+            return "TArrayBranch<" + type + ">";
          } else {
             return type;
          }
