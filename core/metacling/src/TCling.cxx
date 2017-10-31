@@ -3803,6 +3803,12 @@ void TCling::UpdateListOfDataMembers(TClass* cl) const
 {
 }
 
+bool TCling::SetupModules() {
+  if (!fInterpreter->getCI()->getLangOpts().Modules)
+    return false;
+  return fInterpreter->setupModules();
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Create list of pointers to method arguments for TMethod m.
 
