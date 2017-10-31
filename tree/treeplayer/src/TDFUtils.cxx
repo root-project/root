@@ -84,7 +84,7 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
          if (title[title.size() - 3] == ']') {
             // title has the form "varname[size]/X", i.e. it refers to an array (doesn't matter if size is fixed or not)
             // TDataFrame reads it as a TArrayBranch
-            return "TArrayBranch<" + type + ">";
+            return "ROOT::Experimental::TDF::TArrayBranch<" + type + ">";
          } else {
             return type;
          }

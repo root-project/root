@@ -182,8 +182,8 @@ TEST_F(TDFSnapshot, Snapshot_action_with_options)
 void checkSnapshotArrayFile(TInterface<TLoopManager> &df, unsigned int kNEvents)
 {
    // fixedSizeArr and varSizeArr are TResultProxy<vector<vector<T>>>
-   auto fixedSizeArr = df.Take<std::array_view<float>>("fixedSizeArr");
-   auto varSizeArr = df.Take<std::array_view<double>>("varSizeArr");
+   auto fixedSizeArr = df.Take<TArrayBranch<float>>("fixedSizeArr");
+   auto varSizeArr = df.Take<TArrayBranch<double>>("varSizeArr");
    auto size = df.Take<unsigned int>("size");
 
    // check contents of fixedSizeArr
@@ -211,8 +211,8 @@ TEST_F(TDFSnapshotArrays, SingleThread)
    TDataFrame tdf("arrayTree", kFileNames);
    // template Snapshot
    // "size" _must_ be listed before "varSizeArr"!
-   auto dt = tdf.Snapshot<std::array_view<float>, unsigned int, std::array_view<double>>(
-      "outTree", "test_snapshotarray_out.root", {"fixedSizeArr", "size", "varSizeArr"});
+   auto dt = tdf.Snapshot<TArrayBranch<float>, unsigned int, TArrayBranch<double>>(
+      "outTree", "test_snapshotTArrayBranchout.root", {"fixedSizeArr", "size", "varSizeArr"});
 
    checkSnapshotArrayFile(dt, kNEvents);
 }
@@ -222,7 +222,7 @@ TEST_F(TDFSnapshotArrays, SingleThreadJitted)
    TDataFrame tdf("arrayTree", kFileNames);
    // jitted Snapshot
    // "size" _must_ be listed before "varSizeArr"!
-   auto dj = tdf.Snapshot("outTree", "test_snapshotarray_out.root", {"fixedSizeArr", "size", "varSizeArr"});
+   auto dj = tdf.Snapshot("outTree", "test_snapshotTArrayBranchout.root", {"fixedSizeArr", "size", "varSizeArr"});
 
    checkSnapshotArrayFile(dj, kNEvents);
 }
@@ -277,8 +277,8 @@ TEST(TDFSnapshotMore, ManyTasksPerThread)
 void checkSnapshotArrayFileMT(TInterface<TLoopManager> &df, unsigned int kNEvents)
 {
    // fixedSizeArr and varSizeArr are TResultProxy<vector<vector<T>>>
-   auto fixedSizeArr = df.Take<std::array_view<float>>("fixedSizeArr");
-   auto varSizeArr = df.Take<std::array_view<double>>("varSizeArr");
+   auto fixedSizeArr = df.Take<TArrayBranch<float>>("fixedSizeArr");
+   auto varSizeArr = df.Take<TArrayBranch<double>>("varSizeArr");
    auto size = df.Take<unsigned int>("size");
 
    // multi-thread execution might have scrambled events w.r.t. the original file, so we just check overall properties
@@ -292,8 +292,8 @@ TEST_F(TDFSnapshotArrays, MultiThread)
    ROOT::EnableImplicitMT(4);
 
    TDataFrame tdf("arrayTree", kFileNames);
-   auto dt = tdf.Snapshot<std::array_view<float>, unsigned int, std::array_view<double>>(
-      "outTree", "test_snapshotarray_out.root", {"fixedSizeArr", "size", "varSizeArr"});
+   auto dt = tdf.Snapshot<TArrayBranch<float>, unsigned int, TArrayBranch<double>>(
+      "outTree", "test_snapshotTArrayBranchout.root", {"fixedSizeArr", "size", "varSizeArr"});
 
    checkSnapshotArrayFileMT(dt, kNEvents);
 
@@ -305,7 +305,7 @@ TEST_F(TDFSnapshotArrays, MultiThreadJitted)
    ROOT::EnableImplicitMT(4);
 
    TDataFrame tdf("arrayTree", kFileNames);
-   auto dj = tdf.Snapshot("outTree", "test_snapshotarray_out.root", {"fixedSizeArr", "size", "varSizeArr"});
+   auto dj = tdf.Snapshot("outTree", "test_snapshotTArrayBranchout.root", {"fixedSizeArr", "size", "varSizeArr"});
 
    checkSnapshotArrayFileMT(dj, kNEvents);
 

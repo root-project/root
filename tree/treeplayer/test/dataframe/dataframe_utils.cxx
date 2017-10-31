@@ -111,8 +111,8 @@ TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
                                                      {"Long64_t", "Long64_t"},
                                                      {"ULong64_t", "ULong64_t"},
                                                      {"bool", "bool"},
-                                                     {"arrint", "std::array_view<int>"},
-                                                     {"vararrint", "std::array_view<int>"}};
+                                                     {"arrint", "ROOT::Experimental::TDF::TArrayBranch<int>"},
+                                                     {"vararrint", "ROOT::Experimental::TDF::TArrayBranch<int>"}};
 
    for (auto &nameType : nameTypes) {
       auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, &t, nullptr);

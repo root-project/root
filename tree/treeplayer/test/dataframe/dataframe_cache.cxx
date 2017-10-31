@@ -237,7 +237,7 @@ TEST(Cache, Carrays)
    }
 
    TDataFrame tdf(treeName, fileName);
-   auto cache = tdf.Cache<std::array_view<float>>({"arr"});
+   auto cache = tdf.Cache<TArrayBranch<float>>({"arr"});
    int i = 0;
    auto checkArr = [&i](std::vector<float> av) {
       auto ifloat = float(i);
