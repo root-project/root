@@ -194,6 +194,7 @@ protected:
    Double_t GetROCIntegral(TString methodname, TString methodtitle, UInt_t iClass = 0);
 
    ClassificationResult &GetResults(TString methodname, TString methodtitle);
+   void CopyFrom(TDirectory *src, TFile *file);
    void MergeFiles();
 
    ClassDef(Classification, 0);
