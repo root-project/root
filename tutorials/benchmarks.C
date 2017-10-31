@@ -23,7 +23,8 @@ void bexec(TString &dir,const char *macro)
    TPaveText *summary2 = (TPaveText*)bench1->GetPrimitive("TPave");
    TText *tmacro2 = summary2->GetLineWith(macro);
    if (tmacro2) tmacro2->SetTextColor(2);
-   bench1->Modified(); bench1->Update();
+   bench1->Modified(); bench1->Update(); gSystem->ProcessEvents();
+
 }
 
 void benchmarks() {
