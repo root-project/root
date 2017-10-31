@@ -93,10 +93,13 @@ namespace cling {
     }
   };
 
+  /// \brief wraps an ExternalASTSource in an ExternalSemaSource. Shouldn't
+  /// have any functional change on the behavior.
   class ExternalASTSourceWrapper : public ExternalSemaSource {
     ExternalASTSource* m_Source;
   public:
     ExternalASTSourceWrapper(ExternalASTSource* Source) : m_Source(Source) {
+      assert(m_Source && "Can't wrap nullptr ExternalASTSource");
     }
 
     virtual Decl *GetExternalDecl(uint32_t ID) override {
@@ -299,19 +302,17 @@ namespace cling {
 
         // FIXME: We should add a multiplexer in the ASTContext, too.
         //ExternalSemaSource* astContextExternalSource(SemaRef.getExternalSource());
+        //MultiplexExternalSemaSource* MS = new MultiplexExternalSemaSource(*wrapper, *astContextExternalSource);
 
         clang::ASTContext& Ctx = SemaRef.getASTContext();
 
         auto ExistingSource = Ctx.getExternalSource();
         Ctx.ExternalSource.resetWithoutRelease();//FIXME: make sure we delete it.
         ExternalASTSourceWrapper* wrapper = new ExternalASTSourceWrapper(ExistingSource);
-        IntrusiveRefCntPtr<ExternalASTSource>S(wrapper); // Replace with `ExistingSource` to fix all bugs.
+        IntrusiveRefCntPtr<ExternalASTSource>S(ExistingSource); // Replace with `ExistingSource` to fix all bugs.
 
         Ctx.setExternalSource(S);
 
-        // FIXME: This is a gross hack. We must make multiplexer in the
-        // astcontext or a derived class that extends what we need.
-        //MultiplexExternalSemaSource* MS = new MultiplexExternalSemaSource(*wrapper, *astContextExternalSource);
       }
     }
 

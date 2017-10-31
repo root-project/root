@@ -1851,7 +1851,7 @@ void TCling::RegisterModule(const char* modulename,
 #endif
 #endif
 
-      if (!hasHeaderParsingOnDemand){
+      if (fInterpreter->getCI()->getLangOpts().Modules || !hasHeaderParsingOnDemand){
          SuspendAutoParsing autoParseRaii(this);
 
          const cling::Transaction* watermark = fInterpreter->getLastTransaction();
@@ -5104,6 +5104,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 
    // Process the forward declarations collected
    cling::Transaction* T = nullptr;
+
    auto compRes= fInterpreter->declare(uniqueString.Data(), &T);
    assert(cling::Interpreter::kSuccess == compRes && "A declaration in a rootmap could not be compiled");
 

@@ -23,6 +23,20 @@ using namespace clang;
 
 ExternalASTSource::~ExternalASTSource() { }
 
+static uint32_t lastValue = 0;
+static uint32_t currentCalls = 0;
+
+uint32_t ExternalASTSource::getGeneration() const {
+  if (lastValue != CurrentGeneration) {
+    //fprintf(stdout, "GEN:%u->%u = %p\n", CurrentGeneration, currentCalls, this);
+    lastValue = CurrentGeneration;
+    currentCalls = 1;
+  } else {
+    currentCalls++;
+  }
+  return CurrentGeneration;
+}
+
 llvm::Optional<ExternalASTSource::ASTSourceDescriptor>
 ExternalASTSource::getSourceDescriptor(unsigned ID) {
   return None;

@@ -53,6 +53,7 @@
 #include "clang/Parse/Parser.h"
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaDiagnostic.h"
+#include "clang/Serialization/ASTReader.h"
 
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/IR/Module.h"
@@ -226,6 +227,16 @@ namespace cling {
     DiagnosticConsumer& DClient = getCI()->getDiagnosticClient();
     DClient.BeginSourceFile(getCI()->getLangOpts(), &PP);
 
+    m_IncrParser->getCI()->createModuleManager();
+    // Disable suggestions for ROOT
+    bool showSuggestions = !llvm::StringRef(ClingStringify(CLING_VERSION)).startswith("ROOT");
+    // We need InterpreterCallbacks only if it is a parent Interpreter.
+    if (!parentInterp) {
+      std::unique_ptr<InterpreterCallbacks>
+         AutoLoadCB(new AutoloadCallback(this, showSuggestions));
+      setCallbacks(std::move(AutoLoadCB));
+    }
+
     llvm::SmallVector<IncrementalParser::ParseResultTransaction, 2>
       IncrParserTransactions;
     if (!m_IncrParser->Initialize(IncrParserTransactions, parentInterp)) {
@@ -236,6 +247,8 @@ namespace cling {
         m_IncrParser->commitTransaction(I, false);
       return;
     }
+
+
 
     llvm::SmallVector<llvm::StringRef, 6> Syms;
     Initialize(noRuntime || m_Opts.NoRuntime, isInSyntaxOnlyMode(), Syms);
@@ -267,16 +280,6 @@ namespace cling {
           }
         }
       }
-    }
-
-    // Disable suggestions for ROOT
-    bool showSuggestions = !llvm::StringRef(ClingStringify(CLING_VERSION)).startswith("ROOT");
-
-    // We need InterpreterCallbacks only if it is a parent Interpreter.
-    if (!parentInterp) {
-      std::unique_ptr<InterpreterCallbacks>
-         AutoLoadCB(new AutoloadCallback(this, showSuggestions));
-      setCallbacks(std::move(AutoLoadCB));
     }
 
     m_IncrParser->SetTransformers(parentInterp);
@@ -1136,6 +1139,13 @@ namespace cling {
            && CO.ValuePrinting == 0
            && CO.ResultEvaluation == 0
            && "Compilation Options not compatible with \"declare\" mode.");
+
+    if (m_IncrParser->getCI()->getLangOpts().Modules) {
+      if(m_IncrParser->getCI()->getSema().getASTContext().getExternalSource()
+         == m_IncrParser->getCI()->getModuleManager().get()) {
+        //fprintf(stderr, "Using ASTReader as external soruce!\n");
+      }
+    }
 
     StateDebuggerRAII stateDebugger(this);
 
