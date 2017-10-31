@@ -48,7 +48,6 @@
 #include <TCanvas.h>
 #include <iostream>
 #include <memory>
-
 #define MinNoTrainingEvents 10
 
 //_______________________________________________________________________
@@ -1068,10 +1067,47 @@ Double_t TMVA::Experimental::Classification::GetROCIntegral(TString methodname, 
 }
 
 //_______________________________________________________________________
+void TMVA::Experimental::Classification::CopyFrom(TDirectory *src, TFile *file)
+{
+   TFile *savdir = file;
+   TDirectory *adir = savdir;
+   adir->cd();
+   // loop on all entries of this directory
+   TKey *key;
+   TIter nextkey(src->GetListOfKeys());
+   while ((key = (TKey *)nextkey())) {
+      const Char_t *classname = key->GetClassName();
+      TClass *cl = gROOT->GetClass(classname);
+      if (!cl)
+         continue;
+      if (cl->InheritsFrom(TDirectory::Class())) {
+         src->cd(key->GetName());
+         TDirectory *subdir = file;
+         adir->cd();
+         CopyFrom(subdir, file);
+         adir->cd();
+      } else if (cl->InheritsFrom(TTree::Class())) {
+         TTree *T = (TTree *)src->Get(key->GetName());
+         adir->cd();
+         TTree *newT = T->CloneTree(-1, "fast");
+         newT->Write();
+      } else {
+         src->cd();
+         TObject *obj = key->ReadObj();
+         adir->cd();
+         obj->Write();
+         delete obj;
+      }
+   }
+   adir->SaveSelf(kTRUE);
+   savdir->cd();
+}
+
+//_______________________________________________________________________
 void TMVA::Experimental::Classification::MergeFiles()
 {
 
-   fFile->mkdir(fDataLoader->GetName());
+   auto dsdir = fFile->mkdir(fDataLoader->GetName()); // dataset dir
    TTree *TrainTree = 0;
    TTree *TestTree = 0;
    TFile *ifile = 0;
@@ -1088,10 +1124,20 @@ void TMVA::Experimental::Classification::MergeFiles()
          ofile = new TFile(fname);
          ds = (TDirectoryFile *)ofile->Get(fDataLoader->GetName());
       }
+      //
       auto tmptrain = (TTree *)ds->Get("TrainTree");
       auto tmptest = (TTree *)ds->Get("TestTree");
       fFile->cd();
       fFile->cd(fDataLoader->GetName());
+
+      auto methdirname = Form("Method_%s", methodtitle.Data());
+      auto methdir = dsdir->mkdir(methdirname, methdirname);
+      auto methdirbase = methdir->mkdir(methodtitle.Data(), methodtitle.Data());
+      auto mfdir = (TDirectoryFile *)ds->Get(methdirname);
+      auto mfdirbase = (TDirectoryFile *)mfdir->Get(methodtitle.Data());
+
+      CopyFrom(mfdirbase, (TFile *)methdirbase);
+      dsdir->cd();
       if (i == 0) {
          TrainTree = tmptrain->CopyTree("");
          TestTree = tmptest->CopyTree("");
@@ -1112,10 +1158,16 @@ void TMVA::Experimental::Classification::MergeFiles()
             testbranch->Fill();
          }
          ofile->Close();
-         gSystem->Unlink(fname);
       }
    }
    TrainTree->Write();
    TestTree->Write();
    ifile->Close();
+   // cleaning
+   for (UInt_t i = 0; i < fMethods.size(); i++) {
+      auto methodname = fMethods[i].GetValue<TString>("MethodName");
+      auto methodtitle = fMethods[i].GetValue<TString>("MethodTitle");
+      auto fname = Form(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
+      gSystem->Unlink(fname);
+   }
 }
