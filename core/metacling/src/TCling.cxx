@@ -1103,6 +1103,8 @@ TCling::TCling(const char *name, const char *title)
 #ifdef R__USE_CXXMODULES
    useCxxModules = true;
 #endif
+   if (useCxxModules)
+     fHeaderParsingOnDemand = false;
 
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
@@ -1851,7 +1853,7 @@ void TCling::RegisterModule(const char* modulename,
 #endif
 #endif
 
-      if (fInterpreter->getCI()->getLangOpts().Modules || !hasHeaderParsingOnDemand){
+      if (!hasHeaderParsingOnDemand){
          SuspendAutoParsing autoParseRaii(this);
 
          const cling::Transaction* watermark = fInterpreter->getLastTransaction();
