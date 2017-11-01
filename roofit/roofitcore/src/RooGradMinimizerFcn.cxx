@@ -631,7 +631,7 @@ void RooGradMinimizerFcn::InitGradient() const {
 //  std::cout << "RooGradMinimizerFcn using strategy " << minimizer->Strategy() << std::endl;
   ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(minimizer->Strategy()));
   ROOT::Minuit2::MnMachinePrecision precision {};
-  ROOT::Math::NumericalDerivatorMinuit2 derivator(*this,
+  RooFit::NumericalDerivatorMinuit2 derivator(*this,
                                                   strategy.GradientStepTolerance(),
                                                   strategy.GradientTolerance(),
                                                   strategy.GradientNCycles(),

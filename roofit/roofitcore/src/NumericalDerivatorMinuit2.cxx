@@ -23,7 +23,7 @@
  *      Modified things (w.r.t. NumericalDerivator) are indicated by MODIFIED.
  */
 
-#include "Math/NumericalDerivatorMinuit2.h"
+#include "NumericalDerivatorMinuit2.h"
 #include <cmath>
 #include <algorithm>
 #include <Math/IFunction.h>
@@ -35,8 +35,7 @@
 #include <Math/Minimizer.h>  // needed here because in Fitter is only a forward declaration
 
 
-namespace ROOT {
-namespace Math {
+namespace RooFit {
 
 NumericalDerivatorMinuit2::NumericalDerivatorMinuit2() :
    fFunction(0), 
@@ -80,7 +79,7 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunc
 }
   
 // copy constructor
-NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::NumericalDerivatorMinuit2 &other) :
+NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const RooFit::NumericalDerivatorMinuit2 &other) :
     fGrd(other.fGrd),
     fG2(other.fG2),
     fGstep(other.fGstep),
@@ -96,7 +95,7 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::Numerical
     eps2(other.eps2)
 {}
 
-ROOT::Math::NumericalDerivatorMinuit2& NumericalDerivatorMinuit2::operator=(const ROOT::Math::NumericalDerivatorMinuit2 &other) {
+RooFit::NumericalDerivatorMinuit2& NumericalDerivatorMinuit2::operator=(const RooFit::NumericalDerivatorMinuit2 &other) {
   if(&other != this) {
     fGrd = other.fGrd;
     fG2 = other.fG2;
@@ -423,7 +422,6 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
 }
 
 
-} // namespace Math
-} // namespace ROOT
+} // namespace RooFit
 
 

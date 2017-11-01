@@ -21,7 +21,7 @@
 #include "Math/IFunction.h"
 #include "Fit/ParameterSettings.h"
 #include "Fit/FitResult.h"
-#include "Math/NumericalDerivatorMinuit2.h"
+#include "NumericalDerivatorMinuit2.h"
 
 #include "TMatrixDSym.h"
 
@@ -110,7 +110,7 @@ private:
 
   // Before using any of the following members, call InitGradient!
   // this all needs to be mutable since ROOT::Math::IMultiGradFunction insists on DoDerivative being const
-  mutable ROOT::Math::NumericalDerivatorMinuit2 _gradf;
+  mutable RooFit::NumericalDerivatorMinuit2 _gradf;
   mutable std::vector<double> _grad;
   mutable std::vector<double> _grad_params;
   mutable bool _grad_initialized;

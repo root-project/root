@@ -16,8 +16,8 @@
  *      Author: E. G. P. Bos
  */
 
-#ifndef ROOT_Math_NumericalDerivatorMinuit2
-#define ROOT_Math_NumericalDerivatorMinuit2
+#ifndef RooFit_NumericalDerivatorMinuit2
+#define RooFit_NumericalDerivatorMinuit2
 
 #ifndef ROOT_Math_IFunctionfwd
 #include <Math/IFunctionfwd.h>
@@ -30,8 +30,7 @@
 #include "Minuit2/SqrtLowParameterTransformation.h"
 
 
-namespace ROOT {
-namespace Math {
+namespace RooFit {
 
 
 class NumericalDerivatorMinuit2 {
@@ -97,7 +96,6 @@ private:
 };
 
 
-} // namespace Math
-} // namespace ROOT
+} // namespace RooFit
 
 #endif /* NumericalDerivatorMinuit2_H_ */
