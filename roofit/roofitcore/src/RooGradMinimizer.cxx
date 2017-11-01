@@ -115,6 +115,9 @@ RooGradMinimizer::RooGradMinimizer(RooAbsReal& function)
   _theFitter->Config().MinimizerOptions().SetMaxIterations(500*_fcn->NDim());
   _theFitter->Config().MinimizerOptions().SetMaxFunctionCalls(500*_fcn->NDim());
 
+  // Use +0.5 for 1-sigma errors
+  setErrorLevel(_func->defaultErrorLevel()) ;
+
   // Declare our parameters to MINUIT
   _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
@@ -398,6 +401,17 @@ inline Double_t& RooGradMinimizer::maxFCN() { return fitterFcn()->GetMaxFCN() ; 
 const RooGradMinimizerFcn* RooGradMinimizer::fitterFcn() const {  return ( fitter()->GetFCN() ? (dynamic_cast<RooGradMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
 RooGradMinimizerFcn* RooGradMinimizer::fitterFcn() { return ( fitter()->GetFCN() ? (dynamic_cast<RooGradMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the level for MINUIT error analysis to the given
+/// value. This function overrides the default value
+/// that is taken in the RooMinimizer constructor from
+/// the defaultErrorLevel() method of the input function
+
+void RooGradMinimizer::setErrorLevel(Double_t level)
+{
+  _theFitter->Config().MinimizerOptions().SetErrorDef(level);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Choose the minimizer algorithm.
