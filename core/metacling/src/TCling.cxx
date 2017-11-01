@@ -1103,6 +1103,8 @@ TCling::TCling(const char *name, const char *title)
 #ifdef R__USE_CXXMODULES
    useCxxModules = true;
 #endif
+   if (useCxxModules)
+     fHeaderParsingOnDemand = false;
 
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
@@ -1223,6 +1225,8 @@ TCling::TCling(const char *name, const char *title)
                             "#include <string>\n"
                             "using namespace std;");
    }
+   if (fInterpreter->getCI()->getLangOpts().Modules)
+     fInterpreter->declare("#include \"TKey.h\"");
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
@@ -5104,6 +5108,7 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
 
    // Process the forward declarations collected
    cling::Transaction* T = nullptr;
+
    auto compRes= fInterpreter->declare(uniqueString.Data(), &T);
    assert(cling::Interpreter::kSuccess == compRes && "A declaration in a rootmap could not be compiled");
 

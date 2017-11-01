@@ -74,7 +74,7 @@ public:
   /// \brief Get the current generation of this AST source. This number
   /// is incremented each time the AST source lazily extends an existing
   /// entity.
-  uint32_t getGeneration() const { return CurrentGeneration; }
+  uint32_t getGeneration() const;
 
   /// \brief Resolve a declaration ID into a declaration, potentially
   /// building a new declaration.

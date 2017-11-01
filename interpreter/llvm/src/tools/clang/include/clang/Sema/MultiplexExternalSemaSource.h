@@ -149,6 +149,8 @@ public:
   /// the external AST source.
   void PrintStats() override;
   
+  /// \brief Retrieve the module that corresponds to the given module ID.
+  virtual Module *getModule(unsigned ID) override;
   
   /// \brief Perform layout on the given record.
   ///

@@ -826,6 +826,10 @@ ASTContext::setExternalSource(IntrusiveRefCntPtr<ExternalASTSource> Source) {
   ExternalSource = std::move(Source);
 }
 
+ExternalASTSource *ASTContext::getExternalSource() const {
+  return ExternalSource.get();
+}
+
 void ASTContext::PrintStats() const {
   llvm::errs() << "\n*** AST Context Stats:\n";
   llvm::errs() << "  " << Types.size() << " types total.\n";
