@@ -1124,7 +1124,6 @@ void TMVA::Experimental::Classification::MergeFiles()
          ofile = new TFile(fname);
          ds = (TDirectoryFile *)ofile->Get(fDataLoader->GetName());
       }
-      //
       auto tmptrain = (TTree *)ds->Get("TrainTree");
       auto tmptest = (TTree *)ds->Get("TestTree");
       fFile->cd();
