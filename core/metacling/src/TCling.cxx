@@ -1103,6 +1103,8 @@ TCling::TCling(const char *name, const char *title)
 #ifdef R__USE_CXXMODULES
    useCxxModules = true;
 #endif
+   if (useCxxModules)
+     fHeaderParsingOnDemand = false;
 
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
