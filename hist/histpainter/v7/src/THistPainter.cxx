@@ -26,13 +26,6 @@
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 
-template <int DIMENSION>
-THistPainterBase<DIMENSION> *THistPainterBase<DIMENSION>::fgPainter = nullptr;
-
-THistPainterBase<1> *THistPainterBase<1>::fgPainter = nullptr;
-THistPainterBase<2> *THistPainterBase<2>::fgPainter = nullptr;
-THistPainterBase<3> *THistPainterBase<3>::fgPainter = nullptr;
-
 namespace {
 class THistPainter1D: public THistPainterBase<1> {
 public:
