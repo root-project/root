@@ -25,6 +25,10 @@
 
 #include <vector>
 #include "Fit/ParameterSettings.h"
+#include "Minuit2/SinParameterTransformation.h"
+#include "Minuit2/SqrtUpParameterTransformation.h"
+#include "Minuit2/SqrtLowParameterTransformation.h"
+
 
 namespace ROOT {
 namespace Math {
@@ -55,6 +59,9 @@ public:
 
   void SetInitialValues(const double* g, const double* g2, const double* s);
 
+  double Int2ext(const ROOT::Fit::ParameterSettings& parameter, double val) const;
+  double Ext2int(const ROOT::Fit::ParameterSettings& parameter, double val) const;
+
   void SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
   void SetParameterHasLimits(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
 
@@ -82,6 +89,10 @@ private:
   //           This means precision is the caller's responsibility, beware!
   double eps;
   double eps2;
+
+  SinParameterTransformation fDoubleLimTrafo;
+  SqrtUpParameterTransformation fUpperLimTrafo;
+  SqrtLowParameterTransformation fLowerLimTrafo;
 
 };
 

@@ -33,8 +33,6 @@
 #include "Fit/ParameterSettings.h"
 
 #include <Math/Minimizer.h>  // needed here because in Fitter is only a forward declaration
-//#include "Minuit2/MnStrategy.h"
-//#include "Minuit2/MnMachinePrecision.h"
 
 
 namespace ROOT {
@@ -277,6 +275,36 @@ void NumericalDerivatorMinuit2::SetParameterHasLimits(std::vector<ROOT::Fit::Par
   }
 }
 
+double NumericalDerivatorMinuit2::Int2ext(const ROOT::Fit::ParameterSettings& parameter, double val) const {
+  // return external value from internal value for parameter i
+  if(parameter.IsBound()) {
+    if(parameter.IsDoubleBound()) {
+      return fDoubleLimTrafo.Int2ext(val, parameter.UpperLimit(), parameter.LowerLimit());
+    } else if (parameter.HasUpperLimit() && !parameter.HasLowerLimit()) {
+      return fUpperLimTrafo.Int2ext(val, parameter.UpperLimit());
+    } else {
+      return fLowerLimTrafo.Int2ext(val, parameter.LowerLimit());
+    }
+  }
+
+  return val;
+}
+
+double NumericalDerivatorMinuit2::Ext2int(const ROOT::Fit::ParameterSettings& parameter, double val) const {
+  // return the internal value for parameter i with external value val
+
+  if(parameter.IsBound()) {
+    if(parameter.IsDoubleBound()) {
+      return fDoubleLimTrafo.Ext2int(val, parameter.UpperLimit(), parameter.LowerLimit(), Precision());
+    } else if (parameter.HasUpperLimit() && !parameter.HasLowerLimit()) {
+      return fUpperLimTrafo.Ext2int(val, parameter.UpperLimit(), Precision());
+    } else {
+      return fLowerLimTrafo.Ext2int(val, parameter.LowerLimit(), Precision());
+    }
+  }
+
+  return val;
+}
 
 // MODIFIED:
 // This function was not implemented as in Minuit2. Now it copies the behavior
@@ -290,6 +318,7 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
 //    Double_t oldVerr = parameters[index].StepSize();
 //    Double_t oldVlo = parameters[index].LowerLimit();
 //    Double_t oldVhi = parameters[index].UpperLimit();
+      std::cout << "initial gradient numericalderivatorminuit2: " << std::endl;
 
   unsigned ix = 0;
   for (auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter, ++ix) {
@@ -314,43 +343,61 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
 //    double var = par.Vec()(i);
     // I'm guessing par.Vec()(i) should give the value of variable i...
     double var = parameter->Value();
+    std::cout << "var: " << var << std::endl;
 
     // Judging by the ParameterSettings.h constructor argument name "err",
     // I'm guessing what MINUIT calls "Error" is stepsize on the ROOT side.
 //    double werr = parameter->Error();
     double werr = parameter->StepSize();
 
+    std::cout << "werr: " << werr << std::endl;
+
 //    double sav = Trafo().Int2ext(i, var);
     // Int2Ext is not necessary, we're doing everything externally here
 //    double sav2 = sav + werr;
     double sav2 = var + werr;
+
+    std::cout << "sav2: " << sav2 << std::endl;
 
 //    if(parameter->HasLimits()) {  // this if statement in MINUIT is superfluous
     if(parameter->HasUpperLimit() && sav2 > parameter->UpperLimit()) {
       sav2 = parameter->UpperLimit();
     }
 
+    std::cout << "sav2: " << sav2 << std::endl;
+
 //    double var2 = Trafo().Ext2int(exOfIn, sav2);
     // Ext2int is not necessary, we're doing everything externally here
 //    double vplu = var2 - var;
     double vplu = sav2 - var;
 
+    std::cout << "vplu: " << vplu << std::endl;
+
 //    sav2 = sav - werr;
     sav2 = var - werr;
+
+    std::cout << "sav2: " << sav2 << std::endl;
 
 //    if(parameter->HasLimits()) {  // this if statement in MINUIT is superfluous
     if(parameter->HasLowerLimit() && sav2 < parameter->LowerLimit()) {
       sav2 = parameter->LowerLimit();
     }
 
+    std::cout << "sav2: " << sav2 << std::endl;
+
 //    var2 = Trafo().Ext2int(exOfIn, sav2);
     // Ext2int is not necessary, we're doing everything externally here
 //    double vmin = var2 - var;
     double vmin = sav2 - var;
 
+    std::cout << "vmin: " << vmin << std::endl;
+
     double gsmin = 8. * eps2 * (fabs(var) + eps2);
     // protect against very small step sizes which can cause dirin to zero and then nan values in grd
     double dirin = std::max(0.5*(fabs(vplu) + fabs(vmin)),  gsmin );
+
+    std::cout << "gsmin: " << gsmin << std::endl;
+    std::cout << "dirin: " << dirin << std::endl;
 
 //    double g2 = 2.0*fFcn.ErrorDef()/(dirin*dirin);
     // ErrorDef is the same as Up, which we already have in here
@@ -358,12 +405,20 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
 
     double gstep = std::max(gsmin, 0.1*dirin);
     double grd = g2*dirin;
+
+    std::cout << "gstep: " << gstep << std::endl;
+
     if(parameter->IsBound()) {
        if(gstep > 0.5) gstep = 0.5;
     }
     fGrd[ix] = grd;
     fG2[ix] = g2;
     fGstep[ix] = gstep;
+
+      std::cout << "fGrd[" << ix <<"] = " << fGrd[ix] << "\t";
+      std::cout << "fG2[" << ix <<"] = " << fG2[ix] << "\t";
+      std::cout << "fGstep[" << ix <<"] = " << fGstep[ix] << std::endl;
+
   }
 }
 

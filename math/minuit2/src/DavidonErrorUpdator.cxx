@@ -41,6 +41,10 @@ MinimumError DavidonErrorUpdator::Update(const MinimumState& s0,
    MnAlgebraicVector dx = p1.Vec() - s0.Vec();
    MnAlgebraicVector dg = g1.Vec() - s0.Gradient().Vec();
 
+//  std::cout << "v0: " << v0 << std::endl;
+//  std::cout << "s0.Vec(): " << s0.Vec() << std::endl;
+//  std::cout << "s0.Gradient().Vec(): " << s0.Gradient().Vec() << std::endl;
+
    double delgam = inner_product(dx, dg);
    double gvg = similarity(dg, v0);
 
