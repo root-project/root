@@ -49,7 +49,7 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2() :
    fN(0),
    Up(1),
    eps(std::numeric_limits<double>::epsilon()),
-   eps2(std::sqrt(eps))
+   eps2(2 * std::sqrt(eps))
 {}
 
 
@@ -60,7 +60,7 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunc
     fNCycles(ncycles),
     Up(error_level),
     eps(std::numeric_limits<double>::epsilon()),
-    eps2(std::sqrt(eps))
+    eps2(2 * std::sqrt(eps))
 {
   // constructor with function, and tolerances (coordinates must be specified for differentiate function, not constructor)
 //    fStepTolerance=step_tolerance;
