@@ -6112,7 +6112,8 @@ public:
 
   bool CheckTemplateParameterList(TemplateParameterList *NewParams,
                                   TemplateParameterList *OldParams,
-                                  TemplateParamListContext TPC);
+                                  TemplateParamListContext TPC,
+                                  bool Complain = true);
   TemplateParameterList *MatchTemplateParametersToScopeSpecifier(
       SourceLocation DeclStartLoc, SourceLocation DeclLoc,
       const CXXScopeSpec &SS, TemplateIdAnnotation *TemplateId,
