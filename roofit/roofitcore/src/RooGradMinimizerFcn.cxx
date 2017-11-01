@@ -44,6 +44,7 @@
 #include "Minuit2/MnStrategy.h"
 #include "Fit/Fitter.h"
 #include "Math/Minimizer.h"
+#include "Minuit2/MnMachinePrecision.h"
 
 #include <algorithm> // std::equal
 
@@ -629,11 +630,13 @@ void RooGradMinimizerFcn::InitGradient() const {
 
 //  std::cout << "RooGradMinimizerFcn using strategy " << minimizer->Strategy() << std::endl;
   ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(minimizer->Strategy()));
+  ROOT::Minuit2::MnMachinePrecision precision {};
   ROOT::Math::NumericalDerivatorMinuit2 derivator(*this,
                                                   strategy.GradientStepTolerance(),
                                                   strategy.GradientTolerance(),
                                                   strategy.GradientNCycles(),
-                                                  minimizer->ErrorDef());
+                                                  minimizer->ErrorDef(),
+                                                  precision.Eps());
   _gradf = derivator;
   _grad.resize(_nDim);
   _grad_params.resize(_nDim);

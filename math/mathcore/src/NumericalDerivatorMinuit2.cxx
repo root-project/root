@@ -20,7 +20,6 @@
  *      Copyright (c) 2005 LCG ROOT Math team, CERN/PH-SFT.
  *
  *      This class attempts to more closely follow the Minuit2 implementation.
- *      Remaining differences are clearly indicated by a DIFFERS comment.
  *      Modified things (w.r.t. NumericalDerivator) are indicated by MODIFIED.
  */
 
@@ -35,6 +34,7 @@
 
 #include <Math/Minimizer.h>  // needed here because in Fitter is only a forward declaration
 //#include "Minuit2/MnStrategy.h"
+//#include "Minuit2/MnMachinePrecision.h"
 
 
 namespace ROOT {
@@ -53,14 +53,14 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2() :
 {}
 
 
-NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level):
+NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, double precision):
     fFunction(&f),
     fStepTolerance(step_tolerance),
     fGradTolerance(grad_tolerance),
     fNCycles(ncycles),
     Up(error_level),
-    eps(std::numeric_limits<double>::epsilon()),
-    eps2(2 * std::sqrt(eps))
+   eps(precision),
+   eps2(2 * std::sqrt(eps))
 {
   // constructor with function, and tolerances (coordinates must be specified for differentiate function, not constructor)
 //    fStepTolerance=step_tolerance;
@@ -88,7 +88,6 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::Numerical
     fGstep(other.fGstep),
     _parameter_has_limits(other._parameter_has_limits),
     fFunction(other.fFunction),
-//    _strategy(other._strategy),
     fStepTolerance(other.fStepTolerance),
     fGradTolerance(other.fGradTolerance),
     fNCycles(other.fNCycles),
@@ -184,7 +183,7 @@ std::vector<double> NumericalDerivatorMinuit2::Differentiate(const double* cx) {
     // _theFitter->GetMinimizer()->ErrorDef() in the initialization call.
     // const double Up = 1;
 
-    // MODIFIED: two redundant double casts removed, for dfmin and for epspri
+  // MODIFIED: two redundant double casts removed, for dfmin and for epspri
     double dfmin = 8. * eps2 * (std::abs(fVal) + Up);
     double vrysml = 8.*eps*eps;
     unsigned int ncycle = fNCycles;
@@ -291,7 +290,6 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
 //    Double_t oldVerr = parameters[index].StepSize();
 //    Double_t oldVlo = parameters[index].LowerLimit();
 //    Double_t oldVhi = parameters[index].UpperLimit();
-
 
   unsigned ix = 0;
   for (auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter, ++ix) {

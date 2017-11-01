@@ -24,13 +24,7 @@
 #endif
 
 #include <vector>
-// MODIFIED: MnStrategy.h
-//#include "Minuit2/MnStrategy.h"
-// MODIFIED: Fitter.h
-//#include <Fit/Fitter.h>
-// MODIFIED: ParameterSettings.h
 #include "Fit/ParameterSettings.h"
-
 
 namespace ROOT {
 namespace Math {
@@ -42,7 +36,7 @@ public:
   NumericalDerivatorMinuit2();
   NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other);
   NumericalDerivatorMinuit2& operator=(const NumericalDerivatorMinuit2 &other);
-  NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level);
+  NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, double precision);
   //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter);
   //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy);
   virtual ~NumericalDerivatorMinuit2();
@@ -83,8 +77,9 @@ private:
   unsigned int fN;
   double Up;
 
-  // DIFFERS: eps, eps2
-  // Minuit2 determines machine precision itself in MnMachinePrecision.cxx
+  // MODIFIED: Minuit2 determines machine precision itself in MnMachinePrecision.cxx, but
+  //           mathcore isn't linked with minuit, so easier to pass in the correct eps from RooFit.
+  //           This means precision is the caller's responsibility, beware!
   double eps;
   double eps2;
 
