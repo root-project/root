@@ -1225,6 +1225,8 @@ TCling::TCling(const char *name, const char *title)
                             "#include <string>\n"
                             "using namespace std;");
    }
+   if (fInterpreter->getCI()->getLangOpts().Modules)
+     fInterpreter->declare("#include \"TKey.h\"");
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
