@@ -94,8 +94,8 @@ extern template class  TRandomGen<ROOT::Math::StdEngine<std::ranlux48> >;
   MIXMAX generator based on a state of N=240.  
   This generator is described in this paper:
    K. Savvidy and G. Savvidy,
-   `Spectrum and Entropy of C-systems. MIXMAX random number generator,'
-  Chaos, Solitons & Fractals, Volume 91, (2016) pp. 33–38 [http://dx.doi.org/10.1016/j.chaos.2016.05.003]
+   *Spectrum and Entropy of C-systems. MIXMAX random number generator*,
+  Chaos, Solitons & Fractals, Volume 91, (2016) pp. 33–38 http://dx.doi.org/10.1016/j.chaos.2016.05.003
  */
 typedef TRandomGen<ROOT::Math::MixMaxEngine<240,0>> TRandomMixMax;
 
@@ -105,8 +105,8 @@ typedef TRandomGen<ROOT::Math::MixMaxEngine<240,0>> TRandomMixMax;
   compared to N=240. 
    This generator is described in this paper:
    K. Savvidy and G. Savvidy,
-   `Spectrum and Entropy of C-systems. MIXMAX random number generator,'
-  Chaos, Solitons & Fractals, Volume 91, (2016) pp. 33–38 [http://dx.doi.org/10.1016/j.chaos.2016.05.003]
+   *Spectrum and Entropy of C-systems. MIXMAX random number generator*,
+  Chaos, Solitons & Fractals, Volume 91, (2016) pp. 33–38 http://dx.doi.org/10.1016/j.chaos.2016.05.003
  */
 typedef TRandomGen<ROOT::Math::MixMaxEngine<17,0>> TRandomMixMax17;
 
@@ -114,8 +114,8 @@ typedef TRandomGen<ROOT::Math::MixMaxEngine<17,0>> TRandomMixMax17;
   @ingroup Random
   MIXMAX generator based on a state of N=256, based on the generator descrived in this 
   paper
-   K. Savvidy, `The MIXMAX random number generator`, Comp. Phys. Commun. 196 (2015), pp 161–165
-  [http://dx.doi.org/10.1016/j.cpc.2015.06.003]
+   K. Savvidy, *The MIXMAX random number generator*, Comp. Phys. Commun. 196 (2015), pp 161–165
+  http://dx.doi.org/10.1016/j.cpc.2015.06.003
 
    This generator has been implemented with a skipping value of 2 iterations (so retaining one 
    matrix iteration every 3). 
