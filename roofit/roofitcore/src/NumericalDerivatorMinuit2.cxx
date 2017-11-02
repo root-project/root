@@ -317,7 +317,6 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
   // set an initial gradient using some given steps
   // (used in the first iteration)
 
-  double eps = precision.Eps();
   double eps2 = precision.Eps2();
 
 //    Bool_t oldFixed = parameters[index].IsFixed();
