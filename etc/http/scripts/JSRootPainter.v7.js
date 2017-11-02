@@ -46,6 +46,7 @@
       this.scale_max = 1;
       this.ticks = []; // list of major ticks
       this.invert_side = false;
+      this.lbls_both_sides = false; // draw labels on both sides
    }
 
    TAxisPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
@@ -415,7 +416,7 @@
       title_g.style("cursor", "move").call(drag_move);
    }
 
-   TAxisPainter.prototype.DrawAxis = function(vertical, layer, w, h, transform, reverse, second_shift, disable_axis_drawing) {
+   TAxisPainter.prototype.DrawAxis = function(vertical, layer, w, h, transform, reverse, second_shift, disable_axis_drawing, max_text_width) {
       // function draws  TAxis or TGaxis object
 
       var axis = this.GetObject(), chOpt = "",
@@ -463,7 +464,7 @@
 
       axis_g.attr("transform", transform || null);
 
-      var side = 1, both_sides = 0,
+      var side = 1, ticks_plusminus = 0,
           text_scaling_size = Math.min(pad_w, pad_h),
           optionPlus = (chOpt.indexOf("+")>=0),
           optionMinus = (chOpt.indexOf("-")>=0),
@@ -479,7 +480,7 @@
       if (is_gaxis && axis.TestBit(JSROOT.EAxisBits.kTickPlus)) optionPlus = true;
       if (is_gaxis && axis.TestBit(JSROOT.EAxisBits.kTickMinus)) optionMinus = true;
 
-      if (optionPlus && optionMinus) { side = 1; both_sides = 1; } else
+      if (optionPlus && optionMinus) { side = 1; ticks_plusminus = 1; } else
       if (optionMinus) { side = myXor(reverse,vertical) ? 1 : -1; } else
       if (optionPlus) { side = myXor(reverse,vertical) ? -1 : 1; }
 
@@ -510,7 +511,7 @@
             this.ticks.push(handle.grpos); // keep graphical positions of major ticks
          }
 
-         if (both_sides > 0) h2 = -h1; else
+         if (ticks_plusminus > 0) h2 = -h1; else
          if (side < 0) { h2 = -h1; h1 = 0; } else { h2 = 0; }
 
          if (res.length == 0) {
@@ -538,113 +539,126 @@
       // if (axis.fLabelFont % 10 != 3) labelsize*=0.6666;
       if ((labelsize <= 0) || (Math.abs(axis.fLabelOffset) > 1.1)) optionUnlab = true; // disable labels when size not specified
 
-      var last = vertical ? h : 0,
-          labelfont = JSROOT.Painter.getFontDetails(axis.fLabelFont, labelsize),
-          label_color = this.get_color(axis.fLabelColor),
-          labeloffset = Math.round(axis.fLabelOffset*text_scaling_size /*+ 0.5*labelsize*/),
-          label_g = axis_g.append("svg:g").attr("class","axis_labels");
+      var labelfont = JSROOT.Painter.getFontDetails(axis.fLabelFont, labelsize);
 
-      // draw labels
+      // draw labels (on both sides, when needed)
       if (!disable_axis_drawing && !optionUnlab) {
 
-         var textscale = 1, maxtextlen = 0, lastpos = 0,
+         var label_color = this.get_color(axis.fLabelColor),
+             labeloffset = Math.round(axis.fLabelOffset*text_scaling_size /*+ 0.5*labelsize*/),
              center_lbls = this.IsCenterLabels(),
              rotate_lbls = axis.TestBit(JSROOT.EAxisBits.kLabelsVert),
-             fix_coord = vertical ? -labeloffset*side : (labeloffset+2)*side + both_sides*tickSize;
+             textscale = 1, maxtextlen = 0, lbls_tilt = false,
+             label_g = [ axis_g.append("svg:g").attr("class","axis_labels") ];
 
-        this.StartTextDrawing(labelfont, 'font', label_g);
+         if (this.lbls_both_sides)
+            label_g.push(axis_g.append("svg:g").attr("class","axis_labels").attr("transform", vertical ? "translate(" + w + ",0)" : "translate(0," + (-h) + ")"));
 
-        for (var nmajor=0;nmajor<handle.major.length;++nmajor) {
+         for (var lcnt = 0; lcnt < label_g.length; ++lcnt) {
 
-           var lbl = this.format(handle.major[nmajor], true);
-           if (lbl === null) continue;
+            if (lcnt > 0) side = -side;
 
-           var pos = Math.round(this.func(handle.major[nmajor])),
-               gap_before = (nmajor>0) ? Math.abs(Math.round(pos - this.func(handle.major[nmajor-1]))) : 0,
-               gap_after = (nmajor<handle.major.length-1) ? Math.abs(Math.round(this.func(handle.major[nmajor+1])-pos)) : 0;
+            var lastpos = 0,
+                fix_coord = vertical ? -labeloffset*side : (labeloffset+2)*side + ticks_plusminus*tickSize;
 
-           if (center_lbls) {
-              var gap = gap_after || gap_before;
-              pos = Math.round(pos - (vertical ? 0.5*gap : -0.5*gap));
-              if ((pos < -5) || (pos > (vertical ? h : w) + 5)) continue;
-           }
+            this.StartTextDrawing(labelfont, 'font', label_g[lcnt]);
 
-           var arg = { text: lbl, color: label_color, latex: 1, draw_g: label_g };
+            for (var nmajor=0;nmajor<handle.major.length;++nmajor) {
 
-           maxtextlen = Math.max(maxtextlen, lbl.length);
+               var lbl = this.format(handle.major[nmajor], true);
+               if (lbl === null) continue;
 
-           if (vertical) {
-              arg.x = fix_coord;
-              arg.y = pos;
-              arg.align = rotate_lbls ? ((side<0) ? 23 : 20) : ((side<0) ? 12 : 32);
-           } else {
-              arg.x = pos;
-              arg.y = fix_coord;
-              arg.align = rotate_lbls ? ((side<0) ? 12 : 32) : ((side<0) ? 20 : 23);
-           }
+               var pos = Math.round(this.func(handle.major[nmajor])),
+                   gap_before = (nmajor>0) ? Math.abs(Math.round(pos - this.func(handle.major[nmajor-1]))) : 0,
+                   gap_after = (nmajor<handle.major.length-1) ? Math.abs(Math.round(this.func(handle.major[nmajor+1])-pos)) : 0;
 
-           if (rotate_lbls) arg.rotate = 270;
+               if (center_lbls) {
+                  var gap = gap_after || gap_before;
+                  pos = Math.round(pos - (vertical ? 0.5*gap : -0.5*gap));
+                  if ((pos < -5) || (pos > (vertical ? h : w) + 5)) continue;
+               }
 
-           var textwidth = this.DrawText(arg);
+               var arg = { text: lbl, color: label_color, latex: 1, draw_g: label_g[lcnt] };
 
-           if (textwidth && ((!vertical && !rotate_lbls) || (vertical && rotate_lbls)) && (this.kind != 'log')) {
-              var maxwidth = gap_before*0.45 + gap_after*0.45;
-              if (!gap_before) maxwidth = 0.9*gap_after; else
-              if (!gap_after) maxwidth = 0.9*gap_before;
-              textscale = Math.min(textscale, maxwidth / textwidth);
-           }
+               maxtextlen = Math.max(maxtextlen, lbl.length);
 
-           if (lastpos && (pos!=lastpos) && ((vertical && !rotate_lbls) || (!vertical && rotate_lbls))) {
-              var axis_step = Math.abs(pos-lastpos);
-              textscale = Math.min(textscale, 0.9*axis_step/labelsize);
-           }
+               if (vertical) {
+                  arg.x = fix_coord;
+                  arg.y = pos;
+                  arg.align = rotate_lbls ? ((side<0) ? 23 : 20) : ((side<0) ? 12 : 32);
+               } else {
+                  arg.x = pos;
+                  arg.y = fix_coord;
+                  arg.align = rotate_lbls ? ((side<0) ? 12 : 32) : ((side<0) ? 20 : 23);
+               }
 
-           lastpos = pos;
-        }
+               if (rotate_lbls) arg.rotate = 270;
 
-        if (this.order)
-           this.DrawText({ color: label_color,
-                           x: vertical ? side*5 : w+5,
-                           y: this.has_obstacle ? fix_coord : (vertical ? -3 : -3*side),
-                           align: vertical ? ((side<0) ? 30 : 10) : ( myXor(this.has_obstacle, (side<0)) ? 13 : 10 ),
-                           latex: 1,
-                           text: '#times' + this.format10Exp(this.order),
-                           draw_g: label_g
-           });
+               var textwidth = this.DrawText(arg);
 
-        this.FinishTextDrawing(label_g);
+               if (textwidth && ((!vertical && !rotate_lbls) || (vertical && rotate_lbls)) && (this.kind != 'log')) {
+                  var maxwidth = gap_before*0.45 + gap_after*0.45;
+                  if (!gap_before) maxwidth = 0.9*gap_after; else
+                  if (!gap_after) maxwidth = 0.9*gap_before;
+                  textscale = Math.min(textscale, maxwidth / textwidth);
+               } else if (vertical && max_text_width && !lcnt && (max_text_width - labeloffset > 20) && (textwidth > max_text_width - labeloffset)) {
+                  textscale = Math.min(textscale, (max_text_width - labeloffset) / textwidth);
+               }
 
-        if ((textscale>0) && (textscale<1)) {
-           if (!vertical && !rotate_lbls && (maxtextlen>5) && (textscale<0.7)) {
-              label_g.selectAll("text").each(function() {
-                 var txt = d3.select(this), tr = txt.attr("transform");
-                 txt.attr("transform", tr + " rotate(25)").style("text-anchor", "start");
-              });
-              textscale = 1;
-           }
+               if (lastpos && (pos!=lastpos) && ((vertical && !rotate_lbls) || (!vertical && rotate_lbls))) {
+                  var axis_step = Math.abs(pos-lastpos);
+                  textscale = Math.min(textscale, 0.9*axis_step/labelsize);
+               }
 
-           // round to upper boundary for calculated value like 4.4
-           if (textscale != 1) {
-              labelfont.size = Math.floor(labelfont.size * textscale + 0.7);
-              label_g.call(labelfont.func);
-           }
-        }
-     }
+               lastpos = pos;
+            }
 
-     if (JSROOT.gStyle.Zooming && !this.disable_zooming) {
-        var r =  axis_g.append("svg:rect")
-                       .attr("class", "axis_zoom")
-                       .style("opacity", "0")
-                       .style("cursor", "crosshair");
+            if (this.order)
+               this.DrawText({ color: label_color,
+                               x: vertical ? side*5 : w+5,
+                               y: this.has_obstacle ? fix_coord : (vertical ? -3 : -3*side),
+                               align: vertical ? ((side<0) ? 30 : 10) : ( myXor(this.has_obstacle, (side<0)) ? 13 : 10 ),
+                               latex: 1,
+                               text: '#times' + this.format10Exp(this.order),
+                               draw_g: label_g[lcnt]
+               });
 
-        if (vertical)
-           r.attr("x", (side>0) ? (-2*labelfont.size - 3) : 3)
-            .attr("y", 0)
-            .attr("width", 2*labelfont.size + 3)
-            .attr("height", h)
-        else
-           r.attr("x", 0).attr("y", (side>0) ? 0 : -labelfont.size-3)
-            .attr("width", w).attr("height", labelfont.size + 3);
+         }
+
+         if ((textscale > 0.01) && (textscale < 0.7) && !vertical && !rotate_lbls && (maxtextlen > 5) && !this.lbls_both_sides) {
+            lbls_tilt = true;
+            textscale *= 3;
+         }
+
+         for (var lcnt = 0; lcnt < label_g.length; ++lcnt) {
+            if ((textscale > 0.01) && (textscale < 1))
+               this.TextScaleFactor(1/textscale, label_g[lcnt]);
+
+            this.FinishTextDrawing(label_g[lcnt]);
+            if (lbls_tilt)
+               label_g[lcnt].selectAll("text").each(function() {
+                  var txt = d3.select(this), tr = txt.attr("transform");
+                  txt.attr("transform", tr + " rotate(25)").style("text-anchor", "start");
+               });
+         }
+
+         if (label_g.length > 1) side = -side;
+      }
+
+      if (JSROOT.gStyle.Zooming && !this.disable_zooming) {
+         var r =  axis_g.append("svg:rect")
+                        .attr("class", "axis_zoom")
+                        .style("opacity", "0")
+                        .style("cursor", "crosshair");
+
+         if (vertical)
+            r.attr("x", (side>0) ? (-2*labelfont.size - 3) : 3)
+             .attr("y", 0)
+             .attr("width", 2*labelfont.size + 3)
+             .attr("height", h)
+         else
+            r.attr("x", 0).attr("y", (side>0) ? 0 : -labelfont.size-3)
+             .attr("width", w).attr("height", labelfont.size + 3);
       }
 
       if ((axis.fTitle.length > 0) && !disable_axis_drawing) {
@@ -1035,6 +1049,7 @@
                                   (this.logx && (this.x_kind !== "time")) ? "log" : this.x_kind,
                                   this.x, this.xmin, this.xmax, this.scale_xmin, this.scale_xmax);
       this.x_handle.invert_side = false;
+      this.x_handle.lbls_both_sides = false;
       this.x_handle.has_obstacle = false; // (this.options.Zscale > 0);
 
       this.y_handle = new JSROOT.TAxisPainter(axisy, true);
@@ -1045,6 +1060,7 @@
                                   (this.logy && this.y_kind !== "time") ? "log" : this.y_kind,
                                   this.y, this.ymin, this.ymax, this.scale_ymin, this.scale_ymax);
       this.y_handle.invert_side = false; // ((this.options.AxisPos % 10) === 1) || (pad.fTicky > 1);
+      this.y_handle.lbls_both_sides = false;
 
       var draw_horiz = this.swap_xy ? this.y_handle : this.x_handle,
           draw_vertical = this.swap_xy ? this.x_handle : this.y_handle,
@@ -1056,22 +1072,22 @@
 
       draw_vertical.DrawAxis(true, layer, w, h,
                              draw_vertical.invert_side ? "translate(" + w + ",0)" : undefined,
-                             false, show_second_ticks ? w : 0, disable_axis_draw);
+                             false, show_second_ticks ? w : 0, disable_axis_draw,
+                             draw_vertical.invert_side ? 0 : this.frame_x());
 
       this.DrawGrids();
 
-      if (!shrink_forbidden) {
+      if (!shrink_forbidden && JSROOT.gStyle.CanAdjustFrame) {
 
          var shrink = 0., ypos = draw_vertical.position;
 
          if ((-0.2*w < ypos) && (ypos < 0)) {
             shrink = -ypos/w + 0.001;
             this.shrink_frame_left += shrink;
-         } else
-            if ((ypos>0) && (ypos<0.3*w) && (this.shrink_frame_left > 0) && (ypos/w > this.shrink_frame_left)) {
-               shrink = -this.shrink_frame_left;
-               this.shrink_frame_left = 0.;
-            }
+         } else if ((ypos>0) && (ypos<0.3*w) && (this.shrink_frame_left > 0) && (ypos/w > this.shrink_frame_left)) {
+            shrink = -this.shrink_frame_left;
+            this.shrink_frame_left = 0.;
+         }
 
          if (shrink != 0) {
             this.Shrink(shrink, 0);
@@ -2273,7 +2289,7 @@
          this.ConvertY = function(y) { return new Date(this.timeoffsety + y*1000); };
          this.RevertY = function(gry) { return (this.y.invert(gry) - this.timeoffsety) / 1000; };
       } else {
-         this.y_kind = 'normal'; // ((this.Dimension()==2) && (this.histo.fYaxis.fLabels!=null)) ? 'labels' : 'normal';
+         this.y_kind = 'normal'; // !this.histo.fYaxis.fLabels ? 'normal' : 'labels';
          this.ConvertY = function(y) { return y; };
          this.RevertY = function(gry) { return this.y.invert(gry); };
       }
