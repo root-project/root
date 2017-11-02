@@ -481,9 +481,9 @@ OBJ: TList	TList	Doubly linked list : 0
  OBJ: TMethod	TArrow	 : 0
       TArrow TArrow::TArrow(const TArrow& arrow)
  OBJ: TMethod	TAttBBox2D	 : 0
-      TAttBBox2D TAttBBox2D::TAttBBox2D()
- OBJ: TMethod	TAttBBox2D	 : 0
       TAttBBox2D TAttBBox2D::TAttBBox2D(const TAttBBox2D&)
+ OBJ: TMethod	TAttBBox2D	 : 0
+      TAttBBox2D TAttBBox2D::TAttBBox2D()
  OBJ: TMethod	TAttFill	 : 0
       TAttFill TAttFill::TAttFill()
  OBJ: TMethod	TAttFill	 : 0
