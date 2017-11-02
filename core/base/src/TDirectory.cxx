@@ -226,6 +226,7 @@ void TDirectory::Build(TFile* /*motherFile*/, TDirectory* motherDir)
    if (motherDir && strlen(GetName()) != 0) motherDir->Append(this);
 
    fList       = new THashList(100,50);
+   fList->UseRWLock();
    fMother     = motherDir;
    SetBit(kCanDelete);
 }
