@@ -68,6 +68,8 @@ public:
 
 private: 
 
+   Bool_t MergeCompatibleHistograms(TH1 *, TH1 *);
+
    EMergerType ExamineHistograms();
 
    void DefineNewAxes();
@@ -94,4 +96,5 @@ private:
    TAxis fNewYAxis; 
    TAxis fNewZAxis; 
    UInt_t fNewAxisFlag; 
+   
 };

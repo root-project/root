@@ -9,6 +9,8 @@
 #include "THashList.h"
 #include "TClass.h"
 #include <iostream>
+#include <limits>
+#include <utility>
 
 
 Bool_t TH1Merger::AxesHaveLimits(const TH1 * h) {
@@ -53,6 +55,54 @@ Bool_t TH1Merger::operator() () {
    }
    Error("TH1Merger","Unknown type of Merge for histogram %s",fH0->GetName());
    return kFALSE;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////
+/// Examine merge compatibility for histograms created in power-of-2 autobin mode.
+///
+/// Return kTRUE if compatible, updating fNewXaxis accordingly; return kFALSE if not
+/// compatible.
+///
+/// The histograms are not merge-compatible if
+///
+///       1. have different variable-size bins
+///       2. larger bin size is not an integer multiple of the smaller one
+///       3. the minimal difference between range extremes, i.e.
+///              min (abs(x2max - x1min), abs(x1max-x2min))
+///          is not a integer multiple of the larger bin width (the final bin width) 
+///
+
+
+Bool_t TH1Merger::MergeCompatibleHistograms(TH1 *h0, TH1 *h1)
+{
+   // They must be both defined
+   if (!h0 || !h1) return kFALSE;
+
+   // They must be created in power-of-2 autobin mode
+   if (!h0->TestBit(TH1::kAutoBinPTwo) || !h1->TestBit(TH1::kAutoBinPTwo)) return kFALSE;
+
+   // Bin sizes must be in integer ratio
+   Double_t bwmax = (h0->GetXaxis()->GetXmax() - h0->GetXaxis()->GetXmin()) / h0->GetXaxis()->GetNbins() ;
+   Double_t bwmin = (h1->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin()) / h1->GetXaxis()->GetNbins() ;
+   if (bwmin > bwmax) std::swap(bwmax, bwmin);
+   if (!(bwmin > 0.)) return kFALSE;
+
+   Double_t rt;
+   Double_t re = std::modf(bwmax / bwmin, &rt);
+   if (rt < 1.) return kFALSE;
+   if (re > std::numeric_limits<Double_t>::epsilon()) return kFALSE;
+
+   // min (abs(x2max - x1min), abs(x1max-x2min)) must be  a integer multiple of the larger bin width
+   Double_t rgmax = h0->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin();
+   Double_t rgmin = h1->GetXaxis()->GetXmax() - h0->GetXaxis()->GetXmin();
+   if (rgmin > rgmax) std::swap(rgmax, rgmin);
+
+   re = std::modf(rgmin / bwmax, &rt);
+   if (rt < 1.) return kFALSE;
+   if (re > std::numeric_limits<Double_t>::epsilon()) return kFALSE;
+
+   // Done
+   return kTRUE;
 }
 
 /**
@@ -126,8 +176,13 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
                h->GetName());
          return kNotCompatible;
       }
-      if (isAutoP2)
+      if (isAutoP2) {
+         if (!MergeCompatibleHistograms(fH0, h)) {
+            Error("Merge", "Cannot merge histogram %s with %s : not merge compatible", h->GetName(), fH0->GetName());
+            return kNotCompatible;
+         }
          continue;
+      }
 
       if (hasLimits) {
          h->BufferEmpty();
