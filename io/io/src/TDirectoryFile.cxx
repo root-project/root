@@ -553,7 +553,6 @@ void TDirectoryFile::Close(Option_t *)
    // we must avoid "slow" as much as possible, in particular Delete("slow")
    // with a large number of objects (eg >10^5) would take for ever.
    {
-      R__LOCKGUARD(gROOTMutex);
       if (fast) fList->Delete();
       else      fList->Delete("slow");
    }
