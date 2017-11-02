@@ -717,10 +717,6 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
          delete [] hD;
       if (hP)
          delete [] hP;
-      if (d)
-         delete [] d;
-      if (p)
-         delete [] p;
       return;
    }
 
