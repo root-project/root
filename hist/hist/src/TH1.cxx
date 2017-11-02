@@ -745,6 +745,7 @@ void TH1::Build()
    if (TH1::AddDirectoryStatus()) {
       fDirectory = gDirectory;
       if (fDirectory) {
+         fFunctions->UseRWLock();
          fDirectory->Append(this,kTRUE);
       }
    }
@@ -2529,6 +2530,7 @@ void TH1::Copy(TObject &obj) const
    // any directory (fDirectory = 0)
    if (fgAddDirectory && gDirectory) {
       gDirectory->Append(&obj);
+      ((TH1&)obj).fFunctions->UseRWLock();
       ((TH1&)obj).fDirectory = gDirectory;
    } else
       ((TH1&)obj).fDirectory = 0;
@@ -8071,7 +8073,10 @@ void TH1::SetDirectory(TDirectory *dir)
    if (fDirectory == dir) return;
    if (fDirectory) fDirectory->Remove(this);
    fDirectory = dir;
-   if (fDirectory) fDirectory->Append(this);
+   if (fDirectory) {
+      fFunctions->UseRWLock();
+      fDirectory->Append(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
