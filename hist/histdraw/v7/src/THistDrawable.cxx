@@ -33,6 +33,12 @@ void ROOT::Experimental::Internal::LoadHistPainterLibrary()
 }
 
 template <int DIMENSION>
+THistPainterBase<DIMENSION>::THistPainterBase()
+{
+   fgPainter = this;
+}
+
+template <int DIMENSION>
 THistPainterBase<DIMENSION>::~THistPainterBase()
 {
    fgPainter = nullptr;
@@ -127,6 +133,13 @@ bool THistDrawable<DIMENSIONS>::UpdateOldHist()
    }
    fOldHist.reset(old);
    return true;
+}
+
+/// Paint the histogram
+template <int DIMENSIONS>
+void THistDrawable<DIMENSIONS>::Paint(Internal::TVirtualCanvasPainter &canv)
+{
+   Internal::THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, canv);
 }
 
 namespace ROOT {

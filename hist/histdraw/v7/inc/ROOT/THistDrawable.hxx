@@ -48,7 +48,7 @@ class THistPainterBase {
    static THistPainterBase<DIMENSION> *fgPainter;
 
 protected:
-   THistPainterBase() { fgPainter = this; }
+   THistPainterBase();
    virtual ~THistPainterBase();
 
 public:
@@ -115,10 +115,7 @@ public:
    {}
 
    /// Paint the histogram
-   void Paint(Internal::TVirtualCanvasPainter &canv) final
-   {
-      Internal::THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, canv);
-   }
+   void Paint(Internal::TVirtualCanvasPainter &canv) final;
 
    THistDrawingOpts<DIMENSIONS> &GetOptions() { return fOpts; }
    const THistDrawingOpts<DIMENSIONS> &GetOptions() const { return fOpts; }
