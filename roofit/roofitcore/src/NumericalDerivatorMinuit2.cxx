@@ -350,17 +350,24 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
 
 //    double var = par.Vec()(i);
     // I'm guessing par.Vec()(i) should give the value of variable i...
-    double var = parameter->Value();
-    std::cout << "var: " << var << std::endl;
+//    double var = parameter->Value();
 
     // Judging by the ParameterSettings.h constructor argument name "err",
     // I'm guessing what MINUIT calls "Error" is stepsize on the ROOT side.
 //    double werr = parameter->Error();
     double werr = parameter->StepSize();
 
-    std::cout << "werr: " << werr << std::endl;
 
-    double sav = Int2ext(*parameter, var);
+//    double sav = Int2ext(*parameter, var);
+    // Actually, sav in Minuit2 is the external parameter value, so that is
+    // what we called var before and var is unnecessary here.
+    double sav = parameter->Value();
+
+    // However, we do need var below, so let's calculate it using Ext2int:
+    double var = Ext2int(*parameter, sav);
+
+    std::cout << "var: " << var << std::endl;
+    std::cout << "werr: " << werr << std::endl;
     std::cout << "sav: " << sav << std::endl;
 
     // Int2Ext is not necessary, we're doing everything externally here
@@ -385,8 +392,8 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
 
     std::cout << "vplu: " << vplu << std::endl;
 
-//    sav2 = sav - werr;
-    sav2 = var - werr;
+    sav2 = sav - werr;
+//    sav2 = var - werr;
 
     std::cout << "sav2: " << sav2 << std::endl;
 
