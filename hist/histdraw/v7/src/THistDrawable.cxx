@@ -27,9 +27,18 @@
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 
+template <int DIMENSION>
+THistPainterBase<DIMENSION> *THistPainterBase<DIMENSION>::fgPainter = nullptr;
+
 void ROOT::Experimental::Internal::LoadHistPainterLibrary()
 {
    gSystem->Load("libHistPainter");
+}
+
+template <int DIMENSION>
+THistPainterBase<DIMENSION>::THistPainterBase()
+{
+   fgPainter = this;
 }
 
 template <int DIMENSION>
@@ -39,7 +48,12 @@ THistPainterBase<DIMENSION>::~THistPainterBase()
 }
 
 template <int DIMENSION>
-THistPainterBase<DIMENSION> *THistPainterBase<DIMENSION>::fgPainter = nullptr;
+THistPainterBase<DIMENSION> *THistPainterBase<DIMENSION>::GetPainter()
+{
+   if (!fgPainter)
+      LoadHistPainterLibrary();
+   return fgPainter;
+}
 
 THistDrawableBase::THistDrawableBase() = default;
 THistDrawableBase::THistDrawableBase(THistDrawableBase &&) = default;
@@ -127,6 +141,13 @@ bool THistDrawable<DIMENSIONS>::UpdateOldHist()
    }
    fOldHist.reset(old);
    return true;
+}
+
+/// Paint the histogram
+template <int DIMENSIONS>
+void THistDrawable<DIMENSIONS>::Paint(Internal::TVirtualCanvasPainter &canv)
+{
+   Internal::THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, canv);
 }
 
 namespace ROOT {
