@@ -26,6 +26,38 @@
 
    JSROOT.sources.push("hierarchy");
 
+
+   // ===========================================================================================
+
+   /// function use to draw all items from TList or TObjArray inserted into the TCanvas list of primitives
+   function drawList(divid, lst, opt, callback) {
+      if (!lst || !lst.arr) return JSROOT.CallBack(callback);
+
+      var obj = {
+        divid: divid,
+        lst: lst,
+        opt: opt,
+        indx: -1,
+        callback: callback,
+        draw_next: function() {
+           while (++this.indx < this.lst.arr.length) {
+              var handle = { func: this.draw_bind },
+                  item = this.lst.arr[this.indx],
+                  opt = this.lst.opt ? this.lst.opt[this.indx] : this.opt;
+              if (!item) continue;
+              JSROOT.draw(this.divid, item, opt, handle);
+              if (!handle.completed) return;
+           }
+
+           return JSROOT.CallBack(this.callback);
+        }
+      }
+
+      obj.draw_bind = obj.draw_next.bind(obj);
+
+      obj.draw_next();
+   }
+
    // ===================== hierarchy scanning functions ==================================
 
    function FolderHierarchy(item, obj) {
@@ -2650,6 +2682,8 @@
 
 
    // export all functions and classes
+
+   JSROOT.Painter.drawList = drawList;
 
    JSROOT.Painter.FolderHierarchy = FolderHierarchy;
    JSROOT.Painter.ObjectHierarchy = ObjectHierarchy;

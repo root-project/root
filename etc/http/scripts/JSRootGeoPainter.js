@@ -245,7 +245,7 @@
                    scale: new THREE.Vector3(1,1,1), zoom: 1.0,
                    more: 1, maxlimit: 100000, maxnodeslimit: 3000,
                    use_worker: false, update_browser: true, show_controls: false,
-                   highlight: false, select_in_view: false,
+                   highlight: false, highlight_scene: false, select_in_view: false,
                    project: '', is_main: false, tracks: false,
                    clipx: false, clipy: false, clipz: false, ssao: false,
                    script_name: "", transparency: 0, autoRotate: false, background: '#FFFFFF',
@@ -329,8 +329,11 @@
       if (d.check("NOWORKER")) res.use_worker = -1;
       if (d.check("WORKER")) res.use_worker = 1;
 
-      if (d.check("NOHIGHLIGHT") || d.check("NOHIGH")) res.highlight = 0;
-      if (d.check("HIGHLIGHT")) res.highlight = true;
+      if (d.check("NOHIGHLIGHT") || d.check("NOHIGH")) res.highlight = res.highlight_scene = 0;
+      if (d.check("HIGHLIGHT")) res.highlight_scene = res.highlight = true;
+      if (d.check("HSCENEONLY")) { res.highlight_scene = true; res.highlight = 0; }
+      if (d.check("NOHSCENE")) res.highlight_scene = 0;
+      if (d.check("HSCENE")) res.highlight_scene = true;
 
       if (d.check("WIRE")) res.wireframe = true;
       if (d.check("ROTATE")) res.autoRotate = true;
@@ -452,6 +455,9 @@
       });
       menu.addchk(this.options.highlight, "Highlight volumes", function() {
          this.options.highlight = !this.options.highlight;
+      });
+      menu.addchk(this.options.highlight_scene, "Highlight scene", function() {
+         this.options.highlight_scene = !this.options.highlight_scene;
       });
       menu.add("Reset camera position", function() {
          this.focusCamera();
@@ -819,9 +825,6 @@
 
    TGeoPainter.prototype.HighlightMesh = function(active_mesh, color, geo_object, geo_stack, no_recursive) {
 
-      if (!this.options.highlight) {
-         active_mesh = null;
-      } else
       if (geo_object) {
          var extras = this.getExtrasContainer();
          if (extras && extras.children)
@@ -832,6 +835,15 @@
          this._toplevel.traverse(function(mesh) {
             if ((mesh instanceof THREE.Mesh) && (mesh.stack===geo_stack)) active_mesh = mesh;
          });
+      }
+
+      if (active_mesh) {
+         // check if highlight is disabled for correspondent objects kinds
+         if (active_mesh.geo_object) {
+            if (!this.options.highlight_scene) active_mesh = null;
+         } else {
+            if (!this.options.highlight) active_mesh = null;
+         }
       }
 
       if (!no_recursive) {
@@ -2901,6 +2913,10 @@
          // after first draw check if highlight can be enabled
          if (this.options.highlight === false)
             this.options.highlight = (this.first_render_tm < 1000);
+
+         // also highlight of scene object can be assigned at the first draw
+         if (this.options.highlight_scene === false)
+            this.options.highlight_scene = this.options.highlight;
 
          // if rotation was enabled, do it
          if (this._webgl && this.options.autoRotate && !this.options.project) this.autorotate(2.5);

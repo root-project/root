@@ -1467,21 +1467,16 @@
 
       if (this.marker_size > 0) radius = Math.max(this.marker_size, radius);
 
-      if (bestbin !== null)
+      if (bestbin)
          bestdist = Math.sqrt(Math.pow(pnt.x-pmain.grx(bestbin.x),2) + Math.pow(pnt.y-pmain.gry(bestbin.y),2));
 
-      if (!islines && !ismark && (bestdist > radius)) bestbin = null;
+      if (!islines && (bestdist > radius)) bestbin = null;
 
-      if (ismark && (bestbin!==null)) {
-         if ((pnt.nproc == 1) && (bestdist > radius)) bestbin = null; else
-         if ((this.bins.length==1) && (bestdist > 3*radius)) bestbin = null;
-      }
-
-      if (bestbin === null) bestindx = -1;
+      if (!bestbin) bestindx = -1;
 
       var res = { bin: bestbin, indx: bestindx, dist: bestdist, radius: Math.round(radius) };
 
-      if ((bestbin===null) && islines) {
+      if (!bestbin && islines) {
 
          bestdist = 10000;
 
