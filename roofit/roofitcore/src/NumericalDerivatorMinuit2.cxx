@@ -44,20 +44,20 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2() :
    fNCycles(2), 
    fVal(0), 
    fN(0),
-   Up(1),
-   eps(std::numeric_limits<double>::epsilon()),
-   eps2(2 * std::sqrt(eps))
+   Up(1)//,
+//   eps(std::numeric_limits<double>::epsilon()),
+//   eps2(2 * std::sqrt(eps))
 {}
 
 
-NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, double precision):
+NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level)://, double precision):
     fFunction(&f),
     fStepTolerance(step_tolerance),
     fGradTolerance(grad_tolerance),
     fNCycles(ncycles),
-    Up(error_level),
-   eps(precision),
-   eps2(2 * std::sqrt(eps))
+    Up(error_level)//,
+//   eps(precision),
+//   eps2(2 * std::sqrt(eps))
 {
   // constructor with function, and tolerances (coordinates must be specified for differentiate function, not constructor)
 //    fStepTolerance=step_tolerance;
@@ -91,8 +91,9 @@ NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const RooFit::NumericalDeri
     fVal(other.fVal),
     fN(other.fN),
     Up(other.Up),
-    eps(other.eps),
-    eps2(other.eps2)
+    precision(other.precision)
+//    eps(other.eps),
+//    eps2(other.eps2)
 {}
 
 RooFit::NumericalDerivatorMinuit2& NumericalDerivatorMinuit2::operator=(const RooFit::NumericalDerivatorMinuit2 &other) {
@@ -108,8 +109,9 @@ RooFit::NumericalDerivatorMinuit2& NumericalDerivatorMinuit2::operator=(const Ro
     fVal = other.fVal;
     fN = other.fN;
     Up = other.Up;
-    eps = other.eps;
-    eps2 = other.eps2;
+    precision = other.precision;
+//    eps = other.eps;
+//    eps2 = other.eps2;
   }
   return *this;
 }
@@ -179,6 +181,9 @@ std::vector<double> NumericalDerivatorMinuit2::Differentiate(const double* cx) {
     // ctor and can be set in the Derivator in the ctor as well using
     // _theFitter->GetMinimizer()->ErrorDef() in the initialization call.
     // const double Up = 1;
+
+    double eps = precision.Eps();
+    double eps2 = precision.Eps2();
 
   // MODIFIED: two redundant double casts removed, for dfmin and for epspri
     double dfmin = 8. * eps2 * (std::abs(fVal) + Up);
@@ -294,11 +299,11 @@ double NumericalDerivatorMinuit2::Ext2int(const ROOT::Fit::ParameterSettings& pa
 
   if(parameter.IsBound()) {
     if(parameter.IsDoubleBound()) {
-      return fDoubleLimTrafo.Ext2int(val, parameter.UpperLimit(), parameter.LowerLimit(), Precision());
+      return fDoubleLimTrafo.Ext2int(val, parameter.UpperLimit(), parameter.LowerLimit(), precision);
     } else if (parameter.HasUpperLimit() && !parameter.HasLowerLimit()) {
-      return fUpperLimTrafo.Ext2int(val, parameter.UpperLimit(), Precision());
+      return fUpperLimTrafo.Ext2int(val, parameter.UpperLimit(), precision);
     } else {
-      return fLowerLimTrafo.Ext2int(val, parameter.LowerLimit(), Precision());
+      return fLowerLimTrafo.Ext2int(val, parameter.LowerLimit(), precision);
     }
   }
 
@@ -309,15 +314,19 @@ double NumericalDerivatorMinuit2::Ext2int(const ROOT::Fit::ParameterSettings& pa
 // This function was not implemented as in Minuit2. Now it copies the behavior
 // of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
 void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const {
-   // set an initial gradient using some given steps 
-   // (used in the first iteration)
+  // set an initial gradient using some given steps
+  // (used in the first iteration)
+
+  double eps = precision.Eps();
+  double eps2 = precision.Eps2();
 
 //    Bool_t oldFixed = parameters[index].IsFixed();
 //    Double_t oldVar = parameters[index].Value();
 //    Double_t oldVerr = parameters[index].StepSize();
 //    Double_t oldVlo = parameters[index].LowerLimit();
 //    Double_t oldVhi = parameters[index].UpperLimit();
-      std::cout << "initial gradient numericalderivatorminuit2: " << std::endl;
+
+  std::cout << "initial gradient numericalderivatorminuit2: " << std::endl;
 
   unsigned ix = 0;
   for (auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter, ++ix) {
@@ -351,10 +360,12 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
 
     std::cout << "werr: " << werr << std::endl;
 
-//    double sav = Trafo().Int2ext(i, var);
+    double sav = Int2ext(*parameter, var);
+    std::cout << "sav: " << sav << std::endl;
+
     // Int2Ext is not necessary, we're doing everything externally here
-//    double sav2 = sav + werr;
-    double sav2 = var + werr;
+    double sav2 = sav + werr;
+//    double sav2 = var + werr;
 
     std::cout << "sav2: " << sav2 << std::endl;
 
@@ -365,10 +376,12 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
 
     std::cout << "sav2: " << sav2 << std::endl;
 
-//    double var2 = Trafo().Ext2int(exOfIn, sav2);
+    double var2 = Ext2int(*parameter, sav2);
+    std::cout << "var2: " << var2 << std::endl;
+
     // Ext2int is not necessary, we're doing everything externally here
-//    double vplu = var2 - var;
-    double vplu = sav2 - var;
+    double vplu = var2 - var;
+//    double vplu = sav2 - var;
 
     std::cout << "vplu: " << vplu << std::endl;
 
@@ -384,10 +397,11 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
 
     std::cout << "sav2: " << sav2 << std::endl;
 
-//    var2 = Trafo().Ext2int(exOfIn, sav2);
+    var2 = Ext2int(*parameter, sav2);
+    std::cout << "var2: " << var2 << std::endl;
     // Ext2int is not necessary, we're doing everything externally here
-//    double vmin = var2 - var;
-    double vmin = sav2 - var;
+    double vmin = var2 - var;
+//    double vmin = sav2 - var;
 
     std::cout << "vmin: " << vmin << std::endl;
 

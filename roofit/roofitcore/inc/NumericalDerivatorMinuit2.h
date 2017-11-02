@@ -28,6 +28,7 @@
 #include "Minuit2/SinParameterTransformation.h"
 #include "Minuit2/SqrtUpParameterTransformation.h"
 #include "Minuit2/SqrtLowParameterTransformation.h"
+#include "Minuit2/MnMachinePrecision.h"
 
 
 namespace RooFit {
@@ -39,7 +40,7 @@ public:
   NumericalDerivatorMinuit2();
   NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other);
   NumericalDerivatorMinuit2& operator=(const NumericalDerivatorMinuit2 &other);
-  NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, double precision);
+  NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level);//, double precision);
   //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter);
   //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy);
   virtual ~NumericalDerivatorMinuit2();
@@ -86,12 +87,15 @@ private:
   // MODIFIED: Minuit2 determines machine precision itself in MnMachinePrecision.cxx, but
   //           mathcore isn't linked with minuit, so easier to pass in the correct eps from RooFit.
   //           This means precision is the caller's responsibility, beware!
-  double eps;
-  double eps2;
+//  double eps;
+//  double eps2;
+  // MODIFIED: Minuit2 determines machine precision in a slightly different way than
+  // std::numeric_limits<double>::epsilon()). We go with the Minuit2 one.
+  ROOT::Minuit2::MnMachinePrecision precision;
 
-  SinParameterTransformation fDoubleLimTrafo;
-  SqrtUpParameterTransformation fUpperLimTrafo;
-  SqrtLowParameterTransformation fLowerLimTrafo;
+  ROOT::Minuit2::SinParameterTransformation fDoubleLimTrafo;
+  ROOT::Minuit2::SqrtUpParameterTransformation fUpperLimTrafo;
+  ROOT::Minuit2::SqrtLowParameterTransformation fLowerLimTrafo;
 
 };
 
