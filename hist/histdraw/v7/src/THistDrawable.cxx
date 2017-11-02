@@ -27,9 +27,6 @@
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 
-template <int DIMENSION>
-THistPainterBase<DIMENSION> *THistPainterBase<DIMENSION>::fgPainter = nullptr;
-
 void ROOT::Experimental::Internal::LoadHistPainterLibrary()
 {
    gSystem->Load("libHistPainter");
@@ -38,21 +35,32 @@ void ROOT::Experimental::Internal::LoadHistPainterLibrary()
 template <int DIMENSION>
 THistPainterBase<DIMENSION>::THistPainterBase()
 {
-   fgPainter = this;
+   GetPainterPtr() = this;
 }
 
 template <int DIMENSION>
 THistPainterBase<DIMENSION>::~THistPainterBase()
 {
-   fgPainter = nullptr;
+   GetPainterPtr() = nullptr;
+}
+
+template <int DIMENSION>
+THistPainterBase<DIMENSION> *&THistPainterBase<DIMENSION>::GetPainterPtr()
+{
+   static THistPainterBase<DIMENSION> *painter = nullptr;
+
+   return painter;
 }
 
 template <int DIMENSION>
 THistPainterBase<DIMENSION> *THistPainterBase<DIMENSION>::GetPainter()
 {
-   if (!fgPainter)
-      LoadHistPainterLibrary();
-   return fgPainter;
+   // Trigger loading of the painter library within the init guard of the static:
+   static int triggerLibLoad = (LoadHistPainterLibrary(), 0);
+
+   (void)triggerLibLoad; // unused.
+
+   return GetPainterPtr();
 }
 
 THistDrawableBase::THistDrawableBase() = default;

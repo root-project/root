@@ -45,7 +45,7 @@ void LoadHistPainterLibrary();
 
 template <int DIMENSION>
 class THistPainterBase {
-   static THistPainterBase<DIMENSION> *fgPainter;
+   static THistPainterBase<DIMENSION> *&GetPainterPtr();
 
 protected:
    THistPainterBase();
