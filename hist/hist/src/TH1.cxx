@@ -582,6 +582,8 @@ TH1::~TH1()
    delete[] fBuffer;
    fBuffer = 0;
    if (fFunctions) {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
       fFunctions->SetBit(kInvalidObject);
       TObject* obj = 0;
       //special logic to support the case where the same object is
@@ -5916,6 +5918,8 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
 
 void TH1::RecursiveRemove(TObject *obj)
 {
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+
    if (fFunctions) {
       if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
    }
