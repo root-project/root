@@ -70,8 +70,6 @@ Double_t BDTEventWrapper::GetCumulativeWeight(Bool_t type) const {
 /// Index of the variable to sort on
 
 Int_t& BDTEventWrapper::GetVarIndex() {
-   // This is a workaround for OSx where static thread_local data members are
-   // not supported. The C++ solution would indeed be a thread-local data member.
    TTHREAD_TLS(Int_t) fVarIndex(0);
    return fVarIndex;
 }
