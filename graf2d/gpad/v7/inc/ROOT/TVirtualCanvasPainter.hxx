@@ -44,15 +44,13 @@ protected:
       /// Default destructor.
       virtual ~Generator();
    };
-   /// The generator for implementations.
-   static std::unique_ptr<Generator> fgGenerator;
+
+   /// generator getter
+   static std::unique_ptr<Generator> &GetGenerator();
 
 public:
    /// Default destructor.
    virtual ~TVirtualCanvasPainter();
-
-   /// generator getter
-   static std::unique_ptr<Generator> &GetGenerator();
 
    /// returns true is canvas used in batch mode
    virtual bool IsBatchMode() const { return true; }
