@@ -380,8 +380,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 
       // update the state
       s0 =  MinimumState(p, e, g, edm, fcn.NumOfCalls());
-     std::cout << "s0: " << s0 << std::endl;
-      if (StorageLevel() || result.size() <= 1) 
+      if (StorageLevel() || result.size() <= 1)
          AddResult(result, s0);
       else
          // use a reduced state for not-final iterations

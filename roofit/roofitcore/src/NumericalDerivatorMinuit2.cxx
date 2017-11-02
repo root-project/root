@@ -326,8 +326,6 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
 //    Double_t oldVlo = parameters[index].LowerLimit();
 //    Double_t oldVhi = parameters[index].UpperLimit();
 
-  std::cout << "initial gradient numericalderivatorminuit2: " << std::endl;
-
   unsigned ix = 0;
   for (auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter, ++ix) {
 //  for (unsigned int i = 0; i < fN; ++i)  {
@@ -366,58 +364,36 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
     // However, we do need var below, so let's calculate it using Ext2int:
     double var = Ext2int(*parameter, sav);
 
-    std::cout << "var: " << var << std::endl;
-    std::cout << "werr: " << werr << std::endl;
-    std::cout << "sav: " << sav << std::endl;
-
     // Int2Ext is not necessary, we're doing everything externally here
     double sav2 = sav + werr;
 //    double sav2 = var + werr;
-
-    std::cout << "sav2: " << sav2 << std::endl;
 
 //    if(parameter->HasLimits()) {  // this if statement in MINUIT is superfluous
     if(parameter->HasUpperLimit() && sav2 > parameter->UpperLimit()) {
       sav2 = parameter->UpperLimit();
     }
 
-    std::cout << "sav2: " << sav2 << std::endl;
-
     double var2 = Ext2int(*parameter, sav2);
-    std::cout << "var2: " << var2 << std::endl;
-
     // Ext2int is not necessary, we're doing everything externally here
     double vplu = var2 - var;
 //    double vplu = sav2 - var;
 
-    std::cout << "vplu: " << vplu << std::endl;
-
     sav2 = sav - werr;
 //    sav2 = var - werr;
-
-    std::cout << "sav2: " << sav2 << std::endl;
 
 //    if(parameter->HasLimits()) {  // this if statement in MINUIT is superfluous
     if(parameter->HasLowerLimit() && sav2 < parameter->LowerLimit()) {
       sav2 = parameter->LowerLimit();
     }
 
-    std::cout << "sav2: " << sav2 << std::endl;
-
     var2 = Ext2int(*parameter, sav2);
-    std::cout << "var2: " << var2 << std::endl;
     // Ext2int is not necessary, we're doing everything externally here
     double vmin = var2 - var;
 //    double vmin = sav2 - var;
 
-    std::cout << "vmin: " << vmin << std::endl;
-
     double gsmin = 8. * eps2 * (fabs(var) + eps2);
     // protect against very small step sizes which can cause dirin to zero and then nan values in grd
     double dirin = std::max(0.5*(fabs(vplu) + fabs(vmin)),  gsmin );
-
-    std::cout << "gsmin: " << gsmin << std::endl;
-    std::cout << "dirin: " << dirin << std::endl;
 
 //    double g2 = 2.0*fFcn.ErrorDef()/(dirin*dirin);
     // ErrorDef is the same as Up, which we already have in here
@@ -425,8 +401,6 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
 
     double gstep = std::max(gsmin, 0.1*dirin);
     double grd = g2*dirin;
-
-    std::cout << "gstep: " << gstep << std::endl;
 
     if(parameter->IsBound()) {
        if(gstep > 0.5) gstep = 0.5;
