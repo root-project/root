@@ -98,7 +98,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 27/10/2017";
+   JSROOT.version = "dev 2/11/2017";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -156,6 +156,7 @@
          DragAndDrop : true,  // enables drag and drop functionality
          ToolBar : 'popup',  // show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button
          CanEnlarge : true,  // if drawing inside particular div can be enlarged on full window
+         CanAdjustFrame : false,  // if frame position can be adjusted to let show axis or colz labels
          OptimizeDraw : 1, // drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always
          AutoStat : true,
          FrameNDC : { fX1NDC: 0.07, fY1NDC: 0.12, fX2NDC: 0.95, fY2NDC: 0.88 },
