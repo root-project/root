@@ -249,5 +249,5 @@ large TClonesArray where each element contains another small vector container.
   - The list of libraries needed by each class is displayed as a diagram.
 
 ## Build, Configuration and Testing Infrastructure
-  - Minimal required version of CMake has been increased to 3.7.0 (released october 2016)
+
 
