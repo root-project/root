@@ -580,6 +580,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
    DoInitialize(addToGlobList);
 }
 TF1::EAddToList GetGlobalListOption(Option_t * opt)  {
+   if (opt == nullptr) return TF1::EAddToList::kDefault; 
    TString option(opt);
    option.ToUpper();
    if (option.Contains("NL")) return TF1::EAddToList::kNo;
@@ -587,6 +588,7 @@ TF1::EAddToList GetGlobalListOption(Option_t * opt)  {
    return TF1::EAddToList::kDefault; 
 }
 bool GetVectorizedOption(Option_t * opt)  {
+   if (opt == nullptr) return false; 
    TString option(opt);
    option.ToUpper();
    if (option.Contains("VEC")) return true;
