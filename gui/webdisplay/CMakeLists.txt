@@ -8,7 +8,7 @@ ROOT_GLOB_HEADERS(WebDisplay_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/*.hxx)
 ROOT_GLOB_SOURCES(WebDisplay_sources src/*.cxx)
 
 
-ROOT_GENERATE_DICTIONARY(G__${libname} ${WebDisplay_headers} MODULE ${libname} LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef.h OPTIONS "-writeEmptyRootPCM" DEPENDENCIES RHTTP)
+ROOT_GENERATE_DICTIONARY(G__${libname} ${WebDisplay_headers} MODULE ${libname} LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef.h OPTIONS DEPENDENCIES RHTTP)
 
 
 set(CEF_LIBRARY "")
