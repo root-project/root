@@ -59,6 +59,8 @@ void classification(UInt_t jobs = 4)
    // -  for signal    : `dataloader->SetSignalWeightExpression    ("weight1*weight2");`
    // -  for background: `dataloader->SetBackgroundWeightExpression("weight1*weight2");`
    dataloader->SetBackgroundWeightExpression("weight");
+   dataloader->PrepareTrainingAndTestTree(
+      "", "", "nTrain_Signal=1000:nTrain_Background=1000:SplitMode=Random:NormMode=NumEvents:!V");
 
    TFile *outputFile = TFile::Open("TMVAClass.root", "RECREATE");
 
