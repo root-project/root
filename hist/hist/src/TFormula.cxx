@@ -2169,7 +2169,7 @@ void TFormula::ProcessFormula(TString &formula)
       // does not make sense to vectorize function which is of FNDim=0
       if (!hasVariables) fVectorized=false;
       // when there are no variables but only parameter we still need to ad
-      Bool_t hasBoth = hasVariables && hasParameters; 
+      //Bool_t hasBoth = hasVariables && hasParameters; 
       Bool_t inputIntoCling = (formula.Length() > 0);
       if (inputIntoCling) {
          // save copy of inputFormula in a std::strig for the unordered map

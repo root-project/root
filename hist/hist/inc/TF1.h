@@ -659,7 +659,7 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
    virtual void     SetSavedPoint(Int_t point, Double_t value);
    virtual void     SetTitle(const char *title = ""); // *MENU*
-   virtual void SetVectorized(Bool_t vectorized)
+   virtual void     SetVectorized(Bool_t vectorized)
    {
       if (fType == EFType::kFormula && fFormula)
          fFormula->SetVectorized(vectorized);
