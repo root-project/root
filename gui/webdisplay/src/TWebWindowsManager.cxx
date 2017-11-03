@@ -214,9 +214,9 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          exec.Append(TString::Format(" --window-size=%u,%u", display->GetWidth(), display->GetHeight()));
       if (batch_mode)
          exec.Append(" --headless");
-      exec.Append(" --app="); // use app mode
+      exec.Append(" --app=\'"); // use app mode
       exec.Append(addr.Data());
-      exec.Append(" &");
+      exec.Append("\' &");
    } else if (!is_native && !ic_cef && !is_qt5 && (where != "browser")) {
       if (where.find("$") != std::string::npos) {
          exec = where.c_str();
