@@ -25,8 +25,7 @@ void timeSeriesFromCSV_TDF()
    auto tdf = ROOT::Experimental::TDF::MakeCsvDataFrame(Form("%sSWAN2017.dat", dir.Data()), false, ' ');
 
    // We now prepare the graph input
-   auto d = tdf.Define("TimeStamp",
-                       "auto s = string(Col0) + ' ' +  Col1; return (float) TDatime(s.c_str()).Convert();")
+   auto d = tdf.Define("TimeStamp", "auto s = string(Col0) + ' ' +  Col1; return (float) TDatime(s.c_str()).Convert();")
                .Define("Value", "(float)Col2");
    auto timeStamps = d.Take<float>("TimeStamp");
    auto values = d.Take<float>("Value");
@@ -34,7 +33,6 @@ void timeSeriesFromCSV_TDF()
    // Create the time graph
    auto g = new TGraph(values->size(), timeStamps->data(), values->data());
    g->SetTitle("SWAN Users during July 2017;Time;Number of Sessions");
-
 
    // Draw the graph
    auto c = new TCanvas("c", "c", 950, 500);
