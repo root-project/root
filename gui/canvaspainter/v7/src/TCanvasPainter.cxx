@@ -612,7 +612,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
 void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 {
    if (!fWindow) {
-      fWindow = TWebWindowsManager::Instance()->CreateWindow(false);
+      fWindow = TWebWindowsManager::Instance()->CreateWindow(IsBatchMode());
 
       fWindow->SetDefaultPage("file:$jsrootsys/files/canvas.htm");
 
@@ -633,6 +633,11 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> wi
 
    if (!fWindow) {
       R__ERROR_HERE("AddPanel") << "Canvas not yet shown";
+      return false;
+   }
+
+   if (IsBatchMode()) {
+      R__ERROR_HERE("AddPanel") << "Canvas shown in batch mode";
       return false;
    }
 
