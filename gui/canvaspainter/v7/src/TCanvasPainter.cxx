@@ -511,7 +511,7 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
    CheckDataToSend();
 
    if (!async)
-      fWindow->WaitFor(std::bind(&TCanvasPainter::CheckWaitingCmd, this, name, std::placeholders::_1), 100);
+      fWindow->WaitFor([this,name](double tm) { return CheckWaitingCmd(name,tm); }, 100);
 }
 
 void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
