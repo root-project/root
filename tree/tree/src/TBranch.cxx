@@ -1335,10 +1335,10 @@ TBranch::GetDecompressionEngine()
 
    if (!fIOFeatures.Test(ROOT::Experimental::EIOFeatures::kCompressionTraining) ||
        GetCompressionAlgorithm() != ROOT::ECompressionAlgorithm::kZSTD) {
-      return false;
+      return nullptr;
    }
    // Compression training is not available until after the first event cluster.
-   if (fCompTraining.size() == 0) return false;
+   if (fCompTraining.size() == 0) return nullptr;
 
    // Ok, we should utilize a decompression engine but one doesn't exist yet.
    // Create it, using the dictionaries from the TBranch.
