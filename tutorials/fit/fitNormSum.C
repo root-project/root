@@ -18,7 +18,7 @@
 /// \macro_output
 /// \macro_code
 ///
-/// \author Rene Brun
+/// \author Lorenzo Moneta
 
 #include <TMath.h>
 #include <TCanvas.h>
