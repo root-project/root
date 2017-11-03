@@ -22,7 +22,7 @@ void timeSeriesFromCSV()
 
    // Create the time graph
    auto g = new TGraph();
-   g->SetTitle("SWAN Users during July 2017;Time;Number of Users");
+   g->SetTitle("SWAN Users during July 2017;Time;Number of Sessions");
 
    // Read the data and fill the graph with time along the X axis and number
    // of users along the Y axis
