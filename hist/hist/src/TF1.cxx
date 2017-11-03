@@ -1421,34 +1421,6 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
    return result;
 }
 
-#ifdef R__HAS_VECCORE
-////////////////////////////////////////////////////////////////////////////////
-///   Eval for vectorized functions
-
-ROOT::Double_v TF1::Eval(ROOT::Double_v x, ROOT::Double_v y, ROOT::Double_v z, ROOT::Double_v t) const
-{
-   if (fType == EFType::kFormula)
-      return fFormula->Eval(x, y, z, t);
-
-   ROOT::Double_v xx[] = {x, y, z, t};
-   Double_t *pp = (Double_t *)fParams->GetParameters();
-   return ((TF1 *)this)->EvalPar(xx, pp);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-///   EvalPar for vectorized
-
-ROOT::Double_v TF1::EvalPar(const ROOT::Double_v *x, const Double_t *params)
-{
-   if (fType == EFType::kTemplVec || fType == EFType::kTemplScalar) {
-      return EvalParTempl(x, params);
-   } else if (fType == EFType::kFormula) {
-      return fFormula->EvalPar(x, params);
-   } else
-      return TF1::EvalPar((double *)x, params);
-}
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
 ///
