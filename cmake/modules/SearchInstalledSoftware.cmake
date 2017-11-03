@@ -1613,7 +1613,7 @@ if (testing)
                   -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
                   -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=""
                   -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=""
-                      # Disable install step
+    # Disable install step
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS ${_gtest_byproducts}
     # Wrap download, configure and build steps in a script to log output
