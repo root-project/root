@@ -55,7 +55,7 @@ public:
 
    std::shared_ptr<TWebWindow> CreateWindow(bool batch_mode = false);
 
-   void CloseDisplay(TWebWindow *display);
+   void CloseWindow(TWebWindow *);
 
    bool Show(TWebWindow *display, const std::string &where);
 

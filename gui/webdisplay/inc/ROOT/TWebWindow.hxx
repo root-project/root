@@ -59,17 +59,18 @@ private:
 
    std::shared_ptr<TWebWindowsManager> fMgr{}; ///<!  display manager
    bool fBatchMode{false};                     ///<!  batch mode
-   std::string fDefaultPage{};                 ///<! HTML page (or file name) returned when window URL is opened
-   std::string fPanelName{};                   ///<! panel name which should be shown in the window
+   std::string fDefaultPage{};                 ///<!  HTML page (or file name) returned when window URL is opened
+   std::string fPanelName{};                   ///<!  panel name which should be shown in the window
    unsigned fId{0};                            ///<!  unique identifier
    TWebWindowWSHandler *fWSHandler{nullptr};   ///<!  specialize websocket handler for all incoming connections
+   bool fShown{false};                         ///<!  true when window was shown at least once
    unsigned fConnCnt{0};                       ///<!  counter of new connections to assign ids
-   std::list<WebConn> fConn{};                 ///<! list of all accepted connections
-   unsigned fConnLimit{0};                     ///<! number of allowed active connections
+   std::list<WebConn> fConn{};                 ///<!  list of all accepted connections
+   unsigned fConnLimit{0};                     ///<!  number of allowed active connections
    static const unsigned fMaxQueueLength{10};  ///<!  maximal number of queue entries
    WebWindowDataCallback_t fDataCallback{};    ///<!  main callback when data over channel 1 is arrived
-   unsigned fWidth{0};                         ///<! initial window width when displayed
-   unsigned fHeight{0};                        ///<! initial window height when displayed
+   unsigned fWidth{0};                         ///<!  initial window width when displayed
+   unsigned fHeight{0};                        ///<!  initial window height when displayed
 
    void SetBatchMode(bool mode) { fBatchMode = mode; }
    void SetId(unsigned id) { fId = id; }
@@ -88,6 +89,7 @@ public:
    ~TWebWindow();
 
    bool IsBatchMode() const { return fBatchMode; }
+   bool IsShown() const { return fShown; }
    unsigned GetId() const { return fId; }
 
    void SetDefaultPage(const std::string &page) { fDefaultPage = page; }
