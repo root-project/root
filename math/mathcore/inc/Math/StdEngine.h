@@ -58,10 +58,19 @@ namespace ROOT {
       
       
       /** 
-          Wrapper class for std::random generator to be included in ROOT 
+          @ingroup Random
+          Class to wrap engines fron the C++ standard random library in 
+          the ROOT Random interface. 
+          This casess is then by used by the generic TRandoGen class 
+          to provide TRandom interrace generators for the C++ random generators.
+          
+          See for examples the TRandomMT64 and TRandomRanlux48 generators 
+          which are typede's to TRandomGen instaniated with some 
+          random engine from the C++ standard library. 
+
       */
       
-      template <class Generator> 
+      StdEngine <class Generator> 
       class StdEngine {
 
 

@@ -27,9 +27,9 @@ since it has quite good random proprieties (period of about 10**6000 ) and it is
 fails some of the tests of the TestU)1 suite. In addition this generator provide only random number with 
 32 bits random. 
 - Generator based on the template TRandomGen<Engine> class.  Convenient typedef's, available also at the ROOT prompts, are 
-  defined for generator of the MIXMAX family (see the <a "https://mixmax.hepforge.org">MIXMAX Web page</a>) and based on ROOT::Math::MixMaxEngine, 
-  and for thec random engine from the standard library, based on ROOT::Math::StdEngine 
-(see the C++ <a "http://www.cplusplus.com/reference/random/">random</a> documentation.).
+  defined for generator of the MIXMAX family (see the <a href="https://mixmax.hepforge.org">MIXMAX HEPFORGE Web page</a>) and based on ROOT::Math::MixMaxEngine, 
+  and for the random engines from the standard library, based on ROOT::Math::StdEngine 
+(see the C++ <a href="http://www.cplusplus.com/reference/random/">random</a> documentation.).
   The typdefs are: 
    - ::TRandomMixMax : MIXMAX generator based on a state of N=240.  This generator provides 61 bits random with a very large period (10**4839)
    - ::TRandomMixMax17 :  MIXMAX generator based on a state of N=17. This generator has a fast seeding time
@@ -38,9 +38,9 @@ fails some of the tests of the TestU)1 suite. In addition this generator provide
         <a  href="http://arxiv.org/abs/1403.5355">2015 paper</a>
         (based on a matrix with m=0 and special number s=-1), but with skipping to have higher randomness.
    - ::TRandomMT64   :  Generator based on a the Mersenne-Twister generator with 64 bits, 
-  using the implementation provided by the standard library ( <a "http://www.cplusplus.com/reference/random/mt19937_64/">std::mt19937_64</a> )
+  using the implementation provided by the standard library ( <a href="http://www.cplusplus.com/reference/random/mt19937_64/">std::mt19937_64</a> )
    - ::TRandomRanlux48 : Generator based on a the RanLux generator with 48 bits, 
-  using the implementation provided by the standard library (<a "http://www.cplusplus.com/reference/random/ranlux48/">std::ranlux48</a>).
+  using the implementation provided by the standard library (<a href="http://www.cplusplus.com/reference/random/ranlux48/">std::ranlux48</a>).
 
 Note also that this class implements also a very simple generator (linear congruential) with periodicity = 10**9
 which is known to have defects (the lower random bits are correlated)
