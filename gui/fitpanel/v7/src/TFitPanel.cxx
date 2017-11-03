@@ -26,7 +26,7 @@
 std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TFitPanel::GetWindow()
 {
    if (!fWindow) {
-      fWindow = TWebWindowsManager::Instance()->CreateWindow(false);
+      fWindow = TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
 
       fWindow->SetPanelName("FitPanel");
 
