@@ -64,7 +64,9 @@ CEF works with  Xvfb without problem.
 ## Compilation with QT5 WebEngine support
 
 This is alternative implementation of local display, using chromium from Qt5.
-Idea to have easy possibility to embed ROOT panels (TCanvas, TBrowser) in Qt applications.
+It should provide very similar functionality as CEF (beside batch mode).
+Biggest advantage - one gets Qt5 libraris for all platforms through normal package managers.
+Later one will provide possibility to embed ROOT panels (TCanvas, TBrowser, TFitPanel) directly in Qt applications.
 
 1. Install libqt5-qtwebengine and libqt5-qtwebengine-devel packages
 
