@@ -50,7 +50,7 @@ ROOT::Experimental::TWebWindow::~TWebWindow()
    fConn.clear();
 
    if (fMgr)
-      fMgr->CloseDisplay(this);
+      fMgr->CloseWindow(this);
 
    if (fWSHandler) {
       delete fWSHandler;
@@ -81,7 +81,9 @@ void ROOT::Experimental::TWebWindow::CreateWSHandler()
 
 bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 {
-   return fMgr->Show(this, where);
+   bool res = fMgr->Show(this, where);
+   if (res) fShown = true;
+   return res;
 }
 
 bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)

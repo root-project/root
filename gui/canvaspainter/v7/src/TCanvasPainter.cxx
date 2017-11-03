@@ -447,6 +447,12 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
       return;
    }
 
+   if (!fWindow || !fWindow->IsShown()) {
+      if (callback)
+         callback(false);
+      return;
+   }
+
    fSnapshotVersion = ver;
    fSnapshot = CreateSnapshot(fCanvas);
 
@@ -483,6 +489,12 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
    if (!async && !fWaitingCmdId.empty()) {
       R__ERROR_HERE("DoWhenReady") << "Fail to submit sync command when previous is still awaited - use async";
       async = true;
+   }
+
+   if (!fWindow || !fWindow->IsShown()) {
+      if (callback)
+         callback(false);
+      return;
    }
 
    WebCommand cmd;
