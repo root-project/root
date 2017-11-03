@@ -182,7 +182,6 @@ public:
    MethodBase *GetMethod(TString methodname, TString methodtitle);
 
 protected:
-   void CreateEnvironment();
    TString GetMethodOptions(TString methodname, TString methodtitle);
    Bool_t HasMethodObject(TString methodname, TString methodtitle, Int_t &index);
    Bool_t IsCutsMethod(TMVA::MethodBase *method);
