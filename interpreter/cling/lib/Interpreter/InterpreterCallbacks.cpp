@@ -303,21 +303,24 @@ namespace cling {
 
         clang::ASTContext& Ctx = SemaRef.getASTContext();
         auto ExistingSource = Ctx.getExternalSource();
-        Ctx.ExternalSource.resetWithoutRelease();//FIXME: make sure we delete it.
-        //Ctx.setExternalSource(astContextExternalSource);
-        ExternalASTSourceWrapper* wrapper = new ExternalASTSourceWrapper(ExistingSource);
+        if (ExistingSource) {
+          Ctx.ExternalSource.resetWithoutRelease();//FIXME: make sure we delete it.
+          //Ctx.setExternalSource(astContextExternalSource);
+          ExternalASTSourceWrapper* wrapper = new ExternalASTSourceWrapper(ExistingSource);
 
-        //llvm::IntrusiveRefCntPtr<ExternalASTSource>
-        //astContextExternalSource(SemaRef.getExternalSource());
-        ExternalSemaSource* astContextExternalSource(SemaRef.getExternalSource());
-        MultiplexExternalSemaSource* MS = new MultiplexExternalSemaSource(*m_ExternalSemaSource, *wrapper);
+          //llvm::IntrusiveRefCntPtr<ExternalASTSource>
+          //astContextExternalSource(SemaRef.getExternalSource());
+          MultiplexExternalSemaSource* MS = new MultiplexExternalSemaSource(*m_ExternalSemaSource, *wrapper);
 
-        // FIXME: This is a gross hack. We must make multiplexer in the
-        // astcontext or a derived class that extends what we need.
+          // FIXME: This is a gross hack. We must make multiplexer in the
+          // astcontext or a derived class that extends what we need.
 
-        IntrusiveRefCntPtr<ExternalASTSource>S(MS); // Replace with `ExistingSource` to fix all bugs.
+          IntrusiveRefCntPtr<ExternalASTSource>S(MS); // Replace with `ExistingSource` to fix all bugs.
 
-        Ctx.setExternalSource(S);
+          Ctx.setExternalSource(S);
+        } else {
+          Ctx.setExternalSource(m_ExternalSemaSource);
+        }
     }
 
     if (enableDeserializationListenerCallbacks && Reader) {
