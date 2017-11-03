@@ -1352,7 +1352,7 @@ void DeclContext::removeDecl(Decl *D) {
     NamedDecl *ND = cast<NamedDecl>(D);
 
     // Remove only decls that have a name or registered in the lookup.
-    if (!ND->getDeclName() || ND->isHidden()) return;
+    if (!ND->getDeclName()) return;
 
     auto *DC = D->getDeclContext();
     do {
