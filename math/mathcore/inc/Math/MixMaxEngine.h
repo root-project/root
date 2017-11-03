@@ -65,7 +65,7 @@ namespace ROOT {
           The MIXMAX generators with these parameters pass all of the BigCrush
           tests in the <a href="http://simul.iro.umontreal.ca/testu01/tu01.html">TestU01 suite</a\>.
    
-
+\latexonly
  \begin{table}[h]
    \centering
      \begin{tabular}{@{} rrlcrr @{}} 
@@ -90,7 +90,7 @@ namespace ROOT {
        Clearly $\tau_0~ < t ~< \tau $.
 }
 \end{table}
-
+\endlatexonly
 
          The References for MIXMAX are 
 
