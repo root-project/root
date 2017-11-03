@@ -455,43 +455,8 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
 TFormula::TFormula(const TFormula &formula) :
    TNamed(formula.GetName(),formula.GetTitle())
 {
-   fReadyToExecute = false;
-   fClingInitialized = false;
-   fMethod = 0;
-   fNdim = formula.GetNdim();
-   fNpar = formula.GetNpar();
-   fNumber = formula.GetNumber();
-   fFormula = formula.GetExpFormula();   // returns fFormula in case of Lambda's
-   fLambdaPtr = nullptr;
-   fFuncPtr = nullptr;
-
-   // case of function based on a C++  expression (lambda's) which is ready to be compiled
-   if (formula.fLambdaPtr && formula.TestBit(TFormula::kLambda)) {
-
-      fClingInput = fFormula;
-      fParams = formula.fParams;
-      fClingParameters = formula.fClingParameters;
-      fAllParametersSetted = formula.fAllParametersSetted;
-
-      bool ret = InitLambdaExpression(fFormula);
-
-      if (ret)  {
-         SetBit(TFormula::kLambda);
-         fReadyToExecute = true;
-      }
-      else
-         Error("TFormula","Syntax error in building the lambda expression %s", fFormula.Data() );
-
-   }
-   else {
-
-      FillDefaults();
-
-      PreProcessFormula(fFormula);
-      PrepareFormula(fFormula);
-   }
-
-
+   formula.Copy(*this);
+ 
    if (!TestBit(TFormula::kNotGlobal) && gROOT ) {
       R__LOCKGUARD(gROOTMutex);
       TFormula *old = (TFormula*)gROOT->GetListOfFunctions()->FindObject(formula.GetName());
@@ -612,6 +577,7 @@ void TFormula::Copy(TObject &obj) const
    fnew.fNdim = fNdim;
    fnew.fNpar = fNpar;
    fnew.fNumber = fNumber;
+   fnew.fVectorized = fVectorized; 
    fnew.SetParameters(GetParameters());
    // copy Linear parts (it is a vector of TFormula pointers) needs to be copied one by one
    // looping at all the elements
