@@ -12,11 +12,11 @@
 
 #include "llvm/ADT/DenseMap.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/BinaryFormat/MachO.h"
 #include "llvm/MC/MCExpr.h"
-#include "llvm/MC/MCSection.h"
 #include "llvm/MC/MCObjectWriter.h"
+#include "llvm/MC/MCSection.h"
 #include "llvm/MC/StringTableBuilder.h"
-#include "llvm/Support/MachO.h"
 #include <cstdint>
 #include <memory>
 #include <string>
@@ -233,8 +233,7 @@ public:
 
   void recordRelocation(MCAssembler &Asm, const MCAsmLayout &Layout,
                         const MCFragment *Fragment, const MCFixup &Fixup,
-                        MCValue Target, bool &IsPCRel,
-                        uint64_t &FixedValue) override;
+                        MCValue Target, uint64_t &FixedValue) override;
 
   void bindIndirectSymbols(MCAssembler &Asm);
 

@@ -1,11 +1,6 @@
 Overview
 ========
 
-.. warning::
-
-   If you are using a released version of LLVM, see `the download page
-   <http://llvm.org/releases/>`_ to find your documentation.
-
 The LLVM compiler infrastructure supports a wide range of projects, from
 industrial strength compilers to specialized JIT applications to small
 research projects.
@@ -90,6 +85,8 @@ representation.
    CodeOfConduct
    CompileCudaWithLLVM
    ReportingGuide
+   Benchmarking
+   Docker
 
 :doc:`GettingStarted`
    Discusses how to get up and running quickly with the LLVM infrastructure.
@@ -159,6 +156,9 @@ representation.
 :doc:`Frontend/PerformanceTips`
    A collection of tips for frontend authors on how to generate IR 
    which LLVM is able to effectively optimize.
+
+:doc:`Docker`
+   A reference for using Dockerfiles provided with LLVM.
 
 
 Programming Documentation
@@ -359,10 +359,10 @@ For API clients and LLVM developers.
   Answers some questions about the new Attributes infrastructure.
 
 :doc:`NVPTXUsage`
-   This document describes using the NVPTX back-end to compile GPU kernels.
+   This document describes using the NVPTX backend to compile GPU kernels.
 
 :doc:`AMDGPUUsage`
-   This document describes how to use the AMDGPU back-end.
+   This document describes using the AMDGPU backend to compile GPU kernels.
 
 :doc:`StackMaps`
   LLVM support for mapping instruction addresses to the location of
@@ -527,6 +527,7 @@ can be better.
 
    CodeOfConduct
    Proposals/GitHubMove
+   Proposals/VectorizationPlan
 
 :doc:`CodeOfConduct`
    Proposal to adopt a code of conduct on the LLVM social spaces (lists, events,
@@ -535,6 +536,8 @@ can be better.
 :doc:`Proposals/GitHubMove`
    Proposal to move from SVN/Git to GitHub.
 
+:doc:`Proposals/VectorizationPlan`
+   Proposal to model the process and upgrade the infrastructure of LLVM's Loop Vectorizer.
 
 Indices and tables
 ==================

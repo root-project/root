@@ -41,6 +41,10 @@
 // |                                   |
 // |-----------------------------------|
 // |                                   |
+// | (Win64 only) varargs from reg     |
+// |                                   |
+// |-----------------------------------|
+// |                                   |
 // | prev_fp, prev_lr                  |
 // | (a.k.a. "frame record")           |
 // |-----------------------------------| <- fp(=x29)
@@ -136,6 +140,34 @@ static cl::opt<bool> EnableRedZone("aarch64-redzone",
                                    cl::init(false), cl::Hidden);
 
 STATISTIC(NumRedZoneFunctions, "Number of functions using red zone");
+
+/// Look at each instruction that references stack frames and return the stack
+/// size limit beyond which some of these instructions will require a scratch
+/// register during their expansion later.
+static unsigned estimateRSStackSizeLimit(MachineFunction &MF) {
+  // FIXME: For now, just conservatively guestimate based on unscaled indexing
+  // range. We'll end up allocating an unnecessary spill slot a lot, but
+  // realistically that's not a big deal at this stage of the game.
+  for (MachineBasicBlock &MBB : MF) {
+    for (MachineInstr &MI : MBB) {
+      if (MI.isDebugValue() || MI.isPseudo() ||
+          MI.getOpcode() == AArch64::ADDXri ||
+          MI.getOpcode() == AArch64::ADDSXri)
+        continue;
+
+      for (unsigned i = 0, e = MI.getNumOperands(); i != e; ++i) {
+        if (!MI.getOperand(i).isFI())
+          continue;
+
+        int Offset = 0;
+        if (isAArch64FrameOffsetLegal(MI, Offset, nullptr, nullptr, nullptr) ==
+            AArch64FrameOffsetCannotUpdate)
+          return 0;
+      }
+    }
+  }
+  return 255;
+}
 
 bool AArch64FrameLowering::canUseRedZone(const MachineFunction &MF) const {
   if (!EnableRedZone)
@@ -267,12 +299,12 @@ static unsigned findScratchNonCalleeSaveRegister(MachineBasicBlock *MBB) {
     return AArch64::X9;
 
   const AArch64Subtarget &Subtarget = MF->getSubtarget<AArch64Subtarget>();
-  const AArch64RegisterInfo *TRI = Subtarget.getRegisterInfo();
+  const AArch64RegisterInfo &TRI = *Subtarget.getRegisterInfo();
   LivePhysRegs LiveRegs(TRI);
   LiveRegs.addLiveIns(*MBB);
 
   // Mark callee saved registers as used so we will not choose them.
-  const MCPhysReg *CSRegs = TRI->getCalleeSavedRegs(MF);
+  const MCPhysReg *CSRegs = TRI.getCalleeSavedRegs(MF);
   for (unsigned i = 0; CSRegs[i]; ++i)
     LiveRegs.addReg(CSRegs[i]);
 
@@ -474,19 +506,23 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF,
     return;
   }
 
-  auto CSStackSize = AFI->getCalleeSavedStackSize();
+  bool IsWin64 =
+      Subtarget.isCallingConvWin64(MF.getFunction()->getCallingConv());
+  unsigned FixedObject = IsWin64 ? alignTo(AFI->getVarArgsGPRSize(), 16) : 0;
+
+  auto PrologueSaveSize = AFI->getCalleeSavedStackSize() + FixedObject;
   // All of the remaining stack allocations are for locals.
-  AFI->setLocalStackSize(NumBytes - CSStackSize);
+  AFI->setLocalStackSize(NumBytes - PrologueSaveSize);
 
   bool CombineSPBump = shouldCombineCSRLocalStackBump(MF, NumBytes);
   if (CombineSPBump) {
     emitFrameOffset(MBB, MBBI, DL, AArch64::SP, AArch64::SP, -NumBytes, TII,
                     MachineInstr::FrameSetup);
     NumBytes = 0;
-  } else if (CSStackSize != 0) {
+  } else if (PrologueSaveSize != 0) {
     MBBI = convertCalleeSaveRestoreToSPPrePostIncDec(MBB, MBBI, DL, TII,
-                                                     -CSStackSize);
-    NumBytes -= CSStackSize;
+                                                     -PrologueSaveSize);
+    NumBytes -= PrologueSaveSize;
   }
   assert(NumBytes >= 0 && "Negative stack allocation size!?");
 
@@ -500,8 +536,9 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF,
     ++MBBI;
   }
   if (HasFP) {
-    // Only set up FP if we actually need to. Frame pointer is fp = sp - 16.
-    int FPOffset = CSStackSize - 16;
+    // Only set up FP if we actually need to. Frame pointer is fp =
+    // sp - fixedobject - 16.
+    int FPOffset = AFI->getCalleeSavedStackSize() - 16;
     if (CombineSPBump)
       FPOffset += AFI->getLocalStackSize();
 
@@ -640,8 +677,8 @@ void AArch64FrameLowering::emitPrologue(MachineFunction &MF,
     if (HasFP) {
       // Define the current CFA rule to use the provided FP.
       unsigned Reg = RegInfo->getDwarfRegNum(FramePtr, true);
-      unsigned CFIIndex = MF.addFrameInst(
-          MCCFIInstruction::createDefCfa(nullptr, Reg, 2 * StackGrowth));
+      unsigned CFIIndex = MF.addFrameInst(MCCFIInstruction::createDefCfa(
+          nullptr, Reg, 2 * StackGrowth - FixedObject));
       BuildMI(MBB, MBBI, DL, TII->get(TargetOpcode::CFI_INSTRUCTION))
           .addCFIIndex(CFIIndex)
           .setMIFlags(MachineInstr::FrameSetup);
@@ -727,12 +764,16 @@ void AArch64FrameLowering::emitEpilogue(MachineFunction &MF,
   // AArch64TargetLowering::LowerCall figures out ArgumentPopSize and keeps
   // it as the 2nd argument of AArch64ISD::TC_RETURN.
 
-  auto CSStackSize = AFI->getCalleeSavedStackSize();
+  bool IsWin64 =
+      Subtarget.isCallingConvWin64(MF.getFunction()->getCallingConv());
+  unsigned FixedObject = IsWin64 ? alignTo(AFI->getVarArgsGPRSize(), 16) : 0;
+
+  auto PrologueSaveSize = AFI->getCalleeSavedStackSize() + FixedObject;
   bool CombineSPBump = shouldCombineCSRLocalStackBump(MF, NumBytes);
 
-  if (!CombineSPBump && CSStackSize != 0)
+  if (!CombineSPBump && PrologueSaveSize != 0)
     convertCalleeSaveRestoreToSPPrePostIncDec(
-        MBB, std::prev(MBB.getFirstTerminator()), DL, TII, CSStackSize);
+        MBB, std::prev(MBB.getFirstTerminator()), DL, TII, PrologueSaveSize);
 
   // Move past the restores of the callee-saved registers.
   MachineBasicBlock::iterator LastPopI = MBB.getFirstTerminator();
@@ -754,7 +795,7 @@ void AArch64FrameLowering::emitEpilogue(MachineFunction &MF,
     return;
   }
 
-  NumBytes -= CSStackSize;
+  NumBytes -= PrologueSaveSize;
   assert(NumBytes >= 0 && "Negative stack allocation size!?");
 
   if (!hasFP(MF)) {
@@ -764,7 +805,7 @@ void AArch64FrameLowering::emitEpilogue(MachineFunction &MF,
     if (RedZone && ArgumentPopSize == 0)
       return;
 
-    bool NoCalleeSaveRestore = CSStackSize == 0;
+    bool NoCalleeSaveRestore = PrologueSaveSize == 0;
     int StackRestoreBytes = RedZone ? 0 : NumBytes;
     if (NoCalleeSaveRestore)
       StackRestoreBytes += ArgumentPopSize;
@@ -783,7 +824,8 @@ void AArch64FrameLowering::emitEpilogue(MachineFunction &MF,
   // be able to save any instructions.
   if (MFI.hasVarSizedObjects() || AFI->isStackRealigned())
     emitFrameOffset(MBB, LastPopI, DL, AArch64::SP, AArch64::FP,
-                    -CSStackSize + 16, TII, MachineInstr::FrameDestroy);
+                    -AFI->getCalleeSavedStackSize() + 16, TII,
+                    MachineInstr::FrameDestroy);
   else if (NumBytes)
     emitFrameOffset(MBB, LastPopI, DL, AArch64::SP, AArch64::SP, NumBytes, TII,
                     MachineInstr::FrameDestroy);
@@ -813,7 +855,11 @@ int AArch64FrameLowering::resolveFrameIndexReference(const MachineFunction &MF,
   const AArch64RegisterInfo *RegInfo = static_cast<const AArch64RegisterInfo *>(
       MF.getSubtarget().getRegisterInfo());
   const AArch64FunctionInfo *AFI = MF.getInfo<AArch64FunctionInfo>();
-  int FPOffset = MFI.getObjectOffset(FI) + 16;
+  const AArch64Subtarget &Subtarget = MF.getSubtarget<AArch64Subtarget>();
+  bool IsWin64 =
+      Subtarget.isCallingConvWin64(MF.getFunction()->getCallingConv());
+  unsigned FixedObject = IsWin64 ? alignTo(AFI->getVarArgsGPRSize(), 16) : 0;
+  int FPOffset = MFI.getObjectOffset(FI) + FixedObject + 16;
   int Offset = MFI.getObjectOffset(FI) + MFI.getStackSize();
   bool isFixed = MFI.isFixedObjectIndex(FI);
 
@@ -922,7 +968,7 @@ static void computeCalleeSaveRegisterPairs(
           CC == CallingConv::PreserveMost ||
           (Count & 1) == 0) &&
          "Odd number of callee-saved regs to spill!");
-  unsigned Offset = AFI->getCalleeSavedStackSize();
+  int Offset = AFI->getCalleeSavedStackSize();
 
   for (unsigned i = 0; i < Count; ++i) {
     RegPairInfo RPI;
@@ -991,6 +1037,7 @@ bool AArch64FrameLowering::spillCalleeSavedRegisters(
   SmallVector<RegPairInfo, 8> RegPairs;
 
   computeCalleeSaveRegisterPairs(MF, CSI, TRI, RegPairs);
+  const MachineRegisterInfo &MRI = MF.getRegInfo();
 
   for (auto RPII = RegPairs.rbegin(), RPIE = RegPairs.rend(); RPII != RPIE;
        ++RPII) {
@@ -1022,9 +1069,11 @@ bool AArch64FrameLowering::spillCalleeSavedRegisters(
           dbgs() << ")\n");
 
     MachineInstrBuilder MIB = BuildMI(MBB, MI, DL, TII.get(StrOpc));
-    MBB.addLiveIn(Reg1);
+    if (!MRI.isReserved(Reg1))
+      MBB.addLiveIn(Reg1);
     if (RPI.isPaired()) {
-      MBB.addLiveIn(Reg2);
+      if (!MRI.isReserved(Reg2))
+        MBB.addLiveIn(Reg2);
       MIB.addReg(Reg2, getPrologueDeath(MF, Reg2));
       MIB.addMemOperand(MF.getMachineMemOperand(
           MachinePointerInfo::getFixedStack(MF, RPI.FrameIdx + 1),
@@ -1158,8 +1207,7 @@ void AArch64FrameLowering::determineCalleeSaves(MachineFunction &MF,
   }
 
   DEBUG(dbgs() << "*** determineCalleeSaves\nUsed CSRs:";
-        for (int Reg = SavedRegs.find_first(); Reg != -1;
-             Reg = SavedRegs.find_next(Reg))
+        for (unsigned Reg : SavedRegs.set_bits())
           dbgs() << ' ' << PrintReg(Reg, RegInfo);
         dbgs() << "\n";);
 
@@ -1167,16 +1215,13 @@ void AArch64FrameLowering::determineCalleeSaves(MachineFunction &MF,
   unsigned NumRegsSpilled = SavedRegs.count();
   bool CanEliminateFrame = NumRegsSpilled == 0;
 
-  // FIXME: Set BigStack if any stack slot references may be out of range.
-  // For now, just conservatively guestimate based on unscaled indexing
-  // range. We'll end up allocating an unnecessary spill slot a lot, but
-  // realistically that's not a big deal at this stage of the game.
   // The CSR spill slots have not been allocated yet, so estimateStackSize
   // won't include them.
   MachineFrameInfo &MFI = MF.getFrameInfo();
   unsigned CFSize = MFI.estimateStackSize(MF) + 8 * NumRegsSpilled;
   DEBUG(dbgs() << "Estimated stack frame size: " << CFSize << " bytes.\n");
-  bool BigStack = (CFSize >= 256);
+  unsigned EstimatedStackSizeLimit = estimateRSStackSizeLimit(MF);
+  bool BigStack = (CFSize > EstimatedStackSizeLimit);
   if (BigStack || !CanEliminateFrame || RegInfo->cannotEliminateFrame(MF))
     AFI->setHasStackFrame(true);
 

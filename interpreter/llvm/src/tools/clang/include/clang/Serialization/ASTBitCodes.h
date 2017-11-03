@@ -607,6 +607,9 @@ namespace clang {
 
       /// \brief Record code for \#pragma pack options.
       PACK_PRAGMA_OPTIONS = 61,
+
+      /// \brief The stack of open #ifs/#ifdefs recorded in a preamble.
+      PP_CONDITIONAL_STACK = 62,
     };
 
     /// \brief Record types used within a source manager block.
@@ -1542,9 +1545,14 @@ namespace clang {
 
       // ARC
       EXPR_OBJC_BRIDGED_CAST,     // ObjCBridgedCastExpr
-      
+
       STMT_MS_DEPENDENT_EXISTS,   // MSDependentExistsStmt
-      EXPR_LAMBDA                 // LambdaExpr
+      EXPR_LAMBDA,                // LambdaExpr
+      STMT_COROUTINE_BODY,
+      STMT_CORETURN,
+      EXPR_COAWAIT,
+      EXPR_COYIELD,
+      EXPR_DEPENDENT_COAWAIT,
     };
 
     /// \brief The kinds of designators that can occur in a

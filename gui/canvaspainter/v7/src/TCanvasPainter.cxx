@@ -290,15 +290,15 @@ public:
          /// Set TVirtualCanvasPainter::fgGenerator to a new GeneratorImpl object.
          static void SetGlobalPainter()
          {
-            if (TVirtualCanvasPainter::fgGenerator) {
+            if (GetGenerator()) {
                R__ERROR_HERE("NewPainter") << "Generator is already set! Skipping second initialization.";
                return;
             }
-            TVirtualCanvasPainter::fgGenerator.reset(new GeneratorImpl());
+            GetGenerator().reset(new GeneratorImpl());
          }
 
          /// Release the GeneratorImpl object.
-         static void ResetGlobalPainter() { TVirtualCanvasPainter::fgGenerator.reset(); }
+         static void ResetGlobalPainter() { GetGenerator().reset(); }
       };
 
 };

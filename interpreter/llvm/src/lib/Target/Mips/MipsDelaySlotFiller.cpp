@@ -211,12 +211,12 @@ namespace {
 
   class Filler : public MachineFunctionPass {
   public:
-    Filler(TargetMachine &tm)
-      : MachineFunctionPass(ID), TM(tm) { }
+    Filler() : MachineFunctionPass(ID), TM(nullptr) {}
 
     StringRef getPassName() const override { return "Mips Delay Slot Filler"; }
 
     bool runOnMachineFunction(MachineFunction &F) override {
+      TM = &F.getTarget();
       bool Changed = false;
       for (MachineFunction::iterator FI = F.begin(), FE = F.end();
            FI != FE; ++FI)
@@ -290,7 +290,7 @@ namespace {
 
     bool terminateSearch(const MachineInstr &Candidate) const;
 
-    TargetMachine &TM;
+    const TargetMachine *TM;
 
     static char ID;
   };
@@ -386,7 +386,7 @@ void RegDefsUses::setCallerSaved(const MachineInstr &MI) {
 void RegDefsUses::setUnallocatableRegs(const MachineFunction &MF) {
   BitVector AllocSet = TRI.getAllocatableSet(MF);
 
-  for (int R = AllocSet.find_first(); R != -1; R = AllocSet.find_next(R))
+  for (unsigned R : AllocSet.set_bits())
     for (MCRegAliasIterator AI(R, &TRI, false); AI.isValid(); ++AI)
       AllocSet.set(*AI);
 
@@ -564,7 +564,7 @@ Iter Filler::replaceWithCompactBranch(MachineBasicBlock &MBB, Iter Branch,
 
 // For given opcode returns opcode of corresponding instruction with short
 // delay slot.
-// For the pseudo TAILCALL*_MM instrunctions return the short delay slot
+// For the pseudo TAILCALL*_MM instructions return the short delay slot
 // form. Unfortunately, TAILCALL<->b16 is denied as b16 has a limited range
 // that is too short to make use of for tail calls.
 static int getEquivalentCallShort(int Opcode) {
@@ -610,7 +610,7 @@ bool Filler::runOnMachineBasicBlock(MachineBasicBlock &MBB) {
     Changed = true;
 
     // Delay slot filling is disabled at -O0.
-    if (!DisableDelaySlotFiller && (TM.getOptLevel() != CodeGenOpt::None)) {
+    if (!DisableDelaySlotFiller && (TM->getOptLevel() != CodeGenOpt::None)) {
       bool Filled = false;
 
       if (MipsCompactBranchPolicy.getValue() != CB_Always ||
@@ -910,6 +910,4 @@ bool Filler::terminateSearch(const MachineInstr &Candidate) const {
 
 /// createMipsDelaySlotFillerPass - Returns a pass that fills in delay
 /// slots in Mips MachineFunctions
-FunctionPass *llvm::createMipsDelaySlotFillerPass(MipsTargetMachine &tm) {
-  return new Filler(tm);
-}
+FunctionPass *llvm::createMipsDelaySlotFillerPass() { return new Filler(); }

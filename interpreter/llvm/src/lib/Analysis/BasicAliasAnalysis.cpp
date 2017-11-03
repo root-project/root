@@ -17,13 +17,13 @@
 #include "llvm/ADT/SmallVector.h"
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
+#include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/Analysis/CFG.h"
 #include "llvm/Analysis/CaptureTracking.h"
 #include "llvm/Analysis/InstructionSimplify.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/MemoryBuiltins.h"
 #include "llvm/Analysis/ValueTracking.h"
-#include "llvm/Analysis/AssumptionCache.h"
 #include "llvm/IR/Constants.h"
 #include "llvm/IR/DataLayout.h"
 #include "llvm/IR/DerivedTypes.h"
@@ -36,6 +36,7 @@
 #include "llvm/IR/Operator.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/ErrorHandling.h"
+#include "llvm/Support/KnownBits.h"
 #include <algorithm>
 
 #define DEBUG_TYPE "basicaa"
@@ -682,8 +683,11 @@ static bool isIntrinsicCall(ImmutableCallSite CS, Intrinsic::ID IID) {
 
 #ifndef NDEBUG
 static const Function *getParent(const Value *V) {
-  if (const Instruction *inst = dyn_cast<Instruction>(V))
+  if (const Instruction *inst = dyn_cast<Instruction>(V)) {
+    if (!inst->getParent())
+      return nullptr;
     return inst->getParent()->getParent();
+  }
 
   if (const Argument *arg = dyn_cast<Argument>(V))
     return arg->getParent();
@@ -1002,15 +1006,32 @@ static AliasResult aliasSameBasePointerGEPs(const GEPOperator *GEP1,
     // Because they cannot partially overlap and because fields in an array
     // cannot overlap, if we can prove the final indices are different between
     // GEP1 and GEP2, we can conclude GEP1 and GEP2 don't alias.
-    
+
     // If the last indices are constants, we've already checked they don't
     // equal each other so we can exit early.
     if (C1 && C2)
       return NoAlias;
-    if (isKnownNonEqual(GEP1->getOperand(GEP1->getNumOperands() - 1),
-                        GEP2->getOperand(GEP2->getNumOperands() - 1),
-                        DL))
-      return NoAlias;
+    {
+      Value *GEP1LastIdx = GEP1->getOperand(GEP1->getNumOperands() - 1);
+      Value *GEP2LastIdx = GEP2->getOperand(GEP2->getNumOperands() - 1);
+      if (isa<PHINode>(GEP1LastIdx) || isa<PHINode>(GEP2LastIdx)) {
+        // If one of the indices is a PHI node, be safe and only use
+        // computeKnownBits so we don't make any assumptions about the
+        // relationships between the two indices. This is important if we're
+        // asking about values from different loop iterations. See PR32314.
+        // TODO: We may be able to change the check so we only do this when
+        // we definitely looked through a PHINode.
+        if (GEP1LastIdx != GEP2LastIdx &&
+            GEP1LastIdx->getType() == GEP2LastIdx->getType()) {
+          KnownBits Known1 = computeKnownBits(GEP1LastIdx, DL);
+          KnownBits Known2 = computeKnownBits(GEP2LastIdx, DL);
+          if (Known1.Zero.intersects(Known2.One) ||
+              Known1.One.intersects(Known2.Zero))
+            return NoAlias;
+        }
+      } else if (isKnownNonEqual(GEP1LastIdx, GEP2LastIdx, DL))
+        return NoAlias;
+    }
     return MayAlias;
   } else if (!LastIndexedStruct || !C1 || !C2) {
     return MayAlias;
@@ -1283,9 +1304,9 @@ AliasResult BasicAAResult::aliasGEP(const GEPOperator *GEP1, uint64_t V1Size,
         // give up if we can't determine conditions that hold for every cycle:
         const Value *V = DecompGEP1.VarIndices[i].V;
 
-        bool SignKnownZero, SignKnownOne;
-        ComputeSignBit(const_cast<Value *>(V), SignKnownZero, SignKnownOne, DL,
-                       0, &AC, nullptr, DT);
+        KnownBits Known = computeKnownBits(V, DL, 0, &AC, nullptr, DT);
+        bool SignKnownZero = Known.isNonNegative();
+        bool SignKnownOne = Known.isNegative();
 
         // Zero-extension widens the variable, and so forces the sign
         // bit to zero.
@@ -1327,11 +1348,7 @@ AliasResult BasicAAResult::aliasGEP(const GEPOperator *GEP1, uint64_t V1Size,
   // Statically, we can see that the base objects are the same, but the
   // pointers have dynamic offsets which we can't resolve. And none of our
   // little tricks above worked.
-  //
-  // TODO: Returning PartialAlias instead of MayAlias is a mild hack; the
-  // practical effect of this is protecting TBAA in the case of dynamic
-  // indices into arrays of unions or malloc'd memory.
-  return PartialAlias;
+  return MayAlias;
 }
 
 static AliasResult MergeAliasResults(AliasResult A, AliasResult B) {

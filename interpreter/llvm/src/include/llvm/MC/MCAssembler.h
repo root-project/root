@@ -11,11 +11,11 @@
 #define LLVM_MC_MCASSEMBLER_H
 
 #include "llvm/ADT/ArrayRef.h"
+#include "llvm/ADT/STLExtras.h"
+#include "llvm/ADT/SmallPtrSet.h"
+#include "llvm/ADT/StringRef.h"
 #include "llvm/ADT/iterator.h"
 #include "llvm/ADT/iterator_range.h"
-#include "llvm/ADT/SmallPtrSet.h"
-#include "llvm/ADT/STLExtras.h"
-#include "llvm/ADT/StringRef.h"
 #include "llvm/MC/MCDirectives.h"
 #include "llvm/MC/MCDwarf.h"
 #include "llvm/MC/MCFixup.h"
@@ -195,8 +195,8 @@ private:
   /// finishLayout - Finalize a layout, including fragment lowering.
   void finishLayout(MCAsmLayout &Layout);
 
-  std::pair<uint64_t, bool> handleFixup(const MCAsmLayout &Layout,
-                                        MCFragment &F, const MCFixup &Fixup);
+  std::tuple<MCValue, uint64_t, bool>
+  handleFixup(const MCAsmLayout &Layout, MCFragment &F, const MCFixup &Fixup);
 
 public:
   /// Construct a new assembler instance.
@@ -413,7 +413,7 @@ public:
 
   /// @}
 
-  void dump();
+  void dump() const;
 };
 
 /// \brief Compute the amount of padding required before the fragment \p F to

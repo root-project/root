@@ -212,8 +212,6 @@ ARMRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
 
   const MachineFunction &MF = *MI.getParent()->getParent();
   const MachineRegisterInfo &MRI = MF.getRegInfo();
-  LLT Ty = MRI.getType(MI.getOperand(0).getReg());
-
   unsigned NumOperands = MI.getNumOperands();
   const ValueMapping *OperandsMapping = &ARM::ValueMappings[ARM::GPR3OpsIdx];
 
@@ -221,6 +219,9 @@ ARMRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
   case G_ADD:
   case G_SUB:
   case G_MUL:
+  case G_AND:
+  case G_OR:
+  case G_XOR:
   case G_SDIV:
   case G_UDIV:
   case G_SEXT:
@@ -233,51 +234,110 @@ ARMRegisterBankInfo::getInstrMapping(const MachineInstr &MI) const {
     OperandsMapping = &ARM::ValueMappings[ARM::GPR3OpsIdx];
     break;
   case G_LOAD:
-  case G_STORE:
+  case G_STORE: {
+    LLT Ty = MRI.getType(MI.getOperand(0).getReg());
     OperandsMapping =
         Ty.getSizeInBits() == 64
             ? getOperandsMapping({&ARM::ValueMappings[ARM::DPR3OpsIdx],
                                   &ARM::ValueMappings[ARM::GPR3OpsIdx]})
             : &ARM::ValueMappings[ARM::GPR3OpsIdx];
     break;
-  case G_FADD:
+  }
+  case G_FADD: {
+    LLT Ty = MRI.getType(MI.getOperand(0).getReg());
     assert((Ty.getSizeInBits() == 32 || Ty.getSizeInBits() == 64) &&
            "Unsupported size for G_FADD");
     OperandsMapping = Ty.getSizeInBits() == 64
                           ? &ARM::ValueMappings[ARM::DPR3OpsIdx]
                           : &ARM::ValueMappings[ARM::SPR3OpsIdx];
     break;
+  }
   case G_CONSTANT:
   case G_FRAME_INDEX:
     OperandsMapping =
         getOperandsMapping({&ARM::ValueMappings[ARM::GPR3OpsIdx], nullptr});
     break;
-  case G_SEQUENCE: {
-    // We only support G_SEQUENCE for creating a double precision floating point
-    // value out of two GPRs.
-    LLT Ty1 = MRI.getType(MI.getOperand(1).getReg());
+  case G_SELECT: {
+    LLT Ty = MRI.getType(MI.getOperand(0).getReg());
+    (void)Ty;
+    LLT Ty2 = MRI.getType(MI.getOperand(1).getReg());
+    (void)Ty2;
+    assert(Ty.getSizeInBits() == 32 && "Unsupported size for G_SELECT");
+    assert(Ty2.getSizeInBits() == 1 && "Unsupported size for G_SELECT");
+    OperandsMapping =
+        getOperandsMapping({&ARM::ValueMappings[ARM::GPR3OpsIdx],
+                            &ARM::ValueMappings[ARM::GPR3OpsIdx],
+                            &ARM::ValueMappings[ARM::GPR3OpsIdx],
+                            &ARM::ValueMappings[ARM::GPR3OpsIdx]});
+    break;
+  }
+  case G_ICMP: {
+    LLT Ty2 = MRI.getType(MI.getOperand(2).getReg());
+    (void)Ty2;
+    assert(Ty2.getSizeInBits() == 32 && "Unsupported size for G_ICMP");
+    OperandsMapping =
+        getOperandsMapping({&ARM::ValueMappings[ARM::GPR3OpsIdx], nullptr,
+                            &ARM::ValueMappings[ARM::GPR3OpsIdx],
+                            &ARM::ValueMappings[ARM::GPR3OpsIdx]});
+    break;
+  }
+  case G_FCMP: {
+    LLT Ty = MRI.getType(MI.getOperand(0).getReg());
+    (void)Ty;
+    LLT Ty1 = MRI.getType(MI.getOperand(2).getReg());
     LLT Ty2 = MRI.getType(MI.getOperand(3).getReg());
+    (void)Ty2;
+    assert(Ty.getSizeInBits() == 1 && "Unsupported size for G_FCMP");
+    assert(Ty1.getSizeInBits() == Ty2.getSizeInBits() &&
+           "Mismatched operand sizes for G_FCMP");
+
+    unsigned Size = Ty1.getSizeInBits();
+    assert((Size == 32 || Size == 64) && "Unsupported size for G_FCMP");
+
+    auto FPRValueMapping = Size == 32 ? &ARM::ValueMappings[ARM::SPR3OpsIdx]
+                                      : &ARM::ValueMappings[ARM::DPR3OpsIdx];
+    OperandsMapping =
+        getOperandsMapping({&ARM::ValueMappings[ARM::GPR3OpsIdx], nullptr,
+                            FPRValueMapping, FPRValueMapping});
+    break;
+  }
+  case G_MERGE_VALUES: {
+    // We only support G_MERGE_VALUES for creating a double precision floating
+    // point value out of two GPRs.
+    LLT Ty = MRI.getType(MI.getOperand(0).getReg());
+    LLT Ty1 = MRI.getType(MI.getOperand(1).getReg());
+    LLT Ty2 = MRI.getType(MI.getOperand(2).getReg());
     if (Ty.getSizeInBits() != 64 || Ty1.getSizeInBits() != 32 ||
         Ty2.getSizeInBits() != 32)
       return getInvalidInstructionMapping();
     OperandsMapping =
         getOperandsMapping({&ARM::ValueMappings[ARM::DPR3OpsIdx],
-                            &ARM::ValueMappings[ARM::GPR3OpsIdx], nullptr,
-                            &ARM::ValueMappings[ARM::GPR3OpsIdx], nullptr});
+                            &ARM::ValueMappings[ARM::GPR3OpsIdx],
+                            &ARM::ValueMappings[ARM::GPR3OpsIdx]});
     break;
   }
-  case G_EXTRACT: {
-    // We only support G_EXTRACT for splitting a double precision floating point
-    // value into two GPRs.
+  case G_UNMERGE_VALUES: {
+    // We only support G_UNMERGE_VALUES for splitting a double precision
+    // floating point value into two GPRs.
+    LLT Ty = MRI.getType(MI.getOperand(0).getReg());
     LLT Ty1 = MRI.getType(MI.getOperand(1).getReg());
-    if (Ty.getSizeInBits() != 32 || Ty1.getSizeInBits() != 64 ||
-        MI.getOperand(2).getImm() % 32 != 0)
+    LLT Ty2 = MRI.getType(MI.getOperand(2).getReg());
+    if (Ty.getSizeInBits() != 32 || Ty1.getSizeInBits() != 32 ||
+        Ty2.getSizeInBits() != 64)
       return getInvalidInstructionMapping();
-    OperandsMapping = getOperandsMapping({&ARM::ValueMappings[ARM::GPR3OpsIdx],
-                                          &ARM::ValueMappings[ARM::DPR3OpsIdx],
-                                          nullptr, nullptr});
+    OperandsMapping =
+        getOperandsMapping({&ARM::ValueMappings[ARM::GPR3OpsIdx],
+                            &ARM::ValueMappings[ARM::GPR3OpsIdx],
+                            &ARM::ValueMappings[ARM::DPR3OpsIdx]});
     break;
   }
+  case G_BR:
+    OperandsMapping = getOperandsMapping({nullptr});
+    break;
+  case G_BRCOND:
+    OperandsMapping =
+        getOperandsMapping({&ARM::ValueMappings[ARM::GPR3OpsIdx], nullptr});
+    break;
   default:
     return getInvalidInstructionMapping();
   }

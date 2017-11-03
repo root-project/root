@@ -45,19 +45,14 @@ void LoadHistPainterLibrary();
 
 template <int DIMENSION>
 class THistPainterBase {
-   static THistPainterBase<DIMENSION> *fgPainter;
+   static THistPainterBase<DIMENSION> *&GetPainterPtr();
 
 protected:
-   THistPainterBase() { fgPainter = this; }
+   THistPainterBase();
    virtual ~THistPainterBase();
 
 public:
-   static THistPainterBase<DIMENSION> *GetPainter()
-   {
-      if (!fgPainter)
-         LoadHistPainterLibrary();
-      return fgPainter;
-   }
+   static THistPainterBase<DIMENSION> *GetPainter();
 
    /// Paint a THist. All we need is access to its GetBinContent()
    virtual void Paint(TDrawable &obj, const THistDrawingOpts<DIMENSION> &opts, TVirtualCanvasPainter &canv) = 0;
@@ -115,10 +110,7 @@ public:
    {}
 
    /// Paint the histogram
-   void Paint(Internal::TVirtualCanvasPainter &canv) final
-   {
-      Internal::THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, canv);
-   }
+   void Paint(Internal::TVirtualCanvasPainter &canv) final;
 
    THistDrawingOpts<DIMENSIONS> &GetOptions() { return fOpts; }
    const THistDrawingOpts<DIMENSIONS> &GetOptions() const { return fOpts; }

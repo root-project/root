@@ -155,6 +155,13 @@ public:
   int getGEPCost(Type *PointeeType, const Value *Ptr,
                  ArrayRef<const Value *> Operands) const;
 
+  /// \brief Estimate the cost of a EXT operation when lowered.
+  ///
+  /// The contract for this function is the same as \c getOperationCost except
+  /// that it supports an interface that provides extra information specific to
+  /// the EXT operation.
+  int getExtCost(const Instruction *I, const Value *Src) const;
+
   /// \brief Estimate the cost of a function call when lowered.
   ///
   /// The contract for this is the same as \c getOperationCost except that it
@@ -216,9 +223,23 @@ public:
   /// other context they may not be folded. This routine can distinguish such
   /// cases.
   ///
+  /// \p Operands is a list of operands which can be a result of transformations
+  /// of the current operands. The number of the operands on the list must equal
+  /// to the number of the current operands the IR user has. Their order on the
+  /// list must be the same as the order of the current operands the IR user
+  /// has.
+  ///
   /// The returned cost is defined in terms of \c TargetCostConstants, see its
   /// comments for a detailed explanation of the cost values.
-  int getUserCost(const User *U) const;
+  int getUserCost(const User *U, ArrayRef<const Value *> Operands) const;
+
+  /// \brief This is a helper function which calls the two-argument getUserCost
+  /// with \p Operands which are the current operands U has.
+  int getUserCost(const User *U) const {
+    SmallVector<const Value *, 4> Operands(U->value_op_begin(),
+                                           U->value_op_end());
+    return getUserCost(U, Operands);
+  }
 
   /// \brief Return true if branch divergence exists.
   ///
@@ -234,6 +255,11 @@ public:
   /// builds the dependency graph, and then runs the reachability algorithm
   /// starting with the sources of divergence.
   bool isSourceOfDivergence(const Value *V) const;
+
+  // \brief Returns true for the target specific
+  // set of operations which produce uniform result
+  // even taking non-unform arguments
+  bool isAlwaysUniform(const Value *V) const;
 
   /// Returns the address space ID for a target's 'flat' address space. Note
   /// this is not necessarily the same as addrspace(0), which LLVM sometimes
@@ -266,6 +292,19 @@ public:
   /// query more accurately as a call is a single small instruction, but
   /// incurs significant execution cost.
   bool isLoweredToCall(const Function *F) const;
+
+  struct LSRCost {
+    /// TODO: Some of these could be merged. Also, a lexical ordering
+    /// isn't always optimal.
+    unsigned Insns;
+    unsigned NumRegs;
+    unsigned AddRecCost;
+    unsigned NumIVMuls;
+    unsigned NumBaseAdds;
+    unsigned ImmCost;
+    unsigned SetupCost;
+    unsigned ScaleCost;
+  };
 
   /// Parameters that control the generic loop unrolling transformation.
   struct UnrollingPreferences {
@@ -348,7 +387,8 @@ public:
   /// \brief Get target-customized preferences for the generic loop unrolling
   /// transformation. The caller will initialize UP with the current
   /// target-independent defaults.
-  void getUnrollingPreferences(Loop *L, UnrollingPreferences &UP) const;
+  void getUnrollingPreferences(Loop *L, ScalarEvolution &,
+                               UnrollingPreferences &UP) const;
 
   /// @}
 
@@ -385,6 +425,10 @@ public:
                              bool HasBaseReg, int64_t Scale,
                              unsigned AddrSpace = 0) const;
 
+  /// \brief Return true if LSR cost of C1 is lower than C1.
+  bool isLSRCostLess(TargetTransformInfo::LSRCost &C1,
+                     TargetTransformInfo::LSRCost &C2) const;
+
   /// \brief Return true if the target supports masked load/store
   /// AVX2 and AVX-512 targets allow masks for consecutive load and store
   bool isLegalMaskedStore(Type *DataType) const;
@@ -395,6 +439,9 @@ public:
   /// bits scalar type.
   bool isLegalMaskedScatter(Type *DataType) const;
   bool isLegalMaskedGather(Type *DataType) const;
+
+  /// Return true if target doesn't mind addresses in vectors.
+  bool prefersVectorizedAddressing() const;
 
   /// \brief Return the cost of the scaling factor used in the addressing
   /// mode represented by AM for this target, for a load/store
@@ -450,6 +497,9 @@ public:
 
   /// \brief Don't restrict interleaved unrolling to small loops.
   bool enableAggressiveInterleaving(bool LoopHasReductions) const;
+
+  /// \brief Enable inline expansion of memcmp
+  bool expandMemCmp(Instruction *I, unsigned &MaxLoadSize) const;
 
   /// \brief Enable matching of interleaved access groups.
   bool enableInterleavedAccessVectorization() const;
@@ -536,6 +586,9 @@ public:
 
   /// \return The width of the largest scalar or vector register type.
   unsigned getRegisterBitWidth(bool Vector) const;
+
+  /// \return The width of the smallest vector register type.
+  unsigned getMinVectorRegisterBitWidth() const;
 
   /// \return True if it should be considered for address type promotion.
   /// \p AllowPromotionWithoutCommonHeader Set true if promoting \p I is
@@ -696,12 +749,38 @@ public:
   /// if false is returned.
   bool getTgtMemIntrinsic(IntrinsicInst *Inst, MemIntrinsicInfo &Info) const;
 
+  /// \returns The maximum element size, in bytes, for an element
+  /// unordered-atomic memory intrinsic.
+  unsigned getAtomicMemIntrinsicMaxElementSize() const;
+
   /// \returns A value which is the result of the given memory intrinsic.  New
   /// instructions may be created to extract the result from the given intrinsic
   /// memory operation.  Returns nullptr if the target cannot create a result
   /// from the given intrinsic.
   Value *getOrCreateResultFromMemIntrinsic(IntrinsicInst *Inst,
                                            Type *ExpectedType) const;
+
+  /// \returns The type to use in a loop expansion of a memcpy call.
+  Type *getMemcpyLoopLoweringType(LLVMContext &Context, Value *Length,
+                                  unsigned SrcAlign, unsigned DestAlign) const;
+
+  /// \param[out] OpsOut The operand types to copy RemainingBytes of memory.
+  /// \param RemainingBytes The number of bytes to copy.
+  ///
+  /// Calculates the operand types to use when copying \p RemainingBytes of
+  /// memory, where source and destination alignments are \p SrcAlign and
+  /// \p DestAlign respectively.
+  void getMemcpyLoopResidualLoweringType(SmallVectorImpl<Type *> &OpsOut,
+                                         LLVMContext &Context,
+                                         unsigned RemainingBytes,
+                                         unsigned SrcAlign,
+                                         unsigned DestAlign) const;
+
+  /// \returns True if we want to test the new memcpy lowering functionality in
+  /// Transform/Utils.
+  /// Temporary. Will be removed once we move to the new functionality and
+  /// remove the old.
+  bool useWideIRMemcpyLoopLowering() const;
 
   /// \returns True if the two functions have compatible attributes for inlining
   /// purposes.
@@ -777,6 +856,7 @@ public:
   virtual int getOperationCost(unsigned Opcode, Type *Ty, Type *OpTy) = 0;
   virtual int getGEPCost(Type *PointeeType, const Value *Ptr,
                          ArrayRef<const Value *> Operands) = 0;
+  virtual int getExtCost(const Instruction *I, const Value *Src) = 0;
   virtual int getCallCost(FunctionType *FTy, int NumArgs) = 0;
   virtual int getCallCost(const Function *F, int NumArgs) = 0;
   virtual int getCallCost(const Function *F,
@@ -788,22 +868,28 @@ public:
                                ArrayRef<const Value *> Arguments) = 0;
   virtual unsigned getEstimatedNumberOfCaseClusters(const SwitchInst &SI,
                                                     unsigned &JTSize) = 0;
-  virtual int getUserCost(const User *U) = 0;
+  virtual int
+  getUserCost(const User *U, ArrayRef<const Value *> Operands) = 0;
   virtual bool hasBranchDivergence() = 0;
   virtual bool isSourceOfDivergence(const Value *V) = 0;
+  virtual bool isAlwaysUniform(const Value *V) = 0;
   virtual unsigned getFlatAddressSpace() = 0;
   virtual bool isLoweredToCall(const Function *F) = 0;
-  virtual void getUnrollingPreferences(Loop *L, UnrollingPreferences &UP) = 0;
+  virtual void getUnrollingPreferences(Loop *L, ScalarEvolution &,
+                                       UnrollingPreferences &UP) = 0;
   virtual bool isLegalAddImmediate(int64_t Imm) = 0;
   virtual bool isLegalICmpImmediate(int64_t Imm) = 0;
   virtual bool isLegalAddressingMode(Type *Ty, GlobalValue *BaseGV,
                                      int64_t BaseOffset, bool HasBaseReg,
                                      int64_t Scale,
                                      unsigned AddrSpace) = 0;
+  virtual bool isLSRCostLess(TargetTransformInfo::LSRCost &C1,
+                             TargetTransformInfo::LSRCost &C2) = 0;
   virtual bool isLegalMaskedStore(Type *DataType) = 0;
   virtual bool isLegalMaskedLoad(Type *DataType) = 0;
   virtual bool isLegalMaskedScatter(Type *DataType) = 0;
   virtual bool isLegalMaskedGather(Type *DataType) = 0;
+  virtual bool prefersVectorizedAddressing() = 0;
   virtual int getScalingFactorCost(Type *Ty, GlobalValue *BaseGV,
                                    int64_t BaseOffset, bool HasBaseReg,
                                    int64_t Scale, unsigned AddrSpace) = 0;
@@ -821,6 +907,7 @@ public:
                                                     unsigned VF) = 0;
   virtual bool supportsEfficientVectorElementLoadStore() = 0;
   virtual bool enableAggressiveInterleaving(bool LoopHasReductions) = 0;
+  virtual bool expandMemCmp(Instruction *I, unsigned &MaxLoadSize) = 0;
   virtual bool enableInterleavedAccessVectorization() = 0;
   virtual bool isFPVectorizationPotentiallyUnsafe() = 0;
   virtual bool allowsMisalignedMemoryAccesses(LLVMContext &Context,
@@ -839,7 +926,8 @@ public:
   virtual int getIntImmCost(Intrinsic::ID IID, unsigned Idx, const APInt &Imm,
                             Type *Ty) = 0;
   virtual unsigned getNumberOfRegisters(bool Vector) = 0;
-  virtual unsigned getRegisterBitWidth(bool Vector) = 0;
+  virtual unsigned getRegisterBitWidth(bool Vector) const = 0;
+  virtual unsigned getMinVectorRegisterBitWidth() = 0;
   virtual bool shouldConsiderAddressTypePromotion(
       const Instruction &I, bool &AllowPromotionWithoutCommonHeader) = 0;
   virtual unsigned getCacheLineSize() = 0;
@@ -892,8 +980,15 @@ public:
   virtual unsigned getCostOfKeepingLiveOverCall(ArrayRef<Type *> Tys) = 0;
   virtual bool getTgtMemIntrinsic(IntrinsicInst *Inst,
                                   MemIntrinsicInfo &Info) = 0;
+  virtual unsigned getAtomicMemIntrinsicMaxElementSize() const = 0;
   virtual Value *getOrCreateResultFromMemIntrinsic(IntrinsicInst *Inst,
                                                    Type *ExpectedType) = 0;
+  virtual Type *getMemcpyLoopLoweringType(LLVMContext &Context, Value *Length,
+                                          unsigned SrcAlign,
+                                          unsigned DestAlign) const = 0;
+  virtual void getMemcpyLoopResidualLoweringType(
+      SmallVectorImpl<Type *> &OpsOut, LLVMContext &Context,
+      unsigned RemainingBytes, unsigned SrcAlign, unsigned DestAlign) const = 0;
   virtual bool areInlineCompatible(const Function *Caller,
                                    const Function *Callee) const = 0;
   virtual unsigned getLoadStoreVecRegBitWidth(unsigned AddrSpace) const = 0;
@@ -935,6 +1030,9 @@ public:
                  ArrayRef<const Value *> Operands) override {
     return Impl.getGEPCost(PointeeType, Ptr, Operands);
   }
+  int getExtCost(const Instruction *I, const Value *Src) override {
+    return Impl.getExtCost(I, Src);
+  }
   int getCallCost(FunctionType *FTy, int NumArgs) override {
     return Impl.getCallCost(FTy, NumArgs);
   }
@@ -956,10 +1054,16 @@ public:
                        ArrayRef<const Value *> Arguments) override {
     return Impl.getIntrinsicCost(IID, RetTy, Arguments);
   }
-  int getUserCost(const User *U) override { return Impl.getUserCost(U); }
+  int getUserCost(const User *U, ArrayRef<const Value *> Operands) override {
+    return Impl.getUserCost(U, Operands);
+  }
   bool hasBranchDivergence() override { return Impl.hasBranchDivergence(); }
   bool isSourceOfDivergence(const Value *V) override {
     return Impl.isSourceOfDivergence(V);
+  }
+
+  bool isAlwaysUniform(const Value *V) override {
+    return Impl.isAlwaysUniform(V);
   }
 
   unsigned getFlatAddressSpace() override {
@@ -969,8 +1073,9 @@ public:
   bool isLoweredToCall(const Function *F) override {
     return Impl.isLoweredToCall(F);
   }
-  void getUnrollingPreferences(Loop *L, UnrollingPreferences &UP) override {
-    return Impl.getUnrollingPreferences(L, UP);
+  void getUnrollingPreferences(Loop *L, ScalarEvolution &SE,
+                               UnrollingPreferences &UP) override {
+    return Impl.getUnrollingPreferences(L, SE, UP);
   }
   bool isLegalAddImmediate(int64_t Imm) override {
     return Impl.isLegalAddImmediate(Imm);
@@ -984,6 +1089,10 @@ public:
     return Impl.isLegalAddressingMode(Ty, BaseGV, BaseOffset, HasBaseReg,
                                       Scale, AddrSpace);
   }
+  bool isLSRCostLess(TargetTransformInfo::LSRCost &C1,
+                     TargetTransformInfo::LSRCost &C2) override {
+    return Impl.isLSRCostLess(C1, C2);
+  }
   bool isLegalMaskedStore(Type *DataType) override {
     return Impl.isLegalMaskedStore(DataType);
   }
@@ -995,6 +1104,9 @@ public:
   }
   bool isLegalMaskedGather(Type *DataType) override {
     return Impl.isLegalMaskedGather(DataType);
+  }
+  bool prefersVectorizedAddressing() override {
+    return Impl.prefersVectorizedAddressing();
   }
   int getScalingFactorCost(Type *Ty, GlobalValue *BaseGV, int64_t BaseOffset,
                            bool HasBaseReg, int64_t Scale,
@@ -1036,6 +1148,9 @@ public:
   bool enableAggressiveInterleaving(bool LoopHasReductions) override {
     return Impl.enableAggressiveInterleaving(LoopHasReductions);
   }
+  bool expandMemCmp(Instruction *I, unsigned &MaxLoadSize) override {
+    return Impl.expandMemCmp(I, MaxLoadSize);
+  }
   bool enableInterleavedAccessVectorization() override {
     return Impl.enableInterleavedAccessVectorization();
   }
@@ -1073,8 +1188,11 @@ public:
   unsigned getNumberOfRegisters(bool Vector) override {
     return Impl.getNumberOfRegisters(Vector);
   }
-  unsigned getRegisterBitWidth(bool Vector) override {
+  unsigned getRegisterBitWidth(bool Vector) const override {
     return Impl.getRegisterBitWidth(Vector);
+  }
+  unsigned getMinVectorRegisterBitWidth() override {
+    return Impl.getMinVectorRegisterBitWidth();
   }
   bool shouldConsiderAddressTypePromotion(
       const Instruction &I, bool &AllowPromotionWithoutCommonHeader) override {
@@ -1180,9 +1298,25 @@ public:
                           MemIntrinsicInfo &Info) override {
     return Impl.getTgtMemIntrinsic(Inst, Info);
   }
+  unsigned getAtomicMemIntrinsicMaxElementSize() const override {
+    return Impl.getAtomicMemIntrinsicMaxElementSize();
+  }
   Value *getOrCreateResultFromMemIntrinsic(IntrinsicInst *Inst,
                                            Type *ExpectedType) override {
     return Impl.getOrCreateResultFromMemIntrinsic(Inst, ExpectedType);
+  }
+  Type *getMemcpyLoopLoweringType(LLVMContext &Context, Value *Length,
+                                  unsigned SrcAlign,
+                                  unsigned DestAlign) const override {
+    return Impl.getMemcpyLoopLoweringType(Context, Length, SrcAlign, DestAlign);
+  }
+  void getMemcpyLoopResidualLoweringType(SmallVectorImpl<Type *> &OpsOut,
+                                         LLVMContext &Context,
+                                         unsigned RemainingBytes,
+                                         unsigned SrcAlign,
+                                         unsigned DestAlign) const override {
+    Impl.getMemcpyLoopResidualLoweringType(OpsOut, Context, RemainingBytes,
+                                           SrcAlign, DestAlign);
   }
   bool areInlineCompatible(const Function *Caller,
                            const Function *Callee) const override {

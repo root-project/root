@@ -782,7 +782,7 @@ CursorKind.CONVERSION_FUNCTION = CursorKind(26)
 # A C++ template type parameter
 CursorKind.TEMPLATE_TYPE_PARAMETER = CursorKind(27)
 
-# A C++ non-type template paramater.
+# A C++ non-type template parameter.
 CursorKind.TEMPLATE_NON_TYPE_PARAMETER = CursorKind(28)
 
 # A C++ template template parameter.
@@ -1367,6 +1367,30 @@ TemplateArgumentKind.DECLARATION = TemplateArgumentKind(2)
 TemplateArgumentKind.NULLPTR = TemplateArgumentKind(3)
 TemplateArgumentKind.INTEGRAL = TemplateArgumentKind(4)
 
+### Exception Specification Kinds ###
+class ExceptionSpecificationKind(BaseEnumeration):
+    """
+    An ExceptionSpecificationKind describes the kind of exception specification
+    that a function has.
+    """
+
+    # The required BaseEnumeration declarations.
+    _kinds = []
+    _name_map = None
+
+    def __repr__(self):
+        return 'ExceptionSpecificationKind.{}'.format(self.name)
+
+ExceptionSpecificationKind.NONE = ExceptionSpecificationKind(0)
+ExceptionSpecificationKind.DYNAMIC_NONE = ExceptionSpecificationKind(1)
+ExceptionSpecificationKind.DYNAMIC = ExceptionSpecificationKind(2)
+ExceptionSpecificationKind.MS_ANY = ExceptionSpecificationKind(3)
+ExceptionSpecificationKind.BASIC_NOEXCEPT = ExceptionSpecificationKind(4)
+ExceptionSpecificationKind.COMPUTED_NOEXCEPT = ExceptionSpecificationKind(5)
+ExceptionSpecificationKind.UNEVALUATED = ExceptionSpecificationKind(6)
+ExceptionSpecificationKind.UNINSTANTIATED = ExceptionSpecificationKind(7)
+ExceptionSpecificationKind.UNPARSED = ExceptionSpecificationKind(8)
+
 ### Cursors ###
 
 class Cursor(Structure):
@@ -1453,6 +1477,11 @@ class Cursor(Structure):
         function template that is declared 'virtual'.
         """
         return conf.lib.clang_CXXMethod_isVirtual(self)
+
+    def is_scoped_enum(self):
+        """Returns True if the cursor refers to a scoped enum declaration.
+        """
+        return conf.lib.clang_EnumDecl_isScoped(self)
 
     def get_definition(self):
         """
@@ -1585,6 +1614,18 @@ class Cursor(Structure):
             self._result_type = conf.lib.clang_getResultType(self.type)
 
         return self._result_type
+
+    @property
+    def exception_specification_kind(self):
+        '''
+        Retrieve the exception specification kind, which is one of the values
+        from the ExceptionSpecificationKind enumeration.
+        '''
+        if not hasattr(self, '_exception_specification_kind'):
+            exc_kind = conf.lib.clang_getCursorExceptionSpecificationType(self)
+            self._exception_specification_kind = ExceptionSpecificationKind.from_id(exc_kind)
+
+        return self._exception_specification_kind
 
     @property
     def underlying_typedef_type(self):
@@ -1963,6 +2004,47 @@ TypeKind.DEPENDENTSIZEDARRAY = TypeKind(116)
 TypeKind.MEMBERPOINTER = TypeKind(117)
 TypeKind.AUTO = TypeKind(118)
 TypeKind.ELABORATED = TypeKind(119)
+TypeKind.PIPE = TypeKind(120)
+TypeKind.OCLIMAGE1DRO = TypeKind(121)
+TypeKind.OCLIMAGE1DARRAYRO = TypeKind(122)
+TypeKind.OCLIMAGE1DBUFFERRO = TypeKind(123)
+TypeKind.OCLIMAGE2DRO = TypeKind(124)
+TypeKind.OCLIMAGE2DARRAYRO = TypeKind(125)
+TypeKind.OCLIMAGE2DDEPTHRO = TypeKind(126)
+TypeKind.OCLIMAGE2DARRAYDEPTHRO = TypeKind(127)
+TypeKind.OCLIMAGE2DMSAARO = TypeKind(128)
+TypeKind.OCLIMAGE2DARRAYMSAARO = TypeKind(129)
+TypeKind.OCLIMAGE2DMSAADEPTHRO = TypeKind(130)
+TypeKind.OCLIMAGE2DARRAYMSAADEPTHRO = TypeKind(131)
+TypeKind.OCLIMAGE3DRO = TypeKind(132)
+TypeKind.OCLIMAGE1DWO = TypeKind(133)
+TypeKind.OCLIMAGE1DARRAYWO = TypeKind(134)
+TypeKind.OCLIMAGE1DBUFFERWO = TypeKind(135)
+TypeKind.OCLIMAGE2DWO = TypeKind(136)
+TypeKind.OCLIMAGE2DARRAYWO = TypeKind(137)
+TypeKind.OCLIMAGE2DDEPTHWO = TypeKind(138)
+TypeKind.OCLIMAGE2DARRAYDEPTHWO = TypeKind(139)
+TypeKind.OCLIMAGE2DMSAAWO = TypeKind(140)
+TypeKind.OCLIMAGE2DARRAYMSAAWO = TypeKind(141)
+TypeKind.OCLIMAGE2DMSAADEPTHWO = TypeKind(142)
+TypeKind.OCLIMAGE2DARRAYMSAADEPTHWO = TypeKind(143)
+TypeKind.OCLIMAGE3DWO = TypeKind(144)
+TypeKind.OCLIMAGE1DRW = TypeKind(145)
+TypeKind.OCLIMAGE1DARRAYRW = TypeKind(146)
+TypeKind.OCLIMAGE1DBUFFERRW = TypeKind(147)
+TypeKind.OCLIMAGE2DRW = TypeKind(148)
+TypeKind.OCLIMAGE2DARRAYRW = TypeKind(149)
+TypeKind.OCLIMAGE2DDEPTHRW = TypeKind(150)
+TypeKind.OCLIMAGE2DARRAYDEPTHRW = TypeKind(151)
+TypeKind.OCLIMAGE2DMSAARW = TypeKind(152)
+TypeKind.OCLIMAGE2DARRAYMSAARW = TypeKind(153)
+TypeKind.OCLIMAGE2DMSAADEPTHRW = TypeKind(154)
+TypeKind.OCLIMAGE2DARRAYMSAADEPTHRW = TypeKind(155)
+TypeKind.OCLIMAGE3DRW = TypeKind(156)
+TypeKind.OCLSAMPLER = TypeKind(157)
+TypeKind.OCLEVENT = TypeKind(158)
+TypeKind.OCLQUEUE = TypeKind(159)
+TypeKind.OCLRESERVEID = TypeKind(160)
 
 class RefQualifierKind(BaseEnumeration):
     """Describes a specific ref-qualifier of a type."""
@@ -2121,6 +2203,12 @@ class Type(Structure):
 
         return conf.lib.clang_isFunctionTypeVariadic(self)
 
+    def get_address_space(self):
+        return conf.lib.clang_getAddressSpace(self)
+
+    def get_typedef_name(self):
+        return conf.lib.clang_getTypedefName(self)
+
     def is_pod(self):
         """Determine whether this Type represents plain old data (POD)."""
         return conf.lib.clang_isPODType(self)
@@ -2206,6 +2294,14 @@ class Type(Structure):
         conf.lib.clang_Type_visitFields(self,
                             callbacks['fields_visit'](visitor), fields)
         return iter(fields)
+
+    def get_exception_specification_kind(self):
+        """
+        Return the kind of the exception specification; a value from
+        the ExceptionSpecificationKind enumeration.
+        """
+        return ExceptionSpecificationKind.from_id(
+                conf.lib.clang.getExceptionSpecificationType(self))
 
     @property
     def spelling(self):
@@ -3223,6 +3319,10 @@ functionList = [
    [Cursor],
    bool),
 
+  ("clang_EnumDecl_isScoped",
+   [Cursor],
+   bool),
+
   ("clang_defaultDiagnosticDisplayOptions",
    [],
    c_uint),
@@ -3623,6 +3723,11 @@ functionList = [
    [Cursor],
    Type,
    Type.from_result),
+
+  ("clang_getTypedefName",
+   [Type],
+   _CXString,
+   _CXString.from_result),
 
   ("clang_getTypeKindSpelling",
    [c_uint],

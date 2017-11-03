@@ -14,8 +14,9 @@
 #ifndef LLVM_OBJECT_SYMBOLICFILE_H
 #define LLVM_OBJECT_SYMBOLICFILE_H
 
-#include "llvm/ADT/iterator_range.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/iterator_range.h"
+#include "llvm/BinaryFormat/Magic.h"
 #include "llvm/Object/Binary.h"
 #include "llvm/Support/Error.h"
 #include "llvm/Support/FileSystem.h"
@@ -162,17 +163,17 @@ public:
 
   // construction aux.
   static Expected<std::unique_ptr<SymbolicFile>>
-  createSymbolicFile(MemoryBufferRef Object, sys::fs::file_magic Type,
+  createSymbolicFile(MemoryBufferRef Object, llvm::file_magic Type,
                      LLVMContext *Context);
 
   static Expected<std::unique_ptr<SymbolicFile>>
   createSymbolicFile(MemoryBufferRef Object) {
-    return createSymbolicFile(Object, sys::fs::file_magic::unknown, nullptr);
+    return createSymbolicFile(Object, llvm::file_magic::unknown, nullptr);
   }
   static Expected<OwningBinary<SymbolicFile>>
   createSymbolicFile(StringRef ObjectPath);
 
-  static inline bool classof(const Binary *v) {
+  static bool classof(const Binary *v) {
     return v->isSymbolic();
   }
 };

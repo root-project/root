@@ -15,10 +15,11 @@
 #ifndef LLVM_IR_MODULE_H
 #define LLVM_IR_MODULE_H
 
-#include "llvm/ADT/iterator_range.h"
+#include "llvm-c/Types.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/StringMap.h"
 #include "llvm/ADT/StringRef.h"
+#include "llvm/ADT/iterator_range.h"
 #include "llvm/IR/Attributes.h"
 #include "llvm/IR/Comdat.h"
 #include "llvm/IR/DataLayout.h"
@@ -30,7 +31,6 @@
 #include "llvm/IR/SymbolTableListTraits.h"
 #include "llvm/Support/CBindingWrapping.h"
 #include "llvm/Support/CodeGen.h"
-#include "llvm-c/Types.h"
 #include <cstddef>
 #include <cstdint>
 #include <iterator>
@@ -139,9 +139,12 @@ public:
     /// during the append operation.
     AppendUnique = 6,
 
+    /// Takes the max of the two values, which are required to be integers.
+    Max = 7,
+
     // Markers:
     ModFlagBehaviorFirstVal = Error,
-    ModFlagBehaviorLastVal = AppendUnique
+    ModFlagBehaviorLastVal = Max
   };
 
   /// Checks if Metadata represents a valid ModFlagBehavior, and stores the
@@ -246,7 +249,7 @@ public:
   /// when other randomness consuming passes are added or removed. In
   /// addition, the random stream will be reproducible across LLVM
   /// versions when the pass does not change.
-  RandomNumberGenerator *createRNG(const Pass* P) const;
+  std::unique_ptr<RandomNumberGenerator> createRNG(const Pass* P) const;
 
 /// @}
 /// @name Module Level Mutators

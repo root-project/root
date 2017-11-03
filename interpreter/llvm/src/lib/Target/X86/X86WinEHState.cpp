@@ -22,9 +22,9 @@
 #include "llvm/CodeGen/WinEHFuncInfo.h"
 #include "llvm/IR/CallSite.h"
 #include "llvm/IR/Function.h"
+#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/IntrinsicInst.h"
-#include "llvm/IR/IRBuilder.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Debug.h"
@@ -398,7 +398,7 @@ Function *WinEHStatePass::generateLSDAInEAXThunk(Function *ParentFunc) {
                         /*isVarArg=*/false);
   Function *Trampoline =
       Function::Create(TrampolineTy, GlobalValue::InternalLinkage,
-                       Twine("__ehhandler$") + GlobalValue::getRealLinkageName(
+                       Twine("__ehhandler$") + GlobalValue::dropLLVMManglingEscape(
                                                    ParentFunc->getName()),
                        TheModule);
   BasicBlock *EntryBB = BasicBlock::Create(Context, "entry", Trampoline);

@@ -449,6 +449,7 @@
       if (JSROOT.GetUrlOption("nomenu", url)!=null) JSROOT.gStyle.ContextMenu = false;
       if (JSROOT.GetUrlOption("noprogress", url)!=null) JSROOT.gStyle.ProgressBox = false;
       if (JSROOT.GetUrlOption("notouch", url)!=null) JSROOT.touches = false;
+      if (JSROOT.GetUrlOption("adjframe", url)!=null) JSROOT.gStyle.CanAdjustFrame = true;
 
       JSROOT.gStyle.fOptStat = JSROOT.GetUrlOption("optstat", url, JSROOT.gStyle.fOptStat);
       JSROOT.gStyle.fOptFit = JSROOT.GetUrlOption("optfit", url, JSROOT.gStyle.fOptFit);
@@ -637,8 +638,9 @@
          return true;
       }
 
-      var marker_kind = Painter.root_markers[this.style] || 100,
-          shape = marker_kind % 100;
+      var marker_kind = Painter.root_markers[this.style];
+      if (marker_kind === undefined) marker_kind = 100;
+      var shape = marker_kind % 100;
 
       this.fill = (marker_kind>=100);
 
@@ -657,7 +659,8 @@
 
       switch(shape) {
          case 0: // circle
-            this.x0 = -size/2;
+            this.x0 = -parseFloat(half);
+            full = (parseFloat(half)*2).toFixed(this.ndig);
             this.marker = "a"+half+","+half+",0,1,0,"+full+",0a"+half+","+half+",0,1,0,-"+full+",0z";
             break;
          case 1: // cross
@@ -4041,6 +4044,7 @@
 
             nextdy = curr.dy + 1.6;
             curr.dy = -0.4;
+            subpos.dx = subpos.dy = 0; // reset variable
          }
 
       }
@@ -5369,12 +5373,12 @@
          menu.add("sub:Ticks x");
          menu.addchk(this.pad.fTickx == 0, "normal", "0fTickx", SetTickField);
          menu.addchk(this.pad.fTickx == 1, "ticks on both sides", "1fTickx", SetTickField);
-         menu.addchk(this.pad.fTickx == 2, "labels up", "2fTickx", SetTickField);
+         menu.addchk(this.pad.fTickx == 2, "labels on both sides", "2fTickx", SetTickField);
          menu.add("endsub:");
          menu.add("sub:Ticks y");
          menu.addchk(this.pad.fTicky == 0, "normal", "0fTicky", SetTickField);
-         menu.addchk(this.pad.fTicky == 1, "ticks on both side", "1fTicky", SetTickField);
-         menu.addchk(this.pad.fTicky == 2, "labels right", "2fTicky", SetTickField);
+         menu.addchk(this.pad.fTicky == 1, "ticks on both sides", "1fTicky", SetTickField);
+         menu.addchk(this.pad.fTicky == 2, "labels on both sides", "2fTicky", SetTickField);
          menu.add("endsub:");
 
          //menu.addchk(this.pad.fTickx, 'Tick x', 'fTickx', ToggleField);
@@ -6713,7 +6717,7 @@
    JSROOT.addDrawFunc({ name: "TBranchFunc", icon: "img_leaf_method", prereq: "tree", func: 'JSROOT.Painter.drawTree', opt: ";dump", noinspect: true });
    JSROOT.addDrawFunc({ name: /^TBranch/, icon: "img_branch", prereq: "tree", func: 'JSROOT.Painter.drawTree', dflt: "expand", opt: ";dump", ctrl: "dump", shift: "inspect", ignore_online: true });
    JSROOT.addDrawFunc({ name: /^TLeaf/, icon: "img_leaf", prereq: "tree", noexpand: true, func: 'JSROOT.Painter.drawTree', opt: ";dump", ctrl: "dump", ignore_online: true });
-   JSROOT.addDrawFunc({ name: "TList", icon: "img_list", prereq: "hierarchy", expand: "JSROOT.Painter.ListHierarchy", dflt: "expand" });
+   JSROOT.addDrawFunc({ name: "TList", icon: "img_list", prereq: "hierarchy", func: "JSROOT.Painter.drawList", expand: "JSROOT.Painter.ListHierarchy", dflt: "expand" });
    JSROOT.addDrawFunc({ name: "THashList", sameas: "TList" });
    JSROOT.addDrawFunc({ name: "TObjArray", sameas: "TList" });
    JSROOT.addDrawFunc({ name: "TClonesArray", sameas: "TList" });

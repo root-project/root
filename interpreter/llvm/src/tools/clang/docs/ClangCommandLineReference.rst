@@ -96,6 +96,8 @@ Emit ARC errors even if the migrator can fix them
 
 Output path for the plist report
 
+.. option:: --autocomplete=<arg>
+
 .. option:: -bind\_at\_load
 
 .. option:: -bundle
@@ -292,7 +294,7 @@ Disable builtin #include directories
 
 .. option:: -nomultidefs
 
-.. option:: -nopie
+.. option:: -nopie, -no-pie
 
 .. option:: -noprebind
 
@@ -654,6 +656,10 @@ Pass <arg> to the assembler
 
 Pass <arg> to the clang compiler
 
+.. option:: -fclang-abi-compat=<version>
+
+Attempt to match the ABI of Clang <version>
+
 .. option:: -fcomment-block-commands=<arg>,<arg2>...
 
 Treat each comma separated argument in <arg> as a documentation comment block command
@@ -703,6 +709,10 @@ Don't use blacklist file for sanitizers
 .. option:: -fsanitize-address-field-padding=<arg>
 
 Level of field padding for AddressSanitizer
+
+.. option:: -fsanitize-address-globals-dead-stripping
+
+Enable linker dead stripping of globals in AddressSanitizer
 
 .. option:: -fsanitize-address-use-after-scope, -fno-sanitize-address-use-after-scope
 
@@ -1071,6 +1081,10 @@ Target-independent compilation options
 
 Enable C++17 aligned allocation functions
 
+.. option:: -fallow-editor-placeholders, -fno-allow-editor-placeholders
+
+Treat editor placeholders as valid source code
+
 .. option:: -fallow-unsupported
 
 .. option:: -faltivec, -fno-altivec
@@ -1204,6 +1218,10 @@ Print absolute paths in diagnostics
 .. program:: clang1
 .. option:: -fdiagnostics-color=<arg>
 .. program:: clang
+
+.. option:: -fdiagnostics-hotness-threshold=<number>
+
+Prevent optimization remarks from being output if they do not have at least this profile count
 
 .. option:: -fdiagnostics-show-hotness, -fno-diagnostics-show-hotness
 
@@ -1585,6 +1603,8 @@ Turn on loop reroller
 
 .. option:: -fretain-comments-from-system-headers
 
+.. option:: -frewrite-imports, -fno-rewrite-imports
+
 .. option:: -frewrite-includes, -fno-rewrite-includes
 
 .. option:: -frewrite-map-file <arg>
@@ -1638,10 +1658,6 @@ Use SjLj style exceptions
 .. option:: -fslp-vectorize, -fno-slp-vectorize, -ftree-slp-vectorize
 
 Enable the superword-level parallelism vectorization passes
-
-.. option:: -fslp-vectorize-aggressive, -fno-slp-vectorize-aggressive
-
-Enable the BB vectorization passes
 
 .. option:: -fspell-checking, -fno-spell-checking
 
@@ -1911,6 +1927,8 @@ Link stack frames through backchain on System Z
 
 .. option:: -mcpu=<arg>, -mv4 (equivalent to -mcpu=hexagonv4), -mv5 (equivalent to -mcpu=hexagonv5), -mv55 (equivalent to -mcpu=hexagonv55), -mv60 (equivalent to -mcpu=hexagonv60), -mv62 (equivalent to -mcpu=hexagonv62)
 
+.. option:: -mdefault-build-attributes<arg>, -mno-default-build-attributes<arg>
+
 .. option:: -mdll<arg>
 
 .. option:: -mdouble-float
@@ -1975,9 +1993,15 @@ Use Intel MCU ABI
 
 Generate branches with extended addressability, usually via indirect jumps.
 
-.. option:: -mmacosx-version-min=<arg>
+.. option:: -mmacosx-version-min=<arg>, -mmacos-version-min=<arg>
 
 Set Mac OS X deployment target
+
+.. option:: -mmadd4, -mno-madd4
+
+Enable the generation of 4-operand madd.s, madd.d and related instructions.
+
+.. option:: -mmcu=<arg>
 
 .. option:: -mmicromips, -mno-micromips
 
@@ -1988,6 +2012,10 @@ Set the default structure layout to be compatible with the Microsoft compiler st
 .. option:: -mmsa, -mno-msa
 
 Enable MSA ASE (MIPS only)
+
+.. option:: -mmt, -mno-mt
+
+Enable MT ASE (MIPS only)
 
 .. option:: -mnan=<arg>
 
@@ -2203,6 +2231,8 @@ X86
 
 .. option:: -mavx512vl, -mno-avx512vl
 
+.. option:: -mavx512vpopcntdq, -mno-avx512vpopcntdq
+
 .. option:: -mbmi, -mno-bmi
 
 .. option:: -mbmi2, -mno-bmi2
@@ -2224,6 +2254,8 @@ X86
 .. option:: -mfsgsbase, -mno-fsgsbase
 
 .. option:: -mfxsr, -mno-fxsr
+
+.. option:: -mlwp, -mno-lwp
 
 .. option:: -mlzcnt, -mno-lzcnt
 
@@ -2371,6 +2403,16 @@ Debug information flags
 .. option:: -gsplit-dwarf
 
 .. option:: -gstrict-dwarf, -gno-strict-dwarf
+
+.. option:: -gz
+
+DWARF debug sections compression type
+
+.. program:: clang1
+.. option:: -gz=<arg>
+.. program:: clang
+
+DWARF debug sections compression type
 
 Static analyzer flags
 =====================
