@@ -2958,12 +2958,13 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
    if (!fVectorized)
       return DoEval(x, params);
 
+#ifdef R__HAS_VECCORE
+
    if (fNdim == 0 || !x)
       return DoEvalVec(nullptr, params)[0];
 
-// otherwise, regular Double_t inputs on a vectorized function
+    // otherwise, regular Double_t inputs on a vectorized function
 
-#ifdef R__HAS_VECCORE
    // convert our input into vectors then convert back
    if (gDebug)
       Info("EvalPar", "Function is vectorized - converting Double_t into ROOT::Double_v and back");
