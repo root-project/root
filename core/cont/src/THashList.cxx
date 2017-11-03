@@ -332,3 +332,16 @@ TObject *THashList::Remove(TObjLink *lnk)
    TList::Remove(lnk);
    return fTable->Remove(obj);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set this collection to use a RW lock upon access, making it thread safe.
+/// Return the previous state.
+///
+/// Note: To test whether the usage is enabled do:
+///    collection->TestBit(TCollection::kUseRWLock);
+
+bool THashList::UseRWLock()
+{
+   fTable->UseRWLock();
+   return TCollection::UseRWLock();
+}
