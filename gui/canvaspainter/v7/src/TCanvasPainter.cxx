@@ -529,7 +529,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
 
    if (!conn) return; // no connection found
 
-   printf("Get data %u %s\n", connid, arg.c_str());
+   printf("Get data %u %.30s\n", connid, arg.c_str());
 
    if (arg == "CONN_CLOSED") {
       // special argument from TWebWindow itself
