@@ -10,16 +10,18 @@
 ///
 /// \authors Danilo Piparo, Olivier Couet
 
-void SWAN2017()
+void timeSeriesFromCSV()
 {
-   // Open the data file
+   // Open the data file. This csv contains the usage statistics of a CERN IT
+   // service, SWAN, during two weeks. We would like to plot this data with
+   // ROOT to draw some conclusions from it.
    TString dir = gROOT->GetTutorialDir();
    dir.Append("/graphs/");
    dir.ReplaceAll("/./","/");
    FILE *f = fopen(Form("%sSWAN2017.dat",dir.Data()),"r");
 
    // Create the time graph
-   auto *g = new TGraph();
+   auto g = new TGraph();
    g->SetTitle("SWAN Users during July 2017;Time;Number of Users");
 
    // Read the data and fill the graph with time along the X axis and number
@@ -38,7 +40,7 @@ void SWAN2017()
    fclose(f);
 
    // Draw the graph
-   auto *c = new TCanvas("c", "c", 950, 500);
+   auto c = new TCanvas("c", "c", 950, 500);
    c->SetLeftMargin(0.07);
    c->SetRightMargin(0.04);
    c->SetGrid();
@@ -48,13 +50,14 @@ void SWAN2017()
    g->GetYaxis()->CenterTitle();
 
    // Make the X axis labelled with time.
-   g->GetXaxis()->SetTimeDisplay(1);
-   g->GetXaxis()->CenterTitle();
-   g->GetXaxis()->SetTimeFormat("%a %d");
-   g->GetXaxis()->SetTimeOffset(0);
-   g->GetXaxis()->SetNdivisions(-219);
-   g->GetXaxis()->SetLimits(TDatime(2017, 7, 3, 0,0,0).Convert(),
-                            TDatime(2017, 7, 22, 0,0,0).Convert());
-   g->GetXaxis()->SetLabelSize(0.025);
-   g->GetXaxis()->CenterLabels();
+   auto xaxis = g->GetXaxis();
+   xaxis->SetTimeDisplay(1);
+   xaxis->CenterTitle();
+   xaxis->SetTimeFormat("%a %d");
+   xaxis->SetTimeOffset(0);
+   xaxis->SetNdivisions(-219);
+   xaxis->SetLimits(TDatime(2017, 7, 3, 0,0,0).Convert(),
+                           TDatime(2017, 7, 22, 0,0,0).Convert());
+   xaxis->SetLabelSize(0.025);
+   xaxis->CenterLabels();
 }
