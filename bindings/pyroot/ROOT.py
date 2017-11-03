@@ -560,7 +560,7 @@ class ModuleFacade( types.ModuleType ):
                   _root.gSystem.ProcessEvents()  
                   time.sleep( 0.01 )
             pt_inputhooks.register('ROOT',_inputhook)
-            get_ipython().run_line_magic('gui', 'ROOT')
+            if get_ipython() : get_ipython().run_line_magic('gui', 'ROOT')
          elif self.PyConfig.StartGuiThread == 'inputhook' or\
                _root.gSystem.InheritsFrom( 'TMacOSXSystem' ):
           # new, PyOS_InputHook based mechanism
