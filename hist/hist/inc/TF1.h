@@ -414,12 +414,8 @@ public:
    virtual TObject *DrawIntegral(Option_t *option = "al"); // *MENU*
    virtual void     DrawF1(Double_t xmin, Double_t xmax, Option_t *option = "");
    virtual Double_t Eval(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
+   //template <class T> T Eval(T x, T y = 0, T z = 0, T t = 0) const; 
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params = 0);
-#ifdef R__HAS_VECCORE
-   virtual ROOT::Double_v
-   Eval(ROOT::Double_v x, ROOT::Double_v y = 0, ROOT::Double_v z = 0, ROOT::Double_v t = 0) const;
-   virtual ROOT::Double_v EvalPar(const ROOT::Double_v *x, const Double_t *params = 0);
-#endif
    template <class T> T EvalPar(const T *x, const Double_t *params = 0);
    virtual Double_t operator()(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
    template <class T> T operator()(const T *x, const Double_t *params = nullptr);
@@ -752,14 +748,31 @@ inline T TF1::operator()(const T *x, const Double_t *params)
    return EvalPar(x, params);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///   EvalPar for vectorized
 template <class T>
 T TF1::EvalPar(const T *x, const Double_t *params)
 {
   if (fType == EFType::kTemplVec || fType == EFType::kTemplScalar) {
-    return EvalParTempl(x, params);
+     return EvalParTempl(x, params);
+  } else if (fType == EFType::kFormula) {
+     return fFormula->EvalPar(x, params);
   } else
      return TF1::EvalPar((double *)x, params);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///   Eval for vectorized functions
+// template <class T>
+// T TF1::Eval(T x, T y, T z, T t) const 
+// {
+//    if (fType == EFType::kFormula)
+//       return fFormula->Eval(x, y, z, t);
+
+//    T xx[] = {x, y, z, t};
+//    Double_t *pp = (Double_t *)fParams->GetParameters();
+//    return ((TF1 *)this)->EvalPar(xx, pp);
+// }
 
 // Internal to TF1. Evaluates Templated interfaces
 template <class T>

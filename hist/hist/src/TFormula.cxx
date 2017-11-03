@@ -2995,13 +2995,13 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 
 ////////////////////////////////////////////////////////////////////////////////
 #ifdef R__HAS_VECCORE
-ROOT::Double_v TFormula::Eval(ROOT::Double_v x, ROOT::Double_v y, ROOT::Double_v z, ROOT::Double_v t) const
-{
-   ROOT::Double_v xxx[] = {x, y, z, t};
-   return EvalPar(xxx, nullptr);
-}
+// ROOT::Double_v TFormula::Eval(ROOT::Double_v x, ROOT::Double_v y, ROOT::Double_v z, ROOT::Double_v t) const
+// {
+//    ROOT::Double_v xxx[] = {x, y, z, t};
+//    return EvalPar(xxx, nullptr);
+// }
 
-ROOT::Double_v TFormula::EvalPar(const ROOT::Double_v *x, const Double_t *params) const
+ROOT::Double_v TFormula::EvalParVec(const ROOT::Double_v *x, const Double_t *params) const
 {
    if (fVectorized)
       return DoEvalVec(x, params);
