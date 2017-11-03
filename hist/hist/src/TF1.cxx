@@ -565,7 +565,8 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
    } else { // regular TFormula
       fFormula = new TFormula(name, formula, false, vectorize);
       fNpar = fFormula->GetNpar();
-      fNdim = fFormula->GetNdim();
+      // TFormula can have dimension zero, but since this is a TF1 minimal dim is 1
+      fNdim = fFormula->GetNdim() == 0 ? 1 : fFormula->GetNdim();
    }
    if (fNpar) {
       fParErrors.resize(fNpar);
