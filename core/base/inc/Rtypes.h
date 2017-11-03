@@ -466,7 +466,11 @@ namespace ROOT {                                                     \
 // prevent compilation errors with complex diagnostics due to
 //   TString BAD_DO_NOT_TRY = "lib";
 //   R__LOAD_LIBRARY(BAD_DO_NOT_TRY + "BAD_DO_NOT_TRY.so") // ERROR!
+#ifdef _MSC_VER // Visual Studio
+#define _R_PragmaStr(x) __pragma(#x)
+#else
 #define _R_PragmaStr(x) _Pragma(#x)
+#endif
 #ifdef __CLING__
 # define R__LOAD_LIBRARY(LIBRARY) _R_PragmaStr(cling load ( #LIBRARY ))
 # define R__ADD_INCLUDE_PATH(PATH) _R_PragmaStr(cling add_include_path ( #PATH ))
