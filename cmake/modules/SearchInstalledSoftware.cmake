@@ -1611,7 +1611,9 @@ if (testing)
                   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                   -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                   -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-    # Disable install step
+                  -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=""
+                  -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=""
+                      # Disable install step
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS ${_gtest_byproducts}
     # Wrap download, configure and build steps in a script to log output
@@ -1633,11 +1635,11 @@ if (testing)
     add_library(${lib} IMPORTED STATIC GLOBAL)
     add_dependencies(${lib} googletest)
   endforeach()
-  set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/libgtest.a)
-  set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/libgtest_main.a)
-  set_property(TARGET gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/libgmock.a)
-  set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/libgmock_main.a)
-
+  set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set_property(TARGET gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock_main${CMAKE_STATIC_LIBRARY_SUFFIX})
+  
 endif()
 
 #---Report non implemented options---------------------------------------------------
