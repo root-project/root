@@ -17,8 +17,8 @@ void timeSeriesFromCSV()
    // ROOT to draw some conclusions from it.
    TString dir = gROOT->GetTutorialDir();
    dir.Append("/graphs/");
-   dir.ReplaceAll("/./","/");
-   FILE *f = fopen(Form("%sSWAN2017.dat",dir.Data()),"r");
+   dir.ReplaceAll("/./", "/");
+   FILE *f = fopen(Form("%sSWAN2017.dat", dir.Data()), "r");
 
    // Create the time graph
    auto g = new TGraph();
@@ -30,8 +30,8 @@ void timeSeriesFromCSV()
    float v;
    char dt[20];
    int i = 0;
-   while (fgets(line,80,f)) {
-      sscanf(&line[20]  ,"%f", &v);
+   while (fgets(line, 80, f)) {
+      sscanf(&line[20], "%f", &v);
       strncpy(dt, line, 18);
       dt[19] = '\0';
       g->SetPoint(i, TDatime(dt).Convert(), v);
@@ -56,8 +56,7 @@ void timeSeriesFromCSV()
    xaxis->SetTimeFormat("%a %d");
    xaxis->SetTimeOffset(0);
    xaxis->SetNdivisions(-219);
-   xaxis->SetLimits(TDatime(2017, 7, 3, 0,0,0).Convert(),
-                           TDatime(2017, 7, 22, 0,0,0).Convert());
+   xaxis->SetLimits(TDatime(2017, 7, 3, 0, 0, 0).Convert(), TDatime(2017, 7, 22, 0, 0, 0).Convert());
    xaxis->SetLabelSize(0.025);
    xaxis->CenterLabels();
 }
