@@ -214,6 +214,6 @@ public:
    void           SetVariables(const std::pair<TString,Double_t> *vars, const Int_t size);
    void SetVectorized(Bool_t vectorized);
 
-   ClassDef(TFormula,10)
+   ClassDef(TFormula,11)
 };
 #endif
