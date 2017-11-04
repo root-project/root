@@ -14,28 +14,30 @@ bool CheckValues(const TString & testName, double r, double r0) {
    }
    else
       if (verbose) std::cout << testName << "\t ok\n";
-   
-   return ret; 
+
+   return ret;
 }
 
 
 typedef double ( * FreeFunc1D) (double );
 bool testVec1D(TF1 * f1, const TString & formula, FreeFunc1D func, double x ) {
-  
+
    auto y = f1->Eval(x);
-   auto y0 = func(x); 
+   auto y0 = func(x);
 
    bool ret = CheckValues(formula, y, y0);
 
-   // check passing double_v interface   
+   // check passing double_v interface
+#ifdef R__HAS_VECCORE
    ROOT::Double_v vx = x;
    ROOT::Double_v vy = f1->EvalPar(&vx, nullptr);
-   ret &= CheckValues(formula+TString("_v"), vy[0], y0); 
-   
-   return ret; 
+   ret &= CheckValues(formula+TString("_v"), vy[0], y0);
+#endif
+
+   return ret;
 }
 bool testVec1D(const TString & formula, FreeFunc1D func, double x = 1.) {
-   
+
    // test first by vectorizing in the constructor
    auto f1 = new TF1("f",formula,0,1,"VEC");
    bool ret = testVec1D(f1,formula,func,x);
@@ -48,38 +50,39 @@ bool testVec1D(const TString & formula, FreeFunc1D func, double x = 1.) {
    // test by removing vectorization
    f2->SetVectorized(false);
    ret &=  testVec1D(f1,formula,func,x);
-   return ret; 
+   return ret;
 }
 
 
 typedef double ( * FreeFunc2D) (double, double );
 bool testVec2D(TF2 * f1, const TString & formula, FreeFunc2D func, double x, double y ) {
-   
+
    auto r = f1->Eval(x,y);
-   auto r0 = func(x,y); 
+   auto r0 = func(x,y);
 
    bool ret = CheckValues(formula,r,r0);
 
-   // check passing double_v interface   
+   // check passing double_v interface
+#ifdef R__HAS_VECCORE
    ROOT::Double_v vx[2] = { x, y};
    ROOT::Double_v vy = f1->EvalPar(vx, nullptr);
-   
-   ret &= CheckValues(formula+TString("_v"), vy[0], r0); 
-   return ret; 
-  
+   ret &= CheckValues(formula+TString("_v"), vy[0], r0);
+#endif
+
+   return ret;
 }
 
 bool testVec2D(const TString & formula, FreeFunc2D func, double x = 1., double y = 1.) {
 
    auto f1 = new TF2("f",formula,0,1,0,1,"VEC");
-   bool ret = testVec2D(f1, formula, func, x, y); 
+   bool ret = testVec2D(f1, formula, func, x, y);
 
    auto f2 = new TF2("f",formula);
    f2->SetVectorized(true);
    ret &=  testVec2D(f2,formula,func,x,y);
    return ret;
 }
- 
+
 
 double constant_function(double ) { return 3; }
 
