@@ -514,7 +514,7 @@ int main(int argc, char **argv)
 
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
-   Int_t n = 200;
+   Int_t n = 100;
    if(argc > 1) 
       n = TString(argv[1]).Atoi();
    printf("************************************************\n");
