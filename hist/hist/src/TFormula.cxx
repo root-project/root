@@ -374,7 +374,10 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList, bo
    fNumber = 0;
    fMethod = 0;
    fLambdaPtr = nullptr;
-   fVectorized = vectorize; 
+   fVectorized = vectorize;
+#ifndef R__HAS_VECCORE
+   fVectorized = false; 
+#endif
 
    FillDefaults();
 
