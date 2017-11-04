@@ -170,6 +170,10 @@ else()
   endif()
 endif()
 
+if(NOT ROOT_geo_FOUND)
+  set(geo_veto  geom/*.C)
+endif()
+
 if(ROOT_root7_FOUND)
   set(root7_veto dataframe/tdf013_InspectAnalysis.C)
 endif()
@@ -222,6 +226,7 @@ set(all_veto hsimple.C
              ${imt_veto}
              ${classic_veto}
              ${pythia_veto}
+             ${geo_veto}
              ${root7_veto}
              )
 
@@ -313,8 +318,10 @@ set (tmva-TMVARegressionApplication-depends tutorial-tmva-TMVARegression)
 #---Define the primordial tutorials-----------------------------------
 ROOT_ADD_TEST(tutorial-hsimple COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/hsimple.C
                 PASSRC 255 FAILREGEX "Error in" "error:" LABELS tutorial)
-ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
-                FAILREGEX "Error in" "error:" LABELS tutorial)
+if(ROOT_geo_FOUND)
+  ROOT_ADD_TEST(tutorial-geom-geometry COMMAND ${ROOT_root_CMD} -b -l -n -q ${CMAKE_CURRENT_SOURCE_DIR}/geom/geometry.C
+                  FAILREGEX "Error in" "error:" LABELS tutorial)
+endif()
 
 #---Loop over all tutorials and define the corresponding test---------
 foreach(t ${tutorials})
@@ -362,10 +369,15 @@ if(ROOT_python_FOUND)
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
              )
+
   if(NOT ROOT_mathmore_FOUND)
     list(APPEND pyveto math/Legendre.py)
   endif()
-  
+
+  if(NOT ROOT_geo_FOUND)
+    list(APPEND pyveto pyroot/geometry.py)
+  endif()
+
   list(REMOVE_ITEM pytutorials ${pyveto})
   if(ROOT_CLASSIC_BUILD)
     set(classic_veto_py dataframe/tdf*.py)
