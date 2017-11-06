@@ -167,9 +167,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          where = cwhere;
    }
 
-   bool is_native = where.empty() || (where == "native"),
-        is_qt5 = (where == "qt5"),
-        is_cef = (where == "cef"),
+   bool is_native = where.empty() || (where == "native"), is_qt5 = (where == "qt5"), is_cef = (where == "cef"),
         is_chrome = (where == "chrome") || (where == "chromium");
 
    if (batch_mode) {
@@ -180,7 +178,8 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       if (is_cef) {
          const char *displ = gSystem->Getenv("DISPLAY");
          if (!displ || (*displ == 0)) {
-            R__ERROR_HERE("Show") << "For a time been in batch mode DISPLAY variable should be set. See gui/webdisplay/Readme.md for more info";
+            R__ERROR_HERE("Show") << "For a time been in batch mode DISPLAY variable should be set. See "
+                                     "gui/webdisplay/Readme.md for more info";
             return false;
          }
       }
