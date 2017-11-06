@@ -1,29 +1,35 @@
-## Compilation with CEF support (https://bitbucket.org/chromiumembedded/cef)
+## [Compilation with CEF support](https://bitbucket.org/chromiumembedded/cef)
 
 1. Current code tested with CEF3 3163, should work with other releases
 
-2  Download binary code from http://opensource.spotify.com/cefbuilds/index.html and 
-   unpack it in directory without spaces and special symbols: 
+2. Download binary code from [http://opensource.spotify.com/cefbuilds/index.html](http://opensource.spotify.com/cefbuilds/index.html)
+   and unpack it in directory without spaces and special symbols:
 
-     [shell] mkdir /d/cef
-     [shell] cd /d/cef/
-     [shell] wget http://opensource.spotify.com/cefbuilds/cef_binary_3.3163.1671.g700dc25_linux64.tar.bz2
-     [shell] tar xjf cef_binary_3.3163.1671.g700dc25_linux64.tar.bz2
+~~~
+     $ mkdir /d/cef
+     $ cd /d/cef/
+     $ wget http://opensource.spotify.com/cefbuilds/cef_binary_3.3163.1671.g700dc25_linux64.tar.bz2
+     $ tar xjf cef_binary_3.3163.1671.g700dc25_linux64.tar.bz2
+~~~
 
 3. Set `CEF_PATH` shell variable to unpacked directory:
 
-     [shell] export CEF_PATH=/d/cef/cef_binary_3.3163.1671.g700dc25_linux64
+~~~
+     $ export CEF_PATH=/d/cef/cef_binary_3.3163.1671.g700dc25_linux64
+~~~
 
-4. Install prerequicities - see comments in $CEF_PATH/CMakeLists.txt.
+4. Install prerequisites - See comments in `$CEF_PATH/CMakeLists.txt`.
    For the linux it is `build-essential`, `libgtk2.0-dev`, `libgtkglext1-dev`
 
 5. Compile all tests (required for the libcef_dll_wrapper)
 
-     [shell] cd $CEF_PATH
-     [shell] mkdir build
-     [shell] cd build
-     [shell] cmake $CEF_PATH
-     [shell] make -j8
+~~~
+     $ cd $CEF_PATH
+     $ mkdir build
+     $ cd build
+     $ cmake $CEF_PATH
+     $ make -j8
+~~~
 
 6. Compile ROOT from the same shell (CEF_PATH variable should be set)
    Check that files icudtl.dat, natives_blob.bin, snapshot_blob.bin copied into ROOT binaries directory
@@ -31,28 +37,29 @@
 7. Run ROOT from the same shell (CEF_PATH and JSROOTSYS variables should be set)
 
 
-
 ## Using CEF in batch mode on Linux
 
 CEF under Linux uses X11 functionality and therefore requires configured display and running X11 server
-On the long run there is hope, that CEF introduces true headless mode - chromium itself 
+On the long run there is hope, that CEF introduces true headless mode - chromium itself
 [already supports it](https://chromium.googlesource.com/chromium/src/+/lkgr/headless/README.md).
 
 There is simple workaround for this problem.
 One could use [Xvfb](https://en.wikipedia.org/wiki/Xvfb) as X11 server.
 It does not require any graphics adapter, screen or input device.
-CEF works with  Xvfb without problem. 
+CEF works with  Xvfb without problem.
 
 1. Start Xvfb
 
-    [shell] Xvfb :99 &
-    [shell] export DISPLAY=:99
+~~~
+     $ Xvfb :99 &
+     $ export DISPLAY=:99
+~~~
 
 2. Run macro in batch mode:
 
-    [shell] root -l -b draw_v6.cxx -q
-
-
+~~~
+     $ root -l -b draw_v6.cxx -q
+~~~
 
 ## Compilation with QT5 WebEngine support
 
@@ -67,10 +74,12 @@ Later one will provide possibility to embed ROOT panels (TCanvas, TBrowser, TFit
 
 3. Compile rootqt5 main program (standard Rint plus QApplication)
 
-     [shell] cd gui/canvaspainter/v7/qt5; qmake-qt5 rootqt5.pro; make
+~~~
+     $ cd gui/canvaspainter/v7/qt5; qmake-qt5 rootqt5.pro; make
+~~~
 
 4. Run ROOT macros, using rootqt5 executable:
 
-     [shell] rootqt5 -l hsimple.C
-
-     
+~~~
+     $ rootqt5 -l hsimple.C
+~~~
