@@ -129,7 +129,6 @@ class ClassificationResult : public TObject {
 private:
    OptionMap fMethod;                                                             //
    TString fDataLoaderName;                                                       //
-   Bool_t fMulticlass;                                                            //
    std::map<UInt_t, std::vector<std::tuple<Float_t, Float_t, Bool_t>>> fMvaTrain; // Mvas for two-class classification
    std::map<UInt_t, std::vector<std::tuple<Float_t, Float_t, Bool_t>>>
       fMvaTest;                      // Mvas for two-class and multiclass classification
