@@ -28,15 +28,20 @@
 namespace ROOT {
 namespace Experimental {
 
-/// just wrapper to deliver WS call-backs to the TWebWindow class
+/// just wrapper to deliver websockets call-backs to the TWebWindow class
 
 class TWebWindowWSHandler : public THttpWSHandler {
 public:
    TWebWindow *fDispl; ///<! back-pointer to display
 
+   /// constructor
    TWebWindowWSHandler(TWebWindow *displ) : THttpWSHandler("name", "title"), fDispl(displ) {}
+
+   /// destructor
    ~TWebWindowWSHandler() { fDispl = nullptr; }
 
+   /// returns content of default web-page
+   /// web-socket interface
    virtual TString GetDefaultPageContent() override { return fDispl->fDefaultPage.c_str(); }
 
    virtual Bool_t ProcessWS(THttpCallArg *arg) override { return fDispl->ProcessWS(arg); }
@@ -44,6 +49,19 @@ public:
 
 } // namespace Experimental
 } // namespace ROOT
+
+
+
+/** \class ROOT::Experimental::TWebWindow
+\ingroup webdisplay
+
+Represents web window, which can be shown in web browser or any other supported environment
+
+Each window can be shown several times (if allowed) in different places
+
+
+*/
+
 
 ROOT::Experimental::TWebWindow::~TWebWindow()
 {
@@ -58,6 +76,11 @@ ROOT::Experimental::TWebWindow::~TWebWindow()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Configure window to show some of existing JSROOT panels
+/// It uses "file:$jsrootsys/files/panel.htm" as default HTML page
+/// At the moment only FitPanel is existing
+
 void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 {
    assert(fConn.size() == 0 && "Cannot configure panel when connection exists");
@@ -65,8 +88,6 @@ void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
    fPanelName = name;
 
    SetDefaultPage("file:$jsrootsys/files/panel.htm");
-
-   fConnLimit = 1;
 }
 
 // TODO: add callback which executed when exactly this window is opened and connection is established
@@ -79,6 +100,8 @@ void ROOT::Experimental::TWebWindow::CreateWSHandler()
    }
 }
 
+/// Show window in specified location
+/// See ROOT::Experimental::TWebWindowsManager::Show() docu for more info
 bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 {
    bool res = fMgr->Show(this, where);
@@ -259,7 +282,10 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
    } while (isany && !only_once);
 }
 
-/// Returns relative address for the window to use when establish connection from the client
+///////////////////////////////////////////////////////////////////////////////////
+/// Returns relative URL address for the specified window
+/// Address can be requried if one needs to access data from one window into another window
+/// Used for instance when inserting panel into canvas
 
 std::string ROOT::Experimental::TWebWindow::RelativeAddr(std::shared_ptr<TWebWindow> &win)
 {
@@ -274,8 +300,10 @@ std::string ROOT::Experimental::TWebWindow::RelativeAddr(std::shared_ptr<TWebWin
    return res;
 }
 
-// returns true if sending via specified connection can be performed
-// if direct==true, requires that direct sending (without queue) is possible
+///////////////////////////////////////////////////////////////////////////////////
+/// returns true if sending via specified connection can be performed
+/// if direct==true, checks if direct sending (without queuing) is possible
+/// if connid==0, all existing connections are checked
 
 bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct) const
 {
@@ -293,8 +321,11 @@ bool ROOT::Experimental::TWebWindow::CanSend(unsigned connid, bool direct) const
    return true;
 }
 
-/// Sends data to specified connection
+///////////////////////////////////////////////////////////////////////////////////
+/// Sends data to specified connection/channel
 /// If connid==0, data will be send to all connections
+/// Normally chid==1 (chid==0 is reserved for internal communications)
+
 void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned connid, unsigned chid)
 {
    for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
@@ -313,11 +344,35 @@ void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned conn
 }
 
 /////////////////////////////////////////////////////////////////////////////////
-/// Waits until provided check function returns non-zero value
-/// Runs application mainloop in background
-/// timelimit (in seconds) defines how long to wait (0 - for ever)
+/// Set call-back function for data, received from the clients via websocket
+/// Function should have signature like void func(unsigned connid, const std::string &data)
+/// First argument identifies connection (unique for each window), second argument is received data
+/// There are predefined values for the data:
+///     "CONN_READY"  - appears when new connection is established
+///     "CONN_CLOSED" - when connection closed, no more data will be send/received via connection
+/// Most simple way to assign call-back - use of c++11 lambdas like:
+/// ~~~ {.cpp}
+/// std::shared_ptr<TWebWindow> win = TWebWindowsManager::Instance()->CreateWindow();
+/// win->SetDefaultPage("file:./page.htm");
+/// win->SetDataCallBack([](unsigned connid, const std::string &data) { printf("Conn:%u data:%s\n", connid, data.c_str()); });
+/// win->Show("opera");
+/// ~~~
 
-bool ROOT::Experimental::TWebWindow::WaitFor(WebWindowWaitFunc_t check, double timelimit)
+void ROOT::Experimental::TWebWindow::SetDataCallBack(WebWindowDataCallback_t func)
+{
+   fDataCallback = func;
+}
+
+/////////////////////////////////////////////////////////////////////////////////
+/// Waits until provided check function or lambdas returns non-zero value
+/// Runs application mainloop and short sleeps in-between
+/// timelimit (in seconds) defines how long to wait (0 - forever)
+/// Function has following signature: int func(double spent_tm)
+/// Parameter spent_tm is time in seconds, which already spent inside function
+/// Waiting will be continued, if function returns zero.
+/// First non-zero value breaks waiting loop and result is returned (or 0 is time is expired).
+
+int ROOT::Experimental::TWebWindow::WaitFor(WebWindowWaitFunc_t check, double timelimit)
 {
    return fMgr->WaitFor(check, timelimit);
 }
