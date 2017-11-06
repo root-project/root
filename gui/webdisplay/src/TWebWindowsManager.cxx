@@ -264,7 +264,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 /// Runs application mainloop in background
 /// timelimit (in seconds) defines how long to wait (0 - for ever)
 
-bool ROOT::Experimental::TWebWindowsManager::WaitFor(WebWindowWaitFunc_t check, double timelimit)
+int ROOT::Experimental::TWebWindowsManager::WaitFor(WebWindowWaitFunc_t check, double timelimit)
 {
    TStopwatch tm;
    tm.Start();
@@ -278,10 +278,10 @@ bool ROOT::Experimental::TWebWindowsManager::WaitFor(WebWindowWaitFunc_t check, 
       spent = tm.RealTime();
       tm.Continue();
       if ((timelimit > 0) && (spent > timelimit))
-         return false;
+         return 0;
       cnt++;
    }
    printf("WAITING RES %d tm %4.2f cnt %d\n", res, spent, cnt);
 
-   return (res > 0);
+   return res;
 }

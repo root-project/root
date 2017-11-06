@@ -626,6 +626,8 @@ void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
    if (!fWindow) {
       fWindow = TWebWindowsManager::Instance()->CreateWindow(IsBatchMode());
 
+      fWindow->SetConnLimit(0); // allow any number of connections
+
       fWindow->SetDefaultPage("file:$jsrootsys/files/canvas.htm");
 
       fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
