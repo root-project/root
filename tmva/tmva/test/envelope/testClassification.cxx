@@ -106,8 +106,8 @@ public:
       dl->AddBackgroundTree(background, backgroundWeight);
 
       dl->SetBackgroundWeightExpression("weight");
-      dl->PrepareTrainingAndTestTree(
-         "", "", "nTrain_Signal=1000:nTrain_Background=1000:SplitMode=Random:NormMode=NumEvents:!V");
+      dl->PrepareTrainingAndTestTree("", "", "nTrain_Signal=1000:nTrain_Background=1000:nTest_Signal=5000:nTest_"
+                                             "Background=5000:SplitMode=Random:NormMode=NumEvents:!V");
    }
 
    ~TestBaseClass()
@@ -136,7 +136,7 @@ public:
    }
 };
 
-// tetsing methods and Train/Test
+// testing methods and Train/Test
 TEST_F(ClassifierTest1, BasicTests)
 {
    Booking();
@@ -215,4 +215,54 @@ TEST_F(ClassifierTest1, BasicTests)
    ASSERT_NE(roc, nullptr);
    EXPECT_NEAR(roc->GetROCIntegral(), 0.897, 0.03);
    ASSERT_EQ(r2[0].GetDataLoaderName(), "dataset");
+}
+
+// Test calling Train/Test with output file
+class ClassifierTest2 : public ::testing::Test, public TestBaseClass {
+public:
+   ClassifierTest2()
+   {
+      CreateDataLoader();
+      outfile = new TFile("TMVAtmp1.root", "RECREATE");
+      cl = new ClassifierInterface(dl, outfile, "Jobs=2");
+   }
+   void Booking()
+   {
+      cl->BookMethod("BDT", "BDTG", "NTrees=100");
+      cl->BookMethod(TMVA::Types::kBDT, "BDTB", "NTrees=100:BoostType=Bagging");
+   }
+};
+
+// tests to check that the output in the file is right
+TEST_F(ClassifierTest2, TestsOverOutput)
+{
+   Booking();
+   auto ds_ = (TDirectoryFile *)outfile->Get("dataset"); // must not exists yet
+   ASSERT_EQ(ds_, nullptr);
+
+   cl->TrainMethod("BDT", "BDTB");
+   // looking output for the first trained method
+   auto ds = (TDirectoryFile *)outfile->Get("dataset"); // get dataset dir
+   ASSERT_NE(ds, nullptr);
+
+   auto Method_BDTB = (TDirectoryFile *)ds->Get("Method_BDTB"); // get method 1 training output dir
+   ASSERT_NE(Method_BDTB, nullptr);
+
+   auto BDTB = (TDirectoryFile *)Method_BDTB->Get("BDTB");
+   ASSERT_NE(BDTB, nullptr);
+
+   ASSERT_NE(BDTB->Get("TrainingPath"), nullptr);
+   ASSERT_NE(BDTB->Get("WeightFileName"), nullptr);
+   ASSERT_NE(BDTB->Get("MonitorNtuple"), nullptr);
+
+   cl->TestMethod("BDT", "BDTB");
+   // looking output for the first tested method
+
+   auto TrainTree = (TTree *)ds->Get("TrainTree");
+   auto TestTree = (TTree *)ds->Get("TestTree");
+   ASSERT_NE(TrainTree, nullptr);
+   ASSERT_NE(TestTree, nullptr);
+
+   ASSERT_EQ(TrainTree->GetEntries(), 2000); // 1000 events for sgn and 1000 for Bkg
+   ASSERT_EQ(TestTree->GetEntries(), 10000); // 5000 events for sgn and 5000 for Bkg
 }
