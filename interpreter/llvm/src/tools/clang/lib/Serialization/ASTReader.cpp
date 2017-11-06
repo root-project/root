@@ -1902,7 +1902,7 @@ void ASTReader::markIdentifierUpToDate(IdentifierInfo *II) {
 
   // Update the generation for this identifier.
   if (getContext().getLangOpts().Modules)
-    IdentifierGeneration[II] = getGeneration();
+    IdentifierGeneration[II] = getGeneration(getContext());
 }
 
 void ASTReader::resolvePendingMacro(IdentifierInfo *II,
@@ -2107,8 +2107,8 @@ InputFile ASTReader::getInputFile(ModuleFile &F, unsigned ID, bool Complain) {
   SourceManager &SM = getSourceManager();
   // FIXME: Reject if the overrides are different.
   if ((!Overridden && !Transient) && SM.isFileOverridden(File)) {
-    if (Complain)
-      Error(diag::err_fe_pch_file_overridden, Filename);
+    //if (Complain)
+    //  Error(diag::err_fe_pch_file_overridden, Filename);
     // After emitting the diagnostic, recover by disabling the override so
     // that the original file will be used.
     //
@@ -4039,7 +4039,7 @@ ASTReader::ReadASTCore(StringRef FileName,
   std::string ErrorStr;
   ModuleManager::AddModuleResult AddResult
     = ModuleMgr.addModule(FileName, Type, ImportLoc, ImportedBy,
-                          getGeneration(), ExpectedSize, ExpectedModTime,
+                          getGeneration(getContext()), ExpectedSize, ExpectedModTime,
                           ExpectedSignature, readASTFileSignature,
                           M, ErrorStr);
 
@@ -7836,7 +7836,7 @@ void ASTReader::ReadMethodPool(Selector Sel) {
   // Get the selector generation and update it to the current generation.
   unsigned &Generation = SelectorGeneration[Sel];
   unsigned PriorGeneration = Generation;
-  Generation = getGeneration();
+  Generation = getGeneration(getContext());
   SelectorOutOfDate[Sel] = false;
 
   // Search for methods defined with this selector.

@@ -5557,7 +5557,7 @@ void TClass::LoadClassInfo() const
          // information. Since it is transient, it is more than likely that the lack
          // will be harmles.
       } else {
-         ::Error("TClass::LoadClassInfo", "no interpreter information for class %s is available"
+         ::Fatal("TClass::LoadClassInfo", "no interpreter information for class %s is available"
                                           " even though it has a TClass initialization routine.",
                  fName.Data());
       }

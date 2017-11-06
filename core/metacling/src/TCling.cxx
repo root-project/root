@@ -1226,6 +1226,9 @@ TCling::TCling(const char *name, const char *title)
                             "using namespace std;");
    }
 
+   // Setup core C++ modules if we have any to setup.
+   SetupCoreModules();
+
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
    fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck, TClingLookupHelper__AutoParse);
@@ -3803,6 +3806,68 @@ void TCling::UpdateListOfMethods(TClass* cl) const
 
 void TCling::UpdateListOfDataMembers(TClass* cl) const
 {
+}
+
+void TCling::SetupCoreModules() {
+  clang::CompilerInstance& CI = *fInterpreter->getCI();
+  if (!CI.getLangOpts().Modules)
+    return;
+
+  std::set<std::string> NeededCoreModuleNames = {
+    "RIO",
+    "Core"
+  };
+
+  std::stringstream declarations;
+  clang::HeaderSearch &headerSearch = CI.getPreprocessor().getHeaderSearchInfo();
+  clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+
+   llvm::SetVector<clang::Module *> modules;
+
+   for (auto MI = moduleMap.module_begin(), end = moduleMap.module_end(); MI != end; MI++) {
+      clang::Module* Module = MI->second;
+      auto Lookup = NeededCoreModuleNames.find(Module->Name);
+      if (Lookup != NeededCoreModuleNames.end()) {
+        NeededCoreModuleNames.erase(Lookup);
+        modules.insert(Module);
+      }
+   }
+
+   if (!NeededCoreModuleNames.empty()) {
+     std::string MissingModuleNames;
+     for(const std::string& name : NeededCoreModuleNames) {
+       MissingModuleNames += " " + name;
+     }
+
+     Error("TCling::SetupCoreModules", "Internal error, couldn't load core "
+                                       "C++ modules:%s\n", MissingModuleNames.c_str());
+   }
+
+   for (size_t i = 0; i < modules.size(); ++i) {
+      for (clang::Module *subModule : modules[i]->submodules()) modules.insert(subModule);
+   }
+
+   // Now we collect all header files from the previously collected modules.
+   std::vector<StringRef> moduleHeaders = {
+     StringRef("cassert")
+   };
+   for (clang::Module *module : modules) {
+      for (int i = 0; i < 4; i++) {
+         auto &headerList = module->Headers[i];
+         for (const clang::Module::Header &moduleHeader : headerList) {
+            moduleHeaders.push_back(moduleHeader.NameAsWritten);
+         }
+      }
+   }
+
+   for (StringRef H : moduleHeaders) {
+      declarations << "#include \"" << H.str() << "\"\n";
+   }
+   auto result = fInterpreter->declare(declarations.str());
+   //llvm::errs() << "Declaring headers!" << declarations.str() << "\n";
+   if (result != cling::Interpreter::CompilationResult::kSuccess) {
+     Error("TCling::SetupCoreModules", "Couldn't parse core headers: %s\n", declarations.str().c_str());
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

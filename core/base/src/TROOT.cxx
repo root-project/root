@@ -2036,6 +2036,7 @@ void TROOT::InitInterpreter()
 
    // Enable autoloading
    fInterpreter->EnableAutoLoading();
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
