@@ -1088,6 +1088,77 @@ inline bool TCling::TUniqueString::Append(const std::string& str)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Loads the basic C++ modules that we require to run any ROOT program.
+/// This is just supposed to make the declarations in their headers available
+/// to the interpreter.
+static void LoadCoreModules(cling::Interpreter &interp)
+{
+   clang::CompilerInstance &CI = *interp.getCI();
+   // Without modules, this function is just a no-op.
+   if (!CI.getLangOpts().Modules)
+      return;
+
+   clang::HeaderSearch &headerSearch = CI.getPreprocessor().getHeaderSearchInfo();
+   clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+   // List of core modules we need to load.
+   std::vector<std::string> neededCoreModuleNames = {"Core", "RIO"};
+   std::vector<std::string> missingCoreModuleNames;
+
+   std::vector<clang::Module *> coreModules;
+
+   // Lookup the core modules in the modulemap by name.
+   for (std::string moduleName : neededCoreModuleNames) {
+      clang::Module *module = moduleMap.findModule(moduleName);
+      if (module) {
+         coreModules.push_back(module);
+      } else {
+         // If we can't find a module, we record that to report it later.
+         missingCoreModuleNames.push_back(moduleName);
+      }
+   }
+
+   // If we couldn't find some modules, so let's print an error message.
+   if (!missingCoreModuleNames.empty()) {
+      std::string MissingModuleNameList;
+      for (const std::string &name : missingCoreModuleNames) {
+         MissingModuleNameList += " " + name;
+      }
+
+      Error("TCling::LoadCoreModules",
+            "Internal error, couldn't find core "
+            "C++ modules in modulemap:%s\n",
+            MissingModuleNameList.c_str());
+   }
+
+   // Collect all submodules in the found core modules.
+   for (size_t i = 0; i < coreModules.size(); ++i) {
+      for (clang::Module *subModule : coreModules[i]->submodules())
+         coreModules.push_back(subModule);
+   }
+
+   // Now we collect all header files from the previously collected modules.
+   std::vector<StringRef> moduleHeaders;
+   for (clang::Module *module : coreModules) {
+      ROOT::TMetaUtils::foreachHeaderInModule(
+         *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.push_back(h.NameAsWritten); });
+   }
+
+   // Turn the list of found header files into C++ code that includes all of
+   // them. This will be wrapped into an `import` declaration by clang, so we
+   // only make those modules available, not actually textually include those
+   // headers.
+   std::stringstream declarations;
+   for (StringRef H : moduleHeaders) {
+      declarations << "#include \"" << H.str() << "\"\n";
+   }
+   auto result = interp.declare(declarations.str());
+
+   if (result != cling::Interpreter::CompilationResult::kSuccess) {
+      Error("TCling::LoadCoreModules", "Couldn't parse core headers: %s\n", declarations.str().c_str());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Initialize the cling interpreter interface.
 
 TCling::TCling(const char *name, const char *title)
@@ -1225,6 +1296,9 @@ TCling::TCling(const char *name, const char *title)
                             "#include <string>\n"
                             "using namespace std;");
    }
+
+   // Setup core C++ modules if we have any to setup.
+   LoadCoreModules(*fInterpreter);
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
