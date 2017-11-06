@@ -169,18 +169,20 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    bool is_native = where.empty() || (where == "native"),
         is_qt5 = (where == "qt5"),
-        ic_cef = (where == "cef"),
+        is_cef = (where == "cef"),
         is_chrome = (where == "chrome") || (where == "chromium");
 
    if (batch_mode) {
-      const char *displ = gSystem->Getenv("DISPLAY");
-      if (!displ || (*displ == 0)) {
-         R__ERROR_HERE("Show") << "For a time been in batch mode DISPLAY variable should be set. See gui/webdisplay/Readme.md for more info";
-         return false;
-      }
-      if (!ic_cef && !is_chrome) {
+      if (!is_cef && !is_chrome) {
          R__ERROR_HERE("Show") << "To use batch mode 'cef' or 'chromium' should be configured as output";
          return false;
+      }
+      if (is_cef) {
+         const char *displ = gSystem->Getenv("DISPLAY");
+         if (!displ || (*displ == 0)) {
+            R__ERROR_HERE("Show") << "For a time been in batch mode DISPLAY variable should be set. See gui/webdisplay/Readme.md for more info";
+            return false;
+         }
       }
    }
 
@@ -201,7 +203,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
    const char *cef_path = gSystem->Getenv("CEF_PATH");
    const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || ic_cef)) {
+   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || is_cef)) {
       typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
 
       printf("Show canvas in CEF window:  %s\n", addr.Data());
@@ -224,14 +226,18 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    if (is_chrome) {
       // see https://peter.sh/experiments/chromium-command-line-switches/
       exec = where.c_str();
-      if (win->GetWidth() && win->GetHeight())
-         exec.Append(TString::Format(" --window-size=%u,%u", win->GetWidth(), win->GetHeight()));
-      if (batch_mode)
-         exec.Append(" --headless");
-      exec.Append(" --app=\'"); // use app mode
+      if (batch_mode) {
+         int debug_port = (int)(9800 + 1000 * gRandom->Rndm(1)); // debug port required to keep chrome running
+         exec.Append(Form(" --headless --disable-gpu --disable-webgl --remote-debugging-port=%d ", debug_port));
+      } else {
+         if (win->GetWidth() && win->GetHeight())
+            exec.Append(TString::Format(" --window-size=%u,%u", win->GetWidth(), win->GetHeight()));
+         exec.Append(" --app="); // use app mode
+      }
+      exec.Append("\'");
       exec.Append(addr.Data());
       exec.Append("\' &");
-   } else if (!is_native && !ic_cef && !is_qt5 && (where != "browser")) {
+   } else if (!is_native && !is_cef && !is_qt5 && (where != "browser")) {
       if (where.find("$") != std::string::npos) {
          exec = where.c_str();
          exec.ReplaceAll("$url", addr);
