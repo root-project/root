@@ -23,6 +23,17 @@
 #include "TROOT.h"
 #include "TBufferJSON.h"
 
+
+/** \class ROOT::Experimental::TFitPanel
+\ingroup webdisplay
+
+web-based FitPanel prototype.
+*/
+
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Returns TWebWindow instance, used to display FitPanel
+
 std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TFitPanel::GetWindow()
 {
    if (!fWindow) {
@@ -38,10 +49,16 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TFitPanel::G
    return fWindow;
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Show FitPanel
+
 void ROOT::Experimental::TFitPanel::Show(const std::string &where)
 {
    GetWindow()->Show(where);
 }
+
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Hide FitPanel
 
 void ROOT::Experimental::TFitPanel::Hide()
 {
@@ -51,11 +68,15 @@ void ROOT::Experimental::TFitPanel::Hide()
    fWindow->CloseConnections();
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Process data from FitPanel
+/// OpenUI5-based FitPanel sends commands or status changes
+
 void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::string &arg)
 {
    if (arg == "CONN_READY") {
       fConnId = connid;
-      printf("Connection established %u\n", fConnId);
+      printf("FitPanel connection established %u\n", fConnId);
       fWindow->Send("INITDONE", fConnId);
 
       TFitPanelModel model;
@@ -77,7 +98,7 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
    }
 
    if (arg == "CONN_CLOSED") {
-      printf("Connection closed\n");
+      printf("FitPanel connection closed\n");
       fConnId = 0;
       return;
    }
@@ -91,17 +112,21 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
    }
 }
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Let use canvas to display fit results
+
 void ROOT::Experimental::TFitPanel::UseCanvas(std::shared_ptr<TCanvas> &canv)
 {
-   if (fCanvas) {
+   if (!fCanvas) {
+      fCanvas = canv;
+   } else {
       R__ERROR_HERE("ShowIn") << "FitPanel already bound to the canvas - change is not yet supported";
-      return;
    }
-
-   fCanvas = canv;
 }
 
-/// method called from the UI
+///////////////////////////////////////////////////////////////////////////////////////////////////////
+/// Dummy function, called when "Fit" button pressed in UI
+
 void ROOT::Experimental::TFitPanel::DoFit(const std::string &dname, const std::string &mname)
 {
    printf("DoFit %s %s\n", dname.c_str(), mname.c_str());
