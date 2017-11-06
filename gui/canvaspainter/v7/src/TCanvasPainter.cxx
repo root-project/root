@@ -252,7 +252,10 @@ public:
    virtual ~TCanvasPainter();
 
    /// returns true is canvas used in batch mode
-   virtual bool IsBatchMode() const { return fBatchMode; }
+   virtual bool IsBatchMode() const override
+   {
+      return fBatchMode;
+   }
 
    virtual void AddDisplayItem(TDisplayItem *item) override
    {
