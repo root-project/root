@@ -41,9 +41,11 @@ public:
    ~TWebWindowWSHandler() { fDispl = nullptr; }
 
    /// returns content of default web-page
-   /// web-socket interface
+   /// THttpWSHandler interface
    virtual TString GetDefaultPageContent() override { return fDispl->fDefaultPage.c_str(); }
 
+   /// Process websocket request
+   /// THttpWSHandler interface
    virtual Bool_t ProcessWS(THttpCallArg *arg) override { return fDispl->ProcessWS(arg); }
 };
 
@@ -57,11 +59,22 @@ public:
 
 Represents web window, which can be shown in web browser or any other supported environment
 
-Each window can be shown several times (if allowed) in different places
+Window can be configured to run either in the normal or in the batch (headless) mode.
+In second case no any graphical elements will be created. For the normal window one can configure geometry
+(width and height), which are applied when window shown.
 
+Each window can be shown several times (if allowed) in different places - either as the
+CEF (chromium embdedded) window or in the standard web browser. When started, window will open and show
+HTML page, configured with TWebWindow::SetDefaultPage() method.
+
+Typically (but not necessarily) clients open web socket connection to the window and one can exchange data,
+using TWebWindow::Send() method and call-back function assigned via TWebWindow::SetDataCallBack().
 
 */
 
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// destructor - closed all connections and remove window from manager
 
 ROOT::Experimental::TWebWindow::~TWebWindow()
 {
@@ -90,7 +103,8 @@ void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
    SetDefaultPage("file:$jsrootsys/files/panel.htm");
 }
 
-// TODO: add callback which executed when exactly this window is opened and connection is established
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Creates websocket handler, used for communication with the clients
 
 void ROOT::Experimental::TWebWindow::CreateWSHandler()
 {
@@ -100,8 +114,10 @@ void ROOT::Experimental::TWebWindow::CreateWSHandler()
    }
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
 /// See ROOT::Experimental::TWebWindowsManager::Show() docu for more info
+
 bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 {
    bool res = fMgr->Show(this, where);
@@ -109,6 +125,9 @@ bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
       fShown = true;
    return res;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Processing of websockets call-backs, invoked from TWebWindowWSHandler
 
 bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
 {
@@ -226,6 +245,10 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
    return true;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Sends data via specified connection (internal use only)
+/// Takes care about message prefix and account for send/recv credits
+
 void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::TWebWindow::WebConn &conn, int chid,
                                                            const std::string &data)
 {
@@ -255,7 +278,10 @@ void ROOT::Experimental::TWebWindow::SendDataViaConnection(ROOT::Experimental::T
    fWSHandler->SendCharStarWS(conn.fWSId, buf.c_str());
 }
 
-/// Check if data to any connection can be send
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Checks if new data can be send (internal use only)
+/// If necessary, provide credits to the client
+
 void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
 {
    bool isany = false;
@@ -370,7 +396,7 @@ void ROOT::Experimental::TWebWindow::SetDataCallBack(WebWindowDataCallback_t fun
 /// Function has following signature: int func(double spent_tm)
 /// Parameter spent_tm is time in seconds, which already spent inside function
 /// Waiting will be continued, if function returns zero.
-/// First non-zero value breaks waiting loop and result is returned (or 0 is time is expired).
+/// First non-zero value breaks waiting loop and result is returned (or 0 if time is expired).
 
 int ROOT::Experimental::TWebWindow::WaitFor(WebWindowWaitFunc_t check, double timelimit)
 {

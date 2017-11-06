@@ -30,18 +30,15 @@ class THttpWSHandler;
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::TWebWindowsManager
-  Central handle to open web-based windows like Canvas or FitPanel.
-  */
-
 class TWebWindowsManager {
 
 private:
    THttpServer *fServer{0};                            ///<!  central communication with the all used displays
-   std::string fAddr{};                                ///<!   HTTP address of the server
-   std::list<std::shared_ptr<TWebWindow>> fDisplays{}; ///<! list of existing displays
+   std::string fAddr;                                  ///<!   HTTP address of the server
+   std::list<std::shared_ptr<TWebWindow>> fDisplays;   ///<! list of existing displays
    unsigned fIdCnt{0};                                 ///<! counter for identifiers
 
+   /// Creates http server, if required - with real http engine (civetweb)
    bool CreateHttpServer(bool with_http = false);
 
 public:
