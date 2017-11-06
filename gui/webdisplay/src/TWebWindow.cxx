@@ -82,7 +82,8 @@ void ROOT::Experimental::TWebWindow::CreateWSHandler()
 bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 {
    bool res = fMgr->Show(this, where);
-   if (res) fShown = true;
+   if (res)
+      fShown = true;
    return res;
 }
 
