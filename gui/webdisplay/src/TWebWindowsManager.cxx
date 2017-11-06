@@ -115,7 +115,7 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 
    fServer->Register("/web7gui", (THttpWSHandler *)win->fWSHandler);
 
-   return std::move(win);
+   return win;
 }
 
 void ROOT::Experimental::TWebWindowsManager::CloseWindow(ROOT::Experimental::TWebWindow *win)
