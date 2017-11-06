@@ -59,7 +59,7 @@ public:
 
    bool Show(TWebWindow *display, const std::string &where);
 
-   bool WaitFor(WebWindowWaitFunc_t check, double tm);
+   int WaitFor(WebWindowWaitFunc_t check, double tm);
 };
 
 } // namespace Experimental
