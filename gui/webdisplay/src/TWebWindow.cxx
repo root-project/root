@@ -32,21 +32,21 @@ namespace Experimental {
 
 class TWebWindowWSHandler : public THttpWSHandler {
 public:
-   TWebWindow *fDispl; ///<! back-pointer to display
+   TWebWindow &fDispl; ///<! back-pointer to display
 
    /// constructor
-   TWebWindowWSHandler(TWebWindow *displ) : THttpWSHandler("name", "title"), fDispl(displ) {}
+   TWebWindowWSHandler(TWebWindow &displ) : THttpWSHandler("name", "title"), fDispl(displ) {}
 
    /// destructor
-   ~TWebWindowWSHandler() { fDispl = nullptr; }
+   virtual ~TWebWindowWSHandler() { printf("TWebWindowWSHandler destructor\n"); }
 
    /// returns content of default web-page
    /// THttpWSHandler interface
-   virtual TString GetDefaultPageContent() override { return fDispl->fDefaultPage.c_str(); }
+   virtual TString GetDefaultPageContent() override { return fDispl.fDefaultPage.c_str(); }
 
    /// Process websocket request
    /// THttpWSHandler interface
-   virtual Bool_t ProcessWS(THttpCallArg *arg) override { return fDispl->ProcessWS(arg); }
+   virtual Bool_t ProcessWS(THttpCallArg *arg) override { return fDispl.ProcessWS(arg); }
 };
 
 } // namespace Experimental
@@ -109,7 +109,7 @@ void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 void ROOT::Experimental::TWebWindow::CreateWSHandler()
 {
    if (!fWSHandler) {
-      fWSHandler = new TWebWindowWSHandler(this);
+      fWSHandler = new TWebWindowWSHandler(*this);
       fWSHandler->SetName(Form("win%u", GetId()));
    }
 }
