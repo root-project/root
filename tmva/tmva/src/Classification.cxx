@@ -102,7 +102,6 @@ operator=(const TMVA::Experimental::ClassificationResult &cr)
 {
    fMethod = cr.fMethod;
    fDataLoaderName = cr.fDataLoaderName;
-   fMulticlass = cr.fMulticlass;
    fMvaTrain = cr.fMvaTrain;
    fMvaTest = cr.fMvaTest;
    return *this;
