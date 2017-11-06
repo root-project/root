@@ -41,13 +41,16 @@
 #endif
 #include "Rtypes.h"
 #include "TString.h"
+#include <ROOT/TThreadExecutor.hxx>
 
 namespace TMVA {
 
    class MsgLogger;
 
    class Config {
-               
+   protected:
+      ROOT::TThreadExecutor fPool;
+
    public:
 
       static Config& Instance();
@@ -64,6 +67,8 @@ namespace TMVA {
 
       Bool_t DrawProgressBar() const { return fDrawProgressBar; }
       void   SetDrawProgressBar( Bool_t d ) { fDrawProgressBar = d; }
+
+      ROOT::TThreadExecutor &GetThreadExecutor() { return fPool; }
 
    public:
 
