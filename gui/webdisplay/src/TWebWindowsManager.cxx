@@ -28,22 +28,30 @@
 #include "TString.h"
 #include "TStopwatch.h"
 
-// const std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWebWindowsManager::Instance()
-//{
-//   static std::shared_ptr<ROOT::Experimental::TWebWindowsManager> sManager;
-//   return sManager;
-//}
+/** \class ROOT::Experimental::TWebWindowManager
+\ingroup webdisplay
 
-// static std::shared_ptr<ROOT::Experimental::TWebWindowsManager> ROOT::Experimental::TWebWindowsManager::Create()
-//{
-//   return std::make_shared<ROOT::Experimental::TWebWindowsManager>();
-//}
+Central instance to create and show web-based windows like Canvas or FitPanel.
+
+Manager responsible to creating THttpServer instance, which is used for TWebWindow's
+communication with clients.
+
+Method TWebWindowsManager::Show() used to show window in specified location.
+*/
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns default window manager
+/// Used to display all standard ROOT elements like TCanvas or TFitPanel
 
 std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWebWindowsManager::Instance()
 {
    static std::shared_ptr<TWebWindowsManager> sInstance = std::make_shared<ROOT::Experimental::TWebWindowsManager>();
    return sInstance;
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// window manager destructor
+/// Closes THttpServer instance
 
 ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 {
@@ -52,6 +60,9 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
       fServer = 0;
    }
 }
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Creates http server, if required - with real http engine (civetweb)
 
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
@@ -89,6 +100,10 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
    return false;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Creates new window
+/// To show window, TWebWindow::Show() have to be called
+
 std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsManager::CreateWindow(bool batch_mode)
 {
    if (!CreateHttpServer()) {
@@ -118,6 +133,10 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
    return win;
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Close window
+/// Normally called in TWebWindow destructor
+
 void ROOT::Experimental::TWebWindowsManager::CloseWindow(ROOT::Experimental::TWebWindow *win)
 {
    // TODO: close all active connections of the display
@@ -134,16 +153,21 @@ void ROOT::Experimental::TWebWindowsManager::CloseWindow(ROOT::Experimental::TWe
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Create new display for the window
-/// Parameter \par where specified  which program could be used for display creation
-/// Possible values:
+/// Show window in specified location
+/// Parameter "where" specifies that kind of window display should be used. Possible values:
 ///
 ///      cef - Chromium Embeded Framework, local display, local communication
 ///      qt5 - Qt5 WebEngine (when running via rootqt5), local display, local communication
 ///  browser - default system web-browser, communication via random http port from range 8800 - 9800
-///  <prog> - any program name which will be started instead of default browser, like firefox or /usr/bin/opera
-///           one could also specify $url in program name, which will be replaced with canvas URL
-///  native - either any available local display or default browser
+///  chrome  - use Google Chrome web browser (requires at least v60), supports headless mode,
+///            preferable display kind if cef is not available
+/// chromium - open-source flawor of chrome, available on most Linux distributions
+///   native - either any available local display or default browser
+///   <prog> - any program name which will be started instead of default browser, like firefox or /usr/bin/opera
+///            one could use following parameters:
+///               $url - URL address of the widget
+///                 $w - widget width
+///                 $h - widget height
 ///
 ///  If allowed, same window can be displayed several times (like for TCanvas)
 
@@ -260,9 +284,13 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 }
 
 //////////////////////////////////////////////////////////////////////////
-/// Waits until provided check function returns non-zero value
-/// Runs application mainloop in background
-/// timelimit (in seconds) defines how long to wait (0 - for ever)
+/// Waits until provided check function or lambdas returns non-zero value
+/// Runs application mainloop and short sleeps in-between
+/// timelimit (in seconds) defines how long to wait (0 - forever)
+/// Function has following signature: int func(double spent_tm)
+/// Parameter spent_tm is time in seconds, which already spent inside function
+/// Waiting will be continued, if function returns zero.
+/// First non-zero value breaks waiting loop and result is returned (or 0 if time is expired).
 
 int ROOT::Experimental::TWebWindowsManager::WaitFor(WebWindowWaitFunc_t check, double timelimit)
 {
