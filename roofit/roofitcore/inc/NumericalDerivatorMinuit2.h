@@ -61,6 +61,7 @@ public:
 
   double Int2ext(const ROOT::Fit::ParameterSettings& parameter, double val) const;
   double Ext2int(const ROOT::Fit::ParameterSettings& parameter, double val) const;
+  double DInt2Ext(const ROOT::Fit::ParameterSettings& parameter, double val) const;
 
   void SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
   void SetParameterHasLimits(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;

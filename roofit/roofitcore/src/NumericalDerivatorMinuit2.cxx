@@ -310,7 +310,26 @@ double NumericalDerivatorMinuit2::Ext2int(const ROOT::Fit::ParameterSettings& pa
   return val;
 }
 
-// MODIFIED:
+
+double NumericalDerivatorMinuit2::DInt2Ext(const ROOT::Fit::ParameterSettings& parameter, double val) const {
+  // return the derivative of the int->ext transformation: dPext(i) / dPint(i)
+  // for the parameter i with value val
+
+  double dd = 1.;
+  if(parameter.IsBound()) {
+    if(parameter.IsDoubleBound())
+      dd = fDoubleLimTrafo.DInt2Ext(val, parameter.UpperLimit(), parameter.LowerLimit());
+    else if(parameter.HasUpperLimit() && !parameter.HasLowerLimit())
+      dd = fUpperLimTrafo.DInt2Ext(val, parameter.UpperLimit());
+    else
+      dd = fLowerLimTrafo.DInt2Ext(val, parameter.LowerLimit());
+  }
+
+  return dd;
+}
+
+
+  // MODIFIED:
 // This function was not implemented as in Minuit2. Now it copies the behavior
 // of InitialGradientCalculator. See https://github.com/roofit-dev/root/issues/10
 void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const {
@@ -404,13 +423,19 @@ void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::Parame
     if(parameter->IsBound()) {
        if(gstep > 0.5) gstep = 0.5;
     }
-    fGrd[ix] = grd;
-    fG2[ix] = g2;
-    fGstep[ix] = gstep;
 
-      std::cout << "fGrd[" << ix <<"] = " << fGrd[ix] << "\t";
-      std::cout << "fG2[" << ix <<"] = " << fG2[ix] << "\t";
-      std::cout << "fGstep[" << ix <<"] = " << fGstep[ix] << std::endl;
+    double inv_d_int_2_ext = 1 / DInt2Ext(*parameter, var);
+    fGrd[ix] = grd * inv_d_int_2_ext;
+    fG2[ix] = g2;// * inv_d_int_2_ext * inv_d_int_2_ext;
+    fGstep[ix] = gstep;// / inv_d_int_2_ext;
+
+
+    std::cout << "INTERNAL: fGrd[" << ix <<"] = " << grd << "\t";
+    std::cout << "fG2[" << ix <<"] = " << g2 << "\t";
+    std::cout << "fGstep[" << ix <<"] = " << gstep << std::endl;
+    std::cout << "EXTERNAL: fGrd[" << ix <<"] = " << fGrd[ix] << "\t";
+    std::cout << "fG2[" << ix <<"] = " << fG2[ix] << "\t";
+    std::cout << "fGstep[" << ix <<"] = " << fGstep[ix] << std::endl;
 
   }
 }
