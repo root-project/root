@@ -125,24 +125,28 @@ std::string base64_decode(std::string const &encoded_string)
       char_array_4[i++] = encoded_string[in_];
       in_++;
       if (i == 4) {
-         for (i = 0; i < 4; i++) char_array_4[i] = base64_chars.find(char_array_4[i]);
+         for (i = 0; i < 4; i++)
+            char_array_4[i] = base64_chars.find(char_array_4[i]);
 
          char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
          char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
          char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
 
-         for (i = 0; (i < 3); i++) ret += char_array_3[i];
+         for (i = 0; (i < 3); i++)
+            ret += char_array_3[i];
          i = 0;
       }
    }
 
    if (i) {
-      for (j = 0; j < i; j++) char_array_4[j] = base64_chars.find(char_array_4[j]);
+      for (j = 0; j < i; j++)
+         char_array_4[j] = base64_chars.find(char_array_4[j]);
 
       char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
       char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
 
-      for (j = 0; (j < i - 1); j++) ret += char_array_3[j];
+      for (j = 0; (j < i - 1); j++)
+         ret += char_array_3[j];
    }
 
    return ret;
@@ -154,35 +158,33 @@ std::string base64_decode(std::string const &encoded_string)
 
 // new implementation of canvas painter, using TWebWindow
 
-
 namespace ROOT {
 namespace Experimental {
 
-class TCanvasPainter : public Internal::TVirtualCanvasPainter  {
+class TCanvasPainter : public Internal::TVirtualCanvasPainter {
 private:
-
    struct WebConn {
-      unsigned fConnId{0};        ///<! connection id
-      bool fDrawReady{false};     ///!< when first drawing is performed
-      std::string fGetMenu{};     ///<! object id for menu request
-      uint64_t fSend{0};          ///<! indicates version send to connection
-      uint64_t fDelivered{0};     ///<! indicates version confirmed from canvas
+      unsigned fConnId{0};    ///<! connection id
+      bool fDrawReady{false}; ///!< when first drawing is performed
+      std::string fGetMenu{}; ///<! object id for menu request
+      uint64_t fSend{0};      ///<! indicates version send to connection
+      uint64_t fDelivered{0}; ///<! indicates version confirmed from canvas
       WebConn() = default;
    };
 
    struct WebCommand {
-      std::string       fId{};            ///<! command identifier
-      std::string       fName{};          ///<! command name
-      std::string       fArg{};           ///<! command arg
-      bool              fRunning{false};  ///<! true when command submitted
-      CanvasCallback_t  fCallback{};      ///<! callback function associated with command
-      unsigned          fConnId{0};       ///<! connection id was used to send command
+      std::string fId{};            ///<! command identifier
+      std::string fName{};          ///<! command name
+      std::string fArg{};           ///<! command arg
+      bool fRunning{false};         ///<! true when command submitted
+      CanvasCallback_t fCallback{}; ///<! callback function associated with command
+      unsigned fConnId{0};          ///<! connection id was used to send command
       WebCommand() = default;
    };
 
    struct WebUpdate {
-      uint64_t            fVersion{0};   ///<! canvas version
-      CanvasCallback_t    fCallback{};   ///<! callback function associated with command
+      uint64_t fVersion{0};         ///<! canvas version
+      CanvasCallback_t fCallback{}; ///<! callback function associated with command
       WebUpdate() = default;
    };
 
@@ -195,23 +197,23 @@ private:
    typedef std::vector<ROOT::Experimental::Detail::TMenuItem> MenuItemsVector;
 
    /// The canvas we are painting. It might go out of existence while painting.
-   const TCanvas &fCanvas;           ///<!  Canvas
+   const TCanvas &fCanvas; ///<!  Canvas
 
-   bool fBatchMode;                  ///<! indicate if canvas works in batch mode (can be independent from gROOT->isBatch())
+   bool fBatchMode; ///<! indicate if canvas works in batch mode (can be independent from gROOT->isBatch())
 
-   std::shared_ptr<TWebWindow>  fWindow; ///!< configured display
+   std::shared_ptr<TWebWindow> fWindow; ///!< configured display
 
-   WebConnList fWebConn;            ///<! connections list
-   bool fHadWebConn;                ///<! true if any connection were existing
-   TPadDisplayItem fDisplayList;    ///!< full list of items to display
-   WebCommandsList fCmds;           ///!< list of submitted commands
-   uint64_t fCmdsCnt;               ///!< commands counter
-   std::string fWaitingCmdId;       ///!< command id waited for completion
+   WebConnList fWebConn;         ///<! connections list
+   bool fHadWebConn;             ///<! true if any connection were existing
+   TPadDisplayItem fDisplayList; ///!< full list of items to display
+   WebCommandsList fCmds;        ///!< list of submitted commands
+   uint64_t fCmdsCnt;            ///!< commands counter
+   std::string fWaitingCmdId;    ///!< command id waited for completion
 
-   uint64_t fSnapshotVersion;      ///!< version of snapshot
-   std::string fSnapshot;          ///!< last produced snapshot
-   uint64_t fSnapshotDelivered;    ///!< minimal version delivered to all connections
-   WebUpdatesList fUpdatesLst;     ///!< list of callbacks for canvas update
+   uint64_t fSnapshotVersion;   ///!< version of snapshot
+   std::string fSnapshot;       ///!< last produced snapshot
+   uint64_t fSnapshotDelivered; ///!< minimal version delivered to all connections
+   WebUpdatesList fUpdatesLst;  ///!< list of callbacks for canvas update
 
    /// Disable copy construction.
    TCanvasPainter(const TCanvasPainter &) = delete;
@@ -229,8 +231,7 @@ private:
 
    std::string CreateSnapshot(const ROOT::Experimental::TCanvas &can);
 
-   ROOT::Experimental::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can,
-                                                const std::string &id);
+   ROOT::Experimental::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
 
    void SaveCreatedFile(std::string &reply);
 
@@ -243,35 +244,27 @@ private:
    int CheckWaitingCmd(const std::string &cmdname, double);
 
 public:
-
-   TCanvasPainter(const TCanvas &canv, bool batch_mode) :
-      fCanvas(canv), fBatchMode(batch_mode), fWindow(),
-      fWebConn(), fHadWebConn(false), fDisplayList(), fCmds(), fCmdsCnt(0), fWaitingCmdId(),
-      fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0), fUpdatesLst() {}
+   TCanvasPainter(const TCanvas &canv, bool batch_mode)
+      : fCanvas(canv), fBatchMode(batch_mode), fWindow(), fWebConn(), fHadWebConn(false), fDisplayList(), fCmds(),
+        fCmdsCnt(0), fWaitingCmdId(), fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0), fUpdatesLst()
+   {
+   }
 
    virtual ~TCanvasPainter();
 
    /// returns true is canvas used in batch mode
-   virtual bool IsBatchMode() const override
-   {
-      return fBatchMode;
-   }
+   virtual bool IsBatchMode() const override { return fBatchMode; }
 
-   virtual void AddDisplayItem(TDisplayItem *item) override
-   {
-      fDisplayList.Add(item);
-   }
+   virtual void AddDisplayItem(TDisplayItem *item) override { fDisplayList.Add(item); }
 
    virtual void CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental::CanvasCallback_t callback) override;
 
    /// return true if canvas modified since last painting
-   virtual bool IsCanvasModified(uint64_t id) const override
-   {
-      return fSnapshotDelivered != id;
-   }
+   virtual bool IsCanvasModified(uint64_t id) const override { return fSnapshotDelivered != id; }
 
    /// perform special action when drawing is ready
-   virtual void DoWhenReady(const std::string &name, const std::string &arg, bool async, CanvasCallback_t callback) override;
+   virtual void
+   DoWhenReady(const std::string &name, const std::string &arg, bool async, CanvasCallback_t callback) override;
 
    virtual void NewDisplay(const std::string &where) override;
 
@@ -282,35 +275,34 @@ public:
         */
 
    class GeneratorImpl : public Generator {
-      public:
-         /// Create a new TCanvasPainter to paint the given TCanvas.
-         std::unique_ptr<TVirtualCanvasPainter> Create(const ROOT::Experimental::TCanvas &canv, bool batch_mode) const override
-         {
-            return std::make_unique<TCanvasPainter>(canv, batch_mode);
+   public:
+      /// Create a new TCanvasPainter to paint the given TCanvas.
+      std::unique_ptr<TVirtualCanvasPainter>
+      Create(const ROOT::Experimental::TCanvas &canv, bool batch_mode) const override
+      {
+         return std::make_unique<TCanvasPainter>(canv, batch_mode);
+      }
+      ~GeneratorImpl() = default;
+
+      /// Set TVirtualCanvasPainter::fgGenerator to a new GeneratorImpl object.
+      static void SetGlobalPainter()
+      {
+         if (GetGenerator()) {
+            R__ERROR_HERE("NewPainter") << "Generator is already set! Skipping second initialization.";
+            return;
          }
-         ~GeneratorImpl() = default;
+         GetGenerator().reset(new GeneratorImpl());
+      }
 
-         /// Set TVirtualCanvasPainter::fgGenerator to a new GeneratorImpl object.
-         static void SetGlobalPainter()
-         {
-            if (GetGenerator()) {
-               R__ERROR_HERE("NewPainter") << "Generator is already set! Skipping second initialization.";
-               return;
-            }
-            GetGenerator().reset(new GeneratorImpl());
-         }
-
-         /// Release the GeneratorImpl object.
-         static void ResetGlobalPainter() { GetGenerator().reset(); }
-      };
-
+      /// Release the GeneratorImpl object.
+      static void ResetGlobalPainter() { GetGenerator().reset(); }
+   };
 };
 
 struct TNewCanvasPainterReg {
    TNewCanvasPainterReg() { TCanvasPainter::GeneratorImpl::SetGlobalPainter(); }
    ~TNewCanvasPainterReg() { TCanvasPainter::GeneratorImpl::ResetGlobalPainter(); }
 } newCanvasPainterReg;
-
 
 } // namespace Experimental
 } // namespace ROOT
@@ -319,15 +311,18 @@ ROOT::Experimental::TCanvasPainter::~TCanvasPainter()
 {
    CancelCommands();
    CancelUpdates();
-   if (fWindow) fWindow->CloseConnections();
+   if (fWindow)
+      fWindow->CloseConnections();
 }
 
 /// Checks if specified version was delivered to all clients
 /// Used to wait for such condition
 int ROOT::Experimental::TCanvasPainter::CheckDeliveredVersion(uint64_t ver, double)
 {
-   if ((fWebConn.size() == 0) && fHadWebConn) return -1;
-   if (fSnapshotDelivered >= ver) return 1;
+   if ((fWebConn.size() == 0) && fHadWebConn)
+      return -1;
+   if (fSnapshotDelivered >= ver)
+      return 1;
    return 0;
 }
 
@@ -371,7 +366,8 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
          min_delivered = conn.fDelivered;
 
       // check if direct data sending is possible
-      if (!fWindow->CanSend(conn.fConnId, true)) continue;
+      if (!fWindow->CanSend(conn.fConnId, true))
+         continue;
 
       TString buf;
 
@@ -438,7 +434,8 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
    }
 }
 
-void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental::CanvasCallback_t callback)
+void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
+                                                       ROOT::Experimental::CanvasCallback_t callback)
 {
    if (ver && fSnapshotDelivered && (ver <= fSnapshotDelivered)) {
       // if given canvas version was already delivered to clients, can return immediately
@@ -475,7 +472,8 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
 
 int ROOT::Experimental::TCanvasPainter::CheckWaitingCmd(const std::string &cmdname, double)
 {
-   if ((fWebConn.size() == 0) && fHadWebConn) return -1;
+   if ((fWebConn.size() == 0) && fHadWebConn)
+      return -1;
    if (fWaitingCmdId.empty()) {
       printf("Command %s waiting READY!!!\n", cmdname.c_str());
       return 1;
@@ -484,7 +482,8 @@ int ROOT::Experimental::TCanvasPainter::CheckWaitingCmd(const std::string &cmdna
 }
 
 /// perform special action when drawing is ready
-void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async, CanvasCallback_t callback)
+void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async,
+                                                     CanvasCallback_t callback)
 {
    if (!async && !fWaitingCmdId.empty()) {
       R__ERROR_HERE("DoWhenReady") << "Fail to submit sync command when previous is still awaited - use async";
@@ -534,7 +533,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
 
    WebConn *conn(0);
    auto iter = fWebConn.begin();
-   while (iter!=fWebConn.end()) {
+   while (iter != fWebConn.end()) {
       if (iter->fConnId == connid) {
          conn = &(*iter);
          break;
@@ -542,7 +541,8 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       ++iter;
    }
 
-   if (!conn) return; // no connection found
+   if (!conn)
+      return; // no connection found
 
    printf("Get data %u %.30s\n", connid, arg.c_str());
 
@@ -596,7 +596,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       }
    } else if (arg.find("SAVE:") == 0) {
       std::string cdata = arg;
-      cdata.erase(0,5);
+      cdata.erase(0, 5);
       SaveCreatedFile(cdata);
    } else if (arg.find("OBJEXEC:") == 0) {
       std::string cdata = arg;
@@ -637,7 +637,6 @@ void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 
    fWindow->Show(where);
 }
-
 
 /// append window and panel inside canvas window
 
@@ -701,23 +700,24 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
    TString res = TBufferJSON::ConvertToJSON(&fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
 
-//   TBufferJSON::ExportToFile("canv.json", &fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+   //   TBufferJSON::ExportToFile("canv.json", &fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
 
    fDisplayList.Clear();
 
-//   std::ofstream ofs("snap.json");
-//   ofs << res.Data() << std::endl;
+   //   std::ofstream ofs("snap.json");
+   //   ofs << res.Data() << std::endl;
 
    return std::string(res.Data());
 }
 
-ROOT::Experimental::TDrawable *ROOT::Experimental::TCanvasPainter::FindDrawable(const ROOT::Experimental::TCanvas &can,
-                                             const std::string &id)
+ROOT::Experimental::TDrawable *
+ROOT::Experimental::TCanvasPainter::FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id)
 {
    std::string search = id;
    size_t pos = search.find("#");
    // exclude extra specifier, later can be used for menu and commands execution
-   if (pos != std::string::npos) search.resize(pos);
+   if (pos != std::string::npos)
+      search.resize(pos);
 
    for (auto &&drawable : can.GetPrimitives()) {
 
@@ -733,13 +733,13 @@ ROOT::Experimental::TDrawable *ROOT::Experimental::TCanvasPainter::FindDrawable(
 void ROOT::Experimental::TCanvasPainter::SaveCreatedFile(std::string &reply)
 {
    size_t pos = reply.find(":");
-   if ((pos == std::string::npos) || (pos==0)) {
+   if ((pos == std::string::npos) || (pos == 0)) {
       R__ERROR_HERE("SaveCreatedFile") << "Not found : separator";
       return;
    }
 
    std::string fname(reply, 0, pos);
-   reply.erase(0, pos+1);
+   reply.erase(0, pos + 1);
 
    std::string binary = base64_decode(reply);
    std::ofstream ofs(fname);

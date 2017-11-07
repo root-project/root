@@ -49,7 +49,6 @@ std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWe
    return sInstance;
 }
 
-
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager constructor
 /// Required here for correct usage of unique_ptr<THttpServer>
@@ -147,12 +146,12 @@ void ROOT::Experimental::TWebWindowsManager::Unregister(ROOT::Experimental::TWeb
    if (win.fWSHandler)
       fServer->Unregister((THttpWSHandler *)win.fWSHandler.get());
 
-//   for (auto displ = fDisplays.begin(); displ != fDisplays.end(); displ++) {
-//      if (displ->get() == win) {
-//         fDisplays.erase(displ);
-//         break;
-//      }
-//   }
+   //   for (auto displ = fDisplays.begin(); displ != fDisplays.end(); displ++) {
+   //      if (displ->get() == win) {
+   //         fDisplays.erase(displ);
+   //         break;
+   //      }
+   //   }
 }
 
 //////////////////////////////////////////////////////////////////////////

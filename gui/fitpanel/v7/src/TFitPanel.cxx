@@ -23,13 +23,11 @@
 #include "TROOT.h"
 #include "TBufferJSON.h"
 
-
 /** \class ROOT::Experimental::TFitPanel
 \ingroup webdisplay
 
 web-based FitPanel prototype.
 */
-
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 /// Returns TWebWindow instance, used to display FitPanel
@@ -43,7 +41,7 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TFitPanel::G
 
       fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
 
-      fWindow->SetGeometry(300,500); // configure predefined geometry
+      fWindow->SetGeometry(300, 500); // configure predefined geometry
    }
 
    return fWindow;
