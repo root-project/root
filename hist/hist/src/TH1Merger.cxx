@@ -13,6 +13,10 @@
 #include <utility>
 
 
+#define PRINTRANGE(a, b) \
+   Printf(" %s: %f %f %d, %s: %f %f %d", a->GetName(), a->GetXaxis()->GetXmin(), a->GetXaxis()->GetXmax(), a->GetNbinsX(), \
+                                         b->GetName(), b->GetXaxis()->GetXmin(), b->GetXaxis()->GetXmax(), b->GetNbinsX());
+
 Bool_t TH1Merger::AxesHaveLimits(const TH1 * h) {
    Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
    if (h->GetDimension() > 1) hasLimits &=  h->GetYaxis()->GetXmin() < h->GetYaxis()->GetXmax();
@@ -76,30 +80,70 @@ Bool_t TH1Merger::operator() () {
 Bool_t TH1Merger::MergeCompatibleHistograms(TH1 *h0, TH1 *h1)
 {
    // They must be both defined
-   if (!h0 || !h1) return kFALSE;
+   if (!h0 || !h1) {
+      Error("MergeCompatibleHistograms", "undefined histogram(s): %p %p", h0, h1);
+      return kFALSE;
+   }
 
    // They must be created in power-of-2 autobin mode
-   if (!h0->TestBit(TH1::kAutoBinPTwo) || !h1->TestBit(TH1::kAutoBinPTwo)) return kFALSE;
+   if (!h0->TestBit(TH1::kAutoBinPTwo) || !h1->TestBit(TH1::kAutoBinPTwo)) {
+      Error("MergeCompatibleHistograms", "not all in autobin-power-of-2 mode!");
+      return kFALSE;
+   }
 
    // Bin sizes must be in integer ratio
    Double_t bwmax = (h0->GetXaxis()->GetXmax() - h0->GetXaxis()->GetXmin()) / h0->GetXaxis()->GetNbins() ;
    Double_t bwmin = (h1->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin()) / h1->GetXaxis()->GetNbins() ;
    if (bwmin > bwmax) std::swap(bwmax, bwmin);
-   if (!(bwmin > 0.)) return kFALSE;
+   if (!(bwmin > 0.)) {
+      PRINTRANGE(h0, h1);
+      Error("MergeCompatibleHistograms", "minimal bin width negative or null: %f", bwmin);
+      return kFALSE;
+   }
 
    Double_t rt;
    Double_t re = std::modf(bwmax / bwmin, &rt);
-   if (rt < 1.) return kFALSE;
-   if (re > std::numeric_limits<Double_t>::epsilon()) return kFALSE;
+   if (re > std::numeric_limits<Double_t>::epsilon()) {
+      PRINTRANGE(h0, h1);
+      Error("MergeCompatibleHistograms", "bin widths not in integer ratio: %f", re);
+      return kFALSE;
+   }
 
-   // min (abs(x2max - x1min), abs(x1max-x2min)) must be  a integer multiple of the larger bin width
-   Double_t rgmax = h0->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin();
-   Double_t rgmin = h1->GetXaxis()->GetXmax() - h0->GetXaxis()->GetXmin();
-   if (rgmin > rgmax) std::swap(rgmax, rgmin);
+   // Range of the merged histogram, taking into account overlaps
+   Double_t range = 0.;
+   if (h0->GetXaxis()->GetXmin() < h1->GetXaxis()->GetXmin()) {
+      if (h0->GetXaxis()->GetXmax() < h1->GetXaxis()->GetXmin()) {
+         range = h1->GetXaxis()->GetXmax() - h0->GetXaxis()->GetXmin();
+      } else {
+         if (h0->GetXaxis()->GetXmax() >= h1->GetXaxis()->GetXmax()) {
+            range = h1->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin();
+         } else {
+            range = h0->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin();
+         }
+      }
+   } else {
+      if (h1->GetXaxis()->GetXmax() < h0->GetXaxis()->GetXmin()) {
+         range = h0->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin();
+      } else {
+         if (h1->GetXaxis()->GetXmax() >= h0->GetXaxis()->GetXmax()) {
+            range = h0->GetXaxis()->GetXmax() - h0->GetXaxis()->GetXmin();
+         } else {
+            range = h1->GetXaxis()->GetXmax() - h0->GetXaxis()->GetXmin();
+         }
+      }
+   }
 
-   re = std::modf(rgmin / bwmax, &rt);
-   if (rt < 1.) return kFALSE;
-   if (re > std::numeric_limits<Double_t>::epsilon()) return kFALSE;
+   re = std::modf(range / bwmax, &rt);
+   if (rt < 1.) {
+      PRINTRANGE(h0, h1);
+      Error("MergeCompatibleHistograms", "range smaller than bin width: %f %f %f", range, bwmax, rt);
+      return kFALSE;
+   }
+   if (re > std::numeric_limits<Double_t>::epsilon()) {
+      PRINTRANGE(h0, h1);
+      Error("MergeCompatibleHistograms", "range not multiple integer of bin width: %f %f %f", range, bwmax, re);
+      return kFALSE;
+   }
 
    // Done
    return kTRUE;
