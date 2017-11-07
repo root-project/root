@@ -447,6 +447,12 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
       return;
    }
 
+   if (!fWindow || !fWindow->IsShown()) {
+      if (callback)
+         callback(false);
+      return;
+   }
+
    fSnapshotVersion = ver;
    fSnapshot = CreateSnapshot(fCanvas);
 
@@ -485,6 +491,12 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
       async = true;
    }
 
+   if (!fWindow || !fWindow->IsShown()) {
+      if (callback)
+         callback(false);
+      return;
+   }
+
    WebCommand cmd;
    cmd.fId = TString::ULLtoa(++fCmdsCnt, 10);
    cmd.fName = name;
@@ -499,7 +511,7 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
    CheckDataToSend();
 
    if (!async)
-      fWindow->WaitFor(std::bind(&TCanvasPainter::CheckWaitingCmd, this, name, std::placeholders::_1), 100);
+      fWindow->WaitFor([this, name](double tm) { return CheckWaitingCmd(name, tm); }, 100);
 }
 
 void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
@@ -532,7 +544,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
 
    if (!conn) return; // no connection found
 
-   printf("Get data %u %s\n", connid, arg.c_str());
+   printf("Get data %u %.30s\n", connid, arg.c_str());
 
    if (arg == "CONN_CLOSED") {
       // special argument from TWebWindow itself
@@ -612,7 +624,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
 void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 {
    if (!fWindow) {
-      fWindow = TWebWindowsManager::Instance()->CreateWindow(false);
+      fWindow = TWebWindowsManager::Instance()->CreateWindow(IsBatchMode());
 
       fWindow->SetDefaultPage("file:$jsrootsys/files/canvas.htm");
 
@@ -633,6 +645,11 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> wi
 
    if (!fWindow) {
       R__ERROR_HERE("AddPanel") << "Canvas not yet shown";
+      return false;
+   }
+
+   if (IsBatchMode()) {
+      R__ERROR_HERE("AddPanel") << "Canvas shown in batch mode";
       return false;
    }
 

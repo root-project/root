@@ -50,7 +50,7 @@ ROOT::Experimental::TWebWindow::~TWebWindow()
    fConn.clear();
 
    if (fMgr)
-      fMgr->CloseDisplay(this);
+      fMgr->CloseWindow(this);
 
    if (fWSHandler) {
       delete fWSHandler;
@@ -81,7 +81,10 @@ void ROOT::Experimental::TWebWindow::CreateWSHandler()
 
 bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 {
-   return fMgr->Show(this, where);
+   bool res = fMgr->Show(this, where);
+   if (res)
+      fShown = true;
+   return res;
 }
 
 bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
@@ -147,7 +150,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
    const char *buf = (const char *)arg->GetPostData();
    char *str_end = 0;
 
-   printf("Get portion of data %d %s\n", (int)arg->GetPostDataLength(), buf);
+   printf("Get portion of data %d %.30s\n", (int)arg->GetPostDataLength(), buf);
 
    unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
    assert(str_end != 0 && *str_end == ':' && "missing number of acknowledged operations");
