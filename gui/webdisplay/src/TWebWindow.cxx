@@ -78,10 +78,12 @@ using TWebWindow::Send() method and call-back function assigned via TWebWindow::
 
 ROOT::Experimental::TWebWindow::~TWebWindow()
 {
+   printf("TWebWindow destructor\n");
+
    fConn.clear();
 
    if (fMgr)
-      fMgr->CloseWindow(this);
+      fMgr->Unregister(*this);
 
    if (fWSHandler) {
       delete fWSHandler;
@@ -120,7 +122,7 @@ void ROOT::Experimental::TWebWindow::CreateWSHandler()
 
 bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 {
-   bool res = fMgr->Show(this, where);
+   bool res = fMgr->Show(*this, where);
    if (res)
       fShown = true;
    return res;
