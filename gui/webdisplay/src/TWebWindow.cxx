@@ -35,7 +35,10 @@ public:
    TWebWindow &fDispl; ///<! display reference
 
    /// constructor
-   TWebWindowWSHandler(TWebWindow &displ, const char *name) : THttpWSHandler(name, "TWebWindow websockets handler"), fDispl(displ) {}
+   TWebWindowWSHandler(TWebWindow &displ, const char *name)
+      : THttpWSHandler(name, "TWebWindow websockets handler"), fDispl(displ)
+   {
+   }
 
    /// returns content of default web-page
    /// THttpWSHandler interface
@@ -48,8 +51,6 @@ public:
 
 } // namespace Experimental
 } // namespace ROOT
-
-
 
 /** \class ROOT::Experimental::TWebWindow
 \ingroup webdisplay
@@ -71,10 +72,9 @@ using TWebWindow::Send() method and call-back function assigned via TWebWindow::
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// TWebWindow constructor
-/// Should be here defined here because of std::unique_ptr<TWebWindowWSHandler>
+/// Should be defined here because of std::unique_ptr<TWebWindowWSHandler>
 
 ROOT::Experimental::TWebWindow::TWebWindow() = default;
-
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// TWebWindow destructor
@@ -377,7 +377,8 @@ void ROOT::Experimental::TWebWindow::Send(const std::string &data, unsigned conn
 /// ~~~ {.cpp}
 /// std::shared_ptr<TWebWindow> win = TWebWindowsManager::Instance()->CreateWindow();
 /// win->SetDefaultPage("file:./page.htm");
-/// win->SetDataCallBack([](unsigned connid, const std::string &data) { printf("Conn:%u data:%s\n", connid, data.c_str()); });
+/// win->SetDataCallBack([](unsigned connid, const std::string &data) { printf("Conn:%u data:%s\n", connid,
+/// data.c_str()); });
 /// win->Show("opera");
 /// ~~~
 
