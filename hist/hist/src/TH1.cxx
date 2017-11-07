@@ -1293,6 +1293,30 @@ Int_t TH1::AutoP2FindLimits(Double_t xmi, Double_t xma)
    Double_t rr = (xhma - xhmi) / (xma - xmi);
    Int_t nb = TH1::AutoP2GetBins((Int_t)(rr * GetNbinsX()));
 
+   // Adjust using the same bin width and offsets
+   Double_t bw = (xhma - xhmi) / nb ;
+   // Bins to left free on each side
+   Double_t autoside = gEnv->GetValue("Hist.Binning.Auto.Side", 0.05);
+   Int_t nbside = (Int_t) (GetNbinsX() * autoside);
+
+   // Side up
+   Int_t nbup = (xhma - xma) / bw;
+   if (nbup % 2 != 0) nbup++;  // Must be even
+   if (nbup != nbside) {
+      // Accounts also for both case: larger or smaller
+      xhma -= bw * (nbup - nbside);
+      nb -= (nbup - nbside);
+   }
+
+  // Side low
+   Int_t nblw = (xmi - xhmi) / bw;
+   if (nblw % 2 != 0) nblw++; // Must be even
+   if (nblw != nbside) {
+      // Accounts also for both case: larger or smaller
+      xhmi += bw * (nblw - nbside);
+      nb -= (nblw - nbside);
+   }
+
    // Set everything and project
    SetBins(nb, xhmi, xhma);
 
