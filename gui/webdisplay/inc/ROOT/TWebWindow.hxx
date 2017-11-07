@@ -86,7 +86,7 @@ private:
    void CreateWSHandler();
 
    /// Processing of websockets call-backs, invoked from TWebWindowWSHandler
-   bool ProcessWS(THttpCallArg *arg);
+   bool ProcessWS(THttpCallArg &arg);
 
    /// Sends data via specified connection (internal use only)
    void SendDataViaConnection(WebConn &conn, int chid, const std::string &data);
