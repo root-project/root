@@ -18,7 +18,7 @@
 
 #include <memory>
 #include <string>
-#include <list>
+// #include <list>
 
 #include "THttpEngine.h"
 
@@ -35,7 +35,7 @@ class TWebWindowsManager {
 friend class TWebWindow;
 
 private:
-   THttpServer *fServer{0};                            ///<!  central communication with the all used displays
+   std::unique_ptr<THttpServer> fServer;              ///<!  central communication with the all used displays
    std::string fAddr;                                  ///<!   HTTP address of the server
    // std::list<std::shared_ptr<TWebWindow>> fDisplays;   ///<! list of existing displays (not used at the moment)
    unsigned fIdCnt{0};                                 ///<! counter for identifiers
@@ -51,7 +51,7 @@ private:
 
 public:
    /// Default constructor
-   TWebWindowsManager() = default;
+   TWebWindowsManager();
 
    /// Destructor
    ~TWebWindowsManager();

@@ -69,9 +69,16 @@ using TWebWindow::Send() method and call-back function assigned via TWebWindow::
 
 */
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// TWebWindow constructor
+/// Should be here defined here because of std::unique_ptr<TWebWindowWSHandler>
+
+ROOT::Experimental::TWebWindow::TWebWindow() = default;
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// destructor - closed all connections and remove window from manager
+/// TWebWindow destructor
+/// Closes all connections and remove window from manager
 
 ROOT::Experimental::TWebWindow::~TWebWindow()
 {
@@ -101,7 +108,7 @@ void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 void ROOT::Experimental::TWebWindow::CreateWSHandler()
 {
    if (!fWSHandler)
-      fWSHandler = std::make_shared<TWebWindowWSHandler>(*this, Form("win%u", GetId()));
+      fWSHandler = std::make_unique<TWebWindowWSHandler>(*this, Form("win%u", GetId()));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
