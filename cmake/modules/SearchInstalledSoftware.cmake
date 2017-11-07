@@ -1367,6 +1367,7 @@ if(vc AND NOT Vc_FOUND)
                -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+               -DCMAKE_WINDOWS_EXPORT_ALL_SYMBOLS=TRUE
     INSTALL_COMMAND env DESTDIR=${Vc_DESTDIR} ${CMAKE_COMMAND} --build . --target install
   )
 
@@ -1381,7 +1382,13 @@ if(vc AND NOT Vc_FOUND)
 
   add_library(Vc INTERFACE)
   target_include_directories(Vc SYSTEM BEFORE INTERFACE $<BUILD_INTERFACE:${Vc_INCLUDE_DIR}>)
-  target_link_libraries(Vc INTERFACE VcExt)
+  # Link Vc but ensure we incldue all symbols from Vc in our shared libraries
+  # to make them available during runtime.
+  if(WIN32)
+    target_link_libraries(Vc INTERFACE VcExt)
+  else()
+    target_link_libraries(Vc INTERFACE -Wl,--whole-archive VcExt)
+  endif()
 
   # propagate build-time include directories to rootcling
   set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
