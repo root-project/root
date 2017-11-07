@@ -122,7 +122,7 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 
    win->SetId(++fIdCnt); // set unique ID
 
-   fDisplays.push_back(win);
+   // fDisplays.push_back(win);
 
    win->fMgr = Instance();
 
@@ -134,22 +134,22 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
-/// Close window
-/// Normally called in TWebWindow destructor
+/// Release all references to specified window
+/// Called from TWebWindow destructor
 
-void ROOT::Experimental::TWebWindowsManager::CloseWindow(ROOT::Experimental::TWebWindow *win)
+void ROOT::Experimental::TWebWindowsManager::Unregister(ROOT::Experimental::TWebWindow &win)
 {
    // TODO: close all active connections of the display
 
-   if (win->fWSHandler)
-      fServer->Unregister((THttpWSHandler *)win->fWSHandler);
+   if (win.fWSHandler)
+      fServer->Unregister((THttpWSHandler *)win.fWSHandler);
 
-   for (auto displ = fDisplays.begin(); displ != fDisplays.end(); displ++) {
-      if (displ->get() == win) {
-         fDisplays.erase(displ);
-         break;
-      }
-   }
+//   for (auto displ = fDisplays.begin(); displ != fDisplays.end(); displ++) {
+//      if (displ->get() == win) {
+//         fDisplays.erase(displ);
+//         break;
+//      }
+//   }
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -171,15 +171,15 @@ void ROOT::Experimental::TWebWindowsManager::CloseWindow(ROOT::Experimental::TWe
 ///
 ///  If allowed, same window can be displayed several times (like for TCanvas)
 
-bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow *win, const std::string &_where)
+bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow &win, const std::string &_where)
 {
    if (!fServer) {
       R__ERROR_HERE("Show") << "Server instance not exists";
       return false;
    }
 
-   THttpWSHandler *handler = (THttpWSHandler *)win->fWSHandler;
-   bool batch_mode = win->IsBatchMode();
+   THttpWSHandler *handler = (THttpWSHandler *)win.fWSHandler;
+   bool batch_mode = win.IsBatchMode();
 
    TString addr;
    addr.Form("/web7gui/%s/%s", handler->GetName(), (batch_mode ? "?batch_mode" : ""));
@@ -217,7 +217,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       printf("Show canvas in Qt5 window:  %s\n", addr.Data());
 
       FunctionQt5 func = (FunctionQt5)symbol_qt5;
-      func(addr.Data(), fServer, batch_mode, win->GetWidth(), win->GetHeight());
+      func(addr.Data(), fServer, batch_mode, win.GetWidth(), win.GetHeight());
       return false;
    }
 
@@ -232,7 +232,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       printf("Show canvas in CEF window:  %s\n", addr.Data());
 
       FunctionCef3 func = (FunctionCef3)symbol_cef;
-      func(addr.Data(), fServer, batch_mode, rootsys, cef_path, win->GetWidth(), win->GetHeight());
+      func(addr.Data(), fServer, batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
 
       return true;
    }
@@ -253,8 +253,8 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          int debug_port = (int)(9800 + 1000 * gRandom->Rndm(1)); // debug port required to keep chrome running
          exec.Append(Form(" --headless --disable-gpu --disable-webgl --remote-debugging-port=%d ", debug_port));
       } else {
-         if (win->GetWidth() && win->GetHeight())
-            exec.Append(TString::Format(" --window-size=%u,%u", win->GetWidth(), win->GetHeight()));
+         if (win.GetWidth() && win.GetHeight())
+            exec.Append(TString::Format(" --window-size=%u,%u", win.GetWidth(), win.GetHeight()));
          exec.Append(" --app="); // use app mode
       }
       exec.Append("\'");
@@ -264,8 +264,8 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       if (where.find("$") != std::string::npos) {
          exec = where.c_str();
          exec.ReplaceAll("$url", addr);
-         exec.ReplaceAll("$w", std::to_string(win->GetWidth() ? win->GetWidth() : 800).c_str());
-         exec.ReplaceAll("$h", std::to_string(win->GetHeight() ? win->GetHeight() : 600).c_str());
+         exec.ReplaceAll("$w", std::to_string(win.GetWidth() ? win.GetWidth() : 800).c_str());
+         exec.ReplaceAll("$h", std::to_string(win.GetHeight() ? win.GetHeight() : 600).c_str());
       } else {
          exec.Form("%s %s &", where.c_str(), addr.Data());
          // if (batch_mode) exec.Append(" --headless");
