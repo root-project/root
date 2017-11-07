@@ -3,8 +3,14 @@
 
 #include "gtest/gtest.h"
 
-// FIXME: Port to windows.
+#ifdef _MSC_VER // Visual Studio
+#include "Windows4Root.h"
+#define dlopen(library_name, flags) ::LoadLibrary(library_name)
+#define dlclose(library) ::FreeLibrary((HMODULE)library)
+#define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name);
+#else
 #include <dlfcn.h>
+#endif
 
 // This test is designed to check if the compile time and runtime understanding of ROOT about zlib
 // match. We want to make sure that libCore.so contains the symbols coming from zlib.h and the cling
