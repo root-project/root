@@ -46,7 +46,7 @@ public:
 
    /// Process websocket request
    /// THttpWSHandler interface
-   virtual Bool_t ProcessWS(THttpCallArg *arg) override { return fDispl.ProcessWS(arg); }
+   virtual Bool_t ProcessWS(THttpCallArg *arg) override { return arg ? fDispl.ProcessWS(*arg) : kFALSE; }
 };
 
 } // namespace Experimental
@@ -126,23 +126,23 @@ bool ROOT::Experimental::TWebWindow::Show(const std::string &where)
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Processing of websockets call-backs, invoked from TWebWindowWSHandler
 
-bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
+bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 {
-   if (!arg || (arg->GetWSId() == 0))
+   if (arg.GetWSId() == 0)
       return kTRUE;
 
    // try to identify connection for given WS request
    WebConn *conn = 0;
    auto iter = fConn.begin();
    while (iter != fConn.end()) {
-      if (iter->fWSId == arg->GetWSId()) {
+      if (iter->fWSId == arg.GetWSId()) {
          conn = &(*iter);
          break;
       }
       ++iter;
    }
 
-   if (arg->IsMethod("WS_CONNECT")) {
+   if (arg.IsMethod("WS_CONNECT")) {
 
       // refuse connection when limit exceed limit
       if (fConnLimit && (fConn.size() >= fConnLimit))
@@ -151,11 +151,11 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
       return true;
    }
 
-   if (arg->IsMethod("WS_READY")) {
+   if (arg.IsMethod("WS_READY")) {
       assert(conn == 0 && "WSHandle with given websocket id exists!!!");
 
       WebConn newconn;
-      newconn.fWSId = arg->GetWSId();
+      newconn.fWSId = arg.GetWSId();
       newconn.fConnId = ++fConnCnt; // unique connection id
       fConn.push_back(newconn);
 
@@ -164,7 +164,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
       return true;
    }
 
-   if (arg->IsMethod("WS_CLOSE")) {
+   if (arg.IsMethod("WS_CLOSE")) {
       // connection is closed, one can remove handle
 
       if (conn && fDataCallback)
@@ -176,20 +176,20 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
       return true;
    }
 
-   assert(arg->IsMethod("WS_DATA") && "WS_DATA request expected!");
+   assert(arg.IsMethod("WS_DATA") && "WS_DATA request expected!");
 
    assert(conn != 0 && "Get websocket data without valid connection - ignore!!!");
 
-   if (arg->GetPostDataLength() <= 0)
+   if (arg.GetPostDataLength() <= 0)
       return true;
 
    // here processing of received data should be performed
    // this is task for the implemented windows
 
-   const char *buf = (const char *)arg->GetPostData();
+   const char *buf = (const char *)arg.GetPostData();
    char *str_end = 0;
 
-   printf("Get portion of data %d %.30s\n", (int)arg->GetPostDataLength(), buf);
+   printf("Get portion of data %d %.30s\n", (int)arg.GetPostDataLength(), buf);
 
    unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
    assert(str_end != 0 && *str_end == ':' && "missing number of acknowledged operations");
@@ -202,9 +202,9 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg *arg)
 
    unsigned processed_len = (str_end + 1 - buf);
 
-   assert(processed_len <= arg->GetPostDataLength() && "corrupted buffer");
+   assert(processed_len <= arg.GetPostDataLength() && "corrupted buffer");
 
-   std::string cdata(str_end + 1, arg->GetPostDataLength() - processed_len);
+   std::string cdata(str_end + 1, arg.GetPostDataLength() - processed_len);
 
    conn->fSendCredits += ackn_oper;
    conn->fRecvCount++;
