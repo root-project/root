@@ -1,4 +1,4 @@
-/// \file ROOT/TDrawingOptsBase.hxx
+/// \file ROOT/TDrawingAttrs.hxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2017-09-26
