@@ -2963,8 +2963,10 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 
 #ifdef R__HAS_VECCORE
 
-   if (fNdim == 0 || !x)
-      return DoEvalVec(nullptr, params)[0];
+   if (fNdim == 0 || !x) {
+      ROOT::Double_v ret =  DoEvalVec(nullptr, params);
+      return vecCore::Get( ret, 0 );
+   }
 
     // otherwise, regular Double_t inputs on a vectorized function
 
@@ -2979,7 +2981,7 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
          xvec[i] = x[i];
 
       ROOT::Double_v ans = DoEvalVec(xvec.data(), params);
-      return ans[0];
+      return vecCore::Get(ans, 0);
    }
    // allocating a vector is much slower (we do only for dim > 4)
    std::vector<ROOT::Double_v> xvec(fNdim); 
@@ -2987,7 +2989,7 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
       xvec[i] = x[i];
 
    ROOT::Double_v ans = DoEvalVec(xvec.data(), params);
-   return ans[0];
+   return  vecCore::Get(ans, 0);
 
 #else
    // this should never happen, because fVectorized can only be set true with
@@ -3018,16 +3020,16 @@ ROOT::Double_v TFormula::EvalParVec(const ROOT::Double_v *x, const Double_t *par
    if (gDebug)
       Info("EvalPar", "Function is not vectorized - converting ROOT::Double_v into Double_t and back");
 
-   int vecSize = x[0].size();
-   Double_t xscalars[vecSize][fNdim];
+   const int vecSize = vecCore::VectorSize<ROOT::Double_v>();
+   std::vector<Double_t>  xscalars(vecSize*fNdim);
 
    for (int i = 0; i < vecSize; i++)
       for (int j = 0; j < fNdim; j++)
-         xscalars[i][j] = x[j][i];
+         xscalars[i*fNdim+j] = vecCore::Get(x[j],i);
 
    ROOT::Double_v answers;
    for (int i = 0; i < vecSize; i++)
-      answers[i] = DoEval(xscalars[i], params);
+      vecCore::Set(answers, i, DoEval(&xscalars[i*fNdim], params));
 
    return answers;
 }
