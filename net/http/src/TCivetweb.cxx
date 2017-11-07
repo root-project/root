@@ -119,7 +119,8 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
       return 1;
 
    // seems to be, appears when connection is broken
-   if ((len==2) && ((int)data[0] == 3) && ((int)data[1] == -23)) return 0;
+   if ((len == 2) && ((int)data[0] == 3) && ((int)data[1] == -23))
+      return 0;
 
    THttpCallArg arg;
    arg.SetPathAndFileName(request_info->uri); // path and file name
