@@ -101,7 +101,6 @@ TH1D *mt303_fillHistosAutobin(unsigned n = 1000, unsigned opt = 1)
    hlist->Remove(h0);
    if (!h0->Merge(hlist))
       return h0;
-   h0->Adjust();
 
    gStyle->SetOptStat(111110);
 
@@ -114,7 +113,6 @@ TH1D *mt303_fillHistosAutobin(unsigned n = 1000, unsigned opt = 1)
    h0->DrawClone("HIST");
 
    c3->cd(2);
-   href2->Adjust();
    href2->StatOverflows();
    href2->DrawClone();
 
