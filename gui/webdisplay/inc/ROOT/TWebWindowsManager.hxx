@@ -32,13 +32,13 @@ namespace Experimental {
 
 class TWebWindowsManager {
 
-friend class TWebWindow;
+   friend class TWebWindow;
 
 private:
-   std::unique_ptr<THttpServer> fServer;              ///<!  central communication with the all used displays
-   std::string fAddr;                                  ///<!   HTTP address of the server
+   std::unique_ptr<THttpServer> fServer; ///<!  central communication with the all used displays
+   std::string fAddr;                    ///<!   HTTP address of the server
    // std::list<std::shared_ptr<TWebWindow>> fDisplays;   ///<! list of existing displays (not used at the moment)
-   unsigned fIdCnt{0};                                 ///<! counter for identifiers
+   unsigned fIdCnt{0}; ///<! counter for identifiers
 
    /// Creates http server, if required - with real http engine (civetweb)
    bool CreateHttpServer(bool with_http = false);

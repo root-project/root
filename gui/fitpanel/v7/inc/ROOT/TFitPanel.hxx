@@ -52,17 +52,16 @@ struct TFitPanelModel {
    TFitPanelModel() = default;
 };
 
+class TFitPanel {
 
-class TFitPanel  {
+   std::string fTitle;  ///<! title
+   unsigned fConnId{0}; ///<! connection id
 
-   std::string     fTitle;                ///<! title
-   unsigned       fConnId{0};             ///<! connection id
+   std::shared_ptr<TWebWindow> fWindow; ///!< configured display
 
-   std::shared_ptr<TWebWindow> fWindow;   ///!< configured display
+   std::shared_ptr<TCanvas> fCanvas; ///!< canvas used to display results
 
-   std::shared_ptr<TCanvas> fCanvas;      ///!< canvas used to display results
-
-   std::shared_ptr<TH1D>  fFitHist;       ///!< histogram created when fit is performed
+   std::shared_ptr<TH1D> fFitHist; ///!< histogram created when fit is performed
 
    /// Disable copy construction.
    TFitPanel(const TFitPanel &) = delete;
@@ -74,7 +73,6 @@ class TFitPanel  {
    void ProcessData(unsigned connid, const std::string &arg);
 
 public:
-
    /// normal constructor
    TFitPanel(const std::string &title = "Fit panel") : fTitle(title) {}
 
@@ -95,7 +93,6 @@ public:
 
    /// Dummy function, called when "Fit" button pressed in UI
    void DoFit(const std::string &dname, const std::string &mname);
-
 };
 
 } // namespace Experimental
