@@ -67,7 +67,7 @@ private:
    std::string fDefaultPage;                   ///<!  HTML page (or file name) returned when window URL is opened
    std::string fPanelName;                     ///<!  panel name which should be shown in the window
    unsigned fId{0};                            ///<!  unique identifier
-   TWebWindowWSHandler *fWSHandler{nullptr};   ///<!  specialize websocket handler for all incoming connections
+   std::shared_ptr<TWebWindowWSHandler> fWSHandler;  ///<!  specialize websocket handler for all incoming connections
    bool fShown{false};                         ///<!  true when window was shown at least once
    unsigned fConnCnt{0};                       ///<!  counter of new connections to assign ids
    std::list<WebConn> fConn;                   ///<!  list of all accepted connections

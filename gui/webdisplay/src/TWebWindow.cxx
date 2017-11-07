@@ -32,13 +32,10 @@ namespace Experimental {
 
 class TWebWindowWSHandler : public THttpWSHandler {
 public:
-   TWebWindow &fDispl; ///<! back-pointer to display
+   TWebWindow &fDispl; ///<! display reference
 
    /// constructor
-   TWebWindowWSHandler(TWebWindow &displ) : THttpWSHandler("name", "title"), fDispl(displ) {}
-
-   /// destructor
-   virtual ~TWebWindowWSHandler() { printf("TWebWindowWSHandler destructor\n"); }
+   TWebWindowWSHandler(TWebWindow &displ, const char *name) : THttpWSHandler(name, "TWebWindow websockets handler"), fDispl(displ) {}
 
    /// returns content of default web-page
    /// THttpWSHandler interface
@@ -78,17 +75,10 @@ using TWebWindow::Send() method and call-back function assigned via TWebWindow::
 
 ROOT::Experimental::TWebWindow::~TWebWindow()
 {
-   printf("TWebWindow destructor\n");
-
    fConn.clear();
 
    if (fMgr)
       fMgr->Unregister(*this);
-
-   if (fWSHandler) {
-      delete fWSHandler;
-      fWSHandler = nullptr;
-   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -110,10 +100,8 @@ void ROOT::Experimental::TWebWindow::SetPanelName(const std::string &name)
 
 void ROOT::Experimental::TWebWindow::CreateWSHandler()
 {
-   if (!fWSHandler) {
-      fWSHandler = new TWebWindowWSHandler(*this);
-      fWSHandler->SetName(Form("win%u", GetId()));
-   }
+   if (!fWSHandler)
+      fWSHandler = std::make_shared<TWebWindowWSHandler>(*this, Form("win%u", GetId()));
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
