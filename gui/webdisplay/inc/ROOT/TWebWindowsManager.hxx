@@ -32,30 +32,37 @@ namespace Experimental {
 
 class TWebWindowsManager {
 
+friend class TWebWindow;
+
 private:
    THttpServer *fServer{0};                            ///<!  central communication with the all used displays
    std::string fAddr;                                  ///<!   HTTP address of the server
-   std::list<std::shared_ptr<TWebWindow>> fDisplays;   ///<! list of existing displays
+   // std::list<std::shared_ptr<TWebWindow>> fDisplays;   ///<! list of existing displays (not used at the moment)
    unsigned fIdCnt{0};                                 ///<! counter for identifiers
 
    /// Creates http server, if required - with real http engine (civetweb)
    bool CreateHttpServer(bool with_http = false);
 
+   /// Release all references to specified window, called from TWebWindow destructor
+   void Unregister(TWebWindow &win);
+
+   /// Show window in specified location, invoked from TWebWindow::Show
+   bool Show(TWebWindow &win, const std::string &where);
+
 public:
-   /// Create a temporary TCanvas
+   /// Default constructor
    TWebWindowsManager() = default;
 
+   /// Destructor
    ~TWebWindowsManager();
 
    /// Returns central instance, which used by standard ROOT widgets like Canvas or FitPanel
    static std::shared_ptr<TWebWindowsManager> &Instance();
 
+   /// Creates new window
    std::shared_ptr<TWebWindow> CreateWindow(bool batch_mode = false);
 
-   void CloseWindow(TWebWindow *);
-
-   bool Show(TWebWindow *display, const std::string &where);
-
+   /// Wait until provided function returns non-zero value
    int WaitFor(WebWindowWaitFunc_t check, double tm);
 };
 
