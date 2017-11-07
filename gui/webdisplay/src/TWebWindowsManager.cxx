@@ -49,16 +49,19 @@ std::shared_ptr<ROOT::Experimental::TWebWindowsManager> &ROOT::Experimental::TWe
    return sInstance;
 }
 
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// window manager constructor
+/// Required here for correct usage of unique_ptr<THttpServer>
+
+ROOT::Experimental::TWebWindowsManager::TWebWindowsManager() = default;
+
 //////////////////////////////////////////////////////////////////////////////////////////
 /// window manager destructor
-/// Closes THttpServer instance
+/// Required here for correct usage of unique_ptr<THttpServer>
 
 ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 {
-   if (fServer) {
-      delete fServer;
-      fServer = 0;
-   }
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -67,7 +70,7 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
    if (!fServer)
-      fServer = new THttpServer("dummy");
+      fServer = std::make_unique<THttpServer>("dummy");
 
    if (!with_http || (fAddr.length() > 0))
       return true;
@@ -217,7 +220,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       printf("Show canvas in Qt5 window:  %s\n", addr.Data());
 
       FunctionQt5 func = (FunctionQt5)symbol_qt5;
-      func(addr.Data(), fServer, batch_mode, win.GetWidth(), win.GetHeight());
+      func(addr.Data(), fServer.get(), batch_mode, win.GetWidth(), win.GetHeight());
       return false;
    }
 
@@ -232,7 +235,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       printf("Show canvas in CEF window:  %s\n", addr.Data());
 
       FunctionCef3 func = (FunctionCef3)symbol_cef;
-      func(addr.Data(), fServer, batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
+      func(addr.Data(), fServer.get(), batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
 
       return true;
    }
