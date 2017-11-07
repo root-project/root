@@ -128,7 +128,7 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 
    win->CreateWSHandler();
 
-   fServer->Register("/web7gui", (THttpWSHandler *)win->fWSHandler);
+   fServer->Register("/web7gui", (THttpWSHandler *)win->fWSHandler.get());
 
    return win;
 }
@@ -139,10 +139,10 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
 
 void ROOT::Experimental::TWebWindowsManager::Unregister(ROOT::Experimental::TWebWindow &win)
 {
-   // TODO: close all active connections of the display
+   // TODO: close all active connections of the window
 
    if (win.fWSHandler)
-      fServer->Unregister((THttpWSHandler *)win.fWSHandler);
+      fServer->Unregister((THttpWSHandler *)win.fWSHandler.get());
 
 //   for (auto displ = fDisplays.begin(); displ != fDisplays.end(); displ++) {
 //      if (displ->get() == win) {
@@ -178,7 +178,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       return false;
    }
 
-   THttpWSHandler *handler = (THttpWSHandler *)win.fWSHandler;
+   THttpWSHandler *handler = (THttpWSHandler *)win.fWSHandler.get();
    bool batch_mode = win.IsBatchMode();
 
    TString addr;
