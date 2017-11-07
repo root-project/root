@@ -31,7 +31,8 @@ bool testVec1D(TF1 * f1, const TString & formula, FreeFunc1D func, double x ) {
 #ifdef R__HAS_VECCORE
    ROOT::Double_v vx = x;
    ROOT::Double_v vy = f1->EvalPar(&vx, nullptr);
-   ret &= CheckValues(formula+TString("_v"), vy[0], y0);
+   double y2 = vecCore::Get(vy,0);
+   ret &= CheckValues(formula+TString("_v"), y2, y0);
 #endif
 
    return ret;
@@ -66,7 +67,8 @@ bool testVec2D(TF2 * f1, const TString & formula, FreeFunc2D func, double x, dou
 #ifdef R__HAS_VECCORE
    ROOT::Double_v vx[2] = { x, y};
    ROOT::Double_v vy = f1->EvalPar(vx, nullptr);
-   ret &= CheckValues(formula+TString("_v"), vy[0], r0);
+   double r2 = vecCore::Get(vy,0);
+   ret &= CheckValues(formula+TString("_v"), r2, r0);
 #endif
 
    return ret;
