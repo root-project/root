@@ -115,12 +115,17 @@ namespace ROOT {
          Use the pure virtual function DoEvalPar to implement it
          */
 
+         /* Reimplementation instead of using BaseParamFunc::operator();
+         until the bug in VS is fixed */
          T operator()(const T *x, const double   *p) const
          {
             return DoEvalPar(x, p);
          }
 
-         using BaseFunc::operator();
+         T operator()(const T *x) const
+         {
+            return DoEval(x);
+         }
 
       private:
          /**
@@ -230,8 +235,17 @@ namespace ROOT {
          virtual ~IParametricGradFunctionMultiDimTempl()  {}
 
 
+         /* Reimplementation instead of using BaseParamFunc::operator();
+         until the bug in VS is fixed */
+         T operator()(const T *x, const double   *p) const
+         {
+            return DoEvalPar(x, p);
+         }
 
-         using BaseParamFunc::operator();
+         T operator()(const T *x) const
+         {
+            return DoEval(x);
+         }
 
          /**
             Evaluate the all the derivatives (gradient vector) of the function with respect to the parameters at a point x.
@@ -270,6 +284,11 @@ namespace ROOT {
             Evaluate the partial derivative w.r.t a parameter ipar , to be implemented by the derived classes
           */
          virtual T DoParameterDerivative(const T *x, const double *p, unsigned int ipar) const = 0;
+         virtual T DoEvalPar(const T *x, const double *p) const = 0;
+         virtual T DoEval(const T *x) const
+         {
+            return DoEvalPar(x, Parameters());
+         }
       };
 
 //_______________________________________________________________________________
