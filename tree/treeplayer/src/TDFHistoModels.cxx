@@ -56,12 +56,13 @@ TH1DModel::TH1DModel(const char *name, const char *title, int nbinsx, const floa
    : fName(name), fTitle(title), fNbinsX(nbinsx)
 {
    fBinXEdges.reserve(nbinsx);
-   for (auto i : ROOT::TSeq<int>(nbinsx)) fBinXEdges.push_back(xbins[i]);
+   for (auto i : ROOT::TSeq<int>(nbinsx))
+      fBinXEdges.push_back(xbins[i]);
 }
 TH1DModel::TH1DModel(const char *name, const char *title, int nbinsx, const double *xbins)
    : fName(name), fTitle(title), fNbinsX(nbinsx)
 {
-   fBinXEdges.assign(xbins, xbins + (size_t) nbinsx);
+   fBinXEdges.assign(xbins, xbins + (size_t)nbinsx);
 }
 TH1DModel::~TH1DModel()
 {
@@ -79,32 +80,34 @@ TH2DModel::TH2DModel(const char *name, const char *title, int nbinsx, double xlo
 {
 }
 TH2DModel::TH2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, double ylow,
-          double yup)
+                     double yup)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fNbinsY(nbinsy), fYLow(ylow), fYUp(yup)
 {
-   fBinXEdges.assign(xbins, xbins + (size_t) nbinsx);
+   fBinXEdges.assign(xbins, xbins + (size_t)nbinsx);
 }
 TH2DModel::TH2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy,
-          const double *ybins)
+                     const double *ybins)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fNbinsY(nbinsy)
 {
-   fBinYEdges.assign(ybins, ybins + (size_t) nbinsy);
+   fBinYEdges.assign(ybins, ybins + (size_t)nbinsy);
 }
 TH2DModel::TH2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy,
-          const double *ybins)
+                     const double *ybins)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fNbinsY(nbinsy)
 {
-   fBinXEdges.assign(xbins, xbins + (size_t) nbinsx);
-   fBinYEdges.assign(ybins, ybins + (size_t) nbinsy);
+   fBinXEdges.assign(xbins, xbins + (size_t)nbinsx);
+   fBinYEdges.assign(ybins, ybins + (size_t)nbinsy);
 }
 TH2DModel::TH2DModel(const char *name, const char *title, int nbinsx, const float *xbins, int nbinsy,
-          const float *ybins)
+                     const float *ybins)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fNbinsY(nbinsy)
 {
    fBinXEdges.reserve(nbinsx);
-   for (auto i : ROOT::TSeq<int>(nbinsx)) fBinXEdges.push_back(xbins[i]);
+   for (auto i : ROOT::TSeq<int>(nbinsx))
+      fBinXEdges.push_back(xbins[i]);
    fBinYEdges.reserve(nbinsy);
-   for (auto i : ROOT::TSeq<int>(nbinsy)) fBinXEdges.push_back(ybins[i]);
+   for (auto i : ROOT::TSeq<int>(nbinsy))
+      fBinXEdges.push_back(ybins[i]);
 }
 
 TH2DModel::~TH2DModel()
@@ -124,24 +127,27 @@ TH3DModel::TH3DModel(const char *name, const char *title, int nbinsx, double xlo
      fNbinsZ(nbinsz), fZLow(zlow), fZUp(zup)
 {
 }
-TH3DModel::TH3DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, const double *ybins,
-            int nbinsz, const double *zbins)
+TH3DModel::TH3DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy,
+                     const double *ybins, int nbinsz, const double *zbins)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fNbinsY(nbinsy), fNbinsZ(nbinsz)
 {
-   fBinXEdges.assign(xbins, xbins + (size_t) nbinsx);
-   fBinYEdges.assign(ybins, ybins + (size_t) nbinsy);
-   fBinZEdges.assign(zbins, zbins + (size_t) nbinsz);
+   fBinXEdges.assign(xbins, xbins + (size_t)nbinsx);
+   fBinYEdges.assign(ybins, ybins + (size_t)nbinsy);
+   fBinZEdges.assign(zbins, zbins + (size_t)nbinsz);
 }
-TH3DModel::TH3DModel(const char *name, const char *title, int nbinsx, const float *xbins, int nbinsy, const float *ybins,
-            int nbinsz, const float *zbins)
+TH3DModel::TH3DModel(const char *name, const char *title, int nbinsx, const float *xbins, int nbinsy,
+                     const float *ybins, int nbinsz, const float *zbins)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fNbinsY(nbinsy), fNbinsZ(nbinsz)
 {
    fBinXEdges.reserve(nbinsx);
-   for (auto i : ROOT::TSeq<int>(nbinsx)) fBinXEdges.push_back(xbins[i]);
+   for (auto i : ROOT::TSeq<int>(nbinsx))
+      fBinXEdges.push_back(xbins[i]);
    fBinYEdges.reserve(nbinsy);
-   for (auto i : ROOT::TSeq<int>(nbinsy)) fBinXEdges.push_back(ybins[i]);
+   for (auto i : ROOT::TSeq<int>(nbinsy))
+      fBinXEdges.push_back(ybins[i]);
    fBinZEdges.reserve(nbinsz);
-   for (auto i : ROOT::TSeq<int>(nbinsz)) fBinZEdges.push_back(zbins[i]);
+   for (auto i : ROOT::TSeq<int>(nbinsz))
+      fBinZEdges.push_back(zbins[i]);
 }
 
 TH3DModel::~TH3DModel()
@@ -167,21 +173,25 @@ TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx
 {
 }
 
-TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx, const float *xbins, const char *option)
+TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx, const float *xbins,
+                                 const char *option)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fOption(option)
 {
    fBinXEdges.reserve(nbinsx);
-   for (auto i : ROOT::TSeq<int>(nbinsx)) fBinXEdges.push_back(xbins[i]);
+   for (auto i : ROOT::TSeq<int>(nbinsx))
+      fBinXEdges.push_back(xbins[i]);
 }
-TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx, const double *xbins, const char *option)
+TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx, const double *xbins,
+                                 const char *option)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fOption(option)
 {
-   fBinXEdges.assign(xbins, xbins + (size_t) nbinsx);
+   fBinXEdges.assign(xbins, xbins + (size_t)nbinsx);
 }
-TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx, const double *xbins, double ylow, double yup, const char *option)
+TProfile1DModel::TProfile1DModel(const char *name, const char *title, int nbinsx, const double *xbins, double ylow,
+                                 double yup, const char *option)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fYLow(ylow), fYUp(yup), fOption(option)
 {
-   fBinXEdges.assign(xbins, xbins + (size_t) nbinsx);
+   fBinXEdges.assign(xbins, xbins + (size_t)nbinsx);
 }
 
 TProfile1DModel::~TProfile1DModel()
@@ -208,23 +218,26 @@ TProfile2DModel::TProfile2DModel(const char *name, const char *title, int nbinsx
 {
 }
 
-TProfile2DModel::TProfile2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, double ylow, double yup, const char *option)
+TProfile2DModel::TProfile2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy,
+                                 double ylow, double yup, const char *option)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fNbinsY(nbinsy), fYLow(ylow), fYUp(yup), fOption(option)
 {
-   fBinXEdges.assign(xbins, xbins + (size_t) nbinsx);
+   fBinXEdges.assign(xbins, xbins + (size_t)nbinsx);
 }
 
-TProfile2DModel::TProfile2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, const double *ybins, const char *option)
+TProfile2DModel::TProfile2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy,
+                                 const double *ybins, const char *option)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fXLow(xlow), fXUp(xup), fNbinsY(nbinsy), fOption(option)
 {
-   fBinYEdges.assign(ybins, ybins + (size_t) nbinsy);
+   fBinYEdges.assign(ybins, ybins + (size_t)nbinsy);
 }
 
-TProfile2DModel::TProfile2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, const double *ybins, const char *option)
+TProfile2DModel::TProfile2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy,
+                                 const double *ybins, const char *option)
    : fName(name), fTitle(title), fNbinsX(nbinsx), fNbinsY(nbinsy), fOption(option)
 {
-   fBinYEdges.assign(xbins, xbins + (size_t) nbinsx);
-   fBinYEdges.assign(ybins, ybins + (size_t) nbinsy);
+   fBinYEdges.assign(xbins, xbins + (size_t)nbinsx);
+   fBinYEdges.assign(ybins, ybins + (size_t)nbinsy);
 }
 
 TProfile2DModel::~TProfile2DModel()
