@@ -35,13 +35,13 @@ namespace Internal {
                            TDictionary* dict):
          TTreeReaderValueBase(reader, branchname, dict), fImpl(0) {}
 
-      size_t GetSize() const { return fImpl->GetSize(GetProxy()); }
+      std::size_t GetSize() const { return fImpl->GetSize(GetProxy()); }
       Bool_t IsEmpty() const { return !GetSize(); }
 
       virtual EReadStatus GetReadStatus() const { return fImpl ? fImpl->fReadStatus : kReadError; }
 
    protected:
-      void* UntypedAt(size_t idx) const { return fImpl->At(GetProxy(), idx); }
+      void *UntypedAt(std::size_t idx) const { return fImpl->At(GetProxy(), idx); }
       virtual void CreateProxy();
       bool GetBranchAndLeaf(TBranch* &branch, TLeaf* &myLeaf,
                             TDictionary* &branchActualType);
