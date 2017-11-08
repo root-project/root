@@ -37,8 +37,8 @@ struct TH1DModel {
    ~TH1DModel();
    TH1DModel(const ::TH1D &h);
    TH1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup);
-   TH1DModel(const char *name, const char *title, Int_t nbinsx, const float *xbins);
-   TH1DModel(const char *name, const char *title, Int_t nbinsx, const double *xbins);
+   TH1DModel(const char *name, const char *title, int nbinsx, const float *xbins);
+   TH1DModel(const char *name, const char *title, int nbinsx, const double *xbins);
 };
 
 struct TH2DModel {
