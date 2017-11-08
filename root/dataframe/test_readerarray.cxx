@@ -27,7 +27,10 @@ int main() {
    fill_tree(fileName,treeName);
 
    ROOT::Experimental::TDataFrame d(treeName, fileName, {"b1"});
-   auto c = d.Filter([](std::array_view<double> a) { std::cout << a[0] << " " << a[1] << " " << a[2] << std::endl; return true; }).Count();
+   auto c = d.Filter([](ROOT::Experimental::TDF::TArrayBranch<double> a) {
+                std::cout << a[0] << " " << a[1] << " " << a[2] << std::endl;
+                return true;
+             }).Count();
    auto val = *c;
    std::cout << "count " << val << std::endl;
    return 0;
