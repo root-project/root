@@ -1119,6 +1119,10 @@ long TClingClassInfo::Property() const
 
    long property = 0L;
    property |= kIsCPPCompiled;
+
+   // Modules can deserialize while querying the various decls for information.
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+
    const clang::DeclContext *ctxt = fDecl->getDeclContext();
    clang::NamespaceDecl *std_ns =fInterp->getSema().getStdNamespace();
    while (! ctxt->isTranslationUnit())  {
