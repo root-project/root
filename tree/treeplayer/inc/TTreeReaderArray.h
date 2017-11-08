@@ -60,7 +60,7 @@ namespace Internal {
 } // namespace ROOT
 
 template <typename T>
-class TTreeReaderArray: public ROOT::Internal::TTreeReaderArrayBase {
+class TTreeReaderArray : public ROOT::Internal::TTreeReaderArrayBase {
 public:
    /// Random access iterator to the elements of a TTreeReaderArray.
    // The template parameter is there to allow distinguishing between the `const` and `non-const` cases.
@@ -183,11 +183,9 @@ public:
    using iterator = Iterator_t<TTreeReaderArray<T>>;
    using const_iterator = Iterator_t<const TTreeReaderArray<T>>;
 
-   TTreeReaderArray(TTreeReader& tr, const char* branchname):
-      TTreeReaderArrayBase(&tr, branchname, TDictionary::GetDictionary(typeid(T)))
-   {
-      // Create an array reader of branch "branchname" for TTreeReader "tr".
-   }
+   /// Create an array reader of branch "branchname" for TTreeReader "tr".
+   TTreeReaderArray(TTreeReader &tr, const char *branchname)
+      : TTreeReaderArrayBase(&tr, branchname, TDictionary::GetDictionary(typeid(T))) {}
 
    T &At(std::size_t idx) { return *static_cast<T *>(UntypedAt(idx)); }
    const T &At(std::size_t idx) const { return *static_cast<T *>(UntypedAt(idx)); }
@@ -203,10 +201,10 @@ public:
 
 protected:
 #define R__TTreeReaderArray_TypeString(T) #T
-   virtual const char* GetDerivedTypeName() const { return R__TTreeReaderArray_TypeString(T); }
+   virtual const char *GetDerivedTypeName() const { return R__TTreeReaderArray_TypeString(T); }
 #undef R__TTreeReaderArray_TypeString
    // FIXME: re-introduce once we have ClassDefTInline!
-   //ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
+   // ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
 };
 
 template <typename T>
