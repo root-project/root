@@ -59,14 +59,10 @@ struct TH2DModel {
    TH2DModel(const ::TH2D &h);
    TH2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, double ylow,
              double yup);
-   TH2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, double ylow,
-             double yup);
-   TH2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy,
-             const double *ybins);
-   TH2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy,
-             const double *ybins);
-   TH2DModel(const char *name, const char *title, int nbinsx, const float *xbins, int nbinsy,
-             const float *ybins);
+   TH2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, double ylow, double yup);
+   TH2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, const double *ybins);
+   TH2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, const double *ybins);
+   TH2DModel(const char *name, const char *title, int nbinsx, const float *xbins, int nbinsy, const float *ybins);
 };
 
 struct TH3DModel {
@@ -115,9 +111,10 @@ struct TProfile1DModel {
    TProfile1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, const char *option = "");
    TProfile1DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, double ylow, double yup,
                    const char *option = "");
-   TProfile1DModel(const char *name, const char *title, int nbinsx, const float *xbins, const char *option="");
-   TProfile1DModel(const char *name, const char *title, int nbinsx, const double *xbins, const char *option="");
-   TProfile1DModel(const char *name, const char *title, int nbinsx, const double *xbins, double ylow, double yup, const char *option="");
+   TProfile1DModel(const char *name, const char *title, int nbinsx, const float *xbins, const char *option = "");
+   TProfile1DModel(const char *name, const char *title, int nbinsx, const double *xbins, const char *option = "");
+   TProfile1DModel(const char *name, const char *title, int nbinsx, const double *xbins, double ylow, double yup,
+                   const char *option = "");
 };
 
 struct TProfile2DModel {
@@ -143,9 +140,12 @@ struct TProfile2DModel {
                    double yup, const char *option = "");
    TProfile2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, double ylow,
                    double yup, double zlow, double zup, const char *option = "");
-   TProfile2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, double ylow, double yup, const char *option="");
-   TProfile2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy, const double *ybins, const char *option="");
-   TProfile2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, const double *ybins, const char *option="");
+   TProfile2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy, double ylow,
+                   double yup, const char *option = "");
+   TProfile2DModel(const char *name, const char *title, int nbinsx, double xlow, double xup, int nbinsy,
+                   const double *ybins, const char *option = "");
+   TProfile2DModel(const char *name, const char *title, int nbinsx, const double *xbins, int nbinsy,
+                   const double *ybins, const char *option = "");
 };
 
 } // ns TDF

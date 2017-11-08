@@ -260,8 +260,7 @@ struct TMinReturnType<TDFDetail::TInferType, false> {
 };
 
 template <typename T>
-struct TMinReturnType<T, true>
-{
+struct TMinReturnType<T, true> {
    using type = TTraits::TakeFirstParameter_t<T>;
 };
 
@@ -269,10 +268,10 @@ struct TMinReturnType<T, true>
 template <typename T>
 using MinReturnType_t = typename TMinReturnType<T>::type;
 
-template<typename T>
+template <typename T>
 using MaxReturnType_t = MinReturnType_t<T>;
 
-template<typename T>
+template <typename T>
 using SumReturnType_t = MinReturnType_t<T>;
 
 } // namespace TDF
@@ -511,14 +510,17 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column with a value dependent on the processing slot and the current entry.
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the
+   /// temporary value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
    ///
    /// This alternative implementation of `Define` is meant as a helper in writing entry-specific, thread-safe custom
    /// columns. The expression must be a callable of signature R(unsigned int, ULong64_t, T1, T2, ...) where `T1, T2...`
    /// are the types of the columns that the expression takes as input. The first parameter is reserved for an unsigned
-   /// integer representing a "slot number". TDataFrame guarantees that different threads will invoke the expression with
-   /// different slot numbers - slot numbers will range from zero to ROOT::GetImplicitMTPoolSize()-1. The second parameter
+   /// integer representing a "slot number". TDataFrame guarantees that different threads will invoke the expression
+   /// with
+   /// different slot numbers - slot numbers will range from zero to ROOT::GetImplicitMTPoolSize()-1. The second
+   /// parameter
    /// is reserved for a `ULong64_t` representing the current entry being processed by the current thread.
    ///
    /// The following two `Define`s are equivalent, although `DefineSlotEntry` is slightly more performant:
@@ -972,7 +974,6 @@ public:
          } else {
             h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data());
          }
-
       }
 
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
@@ -1065,14 +1066,14 @@ public:
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
          if (model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
-            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                         model.fYLow, model.fYUp);
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                         model.fNbinsY, model.fYLow, model.fYUp);
          } else if (!model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
-            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(), model.fNbinsY,
-                                         model.fYLow, model.fYUp);
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                         model.fNbinsY, model.fYLow, model.fYUp);
          } else {
-            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(), model.fNbinsY,
-                                         model.fBinYEdges.data());
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                         model.fNbinsY, model.fBinYEdges.data());
          }
       }
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
@@ -1107,14 +1108,14 @@ public:
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
          if (model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
-            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                         model.fYLow, model.fYUp);
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                         model.fNbinsY, model.fYLow, model.fYUp);
          } else if (!model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
-            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(), model.fNbinsY,
-                                         model.fYLow, model.fYUp);
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                         model.fNbinsY, model.fYLow, model.fYUp);
          } else {
-            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(), model.fNbinsY,
-                                         model.fBinYEdges.data());
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                         model.fNbinsY, model.fBinYEdges.data());
          }
       }
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
@@ -1155,11 +1156,13 @@ public:
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
          if (model.fBinXEdges.empty() && model.fBinYEdges.empty() && model.fBinZEdges.empty()) {
-            h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                         model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+            h =
+               std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                        model.fNbinsY, model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
          } else {
-            h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(), model.fNbinsY,
-                                         model.fBinYEdges.data(), model.fNbinsZ, model.fBinZEdges.data());
+            h =
+               std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                        model.fNbinsY, model.fBinYEdges.data(), model.fNbinsZ, model.fBinZEdges.data());
          }
       }
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
@@ -1196,11 +1199,13 @@ public:
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
          if (model.fBinXEdges.empty() && model.fBinYEdges.empty() && model.fBinZEdges.empty()) {
-            h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                         model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+            h =
+               std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                        model.fNbinsY, model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
          } else {
-            h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(), model.fNbinsY,
-                                         model.fBinYEdges.data(), model.fNbinsZ, model.fBinZEdges.data());
+            h =
+               std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                        model.fNbinsY, model.fBinYEdges.data(), model.fNbinsZ, model.fBinZEdges.data());
          }
       }
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
@@ -1479,7 +1484,8 @@ public:
    /// \brief Return the sum of processed column values (*lazy action*)
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column.
-   /// \param[in] initValue Optional initial value for the sum. If not present, the column values must be default-constructible.
+   /// \param[in] initValue Optional initial value for the sum. If not present, the column values must be
+   /// default-constructible.
    ///
    /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
@@ -1704,8 +1710,9 @@ private:
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
-      using ColTypesTmp_t = typename TDFInternal::RemoveFirstParameterIf<
-         std::is_same<ExtraArgs, TDFDetail::TCCHelperTypes::TSlot>::value, ArgTypes_t>::type;
+      using ColTypesTmp_t =
+         typename TDFInternal::RemoveFirstParameterIf<std::is_same<ExtraArgs, TDFDetail::TCCHelperTypes::TSlot>::value,
+                                                      ArgTypes_t>::type;
       using ColTypes_t = typename TDFInternal::RemoveFirstTwoParametersIf<
          std::is_same<ExtraArgs, TDFDetail::TCCHelperTypes::TSlotAndEntry>::value, ColTypesTmp_t>::type;
 
