@@ -454,11 +454,11 @@ public:
       return *(TInterface<TFilterBase> *)retVal;
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the
-   /// temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function.
    ///
    /// Create a custom column that will be visible from all subsequent nodes
@@ -479,12 +479,13 @@ public:
    {
       return DefineImpl<F, TDFDetail::TCCHelperTypes::TNothing>(name, std::move(expression), columns);
    }
+   // clang-format on
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column with a value dependent on the processing slot.
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the
-   /// temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding the slot number).
    ///
    /// This alternative implementation of `Define` is meant as a helper in writing thread-safe custom columns.
@@ -506,21 +507,20 @@ public:
    {
       return DefineImpl<F, TDFDetail::TCCHelperTypes::TSlot>(name, std::move(expression), columns);
    }
+   // clang-format on
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column with a value dependent on the processing slot and the current entry.
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the
-   /// temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding slot and entry).
    ///
    /// This alternative implementation of `Define` is meant as a helper in writing entry-specific, thread-safe custom
    /// columns. The expression must be a callable of signature R(unsigned int, ULong64_t, T1, T2, ...) where `T1, T2...`
    /// are the types of the columns that the expression takes as input. The first parameter is reserved for an unsigned
-   /// integer representing a "slot number". TDataFrame guarantees that different threads will invoke the expression
-   /// with
-   /// different slot numbers - slot numbers will range from zero to ROOT::GetImplicitMTPoolSize()-1. The second
-   /// parameter
+   /// integer representing a "slot number". TDataFrame guarantees that different threads will invoke the expression with
+   /// different slot numbers - slot numbers will range from zero to ROOT::GetImplicitMTPoolSize()-1. The second parameter
    /// is reserved for a `ULong64_t` representing the current entry being processed by the current thread.
    ///
    /// The following two `Define`s are equivalent, although `DefineSlotEntry` is slightly more performant:
@@ -536,6 +536,7 @@ public:
    {
       return DefineImpl<F, TDFDetail::TCCHelperTypes::TSlotAndEntry>(name, std::move(expression), columns);
    }
+   // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column
@@ -1480,12 +1481,12 @@ public:
       return CreateAction<TDFInternal::ActionTypes::Mean, T>(userColumns, meanV);
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the sum of processed column values (*lazy action*)
    /// \tparam T The type of the branch/column.
    /// \param[in] columnName The name of the branch/column.
-   /// \param[in] initValue Optional initial value for the sum. If not present, the column values must be
-   /// default-constructible.
+   /// \param[in] initValue Optional initial value for the sum. If not present, the column values must be default-constructible.
    ///
    /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
@@ -1501,6 +1502,7 @@ public:
       auto sumV = std::make_shared<TDFInternal::SumReturnType_t<T>>(initValue);
       return CreateAction<TDFInternal::ActionTypes::Sum, T>(userColumns, sumV);
    }
+   // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Print filtering statistics on screen
