@@ -967,7 +967,12 @@ public:
       std::shared_ptr<::TH1D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
+         if (model.fBinXEdges.empty()) {
+            h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
+         } else {
+            h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data());
+         }
+
       }
 
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
@@ -1000,7 +1005,11 @@ public:
       std::shared_ptr<::TH1D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
+         if (model.fBinXEdges.empty()) {
+            h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
+         } else {
+            h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data());
+         }
       }
       return CreateAction<TDFInternal::ActionTypes::Histo1D, V, W>(userColumns, h);
    }
@@ -1055,8 +1064,16 @@ public:
       std::shared_ptr<::TH2D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                      model.fYLow, model.fYUp);
+         if (model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
+                                         model.fYLow, model.fYUp);
+         } else if (!model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(), model.fNbinsY,
+                                         model.fYLow, model.fYUp);
+         } else {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(), model.fNbinsY,
+                                         model.fBinYEdges.data());
+         }
       }
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
@@ -1089,8 +1106,16 @@ public:
       std::shared_ptr<::TH2D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                      model.fYLow, model.fYUp);
+         if (model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
+                                         model.fYLow, model.fYUp);
+         } else if (!model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(), model.fNbinsY,
+                                         model.fYLow, model.fYUp);
+         } else {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(), model.fNbinsY,
+                                         model.fBinYEdges.data());
+         }
       }
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
@@ -1129,8 +1154,13 @@ public:
       std::shared_ptr<::TH3D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                      model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+         if (model.fBinXEdges.empty() && model.fBinYEdges.empty() && model.fBinZEdges.empty()) {
+            h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
+                                         model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+         } else {
+            h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(), model.fNbinsY,
+                                         model.fBinYEdges.data(), model.fNbinsZ, model.fBinZEdges.data());
+         }
       }
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
@@ -1165,8 +1195,13 @@ public:
       std::shared_ptr<::TH3D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                      model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+         if (model.fBinXEdges.empty() && model.fBinYEdges.empty() && model.fBinZEdges.empty()) {
+            h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
+                                         model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+         } else {
+            h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(), model.fNbinsY,
+                                         model.fBinYEdges.data(), model.fNbinsZ, model.fBinZEdges.data());
+         }
       }
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
