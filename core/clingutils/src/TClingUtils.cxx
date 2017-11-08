@@ -3864,6 +3864,8 @@ clang::QualType ROOT::TMetaUtils::GetNormalizedType(const clang::QualType &type,
 {
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
 
+   // Modules can trigger deserialization.
+   cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interpreter));
    clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetConfig(), true /* fully qualify */);
 
    // Readd missing default template parameters
