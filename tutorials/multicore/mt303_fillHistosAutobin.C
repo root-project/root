@@ -43,7 +43,7 @@ TH1D *mt303_fillHistosAutobin(unsigned n = 1000, unsigned opt = 1)
       hw->SetBit(TH1::kAutoBinPTwo);
       hw->SetBuffer(bsize);
 
-      Double_t xhma, xhmi;
+      Double_t xhma, xhmi, ovf, unf;
       Bool_t emptied = kFALSE, tofill = kTRUE;
       Bool_t buffering = kTRUE;
       for (UInt_t i = 0; i < n; ++i) {
@@ -81,12 +81,6 @@ TH1D *mt303_fillHistosAutobin(unsigned n = 1000, unsigned opt = 1)
       r.Fill(xw.GetRMS());
 
       hlist->Add(hw);
-      xhmi = hw->GetXaxis()->GetXmin();
-      xhma = hw->GetXaxis()->GetXmax();
-
-      std::cout << " " << hname.Data() << ":   " << xhmi << " <- " << xmi << " | " << xma << " -> " << xhma
-                << " (nb: " << hw->GetNbinsX() << ", " << hw->GetBinWidth(2) << ", " << hw->GetBinContent(0) << ", "
-                << hw->GetBinContent(hw->GetNbinsX() + 1) << ")\n";
    }
 
    x.Print();
@@ -94,8 +88,6 @@ TH1D *mt303_fillHistosAutobin(unsigned n = 1000, unsigned opt = 1)
    d.Print();
    a.Print();
    r.Print();
-
-   hlist->Print();
 
    TH1D *h0 = (TH1D *)hlist->First();
    hlist->Remove(h0);
