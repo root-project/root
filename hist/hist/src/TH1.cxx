@@ -1297,7 +1297,7 @@ Int_t TH1::AutoP2FindLimits(Double_t xmi, Double_t xma)
    Double_t bw = (xhma - xhmi) / nb ;
    // Bins to left free on each side
    Double_t autoside = gEnv->GetValue("Hist.Binning.Auto.Side", 0.05);
-   Int_t nbside = (Int_t) (GetNbinsX() * autoside);
+   Int_t nbside = (Int_t) (nb * autoside);
 
    // Side up
    Int_t nbup = (xhma - xma) / bw;
