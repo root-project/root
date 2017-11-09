@@ -585,7 +585,7 @@ TGeoMixture::TGeoMixture()
    fAmixture  = 0;
    fWeights   = 0;
    fNatoms    = 0;
-   VecNbOfAtomsPerVolume = 0;
+   fVecNbOfAtomsPerVolume = 0;
    fElements  = 0;
 }
 
@@ -600,7 +600,7 @@ TGeoMixture::TGeoMixture(const char *name, Int_t /*nel*/, Double_t rho)
    fWeights    = 0;
    fNelements  = 0;
    fNatoms     = 0;
-   VecNbOfAtomsPerVolume = 0;
+   fVecNbOfAtomsPerVolume = 0;
    fDensity = rho;
    fElements   = 0;
    if (fDensity < 0) fDensity = 0.001;
@@ -616,7 +616,7 @@ TGeoMixture::TGeoMixture(const TGeoMixture& gm) :
   fAmixture(gm.fAmixture),
   fWeights(gm.fWeights),
   fNatoms(gm.fNatoms),
-  VecNbOfAtomsPerVolume(gm.VecNbOfAtomsPerVolume),
+  fVecNbOfAtomsPerVolume(gm.fVecNbOfAtomsPerVolume),
   fElements(gm.fElements)
 {
 }
@@ -633,7 +633,7 @@ TGeoMixture& TGeoMixture::operator=(const TGeoMixture& gm)
       fAmixture=gm.fAmixture;
       fWeights=gm.fWeights;
       fNatoms = gm.fNatoms;
-      VecNbOfAtomsPerVolume = gm.VecNbOfAtomsPerVolume;
+      fVecNbOfAtomsPerVolume = gm.fVecNbOfAtomsPerVolume;
       fElements = gm.fElements;
    }
    return *this;
@@ -648,7 +648,7 @@ TGeoMixture::~TGeoMixture()
    if (fAmixture) delete[] fAmixture;
    if (fWeights)  delete[] fWeights;
    if (fNatoms)   delete[] fNatoms;
-   if (VecNbOfAtomsPerVolume) delete[] VecNbOfAtomsPerVolume;
+   if (fVecNbOfAtomsPerVolume) delete[] fVecNbOfAtomsPerVolume;
    if (fElements) delete fElements;
 }
 
@@ -1102,11 +1102,11 @@ Double_t TGeoMaterial::ScreenFactor(Double_t z)
 
 void TGeoMixture::ComputeDerivedQuantities()
 {
-   VecNbOfAtomsPerVolume = new Double_t[fNelements];
+   fVecNbOfAtomsPerVolume = new Double_t[fNelements];
 
    // Formula taken from G4Material.cxx L312
    for (Int_t i=0; i<fNelements; ++i) {
-      VecNbOfAtomsPerVolume[i] = TGeoUnit::Avogadro*fDensity*fWeights[i]/((TGeoElement*)fElements->At(i))->A();
+      fVecNbOfAtomsPerVolume[i] = TGeoUnit::Avogadro*fDensity*fWeights[i]/((TGeoElement*)fElements->At(i))->A();
    }
    ComputeRadiationLength();
    ComputeNuclearInterLength();
@@ -1121,7 +1121,7 @@ void TGeoMixture::ComputeRadiationLength()
    // Formula taken from G4Material.cxx L556
    Double_t radinv = 0.0 ;
    for (Int_t i=0;i<fNelements;++i) {
-     radinv += VecNbOfAtomsPerVolume[i]*((TGeoElement*)fElements->At(i))->GetfRadTsai();
+     radinv += fVecNbOfAtomsPerVolume[i]*((TGeoElement*)fElements->At(i))->GetfRadTsai();
    }
    fRadLen = (radinv <= 0.0 ? DBL_MAX : 1./radinv);
 }
@@ -1132,16 +1132,16 @@ void TGeoMixture::ComputeNuclearInterLength()
 {
 
    // Formula taken from G4Material.cxx L567
-   static const Double_t lambda0  = 35*TGeoUnit::g/TGeoUnit::cm2;
-   static const Double_t twothird = 2.0/3.0;
+   constexpr Double_t lambda0  = 35*TGeoUnit::g/TGeoUnit::cm2;
+   constexpr Double_t twothird = 2.0/3.0;
    Double_t NILinv = 0.0;
    for (Int_t i=0; i<fNelements; ++i) {
       Int_t Z = static_cast<Int_t>(((TGeoElement*)fElements->At(i))->Z()+0.5);
       Double_t A = ((TGeoElement*)fElements->At(i))->Neff();
       if(1 == Z) {
-         NILinv += VecNbOfAtomsPerVolume[i]*A;
+         NILinv += fVecNbOfAtomsPerVolume[i]*A;
       } else {
-         NILinv += VecNbOfAtomsPerVolume[i]*TMath::Exp(twothird*TMath::Log(A));
+         NILinv += fVecNbOfAtomsPerVolume[i]*TMath::Exp(twothird*TMath::Log(A));
       }
    }
    NILinv *= TGeoUnit::amu/lambda0;

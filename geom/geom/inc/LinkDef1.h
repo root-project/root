@@ -21,6 +21,8 @@
 #pragma link C++ class TGeoSubtraction+;
 #pragma link C++ class TGeoMedium+;
 #pragma link C++ class TGeoElement+;
+#pragma read sourceClass="TGeoElement" targetClass="TGeoElement" version="[1-2]" source="" target="" \
+    code="{ newObj->ComputeDerivedQuantities() ; }" 
 #pragma link C++ class TGeoElementRN+;
 #pragma link C++ class TGeoIsotope+;
 #pragma link C++ class TGeoDecayChannel+;
