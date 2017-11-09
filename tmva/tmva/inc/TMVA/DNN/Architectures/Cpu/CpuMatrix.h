@@ -25,6 +25,7 @@
 #include "CpuBuffer.h"
 #include <TMVA/Config.h>
 
+//#define DEBUG_TMVA_TCPUMATRIX
 #if defined(DEBUG_TMVA_TCPUMATRIX)
 #define PrintMatrix(mat, text)                                                                             \
    {                                                                                                       \
@@ -37,8 +38,8 @@
       auto _ncols = mat.GetNcols();                                                                        \
       std::cout << "---------------------" << text << " " << #mat << "(" << _nrows << "," << _ncols << ")" \
                 << "--------------------" << std::endl;                                                    \
-      for (auto _i = 0; _i < _nrows; _i++) {                                                               \
-         for (auto _j = 0; _j < _ncols; _j++) {                                                            \
+      for (size_t _i = 0; _i < _nrows; _i++) {                                                               \
+         for (size_t _j = 0; _j < _ncols; _j++) {                                                            \
             std::cout << mat(_i, _j);                                                                      \
             if (_j < _ncols - 1) std::cout << ",";                                                         \
          }                                                                                                 \
@@ -83,6 +84,8 @@ public:
    /** Returns pointer to a vector holding only ones with a guaranteed length
     *  of the number of columns of every instantiated CpuMatrix object. */
    static const AFloat * GetOnePointer() {return fOnes.data();}
+
+   static size_t GetOnePointerSize() { return fOnes.size(); }
 
    /** Construct matrix and allocate space for its elements. */
    TCpuMatrix(size_t nRows, size_t nCols);

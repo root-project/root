@@ -254,6 +254,7 @@ auto TConvLayer<Architecture_t>::Print() const -> void
 
    std::cout << "\t\t\t Filter Width = " << this->GetFilterWidth() << std::endl;
    std::cout << "\t\t\t Filter Height = " << this->GetFilterHeight() << std::endl;
+   std::cout << "\t\t\t Local Views = " << this->GetNLocalViews()  << std::endl;
    std::cout << "\t\t\t Activation Function = " << static_cast<int>(fF) << std::endl;
 }
 

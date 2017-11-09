@@ -33,6 +33,10 @@ void TCpu<Real_t>::Multiply(TCpuMatrix<Real_t> &C,
     int k = (int) A.GetNcols();
     int n = (int) B.GetNcols();
 
+    R__ASSERT((int) C.GetNrows() == m);
+    R__ASSERT((int) C.GetNcols() == n);
+    R__ASSERT((int) B.GetNrows() == k); 
+    
     char transa = 'N';
     char transb = 'N';
 
@@ -57,6 +61,10 @@ void TCpu<Real_t>::TransposeMultiply(TCpuMatrix<Real_t> &C,
     int k = (int) A.GetNrows();
     int n = (int) B.GetNcols();
 
+    R__ASSERT((int) C.GetNrows() == m);
+    R__ASSERT((int) C.GetNcols() == n);
+    R__ASSERT((int) B.GetNrows() == k); 
+    
     char transa = 'T';
     char transb = 'N';
 
