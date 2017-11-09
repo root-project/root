@@ -88,7 +88,7 @@ void TestReaderArray()
    EXPECT_EQ(arr.begin() + (it5 - arr.begin()), arr.begin() + 2);
 
    // operator[]
-   EXPECT_EQ(arr.begin()[2], *(arr.begin() + 2));
+   EXPECT_EQ(arr.begin()[2u], *(arr.begin() + 2));
 
    // ranged for loop
    int truth = 0;
