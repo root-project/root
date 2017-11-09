@@ -56,6 +56,7 @@ void TestReaderArray()
    // copy/move ctors
    auto it = arr.begin();
    const auto it2(it);
+   (void)it2;
    auto it3(std::move(it));
 
    // increments, decrements, copy/move assignments
