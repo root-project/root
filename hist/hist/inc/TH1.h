@@ -157,10 +157,7 @@ public:
       kIsAverage = BIT(18), ///< Bin contents are average (used by Add)
       kIsNotW = BIT(19),    ///< Histogram is forced to be not weighted even when the histogram is filled with weighted
                             /// different than 1.
-      // Autobin options
-      kAutoBinPTwo = BIT(20),      ///< Use Power(2)-based algorithm for autobinning
-      kAutoBinAdjust = BIT(21),    ///< When using Power(2)-based algorithm, adjust range before drawing
-      kAutoBinIsAdjusted = BIT(22) ///< When using Power(2)-based algorithm, signals that adjustment was already done
+      kAutoBinPTwo = BIT(20)  ///< Use Power(2)-based algorithm for autobinning
    };
    // size of statistics data (size of  array used in GetStats()/ PutStats )
    // s[0]  = sumw       s[1]  = sumw2
