@@ -736,7 +736,7 @@ void TFormula::InputFormulaIntoCling()
 
    if (!fClingInitialized && fReadyToExecute && fClingInput.Length() > 0) {
       // add pragma for optimization of the formula
-      fClingInput =  TString("#pragma cling optimize(2)\n") + fClingInput;
+      fClingInput = TString("#pragma cling optimize(2)\n") + fClingInput;
       gCling->Declare(fClingInput);
       fClingInitialized = PrepareEvalMethod();
    }

@@ -41,7 +41,10 @@
 #endif
 #include "Rtypes.h"
 #include "TString.h"
+
+#ifdef R__USE_IMT
 #include <ROOT/TThreadExecutor.hxx>
+#endif
 
 namespace TMVA {
 
@@ -49,7 +52,9 @@ namespace TMVA {
 
    class Config {
    protected:
+#ifdef R__USE_IMT
       ROOT::TThreadExecutor fPool;
+#endif
 
    public:
 
@@ -68,8 +73,9 @@ namespace TMVA {
       Bool_t DrawProgressBar() const { return fDrawProgressBar; }
       void   SetDrawProgressBar( Bool_t d ) { fDrawProgressBar = d; }
 
+#ifdef R__USE_IMT
       ROOT::TThreadExecutor &GetThreadExecutor() { return fPool; }
-
+#endif
    public:
 
       class VariablePlotting;
