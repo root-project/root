@@ -30,6 +30,10 @@ void TCpu<AFloat>::MultiplyTranspose(TCpuMatrix<AFloat> &output, const TCpuMatri
    int k = (int)input.GetNcols();
    int n = (int)Weights.GetNrows();
 
+   R__ASSERT((int) output.GetNrows() == m);
+   R__ASSERT((int) output.GetNcols() == n);
+   R__ASSERT((int) Weights.GetNcols() == k); 
+
    char transa = 'N';
    char transb = 'T';
 
@@ -55,6 +59,9 @@ void TCpu<AFloat>::AddRowWise(TCpuMatrix<AFloat> &output, const TCpuMatrix<AFloa
    AFloat *A = output.GetRawDataPointer();
    const AFloat *x = TCpuMatrix<AFloat>::GetOnePointer();
    const AFloat *y = biases.GetRawDataPointer();
+
+   R__ASSERT(m <= (int)TCpuMatrix<AFloat>::GetOnePointerSize()); 
+   R__ASSERT(n <= (int)biases.GetNcols()*biases.GetNrows()); 
 
    ::TMVA::DNN::Blas::Ger(&m, &n, &alpha, x, &inc, y, &inc, A, &m);
 }
@@ -101,14 +108,17 @@ void TCpu<AFloat>::Im2col(TCpuMatrix<AFloat> &A, TCpuMatrix<AFloat> &B, size_t i
                for (int l = j - fltWidth / 2; l <= Int_t(j + (fltWidth - 1) / 2); l++) {
 
                   // Check the boundaries
-                  if (k < 0 || k >= (Int_t)imgHeight || l < 0 || l >= (Int_t)imgWidth)
+                  R__ASSERT(currLocalView < A.GetNrows() );
+                  R__ASSERT(currLocalViewPixel < A.GetNcols() );
+                  //R__ASSERT(k * imgWidth + l < B.GetNcols());
+                  if (k < 0 || k >= (Int_t)imgHeight || l < 0 || l >= (Int_t)imgWidth || k * imgWidth + l >=  B.GetNcols())
                      A(currLocalView, currLocalViewPixel++) = 0;
                   else
                      A(currLocalView, currLocalViewPixel++) = B(m, k * imgWidth + l);
                }
             }
          }
-
+         //std::cout << " i " << i << "  " << j << " increment currLocalView " << currLocalView << std::endl;
          currLocalView++;
       }
    }
@@ -124,6 +134,7 @@ void TCpu<AFloat>::RotateWeights(TCpuMatrix<AFloat> &A, const TCpuMatrix<AFloat>
       for (size_t k = 0; k < numFilters; k++) {
          for (size_t i = 0; i < jump; i++) {
             A(j, k * jump + i) = B(k, ((j + 1) * jump - 1) - i);
+            //A(j, k * jump + i) = B(k, j * jump + i);
          }
       }
    }
@@ -169,7 +180,7 @@ void TCpu<AFloat>::ConvLayerBackward(std::vector<TCpuMatrix<AFloat>> &activation
 
    // Calculate the activation gradients of the previous layer
    CalculateConvActivationGradients(activationGradientsBackward, df, weights, batchSize, inputHeight, inputWidth, depth,
-                                    height, width, filterDepth, filterHeight, filterWidth);
+                                                                                         height, width, filterDepth, filterHeight, filterWidth);
 
    // Calculate the weight gradients
    CalculateConvWeightGradients(weightGradients, df, activationsBackward, batchSize, inputHeight, inputWidth, depth,
@@ -190,14 +201,22 @@ void TCpu<AFloat>::CalculateConvActivationGradients(std::vector<TCpuMatrix<AFloa
 {
    if (activationGradientsBackward.size() == 0) return;
 
+   
    // Transform the weights
+
+   PrintMatrix(weights,"weights");
+   // filter depth must be same as input depth
    TCpuMatrix<AFloat> rotWeights(filterDepth, depth * filterHeight * filterWidth);
    RotateWeights(rotWeights, weights, filterDepth, filterHeight, filterWidth, weights.GetNrows());
+   PrintMatrix(rotWeights,"rot-weights");
 
    // Calculate the zero paddings
-   size_t tempZeroPaddingHeight = (size_t)(floor((inputHeight - height + filterHeight - 1) / 2));
-   size_t tempZeroPaddingWidth = (size_t)(floor((inputWidth - width + filterWidth - 1) / 2));
+   // size_t tempZeroPaddingHeight = (size_t)(floor((inputHeight - height + filterHeight - 1) / 2));
+   //size_t tempZeroPaddingWidth = (size_t)(floor((inputWidth - width + filterWidth - 1) / 2));
 
+   size_t tempZeroPaddingHeight = 1;
+   size_t tempZeroPaddingWidth = 1;
+   
    // Calculate the number of local views and the number of pixles in each view
    size_t tempNLocalViews = inputHeight * inputWidth;
    size_t tempNLocalViewPixels = depth * filterHeight * filterWidth;
@@ -208,10 +227,21 @@ void TCpu<AFloat>::CalculateConvActivationGradients(std::vector<TCpuMatrix<AFloa
    // An entire convolution follows
    for (size_t i = 0; i < batchSize; i++) {
       TCpuMatrix<AFloat> dfTr(tempNLocalViews, tempNLocalViewPixels);
-      Im2col(dfTr, df[i], inputHeight, inputWidth, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
+      for (int j = 0; j < dfTr.GetNrows(); ++j) {
+         for (int k = 0; k < dfTr.GetNcols(); ++k) {
+            dfTr(j,k)  = 0;
+         }
+      }
+      Im2col(dfTr, df[i], height, width, filterHeight, filterWidth, tempStrideRows, tempStrideCols,
              tempZeroPaddingHeight, tempZeroPaddingWidth);
 
+      PrintMatrix(df[i],"df[i]");
+      PrintMatrix(dfTr,"dfTr");
+
       MultiplyTranspose(activationGradientsBackward[i], rotWeights, dfTr);
+
+      PrintMatrix(activationGradientsBackward[i],"activGrad-result");
+
    }
 }
 
@@ -220,7 +250,7 @@ template <typename AFloat>
 void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradients,
                                                 std::vector<TCpuMatrix<AFloat>> &df,
                                                 const std::vector<TCpuMatrix<AFloat>> &activationsBackward,
-                                                size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth,
+                                               size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth,
                                                 size_t height, size_t width, size_t filterDepth, size_t filterHeight,
                                                 size_t filterWidth, size_t nLocalViews)
 {
@@ -231,41 +261,47 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
       }
    }
 
-   for (size_t i = 0; i < batchSize; i++) {
-      // Calculate the zero paddings
-      size_t tempZeroPaddingHeight = (filterHeight - height + inputHeight - 1) / 2;
-      size_t tempZeroPaddingWidth = (filterWidth - width + inputWidth - 1) / 2;
+   size_t nLocalViewPixels = filterDepth * filterHeight * filterWidth;
+   R__ASSERT( weightGradients.GetNcols() == filterDepth * filterHeight * filterWidth);
 
-      size_t tempNLocalViews = filterHeight * filterWidth;
-      size_t tempNLocalViewPixels = inputHeight * inputWidth;
+   // convolution
+   TCpuMatrix<AFloat> res(depth, nLocalViewPixels);
+   std::cout << "do back-propagation in conv layer - compute weight gradient" << std::endl;
+   for (size_t i = 0; i < batchSize; i++) {
 
       size_t tempStrideRows = 1;
       size_t tempStrideCols = 1;
+      
+      // Calculate the zero paddings from the input height and width (assume stride =1 )      
+      size_t tempZeroPaddingHeight = (height - inputHeight + filterHeight - 1) / 2;
+      size_t tempZeroPaddingWidth = (width - inputWidth + filterWidth - 1) / 2;
+
+      //PrintMatrix(df[i],"df-i");
+
+      //computing t he gradient is equivalent of doing a convolution of the input using as conv kernel the delta's (the df[] values) 
+      //N.B. only stride values=1 are now supported
+ 
+      TCpuMatrix<AFloat> xTr(nLocalViews, nLocalViewPixels);
+      Im2col(xTr, const_cast<TCpuMatrix<AFloat> &>(activationsBackward[i]), inputHeight, inputWidth, filterHeight , filterWidth,
+             tempStrideRows, tempStrideCols, tempZeroPaddingHeight, tempZeroPaddingWidth);
+
+
+      //PrintMatrix(xTr,"xTr-i");
+      //PrintMatrix(activationsBackward[i],"actbackward-i");
+      Multiply(res, df[i], xTr);
+      //PrintMatrix(res,"res_ofMT");
 
       for (size_t j = 0; j < depth; j++) {
-
-         // row matrix
-         TCpuMatrix<AFloat> rowDelta(1, nLocalViews);
-         for (size_t k = 0; k < nLocalViews; k++) {
-            rowDelta(0, k) = df[i](j, k);
-         }
-
-
-         TCpuMatrix<AFloat> rowDeltaTr(tempNLocalViews, tempNLocalViewPixels);
-         Im2col(rowDeltaTr, rowDelta, height, width, inputHeight, inputWidth, tempStrideRows, tempStrideCols,
-                tempZeroPaddingHeight, tempZeroPaddingWidth);
-
-         // convolution
-         TCpuMatrix<AFloat> res(filterDepth, filterHeight * filterWidth);
-         MultiplyTranspose(res, activationsBackward[i], rowDeltaTr);
-
          for (size_t k = 0; k < filterDepth; k++) {
             for (size_t l = 0; l < filterHeight * filterWidth; l++) {
-               weightGradients(j, k * (filterHeight * filterWidth) + l) += res(k, (tempNLocalViews - 1) - l);
+               //weightGradients(j, k * (filterHeight * filterWidth) + l) += res(k, (tempNLocalViews - 1) - l);
+               weightGradients(j, k * (filterHeight * filterWidth) + l) += res(j,  k * (filterHeight * filterWidth) + l);
             }
          }
       }
+  
    }
+   //PrintMatrix(weightGradients,"W-Grad");
 }
 
 //____________________________________________________________________________
@@ -336,7 +372,7 @@ void TCpu<AFloat>::MaxPoolLayerBackward(std::vector<TCpuMatrix<AFloat>> &activat
          for (size_t k = 0; k < nLocalViews; k++) {
             AFloat grad = activationGradients[i](j, k);
             size_t winningIdx = indexMatrix[i](j, k);
-            activationGradientsBackward[i](j, winningIdx) = grad;
+            activationGradientsBackward[i](j, winningIdx) += grad;
          }
       }
    }
