@@ -68,7 +68,7 @@ public:
 
 private: 
 
-   Bool_t MergeCompatibleHistograms(TH1 *, TH1 *);
+   Bool_t AutoP2BuildAxes(TH1 *);
 
    EMergerType ExamineHistograms();
 

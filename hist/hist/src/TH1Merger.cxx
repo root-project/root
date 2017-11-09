@@ -12,10 +12,9 @@
 #include <limits>
 #include <utility>
 
-
-#define PRINTRANGE(a, b) \
-   Printf(" %s: %f %f %d, %s: %f %f %d", a->GetName(), a->GetXaxis()->GetXmin(), a->GetXaxis()->GetXmax(), a->GetNbinsX(), \
-                                         b->GetName(), b->GetXaxis()->GetXmin(), b->GetXaxis()->GetXmax(), b->GetNbinsX());
+#define PRINTRANGE(a, b, bn) \
+   Printf(" base: %f %f %d, %s: %f %f %d", a->GetXmin(), a->GetXmax(), a->GetNbins(), \
+                                       bn, b->GetXmin(), b->GetXmax(), b->GetNbins());
 
 Bool_t TH1Merger::AxesHaveLimits(const TH1 * h) {
    Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
@@ -62,88 +61,138 @@ Bool_t TH1Merger::operator() () {
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////
-/// Examine merge compatibility for histograms created in power-of-2 autobin mode.
+/// Determine final boundaries and number of bins for histograms created in power-of-2
+/// autobin mode.
 ///
-/// Return kTRUE if compatible, updating fNewXaxis accordingly; return kFALSE if not
-/// compatible.
+/// Return kTRUE if compatible, updating fNewXaxis accordingly; return kFALSE if something
+/// wrong.
 ///
 /// The histograms are not merge-compatible if
 ///
 ///       1. have different variable-size bins
 ///       2. larger bin size is not an integer multiple of the smaller one
-///       3. the minimal difference between range extremes, i.e.
-///              min (abs(x2max - x1min), abs(x1max-x2min))
-///          is not a integer multiple of the larger bin width (the final bin width) 
+///       3. the final estimated range is smalle then the bin size
 ///
 
-
-Bool_t TH1Merger::MergeCompatibleHistograms(TH1 *h0, TH1 *h1)
+Bool_t TH1Merger::AutoP2BuildAxes(TH1 *h)
 {
    // They must be both defined
-   if (!h0 || !h1) {
-      Error("MergeCompatibleHistograms", "undefined histogram(s): %p %p", h0, h1);
+   if (!h) {
+      Error("AutoP2BuildAxes", "undefined histogram: %p", h);
       return kFALSE;
    }
 
    // They must be created in power-of-2 autobin mode
-   if (!h0->TestBit(TH1::kAutoBinPTwo) || !h1->TestBit(TH1::kAutoBinPTwo)) {
-      Error("MergeCompatibleHistograms", "not all in autobin-power-of-2 mode!");
+   if (!h->TestBit(TH1::kAutoBinPTwo)) {
+      Error("AutoP2BuildAxes", "not in autobin-power-of-2 mode!");
       return kFALSE;
    }
 
+   // Point to axes
+   TAxis *a0 = &fNewXAxis, *a1 = h->GetXaxis();
+
+   // This is for future merging of detached ranges (only possible if no over/underflows)
+   Bool_t canextend = (h->GetBinContent(0) > 0 || h->GetBinContent(a1->GetNbins() + 1) > 0) ? kFALSE : kTRUE;
+
+   // The first time we just copy the boundaries and bins
+   if (a0->GetFirst() == a0->GetLast()) {
+      a0->Set(a1->GetNbins(), a1->GetXmin(), a1->GetXmax());
+      // This is for future merging of detached ranges (only possible if no over/underflows)
+      a0->SetCanExtend(canextend);
+      return kTRUE;
+   }
+
    // Bin sizes must be in integer ratio
-   Double_t bwmax = (h0->GetXaxis()->GetXmax() - h0->GetXaxis()->GetXmin()) / h0->GetXaxis()->GetNbins() ;
-   Double_t bwmin = (h1->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin()) / h1->GetXaxis()->GetNbins() ;
-   if (bwmin > bwmax) std::swap(bwmax, bwmin);
+   Double_t bwmax = (a0->GetXmax() - a0->GetXmin()) / a0->GetNbins() ;
+   Double_t bwmin = (a1->GetXmax() - a1->GetXmin()) / a1->GetNbins() ;
+   Bool_t b0 = kTRUE;
+   if (bwmin > bwmax) {
+      std::swap(bwmax, bwmin);
+      b0 = kFALSE;
+   }
    if (!(bwmin > 0.)) {
-      PRINTRANGE(h0, h1);
-      Error("MergeCompatibleHistograms", "minimal bin width negative or null: %f", bwmin);
+      PRINTRANGE(a0, a1, h->GetName());
+      Error("AutoP2BuildAxes", "minimal bin width negative or null: %f", bwmin);
       return kFALSE;
    }
 
    Double_t rt;
    Double_t re = std::modf(bwmax / bwmin, &rt);
    if (re > std::numeric_limits<Double_t>::epsilon()) {
-      PRINTRANGE(h0, h1);
-      Error("MergeCompatibleHistograms", "bin widths not in integer ratio: %f", re);
+      PRINTRANGE(a0, a1, h->GetName());
+      Error("AutoP2BuildAxes", "bin widths not in integer ratio: %f", re);
       return kFALSE;
    }
 
    // Range of the merged histogram, taking into account overlaps
-   Double_t range = 0.;
-   if (h0->GetXaxis()->GetXmin() < h1->GetXaxis()->GetXmin()) {
-      if (h0->GetXaxis()->GetXmax() < h1->GetXaxis()->GetXmin()) {
-         range = h1->GetXaxis()->GetXmax() - h0->GetXaxis()->GetXmin();
+   Bool_t domax = kFALSE;
+   Double_t xmax, xmin;
+   if (a0->GetXmin() < a1->GetXmin()) {
+      if (a0->GetXmax() < a1->GetXmin()) {
+         if (!a0->CanExtend() || !canextend) {
+            PRINTRANGE(a0, a1, h->GetName());
+            Error("AutoP2BuildAxes", "ranges are disconnected and under/overflows: cannot merge");
+            return kFALSE;
+         }
+         xmax = a1->GetXmax();
+         xmin = a0->GetXmin();
+         domax = b0 ? kTRUE : kFALSE;
       } else {
-         if (h0->GetXaxis()->GetXmax() >= h1->GetXaxis()->GetXmax()) {
-            range = h1->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin();
+         if (a0->GetXmax() >= a1->GetXmax()) {
+            xmax = a1->GetXmax();
+            xmin = a1->GetXmin();
+            domax = !b0 ? kTRUE : kFALSE;
          } else {
-            range = h0->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin();
+            xmax = a0->GetXmax();
+            xmin = a1->GetXmin();
+            domax = !b0 ? kTRUE : kFALSE;
          }
       }
    } else {
-      if (h1->GetXaxis()->GetXmax() < h0->GetXaxis()->GetXmin()) {
-         range = h0->GetXaxis()->GetXmax() - h1->GetXaxis()->GetXmin();
+      if (a1->GetXmax() < a0->GetXmin()) {
+         if (!a0->CanExtend() || !canextend) {
+            PRINTRANGE(a0, a1, h->GetName());
+            Error("AutoP2BuildAxes", "ranges are disconnected and under/overflows: cannot merge");
+            return kFALSE;
+         }
+         xmax = a0->GetXmax();
+         xmin = a1->GetXmin();
+         domax = !b0 ? kTRUE : kFALSE;
       } else {
-         if (h1->GetXaxis()->GetXmax() >= h0->GetXaxis()->GetXmax()) {
-            range = h0->GetXaxis()->GetXmax() - h0->GetXaxis()->GetXmin();
+         if (a1->GetXmax() >= a0->GetXmax()) {
+            xmax = a0->GetXmax();
+            xmin = a0->GetXmin();
+            domax = b0 ? kTRUE : kFALSE;
          } else {
-            range = h1->GetXaxis()->GetXmax() - h0->GetXaxis()->GetXmin();
+            xmax = a1->GetXmax();
+            xmin = a0->GetXmin();
+            domax = b0 ? kTRUE : kFALSE;
          }
       }
    }
+   Double_t range = xmax - xmin;
 
    re = std::modf(range / bwmax, &rt);
    if (rt < 1.) {
-      PRINTRANGE(h0, h1);
+      PRINTRANGE(a0, a1, h->GetName());
       Error("MergeCompatibleHistograms", "range smaller than bin width: %f %f %f", range, bwmax, rt);
       return kFALSE;
    }
    if (re > std::numeric_limits<Double_t>::epsilon()) {
-      PRINTRANGE(h0, h1);
-      Error("MergeCompatibleHistograms", "range not multiple integer of bin width: %f %f %f", range, bwmax, re);
-      return kFALSE;
+      if (domax) {
+         xmax -= bwmax * re;
+      } else {
+         xmin += bwmax * re;
+      }
    }
+   // Number of bins
+   Int_t nb = (Int_t)rt;
+
+   // Set the result
+   a0->Set(nb, xmin, xmax);
+
+   // This is for future merging of detached ranges (only possible if no over/underflows)
+   if (!a0->CanExtend()) a0->SetCanExtend(canextend);
 
    // Done
    return kTRUE;
@@ -219,13 +268,6 @@ TH1Merger::EMergerType TH1Merger::ExamineHistograms() {
          Error("Merge", "Cannot merge histogram - %s is in autobin-power-of-2 mode, but not the previous ones",
                h->GetName());
          return kNotCompatible;
-      }
-      if (isAutoP2) {
-         if (!MergeCompatibleHistograms(fH0, h)) {
-            Error("Merge", "Cannot merge histogram %s with %s : not merge compatible", h->GetName(), fH0->GetName());
-            return kNotCompatible;
-         }
-         continue;
       }
 
       if (hasLimits) {
@@ -578,7 +620,7 @@ Bool_t TH1Merger::AutoP2Merge()
    TIter next(&fInputList);
    TH1 *hist = 0;
    // Calculate boundaries and bins
-   Double_t xmin = 0., xmax = 0., binw = 0.;
+   Double_t xmin = 0., xmax = 0.;
    if (!(fH0->IsEmpty())) {
       hist = fH0;
    } else {
@@ -587,34 +629,27 @@ Bool_t TH1Merger::AutoP2Merge()
             break;
       }
    }
-   xmin = hist->GetXaxis()->GetXmin();
-   xmax = hist->GetXaxis()->GetXmax();
-   if (hist->GetXaxis()->GetNbins())
-      binw = (xmax - xmin) / hist->GetXaxis()->GetNbins();
 
-   while ((hist = (TH1 *)next())) {
-      if (hist->GetXaxis()->GetXmin() > xmin)
-         xmin = hist->GetXaxis()->GetXmin();
-      if (hist->GetXaxis()->GetXmax() < xmax)
-         xmax = hist->GetXaxis()->GetXmax();
-      Double_t wbinw = (hist->GetXaxis()->GetNbins())
-                          ? (hist->GetXaxis()->GetXmax() - hist->GetXaxis()->GetXmin()) / hist->GetXaxis()->GetNbins()
-                          : 0.;
-      if (wbinw > binw)
-         binw = wbinw;
-   }
-
-   // Check consistency
-   if (xmin >= xmax || binw <= 0.) {
-      Warning("TH1Merger::AutoP2Merge", "incosistent boundaries/bins: %f, %f, %f -> do nothing", xmin, xmax, binw);
+   if (!hist) {
+      Warning("TH1Merger::AutoP2Merge", "all histograms look empty!");
       return kFALSE;
    }
-   Double_t xnbins = (xmax - xmin) / binw;
-   Int_t nbins = (Int_t)xnbins;
-   if ((xnbins - nbins) > .001) {
-      Warning("TH1Merger::AutoP2Merge", "incosistent nbins: %f -> do nothing", xnbins);
+
+   // Start building the axes from the reference histogram
+   if (!AutoP2BuildAxes(hist)) {
+      Error("TH1Merger::AutoP2Merge", "cannot create axes from %s", hist->GetName());
       return kFALSE;
    }
+   TH1 *h = 0;
+   while ((h = (TH1 *)next())) {
+      if (!AutoP2BuildAxes(h)) {
+         Error("TH1Merger::AutoP2Merge", "cannot merge histogram %s: not merge compatible", h->GetName());
+         return kFALSE;
+      }
+   }
+   xmin = fNewXAxis.GetXmin();
+   xmax = fNewXAxis.GetXmax();
+   Int_t nbins = fNewXAxis.GetNbins();
 
    // Prepare stats
    fH0->GetStats(totstats);
