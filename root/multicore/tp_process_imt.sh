@@ -54,4 +54,7 @@ echo "NUM EMPTY TASKS (tentrylist): $NUMETASKS"
 
 # Print number of tasks that processed exactly one entry
 NUM1TASKS=`cat ${TESTNAME}.out | grep -e "\[IMT\] Processed 1 entries" | wc -l`
-echo "NUM 1-ENTRY TASKS (tentrylist): $NUM1TASKS" 
+echo "NUM 1-ENTRY TASKS (tentrylist): $NUM1TASKS"
+
+#### Friends case
+./$TESTNAME $NTHREADS $INPUTFILE $TREENAME "friends" 1>${TESTNAME}.out 
