@@ -207,8 +207,9 @@ protected:
    // ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
 };
 
+// FIXME: `n + it` cannot use this overload of operator+ because T cannot be deduced from the type of the iterator
 template <typename T>
-typename TTreeReaderArray<T>::iterator operator+(std::ptrdiff_t n, const typename TTreeReaderArray<T>::iterator &it)
+auto operator+(std::ptrdiff_t n, const typename TTreeReaderArray<T>::iterator &it) -> decltype(it + n)
 {
    return it + n;
 }
