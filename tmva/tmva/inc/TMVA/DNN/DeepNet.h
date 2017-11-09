@@ -372,8 +372,9 @@ template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::calculateDimension(int imgDim, int fltDim, int padding, int stride) -> size_t
 {
    Scalar_t dimension = ((imgDim - fltDim + 2 * padding) / stride) + 1;
-   if (!isInteger(dimension)) {
-      std::cout << "Not compatible hyper parameters" << std::endl;
+   if (!isInteger(dimension) || dimension < 0) {
+      std::cout << "calculateDimension - Not compatible hyper parameters (imgDim, fltDim, padding, stride)"
+                << imgDim << " , " << fltDim << " , " <<  padding << " , " << stride<< " resulting dim is " << dimension << std::endl;
       std::exit(EXIT_FAILURE);
    }
 
@@ -874,10 +875,11 @@ auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> &input, c
    }
 
    std::vector<Matrix_t> dummy;
-   for (size_t i = 0; i < input.size(); i++) {
-      dummy.emplace_back(input[i].GetNrows(), input[i].GetNcols());
-      // dummy.emplace_back(0, 0);
-    }
+   // for (size_t i = 0; i < input.size(); i++) {
+   //    dummy.emplace_back(input[i].GetNrows(), input[i].GetNcols());
+   //    // dummy.emplace_back(0, 0);
+   //  }
+   std::cout << "Do backward propagation in layer 0 " << inp1.size() << "  " << inp2.size() << " input " << input.size() << std::endl;
    fLayers[0]->Backward(dummy, input, inp1, inp2);
 }
 

@@ -30,30 +30,41 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
                                                            EActivationFunction::kSigmoid, EActivationFunction::kTanh};
 
    size_t depth1 = 12;
-   size_t filterHeightConv1 = 2;
-   size_t filterWidthConv1 = 2;
+   size_t filterHeightConv1 = 8;
+   size_t filterWidthConv1 = 8;
    size_t strideRowsConv1 = 1;
    size_t strideColsConv1 = 1;
    size_t zeroPaddingHeight1 = 1;
    size_t zeroPaddingWidth1 = 1;
 
-   EActivationFunction fConv1 = ActivationFunctions[rand() % ActivationFunctions.size()];
+   EActivationFunction fConv1 = EActivationFunction::kIdentity;
+
+   //EActivationFunction fConv1 = ActivationFunctions[rand() % ActivationFunctions.size()];
 
    net.AddConvLayer(depth1, filterHeightConv1, filterWidthConv1, strideRowsConv1, strideColsConv1, zeroPaddingHeight1,
                     zeroPaddingWidth1, fConv1);
 
+   std::cout << "added Conv layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
+             << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+
+
    size_t depth2 = 6;
-   size_t filterHeightConv2 = 2;
-   size_t filterWidthConv2 = 2;
+   size_t filterHeightConv2 = 4;
+   size_t filterWidthConv2 = 4;
    size_t strideRowsConv2 = 1;
    size_t strideColsConv2 = 1;
-   size_t zeroPaddingHeight2 = 1;
-   size_t zeroPaddingWidth2 = 1;
+   size_t zeroPaddingHeight2 = 0;
+   size_t zeroPaddingWidth2 = 0;
 
-   EActivationFunction fConv2 = ActivationFunctions[rand() % ActivationFunctions.size()];
+   EActivationFunction fConv2 = EActivationFunction::kIdentity;
+//   EActivationFunction fConv2 = ActivationFunctions[rand() % ActivationFunctions.size()];
 
    net.AddConvLayer(depth2, filterHeightConv2, filterWidthConv2, strideRowsConv2, strideColsConv2, zeroPaddingHeight2,
                     zeroPaddingWidth2, fConv2);
+
+   std::cout << "added Conv layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
+             << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+
 
    size_t filterHeightPool = 6;
    size_t filterWidthPool = 6;
@@ -61,6 +72,10 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
    size_t strideColsPool = 1;
 
    net.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
+
+   std::cout << "added MaxPool layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
+             << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+
 
    size_t depthReshape = 1;
    size_t heightReshape = 1;
@@ -71,7 +86,10 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
    net.AddReshapeLayer(depthReshape, heightReshape, widthReshape, true);
 
    size_t widthFC1 = 20;
-   EActivationFunction fFC1 = ActivationFunctions[rand() % ActivationFunctions.size()];
+
+   EActivationFunction fFC1 = EActivationFunction::kIdentity;
+
+   //EActivationFunction fFC1 = ActivationFunctions[rand() % ActivationFunctions.size()];
    net.AddDenseLayer(widthFC1, fFC1);
 
    size_t widthFC2 = 2;
@@ -86,7 +104,8 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
 template <typename AArchitecture>
 void constructLinearConvNet(TDeepNet<AArchitecture> &net)
 {
-   size_t depth1 = 12;
+   
+   size_t depth1 = 2;
    size_t filterHeightConv1 = 2;
    size_t filterWidthConv1 = 2;
    size_t strideRowsConv1 = 1;
@@ -99,25 +118,50 @@ void constructLinearConvNet(TDeepNet<AArchitecture> &net)
    net.AddConvLayer(depth1, filterHeightConv1, filterWidthConv1, strideRowsConv1, strideColsConv1, zeroPaddingHeight1,
                     zeroPaddingWidth1, fConv1);
 
-   size_t depth2 = 6;
+   std::cout << "added Conv layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
+             << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+
+
+
+   size_t depth2 = 2;
    size_t filterHeightConv2 = 2;
    size_t filterWidthConv2 = 2;
    size_t strideRowsConv2 = 1;
    size_t strideColsConv2 = 1;
-   size_t zeroPaddingHeight2 = 1;
-   size_t zeroPaddingWidth2 = 1;
+   size_t zeroPaddingHeight2 = 0;
+   size_t zeroPaddingWidth2 = 0;
 
    EActivationFunction fConv2 = EActivationFunction::kIdentity;
 
    net.AddConvLayer(depth2, filterHeightConv2, filterWidthConv2, strideRowsConv2, strideColsConv2, zeroPaddingHeight2,
                     zeroPaddingWidth2, fConv2);
 
-   size_t filterHeightPool = 6;
-   size_t filterWidthPool = 6;
+   std::cout << "added Conv layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
+             << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
+
+   // size_t depth3 = 12;
+   // size_t filterHeightConv3 = 3;
+   // size_t filterWidthConv3 = 3;
+   // size_t strideRowsConv3 = 1;
+   // size_t strideColsConv3 = 1;
+   // size_t zeroPaddingHeight3 = 1;
+   // size_t zeroPaddingWidth3 = 1;
+
+   // EActivationFunction fConv3 = EActivationFunction::kIdentity;
+
+   // net.AddConvLayer(depth3, filterHeightConv3, filterWidthConv3, strideRowsConv3, strideColsConv3, zeroPaddingHeight3,
+   //                 zeroPaddingWidth3, fConv3);
+
+
+   size_t filterHeightPool = 2;
+   size_t filterWidthPool = 2;
    size_t strideRowsPool = 1;
    size_t strideColsPool = 1;
 
    net.AddMaxPoolLayer(filterHeightPool, filterWidthPool, strideRowsPool, strideColsPool);
+
+   std::cout << "added MaxPool layer " <<  net.GetLayerAt(net.GetDepth() - 1)->GetDepth() << " x " <<  net.GetLayerAt(net.GetDepth() - 1)->GetHeight()
+             << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
 
    size_t depthReshape = 1;
    size_t heightReshape = 1;
@@ -127,11 +171,11 @@ void constructLinearConvNet(TDeepNet<AArchitecture> &net)
 
    net.AddReshapeLayer(depthReshape, heightReshape, widthReshape, true);
 
-   size_t widthFC1 = 20;
+   size_t widthFC1 = 3;
    EActivationFunction fFC1 = EActivationFunction::kIdentity;
    net.AddDenseLayer(widthFC1, fFC1);
 
-   size_t widthFC2 = 5;
+   size_t widthFC2 = 1;
    EActivationFunction fFC2 = EActivationFunction::kIdentity;
    net.AddDenseLayer(widthFC2, fFC2);
 }
