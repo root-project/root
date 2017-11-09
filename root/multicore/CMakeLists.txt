@@ -27,13 +27,6 @@ ROOTTEST_ADD_TEST(loadImt
                   EXEC loadImt
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
-
-# ROOT-8787
-ROOTTEST_GENERATE_EXECUTABLE(tthrobj_ttreeview_regression tthrobj_ttreeview_regression.cpp LIBRARIES Core RIO Tree Imt)
-
-ROOTTEST_ADD_TEST(tthrobj_ttreeview_regression
-                  EXEC tthrobj_ttreeview_regression
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
 endif()
 
 ROOTTEST_GENERATE_EXECUTABLE(testSetAddress testSetAddress.cpp LIBRARIES Core RIO Tree)
