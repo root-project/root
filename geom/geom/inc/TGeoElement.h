@@ -91,7 +91,7 @@ public:
    // Tsai formula for the radiation length
    inline Double_t          GetfRadTsai() const {return fRadTsai;}
 
-   ClassDef(TGeoElement, 2)              // base element class
+   ClassDef(TGeoElement, 3)              // base element class
 };
 
 ////////////////////////////////////////////////////////////////////////////
