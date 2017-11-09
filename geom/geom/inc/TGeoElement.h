@@ -48,15 +48,17 @@ protected:
    Double_t                 fA;          // A of element
    TObjArray               *fIsotopes;   // List of isotopes
    Double_t                *fAbundances; //[fNisotopes] Array of relative isotope abundances
+   Double_t                 fCoulomb;    // Coulomb correction factor
+   Double_t                 fRadTsai;    // Tsai formula for the radiation length
 
 private:
-  TGeoElement(const TGeoElement &other);
-  TGeoElement &operator=(const TGeoElement &other);
-  void                      ComputeDerivedQuantities(); // Calculate properties for an atomic number
-  void                      ComputeCoulombFactor(); // Compute the Coulomb correction factor
-  void                      ComputeLradTsaiFactor(); // Compute the Tsai formula for the radiation length
-  Double_t                  fCoulomb;    // Coulomb correction factor
-  Double_t                  fRadTsai;    // Tsai formula for the radiation length
+   TGeoElement(const TGeoElement &other);
+   TGeoElement &operator=(const TGeoElement &other);
+
+   // Compute the Coulomb correction factor
+   void                     ComputeCoulombFactor();
+   // Compute the Tsai formula for the radiation length
+   void                     ComputeLradTsaiFactor();
 
 public:
    // constructors
@@ -76,6 +78,8 @@ public:
    Int_t                    GetNisotopes() const {return fNisotopes;}
    TGeoIsotope             *GetIsotope(Int_t i) const;
    Double_t                 GetRelativeAbundance(Int_t i) const;
+   // Calculate properties for an atomic number
+   void                     ComputeDerivedQuantities();
    // Specific activity (in Bq/gram)
    virtual Double_t         GetSpecificActivity() const {return 0.;}
    Bool_t                   HasIsotopes() const {return (fNisotopes==0)?kFALSE:kTRUE;}
