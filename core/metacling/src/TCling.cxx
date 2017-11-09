@@ -2285,7 +2285,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          fCurExecutingMacros.push_back(fname);
          if (unnamedMacroOpenCurly != std::string::npos) {
             compRes = fMetaProcessor->readInputFromFile(fname.Data(), &result,
-                                                        unnamedMacroOpenCurly);
+                                                        unnamedMacroOpenCurly,  /*lineByLine*/ true);
          } else {
             // No DynLookup for .x, .L of named macros.
             fInterpreter->enableDynamicLookup(false);
