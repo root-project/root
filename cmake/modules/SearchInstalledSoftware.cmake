@@ -1593,6 +1593,12 @@ if (testing)
     ${_gtest_byproduct_binary_dir}/libgmock_main.a
     )
 
+  if(MSVC)
+    set(EXTRA_GTEST_OPTS
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=\\\"\\\"
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=\\\"\\\")
+  endif()
+
   ExternalProject_Add(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
@@ -1611,8 +1617,7 @@ if (testing)
                   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                   -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                   -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
-                  -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=""
-                  -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=""
+                  ${EXTRA_GTEST_OPTS}
     # Disable install step
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS ${_gtest_byproducts}
