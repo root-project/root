@@ -95,7 +95,6 @@ TGeoElement::TGeoElement()
    fA = 0.0;
    fIsotopes = NULL;
    fAbundances = NULL;
-   ComputeDerivedQuantities();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +128,6 @@ TGeoElement::TGeoElement(const char *name, const char *title, Int_t nisotopes)
    fA = 0.0;
    fIsotopes = new TObjArray(nisotopes);
    fAbundances = new Double_t[nisotopes];
-   ComputeDerivedQuantities();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -257,6 +255,7 @@ void TGeoElement::AddIsotope(TGeoIsotope *isotope, Double_t relativeAbundance)
       fN = (Int_t)neff;
       fA = aeff;
    }
+   ComputeDerivedQuantities();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
