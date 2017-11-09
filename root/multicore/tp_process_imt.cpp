@@ -102,8 +102,21 @@ int main(int argc, char** argv) {
 
      tp.reset(new ROOT::TTreeProcessorMT(chain, entries));
   }
+  else if (kConstructor == "friends") {
+     TChain chain(kTreeName.c_str());
+     chain.Add(kFileName.c_str());
+     chain.Add(kFileName.c_str());
+
+     // Create an identical friend with an alias
+     TChain friendChain(kTreeName.c_str());
+     friendChain.Add(kFileName.c_str());
+     friendChain.Add(kFileName.c_str());
+     chain.AddFriend(&friendChain, "myfriend");
+
+     tp.reset(new ROOT::TTreeProcessorMT(chain));
+  }
   else {
-     std::cerr << "Error: " << kConstructor << " is not a valid constructor name. Please choose filename, collection or chain" << std::endl;
+     std::cerr << "Error: " << kConstructor << " is not a valid constructor name. Please choose filename, collection, chain, entrylist or friend" << std::endl;
      return 1;
   }
   
@@ -111,6 +124,10 @@ int main(int argc, char** argv) {
   tp->Process([&](TTreeReader &myReader) {
      TTreeReaderValue<std::vector<ROOT::Math::PxPyPzEVector>> tracksRV(myReader, "tracks");
      TTreeReaderValue<int> eventNumRV(myReader, "evtNum");
+     std::unique_ptr<TTreeReaderValue<int>> eventNumFriendRVP;
+     bool hasFriend = kConstructor == "friends";
+     if (hasFriend)
+        eventNumFriendRVP.reset(new TTreeReaderValue<int>(myReader, "myfriend.evtNum"));
 
      auto start = myReader.GetCurrentEntry();
 
@@ -118,6 +135,13 @@ int main(int argc, char** argv) {
      double maxPt = -1.;
      while(myReader.Next()) {
         auto evtNum (*eventNumRV);
+        if (hasFriend) {
+           auto evtNumFriend (**eventNumFriendRVP);
+           if (evtNum != evtNumFriend) {
+              std::cerr << "Error checking event number " << evtNum << ", friend's is " << evtNumFriend << std::endl;
+              return;
+           }
+        } 
 
         auto tracks = *tracksRV;
         for (auto&& track : tracks){
