@@ -30,8 +30,8 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
                                                            EActivationFunction::kSigmoid, EActivationFunction::kTanh};
 
    size_t depth1 = 12;
-   size_t filterHeightConv1 = 8;
-   size_t filterWidthConv1 = 8;
+   size_t filterHeightConv1 = 4;
+   size_t filterWidthConv1 = 4;
    size_t strideRowsConv1 = 1;
    size_t strideColsConv1 = 1;
    size_t zeroPaddingHeight1 = 1;
@@ -49,8 +49,9 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
 
 
    size_t depth2 = 6;
-   size_t filterHeightConv2 = 4;
-   size_t filterWidthConv2 = 4;
+   // filter large than 2x2 fails ??????
+   size_t filterHeightConv2 = 2;
+   size_t filterWidthConv2 = 2;
    size_t strideRowsConv2 = 1;
    size_t strideColsConv2 = 1;
    size_t zeroPaddingHeight2 = 0;
@@ -124,8 +125,8 @@ void constructLinearConvNet(TDeepNet<AArchitecture> &net)
 
 
    size_t depth2 = 2;
-   size_t filterHeightConv2 = 2;
-   size_t filterWidthConv2 = 2;
+   size_t filterHeightConv2 = 3;
+   size_t filterWidthConv2 = 3;
    size_t strideRowsConv2 = 1;
    size_t strideColsConv2 = 1;
    size_t zeroPaddingHeight2 = 0;

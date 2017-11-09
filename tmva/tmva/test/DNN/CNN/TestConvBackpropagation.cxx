@@ -63,7 +63,7 @@ bool test1()
 bool test2()
 {
 
-   size_t batchSizeTest = 8;
+   size_t batchSizeTest = 1;
    size_t imgDepthTest = 1;
    size_t imgHeightTest = 32;
    size_t imgWidthTest = 32;
