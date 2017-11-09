@@ -266,7 +266,7 @@ void TCpu<AFloat>::CalculateConvWeightGradients(TCpuMatrix<AFloat> &weightGradie
 
    // convolution
    TCpuMatrix<AFloat> res(depth, nLocalViewPixels);
-   std::cout << "do back-propagation in conv layer - compute weight gradient" << std::endl;
+   //std::cout << "do back-propagation in conv layer - compute weight gradient" << std::endl;
    for (size_t i = 0; i < batchSize; i++) {
 
       size_t tempStrideRows = 1;

@@ -874,12 +874,9 @@ auto TDeepNet<Architecture_t, Layer_t>::Backward(std::vector<Matrix_t> &input, c
       fLayers[i]->Backward(activation_gradient_backward, activations_backward, inp1, inp2);
    }
 
+   // need to have a dummy tensor (size=0) to pass for activation gradient backward which
+   // are not computed for the first layer 
    std::vector<Matrix_t> dummy;
-   // for (size_t i = 0; i < input.size(); i++) {
-   //    dummy.emplace_back(input[i].GetNrows(), input[i].GetNcols());
-   //    // dummy.emplace_back(0, 0);
-   //  }
-   std::cout << "Do backward propagation in layer 0 " << inp1.size() << "  " << inp2.size() << " input " << input.size() << std::endl;
    fLayers[0]->Backward(dummy, input, inp1, inp2);
 }
 
