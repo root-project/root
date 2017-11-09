@@ -54,6 +54,8 @@ integration is performed in the various implemenations of the RooAbsIntegrator b
 // getpid and getppid:
 #include "unistd.h"
 
+#include "ROOT/RMakeUnique.hxx"
+
 using namespace std;
 
 ClassImp(RooRealIntegral); 
@@ -927,8 +929,9 @@ Double_t RooRealIntegral::evaluate() const
   std::unique_ptr<RooWallTimer> timer;
 
   if (_timeNumInt) {
-    std::unique_ptr<RooWallTimer> timer_dummy(new RooWallTimer);
-    timer = std::move(timer_dummy);
+//    std::unique_ptr<RooWallTimer> timer_dummy(new RooWallTimer);
+//    timer = std::move(timer_dummy);
+    timer = std::make_unique<RooWallTimer>();
     timer->start();
   }
 
