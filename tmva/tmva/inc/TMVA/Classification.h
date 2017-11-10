@@ -135,6 +135,8 @@ private:
    std::vector<TString> fClassNames; //
 
    Bool_t IsMethod(TString methodname, TString methodtitle);
+   Bool_t fIsCuts;        // if it is a method cuts need special output
+   Double_t fROCIntegral; //
 
 public:
    ClassificationResult();
@@ -146,6 +148,7 @@ public:
    ROCCurve *GetROC(UInt_t iClass = 0, TMVA::Types::ETreeType type = TMVA::Types::kTesting);
    Double_t GetROCIntegral(UInt_t iClass = 0, TMVA::Types::ETreeType type = TMVA::Types::kTesting);
    TString GetDataLoaderName() { return fDataLoaderName; }
+   Bool_t IsCutsMethod() { return fIsCuts; }
 
    void Show();
 

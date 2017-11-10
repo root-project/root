@@ -51,7 +51,7 @@
 #define MinNoTrainingEvents 10
 
 //_______________________________________________________________________
-TMVA::Experimental::ClassificationResult::ClassificationResult()
+TMVA::Experimental::ClassificationResult::ClassificationResult() : fROCIntegral(0)
 {
 }
 
@@ -62,6 +62,8 @@ TMVA::Experimental::ClassificationResult::ClassificationResult(const Classificat
    fDataLoaderName = cr.fDataLoaderName;
    fMvaTrain = cr.fMvaTrain;
    fMvaTest = cr.fMvaTest;
+   fIsCuts = cr.fIsCuts;
+   fROCIntegral = cr.fROCIntegral;
 }
 
 //_______________________________________________________________________
@@ -73,10 +75,14 @@ TMVA::Experimental::ClassificationResult::ClassificationResult(const Classificat
  */
 Double_t TMVA::Experimental::ClassificationResult::GetROCIntegral(UInt_t iClass, TMVA::Types::ETreeType type)
 {
-   auto roc = GetROC(iClass, type);
-   auto inte = roc->GetROCIntegral();
-   delete roc;
-   return inte;
+   if (fIsCuts) {
+      return fROCIntegral;
+   } else {
+      auto roc = GetROC(iClass, type);
+      auto inte = roc->GetROCIntegral();
+      delete roc;
+      return inte;
+   }
 }
 
 //_______________________________________________________________________
@@ -104,6 +110,8 @@ operator=(const TMVA::Experimental::ClassificationResult &cr)
    fDataLoaderName = cr.fDataLoaderName;
    fMvaTrain = cr.fMvaTrain;
    fMvaTest = cr.fMvaTest;
+   fIsCuts = cr.fIsCuts;
+   fROCIntegral = cr.fROCIntegral;
    return *this;
 }
 
@@ -274,6 +282,7 @@ void TMVA::Experimental::Classification::Evaluate()
          if (!IsSilentFile()) {
             GetFile()->Close();
          }
+         
          return GetResults(methodname, methodtitle);
       };
 
@@ -801,6 +810,8 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
    // Third part of evaluation process
    // --> output
    // -----------------------------------------------------------------------
+   // putting results in the classification result object
+   auto &fResult = GetResults(methodname, methodtitle);
 
    // Binary classification
    if (fROC) {
@@ -839,9 +850,12 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
 
             if (sep[k][i] < 0 || sig[k][i] < 0) {
                // cannot compute separation/significance -> no MVA (usually for Cuts)
-               Log() << kINFO << Form("%-13s %-15s: %#1.3f", fDataLoader->GetName(), methodName.Data(), effArea[k][i])
+               fResult.fROCIntegral = effArea[k][i];
+               Log() << kINFO
+                     << Form("%-13s %-15s: %#1.3f", fDataLoader->GetName(), methodName.Data(), fResult.fROCIntegral)
                      << Endl;
             } else {
+               fResult.fROCIntegral = rocIntegral;
                Log() << kINFO << Form("%-13s %-15s: %#1.3f", datasetName.Data(), methodName.Data(), rocIntegral)
                      << Endl;
             }
@@ -877,22 +891,29 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
 
       if (gTools().CheckForSilentOption(GetOptions()))
          Log().InhibitOutput();
-   } // end fROC
+   } else if (IsCutsMethod(method)) { // end fROC
+      for (Int_t k = 0; k < 2; k++) {
+         for (Int_t i = 0; i < nmeth_used[k]; i++) {
 
-   // putting results in the classification result object
-   auto &fResult = GetResults(methodname, methodtitle);
+            if (sep[k][i] < 0 || sig[k][i] < 0) {
+               // cannot compute separation/significance -> no MVA (usually for Cuts)
+               fResult.fROCIntegral = effArea[k][i];
+            }
+         }
+      }
+   }
 
    TMVA::DataSet *dataset = method->Data();
    dataset->SetCurrentType(Types::kTesting);
 
-   //       auto rocCurveTrain = GetROC(methodname, methodtitle, 0, Types::kTraining);
-   auto rocCurveTest = GetROC(methodname, methodtitle, 0, Types::kTesting);
-   //       fResult.fMvaTrain[0] = rocCurveTrain->GetMvas();
-   fResult.fMvaTest[0] = rocCurveTest->GetMvas();
+   if (IsCutsMethod(method)) {
+      fResult.fIsCuts = kTRUE;
+   } else {
+      auto rocCurveTest = GetROC(methodname, methodtitle, 0, Types::kTesting);
+      fResult.fMvaTest[0] = rocCurveTest->GetMvas();
+   }
    TString className = method->DataInfo().GetClassInfo(0)->GetName();
    fResult.fClassNames.push_back(className);
-   //       className = method->DataInfo().GetClassInfo(1)->GetName();
-   //       fResult.fClassNames.push_back(className);
 
    if (!IsSilentFile()) {
       // write test/training trees
