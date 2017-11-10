@@ -83,7 +83,7 @@ void time(timefunc_t r7, int count, const std::string &name)
 
 void perf()
 {
-   time(createOld, createNew, 1000000, "create 2D hists");
+   time(createNew, 1000000, "create 2D hists");
    time(fillNew, 100000000, "2D fills");
    time(fillBufferedNew, 100000000, "2D fills (buffered)");
 }
