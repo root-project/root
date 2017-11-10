@@ -164,7 +164,7 @@ using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
 Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
                          std::string_view name, std::string_view expression,
-                         const std::map<std::string, std::string> &aliasMap, const ColumnNames_t& branches,
+                         const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
                          const std::vector<std::string> &customColumns,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
                          std::string_view returnTypeName, TDataSource *ds);

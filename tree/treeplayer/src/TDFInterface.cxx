@@ -262,7 +262,8 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::TDF::CallBuildAndBook"
                     << "<" << actionTypeName;
-   for (auto &colType : columnTypeNames) createAction_str << ", " << colType;
+   for (auto &colType : columnTypeNames)
+      createAction_str << ", " << colType;
    createAction_str << ">(*reinterpret_cast<" << prevNodeTypename << "*>(" << prevNode << "), {";
    for (auto i = 0u; i < bl.size(); ++i) {
       if (i != 0u)

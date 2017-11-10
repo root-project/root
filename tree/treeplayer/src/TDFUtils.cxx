@@ -153,11 +153,13 @@ unsigned int GetNSlots()
    return nSlots;
 }
 
-void GetBranchNamesImpl(TTree* t, std::set<std::string> &bNames, std::set<TTree*> &analysedTrees) {
+void GetBranchNamesImpl(TTree *t, std::set<std::string> &bNames, std::set<TTree *> &analysedTrees)
+{
 
-   if (!t) return;
+   if (!t)
+      return;
 
-   if (! analysedTrees.insert(t).second) {
+   if (!analysedTrees.insert(t).second) {
       return;
    }
 
@@ -170,21 +172,23 @@ void GetBranchNamesImpl(TTree* t, std::set<std::string> &bNames, std::set<TTree*
 
    auto friendTrees = t->GetListOfFriends();
 
-   if (!friendTrees) return;
+   if (!friendTrees)
+      return;
 
    for (auto friendTreeObj : *friendTrees) {
-      auto friendTree = ((TFriendElement*) friendTreeObj)->GetTree();
+      auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
       GetBranchNamesImpl(friendTree, bNames, analysedTrees);
    }
 }
 
-ColumnNames_t GetBranchNames(TTree* t)
+ColumnNames_t GetBranchNames(TTree *t)
 {
    std::set<std::string> bNamesSet;
-   std::set<TTree*> analysedTrees;
+   std::set<TTree *> analysedTrees;
    GetBranchNamesImpl(t, bNamesSet, analysedTrees);
    ColumnNames_t bNames;
-   for (auto &bName : bNamesSet) bNames.emplace_back(bName);
+   for (auto &bName : bNamesSet)
+      bNames.emplace_back(bName);
    return bNames;
 }
 
