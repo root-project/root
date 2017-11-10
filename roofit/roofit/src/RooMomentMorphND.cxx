@@ -436,7 +436,7 @@ RooMomentMorphND::CacheElem *RooMomentMorphND::getCache(const RooArgSet * /*nset
    vector<RooAbsReal *> myrms(nObs, null);
    vector<RooAbsReal *> mypos(nObs, null);
    vector<RooAbsReal *> slope(nPdf * nObs, null);
-   vector<RooAbsReal *> offset(nPdf * nObs, null);
+   vector<RooAbsReal *> offsetrv(nPdf * nObs, null);
    vector<RooAbsReal *> transVar(nPdf * nObs, null);
    vector<RooAbsReal *> transPdf(nPdf, null);
 
@@ -519,15 +519,15 @@ RooMomentMorphND::CacheElem *RooMomentMorphND::getCache(const RooArgSet * /*nset
 
             slope[sij(i, j)] =
                new RooFormulaVar(slopeName.c_str(), "@0/@1", RooArgList(*sigmarv[sij(i, j)], *myrms[j]));
-            offset[sij(i, j)] = new RooFormulaVar(offsetName.c_str(), "@0-(@1*@2)",
+            offsetrv[sij(i, j)] = new RooFormulaVar(offsetName.c_str(), "@0-(@1*@2)",
                                                   RooArgList(*meanrv[sij(i, j)], *mypos[j], *slope[sij(i, j)]));
-            ownedComps.add(RooArgSet(*slope[sij(i, j)], *offset[sij(i, j)]));
+            ownedComps.add(RooArgSet(*slope[sij(i, j)], *offsetrv[sij(i, j)]));
 
             // linear transformations, so pdf can be renormalized easily
             var = (RooRealVar *)(_obsItr->Next());
             string transVarName = Form("%s_transVar_%d_%d", GetName(), i, j);
             transVar[sij(i, j)] = new RooLinearVar(transVarName.c_str(), transVarName.c_str(), *var, *slope[sij(i, j)],
-                                                   *offset[sij(i, j)]);
+                                                   *offsetrv[sij(i, j)]);
 
             // *** WVE this is important *** this declares that frac effectively depends on the morphing parameters
             // This will prevent the likelihood optimizers from erroneously declaring terms constant
@@ -821,13 +821,13 @@ void RooMomentMorphND::findShape(const vector<double> &x) const
    int nRef = _referenceGrid._nref.size();
 
    // Find hypercube enclosing the location to morph to
-   bool isEnclosed = true;
-   for (int i = 0; i < nPar; i++) {
-      if (x[i] < _referenceGrid._grid[i]->lowBound())
-         isEnclosed = false;
-      if (x[i] > _referenceGrid._grid[i]->highBound())
-         isEnclosed = false;
-   }
+   // bool isEnclosed = true;
+   // for (int i = 0; i < nPar; i++) {
+   //    if (x[i] < _referenceGrid._grid[i]->lowBound())
+   //       isEnclosed = false;
+   //    if (x[i] > _referenceGrid._grid[i]->highBound())
+   //       isEnclosed = false;
+   // }
 
    // cout << "isEnclosed = " << isEnclosed << endl;
 
