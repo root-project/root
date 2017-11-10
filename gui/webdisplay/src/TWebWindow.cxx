@@ -13,6 +13,9 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 #include "ROOT/TWebWindow.hxx"
 
 #include "ROOT/TWebWindowsManager.hxx"
