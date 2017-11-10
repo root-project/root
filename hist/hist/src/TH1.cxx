@@ -1238,9 +1238,8 @@ inline Double_t TH1::AutoP2GetPower2(Double_t x, Bool_t next)
 {
    Int_t nn;
    Double_t f2 = std::frexp(x, &nn);
-   return ((next && x > 0.) || (!next && x <= 0.))
-          ? std::ldexp(std::copysign(1., f2), nn)
-          : std::ldexp(std::copysign(1., f2), --nn);
+   return ((next && x > 0.) || (!next && x <= 0.)) ? std::ldexp(std::copysign(1., f2), nn)
+                                                   : std::ldexp(std::copysign(1., f2), --nn);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1252,7 +1251,8 @@ inline Int_t TH1::AutoP2GetBins(Int_t n)
 {
    Int_t nn;
    Double_t f2 = std::frexp(n, &nn);
-   if (TMath::Abs(f2 - .5) > 0.001) return (Int_t) std::ldexp(1., nn);
+   if (TMath::Abs(f2 - .5) > 0.001)
+      return (Int_t)std::ldexp(1., nn);
    return n;
 }
 
@@ -1297,23 +1297,25 @@ Int_t TH1::AutoP2FindLimits(Double_t xmi, Double_t xma)
    Int_t nb = TH1::AutoP2GetBins((Int_t)(rr * GetNbinsX()));
 
    // Adjust using the same bin width and offsets
-   Double_t bw = (xhma - xhmi) / nb ;
+   Double_t bw = (xhma - xhmi) / nb;
    // Bins to left free on each side
    Double_t autoside = gEnv->GetValue("Hist.Binning.Auto.Side", 0.05);
-   Int_t nbside = (Int_t) (nb * autoside);
+   Int_t nbside = (Int_t)(nb * autoside);
 
    // Side up
    Int_t nbup = (xhma - xma) / bw;
-   if (nbup % 2 != 0) nbup++;  // Must be even
+   if (nbup % 2 != 0)
+      nbup++; // Must be even
    if (nbup != nbside) {
       // Accounts also for both case: larger or smaller
       xhma -= bw * (nbup - nbside);
       nb -= (nbup - nbside);
    }
 
-  // Side low
+   // Side low
    Int_t nblw = (xmi - xhmi) / bw;
-   if (nblw % 2 != 0) nblw++; // Must be even
+   if (nblw % 2 != 0)
+      nblw++; // Must be even
    if (nblw != nbside) {
       // Accounts also for both case: larger or smaller
       xhmi += bw * (nblw - nbside);

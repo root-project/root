@@ -12,9 +12,9 @@
 #include <limits>
 #include <utility>
 
-#define PRINTRANGE(a, b, bn) \
-   Printf(" base: %f %f %d, %s: %f %f %d", a->GetXmin(), a->GetXmax(), a->GetNbins(), \
-                                       bn, b->GetXmin(), b->GetXmax(), b->GetNbins());
+#define PRINTRANGE(a, b, bn)                                                                                          \
+   Printf(" base: %f %f %d, %s: %f %f %d", a->GetXmin(), a->GetXmax(), a->GetNbins(), bn, b->GetXmin(), b->GetXmax(), \
+          b->GetNbins());
 
 Bool_t TH1Merger::AxesHaveLimits(const TH1 * h) {
    Bool_t hasLimits = h->GetXaxis()->GetXmin() < h->GetXaxis()->GetXmax();
@@ -192,7 +192,8 @@ Bool_t TH1Merger::AutoP2BuildAxes(TH1 *h)
    a0->Set(nb, xmin, xmax);
 
    // This is for future merging of detached ranges (only possible if no over/underflows)
-   if (!a0->CanExtend()) a0->SetCanExtend(canextend);
+   if (!a0->CanExtend())
+      a0->SetCanExtend(canextend);
 
    // Done
    return kTRUE;
