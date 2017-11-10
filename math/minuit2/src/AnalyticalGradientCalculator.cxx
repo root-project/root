@@ -1,11 +1,10 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
-//          E.G.P. Bos                                   2017
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei, E.G.P. Bos   2003-2017
 
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2005 LCG ROOT Math team,  CERN/PH-SFT                *
- * Copyright (c) 2017 Patrick Bos, NL eScience Center                 *
+ * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -59,10 +58,10 @@ namespace ROOT {
         for(unsigned int i = 0; i < par.Vec().size(); i++) {
           unsigned int ext = fTransformation.ExtOfInt(i);
           if(fTransformation.Parameter(ext).HasLimits()) {
-            double jacobian_g2 = fTransformation.D2Int2Ext(i, par.Vec()(i));
-            double jacobian_gstep = fTransformation.GStepInt2Ext(i, par.Vec()(i));
-            vg2(i) = jacobian_g2 * g2[ext];
-            vgstep(i) = jacobian_gstep * gstep[ext];
+            double int2ext_g2 = fTransformation.D2Int2Ext(i, par.Vec()(i));
+            double int2ext_gstep = fTransformation.GStepInt2Ext(i, par.Vec()(i));
+            vg2(i) = int2ext_g2 * g2[ext];
+            vgstep(i) = int2ext_gstep * gstep[ext];
           } else {
             vg2(i) = g2[ext];
             vgstep(i) = gstep[ext];

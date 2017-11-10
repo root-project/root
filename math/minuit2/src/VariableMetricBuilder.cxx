@@ -267,6 +267,7 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
    do {
 
       //MinimumState s0 = result.back();
+//     std::cout << s0 << std::endl;
 
       step = -1.*s0.Error().InvHessian()*s0.Gradient().Vec();
 

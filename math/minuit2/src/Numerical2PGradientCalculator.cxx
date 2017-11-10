@@ -81,6 +81,8 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 //    std::cout << "position[" << i <<"] = " << par.Vec()(i) << std::endl << std::endl;
 //  }
 
+  std::cout << "########### Numerical2PDerivative::operator()" <<std::endl;
+
    assert(par.IsValid());
 
 
@@ -192,8 +194,14 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
                    << " grd " << grd(i) << " g2 " << g2(i) << std::endl;
          std::cout.precision(pr);
 #endif
+        std::cout << "fGrd[" << i <<"] = " << grd(i) << "\t";
+        std::cout << "fG2[" << i <<"] = " << g2(i) << "\t";
+        std::cout << "fGstep[" << i <<"] = " << gstep(i) << "\t";
+        std::cout << "x[" << i << "] = " << xtf << "\t";
+        std::cout << "fVal = " << fcnmin << "\t";
+        std::cout << std::endl;
 
-         if(fabs(grdb4-grd(i))/(fabs(grd(i))+dfmin/step) < GradTolerance())  {
+        if(fabs(grdb4-grd(i))/(fabs(grd(i))+dfmin/step) < GradTolerance())  {
             //    std::cout<<"j= "<<j<<std::endl;
             //    std::cout<<"step= "<<step<<std::endl;
             //    std::cout<<"fs1, fs2: "<<fs1<<" "<<fs2<<std::endl;

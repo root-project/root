@@ -57,7 +57,8 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* co
   _maxFCN(-1e30), _numBadNLL(0),  
   _printEvalErrors(10), _doEvalErrorWall(kTRUE),
   _nDim(0), _logfile(0),
-  _verbose(verbose), _grad_initialized(false)
+  _verbose(verbose),
+  _grad(0), _grad_initialized(false)
 { 
 
   _evalCounter = 0 ;
@@ -638,7 +639,7 @@ void RooGradMinimizerFcn::InitGradient() const {
                                                   minimizer->ErrorDef());//,
 //                                                  precision.Eps());
   _gradf = derivator;
-  _grad.resize(_nDim);
+//  _grad.resize(_nDim);
   _grad_params.resize(_nDim);
 
   SynchronizeGradient(fitter->Config().ParamsSettings());
@@ -647,36 +648,59 @@ void RooGradMinimizerFcn::InitGradient() const {
 }
 
 
-double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int icoord) const {
+void RooGradMinimizerFcn::run_derivator(const double *x) const {
   if (!_grad_initialized) {
     InitGradient();
   }
   // check whether the derivative was already calculated for this set of parameters
   if (std::equal(_grad_params.begin(), _grad_params.end(), x)) {
-    std::cout << "grad value (cached) " << _grad[icoord] << std::endl;
-    return _grad[icoord];
+    std::cout << "gradient already calculated for these parameters, use cached value" << std::endl;
+//    return _grad[icoord];
+  } else {
+    // if not, set the _grad_params to the current input parameters
+    std::vector<double> new_grad_params(x, x + _nDim);
+    _grad_params = new_grad_params;
+
+    // Set the parameter values for this iteration
+    // TODO: this is already done in DoEval as well; find efficient way to do only once
+    for (int index = 0; index < _nDim; index++) {
+      if (_logfile) (*_logfile) << x[index] << " " ;
+      SetPdfParamVal(index,x[index]);
+    }
+
+    // Calculate the function for these parameters
+    _grad = _gradf(x, _context->fitter()->Config().ParamsSettings());
   }
-  // if not, set the _grad_params to the current input parameters
-  std::vector<double> new_grad_params(x, x + _nDim);
-  _grad_params = new_grad_params;
+}
 
-  // Set the parameter values for this iteration
-  // TODO: this is already done in DoEval as well; find efficient way to do only once
-  for (int index = 0; index < _nDim; index++) {
-    if (_logfile) (*_logfile) << x[index] << " " ;
-    SetPdfParamVal(index,x[index]);
-  }
-
-  // Calculate the function for these parameters
-  _grad = _gradf(x);
-
+double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int icoord) const {
+  run_derivator(x);
 //  std::cout << "grad value " << _grad[icoord] << std::endl;
-  return _grad[icoord];
+  return _grad.Grad()(icoord);
 }
 
 
 void RooGradMinimizerFcn::SetVerbose(Bool_t flag) {
   _verbose = flag;
+}
+
+
+bool RooGradMinimizerFcn::hasG2ndDerivative() const {
+  return true;
+}
+
+bool RooGradMinimizerFcn::hasGStepSize() const {
+  return true;
+}
+
+double RooGradMinimizerFcn::DoSecondDerivative(const double *x, unsigned int icoord) const {
+  run_derivator(x);
+  return _grad.G2()(icoord);
+}
+
+double RooGradMinimizerFcn::DoStepSize(const double *x, unsigned int icoord) const {
+  run_derivator(x);
+  return _grad.Gstep()(icoord);
 }
 
 

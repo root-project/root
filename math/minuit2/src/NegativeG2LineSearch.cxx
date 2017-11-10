@@ -22,6 +22,9 @@
 #include <iostream>
 #endif
 
+
+#include <iostream>
+
 namespace ROOT {
 
    namespace Minuit2 {
@@ -115,12 +118,15 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
 bool NegativeG2LineSearch::HasNegativeG2(const FunctionGradient& grad, const MnMachinePrecision& /*prec */ ) const {
    // check if function gradient has any component which is neegative
 
-   for(unsigned int i = 0; i < grad.Vec().size(); i++)
 
-      if(grad.G2()(i) <= 0 ) {
+   for(unsigned int i = 0; i < grad.Vec().size(); i++) {
 
-         return true;
-      }
+     std::cout << grad.G2()(i) << std::endl;
+     if (grad.G2()(i) <= 0) {
+
+       return true;
+     }
+   }
 
    return false;
 }

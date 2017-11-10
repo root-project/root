@@ -1,9 +1,10 @@
 // @(#)root/minuit2:$Id$
-// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei   2003-2005
+// Authors: M. Winkler, F. James, L. Moneta, A. Zsenei, E.G.P. Bos   2003-2017
 
 /**********************************************************************
  *                                                                    *
  * Copyright (c) 2005 LCG ROOT Math team,  CERN/PH-SFT                *
+ * Copyright (c) 2017 Patrick Bos, Netherlands eScience Center        *
  *                                                                    *
  **********************************************************************/
 
@@ -49,6 +50,7 @@ namespace ROOT {
 
 MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculator& gc, const MnUserParameterState& st, const MnStrategy& stra) const {
 
+  std::cout << "MnSeedGenerator::operator() for general GradientCalculator" << std::endl;
 
    // find seed (initial minimization point) using the calculated gradient
    unsigned int n = st.VariableParameters();
@@ -71,14 +73,19 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
    }
 
    MinimumParameters pa(x, fcnmin);
+  std::cout << "... doing gc(pa) ..." << std::endl;
    FunctionGradient dgrad = gc(pa);
+  std::cout << "dgrad.Vec: " << dgrad.Vec() << std::endl;
+  std::cout << "dgrad.G2: " << dgrad.G2() << std::endl;
    MnAlgebraicSymMatrix mat(n);
    double dcovar = 1.;
    if(st.HasCovariance()) {
+     std::cout << "has covariance" << std::endl;
       for(unsigned int i = 0; i < n; i++)
          for(unsigned int j = i; j < n; j++) mat(i,j) = st.IntCovariance()(i,j);
       dcovar = 0.;
    } else {
+     std::cout << "has no covariance" << std::endl;
       for(unsigned int i = 0; i < n; i++)
          mat(i,i) = (fabs(dgrad.G2()(i)) > prec.Eps2() ? 1./dgrad.G2()(i) : 1.);
    }
@@ -92,7 +99,12 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
    }
 
    NegativeG2LineSearch ng2ls;
-   if(ng2ls.HasNegativeG2(dgrad, prec)) {
+  std::cout << dgrad.Vec() << std::endl;
+  std::cout << prec << std::endl;
+  std::cout << ng2ls.HasNegativeG2(dgrad, prec) << std::endl;
+  std::cout << dgrad.Vec().size() << std::endl;
+
+  if(ng2ls.HasNegativeG2(dgrad, prec)) {
 #ifdef DEBUG
       std::cout << "MnSeedGenerator: Negative G2 Found: " << std::endl;
       std::cout << x << std::endl;
@@ -127,20 +139,33 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
 
 
 MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradientCalculator& gc, const MnUserParameterState& st, const MnStrategy& stra) const {
-   // find seed (initial point for minimization) using analytical gradient
+
+  std::cout << "MnSeedGenerator::operator() for AnalyticalGradientCalculator" << std::endl;
+
+  // find seed (initial point for minimization) using analytical gradient
    unsigned int n = st.VariableParameters();
    const MnMachinePrecision& prec = st.Precision();
 
-   // initial starting values
+   int printLevel = MnPrint::Level();
+
+  // initial starting values
    MnAlgebraicVector x(n);
    for(unsigned int i = 0; i < n; i++) x(i) = st.IntParameters()[i];
    double fcnmin = fcn(x);
    MinimumParameters pa(x, fcnmin);
 
-   InitialGradientCalculator igc(fcn, st.Trafo(), stra);
-   FunctionGradient tmp = igc(pa);
+//  std::cout << "... creating igc ..." << std::endl;
+//   InitialGradientCalculator igc(fcn, st.Trafo(), stra);
+//  std::cout << "... doing igc(pa) ..." << std::endl;
+//   FunctionGradient tmp = igc(pa);
+//  std::cout << "tmp.G2: " << tmp.G2() << std::endl;
    FunctionGradient grd = gc(pa);
-   FunctionGradient dgrad(grd.Grad(), tmp.G2(), tmp.Gstep());
+  std::cout << "grd.G2: " << grd.G2() << std::endl;
+
+//  FunctionGradient dgrad(grd.Grad(), tmp.G2(), tmp.Gstep());
+    FunctionGradient dgrad(grd.Grad(), grd.G2(), grd.Gstep());
+  std::cout << "dgrad.Vec: " << dgrad.Vec() << std::endl;
+  std::cout << "dgrad.G2: " << dgrad.G2() << std::endl;
 
    if(gc.CheckGradient()) {
       bool good = true;
@@ -170,10 +195,12 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradie
    MnAlgebraicSymMatrix mat(n);
    double dcovar = 1.;
    if(st.HasCovariance()) {
+     std::cout << "has covariance" << std::endl;
       for(unsigned int i = 0; i < n; i++)
          for(unsigned int j = i; j < n; j++) mat(i,j) = st.IntCovariance()(i,j);
       dcovar = 0.;
    } else {
+     std::cout << "has no covariance" << std::endl;
       for(unsigned int i = 0; i < n; i++)
          mat(i,i) = (fabs(dgrad.G2()(i)) > prec.Eps2() ? 1./dgrad.G2()(i) : 1.);
    }
@@ -182,9 +209,20 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradie
    MinimumState state(pa, err, dgrad, edm, fcn.NumOfCalls());
 
    NegativeG2LineSearch ng2ls;
+  std::cout << dgrad.Vec() << std::endl;
+  std::cout << prec << std::endl;
+  std::cout << ng2ls.HasNegativeG2(dgrad, prec) << std::endl;
+  std::cout << dgrad.Vec().size() << std::endl;
+
    if(ng2ls.HasNegativeG2(dgrad, prec)) {
-      Numerical2PGradientCalculator ngc(fcn, st.Trafo(), stra);
-      state = ng2ls(fcn, state, ngc, prec);
+//      Numerical2PGradientCalculator ngc(fcn, st.Trafo(), stra);
+//      state = ng2ls(fcn, state, ngc, prec);
+      state = ng2ls(fcn, state, gc, prec);
+
+     if (printLevel >1) {
+       MnPrint::PrintState(std::cout, state, "MnSeedGenerator: Negative G2 found - new state:  ");
+     }
+
    }
 
    if(stra.Strategy() == 2 && !st.HasCovariance()) {

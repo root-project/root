@@ -31,65 +31,88 @@
 #include <iostream>
 #include <fstream>
 
+#include "Minuit2/FunctionGradient.h"
+
 class RooGradMinimizer;
 
 
 class RooGradMinimizerFcn : public ROOT::Math::IMultiGradFunction {
 
- public:
+public:
 
-  RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer *context, 
-	       bool verbose = false);
-  RooGradMinimizerFcn(const RooGradMinimizerFcn& other);
+  RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer *context,
+                      bool verbose = false);
+
+  RooGradMinimizerFcn(const RooGradMinimizerFcn &other);
+
   virtual ~RooGradMinimizerFcn();
 
-  virtual ROOT::Math::IMultiGradFunction* Clone() const;
-  virtual unsigned int NDim() const { return _nDim; }
+  ROOT::Math::IMultiGradFunction *Clone() const override;
 
-  RooArgList* GetFloatParamList() { return _floatParamList; }
-  RooArgList* GetConstParamList() { return _constParamList; }
-  RooArgList* GetInitFloatParamList() { return _initFloatParamList; }
-  RooArgList* GetInitConstParamList() { return _initConstParamList; }
+  unsigned int NDim() const override { return _nDim; }
 
-  void SetEvalErrorWall(Bool_t flag) { _doEvalErrorWall = flag ; }
-  void SetPrintEvalErrors(Int_t numEvalErrors) { _printEvalErrors = numEvalErrors ; }
-  Bool_t SetLogFile(const char* inLogfile);
-  std::ofstream* GetLogFile() { return _logfile; }
-  void SetVerbose(Bool_t flag=kTRUE);
+  RooArgList *GetFloatParamList() { return _floatParamList; }
 
-  Double_t& GetMaxFCN() { return _maxFCN; }
+  RooArgList *GetConstParamList() { return _constParamList; }
+
+  RooArgList *GetInitFloatParamList() { return _initFloatParamList; }
+
+  RooArgList *GetInitConstParamList() { return _initConstParamList; }
+
+  void SetEvalErrorWall(Bool_t flag) { _doEvalErrorWall = flag; }
+
+  void SetPrintEvalErrors(Int_t numEvalErrors) { _printEvalErrors = numEvalErrors; }
+
+  Bool_t SetLogFile(const char *inLogfile);
+
+  std::ofstream *GetLogFile() { return _logfile; }
+
+  void SetVerbose(Bool_t flag = kTRUE);
+
+  Double_t &GetMaxFCN() { return _maxFCN; }
+
   Int_t GetNumInvalidNLL() { return _numBadNLL; }
 
-  Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings>& parameters, 
-		     Bool_t optConst, Bool_t verbose);
-  void BackProp(const ROOT::Fit::FitResult &results);  
-  void ApplyCovarianceMatrix(TMatrixDSym& V);
+  Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters,
+                     Bool_t optConst, Bool_t verbose);
 
-  Int_t evalCounter() const { return _evalCounter ; }
-  void zeroEvalCount() { _evalCounter = 0 ; }
+  void BackProp(const ROOT::Fit::FitResult &results);
 
-  void SynchronizeGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
+  void ApplyCovarianceMatrix(TMatrixDSym &V);
 
- private:
-  
+  Int_t evalCounter() const { return _evalCounter; }
+
+  void zeroEvalCount() { _evalCounter = 0; }
+
+  void SynchronizeGradient(std::vector<ROOT::Fit::ParameterSettings> &parameters) const;
+
+private:
+
   Double_t GetPdfParamVal(Int_t index);
+
   Double_t GetPdfParamErr(Int_t index);
+
   void SetPdfParamErr(Int_t index, Double_t value);
+
   void ClearPdfParamAsymErr(Int_t index);
+
   void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
 
   inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const;
 
 
-  virtual double DoEval(const double * x) const;  
-  void updateFloatVec() ;
+  double DoEval(const double *x) const override;
 
-  virtual double DoDerivative(const double *x, unsigned int icoord) const;
+  void updateFloatVec();
+
+  double DoDerivative(const double *x, unsigned int icoord) const override;
+
+  void run_derivator(const double *x) const;
 
 private:
 
-  mutable Int_t _evalCounter ;
-  
+  mutable Int_t _evalCounter;
+
   RooAbsReal *_funct;
   RooGradMinimizer *_context;
 
@@ -102,21 +125,27 @@ private:
   std::ofstream *_logfile;
   bool _verbose;
 
-  RooArgList* _floatParamList;
-  std::vector<RooAbsArg*> _floatParamVec ;
-  RooArgList* _constParamList;
-  RooArgList* _initFloatParamList;
-  RooArgList* _initConstParamList;
+  RooArgList *_floatParamList;
+  std::vector<RooAbsArg *> _floatParamVec;
+  RooArgList *_constParamList;
+  RooArgList *_initFloatParamList;
+  RooArgList *_initConstParamList;
 
   // Before using any of the following members, call InitGradient!
   // this all needs to be mutable since ROOT::Math::IMultiGradFunction insists on DoDerivative being const
   mutable RooFit::NumericalDerivatorMinuit2 _gradf;
-  mutable std::vector<double> _grad;
+//  mutable std::vector<double> _grad;
+  mutable ROOT::Minuit2::FunctionGradient _grad;
   mutable std::vector<double> _grad_params;
   mutable bool _grad_initialized;
 
   void InitGradient() const;
-};
 
+  bool hasG2ndDerivative() const override;
+  bool hasGStepSize() const override;
+  double DoSecondDerivative(const double *x, unsigned int icoord) const override;
+  double DoStepSize(const double *x, unsigned int icoord) const override;
+
+};
 #endif
 #endif

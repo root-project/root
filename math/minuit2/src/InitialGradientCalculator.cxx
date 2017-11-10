@@ -33,6 +33,8 @@ namespace ROOT {
 FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters& par) const {
    // initial rough  estimate of the gradient using the parameter step size
 
+   std::cout << "########### InitialGradientCalculator::operator()" <<std::endl;
+
    assert(par.IsValid());
 
    unsigned int n = Trafo().VariableParameters();
