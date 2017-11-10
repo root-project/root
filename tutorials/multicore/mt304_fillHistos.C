@@ -23,13 +23,12 @@
 #include <thread>
 #include <iostream>
 
-
 // The number of workers
 const UInt_t nWorkers = 8U;
 
 // Reference boundaries
 const Double_t xmiref = -1.;
-const Double_t xmaref =  7.;
+const Double_t xmaref = 7.;
 
 Int_t mt304_fillHistos(UInt_t nNumbers = 1001)
 {
@@ -68,7 +67,8 @@ Int_t mt304_fillHistos(UInt_t nNumbers = 1001)
    }
 
    // Now join them
-   for (auto && worker : workers) worker.join();
+   for (auto &&worker : workers)
+      worker.join();
 
    // Merge
    auto fh1d = h1d.Merge();
@@ -76,7 +76,7 @@ Int_t mt304_fillHistos(UInt_t nNumbers = 1001)
 
    // Make the canvas
    TCanvas *c = new TCanvas("c", "c", 800, 800);
-   c->Divide(1,2);
+   c->Divide(1, 2);
 
    gStyle->SetOptStat(111110);
    c->cd(1);
