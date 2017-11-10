@@ -153,35 +153,34 @@ unsigned int GetNSlots()
    return nSlots;
 }
 
-void GetBranchNamesImpl(TTree *t, std::set<std::string> &bNames, std::set<TTree *> &analysedTrees)
+void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNames, std::set<TTree *> &analysedTrees)
 {
 
-   if (!t)
-      return;
-
-   if (!analysedTrees.insert(t).second) {
+   if (!analysedTrees.insert(&t).second) {
       return;
    }
 
-   auto branches = t->GetListOfBranches();
+   auto branches = t.GetListOfBranches();
    if (branches) {
       for (auto branchObj : *branches) {
          bNames.insert(branchObj->GetName());
       }
    }
 
-   auto friendTrees = t->GetListOfFriends();
+   auto friendTrees = t.GetListOfFriends();
 
    if (!friendTrees)
       return;
 
    for (auto friendTreeObj : *friendTrees) {
       auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
-      GetBranchNamesImpl(friendTree, bNames, analysedTrees);
+      GetBranchNamesImpl(*friendTree, bNames, analysedTrees);
    }
 }
 
-ColumnNames_t GetBranchNames(TTree *t)
+///////////////////////////////////////////////////////////////////////////////
+/// Get all the branches names, including the ones of the friend trees
+ColumnNames_t GetBranchNames(TTree &t)
 {
    std::set<std::string> bNamesSet;
    std::set<TTree *> analysedTrees;
