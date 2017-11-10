@@ -49,6 +49,23 @@
 n.f()
 // CHECK: (int) 200
 
+// Handle the case of nested continuation: PP directives can be mixed with other
+// continuation constructs.
+bool wasIfExecuted = false;
+#ifdef DEF_DEF
+  if (false) {
+#endif
+   wasIfExecuted = true;
+
+
+#ifdef DEF_DEF
+ }
+#endif
+
+wasIfExecuted
+// CHECK: (bool) false
+
+
 #ifdef DEF_DEF
   80 // expected-error {{expected ';' after expression}}
   n.f();

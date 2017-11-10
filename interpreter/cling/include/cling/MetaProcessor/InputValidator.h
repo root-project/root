@@ -35,6 +35,10 @@ namespace cling {
     ///
     std::deque<int> m_ParenStack;
 
+    ///\brief Stack used for checking the preprocessor directive balance.
+    ///
+    unsigned m_DirectiveStack = 0;
+
   public:
     InputValidator() {}
     ~InputValidator() {}
@@ -57,7 +61,13 @@ namespace cling {
     ///\brief Retrieves the number of spaces that the next input line should be
     /// indented.
     ///
-    int getExpectedIndent() { return m_ParenStack.size(); }
+    int getExpectedIndent() {
+      return m_ParenStack.size() + m_DirectiveStack;
+    }
+
+    ///\returns if we need more input.
+    ///
+    bool needsMoreInput() { return getExpectedIndent(); }
 
     ///\brief Resets the collected input and its corresponding brace stack.
     ///

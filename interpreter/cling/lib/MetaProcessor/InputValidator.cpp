@@ -87,6 +87,7 @@ namespace cling {
             multilineComment = false;
             commentTok = tok::slash;
             unwindTokens(m_ParenStack, tok::slash);
+            m_DirectiveStack = 0;
           }
           // If we have a closing comment without a start it will be transformed
           // to */; and clang reports an error for both the */ and the ;
@@ -159,20 +160,21 @@ namespace cling {
             m_ParenStack.push_back(kind);
         }
         else if (kind == tok::hash) {
+          // FIXME: Move in a separate routine handling PP directives.
           MetaLexer Lex(curPos);
           Lex.SkipWhitespace();
           Lex.LexAnyString(Tok);
           const llvm::StringRef PPtk = Tok.getIdent();
           if (PPtk.startswith("endif")
               && (PPtk.size() > 5 ? PPtk[5]=='/' || isspace(PPtk[5]) : true)) {
-            if (m_ParenStack.empty() || m_ParenStack.back() != tok::hash) {
+            if (!m_DirectiveStack) {
               Res = kMismatch;
               break;
             }
-            m_ParenStack.pop_back();
+            --m_DirectiveStack;
           }
           else if (PPtk.startswith("if")) {
-            m_ParenStack.push_back(tok::hash);
+            ++m_DirectiveStack;
           }
         }
         else if (kind == tok::semicolon) {
@@ -187,7 +189,7 @@ namespace cling {
     } while (Tok.isNot(tok::eof));
 
     const bool Continue = lastKind == tok::backslash || lastKind == tok::comma;
-    if (Continue || (!m_ParenStack.empty() && Res != kMismatch))
+    if (Continue || (needsMoreInput() && Res != kMismatch))
       Res = kIncomplete;
 
     if (!m_Input.empty()) {
