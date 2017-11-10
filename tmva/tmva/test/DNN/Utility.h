@@ -49,9 +49,8 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
 
 
    size_t depth2 = 6;
-   // filter large than 2x2 fails ??????
-   size_t filterHeightConv2 = 2;
-   size_t filterWidthConv2 = 2;
+   size_t filterHeightConv2 = 3;
+   size_t filterWidthConv2 = 3;
    size_t strideRowsConv2 = 1;
    size_t strideColsConv2 = 1;
    size_t zeroPaddingHeight2 = 0;
@@ -67,8 +66,8 @@ void constructConvNet(TDeepNet<AArchitecture> &net)
              << " x " << net.GetLayerAt(net.GetDepth() - 1)->GetWidth() << std::endl;
 
 
-   size_t filterHeightPool = 6;
-   size_t filterWidthPool = 6;
+   size_t filterHeightPool = 3;
+   size_t filterWidthPool = 3;
    size_t strideRowsPool = 1;
    size_t strideColsPool = 1;
 
