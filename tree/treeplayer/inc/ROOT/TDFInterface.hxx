@@ -162,12 +162,17 @@ std::vector<std::string> FindUsedColumnNames(std::string_view, TObjArray *, cons
 
 using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
-Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
-                         std::string_view name, std::string_view expression,
-                         const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
-                         const std::vector<std::string> &customColumns,
-                         const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
-                         std::string_view returnTypeName, TDataSource *ds);
+Long_t JitFilter(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
+                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
+                 const std::vector<std::string> &customColumns,
+                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
+                 std::string_view returnTypeName, TDataSource *ds);
+
+Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
+                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
+                 const std::vector<std::string> &customColumns,
+                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
+                 std::string_view returnTypeName, TDataSource *ds);
 
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
@@ -450,7 +455,7 @@ public:
    /// Refer to the first overload of this method for the full documentation.
    TInterface<TFilterBase> Filter(std::string_view expression, std::string_view name = "")
    {
-      auto retVal = CallJitTransformation("Filter", name, expression, "ROOT::Detail::TDF::TFilterBase");
+      auto retVal = CallJitFilter(name, expression, "ROOT::Detail::TDF::TFilterBase");
       return *(TInterface<TFilterBase> *)retVal;
    }
 
@@ -556,7 +561,7 @@ public:
       TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
       using retType = TInterface<TTraits::TakeFirstParameter_t<decltype(TDFInternal::UpcastNode(fProxiedPtr))>>;
-      auto retVal = CallJitTransformation("Define", name, expression, retType::GetNodeTypeName());
+      auto retVal = CallJitDefine(name, expression, retType::GetNodeTypeName());
       auto retInterface = reinterpret_cast<retType *>(retVal);
       return *retInterface;
    }
@@ -1629,8 +1634,7 @@ private:
       return selectedColumns;
    }
 
-   Long_t CallJitTransformation(std::string_view transformation, std::string_view nodeName, std::string_view expression,
-                                std::string_view returnTypeName)
+   Long_t CallJitFilter(std::string_view nodeName, std::string_view expression, std::string_view returnTypeName)
    {
       auto df = GetDataFrameChecked();
       auto &aliasMap = df->GetAliasMap();
@@ -1642,9 +1646,23 @@ private:
       TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
          upcastNode, fImplWeakPtr, fValidCustomColumns, fDataSource);
       const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
-      return TDFInternal::JitTransformation(&upcastInterface, transformation, thisTypeName, nodeName, expression,
-                                            aliasMap, branches, customColumns, tmpBookedBranches, tree, returnTypeName,
-                                            fDataSource);
+      return TDFInternal::JitFilter(&upcastInterface, thisTypeName, nodeName, expression, aliasMap, branches,
+                                    customColumns, tmpBookedBranches, tree, returnTypeName, fDataSource);
+   }
+   Long_t CallJitDefine(std::string_view nodeName, std::string_view expression, std::string_view returnTypeName)
+   {
+      auto df = GetDataFrameChecked();
+      auto &aliasMap = df->GetAliasMap();
+      auto tree = df->GetTree();
+      auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
+      const auto &customColumns = df->GetCustomColumnNames();
+      auto tmpBookedBranches = df->GetBookedColumns();
+      auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
+      TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
+         upcastNode, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
+      return TDFInternal::JitDefine(&upcastInterface, thisTypeName, nodeName, expression, aliasMap, branches,
+                                    customColumns, tmpBookedBranches, tree, returnTypeName, fDataSource);
    }
 
    /// Return string containing fully qualified type name of the node pointed by fProxied.
