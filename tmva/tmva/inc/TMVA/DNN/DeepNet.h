@@ -372,7 +372,7 @@ template <typename Architecture_t, typename Layer_t>
 auto TDeepNet<Architecture_t, Layer_t>::calculateDimension(int imgDim, int fltDim, int padding, int stride) -> size_t
 {
    Scalar_t dimension = ((imgDim - fltDim + 2 * padding) / stride) + 1;
-   if (!isInteger(dimension) || dimension < 0) {
+   if (!isInteger(dimension) || dimension <= 0) {
       std::cout << "calculateDimension - Not compatible hyper parameters (imgDim, fltDim, padding, stride)"
                 << imgDim << " , " << fltDim << " , " <<  padding << " , " << stride<< " resulting dim is " << dimension << std::endl;
       std::exit(EXIT_FAILURE);

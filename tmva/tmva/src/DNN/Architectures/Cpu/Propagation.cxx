@@ -211,11 +211,11 @@ void TCpu<AFloat>::CalculateConvActivationGradients(std::vector<TCpuMatrix<AFloa
    PrintMatrix(rotWeights,"rot-weights");
 
    // Calculate the zero paddings
-   // size_t tempZeroPaddingHeight = (size_t)(floor((inputHeight - height + filterHeight - 1) / 2));
-   //size_t tempZeroPaddingWidth = (size_t)(floor((inputWidth - width + filterWidth - 1) / 2));
+   size_t tempZeroPaddingHeight = (size_t)(floor((inputHeight - height + filterHeight - 1) / 2));
+   size_t tempZeroPaddingWidth = (size_t)(floor((inputWidth - width + filterWidth - 1) / 2));
 
-   size_t tempZeroPaddingHeight = 1;
-   size_t tempZeroPaddingWidth = 1;
+   // size_t tempZeroPaddingHeight = 1;
+   // size_t tempZeroPaddingWidth = 1;
    
    // Calculate the number of local views and the number of pixles in each view
    size_t tempNLocalViews = inputHeight * inputWidth;

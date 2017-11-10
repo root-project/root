@@ -427,7 +427,13 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
       }
       
       std::cout << "Evaluate the Derivatives with Finite difference and compare with BP for Layer " << l << std::endl;
-      int nerrors = 0; 
+      int nerrors = 0;
+      int ngood = 0;
+#ifdef DEBUG
+      int ngoodPrint = 10000;
+#else
+      int ngoodPrint = 3;
+#endif 
       for (size_t k = 0; k <  gw.size() ; ++k) { 
          //for (size_t i = 0; i < layer.GetWidth(); i++) {
          for (size_t i = 0; i < gw[k].GetNrows(); i++) {
@@ -450,10 +456,10 @@ auto testConvBackwardPass(size_t batchSize, size_t imgDepth, size_t imgHeight, s
                   std::cout << k << " - " <<  i << " , " << j << " : " << dy << " from BP " << dy_ref << "   " << error << " ERROR " << std::endl;
                   nerrors ++; 
                }
-#ifdef DEBUG
-               else 
-                  std::cout << k << " - " <<  i << " , " << j << " : " << dy << " from BP " << dy_ref << "   " << error << std::endl;
-#endif
+               else {
+                  if (ngood < ngoodPrint) std::cout << k << " - " <<  i << " , " << j << " : " << dy << " from BP " << dy_ref << "   " << error << std::endl;
+                  ngood++;
+               }
                if (nerrors > 10) {
                   std::cout << "Reached error limit skip..." << std::endl;
                   break;
