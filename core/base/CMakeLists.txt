@@ -12,7 +12,9 @@ ROOT_GLOB_HEADERS(Base_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/T*.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/GuiTypes.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/MessageTypes.h
                                     ${CMAKE_CURRENT_SOURCE_DIR}/inc/KeySymbols.h 
-                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Buttons.h)
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/Buttons.h,
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TExecutor.hxx,
+                                    ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TSequentialExecutor.hxx)
 if(root7)
     set(root7src v7/src/*.cxx)
     ROOT_GLOB_HEADERS(Base_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/T*.hxx)
