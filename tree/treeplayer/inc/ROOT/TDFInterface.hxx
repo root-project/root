@@ -1547,7 +1547,7 @@ public:
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       if (tree) {
-         auto branchNames = TDFInternal::GetBranchNames(tree);
+         auto branchNames = TDFInternal::GetBranchNames(*tree);
          allColumns.insert(allColumns.end(), branchNames.begin(), branchNames.end());
       }
 
@@ -1609,7 +1609,7 @@ private:
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       if (tree) {
-         auto branchNames = TDFInternal::GetBranchNames(tree);
+         auto branchNames = TDFInternal::GetBranchNames(*tree);
          for (auto &branchName : branchNames) {
             if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
                selectedColumns.emplace_back(branchName);
@@ -1635,7 +1635,7 @@ private:
       auto df = GetDataFrameChecked();
       auto &aliasMap = df->GetAliasMap();
       auto tree = df->GetTree();
-      auto branches = TDFInternal::GetBranchNames(tree);
+      auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
       const auto &customColumns = df->GetCustomColumnNames();
       auto tmpBookedBranches = df->GetBookedColumns();
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
