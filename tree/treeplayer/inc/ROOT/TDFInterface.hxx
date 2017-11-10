@@ -164,7 +164,7 @@ using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
 Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
                          std::string_view name, std::string_view expression,
-                         const std::map<std::string, std::string> &aliasMap, TObjArray *branches,
+                         const std::map<std::string, std::string> &aliasMap, const ColumnNames_t& branches,
                          const std::vector<std::string> &customColumns,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
                          std::string_view returnTypeName, TDataSource *ds);
@@ -1547,10 +1547,8 @@ public:
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       if (tree) {
-         const auto branches = tree->GetListOfBranches();
-         for (auto branch : *branches) {
-            allColumns.emplace_back(branch->GetName());
-         }
+         auto branchNames = TDFInternal::GetBranchNames(tree);
+         allColumns.insert(allColumns.end(), branchNames.begin(), branchNames.end());
       }
 
       if (fDataSource) {
@@ -1611,9 +1609,8 @@ private:
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       if (tree) {
-         const auto branches = tree->GetListOfBranches();
-         for (auto branch : *branches) {
-            auto branchName = branch->GetName();
+         auto branchNames = TDFInternal::GetBranchNames(tree);
+         for (auto &branchName : branchNames) {
             if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
                selectedColumns.emplace_back(branchName);
             }
@@ -1638,7 +1635,7 @@ private:
       auto df = GetDataFrameChecked();
       auto &aliasMap = df->GetAliasMap();
       auto tree = df->GetTree();
-      auto branches = tree ? tree->GetListOfBranches() : nullptr;
+      auto branches = TDFInternal::GetBranchNames(tree);
       const auto &customColumns = df->GetCustomColumnNames();
       auto tmpBookedBranches = df->GetBookedColumns();
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
