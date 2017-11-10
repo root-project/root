@@ -24,6 +24,8 @@
 #include <iostream>
 #include <type_traits>
 
+using namespace ROOT;
+
 long createNew(int count)
 {
    long ret = 1;

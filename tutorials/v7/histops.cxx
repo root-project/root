@@ -22,6 +22,7 @@
 void histops()
 {
 
+   using namespace ROOT;
    // Create a 2D histogram with an X axis with equidistant bins, and a y axis
    // with irregular binning.
    Experimental::TH2D hist1({100, 0., 1.}, {{0., 1., 2., 3., 10.}});
