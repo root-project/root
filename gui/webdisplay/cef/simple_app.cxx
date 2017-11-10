@@ -2,6 +2,9 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 #include "simple_app.h"
 
 #include <string>
@@ -305,8 +308,11 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
 
       CefWindowInfo window_info;
 
-      if (!rect.IsEmpty())
-         window_info.SetAsChild(NULL, rect);
+#if defined(OS_WIN) || defined(OS_LINUX)
+      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect);
+#else
+      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect.x, rect.y, rect.width, rect.height );
+#endif
 
       window_info.SetAsWindowless(0);
 
@@ -350,8 +356,11 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
       // Information used when creating the native window.
       CefWindowInfo window_info;
 
-      if (!rect.IsEmpty())
-         window_info.SetAsChild(NULL, rect);
+#if defined(OS_WIN) || defined(OS_LINUX)
+      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect);
+#else
+      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect.x, rect.y, rect.width, rect.height );
+#endif
 
 #if defined(OS_WIN)
       // On Windows we need to specify certain flags that will be passed to
