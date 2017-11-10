@@ -80,7 +80,7 @@ long fillOldII(int count)
 long fillNII(int count)
 {
    Experimental::TH2D hist({{{{0., 0.1, 0.3, 1.}}, {{0., 1., 2., 3., 10.}}}});
-   std::vector<std::array<double, 2>> v(count);
+   std::vector<Experimental::Hist::TCoordArray<2>> v(count);
    for (int i = 0; i < count; ++i)
       v[i] = {0.611, 0.611};
    hist.FillN(v);
@@ -146,7 +146,7 @@ long fillOldEE(int count)
 long fillNEE(int count)
 {
    Experimental::TH2D hist({{{100, 0., 1.}, {5, 0., 10.}}});
-   std::vector<std::array<double, 2>> v(count);
+   std::vector<Experimental::Hist::TCoordArray<2>> v(count);
    for (int i = 0; i < count; ++i)
       v[i] = {0.611, 0.611};
    hist.FillN(v);
