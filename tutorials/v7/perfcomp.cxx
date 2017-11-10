@@ -26,6 +26,8 @@
 #include <iostream>
 #include <type_traits>
 
+using namespace ROOT;
+
 long createNewII(int count)
 {
    long ret = 1;
