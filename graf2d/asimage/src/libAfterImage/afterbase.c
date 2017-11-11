@@ -1290,12 +1290,12 @@ asim_my_scandir_ext ( const char *dirname, int (*filter_func) (const char *),
          }
       }
    }
-	free (filename);
+   free(filename);
 
-	if (closedir (d) == -1)
-		return -1;
-	/* Return the count of the entries */
-	return n;
+   if (closedir(d) == -1)
+      return -1;
+   /* Return the count of the entries */
+   return n;
 }
 
 #endif /* #ifndef _WIN32 */
