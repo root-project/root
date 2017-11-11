@@ -1289,7 +1289,7 @@ asim_my_scandir_ext ( const char *dirname, int (*filter_func) (const char *),
                n++;
          }
       }
-	}
+   }
 	free (filename);
 
 	if (closedir (d) == -1)
