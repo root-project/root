@@ -1288,7 +1288,7 @@ asim_my_scandir_ext ( const char *dirname, int (*filter_func) (const char *),
             if (handle_direntry_func(e->d_name, filename, &stat_info, aux_data))
                n++;
          }
-		}
+      }
 	}
 	free (filename);
 
