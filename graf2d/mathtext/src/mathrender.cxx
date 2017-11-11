@@ -313,7 +313,7 @@ namespace mathtext {
       bounding_box_t ret = iterator->_offset +
       iterator->_bounding_box;
 
-      for(; iterator != token.end(); ++iterator)
+      for (; iterator != token.end(); ++iterator)
          ret = ret.merge(iterator->_offset +
                          iterator->_bounding_box);
 
@@ -332,9 +332,7 @@ namespace mathtext {
       std::vector<math_token_t> token =
       math_tokenize(math_symbol, style, height);
 
-      for(std::vector<math_token_t>::const_iterator iterator =
-          token.begin();
-          iterator != token.end(); ++iterator)
+      for (std::vector<math_token_t>::const_iterator iterator = token.begin(); iterator != token.end(); ++iterator)
          math_text(origin +
                    transform_pixel_to_logical().linear() *
                    iterator->_offset,
@@ -365,7 +363,7 @@ namespace mathtext {
       bounding_box_t ret = iterator->_offset +
       iterator->_bounding_box;
 
-      for(; iterator != token.end(); ++iterator)
+      for (; iterator != token.end(); ++iterator)
          ret = ret.merge(iterator->_offset +
                          iterator->_bounding_box);
 
@@ -457,9 +455,8 @@ namespace mathtext {
       }
       else
          // Incrementally process a math list
-         for(std::vector<math_text_t::item_t>::const_iterator
-             iterator = math_list_begin_interior;
-             iterator != math_list_end_interior; ++iterator) {
+         for (std::vector<math_text_t::item_t>::const_iterator iterator = math_list_begin_interior;
+              iterator != math_list_end_interior; ++iterator) {
             switch(iterator->_type) {
                case math_text_t::item_t::TYPE_ATOM:
                   if(render_structure)
@@ -558,7 +555,7 @@ namespace mathtext {
       bounding_box_t ret = iterator->_offset +
       iterator->_bounding_box;
 
-      for(; iterator != token.end(); ++iterator)
+      for (; iterator != token.end(); ++iterator)
          ret = ret.merge(iterator->_offset +
                          iterator->_bounding_box);
 
