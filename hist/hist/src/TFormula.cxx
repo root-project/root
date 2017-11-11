@@ -2224,8 +2224,7 @@ void TFormula::ProcessFormula(TString &formula)
    // check that all formula components are matched otherwise emit an error
    if (!fClingInitialized) {
       Bool_t allFunctorsMatched = true;
-      for(list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); ++it)
-         {
+      for (list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); ++it) {
          if (!it->fFound) {
             allFunctorsMatched = false;
             if (it->GetNargs() == 0)
@@ -2734,8 +2733,7 @@ void TFormula::SetParameter(const char *name, Double_t value)
    fParams[name].fFound = true;
    fClingParameters[fParams[name].fArrayPos] = value;
    fAllParametersSetted = true;
-   for(map<TString,TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); ++it)
-      {
+   for (map<TString, TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); ++it) {
       if (!it->second.fFound) {
          fAllParametersSetted = false;
          break;
@@ -2767,8 +2765,7 @@ void TFormula::SetParameters(const pair<TString,Double_t> *params,const Int_t si
       fClingParameters[fParams[p.first].fArrayPos] = p.second;
    }
    fAllParametersSetted = true;
-   for(map<TString,TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); ++it)
-      {
+   for (map<TString, TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); ++it) {
       if (!it->second.fFound) {
          fAllParametersSetted = false;
          break;
