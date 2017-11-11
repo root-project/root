@@ -166,8 +166,8 @@ void TEveCalo2DGL::DrawRPhiHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
       if (cellLists[phiBin])
       {
          if (!fM->fCellLists[phiBin]) {
-            delete [] sliceVal;
-            delete [] sliceValRef;
+            delete[] sliceVal;
+            delete[] sliceValRef;
             throw eh + "selected cell not in cell list cache.";
          }
 
@@ -369,10 +369,10 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
       if (cellLists[etaBin])
       {
          if (!fM->fCellLists[etaBin]) {
-            delete [] sliceValsUp;
-            delete [] sliceValsLow;
-            delete [] sliceValsUpRef;
-            delete [] sliceValsLowRef;
+            delete[] sliceValsUp;
+            delete[] sliceValsLow;
+            delete[] sliceValsUpRef;
+            delete[] sliceValsLowRef;
             throw(eh + "selected cell not in cell list cache.");
          }
 

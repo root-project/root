@@ -381,9 +381,8 @@ namespace mathtext {
       }
       else
          // Incrementally process a math list
-         for(std::vector<math_text_t::item_t>::const_iterator
-             iterator = math_list_begin_interior;
-             iterator != math_list_end_interior; ++iterator) {
+         for (std::vector<math_text_t::item_t>::const_iterator iterator = math_list_begin_interior;
+              iterator != math_list_end_interior; ++iterator) {
             unsigned int atom_type;
             bounding_box_t item_bounding_box;
             unsigned int current_style = has_accent ?
