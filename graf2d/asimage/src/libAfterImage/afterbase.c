@@ -1283,8 +1283,8 @@ asim_my_scandir_ext ( const char *dirname, int (*filter_func) (const char *),
             p[i] = e->d_name[i];
             ++i;
          } while (i < PATH_MAX && e->d_name[i]);
-         p[i] ='\0' ;
-			if (stat (filename, &stat_info) != -1)
+         p[i] = '\0';
+         if (stat (filename, &stat_info) != -1)
 			{	
 				if( handle_direntry_func( e->d_name, filename, &stat_info, aux_data) )
 					n++;
