@@ -413,7 +413,7 @@ TList *TGraph2DPainter::GetContourList(Double_t contour)
          js = 0;
 L01:
          findNew = kFALSE;
-         if (js<nbSeg && segUsed[js]) {
+         if (js < nbSeg && segUsed[js]) {
             js++;
             goto L01;
          } else if (xc==xs0[js] && yc==ys0[js]) {
@@ -452,7 +452,7 @@ L01:
       graph->SetPoint(npg,xc,yc); npg++;
 L02:
       findNew = kFALSE;
-      if (js<nbSeg && segUsed[js]) {
+      if (js < nbSeg && segUsed[js]) {
          js++;
          goto L02;
       } else if (xc==xs0[js] && yc==ys0[js]) {

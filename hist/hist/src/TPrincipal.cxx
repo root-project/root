@@ -712,11 +712,11 @@ void TPrincipal::MakeHistograms(const char *name, Option_t *opt)
    }
    if (!makeX && !makeP && !makeD && !makeS) {
       if (hX)
-         delete [] hX;
+         delete[] hX;
       if (hD)
-         delete [] hD;
+         delete[] hD;
       if (hP)
-         delete [] hP;
+         delete[] hP;
       return;
    }
 

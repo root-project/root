@@ -351,7 +351,7 @@ void TEvePointSet::TakeAction(TEvePointSelector* sel)
       for (Int_t i=0; i<fIntIdsPerPoint; ++i) {
          subarr[i] = sel->GetVal(sel->GetDimension() - fIntIdsPerPoint + i);
          if (subarr[i] == 0) {
-            delete [] subarr;
+            delete[] subarr;
             throw(eh + "sub-id array not available.");
          }
       }

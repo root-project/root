@@ -170,7 +170,8 @@ void TGraphSmooth::BDRksmooth(Double_t *x, Double_t *y, Int_t n, Double_t *xp,
       cutoff = 4*bw;
    }
 
-   while ((imin < n) && (x[imin] < xp[0] - cutoff)) imin++;
+   while ((imin < n) && (x[imin] < xp[0] - cutoff))
+      imin++;
 
    for (Int_t j=0;j<np;j++) {
       Double_t xx, w;

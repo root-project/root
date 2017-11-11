@@ -919,8 +919,7 @@ void TGeoManager::ClearNavigators()
 void TGeoManager::RemoveNavigator(const TGeoNavigator *nav)
 {
    if (fMultiThread) fgMutex.lock();
-   for (NavigatorsMap_t::iterator it = fNavigators.begin();
-        it != fNavigators.end(); ++it) {
+   for (NavigatorsMap_t::iterator it = fNavigators.begin(); it != fNavigators.end(); ++it) {
       TGeoNavigatorArray *arr = (*it).second;
       if (arr) {
          if ((TGeoNavigator*)arr->Remove((TObject*)nav)) {
