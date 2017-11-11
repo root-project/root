@@ -431,6 +431,14 @@ void TLoopManager::Book(const TCustomColumnBasePtr_t &columnPtr)
    fCustomColumnNames.emplace_back(name);
 }
 
+void TLoopManager::BookJitted(const TCustomColumnBasePtr_t &columnPtr)
+{
+   const auto &name = columnPtr->GetName();
+   fBookedCustomColumns[name] = columnPtr;
+   // jitted custom columns register the name in the TLoopManger much before (Define call time) thane when the node is
+   // actually created and booked (jitting time)
+}
+
 void TLoopManager::Book(const std::shared_ptr<bool> &readinessPtr)
 {
    fResProxyReadiness.emplace_back(readinessPtr);
