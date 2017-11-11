@@ -165,8 +165,10 @@
 #pragma link C++ class TFileCollection+;
 #pragma link C++ class TVirtualAuth;
 #pragma link C++ class TVirtualMutex;
-#pragma link C++ class TVirtualRWMutex;
+#pragma link C++ class ROOT::TVirtualRWMutex;
 #pragma link C++ class TLockGuard;
+#pragma link C++ class ROOT::TReadLockGuard;
+#pragma link C++ class ROOT::TWriteLockGuard;
 #pragma link C++ class TRedirectOutputGuard;
 #pragma link C++ class TVirtualPerfStats;
 #pragma link C++ enum TVirtualPerfStats::EEventType;

@@ -1,5 +1,5 @@
 /// \file ROOT/TAxis.h
-/// \ingroup Hist
+/// \ingroup Hist ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-03-23
 /// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback
@@ -30,7 +30,7 @@ namespace ROOT {
 namespace Experimental {
 
 /**
- \class TAxisBase ROOT7
+ \class TAxisBase
  Histogram axis base class. Keeps track of the number of bins and overflow
  handling. Offers bin iteration.
 

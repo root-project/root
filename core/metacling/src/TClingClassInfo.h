@@ -55,9 +55,10 @@ class TClingClassInfo {
 private:
 
    cling::Interpreter   *fInterp; // Cling interpreter, we do *not* own.
-   bool                  fFirstTime; // We need to skip the first increment to support the cint Next() semantics.
-   bool                  fDescend; // Flag for signaling the need to descend on this advancement.
-   bool                  fIterAll; // Flag whether iteration should be as complete as possible.
+   bool                  fFirstTime: 1; // We need to skip the first increment to support the cint Next() semantics.
+   bool                  fDescend : 1;  // Flag for signaling the need to descend on this advancement.
+   bool                  fIterAll : 1;  // Flag whether iteration should be as complete as possible.
+   bool                  fIsIter : 1;   // Flag whether this object was setup for iteration.
    clang::DeclContext::decl_iterator fIter; // Current decl in scope.
    const clang::Decl    *fDecl; // Current decl, we do *not* own.
    const clang::Type    *fType; // Type representing the decl (conserves typedefs like Double32_t). (we do *not* own)

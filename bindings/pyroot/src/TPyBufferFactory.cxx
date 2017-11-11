@@ -50,6 +50,8 @@ namespace {
    PyMappingMethods  Py##name##Buffer_MapMethods;
 
    PYROOT_PREPARE_PYBUFFER_TYPE( Bool )
+   PYROOT_PREPARE_PYBUFFER_TYPE( Char )
+   PYROOT_PREPARE_PYBUFFER_TYPE( UChar )
    PYROOT_PREPARE_PYBUFFER_TYPE( Short )
    PYROOT_PREPARE_PYBUFFER_TYPE( UShort )
    PYROOT_PREPARE_PYBUFFER_TYPE( Int )
@@ -158,6 +160,8 @@ namespace {
    }
 
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Bool,   Bool_t,   Long_t,   PyBool_FromLong, PyInt_AsLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( Char,   Char_t,   Long_t,   PyInt_FromLong, PyInt_AsLong )
+   PYROOT_IMPLEMENT_PYBUFFER_METHODS( UChar,  UChar_t,  Long_t,   PyInt_FromLong, PyInt_AsLong )
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Short,  Short_t,  Long_t,   PyInt_FromLong, PyInt_AsLong )
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( UShort, UShort_t, Long_t,   PyInt_FromLong, PyInt_AsLong )
    PYROOT_IMPLEMENT_PYBUFFER_METHODS( Int,    Int_t,    Long_t,   PyInt_FromLong, PyInt_AsLong )
@@ -207,6 +211,10 @@ namespace {
    {
       if ( PyObject_TypeCheck( pyobject, &PyBoolBuffer_Type ) )
          return PyROOT_PyUnicode_FromString( (char*)"b" );
+      else if ( PyObject_TypeCheck( pyobject, &PyCharBuffer_Type ) )
+         return PyROOT_PyUnicode_FromString( (char*)"b" );
+      else if ( PyObject_TypeCheck( pyobject, &PyUCharBuffer_Type ) )
+         return PyROOT_PyUnicode_FromString( (char*)"B" );
       else if ( PyObject_TypeCheck( pyobject, &PyShortBuffer_Type ) )
          return PyROOT_PyUnicode_FromString( (char*)"h" );
       else if ( PyObject_TypeCheck( pyobject, &PyUShortBuffer_Type ) )
@@ -278,6 +286,8 @@ PyROOT::TPyBufferFactory::TPyBufferFactory()
 {
 // construct python buffer types
    PYROOT_INSTALL_PYBUFFER_METHODS( Bool,   Bool_t )
+   PYROOT_INSTALL_PYBUFFER_METHODS( Char,   Char_t )
+   PYROOT_INSTALL_PYBUFFER_METHODS( UChar,  UChar_t )
    PYROOT_INSTALL_PYBUFFER_METHODS( Short,  Short_t )
    PYROOT_INSTALL_PYBUFFER_METHODS( UShort, UShort_t )
    PYROOT_INSTALL_PYBUFFER_METHODS( Int,    Int_t )
@@ -295,6 +305,8 @@ PyROOT::TPyBufferFactory::~TPyBufferFactory()
 }
 
 const char* getBoolFormat()   { return "b";}
+const char* getCharFormat()   { return "b";}
+const char* getUCharFormat()  { return "B";}
 const char* getShortFormat()  { return "h";}
 const char* getUShortFormat() { return "H";}
 const char* getIntFormat()    { return "i";}
@@ -338,6 +350,8 @@ PyObject* PyROOT::TPyBufferFactory::PyBuffer_FromMemory( type* address, PyObject
 }
 
 PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( Bool,   Bool_t )
+PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( Char,   Char_t )
+PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( UChar,  UChar_t )
 PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( Short,  Short_t )
 PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( UShort, UShort_t )
 PYROOT_IMPLEMENT_PYBUFFER_FROM_MEMORY( Int,    Int_t )

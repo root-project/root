@@ -81,7 +81,7 @@ protected:
    Int_t       fEntryOffsetLen;   ///<  Initial Length of fEntryOffset table in the basket buffers
    Int_t       fWriteBasket;      ///<  Last basket number written
    Long64_t    fEntryNumber;      ///<  Current entry number (last one filled in this branch)
-   TIOFeatures fIOFeatures;       ///<! IO features for newly-created baskets.
+   TIOFeatures fIOFeatures;       ///<  IO features for newly-created baskets.
    Int_t       fOffset;           ///<  Offset of this branch
    Int_t       fMaxBaskets;       ///<  Maximum number of Baskets so far
    Int_t       fNBaskets;         ///<! Number of baskets in memory
@@ -226,6 +226,7 @@ public:
    virtual void      SetFirstEntry( Long64_t entry );
    virtual void      SetFile(TFile *file=0);
    virtual void      SetFile(const char *filename);
+   void              SetIOFeatures(TIOFeatures &features) {fIOFeatures = features;}
    virtual Bool_t    SetMakeClass(Bool_t decomposeObj = kTRUE);
    virtual void      SetOffset(Int_t offset=0) {fOffset=offset;}
    virtual void      SetStatus(Bool_t status=1);
@@ -236,7 +237,7 @@ public:
 
    static  void      ResetCount();
 
-   ClassDef(TBranch,12);  //Branch descriptor
+   ClassDef(TBranch, 13); // Branch descriptor
 };
 
 //______________________________________________________________________________

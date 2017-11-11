@@ -81,6 +81,7 @@ void AArch64Subtarget::initializeProperties() {
     break;
   case CortexA57:
     MaxInterleaveFactor = 4;
+    PrefFunctionAlignment = 4;
     break;
   case ExynosM1:
     MaxInterleaveFactor = 4;
@@ -90,7 +91,12 @@ void AArch64Subtarget::initializeProperties() {
     break;
   case Falkor:
     MaxInterleaveFactor = 4;
-    VectorInsertExtractBaseCost = 2;
+    // FIXME: remove this to enable 64-bit SLP if performance looks good.
+    MinVectorRegisterBitWidth = 128;
+    CacheLineSize = 128;
+    PrefetchDistance = 820;
+    MinPrefetchStride = 2048;
+    MaxPrefetchIterationsAhead = 8;
     break;
   case Kryo:
     MaxInterleaveFactor = 4;
@@ -99,6 +105,8 @@ void AArch64Subtarget::initializeProperties() {
     PrefetchDistance = 740;
     MinPrefetchStride = 1024;
     MaxPrefetchIterationsAhead = 11;
+    // FIXME: remove this to enable 64-bit SLP if performance looks good.
+    MinVectorRegisterBitWidth = 128;
     break;
   case ThunderX2T99:
     CacheLineSize = 64;
@@ -108,6 +116,8 @@ void AArch64Subtarget::initializeProperties() {
     PrefetchDistance = 128;
     MinPrefetchStride = 1024;
     MaxPrefetchIterationsAhead = 4;
+    // FIXME: remove this to enable 64-bit SLP if performance looks good.
+    MinVectorRegisterBitWidth = 128;
     break;
   case ThunderX:
   case ThunderXT88:
@@ -116,11 +126,17 @@ void AArch64Subtarget::initializeProperties() {
     CacheLineSize = 128;
     PrefFunctionAlignment = 3;
     PrefLoopAlignment = 2;
+    // FIXME: remove this to enable 64-bit SLP if performance looks good.
+    MinVectorRegisterBitWidth = 128;
     break;
   case CortexA35: break;
   case CortexA53: break;
-  case CortexA72: break;
-  case CortexA73: break;
+  case CortexA72:
+    PrefFunctionAlignment = 4;
+    break;
+  case CortexA73:
+    PrefFunctionAlignment = 4;
+    break;
   case Others: break;
   }
 }
@@ -156,12 +172,12 @@ struct AArch64GISelActualAccessor : public GISelAccessor {
 
 AArch64Subtarget::AArch64Subtarget(const Triple &TT, const std::string &CPU,
                                    const std::string &FS,
-                                   const TargetMachine &TM, bool LittleEndian,
-                                   bool ForCodeSize)
-    : AArch64GenSubtargetInfo(TT, CPU, FS), ReserveX18(TT.isOSDarwin()),
+                                   const TargetMachine &TM, bool LittleEndian)
+    : AArch64GenSubtargetInfo(TT, CPU, FS),
+      ReserveX18(TT.isOSDarwin() || TT.isOSWindows()),
       IsLittle(LittleEndian), TargetTriple(TT), FrameLowering(),
       InstrInfo(initializeSubtargetDependencies(FS, CPU)), TSInfo(),
-      TLInfo(TM, *this), GISel(), ForCodeSize(ForCodeSize) {
+      TLInfo(TM, *this), GISel() {
 #ifndef LLVM_BUILD_GLOBAL_ISEL
   GISelAccessor *AArch64GISel = new GISelAccessor();
 #else

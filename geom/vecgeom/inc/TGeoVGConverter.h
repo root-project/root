@@ -16,7 +16,6 @@
 //                                                                      //
 // TGeo to VecGeom converter class.                                     //
 //                                                                      //
-//                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
 #include "TVirtualGeoConverter.h"

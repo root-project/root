@@ -2557,6 +2557,33 @@ int ROOT::TMetaUtils::IsSTLContainer(const clang::CXXBaseSpecifier &base)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Calls the given lambda on every header in the given module.
+void ROOT::TMetaUtils::foreachHeaderInModule(const clang::Module &module,
+                                             const std::function<void(const clang::Module::Header &)> &closure)
+{
+   // Iterates over all headers in a module and calls the closure on each.
+
+   // FIXME: We currently have to hardcode '4' to do this. Maybe we
+   // will have a nicer way to do this in the future.
+   // NOTE: This is on purpose '4', not '5' which is the size of the
+   // vector. The last element is the list of excluded headers which we
+   // obviously don't want to check here.
+   const std::size_t publicHeaderIndex = 4;
+
+   // Integrity check in case this array changes its size at some point.
+   const std::size_t maxArrayLength = ((sizeof module.Headers) / (sizeof *module.Headers));
+   static_assert(publicHeaderIndex + 1 == maxArrayLength,
+                 "'Headers' has changed it's size, we need to update publicHeaderIndex");
+
+   for (std::size_t i = 0; i < publicHeaderIndex; i++) {
+      auto &headerList = module.Headers[i];
+      for (const clang::Module::Header &moduleHeader : headerList) {
+         closure(moduleHeader);
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return the absolute type of typeDesc.
 /// E.g.: typeDesc = "class TNamed**", returns "TNamed".
 /// we remove * and const keywords. (we do not want to remove & ).
@@ -3837,6 +3864,8 @@ clang::QualType ROOT::TMetaUtils::GetNormalizedType(const clang::QualType &type,
 {
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
 
+   // Modules can trigger deserialization.
+   cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interpreter));
    clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetConfig(), true /* fully qualify */);
 
    // Readd missing default template parameters

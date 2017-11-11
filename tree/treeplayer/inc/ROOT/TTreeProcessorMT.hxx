@@ -19,6 +19,7 @@
 #include "TTreeReader.h"
 #include "TError.h"
 #include "TEntryList.h"
+#include "TFriendElement.h"
 #include "ROOT/TThreadedObject.hxx"
 
 #include <string.h>
@@ -50,26 +51,20 @@ namespace ROOT {
       struct TreeViewCluster {
          Long64_t startEntry;
          Long64_t endEntry;
-         std::size_t filenameIdx;
-      };
-
-      /// Input data as seen by TTreeView.
-      ///
-      /// Each thread will contain a TTreeView that will perform bookkeping of a vector of (few) TreeViewInputs.
-      /// This vector will contain a TreeViewInput for each task currently working on a different input file.
-      struct TreeViewInput {
-         std::unique_ptr<TFile> file;
-         TTree *tree; // needs to be a raw pointer because file destructs this tree when deleted
-         std::size_t filenameIdx; ///< The filename index of this file in the list of filenames contained in TTreeView
-         unsigned int useCount;   ///< Number of tasks that are currently using this input
       };
 
       class TTreeView {
       private:
+         typedef std::pair<std::string, std::string> NameAlias;
+
+         std::unique_ptr<TChain> fChain;         ///< Chain on which to operate
          std::vector<std::string> fFileNames;    ///< Names of the files
-         std::vector<TEntryList> fEntryLists;    ///< Entry numbers to be processed per tree/file. 1:1 with fFileNames
          std::string fTreeName;                  ///< Name of the tree
-         std::vector<TreeViewInput> fOpenInputs; ///< Input files currently open.
+         TEntryList fEntryList;                  ///< Entry numbers to be processed
+         std::vector<Long64_t> fLoadedEntries;   ///<! Per-task loaded entries (for task interleaving)
+         std::vector<NameAlias> fFriendNames;    ///< <name,alias> pairs of the friends of the tree/chain
+         std::vector<std::vector<std::string>> fFriendFileNames; ///< Names of the files where friends are stored
+         std::vector<std::unique_ptr<TChain>> fFriends;          ///< Friends of the tree/chain
 
          ////////////////////////////////////////////////////////////////////////////////
          /// Initialize TTreeView.
@@ -90,6 +85,65 @@ namespace ROOT {
                if (fTreeName.empty()) {
                   auto msg = "Cannot find any tree in file " + fFileNames[0];
                   throw std::runtime_error(msg);
+               }
+            }
+
+            fChain.reset(new TChain(fTreeName.c_str()));
+            for (auto &fn : fFileNames) {
+               fChain->Add(fn.c_str());
+            }
+            fChain->ResetBit(TObject::kMustCleanup);
+
+            auto friendNum = 0u;
+            for (auto &na : fFriendNames) {
+               auto &name = na.first;
+               auto &alias = na.second;
+
+               // Build a friend chain
+               TChain *frChain = new TChain(name.c_str());
+               auto &fileNames = fFriendFileNames[friendNum];
+               for (auto &fn : fileNames)
+                  frChain->Add(fn.c_str());
+
+               // Make it friends with the main chain
+               fFriends.emplace_back(frChain);
+               fChain->AddFriend(frChain, alias.c_str());
+
+               ++friendNum;
+            }
+         }
+
+         ////////////////////////////////////////////////////////////////////////////////
+         /// Get and store the names, aliases and file names of the friends of the tree.
+         void StoreFriends(const TTree &tree, bool isTree)
+         {
+            auto friends = tree.GetListOfFriends();
+            if (!friends)
+               return;
+
+            for (auto fr : *friends) {
+               auto frTree = static_cast<TFriendElement *>(fr)->GetTree();
+
+               // Check if friend tree has an alias
+               auto realName = frTree->GetName();
+               auto alias = tree.GetFriendAlias(frTree);
+               if (alias) {
+                  fFriendNames.emplace_back(std::make_pair(realName, std::string(alias)));
+               } else {
+                  fFriendNames.emplace_back(std::make_pair(realName, ""));
+               }
+
+               // Store the file names of the friend tree
+               fFriendFileNames.emplace_back();
+               auto &fileNames = fFriendFileNames.back();
+               if (isTree) {
+                  auto f = frTree->GetCurrentFile();
+                  fileNames.emplace_back(f->GetName());
+               } else {
+                  auto frChain = static_cast<TChain *>(frTree);
+                  for (auto f : *(frChain->GetListOfFiles())) {
+                     fileNames.emplace_back(f->GetTitle());
+                  }
                }
             }
          }
@@ -137,6 +191,7 @@ namespace ROOT {
                if (filelist->GetEntries() > 0) { 
                   for (auto f : *filelist)
                      fFileNames.emplace_back(f->GetTitle());
+                  StoreFriends(tree, false);
                   Init();
                }
                else {
@@ -148,6 +203,7 @@ namespace ROOT {
                TFile *f = tree.GetCurrentFile();
                if (f) {
                   fFileNames.emplace_back(f->GetName());
+                  StoreFriends(tree, true);
                   Init();
                }
                else {
@@ -163,72 +219,57 @@ namespace ROOT {
          /// \param[in] entries List of entry numbers to process.
          TTreeView(TTree& tree, TEntryList& entries) : TTreeView(tree)
          {
-            static const TClassRef clRefTChain("TChain");
-            if (clRefTChain == tree.IsA()) {
-               // We need to convert the global entry numbers to per-tree entry numbers.
-               // This will allow us to build a TEntryList for a given entry range of a tree of the chain.
-               std::size_t nTrees = fFileNames.size();
-               fEntryLists.resize(nTrees);
-
-               TChain *chain = dynamic_cast<TChain*>(&tree);
-               Long64_t currListEntry  = entries.GetEntry(0);
-               Long64_t currTreeOffset = 0;
-
-               for (unsigned int treeNum = 0; treeNum < nTrees && currListEntry >= 0; ++treeNum) {
-                  chain->LoadTree(currTreeOffset);
-                  TTree *currTree = chain->GetTree();
-                  Long64_t currTreeEntries = currTree->GetEntries();
-                  Long64_t nextTreeOffset = currTreeOffset + currTreeEntries;
-
-                  while (currListEntry >= 0 && currListEntry < nextTreeOffset) {
-                     fEntryLists[treeNum].Enter(currListEntry - currTreeOffset);
-                     currListEntry = entries.Next();
-                  }
-
-                  currTreeOffset = nextTreeOffset;
-               }
-            }
-            else {
-               fEntryLists.emplace_back(entries);
+            Long64_t numEntries = entries.GetN();
+            for (Long64_t i = 0; i < numEntries; ++i) {
+               fEntryList.Enter(entries.GetEntry(i));
             }
          }
 
          //////////////////////////////////////////////////////////////////////////
          /// Copy constructor.
          /// \param[in] view Object to copy.
-         TTreeView(const TTreeView& view) : fTreeName(view.fTreeName)
+         TTreeView(const TTreeView &view) : fTreeName(view.fTreeName), fEntryList(view.fEntryList)
          {
             for (auto& fn : view.fFileNames)
                fFileNames.emplace_back(fn);
 
-            for (auto& el : view.fEntryLists)
-               fEntryLists.emplace_back(el);
+            for (auto &fn : view.fFriendNames)
+               fFriendNames.emplace_back(fn);
+
+            for (auto &ffn : view.fFriendFileNames) {
+               fFriendFileNames.emplace_back();
+               auto &fileNames = fFriendFileNames.back();
+               for (auto &name : ffn) {
+                  fileNames.emplace_back(name);
+               }
+            }
+
+            Init();
          }
 
          //////////////////////////////////////////////////////////////////////////
          /// Get a TTreeReader for the current tree of this view.
          using TreeReaderEntryListPair = std::pair<std::unique_ptr<TTreeReader>, std::unique_ptr<TEntryList>>;
-         TreeReaderEntryListPair GetTreeReader(std::size_t dataIdx, Long64_t start, Long64_t end)
+         TreeReaderEntryListPair GetTreeReader(Long64_t start, Long64_t end)
          {
             std::unique_ptr<TTreeReader> reader;
             std::unique_ptr<TEntryList> elist;
-            if (fEntryLists.size() > 0) {
+            if (fEntryList.GetN() > 0) {
                // TEntryList and SetEntriesRange do not work together (the former has precedence).
                // We need to construct a TEntryList that contains only those entry numbers
                // in our desired range.
-               const auto filenameIdx = fOpenInputs[dataIdx].filenameIdx;
                elist.reset(new TEntryList);
-               if (fEntryLists[filenameIdx].GetN() > 0) {
-                  Long64_t entry = fEntryLists[filenameIdx].GetEntry(0);
-                  do {
-                     if (entry >= start && entry < end) // TODO can quit this loop early when entry >= end
-                        elist->Enter(entry);
-                  } while ((entry = fEntryLists[filenameIdx].Next()) >= 0);
-               }
-               reader.reset(new TTreeReader(fOpenInputs[dataIdx].tree, elist.get()));
+               Long64_t entry = fEntryList.GetEntry(0);
+               do {
+                  if (entry >= start && entry < end) // TODO can quit this loop early when entry >= end
+                     elist->Enter(entry);
+               } while ((entry = fEntryList.Next()) >= 0);
+
+               reader.reset(new TTreeReader(fChain.get(), elist.get()));
             } else {
                // If no TEntryList is involved we can safely set the range in the reader
-               reader.reset(new TTreeReader(fOpenInputs[dataIdx].tree));
+               reader.reset(new TTreeReader(fChain.get()));
+               fChain->LoadTree(start - 1);
                reader->SetEntriesRange(start, end);
             }
 
@@ -250,39 +291,17 @@ namespace ROOT {
          }
 
          //////////////////////////////////////////////////////////////////////////
-         /// Search the open files for the filename with index i. If found, increment its "user counter", otherwise
-         /// open it and add it to the vector of open files. Return the file's index in the vector of open files.
-         std::size_t FindOrOpenFile(std::size_t filenameIdx)
-         {
-            const auto inputIt =
-               std::find_if(fOpenInputs.begin(), fOpenInputs.end(),
-                            [filenameIdx](const TreeViewInput &i) { return i.filenameIdx == filenameIdx; });
-            if (inputIt != fOpenInputs.end()) {
-               // requested file is already open
-               inputIt->useCount++;
-               return std::distance(fOpenInputs.begin(), inputIt); // return input's index in fOpenInputs
-            } else {
-               // requested file needs to be added to fOpenInputs
-               TDirectory::TContext ctxt(gDirectory); // needed to restore the directory after opening the file
-               std::unique_ptr<TFile> f(TFile::Open(fFileNames[filenameIdx].data()));
-               // We must use TFile::Get instead of TFile::GetObject because this header will finish                 
-               // in the PCH and the TFile::GetObject<TTree> specialization will be available there. PyROOT will then
-               // not be able to specialize the method for types other that TTree.
-               // A test that fails as a consequence of this issue is python-ttree-tree.
-               TTree *t = static_cast<TTree*>(f->GetObjectChecked(fTreeName.c_str(), "TTree"));
-               t->ResetBit(TObject::kMustCleanup);
-               fOpenInputs.emplace_back(TreeViewInput{std::move(f), t, filenameIdx, /*useCount=*/1});
-               return fOpenInputs.size() - 1;
-            }
-         }
+         /// Push a new loaded entry to the stack.
+         void PushLoadedEntry(Long64_t entry) { fLoadedEntries.push_back(entry); }
 
          //////////////////////////////////////////////////////////////////////////
-         /// Decrease "use count" of the file at filenameIdx, delete corresponding TreeViewInput if use count is zero.
-         void Cleanup(std::size_t dataIdx)
+         /// Restore the tree of the previous loaded entry, if any.
+         void RestoreLoadedEntry()
          {
-            fOpenInputs[dataIdx].useCount--;
-            if(fOpenInputs[dataIdx].useCount == 0)
-               fOpenInputs.erase(fOpenInputs.begin() + dataIdx);
+            fLoadedEntries.pop_back();
+            if (fLoadedEntries.size() > 0) {
+               fChain->LoadTree(fLoadedEntries.back());
+            }
          }
       };
    } // End of namespace Internal

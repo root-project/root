@@ -13,9 +13,13 @@ protected:
    constexpr static auto kFile1 = "test_tdfandfriends.root";
    constexpr static auto kFile2 = "test_tdfandfriends2.root";
    constexpr static auto kFile3 = "test_tdfandfriends3.root";
+   constexpr static auto kFile4 = "test_tdfandfriends4.root";
+   constexpr static auto kFile5 = "test_tdfandfriends5.root";
+   constexpr static ULong64_t kSizeSmall = 4;
+   constexpr static ULong64_t kSizeBig = 10000;
    static void SetUpTestCase()
    {
-      TDataFrame d(4);
+      TDataFrame d(kSizeSmall);
       d.Define("x", [] { return 1; }).Snapshot<int>("t", kFile1, {"x"});
       d.Define("y", [] { return 2; }).Snapshot<int>("t2", kFile2, {"y"});
 
@@ -30,6 +34,10 @@ protected:
          t.Fill();
       }
       t.Write();
+
+      TDataFrame d2(kSizeBig);
+      d2.Define("x", [] { return 4; }).Snapshot<int>("t", kFile4, {"x"});
+      d2.Define("y", [] { return 5; }).Snapshot<int>("t2", kFile5, {"y"});
    }
 
    static void TearDownTestCase()
@@ -75,7 +83,7 @@ TEST_F(TDFAndFriends, FriendArrayByFile)
    TDataFrame d(*t1);
 
    int i(0);
-   auto checkArr = [&i](std::array_view<float> av) {
+   auto checkArr = [&i](TDF::TArrayBranch<float> av) {
       auto ifloat = float(i);
       EXPECT_EQ(ifloat, av[0]);
       EXPECT_EQ(ifloat + 1, av[1]);
@@ -96,7 +104,7 @@ TEST_F(TDFAndFriends, FriendArrayByPointer)
    TDataFrame d(*t1);
 
    int i(0);
-   auto checkArr = [&i](std::array_view<float> av) {
+   auto checkArr = [&i](TDF::TArrayBranch<float> av) {
       auto ifloat = float(i);
       EXPECT_EQ(ifloat, av[0]);
       EXPECT_EQ(ifloat + 1, av[1]);
@@ -119,3 +127,62 @@ TEST_F(TDFAndFriends, QualifiedBranchName)
    for (auto v : t)
       EXPECT_EQ(v, 2);
 }
+
+// NOW MT!-------------
+#ifdef R__USE_IMT
+
+TEST_F(TDFAndFriends, FriendMT)
+{
+   auto nSlots = 4U;
+   ROOT::EnableImplicitMT(nSlots);
+
+   TFile f1(kFile4);
+   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   t1->AddFriend("t2", kFile5);
+   TDataFrame d(*t1);
+   auto x = d.Min<int>("x");
+   auto t = d.Take<int>("y");
+   EXPECT_EQ(*x, 4);
+   for (auto v : t)
+      EXPECT_EQ(v, 5);
+}
+
+TEST_F(TDFAndFriends, FriendAliasMT)
+{
+   TFile f1(kFile4);
+   TTree *t1 = static_cast<TTree *>(f1.Get("t"));
+   TFile f2(kFile4);
+   TTree *t2 = static_cast<TTree *>(f2.Get("t"));
+   t1->AddFriend(t2, "myfriend");
+   TDataFrame d(*t1);
+   auto x = d.Min<int>("x");
+   auto t = d.Take<int>("myfriend.x");
+   EXPECT_EQ(*x, 4);
+   for (auto v : t)
+      EXPECT_EQ(v, 4);
+}
+
+TEST_F(TDFAndFriends, FriendChainMT)
+{
+   TChain c1("t");
+   c1.AddFile(kFile1);
+   c1.AddFile(kFile4);
+   c1.AddFile(kFile1);
+   c1.AddFile(kFile4);
+   TChain c2("t2");
+   c2.AddFile(kFile2);
+   c2.AddFile(kFile5);
+   c2.AddFile(kFile2);
+   c2.AddFile(kFile5);
+   c1.AddFriend(&c2);
+
+   TDataFrame d(c1);
+   auto c = d.Count();
+   EXPECT_EQ(*c, 2 * (kSizeSmall + kSizeBig));
+   auto x = d.Min<int>("x");
+   auto y = d.Max<int>("y");
+   EXPECT_EQ(*x, 1);
+   EXPECT_EQ(*y, 5);
+}
+
+#endif // R__USE_IMT

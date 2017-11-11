@@ -33,13 +33,35 @@ void ROOT::Experimental::Internal::LoadHistPainterLibrary()
 }
 
 template <int DIMENSION>
-THistPainterBase<DIMENSION>::~THistPainterBase()
+THistPainterBase<DIMENSION>::THistPainterBase()
 {
-   fgPainter = nullptr;
+   GetPainterPtr() = this;
 }
 
 template <int DIMENSION>
-THistPainterBase<DIMENSION> *THistPainterBase<DIMENSION>::fgPainter = nullptr;
+THistPainterBase<DIMENSION>::~THistPainterBase()
+{
+   GetPainterPtr() = nullptr;
+}
+
+template <int DIMENSION>
+THistPainterBase<DIMENSION> *&THistPainterBase<DIMENSION>::GetPainterPtr()
+{
+   static THistPainterBase<DIMENSION> *painter = nullptr;
+
+   return painter;
+}
+
+template <int DIMENSION>
+THistPainterBase<DIMENSION> *THistPainterBase<DIMENSION>::GetPainter()
+{
+   // Trigger loading of the painter library within the init guard of the static:
+   static int triggerLibLoad = (LoadHistPainterLibrary(), 0);
+
+   (void)triggerLibLoad; // unused.
+
+   return GetPainterPtr();
+}
 
 THistDrawableBase::THistDrawableBase() = default;
 THistDrawableBase::THistDrawableBase(THistDrawableBase &&) = default;
@@ -127,6 +149,13 @@ bool THistDrawable<DIMENSIONS>::UpdateOldHist()
    }
    fOldHist.reset(old);
    return true;
+}
+
+/// Paint the histogram
+template <int DIMENSIONS>
+void THistDrawable<DIMENSIONS>::Paint(Internal::TVirtualCanvasPainter &canv)
+{
+   Internal::THistPainterBase<DIMENSIONS>::GetPainter()->Paint(*this, fOpts, canv);
 }
 
 namespace ROOT {

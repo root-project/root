@@ -47,15 +47,50 @@ namespace ROOT {
          released under GNU Lesser General Public License v3.
 
          This wrapper class provides 3 different variants of MIXMAX according to the template para extra parameter N. 
-         The extra parameter, `SkipNumber`, is used to perform additional iterations of the generator before returning the random numbers. For example, when `SkipNumber = 2`, the generator will have two extra iterations that will be discarder. 
+         The extra parameter, `SkipNumber`, is used to perform additional iterations of the generator before returning the random numbers. 
+           For example, when `SkipNumber = 2`, the generator will have two extra iterations that will be discarder. 
 
-         *  MIXMAX with N = 240. This is a new version of  the generator (version 2.0)  described in the 2016 paper (3rd reference), with 
+         *  MIXMAX with N = 240. This is a new version of  the generator (version 2.0beta)  described in the 
+            <a href="http://dx.doi.org/10.1016/j.chaos.2016.05.003">2016 paper</a> (3rd reference), with 
             special number $s=487013230256099140$, $m=2^{51}+1$ and having a period of $10^{4389}$. 
           
-         *  MIXMAX with N = 17, from the 2.0 version with $s=0$ and $m=2^{36}+1$. The period of the generator is $10^{294}$. 
+         *  MIXMAX with N = 17, from the 2.0beta version with $s=0$ and $m=2^{36}+1$. The period of the generator is $10^{294}$. 
 
-         *  MIXMAX with N = 256 from the 1.0 version. The period is (for `SkipNumber=0`) $10^{4682}$. For this generator we recommend using a default value of `SkipNumber=2`. 
+         *  MIXMAX with N = 256 from the 1.0 version. The period is (for `SkipNumber=0`) $10^{4682}$. 
+            For this generator we recommend in ROOT using a default value of `SkipNumber=2, while for the previous two generators 
+            skipping is not needed. 
  
+            This table describes the properties of the MIXMAX generators. MIXMAX is a genuine 61 bit generator on the Galois field GF[p], where
+           $p=2^{61}-1$ is the Mersenne prime number.
+          The MIXMAX generators with these parameters pass all of the BigCrush
+          tests in the <a href="http://simul.iro.umontreal.ca/testu01/tu01.html">TestU01 suite</a\>.
+   
+\latexonly
+ \begin{table}[h]
+   \centering
+     \begin{tabular}{@{} rrlcrr @{}} 
+     
+      \toprule
+      Dimension &~ Entropy & Decorrelation Time &  Iteration Time  & Relaxation Time                                 &Period  q\\
+      N     &~~ $~h(T)$   &~~~ $\tau_0 = {1\over h(T) 2N }$ & t & $\tau ={1\over h(T) \ln {1\over \delta v_0}}$ &  $  \log_{10} (q)$  \\ % Crush
+      \midrule
+      256    & 194   & ~~~~~0.000012     & 1   & 95.00  &   4682\footnote{full
+      period is not confirmed}  \\
+      \hline
+         8   & 220   & $~~~~~0.00028$    & 1   & 1.54   &    129  \\
+        17   & 374   & ~~~~~0.000079     & 1   & 1.92   &    294  \\
+       240   & 8679  & ~~~~~0.00000024   & 1   & 1.17   &   4389  \\
+      \bottomrule
+   \end{tabular}
+     \caption{The entropy $h(T)$, decorrelation time $\tau_0$ 
+       decorrelation time, relaxation time $\tau $ and period of the MIXMAX generator
+       \cite{savvidy2017ex,savvidy2017cl},
+       expressed in units of the iteration time $t$, which is
+       normalised to 1.
+       Clearly $\tau_0~ < t ~< \tau $.
+}
+\end{table}
+\endlatexonly
 
          The References for MIXMAX are 
 

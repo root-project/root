@@ -13,7 +13,7 @@
 
 #include "ROOT/TDataSource.hxx" // ColumnName2ColumnTypeName
 #include "ROOT/TypeTraits.hxx"
-#include "ROOT/RArrayView.hxx"
+#include "ROOT/TArrayBranch.hxx"
 #include "Compression.h"
 #include "TH1.h"
 #include "TTreeReaderArray.h"
@@ -153,14 +153,14 @@ const char *ToConstCharPtr(const std::string &s);
 unsigned int GetNSlots();
 
 /// Choose between TTreeReader{Array,Value} depending on whether the branch type
-/// T is a `std::array_view<T>` or any other type (respectively).
+/// T is a `TArrayBranch<T>` or any other type (respectively).
 template <typename T>
 struct TReaderValueOrArray {
    using Proxy_t = TTreeReaderValue<T>;
 };
 
 template <typename T>
-struct TReaderValueOrArray<std::array_view<T>> {
+struct TReaderValueOrArray<TArrayBranch<T>> {
    using Proxy_t = TTreeReaderArray<T>;
 };
 
@@ -201,6 +201,8 @@ void CheckFilter(Filter &)
    using FilterRet_t = typename TDF::CallableTraits<Filter>::ret_type;
    static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
 }
+
+ColumnNames_t GetBranchNames(TTree &t);
 
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
                        const ColumnNames_t &dataSourceColumns);
@@ -347,11 +349,11 @@ struct IsDeque_t<std::deque<T>> : std::true_type {
 };
 
 template <typename>
-struct IsArrayView_t : std::false_type {
+struct IsTArrayBranch_t : std::false_type {
 };
 
 template <typename T>
-struct IsArrayView_t<std::array_view<T>> : std::true_type {
+struct IsTArrayBranch_t<ROOT::Experimental::TDF::TArrayBranch<T>> : std::true_type {
 };
 
 // Check the value_type type of a type with a SFINAE to allow compilation in presence
@@ -363,6 +365,11 @@ struct ValueType {
 
 template <typename T>
 struct ValueType<T, false> {
+   using value_type = T;
+};
+
+template <typename T>
+struct ValueType<ROOT::Experimental::TDF::TArrayBranch<T>, false> {
    using value_type = T;
 };
 

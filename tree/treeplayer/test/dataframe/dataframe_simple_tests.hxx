@@ -14,6 +14,7 @@
 #include <set>
 
 using namespace ROOT::Experimental;
+using namespace ROOT::Experimental::TDF;
 
 namespace TEST_CATEGORY {
 
@@ -358,10 +359,10 @@ TEST(TEST_CATEGORY, CArraysFromTree)
    TDataFrame df(treename, filename);
 
    // no jitting
-   auto h = df.Filter([](double b1, unsigned int n, std::array_view<double> b3,
-                         std::array_view<int> b4) { return b3[0] == b1 && b4[0] == 21 && b4.size() == n; },
+   auto h = df.Filter([](double b1, unsigned int n, TArrayBranch<double> b3,
+                         TArrayBranch<int> b4) { return b3[0] == b1 && b4[0] == 21 && b4.size() == n; },
                       {"b1", "n", "b3", "b4"})
-               .Histo1D<std::array_view<double>>("b3");
+               .Histo1D<TArrayBranch<double>>("b3");
    EXPECT_EQ(20, h->GetEntries());
 
    // jitting
@@ -391,7 +392,7 @@ TEST(TEST_CATEGORY, TakeCarrays)
 
    TDataFrame tdf(treeName, fileName);
    // no auto here: we check that the type is a COLL<vector<float>>!
-   using ColType_t = std::array_view<float>;
+   using ColType_t = TDF::TArrayBranch<float>;
    std::vector<std::vector<float>> v = *tdf.Take<ColType_t>("arr");
    std::deque<std::vector<float>> d = *tdf.Take<ColType_t, std::deque<ColType_t>>("arr");
    std::list<std::vector<float>> l = *tdf.Take<ColType_t, std::list<ColType_t>>("arr");

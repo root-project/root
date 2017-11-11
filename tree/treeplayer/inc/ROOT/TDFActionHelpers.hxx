@@ -15,7 +15,7 @@
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TThreadedObject.hxx"
-#include "ROOT/RArrayView.hxx"
+#include "ROOT/TArrayBranch.hxx"
 #include "TH1.h"
 #include "TTreeReader.h" // for SnapshotHelper
 #include "TFile.h"       // for SnapshotHelper
@@ -249,12 +249,12 @@ public:
 };
 
 // In case of the take helper we have 4 cases:
-// 1. The column is not an array_view, the collection is not a vector
-// 2. The column is not an array_view, the collection is a vector
-// 3. The column is an array_view, the collection is not a vector
-// 4. The column is an array_view, the collection is a vector
+// 1. The column is not an TArrayBranch, the collection is not a vector
+// 2. The column is not an TArrayBranch, the collection is a vector
+// 3. The column is an TArrayBranch, the collection is not a vector
+// 4. The column is an TArrayBranch, the collection is a vector
 
-// Case 1.: The column is not an array_view, the collection is not a vector
+// Case 1.: The column is not an TArrayBranch, the collection is not a vector
 // No optimisations, no transformations: just copies.
 template <typename RealT_t, typename T, typename COLL>
 class TakeHelper {
@@ -289,7 +289,7 @@ public:
    COLL &PartialUpdate(unsigned int slot) { return *fColls[slot].get(); }
 };
 
-// Case 2.: The column is not an array_view, the collection is a vector
+// Case 2.: The column is not an TArrayBranch, the collection is a vector
 // Optimisations, no transformations: just copies.
 template <typename RealT_t, typename T>
 class TakeHelper<RealT_t, T, std::vector<T>> {
@@ -330,14 +330,14 @@ public:
    std::vector<T> &PartialUpdate(unsigned int slot) { return *fColls[slot]; }
 };
 
-// Case 3.: The column is an array_view, the collection is not a vector
-// No optimisations, transformations from array_views to vectors
+// Case 3.: The column is a TArrayBranch, the collection is not a vector
+// No optimisations, transformations from TArrayBranchs to vectors
 template <typename RealT_t, typename COLL>
-class TakeHelper<RealT_t, std::array_view<RealT_t>, COLL> {
+class TakeHelper<RealT_t, TArrayBranch<RealT_t>, COLL> {
    std::vector<std::shared_ptr<COLL>> fColls;
 
 public:
-   using BranchTypes_t = TypeList<std::array_view<RealT_t>>;
+   using BranchTypes_t = TypeList<TArrayBranch<RealT_t>>;
    TakeHelper(const std::shared_ptr<COLL> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
@@ -349,7 +349,7 @@ public:
 
    void InitSlot(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, std::array_view<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
+   void Exec(unsigned int slot, TArrayBranch<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
 
    void Finalize()
    {
@@ -363,14 +363,14 @@ public:
    }
 };
 
-// Case 4.: The column is an array_view, the collection is a vector
-// Optimisations, transformations from array_views to vectors
+// Case 4.: The column is an TArrayBranch, the collection is a vector
+// Optimisations, transformations from TArrayBranchs to vectors
 template <typename RealT_t>
-class TakeHelper<RealT_t, std::array_view<RealT_t>, std::vector<RealT_t>> {
+class TakeHelper<RealT_t, TArrayBranch<RealT_t>, std::vector<RealT_t>> {
    std::vector<std::shared_ptr<std::vector<std::vector<RealT_t>>>> fColls;
 
 public:
-   using BranchTypes_t = TypeList<std::array_view<RealT_t>>;
+   using BranchTypes_t = TypeList<TArrayBranch<RealT_t>>;
    TakeHelper(const std::shared_ptr<std::vector<std::vector<RealT_t>>> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
@@ -385,7 +385,7 @@ public:
 
    void InitSlot(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, std::array_view<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
+   void Exec(unsigned int slot, TArrayBranch<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
 
    // This is optimised to treat vectors
    void Finalize()
@@ -571,17 +571,17 @@ extern template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 template<typename T>
-struct AddRefIfNotArrayView {
+struct AddRefIfNotArrayBranch {
    using type = T&;
 };
 
 template<typename T>
-struct AddRefIfNotArrayView<std::array_view<T>> {
-   using type = std::array_view<T>;
+struct AddRefIfNotArrayBranch<TArrayBranch<T>> {
+   using type = TArrayBranch<T>;
 };
 
 template<typename T>
-using AddRefIfNotArrayView_t = typename AddRefIfNotArrayView<T>::type;
+using AddRefIfNotArrayBranch_t = typename AddRefIfNotArrayBranch<T>::type;
 
 /// Helper object for a single-thread Snapshot action
 template <typename... BranchTypes>
@@ -589,12 +589,12 @@ class SnapshotHelper {
    std::unique_ptr<TFile> fOutputFile;
    std::unique_ptr<TTree> fOutputTree; // must be a ptr because TTrees are not copy/move constructible
    bool fIsFirstEvent{true};
-   const Detail::TDF::ColumnNames_t fBranchNames;
+   const ColumnNames_t fBranchNames;
    TTree *fInputTree = nullptr; // Current input tree. Set at initialization time (`InitSlot`)
 
 public:
    SnapshotHelper(std::string_view filename, std::string_view dirname, std::string_view treename,
-                  const Detail::TDF::ColumnNames_t &bnames, const TSnapshotOptions &options)
+                  const ColumnNames_t &bnames, const TSnapshotOptions &options)
       : fOutputFile(TFile::Open(std::string(filename).c_str(), options.fMode.c_str(), /*ftitle=*/"",
                                 ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
         fBranchNames(bnames)
@@ -625,7 +625,7 @@ public:
       fInputTree->AddClone(fOutputTree.get());
    }
 
-   void Exec(unsigned int /* slot */, AddRefIfNotArrayView_t<BranchTypes>... values)
+   void Exec(unsigned int /* slot */, AddRefIfNotArrayBranch_t<BranchTypes>... values)
    {
       if (fIsFirstEvent) {
          using ind_t = GenStaticSeq_t<sizeof...(BranchTypes)>;
@@ -635,7 +635,7 @@ public:
    }
 
    template <int... S>
-   void SetBranches(AddRefIfNotArrayView_t<BranchTypes>... values, StaticSeq<S...> /*dummy*/)
+   void SetBranches(AddRefIfNotArrayBranch_t<BranchTypes>... values, StaticSeq<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {(SetBranchesHelper(fBranchNames[S], &values), 0)..., 0};
@@ -649,12 +649,12 @@ public:
       fOutputTree->Branch(name.c_str(), address);
    }
 
-   // This overload is called for columns of type `array_view<T>`. For TDF, these represent c-style arrays in ROOT
+   // This overload is called for columns of type `TArrayBranch<T>`. For TDF, these represent c-style arrays in ROOT
    // files, so we are sure that there are input trees to which we can ask the correct branch title
    template <typename T>
-   void SetBranchesHelper(const std::string &name, std::array_view<T> *arrview)
+   void SetBranchesHelper(const std::string &name, TArrayBranch<T> *ab)
    {
-      fOutputTree->Branch(name.c_str(), const_cast<T*>(arrview->data()), fInputTree->GetBranch(name.c_str())->GetTitle());
+      fOutputTree->Branch(name.c_str(), ab->GetData(), fInputTree->GetBranch(name.c_str())->GetTitle());
    }
 
    void Finalize() { fOutputTree->Write(); }
@@ -671,14 +671,13 @@ class SnapshotHelperMT {
    const std::string fDirName;        // name of TFile subdirectory in which output must be written (possibly empty)
    const std::string fTreeName;       // name of output tree
    const TSnapshotOptions fOptions;   // struct holding options to pass down to TFile and TTree in this action
-   const Detail::TDF::ColumnNames_t fBranchNames;
+   const ColumnNames_t fBranchNames;
    std::vector<TTree *> fInputTrees; // Current input trees. Set at initialization time (`InitSlot`)
 
 public:
    using BranchTypes_t = TypeList<BranchTypes...>;
    SnapshotHelperMT(const unsigned int nSlots, std::string_view filename, std::string_view dirname,
-                    std::string_view treename, const Detail::TDF::ColumnNames_t &bnames,
-                    const TSnapshotOptions &options)
+                    std::string_view treename, const ColumnNames_t &bnames, const TSnapshotOptions &options)
       : fNSlots(nSlots), fMerger(new ROOT::Experimental::TBufferMerger(
                             std::string(filename).c_str(), options.fMode.c_str(),
                             ROOT::CompressionSettings(options.fCompressionAlgorithm, options.fCompressionLevel))),
@@ -719,7 +718,7 @@ public:
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
 
-   void Exec(unsigned int slot, AddRefIfNotArrayView_t<BranchTypes>... values)
+   void Exec(unsigned int slot, AddRefIfNotArrayBranch_t<BranchTypes>... values)
    {
       if (fIsFirstEvent[slot]) {
          using ind_t = GenStaticSeq_t<sizeof...(BranchTypes)>;
@@ -734,7 +733,7 @@ public:
    }
 
    template <int... S>
-   void SetBranches(unsigned int slot, AddRefIfNotArrayView_t<BranchTypes>... values, StaticSeq<S...> /*dummy*/)
+   void SetBranches(unsigned int slot, AddRefIfNotArrayBranch_t<BranchTypes>... values, StaticSeq<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {(SetBranchesHelper(*fOutputTrees[slot], *fInputTrees[slot], fBranchNames[S], &values), 0)...,
@@ -748,12 +747,12 @@ public:
       t.Branch(name.c_str(), address);
    }
 
-   // This overload is called for columns of type `array_view<T>`. For TDF, these represent c-style arrays in ROOT
+   // This overload is called for columns of type `TArrayBranch<T>`. For TDF, these represent c-style arrays in ROOT
    // files, so we are sure that there are input trees to which we can ask the correct branch title
    template <typename T>
-   void SetBranchesHelper(TTree &outputTree, TTree &inputTree, const std::string &name, std::array_view<T> *arrview)
+   void SetBranchesHelper(TTree &outputTree, TTree &inputTree, const std::string &name, TArrayBranch<T> *ab)
    {
-      outputTree.Branch(name.c_str(), const_cast<T*>(arrview->data()), inputTree.GetBranch(name.c_str())->GetTitle());
+      outputTree.Branch(name.c_str(), ab->GetData(), inputTree.GetBranch(name.c_str())->GetTitle());
    }
 
    void Finalize()

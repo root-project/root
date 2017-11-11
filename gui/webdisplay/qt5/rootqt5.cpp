@@ -189,7 +189,7 @@ public:
    }
 };
 
-extern "C" void webgui_start_browser_in_qt5(const char *url, void *http_serv, bool is_batch)
+extern "C" void webgui_start_browser_in_qt5(const char *url, void *http_serv, bool is_batch, unsigned width, unsigned height)
 {
    // webgui_initapp();
 
@@ -219,7 +219,7 @@ extern "C" void webgui_start_browser_in_qt5(const char *url, void *http_serv, bo
       RootWebPage *page = new RootWebPage();
       page->load(QUrl(fullurl));
    } else {
-      RootWebView *view = new RootWebView();
+      RootWebView *view = new RootWebView(0, width, height);
       view->load(QUrl(fullurl));
       view->show();
    }

@@ -33,7 +33,7 @@ namespace Internal {
 namespace TDF {
 // Match expression against names of branches passed as parameter
 // Return vector of names of the branches used in the expression
-std::vector<std::string> FindUsedColumnNames(std::string_view expression, TObjArray *branches,
+std::vector<std::string> FindUsedColumnNames(std::string_view expression, const ColumnNames_t &branches,
                                              const ColumnNames_t &customColumns, const ColumnNames_t &dsColumns,
                                              const std::map<std::string, std::string> &aliasMap)
 {
@@ -54,14 +54,11 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, TObjAr
    }
 
    // Check which tree branches match
-   if (branches) {
-      for (auto bro : *branches) {
-         auto brName = bro->GetName();
-         std::string bNameRegexContent = regexBit + brName + regexBit;
-         TRegexp bNameRegex(bNameRegexContent.c_str());
-         if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
-            usedBranches.emplace_back(brName);
-         }
+   for (auto &brName : branches) {
+      std::string bNameRegexContent = regexBit + brName + regexBit;
+      TRegexp bNameRegex(bNameRegexContent.c_str());
+      if (-1 != bNameRegex.Index(paddedExpr.c_str(), &paddedExprLen)) {
+         usedBranches.emplace_back(brName);
       }
    }
 
@@ -95,7 +92,7 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, TObjAr
 // Return pointer to the new functional chain node returned by the call, cast to Long_t
 Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
                          std::string_view name, std::string_view expression,
-                         const std::map<std::string, std::string> &aliasMap, TObjArray *branches,
+                         const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
                          const std::vector<std::string> &customColumns,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
                          std::string_view returnTypeName, TDataSource *ds)
@@ -153,9 +150,9 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    for (unsigned int i = 0; i < usedBranchesTypes.size(); ++i) {
       // We pass by reference to avoid expensive copies
       // It can't be const reference in general, as users might want/need to call non-const methods on the values
-      // In the special case of arguments of type `std::array_view`, it *has* to be a const ref as we will pass in
+      // In the special case of arguments of type `TArrayBranch`, it *has* to be a const ref as we will pass in
       // temporaries converted from TTreeReaderArrays.
-      if (usedBranchesTypes[i].find_first_of("std::array_view<") == 0u)
+      if (usedBranchesTypes[i].find_first_of("ROOT::Experimental::TDF::TArrayBranch<") == 0u)
          ss << "const ";
       // Here we do not replace anything: the name of the parameters of the lambda does not need to be the real
       // column name, it must be an alias to compile.
@@ -265,7 +262,8 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
    std::stringstream createAction_str;
    createAction_str << "ROOT::Internal::TDF::CallBuildAndBook"
                     << "<" << actionTypeName;
-   for (auto &colType : columnTypeNames) createAction_str << ", " << colType;
+   for (auto &colType : columnTypeNames)
+      createAction_str << ", " << colType;
    createAction_str << ">(*reinterpret_cast<" << prevNodeTypename << "*>(" << prevNode << "), {";
    for (auto i = 0u; i < bl.size(); ++i) {
       if (i != 0u)

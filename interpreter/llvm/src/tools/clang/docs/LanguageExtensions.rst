@@ -1271,6 +1271,87 @@ Further examples of these attributes are available in the static analyzer's `lis
 Query for these features with ``__has_attribute(ns_consumed)``,
 ``__has_attribute(ns_returns_retained)``, etc.
 
+Objective-C @available
+----------------------
+
+It is possible to use the newest SDK but still build a program that can run on
+older versions of macOS and iOS by passing ``-mmacosx-version-min=`` /
+``-miphoneos-version-min=``.
+
+Before LLVM 5.0, when calling a function that exists only in the OS that's
+newer than the target OS (as determined by the minimum deployment version),
+programmers had to carefully check if the function exists at runtime, using
+null checks for weakly-linked C functions, ``+class`` for Objective-C classes,
+and ``-respondsToSelector:`` or ``+instancesRespondToSelector:`` for
+Objective-C methods.  If such a check was missed, the program would compile
+fine, run fine on newer systems, but crash on older systems.
+
+As of LLVM 5.0, ``-Wunguarded-availability`` uses the `availability attributes
+<http://clang.llvm.org/docs/AttributeReference.html#availability>`_ together
+with the new ``@available()`` keyword to assist with this issue.
+When a method that's introduced in the OS newer than the target OS is called, a
+-Wunguarded-availability warning is emitted if that call is not guarded:
+
+.. code-block:: objc
+
+  void my_fun(NSSomeClass* var) {
+    // If fancyNewMethod was added in e.g. macOS 10.12, but the code is
+    // built with -mmacosx-version-min=10.11, then this unconditional call
+    // will emit a -Wunguarded-availability warning:
+    [var fancyNewMethod];
+  }
+
+To fix the warning and to avoid the crash on macOS 10.11, wrap it in
+``if(@available())``:
+
+.. code-block:: objc
+
+  void my_fun(NSSomeClass* var) {
+    if (@available(macOS 10.12, *)) {
+      [var fancyNewMethod];
+    } else {
+      // Put fallback behavior for old macOS versions (and for non-mac
+      // platforms) here.
+    }
+  }
+
+The ``*`` is required and means that platforms not explicitly listed will take
+the true branch, and the compiler will emit ``-Wunguarded-availability``
+warnings for unlisted platforms based on those platform's deployment target.
+More than one platform can be listed in ``@available()``:
+
+.. code-block:: objc
+
+  void my_fun(NSSomeClass* var) {
+    if (@available(macOS 10.12, iOS 10, *)) {
+      [var fancyNewMethod];
+    }
+  }
+
+If the caller of ``my_fun()`` already checks that ``my_fun()`` is only called
+on 10.12, then add an `availability attribute
+<http://clang.llvm.org/docs/AttributeReference.html#availability>`_ to it,
+which will also suppress the warning and require that calls to my_fun() are
+checked:
+
+.. code-block:: objc
+
+  API_AVAILABLE(macos(10.12)) void my_fun(NSSomeClass* var) {
+    [var fancyNewMethod];  // Now ok.
+  }
+
+``@available()`` is only available in Objective-C code.  To use the feature
+in C and C++ code, use the ``__builtin_available()`` spelling instead.
+
+If existing code uses null checks or ``-respondsToSelector:``, it should
+be changed to use ``@available()`` (or ``__builtin_available``) instead.
+
+``-Wunguarded-availability`` is disabled by default, but
+``-Wunguarded-availability-new``, which only emits this warning for APIs
+that have been introduced in macOS >= 10.13, iOS >= 11, watchOS >= 4 and
+tvOS >= 11, is enabled by default.
+
+.. _langext-overloading:
 
 Objective-C++ ABI: protocol-qualifier mangling of parameters
 ------------------------------------------------------------
@@ -1286,8 +1367,6 @@ parameters of protocol-qualified type.
 
 Query the presence of this new mangling with
 ``__has_feature(objc_protocol_qualifier_mangling)``.
-
-.. _langext-overloading:
 
 Initializer lists for complex numbers in C
 ==========================================
@@ -2521,3 +2600,45 @@ whether or not an attribute is supported by the pragma by referring to the
 The attributes are applied to all matching declarations individually, even when
 the attribute is semantically incorrect. The attributes that aren't applied to
 any declaration are not verified semantically.
+
+Specifying section names for global objects (#pragma clang section)
+===================================================================
+
+The ``#pragma clang section`` directive provides a means to assign section-names
+to global variables, functions and static variables.
+
+The section names can be specified as:
+
+.. code-block:: c++
+
+  #pragma clang section bss="myBSS" data="myData" rodata="myRodata" text="myText"
+
+The section names can be reverted back to default name by supplying an empty
+string to the section kind, for example:
+
+.. code-block:: c++
+
+  #pragma clang section bss="" data="" text="" rodata=""
+
+The ``#pragma clang section`` directive obeys the following rules:
+
+* The pragma applies to all global variable, statics and function declarations
+  from the pragma to the end of the translation unit.
+
+* The pragma clang section is enabled automatically, without need of any flags.
+
+* This feature is only defined to work sensibly for ELF targets.
+
+* If section name is specified through _attribute_((section("myname"))), then
+  the attribute name gains precedence.
+
+* Global variables that are initialized to zero will be placed in the named
+  bss section, if one is present.
+
+* The ``#pragma clang section`` directive does not does try to infer section-kind
+  from the name. For example, naming a section "``.bss.mySec``" does NOT mean
+  it will be a bss section name.
+
+* The decision about which section-kind applies to each global is taken in the back-end.
+  Once the section-kind is known, appropriate section name, as specified by the user using
+  ``#pragma clang section`` directive, is applied to that global.

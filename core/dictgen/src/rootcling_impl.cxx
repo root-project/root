@@ -2240,31 +2240,6 @@ static bool GenerateAllDict(TModuleGenerator &modGen, clang::CompilerInstance *c
    return WriteAST(modGen.GetModuleFileName(), compilerInstance, iSysRoot);
 }
 
-static void
-foreachHeaderInModule(const clang::Module &module, const std::function<void(const clang::Module::Header &)> &closure)
-{
-   // Iterates over all headers in a module and calls the closure on each.
-
-   // FIXME: We currently have to hardcode '4' to do this. Maybe we
-   // will have a nicer way to do this in the future.
-   // NOTE: This is on purpose '4', not '5' which is the size of the
-   // vector. The last element is the list of excluded headers which we
-   // obviously don't want to check here.
-   const std::size_t publicHeaderIndex = 4;
-
-   // Integrity check in case this array changes its size at some point.
-   const std::size_t maxArrayLength = ((sizeof module.Headers) / (sizeof *module.Headers));
-   static_assert(publicHeaderIndex + 1 == maxArrayLength,
-                 "'Headers' has changed it's size, we need to update publicHeaderIndex");
-
-   for (std::size_t i = 0; i < publicHeaderIndex; i++) {
-      auto &headerList = module.Headers[i];
-      for (const clang::Module::Header &moduleHeader : headerList) {
-         closure(moduleHeader);
-      }
-   }
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Includes all headers in the given module from this interpreter.
 static void IncludeModuleHeaders(TModuleGenerator &modGen, clang::Module *module, cling::Interpreter &interpreter)
@@ -2287,7 +2262,7 @@ static void IncludeModuleHeaders(TModuleGenerator &modGen, clang::Module *module
    // of doing this and 'import' each header in its own submodule, then let
    // the visibility of the decls handle this situation nicely.
    for (clang::Module *module : modules) {
-      foreachHeaderInModule(*module, [&includes](const clang::Module::Header &h) {
+      ROOT::TMetaUtils::foreachHeaderInModule(*module, [&includes](const clang::Module::Header &h) {
          includes << "#include \"" << h.NameAsWritten << "\"\n";
       });
    }
@@ -2319,7 +2294,7 @@ static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *modul
    // Now we collect all header files from the previously collected modules.
    std::set<std::string> moduleHeaders;
    for (clang::Module *module : modules) {
-      foreachHeaderInModule(
+      ROOT::TMetaUtils::foreachHeaderInModule(
          *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.insert(h.NameAsWritten); });
    }
 
@@ -4361,6 +4336,11 @@ int RootClingMain(int argc,
          interpPtr->setCallbacks(std::move(callBacks));
       }
    } else {
+#ifdef R__FAST_MATH
+      // Same setting as in TCling.cxx.
+      clingArgsC.push_back("-ffast-math");
+#endif
+
       owningInterpPtr.reset(new cling::Interpreter(clingArgsC.size(), &clingArgsC[0],
                                                    resourceDir.c_str()));
       interpPtr = owningInterpPtr.get();

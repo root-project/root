@@ -72,11 +72,11 @@ CreateHostTargetMachine(const clang::CompilerInstance& CI) {
   std::string MCPU;
   std::string FeaturesStr;
 
-  return std::unique_ptr<TargetMachine>(TheTarget->createTargetMachine(Triple,
-                                        MCPU, FeaturesStr,
-                                        llvm::TargetOptions(),
-                                        Optional<Reloc::Model>(), CMModel,
-                                        OptLevel));
+  auto TM = std::unique_ptr<TargetMachine>(TheTarget->createTargetMachine(
+      Triple, MCPU, FeaturesStr, llvm::TargetOptions(),
+      Optional<Reloc::Model>(), CMModel, OptLevel));
+  TM->Options.EmulatedTLS = true;
+  return TM;
 }
 
 } // anonymous namespace

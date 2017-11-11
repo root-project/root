@@ -44,8 +44,9 @@ protected:
       /// Default destructor.
       virtual ~Generator();
    };
-   /// The generator for implementations.
-   static std::unique_ptr<Generator> fgGenerator;
+
+   /// generator getter
+   static std::unique_ptr<Generator> &GetGenerator();
 
 public:
    /// Default destructor.

@@ -12,7 +12,7 @@
  *  zip.h by Mark Adler.
  */
 
-
+#ifndef ZIP
 #define ZIP   /* for crypt.c:  include zip password functions, not unzip */
 
 /* Set up portability */
@@ -66,9 +66,6 @@ typedef unsigned long ulg;      /* unsigned 32-bit value */
 #define STORE 0                 /* Store method */
 #define DEFLATE 8               /* Deflation method*/
 
-static int verbose=0;           /* Report oddities in zip file structure */
-static int level=6;             /* Compression level */
-
 /* Diagnostic functions */
 #ifdef DEBUG
 # ifdef MSDOS
@@ -92,9 +89,15 @@ static int level=6;             /* Compression level */
 #  define Tracecv(c,x)
 #endif
 
-#ifndef UTIL
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+extern int gCompressionLevel;          /* Compression level */
+
 typedef struct bits_internal_state bits_internal_state;
 typedef struct tree_internal_state tree_internal_state;
+
         /* in deflate.c */
 int R__lm_init OF((bits_internal_state *state,int pack_level, ush *flags));
 void R__lm_free OF((void));
@@ -106,25 +109,12 @@ int  R__ct_tally    OF((bits_internal_state *state, int dist, int lc));
 ulg  R__flush_block OF((bits_internal_state *state, char far *buf, ulg stored_len, int eof,int *errorflag));
 tree_internal_state *R__get_thread_tree_state   OF((void));
 
-        /* in bits.c */
-int      R__bi_init    OF((bits_internal_state *state));
-void     R__send_bits  OF((bits_internal_state *state,int value, int length));
-unsigned R__bi_reverse OF((unsigned value, int length));
-void     R__bi_windup  OF((bits_internal_state *state));
-void     R__copy_block OF((bits_internal_state *state,char far *buf, unsigned len, int header));
-int      R__seekable   OF((void));
-/* On some platform (MacOS) marking this thread local does not work,
- however in our use this is a constant, so we do not really need to make it
- thread local */
-#ifdef _MSC_VER
-extern /* __declspec( thread ) */ int (*R__read_buf) OF((char *buf, unsigned size));
-#else
-extern /* __thread */ int (*R__read_buf) OF((char *buf, unsigned size));
+void R__error(const char *);
+
+#ifdef __cplusplus
+}  // extern "C"
 #endif
-ulg      R__memcompress OF((char *tgt, ulg tgtsize, char *src, ulg srcsize));
-void     R__error      OF((char *h));
 
-#endif /* !UTIL */
-
+#endif /* !ZIP */
 /* end of zip.h */
 

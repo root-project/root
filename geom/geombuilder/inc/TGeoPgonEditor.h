@@ -11,14 +11,6 @@
 #ifndef ROOT_TGeoPgonEditor
 #define ROOT_TGeoPgonEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoPgonEditor                                                      //
-//                                                                      //
-//  Editor for a TGeoPgon.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoPconEditor.h"
 

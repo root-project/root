@@ -185,12 +185,12 @@ const char *TTable::fgTypeName[] = {
 /// ArrayLayout - calculates the array layout recursively
 ///
 /// Input:
-/// -----
+///
 /// dim   - dimension of the targeted array
 /// size  - the max index for each dimension
 ///
 /// Output:
-/// ------
+///
 /// layout - the "start index" for each dimension of an array
 ///
 
@@ -366,8 +366,7 @@ void TTable::DeleteRows(Long_t indx, UInt_t nRows)
       SetUsedRows(GetNRows() - nRows);
 }
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
-///*-*                  ===========================================
+///   Draw expression varexp for specified entries.
 ///
 ///   This function accepts TCut objects as arguments.
 ///   Useful to use the string operator +
@@ -383,8 +382,7 @@ TH1  *TTable::Draw(TCut varexp, TCut selection, Option_t *option, Int_t nentries
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Draw expression varexp for specified entries-*-*-*-*-*
-///*-*                  ===========================================
+///  Draw expression varexp for specified entries.
 ///
 ///  varexp is an expression of the general form e1:e2:e3
 ///    where e1,etc is a C++ expression referencing a combination of the TTable columns
@@ -730,10 +728,8 @@ TH1 *TTable::Draw(const char *varexp00, const char *selection, Option_t *option,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Find reasonable bin values*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*              ==========================
-///*-*  This mathod is a straight copy of void TTree::FindGoodLimits method
-///*-*
+/// Find reasonable bin values.
+/// This mathod is a straight copy of void TTree::FindGoodLimits method.
 
 static void FindGoodLimits(Int_t nbins, Int_t &newbins, Float_t &xmin, Float_t &xmax)
 {
@@ -1407,8 +1403,7 @@ Long_t TTable::GetTableSize() const {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Fit a projected item(s) from a TTable*-*-*-*-*-*-*-*-*-*
-///*-*              =======================================
+///  Fit a projected item(s) from a TTable.
 ///
 ///  formula is a TF1 expression.
 ///
@@ -1633,8 +1628,6 @@ const Char_t *TTable::PrintHeader() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *colfirst, const Char_t *collast) const
-///
 ///  Print the contents of internal table per COLUMN.
 ///
 ///  row       - the index of the first row to print (counting from ZERO)
@@ -1642,12 +1635,10 @@ const Char_t *TTable::PrintHeader() const
 ///
 ///  (No use !) Char_t *colfirst, *collast - the names of the first/last
 ///                                          to print out (not implemented yet)
-///
-///--------------------------------------------------------------
-/// Check bounds and adjust it
 
 const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Char_t *) const
 {
+   // Check bounds and adjust it
    Int_t const width = 8;
    Int_t rowStep = 10; // The maximun values to print per line
    Int_t rowNumber = rownumber;
@@ -1785,8 +1776,7 @@ void TTable::PrintContents(Option_t *) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Make a projection of a TTable using selections*-*-*-*-*-*-*
-///*-*              =============================================
+///   Make a projection of a TTable using selections.
 ///
 ///   Depending on the value of varexp (described in Draw) a 1-D,2-D,etc
 ///   projection of the TTable will be filled in histogram hname.

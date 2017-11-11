@@ -164,7 +164,7 @@ using TmpBranchBasePtr_t = std::shared_ptr<TCustomColumnBase>;
 
 Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
                          std::string_view name, std::string_view expression,
-                         const std::map<std::string, std::string> &aliasMap, TObjArray *branches,
+                         const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
                          const std::vector<std::string> &customColumns,
                          const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
                          std::string_view returnTypeName, TDataSource *ds);
@@ -260,8 +260,7 @@ struct TMinReturnType<TDFDetail::TInferType, false> {
 };
 
 template <typename T>
-struct TMinReturnType<T, true>
-{
+struct TMinReturnType<T, true> {
    using type = TTraits::TakeFirstParameter_t<T>;
 };
 
@@ -269,10 +268,10 @@ struct TMinReturnType<T, true>
 template <typename T>
 using MinReturnType_t = typename TMinReturnType<T>::type;
 
-template<typename T>
+template <typename T>
 using MaxReturnType_t = MinReturnType_t<T>;
 
-template<typename T>
+template <typename T>
 using SumReturnType_t = MinReturnType_t<T>;
 
 } // namespace TDF
@@ -284,20 +283,20 @@ namespace TDF {
 template <typename T, typename COLL = std::vector<T>>
 struct TakeRealTypes {
    // We cannot put in the output collection C arrays: the ownership is not defined.
-   // We therefore proceed to check if T is an array_view
+   // We therefore proceed to check if T is an TArrayBranch
    // If yes, we check what type is the output collection and we rebuild it.
-   // E.g. if a vector<V> was the selected collection, where V is array_view<T>,
+   // E.g. if a vector<V> was the selected collection, where V is TArrayBranch<T>,
    // the collection becomes vector<vector<T>>.
-   static constexpr auto isAV = TDFInternal::IsArrayView_t<T>::value;
+   static constexpr auto isAB = TDFInternal::IsTArrayBranch_t<T>::value;
    using RealT_t = typename TDFInternal::ValueType<T>::value_type;
    using VTColl_t = std::vector<RealT_t>;
 
    using NewC0_t =
-      typename std::conditional<isAV && TDFInternal::IsVector_t<COLL>::value, std::vector<VTColl_t>, COLL>::type;
+      typename std::conditional<isAB && TDFInternal::IsVector_t<COLL>::value, std::vector<VTColl_t>, COLL>::type;
    using NewC1_t =
-      typename std::conditional<isAV && TDFInternal::IsList_t<NewC0_t>::value, std::list<VTColl_t>, NewC0_t>::type;
+      typename std::conditional<isAB && TDFInternal::IsList_t<NewC0_t>::value, std::list<VTColl_t>, NewC0_t>::type;
    using NewC2_t =
-      typename std::conditional<isAV && TDFInternal::IsDeque_t<NewC1_t>::value, std::deque<VTColl_t>, NewC1_t>::type;
+      typename std::conditional<isAB && TDFInternal::IsDeque_t<NewC1_t>::value, std::deque<VTColl_t>, NewC1_t>::type;
    using RealColl_t = NewC2_t;
 };
 
@@ -455,11 +454,11 @@ public:
       return *(TInterface<TFilterBase> *)retVal;
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the
-   /// temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function.
    ///
    /// Create a custom column that will be visible from all subsequent nodes
@@ -480,12 +479,13 @@ public:
    {
       return DefineImpl<F, TDFDetail::TCCHelperTypes::TNothing>(name, std::move(expression), columns);
    }
+   // clang-format on
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column with a value dependent on the processing slot.
    /// \param[in] name The name of the custom column.
-   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the
-   /// temporary value. Returns the value that will be assigned to the custom column.
+   /// \param[in] expression Function, lambda expression, functor class or any other callable object producing the temporary value. Returns the value that will be assigned to the custom column.
    /// \param[in] columns Names of the columns/branches in input to the producer function (excluding the slot number).
    ///
    /// This alternative implementation of `Define` is meant as a helper in writing thread-safe custom columns.
@@ -507,7 +507,9 @@ public:
    {
       return DefineImpl<F, TDFDetail::TCCHelperTypes::TSlot>(name, std::move(expression), columns);
    }
+   // clang-format on
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column with a value dependent on the processing slot and the current entry.
    /// \param[in] name The name of the custom column.
@@ -534,6 +536,7 @@ public:
    {
       return DefineImpl<F, TDFDetail::TCCHelperTypes::TSlotAndEntry>(name, std::move(expression), columns);
    }
+   // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a custom column
@@ -919,7 +922,7 @@ public:
    /// \tparam COLL The type of collection used to store the values.
    /// \param[in] column The name of the column to collect the values of.
    ///
-   /// If the type of the column is std::array_view<T>, i.e. in the ROOT dataset this is
+   /// If the type of the column is TArrayBranch<T>, i.e. in the ROOT dataset this is
    /// a C-style array, the type stored in the return container is a std::vector<T> to
    /// guarantee the lifetime of the data involved.
    /// This action is *lazy*: upon invocation of this method the calculation is
@@ -967,7 +970,11 @@ public:
       std::shared_ptr<::TH1D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
+         if (model.fBinXEdges.empty()) {
+            h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
+         } else {
+            h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data());
+         }
       }
 
       if (h->GetXaxis()->GetXmax() == h->GetXaxis()->GetXmin())
@@ -1000,7 +1007,11 @@ public:
       std::shared_ptr<::TH1D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
+         if (model.fBinXEdges.empty()) {
+            h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp);
+         } else {
+            h = std::make_shared<::TH1D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data());
+         }
       }
       return CreateAction<TDFInternal::ActionTypes::Histo1D, V, W>(userColumns, h);
    }
@@ -1055,8 +1066,16 @@ public:
       std::shared_ptr<::TH2D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                      model.fYLow, model.fYUp);
+         if (model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                         model.fNbinsY, model.fYLow, model.fYUp);
+         } else if (!model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                         model.fNbinsY, model.fYLow, model.fYUp);
+         } else {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                         model.fNbinsY, model.fBinYEdges.data());
+         }
       }
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
@@ -1089,8 +1108,16 @@ public:
       std::shared_ptr<::TH2D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                      model.fYLow, model.fYUp);
+         if (model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                         model.fNbinsY, model.fYLow, model.fYUp);
+         } else if (!model.fBinXEdges.empty() && model.fBinYEdges.empty()) {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                         model.fNbinsY, model.fYLow, model.fYUp);
+         } else {
+            h = std::make_shared<::TH2D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                         model.fNbinsY, model.fBinYEdges.data());
+         }
       }
       if (!TDFInternal::HistoUtils<::TH2D>::HasAxisLimits(*h)) {
          throw std::runtime_error("2D histograms with no axes limits are not supported yet.");
@@ -1129,8 +1156,15 @@ public:
       std::shared_ptr<::TH3D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                      model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+         if (model.fBinXEdges.empty() && model.fBinYEdges.empty() && model.fBinZEdges.empty()) {
+            h =
+               std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                        model.fNbinsY, model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+         } else {
+            h =
+               std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                        model.fNbinsY, model.fBinYEdges.data(), model.fNbinsZ, model.fBinZEdges.data());
+         }
       }
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
@@ -1165,8 +1199,15 @@ public:
       std::shared_ptr<::TH3D> h(nullptr);
       {
          ROOT::Internal::TDF::TIgnoreErrorLevelRAII iel(kError);
-         h = std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp, model.fNbinsY,
-                                      model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+         if (model.fBinXEdges.empty() && model.fBinYEdges.empty() && model.fBinZEdges.empty()) {
+            h =
+               std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fXLow, model.fXUp,
+                                        model.fNbinsY, model.fYLow, model.fYUp, model.fNbinsZ, model.fZLow, model.fZUp);
+         } else {
+            h =
+               std::make_shared<::TH3D>(model.fName, model.fTitle, model.fNbinsX, model.fBinXEdges.data(),
+                                        model.fNbinsY, model.fBinYEdges.data(), model.fNbinsZ, model.fBinZEdges.data());
+         }
       }
       if (!TDFInternal::HistoUtils<::TH3D>::HasAxisLimits(*h)) {
          throw std::runtime_error("3D histograms with no axes limits are not supported yet.");
@@ -1440,6 +1481,7 @@ public:
       return CreateAction<TDFInternal::ActionTypes::Mean, T>(userColumns, meanV);
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the sum of processed column values (*lazy action*)
    /// \tparam T The type of the branch/column.
@@ -1460,6 +1502,7 @@ public:
       auto sumV = std::make_shared<TDFInternal::SumReturnType_t<T>>(initValue);
       return CreateAction<TDFInternal::ActionTypes::Sum, T>(userColumns, sumV);
    }
+   // clang-format on
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Print filtering statistics on screen
@@ -1504,10 +1547,8 @@ public:
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       if (tree) {
-         const auto branches = tree->GetListOfBranches();
-         for (auto branch : *branches) {
-            allColumns.emplace_back(branch->GetName());
-         }
+         auto branchNames = TDFInternal::GetBranchNames(*tree);
+         allColumns.insert(allColumns.end(), branchNames.begin(), branchNames.end());
       }
 
       if (fDataSource) {
@@ -1568,9 +1609,8 @@ private:
       auto df = GetDataFrameChecked();
       auto tree = df->GetTree();
       if (tree) {
-         const auto branches = tree->GetListOfBranches();
-         for (auto branch : *branches) {
-            auto branchName = branch->GetName();
+         auto branchNames = TDFInternal::GetBranchNames(*tree);
+         for (auto &branchName : branchNames) {
             if (isEmptyRegex || -1 != regexp.Index(branchName, &dummy)) {
                selectedColumns.emplace_back(branchName);
             }
@@ -1595,7 +1635,7 @@ private:
       auto df = GetDataFrameChecked();
       auto &aliasMap = df->GetAliasMap();
       auto tree = df->GetTree();
-      auto branches = tree ? tree->GetListOfBranches() : nullptr;
+      auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
       const auto &customColumns = df->GetCustomColumnNames();
       auto tmpBookedBranches = df->GetBookedColumns();
       auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
@@ -1669,8 +1709,9 @@ private:
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
 
       using ArgTypes_t = typename TTraits::CallableTraits<F>::arg_types;
-      using ColTypesTmp_t = typename TDFInternal::RemoveFirstParameterIf<
-         std::is_same<ExtraArgs, TDFDetail::TCCHelperTypes::TSlot>::value, ArgTypes_t>::type;
+      using ColTypesTmp_t =
+         typename TDFInternal::RemoveFirstParameterIf<std::is_same<ExtraArgs, TDFDetail::TCCHelperTypes::TSlot>::value,
+                                                      ArgTypes_t>::type;
       using ColTypes_t = typename TDFInternal::RemoveFirstTwoParametersIf<
          std::is_same<ExtraArgs, TDFDetail::TCCHelperTypes::TSlotAndEntry>::value, ColTypesTmp_t>::type;
 

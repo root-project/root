@@ -17,15 +17,6 @@
 
 #include "TGeoVolume.h"
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoRegion - class wrapper for regions used by Monte Carlo packages    //
-//   A region is composed by a list of logical volumes and defines a set  //
-//   of cuts. Used mainly to transport region information stored in       //
-//   GDML format to the clients requiring it from the transient geometry  //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
-
 class TGeoRegionCut : public TNamed {
 protected:
    Double_t fCut{0.}; // Cut value

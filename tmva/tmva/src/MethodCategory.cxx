@@ -448,8 +448,6 @@ void TMVA::MethodCategory::AddWeightsXMLTo( void* parent ) const
    gTools().AddAttr( wght, "NSubMethods", fMethods.size() );
    void* submethod(0);
 
-   std::vector<IMethod*>::iterator itrMethod;
-
    // iterate over methods and write them to XML file
    for (UInt_t i=0; i<fMethods.size(); i++) {
       MethodBase* method = dynamic_cast<MethodBase*>(fMethods[i]);

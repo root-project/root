@@ -26,7 +26,7 @@ hooks for tracking, such as media, materials, magnetic field or track state flag
 in order to allow interfacing to tracking MC's. The final goal is to be
 able to use the same geometry for several purposes, such as tracking,
 reconstruction or visualization, taking advantage of the ROOT features
-related to bookkeeping, I/O, histograming, browsing and GUI's.
+related to bookkeeping, I/O, histogramming, browsing and GUI's.
 
   The geometrical modeler is the most important component of the package and
 it provides answers to the basic questions like "Where am I ?" or "How far
@@ -115,7 +115,7 @@ loaded on demand in order to control visualization actions.
   A given geometry can be built in various ways, but there are mandatory steps
 that have to be followed in order to be validated by the modeler. There are
 general rules : volumes needs media and shapes in order to be created,
-both container an containee volumes must be created before linking them together,
+both container and containee volumes must be created before linking them together,
 and the relative transformation matrix must be provided. All branches must
 have an upper link point otherwise they will not be considered as part of the
 geometry. Visibility or tracking properties of volumes can be provided both
@@ -1013,7 +1013,7 @@ Int_t TGeoManager::ThreadId()
    Int_t ttid = tid; // TTHREAD_TLS_GET(Int_t,tid);
    if (ttid > -1) return ttid;
    if (gGeoManager && !gGeoManager->IsMultiThread()) return 0;
-   std::thread::id threadId = std::this_thread::get_id();   
+   std::thread::id threadId = std::this_thread::get_id();
    TGeoManager::ThreadsMapIt_t it = fgThreadId->find(threadId);
    if (it != fgThreadId->end()) return it->second;
    // Map needs to be updated.
@@ -3536,7 +3536,7 @@ void TGeoManager::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Test for shape navigation methods. Summary for test numbers:
-///  1: DistFromInside/Outside. Sample points inside the shape. Generate
+///  - 1: DistFromInside/Outside. Sample points inside the shape. Generate
 ///    directions randomly in cos(theta). Compute DistFromInside and move the
 ///    point with bigger distance. Compute DistFromOutside back from new point.
 ///    Plot d-(d1+d2)
@@ -3556,14 +3556,14 @@ void TGeoManager::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Opt
 ///  checked by user to get report, then TGeoVolume::CheckOverlaps(0.01, "s") can
 ///  be called for the suspicious volumes.
 ///
-/// STAGE2 : normal overlap checking using the shapes mesh - fills the list of
+/// STAGE 2: normal overlap checking using the shapes mesh - fills the list of
 ///  overlaps.
 ///
-/// STAGE3 : shooting NRAYS rays from VERTEX and counting the total number of
+/// STAGE 3: shooting NRAYS rays from VERTEX and counting the total number of
 ///  crossings per volume (rays propagated from boundary to boundary until
 ///  geometry exit). Timing computed and results stored in a histo.
 ///
-/// STAGE4 : shooting 1 mil. random rays inside EACH volume and calling
+/// STAGE 4: shooting 1 mil. random rays inside EACH volume and calling
 ///  FindNextBoundary() + Safety() for each call. The timing is normalized by the
 ///  number of crossings computed at stage 2 and presented as percentage.
 ///  One can get a picture on which are the most "burned" volumes during

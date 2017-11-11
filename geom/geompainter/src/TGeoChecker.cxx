@@ -10,62 +10,55 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-//   TGeoChecker - Geometry checking package.
-//===============
-//
-// TGeoChecker class provides several geometry checking methods. There are two
-// types of tests that can be performed. One is based on random sampling or
-// ray-tracing and provides a visual check on how navigation methods work for
-// a given geometry. The second actually checks the validity of the geometry
-// definition in terms of overlapping/extruding objects. Both types of checks
-// can be done for a given branch (starting with a given volume) as well as for
-// the geometry as a whole.
-//
-// 1. TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z)
-//
-// This method can be called direcly from the TGeoManager class and print a
-// report on how a given point is classified by the modeller: which is the
-// full path to the deepest node containing it, and the (under)estimation
-// of the distance to the closest boundary (safety).
-//
-// 2. TGeoChecker::RandomPoints(Int_t npoints)
-//
-// Can be called from TGeoVolume class. It first draws the volume and its
-// content with the current visualization settings. Then randomly samples points
-// in its bounding box, plotting in the geometry display only the points
-// classified as belonging to visible volumes.
-//
-// 3. TGeoChecker::RandomRays(Int_t nrays, Double_t startx, starty, startz)
-//
-// Can be called and acts in the same way as the previous, but instead of points,
-// rays having random isotropic directions are generated from the given point.
-// A raytracing algorithm propagates all rays untill they exit geometry, plotting
-// all segments crossing visible nodes in the same color as these.
-//
-// 4. TGeoChecker::Test(Int_t npoints)
-//
-// Implementation of TGeoManager::Test(). Computes the time for the modeller
-// to find out "Where am I?" for a given number of random points.
-//
-// 5. TGeoChecker::LegoPlot(ntheta, themin, themax, nphi, phimin, phimax,...)
-//
-// Implementation of TGeoVolume::LegoPlot(). Draws a spherical radiation length
-// lego plot for a given volume, in a given theta/phi range.
-//
-// 6. TGeoChecker::Weigth(Double_t precision)
-//
-// Implementation of TGeoVolume::Weigth(). Estimates the total weigth of a given
-// volume by matrial sampling. Accepts as input the desired precision.
-//
-// Overlap checker
-//-----------------
-//
-//Begin_Html
-/*
-<img src="gif/t_checker.jpg">
+/** \class TGeoChecker
+\ingroup Geometry_classes
+
+Geometry checking package.
+
+TGeoChecker class provides several geometry checking methods. There are two
+types of tests that can be performed. One is based on random sampling or
+ray-tracing and provides a visual check on how navigation methods work for
+a given geometry. The second actually checks the validity of the geometry
+definition in terms of overlapping/extruding objects. Both types of checks
+can be done for a given branch (starting with a given volume) as well as for
+the geometry as a whole.
+
+#### TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z)
+
+This method can be called directly from the TGeoManager class and print a
+report on how a given point is classified by the modeller: which is the
+full path to the deepest node containing it, and the (under)estimation
+of the distance to the closest boundary (safety).
+
+#### TGeoChecker::RandomPoints(Int_t npoints)
+
+Can be called from TGeoVolume class. It first draws the volume and its
+content with the current visualization settings. Then randomly samples points
+in its bounding box, plotting in the geometry display only the points
+classified as belonging to visible volumes.
+
+#### TGeoChecker::RandomRays(Int_t nrays, Double_t startx, starty, startz)
+
+Can be called and acts in the same way as the previous, but instead of points,
+rays having random isotropic directions are generated from the given point.
+A raytracing algorithm propagates all rays until they exit geometry, plotting
+all segments crossing visible nodes in the same color as these.
+
+#### TGeoChecker::Test(Int_t npoints)
+
+Implementation of TGeoManager::Test(). Computes the time for the modeller
+to find out "Where am I?" for a given number of random points.
+
+#### TGeoChecker::LegoPlot(ntheta, themin, themax, nphi, phimin, phimax,...)
+
+Implementation of TGeoVolume::LegoPlot(). Draws a spherical radiation length
+lego plot for a given volume, in a given theta/phi range.
+
+#### TGeoChecker::Weight(Double_t precision)
+
+Implementation of TGeoVolume::Weight(). Estimates the total weight of a given
+volume by material sampling. Accepts as input the desired precision.
 */
-//End_Html
 
 #include "TVirtualPad.h"
 #include "TCanvas.h"
@@ -455,23 +448,27 @@ void TGeoChecker::CheckBoundaryReference(Int_t icheck)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Geometry checking. Opional overlap checkings (by sampling and by mesh). Optional
+/// Geometry checking. Optional overlap checkings (by sampling and by mesh). Optional
 /// boundary crossing check + timing per volume.
 ///
 /// STAGE 1: extensive overlap checking by sampling per volume. Stdout need to be
 ///  checked by user to get report, then TGeoVolume::CheckOverlaps(0.01, "s") can
 ///  be called for the suspicious volumes.
-/// STAGE2 : normal overlap checking using the shapes mesh - fills the list of
+///
+/// STAGE 2: normal overlap checking using the shapes mesh - fills the list of
 ///  overlaps.
-/// STAGE3 : shooting NRAYS rays from VERTEX and counting the total number of
+///
+/// STAGE 3: shooting NRAYS rays from VERTEX and counting the total number of
 ///  crossings per volume (rays propagated from boundary to boundary until
 ///  geometry exit). Timing computed and results stored in a histo.
-/// STAGE4 : shooting 1 mil. random rays inside EACH volume and calling
+///
+/// STAGE 4: shooting 1 mil. random rays inside EACH volume and calling
 ///  FindNextBoundary() + Safety() for each call. The timing is normalized by the
 ///  number of crossings computed at stage 2 and presented as percentage.
 ///  One can get a picture on which are the most "burned" volumes during
 ///  transportation from geometry point of view. Another plot of the timing per
 ///  volume vs. number of daughters is produced.
+///
 /// All histos are saved in the file statistics.root
 
 void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings, Int_t ntracks, const Double_t *vertex)
@@ -516,7 +513,7 @@ void TGeoChecker::CheckGeometryFull(Bool_t checkoverlaps, Bool_t checkcrossings,
    // Generate rays from vertex in phi=[0,2*pi] theta=[0,pi]
 //   Int_t ntracks = 1000000;
    printf("====================================================================\n");
-   printf("STAGE 3: Propagating %i tracks starting from vertex\n and conting number of boundary crossings...\n", ntracks);
+   printf("STAGE 3: Propagating %i tracks starting from vertex\n and counting number of boundary crossings...\n", ntracks);
    printf("====================================================================\n");
    Int_t nbound = 0;
    Double_t theta, phi;
@@ -1058,7 +1055,7 @@ TGeoOverlap *TGeoChecker::MakeCheckOverlap(const char *name, TGeoVolume *vol1, T
          mat2->MasterToLocal(point, local1);
          extrude = shape2->Contains(local1);
          if (extrude) {
-            // skip points on mother mesh that have no neghbourhood ouside mother
+            // skip points on mother mesh that have no neighborhood outside mother
             safety = shape1->Safety(local,kTRUE);
             if (safety>1E-6) {
                extrude = kFALSE;
@@ -1578,9 +1575,9 @@ void TGeoChecker::PrintOverlaps() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Draw point (x,y,z) over the picture of the daughers of the volume containing this point.
-///   Generates a report regarding the path to the node containing this point and the distance to
-///   the closest boundary.
+/// Draw point (x,y,z) over the picture of the daughters of the volume containing this point.
+/// Generates a report regarding the path to the node containing this point and the distance to
+/// the closest boundary.
 
 void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
 {
@@ -1629,14 +1626,13 @@ void TGeoChecker::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Test for shape navigation methods. Summary for test numbers:
-///  1: DistFromInside/Outside. Sample points inside the shape. Generate
+///  - 1: DistFromInside/Outside. Sample points inside the shape. Generate
 ///    directions randomly in cos(theta). Compute DistFromInside and move the
 ///    point with bigger distance. Compute DistFromOutside back from new point.
 ///    Plot d-(d1+d2)
-/// 2: Safety test. Sample points inside the bounding and compute safety. Generate
+///  - 2: Safety test. Sample points inside the bounding and compute safety. Generate
 ///    directions randomly in cos(theta) and compute distance to boundary. Check if
-/// Distance to boundary is bigger than safety
-///
+///    distance to boundary is bigger than safety
 
 void TGeoChecker::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option)
 {
@@ -2328,7 +2324,7 @@ void TGeoChecker::RandomRays(Int_t nrays, Double_t startx, Double_t starty, Doub
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// shoot npoints randomly in a box of 1E-5 arround current point.
+/// shoot npoints randomly in a box of 1E-5 around current point.
 /// return minimum distance to points outside
 /// make sure that path to current node is updated
 /// get the response of tgeo
@@ -2442,10 +2438,10 @@ TGeoNode *TGeoChecker::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
 ////////////////////////////////////////////////////////////////////////////////
 /// Shoot one ray from start point with direction (dirx,diry,dirz). Fills input array
 /// with points just after boundary crossings.
-///   Int_t array_dimension = 3*dim;
 
 Double_t *TGeoChecker::ShootRay(Double_t *start, Double_t dirx, Double_t diry, Double_t dirz, Double_t *array, Int_t &nelem, Int_t &dim, Double_t *endpoint) const
 {
+//   Int_t array_dimension = 3*dim;
    nelem = 0;
    Int_t istep = 0;
    if (!dim) {
@@ -2582,7 +2578,7 @@ void TGeoChecker::Test(Int_t npoints, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Geometry overlap checker based on sampling.
+/// Geometry overlap checker based on sampling.
 
 void TGeoChecker::TestOverlaps(const char* path)
 {
@@ -2811,8 +2807,8 @@ Double_t TGeoChecker::CheckVoxels(TGeoVolume *vol, TGeoVoxelFinder *voxels, Doub
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Returns optimal voxelization type for volume vol.
-///   kFALSE - cartesian
-///   kTRUE  - cylindrical
+///  - kFALSE - cartesian
+///  - kTRUE  - cylindrical
 
 Bool_t TGeoChecker::TestVoxels(TGeoVolume * /*vol*/, Int_t /*npoints*/)
 {

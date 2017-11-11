@@ -61,8 +61,8 @@ class TGLViewer : public TVirtualViewer3D,
 public:
 
    enum ECameraType { kCameraPerspXOZ,  kCameraPerspYOZ,  kCameraPerspXOY,
-                      kCameraOrthoXOY,  kCameraOrthoXOZ,  kCameraOrthoZOY,
-                      kCameraOrthoXnOY, kCameraOrthoXnOZ, kCameraOrthoZnOY };
+                      kCameraOrthoXOY,  kCameraOrthoXOZ,  kCameraOrthoZOY, kCameraOrthoZOX,
+                      kCameraOrthoXnOY, kCameraOrthoXnOZ, kCameraOrthoZnOY, kCameraOrthoZnOX };
 
    enum ESecSelType { // When to do secondary-selection:
       kOnRequest,     // - on request - when Mod1 is pressed or logical-shape requests it;
@@ -90,9 +90,11 @@ protected:
    TGLOrthoCamera       fOrthoXOYCamera;       //!
    TGLOrthoCamera       fOrthoXOZCamera;       //!
    TGLOrthoCamera       fOrthoZOYCamera;       //!
+   TGLOrthoCamera       fOrthoZOXCamera;       //!
    TGLOrthoCamera       fOrthoXnOYCamera;      //!
    TGLOrthoCamera       fOrthoXnOZCamera;      //!
    TGLOrthoCamera       fOrthoZnOYCamera;      //!
+   TGLOrthoCamera       fOrthoZnOXCamera;      //!
    TGLCamera           *fCurrentCamera;        //!
    TGLAutoRotator      *fAutoRotator;          //!
 

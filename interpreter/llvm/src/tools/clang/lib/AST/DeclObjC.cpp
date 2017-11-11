@@ -1070,20 +1070,20 @@ void ObjCMethodDecl::createImplicitParams(ASTContext &Context,
   bool selfIsPseudoStrong, selfIsConsumed;
   QualType selfTy =
     getSelfType(Context, OID, selfIsPseudoStrong, selfIsConsumed);
-  ImplicitParamDecl *self
-    = ImplicitParamDecl::Create(Context, this, SourceLocation(),
-                                &Context.Idents.get("self"), selfTy);
-  setSelfDecl(self);
+  auto *Self = ImplicitParamDecl::Create(Context, this, SourceLocation(),
+                                         &Context.Idents.get("self"), selfTy,
+                                         ImplicitParamDecl::ObjCSelf);
+  setSelfDecl(Self);
 
   if (selfIsConsumed)
-    self->addAttr(NSConsumedAttr::CreateImplicit(Context));
+    Self->addAttr(NSConsumedAttr::CreateImplicit(Context));
 
   if (selfIsPseudoStrong)
-    self->setARCPseudoStrong(true);
+    Self->setARCPseudoStrong(true);
 
-  setCmdDecl(ImplicitParamDecl::Create(Context, this, SourceLocation(),
-                                       &Context.Idents.get("_cmd"),
-                                       Context.getObjCSelType()));
+  setCmdDecl(ImplicitParamDecl::Create(
+      Context, this, SourceLocation(), &Context.Idents.get("_cmd"),
+      Context.getObjCSelType(), ImplicitParamDecl::ObjCCmd));
 }
 
 ObjCInterfaceDecl *ObjCMethodDecl::getClassInterface() {
@@ -1889,25 +1889,23 @@ void ObjCProtocolDecl::collectPropertiesToImplement(PropertyMap &PM,
   }
 }
 
-    
 void ObjCProtocolDecl::collectInheritedProtocolProperties(
-                                                const ObjCPropertyDecl *Property,
-                                                ProtocolPropertyMap &PM) const {
+    const ObjCPropertyDecl *Property, ProtocolPropertySet &PS,
+    PropertyDeclOrder &PO) const {
   if (const ObjCProtocolDecl *PDecl = getDefinition()) {
-    bool MatchFound = false;
+    if (!PS.insert(PDecl).second)
+      return;
     for (auto *Prop : PDecl->properties()) {
       if (Prop == Property)
         continue;
       if (Prop->getIdentifier() == Property->getIdentifier()) {
-        PM[PDecl] = Prop;
-        MatchFound = true;
-        break;
+        PO.push_back(Prop);
+        return;
       }
     }
     // Scan through protocol's protocols which did not have a matching property.
-    if (!MatchFound)
-      for (const auto *PI : PDecl->protocols())
-        PI->collectInheritedProtocolProperties(Property, PM);
+    for (const auto *PI : PDecl->protocols())
+      PI->collectInheritedProtocolProperties(Property, PS, PO);
   }
 }
 

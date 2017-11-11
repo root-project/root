@@ -182,6 +182,20 @@ namespace cling {
     return Opts.ShowVersion || Opts.Help;
   }
 
+  static void setupCallbacks(Interpreter& Interp,
+                             const Interpreter* parentInterp) {
+    // We need InterpreterCallbacks only if it is a parent Interpreter.
+    if (parentInterp) return;
+
+    // Disable suggestions for ROOT
+    bool showSuggestions =
+        !llvm::StringRef(ClingStringify(CLING_VERSION)).startswith("ROOT");
+
+    std::unique_ptr<InterpreterCallbacks> AutoLoadCB(
+        new AutoloadCallback(&Interp, showSuggestions));
+    Interp.setCallbacks(std::move(AutoLoadCB));
+  }
+
   Interpreter::Interpreter(int argc, const char* const *argv,
                            const char* llvmdir /*= 0*/, bool noRuntime,
                            const Interpreter* parentInterp) :
@@ -202,7 +216,7 @@ namespace cling {
 
     // Initialize the opt level to what CodeGenOpts says.
     if (m_OptLevel == -1)
-      m_OptLevel = getCI()->getCodeGenOpts().OptimizationLevel;
+      setDefaultOptLevel(getCI()->getCodeGenOpts().OptimizationLevel);
 
     Sema& SemaRef = getSema();
     Preprocessor& PP = SemaRef.getPreprocessor();
@@ -226,6 +240,23 @@ namespace cling {
     DiagnosticConsumer& DClient = getCI()->getDiagnosticClient();
     DClient.BeginSourceFile(getCI()->getLangOpts(), &PP);
 
+    bool usingCxxModules = getSema().getLangOpts().Modules;
+
+    if (usingCxxModules) {
+      // Explicitly create the modulemanager now. If we would create it later
+      // implicitly then it would just overwrite our callbacks we set below.
+      m_IncrParser->getCI()->createModuleManager();
+    }
+
+    // When using C++ modules, we setup the callbacks now that we have them
+    // ready before we parse code for the first time. Without C++ modules
+    // we can't setup the calls now because the clang PCH currently just
+    // overwrites it in the Initialize method and we have no simple way to
+    // initialize them earlier. We handle the non-modules case below.
+    if (usingCxxModules) {
+      setupCallbacks(*this, parentInterp);
+    }
+
     llvm::SmallVector<IncrementalParser::ParseResultTransaction, 2>
       IncrParserTransactions;
     if (!m_IncrParser->Initialize(IncrParserTransactions, parentInterp)) {
@@ -235,6 +266,13 @@ namespace cling {
       for (auto&& I: IncrParserTransactions)
         m_IncrParser->commitTransaction(I, false);
       return;
+    }
+
+    // When not using C++ modules, we now have a PCH and we can safely setup
+    // our callbacks without fearing that they get ovewritten by clang code.
+    // The modules setup is handled above.
+    if (!usingCxxModules) {
+      setupCallbacks(*this, parentInterp);
     }
 
     llvm::SmallVector<llvm::StringRef, 6> Syms;
@@ -267,16 +305,6 @@ namespace cling {
           }
         }
       }
-    }
-
-    // Disable suggestions for ROOT
-    bool showSuggestions = !llvm::StringRef(ClingStringify(CLING_VERSION)).startswith("ROOT");
-
-    // We need InterpreterCallbacks only if it is a parent Interpreter.
-    if (!parentInterp) {
-      std::unique_ptr<InterpreterCallbacks>
-         AutoLoadCB(new AutoloadCallback(this, showSuggestions));
-      setCallbacks(std::move(AutoLoadCB));
     }
 
     m_IncrParser->SetTransformers(parentInterp);

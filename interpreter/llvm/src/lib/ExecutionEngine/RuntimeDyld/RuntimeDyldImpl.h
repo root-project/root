@@ -28,8 +28,8 @@
 #include "llvm/Support/Mutex.h"
 #include "llvm/Support/SwapByteOrder.h"
 #include <map>
-#include <unordered_map>
 #include <system_error>
+#include <unordered_map>
 
 using namespace llvm;
 using namespace llvm::object;
@@ -417,7 +417,7 @@ protected:
                        StubMap &Stubs) = 0;
 
   /// \brief Resolve relocations to external symbols.
-  void resolveExternalSymbols();
+  Error resolveExternalSymbols();
 
   // \brief Compute an upper bound of the memory that is required to load all
   // sections

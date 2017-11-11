@@ -274,7 +274,7 @@ def X86select  : SDNode<"X86ISD::SELECT",
                                              SDTCisSameNumEltsAs<0, 1>]>>;
 
 def X86selects : SDNode<"X86ISD::SELECTS",
-                        SDTypeProfile<1, 3, [SDTCisVT<1, i1>,
+                        SDTypeProfile<1, 3, [SDTCisVT<1, v1i1>,
                                              SDTCisSameAs<0, 2>,
                                              SDTCisSameAs<2, 3>]>>;
 
@@ -441,7 +441,7 @@ def X86Vfpclass    : SDNode<"X86ISD::VFPCLASS",
                                             SDTCisSameNumEltsAs<0,1>,
                                             SDTCisVT<2, i32>]>, []>;
 def X86Vfpclasss   : SDNode<"X86ISD::VFPCLASSS",
-                       SDTypeProfile<1, 2, [SDTCisVT<0, i1>,
+                       SDTypeProfile<1, 2, [SDTCisVT<0, v1i1>,
                                             SDTCisFP<1>, SDTCisVT<2, i32>]>,[]>;
 
 def X86SubVBroadcast : SDNode<"X86ISD::SUBV_BROADCAST",
@@ -451,7 +451,7 @@ def X86SubVBroadcast : SDNode<"X86ISD::SUBV_BROADCAST",
 def X86VBroadcast : SDNode<"X86ISD::VBROADCAST", SDTVBroadcast>;
 def X86VBroadcastm : SDNode<"X86ISD::VBROADCASTM", SDTVBroadcastm>;
 def X86Vextract   : SDNode<"X86ISD::VEXTRACT",  SDTypeProfile<1, 2,
-                              [SDTCisEltOfVec<0, 1>, SDTCisVec<1>,
+                              [SDTCisVec<1>,
                                SDTCisPtrTy<2>]>, []>;
 
 def X86Blendi    : SDNode<"X86ISD::BLENDI",   SDTBlend>;
@@ -641,22 +641,37 @@ def sdmem : Operand<v2f64> {
 // SSE pattern fragments
 //===----------------------------------------------------------------------===//
 
+// Vector load wrappers to prevent folding of non-temporal aligned loads on
+// supporting targets.
+def vec128load : PatFrag<(ops node:$ptr), (load node:$ptr), [{
+  return !Subtarget->hasSSE41() || !cast<LoadSDNode>(N)->isNonTemporal() ||
+         cast<LoadSDNode>(N)->getAlignment() < 16;
+}]>;
+def vec256load : PatFrag<(ops node:$ptr), (load node:$ptr), [{
+  return !Subtarget->hasAVX2() || !cast<LoadSDNode>(N)->isNonTemporal() ||
+         cast<LoadSDNode>(N)->getAlignment() < 32;
+}]>;
+def vec512load : PatFrag<(ops node:$ptr), (load node:$ptr), [{
+  return !Subtarget->hasAVX512() || !cast<LoadSDNode>(N)->isNonTemporal() ||
+         cast<LoadSDNode>(N)->getAlignment() < 64;
+}]>;
+
 // 128-bit load pattern fragments
 // NOTE: all 128-bit integer vector loads are promoted to v2i64
-def loadv4f32    : PatFrag<(ops node:$ptr), (v4f32 (load node:$ptr))>;
-def loadv2f64    : PatFrag<(ops node:$ptr), (v2f64 (load node:$ptr))>;
-def loadv2i64    : PatFrag<(ops node:$ptr), (v2i64 (load node:$ptr))>;
+def loadv4f32    : PatFrag<(ops node:$ptr), (v4f32 (vec128load node:$ptr))>;
+def loadv2f64    : PatFrag<(ops node:$ptr), (v2f64 (vec128load node:$ptr))>;
+def loadv2i64    : PatFrag<(ops node:$ptr), (v2i64 (vec128load node:$ptr))>;
 
 // 256-bit load pattern fragments
 // NOTE: all 256-bit integer vector loads are promoted to v4i64
-def loadv8f32    : PatFrag<(ops node:$ptr), (v8f32 (load node:$ptr))>;
-def loadv4f64    : PatFrag<(ops node:$ptr), (v4f64 (load node:$ptr))>;
-def loadv4i64    : PatFrag<(ops node:$ptr), (v4i64 (load node:$ptr))>;
+def loadv8f32    : PatFrag<(ops node:$ptr), (v8f32 (vec256load node:$ptr))>;
+def loadv4f64    : PatFrag<(ops node:$ptr), (v4f64 (vec256load node:$ptr))>;
+def loadv4i64    : PatFrag<(ops node:$ptr), (v4i64 (vec256load node:$ptr))>;
 
 // 512-bit load pattern fragments
-def loadv16f32   : PatFrag<(ops node:$ptr), (v16f32 (load node:$ptr))>;
-def loadv8f64    : PatFrag<(ops node:$ptr), (v8f64 (load node:$ptr))>;
-def loadv8i64    : PatFrag<(ops node:$ptr), (v8i64 (load node:$ptr))>;
+def loadv16f32   : PatFrag<(ops node:$ptr), (v16f32 (vec512load node:$ptr))>;
+def loadv8f64    : PatFrag<(ops node:$ptr), (v8f64 (vec512load node:$ptr))>;
+def loadv8i64    : PatFrag<(ops node:$ptr), (v8i64 (vec512load node:$ptr))>;
 
 // 128-/256-/512-bit extload pattern fragments
 def extloadv2f32 : PatFrag<(ops node:$ptr), (v2f64 (extloadvf32 node:$ptr))>;
@@ -722,15 +737,15 @@ def alignedloadv8f64  : PatFrag<(ops node:$ptr),
 def alignedloadv8i64  : PatFrag<(ops node:$ptr),
                                 (v8i64  (alignedload512 node:$ptr))>;
 
-// Like 'load', but uses special alignment checks suitable for use in
+// Like 'vec128load', but uses special alignment checks suitable for use in
 // memory operands in most SSE instructions, which are required to
 // be naturally aligned on some targets but not on others.  If the subtarget
 // allows unaligned accesses, match any load, though this may require
 // setting a feature bit in the processor (on startup, for example).
 // Opteron 10h and later implement such a feature.
-def memop : PatFrag<(ops node:$ptr), (load node:$ptr), [{
-  return    Subtarget->hasSSEUnalignedMem()
-         || cast<LoadSDNode>(N)->getAlignment() >= 16;
+def memop : PatFrag<(ops node:$ptr), (vec128load node:$ptr), [{
+  return Subtarget->hasSSEUnalignedMem() ||
+         cast<LoadSDNode>(N)->getAlignment() >= 16;
 }]>;
 
 // 128-bit memop pattern fragments
@@ -738,16 +753,6 @@ def memop : PatFrag<(ops node:$ptr), (load node:$ptr), [{
 def memopv4f32 : PatFrag<(ops node:$ptr), (v4f32 (memop node:$ptr))>;
 def memopv2f64 : PatFrag<(ops node:$ptr), (v2f64 (memop node:$ptr))>;
 def memopv2i64 : PatFrag<(ops node:$ptr), (v2i64 (memop node:$ptr))>;
-
-// These are needed to match a scalar memop that is used in a vector-only
-// math instruction such as the FP logical ops: andps, andnps, orps, xorps.
-// The memory operand is required to be a 128-bit load, so it must be converted
-// from a vector to a scalar.
-def memopfsf32_128 : PatFrag<(ops node:$ptr),
-  (f32 (extractelt (memopv4f32 node:$ptr), (iPTR 0)))>;
-def memopfsf64_128 : PatFrag<(ops node:$ptr),
-  (f64 (extractelt (memopv2f64 node:$ptr), (iPTR 0)))>;
-
 
 // SSSE3 uses MMX registers for some instructions. They aren't aligned on a
 // 16-byte boundary.
@@ -757,6 +762,9 @@ def memop64 : PatFrag<(ops node:$ptr), (load node:$ptr), [{
 }]>;
 
 def memopmmx  : PatFrag<(ops node:$ptr), (x86mmx  (memop64 node:$ptr))>;
+
+def X86masked_gather  : SDNode<"X86ISD::MGATHER",  SDTMaskedGather,
+                       [SDNPHasChain, SDNPMayLoad, SDNPMemOperand]>;
 
 def mgatherv4i32 : PatFrag<(ops node:$src1, node:$src2, node:$src3),
   (masked_gather node:$src1, node:$src2, node:$src3) , [{
@@ -779,6 +787,15 @@ def mgatherv2i64 : PatFrag<(ops node:$src1, node:$src2, node:$src3),
   if (MaskedGatherSDNode *Mgt = dyn_cast<MaskedGatherSDNode>(N))
     return (Mgt->getIndex().getValueType() == MVT::v2i64 ||
             Mgt->getBasePtr().getValueType() == MVT::v2i64);
+  return false;
+}]>;
+def X86mgatherv2i64 : PatFrag<(ops node:$src1, node:$src2, node:$src3),
+  (X86masked_gather node:$src1, node:$src2, node:$src3) , [{
+  if (X86MaskedGatherSDNode *Mgt = dyn_cast<X86MaskedGatherSDNode>(N))
+    return (Mgt->getIndex().getValueType() == MVT::v2i64 ||
+            Mgt->getBasePtr().getValueType() == MVT::v2i64) &&
+           (Mgt->getMemoryVT() == MVT::v2i32 ||
+            Mgt->getMemoryVT() == MVT::v2f32);
   return false;
 }]>;
 def mgatherv4i64 : PatFrag<(ops node:$src1, node:$src2, node:$src3),

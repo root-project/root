@@ -183,6 +183,10 @@ class ASTContext : public RefCountedBase<ASTContext> {
                                      ASTContext&>
     SubstTemplateTemplateParmPacks;
 
+  /// Generation number for this external AST source. Must be increased
+  /// whenever we might have added new redeclarations for existing decls.
+  uint32_t CurrentGeneration = 0;
+
   /// \brief The set of nested name specifiers.
   ///
   /// This set is managed by the NestedNameSpecifier class.
@@ -605,6 +609,15 @@ public:
 
   DynTypedNodeList getParents(const ast_type_traits::DynTypedNode &Node);
 
+  uint32_t getGeneration() const { return CurrentGeneration; }
+  uint32_t incrementGeneration() {
+    uint32_t OldGeneration = CurrentGeneration;
+    CurrentGeneration++;
+    assert(CurrentGeneration > OldGeneration &&
+           "Overflowed generation counter");
+    return OldGeneration;
+  }
+
   const clang::PrintingPolicy &getPrintingPolicy() const {
     return PrintingPolicy;
   }
@@ -935,7 +948,7 @@ public:
 
   /// \brief Get the additional modules in which the definition \p Def has
   /// been merged.
-  ArrayRef<Module*> getModulesWithMergedDefinition(NamedDecl *Def) {
+  ArrayRef<Module*> getModulesWithMergedDefinition(const NamedDecl *Def) {
     auto MergedIt = MergedDefModules.find(Def);
     if (MergedIt == MergedDefModules.end())
       return None;
@@ -1441,6 +1454,10 @@ public:
   ///
   /// The sizeof operator requires this (C99 6.5.3.4p4).
   CanQualType getSizeType() const;
+
+  /// \brief Return the unique signed counterpart of 
+  /// the integer type corresponding to size_t.
+  CanQualType getSignedSizeType() const;
 
   /// \brief Return the unique type for "intmax_t" (C99 7.18.1.5), defined in
   /// <stdint.h>.
@@ -2051,6 +2068,11 @@ public:
   /// Get the offset of a FieldDecl or IndirectFieldDecl, in bits.
   uint64_t getFieldOffset(const ValueDecl *FD) const;
 
+  /// Get the offset of an ObjCIvarDecl in bits.
+  uint64_t lookupFieldBitOffset(const ObjCInterfaceDecl *OID,
+                                const ObjCImplementationDecl *ID,
+                                const ObjCIvarDecl *Ivar) const;
+
   bool isNearlyEmpty(const CXXRecordDecl *RD) const;
 
   VTableContextBase *getVTableContext();
@@ -2325,8 +2347,7 @@ public:
   uint64_t getTargetNullPointerValue(QualType QT) const;
 
   bool addressSpaceMapManglingFor(unsigned AS) const {
-    return AddrSpaceMapMangling || 
-           AS >= LangAS::Count;
+    return AddrSpaceMapMangling || AS >= LangAS::FirstTargetAddressSpace;
   }
 
 private:
@@ -2819,7 +2840,7 @@ typename clang::LazyGenerationalUpdatePtr<Owner, T, Update>::ValueType
   // include ASTContext.h. We explicitly instantiate it for all relevant types
   // in ASTContext.cpp.
   if (auto *Source = Ctx.getExternalSource())
-    return new (Ctx) LazyData(Source, Value);
+    return new (Ctx) LazyData(&Ctx, Source, Value);
   return Value;
 }
 

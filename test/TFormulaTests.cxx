@@ -13,6 +13,7 @@
 #include <TRandom.h>
 #include <iostream>
 #include "TFormulaParsingTests.h"
+#include "TFormulaVecTests.h"
 
 using namespace std;
 
@@ -55,8 +56,8 @@ public:
    Bool_t      SetPars2();
    Bool_t      Eval();
    Bool_t      Stress(Int_t n = 10000);
-
    Bool_t      Parser();
+   Bool_t      Vectorize();
 
    
 
@@ -496,7 +497,15 @@ bool TFormulaTests::Parser() {
    return true; 
 }
    
-
+bool TFormulaTests::Vectorize() {
+   std::cout << "Test creating vectorized Formula" << std::endl;
+   bool ok = testVecFormula(); 
+   if (!ok) {
+      std::cout << "ERROR - Creating Vectorized TFormula failed " << std::endl;
+      return false;
+   }
+   return true; 
+}
 
 
 int main(int argc, char **argv)
@@ -505,7 +514,7 @@ int main(int argc, char **argv)
 
    TApplication theApp("App", &argc, argv);
    gBenchmark = new TBenchmark();
-   Int_t n = 200;
+   Int_t n = 100;
    if(argc > 1) 
       n = TString(argv[1]).Atoi();
    printf("************************************************\n");
@@ -563,6 +572,7 @@ int main(int argc, char **argv)
 #endif
    printf("Stress test:%s\n",(test->Stress(n) ? "PASSED" : "FAILED"));
    printf("Parsing test:%s\n",(test->Parser() ? "PASSED" : "FAILED"));
+   printf("Vectorization test:%s\n",(test->Vectorize() ? "PASSED" : "FAILED"));
 
    return 0;
 }

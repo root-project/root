@@ -1,6 +1,6 @@
 #---Check if cmake has the required version-----------------------------------------------------
 
-cmake_minimum_required(VERSION 3.7.0 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.4.3 FATAL_ERROR)
 
 set(policy_new CMP0068)
 foreach(policy ${policy_new})
@@ -341,18 +341,23 @@ if(WIN32)
   set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk)
 endif()
 
-add_custom_command(OUTPUT etc/allDict.cxx.pch
-                   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
-                   DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
-                           etc/dictpch/allLinkDefs.h
-                           etc/dictpch/allHeaders.h
-                           etc/dictpch/allCppflags.txt
-                           rootcling)
-add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
-set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
-add_dependencies(onepcm ${__allTargets})
-install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+if(runtime_cxxmodules)
+  # Dummy target that does nothing, we don't need a PCH for modules.
+  add_custom_target(onepcm)
+else()
+  add_custom_command(OUTPUT etc/allDict.cxx.pch
+                    COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
+                    DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
+                            etc/dictpch/allLinkDefs.h
+                            etc/dictpch/allHeaders.h
+                            etc/dictpch/allCppflags.txt
+                            rootcling)
+  add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
+  set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
+  add_dependencies(onepcm ${__allTargets})
+  install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+endif()
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
 if(NOT WIN32)

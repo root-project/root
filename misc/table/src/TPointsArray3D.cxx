@@ -58,8 +58,7 @@
 ClassImp(TPointsArray3D);
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine default constructor*-*-*-*-*-*-*-*-*-*-*
-///*-*                      ================================
+/// 3-D PolyLine default constructor.
 
 TPointsArray3D::TPointsArray3D()
 {
@@ -72,10 +71,8 @@ TPointsArray3D::TPointsArray3D()
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*3-D PolyLine normal constructor without initialisation*-*-*-*-*-*-*
-///*-*        ======================================================
-///*-*  If n < 0 the default size (2 points) is set
-///*-*
+/// 3-D PolyLine normal constructor without initialisation.
+/// If n < 0 the default size (2 points) is set.
 
 TPointsArray3D::TPointsArray3D(Int_t n, Option_t *option)
 {
@@ -92,10 +89,8 @@ TPointsArray3D::TPointsArray3D(Int_t n, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*-*3-D Point3D normal constructor*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                      ===============================
-///*-*  If n < 0 the default size (2 points) is set
-///*-*
+/// 3-D Point3D normal constructor.
+/// If n < 0 the default size (2 points) is set.
 
 TPointsArray3D::TPointsArray3D(Int_t n, Float_t *p, Option_t *option)
 {
@@ -118,10 +113,8 @@ TPointsArray3D::TPointsArray3D(Int_t n, Float_t *p, Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine normal constructor*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                      ===============================
-///*-*  If n < 0 the default size (2 points) is set
-///*-*
+/// 3-D PolyLine normal constructor.
+/// If n < 0 the default size (2 points) is set.
 
 TPointsArray3D::TPointsArray3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Option_t *option)
 {
@@ -149,8 +142,7 @@ TPointsArray3D::TPointsArray3D(Int_t n, Float_t *x, Float_t *y, Float_t *z, Opti
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*-*3-D PolyLine default destructor*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                      ===============================
+/// 3-D PolyLine default destructor.
 
 TPointsArray3D::~TPointsArray3D()
 {
@@ -170,8 +162,7 @@ TPointsArray3D::TPointsArray3D(const TPointsArray3D &point) : TPoints3DABC(point
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*-*-*Copy this TPointsArray3D to another *-*-*-*-*-*-*-*-*-*-*-*
-///*-*                      ==============================
+/// Copy this TPointsArray3D to another.
 
 void TPointsArray3D::Copy(TObject &obj) const
 {
@@ -187,15 +178,12 @@ void TPointsArray3D::Copy(TObject &obj) const
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*Compute distance from point px,py to a 3-D points *-*-*-*-*-*-*
-///*-*          =====================================================
-///*-*
-///*-*  Compute the closest distance of approach from point px,py to each segment
-///*-*  of the polyline.
-///*-*  Returns when the distance found is below DistanceMaximum.
-///*-*  The distance is computed in pixels units.
-///*-*
-///*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Compute distance from point px,py to a 3-D points.
+///
+/// Compute the closest distance of approach from point px,py to each segment
+/// of the polyline.
+/// Returns when the distance found is below DistanceMaximum.
+/// The distance is computed in pixels units.
 
 Int_t TPointsArray3D::DistancetoPrimitive(Int_t px, Int_t py)
 {
@@ -232,8 +220,7 @@ Int_t TPointsArray3D::DistancetoPrimitive(Int_t px, Int_t py)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*Execute action corresponding to one event*-*-*-*-*-*-*-*-*-*
-///*-*                =========================================
+/// Execute action corresponding to one event.
 
 void TPointsArray3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
@@ -242,8 +229,7 @@ void TPointsArray3D::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*List this 3-D polyline with its attributes*-*-*-*-*-*-*
-///*-*                ==========================================
+/// List this 3-D polyline with its attributes.
 
 void TPointsArray3D::ls(Option_t *option) const
 {
@@ -252,8 +238,7 @@ void TPointsArray3D::ls(Option_t *option) const
 
 }
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*Dump this 3-D polyline with its attributes*-*-*-*-*-*-*-*-*
-///*-*                ==========================================
+/// Dump this 3-D polyline with its attributes.
 
 void TPointsArray3D::Print(Option_t *option) const
 {
@@ -269,13 +254,11 @@ Int_t TPointsArray3D::SetLastPosition(Int_t idx)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*Initialize one point of the 3-D polyline*-*-*-*-*-*-*-*-*-*
-///*-*                ========================================
-///*-*  if n is more then the current TPointsArray3D size (n > fN) - re-allocate this
-///*-*  The new size of the object will be fN += min(10,fN/4)
-///*-*
-///*-*  return the total number of points introduced
-///*-*
+/// Initialize one point of the 3-D polyline.
+/// if n is more then the current TPointsArray3D size (n > fN) - re-allocate this.
+/// The new size of the object will be fN += min(10,fN/4).
+///
+/// return the total number of points introduced.
 
 Int_t TPointsArray3D::SetPoint(Int_t n, Float_t x, Float_t y, Float_t z)
 {
@@ -299,10 +282,8 @@ Int_t TPointsArray3D::SetPoint(Int_t n, Float_t x, Float_t y, Float_t z)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Set new values for this 3-D polyline*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ====================================
-///*-* return the total number of points introduced
-///*-*
+/// Set new values for this 3-D polyline.
+/// return the total number of points introduced.
 
 Int_t TPointsArray3D::SetPoints(Int_t n, Float_t *p, Option_t *option)
 {
@@ -320,8 +301,7 @@ Int_t TPointsArray3D::SetPoints(Int_t n, Float_t *p, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*Stream a class object*-*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*              =========================================
+/// Stream a class object.
 
 void TPointsArray3D::Streamer(TBuffer &b)
 {

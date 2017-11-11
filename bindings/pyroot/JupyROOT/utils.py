@@ -36,7 +36,7 @@ Jupyter.CodeCell.options_default.highlight_modes['magic_{cppMIME}'] = {{'reg':[/
 console.log("JupyROOT - %%cpp magic configured");
 """
 
-_jsNotDrawableClassesPatterns = ["TGraph[23]D","TH3*","TGraphPolar","TProf*","TEve*","TF[23]","TGeo*","TPolyLine3D", "TH2Poly"]
+_jsNotDrawableClassesPatterns = ["TEve*","TF3","TPolyLine3D"]
 
 
 _jsROOTSourceDir = "https://root.cern.ch/js/notebook/"

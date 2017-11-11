@@ -2,12 +2,13 @@
 // reserved. Use of this source code is governed by a BSD-style license that
 // can be found in the LICENSE file.
 
+#pragma GCC diagnostic ignored "-Wall"
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+
 #include "simple_app.h"
 
 #include <string>
 
-#include "gui_handler.h"
-#include "osr_handler.h"
 #include "include/cef_browser.h"
 #include "include/cef_scheme.h"
 #include "include/views/cef_browser_view.h"
@@ -24,6 +25,8 @@
 
 THttpServer *gHandlingServer = 0;
 
+CefRefPtr<SimpleApp> *gCefApp = 0;
+
 // TODO: memory cleanup of these arguments
 class TCefHttpCallArg : public THttpCallArg, public CefResourceHandler {
 protected:
@@ -39,7 +42,8 @@ public:
 
    virtual ~TCefHttpCallArg()
    {
-      if (fDD != 1) printf("FAAAAAAAAAAAAAIL %d\n", fDD);
+      if (fDD != 1)
+         printf("FAAAAAAAAAAAAAIL %d\n", fDD);
       fDD = -1;
    }
 
@@ -96,7 +100,8 @@ public:
          char *data_ = (char *)GetContent();
          // Copy the next block of data into the buffer.
          int transfer_size = GetContentLength() - offset_;
-         if (transfer_size > bytes_to_read) transfer_size = bytes_to_read;
+         if (transfer_size > bytes_to_read)
+            transfer_size = bytes_to_read;
          memcpy(data_out, data_ + offset_, transfer_size);
          offset_ += transfer_size;
 
@@ -135,7 +140,8 @@ public:
    {
       // Allow the window to close if the browser says it's OK.
       CefRefPtr<CefBrowser> browser = browser_view_->GetBrowser();
-      if (browser) return browser->GetHost()->TryCloseBrowser();
+      if (browser)
+         return browser->GetHost()->TryCloseBrowser();
       return true;
    }
 
@@ -209,14 +215,10 @@ public:
 } // namespace
 
 SimpleApp::SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *serv, bool isbatch)
-   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUrl(), fCefMain(cef_main), fBatch(isbatch)
+   : CefApp(), CefBrowserProcessHandler(), /*CefRenderProcessHandler(),*/ fUrl(url), fCefMain(cef_main),
+     fBatch(isbatch), fRect(), fOsrHandler(), fUseViewes(false), fGuiHandler()
 {
-   fUrl = "rootscheme://rootserver";
-   fUrl.append(url);
-   if (url.find("?") != std::string::npos) fUrl.append("&cef3");
-                                      else fUrl.append("?cef3");
    gHandlingServer = serv;
-   printf("Assign url %s\n", fUrl.c_str());
 }
 
 SimpleApp::~SimpleApp()
@@ -277,23 +279,47 @@ void SimpleApp::OnContextInitialized()
 {
    CEF_REQUIRE_UI_THREAD();
 
+   printf("SimpleApp::OnContextInitialized\n");
+
    CefRegisterSchemeHandlerFactory("rootscheme", "rootserver", new ROOTSchemeHandlerFactory());
+
+   StartWindow(fUrl, fBatch, fRect);
+}
+
+void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
+{
+   CEF_REQUIRE_UI_THREAD();
+
+   std::string url = "rootscheme://rootserver";
+   url.append(addr);
+   if (url.find("?") != std::string::npos)
+      url.append("&cef3");
+   else
+      url.append("?cef3");
 
    // Specify CEF browser settings here.
    CefBrowserSettings browser_settings;
 
-   if (fBatch) {
+   if (batch) {
 
-      CefRefPtr<OsrHandler> handler(new OsrHandler(gHandlingServer));
+      if (!fOsrHandler)
+         fOsrHandler = new OsrHandler(gHandlingServer);
+      // CefRefPtr<OsrHandler> handler(new OsrHandler(gHandlingServer));
 
       CefWindowInfo window_info;
 
+#if defined(OS_WIN) || defined(OS_LINUX)
+      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect);
+#else
+      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect.x, rect.y, rect.width, rect.height );
+#endif
+
       window_info.SetAsWindowless(0);
 
-      printf("Create OSR browser %s\n", fUrl.c_str());
+      printf("Create OSR browser %s\n", url.c_str());
 
       // Create the first browser window.
-      CefBrowserHost::CreateBrowser(window_info, handler, fUrl, browser_settings, NULL);
+      CefBrowserHost::CreateBrowser(window_info, fOsrHandler, url, browser_settings, NULL);
 
       return;
    }
@@ -306,24 +332,35 @@ void SimpleApp::OnContextInitialized()
 
    CefRefPtr<CefCommandLine> command_line = CefCommandLine::GetGlobalCommandLine();
 
-   bool use_views = command_line->HasSwitch("use-views");
+// bool use_views = command_line->HasSwitch("use-views");
 #else
-   bool use_views = false;
+// bool use_views = false;
 #endif
 
-   // SimpleHandler implements browser-level callbacks.
-   CefRefPtr<GuiHandler> handler(new GuiHandler(gHandlingServer, use_views));
+   if (!fGuiHandler) {
+      fUseViewes = false;
+      fGuiHandler = new GuiHandler(gHandlingServer, fUseViewes);
+   }
 
-   if (use_views) {
+   // SimpleHandler implements browser-level callbacks.
+   // CefRefPtr<GuiHandler> handler(new GuiHandler(gHandlingServer, use_views));
+
+   if (fUseViewes) {
       // Create the BrowserView.
       CefRefPtr<CefBrowserView> browser_view =
-         CefBrowserView::CreateBrowserView(handler, fUrl, browser_settings, NULL, NULL);
+         CefBrowserView::CreateBrowserView(fGuiHandler, url, browser_settings, NULL, NULL);
 
       // Create the Window. It will show itself after creation.
       CefWindow::CreateTopLevelWindow(new SimpleWindowDelegate(browser_view));
    } else {
       // Information used when creating the native window.
       CefWindowInfo window_info;
+
+#if defined(OS_WIN) || defined(OS_LINUX)
+      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect);
+#else
+      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect.x, rect.y, rect.width, rect.height );
+#endif
 
 #if defined(OS_WIN)
       // On Windows we need to specify certain flags that will be passed to
@@ -332,7 +369,7 @@ void SimpleApp::OnContextInitialized()
 #endif
 
       // Create the first browser window.
-      CefBrowserHost::CreateBrowser(window_info, handler, fUrl, browser_settings, NULL);
+      CefBrowserHost::CreateBrowser(window_info, fGuiHandler, url, browser_settings, NULL);
    }
 }
 
@@ -354,8 +391,20 @@ public:
 };
 
 extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, bool batch_mode, const char *rootsys,
-                                             const char *cef_path)
+                                             const char *cef_path, unsigned width, unsigned height)
 {
+   if (gCefApp) {
+      printf("Starting next CEF window\n");
+
+      if (gHandlingServer != (THttpServer *)http_serv) {
+         printf("CEF plugin do not allow to use other THttpServer instance\n");
+      } else {
+         CefRect rect(0, 0, width, height);
+         gCefApp->get()->StartWindow(url, batch_mode, rect);
+      }
+      return;
+   }
+
    TApplication *root_app = gROOT->GetApplication();
 
    CefMainArgs main_args(root_app->Argc(), root_app->Argv());
@@ -391,23 +440,24 @@ extern "C" void webgui_start_browser_in_cef3(const char *url, void *http_serv, b
    settings.no_sandbox = true;
    // settings.single_process = true;
 
-   if (batch_mode) settings.windowless_rendering_enabled = true;
+   if (batch_mode)
+      settings.windowless_rendering_enabled = true;
 
    TString plog = "cef.log";
    cef_string_ascii_to_utf16(plog.Data(), plog.Length(), &settings.log_file);
    settings.log_severity = LOGSEVERITY_INFO; // LOGSEVERITY_VERBOSE;
-   //settings.uncaught_exception_stack_size = 100;
-   //settings.ignore_certificate_errors = true;
+   // settings.uncaught_exception_stack_size = 100;
+   // settings.ignore_certificate_errors = true;
    // settings.remote_debugging_port = 7890;
 
    // SimpleApp implements application-level callbacks for the browser process.
    // It will create the first browser instance in OnContextInitialized() after
    // CEF has initialized.
-   CefRefPtr<SimpleApp> *app =
-      new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), (THttpServer *)http_serv, batch_mode));
+   gCefApp = new CefRefPtr<SimpleApp>(new SimpleApp(url, cef_main.Data(), (THttpServer *)http_serv, batch_mode));
+   gCefApp->get()->SetRect(width, height);
 
    // Initialize CEF for the browser process.
-   CefInitialize(main_args, settings, app->get(), NULL);
+   CefInitialize(main_args, settings, gCefApp->get(), NULL);
 
    // let run CEF message loop, should be improved later
    TCefTimer *timer = new TCefTimer(10, kTRUE);

@@ -396,6 +396,25 @@ std::cout << "rms of b: " << std::sqrt(sumSq / n) << std::endl;
 You see how we created one `double` variable for each thread in the pool, and later merged their results via
 `std::accumulate`.
 
+### Friend trees
+Friend trees are supported by TDataFrame.
+In order to deal with friend trees with TDataFrame, the user is required to build
+the tree and its friends and instantiate a TDataFrame with it.
+Two caveats are presents when using jitted `Define`s and `Filter`s:
+1) the only columns which can be used in the strings passed to the aforementioned transformations are the top level branches of the friend trees.
+2) the "friend columns" cannot be written with the notation involving a dot. For example, if a tree is created like this:
+~~~{.cpp}
+TTree t([...]);
+TTree ft([...]);
+t.AddFriend(t,"myFriend");
+~~~
+in order to access a certain column `col` of the tree ft, it will be necessary to alias it before. To continue the example:
+~~~{.cpp}
+TDataFrame d(t);
+d.Alias("myFriend.MyCol", "myFriend_MyCol");
+auto f = d.Filter("myFriend_MyCol == 42");
+~~~
+
 ### <a name="callgraphs"></a>Call graphs (storing and reusing sets of transformations)
 **Sets of transformations can be stored as variables** and reused multiple times to create **call graphs** in which
 several paths of filtering/creation of columns are executed simultaneously; we often refer to this as "storing the

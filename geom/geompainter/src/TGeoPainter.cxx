@@ -8,10 +8,12 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-// TGeoPainter - class implementing all draw interfaces for a generic 3D viewer
-// using TBuffer3D mechanism.
-//______________________________________________________________________________
+/** \class TGeoPainter
+\ingroup Geometry_classes
+
+Class implementing all draw interfaces for a generic 3D viewer
+using TBuffer3D mechanism.
+*/
 
 #include <map>
 #include "TROOT.h"
@@ -56,8 +58,7 @@
 ClassImp(TGeoPainter);
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Geometry painter default constructor*-*-*-*-*-*-*-*-*
-///*-*                  ====================================
+/// Default constructor.
 
 TGeoPainter::TGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
 {
@@ -99,8 +100,7 @@ TGeoPainter::TGeoPainter(TGeoManager *manager) : TVirtualGeoPainter(manager)
    DefineColors();
 }
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Geometry painter default destructor*-*-*-*-*-*-*-*-*
-///*-*                  ===================================
+/// Default destructor.
 
 TGeoPainter::~TGeoPainter()
 {
@@ -111,7 +111,7 @@ TGeoPainter::~TGeoPainter()
    if (fPlugin) delete fPlugin;
 }
 ////////////////////////////////////////////////////////////////////////////////
-///--- Add numpoints, numsegs, numpolys to the global 3D size.
+/// Add numpoints, numsegs, numpolys to the global 3D size.
 
 void TGeoPainter::AddSize3D(Int_t numpoints, Int_t numsegs, Int_t numpolys)
 {
@@ -158,7 +158,7 @@ void TGeoPainter::AddTrackPoint(Double_t *point, Double_t *box, Bool_t reset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get the new 'bombed' translation vector according current exploded view mode
+/// Get the new 'bombed' translation vector according current exploded view mode.
 
 void TGeoPainter::BombTranslation(const Double_t *tr, Double_t *bombtr)
 {
@@ -231,7 +231,7 @@ void TGeoPainter::CheckOverlaps(const TGeoVolume *vol, Double_t ovlp, Option_t *
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// check current point in the geometry
+/// Check current point in the geometry.
 
 void TGeoPainter::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *option)
 {
@@ -240,11 +240,10 @@ void TGeoPainter::CheckPoint(Double_t x, Double_t y, Double_t z, Option_t *optio
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Test for shape navigation methods. Summary for test numbers:
-///  1: DistFromInside/Outside. Sample points inside the shape. Generate
+///  - 1: DistFromInside/Outside. Sample points inside the shape. Generate
 ///    directions randomly in cos(theta). Compute DistFromInside and move the
 ///    point with bigger distance. Compute DistFromOutside back from new point.
 ///    Plot d-(d1+d2)
-///
 
 void TGeoPainter::CheckShape(TGeoShape *shape, Int_t testNo, Int_t nsamples, Option_t *option)
 {
@@ -334,7 +333,7 @@ TGeoVolume *TGeoPainter::GetDrawnVolume() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// compute the closest distance of approach from point px,py to a volume
+/// Compute the closest distance of approach from point px,py to a volume.
 
 Int_t TGeoPainter::DistanceToPrimitiveVol(TGeoVolume *volume, Int_t px, Int_t py)
 {
@@ -1281,7 +1280,7 @@ void TGeoPainter::PaintOverlap(void *ovlp, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint recursively a node and its content accordind to visualization options.
+/// Paint recursively a node and its content according to visualization options.
 
 void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option, TGeoMatrix* global)
 {
@@ -1289,7 +1288,7 @@ void TGeoPainter::PaintNode(TGeoNode *node, Option_t *option, TGeoMatrix* global
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Paint recursively a node and its content accordind to visualization options.
+/// Paint recursively a node and its content according to visualization options.
 
 void TGeoPainter::PaintVolume(TGeoVolume *top, Option_t *option, TGeoMatrix* global)
 {
@@ -1459,7 +1458,7 @@ Bool_t TGeoPainter::PaintShape(const TGeoShape & shape, Option_t *  option ) con
       return addDaughters;
    }
 
-   // For non-composite shapes we are the main paint method & perform the negotation
+   // For non-composite shapes we are the main paint method & perform the negotiation
    // with the viewer here
    if (!shape.IsComposite()) {
       // Does viewer prefer local frame positions?
@@ -1815,8 +1814,8 @@ void TGeoPainter::Raytrace(Option_t *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// shoot npoints randomly in a box of 1E-5 arround current point.
-/// return minimum distance to points outside
+/// Shoot npoints randomly in a box of 1E-5 around current point.
+/// Return minimum distance to points outside.
 
 TGeoNode *TGeoPainter::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsil,
                                     const char* g3path)
@@ -1825,7 +1824,7 @@ TGeoNode *TGeoPainter::SamplePoints(Int_t npoints, Double_t &dist, Double_t epsi
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Set cartesian and radial bomb factors for translations
+/// Set cartesian and radial bomb factors for translations.
 
 void TGeoPainter::SetBombFactors(Double_t bombx, Double_t bomby, Double_t bombz, Double_t bombr)
 {
@@ -1837,7 +1836,7 @@ void TGeoPainter::SetBombFactors(Double_t bombx, Double_t bomby, Double_t bombz,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set type of exploding view
+/// Set type of exploding view.
 
 void TGeoPainter::SetExplodedView(Int_t ibomb)
 {
@@ -1865,7 +1864,7 @@ void TGeoPainter::SetExplodedView(Int_t ibomb)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set number of segments to approximate circles
+/// Set number of segments to approximate circles.
 
 void TGeoPainter::SetNsegments(Int_t nseg)
 {
@@ -1926,10 +1925,10 @@ void TGeoPainter::SetTopVisible(Bool_t vis)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set drawing mode :
-/// option=0 (default) all nodes drawn down to vislevel
-/// option=1           leaves and nodes at vislevel drawn
-/// option=2           path is drawn
+/// Set drawing mode :
+///  - option=0 (default) all nodes drawn down to vislevel
+///  - option=1           leaves and nodes at vislevel drawn
+///  - option=2           path is drawn
 
 void TGeoPainter::SetVisOption(Int_t option) {
    if ((fVisOption<0) || (fVisOption>4)) {
@@ -2034,7 +2033,7 @@ void TGeoPainter::Test(Int_t npoints, Option_t *option)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Geometry overlap checker based on sampling.
+/// Geometry overlap checker based on sampling.
 
 void TGeoPainter::TestOverlaps(const char* path)
 {
@@ -2050,7 +2049,7 @@ Bool_t TGeoPainter::TestVoxels(TGeoVolume *vol)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// get the new 'unbombed' translation vector according current exploded view mode
+/// Get the new 'unbombed' translation vector according current exploded view mode.
 
 void TGeoPainter::UnbombTranslation(const Double_t *tr, Double_t *bombtr)
 {

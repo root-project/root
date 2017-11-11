@@ -1,4 +1,3 @@
-
 // @(#)root/hist:$Id$
 // Author: Maciej Zimnoch   30/09/2013
 
@@ -22,7 +21,7 @@
 #include <vector>
 #include <list>
 #include <map>
-
+#include <Math/Types.h>
 
 class TFormulaFunction
 {
@@ -93,7 +92,7 @@ private:
    Bool_t            fReadyToExecute;       //! trasient to force initialization
    Bool_t            fClingInitialized;  //!  transient to force re-initialization
    Bool_t            fAllParametersSetted;    // flag to control if all parameters are setted
-   TMethodCall*      fMethod;        //! pointer to methocall
+   TMethodCall *fMethod;                      //! pointer to methodcall
    TString           fClingName;     //! unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
 
    TInterpreter::CallFuncIFacePtr_t::Generic_t fFuncPtr;   //!  function pointer
@@ -112,6 +111,7 @@ private:
    static Bool_t   IsDefaultVariableName(const TString &name);
    void ReplaceAllNames(TString &formula, std::map<TString, TString> &substitutions);
    void FillParametrizedFunctions(std::map<std::pair<TString, Int_t>, std::pair<TString, TString>> &functions);
+   void FillVecFunctionsShurtCuts(); 
 
 protected:
 
@@ -125,6 +125,8 @@ protected:
    Int_t                          fNpar;  //!
    Int_t                          fNumber;  //!
    std::vector<TObject*>          fLinearParts;  // vector of linear functions
+   Bool_t                         fVectorized = false;      // whether we should use vectorized or regular variables
+   // (we default to false since a lot of functions still cannot be expressed in vectorized form)
 
    static Bool_t IsOperator(const char c);
    static Bool_t IsBracket(const char c);
@@ -142,6 +144,9 @@ protected:
    void   SetPredefinedParamNames(); 
 
    Double_t       DoEval(const Double_t * x, const Double_t * p = nullptr) const;
+#ifdef R__HAS_VECCORE
+   ROOT::Double_v DoEvalVec(const ROOT::Double_v *x, const Double_t *p = nullptr) const;
+#endif
 
 public:
 
@@ -154,7 +159,7 @@ public:
                   TFormula();
    virtual        ~TFormula();
    TFormula&      operator=(const TFormula &rhs);
-   TFormula(const char *name, const char * formula = "", bool addToGlobList = true);
+   TFormula(const char *name, const char * formula = "", bool addToGlobList = true, bool vectorize = false);
    TFormula(const char *name, const char * formula, int ndim, int npar, bool addToGlobList = true);
                   TFormula(const TFormula &formula);
    //               TFormula(const char *name, Int_t nparams, Int_t ndims);
@@ -170,6 +175,15 @@ public:
    Double_t       Eval(Double_t x, Double_t y , Double_t z) const;
    Double_t       Eval(Double_t x, Double_t y , Double_t z , Double_t t ) const;
    Double_t       EvalPar(const Double_t *x, const Double_t *params=0) const;
+   // template <class T>
+   // T Eval(T x, T y = 0, T z = 0, T t = 0) const;
+   template <class T>
+   T EvalPar(const T *x, const Double_t *params = 0) const {
+      return  EvalParVec(x, params);
+   }
+#ifdef R__HAS_VECCORE
+   ROOT::Double_v EvalParVec(const ROOT::Double_v *x, const Double_t *params = 0) const;
+#endif
    TString        GetExpFormula(Option_t *option="") const;
    const TObject *GetLinearPart(Int_t i) const;
    Int_t          GetNdim() const {return fNdim;}
@@ -185,6 +199,7 @@ public:
    Int_t          GetVarNumber(const char *name) const;
    TString        GetVarName(Int_t ivar) const;
    Bool_t         IsValid() const { return fReadyToExecute && fClingInitialized; }
+   Bool_t IsVectorized() const { return fVectorized; }
    Bool_t         IsLinear() const { return TestBit(kLinear); }
    void           Print(Option_t *option = "") const;
    void           SetName(const char* name);
@@ -202,7 +217,8 @@ public:
                              *name8="p8",const char *name9="p9",const char *name10="p10"); // *MENU*
    void           SetVariable(const TString &name, Double_t value);
    void           SetVariables(const std::pair<TString,Double_t> *vars, const Int_t size);
+   void SetVectorized(Bool_t vectorized);
 
-   ClassDef(TFormula,10)
+   ClassDef(TFormula,11)
 };
 #endif

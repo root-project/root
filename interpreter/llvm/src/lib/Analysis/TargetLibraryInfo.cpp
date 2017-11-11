@@ -13,6 +13,7 @@
 
 #include "llvm/Analysis/TargetLibraryInfo.h"
 #include "llvm/ADT/Triple.h"
+#include "llvm/IR/Constants.h"
 #include "llvm/Support/CommandLine.h"
 using namespace llvm;
 
@@ -540,7 +541,7 @@ static StringRef sanitizeFunctionName(StringRef funcName) {
 
   // Check for \01 prefix that is used to mangle __asm declarations and
   // strip it if present.
-  return GlobalValue::getRealLinkageName(funcName);
+  return GlobalValue::dropLLVMManglingEscape(funcName);
 }
 
 bool TargetLibraryInfoImpl::getLibFunc(StringRef funcName,
@@ -1518,6 +1519,21 @@ TargetLibraryInfoImpl &TargetLibraryAnalysis::lookupInfoImpl(const Triple &T) {
   return *Impl;
 }
 
+unsigned TargetLibraryInfoImpl::getTargetWCharSize(const Triple &T) {
+  // See also clang/lib/Basic/Targets.cpp.
+  if (T.isPS4() || T.isOSWindows() || T.isArch16Bit())
+    return 2;
+  if (T.getArch() == Triple::xcore)
+    return 1;
+  return 4;
+}
+
+unsigned TargetLibraryInfoImpl::getWCharSize(const Module &M) const {
+  if (auto *ShortWChar = cast_or_null<ConstantAsMetadata>(
+      M.getModuleFlag("wchar_size")))
+    return cast<ConstantInt>(ShortWChar->getValue())->getZExtValue();
+  return getTargetWCharSize(Triple(M.getTargetTriple()));
+}
 
 TargetLibraryInfoWrapperPass::TargetLibraryInfoWrapperPass()
     : ImmutablePass(ID), TLIImpl(), TLI(TLIImpl) {

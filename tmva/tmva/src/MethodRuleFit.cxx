@@ -198,9 +198,9 @@ Bool_t TMVA::MethodRuleFit::HasAnalysisType( Types::EAnalysisType type, UInt_t n
 ///  - GDStep         <float>      gradient-directed path: step size
 ///  - GDNSteps       <float>      gradient-directed path: number of steps
 ///  - GDErrScale     <float>      stop scan when error>scale*errmin
-///-----------------
+///
 /// #### Tree generation
-///-----------------
+///
 ///  - fEventsMin     <float>      minimum fraction of events in a splittable node
 ///  - fEventsMax     <float>      maximum fraction of events in a splittable node
 ///  - nTrees         <float>      number of trees in forest.
@@ -209,7 +209,7 @@ Bool_t TMVA::MethodRuleFit::HasAnalysisType( Types::EAnalysisType type, UInt_t n
 ///    - Random    - create forest using random subsample and only random variables subset at each node
 ///    - AdaBoost  - create forest with boosted events
 ///
-///#### Model creation
+/// #### Model creation
 ///
 ///  - RuleMinDist    <float>      min distance allowed between rules
 ///  - MinImp         <float>      minimum rule importance accepted

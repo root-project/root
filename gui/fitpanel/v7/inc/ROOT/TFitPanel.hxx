@@ -18,15 +18,50 @@
 
 #include <ROOT/TWebWindow.hxx>
 
+#include <ROOT/TCanvas.hxx>
+
+#include "ROOT/THist.hxx"
+
+#include <vector>
+
 namespace ROOT {
 namespace Experimental {
 
-class TFitPanel  {
+/** struct ROOT::Experimental::ComboBoxItem
+ * \ingroup webdisplay
+ * Descriptor for the openui5 ComboBox, used in FitPanel
+ */
 
-   std::string     fTitle{};              ///<! title
-   unsigned       fConnId{0};             ///<! connection id
+struct ComboBoxItem {
+   std::string fId;
+   std::string fName;
+   ComboBoxItem() = default;
+   ComboBoxItem(const std::string &id, const std::string &name) : fId(id), fName(name) {}
+};
 
-   std::shared_ptr<TWebWindow> fWindow{}; ///!< configured display
+/** struct ROOT::Experimental::TFitPanelModel
+ * \ingroup webdisplay
+ * Model, used to initialized openui5 FitPanel
+ */
+
+struct TFitPanelModel {
+   std::vector<ComboBoxItem> fDataNames;
+   std::string fSelectDataId;
+   std::vector<ComboBoxItem> fModelNames;
+   std::string fSelectModelId;
+   TFitPanelModel() = default;
+};
+
+class TFitPanel {
+
+   std::string fTitle;  ///<! title
+   unsigned fConnId{0}; ///<! connection id
+
+   std::shared_ptr<TWebWindow> fWindow; ///!< configured display
+
+   std::shared_ptr<TCanvas> fCanvas; ///!< canvas used to display results
+
+   std::shared_ptr<TH1D> fFitHist; ///!< histogram created when fit is performed
 
    /// Disable copy construction.
    TFitPanel(const TFitPanel &) = delete;
@@ -34,22 +69,30 @@ class TFitPanel  {
    /// Disable assignment.
    TFitPanel &operator=(const TFitPanel &) = delete;
 
+   /// process data from UI
    void ProcessData(unsigned connid, const std::string &arg);
 
 public:
-
+   /// normal constructor
    TFitPanel(const std::string &title = "Fit panel") : fTitle(title) {}
 
+   /// destructor
    virtual ~TFitPanel() { printf("Fit panel destructor!!!\n"); }
 
+   // method required when any panel want to be inserted into the TCanvas
    std::shared_ptr<TWebWindow> GetWindow();
 
+   /// show FitPanel in specified place
    void Show(const std::string &where = "");
 
+   /// hide FitPanel
    void Hide();
 
-   void DoFit(const std::string &dname, const std::string &mname);
+   /// let use canvas to display fit results
+   void UseCanvas(std::shared_ptr<TCanvas> &canv);
 
+   /// Dummy function, called when "Fit" button pressed in UI
+   void DoFit(const std::string &dname, const std::string &mname);
 };
 
 } // namespace Experimental

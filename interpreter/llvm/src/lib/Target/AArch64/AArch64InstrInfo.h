@@ -27,6 +27,13 @@ namespace llvm {
 class AArch64Subtarget;
 class AArch64TargetMachine;
 
+static const MachineMemOperand::Flags MOSuppressPair =
+    MachineMemOperand::MOTargetFlag1;
+static const MachineMemOperand::Flags MOStridedAccess =
+    MachineMemOperand::MOTargetFlag2;
+
+#define FALKOR_STRIDED_ACCESS_MD "falkor.strided.access"
+
 class AArch64InstrInfo final : public AArch64GenInstrInfo {
   const AArch64RegisterInfo RI;
   const AArch64Subtarget &Subtarget;
@@ -81,6 +88,9 @@ public:
   /// unprofitable.
   bool isLdStPairSuppressed(const MachineInstr &MI) const;
 
+  /// Return true if the given load or store is a strided memory access.
+  bool isStridedAccess(const MachineInstr &MI) const;
+
   /// Return true if this is an unscaled load/store.
   bool isUnscaledLdSt(unsigned Opc) const;
 
@@ -118,6 +128,44 @@ public:
       return true;
     }
   }
+
+  /// \brief Return the opcode that set flags when possible.  The caller is
+  /// responsible for ensuring the opc has a flag setting equivalent.
+  static unsigned convertToFlagSettingOpc(unsigned Opc, bool &Is64Bit) {
+    switch (Opc) {
+    default:
+      llvm_unreachable("Opcode has no flag setting equivalent!");
+    // 32-bit cases:
+    case AArch64::ADDWri: Is64Bit = false; return AArch64::ADDSWri;
+    case AArch64::ADDWrr: Is64Bit = false; return AArch64::ADDSWrr;
+    case AArch64::ADDWrs: Is64Bit = false; return AArch64::ADDSWrs;
+    case AArch64::ADDWrx: Is64Bit = false; return AArch64::ADDSWrx;
+    case AArch64::ANDWri: Is64Bit = false; return AArch64::ANDSWri;
+    case AArch64::ANDWrr: Is64Bit = false; return AArch64::ANDSWrr;
+    case AArch64::ANDWrs: Is64Bit = false; return AArch64::ANDSWrs;
+    case AArch64::BICWrr: Is64Bit = false; return AArch64::BICSWrr;
+    case AArch64::BICWrs: Is64Bit = false; return AArch64::BICSWrs;
+    case AArch64::SUBWri: Is64Bit = false; return AArch64::SUBSWri;
+    case AArch64::SUBWrr: Is64Bit = false; return AArch64::SUBSWrr;
+    case AArch64::SUBWrs: Is64Bit = false; return AArch64::SUBSWrs;
+    case AArch64::SUBWrx: Is64Bit = false; return AArch64::SUBSWrx;
+    // 64-bit cases:
+    case AArch64::ADDXri: Is64Bit = true; return AArch64::ADDSXri;
+    case AArch64::ADDXrr: Is64Bit = true; return AArch64::ADDSXrr;
+    case AArch64::ADDXrs: Is64Bit = true; return AArch64::ADDSXrs;
+    case AArch64::ADDXrx: Is64Bit = true; return AArch64::ADDSXrx;
+    case AArch64::ANDXri: Is64Bit = true; return AArch64::ANDSXri;
+    case AArch64::ANDXrr: Is64Bit = true; return AArch64::ANDSXrr;
+    case AArch64::ANDXrs: Is64Bit = true; return AArch64::ANDSXrs;
+    case AArch64::BICXrr: Is64Bit = true; return AArch64::BICSXrr;
+    case AArch64::BICXrs: Is64Bit = true; return AArch64::BICSXrs;
+    case AArch64::SUBXri: Is64Bit = true; return AArch64::SUBSXri;
+    case AArch64::SUBXrr: Is64Bit = true; return AArch64::SUBSXrr;
+    case AArch64::SUBXrs: Is64Bit = true; return AArch64::SUBSXrs;
+    case AArch64::SUBXrx: Is64Bit = true; return AArch64::SUBSXrx;
+    }
+  }
+
 
   /// Return true if this is a load/store that can be potentially paired/merged.
   bool isCandidateToMergeOrPair(MachineInstr &MI) const;
@@ -225,8 +273,8 @@ public:
   /// \param Pattern - combiner pattern
   bool isThroughputPattern(MachineCombinerPattern Pattern) const override;
   /// Return true when there is potentially a faster code sequence
-  /// for an instruction chain ending in <Root>. All potential patterns are
-  /// listed in the <Patterns> array.
+  /// for an instruction chain ending in ``Root``. All potential patterns are
+  /// listed in the ``Patterns`` array.
   bool getMachineCombinerPatterns(MachineInstr &Root,
                   SmallVectorImpl<MachineCombinerPattern> &Patterns)
       const override;
@@ -251,6 +299,8 @@ public:
   getSerializableDirectMachineOperandTargetFlags() const override;
   ArrayRef<std::pair<unsigned, const char *>>
   getSerializableBitmaskMachineOperandTargetFlags() const override;
+  ArrayRef<std::pair<MachineMemOperand::Flags, const char *>>
+  getSerializableMachineMemOperandTargetFlags() const override;
 
   bool isFunctionSafeToOutlineFrom(MachineFunction &MF) const override;
   unsigned getOutliningBenefit(size_t SequenceSize, size_t Occurrences,
@@ -270,7 +320,7 @@ public:
                      bool IsTailCall) const override;
   /// Returns true if the instruction has a shift by immediate that can be
   /// executed in one cycle less.
-  bool isFalkorLSLFast(const MachineInstr &MI) const;
+  bool isFalkorShiftExtFast(const MachineInstr &MI) const;
 private:
 
   /// \brief Sets the offsets on outlined instructions in \p MBB which use SP
@@ -316,7 +366,7 @@ enum AArch64FrameOffsetStatus {
 /// If result == AArch64FrameOffsetCannotUpdate, @p MI cannot be updated to
 /// use an offset.eq
 /// If result & AArch64FrameOffsetIsLegal, @p Offset can completely be
-/// rewriten in @p MI.
+/// rewritten in @p MI.
 /// If result & AArch64FrameOffsetCanUpdate, @p Offset contains the
 /// amount that is off the limit of the legal offset.
 /// If set, @p OutUseUnscaledOp will contain the whether @p MI should be

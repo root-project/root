@@ -179,6 +179,18 @@ arm::FloatABI arm::getARMFloatABI(const ToolChain &TC, const ArgList &Args) {
       ABI = FloatABI::Hard;
       break;
 
+    case llvm::Triple::NetBSD:
+      switch (Triple.getEnvironment()) {
+      case llvm::Triple::EABIHF:
+      case llvm::Triple::GNUEABIHF:
+        ABI = FloatABI::Hard;
+        break;
+      default:
+        ABI = FloatABI::Soft;
+        break;
+      }
+      break;
+
     case llvm::Triple::FreeBSD:
       switch (Triple.getEnvironment()) {
       case llvm::Triple::GNUEABIHF:
@@ -392,9 +404,7 @@ void arm::getARMTargetFeatures(const ToolChain &TC,
           if (B->getOption().matches(options::OPT_mlong_calls))
             D.Diag(diag::err_opt_not_valid_with_opt) << A->getAsString(Args) << B->getAsString(Args);
         }
-
-        CmdArgs.push_back("-backend-option");
-        CmdArgs.push_back("-arm-execute-only");
+	Features.push_back("+execute-only");
       }
     }
   }

@@ -43,6 +43,8 @@ setting/clearing/testing named attributes.
 // #include "TGraphStruct.h"
 
 #include "RooSecondMoment.h"
+#include "RooNameSet.h"
+#include "RooWorkspace.h"
 
 #include "RooMsgService.h"
 #include "RooAbsArg.h"
@@ -90,17 +92,10 @@ std::stack<RooAbsArg*> RooAbsArg::_ioReadStack ;
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-RooAbsArg::RooAbsArg() :
-  TNamed(),
-  _deleteWatch(kFALSE),
-  _operMode(Auto),
-  _fast(kFALSE),
-  _ownedComponents(0),
-  _prohibitServerRedirect(kFALSE),
-  _eocache(0),
-  _namePtr(0),
-  _isConstant(kFALSE),
-  _localNoInhibitDirty(kFALSE)
+RooAbsArg::RooAbsArg()
+   : TNamed(), _deleteWatch(kFALSE), _operMode(Auto), _fast(kFALSE), _ownedComponents(0),
+     _prohibitServerRedirect(kFALSE), _eocache(0), _namePtr(0), _isConstant(kFALSE), _localNoInhibitDirty(kFALSE),
+     _myws(0)
 {
   _clientShapeIter = _clientListShape.MakeIterator() ;
   _clientValueIter = _clientListValue.MakeIterator() ;
@@ -114,19 +109,10 @@ RooAbsArg::RooAbsArg() :
 /// The newly created object has no clients or servers and has its
 /// dirty flags set.
 
-RooAbsArg::RooAbsArg(const char *name, const char *title) :
-  TNamed(name,title),
-  _deleteWatch(kFALSE),
-  _valueDirty(kTRUE),
-  _shapeDirty(kTRUE),
-  _operMode(Auto),
-  _fast(kFALSE),
-  _ownedComponents(0),
-  _prohibitServerRedirect(kFALSE),
-  _eocache(0),
-  _namePtr(0),
-  _isConstant(kFALSE),
-  _localNoInhibitDirty(kFALSE)
+RooAbsArg::RooAbsArg(const char *name, const char *title)
+   : TNamed(name, title), _deleteWatch(kFALSE), _valueDirty(kTRUE), _shapeDirty(kTRUE), _operMode(Auto), _fast(kFALSE),
+     _ownedComponents(0), _prohibitServerRedirect(kFALSE), _eocache(0), _namePtr(0), _isConstant(kFALSE),
+     _localNoInhibitDirty(kFALSE), _myws(0)
 {
   _namePtr = (TNamed*) RooNameReg::instance().constPtr(GetName()) ;
 
@@ -139,20 +125,11 @@ RooAbsArg::RooAbsArg(const char *name, const char *title) :
 /// Copy constructor transfers all boolean and string properties of the original
 /// object. Transient properties and client-server links are not copied
 
-RooAbsArg::RooAbsArg(const RooAbsArg& other, const char* name)
-  : TNamed(other.GetName(),other.GetTitle()),
-    RooPrintable(other),
-    _boolAttrib(other._boolAttrib),
-    _stringAttrib(other._stringAttrib),
-    _deleteWatch(other._deleteWatch),
-    _operMode(Auto),
-    _fast(kFALSE),
-    _ownedComponents(0),
-    _prohibitServerRedirect(kFALSE),
-    _eocache(other._eocache),
-    _namePtr(other._namePtr),
-    _isConstant(other._isConstant),
-    _localNoInhibitDirty(other._localNoInhibitDirty)
+RooAbsArg::RooAbsArg(const RooAbsArg &other, const char *name)
+   : TNamed(other.GetName(), other.GetTitle()), RooPrintable(other), _boolAttrib(other._boolAttrib),
+     _stringAttrib(other._stringAttrib), _deleteWatch(other._deleteWatch), _operMode(Auto), _fast(kFALSE),
+     _ownedComponents(0), _prohibitServerRedirect(kFALSE), _eocache(other._eocache), _namePtr(other._namePtr),
+     _isConstant(other._isConstant), _localNoInhibitDirty(other._localNoInhibitDirty), _myws(0)
 {
   // Use name in argument, if supplied
   if (name) {
@@ -610,12 +587,31 @@ void RooAbsArg::addParameters(RooArgSet& params, const RooArgSet* nset,Bool_t st
 RooArgSet* RooAbsArg::getParameters(const RooArgSet* nset, Bool_t stripDisconnected) const
 {
 
-  RooArgSet* parList = new RooArgSet("parameters");
+   // Check for cached parameter set
+   if (_myws) {
+      RooNameSet nsetObs(nset ? *nset : RooArgSet());
+      const RooArgSet *paramSet = _myws->set(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.content()));
+      if (paramSet) {
+         // cout << " restoring parameter cache from workspace for pdf " << IsA()->GetName() << "::" << GetName() <<
+         // endl ;
+         return new RooArgSet(*paramSet);
+      }
+   }
 
-  addParameters(*parList, nset, stripDisconnected);
+   RooArgSet *parList = new RooArgSet("parameters");
 
-  parList->sort();
-  return parList;
+   addParameters(*parList, nset, stripDisconnected);
+
+   parList->sort();
+
+   // Cache parameter set
+   if (_myws && parList->getSize() > 10) {
+      RooNameSet nsetObs(nset ? *nset : RooArgSet());
+      _myws->defineSetInternal(Form("CACHE_PARAMS_OF_PDF_%s_FOR_OBS_%s", GetName(), nsetObs.content()), *parList);
+      // cout << " caching parameters in workspace for pdf " << IsA()->GetName() << "::" << GetName() << endl ;
+   }
+
+   return parList;
 }
 
 
@@ -1266,7 +1262,7 @@ RooAbsProxy* RooAbsArg::getProxy(Int_t index) const
 
 Int_t RooAbsArg::numProxies() const
 {
-  return _proxyList.GetEntries() ;
+   return _proxyList.GetEntriesFast();
 }
 
 
@@ -2450,8 +2446,10 @@ void RooAbsArg::ioStreamerPass2()
   if (iter != _ioEvoList.end()) {
 
     // Transfer contents of saved TRefArray to RooRefArray now
-    for (int i=0 ; i < iter->second->GetEntries() ; i++) {
-      _proxyList.Add(iter->second->At(i)) ;
+    if (!_proxyList.GetEntriesFast())
+       _proxyList.Expand(iter->second->GetEntriesFast());
+    for (int i = 0; i < iter->second->GetEntriesFast(); i++) {
+       _proxyList.Add(iter->second->At(i));
     }
     // Delete TRefArray and remove from list
     delete iter->second ;
@@ -2478,8 +2476,10 @@ void RooAbsArg::ioStreamerPass2Finalize()
   while (iter != _ioEvoList.end()) {
     
     // Transfer contents of saved TRefArray to RooRefArray now
-    for (int i=0 ; i < iter->second->GetEntries() ; i++) {
-      iter->first->_proxyList.Add(iter->second->At(i)) ;
+    if (!iter->first->_proxyList.GetEntriesFast())
+       iter->first->_proxyList.Expand(iter->second->GetEntriesFast());
+    for (int i = 0; i < iter->second->GetEntriesFast(); i++) {
+       iter->first->_proxyList.Add(iter->second->At(i));
     }
 
     // Save iterator position for deletion after increment
@@ -2519,7 +2519,7 @@ void RooRefArray::Streamer(TBuffer &R__b)
      R__c = R__b.WriteVersion(RooRefArray::IsA(), kTRUE);
 
      // Make a temporary refArray and write that to the streamer
-     TRefArray refArray ;
+     TRefArray refArray(GetEntriesFast());
      TIterator* iter = MakeIterator() ; 
      TObject* tmpObj ; while ((tmpObj = iter->Next())) { 
        refArray.Add(tmpObj) ; 

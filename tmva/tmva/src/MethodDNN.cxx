@@ -676,7 +676,6 @@ void TMVA::MethodDNN::Train()
 
    size_t nValidationSamples = GetNumValidationSamples();
    size_t nTrainingSamples = GetEventCollection(Types::kTraining).size() - nValidationSamples;
-   size_t nTestSamples = nValidationSamples;
 
    const std::vector<TMVA::Event *> &allData = GetEventCollection(Types::kTraining);
    const std::vector<TMVA::Event *> eventCollectionTraining{allData.begin(), allData.begin() + nTrainingSamples};

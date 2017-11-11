@@ -23,7 +23,7 @@
 #include <future>
 #include <random>
 
-using namespace Experimental;
+using namespace ROOT;
 
 double wasteCPUTime(std::mt19937 &gen)
 {

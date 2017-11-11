@@ -18,7 +18,7 @@ TREEDS       := $(call stripsrc,$(MODDIRS)/G__Tree.cxx)
 TREEDO       := $(TREEDS:.cxx=.o)
 TREEDH       := $(TREEDS:.cxx=.h)
 
-TREEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h))
+TREEH        := $(filter-out $(MODDIRI)/LinkDef%,$(wildcard $(MODDIRI)/*.h $(MODDIRI)/ROOT/*.hxx))
 TREES        := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 TREEO        := $(call stripsrc,$(TREES:.cxx=.o))
 
@@ -28,7 +28,7 @@ TREELIB      := $(LPATH)/libTree.$(SOEXT)
 TREEMAP      := $(TREELIB:.$(SOEXT)=.rootmap)
 
 # used in the main Makefile
-TREEH_REL   := $(patsubst $(MODDIRI)/%.h,include/%.h,$(TREEH))
+TREEH_REL   := $(patsubst $(MODDIRI)/%,include/%,$(TREEH))
 ALLHDRS     += $(TREEH_REL)
 ALLLIBS     += $(TREELIB)
 ALLMAPS     += $(TREEMAP)
@@ -48,6 +48,10 @@ INCLUDEFILES += $(TREEDEP)
 .PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
 
 include/%.h:    $(TREEDIRI)/%.h
+		cp $< $@
+
+include/%.hxx:  $(TREEDIRI)/%.hxx
+		mkdir -p include/ROOT
 		cp $< $@
 
 $(TREELIB):     $(TREEO) $(TREEDO) $(ORDER_) $(MAINLIBS) $(TREELIBDEP)

@@ -38,7 +38,6 @@ void fitpanel0() {
 
 
   auto panel = std::make_shared<ROOT::Experimental::TFitPanel>("FitPanel Title");
-  // panel->Show("opera");
   panel->Show();
 
   // Register the histogram with ROOT: now it lives even after draw() ends.
@@ -57,9 +56,10 @@ void fitpanel() {
 
    using namespace ROOT;
 
+   // TODO - also keep axis correctly in the help
+   auto xaxis = std::make_shared<Experimental::TAxisConfig>(10, 0., 10.);
    // Create the histogram.
-   Experimental::TAxisConfig xaxis(10, 0., 10.);
-   auto pHist = std::make_shared<Experimental::TH1D>(xaxis);
+   auto pHist = std::make_shared<Experimental::TH1D>(*xaxis.get());
 
    // Fill a few points.
    pHist->Fill(1);
@@ -70,14 +70,19 @@ void fitpanel() {
    auto canvas = Experimental::TCanvas::Create("Canvas Title");
    canvas->Draw(pHist).SetLineColor(Experimental::TColor::kRed);
 
-   // canvas->Show("opera");
    canvas->Show();
-
    canvas->Update(); // need to ensure canvas is drawn
 
    auto panel = std::make_shared<ROOT::Experimental::TFitPanel>("FitPanel Title");
 
    Experimental::TDirectory::Heap().Add("fitpanel", panel);
+   Experimental::TDirectory::Heap().Add("firsthisto", pHist);
+   Experimental::TDirectory::Heap().Add("firstaxis", xaxis);
+
+   // TODO: how combine there methods together
+   // here std::shread_ptr<> on both sides
+
+   panel->UseCanvas(canvas);
 
    canvas->AddPanel(panel);
 }

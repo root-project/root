@@ -9,21 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTubeEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/tube_pic.gif">
+/** \class TGeoTubeEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoTube.
+
+\image html geom_tube_pic.png
+
+\image html geom_tube_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/tube_ed.jpg">
-*/
-//End_Html
 
 #include "TGeoTubeEditor.h"
 #include "TGeoTabManager.h"
@@ -293,21 +288,16 @@ void TGeoTubeEditor::DoDz()
    if (!IsDelayed()) DoApply();
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTubeSegEditor                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/tubs_pic.gif">
+/** \class TGeoTubeSegEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoTubeSeg.
+
+\image html geom_tubs_pic.png
+
+\image html geom_tubs_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/tubs_ed.jpg">
-*/
-//End_Html
 
 ClassImp(TGeoTubeSegEditor);
 
@@ -529,21 +519,16 @@ void TGeoTubeSegEditor::DoUndo()
    fApply->SetEnabled(kFALSE);
 }
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoCtubEditor                                                   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/ctub_pic.gif">
+/** \class TGeoCtubEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoCtub.
+
+\image html geom_ctub_pic.png
+
+\image html geom_ctub_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/ctub_ed.jpg">
-*/
-//End_Html
 
 ClassImp(TGeoCtubEditor);
 

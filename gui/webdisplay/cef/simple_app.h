@@ -7,6 +7,9 @@
 
 #include "include/cef_app.h"
 
+#include "gui_handler.h"
+#include "osr_handler.h"
+
 class THttpServer;
 
 // Implement application-level callbacks for the browser process.
@@ -15,9 +18,17 @@ protected:
    std::string fUrl;     ///<! first URL to open
    std::string fCefMain; ///!< executable used for extra processed
    bool fBatch;          ///!< indicate batch mode
+   CefRect fRect;        ///!< original width
+
+   CefRefPtr<OsrHandler> fOsrHandler; ///!< batch-mode handler
+   bool fUseViewes;                   ///!< is viewes are used
+   CefRefPtr<GuiHandler> fGuiHandler; ///!< normal handler
+
 public:
    SimpleApp(const std::string &url, const std::string &cef_main, THttpServer *server = 0, bool isbatch = false);
    virtual ~SimpleApp();
+
+   void SetRect(unsigned width, unsigned height) { fRect.Set(0, 0, width, height); }
 
    // CefApp methods:
    virtual CefRefPtr<CefBrowserProcessHandler> GetBrowserProcessHandler() OVERRIDE { return this; }
@@ -28,10 +39,12 @@ public:
    // CefBrowserProcessHandler methods:
    virtual void OnContextInitialized() OVERRIDE;
 
-   virtual void OnBeforeCommandLineProcessing(const CefString &process_type,
-                                              CefRefPtr<CefCommandLine> command_line) OVERRIDE;
+   virtual void
+   OnBeforeCommandLineProcessing(const CefString &process_type, CefRefPtr<CefCommandLine> command_line) OVERRIDE;
 
    virtual void OnBeforeChildProcessLaunch(CefRefPtr<CefCommandLine> command_line) OVERRIDE;
+
+   void StartWindow(const std::string &url, bool batch, CefRect &rect);
 
    // CefRenderProcessHandler methods
    // virtual void OnContextCreated(CefRefPtr<CefBrowser> browser, CefRefPtr<CefFrame> frame,

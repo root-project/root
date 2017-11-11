@@ -20,20 +20,19 @@
 #include "AMDGPUDisassembler.h"
 #include "AMDGPU.h"
 #include "AMDGPURegisterInfo.h"
+#include "MCTargetDesc/AMDGPUMCTargetDesc.h"
 #include "SIDefines.h"
 #include "Utils/AMDGPUBaseInfo.h"
-#include "MCTargetDesc/AMDGPUMCTargetDesc.h"
 
+#include "llvm/BinaryFormat/ELF.h"
 #include "llvm/MC/MCContext.h"
 #include "llvm/MC/MCFixedLenDisassembler.h"
 #include "llvm/MC/MCInst.h"
 #include "llvm/MC/MCInstrDesc.h"
 #include "llvm/MC/MCSubtargetInfo.h"
-#include "llvm/Support/ELF.h"
-#include "llvm/Support/Endian.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Support/Endian.h"
 #include "llvm/Support/TargetRegistry.h"
-
 
 using namespace llvm;
 
@@ -50,6 +49,17 @@ addOperand(MCInst &Inst, const MCOperand& Opnd) {
     MCDisassembler::SoftFail;
 }
 
+static int insertNamedMCOperand(MCInst &MI, const MCOperand &Op,
+                                uint16_t NameIdx) {
+  int OpIdx = AMDGPU::getNamedOperandIdx(MI.getOpcode(), NameIdx);
+  if (OpIdx != -1) {
+    auto I = MI.begin();
+    std::advance(I, OpIdx);
+    MI.insert(I, Op);
+  }
+  return OpIdx;
+}
+
 static DecodeStatus decodeSoppBrTarget(MCInst &Inst, unsigned Imm,
                                        uint64_t Addr, const void *Decoder) {
   auto DAsm = static_cast<const AMDGPUDisassembler*>(Decoder);
@@ -62,32 +72,34 @@ static DecodeStatus decodeSoppBrTarget(MCInst &Inst, unsigned Imm,
   return addOperand(Inst, MCOperand::createImm(Imm));
 }
 
-#define DECODE_OPERAND2(RegClass, DecName) \
-static DecodeStatus Decode##RegClass##RegisterClass(MCInst &Inst, \
-                                                    unsigned Imm, \
-                                                    uint64_t /*Addr*/, \
-                                                    const void *Decoder) { \
+#define DECODE_OPERAND(StaticDecoderName, DecoderName) \
+static DecodeStatus StaticDecoderName(MCInst &Inst, \
+                                       unsigned Imm, \
+                                       uint64_t /*Addr*/, \
+                                       const void *Decoder) { \
   auto DAsm = static_cast<const AMDGPUDisassembler*>(Decoder); \
-  return addOperand(Inst, DAsm->decodeOperand_##DecName(Imm)); \
+  return addOperand(Inst, DAsm->DecoderName(Imm)); \
 }
 
-#define DECODE_OPERAND(RegClass) DECODE_OPERAND2(RegClass, RegClass)
+#define DECODE_OPERAND_REG(RegClass) \
+DECODE_OPERAND(Decode##RegClass##RegisterClass, decodeOperand_##RegClass)
 
-DECODE_OPERAND(VGPR_32)
-DECODE_OPERAND(VS_32)
-DECODE_OPERAND(VS_64)
+DECODE_OPERAND_REG(VGPR_32)
+DECODE_OPERAND_REG(VS_32)
+DECODE_OPERAND_REG(VS_64)
+DECODE_OPERAND_REG(VS_128)
 
-DECODE_OPERAND(VReg_64)
-DECODE_OPERAND(VReg_96)
-DECODE_OPERAND(VReg_128)
+DECODE_OPERAND_REG(VReg_64)
+DECODE_OPERAND_REG(VReg_96)
+DECODE_OPERAND_REG(VReg_128)
 
-DECODE_OPERAND(SReg_32)
-DECODE_OPERAND(SReg_32_XM0_XEXEC)
-DECODE_OPERAND(SReg_64)
-DECODE_OPERAND(SReg_64_XEXEC)
-DECODE_OPERAND(SReg_128)
-DECODE_OPERAND(SReg_256)
-DECODE_OPERAND(SReg_512)
+DECODE_OPERAND_REG(SReg_32)
+DECODE_OPERAND_REG(SReg_32_XM0_XEXEC)
+DECODE_OPERAND_REG(SReg_64)
+DECODE_OPERAND_REG(SReg_64_XEXEC)
+DECODE_OPERAND_REG(SReg_128)
+DECODE_OPERAND_REG(SReg_256)
+DECODE_OPERAND_REG(SReg_512)
 
 
 static DecodeStatus decodeOperand_VSrc16(MCInst &Inst,
@@ -105,6 +117,13 @@ static DecodeStatus decodeOperand_VSrcV216(MCInst &Inst,
   auto DAsm = static_cast<const AMDGPUDisassembler*>(Decoder);
   return addOperand(Inst, DAsm->decodeOperand_VSrcV216(Imm));
 }
+
+#define DECODE_SDWA(DecName) \
+DECODE_OPERAND(decodeSDWA##DecName, decodeSDWA##DecName)
+
+DECODE_SDWA(Src32)
+DECODE_SDWA(Src16)
+DECODE_SDWA(VopcDst)
 
 #include "AMDGPUGenDisassemblerTables.inc"
 
@@ -126,6 +145,7 @@ DecodeStatus AMDGPUDisassembler::tryDecodeInst(const uint8_t* Table,
   assert(MI.getOpcode() == 0);
   assert(MI.getNumOperands() == 0);
   MCInst TmpInst;
+  HasLiteral = false;
   const auto SavedBytes = Bytes;
   if (decodeInstruction(Table, TmpInst, Inst, Address, this, STI)) {
     MI = TmpInst;
@@ -141,6 +161,7 @@ DecodeStatus AMDGPUDisassembler::getInstruction(MCInst &MI, uint64_t &Size,
                                                 raw_ostream &WS,
                                                 raw_ostream &CS) const {
   CommentStream = &CS;
+  bool IsSDWA = false;
 
   // ToDo: AMDGPUDisassembler supports only VI ISA.
   if (!STI.getFeatureBits()[AMDGPU::FeatureGCN3Encoding])
@@ -162,7 +183,10 @@ DecodeStatus AMDGPUDisassembler::getInstruction(MCInst &MI, uint64_t &Size,
       if (Res) break;
 
       Res = tryDecodeInst(DecoderTableSDWA64, MI, QW, Address);
-      if (Res) break;
+      if (Res) { IsSDWA = true;  break; }
+
+      Res = tryDecodeInst(DecoderTableSDWA964, MI, QW, Address);
+      if (Res) { IsSDWA = true;  break; }
     }
 
     // Reinitialize Bytes as DPP64 could have eaten too much
@@ -189,15 +213,34 @@ DecodeStatus AMDGPUDisassembler::getInstruction(MCInst &MI, uint64_t &Size,
               MI.getOpcode() == AMDGPU::V_MAC_F32_e64_si ||
               MI.getOpcode() == AMDGPU::V_MAC_F16_e64_vi)) {
     // Insert dummy unused src2_modifiers.
-    int Src2ModIdx = AMDGPU::getNamedOperandIdx(MI.getOpcode(),
-                                                AMDGPU::OpName::src2_modifiers);
-    auto I = MI.begin();
-    std::advance(I, Src2ModIdx);
-    MI.insert(I, MCOperand::createImm(0));
+    insertNamedMCOperand(MI, MCOperand::createImm(0),
+                         AMDGPU::OpName::src2_modifiers);
   }
+
+  if (Res && IsSDWA)
+    Res = convertSDWAInst(MI);
 
   Size = Res ? (MaxInstBytesNum - Bytes.size()) : 0;
   return Res;
+}
+
+DecodeStatus AMDGPUDisassembler::convertSDWAInst(MCInst &MI) const {
+  if (STI.getFeatureBits()[AMDGPU::FeatureGFX9]) {
+    if (AMDGPU::getNamedOperandIdx(MI.getOpcode(), AMDGPU::OpName::sdst) != -1)
+      // VOPC - insert clamp
+      insertNamedMCOperand(MI, MCOperand::createImm(0), AMDGPU::OpName::clamp);
+  } else if (STI.getFeatureBits()[AMDGPU::FeatureVolcanicIslands]) {
+    int SDst = AMDGPU::getNamedOperandIdx(MI.getOpcode(), AMDGPU::OpName::sdst);
+    if (SDst != -1) {
+      // VOPC - insert VCC register as sdst
+      insertNamedMCOperand(MI, MCOperand::createReg(AMDGPU::VCC),
+                           AMDGPU::OpName::sdst);
+    } else {
+      // VOP1/2 - insert omod if present in instruction
+      insertNamedMCOperand(MI, MCOperand::createImm(0), AMDGPU::OpName::omod);
+    }
+  }
+  return MCDisassembler::Success;
 }
 
 const char* AMDGPUDisassembler::getRegClassName(unsigned RegClassID) const {
@@ -276,6 +319,10 @@ MCOperand AMDGPUDisassembler::decodeOperand_VS_64(unsigned Val) const {
   return decodeSrcOp(OPW64, Val);
 }
 
+MCOperand AMDGPUDisassembler::decodeOperand_VS_128(unsigned Val) const {
+  return decodeSrcOp(OPW128, Val);
+}
+
 MCOperand AMDGPUDisassembler::decodeOperand_VSrc16(unsigned Val) const {
   return decodeSrcOp(OPW16, Val);
 }
@@ -343,10 +390,15 @@ MCOperand AMDGPUDisassembler::decodeLiteralConstant() const {
   // For now all literal constants are supposed to be unsigned integer
   // ToDo: deal with signed/unsigned 64-bit integer constants
   // ToDo: deal with float/double constants
-  if (Bytes.size() < 4)
-    return errOperand(0, "cannot read literal, inst bytes left " +
-                         Twine(Bytes.size()));
-  return MCOperand::createImm(eatBytes<uint32_t>(Bytes));
+  if (!HasLiteral) {
+    if (Bytes.size() < 4) {
+      return errOperand(0, "cannot read literal, inst bytes left " +
+                        Twine(Bytes.size()));
+    }
+    HasLiteral = true;
+    Literal = eatBytes<uint32_t>(Bytes);
+  }
+  return MCOperand::createImm(Literal);
 }
 
 MCOperand AMDGPUDisassembler::decodeIntImmed(unsigned Imm) {
@@ -508,8 +560,6 @@ MCOperand AMDGPUDisassembler::decodeSrcOp(const OpWidthTy Width, unsigned Val) c
     return createSRegOperand(getTtmpClassId(Width), Val - TTMP_MIN);
   }
 
-  assert(Width == OPW16 || Width == OPW32 || Width == OPW64);
-
   if (INLINE_INTEGER_C_MIN <= Val && Val <= INLINE_INTEGER_C_MAX)
     return decodeIntImmed(Val);
 
@@ -574,6 +624,57 @@ MCOperand AMDGPUDisassembler::decodeSpecialReg64(unsigned Val) const {
   default: break;
   }
   return errOperand(Val, "unknown operand encoding " + Twine(Val));
+}
+
+MCOperand AMDGPUDisassembler::decodeSDWASrc(const OpWidthTy Width,
+                                            unsigned Val) const {
+  using namespace AMDGPU::SDWA;
+
+  if (STI.getFeatureBits()[AMDGPU::FeatureGFX9]) {
+    // XXX: static_cast<int> is needed to avoid stupid warning:
+    // compare with unsigned is always true
+    if (SDWA9EncValues::SRC_VGPR_MIN <= static_cast<int>(Val) &&
+        Val <= SDWA9EncValues::SRC_VGPR_MAX) {
+      return createRegOperand(getVgprClassId(Width),
+                              Val - SDWA9EncValues::SRC_VGPR_MIN);
+    }
+    if (SDWA9EncValues::SRC_SGPR_MIN <= Val &&
+        Val <= SDWA9EncValues::SRC_SGPR_MAX) {
+      return createSRegOperand(getSgprClassId(Width),
+                               Val - SDWA9EncValues::SRC_SGPR_MIN);
+    }
+
+    return decodeSpecialReg32(Val - SDWA9EncValues::SRC_SGPR_MIN);
+  } else if (STI.getFeatureBits()[AMDGPU::FeatureVolcanicIslands]) {
+    return createRegOperand(getVgprClassId(Width), Val);
+  }
+  llvm_unreachable("unsupported target");
+}
+
+MCOperand AMDGPUDisassembler::decodeSDWASrc16(unsigned Val) const {
+  return decodeSDWASrc(OPW16, Val);
+}
+
+MCOperand AMDGPUDisassembler::decodeSDWASrc32(unsigned Val) const {
+  return decodeSDWASrc(OPW32, Val);
+}
+
+
+MCOperand AMDGPUDisassembler::decodeSDWAVopcDst(unsigned Val) const {
+  using namespace AMDGPU::SDWA;
+
+  assert(STI.getFeatureBits()[AMDGPU::FeatureGFX9] &&
+         "SDWAVopcDst should be present only on GFX9");
+  if (Val & SDWA9EncValues::VOPC_DST_VCC_MASK) {
+    Val &= SDWA9EncValues::VOPC_DST_SGPR_MASK;
+    if (Val > AMDGPU::EncValues::SGPR_MAX) {
+      return decodeSpecialReg64(Val);
+    } else {
+      return createSRegOperand(getSgprClassId(OPW64), Val);
+    }
+  } else {
+    return createRegOperand(AMDGPU::VCC);
+  }
 }
 
 //===----------------------------------------------------------------------===//

@@ -4,14 +4,6 @@
 #ifndef ROOT_TGeoGedFrame
 #define ROOT_TGeoGedFrame
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoGedFrame                                                        //
-//                                                                      //
-//  Common base class for geombuilder editors.                          //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGedFrame.h"
 
 class TGTab;

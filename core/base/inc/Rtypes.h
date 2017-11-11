@@ -226,7 +226,6 @@ template <typename T>
 class ClassDefGenerateInitInstanceLocalInjector:
    public TCDGIILIBase {
       static atomic_TClass_ptr fgIsA;
-      static std::string fgName;
       static ::ROOT::TGenericClassInfo *fgGenericInfo;
    public:
       static void *New(void *p) { return p ? new(p) T : new T; };
@@ -252,16 +251,15 @@ class ClassDefGenerateInitInstanceLocalInjector:
       static TClass *Dictionary() { fgIsA = fgGenericInfo->GetClass(); return fgIsA; }
       static TClass *Class() { SetfgIsA(fgIsA, &Dictionary); return fgIsA; }
       static const char* Name() {
-         if (fgName.empty())
-            SetName(TTypeNameExtraction<T>::Get(), fgName);
-         return fgName.c_str();
+         static std::string gName;
+         if (gName.empty())
+            SetName(TTypeNameExtraction<T>::Get(), gName);
+         return gName.c_str();
       }
    };
 
    template<typename T>
    atomic_TClass_ptr ClassDefGenerateInitInstanceLocalInjector<T>::fgIsA{};
-   template<typename T>
-   std::string ClassDefGenerateInitInstanceLocalInjector<T>::fgName{};
    template<typename T>
    ::ROOT::TGenericClassInfo *ClassDefGenerateInitInstanceLocalInjector<T>::fgGenericInfo {
       ClassDefGenerateInitInstanceLocalInjector<T>::GenerateInitInstanceLocal()
@@ -295,7 +293,7 @@ private:                                                                        
          return false;                                                                                          \
       } else if (recurseBlocker++ == 0) {                                                                       \
          ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency =                         \
-            ::ROOT::Internal::HasConsistentHashMember(Class_Name()) ||                                          \
+            ::ROOT::Internal::HasConsistentHashMember(_QUOTE_(name)) ||                                         \
             ::ROOT::Internal::HasConsistentHashMember(*IsA());                                                  \
          ++recurseBlocker;                                                                                      \
          return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;                   \
@@ -330,11 +328,11 @@ public: \
    static const char *ImplFileName() { return 0; }                                                               \
    static const char *Class_Name()                                                                               \
    {                                                                                                             \
-      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name();               \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name();                          \
    }                                                                                                             \
    static TClass *Dictionary()                                                                                   \
    {                                                                                                             \
-      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();         \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();                    \
    }                                                                                                             \
    static TClass *Class() { return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); } \
    virtual_keyword void Streamer(TBuffer &R__b) overrd { ::ROOT::Internal::DefaultStreamer(R__b, name::Class(), this); }
@@ -468,7 +466,11 @@ namespace ROOT {                                                     \
 // prevent compilation errors with complex diagnostics due to
 //   TString BAD_DO_NOT_TRY = "lib";
 //   R__LOAD_LIBRARY(BAD_DO_NOT_TRY + "BAD_DO_NOT_TRY.so") // ERROR!
+#ifdef _MSC_VER // Visual Studio
+#define _R_PragmaStr(x) __pragma(#x)
+#else
 #define _R_PragmaStr(x) _Pragma(#x)
+#endif
 #ifdef __CLING__
 # define R__LOAD_LIBRARY(LIBRARY) _R_PragmaStr(cling load ( #LIBRARY ))
 # define R__ADD_INCLUDE_PATH(PATH) _R_PragmaStr(cling add_include_path ( #PATH ))

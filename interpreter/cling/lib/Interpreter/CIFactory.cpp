@@ -709,7 +709,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       PPOpts.addMacroDef("__CLING__CXX14");
 
     if (CI->getDiagnostics().hasErrorOccurred()) {
-      cling::errs() << "Compiler error to early in initialization.\n";
+      cling::errs() << "Compiler error too early in initialization.\n";
       return false;
     }
 
@@ -1074,8 +1074,9 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     }
 
     // With C++ modules, we now attach the consumers that will handle the
-    // generation of the PCM file itself.
-    if (COpts.CxxModules) {
+    // generation of the PCM file itself in case we want to generate
+    // a C++ module with the current interpreter instance.
+    if (COpts.CxxModules && !COpts.ModuleName.empty()) {
       // Code below from the (private) code in the GenerateModuleAction class.
       llvm::SmallVector<char, 256> Output;
       llvm::sys::path::append(Output, COpts.CachePath,
@@ -1133,7 +1134,10 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     CGOpts.CXXCtorDtorAliases = 1;
 #endif
     // Reduce amount of emitted symbols by optimizing more.
-    CGOpts.OptimizationLevel = 2;
+    // FIXME: We have a bug when we switch to -O2, for some cases it takes
+    // several minutes to optimize, while the same code compiled by clang -O2
+    // takes only a few seconds.
+    CGOpts.OptimizationLevel = 0;
     // Taken from a -O2 run of clang:
     CGOpts.DiscardValueNames = 1;
     CGOpts.OmitLeafFramePointer = 1;

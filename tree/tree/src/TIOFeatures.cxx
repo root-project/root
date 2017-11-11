@@ -189,6 +189,35 @@ bool TIOFeatures::Set(const std::string &value)
 }
 
 ////////////////////////////////////////////////////////////////////////////
+/// \brief Print a human-readable representation of the TIOFeatures to stdout
+///
+/// Prints a string with the names of all enabled IO features.
+void TIOFeatures::Print() const
+{
+   TClass *cl = TBasket::Class();
+   if (cl == nullptr) {
+      Error("Print", "Could not retrieve TBasket's class");
+      return;
+   }
+   TEnum *eIOBits = static_cast<TEnum *>(cl->GetListOfEnums()->FindObject("EIOBits"));
+   if (eIOBits == nullptr) {
+      Error("Print", "Could not locate TBasket::EIOBits enum");
+      return;
+   }
+   std::stringstream ss;
+   bool hasFeatures = false;
+   ss << "TIOFeatures{";
+   for (auto constant : ROOT::Detail::TRangeStaticCast<TEnumConstant>(eIOBits->GetConstants())) {
+      if ((constant->GetValue() & fIOBits) == constant->GetValue()) {
+         ss << (hasFeatures ? ", " : "") << constant->GetName();
+         hasFeatures = true;
+      }
+   }
+   ss << "}";
+   Printf("%s", ss.str().c_str());
+}
+
+////////////////////////////////////////////////////////////////////////////
 /// \brief Test to see if a given feature is set
 /// \param[in] enum_bits The specific feature to test.
 ///

@@ -46,8 +46,8 @@ TF3::TF3(): TF2()
 ///
 /// See TFormula constructor for explanation of the formula syntax.
 
-TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax)
-      :TF2(name,formula,xmin,xmax,ymax,ymin)
+TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Double_t ymin, Double_t ymax, Double_t zmin, Double_t zmax, Option_t * opt)
+   :TF2(name,formula,xmin,xmax,ymax,ymin,opt)
 {
    fZmin   = zmin;
    fZmax   = zmax;

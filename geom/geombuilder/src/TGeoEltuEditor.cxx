@@ -9,21 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoEltuEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/eltu_pic.gif">
+/** \class TGeoEltuEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoEltu.
+
+\image html geom_eltu_pic.png
+
+\image html geom_eltu_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/eltu_ed.jpg">
-*/
-//End_Html
 
 #include "TGeoEltuEditor.h"
 #include "TGeoTabManager.h"
@@ -100,7 +95,7 @@ TGeoEltuEditor::TGeoEltuEditor(const TGWindow *p, Int_t width,
    fEDz->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEDz->Resize(100, fEDz->GetDefaultHeight());
    nef = (TGTextEntry*)fEDz->GetNumberEntry();
-   nef->SetToolTipText("Enter the half-lenth in Z");
+   nef->SetToolTipText("Enter the half-length in Z");
    fEDz->Associate(this);
    f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));

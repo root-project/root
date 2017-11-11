@@ -47,3 +47,8 @@ module "sys_types.h" [system] {
   export *
   header "sys/types.h"
 }
+
+module "stdlib.h" [system] {
+  export *
+  header "stdlib.h"
+}

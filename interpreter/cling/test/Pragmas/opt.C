@@ -13,10 +13,10 @@ extern "C" int printf(const char*,...);
 #include "cling/Interpreter/Transaction.h"
 
 gCling->getDefaultOptLevel()
-// CHECK: (int) 2
+// CHECK: (int) 0
 
 (int)gCling->getLatestTransaction()->getCompilationOpts().OptLevel
-// CHECK-NEXT: (int) 2
+// CHECK-NEXT: (int) 0
 
 {
 #pragma cling optimize(0)
@@ -37,16 +37,19 @@ gCling->getDefaultOptLevel()
 // CHECK-NEXT: Transaction OptLevel=2
 
 {
-#pragma cling optimize(0)
+#pragma cling optimize(2)
+// CHECK-NEXT: cling::PHOptLevel: conflicting `#pragma cling optimize` directives: was already set to 2
 #pragma cling optimize(1)
+// CHECK-NEXT: Setting to lower value of 1
+#pragma cling optimize(2)
+// CHECK-NEXT: cling::PHOptLevel: conflicting `#pragma cling optimize` directives: was already set to 1
+// CHECK-NEXT: Ignoring higher value of 2
   printf("Transaction OptLevel=%d\n", (int)gCling->getLatestTransaction()->getCompilationOpts().OptLevel);
 }
-// CHECK-NEXT: cling::PHOptLevel: conflicting `#pragma cling optimize` directives: was already set to 0
-// CHECK-NEXT: Ignoring higher value of 1
-// CHECK-NEXT: Transaction OptLevel=0
+// CHECK-NEXT: Transaction OptLevel=1
 
 .O
-// CHECK-NEXT: Current cling optimization level: 2
+// CHECK-NEXT: Current cling optimization level: 0
 
 // No parenthesis
 {

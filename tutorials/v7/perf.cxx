@@ -24,6 +24,8 @@
 #include <iostream>
 #include <type_traits>
 
+using namespace ROOT;
+
 long createNew(int count)
 {
    long ret = 1;
@@ -45,7 +47,7 @@ long fillNew(int count)
 long fillN(int count)
 {
    Experimental::TH2D hist({{{100, 0., 1.}, {{0., 1., 2., 3., 10.}}}});
-   std::vector<std::array<double, 2>> v(count);
+   std::vector<Experimental::Hist::TCoordArray<2>> v(count);
    for (int i = 0; i < count; ++i)
       v[i] = {0.611, 0.611};
    hist.FillN(v);
@@ -81,7 +83,7 @@ void time(timefunc_t r7, int count, const std::string &name)
 
 void perf()
 {
-   time(createOld, createNew, 1000000, "create 2D hists");
+   time(createNew, 1000000, "create 2D hists");
    time(fillNew, 100000000, "2D fills");
    time(fillBufferedNew, 100000000, "2D fills (buffered)");
 }

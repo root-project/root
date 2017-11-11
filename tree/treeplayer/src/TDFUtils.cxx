@@ -14,6 +14,7 @@
 #include "TBranch.h"
 #include "TBranchElement.h"
 #include "TClassRef.h"
+#include "TFriendElement.h"
 #include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
 
 #include <stdexcept>
@@ -83,9 +84,8 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
             type = "bool";
          if (title[title.size() - 3] == ']') {
             // title has the form "varname[size]/X", i.e. it refers to an array (doesn't matter if size is fixed or not)
-            // TDataFrame reads it as an array_view
-            // TODO change array_view to span when available
-            return "std::array_view<" + type + ">";
+            // TDataFrame reads it as a TArrayBranch
+            return "ROOT::Experimental::TDF::TArrayBranch<" + type + ">";
          } else {
             return type;
          }
@@ -151,6 +151,44 @@ unsigned int GetNSlots()
       nSlots = ROOT::GetImplicitMTPoolSize();
 #endif // R__USE_IMT
    return nSlots;
+}
+
+void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNames, std::set<TTree *> &analysedTrees)
+{
+
+   if (!analysedTrees.insert(&t).second) {
+      return;
+   }
+
+   auto branches = t.GetListOfBranches();
+   if (branches) {
+      for (auto branchObj : *branches) {
+         bNames.insert(branchObj->GetName());
+      }
+   }
+
+   auto friendTrees = t.GetListOfFriends();
+
+   if (!friendTrees)
+      return;
+
+   for (auto friendTreeObj : *friendTrees) {
+      auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
+      GetBranchNamesImpl(*friendTree, bNames, analysedTrees);
+   }
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Get all the branches names, including the ones of the friend trees
+ColumnNames_t GetBranchNames(TTree &t)
+{
+   std::set<std::string> bNamesSet;
+   std::set<TTree *> analysedTrees;
+   GetBranchNamesImpl(t, bNamesSet, analysedTrees);
+   ColumnNames_t bNames;
+   for (auto &bName : bNamesSet)
+      bNames.emplace_back(bName);
+   return bNames;
 }
 
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,

@@ -18,7 +18,7 @@
 
 #include <memory>
 #include <string>
-#include <list>
+// #include <list>
 
 #include "THttpEngine.h"
 
@@ -30,38 +30,40 @@ class THttpWSHandler;
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::TWebWindowsManager
-  Central handle to open web-based windows like Canvas or FitPanel.
-  */
-
-
 class TWebWindowsManager {
 
+   friend class TWebWindow;
+
 private:
+   std::unique_ptr<THttpServer> fServer; ///<!  central communication with the all used displays
+   std::string fAddr;                    ///<!   HTTP address of the server
+   // std::list<std::shared_ptr<TWebWindow>> fDisplays;   ///<! list of existing displays (not used at the moment)
+   unsigned fIdCnt{0}; ///<! counter for identifiers
 
-   THttpServer    *fServer{0};      ///<!  central communication with the all used displays
-   std::string     fAddr{};         ///<!   HTTP address of the server
-   std::list<std::shared_ptr<TWebWindow>> fDisplays{}; ///<! list of existing displays
-   unsigned                      fIdCnt{0};   ///<! counter for identifiers
-
+   /// Creates http server, if required - with real http engine (civetweb)
    bool CreateHttpServer(bool with_http = false);
 
-public:
-   /// Create a temporary TCanvas
-   TWebWindowsManager() = default;
+   /// Release all references to specified window, called from TWebWindow destructor
+   void Unregister(TWebWindow &win);
 
+   /// Show window in specified location, invoked from TWebWindow::Show
+   bool Show(TWebWindow &win, const std::string &where);
+
+public:
+   /// Default constructor
+   TWebWindowsManager();
+
+   /// Destructor
    ~TWebWindowsManager();
 
    /// Returns central instance, which used by standard ROOT widgets like Canvas or FitPanel
    static std::shared_ptr<TWebWindowsManager> &Instance();
 
+   /// Creates new window
    std::shared_ptr<TWebWindow> CreateWindow(bool batch_mode = false);
 
-   void CloseDisplay(TWebWindow *display);
-
-   bool Show(TWebWindow *display, const std::string &where);
-
-   bool WaitFor(WebWindowWaitFunc_t check, double tm);
+   /// Wait until provided function returns non-zero value
+   int WaitFor(WebWindowWaitFunc_t check, double tm);
 };
 
 } // namespace Experimental

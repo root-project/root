@@ -155,5 +155,15 @@ int tdf001_introduction()
    auto entries_sum2 = d.Define("sum2", "b1 + b2").Filter("sum2 > 4.2").Count();
    std::cout << *entries_sum2 << std::endl;
 
+   // It is possible at any moment to read the entry number and the processing
+   // slot number. The latter may change when implicit multithreading is active.
+   // The special columns which provide the entry number and the slot index are
+   // called "tdfentry_" and "tdfslot_" respectively. Their types are an unsigned
+   // 64 bit integer and an unsigned integer.
+   auto printEntrySlot = [](ULong64_t iEntry, unsigned int slot) {
+      std::cout << "Entry: " << iEntry << " Slot: " << slot << std::endl;
+   };
+   d.Foreach(printEntrySlot, {"tdfentry_", "tdfslot_"});
+
    return 0;
 }

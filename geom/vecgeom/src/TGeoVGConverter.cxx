@@ -8,9 +8,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//______________________________________________________________________________
-// TGeoVGConverter - Geometry converter to VecGeom
-//______________________________________________________________________________
+/** \class TGeoVGConverter
+\ingroup Geometry_classes
+
+Geometry converter to VecGeom
+*/
 
 #include "TGeoVGConverter.h"
 #include "TGeoVGShape.h"
@@ -18,8 +20,7 @@
 ClassImp(TGeoVGConverter);
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Geometry converter default constructor*-*-*-*-*-*-*-*-*
-///*-*                  ====================================
+/// Default constructor.
 
 TGeoVGConverter::TGeoVGConverter(TGeoManager *manager) : TVirtualGeoConverter(manager)
 {
@@ -27,19 +28,18 @@ TGeoVGConverter::TGeoVGConverter(TGeoManager *manager) : TVirtualGeoConverter(ma
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Geometry converter default destructor*-*-*-*-*-*-*-*-*
-///*-*                  ===================================
+/// Default destructor.
 
 TGeoVGConverter::~TGeoVGConverter()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Main geometry convertion method *-*-*-*-*-*-*-*-*
-///*-*                  ===================================
+/// Main geometry conversion method.
+/// Convert all geometry shapes connected to volumes to VecGeom shapes
+
 void TGeoVGConverter::ConvertGeometry()
 {
-// Convert all geometry shapes connected to volumes to VecGeom shapes
    // First convert the top volume
    TGeoVolume *top = fGeom->GetMasterVolume();
    TGeoVGShape *vgshape = nullptr;

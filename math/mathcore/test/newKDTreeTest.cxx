@@ -254,7 +254,6 @@ bool CheckNearestNeighborSearches(const ROOT::Math::KDTree<_DataPoint>* pTree,co
 
    std::vector<std::pair<const _DataPoint*,double> > vFoundNeighbors;
    std::vector<std::pair<const _DataPoint*,double> > vFoundNeighborsCheck;
-   typename std::vector<std::pair<const _DataPoint*,double> >::iterator nit;
 
    pTree->GetClosestPoints(test,nNeighbors,vFoundNeighbors);
    fDist = vFoundNeighbors.back().second;

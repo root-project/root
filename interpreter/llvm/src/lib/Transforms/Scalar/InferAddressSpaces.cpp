@@ -89,7 +89,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "llvm/Transforms/Scalar.h"
 #include "llvm/ADT/DenseSet.h"
 #include "llvm/ADT/Optional.h"
 #include "llvm/ADT/SetVector.h"
@@ -100,6 +99,7 @@
 #include "llvm/IR/Operator.h"
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/raw_ostream.h"
+#include "llvm/Transforms/Scalar.h"
 #include "llvm/Transforms/Utils/Local.h"
 #include "llvm/Transforms/Utils/ValueMapper.h"
 
@@ -232,7 +232,7 @@ bool InferAddressSpaces::rewriteIntrinsicOperands(IntrinsicInst *II,
   case Intrinsic::amdgcn_atomic_inc:
   case Intrinsic::amdgcn_atomic_dec:{
     const ConstantInt *IsVolatile = dyn_cast<ConstantInt>(II->getArgOperand(4));
-    if (!IsVolatile || !IsVolatile->isNullValue())
+    if (!IsVolatile || !IsVolatile->isZero())
       return false;
 
     LLVM_FALLTHROUGH;
@@ -358,7 +358,8 @@ InferAddressSpaces::collectFlatAddressExpressions(Function &F) const {
     // If the operands of the expression on the top are already explored,
     // adds that expression to the resultant postorder.
     if (PostorderStack.back().second) {
-      Postorder.push_back(TopVal);
+      if (TopVal->getType()->getPointerAddressSpace() == FlatAddrSpace)
+        Postorder.push_back(TopVal);
       PostorderStack.pop_back();
       continue;
     }
@@ -500,6 +501,7 @@ static Value *cloneConstantExprWithNewAddressSpace(
   }
 
   // Computes the operands of the new constant expression.
+  bool IsNew = false;
   SmallVector<Constant *, 4> NewOperands;
   for (unsigned Index = 0; Index < CE->getNumOperands(); ++Index) {
     Constant *Operand = CE->getOperand(Index);
@@ -509,12 +511,18 @@ static Value *cloneConstantExprWithNewAddressSpace(
     // bitcast, and getelementptr) do not incur cycles in the data flow graph
     // and (2) this function is called on constant expressions in postorder.
     if (Value *NewOperand = ValueWithNewAddrSpace.lookup(Operand)) {
+      IsNew = true;
       NewOperands.push_back(cast<Constant>(NewOperand));
     } else {
       // Otherwise, reuses the old operand.
       NewOperands.push_back(Operand);
     }
   }
+
+  // If !IsNew, we will replace the Value with itself. However, replaced values
+  // are assumed to wrapped in a addrspace cast later so drop it now.
+  if (!IsNew)
+    return nullptr;
 
   if (CE->getOpcode() == Instruction::GetElementPtr) {
     // Needs to specify the source type while constructing a getelementptr

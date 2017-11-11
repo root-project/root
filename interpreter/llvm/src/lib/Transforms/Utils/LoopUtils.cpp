@@ -12,17 +12,17 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Transforms/Utils/LoopUtils.h"
+#include "llvm/ADT/ScopeExit.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/Analysis/BasicAliasAnalysis.h"
 #include "llvm/Analysis/GlobalsModRef.h"
-#include "llvm/Analysis/GlobalsModRef.h"
 #include "llvm/Analysis/LoopInfo.h"
 #include "llvm/Analysis/LoopPass.h"
-#include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Analysis/ScalarEvolution.h"
 #include "llvm/Analysis/ScalarEvolutionAliasAnalysis.h"
 #include "llvm/Analysis/ScalarEvolutionExpander.h"
 #include "llvm/Analysis/ScalarEvolutionExpressions.h"
+#include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/IR/Dominators.h"
 #include "llvm/IR/Instructions.h"
 #include "llvm/IR/Module.h"
@@ -30,6 +30,7 @@
 #include "llvm/IR/ValueHandle.h"
 #include "llvm/Pass.h"
 #include "llvm/Support/Debug.h"
+#include "llvm/Transforms/Utils/BasicBlockUtils.h"
 
 using namespace llvm;
 using namespace llvm::PatternMatch;
@@ -88,8 +89,7 @@ RecurrenceDescriptor::lookThroughAnd(PHINode *Phi, Type *&RT,
 
   // Matches either I & 2^x-1 or 2^x-1 & I. If we find a match, we update RT
   // with a new integer type of the corresponding bit width.
-  if (match(J, m_CombineOr(m_And(m_Instruction(I), m_APInt(M)),
-                           m_And(m_APInt(M), m_Instruction(I))))) {
+  if (match(J, m_c_And(m_Instruction(I), m_APInt(M)))) {
     int32_t Bits = (*M + 1).exactLogBase2();
     if (Bits > 0) {
       RT = IntegerType::get(Phi->getContext(), Bits);
@@ -528,8 +528,9 @@ bool RecurrenceDescriptor::isReductionPHI(PHINode *Phi, Loop *TheLoop,
   return false;
 }
 
-bool RecurrenceDescriptor::isFirstOrderRecurrence(PHINode *Phi, Loop *TheLoop,
-                                                  DominatorTree *DT) {
+bool RecurrenceDescriptor::isFirstOrderRecurrence(
+    PHINode *Phi, Loop *TheLoop,
+    DenseMap<Instruction *, Instruction *> &SinkAfter, DominatorTree *DT) {
 
   // Ensure the phi node is in the loop header and has two incoming values.
   if (Phi->getParent() != TheLoop->getHeader() ||
@@ -551,12 +552,24 @@ bool RecurrenceDescriptor::isFirstOrderRecurrence(PHINode *Phi, Loop *TheLoop,
   // Get the previous value. The previous value comes from the latch edge while
   // the initial value comes form the preheader edge.
   auto *Previous = dyn_cast<Instruction>(Phi->getIncomingValueForBlock(Latch));
-  if (!Previous || !TheLoop->contains(Previous) || isa<PHINode>(Previous))
+  if (!Previous || !TheLoop->contains(Previous) || isa<PHINode>(Previous) ||
+      SinkAfter.count(Previous)) // Cannot rely on dominance due to motion.
     return false;
 
   // Ensure every user of the phi node is dominated by the previous value.
   // The dominance requirement ensures the loop vectorizer will not need to
   // vectorize the initial value prior to the first iteration of the loop.
+  // TODO: Consider extending this sinking to handle other kinds of instructions
+  // and expressions, beyond sinking a single cast past Previous.
+  if (Phi->hasOneUse()) {
+    auto *I = Phi->user_back();
+    if (I->isCast() && (I->getParent() == Phi->getParent()) && I->hasOneUse() &&
+        DT->dominates(Previous, I->user_back())) {
+      SinkAfter[I] = Previous;
+      return true;
+    }
+  }
+
   for (User *U : Phi->users())
     if (auto *I = dyn_cast<Instruction>(U)) {
       if (!DT->dominates(Previous, I))
@@ -922,6 +935,69 @@ bool InductionDescriptor::isInductionPHI(PHINode *Phi, const Loop *TheLoop,
                                     true /* signed */);
   D = InductionDescriptor(StartValue, IK_PtrInduction, StepValue);
   return true;
+}
+
+bool llvm::formDedicatedExitBlocks(Loop *L, DominatorTree *DT, LoopInfo *LI,
+                                   bool PreserveLCSSA) {
+  bool Changed = false;
+
+  // We re-use a vector for the in-loop predecesosrs.
+  SmallVector<BasicBlock *, 4> InLoopPredecessors;
+
+  auto RewriteExit = [&](BasicBlock *BB) {
+    assert(InLoopPredecessors.empty() &&
+           "Must start with an empty predecessors list!");
+    auto Cleanup = make_scope_exit([&] { InLoopPredecessors.clear(); });
+
+    // See if there are any non-loop predecessors of this exit block and
+    // keep track of the in-loop predecessors.
+    bool IsDedicatedExit = true;
+    for (auto *PredBB : predecessors(BB))
+      if (L->contains(PredBB)) {
+        if (isa<IndirectBrInst>(PredBB->getTerminator()))
+          // We cannot rewrite exiting edges from an indirectbr.
+          return false;
+
+        InLoopPredecessors.push_back(PredBB);
+      } else {
+        IsDedicatedExit = false;
+      }
+
+    assert(!InLoopPredecessors.empty() && "Must have *some* loop predecessor!");
+
+    // Nothing to do if this is already a dedicated exit.
+    if (IsDedicatedExit)
+      return false;
+
+    auto *NewExitBB = SplitBlockPredecessors(
+        BB, InLoopPredecessors, ".loopexit", DT, LI, PreserveLCSSA);
+
+    if (!NewExitBB)
+      DEBUG(dbgs() << "WARNING: Can't create a dedicated exit block for loop: "
+                   << *L << "\n");
+    else
+      DEBUG(dbgs() << "LoopSimplify: Creating dedicated exit block "
+                   << NewExitBB->getName() << "\n");
+    return true;
+  };
+
+  // Walk the exit blocks directly rather than building up a data structure for
+  // them, but only visit each one once.
+  SmallPtrSet<BasicBlock *, 4> Visited;
+  for (auto *BB : L->blocks())
+    for (auto *SuccBB : successors(BB)) {
+      // We're looking for exit blocks so skip in-loop successors.
+      if (L->contains(SuccBB))
+        continue;
+
+      // Visit each exit block exactly once.
+      if (!Visited.insert(SuccBB).second)
+        continue;
+
+      Changed |= RewriteExit(SuccBB);
+    }
+
+  return Changed;
 }
 
 /// \brief Returns the instructions that use values defined in the loop.
@@ -1300,16 +1376,21 @@ Value *llvm::createTargetReduction(IRBuilder<> &Builder,
   }
 }
 
-void llvm::propagateIRFlags(Value *I, ArrayRef<Value *> VL) {
-  if (auto *VecOp = dyn_cast<Instruction>(I)) {
-    if (auto *I0 = dyn_cast<Instruction>(VL[0])) {
-      // VecOVp is initialized to the 0th scalar, so start counting from index
-      // '1'.
-      VecOp->copyIRFlags(I0);
-      for (int i = 1, e = VL.size(); i < e; ++i) {
-        if (auto *Scalar = dyn_cast<Instruction>(VL[i]))
-          VecOp->andIRFlags(Scalar);
-      }
-    }
+void llvm::propagateIRFlags(Value *I, ArrayRef<Value *> VL, Value *OpValue) {
+  auto *VecOp = dyn_cast<Instruction>(I);
+  if (!VecOp)
+    return;
+  auto *Intersection = (OpValue == nullptr) ? dyn_cast<Instruction>(VL[0])
+                                            : dyn_cast<Instruction>(OpValue);
+  if (!Intersection)
+    return;
+  const unsigned Opcode = Intersection->getOpcode();
+  VecOp->copyIRFlags(Intersection);
+  for (auto *V : VL) {
+    auto *Instr = dyn_cast<Instruction>(V);
+    if (!Instr)
+      continue;
+    if (OpValue == nullptr || Opcode == Instr->getOpcode())
+      VecOp->andIRFlags(V);
   }
 }

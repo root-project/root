@@ -56,7 +56,7 @@ if(NOT ROOT_minuit2_FOUND)
                    fit/minuit2FitBench.C fit/minuit2GausFit.C
                    fit/minuit2GausFit.C fit/NumericalMinimization.C
                    fit/combinedFit.C fit/TestBinomial.C
-                   fit/fitNormSum.C)
+                   fit/fitNormSum.C fit/vectorizedFit.C)
 endif()
 
 if(NOT ROOT_roofit_FOUND)
@@ -226,6 +226,10 @@ set(all_veto hsimple.C
              )
 
 file(GLOB_RECURSE tutorials RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} *.C)
+if(ROOT_root7_FOUND)
+  file(GLOB_RECURSE tutorials_v7 RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}/v7 *.cxx)
+  list(APPEND tutorials ${tutorials_v7})
+endif()
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
 
 list(LENGTH tutorials total)
