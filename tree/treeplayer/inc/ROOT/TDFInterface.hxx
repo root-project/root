@@ -168,11 +168,7 @@ Long_t JitFilter(void *thisPtr, std::string_view interfaceTypeName, std::string_
                  const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
                  std::string_view returnTypeName, TDataSource *ds);
 
-Long_t JitDefine(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
-                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
-                 const std::vector<std::string> &customColumns,
-                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
-                 std::string_view returnTypeName, TDataSource *ds);
+std::string JitDefine(TLoopManager& lm, std::string_view name, std::string_view expression, TDataSource *ds);
 
 std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNodeTypename, void *prevNode,
                             const std::type_info &art, const std::type_info &at, const void *r, TTree *tree,
@@ -251,6 +247,19 @@ void CallBuildAndBook(PrevNodeType &prevNode, const ColumnNames_t &bl, const uns
    **actionPtrPtrOnHeap = actionPtr;
    delete rOnHeap;
    delete actionPtrPtrOnHeap;
+}
+
+template <typename F>
+void JittedDefineImpl(TLoopManager &lm, std::string_view name, F &&expr, ColumnNames_t columns)
+{
+   using ColTypes_t = typename ROOT::TypeTraits::CallableTraits<F>::arg_types;
+   constexpr auto nColumns = ColTypes_t::list_size;
+   auto dsPtr = lm.GetDataSource();
+   if (dsPtr)
+      DefineDataSourceColumns(columns, lm, GenStaticSeq_t<nColumns>(), ColTypes_t(), *dsPtr);
+
+   using NewCol_t = TDFDetail::TCustomColumn<F>;
+   lm.Book(std::make_shared<NewCol_t>(name, std::move(expr), columns, &lm));
 }
 
 /// The contained `type` alias is `double` if `T == TInferType`, `U` if `T == std::container<U>`, `T` otherwise.
@@ -560,10 +569,14 @@ public:
       // this check must be done before jitting lest we throw exceptions in jitted code
       TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
+      const auto toJit = TDFInternal::JitDefine(*loopManager, name, expression, fDataSource);
+      loopManager->Jit(toJit);
+
+      loopManager->AddCustomColumn(name);
       using retType = TInterface<TTraits::TakeFirstParameter_t<decltype(TDFInternal::UpcastNode(fProxiedPtr))>>;
-      auto retVal = CallJitDefine(name, expression, retType::GetNodeTypeName());
-      auto retInterface = reinterpret_cast<retType *>(retVal);
-      return *retInterface;
+      retType newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
+      newInterface.fValidCustomColumns.emplace_back(name);
+      return newInterface;
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -1649,21 +1662,6 @@ private:
       return TDFInternal::JitFilter(&upcastInterface, thisTypeName, nodeName, expression, aliasMap, branches,
                                     customColumns, tmpBookedBranches, tree, returnTypeName, fDataSource);
    }
-   Long_t CallJitDefine(std::string_view nodeName, std::string_view expression, std::string_view returnTypeName)
-   {
-      auto df = GetDataFrameChecked();
-      auto &aliasMap = df->GetAliasMap();
-      auto tree = df->GetTree();
-      auto branches = tree ? TDFInternal::GetBranchNames(*tree) : ColumnNames_t();
-      const auto &customColumns = df->GetCustomColumnNames();
-      auto tmpBookedBranches = df->GetBookedColumns();
-      auto upcastNode = TDFInternal::UpcastNode(fProxiedPtr);
-      TInterface<TypeTraits::TakeFirstParameter_t<decltype(upcastNode)>> upcastInterface(
-         upcastNode, fImplWeakPtr, fValidCustomColumns, fDataSource);
-      const auto thisTypeName = "ROOT::Experimental::TDF::TInterface<" + upcastInterface.GetNodeTypeName() + ">";
-      return TDFInternal::JitDefine(&upcastInterface, thisTypeName, nodeName, expression, aliasMap, branches,
-                                    customColumns, tmpBookedBranches, tree, returnTypeName, fDataSource);
-   }
 
    /// Return string containing fully qualified type name of the node pointed by fProxied.
    /// The method is only defined for TInterface<{TFilterBase,TCustomColumnBase,TRangeBase,TLoopManager}> as it should
@@ -1740,9 +1738,6 @@ private:
          TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
                                               ColTypes_t(), *fDataSource);
       using NewCol_t = TDFDetail::TCustomColumn<F, ExtraArgs>;
-
-      // Here we check if the return type is a pointer. In this case, we assume it points to valid memory
-      // and we treat the column as if it came from a data source, i.e. it points to valid memory.
       loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
       TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
       newInterface.fValidCustomColumns.emplace_back(name);
