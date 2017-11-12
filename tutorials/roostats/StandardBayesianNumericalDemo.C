@@ -39,6 +39,8 @@
 #include "RooPlot.h"
 #include "TSystem.h"
 
+#include <cassert>
+
 using namespace RooFit;
 using namespace RooStats;
 

@@ -35,6 +35,8 @@
 #include "RooStats/LikelihoodIntervalPlot.h"
 #include "RooRealVar.h"
 
+#include <cassert>
+
 // use this order for safety on library loading
 using namespace RooFit;
 using namespace RooStats;

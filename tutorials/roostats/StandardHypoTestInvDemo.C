@@ -63,6 +63,8 @@
 #include "RooStats/HypoTestInverterResult.h"
 #include "RooStats/HypoTestInverterPlot.h"
 
+#include <cassert>
+
 using namespace RooFit;
 using namespace RooStats;
 using namespace std;

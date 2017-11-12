@@ -43,6 +43,8 @@
 #include "RooFitResult.h"
 #include "TGraph2D.h"
 
+#include <cassert>
+
 // use this order for safety on library loading
 using namespace RooFit;
 using namespace RooStats;
