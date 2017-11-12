@@ -828,7 +828,7 @@ void RooMomentMorphFuncND::findShape(const vector<double> &x) const
       if (x[i] > _referenceGrid._grid[i]->highBound())
          isEnclosed = false;
    }
-
+   (void)isEnclosed; // Silence warning for isEnclosed being unused.
    // cout << "isEnclosed = " << isEnclosed << endl;
 
    int depth = TMath::Power(2, nPar);
