@@ -436,7 +436,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
    vector<RooAbsReal *> myrms(nObs, null);
    vector<RooAbsReal *> mypos(nObs, null);
    vector<RooAbsReal *> slope(nPdf * nObs, null);
-   vector<RooAbsReal *> offset(nPdf * nObs, null);
+   vector<RooAbsReal *> offsets(nPdf * nObs, null);
    vector<RooAbsReal *> transVar(nPdf * nObs, null);
    vector<RooAbsReal *> transPdf(nPdf, null);
 
@@ -485,7 +485,7 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
          }
       }
 
-      // slope and offset (to be set later, depend on nuisance parameters)
+      // slope and offsets (to be set later, depend on nuisance parameters)
       for (int j = 0; j < nObs; ++j) {
          RooArgList meanList("meanList");
          RooArgList rmsList("rmsList");
@@ -514,21 +514,21 @@ RooMomentMorphFuncND::CacheElem *RooMomentMorphFuncND::getCache(const RooArgSet 
          RooCustomizer cust(*pdf, pdfName.c_str());
 
          for (int j = 0; j < nObs; ++j) {
-            // slope and offset formulas
+            // slope and offsets formulas
             string slopeName = Form("%s_slope_%d_%d", GetName(), i, j);
             string offsetName = Form("%s_offset_%d_%d", GetName(), i, j);
 
             slope[sij(i, j)] =
                new RooFormulaVar(slopeName.c_str(), "@0/@1", RooArgList(*sigmarv[sij(i, j)], *myrms[j]));
-            offset[sij(i, j)] = new RooFormulaVar(offsetName.c_str(), "@0-(@1*@2)",
-                                                  RooArgList(*meanrv[sij(i, j)], *mypos[j], *slope[sij(i, j)]));
-            ownedComps.add(RooArgSet(*slope[sij(i, j)], *offset[sij(i, j)]));
+            offsets[sij(i, j)] = new RooFormulaVar(offsetName.c_str(), "@0-(@1*@2)",
+                                                   RooArgList(*meanrv[sij(i, j)], *mypos[j], *slope[sij(i, j)]));
+            ownedComps.add(RooArgSet(*slope[sij(i, j)], *offsets[sij(i, j)]));
 
             // linear transformations, so pdf can be renormalized easily
             var = (RooRealVar *)(_obsItr->Next());
             string transVarName = Form("%s_transVar_%d_%d", GetName(), i, j);
             transVar[sij(i, j)] = new RooLinearVar(transVarName.c_str(), transVarName.c_str(), *var, *slope[sij(i, j)],
-                                                   *offset[sij(i, j)]);
+                                                   *offsets[sij(i, j)]);
 
             // *** WVE this is important *** this declares that frac effectively depends on the morphing parameters
             // This will prevent the likelihood optimizers from erroneously declaring terms constant
