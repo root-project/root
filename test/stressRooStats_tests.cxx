@@ -19,6 +19,8 @@
 
 #include "stressRooStats_models.cxx" // Global functions that build complex RooStats models
 
+#include <cassert>
+
 using namespace ROOT::Math;
 using namespace RooFit;
 using namespace RooStats;
