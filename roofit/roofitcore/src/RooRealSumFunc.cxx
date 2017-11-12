@@ -353,6 +353,7 @@ Double_t RooRealSumFunc::analyticalIntegralWN(Int_t code, const RooArgSet *normS
       RooArgSet dummy;
       Int_t code2 = getAnalyticalIntegralWN(*iset, dummy, nset.get(), rangeName);
       assert(code == code2); // must have revived the right (sterilized) slot...
+      (void)code2;
       cache = (CacheElem *)_normIntMgr.getObjByIndex(code - 1);
       assert(cache != 0);
    }
