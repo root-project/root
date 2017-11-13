@@ -3868,7 +3868,11 @@ public:
    }
 };
 
-
+static bool FileExists(const char *file)
+{
+   struct stat buf;
+   return (stat(file, &buf) == 0);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -4286,8 +4290,12 @@ int RootClingMain(int argc,
       clingArgsInterpreter.push_back(moduleName.str());
 
       std::string vfsPath = std::string(gDriverConfig->fTROOT__GetIncludeDir()) + "/modulemap.overlay.yaml";
-      vfsArg = "-ivfsoverlay" + vfsPath;
-      clingArgsInterpreter.push_back(vfsArg.c_str());
+      // On modules aware build systems (such as OSX) we do not need an overlay file and thus the build system does not
+      // generate it.
+      if (FileExists(vfsPath.c_str())) {
+         vfsArg = "-ivfsoverlay" + vfsPath;
+         clingArgsInterpreter.push_back(vfsArg.c_str());
+      }
 
       // Set the C++ modules output directory to the directory where we generate
       // the shared library.
