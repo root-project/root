@@ -767,6 +767,7 @@ INPUT                  = . \
                          ../../core/unix/ \
                          ../../core/winnt/ \
                          ../../core/imt/ \
+                         ../../core/zip/inc/Compression.h \
                          ../../geom/ \
                          ../../graf2d/asimage/ \
                          ../../graf2d/cocoa/ \
@@ -832,7 +833,6 @@ INPUT                  = . \
 #                         ../../core/lzma/
 #                         ../../core/newdelete/
 #                         ../../core/textinput/
-#                         ../../core/zip/
 #                         ../../graf2d/ios/
 #                         ../../graf2d/qt/ \
 #                         ../../graf2d/mathtext/
