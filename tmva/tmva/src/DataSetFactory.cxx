@@ -128,6 +128,7 @@ TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
    // build the first dataset from the data input
    DataSet * ds = BuildInitialDataSet( dsi, dataInput );
 
+#if 0  
    if (ds->GetNEvents() > 1) {
       CalcMinMax(ds,dsi);
 
@@ -142,7 +143,8 @@ TMVA::DataSet* TMVA::DataSetFactory::CreateDataSet( TMVA::DataSetInfo& dsi,
       //Log() << kHEADER <<  Endl;
       Log() << kHEADER << Form("[%s] : ",dsi.GetName()) << " " << Endl << Endl;
    }
-
+#endif
+   
    return ds;
 }
 
@@ -478,7 +480,7 @@ void TMVA::DataSetFactory::CalcMinMax( DataSet* ds, TMVA::DataSetInfo& dsi )
       dsi.GetVariableInfo(ivar).SetMin(min[ivar]);
       dsi.GetVariableInfo(ivar).SetMax(max[ivar]);
       if( TMath::Abs(max[ivar]-min[ivar]) <= FLT_MIN )
-         Log() << kFATAL << Form("Dataset[%s] : ",dsi.GetName()) << "Variable " << dsi.GetVariableInfo(ivar).GetExpression().Data() << " is constant. Please remove the variable." << Endl;
+         Log() << kWARNING << Form("Dataset[%s] : ",dsi.GetName()) << "Variable " << dsi.GetVariableInfo(ivar).GetExpression().Data() << " is constant. Please remove the variable." << Endl;
    }
    for (UInt_t ivar=0; ivar<ntgts; ivar++) {
       dsi.GetTargetInfo(ivar).SetMin(tgmin[ivar]);
