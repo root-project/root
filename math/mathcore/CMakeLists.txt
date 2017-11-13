@@ -38,7 +38,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(MathCore HEADERS TComplex.h TMath.h ${MATHCORE_HEA
                               SOURCES *.cxx *.c
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES ${CMAKE_THREAD_LIBS_INIT} ${MATHCORE_LIBRARIES}
-                              DEPENDENCIES Core ${MATHCORE_DEPENDENCIES}
+                              DEPENDENCIES Core MultiProc ${MATHCORE_DEPENDENCIES}
                               BUILTINS ${MATHCORE_BUILTINS})
 
 if(veccore)
