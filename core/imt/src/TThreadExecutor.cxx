@@ -1,5 +1,6 @@
 #include "ROOT/TThreadExecutor.hxx"
 #include "tbb/tbb.h"
+#include <functional> // std::function
 
 //////////////////////////////////////////////////////////////////////////
 ///

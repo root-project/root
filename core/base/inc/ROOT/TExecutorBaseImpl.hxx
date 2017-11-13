@@ -21,7 +21,7 @@
 /// \class ROOT::TExecutorBaseImpl
 /// \brief This class defines an interface to execute the same task
 /// multiple times in parallel, possibly with different arguments every
-/// time. The classes implementing it mimic the behaviour of python's pool.Map method. 
+/// time. The classes implementing it mimic the behaviour of python's pool.Map method.
 ///
 /// ###ROOT::TExecutorBaseImpl::Map
 /// The two possible usages of the Map method are:\n
@@ -184,10 +184,10 @@ T* TExecutorBaseImpl<subc>::Reduce(const std::vector<T*> &mergeObjs)
   for(unsigned i =1; i<mergeObjs.size(); i++){
     l.Add(mergeObjs[i]);
   }
-  // use clone to return a new object 
+  // use clone to return a new object
   auto retHist = dynamic_cast<T*>((mergeObjs.front())->Clone());
   if (retHist) retHist->Merge(&l);
-  return retHist; 
+  return retHist;
 }
 
 } // end namespace ROOT

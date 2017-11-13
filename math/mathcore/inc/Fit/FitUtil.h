@@ -600,7 +600,7 @@ namespace FitUtil {
 
          auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size() / vecSize);
          ROOT::Internal::TExecutor pool(executionPolicy);
-         LikelihoodAux<T> res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
+         auto res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, data.Size() / vecSize), redFunction, chunks);
 
          // Compute the contribution from the remaining points ( Last padded SIMD vector of elements )
          unsigned int remainingPoints = n % vecSize;

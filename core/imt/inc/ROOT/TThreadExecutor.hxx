@@ -25,6 +25,7 @@
 #include "ROOT/TExecutorBaseImpl.hxx"
 #include "ROOT/TPoolManager.hxx"
 #include "TROOT.h"
+
 #include <memory>
 #include <numeric>
 
@@ -356,6 +357,7 @@ namespace ROOT {
    //////////////////////////////////////////////////////////////////////////
    /// "Reduce" an std::vector into a single object in parallel by passing a
    /// binary operator as the second argument to act on pairs of elements of the std::vector.
+   /// Only works for doubles and floats
    template<class T, class BINARYOP>
    auto TThreadExecutor::Reduce(const std::vector<T> &objs, BINARYOP redfunc) -> decltype(redfunc(objs.front(), objs.front()))
    {

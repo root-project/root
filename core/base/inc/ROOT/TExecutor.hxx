@@ -17,8 +17,9 @@
 #include "ROOT/TProcessExecutor.hxx"
 #include "TROOT.h"
 #include "ExecutionPolicy.hxx"
-#include <memory>
-#include <thread>
+
+#include <memory> // unique_ptr
+#include <thread> // thread_hardware_concurrency
 
 
 namespace ROOT{
@@ -100,7 +101,7 @@ private:
 template<class F, class Cond>
 auto TExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
     using retType = decltype(func());
-    std::vector<retType> res;;
+    std::vector<retType> res(nTimes);
     switch(fExecPolicy){
         case ROOT::Internal::ExecutionPolicy::kSequential:
         res = fSeqPool->Map(func, nTimes);
@@ -124,7 +125,7 @@ auto TExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result
 template<class F, class INTEGER, class Cond>
 auto TExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
     using retType = decltype(func(args.front()));
-    std::vector<retType> res;
+    std::vector<retType> res(args.size());
 
     switch(fExecPolicy){
         case ROOT::Internal::ExecutionPolicy::kSequential:
@@ -152,7 +153,7 @@ template<class F, class T, class Cond>
 auto TExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
     //check whether func is callable
     using retType = decltype(func(args.front()));
-    std::vector<retType> res;;
+    std::vector<retType> res(args.size());
     switch(fExecPolicy){
         case ROOT::Internal::ExecutionPolicy::kSequential:
         res = fSeqPool->Map(func, args);
@@ -194,7 +195,7 @@ auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename s
 template<class F, class R, class Cond>
 auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type {
    using retType = decltype(func());
-   retType res;
+   retType res{};
    switch(fExecPolicy) {
       case ROOT::Internal::ExecutionPolicy::kSequential:
          //arbitrary value for the number of chunks so the returned vector is not big
@@ -220,7 +221,7 @@ auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) 
 template<class F, class INTEGER, class R, class Cond>
 auto TExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type {
    using retType = decltype(func(args.front()));
-   retType res;
+   retType res{};
    switch(fExecPolicy) {
       case ROOT::Internal::ExecutionPolicy::kSequential:
          //arbitrary value for the number of chunks so the returned vector is not big
@@ -260,7 +261,7 @@ auto TExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsi
 template<class F, class T, class R, class Cond>
 auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type {
     using retType = decltype(func(args.front()));
-    retType res;
+    retType res{};
     switch(fExecPolicy) {
       case ROOT::Internal::ExecutionPolicy::kSequential:
           //arbitrary value for the number of chunks so the returned vector is not big
@@ -289,6 +290,6 @@ auto TExecutor::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfun
    return redfunc(objs);
 }
 
-}
-}
+} // Internals
+} // ROOT
 #endif
