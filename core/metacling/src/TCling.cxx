@@ -1101,19 +1101,30 @@ static void LoadCoreModules(cling::Interpreter &interp)
 
    clang::HeaderSearch &headerSearch = CI.getPreprocessor().getHeaderSearchInfo();
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+   // List of core modules we can load, but it's ok if they are missing because
+   // the system doesn't have these modules.
+   std::vector<std::string> optionalCoreModuleNames = {"stl", "libc"};
+
    // List of core modules we need to load.
    std::vector<std::string> neededCoreModuleNames = {"Core", "RIO"};
    std::vector<std::string> missingCoreModuleNames;
 
    std::vector<clang::Module *> coreModules;
 
+   // Lookup the optional core modules in the modulemap by name.
+   for (std::string moduleName : optionalCoreModuleNames) {
+      clang::Module *module = moduleMap.findModule(moduleName);
+      // Don't report an error here, the module is optional.
+      if (module)
+         coreModules.push_back(module);
+   }
    // Lookup the core modules in the modulemap by name.
    for (std::string moduleName : neededCoreModuleNames) {
       clang::Module *module = moduleMap.findModule(moduleName);
       if (module) {
          coreModules.push_back(module);
       } else {
-         // If we can't find a module, we record that to report it later.
+         // If we can't find a needed module, we record that to report it later.
          missingCoreModuleNames.push_back(moduleName);
       }
    }
