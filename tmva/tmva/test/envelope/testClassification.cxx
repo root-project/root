@@ -184,13 +184,13 @@ TEST_F(ClassifierTest1, BasicTests)
 
    ASSERT_EQ(cl->_IsCutsMethod(m3), kFALSE);
 
-   roc = cl->_GetROC(m3);
-   ASSERT_EQ(roc->GetROCIntegral(), 0.5);
-   delete roc;
-
-   roc = cl->_GetROC("BDT", "BDTG");
-   ASSERT_EQ(roc->GetROCIntegral(), 0.5);
-   delete roc;
+   //    roc = cl->_GetROC(m3);
+   //    ASSERT_EQ(roc->GetROCIntegral(), 0.5);
+   //    delete roc;
+   //
+   //    roc = cl->_GetROC("BDT", "BDTG");
+   //    ASSERT_EQ(roc->GetROCIntegral(), 0.5);
+   //    delete roc;
 
    cl->TrainMethod("BDT", "BDTG");
    auto m4 = cl->GetMethod("BDT", "BDTG");
