@@ -27,12 +27,12 @@ namespace Internal{
 class TExecutor: public TExecutorBaseImpl<TExecutor> {
 public:
 
-   explicit TExecutor(unsigned nProcessingUnits = -1) :
+   explicit TExecutor(unsigned nProcessingUnits = -1u) :
     TExecutor(ROOT::IsImplicitMTEnabled() ? ROOT::Internal::ExecutionPolicy::kMultithread :ROOT::Internal::ExecutionPolicy::kSequential, nProcessingUnits) {}
 
    explicit TExecutor(ROOT::Internal::ExecutionPolicy execPolicy, unsigned nProcessingUnits = -1) : fExecPolicy(execPolicy) {
       fExecPolicy = execPolicy;
-      auto poolSize = nProcessingUnits != -1 ? nProcessingUnits: std::thread::hardware_concurrency();
+      auto poolSize = nProcessingUnits != -1u ? nProcessingUnits: std::thread::hardware_concurrency();
       switch(fExecPolicy) {
         case ROOT::Internal::ExecutionPolicy::kSequential:
            fSeqPool = std::unique_ptr<ROOT::TSequentialExecutor>(new ROOT::TSequentialExecutor());
@@ -82,16 +82,6 @@ public:
    using TExecutorBaseImpl<TExecutor>::Reduce;
    template<class T, class R> auto Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs));
 
-protected:
-   template<class F, class R, class Cond = noReferenceCond<F>>
-   auto Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type>;
-   template<class F, class INTEGER, class R, class Cond = noReferenceCond<F, INTEGER>>
-   auto Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(INTEGER)>::type>;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
-   template<class F, class T, class R, class Cond = noReferenceCond<F, T>>
-   auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
-
 private:
     ROOT::Internal::ExecutionPolicy fExecPolicy;
 #ifdef R__USE_IMT
@@ -103,222 +93,202 @@ private:
 
 
 //////////////////////////////////////////////////////////////////////////
-   /// Execute func (with no arguments) nTimes in parallel.
-   /// A vector containg executions' results is returned.
-   /// Functions that take more than zero arguments can be executed (with
-   /// fixed arguments) by wrapping them in a lambda or with std::bind.
-   template<class F, class Cond>
-   auto TExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
-      using retType = decltype(func());
-      std::vector<retType> res;;
-      switch(fExecPolicy){
-         case ROOT::Internal::ExecutionPolicy::kSequential:
-            res = fSeqPool->Map(func, nTimes);
-            break;
-#ifdef R__USE_IMT
-         case ROOT::Internal::ExecutionPolicy::kMultithread:
-            res = fThreadPool->Map(func, nTimes);
-            break;
-#endif
-         case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-            res = fProcPool->Map(func, nTimes);
-            break;
-      }
-      return res;
-   }
-
-   //////////////////////////////////////////////////////////////////////////
-   /// Execute func in parallel, taking an element of a
-   /// sequence as argument.
-   /// A vector containg executions' results is returned.
-   template<class F, class INTEGER, class Cond>
-   auto TExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
-      using retType = decltype(func(args.front()));
-      std::vector<retType> res;
-
-      switch(fExecPolicy){
-         case ROOT::Internal::ExecutionPolicy::kSequential:
-            res = fSeqPool->Map(func, args);
-            break;
-#ifdef R__USE_IMT
-         case ROOT::Internal::ExecutionPolicy::kMultithread:
-            res = fThreadPool->Map(func, args);
-            break;
-#endif
-         case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-            res = fProcPool->Map(func, args);
-            break;
-      }
-      return res;
-   }
-
-   //////////////////////////////////////////////////////////////////////////
-   /// Execute func (with no arguments) nTimes in parallel.
-   /// Divides and groups the executions in nChunks (if it doesn't make sense will reduce the number of chunks) with partial reduction;
-   /// A vector containg partial reductions' results is returned.
-   template<class F, class R, class Cond>
-   auto TExecutor::Map(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F()>::type> {
-      using retType = decltype(func());
-      std::vector<retType> res;;
-      switch(fExecPolicy){
+/// Execute func (with no arguments) nTimes in parallel.
+/// A vector containg executions' results is returned.
+/// Functions that take more than zero arguments can be executed (with
+/// fixed arguments) by wrapping them in a lambda or with std::bind.
+template<class F, class Cond>
+auto TExecutor::Map(F func, unsigned nTimes) -> std::vector<typename std::result_of<F()>::type> {
+    using retType = decltype(func());
+    std::vector<retType> res;;
+    switch(fExecPolicy){
         case ROOT::Internal::ExecutionPolicy::kSequential:
-            //arbitrary value for the number of chunks so the returned vector is not big
-            res = fSeqPool->Map(func, nTimes, redfunc, 3);
-            break;
-  #ifdef R__USE_IMT
-        case ROOT::Internal::ExecutionPolicy::kMultithread:
-            res = fThreadPool->Map(func, nTimes, redfunc, nChunks);
-            break;
-  #endif
-        case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-            res = fProcPool->Map(func, nTimes, redfunc, nChunks);
-            break;
-      }
-      return res;
-   }
-
-   //////////////////////////////////////////////////////////////////////////
-   /// Execute func in parallel, taking an element of an
-   /// std::vector as argument.
-   /// A vector containg executions' results is returned.
-   // actual implementation of the Map method. all other calls with arguments eventually
-   // call this one
-   template<class F, class T, class Cond>
-   auto TExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
-      // //check whether func is callable
-      using retType = decltype(func(args.front()));
-      std::vector<retType> res;;
-      switch(fExecPolicy){
-         case ROOT::Internal::ExecutionPolicy::kSequential:
-            res = fSeqPool->Map(func, args);
-            break;
+        res = fSeqPool->Map(func, nTimes);
+        break;
 #ifdef R__USE_IMT
-         case ROOT::Internal::ExecutionPolicy::kMultithread:
-            res = fThreadPool->Map(func, args);
-            break;
+        case ROOT::Internal::ExecutionPolicy::kMultithread:
+        res = fThreadPool->Map(func, nTimes);
+        break;
 #endif
-         case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-            res = fProcPool->Map(func, args);
-            break;
-      }
-      return res;
-   }
+        case ROOT::Internal::ExecutionPolicy::kMultiprocess:
+        res = fProcPool->Map(func, nTimes);
+        break;
+    }
+    return res;
+}
 
-   //////////////////////////////////////////////////////////////////////////
-   /// Execute func in parallel, taking an element of a
-   /// sequence as argument.
-   /// Divides and groups the executions in nChunks (if it doesn't make sense will reduce the number of chunks) with partial reduction\n
-   /// A vector containg partial reductions' results is returned.
-   template<class F, class INTEGER, class R, class Cond>
-   auto TExecutor::Map(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
+//////////////////////////////////////////////////////////////////////////
+/// Execute func in parallel, taking an element of a
+/// sequence as argument.
+/// A vector containg executions' results is returned.
+template<class F, class INTEGER, class Cond>
+auto TExecutor::Map(F func, ROOT::TSeq<INTEGER> args) -> std::vector<typename std::result_of<F(INTEGER)>::type> {
+    using retType = decltype(func(args.front()));
+    std::vector<retType> res;
+
+    switch(fExecPolicy){
+        case ROOT::Internal::ExecutionPolicy::kSequential:
+        res = fSeqPool->Map(func, args);
+        break;
+#ifdef R__USE_IMT
+        case ROOT::Internal::ExecutionPolicy::kMultithread:
+        res = fThreadPool->Map(func, args);
+        break;
+#endif
+        case ROOT::Internal::ExecutionPolicy::kMultiprocess:
+        res = fProcPool->Map(func, args);
+        break;
+    }
+    return res;
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// Execute func in parallel, taking an element of an
+/// std::vector as argument.
+/// A vector containg executions' results is returned.
+// actual implementation of the Map method. all other calls with arguments eventually
+// call this one
+template<class F, class T, class Cond>
+auto TExecutor::Map(F func, std::vector<T> &args) -> std::vector<typename std::result_of<F(T)>::type> {
+    //check whether func is callable
     using retType = decltype(func(args.front()));
     std::vector<retType> res;;
     switch(fExecPolicy){
-       case ROOT::Internal::ExecutionPolicy::kSequential:
-          //arbitrary value for the number of chunks so the returned vector is not big
-          res = fSeqPool->Map(func, args, redfunc, 3);
-          break;
-#ifdef R__USE_IMT
-       case ROOT::Internal::ExecutionPolicy::kMultithread:
-          res = fThreadPool->Map(func, args, redfunc, nChunks);
-          break;
-#endif
-       case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-          res = fProcPool->Map(func, args, redfunc, nChunks);
-          break;
-    }
-    return res;
-   }
-
-/// \cond
-    //////////////////////////////////////////////////////////////////////////
-   /// Execute func in parallel, taking an element of an
-   /// std::vector as argument. Divides and groups the executions in nChunks with partial reduction.
-   /// If it doesn't make sense will reduce the number of chunks.\n
-   /// A vector containg partial reductions' results is returned.
-   template<class F, class T, class R, class Cond>
-   auto TExecutor::Map(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type> {
-      using retType = decltype(func(args.front()));
-      std::vector<retType> res;;
-      switch(fExecPolicy){
         case ROOT::Internal::ExecutionPolicy::kSequential:
-            //arbitrary value for the number of chunks so the returned vector is not big
-            res = fSeqPool->Map(func, args, redfunc, 3);
-            break;
+        res = fSeqPool->Map(func, args);
+        break;
 #ifdef R__USE_IMT
         case ROOT::Internal::ExecutionPolicy::kMultithread:
-            res = fThreadPool->Map(func, args, redfunc, nChunks);
-            break;
+        res = fThreadPool->Map(func, args);
+        break;
 #endif
         case ROOT::Internal::ExecutionPolicy::kMultiprocess:
-            res = fProcPool->Map(func, args, redfunc, nChunks);
-            break;
-      }
-      return res;
-   }
+        res = fProcPool->Map(func, args);
+        break;
+    }
+    return res;
+}
 
-    //////////////////////////////////////////////////////////////////////////
-   /// Execute func in parallel, taking an element of an
-   /// std::initializer_list as an argument. Divides and groups the executions in nChunks with partial reduction.
-   /// If it doesn't make sense will reduce the number of chunks.\n
-   /// A vector containg partial reductions' results is returned.
-   template<class F, class T, class R, class Cond>
-   auto TExecutor::Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type> {
-      std::vector<T> vargs(std::move(args));
-      const auto &reslist = Map(func, vargs, redfunc, nChunks);
-      return reslist;
-   }
-/// \endcond
+//////////////////////////////////////////////////////////////////////////
+/// This method behaves just like Map, but an additional redfunc function
+/// must be provided. redfunc is applied to the vector Map would return and
+/// must return the same type as func. In practice, redfunc can be used to
+/// "squash" the vector returned by Map into a single object by merging,
+/// adding, mixing the elements of the vector.\n
+/// The fourth argument indicates the number of chunks we want to divide our work in.
+template<class F, class R, class Cond>
+auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type {
+   return Reduce(Map(func, nTimes), redfunc);
+}
+
+template<class F, class T, class R, class Cond>
+auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type {
+   return Reduce(Map(func, args), redfunc);
+}
 
 
-   //////////////////////////////////////////////////////////////////////////
-   /// This method behaves just like Map, but an additional redfunc function
-   /// must be provided. redfunc is applied to the vector Map would return and
-   /// must return the same type as func. In practice, redfunc can be used to
-   /// "squash" the vector returned by Map into a single object by merging,
-   /// adding, mixing the elements of the vector.\n
-   /// The fourth argument indicates the number of chunks we want to divide our work in.
-   template<class F, class R, class Cond>
-   auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc) -> typename std::result_of<F()>::type {
-      return Reduce(Map(func, nTimes), redfunc);
+//////////////////////////////////////////////////////////////////////////
+/// Execute func (with no arguments) nTimes in parallel.
+/// Divides and groups the executions in nChunks (if it doesn't make sense will reduce the number of chunks) with partial reduction;
+/// A vector containg partial reductions' results is returned.
+template<class F, class R, class Cond>
+auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type {
+   using retType = decltype(func());
+   retType res;
+   switch(fExecPolicy) {
+      case ROOT::Internal::ExecutionPolicy::kSequential:
+         //arbitrary value for the number of chunks so the returned vector is not big
+         res = fSeqPool->MapReduce(func, nTimes, redfunc);
+         break;
+#ifdef R__USE_IMT
+      case ROOT::Internal::ExecutionPolicy::kMultithread:
+         res = fThreadPool->MapReduce(func, nTimes, redfunc, nChunks);
+         break;
+#endif
+      case ROOT::Internal::ExecutionPolicy::kMultiprocess:
+         res = fProcPool->MapReduce(func, nTimes, redfunc);
+         break;
    }
+   return res;
+}
 
-   template<class F, class R, class Cond>
-   auto TExecutor::MapReduce(F func, unsigned nTimes, R redfunc, unsigned nChunks) -> typename std::result_of<F()>::type {
-      return Reduce(Map(func, nTimes, redfunc, nChunks), redfunc);
+//////////////////////////////////////////////////////////////////////////
+/// Execute func in parallel, taking an element of a
+/// sequence as argument.
+/// Divides and groups the executions in nChunks (if it doesn't make sense will reduce the number of chunks) with partial reduction\n
+/// A vector containg partial reductions' results is returned.
+template<class F, class INTEGER, class R, class Cond>
+auto TExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type {
+   using retType = decltype(func(args.front()));
+   retType res;
+   switch(fExecPolicy) {
+      case ROOT::Internal::ExecutionPolicy::kSequential:
+         //arbitrary value for the number of chunks so the returned vector is not big
+         res = fSeqPool->MapReduce(func, args, redfunc);
+         break;
+#ifdef R__USE_IMT
+      case ROOT::Internal::ExecutionPolicy::kMultithread:
+         res = fThreadPool->MapReduce(func, args, redfunc, nChunks);
+         break;
+#endif
+      case ROOT::Internal::ExecutionPolicy::kMultiprocess:
+         res = fProcPool->MapReduce(func, args, redfunc);
+         break;
    }
+   return res;
+}
 
-   template<class F, class INTEGER, class R, class Cond>
-   auto TExecutor::MapReduce(F func, ROOT::TSeq<INTEGER> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(INTEGER)>::type {
-      return Reduce(Map(func, args, redfunc, nChunks), redfunc);
-   }
-   /// \cond
-   template<class F, class T, class R, class Cond>
-   auto TExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type {
-      return Reduce(Map(func, args, redfunc, nChunks), redfunc);
-   }
-   /// \endcond
+/// \cond
+//////////////////////////////////////////////////////////////////////////
+/// Execute func in parallel, taking an element of an
+/// std::initializer_list as an argument. Divides and groups the executions in nChunks with partial reduction.
+/// If it doesn't make sense will reduce the number of chunks.\n
+/// A vector containg partial reductions' results is returned.
+template<class F, class T, class R, class Cond>
+auto TExecutor::MapReduce(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type {
+    std::vector<T> vargs(std::move(args));
+    const auto &reslist = MapReduce(func, vargs, redfunc, nChunks);
+    return reslist;
+}
+///\endcond
 
-   template<class F, class T, class R, class Cond>
-   auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc) -> typename std::result_of<F(T)>::type {
-      return Reduce(Map(func, args), redfunc);
-   }
+//////////////////////////////////////////////////////////////////////////
+/// Execute func in parallel, taking an element of an
+/// std::vector as argument. Divides and groups the executions in nChunks with partial reduction.
+/// If it doesn't make sense will reduce the number of chunks.\n
+/// A vector containg partial reductions' results is returned.
+template<class F, class T, class R, class Cond>
+auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type {
+    using retType = decltype(func(args.front()));
+    retType res;
+    switch(fExecPolicy) {
+      case ROOT::Internal::ExecutionPolicy::kSequential:
+          //arbitrary value for the number of chunks so the returned vector is not big
+         res = fSeqPool->MapReduce(func, args, redfunc);
+         break;
+ #ifdef R__USE_IMT
+      case ROOT::Internal::ExecutionPolicy::kMultithread:
+         res = fThreadPool->MapReduce(func, args, redfunc, nChunks);
+         break;
+ #endif
+      case ROOT::Internal::ExecutionPolicy::kMultiprocess:
+         res = fProcPool->MapReduce(func, args, redfunc);
+         break;
+    }
+    return res;
+ }
 
-   template<class F, class T, class R, class Cond>
-   auto TExecutor::MapReduce(F func, std::vector<T> &args, R redfunc, unsigned nChunks) -> typename std::result_of<F(T)>::type {
-      return Reduce(Map(func, args, redfunc, nChunks), redfunc);
-   }
+//////////////////////////////////////////////////////////////////////////
+/// "Reduce" an std::vector into a single object by passing a
+/// function as the second argument defining the reduction operation.
+template<class T, class R>
+auto TExecutor::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
+{
+   // check we can apply reduce to objs
+   static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
+   return redfunc(objs);
+}
 
-   //////////////////////////////////////////////////////////////////////////
-   /// "Reduce" an std::vector into a single object by passing a
-   /// function as the second argument defining the reduction operation.
-   template<class T, class R>
-   auto TExecutor::Reduce(const std::vector<T> &objs, R redfunc) -> decltype(redfunc(objs))
-   {
-      // check we can apply reduce to objs
-      static_assert(std::is_same<decltype(redfunc(objs)), T>::value, "redfunc does not have the correct signature");
-      return redfunc(objs);
-   }
 }
 }
 #endif
