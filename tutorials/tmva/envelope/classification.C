@@ -59,19 +59,20 @@ void classification(UInt_t jobs = 4)
    // -  for signal    : `dataloader->SetSignalWeightExpression    ("weight1*weight2");`
    // -  for background: `dataloader->SetBackgroundWeightExpression("weight1*weight2");`
    dataloader->SetBackgroundWeightExpression("weight");
+   dataloader->PrepareTrainingAndTestTree(
+      "", "", "nTrain_Signal=1000:nTrain_Background=1000:SplitMode=Random:NormMode=NumEvents:!V");
 
    TFile *outputFile = TFile::Open("TMVAClass.root", "RECREATE");
 
    TMVA::Experimental::Classification *cl = new TMVA::Experimental::Classification(dataloader, Form("Jobs=%d", jobs));
 
-   cl->BookMethod(TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=2000:MinNodeSize=2.5%:MaxDepth=3:BoostType=AdaBoost:"
-                                            "AdaBoostBeta=0.5:UseBaggedBoost:BaggedSampleFraction=0.5:SeparationType="
-                                            "GiniIndex:nCuts=20");
    cl->BookMethod(TMVA::Types::kBDT, "BDTG", "!H:!V:NTrees=2000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:"
                                              "UseBaggedBoost:BaggedSampleFraction=0.5:nCuts=20:MaxDepth=2");
    cl->BookMethod(TMVA::Types::kSVM, "SVM", "Gamma=0.25:Tol=0.001:VarTransform=Norm");
 
    cl->BookMethod(TMVA::Types::kBDT, "BDTB", "!H:!V:NTrees=2000:BoostType=Bagging:SeparationType=GiniIndex:nCuts=20");
+
+   cl->BookMethod(TMVA::Types::kCuts, "Cuts", "!H:!V:FitMethod=MC:EffSel:SampleSize=200000:VarProp=FSmart");
 
    cl->Evaluate(); // Train and Test all methods
 
@@ -82,9 +83,11 @@ void classification(UInt_t jobs = 4)
 
    auto mg = new TMultiGraph();
    for (UInt_t i = 0; i < results.size(); i++) {
-      auto roc = results[i].GetROCGraph();
-      roc->SetLineColorAlpha(i + 1, 0.1);
-      mg->Add(roc);
+      if (!results[i].IsCutsMethod()) {
+         auto roc = results[i].GetROCGraph();
+         roc->SetLineColorAlpha(i + 1, 0.1);
+         mg->Add(roc);
+      }
    }
    mg->Draw("AL");
    mg->GetXaxis()->SetTitle(" Signal Efficiency ");
