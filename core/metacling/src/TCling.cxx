@@ -132,6 +132,7 @@ clang/LLVM technology.
 #ifndef R__WIN32
 #include <cxxabi.h>
 #define R__DLLEXPORT __attribute__ ((visibility ("default")))
+#include <sys/stat.h>
 #endif
 #include <limits.h>
 #include <stdio.h>
@@ -1158,6 +1159,12 @@ static void LoadCoreModules(cling::Interpreter &interp)
    }
 }
 
+static bool FileExists(const char *file)
+{
+   struct stat buf;
+   return (stat(file, &buf) == 0);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the cling interpreter interface.
 
@@ -1233,8 +1240,12 @@ TCling::TCling(const char *name, const char *title)
       interpArgs.push_back("-fmodules");
 
       TString vfsPath = TROOT::GetIncludeDir() + "/modulemap.overlay.yaml";
-      vfsArg = "-ivfsoverlay" + vfsPath;
-      interpArgs.push_back(vfsArg.Data());
+      // On modules aware build systems (such as OSX) we do not need an overlay file and thus the build system does not
+      // generate it.
+      if (FileExists(vfsPath.Data())) {
+         vfsArg = "-ivfsoverlay" + vfsPath;
+         interpArgs.push_back(vfsArg.Data());
+      }
    }
 
 #ifdef R__FAST_MATH
