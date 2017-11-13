@@ -16,7 +16,7 @@
 #include "ROOT/TThreadExecutor.hxx"
 #include "ROOT/TProcessExecutor.hxx"
 #include "TROOT.h"
-#include "Fit/FitExecutionPolicy.h"
+#include "ExecutionPolicy.hxx"
 #include <memory>
 #include <thread>
 
@@ -28,21 +28,21 @@ class TExecutor: public TExecutorBaseImpl<TExecutor> {
 public:
 
    explicit TExecutor(unsigned nProcessingUnits = -1) :
-    TExecutor(ROOT::IsImplicitMTEnabled() ? ROOT::Fit::ExecutionPolicy::kMultithread :ROOT::Fit::ExecutionPolicy::kSerial, nProcessingUnits) {}
+    TExecutor(ROOT::IsImplicitMTEnabled() ? ROOT::Internal::ExecutionPolicy::kMultithread :ROOT::Internal::ExecutionPolicy::kSerial, nProcessingUnits) {}
 
-   explicit TExecutor(ROOT::Fit::ExecutionPolicy execPolicy, unsigned nProcessingUnits = -1) : fExecPolicy(execPolicy) {
+   explicit TExecutor(ROOT::Internal::ExecutionPolicy execPolicy, unsigned nProcessingUnits = -1) : fExecPolicy(execPolicy) {
       fExecPolicy = execPolicy;
       auto poolSize = nProcessingUnits != -1 ? nProcessingUnits: std::thread::hardware_concurrency();
       switch(fExecPolicy) {
-        case ROOT::Fit::ExecutionPolicy::kSerial:
+        case ROOT::Internal::ExecutionPolicy::kSerial:
            fSeqPool = std::unique_ptr<ROOT::TSequentialExecutor>(new ROOT::TSequentialExecutor());
            break;
 #ifdef R__USE_IMT
-        case ROOT::Fit::ExecutionPolicy::kMultithread:
+        case ROOT::Internal::ExecutionPolicy::kMultithread:
            fThreadPool = std::unique_ptr<ROOT::TThreadExecutor>(new ROOT::TThreadExecutor(poolSize));
            break;
 #endif
-        case ROOT::Fit::ExecutionPolicy::kMultiprocess:
+        case ROOT::Internal::ExecutionPolicy::kMultiprocess:
            fProcPool = std::unique_ptr<ROOT::TProcessExecutor>(new ROOT::TProcessExecutor(poolSize));
            break;
       }
@@ -93,7 +93,7 @@ protected:
    auto Map(F func, std::initializer_list<T> args, R redfunc, unsigned nChunks) -> std::vector<typename std::result_of<F(T)>::type>;
 
 private:
-    ROOT::Fit::ExecutionPolicy fExecPolicy;
+    ROOT::Internal::ExecutionPolicy fExecPolicy;
 #ifdef R__USE_IMT
     std::unique_ptr<ROOT::TThreadExecutor> fThreadPool;
 #endif
@@ -112,15 +112,15 @@ private:
       using retType = decltype(func());
       std::vector<retType> res;;
       switch(fExecPolicy){
-         case ROOT::Fit::ExecutionPolicy::kSerial:
+         case ROOT::Internal::ExecutionPolicy::kSerial:
             res = fSeqPool->Map(func, nTimes);
             break;
 #ifdef R__USE_IMT
-         case ROOT::Fit::ExecutionPolicy::kMultithread:
+         case ROOT::Internal::ExecutionPolicy::kMultithread:
             res = fThreadPool->Map(func, nTimes);
             break;
 #endif
-         case ROOT::Fit::ExecutionPolicy::kMultiprocess:
+         case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             res = fProcPool->Map(func, nTimes);
             break;
       }
@@ -137,15 +137,15 @@ private:
       std::vector<retType> res;
 
       switch(fExecPolicy){
-         case ROOT::Fit::ExecutionPolicy::kSerial:
+         case ROOT::Internal::ExecutionPolicy::kSerial:
             res = fSeqPool->Map(func, args);
             break;
 #ifdef R__USE_IMT
-         case ROOT::Fit::ExecutionPolicy::kMultithread:
+         case ROOT::Internal::ExecutionPolicy::kMultithread:
             res = fThreadPool->Map(func, args);
             break;
 #endif
-         case ROOT::Fit::ExecutionPolicy::kMultiprocess:
+         case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             res = fProcPool->Map(func, args);
             break;
       }
@@ -161,16 +161,16 @@ private:
       using retType = decltype(func());
       std::vector<retType> res;;
       switch(fExecPolicy){
-        case ROOT::Fit::ExecutionPolicy::kSerial:
+        case ROOT::Internal::ExecutionPolicy::kSerial:
             //arbitrary value for the number of chunks so the returned vector is not big
             res = fSeqPool->Map(func, nTimes, redfunc, 3);
             break;
   #ifdef R__USE_IMT
-        case ROOT::Fit::ExecutionPolicy::kMultithread:
+        case ROOT::Internal::ExecutionPolicy::kMultithread:
             res = fThreadPool->Map(func, nTimes, redfunc, nChunks);
             break;
   #endif
-        case ROOT::Fit::ExecutionPolicy::kMultiprocess:
+        case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             res = fProcPool->Map(func, nTimes, redfunc, nChunks);
             break;
       }
@@ -189,15 +189,15 @@ private:
       using retType = decltype(func(args.front()));
       std::vector<retType> res;;
       switch(fExecPolicy){
-         case ROOT::Fit::ExecutionPolicy::kSerial:
+         case ROOT::Internal::ExecutionPolicy::kSerial:
             res = fSeqPool->Map(func, args);
             break;
 #ifdef R__USE_IMT
-         case ROOT::Fit::ExecutionPolicy::kMultithread:
+         case ROOT::Internal::ExecutionPolicy::kMultithread:
             res = fThreadPool->Map(func, args);
             break;
 #endif
-         case ROOT::Fit::ExecutionPolicy::kMultiprocess:
+         case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             res = fProcPool->Map(func, args);
             break;
       }
@@ -214,16 +214,16 @@ private:
     using retType = decltype(func(args.front()));
     std::vector<retType> res;;
     switch(fExecPolicy){
-       case ROOT::Fit::ExecutionPolicy::kSerial:
+       case ROOT::Internal::ExecutionPolicy::kSerial:
           //arbitrary value for the number of chunks so the returned vector is not big
           res = fSeqPool->Map(func, args, redfunc, 3);
           break;
 #ifdef R__USE_IMT
-       case ROOT::Fit::ExecutionPolicy::kMultithread:
+       case ROOT::Internal::ExecutionPolicy::kMultithread:
           res = fThreadPool->Map(func, args, redfunc, nChunks);
           break;
 #endif
-       case ROOT::Fit::ExecutionPolicy::kMultiprocess:
+       case ROOT::Internal::ExecutionPolicy::kMultiprocess:
           res = fProcPool->Map(func, args, redfunc, nChunks);
           break;
     }
@@ -241,16 +241,16 @@ private:
       using retType = decltype(func(args.front()));
       std::vector<retType> res;;
       switch(fExecPolicy){
-        case ROOT::Fit::ExecutionPolicy::kSerial:
+        case ROOT::Internal::ExecutionPolicy::kSerial:
             //arbitrary value for the number of chunks so the returned vector is not big
             res = fSeqPool->Map(func, args, redfunc, 3);
             break;
 #ifdef R__USE_IMT
-        case ROOT::Fit::ExecutionPolicy::kMultithread:
+        case ROOT::Internal::ExecutionPolicy::kMultithread:
             res = fThreadPool->Map(func, args, redfunc, nChunks);
             break;
 #endif
-        case ROOT::Fit::ExecutionPolicy::kMultiprocess:
+        case ROOT::Internal::ExecutionPolicy::kMultiprocess:
             res = fProcPool->Map(func, args, redfunc, nChunks);
             break;
       }

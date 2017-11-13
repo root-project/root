@@ -224,7 +224,7 @@ namespace ROOT {
 //___________________________________________________________________________________________________________________________
 
       double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, const double *p, unsigned int &,
-                                   ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+                                   ROOT::Internal::ExecutionPolicy executionPolicy, unsigned nChunks)
       {
          // evaluate the chi2 given a  function reference  , the data and returns the value and also in nPoints
          // the actual number of used points
@@ -376,20 +376,20 @@ namespace ROOT {
   (void)nChunks;
 
   // If IMT is disabled, force the execution policy to the serial case
-  if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+  if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
      Warning("FitUtil::EvaluateChi2", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                      "to ROOT::Fit::ExecutionPolicy::kSerial.");
-     executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+                                      "to ROOT::Internal::ExecutionPolicy::kSerial.");
+     executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
   }
 #endif
 
   double res{};
-  if(executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial){
+  if(executionPolicy == ROOT::Internal::ExecutionPolicy::kSerial){
     for (unsigned int i=0; i<n; ++i) {
       res += mapFunction(i);
     }
 #ifdef R__USE_IMT
-  } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+  } else if(executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
     auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     ROOT::TThreadExecutor pool;
     res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
@@ -398,7 +398,7 @@ namespace ROOT {
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n ROOT::Internal::ExecutionPolicy::kSerial (default)\n ROOT::Internal::ExecutionPolicy::kMultithread (requires IMT)\n");
   }
 
    return res;
@@ -636,7 +636,7 @@ double FitUtil::EvaluateChi2Residual(const IModelFunction & func, const BinData 
 }
 
 void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
-                                   unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+                                   unsigned int &nPoints, ROOT::Internal::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the gradient of the chi2 function
    // this function is used when the model function knows how to calculate the derivative and we can
@@ -786,14 +786,14 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
 
 #ifndef R__USE_IMT
    // If IMT is disabled, force the execution policy to the serial case
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
       Warning("FitUtil::EvaluateChi2Gradient", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                               "to ROOT::Fit::ExecutionPolicy::kSerial.");
-      executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+                                               "to ROOT::Internal::ExecutionPolicy::kSerial.");
+      executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
    }
 #endif
 
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kSerial) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
          allGradients[i] = mapFunction(i);
@@ -801,7 +801,7 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
       g = redFunction(allGradients);
    }
 #ifdef R__USE_IMT
-   else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   else if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
       auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       ROOT::TThreadExecutor pool;
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
@@ -897,7 +897,7 @@ double FitUtil::EvaluatePdf(const IModelFunction & func, const UnBinData & data,
 
 double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBinData &data, const double *p,
                              int iWeight, bool extended, unsigned int &nPoints,
-                             ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+                             ROOT::Internal::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the LogLikelihood
 
@@ -1026,17 +1026,17 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
   (void)nChunks;
 
   // If IMT is disabled, force the execution policy to the serial case
-  if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+  if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
      Warning("FitUtil::EvaluateLogL", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                      "to ROOT::Fit::ExecutionPolicy::kSerial.");
-     executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+                                      "to ROOT::Internal::ExecutionPolicy::kSerial.");
+     executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
   }
 #endif
 
   double logl{};
   double sumW{};
   double sumW2{};
-  if(executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial){
+  if(executionPolicy == ROOT::Internal::ExecutionPolicy::kSerial){
     for (unsigned int i=0; i<n; ++i) {
       auto resArray = mapFunction(i);
       logl+=resArray.logvalue;
@@ -1044,7 +1044,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
       sumW2+=resArray.weight2;
     }
 #ifdef R__USE_IMT
-  } else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+  } else if(executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
     auto chunks = nChunks !=0? nChunks: setAutomaticChunking(data.Size());
     ROOT::TThreadExecutor pool;
     auto resArray = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
@@ -1056,7 +1056,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n ROOT::Internal::ExecutionPolicy::kSerial (default)\n ROOT::Internal::ExecutionPolicy::kMultithread (requires IMT)\n");
   }
 
   if (extended) {
@@ -1124,7 +1124,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
 }
 
 void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &data, const double *p, double *grad,
-                                   unsigned int &, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+                                   unsigned int &, ROOT::Internal::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the gradient of the log likelihood function
 
@@ -1211,14 +1211,14 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
 
 #ifndef R__USE_IMT
    // If IMT is disabled, force the execution policy to the serial case
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
       Warning("FitUtil::EvaluateLogLGradient", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                               "to ROOT::Fit::ExecutionPolicy::kSerial.");
-      executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+                                               "to ROOT::Internal::ExecutionPolicy::kSerial.");
+      executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
    }
 #endif
 
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kSerial) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
          allGradients[i] = mapFunction(i);
@@ -1226,21 +1226,21 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
       g = redFunction(allGradients);
    }
 #ifdef R__USE_IMT
-   else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   else if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
       auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       ROOT::TThreadExecutor pool;
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
    }
 #endif
 
-   // else if(executionPolicy == ROOT::Fit::ExecutionPolicy::kMultiprocess){
+   // else if(executionPolicy == ROOT::Internal::ExecutionPolicy::kMultiprocess){
    //    ROOT::TProcessExecutor pool;
    //    g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    // }
    else {
       Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Avalaible choices:\n "
-                                             "ROOT::Fit::ExecutionPolicy::kSerial (default)\n "
-                                             "ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+                                             "ROOT::Internal::ExecutionPolicy::kSerial (default)\n "
+                                             "ROOT::Internal::ExecutionPolicy::kMultithread (requires IMT)\n");
    }
 
 #ifndef R__USE_IMT
@@ -1369,7 +1369,7 @@ double FitUtil::EvaluatePoissonBinPdf(const IModelFunction & func, const BinData
 }
 
 double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &data, const double *p, int iWeight,
-                                    bool extended, unsigned int &nPoints, ROOT::Fit::ExecutionPolicy executionPolicy,
+                                    bool extended, unsigned int &nPoints, ROOT::Internal::ExecutionPolicy executionPolicy,
                                     unsigned nChunks)
 {
    // evaluate the Poisson Log Likelihood
@@ -1536,20 +1536,20 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
    (void)nChunks;
 
    // If IMT is disabled, force the execution policy to the serial case
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
       Warning("FitUtil::EvaluatePoissonLogL", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                              "to ROOT::Fit::ExecutionPolicy::kSerial.");
-      executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+                                              "to ROOT::Internal::ExecutionPolicy::kSerial.");
+      executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
    }
 #endif
 
    double res{};
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kSerial) {
       for (unsigned int i = 0; i < n; ++i) {
          res += mapFunction(i);
       }
 #ifdef R__USE_IMT
-   } else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   } else if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
       auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(data.Size());
       ROOT::TThreadExecutor pool;
       res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction, chunks);
@@ -1559,7 +1559,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    } else {
       Error("FitUtil::EvaluatePoissonLogL",
-            "Execution policy unknown. Avalaible choices:\n ROOT::Fit::ExecutionPolicy::kSerial (default)\n ROOT::Fit::ExecutionPolicy::kMultithread (requires IMT)\n");
+            "Execution policy unknown. Avalaible choices:\n ROOT::Internal::ExecutionPolicy::kSerial (default)\n ROOT::Internal::ExecutionPolicy::kMultithread (requires IMT)\n");
    }
 
 #ifdef DEBUG
@@ -1570,7 +1570,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
 }
 
 void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData &data, const double *p, double *grad,
-                                          unsigned int &, ROOT::Fit::ExecutionPolicy executionPolicy, unsigned nChunks)
+                                          unsigned int &, ROOT::Internal::ExecutionPolicy executionPolicy, unsigned nChunks)
 {
    // evaluate the gradient of the Poisson log likelihood function
 
@@ -1704,15 +1704,15 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
 
 #ifndef R__USE_IMT
    // If IMT is disabled, force the execution policy to the serial case
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
       Warning("FitUtil::EvaluatePoissonLogLGradient",
               "Multithread execution policy requires IMT, which is disabled. Changing "
-              "to ROOT::Fit::ExecutionPolicy::kSerial.");
-      executionPolicy = ROOT::Fit::ExecutionPolicy::kSerial;
+              "to ROOT::Internal::ExecutionPolicy::kSerial.");
+      executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
    }
 #endif
 
-   if (executionPolicy == ROOT::Fit::ExecutionPolicy::kSerial) {
+   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kSerial) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
          allGradients[i] = mapFunction(i);
@@ -1720,7 +1720,7 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
       g = redFunction(allGradients);
    }
 #ifdef R__USE_IMT
-   else if (executionPolicy == ROOT::Fit::ExecutionPolicy::kMultithread) {
+   else if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
       auto chunks = nChunks != 0 ? nChunks : setAutomaticChunking(initialNPoints);
       ROOT::TThreadExecutor pool;
       g = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, initialNPoints), redFunction, chunks);
