@@ -378,13 +378,13 @@ namespace ROOT {
   // If IMT is disabled, force the execution policy to the serial case
   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
      Warning("FitUtil::EvaluateChi2", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                      "to ROOT::Internal::ExecutionPolicy::kSerial.");
-     executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
+                                      "to ROOT::Internal::ExecutionPolicy::kSequential.");
+     executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential;
   }
 #endif
 
   double res{};
-  if(executionPolicy == ROOT::Internal::ExecutionPolicy::kSerial){
+  if(executionPolicy == ROOT::Internal::ExecutionPolicy::kSequential){
     for (unsigned int i=0; i<n; ++i) {
       res += mapFunction(i);
     }
@@ -398,7 +398,7 @@ namespace ROOT {
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n ROOT::Internal::ExecutionPolicy::kSerial (default)\n ROOT::Internal::ExecutionPolicy::kMultithread (requires IMT)\n");
+    Error("FitUtil::EvaluateChi2","Execution policy unknown. Avalaible choices:\n ROOT::Internal::ExecutionPolicy::kSequential (default)\n ROOT::Internal::ExecutionPolicy::kMultithread (requires IMT)\n");
   }
 
    return res;
@@ -788,12 +788,12 @@ void FitUtil::EvaluateChi2Gradient(const IModelFunction &f, const BinData &data,
    // If IMT is disabled, force the execution policy to the serial case
    if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
       Warning("FitUtil::EvaluateChi2Gradient", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                               "to ROOT::Internal::ExecutionPolicy::kSerial.");
-      executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
+                                               "to ROOT::Internal::ExecutionPolicy::kSequential.");
+      executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential;
    }
 #endif
 
-   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kSerial) {
+   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kSequential) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
          allGradients[i] = mapFunction(i);
@@ -1028,15 +1028,15 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
   // If IMT is disabled, force the execution policy to the serial case
   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
      Warning("FitUtil::EvaluateLogL", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                      "to ROOT::Internal::ExecutionPolicy::kSerial.");
-     executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
+                                      "to ROOT::Internal::ExecutionPolicy::kSequential.");
+     executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential;
   }
 #endif
 
   double logl{};
   double sumW{};
   double sumW2{};
-  if(executionPolicy == ROOT::Internal::ExecutionPolicy::kSerial){
+  if(executionPolicy == ROOT::Internal::ExecutionPolicy::kSequential){
     for (unsigned int i=0; i<n; ++i) {
       auto resArray = mapFunction(i);
       logl+=resArray.logvalue;
@@ -1056,7 +1056,7 @@ double FitUtil::EvaluateLogL(const IModelFunctionTempl<double> &func, const UnBi
     // ROOT::TProcessExecutor pool;
     // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
   } else{
-    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n ROOT::Internal::ExecutionPolicy::kSerial (default)\n ROOT::Internal::ExecutionPolicy::kMultithread (requires IMT)\n");
+    Error("FitUtil::EvaluateLogL","Execution policy unknown. Avalaible choices:\n ROOT::Internal::ExecutionPolicy::kSequential (default)\n ROOT::Internal::ExecutionPolicy::kMultithread (requires IMT)\n");
   }
 
   if (extended) {
@@ -1213,12 +1213,12 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
    // If IMT is disabled, force the execution policy to the serial case
    if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
       Warning("FitUtil::EvaluateLogLGradient", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                               "to ROOT::Internal::ExecutionPolicy::kSerial.");
-      executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
+                                               "to ROOT::Internal::ExecutionPolicy::kSequential.");
+      executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential;
    }
 #endif
 
-   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kSerial) {
+   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kSequential) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
          allGradients[i] = mapFunction(i);
@@ -1239,7 +1239,7 @@ void FitUtil::EvaluateLogLGradient(const IModelFunction &f, const UnBinData &dat
    // }
    else {
       Error("FitUtil::EvaluateLogLGradient", "Execution policy unknown. Avalaible choices:\n "
-                                             "ROOT::Internal::ExecutionPolicy::kSerial (default)\n "
+                                             "ROOT::Internal::ExecutionPolicy::kSequential (default)\n "
                                              "ROOT::Internal::ExecutionPolicy::kMultithread (requires IMT)\n");
    }
 
@@ -1538,13 +1538,13 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
    // If IMT is disabled, force the execution policy to the serial case
    if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
       Warning("FitUtil::EvaluatePoissonLogL", "Multithread execution policy requires IMT, which is disabled. Changing "
-                                              "to ROOT::Internal::ExecutionPolicy::kSerial.");
-      executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
+                                              "to ROOT::Internal::ExecutionPolicy::kSequential.");
+      executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential;
    }
 #endif
 
    double res{};
-   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kSerial) {
+   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kSequential) {
       for (unsigned int i = 0; i < n; ++i) {
          res += mapFunction(i);
       }
@@ -1559,7 +1559,7 @@ double FitUtil::EvaluatePoissonLogL(const IModelFunction &func, const BinData &d
       // res = pool.MapReduce(mapFunction, ROOT::TSeq<unsigned>(0, n), redFunction);
    } else {
       Error("FitUtil::EvaluatePoissonLogL",
-            "Execution policy unknown. Avalaible choices:\n ROOT::Internal::ExecutionPolicy::kSerial (default)\n ROOT::Internal::ExecutionPolicy::kMultithread (requires IMT)\n");
+            "Execution policy unknown. Avalaible choices:\n ROOT::Internal::ExecutionPolicy::kSequential (default)\n ROOT::Internal::ExecutionPolicy::kMultithread (requires IMT)\n");
    }
 
 #ifdef DEBUG
@@ -1707,12 +1707,12 @@ void FitUtil::EvaluatePoissonLogLGradient(const IModelFunction &f, const BinData
    if (executionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread) {
       Warning("FitUtil::EvaluatePoissonLogLGradient",
               "Multithread execution policy requires IMT, which is disabled. Changing "
-              "to ROOT::Internal::ExecutionPolicy::kSerial.");
-      executionPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
+              "to ROOT::Internal::ExecutionPolicy::kSequential.");
+      executionPolicy = ROOT::Internal::ExecutionPolicy::kSequential;
    }
 #endif
 
-   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kSerial) {
+   if (executionPolicy == ROOT::Internal::ExecutionPolicy::kSequential) {
       std::vector<std::vector<double>> allGradients(initialNPoints);
       for (unsigned int i = 0; i < initialNPoints; ++i) {
          allGradients[i] = mapFunction(i);

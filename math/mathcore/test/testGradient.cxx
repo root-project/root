@@ -61,10 +61,10 @@ char mthreadStr[] = "Multithread";
 
 // Typedefs of GradientTestTraits for scalar (serial and multithreaded)
 // scenarios
-using ScalarSerial1D = GradientTestTraits<Double_t, ROOT::Internal::ExecutionPolicy::kSerial, 1, scalarStr, serialStr>;
+using ScalarSerial1D = GradientTestTraits<Double_t, ROOT::Internal::ExecutionPolicy::kSequential, 1, scalarStr, serialStr>;
 using ScalarMultithread1D =
    GradientTestTraits<Double_t, ROOT::Internal::ExecutionPolicy::kMultithread, 1, scalarStr, mthreadStr>;
-using ScalarSerial2D = GradientTestTraits<Double_t, ROOT::Internal::ExecutionPolicy::kSerial, 2, scalarStr, serialStr>;
+using ScalarSerial2D = GradientTestTraits<Double_t, ROOT::Internal::ExecutionPolicy::kSequential, 2, scalarStr, serialStr>;
 using ScalarMultithread2D =
    GradientTestTraits<Double_t, ROOT::Internal::ExecutionPolicy::kMultithread, 2, scalarStr, mthreadStr>;
 
@@ -73,11 +73,11 @@ using ScalarMultithread2D =
 // Typedefs of GradientTestTraits for vectorial (serial and multithreaded)
 // scenarios
 using VectorialSerial1D =
-   GradientTestTraits<ROOT::Double_v, ROOT::Internal::ExecutionPolicy::kSerial, 1, vectorStr, serialStr>;
+   GradientTestTraits<ROOT::Double_v, ROOT::Internal::ExecutionPolicy::kSequential, 1, vectorStr, serialStr>;
 using VectorialMultithread1D =
    GradientTestTraits<ROOT::Double_v, ROOT::Internal::ExecutionPolicy::kMultithread, 1, vectorStr, mthreadStr>;
 using VectorialSerial2D =
-   GradientTestTraits<ROOT::Double_v, ROOT::Internal::ExecutionPolicy::kSerial, 2, vectorStr, serialStr>;
+   GradientTestTraits<ROOT::Double_v, ROOT::Internal::ExecutionPolicy::kSequential, 2, vectorStr, serialStr>;
 using VectorialMultithread2D =
    GradientTestTraits<ROOT::Double_v, ROOT::Internal::ExecutionPolicy::kMultithread, 2, vectorStr, mthreadStr>;
 
@@ -263,7 +263,7 @@ struct GradientTestEvaluation {
 
    // Basic type to compare against
    using ScalarSerial =
-      GradientTestTraits<double, ROOT::Internal::ExecutionPolicy::kSerial, T::Dimensions(), scalarStr, serialStr>;
+      GradientTestTraits<double, ROOT::Internal::ExecutionPolicy::kSequential, T::Dimensions(), scalarStr, serialStr>;
 
    GradientTestEvaluation()
    {

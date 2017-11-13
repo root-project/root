@@ -712,7 +712,7 @@ void ROOT::Fit::FitOptionsMake(EFitObjectType type, const char *option, Foption_
       // }
 
       if (opt.Contains("SERIAL")) {
-         fitOption.ExecPolicy = ROOT::Internal::ExecutionPolicy::kSerial;
+         fitOption.ExecPolicy = ROOT::Internal::ExecutionPolicy::kSequential;
          opt.ReplaceAll("SERIAL","");
       }
 

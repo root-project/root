@@ -2,7 +2,7 @@
 #define ROOT_Fit_FitExecutionPolicy
 namespace ROOT {
    namespace Internal {
-      enum class ExecutionPolicy { kSerial, kMultithread, kMultiprocess };
+      enum class ExecutionPolicy { kSequential, kMultithread, kMultiprocess };
     }
 }
 

@@ -234,7 +234,7 @@ protected:
       fExecutionPolicy = executionPolicy;
       if (printLevel>0) { 
          std::cout << "**************************************\n";
-         if (fExecutionPolicy == ROOT::Internal::ExecutionPolicy::kSerial)
+         if (fExecutionPolicy == ROOT::Internal::ExecutionPolicy::kSequential)
             std::cout << "   RUN SEQUENTIAL \n";
          else if (fExecutionPolicy == ROOT::Internal::ExecutionPolicy::kMultithread)
             std::cout << "   RUN MULTI-THREAD \n";
@@ -253,7 +253,7 @@ protected:
    typename T::FittingDataType *fData;
    TH2D *fHistogram;
    ROOT::Fit::Fitter fFitter;
-   ROOT::Internal::ExecutionPolicy fExecutionPolicy = ROOT::Internal::ExecutionPolicy::kSerial; 
+   ROOT::Internal::ExecutionPolicy fExecutionPolicy = ROOT::Internal::ExecutionPolicy::kSequential;
    static const unsigned fNumPoints = 401;
 };
 
@@ -274,7 +274,7 @@ TYPED_TEST_CASE_P(GradientFittingTest);
 // Test the fitting using the gradient is successful
 TYPED_TEST_P(GradientFittingTest, Sequential)
 {
-   EXPECT_TRUE(TestFixture::RunFit(ROOT::Internal::ExecutionPolicy::kSerial));
+   EXPECT_TRUE(TestFixture::RunFit(ROOT::Internal::ExecutionPolicy::kSequential));
 }
 
 TYPED_TEST_P(GradientFittingTest, Multithread)

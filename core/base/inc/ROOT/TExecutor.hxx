@@ -28,13 +28,13 @@ class TExecutor: public TExecutorBaseImpl<TExecutor> {
 public:
 
    explicit TExecutor(unsigned nProcessingUnits = -1) :
-    TExecutor(ROOT::IsImplicitMTEnabled() ? ROOT::Internal::ExecutionPolicy::kMultithread :ROOT::Internal::ExecutionPolicy::kSerial, nProcessingUnits) {}
+    TExecutor(ROOT::IsImplicitMTEnabled() ? ROOT::Internal::ExecutionPolicy::kMultithread :ROOT::Internal::ExecutionPolicy::kSequential, nProcessingUnits) {}
 
    explicit TExecutor(ROOT::Internal::ExecutionPolicy execPolicy, unsigned nProcessingUnits = -1) : fExecPolicy(execPolicy) {
       fExecPolicy = execPolicy;
       auto poolSize = nProcessingUnits != -1 ? nProcessingUnits: std::thread::hardware_concurrency();
       switch(fExecPolicy) {
-        case ROOT::Internal::ExecutionPolicy::kSerial:
+        case ROOT::Internal::ExecutionPolicy::kSequential:
            fSeqPool = std::unique_ptr<ROOT::TSequentialExecutor>(new ROOT::TSequentialExecutor());
            break;
 #ifdef R__USE_IMT
@@ -112,7 +112,7 @@ private:
       using retType = decltype(func());
       std::vector<retType> res;;
       switch(fExecPolicy){
-         case ROOT::Internal::ExecutionPolicy::kSerial:
+         case ROOT::Internal::ExecutionPolicy::kSequential:
             res = fSeqPool->Map(func, nTimes);
             break;
 #ifdef R__USE_IMT
@@ -137,7 +137,7 @@ private:
       std::vector<retType> res;
 
       switch(fExecPolicy){
-         case ROOT::Internal::ExecutionPolicy::kSerial:
+         case ROOT::Internal::ExecutionPolicy::kSequential:
             res = fSeqPool->Map(func, args);
             break;
 #ifdef R__USE_IMT
@@ -161,7 +161,7 @@ private:
       using retType = decltype(func());
       std::vector<retType> res;;
       switch(fExecPolicy){
-        case ROOT::Internal::ExecutionPolicy::kSerial:
+        case ROOT::Internal::ExecutionPolicy::kSequential:
             //arbitrary value for the number of chunks so the returned vector is not big
             res = fSeqPool->Map(func, nTimes, redfunc, 3);
             break;
@@ -189,7 +189,7 @@ private:
       using retType = decltype(func(args.front()));
       std::vector<retType> res;;
       switch(fExecPolicy){
-         case ROOT::Internal::ExecutionPolicy::kSerial:
+         case ROOT::Internal::ExecutionPolicy::kSequential:
             res = fSeqPool->Map(func, args);
             break;
 #ifdef R__USE_IMT
@@ -214,7 +214,7 @@ private:
     using retType = decltype(func(args.front()));
     std::vector<retType> res;;
     switch(fExecPolicy){
-       case ROOT::Internal::ExecutionPolicy::kSerial:
+       case ROOT::Internal::ExecutionPolicy::kSequential:
           //arbitrary value for the number of chunks so the returned vector is not big
           res = fSeqPool->Map(func, args, redfunc, 3);
           break;
@@ -241,7 +241,7 @@ private:
       using retType = decltype(func(args.front()));
       std::vector<retType> res;;
       switch(fExecPolicy){
-        case ROOT::Internal::ExecutionPolicy::kSerial:
+        case ROOT::Internal::ExecutionPolicy::kSequential:
             //arbitrary value for the number of chunks so the returned vector is not big
             res = fSeqPool->Map(func, args, redfunc, 3);
             break;
