@@ -114,7 +114,7 @@ large TClonesArray where each element contains another small vector container.
 ### TDataFrame
 
 #### New features
-  - Add `Alias`, a facility to specify an alternative name for a given column: `auto histo = mytdf.Alias("myAlias", "myColumn").Histo1D("myAlias");`
+  - Add `Alias`, a facility to specify an alternative name for a given column: `auto histo = mytdf.Alias("myAlias", "myColumn").Histo1D("myAlias");`. Especially useful for pyROOT users to deal with column names that are not valid C++ identifiers (e.g. `Filter("1branch > 0") --> Alias("1branch", "branch1").Filter("branch1 > 0")`.
   - Add `Cache`, a facility to cache `TDataFrame`s in memory. All or some columns can be cached. Two versions of the method are proposed: one which allows to explicitly list the types of the columns and another one allowing to let the system infer them (the same mechanism of the `Snapshot` method). Only columns containing instances of classes which have a copy constructor can be cached.
   - Add `DefineSlot`, a `Define` transformation that is aware of the multi-threading slot where the workload is executed
   - Add `DefineSlotEntry`, a `Define` transformation that is aware of the multi-threading slot and of the current entry number
@@ -130,12 +130,12 @@ large TClonesArray where each element contains another small vector container.
     See the tutorials for more examples.
   - Add `Sum`, an action that sums all values of a column for the processed entries
   - The new TDataSource interface allows developers to pipe any kind of columnar data format into TDataFrame. Two example data sources have been provided: the TRootDS and the TTrivialDS. The former allows to read via the novel data source mechanism ROOT data, while the latter is a simple generator, created for testing and didactic purposes. It is therefore now possible to interface *any* kind of dataset/data format to ROOT as long as an adaptor which implements the pure virtual methods of the TDataSource interface can be written in C++.
-  - TDF can now read CSV files through a specialized TDataSource. Just create the TDF with `MakeCsvDataFrame("f.csv", false, ',')`
+  - TDF can now read CSV files through a specialized TDataSource. Just create the TDF with `MakeCsvDataFrame("f.csv")`. Just create the TDF with MakeCsvDataFrame("f.csv"). The data types of the CSV columns are automatically inferred. You can also specify if you want to use a different delimiter or if your file does not have headers.
   - Users can now configure Snapshot to use different file open modes ("RECREATE" or "UPDATE"), compression level, compression algorithm, TTree split-level and autoflush settings
   - Users can now access multi-threading slot and entry number as pre-defined columns "tdfslot_" and "tdfentry_". Especially useful for pyROOT users.
   - Users can now specify filters and definitions as strings containing multiple C++ expressions, e.g. "static int a = 0; return ++a". Especially useful for pyROOT users.
   - pyROOT users can now easily specify parameters for the TDF histograms and profiles thanks to the newly introduced tuple-initialization
-  - Add support for friend trees
+  - Add support for friend trees and chains. Just add the friends before passing the tree/chain to TDataFrame's constructor and refer to friend branches as usual.
 
 #### Fixes
   - Fixed race condition: concurrent deletion of TTreeReader/TTreeReaderValue
