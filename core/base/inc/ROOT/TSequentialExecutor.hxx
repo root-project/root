@@ -67,7 +67,7 @@ namespace ROOT {
    /// fixed arguments) by wrapping them in a lambda or with std::bind.
    template<class F>
    void TSequentialExecutor::Foreach(F func, unsigned nTimes) {
-       for(auto i: ROOT::TSeqI(nTimes)) func();
+       for(auto i = 0u; i < nTimes; i++) func();
    }
 
    //////////////////////////////////////////////////////////////////////////
