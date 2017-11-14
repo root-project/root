@@ -1106,7 +1106,10 @@ static void LoadCoreModules(cling::Interpreter &interp)
    std::vector<std::string> optionalCoreModuleNames = {"stl", "libc"};
 
    // List of core modules we need to load.
-   std::vector<std::string> neededCoreModuleNames = {"Core", "RIO"};
+   // FIXME: TreePlayer is here because the rootmap loading doesn't work with
+   // TDataFrame. This should be gone once we no longer rely on rootmap files
+   // for loading a module.
+   std::vector<std::string> neededCoreModuleNames = {"Core", "RIO", "TreePlayer"};
    std::vector<std::string> missingCoreModuleNames;
 
    std::vector<clang::Module *> coreModules;
