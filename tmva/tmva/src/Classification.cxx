@@ -282,7 +282,7 @@ void TMVA::Experimental::Classification::Evaluate()
          if (!IsSilentFile()) {
             GetFile()->Close();
          }
-         
+
          return GetResults(methodname, methodtitle);
       };
 
