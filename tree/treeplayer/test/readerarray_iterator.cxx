@@ -64,9 +64,7 @@ void TestReaderArray()
    it = it3++;
    EXPECT_EQ(it += 1, it3);
 
-   // FIXME: `n + it` does not resolve to the right operator+
-   // EXPECT_EQ((std::ptrdiff_t(2) + arr.begin()) - 1, --(arr.begin() + 2));
-   EXPECT_EQ((arr.begin() + 2) - 1, --(arr.begin() + 2));
+   EXPECT_EQ((std::ptrdiff_t(2) + arr.begin()) - 1, --(arr.begin() + 2));
    it = std::move(it3);
    auto it4 = it--;
    EXPECT_EQ(it4 -= 1, it);
