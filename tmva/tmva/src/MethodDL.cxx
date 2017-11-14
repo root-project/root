@@ -1214,28 +1214,34 @@ void MethodDL::TrainCpu()
          Log() << separator << Endl;
       }
 
+      Double_t minTestError = 0; 
       while (!converged) {
          stepCount++;
          trainingData.Shuffle();
 
          // execute all epochs
          //for (size_t i = 0; i < batchesInEpoch; i += nThreads) {
+         for (size_t i = 0; i < batchesInEpoch; ++i ) {
             // Clean and load new batches, one batch for one slave net
             //batches.clear();
             //batches.reserve(nThreads);
             //for (size_t j = 0; j < nThreads; j++) {
             //   batches.push_back(trainingData.GetTensorBatch());
             //}
-         auto my_batch = trainingData.GetTensorBatch();
+            auto my_batch = trainingData.GetTensorBatch();
+
+            //std::cout << "input size " << my_batch.GetInput().size() << " matrix  " << my_batch.GetInput().front().GetNrows() << " x " << my_batch.GetInput().front().GetNcols()   << std::endl;
+         
 
          // execute one minimization step
          // StepMomentum is currently not written for single thread, TODO write it
-         if (settings.momentum > 0.0) {
-            //minimizer.StepMomentum(deepNet, nets, batches, settings.momentum);
-            minimizer.Step(deepNet, my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
-         } else {
-            //minimizer.Step(deepNet, nets, batches);
-            minimizer.Step(deepNet, my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
+            if (settings.momentum > 0.0) {
+               //minimizer.StepMomentum(deepNet, nets, batches, settings.momentum);
+               minimizer.Step(deepNet, my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
+            } else {
+               //minimizer.Step(deepNet, nets, batches);
+               minimizer.Step(deepNet, my_batch.GetInput(), my_batch.GetOutput(), my_batch.GetWeights());
+            }
          }
          //}
 
@@ -1258,19 +1264,34 @@ void MethodDL::TrainCpu()
             
             t2 = std::chrono::system_clock::now();
             testError /= (Double_t)(nTestSamples / settings.batchSize);
+            // copy configuration when reached a minimum error
+            if (testError < minTestError ) {
+               // Copy weights from deepNet to fNet
+               Log() << std::setw(10) << stepCount << " Minimun Test error found - save the configuration " << Endl;
+               for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
+                  const auto & fLayer = fNet->GetLayerAt(i); 
+                  const auto & dLayer = deepNet.GetLayerAt(i); 
+                  fLayer->CopyWeights(dLayer->GetWeights()); 
+                  fLayer->CopyBiases(dLayer->GetBiases());
+               }
+               minTestError = testError;
+            }
+            else if ( minTestError <= 0. )
+               minTestError = testError; 
 
 
             Double_t trainingError = 0.0;
-            if ((stepCount % 20*minimizer.GetTestInterval()) == 0) {
-               // Compute training error.
-               for (auto batch : trainingData) {
-                  auto inputTensor = batch.GetInput();
-                  auto outputMatrix = batch.GetOutput();
-                  auto weights = batch.GetWeights();
-                  trainingError += deepNet.Loss(inputTensor, outputMatrix, weights);
-               }
-               trainingError /= (Double_t)(nTrainingSamples / settings.batchSize);
+            // Compute training error.
+            for (auto batch : trainingData) {
+               auto inputTensor = batch.GetInput();
+               auto outputMatrix = batch.GetOutput();
+               auto weights = batch.GetWeights();
+
+               //std::cout << "After  size " << batch.GetInput().size() << " matrix  " << batch.GetInput().front().GetNrows() << " x " << batch.GetInput().front().GetNcols()   << std::endl;
+               
+               trainingError += deepNet.Loss(inputTensor, outputMatrix, weights);
             }
+            trainingError /= (Double_t)(nTrainingSamples / settings.batchSize);
 
             // stop measuring
             end = std::chrono::system_clock::now();
@@ -1302,14 +1323,6 @@ void MethodDL::TrainCpu()
             start = std::chrono::system_clock::now();
          }
       }
-
-      // Copy weights from deepNet to fNet
-      for (size_t i = 0; i < deepNet.GetDepth(); ++i) {
-         const auto & fLayer = fNet->GetLayerAt(i); 
-         const auto & dLayer = deepNet.GetLayerAt(i); 
-         fLayer->CopyWeights(dLayer->GetWeights()); 
-         fLayer->CopyBiases(dLayer->GetBiases());
-      } 
 
    }
 
