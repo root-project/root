@@ -112,40 +112,46 @@ large TClonesArray where each element contains another small vector container.
   (the absolute value of MaxVirtualSize indicates how many additional clusters will be kept in memory).
 
 ### TDataFrame
-  - Improved documentation
-  - Fixed race condition: concurrent deletion of TTreeReader/TTreeReaderValue
-  - TDF now avoids performing virtual calls for parts of the analysis that are not jitted
-  - Improved checks for column name validity (throw if column does not exist and if `Define`d column overrides an already existing column)
-  - Removed "custom column" nodes from the functional graph therewith optimising the traversal
-  - Added `DefineSlot`, a `Define` transformation that is aware of the multi-threading slot where the workload is executed
-  - Improvements in Cling drastically enhanced scaling and performance of TDF jitted code
-  - Fixed reading of c-style arrays from jitted transformations and actions
-  - pyROOT users can now easily specify parameters for the TDF histograms and profiles thanks to the newly introduced tuple-initialization
-  - The new TDataSource interface allows developers to pipe any kind of columnar data format into TDataFrame
-  - Test coverage has been increased with the introduction of google tests
-  - Users can now configure Snapshot to use different file open modes ("RECREATE" or "UPDATE"), compression level, compression algorithm, TTree split-level and autoflush settings
-  - Python tutorials show the new "tuple-initialisation" feature of PyROOT (see below)
-  - The possibility to read from data sources was added. An interface for all data sources, TDataSource, is provided by ROOT. Two example data sources have been provided too: the TRootDS and the TTrivialDS. The former allows to read via the novel data source mechanism ROOT data, while the latter is a simple generator, created for testing and didactic purposes. It is therefore now possible to interface *any* kind of dataset/data format to ROOT as long as an adaptor which implements the pure virtual methods of the TDataSource interface can be written in C++.
-  - Column can be aliased with the `TDF::TInterface` method `Alias`: `auto histo = mytdf.Alias("myAlias", "myColumn").Histo1D("myAlias");`
-  - Add the `GetColumnsNames` method to the `TDF::TInterface`: the user can therefore get the names of the available columns coming from trees, data sources or `Define`d columns
-  - `TDataFrame`s can be cached in memory with the `TDF::TInterface` method `Cache`. All or some columns can be cached. Two versions of the method are proposed: one which allows to explicitly list the types of the columns and another one allowing to let the system infer them (the same mechanism of the `Snapshot` method). Only columns containing instances of classes which have a copy constructor can be cached.
+
+#### New features
+  - Add `Alias`, a facility to specify an alternative name for a given column: `auto histo = mytdf.Alias("myAlias", "myColumn").Histo1D("myAlias");`
+  - Add `Cache`, a facility to cache `TDataFrame`s in memory. All or some columns can be cached. Two versions of the method are proposed: one which allows to explicitly list the types of the columns and another one allowing to let the system infer them (the same mechanism of the `Snapshot` method). Only columns containing instances of classes which have a copy constructor can be cached.
+  - Add `DefineSlot`, a `Define` transformation that is aware of the multi-threading slot where the workload is executed
+  - Add `DefineSlotEntry`, a `Define` transformation that is aware of the multi-threading slot and of the current entry number
+  - Add `GetColumnsNames`: users can now get the names of the available columns coming from trees, data sources or `Define`d columns
   - Add `OnPartialResult` and `OnPartialResultSlot`: users can now register one or more functions to be executed on partial results of TDF actions during the event loop.
     This mechanism is meant to be used to inspect partial results of the analysis or print useful debug information.
     For example, both in single- and multi-thread event loops, one can draw a result histogram and update the canvas every 100 entries like this:
-    ```
+    ```c++
     auto h = tdf.Histo1D("x");
     TCanvas c("c","x hist");
     h.OnPartialResult(100, [&c](TH1D &h_) { c.cd(); h_.Draw(); c.Update(); });
     ```
     See the tutorials for more examples.
-  - Added `DefineSlotEntry`, a `Define` transformation that is aware of the multi-threading slot and of the current entry number
-  - Users can now access multi-threading slot and entry number as pre-defined columns "tdfslot_" and "tdfentry_"
-  - Added a `Sum` action that sums all values of a column for the processed entries
-  - Added support for friend trees in all cases
+  - Add `Sum`, an action that sums all values of a column for the processed entries
+  - The new TDataSource interface allows developers to pipe any kind of columnar data format into TDataFrame. Two example data sources have been provided: the TRootDS and the TTrivialDS. The former allows to read via the novel data source mechanism ROOT data, while the latter is a simple generator, created for testing and didactic purposes. It is therefore now possible to interface *any* kind of dataset/data format to ROOT as long as an adaptor which implements the pure virtual methods of the TDataSource interface can be written in C++.
+  - TDF can now read CSV files through a specialized TDataSource. Just create the TDF with `MakeCsvDataFrame("f.csv", false, ',')`
+  - Users can now configure Snapshot to use different file open modes ("RECREATE" or "UPDATE"), compression level, compression algorithm, TTree split-level and autoflush settings
+  - Users can now access multi-threading slot and entry number as pre-defined columns "tdfslot_" and "tdfentry_". Especially useful for pyROOT users.
+  - Users can now specify filters and definitions as strings containing multiple C++ expressions, e.g. "static int a = 0; return ++a". Especially useful for pyROOT users.
+  - pyROOT users can now easily specify parameters for the TDF histograms and profiles thanks to the newly introduced tuple-initialization
+  - Add support for friend trees
+
+#### Fixes
+  - Fixed race condition: concurrent deletion of TTreeReader/TTreeReaderValue
+  - Fixed reading of c-style arrays from jitted transformations and actions
   - Fixed writing of c-style arrays with `Snapshot`
-  - pyROOT users can now specify filters and definitions as strings containing multiple C++ expressions, e.g. "static int a = 0; return ++a"
-  - TDF can now read CSV files through a specialized TDataSource. Just create the TDF with `MakeCsvDataFrame("f.csv", false, ',')
-  - Interface change: users must now use TDF::TArrayBranch rather than std::array_view to specify that the column being read is a c-style array TTree branch
+  - Improved checks for column name validity (throw if column does not exist and if `Define`d column overrides an already existing column)
+
+#### Other changes
+  - Improved documentation
+  - TDF now avoids performing virtual calls for parts of the analysis that are not jitted
+  - Removed "custom column" nodes from the internal functional graph therewith optimising its traversal
+  - Improvements in Cling drastically enhanced scaling and performance of TDF jitted code
+  - Test coverage has been increased with the introduction of google tests
+  - Interface change: users must now use TDF::TArrayBranch rather than std::array\_view to specify that the column being read is a c-style array TTree branch
+  - Interface change: `Min` and `Max` now return results as the same type specified as template parameter, or double if no template parameter was specified
+
 
 ## Histogram Libraries
 
