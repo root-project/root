@@ -2895,8 +2895,6 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
    if (strncmp(name,"class ",6)==0) name += 6;
    if (strncmp(name,"struct ",7)==0) name += 7;
 
-   R__LOCKGUARD(gInterpreterMutex);
-
    if (!gROOT->GetListOfClasses())  return 0;
 
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
@@ -2925,6 +2923,8 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       //we may pass here in case of a dummy class created by TVirtualStreamerInfo
       load = kTRUE;
    }
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    // To avoid spurious auto parsing, let's check if the name as-is is
    // known in the TClassTable.

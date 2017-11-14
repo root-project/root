@@ -553,7 +553,6 @@ void TDirectoryFile::Close(Option_t *)
    // we must avoid "slow" as much as possible, in particular Delete("slow")
    // with a large number of objects (eg >10^5) would take for ever.
    {
-      R__LOCKGUARD(gROOTMutex);
       if (fast) fList->Delete();
       else      fList->Delete("slow");
    }
@@ -1464,14 +1463,15 @@ void TDirectoryFile::Save()
    SaveSelf();
 
    // recursively save all sub-directories
-   if (fList) {
-      TObject *idcur;
-      TIter    next(fList);
-      while ((idcur = next())) {
-         if (idcur->InheritsFrom(TDirectoryFile::Class())) {
-            TDirectoryFile *dir = (TDirectoryFile*)idcur;
+   if (fList && fList->FirstLink()) {
+      auto lnk = fList->FirstLink()->shared_from_this();
+      while (lnk) {
+         TObject *idcur = lnk->GetObject();
+         if (idcur && idcur->InheritsFrom(TDirectoryFile::Class())) {
+            TDirectoryFile *dir = (TDirectoryFile *)idcur;
             dir->Save();
          }
+         lnk = lnk->NextSP();
       }
    }
 }
