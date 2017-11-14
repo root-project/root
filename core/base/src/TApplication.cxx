@@ -86,8 +86,10 @@ static void CallEndOfProcessCleanups()
    // after the function static in TSystem.cxx has been destructed.  So we
    // set gROOT in its end-of-life mode which prevents executing code, like
    // autoloading libraries (!) that is pointless ...
-   gROOT->SetBit(kInvalidObject);
-   gROOT->EndOfProcessCleanups();
+   if (gROOT) {
+      gROOT->SetBit(kInvalidObject);
+      gROOT->EndOfProcessCleanups();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
