@@ -36,6 +36,7 @@
 #include "TMVA/Types.h"
 #include "TMVA/DNN/TensorDataLoader.h"
 #include "TMVA/DNN/DLMinimizers.h"
+#include "TStopwatch.h"
 
 REGISTER_METHOD(DL)
 ClassImp(TMVA::MethodDL);
@@ -1054,6 +1055,8 @@ void MethodDL::TrainGpu()
          }
 
          if ((stepCount % minimizer.GetTestInterval()) == 0) {
+
+            std::chrono::time_point<std::chrono::system_clock> t1 = std::chrono::system_clock::now();
             // Compute test error.
             Double_t testError = 0.0;
             for (auto batch : testingData) {
@@ -1062,19 +1065,23 @@ void MethodDL::TrainGpu()
                testError += deepNet.Loss(inputTensor, outputMatrix);
             }
 
+            std::chrono::time_point<std::chrono::system_clock> t2 = std::chrono::system_clock::now();
             testError /= (Double_t)(nTestSamples / settings.batchSize);
 
-            // stop measuring
-            end = std::chrono::system_clock::now();
 
             // Compute training error.
             Double_t trainingError = 0.0;
-            for (auto batch : trainingData) {
-               auto inputTensor = batch.GetInput();
-               auto outputMatrix = batch.GetOutput();
-               trainingError += deepNet.Loss(inputTensor, outputMatrix);
+            if ((stepCount % 10*minimizer.GetTestInterval()) == 0) {
+               for (auto batch : trainingData) {
+                  auto inputTensor = batch.GetInput();
+                  auto outputMatrix = batch.GetOutput();
+                  trainingError += deepNet.Loss(inputTensor, outputMatrix);
+               }
+               trainingError /= (Double_t)(nTrainingSamples / settings.batchSize);
+
             }
-            trainingError /= (Double_t)(nTrainingSamples / settings.batchSize);
+            // stop measuring               
+            end = std::chrono::system_clock::now();
 
             // Compute numerical throughput.
             std::chrono::duration<double> elapsed_seconds = end - start;
@@ -1085,7 +1092,9 @@ void MethodDL::TrainGpu()
             converged = minimizer.HasConverged(testError) || stepCount >= settings.maxEpochs;
 
             Log() << std::setw(10) << stepCount << " | " << std::setw(12) << trainingError << std::setw(12) << testError
-                  << std::setw(12) << nFlops / seconds << std::setw(12) << seconds/settings.testInterval << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
+                  << std::setw(12) << nFlops / seconds << std::setw(12) << seconds/settings.testInterval << std::setw(12) << minimizer.GetConvergenceCount()
+                  << Endl;
+
 
             if (converged) {
                Log() << Endl;
@@ -1230,7 +1239,13 @@ void MethodDL::TrainCpu()
          }
          //}
 
+
          if ((stepCount % minimizer.GetTestInterval()) == 0) {
+
+            std::chrono::time_point<std::chrono::system_clock> t1,t2; 
+
+            t1 = std::chrono::system_clock::now();
+            
             // Compute test error.
             Double_t testError = 0.0;
             for (auto batch : testingData) {
@@ -1240,23 +1255,31 @@ void MethodDL::TrainCpu()
                testError += deepNet.Loss(inputTensor, outputMatrix, weights);
             }
 
+            
+            t2 = std::chrono::system_clock::now();
             testError /= (Double_t)(nTestSamples / settings.batchSize);
+
+
+            Double_t trainingError = 0.0;
+            if ((stepCount % 20*minimizer.GetTestInterval()) == 0) {
+               // Compute training error.
+               for (auto batch : trainingData) {
+                  auto inputTensor = batch.GetInput();
+                  auto outputMatrix = batch.GetOutput();
+                  auto weights = batch.GetWeights();
+                  trainingError += deepNet.Loss(inputTensor, outputMatrix, weights);
+               }
+               trainingError /= (Double_t)(nTrainingSamples / settings.batchSize);
+            }
 
             // stop measuring
             end = std::chrono::system_clock::now();
-
-            // Compute training error.
-            Double_t trainingError = 0.0;
-            for (auto batch : trainingData) {
-               auto inputTensor = batch.GetInput();
-               auto outputMatrix = batch.GetOutput();
-               auto weights = batch.GetWeights();
-               trainingError += deepNet.Loss(inputTensor, outputMatrix, weights);
-            }
-            trainingError /= (Double_t)(nTrainingSamples / settings.batchSize);
-
+            
             // Compute numerical throughput.
             std::chrono::duration<double> elapsed_seconds = end - start;
+            std::chrono::duration<double> elapsed1 = t1-start; 
+            std::chrono::duration<double> elapsed2 = t2-start; 
+ 
             double seconds = elapsed_seconds.count();
             double nFlops = (double)(settings.testInterval * batchesInEpoch);
             // nFlops *= net.GetNFlops() * 1e-9;
@@ -1266,7 +1289,12 @@ void MethodDL::TrainCpu()
             Log() << std::setw(10) << stepCount << " | " << std::setw(12) << trainingError << std::setw(12) << testError
                   << std::setw(12) << nFlops / seconds << std::setw(12)
                   << std::setw(12) << seconds/settings.testInterval 
-                  << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
+                  << std::setw(12) << minimizer.GetConvergenceCount()
+                  <<  std::setw(12) << elapsed1.count()
+                  << std::setw(12) << elapsed2.count() 
+                  << std::setw(12) << seconds 
+ 
+                  << Endl;
 
             if (converged) {
                Log() << Endl;
