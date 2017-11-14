@@ -182,6 +182,7 @@ void MethodDL::DeclareOptions()
                                               "Momentum=0.3,"
                                               "Repetitions=3,"
                                               "ConvergenceSteps=50,"
+                                              "MaxEpochs=2000,"
                                               "BatchSize=20,"
                                               "TestRepetitions=7,"
                                               "WeightDecay=0.001,"
@@ -304,6 +305,7 @@ void MethodDL::ProcessOptions()
 
       settings.convergenceSteps = fetchValueTmp(block, "ConvergenceSteps", 100);
       settings.batchSize = fetchValueTmp(block, "BatchSize", 30);
+      settings.maxEpochs = fetchValueTmp(block, "MaxEpochs", 2000);
       settings.testInterval = fetchValueTmp(block, "TestRepetitions", 7);
       settings.weightDecay = fetchValueTmp(block, "WeightDecay", 0.0);
       settings.learningRate = fetchValueTmp(block, "LearningRate", 1e-5);
@@ -1025,7 +1027,7 @@ void MethodDL::TrainGpu()
       if (!fInteractive) {
          Log() << std::setw(10) << "Epoch"
                << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Test  Err." << std::setw(12) << "GFLOP/s"
-               << std::setw(12) << "Conv. Steps" << Endl;
+               << std::setw(16) << "time(s)/epoch" << std::setw(12)  << "Conv. Steps" << Endl;
          std::string separator(62, '-');
          Log() << separator << Endl;
       }
@@ -1080,14 +1082,15 @@ void MethodDL::TrainGpu()
             double nFlops = (double)(settings.testInterval * batchesInEpoch);
             // nFlops *= deepNet.GetNFlops() * 1e-9;
 
-            converged = minimizer.HasConverged(testError);
+            converged = minimizer.HasConverged(testError) || stepCount >= settings.maxEpochs;
 
             Log() << std::setw(10) << stepCount << " | " << std::setw(12) << trainingError << std::setw(12) << testError
-                  << std::setw(12) << nFlops / seconds << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
+                  << std::setw(12) << nFlops / seconds << std::setw(12) << seconds/settings.testInterval << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
 
             if (converged) {
                Log() << Endl;
             }
+            start = std::chrono::system_clock::now();
          }
       }
    }
@@ -1197,7 +1200,7 @@ void MethodDL::TrainCpu()
       if (!fInteractive) {
          Log() << std::setw(10) << "Epoch"
                << " | " << std::setw(12) << "Train Err." << std::setw(12) << "Test  Err." << std::setw(12) << "GFLOP/s"
-               << std::setw(12) << "Conv. Steps" << Endl;
+               << std::setw(16) << "time(s)/epoch" << std::setw(12) << "Conv. Steps" << Endl;
          std::string separator(62, '-');
          Log() << separator << Endl;
       }
@@ -1258,14 +1261,17 @@ void MethodDL::TrainCpu()
             double nFlops = (double)(settings.testInterval * batchesInEpoch);
             // nFlops *= net.GetNFlops() * 1e-9;
 
-            converged = minimizer.HasConverged(testError);
+            converged = minimizer.HasConverged(testError) || stepCount >= settings.maxEpochs;
 
             Log() << std::setw(10) << stepCount << " | " << std::setw(12) << trainingError << std::setw(12) << testError
-                  << std::setw(12) << nFlops / seconds << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
+                  << std::setw(12) << nFlops / seconds << std::setw(12)
+                  << std::setw(12) << seconds/settings.testInterval 
+                  << std::setw(12) << minimizer.GetConvergenceCount() << Endl;
 
             if (converged) {
                Log() << Endl;
             }
+            start = std::chrono::system_clock::now();
          }
       }
 
