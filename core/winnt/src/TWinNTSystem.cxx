@@ -3864,6 +3864,7 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
             gROOT->ProcessLine(TString::Format("((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()->CloseWindow();",
                                                (ULong_t)b));
       }
+      gROOT->EndOfProcessCleanups();
    }
    if (gInterpreter) {
       gInterpreter->ResetGlobals();
