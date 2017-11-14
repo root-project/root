@@ -154,6 +154,7 @@ public:
       }
 
       Iterator_t operator+(std::ptrdiff_t n) const { return Iterator_t(fIndex + n, fArray); }
+      friend auto operator+(std::ptrdiff_t n, const Iterator_t &it) -> decltype(it + n) { return it + n; }
 
       Iterator_t operator-(std::ptrdiff_t n) const
       {
@@ -206,12 +207,5 @@ protected:
    // FIXME: re-introduce once we have ClassDefTInline!
    // ClassDefT(TTreeReaderArray, 0);//Accessor to member of an object stored in a collection
 };
-
-// FIXME: `n + it` cannot use this overload of operator+ because T cannot be deduced from the type of the iterator
-template <typename T>
-auto operator+(std::ptrdiff_t n, const typename TTreeReaderArray<T>::iterator &it) -> decltype(it + n)
-{
-   return it + n;
-}
 
 #endif // ROOT_TTreeReaderArray
