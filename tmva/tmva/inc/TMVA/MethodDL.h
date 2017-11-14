@@ -63,6 +63,7 @@ struct TTrainingSettings {
    size_t batchSize;
    size_t testInterval;
    size_t convergenceSteps;
+   size_t maxEpochs; 
    DNN::ERegularization regularization;
    Double_t learningRate;
    Double_t momentum;
