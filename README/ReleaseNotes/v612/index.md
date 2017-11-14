@@ -138,6 +138,14 @@ large TClonesArray where each element contains another small vector container.
     h.OnPartialResult(100, [&c](TH1D &h_) { c.cd(); h_.Draw(); c.Update(); });
     ```
     See the tutorials for more examples.
+  - Added `DefineSlotEntry`, a `Define` transformation that is aware of the multi-threading slot and of the current entry number
+  - Users can now access multi-threading slot and entry number as pre-defined columns "tdfslot_" and "tdfentry_"
+  - Added a `Sum` action that sums all values of a column for the processed entries
+  - Added support for friend trees in all cases
+  - Fixed writing of c-style arrays with `Snapshot`
+  - pyROOT users can now specify filters and definitions as strings containing multiple C++ expressions, e.g. "static int a = 0; return ++a"
+  - TDF can now read CSV files through a specialized TDataSource. Just create the TDF with `MakeCsvDataFrame("f.csv", false, ',')
+  - Interface change: users must now use TDF::TArrayBranch rather than std::array_view to specify that the column being read is a c-style array TTree branch
 
 ## Histogram Libraries
 
