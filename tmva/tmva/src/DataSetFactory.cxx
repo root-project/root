@@ -829,6 +829,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                // the input variable
                for (UInt_t ivar=0; ivar<nvars; ivar++) {
                   formula = fInputFormulas[ivar];
+                  formula->SetQuickLoad(true);
                   Int_t ndata = formula->GetNdata();
                   vars[ivar] = (ndata == 1 ?
                                 formula->EvalInstance(0) :
