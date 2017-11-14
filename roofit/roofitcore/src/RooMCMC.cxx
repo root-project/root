@@ -1,0 +1,1025 @@
+/*****************************************************************************
+ * Project: RooFit                                                           *
+ * Package: RooFitCore                                                       *
+ *    File: $Id: RooMCMC.h,v 1.00 2017/14/11 11:13:42
+
+ * Author:                                                                  *
+ *   OD, Oliver Dahme, University of Zurich, o.dahme@cern.ch      *
+ *
+ *****************************************************************************/
+#include "RooFit.h"
+#include <fstream>
+#include <algorithm>
+#include <iomanip>
+#include "TH1.h"
+#include "TH2.h"
+#include "TMarker.h"
+#include "TGraph.h"
+#include "TFitter.h"
+#include "TMatrixDSym.h"
+#include "RooMCMC.h"
+#include "RooArgSet.h"
+#include "RooArgList.h"
+#include "RooAbsReal.h"
+#include "RooAbsRealLValue.h"
+#include "RooRealVar.h"
+#include "RooFitResult.h"
+#include "RooPlot.h"
+#include "RooMsgService.h"
+#include <TVectorD.h>
+#include "TMatrixD.h"
+#include <TRandom3.h>
+#include "RooDataSet.h"
+#include "TDecompChol.h"
+#include <iostream>
+#include "TStyle.h"
+#include "TMultiGraph.h"
+#include "TLine.h"
+
+#include <cstdlib>
+
+ClassImp(RooMCMC)
+
+using namespace std;
+
+TVirtualFitter *RooMCMC::_theFitter = 0 ;
+
+void RooMCMC::cleanup()
+{
+  if (_theFitter) {
+    delete _theFitter ;
+    _theFitter =0 ;
+  }
+}
+
+RooMCMC::RooMCMC(RooAbsReal& function)
+{
+  _func = &function ;
+  _verbose = kFALSE ;
+  _gaus = kFALSE;
+  _interval = kFALSE;
+  _fileName = "out.root";
+
+  // Examine parameter list
+   RooArgSet* paramSet = function.getParameters(RooArgSet()) ;
+   RooArgList paramList(*paramSet) ;
+   delete paramSet ;
+
+  _floatParamList = (RooArgList*) paramList.selectByAttrib("Constant",kFALSE) ;
+  if (_floatParamList->getSize()>1) {
+    _floatParamList->sort() ;
+  }
+  _floatParamList->setName("floatParamList") ;
+
+  _constParamList = (RooArgList*) paramList.selectByAttrib("Constant",kTRUE) ;
+  if (_constParamList->getSize()>1) {
+    _constParamList->sort() ;
+  }
+  _constParamList->setName("constParamList") ;
+
+  // Remove all non-RooRealVar parameters from list
+  TIterator* pIter = _floatParamList->createIterator() ;
+  RooAbsArg* arg ;
+  while((arg=(RooAbsArg*)pIter->Next())) {
+    if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
+      _floatParamList->remove(*arg) ;
+    }
+  }
+  _nPar      = _floatParamList->getSize() ;
+  delete pIter ;
+
+  updateFloatVec() ;
+
+   // Save snapshot of initial lists
+   _initFloatParamList = (RooArgList*) _floatParamList->snapshot(kFALSE) ;
+   _initConstParamList = (RooArgList*) _constParamList->snapshot(kFALSE) ;
+
+  // Initialize
+   Int_t nPar= _floatParamList->getSize() + _constParamList->getSize() ;
+   if (_theFitter) delete _theFitter ;
+   _theFitter = new TFitter(nPar*2+1) ;
+   _theFitter->SetObjectFit(this) ;
+   setPrintLevel(-1) ;
+   _theFitter->Clear();
+}
+
+
+
+
+/// Destructor
+RooMCMC::~RooMCMC()
+{
+  // delete _floatParamList ;
+  _floatParamVec.clear() ;
+  // delete _initFloatParamList ;
+  // delete _constParamList ;
+  // delete _initConstParamList ;
+  // delete _bestParamList;
+  _pointList.clear();
+  _sortPointList.clear();
+  _cutoffList.clear();
+  // delete _fileName;
+  // delete _func ;
+  // if (_extV) {
+  //   delete _extV ;
+  // }
+}
+
+
+Int_t RooMCMC::mcmc(size_t npoints, size_t cutoff, const char* errorstrategy)
+{
+  Bool_t verbose = _verbose;
+  int pl = 0;
+  if (_printLevel > 0) {
+    pl = _printLevel;
+    if (pl > 2) {
+      verbose = kTRUE;
+    }
+    std::cout << "Starting Monte Carlo Markov Chain Fit with "<< npoints <<" points and cutoff after "<< cutoff <<" points" << '\n';
+  }
+
+  if (strcmp(errorstrategy, "gaus") == 0) {
+    _gaus = kTRUE;
+  }
+  if (strcmp(errorstrategy, "interval") == 0) {
+    _interval = kTRUE;
+  }
+
+  Double_t seed = _seed;
+  if (seed == 0) {
+    time_t  timev;
+    double systime = std::time(&timev);
+    systime /= 1e7;
+    seed = systime*13-5;
+  }
+
+  TRandom3 *rnd = new TRandom3(seed); //random generator with seed
+  unsigned int nparams = _nPar; //number of parameters
+  unsigned int nstat = npoints*100;//number of tries
+  double maxstep = 0.01; //maximum step size
+  double alphastar = 0.234; //forced acceptance rate
+
+  //Bool_t accepted;
+  unsigned int ntested = 0;
+  size_t naccepted = 0;
+
+  //creating the negative log-likelihood value
+  RooRealVar* nllval = new RooRealVar("nllval","nllval of parameters",-1);
+  TVectorD* last = new TVectorD(nparams); //last state
+  TVectorD* curr = new TVectorD(nparams); //current state
+  int indexofbest = -1; //index in the pointlist for the minimum
+  _pointList.reserve(npoints); //reserving RAM for pointlist
+
+  //Initialize last state
+  RooArgList* startpoint = (RooArgList*) _floatParamList->snapshot(kTRUE);
+  for (size_t index = 0; index < _nPar; index++) {
+    RooRealVar* var = (RooRealVar*) startpoint->at(index);
+    (*last)[index] = var->getVal();
+  }
+  delete startpoint; //startpoint no longer needed
+
+  double minllh = 1e32; //Initialize container for min value
+
+
+  //Initialize containers for S Matrix calculation
+  // unsigned int nlast = 200;
+  std::vector<bool> lastaccepted;
+  TMatrixDSym* identity = new TMatrixDSym(nparams);
+  identity->UnitMatrix();
+  TMatrixDSym* S1 = new TMatrixDSym(nparams);
+  S1->Zero();
+  (*S1) = (*identity);
+  TMatrixDSym* SNminusone = new TMatrixDSym(nparams);
+  *SNminusone = *S1;
+  TMatrixDSym* SN = new TMatrixDSym(nparams);
+  SN->Zero();
+  RooMCMC* context = (RooMCMC*) RooMCMC::_theFitter->GetObjectFit();
+  TVectorD* SW = new TVectorD(nparams);
+  TVectorD* WN = new TVectorD(nparams);
+  if (pl > 0) {
+    std::cout << "starting minimization" << '\n';
+  }
+  for (unsigned int i = 0; i < nstat; i++) {
+     *curr = *last;//use value of last for current then vary
+
+
+    for (int j = 0; j < WN->GetNrows() ; j++) {
+      (*WN)[j] = rnd->Gaus(0.0, maxstep); //Random inital step size
+    }
+    *SW =  *SNminusone * *WN; //Step size correction
+    *curr += *SW; //vary current point
+
+    for(size_t index= 0; index < nparams; index++) {
+      context->setPdfParamVal(index, (*last)[index],verbose);
+    }
+    double llh_last = context->_func->getVal(); //get nll for last parameters
+    for(size_t index= 0; index < nparams; index++) {
+      context->setPdfParamVal(index, (*curr)[index],verbose);
+    }
+    double llh_curr = context->_func->getVal(); //get nll for current parameters
+
+  // If out of bounds of the negative log-likelihood values gets set very high
+  // to provoke big step size away from the bounds
+  // Also warning become disable, because of command line spam
+    if (llh_curr != llh_curr) {
+      RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
+      // std::cout << "press Enter to continue" << std::endl;
+      // std::cin.ignore();
+      llh_curr = 1e16;
+    }
+
+
+  // update minimum value
+    if (llh_curr < minllh) {
+      minllh = llh_curr;
+      indexofbest = naccepted;
+    }
+
+  // Computing rejection or acceptance of current point
+    double alpha = std::min(1.0, exp(llh_last - llh_curr));
+    double r = rnd->Uniform(0,1);
+    // accepted = false;
+    //double acceptrate = double(naccepted)/double(ntested);
+    if (r < alpha) {
+      //success
+      // accepted = true;
+      nllval->setVal(llh_curr);
+      RooArgList* point = (RooArgList*) _floatParamList->snapshot(kTRUE);
+      for (size_t index = 0; index < nparams; index++) {
+        RooRealVar* var = (RooRealVar*) point->at(index);
+        var->setVal((*curr)[index]);
+      }
+      point->addClone(*nllval);
+      _pointList.push_back(point);
+      naccepted++;
+      *last = *curr;
+
+    } else {
+      //reset to last candidate
+      // accepted = false;
+      *curr = *last;
+    }
+
+    ntested++;
+    //update S matrix
+    TMatrixDSym* SNminusoneT = new TMatrixDSym(*SNminusone);
+    SNminusoneT->T();
+    double etan = std::min(1.0, nparams*pow(double(i), -2.0/3.0));
+    TMatrixDSym* WNWNT = new TMatrixDSym(nparams);
+    WNWNT->Zero();
+    for (int row = 0; row < WNWNT->GetNrows(); row++) {
+      for (int col = 0; col < WNWNT->GetNcols(); col++) {
+        (*WNWNT)[row][col] = (*WN)[row]*(*WN)[col]/WN->Norm2Sqr();
+      }
+    }
+    TMatrixDSym* SNSNT = new TMatrixDSym(nparams);
+    *SNSNT = ((*identity) + (*WNWNT)*etan*(alpha-alphastar));
+    *SNSNT = SNSNT->Similarity(*SNminusone);
+    //SNSNT = (SNminusone*identity*SNminusoneT);
+    TDecompChol* chol = new TDecompChol(nparams);
+    *chol = (*SNSNT);
+    bool success = chol->Decompose();
+    assert(success);
+    TMatrixD* SNT = new TMatrixD(nparams,nparams);
+    *SNT = chol->GetU();
+    SNT->T();
+    for (int row = 0; row < SNT->GetNrows(); row++) {
+      for (int col = 0; col < SNT->GetNcols(); col++) {
+        (*SNminusone)[row][col] = (*SNT)[row][col];
+      }
+    }
+    if (naccepted == npoints) {
+      break;
+    }
+
+  }
+
+// Filling all points after the cut into cutoffList
+  _cutoff = cutoff;
+  _cutoffList.reserve(npoints - cutoff);
+  for (size_t i = cutoff; i < _pointList.size(); i++) {
+    RooArgList* point = (RooArgList*) _pointList[i];
+    _cutoffList.push_back(point);
+  }
+  std::cout << "cutoffList filled" << std::endl;
+
+  // Saving minimum point
+  _bestParamList = (RooArgList*) _pointList[indexofbest];
+
+
+// Calculate and print errors
+  if (_gaus) {
+    getGausErrors();
+  }
+  if (_interval) {
+    for (size_t i = 0; i < nparams; i++) {
+      RooArgList* point = (RooArgList*) _cutoffList[0];
+      RooRealVar* var = (RooRealVar*) point->at(i);
+      const char* valname = var->GetName();
+      getPercentile(valname);
+    }
+  }
+
+  return 1;
+}
+
+/*
+getProfile returns a profile of the nll for a certain parameter, which can be called by name. It does so by creating a TGraph and plots all the nll values of the walk in respect to the parameter. Also, it is possible to include the cutoff points or not.
+*/
+TGraph* RooMCMC::getProfile(const char* name, Bool_t cutoff)
+{
+  if (_pointList.size() == 0) {
+    std::cout << "point list empty. Please run mcmc() first" << std::endl;
+  }
+
+  unsigned int np =0;
+  if (cutoff) {
+    np = _cutoffList.size();
+  } else {
+    np = _pointList.size();
+  }
+
+
+  unsigned int index = getIndex(name);
+  TVectorD x(np);
+  TVectorD y(np);
+
+  if (cutoff) {
+    for (unsigned int i = 0; i < np; i++) {
+      RooArgList* point = (RooArgList*) _cutoffList[i];
+      RooRealVar* var1 = (RooRealVar*) point->at(index);
+      RooRealVar* var2 = (RooRealVar*) point->at(_nPar);
+      x[i] = var1->getVal();
+      y[i] = var2->getVal();
+    }
+
+  } else {
+    for (unsigned int i = 0; i < np; i++) {
+      RooArgList* point = (RooArgList*) _pointList[i];
+      RooRealVar* var1 = (RooRealVar*) point->at(index);
+      RooRealVar* var2 = (RooRealVar*) point->at(_nPar);
+      x[i] = var1->getVal();
+      y[i] = var2->getVal();
+    }
+  }
+
+  TGraph* gr = new TGraph(x,y);
+  gr->GetXaxis()->SetTitle(name);
+  gr->GetYaxis()->SetTitle("nll value");
+  return gr;
+}
+
+/*
+getWalkDis returns a TMultigraph pointer of the walk distribution of a parameter, which is called by name. It does so by creating two TGraphs one with the points which had been cutoff and one with the included points. Also, it adds a dotted line where the cutoff has been set.
+*/
+TMultiGraph* RooMCMC::getWalkDis(const char* name, Bool_t cutoff)
+{
+  if (_pointList.size() == 0) {
+    std::cout << "point list empty. Please run mcmc() first" << std::endl;
+  }
+
+  string graphTitelStr = "Walk Distribution of ";
+  graphTitelStr += name;
+  const char * graphTitelChar = graphTitelStr.c_str();
+  string graphNameStr = "Dis";
+  graphNameStr += name;
+  const char * graphNameChar = graphNameStr.c_str();
+
+  Int_t index = getIndex(name);
+  TMultiGraph* graph = new TMultiGraph(graphNameChar,graphTitelChar);
+  size_t np = 0;
+
+  if (cutoff == kFALSE) {
+    np = _cutoff;
+    TVectorD x1(np);
+    TVectorD y1(np);
+
+    for (unsigned int i = 0; i < np; i++) {
+      RooArgList* point1 = (RooArgList*) _pointList[i];
+      RooRealVar* var1 = (RooRealVar*) point1->at(index);
+      x1[i] = i;
+      y1[i] = var1->getVal();
+    }
+    TGraph* gr1 = new TGraph(x1,y1);
+    gr1->SetLineColor(2);
+    graph->Add(gr1);
+
+    Double_t minVal = getMinList(name);
+    Double_t maxVal = getMaxList(name);
+    Double_t x[2] = {Double_t(_cutoff),Double_t(_cutoff)};
+    Double_t y[2] = {minVal,maxVal};
+    TGraph* cutline = new TGraph(2,x,y);
+    cutline->SetLineWidth(5);
+    cutline->SetLineStyle(2);
+    graph->Add(cutline);
+  }
+
+  np = _cutoffList.size();
+  TVectorD x2(np);
+  TVectorD y2(np);
+
+  for (unsigned int i = 0; i < np; i++) {
+    RooArgList* point2 = (RooArgList*) _cutoffList[i];
+    RooRealVar* var2 = (RooRealVar*) point2->at(index);
+    x2[i] = _cutoff+i;
+    y2[i] = var2->getVal();
+  }
+  TGraph* gr2 = new TGraph(x2,y2);
+  if (cutoff == kFALSE) {
+    gr2->SetLineColor(4);
+  }
+  graph->Add(gr2);
+
+  graph->Draw("ap");
+  graph->GetXaxis()->SetTitle("number of steps");
+  graph->GetYaxis()->SetTitle(name);
+
+  return graph;
+}
+
+/*
+getWalkDisHis returns a TH1F pointer with a histogram of the walk for a certain parameter, called by name. The number of bins for the histogram can be set by nbinsx. Cutoff points can be included or not. It does so by just adding all the points of the walk to a histogram. The main purpose is to look at the distribution of the points. This function is also used to calculate the symmetric errors of the parameter.
+*/
+TH1F* RooMCMC::getWalkDisHis(const char* name,  Int_t nbinsx, Bool_t cutoff)
+{
+  if (_pointList.size() == 0) {
+    std::cout << "point list empty. Please run mcmc() first" << std::endl;
+  }
+
+  Double_t xlow = getMinList(name);
+  Double_t xup = getMaxList(name);
+
+  string histTitelStr = "Histogram of ";
+  histTitelStr += name;
+  const char * histTitelChar = histTitelStr.c_str();
+  string histNameStr = "hist";
+  histNameStr += name;
+  const char * histNameChar = histNameStr.c_str();
+
+  Int_t index = getIndex(name);
+
+  TH1F *hist = new TH1F(histNameChar, histTitelChar, nbinsx, xlow, xup);
+  hist->GetXaxis()->SetTitle(name);
+
+  if (cutoff) {
+    unsigned int np = _cutoffList.size();
+
+    for (unsigned int i = 0; i < np; i++) {
+      RooArgList* point = (RooArgList*) _cutoffList[i];
+      RooRealVar* var1 = (RooRealVar*) point->at(index);
+      hist->Fill(var1->getVal());
+    }
+    return hist;
+  } else {
+    unsigned int np = _pointList.size();
+
+    for (unsigned int i = 0; i < np; i++) {
+      RooArgList* point = (RooArgList*) _pointList[i];
+      RooRealVar* var1 = (RooRealVar*) point->at(index);
+      hist->Fill(var1->getVal());
+    }
+    return hist;
+  }
+}
+
+/*
+changeCutoff just changes the number of points, which should not be included into the error calculation. The number of cutoff points can be changed without re performing the walk.
+*/
+Int_t RooMCMC::changeCutoff(Int_t newCutoff)
+{
+  _cutoff = newCutoff;
+  _cutoffList.clear();
+  _cutoffList.reserve(_pointList.size() - newCutoff);
+  for (size_t i = newCutoff; i < _pointList.size(); i++) {
+    RooArgList* point = (RooArgList*) _pointList[i];
+    _cutoffList.push_back(point);
+  }
+  return 1;
+}
+
+/*
+getCornerPlot returns a TH2D pointer with a 2D histogram of two parameters, called by name1 and name2. The number of bins for the name1 parameter are set by nbinsx and for name2 by nbinsy.  It does so just by adding all the points of the two parameters in a TH2D histogram. As always the cutoff can be turned on or off. This plot could for example be used to look for correlations.
+*/
+TH2D* RooMCMC::getCornerPlot(const char* name1, const char* name2, Int_t nbinsx, Int_t nbinsy, Bool_t cutoff)
+{
+  string histNameStr = "cornerhist";
+  histNameStr += name1;
+  histNameStr += name2;
+  const char * histNameChar = histNameStr.c_str();
+  string histTitelStr = "Corner Plot of ";
+  histTitelStr += name1;
+  histTitelStr += " and ";
+  histTitelStr += name2;
+  const char * histTitelChar = histTitelStr.c_str();
+  if (_pointList.size() == 0) {
+    std::cout << "point list empty. Please run mcmc() first" << std::endl;
+  }
+  Int_t index1 = getIndex(name1);
+  Int_t index2 = getIndex(name2);
+    for (size_t i = 0; i < _nPar; i++) {
+    RooArgList* point = (RooArgList*) _pointList[0];
+    RooRealVar* var1 = (RooRealVar*) point->at(i);
+    const char* varname = var1->GetName();
+    if (strcmp(name1, varname) == 0) {
+      index1 = i;
+    }
+    if (strcmp(name2, varname) == 0) {
+      index2 = i;
+    }
+  }
+
+  Double_t xlow = getMinList(name1);
+  Double_t xup = getMaxList(name1);
+  Double_t ylow = getMinList(name2);
+  Double_t yup = getMaxList(name2);
+
+  TH2D *hist = new TH2D(histNameChar,histTitelChar,nbinsx,xlow,xup,nbinsy,ylow,yup);
+  hist->GetXaxis()->SetTitle(name1);
+  hist->GetYaxis()->SetTitle(name2);
+
+  if (cutoff) {
+    unsigned int np = _cutoffList.size();
+    Double_t x = 0;
+    Double_t y = 0;
+
+    for (unsigned int i = 0; i < np; i++) {
+      RooArgList* point = (RooArgList*) _cutoffList[i];
+      RooRealVar* var1 = (RooRealVar*) point->at(index1);
+      RooRealVar* var2 = (RooRealVar*) point->at(index2);
+      x = var1->getVal();
+      y = var2->getVal();
+      hist->Fill(x,y);
+    }
+
+
+    return hist;
+  } else {
+    unsigned int np = _pointList.size();
+    Double_t x = 0;
+    Double_t y = 0;
+
+    for (unsigned int i = 0; i < np; i++) {
+      RooArgList* point = (RooArgList*) _pointList[i];
+      RooRealVar* var1 = (RooRealVar*) point->at(index1);
+      RooRealVar* var2 = (RooRealVar*) point->at(index2);
+      x = var1->getVal();
+      y= var2->getVal();
+      hist->Fill(x,y);
+    }
+
+
+    return hist;
+  }
+}
+/*
+sortPointList sorts the points according to a value defined by name. It saves them into the _sortPointList.
+*/
+void RooMCMC::sortPointList(const char* name)
+{
+  int index = getIndex(name);
+  _sortPointList.clear();
+  _sortPointList.reserve(_cutoffList.size());
+  for (size_t i = 0; i < _cutoffList.size(); i++) {
+    RooArgList* point = (RooArgList*) _cutoffList[i];
+    _sortPointList.push_back(point);
+  }
+  std::sort(_sortPointList.begin(),_sortPointList.end(), [&index](RooArgList* a, RooArgList* b){
+    RooRealVar* var1 = (RooRealVar*) a->at(index);
+    RooRealVar* var2 = (RooRealVar*) b->at(index);
+    if (var1->getVal() < var2->getVal()) {
+      return kTRUE;
+    }else{
+      return kFALSE;
+    }
+  });
+}
+
+/*
+getIndex just returns the index of a parameter given by name.
+*/
+Int_t RooMCMC::getIndex(const char* name)
+{
+  Int_t index = 0;
+  for (size_t i = 0; i < _nPar; i++) {
+    RooArgList* point = (RooArgList*) _floatParamList;
+    RooRealVar* var1 = (RooRealVar*) point->at(i);
+    const char* varname = var1->GetName();
+    if (strcmp(name, varname) == 0) {
+      index = i;
+      break;
+    }
+  }
+  return index;
+}
+
+/*
+printError prints symmetric errors of a parameter defined by name at a certain confidence level defined by conf. It does so by scanning the negative log likelihood points computed by the Markov Chain and takes the point left and right of the minimum nearest to the confidence level.
+*/
+Int_t RooMCMC::printError(const char* name, Double_t conf)
+{
+  sortPointList(name);
+  Int_t count = int(_sortPointList.size() * conf) ;
+  Double_t high = -1e32;
+  Double_t low = 1e32;
+  Int_t index = getIndex(name);
+
+  for (Int_t i = 0; i < count; i++) {
+    RooArgList* point = (RooArgList*) _sortPointList[i];
+    RooRealVar* var = (RooRealVar*) point->at(index);
+    if (var->getVal() < low) {
+      low = var->getVal();
+    }
+    if (var->getVal() > high) {
+      high = var->getVal();
+    }
+  }
+  std::cout << "error on "<<name<<" = "<< (high - low)/2 << std::endl;
+  return 1;
+
+}
+
+/*
+getPercentile prints the asymmetric errors of a parameter defined by name at a certain confidence level defined by conf. Is does so by scanning the negative log liklihood points computed by the Markov Chain and takes the two points left and right of the minimum nearest to the confidence level
+*/
+Int_t RooMCMC::getPercentile(const char* name, Double_t conf)
+{
+  Double_t per = conf;
+  if (conf > 1.0) {
+    per = 0.682;
+  }
+  Double_t left = 0;
+  Double_t right = 0;
+  Int_t index = getIndex(name);
+  sortPointList(name);
+  size_t np = _sortPointList.size();
+  size_t i = 0;
+  while (double(i)/double(np) < (1-per)/2) {
+    RooArgList* pointl = (RooArgList*) _sortPointList[i];
+    RooRealVar* varl = (RooRealVar*) pointl->at(index);
+    left = varl->getVal();
+    i++;
+  }
+
+  i=np-1;
+  size_t n = 0;
+  while (double(n)/double(np) < (1-per)/2) {
+    RooArgList* pointr = (RooArgList*) _sortPointList[i];
+    RooRealVar* varr = (RooRealVar*) pointr->at(index);
+    right = varr->getVal();
+    i--;
+    n++;
+  }
+  RooRealVar* bestvar = (RooRealVar*) _bestParamList->at(index);
+  std::cout << "ASYMETRIC ERROR at "<<per<<" confidence level for "<< name << std::endl;
+  std::cout << "INTERVAL =\t[ "<< left <<" , "<< right <<" ]"<< std::endl;
+  std::cout << "BEST     =\t"<< bestvar->getVal() << std::endl;
+  std::cout << "MINUS    =\t"<< bestvar->getVal() - left << std::endl;
+  std::cout << "PLUS     =\t"<< right - bestvar->getVal() << std::endl;
+  std::cout << "" << std::endl;
+
+
+  return 1;
+}
+/*
+getGausErrors prints symetric errors of all parameters. It does so py calling getWalkDisHis for every parameter and reading the gaussian error of the histogram and printing it.
+*/
+Int_t RooMCMC::getGausErrors()
+{
+  int nPar = _nPar;
+  std::vector<const char*> names;
+  names.reserve(nPar);
+  std::vector<size_t> nOfTabs;
+  nOfTabs.reserve(nPar);
+  size_t maxnOfTabs = 0;
+
+  //std::cout << "getting names" << std::endl;
+  for (int i = 0; i < nPar; i++) {
+    size_t nOfTabscurr = 0;
+    RooArgList* point = (RooArgList*) _cutoffList[0];
+    RooRealVar* var = (RooRealVar*) point->at(i);
+    names.push_back(var->GetName());
+    size_t scan = 0;
+    while (strlen(names[i]) >= scan) {
+      scan+=8;
+      nOfTabscurr++;
+    }
+    nOfTabs.push_back(nOfTabscurr);
+    if (maxnOfTabs < nOfTabscurr) {
+      maxnOfTabs = nOfTabscurr;
+    }
+  }
+  std::vector<TH1F*> hist1D;
+  hist1D.reserve(nPar);
+  for (int i = 0; i < nPar;i++) {
+    // std::cout << names[i] << std::endl;
+    TH1F* hist = getWalkDisHis(names[i],100,kTRUE);
+    hist1D.push_back(hist);
+  }
+
+  std::vector<TH2D*> hist2D;
+  hist2D.reserve(nPar*(nPar-1)/2);
+  for (int i = 0; i < nPar; i++) {
+    for (int j = i+1; j < nPar; j++) {
+      TH2D* hist = getCornerPlot(names[i],names[j],100,100,kTRUE);
+      hist2D.push_back(hist);
+    }
+  }
+
+  for (size_t i = 0; i < nOfTabs.size(); i++) {
+    nOfTabs[i] = maxnOfTabs - nOfTabs[i] +1 ;
+  }
+
+  cout.precision(5);
+  std::cout <<"NO."<<"\t"<<"NAME";
+  for (size_t i = 0; i < maxnOfTabs; i++) {std::cout<<"\t";}
+  std::cout<<"VALUE"<<"\t\t"<<"ERROR"<< std::endl;
+
+  for (int i = 0; i < nPar; i++) {
+    std::cout <<i+1<<std::scientific<<"\t"<<names[i];
+    for (size_t j = 0; j < nOfTabs[i]; j++) {std::cout<<"\t";}
+    if (hist1D[i]->GetMean() < 0) {
+      cout<<" "<< hist1D[i]->GetMean();
+    } else {
+      cout<< hist1D[i]->GetMean();
+    }
+    cout<<"\t"<<hist1D[i]->GetRMS()<< std::endl;
+    setPdfParamErr(i,hist1D[i]->GetRMS());
+  }
+  std::cout << "" << std::endl;
+  Double_t corr[nPar][nPar];
+  int n = 0;
+  for (int i = 0; i < nPar; i++) {
+    for (int j = i+1; j < nPar; j++) {
+      if (i == j) {
+        corr[i][j] = 1.0;
+      }else{
+        corr[i][j] = hist2D[n]->GetCorrelationFactor();
+        n++;
+      }
+    }
+  }
+  for (int i = 0; i < nPar; i++) {
+    for (int j = i; j < nPar; j++) {
+      if (i == j) {
+        corr[i][j] = 1.0;
+      }else{
+        corr[j][i] = corr[i][j];
+      }
+    }
+  }
+  cout.precision(3);
+  std::cout <<std::fixed<< "CORRELATION COEFFICIENTS" << std::endl;
+  std::cout << "NO."<<"\t";
+  for (int i = 0; i < nPar; i++) {
+    std::cout << i+1<< "\t";
+  }
+  std::cout << "" << std::endl;
+
+  for (int i = 0; i < nPar; i++) {
+    std::cout << i+1<<"\t";
+    for (int j = 0; j < nPar; j++) {
+      std::cout << corr[i][j] <<"\t";
+    }
+    std::cout << "" << std::endl;
+  }
+  std::cout << "" << std::endl;
+
+  for (size_t i = 0; i < hist1D.size(); i++) {
+    delete hist1D[i];
+  }
+  for (size_t i = 0; i < hist2D.size(); i++) {
+    delete hist2D[i];
+  }
+
+
+  hist1D.clear();
+  hist2D.clear();
+
+  return 1;
+}
+
+/*
+saveCandidatesAs saves all the points of the Markov Chain in a file defined by name, for example "points.txt" to save them in a text file. One could publish the file alongside a paper, such that somebody can download it to recompute the values and errors of the fit published in the paper.
+*/
+Int_t RooMCMC::saveCandidatesAs(const char* name)
+{
+  ofstream candidates;
+  candidates.open(name);
+  for (size_t i = 0; i < _nPar; i++) {
+    RooArgList* point = (RooArgList*) _pointList[0];
+    RooRealVar* var = (RooRealVar*) point->at(i);
+    candidates << var->GetName() << "\t";
+  }
+  candidates << "\n";
+
+  for (size_t i = 0; i < _pointList.size(); i++) {
+    RooArgList* point = (RooArgList*) _pointList[i];
+    for (size_t j = 0; j < _nPar; j++) {
+      RooRealVar* var = (RooRealVar*) point->at(j);
+      candidates << var->getVal() << "\t";
+    }
+    candidates << "\n";
+  }
+  candidates.close();
+  return 1;
+}
+
+
+std::vector<const char*> RooMCMC::getNames()
+{
+  std::vector<const char*> names;
+  names.reserve(_nPar);
+  for (size_t i = 0; i < _nPar; i++) {
+    RooArgList* point = (RooArgList*) _cutoffList[0];
+    RooRealVar* var = (RooRealVar*) point->at(i);
+    names[i] = var->GetName();
+  }
+  return names;
+}
+
+
+/*
+saveCornerPlotAs is the most complex function of the RooMCMC class. It creates a histogram of every parameter with getWalkDisHis and a cornerplot with every pair of parameters. It can be used to see any correlations between the parameters. The Histograms can be used to see graphically if a parameter has an asymertric error or if it has a Gaussian distribution. Picname defines the name of the output file.
+*/
+// Int_t RooMCMC::saveCornerPlotAs(const char* pngname)
+// {
+//
+//   gStyle->SetOptStat(0);
+//   int nPar = _nPar;
+//   int nPads = nPar+ nPar*nPar;
+//   TCanvas* corner = new TCanvas("corner","corner plot",1,1,nPar*800,nPar*600);
+//   std::vector<TPad*> pads;
+//   pads.reserve(nPads);
+//   for (int i = 0; i < nPar; i++) {
+//     corner->cd();
+//     std::string s = std::to_string(i);
+//     const char* padname = s.c_str();
+//     TPad *pad = new TPad(padname,padname,0.05,0.02+((nPar-i-1)* 1.0/nPar),0.95,0.97-(i* 1.0/nPar));
+//     pads.push_back(pad);
+//     pads[i]->SetFillColor(0);
+//     pads[i]->Draw();
+//   }
+//   for (int i = 0; i < nPar; i++) {
+//     int subpadindex = 0;
+//     for (int j = (i+1)*nPar; j < (i+2)*nPar; j++) {
+//       std::string s = std::to_string(i);
+//       s = std::to_string(j);
+//       const char* padname = s.c_str();
+//       TPad *subpad = new TPad(padname,padname,0.02+(subpadindex* 1.0/nPar),0.05,((subpadindex+1)* 1.0/nPar)-nPar*0.01,0.95,17,3);
+//       pads[i]->cd();
+//       pads.push_back(subpad);
+//       pads[j]->SetFillColor(0);
+//       pads[j]->Draw();
+//       subpadindex++;
+//     }
+//   }
+//
+//   std::vector<const char*> names;
+//   names.reserve(nPar);
+//   for (int i = 0; i < nPar; i++) {
+//     RooArgList* point = (RooArgList*) _cutoffList[0];
+//     RooRealVar* var = (RooRealVar*) point->at(i);
+//     names[i] = var->GetName();
+//   }
+//
+//   std::vector<TH1F*> hist1D;
+//   hist1D.reserve(nPar);
+//   for (int i = 0; i < nPar;i++) {
+//     TH1F* hist = getWalkDisHis(names[i],100,kTRUE);
+//     hist1D.push_back(hist);
+//   }
+//
+//   std::vector<TH2D*> hist2D;
+//   hist2D.reserve(nPar*(nPar-1)/2);
+//   for (int i = 0; i < nPar; i++) {
+//     for (int j = i+1; j < nPar; j++) {
+//       TH2D* hist = getCornerPlot(names[i],names[j],100,100,kTRUE);
+//       hist2D.push_back(hist);
+//     }
+//   }
+//
+//
+//   size_t Plot1DIndex = 0;
+//   for (int i = nPar; i < nPads;) {
+//     pads[i]->cd();
+//     hist1D[Plot1DIndex]->Draw();
+//     Plot1DIndex++;
+//     i+=nPar+1;
+//   }
+//
+//   size_t Plot2DIndex = 0;
+//   for (int i = 2; i < nPar+1; i++) {
+//     int padindex = i*nPar;
+//     for (int j = 1; j < i; j++) {
+//       pads[padindex]->cd();
+//       hist2D[Plot2DIndex]->SetMarkerStyle(7);
+//       hist2D[Plot2DIndex]->Draw("colz");
+//       padindex++;
+//       Plot2DIndex++;
+//     }
+//   }
+//
+//   corner->SaveAs(pngname);
+//
+//   TFile* file = new TFile(_fileName, "recreate");
+//   file->cd();
+//   for (size_t i = 0; i < hist1D.size(); i++) {
+//     hist1D[i]->Write();
+//     delete hist1D[i];
+//   }
+//   for (size_t i = 0; i < hist2D.size(); i++) {
+//     hist2D[i]->Write();
+//     delete hist2D[i];
+//   }
+//   file->Close();
+//
+//
+//
+//   hist1D.clear();
+//   hist2D.clear();
+//
+//   return 1;
+// }
+
+
+Double_t RooMCMC::getMinList(const char* name)
+{
+  size_t index = getIndex(name);
+  Double_t minval = 1e32;
+  for (size_t i = 0; i < _cutoffList.size(); i++) {
+    RooArgList* point = (RooArgList*) _cutoffList[i];
+    RooRealVar* var = (RooRealVar*) point->at(index);
+    if (var->getVal() < minval) {
+      minval = var->getVal();
+    }
+  }
+  return minval;
+}
+
+Double_t RooMCMC::getMaxList(const char* name)
+{
+  size_t index = getIndex(name);
+  Double_t maxval = -1e32;
+  for (size_t i = 0; i < _cutoffList.size(); i++) {
+    RooArgList* point = (RooArgList*) _cutoffList[i];
+    RooRealVar* var = (RooRealVar*) point->at(index);
+    if (var->getVal() > maxval) {
+      maxval = var->getVal();
+    }
+  }
+  return maxval;
+}
+
+
+
+
+
+void RooMCMC::setOffsetting(Bool_t flag)
+{
+  _func->enableOffsetting(flag) ;
+}
+
+
+Int_t RooMCMC::setPrintLevel(Int_t newLevel)
+{
+  Int_t ret = _printLevel ;
+  Double_t arg(newLevel) ;
+  _theFitter->ExecuteCommand("SET PRINT",&arg,1);
+  _printLevel = newLevel ;
+  return ret ;
+}
+
+/// Modify PDF parameter value by ordinal index
+Bool_t RooMCMC::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
+{
+  //RooRealVar* par = (RooRealVar*)_floatParamList->at(index) ;
+  RooRealVar* par = (RooRealVar*)_floatParamVec[index] ;
+
+  if (par->getVal()!=value) {
+    if (verbose) cout << par->GetName() << "=" << value << ", " ;
+    par->setVal(value) ;
+    return kTRUE ;
+  }
+
+  return kFALSE ;
+ }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Modify PDF parameter error by ordinal index
+void RooMCMC::setPdfParamErr(Int_t index, Double_t value)
+{
+  ((RooRealVar*)_floatParamList->at(index))->setError(value) ;
+}
+
+
+void RooMCMC::updateFloatVec()
+{
+  _floatParamVec.clear() ;
+  RooFIter iter = _floatParamList->fwdIterator() ;
+  RooAbsArg* arg ;
+  _floatParamVec.resize(_floatParamList->getSize()) ;
+  Int_t i(0) ;
+  while((arg=iter.next())) {
+    _floatParamVec[i++] = arg ;
+  }
+}

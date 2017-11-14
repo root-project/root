@@ -48,7 +48,7 @@ ROOFITCOREH2   := RooDouble.h RooEffGenContext.h RooEllipse.h RooErrorHandler.h 
                   RooInt.h RooInvTransform.h RooLinearVar.h RooLinkedListElem.h \
                   RooLinkedList.h RooLinkedListIter.h RooLinTransBinning.h RooList.h \
                   RooListProxy.h RooMapCatEntry.h RooMappedCategory.h RooMath.h \
-                  RooMCIntegrator.h RooMinuit.h RooMPSentinel.h \
+                  RooMCIntegrator.h RooMinuit.h RooMCMC.h RooMPSentinel.h \
                   RooMultiCategory.h RooMultiCatIter.h RooNameReg.h \
                   RooNameSet.h RooNLLVar.h RooNormSetCache.h RooNumber.h \
                   RooNumConvolution.h RooNumConvPdf.h RooNumIntConfig.h RooNumIntFactory.h \

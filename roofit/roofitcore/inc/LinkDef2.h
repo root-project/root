@@ -46,6 +46,7 @@
 #pragma link C++ class RooMath+ ;
 #pragma link C++ class RooMCIntegrator+ ;
 #pragma link C++ class RooMinuit+ ;
+#pragma link C++ class RooMCMC+ ;
 #pragma link C++ class RooMPSentinel+ ;
 #pragma link C++ class RooMultiCategory+ ;
 #pragma link C++ class RooMultiCatIter+ ;

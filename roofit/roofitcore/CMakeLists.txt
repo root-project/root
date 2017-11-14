@@ -19,7 +19,7 @@ set(headers2 RooDouble.h RooEffGenContext.h RooEllipse.h RooErrorHandler.h RooEr
              RooGrid.h RooHashTable.h RooHistError.h RooHist.h RooImproperIntegrator1D.h RooBinIntegrator.h
              RooIntegrator1D.h RooIntegrator2D.h RooIntegratorBinding.h RooInt.h RooInvTransform.h RooLinearVar.h RooLinkedListElem.h
              RooLinkedList.h RooLinkedListIter.h RooLinTransBinning.h RooList.h RooListProxy.h RooMapCatEntry.h RooMappedCategory.h RooMath.h
-             RooMCIntegrator.h RooMinuit.h RooMPSentinel.h RooMultiCategory.h RooMultiCatIter.h RooNameReg.h
+             RooMCIntegrator.h RooMinuit.h RooMCMC.h RooMPSentinel.h RooMultiCategory.h RooMultiCatIter.h RooNameReg.h
              RooNameSet.h RooNLLVar.h RooNormSetCache.h RooNumber.h RooNumConvolution.h RooNumConvPdf.h RooNumIntConfig.h RooNumIntFactory.h
              RooPlotable.h RooPlot.h RooPolyVar.h RooPrintable.h RooProdGenContext.h RooProduct.h RooPullVar.h
              RooQuasiRandomGenerator.h RooRandom.h)
