@@ -154,6 +154,7 @@ FARPROC dlsym(void *library, const char *function_name)
 #include "TListOfFunctionTemplates.h"
 #include "TFunctionTemplate.h"
 #include "ThreadLocalStorage.h"
+#include "TVirtualRWMutex.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -176,6 +177,7 @@ static void *gInterpreterLib = 0;
 
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
+ROOT::TVirtualRWMutex *ROOT::gCoreMutex = nullptr;
 
 // For accessing TThread::Tsd indirectly.
 void **(*gThreadTsd)(void*,Int_t) = 0;
@@ -719,9 +721,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    ReadGitInfo();
 
-   fClasses         = new THashTable(800,3);
+   fClasses         = new THashTable(800,3); fClasses->UseRWLock();
    //fIdMap           = new IdMap_t;
-   fStreamerInfo    = new TObjArray(100);
+   fStreamerInfo    = new TObjArray(100); fStreamerInfo->UseRWLock();
    fClassGenerators = new TList;
 
    // usedToIdentifyRootClingByDlSym is available when TROOT is part of
@@ -739,34 +741,40 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
 
+   auto setNameLocked = [](TSeqCollection *l, const char *collection_name) {
+      l->SetName(collection_name);
+      l->UseRWLock();
+      return l;
+   };
+
    fTimer       = 0;
    fApplication = 0;
-   fColors      = new TObjArray(1000); fColors->SetName("ListOfColors");
+   fColors      = setNameLocked(new TObjArray(1000), "ListOfColors");
    fTypes       = 0;
    fGlobals     = 0;
    fGlobalFunctions = 0;
    // fList was created in TDirectory::Build but with different sizing.
    delete fList;
-   fList        = new THashList(1000,3);
-   fClosedObjects = new TList; fClosedObjects->SetName("ClosedFiles");
-   fFiles       = new TList; fFiles->SetName("Files");
-   fMappedFiles = new TList; fMappedFiles->SetName("MappedFiles");
-   fSockets     = new TList; fSockets->SetName("Sockets");
-   fCanvases    = new TList; fCanvases->SetName("Canvases");
-   fStyles      = new TList; fStyles->SetName("Styles");
-   fFunctions   = new TList; fFunctions->SetName("Functions");
-   fTasks       = new TList; fTasks->SetName("Tasks");
-   fGeometries  = new TList; fGeometries->SetName("Geometries");
-   fBrowsers    = new TList; fBrowsers->SetName("Browsers");
-   fSpecials    = new TList; fSpecials->SetName("Specials");
-   fBrowsables  = new TList; fBrowsables->SetName("Browsables");
-   fCleanups    = new THashList; fCleanups->SetName("Cleanups");
-   fMessageHandlers = new TList; fMessageHandlers->SetName("MessageHandlers");
-   fSecContexts = new TList; fSecContexts->SetName("SecContexts");
-   fProofs      = new TList; fProofs->SetName("Proofs");
-   fClipboard   = new TList; fClipboard->SetName("Clipboard");
-   fDataSets    = new TList; fDataSets->SetName("DataSets");
-   fTypes       = new TListOfTypes;
+   fList        = new THashList(1000,3); fList->UseRWLock();
+   fClosedObjects = setNameLocked(new TList, "ClosedFiles");
+   fFiles       = setNameLocked(new TList, "Files");
+   fMappedFiles = setNameLocked(new TList, "MappedFiles");
+   fSockets     = setNameLocked(new TList, "Sockets");
+   fCanvases    = setNameLocked(new TList, "Canvases");
+   fStyles      = setNameLocked(new TList, "Styles");
+   fFunctions   = setNameLocked(new TList, "Functions");
+   fTasks       = setNameLocked(new TList, "Tasks");
+   fGeometries  = setNameLocked(new TList, "Geometries");
+   fBrowsers    = setNameLocked(new TList, "Browsers");
+   fSpecials    = setNameLocked(new TList, "Specials");
+   fBrowsables  = (TList*)setNameLocked(new TList, "Browsables");
+   fCleanups    = setNameLocked(new THashList, "Cleanups");
+   fMessageHandlers = setNameLocked(new TList, "MessageHandlers");
+   fSecContexts = setNameLocked(new TList, "SecContexts");
+   fProofs      = setNameLocked(new TList, "Proofs");
+   fClipboard   = setNameLocked(new TList, "Clipboard");
+   fDataSets    = setNameLocked(new TList, "DataSets");
+   fTypes       = new TListOfTypes; fTypes->UseRWLock();
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();
@@ -2390,6 +2398,8 @@ const char *TROOT::GetGitDate()
 
 void TROOT::RecursiveRemove(TObject *obj)
 {
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+
    fCleanups->RecursiveRemove(obj);
 }
 

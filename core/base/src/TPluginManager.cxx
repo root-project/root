@@ -455,18 +455,22 @@ void TPluginManager::LoadHandlerMacros(const char *path)
 
 void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
 {
-   R__LOCKGUARD(gInterpreterMutex);
+   TString sbase = base;
+   if (sbase.Length())
+      sbase.ReplaceAll("::", "@@");
+
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+
+   if (fBasesLoaded && fBasesLoaded->FindObject(sbase))
+      return;
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
    if (!fBasesLoaded) {
       fBasesLoaded = new THashTable();
       fBasesLoaded->SetOwner();
    }
-   TString sbase = base;
-   if (sbase != "") {
-      sbase.ReplaceAll("::", "@@");
-      if (fBasesLoaded->FindObject(sbase))
-         return;
-      fBasesLoaded->Add(new TObjString(sbase));
-   }
+   fBasesLoaded->Add(new TObjString(sbase));
 
    TPH__IsReadingDirs() = kTRUE;
 
@@ -475,11 +479,11 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
       plugindirs = "plugins";
       gSystem->PrependPathName(TROOT::GetEtcDir(), plugindirs);
    }
-   #ifdef WIN32
+#ifdef WIN32
    TObjArray *dirs = plugindirs.Tokenize(";");
-   #else
+#else
    TObjArray *dirs = plugindirs.Tokenize(":");
-   #endif
+#endif
    TString d;
    for (Int_t i = 0; i < dirs->GetEntriesFast(); i++) {
       d = ((TObjString*)dirs->At(i))->GetString();
@@ -516,8 +520,6 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
       }
    }
    TPH__IsReadingDirs() = kFALSE;
-
-   // Note that The destructor of TObjArray takes the gROOTMutex/gInterpreter lock.
    delete dirs;
 }
 

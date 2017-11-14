@@ -582,6 +582,8 @@ TH1::~TH1()
    delete[] fBuffer;
    fBuffer = 0;
    if (fFunctions) {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
       fFunctions->SetBit(kInvalidObject);
       TObject* obj = 0;
       //special logic to support the case where the same object is
@@ -745,6 +747,7 @@ void TH1::Build()
    if (TH1::AddDirectoryStatus()) {
       fDirectory = gDirectory;
       if (fDirectory) {
+         fFunctions->UseRWLock();
          fDirectory->Append(this,kTRUE);
       }
    }
@@ -2529,6 +2532,7 @@ void TH1::Copy(TObject &obj) const
    // any directory (fDirectory = 0)
    if (fgAddDirectory && gDirectory) {
       gDirectory->Append(&obj);
+      ((TH1&)obj).fFunctions->UseRWLock();
       ((TH1&)obj).fDirectory = gDirectory;
    } else
       ((TH1&)obj).fDirectory = 0;
@@ -5914,6 +5918,8 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
 
 void TH1::RecursiveRemove(TObject *obj)
 {
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+
    if (fFunctions) {
       if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
    }
@@ -8071,7 +8077,10 @@ void TH1::SetDirectory(TDirectory *dir)
    if (fDirectory == dir) return;
    if (fDirectory) fDirectory->Remove(this);
    fDirectory = dir;
-   if (fDirectory) fDirectory->Append(this);
+   if (fDirectory) {
+      fFunctions->UseRWLock();
+      fDirectory->Append(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

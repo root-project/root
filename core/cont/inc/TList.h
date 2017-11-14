@@ -26,6 +26,7 @@
 #include "TString.h"
 
 #include <iterator>
+#include <memory>
 
 #if (__GNUC__ >= 3) && !defined(__INTEL_COMPILER)
 // Prevent -Weffc++ from complaining about the inheritance
@@ -45,18 +46,27 @@ class TList : public TSeqCollection {
 friend  class TListIter;
 
 protected:
-   TObjLink  *fFirst;     //! pointer to first entry in linked list
-   TObjLink  *fLast;      //! pointer to last entry in linked list
-   TObjLink  *fCache;     //! cache to speedup sequential calling of Before() and After() functions
+   using TObjLinkPtr_t = std::shared_ptr<TObjLink>;
+   using TObjLinkWeakPtr_t = std::weak_ptr<TObjLink>;
+
+   TObjLinkPtr_t     fFirst;     //! pointer to first entry in linked list
+   TObjLinkPtr_t     fLast;      //! pointer to last entry in linked list
+   TObjLinkWeakPtr_t fCache;     //! cache to speedup sequential calling of Before() and After() functions
    Bool_t     fAscending; //! sorting order (when calling Sort() or for TSortedList)
 
    TObjLink          *LinkAt(Int_t idx) const;
    TObjLink          *FindLink(const TObject *obj, Int_t &idx) const;
-   TObjLink         **DoSort(TObjLink **head, Int_t n);
-   Bool_t             LnkCompare(TObjLink *l1, TObjLink *l2);
-   virtual TObjLink  *NewLink(TObject *obj, TObjLink *prev = NULL);
-   virtual TObjLink  *NewOptLink(TObject *obj, Option_t *opt, TObjLink *prev = NULL);
-   virtual void       DeleteLink(TObjLink *lnk);
+
+   TObjLinkPtr_t *DoSort(TObjLinkPtr_t *head, Int_t n);
+
+   Bool_t         LnkCompare(const TObjLinkPtr_t &l1, const TObjLinkPtr_t &l2);
+   TObjLinkPtr_t  NewLink(TObject *obj, const TObjLinkPtr_t &prev = nullptr);
+   TObjLinkPtr_t  NewOptLink(TObject *obj, Option_t *opt,  const TObjLinkPtr_t &prev = nullptr);
+   TObjLinkPtr_t  NewLink(TObject *obj, TObjLink *prev);
+   TObjLinkPtr_t  NewOptLink(TObject *obj, Option_t *opt,  TObjLink *prev);
+   // virtual void       DeleteLink(TObjLink *lnk);
+
+   void InsertAfter(const TObjLinkPtr_t &newlink, const TObjLinkPtr_t &prev);
 
 private:
    TList(const TList&);             // not implemented
@@ -65,8 +75,8 @@ private:
 public:
    typedef TListIter Iterator_t;
 
-   TList() : fFirst(0), fLast(0), fCache(0), fAscending(kTRUE) { }
-   TList(TObject *) : fFirst(0), fLast(0), fCache(0), fAscending(kTRUE) { } // for backward compatibility, don't use
+   TList() : fAscending(kTRUE) { }
+   TList(TObject *) : fAscending(kTRUE) { } // for backward compatibility, don't use
    virtual           ~TList();
    virtual void      Clear(Option_t *option="");
    virtual void      Delete(Option_t *option="");
@@ -87,6 +97,7 @@ public:
    virtual void      AddBefore(TObjLink *before, TObject *obj);
    virtual TObject  *Remove(TObject *obj);
    virtual TObject  *Remove(TObjLink *lnk);
+           TObject  *Remove(const TObjLinkPtr_t &lnk) { return Remove(lnk.get()); }
    virtual void      RemoveLast();
    virtual void      RecursiveRemove(TObject *obj);
 
@@ -94,10 +105,10 @@ public:
    virtual TObject  *After(const TObject *obj) const;
    virtual TObject  *Before(const TObject *obj) const;
    virtual TObject  *First() const;
-   virtual TObjLink *FirstLink() const { return fFirst; }
+   virtual TObjLink *FirstLink() const { return fFirst.get(); }
    virtual TObject **GetObjectRef(const TObject *obj) const;
    virtual TObject  *Last() const;
-   virtual TObjLink *LastLink() const { return fLast; }
+   virtual TObjLink *LastLink() const { return fLast.get(); }
 
    virtual void      Sort(Bool_t order = kSortAscending);
    Bool_t            IsAscending() { return fAscending; }
@@ -113,24 +124,26 @@ public:
 // Wrapper around a TObject so it can be stored in a TList.             //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
-class TObjLink {
+class TObjLink : public std::enable_shared_from_this<TObjLink> {
 
-friend  class TList;
+friend class TList;
 
 private:
-   TObjLink   *fNext;
-   TObjLink   *fPrev;
-   TObject    *fObject;
+   using TObjLinkPtr_t = std::shared_ptr<TObjLink>;
+   using TObjLinkWeakPtr_t = std::weak_ptr<TObjLink>;
 
-   TObjLink(const TObjLink&);            // not implemented
-   TObjLink& operator=(const TObjLink&); // not implemented
+   TObjLinkPtr_t     fNext;
+   TObjLinkWeakPtr_t fPrev;
 
-protected:
-   TObjLink() : fNext(NULL), fPrev(NULL), fObject(NULL) { fNext = fPrev = this; }
+   TObject    *fObject; // should be atomic ...
+
+   TObjLink(const TObjLink&) = delete;
+   TObjLink& operator=(const TObjLink&) = delete;
+   TObjLink() = delete;
 
 public:
-   TObjLink(TObject *obj) : fNext(NULL), fPrev(NULL), fObject(obj) { }
-   TObjLink(TObject *obj, TObjLink *lnk);
+
+   TObjLink(TObject *obj) : fObject(obj) { }
    virtual ~TObjLink() { }
 
    TObject                *GetObject() const { return fObject; }
@@ -139,8 +152,10 @@ public:
    virtual Option_t       *GetAddOption() const { return ""; }
    virtual Option_t       *GetOption() const { return fObject->GetOption(); }
    virtual void            SetOption(Option_t *) { }
-   TObjLink               *Next() { return fNext; }
-   TObjLink               *Prev() { return fPrev; }
+   TObjLink               *Next() { return fNext.get(); }
+   TObjLink               *Prev() { return fPrev.lock().get(); }
+   TObjLinkPtr_t           NextSP() { return fNext; }
+   TObjLinkPtr_t           PrevSP() { return fPrev.lock(); }
 };
 
 
@@ -159,7 +174,6 @@ private:
 
 public:
    TObjOptLink(TObject *obj, Option_t *opt) : TObjLink(obj), fOption(opt) { }
-   TObjOptLink(TObject *obj, TObjLink *lnk, Option_t *opt) : TObjLink(obj, lnk), fOption(opt) { }
    ~TObjOptLink() { }
    Option_t        *GetAddOption() const { return fOption.Data(); }
    Option_t        *GetOption() const { return fOption.Data(); }
@@ -186,11 +200,13 @@ class TListIter : public TIterator,
                                        const TObject**, const TObject*&> {
 
 protected:
-   const TList       *fList;         //list being iterated
-   TObjLink          *fCurCursor;    //current position in list
-   TObjLink          *fCursor;       //next position in list
-   Bool_t             fDirection;    //iteration direction
-   Bool_t             fStarted;      //iteration started
+   using TObjLinkPtr_t = std::shared_ptr<TObjLink>;
+
+   const TList   *fList;         //list being iterated
+   TObjLinkPtr_t  fCurCursor;    //current position in list
+   TObjLinkPtr_t  fCursor;       //next position in list
+   Bool_t         fDirection;    //iteration direction
+   Bool_t         fStarted;      //iteration started
 
    TListIter() : fList(0), fCurCursor(0), fCursor(0), fDirection(kIterForward),
                  fStarted(kFALSE) { }
@@ -213,6 +229,22 @@ public:
 
    ClassDef(TListIter,0)  //Linked list iterator
 };
+
+inline bool operator==(TObjOptLink *l, const std::shared_ptr<TObjLink> &r) {
+   return l == r.get();
+}
+
+inline bool operator==(const std::shared_ptr<TObjLink> &l, TObjOptLink *r) {
+    return r == l;
+}
+
+inline TList::TObjLinkPtr_t  TList::NewLink(TObject *obj, TObjLink *prev) {
+   return NewLink(obj, prev ? prev->shared_from_this() : nullptr);
+}
+inline TList::TObjLinkPtr_t  TList::NewOptLink(TObject *obj, Option_t *opt,  TObjLink *prev) {
+   return NewOptLink(obj, opt, prev ? prev->shared_from_this() : nullptr);
+}
+
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) >= 40600
 #pragma GCC diagnostic pop
