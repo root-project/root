@@ -1163,6 +1163,15 @@ static void LoadCoreModules(cling::Interpreter &interp)
    for (StringRef H : moduleHeaders) {
       declarations << "#include \"" << H.str() << "\"\n";
    }
+
+   // C99 decided that it's a very good idea to name a macro `I` (the letter I).
+   // This seems to screw up nearly all the template code out there as `I` is
+   // common template parameter name and iterator variable name.
+   // Let's follow the GCC recommendation and undefine `I` in case any of the
+   // core modules have defined it:
+   // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
+   declarations << "#ifdef I\n #undef I\n #endif\n";
+
    auto result = interp.declare(declarations.str());
 
    if (result != cling::Interpreter::CompilationResult::kSuccess) {
