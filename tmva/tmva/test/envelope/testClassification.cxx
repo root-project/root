@@ -155,14 +155,6 @@ TEST_F(ClassifierTest1, BasicTests)
 
    ASSERT_EQ(cl->_IsCutsMethod(m), kFALSE);
 
-   auto roc = cl->_GetROC(m);
-   ASSERT_EQ(roc->GetROCIntegral(), 0.5);
-   delete roc;
-
-   roc = cl->_GetROC("BDT", "BDTB");
-   ASSERT_EQ(roc->GetROCIntegral(), 0.5);
-   delete roc;
-
    cl->TrainMethod("BDT", "BDTB");
    auto m2 = cl->GetMethod("BDT", "BDTB");
    ASSERT_EQ(m, m2);
@@ -174,7 +166,7 @@ TEST_F(ClassifierTest1, BasicTests)
    ASSERT_EQ(r1.size(), (UInt_t)1);
    ASSERT_EQ(r1[0].GetMethodName(), "BDT");
    ASSERT_EQ(r1[0].GetMethodTitle(), "BDTB");
-   roc = r1[0].GetROC();
+   auto roc = r1[0].GetROC();
    ASSERT_NE(roc, nullptr);
    EXPECT_NEAR(roc->GetROCIntegral(), 0.853, 0.03);
    ASSERT_EQ(r1[0].GetDataLoaderName(), "dataset");
@@ -191,14 +183,6 @@ TEST_F(ClassifierTest1, BasicTests)
    ASSERT_EQ(index, 1);
 
    ASSERT_EQ(cl->_IsCutsMethod(m3), kFALSE);
-
-   roc = cl->_GetROC(m3);
-   ASSERT_EQ(roc->GetROCIntegral(), 0.5);
-   delete roc;
-
-   roc = cl->_GetROC("BDT", "BDTG");
-   ASSERT_EQ(roc->GetROCIntegral(), 0.5);
-   delete roc;
 
    cl->TrainMethod("BDT", "BDTG");
    auto m4 = cl->GetMethod("BDT", "BDTG");
