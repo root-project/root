@@ -103,8 +103,8 @@ Bool_t TH1Merger::AutoP2BuildAxes(TH1 *h)
    }
 
    // Bin sizes must be in integer ratio
-   Double_t bwmax = (a0->GetXmax() - a0->GetXmin()) / a0->GetNbins() ;
-   Double_t bwmin = (a1->GetXmax() - a1->GetXmin()) / a1->GetNbins() ;
+   Double_t bwmax = (a0->GetXmax() - a0->GetXmin()) / a0->GetNbins();
+   Double_t bwmin = (a1->GetXmax() - a1->GetXmin()) / a1->GetNbins();
    Bool_t b0 = kTRUE;
    if (bwmin > bwmax) {
       std::swap(bwmax, bwmin);
