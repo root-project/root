@@ -1258,6 +1258,10 @@ TCling::TCling(const char *name, const char *title)
    if (useCxxModules && !fromRootCling) {
       // We only set this flag, rest is done by the CIFactory.
       interpArgs.push_back("-fmodules");
+      // We should never build modules during runtime, so let's enable the
+      // module build remarks from clang to make it easier to spot when we do
+      // this by accident.
+      interpArgs.push_back("-Rmodule-build");
 
       TString vfsPath = TROOT::GetIncludeDir() + "/modulemap.overlay.yaml";
       // On modules aware build systems (such as OSX) we do not need an overlay file and thus the build system does not
