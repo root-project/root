@@ -905,7 +905,7 @@ public:
          if (tok.getIdentifierInfo()) type = tok.getIdentifierInfo()->getName();
       }
 
-      PP.Lex(tok);
+      PP.LexUnexpandedToken(tok);
       const char *start = fSourceManager.getCharacterData(tok.getLocation());
       clang::Token end;
       end.startToken(); // Initialize token.
@@ -913,7 +913,7 @@ public:
          // PP.DumpToken(tok, true);
          // llvm::errs() << "\n";
          end = tok;
-         PP.Lex(tok);
+         PP.LexUnexpandedToken(tok);
       }
 
       if (tok.isNot(clang::tok::semi)) {
