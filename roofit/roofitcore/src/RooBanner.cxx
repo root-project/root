@@ -23,7 +23,7 @@ static Int_t dummy = doBanner() ;
 Int_t doBanner()
 
 {
-#ifndef __ROOFIT_NOBANNER
+#if !defined(__ROOFIT_NOBANNER) || !defined(R__USE_CXXMODULES)
    if (gEnv->GetValue("RooFit.Banner", 1)) {
        cout << endl
       << "\033[1mRooFit v" << VTAG << " -- Developed by Wouter Verkerke and David Kirkby\033[0m " << endl
