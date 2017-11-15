@@ -49,6 +49,12 @@ public:
    void Initialise();
 };
 
+////////////////////////////////////////////////////////////////////////////////////////////////
+/// \brief Factory method to create a CSV TDataFrame.
+/// \param[in] fileName Path of the CSV file.
+/// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
+///                        (default `true`).
+/// \param[in] delimiter Delimiter character (default ',').
 TDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders = true, char delimiter = ',');
 
 } // ns TDF
