@@ -338,12 +338,6 @@ void TCsvDS::Initialise()
    fEntryRanges.back().second += remainder;
 }
 
-////////////////////////////////////////////////////////////////////////
-/// Factory method to create a CSV TDataFrame.
-/// \param[in] fileName Path of the CSV file.
-/// \param[in] readHeaders `true` if the CSV file contains headers as first row, `false` otherwise
-///                        (default `true`).
-/// \param[in] delimiter Delimiter character (default ',').
 TDataFrame MakeCsvDataFrame(std::string_view fileName, bool readHeaders, char delimiter)
 {
    ROOT::Experimental::TDataFrame tdf(std::make_unique<TCsvDS>(fileName, readHeaders, delimiter));
