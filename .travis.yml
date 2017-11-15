@@ -125,7 +125,7 @@ script:
         echo -e "\tgit checkout $TRAVIS_BRANCH"
         echo -e "\tgit-clang-format --commit $BASE_COMMIT --diff --binary $(which clang-format)"
         echo "$RESULT_OUTPUT"
-        exit 0
+        exit 1
       fi
     elif [[ $TOOL == clang-tidy* ]]; then
       CLANG_TIDY_CHECKS='-*'
