@@ -870,7 +870,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
     } // loop on children
       // Create TGeoElement - note: Object(name, title) corresponds to Element(formula, name)
      TGeoElement *ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
-     for (fractions f = fracmap.begin(); f != fracmap.end(); f++) {
+     for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
         if (fisomap.find(f->first) != fisomap.end()) {
            ele->AddIsotope((TGeoIsotope*)fisomap[f->first], f->second);
         }
@@ -926,7 +926,7 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       } // loop on children
         // Create TGeoElement - note: Object(name, title) corresponds to Element(formula, name)
       TGeoElement *ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
-      for (fractions f = fracmap.begin(); f != fracmap.end(); f++) {
+      for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
          if (fisomap.find(f->first) != fisomap.end()) {
             ele->AddIsotope((TGeoIsotope*)fisomap[f->first], f->second);
          }
@@ -1155,7 +1155,7 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
      Int_t natoms;
      Double_t weight;
 
-     for (fractions f = fracmap.begin(); f != fracmap.end(); f++) {
+     for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
         matname = f->first;
         matname = NameShort(matname);
 

@@ -443,9 +443,8 @@ namespace mathtext {
 
       unsigned int char_strings_count = 0;
 
-      for (std::vector<std::string>::const_iterator iterator =
-           char_strings.begin();
-           iterator < char_strings.end(); iterator++) {
+      for (std::vector<std::string>::const_iterator iterator = char_strings.begin(); iterator < char_strings.end();
+           ++iterator) {
          if (!iterator->empty()) {
             char_strings_count++;
          }

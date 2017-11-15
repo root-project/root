@@ -1012,9 +1012,8 @@ namespace mathtext {
 
                                         if (char_strings.empty() && !cid_map.empty()) {
                                            char_strings.resize(cid_map.size());
-                                           for (std::map<wchar_t, uint16_t>::const_iterator iterator =
-                                                cid_map.begin();
-                                                iterator != cid_map.end(); iterator++) {
+                                           for (std::map<wchar_t, uint16_t>::const_iterator iterator = cid_map.begin();
+                                                iterator != cid_map.end(); ++iterator) {
                                               if (iterator->second < char_strings.size()) {
 #include "table/adobeglyphlist.h"
 

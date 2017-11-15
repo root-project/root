@@ -1279,21 +1279,23 @@ asim_my_scandir_ext ( const char *dirname, int (*filter_func) (const char *),
 		{
 			int i = 0; 
 			/* Fill in the fields using stat() */
-			do{ p[i] = e->d_name[i]; ++i ; }while(  e->d_name[i] && i < PATH_MAX ); 
-			p[i] ='\0' ;
-			if (stat (filename, &stat_info) != -1)
-			{	
-				if( handle_direntry_func( e->d_name, filename, &stat_info, aux_data) )
-					n++;
-			}
-		}
-	}
-	free (filename);
+         do {
+            p[i] = e->d_name[i];
+            ++i;
+         } while (i < PATH_MAX && e->d_name[i]);
+         p[i] = '\0';
+         if (stat(filename, &stat_info) != -1) {
+            if (handle_direntry_func(e->d_name, filename, &stat_info, aux_data))
+               n++;
+         }
+      }
+   }
+   free(filename);
 
-	if (closedir (d) == -1)
-		return -1;
-	/* Return the count of the entries */
-	return n;
+   if (closedir(d) == -1)
+      return -1;
+   /* Return the count of the entries */
+   return n;
 }
 
 #endif /* #ifndef _WIN32 */

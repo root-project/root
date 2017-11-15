@@ -730,8 +730,7 @@ TMatrixDSparse *TUnfold::MultiplyMSparseTranspMSparse
    }
 
    Int_t n=0;
-   for(MMatrix_t::const_iterator irow=matrix.begin();
-       irow!=matrix.end();irow++) {
+   for (MMatrix_t::const_iterator irow = matrix.begin(); irow != matrix.end(); ++irow) {
       n += (*irow).second.size();
    }
    if(n>0) {
@@ -740,10 +739,8 @@ TMatrixDSparse *TUnfold::MultiplyMSparseTranspMSparse
       Int_t *r_cols=new Int_t[n];
       Double_t *r_data=new Double_t[n];
       n=0;
-      for(MMatrix_t::const_iterator irow=matrix.begin();
-          irow!=matrix.end();irow++) {
-         for(MMatrixRow_t::const_iterator icol=(*irow).second.begin();
-             icol!=(*irow).second.end();icol++) {
+      for (MMatrix_t::const_iterator irow = matrix.begin(); irow != matrix.end(); ++irow) {
+         for (MMatrixRow_t::const_iterator icol = (*irow).second.begin(); icol != (*irow).second.end(); ++icol) {
             r_rows[n]=(*irow).first;
             r_cols[n]=(*icol).first;
             r_data[n]=(*icol).second;
@@ -2694,17 +2691,17 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
     i1=i0;
     Double_t logTau=(*i0).first;
     Double_t distMax=0.0;
-    for(i1++;i1!=curve.end();i1++) {
-      const std::pair<Double_t,Double_t> &xy0=(*i0).second;
-      const std::pair<Double_t,Double_t> &xy1=(*i1).second;
-      Double_t dx=xy1.first-xy0.first;
-      Double_t dy=xy1.second-xy0.second;
-      Double_t d=TMath::Sqrt(dx*dx+dy*dy);
-      if(d>=distMax) {
-        distMax=d;
-        logTau=0.5*((*i0).first+(*i1).first);
-      }
-      i0=i1;
+    for (++i1; i1 != curve.end(); ++i1) {
+       const std::pair<Double_t, Double_t> &xy0 = (*i0).second;
+       const std::pair<Double_t, Double_t> &xy1 = (*i1).second;
+       Double_t dx = xy1.first - xy0.first;
+       Double_t dy = xy1.second - xy0.second;
+       Double_t d = TMath::Sqrt(dx * dx + dy * dy);
+       if (d >= distMax) {
+          distMax = d;
+          logTau = 0.5 * ((*i0).first + (*i1).first);
+       }
+       i0 = i1;
     }
     DoUnfold(TMath::Power(10.,logTau));
     if((!TMath::Finite(GetLcurveX())) ||(!TMath::Finite(GetLcurveY()))) {
@@ -2723,7 +2720,7 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
   XYtau_t::const_iterator i0,i1;
   i0=curve.begin();
   i1=i0;
-  i1++;
+  ++i1;
   Double_t logTauFin=(*i0).first;
   if( ((int)curve.size())<nPoint) {
     // set up splines and determine (x,y) curvature in each point
@@ -2734,11 +2731,11 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
       Double_t *lXi=new Double_t[curve.size()]();
       Double_t *lYi=new Double_t[curve.size()]();
       Double_t *lTi=new Double_t[curve.size()]();
-      for( XYtau_t::const_iterator i=curve.begin();i!=curve.end();i++) {
-        lXi[n]=(*i).second.first;
-        lYi[n]=(*i).second.second;
-        lTi[n]=(*i).first;
-        n++;
+      for (XYtau_t::const_iterator i = curve.begin(); i != curve.end(); ++i) {
+         lXi[n] = (*i).second.first;
+         lYi[n] = (*i).second.second;
+         lTi[n] = (*i).first;
+         n++;
       }
       TSpline3 *splineX=new TSpline3("x vs tau",lTi,lXi,n);
       TSpline3 *splineY=new TSpline3("y vs tau",lTi,lYi,n);
@@ -2861,14 +2858,14 @@ Int_t TUnfold::ScanLcurve(Int_t nPoint,
     Double_t *y=new Double_t[curve.size()]();
     Double_t *logT=new Double_t[curve.size()]();
     int n=0;
-    for( XYtau_t::const_iterator i=curve.begin();i!=curve.end();i++) {
-      if(logTauFin==(*i).first) {
-        bestChoice=n;
-      }
-      x[n]=(*i).second.first;
-      y[n]=(*i).second.second;
-      logT[n]=(*i).first;
-      n++;
+    for (XYtau_t::const_iterator i = curve.begin(); i != curve.end(); ++i) {
+       if (logTauFin == (*i).first) {
+          bestChoice = n;
+       }
+       x[n] = (*i).second.first;
+       y[n] = (*i).second.second;
+       logT[n] = (*i).first;
+       n++;
     }
     if(lCurve) {
        (*lCurve)=new TGraph(n,x,y);
@@ -3323,8 +3320,7 @@ void TUnfold::GetOutput(TH1 *output,const Int_t *binMap) const
          //output->SetBinError(destBinI,TMath::Sqrt(e2));
       }
    }
-   for(std::map<Int_t,Double_t>::const_iterator i=e2.begin();
-       i!=e2.end();i++) {
+   for (std::map<Int_t, Double_t>::const_iterator i = e2.begin(); i != e2.end(); ++i) {
       //cout<<(*i).first<<" "<<(*i).second<<"\n";
       output->SetBinError((*i).first,TMath::Sqrt((*i).second));
    }
@@ -3558,8 +3554,7 @@ Double_t TUnfold::GetRhoIFromMatrix(TH1 *rhoi,const TMatrixDSparse *eOrig,
       // construct inverse mapping function
       //    local index -> histogram bin
       Int_t *localBinToHist=new Int_t[nBin];
-      for(std::map<int,int>::const_iterator i=histToLocalBin.begin();
-          i!=histToLocalBin.end();i++) {
+      for (std::map<int, int>::const_iterator i = histToLocalBin.begin(); i != histToLocalBin.end(); ++i) {
          localBinToHist[(*i).second]=(*i).first;
       }
 

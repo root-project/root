@@ -165,8 +165,11 @@ void TEveCalo2DGL::DrawRPhiHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
    {
       if (cellLists[phiBin])
       {
-         if (!fM->fCellLists[phiBin])
+         if (!fM->fCellLists[phiBin]) {
+            delete[] sliceVal;
+            delete[] sliceValRef;
             throw eh + "selected cell not in cell list cache.";
+         }
 
          Float_t off = 0;
          // selected eta sum
@@ -365,8 +368,13 @@ void TEveCalo2DGL::DrawRhoZHighlighted(std::vector<TEveCaloData::vCellId_t*>& ce
    {
       if (cellLists[etaBin])
       {
-         if (!fM->fCellLists[etaBin])
+         if (!fM->fCellLists[etaBin]) {
+            delete[] sliceValsUp;
+            delete[] sliceValsLow;
+            delete[] sliceValsUpRef;
+            delete[] sliceValsLowRef;
             throw(eh + "selected cell not in cell list cache.");
+         }
 
          offUp = 0; offLow =0;
          // selected phi sum
