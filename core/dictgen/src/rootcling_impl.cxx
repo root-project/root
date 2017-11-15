@@ -4302,12 +4302,9 @@ int RootClingMain(int argc,
       clingArgsInterpreter.push_back("-fmodules-cache-path=" +
                                      llvm::sys::path::parent_path(sharedLibraryPathName).str());
 
-      // If the user has passed ROOT_MODULES with the value 'DEBUG', then we
-      // enable remarks in clang for building on-demand modules. This is useful
-      // to figure out when and why on-demand modules are built by clang.
-      if (llvm::StringRef(getenv("ROOT_MODULES")) == "DEBUG") {
-         clingArgsInterpreter.push_back("-Rmodule-build");
-      }
+      // We enable remarks in clang for building on-demand modules. This is
+      // useful to figure out when and why on-demand modules are built by clang.
+      clingArgsInterpreter.push_back("-Rmodule-build");
    }
 
    // Convert arguments to a C array and check if they are sane
