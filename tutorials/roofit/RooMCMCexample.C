@@ -77,7 +77,7 @@ void RooMCMCexample() {
   leg->SetFillColor(kWhite);
   leg->SetLineColor(kWhite);
   leg->AddEntry("data","Data","LP");
-  leg->AddEntry("modelmcmc","RooMinuitMCMC fit","L");
+  leg->AddEntry("modelmcmc","RooMCMC fit","L");
   leg->AddEntry("modelmin","Minuit fit","L");
   leg->Draw();
 
