@@ -66,6 +66,8 @@ matrix:
   allow_failures:
     # clang-tidy-modernize is still experimental
     - env: TOOL=clang-tidy-modernize
+    # a lot of code doesn't follow clang-format yet
+    - env: TOOL=clang-format
 install:
   - |
     if [[ $TOOL == clang-tidy* ]]; then
