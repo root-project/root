@@ -31,8 +31,12 @@ public:
 
   RooMCMC(RooAbsReal& function) ;
   virtual ~RooMCMC() ;
-   void setOffsetting(Bool_t flag) ;
+  /*
+  RooMCMC is used as the RooMinuit class except that it is using a Monte Carlo Markov Chain as a minimizer.A tutorial can be found in the roofit section where a basic comparison with Minuit can be performed.
+  */
 
+
+   void setOffsetting(Bool_t flag) ; //enable or disable Offesting
   Int_t mcmc(size_t npoints, size_t cutoff, const char* errorstrategy = "gaus"); //minimizes function, cutoff points and calculates errors, "gaus" for symetric ones, and "interval" for asymetric ones.
   TGraph* getProfile(const char* name, Bool_t cutoff = kTRUE);// returns a profile of function for a parameter, including or excluding cutoff-points
   TMultiGraph* getWalkDis(const char* name, Bool_t cutoff = kTRUE);// returns the walk distribution for a parameter, including or excluding cutoff-points
