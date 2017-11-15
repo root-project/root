@@ -2241,36 +2241,22 @@ static bool GenerateAllDict(TModuleGenerator &modGen, clang::CompilerInstance *c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Includes all headers in the given module from this interpreter.
-static void IncludeModuleHeaders(TModuleGenerator &modGen, clang::Module *module, cling::Interpreter &interpreter)
+/// Includes all given headers in the interpreter. Returns true when we could
+/// include the headers and otherwise false on an error when including.
+static bool IncludeHeaders(const std::vector<std::string> &headers, cling::Interpreter &interpreter)
 {
-   // Make a list of modules and submodules that we can check for headers.
-   // We use a SetVector to prevent an infinite loop in unlikely case the
-   // modules somehow are messed up and don't form a tree...
-   llvm::SetVector<clang::Module *> modules;
-   modules.insert(module);
-   for (size_t i = 0; i < modules.size(); ++i) {
-      clang::Module *M = modules[i];
-      for (clang::Module *subModule : M->submodules())
-         modules.insert(subModule);
-   }
-   // List of includes the interpreter has to parse.
+   // If no headers are given, this is a no-op.
+   if (headers.empty())
+      return true;
+
+   // Turn every header name into an include and parse it in the interpreter.
    std::stringstream includes;
-   // Now we include all header files from the previously collected modules.
-   // FIXME: This might hide that we have a missing include if one of the
-   // previous headers already includes this. We should reuse the clang way
-   // of doing this and 'import' each header in its own submodule, then let
-   // the visibility of the decls handle this situation nicely.
-   for (clang::Module *module : modules) {
-      ROOT::TMetaUtils::foreachHeaderInModule(*module, [&includes](const clang::Module::Header &h) {
-         includes << "#include \"" << h.NameAsWritten << "\"\n";
-      });
+   for (const std::string &header : headers) {
+      includes << "#include \"" << header << "\"\n";
    }
    std::string includeListStr = includes.str();
    auto result = interpreter.declare(includeListStr);
-   if (result != cling::Interpreter::CompilationResult::kSuccess) {
-      ROOT::TMetaUtils::Error("IncludeModuleHeaders", "Couldn't include headers:\n%s!\n", includeListStr.c_str());
-   }
+   return result == cling::Interpreter::CompilationResult::kSuccess;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2345,9 +2331,13 @@ static bool GenerateModule(TModuleGenerator &modGen, const std::string &resource
       }
       std::string warningMessage = msgStream.str();
       ROOT::TMetaUtils::Warning("GenerateModule", warningMessage.c_str());
+      // We include the missing headers to fix the module for the user.
+      if (!IncludeHeaders(missingHeaders, interpreter)) {
+         ROOT::TMetaUtils::Error("GenerateModule", "Couldn't include missing module headers for module '%s'!\n",
+                                 module->Name.c_str());
+      }
    }
 
-   IncludeModuleHeaders(modGen, module, interpreter);
    return true;
 }
 
