@@ -207,13 +207,14 @@ TConvLayer<Architecture_t>::~TConvLayer()
 template <typename Architecture_t>
 auto TConvLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool applyDropout) -> void
 {
+   Matrix_t inputTr(this->GetNLocalViews(), this->GetNLocalViewPixels());
    for (size_t i = 0; i < this->GetBatchSize(); i++) {
 
       if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
          Architecture_t::Dropout(input[i], this->GetDropoutProbability());
       }
 
-      Matrix_t inputTr(this->GetNLocalViews(), this->GetNLocalViewPixels());
+      inputTr.Clear(); 
       Architecture_t::Im2col(inputTr, input[i], this->GetInputHeight(), this->GetInputWidth(), this->GetFilterHeight(),
                              this->GetFilterWidth(), this->GetStrideRows(), this->GetStrideCols(),
                              this->GetPaddingHeight(), this->GetPaddingWidth());

@@ -102,6 +102,10 @@ public:
    TCpuMatrix & operator=(TCpuMatrix &&)       = default;
    ~TCpuMatrix()                               = default;
 
+   /** Clear content of the matrix and initialize to zero elements
+    */
+   void Clear();
+
    /** Convert to a TMatrixT<Double_t> object. Performs a deep copy of the matrix
     *  elements. */
    operator TMatrixT<Double_t>() const;
@@ -155,7 +159,9 @@ inline void TCpuMatrix<AFloat>::Map(Function_t &f)
       return 0;
    };
 
-   TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(fNCols * fNRows));
+   //TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(fNCols * fNRows));
+   for (size_t i = 0;  i < fNCols * fNRows; ++i)
+      ff(i); 
 }
 
 template<typename AFloat>
@@ -171,8 +177,21 @@ inline void TCpuMatrix<AFloat>::MapFrom(Function_t &f, const TCpuMatrix &A)
       return 0;
    };
 
-   TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(fNCols * fNRows));
+   //TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(fNCols * fNRows));
+   for (size_t i = 0;  i < fNCols * fNRows; ++i)
+      ff(i); 
 }
+
+template<typename AFloat>
+void TCpuMatrix<AFloat>::Clear()  
+{
+   for (size_t j = 0; j < fNCols; j++) {
+      for (size_t i = 0; i < fNRows; i++) {
+         (*this)(i, j) = 0;
+      }
+   }
+}
+
 
 } // namespace DNN
 } // namespace TMVA
