@@ -1001,11 +1001,13 @@ void MethodDL::TrainGpu()
       CreateDeepNet(deepNet, nets);
 
       // Loading the training and testing datasets
-      TensorDataLoader_t trainingData(GetEventCollection(Types::kTraining), nTrainingSamples, deepNet.GetBatchSize(),
+      TMVAInput_t trainingTuple = std::tie(GetEventCollection(Types::kTraining), DataInfo());
+      TensorDataLoader_t trainingData(trainingTuple, nTrainingSamples, deepNet.GetBatchSize(),
                                       deepNet.GetBatchDepth(), deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
                                       deepNet.GetOutputWidth(), nThreads);
 
-      TensorDataLoader_t testingData(GetEventCollection(Types::kTesting), nTestSamples, deepNet.GetBatchSize(),
+      TMVAInput_t testTuple = std::tie(GetEventCollection(Types::kTesting), DataInfo());
+      TensorDataLoader_t testingData(testTuple, nTestSamples, deepNet.GetBatchSize(),
                                      deepNet.GetBatchDepth(), deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
                                      deepNet.GetOutputWidth(), nThreads);
 
@@ -1182,11 +1184,13 @@ void MethodDL::TrainCpu()
       CreateDeepNet(deepNet, nets); 
 
       // Loading the training and testing datasets
-      TensorDataLoader_t trainingData(GetEventCollection(Types::kTraining), nTrainingSamples, deepNet.GetBatchSize(),
+      TMVAInput_t trainingTuple = std::tie(GetEventCollection(Types::kTraining), DataInfo());
+      TensorDataLoader_t trainingData(trainingTuple, nTrainingSamples, deepNet.GetBatchSize(),
                                       deepNet.GetBatchDepth(), deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
                                       deepNet.GetOutputWidth(), nThreads);
 
-      TensorDataLoader_t testingData(GetEventCollection(Types::kTesting), nTestSamples, deepNet.GetBatchSize(),
+      TMVAInput_t testTuple = std::tie(GetEventCollection(Types::kTesting), DataInfo());
+      TensorDataLoader_t testingData(testTuple, nTestSamples, deepNet.GetBatchSize(),
                                      deepNet.GetBatchDepth(), deepNet.GetBatchHeight(), deepNet.GetBatchWidth(),
                                      deepNet.GetOutputWidth(), nThreads);
 
