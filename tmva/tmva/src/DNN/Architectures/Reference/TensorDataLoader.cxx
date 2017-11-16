@@ -30,6 +30,7 @@
 ///////////////////////////////////////////////////////////////////
 
 #include "TMVA/DNN/Architectures/Reference.h"
+#include "TMVA/DataSetInfo.h"
 
 namespace TMVA {
 namespace DNN {
@@ -160,13 +161,13 @@ void TTensorDataLoader<TMVAInput_t, TReference<Real_t>>::CopyTensorInput(std::ve
                                                                          IndexIterator_t sampleIterator)
 {
    // one event, one  example in the batch
-   Event *event = fData.front();
+   Event *event = std::get<0>(fData)[0];
 
    if (fBatchDepth == 1) {
       for (size_t i = 0; i < fBatchHeight; i++) {
          size_t sampleIndex = *sampleIterator;
          for (size_t j = 0; j < fBatchWidth; j++) {
-            event = fData[sampleIndex];
+            event = std::get<0>(fData)[sampleIndex];
             tensor[0](i, j) = static_cast<Real_t>(event->GetValue(j));
          }
          sampleIterator++;
@@ -176,7 +177,7 @@ void TTensorDataLoader<TMVAInput_t, TReference<Real_t>>::CopyTensorInput(std::ve
          size_t sampleIndex = *sampleIterator;
          for (size_t j = 0; j < fBatchHeight; j++) {
             for (size_t k = 0; k < fBatchWidth; k++) {
-               event = fData[sampleIndex];
+               event = std::get<0>(fData)[sampleIndex];
                tensor[i](j, k) = static_cast<Real_t>(event->GetValue(j * fBatchHeight + k));
             }
          }
@@ -190,17 +191,17 @@ template <>
 void TTensorDataLoader<TMVAInput_t, TReference<Real_t>>::CopyTensorOutput(TMatrixT<Real_t> &matrix,
                                                                           IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
+   const DataSetInfo &info = std::get<1>(fData);
    Int_t n = matrix.GetNcols();
 
    for (size_t i = 0; i < fBatchSize; i++) {
       size_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
+      Event *event = std::get<0>(fData)[sampleIndex];
 
       for (Int_t j = 0; j < n; j++) {
          if (event->GetNTargets() == 0) {
             if (n == 1) {
-               matrix(i, j) = (event->GetClass() == 0) ? 1.0 : 0.0;
+               matrix(i, j) = (info.IsSignal(event)) ? 1.0 : 0.0;
             } else {
                matrix(i, j) = 0.0;
                if (j == (Int_t)event->GetClass()) {
@@ -219,11 +220,9 @@ template <>
 void TTensorDataLoader<TMVAInput_t, TReference<Real_t>>::CopyTensorWeights(TMatrixT<Real_t> &matrix,
                                                                            IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
-
    for (size_t i = 0; i < fBatchSize; i++) {
       size_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
+      Event *event = std::get<0>(fData)[sampleIndex];
       matrix(i, 0) = static_cast<Real_t>(event->GetWeight());
    }
 }
@@ -234,13 +233,13 @@ void TTensorDataLoader<TMVAInput_t, TReference<Double_t>>::CopyTensorInput(std::
                                                                            IndexIterator_t sampleIterator)
 {
    // one event, one  example in the batch
-   Event *event = fData.front();
+   Event *event = std::get<0>(fData)[0];
 
    if (fBatchDepth == 1) {
       for (size_t i = 0; i < fBatchHeight; i++) {
          size_t sampleIndex = *sampleIterator;
          for (size_t j = 0; j < fBatchWidth; j++) {
-            event = fData[sampleIndex];
+            event = std::get<0>(fData)[sampleIndex];
             tensor[0](i, j) = event->GetValue(j);
          }
          sampleIterator++;
@@ -250,7 +249,7 @@ void TTensorDataLoader<TMVAInput_t, TReference<Double_t>>::CopyTensorInput(std::
          size_t sampleIndex = *sampleIterator;
          for (size_t j = 0; j < fBatchHeight; j++) {
             for (size_t k = 0; k < fBatchWidth; k++) {
-               event = fData[sampleIndex];
+               event = std::get<0>(fData)[sampleIndex];
                tensor[i](j, k) = event->GetValue(j * fBatchHeight + k);
             }
          }
@@ -264,17 +263,17 @@ template <>
 void TTensorDataLoader<TMVAInput_t, TReference<Double_t>>::CopyTensorOutput(TMatrixT<Double_t> &matrix,
                                                                             IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
+   const DataSetInfo &info = std::get<1>(fData);
    Int_t n = matrix.GetNcols();
 
-   for (size_t i = 0; i < fBatchSize; i++) {
+   for (size_t i = 0; i < fBatchSize; i++) {     
       size_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
+      Event *event = std::get<0>(fData)[sampleIndex];
 
       for (Int_t j = 0; j < n; j++) {
          if (event->GetNTargets() == 0) {
             if (n == 1) {
-               matrix(i, j) = (event->GetClass() == 0) ? 1.0 : 0.0;
+               matrix(i, j) = (info.IsSignal(event)) ? 1.0 : 0.0;
             } else {
                matrix(i, j) = 0.0;
                if (j == (Int_t)event->GetClass()) {
@@ -293,11 +292,9 @@ template <>
 void TTensorDataLoader<TMVAInput_t, TReference<Double_t>>::CopyTensorWeights(TMatrixT<Double_t> &matrix,
                                                                              IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
-
    for (size_t i = 0; i < fBatchSize; i++) {
       size_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
+      Event *event = std::get<0>(fData)[sampleIndex];
       matrix(i, 0) = event->GetWeight();
    }
 }
