@@ -155,7 +155,7 @@ inline void TCpuMatrix<AFloat>::Map(Function_t &f)
       return 0;
    };
 
-   TMVA::Config::Instance().GetThreadExecutor().Map(ff, ROOT::TSeqI(fNCols * fNRows));
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(fNCols * fNRows));
 }
 
 template<typename AFloat>
@@ -171,7 +171,7 @@ inline void TCpuMatrix<AFloat>::MapFrom(Function_t &f, const TCpuMatrix &A)
       return 0;
    };
 
-   TMVA::Config::Instance().GetThreadExecutor().Map(ff, ROOT::TSeqI(fNCols * fNRows));
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(fNCols * fNRows));
 }
 
 } // namespace DNN
