@@ -228,7 +228,7 @@ namespace ROOT {
          */
          const double *GetCoordComponent(unsigned int ipoint, unsigned int icoord) const
          {
-            assert(ipoint < fMaxPoints);
+            assert(ipoint < fMaxPoints + VectorPadding(fMaxPoints));
             assert(icoord < fDim);
             assert(fCoordsPtr.size() == fDim);
             assert(fCoordsPtr[icoord]);
@@ -246,7 +246,7 @@ namespace ROOT {
          const double *Coords(unsigned int ipoint) const
          {
             assert(fpTmpCoordVector);
-            assert(ipoint < fMaxPoints);
+            assert(ipoint < fMaxPoints + VectorPadding(fMaxPoints));
 
             for (unsigned int i = 0; i < fDim; i++) {
                assert(fCoordsPtr[i]);
