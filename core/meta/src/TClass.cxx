@@ -3178,6 +3178,12 @@ TClass *TClass::GetClass(ClassInfo_t *info, Bool_t load, Bool_t silent)
    if (!info || !gCling->ClassInfo_IsValid(info)) return 0;
    if (!gROOT->GetListOfClasses())    return 0;
 
+   // Technically we need the write lock only for the call to ClassInfo_FullName
+   // and GenerateTClass but FindObject will take the read lock (and LoadClass will
+   // take the write lock).  Since taking/releasing the lock is expensive, let just
+   // take the write guard and keep it.
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
    // Get the normalized name.
    TString name( gCling->ClassInfo_FullName(info) );
 
