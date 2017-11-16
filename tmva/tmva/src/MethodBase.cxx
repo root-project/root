@@ -1971,10 +1971,12 @@ TDirectory* TMVA::MethodBase::BaseDir() const
          sdir = methodDir->mkdir(defaultDir);
          sdir->cd();
          // write weight file name into target file
-         TObjString wfilePath( gSystem->WorkingDirectory() );
-         TObjString wfileName( GetWeightFileName() );
-         wfilePath.Write( "TrainingPath" );
-         wfileName.Write( "WeightFileName" );
+         if (fModelPersistence) { 
+            TObjString wfilePath( gSystem->WorkingDirectory() );
+            TObjString wfileName( GetWeightFileName() );
+            wfilePath.Write( "TrainingPath" );
+            wfileName.Write( "WeightFileName" );
+         }
       }
 
    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " existed, return it.." <<Endl;
@@ -2040,11 +2042,13 @@ TString TMVA::MethodBase::GetWeightFileName() const
    // directory/jobname_methodname_suffix.extension.{root/txt}
    TString suffix = "";
    TString wFileDir(GetWeightFileDir());
+   TString wFileName = GetJobName() + "_" + GetMethodName() +
+      suffix + "." + gConfig().GetIONames().fWeightFileExtension + ".xml";
+   if (wFileDir.IsNull() )  return wFileName;
+   // add weight file directory of it is not null
    return ( wFileDir + (wFileDir[wFileDir.Length()-1]=='/' ? "" : "/")
-            + GetJobName() + "_" + GetMethodName() +
-            suffix + "." + gConfig().GetIONames().fWeightFileExtension + ".xml" );
+            + wFileName );
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// writes all MVA evaluation histograms to file
 
