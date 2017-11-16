@@ -418,19 +418,19 @@ void TTensorDataLoader<TensorInput, TCpu<Double_t>>::CopyTensorWeights(TCpuBuffe
    }
 }
 
+///- re-impleent specialization for Double_t
 //______________________________________________________________________________
 template <>
 void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorInput(TCpuBuffer<Double_t> &buffer,
                                                                      IndexIterator_t sampleIterator)
 {
    // one event, one  example in the batch
-   Event *event = fData.front();
 
    if (fBatchDepth == 1) {
       for (size_t i = 0; i < fBatchHeight; i++) {
          size_t sampleIndex = *sampleIterator;
+         Event * event = std::get<0>(fData)[sampleIndex];
          for (size_t j = 0; j < fBatchWidth; j++) {
-            event = fData[sampleIndex];
             size_t bufferIndex = j * fBatchHeight + i;
             buffer[bufferIndex] = event->GetValue(j);
          }
@@ -439,9 +439,9 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorInput(TCpuBuffer<
    } else {
       for (size_t i = 0; i < fBatchDepth; i++) {
          size_t sampleIndex = *sampleIterator;
+         Event * event = std::get<0>(fData)[sampleIndex];
          for (size_t j = 0; j < fBatchHeight; j++) {
             for (size_t k = 0; k < fBatchWidth; k++) {
-               event = fData[sampleIndex];
                // because of the column-major ordering
                size_t bufferIndex = i * fBatchHeight * fBatchWidth + k * fBatchHeight + j;
                buffer[bufferIndex] = event->GetValue(j * fBatchHeight + k);
@@ -457,14 +457,14 @@ template <>
 void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorOutput(TCpuBuffer<Double_t> &buffer,
                                                                       IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
+   const DataSetInfo &info = std::get<1>(fData);
    size_t n = buffer.GetSize() / fBatchSize;
 
    // Copy target(s).
 
    for (size_t i = 0; i < fBatchSize; i++) {
       size_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
+      Event *event = std::get<0>(fData)[sampleIndex];
       for (size_t j = 0; j < n; j++) {
          // Copy output matrices.
          size_t bufferIndex = j * fBatchSize + i;
@@ -472,7 +472,7 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorOutput(TCpuBuffer
          if (event->GetNTargets() == 0) {
             if (n == 1) {
                // Binary.
-               buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+               buffer[bufferIndex] = (info.IsSignal(event)) ? 1.0 : 0.0;
             } else {
                // Multiclass.
                buffer[bufferIndex] = 0.0;
@@ -492,41 +492,40 @@ template <>
 void TTensorDataLoader<TMVAInput_t, TCpu<Double_t>>::CopyTensorWeights(TCpuBuffer<Double_t> &buffer,
                                                                        IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
-
    for (size_t i = 0; i < fBatchSize; i++) {
       size_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
-      buffer[i] = event->GetWeight();
+      Event *event = std::get<0>(fData)[sampleIndex];
+       buffer[i] = event->GetWeight();
    }
 }
 
+///- re-impleent specialization for Real_t
 //______________________________________________________________________________
 template <>
 void TTensorDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyTensorInput(TCpuBuffer<Real_t> &buffer,
                                                                    IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
-
+   // one event, one  example in the batch
+ 
    if (fBatchDepth == 1) {
       for (size_t i = 0; i < fBatchHeight; i++) {
          size_t sampleIndex = *sampleIterator;
          for (size_t j = 0; j < fBatchWidth; j++) {
-            event = fData[sampleIndex];
+            Event * event = std::get<0>(fData)[sampleIndex];
             size_t bufferIndex = j * fBatchHeight + i;
-            buffer[bufferIndex] = static_cast<Real_t>(event->GetValue(j));
+            buffer[bufferIndex] = event->GetValue(j);
          }
          sampleIterator++;
       }
    } else {
       for (size_t i = 0; i < fBatchDepth; i++) {
          size_t sampleIndex = *sampleIterator;
+         Event * event = std::get<0>(fData)[sampleIndex];
          for (size_t j = 0; j < fBatchHeight; j++) {
             for (size_t k = 0; k < fBatchWidth; k++) {
-               event = fData[sampleIndex];
                // because of the column-major ordering
                size_t bufferIndex = i * fBatchHeight * fBatchWidth + k * fBatchHeight + j;
-               buffer[bufferIndex] = static_cast<Real_t>(event->GetValue(j * fBatchHeight + k));
+               buffer[bufferIndex] = event->GetValue(j * fBatchHeight + k);
             }
          }
          sampleIterator++;
@@ -534,19 +533,19 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyTensorInput(TCpuBuffer<Re
    }
 }
 
-//______________________________________________________________________________
+ //______________________________________________________________________________
 template <>
 void TTensorDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyTensorOutput(TCpuBuffer<Real_t> &buffer,
-                                                                    IndexIterator_t sampleIterator)
+                                                                      IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
+   const DataSetInfo &info = std::get<1>(fData);
    size_t n = buffer.GetSize() / fBatchSize;
 
    // Copy target(s).
 
    for (size_t i = 0; i < fBatchSize; i++) {
       size_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
+      Event *event = std::get<0>(fData)[sampleIndex];
       for (size_t j = 0; j < n; j++) {
          // Copy output matrices.
          size_t bufferIndex = j * fBatchSize + i;
@@ -554,7 +553,7 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyTensorOutput(TCpuBuffer<R
          if (event->GetNTargets() == 0) {
             if (n == 1) {
                // Binary.
-               buffer[bufferIndex] = (event->GetClass() == 0) ? 1.0 : 0.0;
+               buffer[bufferIndex] = (info.IsSignal(event)) ? 1.0 : 0.0;
             } else {
                // Multiclass.
                buffer[bufferIndex] = 0.0;
@@ -572,16 +571,15 @@ void TTensorDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyTensorOutput(TCpuBuffer<R
 //______________________________________________________________________________
 template <>
 void TTensorDataLoader<TMVAInput_t, TCpu<Real_t>>::CopyTensorWeights(TCpuBuffer<Real_t> &buffer,
-                                                                     IndexIterator_t sampleIterator)
+                                                                       IndexIterator_t sampleIterator)
 {
-   Event *event = fData.front();
-
    for (size_t i = 0; i < fBatchSize; i++) {
       size_t sampleIndex = *sampleIterator++;
-      event = fData[sampleIndex];
-      buffer[i] = static_cast<Real_t>(event->GetWeight());
+      Event *event = std::get<0>(fData)[sampleIndex];
+      buffer[i] = event->GetWeight();
    }
 }
+  
 
 // Explicit instantiations.
 template class TCpuBuffer<Double_t>;

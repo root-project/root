@@ -31,6 +31,7 @@
 #include "TMVA/Event.h"
 
 namespace TMVA {
+   class DataSetInfo; 
 namespace DNN {
 
 //
@@ -39,7 +40,7 @@ namespace DNN {
 using TensorInput =
    std::tuple<const std::vector<TMatrixT<Double_t>> &, const TMatrixT<Double_t> &, const TMatrixT<Double_t> &>;
 
-using TMVAInput_t = std::vector<Event *>;
+using TMVAInput_t =  std::tuple<const std::vector<Event *> &, const DataSetInfo &>;
 using IndexIterator_t = typename std::vector<size_t>::iterator;
 
 /** TTensorBatch

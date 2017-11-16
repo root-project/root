@@ -72,7 +72,6 @@ namespace TMVA {
 
       Bool_t DrawProgressBar() const { return fDrawProgressBar; }
       void   SetDrawProgressBar( Bool_t d ) { fDrawProgressBar = d; }
-      ROOT::TThreadExecutor &GetThreadExecutor() { return fPool; }
       UInt_t  GetNCpu() { return fNCpu; }
 
 #ifdef R__USE_IMT
