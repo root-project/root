@@ -1,5 +1,5 @@
 /// \file
-/// \ingroup tutorial_multicore
+/// \ingroup tutorial_hist
 /// Fill multiple histograms with different functions and automatic binning.
 /// Illustrates merging with the power-of-two autobin algorithm
 ///
@@ -22,7 +22,7 @@ TF1 *gam1 = new TF1("gam", "1/(1+0.1*x*0.1*x)", -1., .25);
 TF1 *iga = new TF1("inv gam", "1.-1/(1+0.1*x*0.1*x)", -100., 100.);
 TF1 *iga1 = new TF1("inv gam", "1.-1/(1+0.1*x*0.1*x)", -.5, 1.);
 
-void mt305_fillHistosAutobin(unsigned opt = 1, unsigned n = 1001)
+void fillhistosauto2p(unsigned opt = 1, unsigned n = 1001)
 {
 
    UInt_t nh = 10;
