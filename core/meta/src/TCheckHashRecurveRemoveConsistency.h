@@ -21,6 +21,7 @@
 #include <list>
 
 #include <iostream>
+#include <mutex>
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -44,6 +45,7 @@ public:
    using Value_t = Value; // std::pair<ULong_t, TObject*>;
 
    std::list<Value> fCont;
+   std::mutex       fMutex;
 
 public:
    // Default constructors.  Adds object to the list of
@@ -63,11 +65,21 @@ public:
    void Add(TObject *obj)
    {
       obj->SetBit(kMustCleanup);
-      fCont.push_back(Value_t{obj->Hash(), obj});
+      auto hashValue = obj->Hash(); // This might/will take the ROOT lock.
+
+      std::unique_lock<std::mutex> lock(fMutex);
+      fCont.push_back(Value_t{hashValue, obj});
    }
 
    void RecursiveRemove(TObject *obj)
    {
+      // Since we use std::list, a remove (from another thread)
+      // would invalidate out iterator and taking the write lock
+      // 'only' inside the loop would suspend this thread and lead
+      // another reader or write go on; consequently we would need
+      // to re-find the object we are wanting to remove.
+      std::unique_lock<std::mutex> lock(fMutex);
+
       // std::cout << "Recursive Remove called for: " << obj << '\n';
       for (auto p = fCont.begin(); p != fCont.end(); ++p) {
          if (p->fObjectPtr == obj) {
@@ -84,6 +96,8 @@ public:
 
    void SlowRemove(TObject *obj)
    {
+      std::unique_lock<std::mutex> lock(fMutex);
+
       for (auto p = fCont.begin(); p != fCont.end(); ++p) {
          if (p->fObjectPtr == obj) {
             fCont.erase(p);
