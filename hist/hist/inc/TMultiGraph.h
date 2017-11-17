@@ -64,15 +64,15 @@ public:
    virtual void      InitExpo(Double_t xmin, Double_t xmax);
    virtual void      InitGaus(Double_t xmin, Double_t xmax);
    virtual Int_t     IsInside(Double_t x, Double_t y) const;
-   TH1F             *GetHistogram() const;
+   TH1F             *GetHistogram();
    TF1              *GetFunction(const char *name) const;
    TList            *GetListOfGraphs() const { return fGraphs; }
    TIter             begin() const;
    TIter             end() const { return TIter::End(); }
    TList            *GetListOfFunctions();  // non const method (create list if empty)
    const TList      *GetListOfFunctions() const { return fFunctions; }
-   TAxis            *GetXaxis() const;
-   TAxis            *GetYaxis() const;
+   TAxis            *GetXaxis();
+   TAxis            *GetYaxis();
    virtual void      Paint(Option_t *chopt="");
    void              PaintPads(Option_t *chopt="");
    void              PaintPolyLine3D(Option_t *chopt="");
