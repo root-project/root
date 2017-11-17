@@ -1,7 +1,7 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
  * Package: RooFitCore                                                       *
- *    File: $Id: RooMCMC.h,v 1.00 2017/14/11 11:13:42
+ *    File: $Id: RooMCMarkovChain.h,v 1.00 2017/14/11 11:13:42
 
  * Author:                                                                  *
  *   OD, Oliver Dahme, University of Zurich, o.dahme@cern.ch      *
@@ -17,7 +17,7 @@
 #include "TGraph.h"
 #include "TFitter.h"
 #include "TMatrixDSym.h"
-#include "RooMCMC.h"
+#include "RooMCMarkovChain.h"
 #include "RooArgSet.h"
 #include "RooArgList.h"
 #include "RooAbsReal.h"
@@ -38,13 +38,21 @@
 
 #include <cstdlib>
 
-ClassImp(RooMCMC)
-
 using namespace std;
 
-TVirtualFitter *RooMCMC::_theFitter = 0 ;
+ClassImp(RooMCMarkovChain);
 
-void RooMCMC::cleanup()
+/** \class RooMCMarkovChain
+  RooMCMarkovChain is used as the RooMinuit class except that it is using a Monte Carlo Markov Chain as a minimizer.A tutorial can be found in the roofit section where a basic comparison with Minuit can be performed.
+*/
+
+
+TVirtualFitter *RooMCMarkovChain::_theFitter = 0 ;
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// cleanup function to reset the fitter
+void RooMCMarkovChain::cleanup()
 {
   if (_theFitter) {
     delete _theFitter ;
@@ -52,13 +60,15 @@ void RooMCMC::cleanup()
   }
 }
 
-RooMCMC::RooMCMC(RooAbsReal& function)
+////////////////////////////////////////////////////////////////////////////////
+/// RooMCMarkovChain constructor: takes the negative log liklihood function as an argument
+
+RooMCMarkovChain::RooMCMarkovChain(RooAbsReal& function)
 {
   _func = &function ;
   _verbose = kFALSE ;
   _gaus = kFALSE;
   _interval = kFALSE;
-  _fileName = "out.root";
 
   // Examine parameter list
    RooArgSet* paramSet = function.getParameters(RooArgSet()) ;
@@ -105,28 +115,23 @@ RooMCMC::RooMCMC(RooAbsReal& function)
 
 
 
-
-/// Destructor
-RooMCMC::~RooMCMC()
+////////////////////////////////////////////////////////////////////////////////
+/// Destructor: clears all points in the Markov Chain
+RooMCMarkovChain::~RooMCMarkovChain()
 {
-  // delete _floatParamList ;
   _floatParamVec.clear() ;
-  // delete _initFloatParamList ;
-  // delete _constParamList ;
-  // delete _initConstParamList ;
-  // delete _bestParamList;
   _pointList.clear();
   _sortPointList.clear();
   _cutoffList.clear();
-  // delete _fileName;
-  // delete _func ;
-  // if (_extV) {
-  //   delete _extV ;
-  // }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// minimizes function, cutoff points and calculates errors, "gaus" for symetric ones, and "interval" for asymetric ones.
+/// \param[in] npoints = number of steps of the Markov Chain
+/// \param[in] cutoff = number of points to be cut off starting from the first
+/// \param[in] errorstrategy takes "gaus" or "interval"
 
-Int_t RooMCMC::mcmc(size_t npoints, size_t cutoff, const char* errorstrategy)
+Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstrategy)
 {
   Bool_t verbose = _verbose;
   int pl = 0;
@@ -140,9 +145,11 @@ Int_t RooMCMC::mcmc(size_t npoints, size_t cutoff, const char* errorstrategy)
 
   if (strcmp(errorstrategy, "gaus") == 0) {
     _gaus = kTRUE;
-  }
-  if (strcmp(errorstrategy, "interval") == 0) {
+  } else if (strcmp(errorstrategy, "interval") == 0) {
     _interval = kTRUE;
+  } else {
+    std::cout << "unknown errorstrategy setting strategy to gaus" << '\n';
+    _gaus = kTRUE;
   }
 
   Double_t seed = _seed;
@@ -193,7 +200,7 @@ Int_t RooMCMC::mcmc(size_t npoints, size_t cutoff, const char* errorstrategy)
   *SNminusone = *S1;
   TMatrixDSym* SN = new TMatrixDSym(nparams);
   SN->Zero();
-  RooMCMC* context = (RooMCMC*) RooMCMC::_theFitter->GetObjectFit();
+  RooMCMarkovChain* context = (RooMCMarkovChain*) RooMCMarkovChain::_theFitter->GetObjectFit();
   TVectorD* SW = new TVectorD(nparams);
   TVectorD* WN = new TVectorD(nparams);
   if (pl > 0) {
@@ -323,10 +330,12 @@ Int_t RooMCMC::mcmc(size_t npoints, size_t cutoff, const char* errorstrategy)
   return 1;
 }
 
-/*
-getProfile returns a profile of the nll for a certain parameter, which can be called by name. It does so by creating a TGraph and plots all the nll values of the walk in respect to the parameter. Also, it is possible to include the cutoff points or not.
-*/
-TGraph* RooMCMC::getProfile(const char* name, Bool_t cutoff)
+////////////////////////////////////////////////////////////////////////////////
+///getProfile returns a profile of the nll for a certain parameter, which can be called by name. It does so by creating a TGraph and plots all the nll values of the walk in respect to the parameter. Also, it is possible to include the cutoff points or not.
+/// \param[in] name = name of parameter
+/// \param[in] cutoff = include or exclude cutoff-points
+
+TGraph* RooMCMarkovChain::getProfile(const char* name, Bool_t cutoff)
 {
   if (_pointList.size() == 0) {
     std::cout << "point list empty. Please run mcmc() first" << std::endl;
@@ -369,10 +378,12 @@ TGraph* RooMCMC::getProfile(const char* name, Bool_t cutoff)
   return gr;
 }
 
-/*
-getWalkDis returns a TMultigraph pointer of the walk distribution of a parameter, which is called by name. It does so by creating two TGraphs one with the points which had been cutoff and one with the included points. Also, it adds a dotted line where the cutoff has been set.
-*/
-TMultiGraph* RooMCMC::getWalkDis(const char* name, Bool_t cutoff)
+////////////////////////////////////////////////////////////////////////////////
+/// getWalkDis returns a TMultigraph pointer of the walk distribution of a parameter, which is called by name. It does so by creating two TGraphs one with the points which had been cutoff and one with the included points. Also, it adds a dotted line where the cutoff has been set.
+/// \param[in] name = name of parameter
+/// \param[in] cutoff = include or exclude cutoff-points
+
+TMultiGraph* RooMCMarkovChain::getWalkDis(const char* name, Bool_t cutoff)
 {
   if (_pointList.size() == 0) {
     std::cout << "point list empty. Please run mcmc() first" << std::endl;
@@ -404,8 +415,8 @@ TMultiGraph* RooMCMC::getWalkDis(const char* name, Bool_t cutoff)
     gr1->SetLineColor(2);
     graph->Add(gr1);
 
-    Double_t minVal = getMinList(name);
-    Double_t maxVal = getMaxList(name);
+    Double_t minVal = getMin(name);
+    Double_t maxVal = getMax(name);
     Double_t x[2] = {Double_t(_cutoff),Double_t(_cutoff)};
     Double_t y[2] = {minVal,maxVal};
     TGraph* cutline = new TGraph(2,x,y);
@@ -437,17 +448,20 @@ TMultiGraph* RooMCMC::getWalkDis(const char* name, Bool_t cutoff)
   return graph;
 }
 
-/*
-getWalkDisHis returns a TH1F pointer with a histogram of the walk for a certain parameter, called by name. The number of bins for the histogram can be set by nbinsx. Cutoff points can be included or not. It does so by just adding all the points of the walk to a histogram. The main purpose is to look at the distribution of the points. This function is also used to calculate the symmetric errors of the parameter.
-*/
-TH1F* RooMCMC::getWalkDisHis(const char* name,  Int_t nbinsx, Bool_t cutoff)
+////////////////////////////////////////////////////////////////////////////////
+///getWalkDisHis returns a TH1F pointer with a histogram of the walk for a certain parameter, called by name. The number of bins for the histogram can be set by nbinsx. Cutoff points can be included or not. It does so by just adding all the points of the walk to a histogram. The main purpose is to look at the distribution of the points. This function is also used to calculate the symmetric errors of the parameter.
+/// \param[in] name = name of parameter
+/// \param[in] nbinsx = numer of bins in the histogram
+/// \param[in] cutoff = include or exclude cutoff-points
+
+TH1F* RooMCMarkovChain::getWalkDisHis(const char* name,  Int_t nbinsx, Bool_t cutoff)
 {
   if (_pointList.size() == 0) {
     std::cout << "point list empty. Please run mcmc() first" << std::endl;
   }
 
-  Double_t xlow = getMinList(name);
-  Double_t xup = getMaxList(name);
+  Double_t xlow = getMin(name);
+  Double_t xup = getMax(name);
 
   string histTitelStr = "Histogram of ";
   histTitelStr += name;
@@ -482,10 +496,11 @@ TH1F* RooMCMC::getWalkDisHis(const char* name,  Int_t nbinsx, Bool_t cutoff)
   }
 }
 
-/*
-changeCutoff just changes the number of points, which should not be included into the error calculation. The number of cutoff points can be changed without re performing the walk.
-*/
-Int_t RooMCMC::changeCutoff(Int_t newCutoff)
+////////////////////////////////////////////////////////////////////////////////
+///changeCutoff just changes the number of points, which should not be included into the error calculation. The number of cutoff points can be changed without re performing the walk.
+/// \param[in] newCutoff = new number of points to be cut off
+
+Int_t RooMCMarkovChain::changeCutoff(Int_t newCutoff)
 {
   _cutoff = newCutoff;
   _cutoffList.clear();
@@ -497,10 +512,15 @@ Int_t RooMCMC::changeCutoff(Int_t newCutoff)
   return 1;
 }
 
-/*
-getCornerPlot returns a TH2D pointer with a 2D histogram of two parameters, called by name1 and name2. The number of bins for the name1 parameter are set by nbinsx and for name2 by nbinsy.  It does so just by adding all the points of the two parameters in a TH2D histogram. As always the cutoff can be turned on or off. This plot could for example be used to look for correlations.
-*/
-TH2D* RooMCMC::getCornerPlot(const char* name1, const char* name2, Int_t nbinsx, Int_t nbinsy, Bool_t cutoff)
+////////////////////////////////////////////////////////////////////////////////
+///getCornerPlot returns a TH2D pointer with a 2D histogram of two parameters, called by name1 and name2. The number of bins for the name1 parameter are set by nbinsx and for name2 by nbinsy.  It does so just by adding all the points of the two parameters in a TH2D histogram. As always the cutoff can be turned on or off. This plot could for example be used to look for correlations.
+/// \param[in] name1 = name of first parameter
+/// \param[in] name2 = name of second parameter
+/// \param[in] nbinsx = number of bins on the x-axis
+/// \param[in] nbinsy = number of bins on the y-axis
+/// \param[in] cutoff = include or exclude cutoff-points
+
+TH2D* RooMCMarkovChain::getCornerPlot(const char* name1, const char* name2, Int_t nbinsx, Int_t nbinsy, Bool_t cutoff)
 {
   string histNameStr = "cornerhist";
   histNameStr += name1;
@@ -528,10 +548,10 @@ TH2D* RooMCMC::getCornerPlot(const char* name1, const char* name2, Int_t nbinsx,
     }
   }
 
-  Double_t xlow = getMinList(name1);
-  Double_t xup = getMaxList(name1);
-  Double_t ylow = getMinList(name2);
-  Double_t yup = getMaxList(name2);
+  Double_t xlow = getMin(name1);
+  Double_t xup = getMax(name1);
+  Double_t ylow = getMin(name2);
+  Double_t yup = getMax(name2);
 
   TH2D *hist = new TH2D(histNameChar,histTitelChar,nbinsx,xlow,xup,nbinsy,ylow,yup);
   hist->GetXaxis()->SetTitle(name1);
@@ -571,10 +591,11 @@ TH2D* RooMCMC::getCornerPlot(const char* name1, const char* name2, Int_t nbinsx,
     return hist;
   }
 }
-/*
-sortPointList sorts the points according to a value defined by name. It saves them into the _sortPointList.
-*/
-void RooMCMC::sortPointList(const char* name)
+////////////////////////////////////////////////////////////////////////////////
+///sortPointList sorts the points according to a value defined by name. It saves them into the _sortPointList.
+/// \param[in] name = name of parameter
+
+void RooMCMarkovChain::sortPointList(const char* name)
 {
   int index = getIndex(name);
   _sortPointList.clear();
@@ -594,10 +615,11 @@ void RooMCMC::sortPointList(const char* name)
   });
 }
 
-/*
-getIndex just returns the index of a parameter given by name.
-*/
-Int_t RooMCMC::getIndex(const char* name)
+////////////////////////////////////////////////////////////////////////////////
+///getIndex just returns the index of a parameter given by name.
+/// \param[in] name = name of parameter
+
+Int_t RooMCMarkovChain::getIndex(const char* name)
 {
   Int_t index = 0;
   for (size_t i = 0; i < _nPar; i++) {
@@ -612,11 +634,17 @@ Int_t RooMCMC::getIndex(const char* name)
   return index;
 }
 
-/*
-printError prints symmetric errors of a parameter defined by name at a certain confidence level defined by conf. It does so by scanning the negative log likelihood points computed by the Markov Chain and takes the point left and right of the minimum nearest to the confidence level.
-*/
-Int_t RooMCMC::printError(const char* name, Double_t conf)
+////////////////////////////////////////////////////////////////////////////////
+///printError prints symmetric errors of a parameter defined by name at a certain confidence level defined by conf. It does so by scanning the negative log likelihood points computed by the Markov Chain and takes the point left and right of the minimum nearest to the confidence level.
+/// \param[in] name = name of parameter
+/// \param[in] conf = confidence level must be between [0,1]
+
+Int_t RooMCMarkovChain::printError(const char* name, Double_t conf)
 {
+  if (conf > 1.0) {
+    std::cout << "confidence level must be between 0 and 1, setting to 0.682" << '\n';
+    conf = 0.682;
+  }
   sortPointList(name);
   Int_t count = int(_sortPointList.size() * conf) ;
   Double_t high = -1e32;
@@ -638,11 +666,17 @@ Int_t RooMCMC::printError(const char* name, Double_t conf)
 
 }
 
-/*
-getPercentile prints the asymmetric errors of a parameter defined by name at a certain confidence level defined by conf. Is does so by scanning the negative log liklihood points computed by the Markov Chain and takes the two points left and right of the minimum nearest to the confidence level
-*/
-Int_t RooMCMC::getPercentile(const char* name, Double_t conf)
+////////////////////////////////////////////////////////////////////////////////
+///getPercentile prints the asymmetric errors of a parameter defined by name at a certain confidence level defined by conf. Is does so by scanning the negative log liklihood points computed by the Markov Chain and takes the two points left and right of the minimum nearest to the confidence level
+/// \param[in] name = name of parameter
+/// \param[in] conf = confidence level must be between [0,1]
+
+Int_t RooMCMarkovChain::getPercentile(const char* name, Double_t conf)
 {
+  if (conf > 1.0) {
+    std::cout << "confidence level must be between 0 and 1, setting to 0.682" << '\n';
+    conf = 0.682;
+  }
   Double_t per = conf;
   if (conf > 1.0) {
     per = 0.682;
@@ -680,10 +714,10 @@ Int_t RooMCMC::getPercentile(const char* name, Double_t conf)
 
   return 1;
 }
-/*
-getGausErrors prints symetric errors of all parameters. It does so py calling getWalkDisHis for every parameter and reading the gaussian error of the histogram and printing it.
-*/
-Int_t RooMCMC::getGausErrors()
+////////////////////////////////////////////////////////////////////////////////
+///getGausErrors prints symetric errors of all parameters. It does so py calling getWalkDisHis for every parameter and reading the gaussian error of the histogram and printing it.
+
+Int_t RooMCMarkovChain::getGausErrors()
 {
   int nPar = _nPar;
   std::vector<const char*> names;
@@ -798,10 +832,11 @@ Int_t RooMCMC::getGausErrors()
   return 1;
 }
 
-/*
-saveCandidatesAs saves all the points of the Markov Chain in a file defined by name, for example "points.txt" to save them in a text file. One could publish the file alongside a paper, such that somebody can download it to recompute the values and errors of the fit published in the paper.
-*/
-Int_t RooMCMC::saveCandidatesAs(const char* name)
+////////////////////////////////////////////////////////////////////////////////
+///saveCandidatesAs saves all the points of the Markov Chain in a file defined by name, for example "points.txt" to save them in a text file. One could publish the file alongside a paper, such that somebody can download it to recompute the values and errors of the fit published in the paper.
+/// \param[in] name = name of parameter
+
+Int_t RooMCMarkovChain::saveCandidatesAs(const char* name)
 {
   ofstream candidates;
   candidates.open(name);
@@ -824,8 +859,10 @@ Int_t RooMCMC::saveCandidatesAs(const char* name)
   return 1;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///Returns vector of the parameter names
 
-std::vector<const char*> RooMCMC::getNames()
+std::vector<const char*> RooMCMarkovChain::getNames()
 {
   std::vector<const char*> names;
   names.reserve(_nPar);
@@ -837,112 +874,11 @@ std::vector<const char*> RooMCMC::getNames()
   return names;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///Returns minimal value of a parameter
+/// \param[in] name = name of parameter
 
-/*
-saveCornerPlotAs is the most complex function of the RooMCMC class. It creates a histogram of every parameter with getWalkDisHis and a cornerplot with every pair of parameters. It can be used to see any correlations between the parameters. The Histograms can be used to see graphically if a parameter has an asymertric error or if it has a Gaussian distribution. Picname defines the name of the output file.
-*/
-// Int_t RooMCMC::saveCornerPlotAs(const char* pngname)
-// {
-//
-//   gStyle->SetOptStat(0);
-//   int nPar = _nPar;
-//   int nPads = nPar+ nPar*nPar;
-//   TCanvas* corner = new TCanvas("corner","corner plot",1,1,nPar*800,nPar*600);
-//   std::vector<TPad*> pads;
-//   pads.reserve(nPads);
-//   for (int i = 0; i < nPar; i++) {
-//     corner->cd();
-//     std::string s = std::to_string(i);
-//     const char* padname = s.c_str();
-//     TPad *pad = new TPad(padname,padname,0.05,0.02+((nPar-i-1)* 1.0/nPar),0.95,0.97-(i* 1.0/nPar));
-//     pads.push_back(pad);
-//     pads[i]->SetFillColor(0);
-//     pads[i]->Draw();
-//   }
-//   for (int i = 0; i < nPar; i++) {
-//     int subpadindex = 0;
-//     for (int j = (i+1)*nPar; j < (i+2)*nPar; j++) {
-//       std::string s = std::to_string(i);
-//       s = std::to_string(j);
-//       const char* padname = s.c_str();
-//       TPad *subpad = new TPad(padname,padname,0.02+(subpadindex* 1.0/nPar),0.05,((subpadindex+1)* 1.0/nPar)-nPar*0.01,0.95,17,3);
-//       pads[i]->cd();
-//       pads.push_back(subpad);
-//       pads[j]->SetFillColor(0);
-//       pads[j]->Draw();
-//       subpadindex++;
-//     }
-//   }
-//
-//   std::vector<const char*> names;
-//   names.reserve(nPar);
-//   for (int i = 0; i < nPar; i++) {
-//     RooArgList* point = (RooArgList*) _cutoffList[0];
-//     RooRealVar* var = (RooRealVar*) point->at(i);
-//     names[i] = var->GetName();
-//   }
-//
-//   std::vector<TH1F*> hist1D;
-//   hist1D.reserve(nPar);
-//   for (int i = 0; i < nPar;i++) {
-//     TH1F* hist = getWalkDisHis(names[i],100,kTRUE);
-//     hist1D.push_back(hist);
-//   }
-//
-//   std::vector<TH2D*> hist2D;
-//   hist2D.reserve(nPar*(nPar-1)/2);
-//   for (int i = 0; i < nPar; i++) {
-//     for (int j = i+1; j < nPar; j++) {
-//       TH2D* hist = getCornerPlot(names[i],names[j],100,100,kTRUE);
-//       hist2D.push_back(hist);
-//     }
-//   }
-//
-//
-//   size_t Plot1DIndex = 0;
-//   for (int i = nPar; i < nPads;) {
-//     pads[i]->cd();
-//     hist1D[Plot1DIndex]->Draw();
-//     Plot1DIndex++;
-//     i+=nPar+1;
-//   }
-//
-//   size_t Plot2DIndex = 0;
-//   for (int i = 2; i < nPar+1; i++) {
-//     int padindex = i*nPar;
-//     for (int j = 1; j < i; j++) {
-//       pads[padindex]->cd();
-//       hist2D[Plot2DIndex]->SetMarkerStyle(7);
-//       hist2D[Plot2DIndex]->Draw("colz");
-//       padindex++;
-//       Plot2DIndex++;
-//     }
-//   }
-//
-//   corner->SaveAs(pngname);
-//
-//   TFile* file = new TFile(_fileName, "recreate");
-//   file->cd();
-//   for (size_t i = 0; i < hist1D.size(); i++) {
-//     hist1D[i]->Write();
-//     delete hist1D[i];
-//   }
-//   for (size_t i = 0; i < hist2D.size(); i++) {
-//     hist2D[i]->Write();
-//     delete hist2D[i];
-//   }
-//   file->Close();
-//
-//
-//
-//   hist1D.clear();
-//   hist2D.clear();
-//
-//   return 1;
-// }
-
-
-Double_t RooMCMC::getMinList(const char* name)
+Double_t RooMCMarkovChain::getMin(const char* name)
 {
   size_t index = getIndex(name);
   Double_t minval = 1e32;
@@ -956,7 +892,11 @@ Double_t RooMCMC::getMinList(const char* name)
   return minval;
 }
 
-Double_t RooMCMC::getMaxList(const char* name)
+////////////////////////////////////////////////////////////////////////////////
+///Returns maximum value of a parameter
+/// \param[in] name = name of parameter
+
+Double_t RooMCMarkovChain::getMax(const char* name)
 {
   size_t index = getIndex(name);
   Double_t maxval = -1e32;
@@ -970,17 +910,20 @@ Double_t RooMCMC::getMaxList(const char* name)
   return maxval;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///Enable or disable Offesting
+/// \param[in] flag = true or false
 
-
-
-
-void RooMCMC::setOffsetting(Bool_t flag)
+void RooMCMarkovChain::setOffsetting(Bool_t flag)
 {
   _func->enableOffsetting(flag) ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///Set level of output (not implemented)
+/// \param[in] newLevel = level of printing
 
-Int_t RooMCMC::setPrintLevel(Int_t newLevel)
+Int_t RooMCMarkovChain::setPrintLevel(Int_t newLevel)
 {
   Int_t ret = _printLevel ;
   Double_t arg(newLevel) ;
@@ -989,8 +932,33 @@ Int_t RooMCMC::setPrintLevel(Int_t newLevel)
   return ret ;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///Set seed for random generator
+/// \param[in] seed = new seed
+
+void RooMCMarkovChain::setSeed(Double_t seed)
+{
+ _seed = seed;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///Change forced acceptance rate, not recommended
+/// \param[in] newAlpha = new forced acceptance rate
+
+void RooMCMarkovChain::setAlphaStar(Double_t newAlpha) {
+ _alphaStar = newAlpha;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///Returns number of parameters
+
+size_t RooMCMarkovChain::getNPar() {
+  return _nPar ;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Modify PDF parameter value by ordinal index
-Bool_t RooMCMC::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
+Bool_t RooMCMarkovChain::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
 {
   //RooRealVar* par = (RooRealVar*)_floatParamList->at(index) ;
   RooRealVar* par = (RooRealVar*)_floatParamVec[index] ;
@@ -1006,13 +974,14 @@ Bool_t RooMCMC::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Modify PDF parameter error by ordinal index
-void RooMCMC::setPdfParamErr(Int_t index, Double_t value)
+void RooMCMarkovChain::setPdfParamErr(Int_t index, Double_t value)
 {
   ((RooRealVar*)_floatParamList->at(index))->setError(value) ;
 }
 
-
-void RooMCMC::updateFloatVec()
+////////////////////////////////////////////////////////////////////////////////
+///Updates float vector
+void RooMCMarkovChain::updateFloatVec()
 {
   _floatParamVec.clear() ;
   RooFIter iter = _floatParamList->fwdIterator() ;

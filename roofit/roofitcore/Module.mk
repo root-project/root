@@ -48,7 +48,7 @@ ROOFITCOREH2   := RooDouble.h RooEffGenContext.h RooEllipse.h RooErrorHandler.h 
                   RooInt.h RooInvTransform.h RooLinearVar.h RooLinkedListElem.h \
                   RooLinkedList.h RooLinkedListIter.h RooLinTransBinning.h RooList.h \
                   RooListProxy.h RooMapCatEntry.h RooMappedCategory.h RooMath.h \
-                  RooMCIntegrator.h RooMinuit.h RooMCMC.h RooMPSentinel.h \
+                  RooMCIntegrator.h RooMinuit.h RooMCMarkovChain.h RooMPSentinel.h \
                   RooMultiCategory.h RooMultiCatIter.h RooNameReg.h \
                   RooNameSet.h RooNLLVar.h RooNormSetCache.h RooNumber.h \
                   RooNumConvolution.h RooNumConvPdf.h RooNumIntConfig.h RooNumIntFactory.h \
@@ -71,7 +71,7 @@ ROOFITCOREH3   := RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic
                   RooProjectedPdf.h RooWorkspace.h RooProfileLL.h RooAbsCachedPdf.h RooAbsSelfCachedPdf.h \
                   RooHistPdf.h RooCachedPdf.h RooFFTConvPdf.h RooDataHistSliceIter.h RooCacheManager.h \
                   RooAbsCache.h RooAbsCacheElement.h RooObjCacheManager.h RooExtendedTerm.h RooSentinel.h \
-                  RooParamBinning.h 
+                  RooParamBinning.h
 
 ROOFITCOREH4   := RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h \
                   RooSimWSTool.h RooFracRemainder.h RooAbsCachedReal.h \

@@ -1,7 +1,15 @@
-/*
-Project: RooMCMC
-Author: Oliver Dahme, University of Zurich, o.dahme@cern.ch
-*/
+/// \file
+/// \ingroup tutorial_roofit
+/// \notebook -js
+///  'LIKELIHOOD AND MINIMIZATION' RooFit tutorial macro #611
+///
+/// Negtive log likelihood minimization with RooMCMarkovChain compared to RooMinuit
+/// Plus niceCornerPlot function which can be copied to get nice correlation plots of all parameters
+///
+/// \macro_image
+/// \macro_output
+/// \macro_code
+/// \author 11/2017 - Oliver Dahme
 
 #ifndef __CINT__
 #include "RooGlobalFunc.h"
@@ -13,7 +21,7 @@ Author: Oliver Dahme, University of Zurich, o.dahme@cern.ch
 #include "RooProdPdf.h"
 #include "RooAddPdf.h"
 #include "RooMinuit.h"
-#include "RooMCMC.h"
+#include "RooMCMarkovChain.h"
 #include "RooFitResult.h"
 #include "RooPlot.h"
 #include "TCanvas.h"
@@ -23,10 +31,10 @@ Author: Oliver Dahme, University of Zurich, o.dahme@cern.ch
 #include "TH2D.h"
 using namespace RooFit ;
 
-TCanvas* niceCornerPlot(RooMCMC *roomcmc);
+TCanvas* niceCornerPlot(RooMCMarkovChain *roomcmc);
 
 
-void RooMCMCexample() {
+void rf611_RooMCMarkovChainexample() {
 
   //create a canvas
   TCanvas *c1 = new TCanvas("c1","c1",1,1,1920,1080);
@@ -57,7 +65,7 @@ void RooMCMCexample() {
   RooAbsReal* nllminuit = modelmin.createNLL(*datamin);
 
   // Run RooMinuitMCMC fit
-  RooMCMC m(*nllmcmc);
+  RooMCMarkovChain m(*nllmcmc);
   m.mcmc(2000,150);
 
   // Run Minuit fit
@@ -77,23 +85,24 @@ void RooMCMCexample() {
   leg->SetFillColor(kWhite);
   leg->SetLineColor(kWhite);
   leg->AddEntry("data","Data","LP");
-  leg->AddEntry("modelmcmc","RooMCMC fit","L");
+  leg->AddEntry("modelmcmc","RooMCMarkovChain fit","L");
   leg->AddEntry("modelmin","Minuit fit","L");
   leg->Draw();
 
+  // create nice corner plot
   TCanvas *corner = niceCornerPlot(&m);
 
   //Display canvas
   corner->cd();
   c1->cd();
 
-}
+};
 
 
 /*
 saveCornerPlotAs creates a histogram of every parameter with getWalkDisHis and a cornerplot with every pair of parameters. It can be used to see any correlations between the parameters. The Histograms can be used to see graphically if a parameter has an asymertric error or if it has a Gaussian distribution. Picname defines the name of the output file.
 */
-TCanvas* niceCornerPlot(RooMCMC *roomcmc)
+TCanvas* niceCornerPlot(RooMCMarkovChain *roomcmc)
 {
 
   gStyle->SetOptStat(0);
