@@ -123,6 +123,7 @@ TEST(TTrivialDS, DefineSlotCheckMT)
    const auto nUsedSlots = std::accumulate(ids.begin(), ids.end(), 0u);
    EXPECT_GT(nUsedSlots, 0u);
    EXPECT_LE(nUsedSlots, nSlots);
+   ROOT::DisableImplicitMT();
 }
 
 TEST(TTrivialDS, FromATDFMT)
@@ -153,6 +154,32 @@ TEST(TTrivialDS, FromATDFWithJittingMT)
 
    EXPECT_DOUBLE_EQ(9., *max);
    EXPECT_DOUBLE_EQ(22., *min);
+}
+
+TEST(TTrivialDS, Snapshot)
+{
+   std::unique_ptr<TDataSource> tds(new TTrivialDS(10));
+   TDataFrame tdf(std::move(tds));
+   auto tdf2 = tdf.Snapshot("t", "f.root", "col0");
+   auto c = tdf2.Take<ULong64_t>("col0");
+   auto i = 0u;
+   for (auto e : c) {
+      EXPECT_EQ(e, i);
+      ++i;
+   }
+}
+
+TEST(TTrivialDS, Cache)
+{
+   std::unique_ptr<TDataSource> tds(new TTrivialDS(10));
+   TDataFrame tdf(std::move(tds));
+   auto tdfCached = tdf.Cache("col0");
+   auto c = tdfCached.Take<ULong64_t>("col0");
+   auto i = 0u;
+   for (auto e : c) {
+      EXPECT_EQ(e, i);
+      ++i;
+   }
 }
 
 #endif // R__USE_IMT

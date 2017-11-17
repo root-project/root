@@ -1761,6 +1761,10 @@ private:
                                          const ColumnNames_t &columnList, const TSnapshotOptions &options)
    {
       TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
+      auto df = GetDataFrameChecked();
+      if (fDataSource)
+         TDFInternal::DefineDataSourceColumns(columnList, *df, TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>(),
+                                              TTraits::TypeList<BranchTypes...>(), *fDataSource);
 
       const std::string fullTreename(treename);
       // split name into directory and treename if needed
@@ -1787,7 +1791,6 @@ private:
             new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filename, dirname, treename, columnList, options),
                          columnList, *fProxiedPtr));
       }
-      auto df = GetDataFrameChecked();
       df->Book(std::move(actionPtr));
       df->Run();
 
@@ -1806,7 +1809,7 @@ private:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Implementation of cache
    template <typename... BranchTypes, int... S>
-   TInterface<TLoopManager> CacheImpl(const ColumnNames_t &columnList, TDFInternal::StaticSeq<S...>)
+   TInterface<TLoopManager> CacheImpl(const ColumnNames_t &columnList, TDFInternal::StaticSeq<S...> s)
    {
 
       // Check at compile time that the columns types are copy constructible
@@ -1817,6 +1820,10 @@ private:
       // We share bits and pieces with snapshot. De facto this is a snapshot
       // in memory!
       TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
+      if (fDataSource) {
+         auto lm = GetDataFrameChecked();
+         TDFInternal::DefineDataSourceColumns(columnList, *lm, s, TTraits::TypeList<BranchTypes...>(), *fDataSource);
+      }
       std::tuple<
          TDFInternal::CacheColumnHolder<typename TDFDetail::TakeRealTypes<BranchTypes>::RealColl_t::value_type>...>
          colHolders;
