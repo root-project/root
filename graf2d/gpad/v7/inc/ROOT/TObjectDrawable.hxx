@@ -57,7 +57,7 @@ public:
 /// Interface to graphics taking a shared_ptr<TObject>.
 /// Must be on global scope, else lookup cannot find it (no ADL for TObject).
 inline std::unique_ptr<ROOT::Experimental::TDrawable>
-GetDrawable(const std::shared_ptr<TObject> &obj, ROOT::Experimental::TPadBase &parent)
+GetDrawable(const std::shared_ptr<TObject> &obj, ROOT::Experimental::TPadBase & /* parent */)
 {
    return std::make_unique<ROOT::Experimental::TObjectDrawable>(obj);
 }
