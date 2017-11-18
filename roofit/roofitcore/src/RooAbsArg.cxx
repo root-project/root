@@ -277,9 +277,7 @@ void RooAbsArg::setStringAttribute(const Text_t* key, const Text_t* value)
   if (value) {
     _stringAttrib[key] = value ;
   } else {
-    if (_stringAttrib.find(key)!=_stringAttrib.end()) {
-      _stringAttrib.erase(key) ;
-    }
+    _stringAttrib.erase(key) ;
   }
 }
 
@@ -2485,7 +2483,7 @@ void RooAbsArg::ioStreamerPass2Finalize()
     // Save iterator position for deletion after increment
     map<RooAbsArg*,TRefArray*>::iterator iter_tmp = iter ;
     
-    iter++ ;
+    ++iter ;
     
     // Delete TRefArray and remove from list
     delete iter_tmp->second ;

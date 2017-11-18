@@ -291,7 +291,7 @@ static int CreateActiveList(const char *, XrdProofdSessionEntry *e, void *s)
                e->fFracEff = ef;
                bool pushed = 0;
                std::list<XrdProofdSessionEntry *>::iterator ssvi;
-               for (ssvi = sorted->begin() ; ssvi != sorted->end(); ssvi++) {
+               for (ssvi = sorted->begin() ; ssvi != sorted->end(); ++ssvi) {
                   if (ef >= (*ssvi)->fFracEff) {
                      sorted->insert(ssvi, e);
                      pushed = 1;
@@ -379,7 +379,7 @@ int XrdProofdPriorityMgr::SetNiceValues(int opt)
       int i = 0;
       std::list<XrdProofdSessionEntry *>::iterator ssvi;
       if (TRACING(HDBG)) {
-         for (ssvi = sorted.begin() ; ssvi != sorted.end(); ssvi++)
+         for (ssvi = sorted.begin() ; ssvi != sorted.end(); ++ssvi)
             TRACE(HDBG, i++ <<" eff: "<< (*ssvi)->fFracEff);
       }
 
@@ -393,14 +393,14 @@ int XrdProofdPriorityMgr::SetNiceValues(int opt)
          int nice = 20 - fPriorityMax;
          (*ssvi)->SetPriority(nice);
          // The others have priorities rescaled wrt their effective fractions
-         ssvi++;
+         ++ssvi;
          while (ssvi != sorted.end()) {
             int xpri = (int) ((*ssvi)->fFracEff / xmax * (fPriorityMax - fPriorityMin))
                                                       + fPriorityMin;
             nice = 20 - xpri;
             TRACE(DBG,  "    --> nice value for client "<< (*ssvi)->fUser<<" is "<<nice);
             (*ssvi)->SetPriority(nice);
-            ssvi++;
+            ++ssvi;
          }
       } else {
          TRACE(XERR, "negative or null max effective fraction: "<<xmax);

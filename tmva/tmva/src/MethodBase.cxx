@@ -393,7 +393,7 @@ TMVA::MethodBase::~MethodBase( void )
    for (Int_t i = 0; i < 2; i++ ) {
       if (fEventCollections.at(i)) {
          for (std::vector<Event*>::const_iterator it = fEventCollections.at(i)->begin();
-              it != fEventCollections.at(i)->end(); it++) {
+              it != fEventCollections.at(i)->end(); ++it) {
             delete (*it);
          }
          delete fEventCollections.at(i);
@@ -1674,10 +1674,10 @@ void TMVA::MethodBase::WriteVarsToStream( std::ostream& o, const TString& prefix
 {
    o << prefix << "NVar " << DataInfo().GetNVariables() << std::endl;
    std::vector<VariableInfo>::const_iterator varIt = DataInfo().GetVariableInfos().begin();
-   for (; varIt!=DataInfo().GetVariableInfos().end(); varIt++) { o << prefix; varIt->WriteToStream(o); }
+   for (; varIt!=DataInfo().GetVariableInfos().end(); ++varIt) { o << prefix; varIt->WriteToStream(o); }
    o << prefix << "NSpec " << DataInfo().GetNSpectators() << std::endl;
    varIt = DataInfo().GetSpectatorInfos().begin();
-   for (; varIt!=DataInfo().GetSpectatorInfos().end(); varIt++) { o << prefix; varIt->WriteToStream(o); }
+   for (; varIt!=DataInfo().GetSpectatorInfos().end(); ++varIt) { o << prefix; varIt->WriteToStream(o); }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1701,7 +1701,7 @@ void TMVA::MethodBase::ReadVarsFromStream( std::istream& istr )
    VariableInfo varInfo;
    std::vector<VariableInfo>::iterator varIt = DataInfo().GetVariableInfos().begin();
    int varIdx = 0;
-   for (; varIt!=DataInfo().GetVariableInfos().end(); varIt++, varIdx++) {
+   for (; varIt!=DataInfo().GetVariableInfos().end(); ++varIt, ++varIdx) {
       varInfo.ReadFromStream(istr);
       if (varIt->GetExpression() == varInfo.GetExpression()) {
          varInfo.SetExternalLink((*varIt).GetExternalLink());
@@ -2780,6 +2780,8 @@ Double_t TMVA::MethodBase::GetROCIntegral(TH1D *histS, TH1D *histB) const
       integral += (1-pdfB->GetIntegral(cut,xmax)) * pdfS->GetVal(cut);
       cut+=step;
    }
+   delete pdfS;
+   delete pdfB;
    return integral*step;
 }
 

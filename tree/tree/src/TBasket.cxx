@@ -849,7 +849,7 @@ void TBasket::Streamer(TBuffer &b)
       b >> flag;
       if (fLast > fBufferSize) fBufferSize = fLast;
       Bool_t mustGenerateOffsets = false;
-      if (flag && (flag >= 80)) {
+      if (flag >= 80) {
          mustGenerateOffsets = true;
          flag -= 80;
       }

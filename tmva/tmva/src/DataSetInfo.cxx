@@ -140,7 +140,7 @@ TMVA::ClassInfo* TMVA::DataSetInfo::AddClass( const TString& className )
 
 TMVA::ClassInfo* TMVA::DataSetInfo::GetClassInfo( const TString& name ) const
 {
-   for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {
+   for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); ++it) {
       if ((*it)->GetName() == name) return (*it);
    }
    return 0;
@@ -191,7 +191,7 @@ std::vector<Float_t>*  TMVA::DataSetInfo::GetTargetsForMulticlass( const TMVA::E
 Bool_t TMVA::DataSetInfo::HasCuts() const
 {
    Bool_t hasCuts = kFALSE;
-   for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {
+   for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); ++it) {
       if( TString((*it)->GetCut()) != TString("") ) hasCuts = kTRUE;
    }
    return hasCuts;
@@ -323,7 +323,7 @@ void TMVA::DataSetInfo::SetWeightExpression( const TString& expr, const TString&
       if (fClasses.empty()) {
          Log() << kWARNING << Form("Dataset[%s] : ",fName.Data()) << "No classes registered yet, cannot specify weight expression!" << Endl;
       }
-      for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {
+      for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); ++it) {
          (*it)->SetWeight( expr );
       }
    }
@@ -342,7 +342,7 @@ void TMVA::DataSetInfo::SetCorrelationMatrix( const TString& className, TMatrixD
 void TMVA::DataSetInfo::SetCut( const TCut& cut, const TString& className )
 {
    if (className == "") {  // if no className has been given set the cut for all the classes
-      for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {
+      for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); ++it) {
          (*it)->SetCut( cut );
       }
    }
@@ -358,7 +358,7 @@ void TMVA::DataSetInfo::SetCut( const TCut& cut, const TString& className )
 void TMVA::DataSetInfo::AddCut( const TCut& cut, const TString& className )
 {
    if (className == "") {  // if no className has been given set the cut for all the classes
-      for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); it++) {
+      for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); ++it) {
          const TCut& oldCut = (*it)->GetCut();
          (*it)->SetCut( oldCut+cut );
       }
@@ -376,7 +376,7 @@ std::vector<TString> TMVA::DataSetInfo::GetListOfVariables() const
 {
    std::vector<TString> vNames;
    std::vector<TMVA::VariableInfo>::const_iterator viIt = GetVariableInfos().begin();
-   for(;viIt != GetVariableInfos().end(); viIt++) vNames.push_back( (*viIt).GetExpression() );
+   for(;viIt != GetVariableInfos().end(); ++viIt) vNames.push_back( (*viIt).GetExpression() );
 
    return vNames;
 }

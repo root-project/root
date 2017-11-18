@@ -272,7 +272,7 @@ private:
       if (fHasNorm && fUseOldValues) {
          // look in the map of the stored cdf values the closes one
          std::map<double,double>::iterator itr = fNormCdfValues.upper_bound(x);
-         itr--;   // upper bound returns a position 1 up of the value we want
+         --itr;   // upper bound returns a position 1 up of the value we want
          if (itr != fNormCdfValues.end() ) {
             fXmin[0] = itr->first;
             normcdf0 = itr->second;

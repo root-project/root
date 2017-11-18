@@ -94,7 +94,7 @@ TMVA::IMethod* TMVA::MethodCompositeBase::GetMethod( const TString &methodTitle 
    std::vector<IMethod*>::const_iterator itrMethod    = fMethods.begin();
    std::vector<IMethod*>::const_iterator itrMethodEnd = fMethods.end();
 
-   for (; itrMethod != itrMethodEnd; itrMethod++) {
+   for (; itrMethod != itrMethodEnd; ++itrMethod) {
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if ( (mva->GetMethodName())==methodTitle ) return mva;
    }
@@ -144,7 +144,7 @@ void TMVA::MethodCompositeBase::AddWeightsXMLTo( void* parent ) const
 TMVA::MethodCompositeBase::~MethodCompositeBase( void )
 {
    std::vector<IMethod*>::iterator itrMethod = fMethods.begin();
-   for (; itrMethod != fMethods.end(); itrMethod++) {
+   for (; itrMethod != fMethods.end(); ++itrMethod) {
       Log() << kVERBOSE << "Delete method: " << (*itrMethod)->GetName() << Endl;
       delete (*itrMethod);
    }

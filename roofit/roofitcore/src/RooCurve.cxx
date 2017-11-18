@@ -373,7 +373,7 @@ void RooCurve::addPoints(const RooAbsFunc &func, Double_t xlo, Double_t xhi,
   step=1 ;
   while(true) {
     x1= x2;
-    iter2++ ;
+    ++iter2 ;
     if (iter2==xval->end()) {
       break ;
     }
@@ -796,11 +796,11 @@ void RooCurve::calcBandInterval(const vector<RooCurve*>& plusVar, const vector<R
 {
   vector<double> y_plus(plusVar.size()), y_minus(minusVar.size()) ;
   Int_t j(0) ;
-  for (vector<RooCurve*>::const_iterator iter=plusVar.begin() ; iter!=plusVar.end() ; iter++) {
+  for (vector<RooCurve*>::const_iterator iter=plusVar.begin() ; iter!=plusVar.end() ; ++iter) {
     y_plus[j++] = (*iter)->interpolate(GetX()[i]) ;    
   }
   j=0 ;
-  for (vector<RooCurve*>::const_iterator iter=minusVar.begin() ; iter!=minusVar.end() ; iter++) {
+  for (vector<RooCurve*>::const_iterator iter=minusVar.begin() ; iter!=minusVar.end() ; ++iter) {
     y_minus[j++] = (*iter)->interpolate(GetX()[i]) ;
   }
   Double_t y_cen = GetY()[i] ;
@@ -827,7 +827,7 @@ void RooCurve::calcBandInterval(const vector<RooCurve*>& variations,Int_t i,Doub
 {
   vector<double> y(variations.size()) ;
   Int_t j(0) ;
-  for (vector<RooCurve*>::const_iterator iter=variations.begin() ; iter!=variations.end() ; iter++) {
+  for (vector<RooCurve*>::const_iterator iter=variations.begin() ; iter!=variations.end() ; ++iter) {
     y[j++] = (*iter)->interpolate(GetX()[i]) ;
 }
 

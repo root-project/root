@@ -508,7 +508,7 @@ Bool_t TOracleStatement::SetVLong(Int_t npar, const std::vector<Long_t> value, c
       std::vector<Number> nvec;
       for (std::vector<Long_t>::const_iterator it = value.begin();
            it != value.end();
-           it++) {
+           ++it) {
          nvec.push_back(Number(*it));
       }
       setVector(fStmt, npar+1, nvec, schemaName, typeName);
@@ -530,7 +530,7 @@ Bool_t TOracleStatement::SetVLong64(Int_t npar, const std::vector<Long64_t> valu
       std::vector<Number> nvec;
       for (std::vector<Long64_t>::const_iterator it = value.begin();
            it != value.end();
-           it++) {
+           ++it) {
         nvec.push_back(Number((long double)*it));
       }
       setVector(fStmt, npar+1, nvec, schemaName, typeName);
@@ -552,7 +552,7 @@ Bool_t TOracleStatement::SetVULong64(Int_t npar, std::vector<ULong64_t> value, c
       std::vector<Number> nvec;
       for (std::vector<ULong64_t>::const_iterator it = value.begin();
            it != value.end();
-           it++) {
+           ++it) {
         nvec.push_back(Number((long double)*it));
       }
       setVector(fStmt, npar+1, nvec, schemaName, typeName);
@@ -1167,7 +1167,7 @@ Bool_t TOracleStatement::GetVLong(Int_t npar, std::vector<Long_t> &value)
          getVector(fResult, npar+1, res);
       for (std::vector<Number>::const_iterator it = res.begin();
            it != res.end();
-           it++ ) {
+           ++it ) {
          value.push_back((Long_t)*it);
       }
       return kTRUE;
@@ -1189,7 +1189,7 @@ Bool_t TOracleStatement::GetVLong64(Int_t npar, std::vector<Long64_t> &value)
          getVector(fResult, npar+1, res);
       for (std::vector<Number>::const_iterator it = res.begin();
            it != res.end();
-           it++ ) {
+           ++it ) {
          value.push_back((Long_t)*it);
       }
       return kTRUE;
@@ -1211,7 +1211,7 @@ Bool_t TOracleStatement::GetVULong64(Int_t npar, std::vector<ULong64_t> &value)
          getVector(fResult, npar+1, res);
       for (std::vector<Number>::const_iterator it = res.begin();
            it != res.end();
-           it++ ) {
+           ++it ) {
         value.push_back((Long_t)(long double)*it);
       }
       return kTRUE;

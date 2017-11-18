@@ -251,7 +251,7 @@ void RooStudyManager::processBatchOutput(const char* filePat)
 
 void RooStudyManager::aggregateData(TList* olist) 
 {
-  for (list<RooAbsStudy*>::iterator iter=_pkg->studies().begin() ; iter!=_pkg->studies().end() ; iter++) {
+  for (list<RooAbsStudy*>::iterator iter=_pkg->studies().begin() ; iter!=_pkg->studies().end() ; ++iter) {
     (*iter)->aggregateSummaryOutput(olist) ;
   }  
 }

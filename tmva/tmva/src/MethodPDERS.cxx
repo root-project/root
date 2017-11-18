@@ -411,7 +411,7 @@ const std::vector< Float_t >& TMVA::MethodPDERS::GetRegressionValues()
 
    Event * evT = new Event(*ev);
    UInt_t ivar = 0;
-   for (std::vector<Float_t>::iterator it = fRegressionReturnVal->begin(); it != fRegressionReturnVal->end(); it++ ) {
+   for (std::vector<Float_t>::iterator it = fRegressionReturnVal->begin(); it != fRegressionReturnVal->end(); ++it ) {
       evT->SetTarget(ivar,(*it));
       ivar++;
    }
@@ -750,7 +750,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
 
          //counting the fkNNMin-th element
          std::vector<Double_t>::iterator wsk = distances->begin();
-         for (Int_t j=0;j<fkNNMin-1;j++) wsk++;
+         for (Int_t j=0;j<fkNNMin-1;++j) ++wsk;
          std::nth_element( distances->begin(), wsk, distances->end() );
 
          //getting all elements that are closer than fkNNMin-th element
@@ -844,7 +844,7 @@ Double_t TMVA::MethodPDERS::CKernelEstimate( const Event & event,
    Double_t pdfSumB = 0;
 
    // Iteration over sample points
-   for (std::vector<const BinarySearchTreeNode*>::iterator iev = events.begin(); iev != events.end(); iev++) {
+   for (std::vector<const BinarySearchTreeNode*>::iterator iev = events.begin(); iev != events.end(); ++iev) {
 
       // First switch to the one dimensional distance
       Double_t normalized_distance = GetNormalizedDistance (event, *(*iev), dim_normalization);
@@ -891,7 +891,7 @@ void TMVA::MethodPDERS::RKernelEstimate( const Event & event,
       pdfSum->push_back( 0 );
 
    // Iteration over sample points
-   for (std::vector<const BinarySearchTreeNode*>::iterator iev = events.begin(); iev != events.end(); iev++) {
+   for (std::vector<const BinarySearchTreeNode*>::iterator iev = events.begin(); iev != events.end(); ++iev) {
 
       // First switch to the one dimensional distance
       Double_t normalized_distance = GetNormalizedDistance (event, *(*iev), dim_normalization);

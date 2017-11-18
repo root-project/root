@@ -117,7 +117,7 @@ std::ostream& operator<<(std::ostream& os, const MnUserParameters& par) {
 
    bool atLoLim = false;
    bool atHiLim = false;
-   for(std::vector<MinuitParameter>::const_iterator ipar = par.Parameters().begin(); ipar != par.Parameters().end(); ipar++) {
+   for(std::vector<MinuitParameter>::const_iterator ipar = par.Parameters().begin(); ipar != par.Parameters().end(); ++ipar) {
       os << std::setw(4) << (*ipar).Number() << std::setw(5) << "||";
       os << std::setw(10) << (*ipar).Name()   << std::setw(3) << "||";
       if((*ipar).IsConst()) {
@@ -364,7 +364,7 @@ std::ostream& operator<<(std::ostream& os, const ContoursError& ce) {
    os << ce.YMinosError() << std::endl;
    MnPlot plot;
    plot(ce.XMin(), ce.YMin(), ce());
-   for(std::vector<std::pair<double,double> >::const_iterator ipar = ce().begin(); ipar != ce().end(); ipar++) {
+   for(std::vector<std::pair<double,double> >::const_iterator ipar = ce().begin(); ipar != ce().end(); ++ipar) {
       os << ipar - ce().begin() <<"  "<< (*ipar).first <<"  "<< (*ipar).second <<std::endl;
    }
    os << std::endl;

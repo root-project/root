@@ -44,7 +44,7 @@ void TMVA::DrawNetworkMovie(TString dataset, TFile* file, const TString& methodT
 
       // check if done already      
       Bool_t isOld = kFALSE;
-      for (std::vector<TString>::const_iterator it = epochList.begin(); it < epochList.end(); it++) {
+      for (std::vector<TString>::const_iterator it = epochList.begin(); it < epochList.end(); ++it) {
          if (*it == es) isOld = kTRUE; 
       }
       if (isOld) continue;

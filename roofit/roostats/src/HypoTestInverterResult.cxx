@@ -301,7 +301,7 @@ int HypoTestInverterResult::ExclusionCleanup()
       continue;
     } else { // keep
       CLsobsprev = CLsobs;
-      itr++;
+      ++itr;
     }
   }
 

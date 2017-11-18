@@ -219,10 +219,10 @@ TMVA::DataSetInfo& TMVA::MethodCategory::CreateCategoryDSI(const TCut& theCut,
    // copy the targets and spectators from the old dsi to the new dsi
    std::vector<VariableInfo>::iterator itrVarInfo;
 
-   for (itrVarInfo = oldDSI.GetTargetInfos().begin(); itrVarInfo != oldDSI.GetTargetInfos().end(); itrVarInfo++)
+   for (itrVarInfo = oldDSI.GetTargetInfos().begin(); itrVarInfo != oldDSI.GetTargetInfos().end(); ++itrVarInfo)
       dsi->AddTarget(*itrVarInfo);
 
-   for (itrVarInfo = oldDSI.GetSpectatorInfos().begin(); itrVarInfo != oldDSI.GetSpectatorInfos().end(); itrVarInfo++)
+   for (itrVarInfo = oldDSI.GetSpectatorInfos().begin(); itrVarInfo != oldDSI.GetSpectatorInfos().end(); ++itrVarInfo)
       dsi->AddSpectator(*itrVarInfo);
 
    // split string that contains the variables into tiny little pieces
@@ -237,11 +237,11 @@ TMVA::DataSetInfo& TMVA::MethodCategory::CreateCategoryDSI(const TCut& theCut,
    Bool_t found = kFALSE;
 
    // iterate over all variables in 'variables' and add them
-   for (itrVariables = variables.begin(); itrVariables != variables.end(); itrVariables++) {
+   for (itrVariables = variables.begin(); itrVariables != variables.end(); ++itrVariables) {
       counter=0;
 
       // check the variables of the old dsi for the variable that we want to add
-      for (itrVarInfo = oldDSI.GetVariableInfos().begin(); itrVarInfo != oldDSI.GetVariableInfos().end(); itrVarInfo++) {
+      for (itrVarInfo = oldDSI.GetVariableInfos().begin(); itrVarInfo != oldDSI.GetVariableInfos().end(); ++itrVarInfo) {
          if((*itrVariables==itrVarInfo->GetLabel()) ) { // || (*itrVariables==itrVarInfo->GetExpression())) {
             // don't compare the expression, since the user might take two times the same expression, but with different labels
             // and apply different transformations to the variables.
@@ -253,7 +253,7 @@ TMVA::DataSetInfo& TMVA::MethodCategory::CreateCategoryDSI(const TCut& theCut,
       }
 
       // check the spectators of the old dsi for the variable that we want to add
-      for (itrVarInfo = oldDSI.GetSpectatorInfos().begin(); itrVarInfo != oldDSI.GetSpectatorInfos().end(); itrVarInfo++) {
+      for (itrVarInfo = oldDSI.GetSpectatorInfos().begin(); itrVarInfo != oldDSI.GetSpectatorInfos().end(); ++itrVarInfo) {
          if((*itrVariables==itrVarInfo->GetLabel()) ) { // || (*itrVariables==itrVarInfo->GetExpression())) {
             // don't compare the expression, since the user might take two times the same expression, but with different labels
             // and apply different transformations to the variables.
@@ -425,7 +425,7 @@ void TMVA::MethodCategory::Train()
 
       // variable ranking
       Log() << kINFO << "Begin ranking of input variables..." << Endl;
-      for (itrMethod = fMethods.begin(); itrMethod != fMethods.end(); itrMethod++) {
+      for (itrMethod = fMethods.begin(); itrMethod != fMethods.end(); ++itrMethod) {
          MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
          if (mva && mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
             const Ranking* ranking = (*itrMethod)->CreateRanking();

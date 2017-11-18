@@ -121,7 +121,7 @@ TMVA::RuleEnsemble::RuleEnsemble()
 
 TMVA::RuleEnsemble::~RuleEnsemble()
 {
-   for ( std::vector<Rule *>::iterator itrRule = fRules.begin(); itrRule != fRules.end(); itrRule++ ) {
+   for ( std::vector<Rule *>::iterator itrRule = fRules.begin(); itrRule != fRules.end(); ++itrRule ) {
       delete *itrRule;
    }
    // NOTE: Should not delete the histos fLinPDFB/S since they are delete elsewhere
@@ -389,11 +389,11 @@ void TMVA::RuleEnsemble::CalcRuleSupport()
    Double_t ew;
    //
    if ((nrules>0) && (events->size()>0)) {
-      for ( std::vector< Rule * >::iterator itrRule=fRules.begin(); itrRule!=fRules.end(); itrRule++ ) {
+      for ( std::vector< Rule * >::iterator itrRule=fRules.begin(); itrRule!=fRules.end(); ++itrRule ) {
          s=0.0;
          ssig=0.0;
          sbkg=0.0;
-         for ( std::vector<const Event * >::const_iterator itrEvent=events->begin(); itrEvent!=events->end(); itrEvent++ ) {
+         for ( std::vector<const Event * >::const_iterator itrEvent=events->begin(); itrEvent!=events->end(); ++itrEvent ) {
             if ((*itrRule)->EvalEvent( *(*itrEvent) )) {
                ew = (*itrEvent)->GetWeight();
                s += ew;
@@ -1036,7 +1036,7 @@ void TMVA::RuleEnsemble::Print() const
       Log() << kmtype << "Printing the first " << printN << " rules, ordered in importance." << Endl;
       int pind=0;
       for ( std::list< std::pair<double,int> >::reverse_iterator itpair = sortedImp.rbegin();
-            itpair != sortedImp.rend(); itpair++ ) {
+            itpair != sortedImp.rend(); ++itpair ) {
          ind = itpair->second;
          //    if (pind==0) impref =
          //         Log() << kmtype << "Rule #" <<

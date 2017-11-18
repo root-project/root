@@ -168,7 +168,7 @@ void TMVA::MethodTMlpANN::CreateMLPOptions( TString layerSpec )
    std::vector<TString>::iterator itrVar    = (*fInputVars).begin();
    std::vector<TString>::iterator itrVarEnd = (*fInputVars).end();
    fMLPBuildOptions = "";
-   for (; itrVar != itrVarEnd; itrVar++) {
+   for (; itrVar != itrVarEnd; ++itrVar) {
       if (EnforceNormalization__) fMLPBuildOptions += "@";
       TString myVar = *itrVar; ;
       fMLPBuildOptions += myVar;

@@ -107,7 +107,7 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
    // initial parameters (given by argument) are ignored
    std::vector< TMVA::Interval* >::const_iterator rIt;
    Double_t val;
-   for (rIt = fRanges.begin(); rIt<fRanges.end(); rIt++) {
+   for (rIt = fRanges.begin(); rIt<fRanges.end(); ++rIt) {
       rndRanges.push_back( new TMVA::GeneticRange( rnd, (*rIt) ) );
       val = rndRanges.back()->Random();
       parameters.push_back( val );
@@ -129,16 +129,16 @@ Double_t TMVA::MCFitter::Run( std::vector<Double_t>& pars )
       parIt = parameters.begin();
       if (fSigma > 0.0) {
          parBestIt = bestParameters.begin();
-         for (std::vector<TMVA::GeneticRange*>::iterator rndIt = rndRanges.begin(); rndIt<rndRanges.end(); rndIt++) {
+         for (std::vector<TMVA::GeneticRange*>::iterator rndIt = rndRanges.begin(); rndIt<rndRanges.end(); ++rndIt) {
             (*parIt) = (*rndIt)->Random( kTRUE, (*parBestIt), fSigma );
-            parIt++;
-            parBestIt++;
+            ++parIt;
+            ++parBestIt;
          }
       }
       else {
-         for (std::vector<TMVA::GeneticRange*>::iterator rndIt = rndRanges.begin(); rndIt<rndRanges.end(); rndIt++) {
+         for (std::vector<TMVA::GeneticRange*>::iterator rndIt = rndRanges.begin(); rndIt<rndRanges.end(); ++rndIt) {
             (*parIt) = (*rndIt)->Random();
-            parIt++;
+            ++parIt;
          }
       }
 

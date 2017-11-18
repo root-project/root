@@ -139,7 +139,7 @@ void RooRealBinding::saveXVec() const
   list<Double_t>::iterator si = _compSave.begin() ;
   while(ci!=_compList.end()) {
     *si = (*ci)->_value ;
-    si++ ; ci++ ;
+    ++si ; ++ci ;
   }
   
   for (UInt_t i=0 ; i<getDimension() ; i++) {
@@ -163,7 +163,7 @@ void RooRealBinding::restoreXVec() const
   list<Double_t>::iterator si = _compSave.begin() ;
   while (ci!=_compList.end()) {
     (*ci)->_value = *si ;
-    ci++ ; si++ ;
+    ++ci ; ++si ;
   }
 
   for (UInt_t i=0 ; i<getDimension() ; i++) {

@@ -137,7 +137,7 @@ Bool_t TMVA::SVWorkingSet::ExamineExample( TMVA::SVEvent* jevt )
       std::vector<TMVA::SVEvent*>::iterator idIter;
 
       UInt_t k=0;
-      for(idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
+      for(idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter){
          if((*idIter)->GetAlpha()>0)
             fErrorC_J += (*idIter)->GetAlpha()*(*idIter)->GetTypeFlag()*fKVals[k];
          k++;
@@ -309,7 +309,7 @@ Bool_t TMVA::SVWorkingSet::TakeStep(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
    Float_t dL_J = type_J * ( newAlpha_J - alpha_J );
 
    Int_t k = 0;
-   for(idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
+   for(idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter){
       k++;
       if((*idIter)->GetIdx()==0){
          Float_t ii = fKMatrix->GetElement(ievt->GetNs(), (*idIter)->GetNs());
@@ -333,7 +333,7 @@ Bool_t TMVA::SVWorkingSet::TakeStep(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
    fB_low = -1*1e30;
    fB_up = 1e30;
 
-   for(idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
+   for(idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter){
       if((*idIter)->GetIdx()==0){
          if((*idIter)->GetErrorCache()> fB_low){
             fB_low = (*idIter)->GetErrorCache();
@@ -399,13 +399,13 @@ void TMVA::SVWorkingSet::Train(UInt_t nMaxIter)
      if (fExitFromTraining && *fExitFromTraining) break;
       numChanged = 0;
       if (examineAll) {
-         for (idIter = fInputData->begin(); idIter!=fInputData->end(); idIter++){
+         for (idIter = fInputData->begin(); idIter!=fInputData->end(); ++idIter){
             if(!fdoRegression) numChanged += (UInt_t)ExamineExample(*idIter);
             else numChanged += (UInt_t)ExamineExampleReg(*idIter);
          }
       }
       else {
-         for (idIter = fInputData->begin(); idIter!=fInputData->end(); idIter++) {
+         for (idIter = fInputData->begin(); idIter!=fInputData->end(); ++idIter) {
             if ((*idIter)->IsInI0()) {
                if(!fdoRegression) numChanged += (UInt_t)ExamineExample(*idIter);
                else numChanged += (UInt_t)ExamineExampleReg(*idIter);
@@ -461,7 +461,7 @@ void TMVA::SVWorkingSet::PrintStat()
 {
    std::vector<TMVA::SVEvent*>::iterator idIter;
    UInt_t counter = 0;
-   for( idIter = fInputData->begin(); idIter != fInputData->end(); idIter++)
+   for( idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter)
       if((*idIter)->GetAlpha() !=0) counter++;
 }
 
@@ -473,7 +473,7 @@ std::vector<TMVA::SVEvent*>* TMVA::SVWorkingSet::GetSupportVectors()
    if( fSupVec != 0) {delete fSupVec; fSupVec = 0; }
    fSupVec = new std::vector<TMVA::SVEvent*>(0);
 
-   for( idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
+   for( idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter){
       if((*idIter)->GetDeltaAlpha() !=0){
          fSupVec->push_back((*idIter));
       }
@@ -635,7 +635,7 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
 
       //update error cache
       Int_t k = 0;
-      for(idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
+      for(idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter){
          k++;
          //there will be some changes in Idx notation
          if((*idIter)->GetIdx()==0){
@@ -659,7 +659,7 @@ Bool_t TMVA::SVWorkingSet::TakeStepReg(TMVA::SVEvent* ievt,TMVA::SVEvent* jevt )
       fB_low = -1*1e30;
       fB_up =1e30;
 
-      for(idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
+      for(idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter){
          if((!(*idIter)->IsInI3()) && ((*idIter)->GetErrorCache()> fB_low)){
             fB_low = (*idIter)->GetErrorCache();
             fTEventLow = (*idIter);
@@ -691,7 +691,7 @@ Bool_t TMVA::SVWorkingSet::ExamineExampleReg(TMVA::SVEvent* jevt)
       std::vector<TMVA::SVEvent*>::iterator idIter;
 
       UInt_t k=0;
-      for(idIter = fInputData->begin(); idIter != fInputData->end(); idIter++){
+      for(idIter = fInputData->begin(); idIter != fInputData->end(); ++idIter){
          fErrorC_J -= (*idIter)->GetDeltaAlpha()*fKVals[k];
          k++;
       }

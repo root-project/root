@@ -22,7 +22,7 @@ void MnPlot::operator()(const std::vector<std::pair<double,double> >& points) co
    std::vector<double> y; y.reserve(points.size());
    std::vector<char> chpt; chpt.reserve(points.size());
 
-   for(std::vector<std::pair<double,double> >::const_iterator ipoint = points.begin(); ipoint != points.end(); ipoint++) {
+   for(std::vector<std::pair<double,double> >::const_iterator ipoint = points.begin(); ipoint != points.end(); ++ipoint) {
       x.push_back((*ipoint).first);
       y.push_back((*ipoint).second);
       chpt.push_back('*');
@@ -44,7 +44,7 @@ void MnPlot::operator()(double xmin, double ymin, const std::vector<std::pair<do
    chpt.push_back(' ');
    chpt.push_back('X');
 
-   for(std::vector<std::pair<double,double> >::const_iterator ipoint = points.begin(); ipoint != points.end(); ipoint++) {
+   for(std::vector<std::pair<double,double> >::const_iterator ipoint = points.begin(); ipoint != points.end(); ++ipoint) {
       x.push_back((*ipoint).first);
       y.push_back((*ipoint).second);
       chpt.push_back('*');

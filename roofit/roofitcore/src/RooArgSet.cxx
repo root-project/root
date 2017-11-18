@@ -86,7 +86,7 @@ void RooArgSet::cleanup()
   while(iter!=_memPoolList.end()) {
     free(iter->_base) ;
     iter->_base=0 ;
-    iter++ ;
+    ++iter ;
   }
   _memPoolList.clear() ;
 }

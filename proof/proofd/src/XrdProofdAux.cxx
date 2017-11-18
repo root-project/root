@@ -2010,7 +2010,7 @@ bool XrdProofdMultiStr::Matches(const char *s)
             str.replace(fHead,"");
             str.replace(fTail,"");
             std::list<XrdProofdMultiStrToken>::iterator it = fTokens.begin();
-            for (; it != fTokens.end(); it++) {
+            for (; it != fTokens.end(); ++it) {
                if ((*it).Matches(str.c_str()))
                   return 1;
             }
@@ -2030,7 +2030,7 @@ XrdOucString XrdProofdMultiStr::Export()
    str = "";
    if (fN > 0) {
       std::list<XrdProofdMultiStrToken>::iterator it = fTokens.begin();
-      for (; it != fTokens.end(); it++) {
+      for (; it != fTokens.end(); ++it) {
          int n = (*it).N(), j = -1;
          while (n--) {
             str += fHead;
@@ -2056,7 +2056,7 @@ XrdOucString XrdProofdMultiStr::Get(int i)
 
    if (i >= 0) {
       std::list<XrdProofdMultiStrToken>::iterator it = fTokens.begin();
-      for (; it != fTokens.end(); it++) {
+      for (; it != fTokens.end(); ++it) {
          int n = (*it).N(), j = -1;
          if ((i + 1) > n) {
             i -= n;

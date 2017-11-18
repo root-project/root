@@ -123,7 +123,7 @@ void TMVA::RuleCut::MakeCuts( const std::vector<const Node*> & nodes )
    Int_t nsel=0;
    Bool_t firstMin=kTRUE;
    Bool_t firstMax=kTRUE;
-   for ( std::list<SelCut_t>::const_iterator it = allsel.begin(); it!=allsel.end(); it++ ) {
+   for ( std::list<SelCut_t>::const_iterator it = allsel.begin(); it!=allsel.end(); ++it ) {
       sel = (*it).first;
       val = (*it).second.first;
       dir = (*it).second.second;

@@ -265,7 +265,7 @@ XrdProofdManager::XrdProofdManager(char *parms, XrdProtocol_Config *pi, XrdSysEr
    std::list<XrdOucString>::iterator ia = fRootdArgs.begin();
    while (ia != fRootdArgs.end()) {
       fRootdArgsPtrs[i] = (*ia).c_str();
-      i++; ia++;
+      ++i; ++ia;
    }
    fRootdArgsPtrs[fRootdArgs.size() + 1] = 0;
    // Started with 'system' (not 'fork')
@@ -727,11 +727,11 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
       // If in remote PLite mode, we need to isolate the number of workers
       // per unique node
       if (fRemotePLite) {
-         for (iw = wrks.begin(); iw != wrks.end() ; iw++) {
+         for (iw = wrks.begin(); iw != wrks.end() ; ++iw) {
             XrdProofWorker *w = *iw;
             // Do we have it already in the unique list?
             bool isnew = 1;
-            for (iaw = uwrks.begin(); iaw != uwrks.end() ; iaw++) {
+            for (iaw = uwrks.begin(); iaw != uwrks.end() ; ++iaw) {
                XrdProofWorker *uw = *iaw;
                if (w->fHost == uw->fHost && w->fPort == uw->fPort) {
                   uw->fNwrks += 1;
@@ -756,7 +756,7 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
                w->AddProofServ(xps);
             }
          }
-         for (iw = uwrks.begin(); iw != uwrks.end() ; iw++) {
+         for (iw = uwrks.begin(); iw != uwrks.end() ; ++iw) {
             XrdProofWorker *w = *iw;
             // Master at the beginning
             if (w->fType == 'M') {
@@ -773,7 +773,7 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
       } else {
 
          // The full list
-         for (iw = wrks.begin(); iw != wrks.end() ; iw++) {
+         for (iw = wrks.begin(); iw != wrks.end() ; ++iw) {
             XrdProofWorker *w = *iw;
             // Count (fActive is increased inside here)
             if (ii == -1)
@@ -801,7 +801,7 @@ int XrdProofdManager::GetWorkers(XrdOucString &lw, XrdProofdProofServ *xps,
    if (TRACING(REQ)) fNetMgr->Dump();
 
    // Clear the temp list
-   if (uwrks.size() > 0) {
+   if (!uwrks.empty()) {
       iw = uwrks.begin();
       while (iw != uwrks.end()) {
          XrdProofWorker *w = *iw;
@@ -1058,17 +1058,17 @@ int XrdProofdManager::Config(bool rcf)
                ii = fDataSetSrcs.erase(ii);
             } else {
                // Check next
-               ii++;
+               ++ii;
             }
          } else {
             // Validate only "file" datasets
             TRACE(ALL, "Skipping validation (no \"file\" type dataset source)");
-            ii++;
+            ++ii;
          }
       }
       if (fDataSetSrcs.size() > 0) {
          TRACE(ALL, fDataSetSrcs.size() << " dataset sources defined");
-         for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end(); ii++) {
+         for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end(); ++ii) {
             TRACE(ALL, ">> Valid dataset: " << (*ii)->ToString());
             if ((*ii)->fLocal && (*ii)->fRW) {
                if (fDataSetExp.length() > 0) fDataSetExp += ",";
@@ -1286,7 +1286,7 @@ int XrdProofdManager::Config(bool rcf)
          while (ia != fRootdAllow.end()) {
             if (hhs.length() > 0) hhs += ",";
             hhs += (*ia).c_str();
-            ia++;
+            ++ia;
          }
          TRACE(ALL, "serving files with: '" << fRootdExe <<"' (protocol: 'rootd://') to ALLOWED hosts");
          TRACE(ALL, "rootd-allowed hosts: "<< hhs);
@@ -1935,7 +1935,7 @@ int XrdProofdManager::DoDirectiveDataSetSrc(char *val, XrdOucStream *cfg, bool)
       // If first local, add it in front
       std::list<XrdProofdDSInfo *>::iterator ii = fDataSetSrcs.begin();
       bool haslocal = 0;
-      for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end(); ii++) {
+      for (ii = fDataSetSrcs.begin(); ii != fDataSetSrcs.end(); ++ii) {
          if ((*ii)->fLocal) {
             haslocal = 1;
             break;
@@ -2074,7 +2074,7 @@ int XrdProofdManager::DoDirectiveRootd(char *val, XrdOucStream *cfg, bool)
    std::list<XrdOucString>::iterator ia = fRootdArgs.begin();
    while (ia != fRootdArgs.end()) {
       fRootdArgsPtrs[i] = (*ia).c_str();
-      i++; ia++;
+      ++i; ++ia;
    }
    fRootdArgsPtrs[fRootdArgs.size() + 1] = 0;
 
@@ -2172,7 +2172,7 @@ bool XrdProofdManager::IsRootdAllowed(const char *host)
    std::list<XrdOucString>::iterator ia = fRootdAllow.begin();
    while (ia != fRootdAllow.end()) {
       if (h.matches((*ia).c_str(), '*') > 0) return 1;
-      ia++;
+      ++ia;
    }
 
    // Done

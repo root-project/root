@@ -15431,8 +15431,9 @@ struct behavior *b;
       worstaspect = triaspect2;
     }
     aspectindex = 0;
-    while ((triaspect2 > ratiotable[aspectindex] * ratiotable[aspectindex])
-           && (aspectindex < 15)) {
+    while ((aspectindex < 15) &&
+            (triaspect2 > ratiotable[aspectindex] * ratiotable[aspectindex])
+          ) {
       aspectindex++;
     }
     aspecttable[aspectindex]++;

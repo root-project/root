@@ -220,7 +220,7 @@ std::vector<Double_t> TMVA::ResultsMulticlass::GetBestMultiClassCuts(UInt_t targ
    fBestCuts.at(targetClass) = result;
 
    UInt_t n = 0;
-   for( std::vector<Double_t>::iterator it = result.begin(); it<result.end(); it++ ){
+   for( std::vector<Double_t>::iterator it = result.begin(); it<result.end(); ++it ){
       Log() << kINFO << "  cutValue[" <<dsi->GetClassInfo( n )->GetName()  << "] = " << (*it) << ";"<< Endl;
       n++;
    }

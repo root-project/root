@@ -372,7 +372,7 @@ void RooIntegralMorph::MorphCacheElem::calculate(TIterator* dIter)
   while(true) {
     // Find next gap
     Int_t igapHigh = igapLow+1 ;
-    while(_yatX[igapHigh]<0 && igapHigh<(_yatXmax)) igapHigh++ ;
+    while(igapHigh<(_yatXmax) && _yatX[igapHigh]<0) igapHigh++ ;
 
     // Fill the gap (iteratively and/or using interpolation)
     fillGap(igapLow-1,igapHigh) ;
