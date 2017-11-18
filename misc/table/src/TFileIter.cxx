@@ -465,7 +465,7 @@ TKey *TFileIter::NextEventKey(UInt_t eventNumber, UInt_t runNumber, const char *
       if (runNumber != UInt_t(-1)) {
          UInt_t thisRunNumber = thisKey.RunNumber();
          if (thisRunNumber < runNumber) continue;
-         if (thisRunNumber < runNumber) { key = 0; break; }
+         if (thisRunNumber > runNumber) { key = 0; break; }
       }
       // Check "event number"
       if (eventNumber != UInt_t(-1)) {

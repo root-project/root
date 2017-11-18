@@ -138,6 +138,8 @@ void TFitter::GetConfidenceIntervals(Int_t n, Int_t ndim, const Double_t *x, Dou
    if (!matr){
       delete [] grad;
       delete [] sum_vector;
+      if (fixed)
+         delete [] fixed;
       return;
    }
   

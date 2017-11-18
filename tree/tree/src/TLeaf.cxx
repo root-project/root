@@ -219,10 +219,12 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
    // Now search a branch name with a leaf name = countname
    if (fBranch == 0) {
       Error("GetLeafCounter","TLeaf %s is not setup properly, fBranch is null.",GetName());
+      delete[] countname;
       return 0;
    }
    if (fBranch->GetTree() == 0) {
       Error("GetLeafCounter","For Leaf %s, the TBranch %s is not setup properly, fTree is null.",GetName(),fBranch->GetName());
+      delete[] countname;
       return 0;
    }
    TTree* pTree = fBranch->GetTree();

@@ -385,12 +385,12 @@ int XrdProofdProofServMgr::Config(bool rcf)
       XPDPRT("RC settings: "<< fProofServRCs.size());
       if (fProofServRCs.size() > 0) {
          std::list<XpdEnv>::iterator ircs = fProofServRCs.begin();
-         for ( ; ircs != fProofServRCs.end(); ircs++) { (*ircs).Print("rc"); }
+         for ( ; ircs != fProofServRCs.end(); ++ircs) { (*ircs).Print("rc"); }
       }
       XPDPRT("ENV settings: "<< fProofServEnvs.size());
       if (fProofServEnvs.size() > 0) {
          std::list<XpdEnv>::iterator ienvs = fProofServEnvs.begin();
-         for ( ; ienvs != fProofServEnvs.end(); ienvs++) { (*ienvs).Print("env"); }
+         for ( ; ienvs != fProofServEnvs.end(); ++ienvs) { (*ienvs).Print("env"); }
       }
    }
 
@@ -834,7 +834,7 @@ int XrdProofdProofServMgr::RecoverActiveSessions()
    {  XrdSysMutexHelper mhp(fRecoverMutex);
       if (fRecoverClients->size() > 0) {
          std::list<XpdClientSessions* >::iterator ii = fRecoverClients->begin();
-         for (; ii != fRecoverClients->end(); ii++) {
+         for (; ii != fRecoverClients->end(); ++ii) {
             rc += (*ii)->fProofServs.size();
          }
       }
@@ -872,7 +872,7 @@ bool XrdProofdProofServMgr::IsClientRecovering(const char *usr, const char *grp,
    {  XrdSysMutexHelper mhp(fRecoverMutex);
       if (fRecoverClients && fRecoverClients->size() > 0) {
          std::list<XpdClientSessions *>::iterator ii = fRecoverClients->begin();
-         for (; ii != fRecoverClients->end(); ii++) {
+         for (; ii != fRecoverClients->end(); ++ii) {
             if ((*ii)->fClient && (*ii)->fClient->Match(usr, grp)) {
                rc = true;
                deadline = fRecoverDeadline;
@@ -1152,10 +1152,10 @@ int XrdProofdProofServMgr::CleanClientSessions(const char *usr, int srvtype)
             active = 1;
             break;
          }
-         ixps++;
+         ++ixps;
       }
       if (!active) fSessions.Del(key.c_str());
-      ii++;
+      ++ii;
    }
 
    // Done
@@ -2468,7 +2468,7 @@ int XrdProofdProofServMgr::ResolveSession(const char *fpid)
    while (ii != fRecoverClients->end()) {
       if ((*ii)->fClient == c)
          break;
-      ii++;
+      ++ii;
    }
    if (ii != fRecoverClients->end()) {
       (*ii)->fProofServs.push_back(xps);
@@ -3053,7 +3053,7 @@ int XrdProofdProofServMgr::SetProofServEnvOld(XrdProofdProtocol *p, void *input)
          // Hash list of the directives applying to this {user, group, svn, version}
          XrdOucHash<XpdEnv> sessenvs;
          std::list<XpdEnv>::iterator ienvs = fProofServEnvs.begin();
-         for ( ; ienvs != fProofServEnvs.end(); ienvs++) {
+         for ( ; ienvs != fProofServEnvs.end(); ++ienvs) {
             int envmatch = (*ienvs).Matches(p->Client()->User(), p->Client()->Group(),
                                             p->Client()->ROOT()->VersionCode());
             if (envmatch >= 0) {
@@ -3574,7 +3574,7 @@ int XrdProofdProofServMgr::CreateProofServEnvFile(XrdProofdProtocol *p, void *in
          // Hash list of the directives applying to this {user, group, svn, version}
          XrdOucHash<XpdEnv> sessenvs;
          std::list<XpdEnv>::iterator ienvs = fProofServEnvs.begin();
-         for ( ; ienvs != fProofServEnvs.end(); ienvs++) {
+         for ( ; ienvs != fProofServEnvs.end(); ++ienvs) {
             int envmatch = (*ienvs).Matches(p->Client()->User(), p->Client()->Group(),
                                             p->Client()->ROOT()->VersionCode());
             if (envmatch >= 0) {
@@ -3839,7 +3839,7 @@ int XrdProofdProofServMgr::CreateProofServRootRc(XrdProofdProtocol *p,
          // Hash list of the directives applying to this {user, group, svn, version}
          XrdOucHash<XpdEnv> sessrcs;
          std::list<XpdEnv>::iterator ircs = fProofServRCs.begin();
-         for ( ; ircs != fProofServRCs.end(); ircs++) {
+         for ( ; ircs != fProofServRCs.end(); ++ircs) {
             int rcmatch = (*ircs).Matches(p->Client()->User(), p->Client()->Group(),
                                           p->Client()->ROOT()->VersionCode());
             if (rcmatch >= 0) {
@@ -3868,7 +3868,7 @@ int XrdProofdProofServMgr::CreateProofServRootRc(XrdProofdProtocol *p,
       fprintf(frc, "# Dataset sources\n");
       XrdOucString rc("Proof.DataSetManager: ");
       std::list<XrdProofdDSInfo *>::iterator ii;
-      for (ii = fMgr->DataSetSrcs()->begin(); ii != fMgr->DataSetSrcs()->end(); ii++) {
+      for (ii = fMgr->DataSetSrcs()->begin(); ii != fMgr->DataSetSrcs()->end(); ++ii) {
          if (ii != fMgr->DataSetSrcs()->begin()) rc += ", ";
          rc += (*ii)->fType;
          rc += " dir:";
@@ -3950,7 +3950,7 @@ int XrdProofdProofServMgr::CleanupLostProofServ()
    int pid, ia, a;
    XrdOucString cmd, apath, pidpath, sessiondir, emsg, rest, after;
    std::map<int,XrdOucString>::iterator ip;
-   for (ip = procs.begin(); ip != procs.end(); ip++) {
+   for (ip = procs.begin(); ip != procs.end(); ++ip) {
       pid = ip->first;
       cmd = ip->second;
       if ((ia = cmd.find("xpdpath:")) != STR_NPOS) {
@@ -4360,7 +4360,7 @@ int XrdProofdProofServMgr::SetUserOwnerships(XrdProofdProtocol *p,
       XrdProofUI ui;
       XrdProofdAux::GetUserInfo(XrdProofdProtocol::EUidAtStartup(), ui);
       std::list<XrdProofdDSInfo *>::iterator ii;
-      for (ii = fMgr->DataSetSrcs()->begin(); ii != fMgr->DataSetSrcs()->end(); ii++) {
+      for (ii = fMgr->DataSetSrcs()->begin(); ii != fMgr->DataSetSrcs()->end(); ++ii) {
          TRACE(ALL, "Checking dataset source: url:"<<(*ii)->fUrl<<", local:"
                                                    <<(*ii)->fLocal<<", rw:"<<(*ii)->fRW);
          if ((*ii)->fLocal && (*ii)->fRW) {
@@ -4562,7 +4562,7 @@ void XrdProofdProofServMgr::BroadcastClusterInfo()
          tot++;
          if ((*si)->Status() == kXPD_running) act++;
       }
-      si++;
+      ++si;
    }
    if (tot > 0) {
       XPDPRT("tot: "<<tot<<", act: "<<act);
@@ -4571,7 +4571,7 @@ void XrdProofdProofServMgr::BroadcastClusterInfo()
       while (si != fActiveSessions.end()) {
          if ((*si)->Status() == kXPD_running &&
             (*si)->SrvType() != kXPD_Worker) (*si)->SendClusterInfo(tot, act);
-         si++;
+         ++si;
       }
    } else {
       TRACE(DBG, "No master or submaster controlled by this manager");
@@ -4642,10 +4642,10 @@ bool XrdProofdProofServMgr::Alive(XrdProofdProtocol* p)
       int rect = now - iter->second;
       if (rect < fReconnectTimeOut) {
          if (p == iter->first) alive = false;
+         ++iter;
       } else {
-         fDestroyTimes.erase(iter);
+         iter = fDestroyTimes.erase(iter);
       }
-      iter++;
    }
 
    return alive;

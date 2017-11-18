@@ -337,7 +337,7 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>
          vsForBinning[icl][ivar].push_back(ev_value-eps);
          vsForBinning[icl][ivar].push_back(ev_value);
 
-         for (it=listsForBinning[icl][ivar].begin(); it != listsForBinning[icl][ivar].end(); it++){
+         for (it=listsForBinning[icl][ivar].begin(); it != listsForBinning[icl][ivar].end(); ++it){
             sum+= it->GetWeight();
             if (sum >= sumPerBin) {
                ev_value=it->GetValue();

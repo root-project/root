@@ -5031,8 +5031,8 @@ int TWinNTSystem::GetSockOpt(int socket, int opt, int *val)
          if (sock == INVALID_SOCKET) {
             ::SysError("GetSockOpt", "INVALID_SOCKET");
          }
-         return -1;
          *val = flg; //  & O_NDELAY;  It is not been defined for WIN32
+         return -1;
       }
       break;
 #if 0

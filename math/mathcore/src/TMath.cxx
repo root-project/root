@@ -823,11 +823,11 @@ Double_t TMath::KolmogorovTest(Int_t na, const Double_t *a, Int_t nb, const Doub
       } else {
          // special cases for the ties
          double x = a[ia];
-         while(a[ia] == x && ia < na) {
+         while(ia < na && a[ia] == x) {
             rdiff -= sa;
             ia++;
          }
-         while(b[ib] == x && ib < nb) {
+         while(ib < nb && b[ib] == x) {
             rdiff += sb;
             ib++;
          }

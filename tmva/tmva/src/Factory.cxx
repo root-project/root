@@ -297,7 +297,7 @@ Bool_t TMVA::Factory::IsModelPersistence()
 TMVA::Factory::~Factory( void )
 {
    std::vector<TMVA::VariableTransformBase*>::iterator trfIt = fDefaultTrfs.begin();
-   for (;trfIt != fDefaultTrfs.end(); trfIt++) delete (*trfIt);
+   for (;trfIt != fDefaultTrfs.end(); ++trfIt) delete (*trfIt);
 
    this->DeleteAllMethods();
 
@@ -316,12 +316,12 @@ void TMVA::Factory::DeleteAllMethods( void )
 {
    std::map<TString,MVector*>::iterator itrMap;
 
-   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();itrMap++)
+   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();++itrMap)
    {
       MVector *methods=itrMap->second;
       // delete methods
       MVector::iterator itrMethod = methods->begin();
-      for (; itrMethod != methods->end(); itrMethod++) {
+      for (; itrMethod != methods->end(); ++itrMethod) {
      Log() << kDEBUG << "Delete method: " << (*itrMethod)->GetName() << Endl;
      delete (*itrMethod);
       }
@@ -494,7 +494,7 @@ TMVA::IMethod* TMVA::Factory::GetMethod(const TString& datasetname,  const TStri
 
    MVector::const_iterator itrMethod;
    //
-   for (itrMethod    = methods->begin(); itrMethod != methods->end(); itrMethod++) {
+   for (itrMethod    = methods->begin(); itrMethod != methods->end(); ++itrMethod) {
       MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
       if ( (mva->GetMethodName())==methodTitle ) return mva;
    }
@@ -583,7 +583,7 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
 
    std::vector<TString> trfsDef = gTools().SplitString(processTrfs,';');
    std::vector<TString>::iterator trfsDefIt = trfsDef.begin();
-   for (; trfsDefIt!=trfsDef.end(); trfsDefIt++) {
+   for (; trfsDefIt!=trfsDef.end(); ++trfsDefIt) {
       trfs.push_back(new TMVA::TransformationHandler(fDataSetInfo, "Factory"));
       TString trfS = (*trfsDefIt);
 
@@ -602,7 +602,7 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
    // apply all transformations
    std::vector<TMVA::TransformationHandler*>::iterator trfIt = trfs.begin();
 
-   for (;trfIt != trfs.end(); trfIt++) {
+   for (;trfIt != trfs.end(); ++trfIt) {
       // setting a Root dir causes the variables distributions to be saved to the root file
       (*trfIt)->SetRootDir(RootBaseDir()->GetDirectory(fDataSetInfo.GetName()));// every dataloader have its own dir
       (*trfIt)->CalcTransformations(inputEvents);
@@ -610,7 +610,7 @@ void TMVA::Factory::WriteDataInformation(DataSetInfo&     fDataSetInfo)
    if(identityTrHandler) identityTrHandler->PrintVariableRanking();
 
    // clean up
-   for (trfIt = trfs.begin(); trfIt != trfs.end(); trfIt++) delete *trfIt;
+   for (trfIt = trfs.begin(); trfIt != trfs.end(); ++trfIt) delete *trfIt;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -624,14 +624,14 @@ std::map<TString,Double_t> TMVA::Factory::OptimizeAllMethods(TString fomType, TS
 
    std::map<TString,MVector*>::iterator itrMap;
    std::map<TString,Double_t> TunedParameters;
-   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();itrMap++)
+   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();++itrMap)
    {
       MVector *methods=itrMap->second;
 
       MVector::iterator itrMethod;
 
       // iterate over methods and optimize
-      for( itrMethod = methods->begin(); itrMethod != methods->end(); itrMethod++ ) {
+      for( itrMethod = methods->begin(); itrMethod != methods->end(); ++itrMethod ) {
      Event::SetIsTraining(kTRUE);
      MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
      if (!mva) {
@@ -1038,13 +1038,13 @@ void TMVA::Factory::TrainAllMethods()
 
    std::map<TString,MVector*>::iterator itrMap;
 
-   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();itrMap++)
+   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();++itrMap)
    {
       MVector *methods=itrMap->second;
       MVector::iterator itrMethod;
 
       // iterate over methods and train
-      for( itrMethod = methods->begin(); itrMethod != methods->end(); itrMethod++ ) {
+      for( itrMethod = methods->begin(); itrMethod != methods->end(); ++itrMethod ) {
      Event::SetIsTraining(kTRUE);
      MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
 
@@ -1084,7 +1084,7 @@ void TMVA::Factory::TrainAllMethods()
      // variable ranking
      //Log() << Endl;
      Log() << kINFO << "Ranking input variables (method specific)..." << Endl;
-     for (itrMethod = methods->begin(); itrMethod != methods->end(); itrMethod++) {
+     for (itrMethod = methods->begin(); itrMethod != methods->end(); ++itrMethod) {
        MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
        if (mva && mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
 
@@ -1165,13 +1165,13 @@ void TMVA::Factory::TestAllMethods()
    }
    std::map<TString,MVector*>::iterator itrMap;
 
-   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();itrMap++)
+   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();++itrMap)
    {
       MVector *methods=itrMap->second;
       MVector::iterator itrMethod;
 
       // iterate over methods and test
-      for( itrMethod = methods->begin(); itrMethod != methods->end(); itrMethod++ ) {
+      for( itrMethod = methods->begin(); itrMethod != methods->end(); ++itrMethod ) {
      Event::SetIsTraining(kFALSE);
      MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
      if(mva==0) continue;
@@ -1201,7 +1201,7 @@ void TMVA::Factory::MakeClass(const TString& datasetname , const TString& method
       // no classifier specified, print all help messages
       MVector *methods=fMethodsMap.find(datasetname)->second;
       MVector::const_iterator itrMethod;
-      for (itrMethod    = methods->begin(); itrMethod != methods->end(); itrMethod++) {
+      for (itrMethod    = methods->begin(); itrMethod != methods->end(); ++itrMethod) {
          MethodBase* method = dynamic_cast<MethodBase*>(*itrMethod);
          if(method==0) continue;
          Log() << kINFO << "Make response class for classifier: " << method->GetMethodName() << Endl;
@@ -1229,7 +1229,7 @@ void TMVA::Factory::PrintHelpMessage(const TString& datasetname , const TString&
       // no classifier specified, print all help messages
       MVector *methods=fMethodsMap.find(datasetname)->second;
       MVector::const_iterator itrMethod ;
-      for (itrMethod    = methods->begin(); itrMethod != methods->end(); itrMethod++) {
+      for (itrMethod    = methods->begin(); itrMethod != methods->end(); ++itrMethod) {
          MethodBase* method = dynamic_cast<MethodBase*>(*itrMethod);
          if(method==0) continue;
          Log() << kINFO << "Print help message for classifier: " << method->GetMethodName() << Endl;
@@ -1267,7 +1267,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
    }
    std::map<TString,MVector*>::iterator itrMap;
 
-   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();itrMap++)
+   for(itrMap = fMethodsMap.begin();itrMap != fMethodsMap.end();++itrMap)
    {
       MVector *methods=itrMap->second;
 
@@ -1328,7 +1328,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
       Bool_t doMulticlass = kFALSE;
 
       // iterate over methods and evaluate
-      for (MVector::iterator itrMethod =methods->begin(); itrMethod != methods->end(); itrMethod++) {
+      for (MVector::iterator itrMethod =methods->begin(); itrMethod != methods->end(); ++itrMethod) {
      Event::SetIsTraining(kFALSE);
      MethodBase* theMethod = dynamic_cast<MethodBase*>(*itrMethod);
      if(theMethod==0) continue;
@@ -1551,7 +1551,7 @@ void TMVA::Factory::EvaluateAllMethods( void )
       Int_t ivar = 0;
       std::vector<TString>* theVars = new std::vector<TString>;
       std::vector<ResultsClassification*> mvaRes;
-      for (MVector::iterator itrMethod = methodsNoCuts.begin(); itrMethod != methodsNoCuts.end(); itrMethod++, ivar++) {
+      for (MVector::iterator itrMethod = methodsNoCuts.begin(); itrMethod != methodsNoCuts.end(); ++itrMethod, ++ivar) {
           MethodBase* m = dynamic_cast<MethodBase*>(*itrMethod);
           if(m==0) continue;
           theVars->push_back( m->GetTestvarName() );

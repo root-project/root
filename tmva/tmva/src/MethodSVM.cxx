@@ -779,7 +779,7 @@ std::map<TString,Double_t> TMVA::MethodSVM::OptimizeTuningParameters(TString fom
          tuneParameters.insert(std::pair<TString,Interval*>("C",new Interval(0.01,1.,100)));
       }
       else{
-         for(iter=optVars.begin(); iter!=optVars.end(); iter++){
+         for(iter=optVars.begin(); iter!=optVars.end(); ++iter){
             if( iter->first == "Gamma" || iter->first == "C"){
                tuneParameters.insert(std::pair<TString,Interval*>(iter->first, new Interval(iter->second.at(0),iter->second.at(1),iter->second.at(2))));
             }
@@ -797,7 +797,7 @@ std::map<TString,Double_t> TMVA::MethodSVM::OptimizeTuningParameters(TString fom
          tuneParameters.insert(std::pair<TString,Interval*>("C", new Interval(0.01,1.,100)));
       }
       else{
-         for(iter=optVars.begin(); iter!=optVars.end(); iter++){
+         for(iter=optVars.begin(); iter!=optVars.end(); ++iter){
             if( iter->first == "Theta" || iter->first == "C"){
                tuneParameters.insert(std::pair<TString,Interval*>(iter->first, new Interval(iter->second.at(0),iter->second.at(1),iter->second.at(2))));
             }
@@ -821,7 +821,7 @@ std::map<TString,Double_t> TMVA::MethodSVM::OptimizeTuningParameters(TString fom
          }
          tuneParameters.insert(std::pair<TString,Interval*>("C",new Interval(0.01,1.,100)));
       } else {
-         for(iter=optVars.begin(); iter!=optVars.end(); iter++){
+         for(iter=optVars.begin(); iter!=optVars.end(); ++iter){
             if( iter->first == "GammaList"){
                for(int j=0; j<fNumVars; j++){
                   stringstream s;
@@ -898,7 +898,7 @@ std::map<TString,Double_t> TMVA::MethodSVM::OptimizeTuningParameters(TString fom
    }
    Log() << kINFO << " the following SVM parameters will be tuned on the respective *grid*\n" << Endl;
    std::map<TString,TMVA::Interval*>::iterator it;
-   for(it=tuneParameters.begin(); it!=tuneParameters.end(); it++){
+   for(it=tuneParameters.begin(); it!=tuneParameters.end(); ++it){
       Log() << kWARNING << it->first <<Endl;
       std::ostringstream oss;
       (it->second)->Print(oss);
@@ -918,7 +918,7 @@ void TMVA::MethodSVM::SetTuneParameters(std::map<TString,Double_t> tuneParameter
 {
    std::map<TString,Double_t>::iterator it;
    if( fTheKernel == "RBF" ){
-      for(it=tuneParameters.begin(); it!=tuneParameters.end(); it++){
+      for(it=tuneParameters.begin(); it!=tuneParameters.end(); ++it){
          Log() << kWARNING << it->first << " = " << it->second << Endl;
          if (it->first == "Gamma"){
             SetGamma (it->second);
@@ -940,7 +940,7 @@ void TMVA::MethodSVM::SetTuneParameters(std::map<TString,Double_t> tuneParameter
          Log() << kWARNING << tuneParameters.find(str)->first << " = " << tuneParameters.find(str)->second << Endl;
          fmGamma.push_back(tuneParameters.find(str)->second);
       }
-      for(it=tuneParameters.begin(); it!=tuneParameters.end(); it++){
+      for(it=tuneParameters.begin(); it!=tuneParameters.end(); ++it){
          if (it->first == "C"){
             Log() << kWARNING << it->first << " = " << it->second << Endl;
             SetCost(it->second);
@@ -949,7 +949,7 @@ void TMVA::MethodSVM::SetTuneParameters(std::map<TString,Double_t> tuneParameter
       }
    }
    else if( fTheKernel == "Polynomial" ){
-      for(it=tuneParameters.begin(); it!=tuneParameters.end(); it++){
+      for(it=tuneParameters.begin(); it!=tuneParameters.end(); ++it){
          Log() << kWARNING << it->first << " = " << it->second << Endl;
          if (it->first == "Order"){
             SetOrder(it->second);
@@ -969,7 +969,7 @@ void TMVA::MethodSVM::SetTuneParameters(std::map<TString,Double_t> tuneParameter
    }
    else if( fTheKernel == "Prod" || fTheKernel == "Sum"){
       fmGamma.clear();
-      for(it=tuneParameters.begin(); it!=tuneParameters.end(); it++){
+      for(it=tuneParameters.begin(); it!=tuneParameters.end(); ++it){
          bool foundParam = false;
          Log() << kWARNING << it->first << " = " << it->second << Endl;
          for(int i=0; i<fNumVars; i++){

@@ -724,7 +724,7 @@ Bool_t TMVA::Tools::CheckForVerboseOption( const TString& cs ) const
    s.ToLower();
    s.ReplaceAll(" ","");
    std::vector<TString> v = SplitString( s, ':' );
-   for (std::vector<TString>::iterator it = v.begin(); it != v.end(); it++) {
+   for (std::vector<TString>::iterator it = v.begin(); it != v.end(); ++it) {
       if ((*it == "v" || *it == "verbose") && !it->Contains("!")) isVerbose = kTRUE;
    }
 

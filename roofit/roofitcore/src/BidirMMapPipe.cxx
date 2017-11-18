@@ -1877,6 +1877,7 @@ childcloses:
             int retVal = pipe->close();
             if (retVal) {
                 std::cout << "[PARENT]: child exited with code " << retVal << std::endl;
+                delete[] s;
                 return retVal;
             }
             delete pipe;

@@ -140,7 +140,7 @@ Int_t TVirtualBranchBrowsable::FillListOfBrowsables(TList& li, const TBranch* br
    if (!fgGeneratorsSet) RegisterDefaultGenerators();
    std::list<MethodCreateListOfBrowsables_t>::iterator iGenerator;
    Int_t numCreated=0;
-   for (iGenerator=fgGenerators.begin(); iGenerator!=fgGenerators.end(); iGenerator++)
+   for (iGenerator=fgGenerators.begin(); iGenerator!=fgGenerators.end(); ++iGenerator)
       numCreated+=(*(*iGenerator))(li, branch, parent);
    return numCreated;
 }

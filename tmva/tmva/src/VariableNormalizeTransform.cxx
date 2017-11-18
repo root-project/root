@@ -233,7 +233,7 @@ void TMVA::VariableNormalizeTransform::CalcNormalizationParams( const std::vecto
    }
 
    std::vector<Event*>::const_iterator evIt = events.begin();
-   for (;evIt!=events.end();evIt++) { // loop over all events
+   for (;evIt!=events.end();++evIt) { // loop over all events
       const TMVA::Event* event = (*evIt);   // get the event
 
       UInt_t cls = (*evIt)->GetClass(); // get the class of this event

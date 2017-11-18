@@ -681,7 +681,7 @@ void TDocParser::DecorateKeywords(TString& line)
       TDataMember *datamem = 0;
       TMethod *meth = 0;
       const char* globalTypeName = 0;
-      if (!currentType.size()) {
+      if (currentType.empty()) {
          Warning("DecorateKeywords", "type context is empty!");
          currentType.push_back(0);
       }

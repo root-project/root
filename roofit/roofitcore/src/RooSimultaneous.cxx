@@ -159,7 +159,7 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
 {
   // First see if there are any RooSimultaneous input components
   Bool_t simComps(kFALSE) ;
-  for (map<string,RooAbsPdf*>::iterator iter=pdfMap.begin() ; iter!=pdfMap.end() ; iter++) {    
+  for (map<string,RooAbsPdf*>::iterator iter=pdfMap.begin() ; iter!=pdfMap.end() ; ++iter) {
     if (dynamic_cast<RooSimultaneous*>(iter->second)) {
       simComps = kTRUE ;
       break ;
@@ -168,7 +168,7 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
 
   // If there are no simultaneous component p.d.f. do simple processing through addPdf()
   if (!simComps) {
-    for (map<string,RooAbsPdf*>::iterator iter=pdfMap.begin() ; iter!=pdfMap.end() ; iter++) {    
+    for (map<string,RooAbsPdf*>::iterator iter=pdfMap.begin() ; iter!=pdfMap.end() ; ++iter) {
       addPdf(*iter->second,iter->first.c_str()) ;
     }
     return ;
@@ -182,7 +182,7 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
 
   RooArgSet allAuxCats ;
   map<string,RooSimultaneousAux::CompInfo> compMap ;
-  for (map<string,RooAbsPdf*>::iterator iter=pdfMap.begin() ; iter!=pdfMap.end() ; iter++) {    
+  for (map<string,RooAbsPdf*>::iterator iter=pdfMap.begin() ; iter!=pdfMap.end() ; ++iter) {
     RooSimultaneousAux::CompInfo ci ;
     ci.pdf = iter->second ;
     RooSimultaneous* simComp = dynamic_cast<RooSimultaneous*>(iter->second) ;
@@ -206,7 +206,7 @@ void RooSimultaneous::initialize(RooAbsCategoryLValue& inIndexCat, std::map<std:
   RooSuperCategory* superIndex = new RooSuperCategory(siname.c_str(),siname.c_str(),allCats) ;
   
   // Now process each of original pdf/state map entries
-  for (map<string,RooSimultaneousAux::CompInfo>::iterator citer = compMap.begin() ; citer != compMap.end() ; citer++) {
+  for (map<string,RooSimultaneousAux::CompInfo>::iterator citer = compMap.begin() ; citer != compMap.end() ; ++citer) {
 
     RooArgSet repliCats(allAuxCats) ;
     if (citer->second.subIndexComps) {

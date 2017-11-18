@@ -377,7 +377,7 @@ int XrdROOTMgr::Config(bool rcf)
                delete (*tri);
                tri = fROOT.erase(tri);
             } else {
-               tri++;
+               ++tri;
             }
          }
       }
@@ -487,7 +487,7 @@ int XrdROOTMgr::DoDirectiveRootSys(char *val, XrdOucStream *cfg, bool)
                                    a[1].c_str(), a[2].c_str(), a[3].c_str());
       // Check if already validated
       std::list<XrdROOT *>::iterator ori;
-      for (ori = fROOT.begin(); ori != fROOT.end(); ori++) {
+      for (ori = fROOT.begin(); ori != fROOT.end(); ++ori) {
          if ((*ori)->Match(rootc->Dir(), rootc->Tag())) {
             if ((*ori)->IsParked()) {
                (*ori)->SetValid();

@@ -4202,6 +4202,7 @@ Int_t TAuthenticate::ReadRootAuthrc()
       if (!tmp) {
          ::Error("TAuthenticate::ReadRootAuthrc",
                  "could not allocate temporary buffer");
+         fclose(fd);
          return 0;
       }
       strlcpy(tmp, line, tmpSize);

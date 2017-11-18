@@ -199,7 +199,7 @@ std::vector<Int_t>* TMVA::MethodANNBase::ParseLayoutString(TString layerSpec)
       layout->push_back(1);  // one output node (for signal/background classification)
 
    int n = 0;
-   for( std::vector<Int_t>::iterator it = layout->begin(); it != layout->end(); it++ ){
+   for( std::vector<Int_t>::iterator it = layout->begin(); it != layout->end(); ++it ){
       n++;
    }
 
@@ -1022,15 +1022,15 @@ void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
       epochdir = BaseDir()->mkdir( Form("EpochMonitoring_%4d",epochVal) );
 
    epochdir->cd();
-   for (std::vector<TH1*>::const_iterator it = fEpochMonHistS.begin(); it != fEpochMonHistS.end(); it++) {
+   for (std::vector<TH1*>::const_iterator it = fEpochMonHistS.begin(); it != fEpochMonHistS.end(); ++it) {
       (*it)->Write();
       delete (*it);
    }
-   for (std::vector<TH1*>::const_iterator it = fEpochMonHistB.begin(); it != fEpochMonHistB.end(); it++) {
+   for (std::vector<TH1*>::const_iterator it = fEpochMonHistB.begin(); it != fEpochMonHistB.end(); ++it) {
       (*it)->Write();
       delete (*it);
    }
-   for (std::vector<TH1*>::const_iterator it = fEpochMonHistW.begin(); it != fEpochMonHistW.end(); it++) {
+   for (std::vector<TH1*>::const_iterator it = fEpochMonHistW.begin(); it != fEpochMonHistW.end(); ++it) {
       (*it)->Write();
       delete (*it);
    }

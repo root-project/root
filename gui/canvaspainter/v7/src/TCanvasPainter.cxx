@@ -319,7 +319,7 @@ ROOT::Experimental::TCanvasPainter::~TCanvasPainter()
 /// Used to wait for such condition
 int ROOT::Experimental::TCanvasPainter::CheckDeliveredVersion(uint64_t ver, double)
 {
-   if ((fWebConn.size() == 0) && fHadWebConn)
+   if (fWebConn.empty() && fHadWebConn)
       return -1;
    if (fSnapshotDelivered >= ver)
       return 1;
@@ -371,7 +371,7 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 
       TString buf;
 
-      if (conn.fDrawReady && (fCmds.size() > 0) && !fCmds.front().fRunning) {
+      if (conn.fDrawReady && !fCmds.empty() && !fCmds.front().fRunning) {
          WebCommand &cmd = fCmds.front();
          cmd.fRunning = true;
          buf = "CMD:";
@@ -416,7 +416,7 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
    }
 
    // if there are updates submitted, but all connections disappeared - cancel all updates
-   if ((fWebConn.size() == 0) && fSnapshotDelivered)
+   if (fWebConn.empty() && fSnapshotDelivered)
       return CancelUpdates();
 
    if (fSnapshotDelivered != min_delivered) {
@@ -472,7 +472,7 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
 
 int ROOT::Experimental::TCanvasPainter::CheckWaitingCmd(const std::string &cmdname, double)
 {
-   if ((fWebConn.size() == 0) && fHadWebConn)
+   if (fWebConn.empty() && fHadWebConn)
       return -1;
    if (fWaitingCmdId.empty()) {
       printf("Command %s waiting READY!!!\n", cmdname.c_str());
@@ -584,7 +584,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       std::string id;
       if (separ)
          id.append(sid, separ - sid);
-      if (fCmds.size() == 0) {
+      if (fCmds.empty()) {
          printf("Get REPLY without command\n");
       } else if (!fCmds.front().fRunning) {
          printf("Front command is not running when get reply\n");
@@ -784,7 +784,7 @@ bool ROOT::Experimental::TCanvasPainter::FrontCommandReplied(const std::string &
 
 void ROOT::Experimental::TCanvasPainter::PopFrontCommand(bool result)
 {
-   if (fCmds.size() == 0)
+   if (fCmds.empty())
       return;
 
    // simple condition, which will be checked in waiting loop

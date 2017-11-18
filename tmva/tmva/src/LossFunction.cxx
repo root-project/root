@@ -251,7 +251,7 @@ void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionE
 void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
    std::vector<LossFunctionEventInfo> eventvec;
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++){
+   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e){
       eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
    }
 
@@ -261,7 +261,7 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
    SetSumOfWeights(eventvec); // This was already set in init, but may change if there is subsampling for each tree
    SetTransitionPoint(eventvec);
 
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++) {
+   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e) {
          const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
    }
 }
@@ -384,11 +384,11 @@ void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFu
 void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
    std::vector<LossFunctionEventInfo> eventvec;
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++){
+   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e){
       eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
    }
 
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++) {
+   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e) {
          const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
    }
 }
@@ -497,11 +497,11 @@ void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::map<const TMVA::Event*, L
 void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
    std::vector<LossFunctionEventInfo> eventvec;
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++){
+   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e){
       eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
    }
 
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();e++) {
+   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e) {
          const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
    }
 }

@@ -190,7 +190,7 @@ void TMVA::rulevisCorr( TDirectory *rfdir, TDirectory *vardir, TDirectory *corrd
          TKey* hkey = corrdir->GetKey(bgname);
          TH2F* bgd = (TH2F*)hkey->ReadObj();
          if (bgd == NULL) {
-            cout << "ERROR!!! couldn't find backgroung histo for" << hname << endl;
+            cout << "ERROR!!! couldn't find background histo for" << hname << endl;
             return;
          }
          const Int_t rebin=6;
