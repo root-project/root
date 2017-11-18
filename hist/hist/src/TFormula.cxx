@@ -457,7 +457,7 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
 
 ////////////////////////////////////////////////////////////////////////////////
 TFormula::TFormula(const TFormula &formula) :
-   TNamed(formula.GetName(),formula.GetTitle())
+   TNamed(formula.GetName(),formula.GetTitle()), fMethod(nullptr)
 {
    formula.Copy(*this);
 
