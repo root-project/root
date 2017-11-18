@@ -529,7 +529,7 @@ void XrdProofdProtocol::Reset()
    std::vector<XrdProofdResponse *>::iterator ii = fResponses.begin(); // One per each logical connection
    while (ii != fResponses.end()) {
       (*ii)->Reset();
-      ii++;
+      ++ii;
    }
 }
 

@@ -290,7 +290,7 @@ void TMVA::Envelope::WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA:
 
    std::vector<TString> trfsDef = gTools().SplitString(processTrfs, ';');
    std::vector<TString>::iterator trfsDefIt = trfsDef.begin();
-   for (; trfsDefIt != trfsDef.end(); trfsDefIt++) {
+   for (; trfsDefIt != trfsDef.end(); ++trfsDefIt) {
       trfs.push_back(new TMVA::TransformationHandler(fDataSetInfo, "Envelope"));
       TString trfS = (*trfsDefIt);
 
@@ -307,7 +307,7 @@ void TMVA::Envelope::WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA:
    // apply all transformations
    std::vector<TMVA::TransformationHandler *>::iterator trfIt = trfs.begin();
 
-   for (; trfIt != trfs.end(); trfIt++) {
+   for (; trfIt != trfs.end(); ++trfIt) {
       // setting a Root dir causes the variables distributions to be saved to the root file
       (*trfIt)->SetRootDir(RootBaseDir()->GetDirectory(fDataSetInfo.GetName())); // every dataloader have its own dir
       (*trfIt)->CalcTransformations(inputEvents);
@@ -316,6 +316,6 @@ void TMVA::Envelope::WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA:
       identityTrHandler->PrintVariableRanking();
 
    // clean up
-   for (trfIt = trfs.begin(); trfIt != trfs.end(); trfIt++)
+   for (trfIt = trfs.begin(); trfIt != trfs.end(); ++trfIt)
       delete *trfIt;
 }

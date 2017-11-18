@@ -86,7 +86,7 @@ TMVA::TransformationHandler::TransformationHandler( DataSetInfo& dsi, const TStr
 TMVA::TransformationHandler::~TransformationHandler()
 {
    std::vector<Ranking*>::const_iterator it = fRanking.begin();
-   for (; it != fRanking.end(); it++) delete *it;
+   for (; it != fRanking.end(); ++it) delete *it;
 
    fTransformations.SetOwner();
    delete fLogger;
@@ -148,7 +148,7 @@ const TMVA::Event* TMVA::TransformationHandler::Transform( const Event* ev ) con
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt()) {
       if (rClsIt == fTransformationsReferenceClasses.end()) Log() << kFATAL<< "invalid read in TransformationHandler::Transform " <<Endl;
       trEv = trf->Transform(trEv, (*rClsIt) );
-      rClsIt++;
+      ++rClsIt;
    }
    return trEv;
 }
@@ -164,7 +164,7 @@ const TMVA::Event* TMVA::TransformationHandler::InverseTransform( const Event* e
    // the inverse transformation
    TListIter trIt(&fTransformations, kIterBackward);
    std::vector< Int_t >::const_iterator rClsIt = fTransformationsReferenceClasses.end();
-   rClsIt--;
+   --rClsIt;
    const Event* trEv = ev;
    UInt_t nvars = 0, ntgts = 0, nspcts = 0;
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt() ) { // shouldn't be the transformation called in the inverse order for the inversetransformation?????
@@ -220,7 +220,7 @@ const std::vector<TMVA::Event*>* TMVA::TransformationHandler::CalcTransformation
          for (UInt_t ievt = 0; ievt<transformedEvents->size(); ievt++) {  // loop through all events
             *(*transformedEvents)[ievt] = *trf->Transform((*transformedEvents)[ievt],(*rClsIt));
          }
-         rClsIt++;
+         ++rClsIt;
       }
    }
 
@@ -383,7 +383,7 @@ void TMVA::TransformationHandler::MakeFunction( std::ostream& fout, const TStrin
    UInt_t trCounter=1;
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt() ) {
       trf->MakeFunction(fout, fncName, part, trCounter++, (*rClsIt) );
-      rClsIt++;
+      ++rClsIt;
    }
    if (part==1) {
       for (Int_t i=0; i<fTransformations.GetSize(); i++) {
@@ -842,7 +842,7 @@ void TMVA::TransformationHandler::WriteToStream( std::ostream& o ) const
       if (ci == 0 ) clsName = "AllClasses";
       else clsName = ci->GetName();
       o << "ReferenceClass " << clsName << std::endl;
-      rClsIt++;
+      ++rClsIt;
    }
 }
 
@@ -917,7 +917,7 @@ void TMVA::TransformationHandler::PrintVariableRanking() const
   //Log() << kINFO << " " << Endl;
    Log() << kINFO << "Ranking input variables (method unspecific)..." << Endl;
    std::vector<Ranking*>::const_iterator it = fRanking.begin();
-   for (; it != fRanking.end(); it++) (*it)->Print();
+   for (; it != fRanking.end(); ++it) (*it)->Print();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

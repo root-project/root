@@ -105,7 +105,7 @@ TMVA::DataLoader::~DataLoader( void )
    // destructor
 
    std::vector<TMVA::VariableTransformBase*>::iterator trfIt = fDefaultTrfs.begin();
-   for (;trfIt != fDefaultTrfs.end(); trfIt++) delete (*trfIt);
+   for (;trfIt != fDefaultTrfs.end(); ++trfIt) delete (*trfIt);
 
    delete fDataInputHandler;
 
@@ -538,7 +538,7 @@ TMVA::DataSetInfo& TMVA::DataLoader::DefaultDataSetInfo()
 void TMVA::DataLoader::SetInputVariables( std::vector<TString>* theVariables )
 {
    for (std::vector<TString>::iterator it=theVariables->begin();
-        it!=theVariables->end(); it++) AddVariable(*it);
+        it!=theVariables->end(); ++it) AddVariable(*it);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -853,12 +853,12 @@ TMVA::DataLoader* TMVA::DataLoader::MakeCopy(TString name)
 
 void TMVA::DataLoaderCopy(TMVA::DataLoader* des, TMVA::DataLoader* src)
 {
-   for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Sbegin();treeinfo!=src->DataInput().Send();treeinfo++)
+   for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Sbegin();treeinfo!=src->DataInput().Send();++treeinfo)
    {
       des->AddSignalTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
    }
 
-   for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Bbegin();treeinfo!=src->DataInput().Bend();treeinfo++)
+   for( std::vector<TreeInfo>::const_iterator treeinfo=src->DataInput().Bbegin();treeinfo!=src->DataInput().Bend();++treeinfo)
    {
       des->AddBackgroundTree( (*treeinfo).GetTree(), (*treeinfo).GetWeight(),(*treeinfo).GetTreeType());
    }

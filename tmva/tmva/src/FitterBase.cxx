@@ -74,7 +74,7 @@ TMVA::FitterBase::FitterBase( IFitterTarget& target,
 Double_t TMVA::FitterBase::Run()
 {
    std::vector<Double_t> pars;
-   for (std::vector<Interval*>::const_iterator parIt = fRanges.begin(); parIt != fRanges.end(); parIt++) {
+   for (std::vector<Interval*>::const_iterator parIt = fRanges.begin(); parIt != fRanges.end(); ++parIt) {
       pars.push_back( (*parIt)->GetMean() );
    }
 

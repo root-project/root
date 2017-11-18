@@ -446,7 +446,7 @@ std::vector<TString> TMVA::TMVAGlob::GetInputVariableNames(TDirectory *dir)
       while(iter != names.end()){
          if(name.CompareTo(*iter)==0)
             hasname=true;
-         iter++;
+         ++iter;
       }
       if(!hasname)
          names.push_back(name);
@@ -500,7 +500,7 @@ std::vector<TString> TMVA::TMVAGlob::GetClassNames(TDirectory *dir )
       while(iter != names.end()){
          if(name.CompareTo(*iter)==0)
             hasname=true;
-         iter++;
+         ++iter;
       }
       if(!hasname)
          names.push_back(name);

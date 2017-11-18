@@ -1070,7 +1070,7 @@ RooDataHist::~RooDataHist()
   vector<const RooAbsBinning*>::iterator iter = _lvbins.begin() ;
   while(iter!=_lvbins.end()) {
     delete *iter ;
-    iter++ ;
+    ++iter ;
   }
 
    removeFromDir(this) ;
@@ -1108,7 +1108,7 @@ Int_t RooDataHist::calcTreeIndex() const
   for (;iter!=_lvvars.end() ; ++iter) {
     const RooAbsBinning* binning = (*biter) ;
     masterIdx += _idxMult[i++]*(*iter)->getBin(binning) ;
-    biter++ ;
+    ++biter ;
   }
   return masterIdx ;
 }

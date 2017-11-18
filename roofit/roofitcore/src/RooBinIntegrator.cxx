@@ -223,7 +223,7 @@ Double_t RooBinIntegrator::integral(const Double_t *)
 
   if (_function->getDimension()==1) {
     list<Double_t>::iterator iter = _binb[0]->begin() ;
-    Double_t xlo = *iter ; iter++ ;
+    Double_t xlo = *iter ; ++iter ;
     for (; iter!=_binb[0]->end() ; ++iter) {
       Double_t xhi = *iter ;
       Double_t xcenter = (xhi+xlo)/2 ;
@@ -238,14 +238,14 @@ Double_t RooBinIntegrator::integral(const Double_t *)
 
     list<Double_t>::iterator iter1 = _binb[0]->begin() ;
 
-    Double_t x1lo = *iter1 ; iter1++ ;
+    Double_t x1lo = *iter1 ; ++iter1 ;
     for (; iter1!=_binb[0]->end() ; ++iter1) {
 
       Double_t x1hi = *iter1 ;
       Double_t x1center = (x1hi+x1lo)/2 ;
       
       list<Double_t>::iterator iter2 = _binb[1]->begin() ;
-      Double_t x2lo = *iter2 ; iter2++ ;
+      Double_t x2lo = *iter2 ; ++iter2 ;
       for (; iter2!=_binb[1]->end() ; ++iter2) {
 
 	Double_t x2hi = *iter2 ;
@@ -264,21 +264,21 @@ Double_t RooBinIntegrator::integral(const Double_t *)
 
     list<Double_t>::iterator iter1 = _binb[0]->begin() ;
 
-    Double_t x1lo = *iter1 ; iter1++ ;
+    Double_t x1lo = *iter1 ; ++iter1 ;
     for (; iter1!=_binb[0]->end() ; ++iter1) {
 
       Double_t x1hi = *iter1 ;
       Double_t x1center = (x1hi+x1lo)/2 ;
       
       list<Double_t>::iterator iter2 = _binb[1]->begin() ;
-      Double_t x2lo = *iter2 ; iter2++ ;
+      Double_t x2lo = *iter2 ; ++iter2 ;
       for (; iter2!=_binb[1]->end() ; ++iter2) {
 
 	Double_t x2hi = *iter2 ;
 	Double_t x2center = (x2hi+x2lo)/2 ;
 
 	list<Double_t>::iterator iter3 = _binb[2]->begin() ;
-	Double_t x3lo = *iter3 ; iter3++ ;
+	Double_t x3lo = *iter3 ; ++iter3 ;
 	for (; iter3!=_binb[2]->end() ; ++iter3) {
 
 	  Double_t x3hi = *iter3 ;

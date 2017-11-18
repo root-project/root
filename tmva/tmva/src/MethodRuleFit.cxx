@@ -679,7 +679,7 @@ void TMVA::MethodRuleFit::MakeClassRuleCuts( std::ostream& fout ) const
    fout << "   //" << std::endl;
    //
    for ( std::list< std::pair<double,int> >::reverse_iterator itpair = sortedRules.rbegin();
-         itpair != sortedRules.rend(); itpair++ ) {
+         itpair != sortedRules.rend(); ++itpair ) {
       UInt_t ir     = itpair->second;
       Double_t impr = itpair->first;
       ruleCut = (*rules)[ir]->GetRuleCut();

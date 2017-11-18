@@ -325,7 +325,7 @@ void XrdProofWorker::Sort(std::list<XrdProofWorker *> *lst,
    // Fill a temp array with the current status
    XrdProofWorker **ta = new XrdProofWorker *[lst->size() - 1];
    std::list<XrdProofWorker *>::iterator i = lst->begin();
-   i++; // skip master
+   ++i; // skip master
    int n = 0;
    for (; i != lst->end(); ++i)
       ta[n++] = *i;

@@ -666,7 +666,7 @@ const double * Minuit2Minimizer::Errors() const {
 
 double Minuit2Minimizer::CovMatrix(unsigned int i, unsigned int j) const {
    // get value of covariance matrices (transform from external to internal indices)
-   if ( i >= fDim || i >= fDim) return 0;
+   if ( i >= fDim || j >= fDim) return 0;
    if (  !fState.HasCovariance()    ) return 0; // no info available when minimization has failed
    if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) return 0;
    if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) return 0;
@@ -733,7 +733,7 @@ bool Minuit2Minimizer::GetHessianMatrix(double * hess) const {
 
 double Minuit2Minimizer::Correlation(unsigned int i, unsigned int j) const {
    // get correlation between parameter i and j
-   if ( i >= fDim || i >= fDim) return 0;
+   if ( i >= fDim || j >= fDim) return 0;
    if (  !fState.HasCovariance()    ) return 0; // no info available when minimization has failed
    if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) return 0;
    if (fState.Parameter(j).IsFixed() || fState.Parameter(j).IsConst() ) return 0;
@@ -750,7 +750,7 @@ double Minuit2Minimizer::GlobalCC(unsigned int i) const {
    // the correlation between the i-th parameter  and that linear combination of all other parameters which
    // is most strongly correlated with i.
 
-   if ( i >= fDim || i >= fDim) return 0;
+   if ( i >= fDim ) return 0;
     // no info available when minimization has failed or has some problems
    if ( !fState.HasGlobalCC()    ) return 0;
    if (fState.Parameter(i).IsFixed() || fState.Parameter(i).IsConst() ) return 0;

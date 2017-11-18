@@ -1576,7 +1576,7 @@ Char_t *TTable::Print(Char_t *strbuf,Int_t lenbuf) const
    TTableDescriptor::iterator dsc  = dscT->begin();
    TTableDescriptor::iterator dscE = dscT->end();
    TDataSetIter nextComment(dscT->MakeCommentField(kFALSE));
-   for (;dsc != dscE; dsc++) {
+   for (;dsc != dscE; ++dsc) {
       TROOT::IndentLevel();
       TString name = GetTypeName(EColumnType((*dsc).fType));
       if (lenbuf>0) {
@@ -1688,7 +1688,7 @@ const Char_t *TTable::Print(Int_t row, Int_t rownumber, const Char_t *, const Ch
       TTableDescriptor::iterator   dscE = dscT->end();
       TDataSetIter nextComment(dscT->MakeCommentField(kFALSE));
 
-      for (; member != dscE; member++){
+      for (; member != dscE; ++member){
          TString membertype = GetTypeName(EColumnType((*member).fType));
          isdate = kFALSE;
          if (strcmp((*member).fColumnName,"fDatime") == 0 && EColumnType((*member).fType) == kUInt)
@@ -1859,7 +1859,7 @@ void TTable::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 //              Member loop
    TTableDescriptor::iterator member  = dscT->begin();
    TTableDescriptor::iterator   dscE  = dscT->end();
-   for (; member != dscE; member++) {  //LOOP over members
+   for (; member != dscE; ++member) {  //LOOP over members
       TString memberType = GetTypeName(EColumnType((*member).fType));
       TString memberName((*member).fColumnName);
 
@@ -2452,7 +2452,7 @@ TTable::piterator::piterator(const TTable *t,EColumnType type): fCurrentRowIndex
       TTableDescriptor::iterator ptr     = tabsDsc->begin();
       TTableDescriptor::iterator lastPtr = tabsDsc->end();
       UInt_t i =0;
-      for( i = 0; ptr != lastPtr; ptr++,i++)
+      for( i = 0; ptr != lastPtr; ++ptr,++i)
          if ( tabsDsc->ColumnType(i) == type ) fPtrs.push_back(tabsDsc->Offset(i));
       if (fPtrs.size()==0) {
          MakeEnd(t->GetNRows());

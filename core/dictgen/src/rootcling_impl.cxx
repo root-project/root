@@ -454,7 +454,7 @@ void AnnotateFieldDecl(clang::FieldDecl &decl,
    // We may look for a smarter algorithm.
 
    // Nothing to do then ...
-   if (fieldSelRules.size() == 0) return;
+   if (fieldSelRules.empty()) return;
 
    clang::ASTContext &C = decl.getASTContext();
    clang::SourceRange commentRange; // Empty: this is a fake comment
@@ -4558,7 +4558,7 @@ int RootClingMain(int argc,
                            inlineInputHeader,
                            sharedLibraryPathName);
 
-   if (!gDriverConfig->fBuildingROOTStage1 && filesIncludedByLinkdef.size() !=0) {
+   if (!gDriverConfig->fBuildingROOTStage1 && !filesIncludedByLinkdef.empty()) {
       pcmArgs.push_back(argv[linkdefLoc]);
    }
 
