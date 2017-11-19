@@ -5,7 +5,7 @@
 
 ## Introduction
 
-ROOT version 6.12/00 is scheduled for release in 2018.
+ROOT version 6.12/00 is scheduled for release in December 2017.
 
 For more information, see:
 
