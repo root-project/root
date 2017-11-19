@@ -5036,38 +5036,6 @@ namespace {
          // We want to enable the external lookup for this namespace
          // because it may shadow the lookup of other names contained
          // in that namespace
-
-         #ifdef R__USE_CXXMODULES
-         // When we want to autoload contents from namespaces we end up in Sema::LookupQualifiedName; then we issue a
-         // callback to FindExternallyVisibleName which forwards to LookupObject. Lookup object takes a DeclContext as
-         // an argument. This argument is always the primary lookup context (which for a NamespaceDecl is the original
-         // namespace.
-         //
-         // Regular autoloading does not consider this (or has chosen not to) because this reduces the amount of
-         // autoloads. Such autoloads can happen when resolving template instantiations when computing a decl's linkage
-         // by clang's CodeGen. This in turn loads unexpected libraries such as RooFit when trying to resolve all
-         // template specializations of __to_raw_pointer (located in <memory>), including the one taking a
-         // HistFactory::Data*.
-         //
-         // That way we end up needlessly loading RooFit and showing it's weird banner, potentially breaking a lot of
-         // tests.
-         //
-         // This behavior can be considered as broken because we hide information about possible redeclarations which
-         // can affect the linkage computation or other checks in codegen. If we fix the bug we will probably explode
-         // ROOT's memory footprint and make the gap between standard ROOT and ROOT with modules even bigger.
-         //
-         // Since it is not clear how much work and issue resolving is required for standard ROOT, we can probably
-         // only live with the workaround of the missing concept: moving entities in namespaces whose autoloading
-         // requires declarations to be in the PCH. For instance, ROOT::Experimental::TDataFrame.
-         //
-         // FIXME: We might want to consider enabling this for regular autoloading once we have a good understanding
-         // of the performance implications.
-         NamespaceDecl* nsOrigDecl = nsDecl->getOriginalNamespace();
-         if (nsDecl != nsOrigDecl) {
-            nsOrigDecl->setHasExternalVisibleStorage();
-            fNSSet.insert(nsOrigDecl);
-         }
-         #endif
          nsDecl->setHasExternalVisibleStorage();
          fNSSet.insert(nsDecl);
          return true;
