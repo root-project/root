@@ -1159,6 +1159,7 @@ static void LoadCoreModules(cling::Interpreter &interp)
    // them. This will be wrapped into an `import` declaration by clang, so we
    // only make those modules available, not actually textually include those
    // headers.
+   // FIXME: Use clang::ASTReader::makeModuleVisible.
    std::stringstream declarations;
    for (StringRef H : moduleHeaders) {
       declarations << "#include \"" << H.str() << "\"\n";
