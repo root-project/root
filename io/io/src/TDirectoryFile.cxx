@@ -532,7 +532,7 @@ TDirectory *TDirectoryFile::GetDirectory(const char *apath,
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete all objects from memory and directory structure itself.
 
-void TDirectoryFile::Close(Option_t *)
+void TDirectoryFile::Close(Option_t *option)
 {
    if (!fList || !fSeekDir) {
       return;
@@ -541,20 +541,24 @@ void TDirectoryFile::Close(Option_t *)
    // Save the directory key list and header
    Save();
 
-   Bool_t fast = kTRUE;
-   TObjLink *lnk = fList->FirstLink();
-   while (lnk) {
-      if (lnk->GetObject()->IsA() == TDirectoryFile::Class()) {fast = kFALSE;break;}
-      lnk = lnk->Next();
-   }
-   // Delete objects from directory list, this in turn, recursively closes all
-   // sub-directories (that were allocated on the heap)
-   // if this dir contains subdirs, we must use the slow option for Delete!
-   // we must avoid "slow" as much as possible, in particular Delete("slow")
-   // with a large number of objects (eg >10^5) would take for ever.
-   {
-      if (fast) fList->Delete();
-      else      fList->Delete("slow");
+   Bool_t nodelete = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
+
+   if (!nodelete) {
+      Bool_t fast = kTRUE;
+      TObjLink *lnk = fList->FirstLink();
+      while (lnk) {
+         if (lnk->GetObject()->IsA() == TDirectoryFile::Class()) {fast = kFALSE;break;}
+         lnk = lnk->Next();
+      }
+      // Delete objects from directory list, this in turn, recursively closes all
+      // sub-directories (that were allocated on the heap)
+      // if this dir contains subdirs, we must use the slow option for Delete!
+      // we must avoid "slow" as much as possible, in particular Delete("slow")
+      // with a large number of objects (eg >10^5) would take for ever.
+      {
+         if (fast) fList->Delete();
+         else      fList->Delete("slow");
+      }
    }
 
    // Delete keys from key list (but don't delete the list header)
