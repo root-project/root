@@ -104,7 +104,7 @@ public:
 
    /** Clear content of the matrix and initialize to zero elements
     */
-   void Clear();
+   void Zero();
 
    /** Convert to a TMatrixT<Double_t> object. Performs a deep copy of the matrix
     *  elements. */
@@ -135,6 +135,9 @@ public:
 
    ROOT::TThreadExecutor &GetThreadExecutor() const { return TMVA::Config::Instance().GetThreadExecutor(); }
 
+    // static function to get the number of elements for task
+   static size_t GetNWorkItems(size_t nelements); 
+
 private:
 
    void Initialize();
@@ -148,22 +151,45 @@ std::vector<AFloat> TCpuMatrix<AFloat>::fOnes {};
 // Inline Functions.
 //______________________________________________________________________________
 template<typename AFloat>
+size_t TCpuMatrix<AFloat>::GetNWorkItems(size_t nElements) 
+{
+   // const size_t nWorkers = TMVA::Config::Instance().GetNCpu();
+   // return  (nElements > nWorkers) ?  (int) nElements/nWorkers : 1;
+   const size_t nCpu = TMVA::Config::Instance().GetNCpu();
+   if (nElements <= nCpu) return 1;
+   if (nElements < nCpu*20) return nElements/nCpu;
+   return nElements/(nCpu*10); 
+}
+
+   
+//______________________________________________________________________________
+template<typename AFloat>
 template<typename Function_t>
 inline void TCpuMatrix<AFloat>::Map(Function_t &f)
 {
    AFloat  *data = GetRawDataPointer();
+   size_t nelements =  GetNElements();
+   size_t nsteps = TCpuMatrix<AFloat>::GetNWorkItems(nelements);
 
-   auto ff = [data, &f](UInt_t workerID)
+   auto ff = [data, &nsteps, &nelements, &f](UInt_t workerID)
    {
-      data[workerID] = f(data[workerID]);
+      for (size_t j = 0; j < nsteps; ++j) {
+         size_t idx = workerID+j;
+         if (idx >= nelements) break; 
+         data[idx] = f(data[idx]);
+      }
       return 0;
    };
 
-   //TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(fNCols * fNRows));
-   for (size_t i = 0;  i < fNCols * fNRows; ++i)
-      ff(i); 
+#ifdef DL_USE_MTE
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(0,nelements,nsteps));
+#else
+   for (size_t i = 0;  i < nelements; i+=nsteps)
+      ff(i);
+#endif
 }
 
+//______________________________________________________________________________
 template<typename AFloat>
 template<typename Function_t>
 inline void TCpuMatrix<AFloat>::MapFrom(Function_t &f, const TCpuMatrix &A)
@@ -171,19 +197,30 @@ inline void TCpuMatrix<AFloat>::MapFrom(Function_t &f, const TCpuMatrix &A)
          AFloat  *dataB = GetRawDataPointer();
    const AFloat  *dataA = A.GetRawDataPointer();
 
-   auto ff = [&dataB, &dataA, &f](UInt_t workerID)
+   size_t nelements =  GetNElements();
+   R__ASSERT(nelements == A.GetNElements() );
+   size_t nsteps = TCpuMatrix<AFloat>::GetNWorkItems(nelements);
+
+   auto ff = [&dataB, &dataA,  &nsteps, &nelements, &f](UInt_t workerID)
    {
-      dataB[workerID] = f(dataA[workerID]);
+      for (size_t j = 0; j < nsteps; ++j) {
+         size_t idx = workerID+j;
+         if (idx >= nelements) break; 
+         dataB[idx] = f(dataA[idx]);
+      }
       return 0;
    };
-
-   //TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(fNCols * fNRows));
-   for (size_t i = 0;  i < fNCols * fNRows; ++i)
-      ff(i); 
+#ifdef DL_USE_MTE
+   TMVA::Config::Instance().GetThreadExecutor().Foreach(ff, ROOT::TSeqI(0,nelements,nsteps));
+#else
+   for (size_t i = 0;  i < nelements; i+=nsteps)
+      ff(i);
+#endif
 }
 
+//______________________________________________________________________________
 template<typename AFloat>
-void TCpuMatrix<AFloat>::Clear()  
+void TCpuMatrix<AFloat>::Zero()  
 {
    for (size_t j = 0; j < fNCols; j++) {
       for (size_t i = 0; i < fNRows; i++) {
