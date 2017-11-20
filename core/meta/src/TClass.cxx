@@ -2732,6 +2732,7 @@ Int_t TClass::GetBaseClassOffset(const TClass *toBase, void *address, bool isDer
    ClassInfo_t* derived = GetClassInfo();
    ClassInfo_t* base = toBase->GetClassInfo();
    if(derived && base) {
+      // TClingClassInfo::GetBaseOffset takes the lock.
       return gCling->ClassInfo_GetBaseOffset(derived, base, address, isDerivedObject);
    }
    else {
