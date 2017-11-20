@@ -649,6 +649,9 @@ void RooGradMinimizerFcn::InitGradient() const {
 
 
 void RooGradMinimizerFcn::run_derivator(const double *x) const {
+  for (int i = 0; i < _nDim; ++i) {
+    std::cout << "x[" << i << "] = " << x[i] << std::endl;
+  }
   if (!_grad_initialized) {
     InitGradient();
   }

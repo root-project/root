@@ -106,6 +106,11 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    MnAlgebraicVector g2 = Gradient.G2();
    MnAlgebraicVector gstep = Gradient.Gstep();
 
+  for (int i = 0; i < n; ++i) {
+    std::cout << par.Vec()(i) << "\t";
+  }
+  std::cout << std::endl;
+
 #ifndef _OPENMP
    MPIProcess mpiproc(n,0);
 #endif
@@ -148,7 +153,15 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
       MnAlgebraicVector x = par.Vec();
 #endif
 
-      double xtf = x(i);
+     std::cout << "BEFORE: ";
+     std::cout << "fGrd[" << i <<"] = " << grd(i) << "\t";
+     std::cout << "fG2[" << i <<"] = " << g2(i) << "\t";
+     std::cout << "fGstep[" << i <<"] = " << gstep(i) << "\t";
+     std::cout << "x[" << i << "] = " << x(i) << "\t";
+     std::cout << "fVal = " << fcnmin << "\t";
+     std::cout << std::endl;
+
+     double xtf = x(i);
       double epspri = eps2 + fabs(grd(i)*eps2);
       double stepb4 = 0.;
       for(unsigned int j = 0; j < ncycle; j++)  {
@@ -194,6 +207,7 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
                    << " grd " << grd(i) << " g2 " << g2(i) << std::endl;
          std::cout.precision(pr);
 #endif
+        std::cout << "AFTER:  ";
         std::cout << "fGrd[" << i <<"] = " << grd(i) << "\t";
         std::cout << "fG2[" << i <<"] = " << g2(i) << "\t";
         std::cout << "fGstep[" << i <<"] = " << gstep(i) << "\t";
