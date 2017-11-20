@@ -1089,7 +1089,8 @@ namespace {
             // is not seen as part of the list.
             // We will later, remove all the object (see files->Clear()
             cursor->SetObject(&harmless); // this must not be zero otherwise things go wrong.
-            dir->Close();
+            // See related comment at the files->Clear("nodelete");
+            dir->Close("nodelete");
             // Put it back
             cursor->SetObject(dir);
          }
