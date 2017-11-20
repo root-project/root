@@ -287,6 +287,13 @@ public:
    static void Im2col(TMatrixT<AReal> &A, TMatrixT<AReal> &B, size_t imgHeight, size_t imgWidth, size_t fltHeight,
                       size_t fltWidth, size_t strideRows, size_t strideCols, size_t zeroPaddingHeight,
                       size_t zeroPaddingWidth);
+   static void Im2colIndices(std::vector<int> &, const TMatrixT<AReal> &, size_t, size_t, size_t, size_t ,
+                      size_t , size_t , size_t , size_t ,size_t ) {
+      Fatal("Im2ColIndices","This function is not implemented for ref architectures");
+   }
+   static void Im2colFast(TMatrixT<AReal> &, const TMatrixT<AReal> &, const std::vector<int> & ) {
+       Fatal("Im2ColFast","This function is not implemented for ref architectures");
+   }
 
    /** Rotates the matrix \p B, which is representing a weights,
     *  and stores them in the matrix \p A. */

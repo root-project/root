@@ -85,18 +85,28 @@ void TCpu<Real_t>::Hadamard(TCpuMatrix<Real_t> &B,
                             const TCpuMatrix<Real_t> &A)
 {
    const Real_t *dataA      = A.GetRawDataPointer();
-         Real_t *dataB      = B.GetRawDataPointer();
+   Real_t *dataB      = B.GetRawDataPointer();
 
-   auto f = [&dataA, &dataB](UInt_t workerID)
+   size_t nElements =  A.GetNElements();
+   R__ASSERT(B.GetNElements() == nElements); 
+   size_t nSteps = TCpuMatrix<Real_t>::GetNWorkItems(nElements);
+
+   auto f = [&](UInt_t workerID)
    {
-      dataB[workerID] *= dataA[workerID];
+      for (size_t j = 0; j < nSteps; ++j) {
+         size_t idx = workerID+j;
+         if (idx >= nElements) break; 
+         dataB[idx] *= dataA[idx];
+      }
       return 0;
    };
 
-   
-//   B.GetThreadExecutor().Foreach(f, ROOT::TSeqI(B.GetNElements()));
-   for (size_t i = 0;  i < B.GetNElements() ; ++i)
-      f(i); 
+#ifdef DL_USE_MTE
+   B.GetThreadExecutor().Foreach(f, ROOT::TSeqI(0,nElements,nSteps));
+#else
+   for (size_t i = 0;  i < nElements ; i+= nSteps)
+      f(i);
+#endif
 }
 
 //____________________________________________________________________________
