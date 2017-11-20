@@ -212,6 +212,7 @@ large TClonesArray where each element contains another small vector container.
 ```{.cpp}
     h->GetXaxis()->SetMaxDigits(6);
 ```
+   - `TMultiGgraph::GetHistogram` now works even is the multigraph is not drawn.
 
 ## 3D Graphics Libraries
 
