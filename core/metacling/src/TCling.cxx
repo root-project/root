@@ -1816,6 +1816,9 @@ void TCling::RegisterModule(const char* modulename,
    if (hasHeaderParsingOnDemand && fwdDeclsCode){
       // We now parse the forward declarations. All the classes are then modified
       // in order for them to have an external lexical storage.
+      if (fInterpreter->getCI()->getLangOpts().Modules) {
+        assert(false && "Fwd decls with modules?");
+      }
       std::string fwdDeclsCodeLessEnums;
       {
          // Search for enum forward decls and only declare them if no
