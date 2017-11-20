@@ -543,7 +543,10 @@ void TDirectory::Clear(Option_t *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete all objects from memory and directory structure itself.
-
+/// if option is "slow", iterate through the containers in a way to can handle
+///    'external' modification (induced by recursions)
+/// if option is "nodelete", write the TDirectory but do not delete the contained
+///    objects.
 void TDirectory::Close(Option_t *option)
 {
    if (!fList) {
@@ -553,26 +556,30 @@ void TDirectory::Close(Option_t *option)
    // Save the directory key list and header
    Save();
 
-   Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
-   if (!slow) {
-      // Check if it is wise to use the fast deletion path.
-      TObjLink *lnk = fList->FirstLink();
-      while (lnk) {
-         if (lnk->GetObject()->IsA() == TDirectory::Class()) {
-            slow = kTRUE;
-            break;
-         }
-         lnk = lnk->Next();
-      }
-   }
+   Bool_t nodelete = option ? (!strcmp(option, "nodelete") ? kTRUE : kFALSE) : kFALSE;
 
-   // Delete objects from directory list, this in turn, recursively closes all
-   // sub-directories (that were allocated on the heap)
-   // if this dir contains subdirs, we must use the slow option for Delete!
-   // we must avoid "slow" as much as possible, in particular Delete("slow")
-   // with a large number of objects (eg >10^5) would take for ever.
-   if (slow) fList->Delete("slow");
-   else      fList->Delete();
+   if (!nodelete) {
+      Bool_t slow = option ? (!strcmp(option, "slow") ? kTRUE : kFALSE) : kFALSE;
+      if (!slow) {
+         // Check if it is wise to use the fast deletion path.
+         TObjLink *lnk = fList->FirstLink();
+         while (lnk) {
+            if (lnk->GetObject()->IsA() == TDirectory::Class()) {
+               slow = kTRUE;
+               break;
+            }
+            lnk = lnk->Next();
+         }
+      }
+
+      // Delete objects from directory list, this in turn, recursively closes all
+      // sub-directories (that were allocated on the heap)
+      // if this dir contains subdirs, we must use the slow option for Delete!
+      // we must avoid "slow" as much as possible, in particular Delete("slow")
+      // with a large number of objects (eg >10^5) would take for ever.
+      if (slow) fList->Delete("slow");
+      else      fList->Delete();
+   }
 
    CleanTargets();
 }
