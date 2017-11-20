@@ -62,10 +62,14 @@ module ROOT_Core_Config_C {
 // this module as part of the ROOT. The only way is either by outlining it here
 // or relying on fragile module ordering (eg. order before things such as Cocoa.h
 // including gltypes.h.
-module ROOT_Glew {
-  umbrella "GL"
-  module * { export *}
+// FIXME: We can switch back to using umbrella folder and submodules once
+// https://llvm.org/bugs/show_bug.cgi?id=30508 gets resolved.
+// module ROOT_Glew {
+  // Depending on the platform we get some of these three installed.
+  module "glew.h" { header "GL/glew.h" export * }
+  module "wglew.h" { header "GL/wglew.h" export * }
+  module "glxew.h" { header "GL/glxew.h" export * }
 //  link "lib/libGLEW.so"
-}
+//}
 
 // From this point on the contents of this file are automatically generated.
