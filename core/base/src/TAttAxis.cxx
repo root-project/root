@@ -286,9 +286,10 @@ void TAttAxis::SetTickLength(Float_t length)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set distance between the axis and the axis title
 /// Offset is a correction factor with respect to the "standard" value.
-///  - offset = 1   uses the default position that is computed in function
+///  - offset = 1   uses standard position that is computed in function
 ///                 of the label offset and size.
-///  - offset = 1.2 will add 20 per cent more to the default offset.
+///  - offset = 1.2 will add 20 per cent more to the standard offset.
+///  - offset = 0   automatic placement for the Y axis title (default).
 
 void TAttAxis::SetTitleOffset(Float_t offset)
 {
