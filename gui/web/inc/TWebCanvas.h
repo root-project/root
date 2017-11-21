@@ -29,6 +29,7 @@
 #endif
 
 #include "THttpEngine.h"
+#include "THttpWSHandler.h"
 
 #include <list>
 
