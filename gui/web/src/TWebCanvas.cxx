@@ -11,7 +11,7 @@
 #include "TWebCanvas.h"
 
 #include "THttpCallArg.h"
-#include "THttpEngine.h"
+#include "THttpWSEngine.h"
 #include "TWebSnapshot.h"
 #include "TWebPadPainter.h"
 #include "TWebVirtualX.h"
