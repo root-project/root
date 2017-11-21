@@ -236,9 +236,12 @@ void TDirectory::Build(TFile* /*motherFile*/, TDirectory* motherDir)
 
 void TDirectory::CleanTargets()
 {
-   while (fContext) {
-      fContext->fDirectory = 0;
-      fContext = fContext->fNext;
+   {
+      ROOT::Internal::TSpinLockGuard slg(fSpinLock);
+      while (fContext) {
+         fContext->fDirectory = 0;
+         fContext = fContext->fNext;
+      }
    }
 
    if (gDirectory == this) {
