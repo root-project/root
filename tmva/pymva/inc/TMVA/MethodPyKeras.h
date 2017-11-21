@@ -79,6 +79,7 @@ namespace TMVA {
       Bool_t fSaveBestOnly; // Store only weights with smallest validation loss
       Int_t fTriesEarlyStopping; // Stop training if validation loss is not decreasing for several epochs
       TString fLearningRateSchedule; // Set new learning rate at specific epochs
+      TString fTensorBoard;          // Store log files during training
 
       bool fModelIsSetup = false; // flag whether model is loaded, neede for getMvaValue during evaluation
       float* fVals = nullptr; // variables array used for GetMvaValue
