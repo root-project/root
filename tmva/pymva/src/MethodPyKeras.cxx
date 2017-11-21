@@ -13,6 +13,7 @@
 #include "TMVA/Results.h"
 #include "TMVA/TransformationHandler.h"
 #include "TMVA/VariableTransformBase.h"
+#include "TMVA/Tools.h"
 
 using namespace TMVA;
 
@@ -30,6 +31,7 @@ MethodPyKeras::MethodPyKeras(const TString &jobName, const TString &methodTitle,
    fTriesEarlyStopping = -1;
    fLearningRateSchedule = ""; // empty string deactivates learning rate scheduler
    fFilenameTrainedModel = ""; // empty string sets output model filename to default (in weights/)
+   fTensorBoard = "";          // empty string deactivates TensorBoard callback
 }
 
 MethodPyKeras::MethodPyKeras(DataSetInfo &theData, const TString &theWeightFile)
@@ -42,6 +44,7 @@ MethodPyKeras::MethodPyKeras(DataSetInfo &theData, const TString &theWeightFile)
    fTriesEarlyStopping = -1;
    fLearningRateSchedule = ""; // empty string deactivates learning rate scheduler
    fFilenameTrainedModel = ""; // empty string sets output model filename to default (in weights/)
+   fTensorBoard = "";          // empty string deactivates TensorBoard callback
 }
 
 MethodPyKeras::~MethodPyKeras() {
@@ -66,6 +69,8 @@ void MethodPyKeras::DeclareOptions() {
    DeclareOptionRef(fSaveBestOnly, "SaveBestOnly", "Store only weights with smallest validation loss");
    DeclareOptionRef(fTriesEarlyStopping, "TriesEarlyStopping", "Number of epochs with no improvement in validation loss after which training will be stopped. The default or a negative number deactivates this option.");
    DeclareOptionRef(fLearningRateSchedule, "LearningRateSchedule", "Set new learning rate during training at specific epochs, e.g., \"50,0.01;70,0.005\"");
+   DeclareOptionRef(fTensorBoard, "TensorBoard",
+                    "Write a log during training to visualize and monitor the training performance with TensorBoard");
 }
 
 void MethodPyKeras::ProcessOptions() {
@@ -278,6 +283,16 @@ void MethodPyKeras::Train() {
       PyRunString("callbacks.append(keras.callbacks.LearningRateScheduler(schedule))",
                   "Failed to setup training callback: LearningRateSchedule");
       Log() << kINFO << "Option LearningRateSchedule: Set learning rate during training: " << fLearningRateSchedule << Endl;
+   }
+
+   // Callback: TensorBoard
+   if (fTensorBoard != "") {
+      TString logdir = TString("'") + fTensorBoard + TString("'");
+      PyRunString(
+         "callbacks.append(keras.callbacks.TensorBoard(log_dir=" + logdir +
+            ", histogram_freq=0, batch_size=batchSize, write_graph=True, write_grads=False, write_images=False))",
+         "Failed to setup training callback: TensorBoard");
+      Log() << kINFO << "Option TensorBoard: Log files for training monitoring are stored in: " << logdir << Endl;
    }
 
    // Train model
