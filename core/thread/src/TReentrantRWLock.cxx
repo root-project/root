@@ -71,9 +71,13 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::ReadLock()
 
    } else if (! fRecurseCounts.IsNotCurrentWriter(local)) {
 
-    --fReaderReservation;
-    fRecurseCounts.IncrementReadCount(local);
-    ++fReaders;
+      --fReaderReservation;
+      // This can run concurrently with another thread trying to get
+      // the read lock and ending up in the next section ("Wait for writers, if any")
+      // which need to also get the local readers count and thus can
+      // modify the map.
+      fRecurseCounts.IncrementReadCount(local, fMutex);
+      ++fReaders;
 
    } else {
       // A writer claimed the RW lock, we will need to wait on the
