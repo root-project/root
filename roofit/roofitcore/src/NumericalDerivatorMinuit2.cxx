@@ -45,7 +45,8 @@ namespace RooFit {
       Up(1),
       fVal(0),
       fN(0),
-      fG(0)//,
+      fG(0),
+      fG_internal(0)
 //   eps(std::numeric_limits<double>::epsilon()),
 //   eps2(2 * std::sqrt(eps))
   {}
@@ -59,7 +60,8 @@ namespace RooFit {
       Up(error_level),
       fVal(0),
       fN(f.NDim()),
-      fG(f.NDim())//,
+      fG(f.NDim()),
+      fG_internal(f.NDim())
 //   eps(precision),
 //   eps2(2 * std::sqrt(eps))
   {
@@ -95,6 +97,7 @@ namespace RooFit {
       fVal(other.fVal),
       fN(other.fN),
       fG(other.fG),
+      fG_internal(other.fG_internal),
       _parameter_has_limits(other._parameter_has_limits),
       precision(other.precision)
 //    eps(other.eps),
@@ -107,6 +110,7 @@ namespace RooFit {
 //      fG2 = other.fG2;
 //      fGstep = other.fGstep;
       fG = other.fG;
+      fG_internal = other.fG_internal;
       _parameter_has_limits = other._parameter_has_limits;
       fFunction = other.fFunction;
       fStepTolerance = other.fStepTolerance;
@@ -189,6 +193,9 @@ namespace RooFit {
     ROOT::Minuit2::MnAlgebraicVector grad_vec(fG.Grad()),
                                      gr2_vec(fG.G2()),
                                      gstep_vec(fG.Gstep());
+    ROOT::Minuit2::MnAlgebraicVector grad_vec_internal(fG_internal.Grad()),
+                                     gr2_vec_internal(fG_internal.G2()),
+                                     gstep_vec_internal(fG_internal.Gstep());
 
     // MODIFIED: Up
     // In Minuit2, this depends on the type of function to minimize, e.g.
@@ -214,24 +221,24 @@ namespace RooFit {
       std::cout << "fVal = " << fVal << "\t";
       std::cout << std::endl;
 
-      grad_vec(i)  *= DInt2Ext(parameters[i], vx[i]);
-      gr2_vec(i)   *= D2Int2Ext(parameters[i], vx[i]);
-      gstep_vec(i) *= GStepInt2Ext(parameters[i], vx[i]);
+//      grad_vec(i)  *= DInt2Ext(parameters[i], vx[i]);
+//      gr2_vec(i)   *= D2Int2Ext(parameters[i], vx[i]);
+//      gstep_vec(i) *= GStepInt2Ext(parameters[i], vx[i]);
 
-      std::cout << "BEFORE, INTERNAL: fGrd[" << i <<"] = " << grad_vec(i) << "\t";
-      std::cout << "fG2[" << i <<"] = " << gr2_vec(i) << "\t";
-      std::cout << "fGstep[" << i <<"] = " << gstep_vec(i) << "\t";
+      std::cout << "BEFORE, INTERNAL: fGrd[" << i <<"] = " << grad_vec_internal(i) << "\t";
+      std::cout << "fG2[" << i <<"] = " << gr2_vec_internal(i) << "\t";
+      std::cout << "fGstep[" << i <<"] = " << gstep_vec_internal(i) << "\t";
       std::cout << "x[" << i << "] = " << vx[i] << "\t";
       std::cout << "fVal = " << fVal << "\t";
       std::cout << std::endl;
 
       double xtf = vx[i];
-      double epspri = eps2 + std::abs(grad_vec(i) * eps2);
+      double epspri = eps2 + std::abs(grad_vec_internal(i) * eps2);
       double step_old = 0.;
       for (unsigned int j = 0; j < ncycle; ++ j) {
 
-        double optstp = std::sqrt(dfmin/(std::abs(gr2_vec(i))+epspri));
-        double step = std::max(optstp, std::abs(0.1*gstep_vec(i)));
+        double optstp = std::sqrt(dfmin/(std::abs(gr2_vec_internal(i))+epspri));
+        double step = std::max(optstp, std::abs(0.1*gstep_vec_internal(i)));
 
         // MODIFIED: in Minuit2 we have here the following condition:
         //   if(Trafo().Parameter(Trafo().ExtOfInt(i)).HasLimits()) {
@@ -242,7 +249,7 @@ namespace RooFit {
         // See the discussion above NumericalDerivatorMinuit2::SetInitialGradient
         // below on how to pass parameter information to this derivator.
 
-        double stpmax = 10.*std::abs(gstep_vec(i));
+        double stpmax = 10.*std::abs(gstep_vec_internal(i));
         if (step > stpmax) step = stpmax;
 
         double stpmin = std::max(vrysml, 8.*std::abs(eps2*vx[i])); //8.*std::abs(double(eps2*x[i]))
@@ -251,7 +258,7 @@ namespace RooFit {
           //answer = fGrd[i];
           break;
         }
-        gstep_vec(i) = step;
+        gstep_vec_internal(i) = step;
         step_old = step;
         // std::cout << "step = " << step << std::endl;
         vx[i] = xtf + step;
@@ -266,37 +273,37 @@ namespace RooFit {
         vx[i] = xtf;
         vx_external[i] = Int2ext(parameters[i], vx[i]);
 
-        double fGrd_old = grad_vec(i);
-        grad_vec(i) = 0.5*(fs1-fs2)/step;
+        double fGrd_old = grad_vec_internal(i);
+        grad_vec_internal(i) = 0.5*(fs1-fs2)/step;
 //            std::cout << "int i = " << i << std::endl;
 //            std::cout << "fs1 = " << fs1 << std::endl;
 //            std::cout << "fs2 = " << fs2 << std::endl;
 //            std::cout << "fVal = " << fVal << std::endl;
 //            std::cout << "step^2 = " << (step*step) << std::endl;
 //            std::cout << std::endl;
-        gr2_vec(i) = (fs1 + fs2 -2.*fVal)/step/step;
+        gr2_vec_internal(i) = (fs1 + fs2 -2.*fVal)/step/step;
 
         // MODIFIED:
         // The condition below had a closing parenthesis differently than
         // Minuit. Fixed in this version.
         // if (std::abs(fGrd_old-fGrd[i])/(std::abs(fGrd[i]+dfmin/step)) < grad_tolerance)
-        if (std::abs(fGrd_old - grad_vec(i))/(std::abs(grad_vec(i)) + dfmin/step) < grad_tolerance)
+        if (std::abs(fGrd_old - grad_vec_internal(i))/(std::abs(grad_vec_internal(i)) + dfmin/step) < grad_tolerance)
         {
           //answer = fGrd[i];
           break;
         }
       }
 
-      std::cout << "AFTER, INTERNAL:  fGrd[" << i <<"] = " << grad_vec(i) << "\t";
-      std::cout << "fG2[" << i <<"] = " << gr2_vec(i) << "\t";
-      std::cout << "fGstep[" << i <<"] = " << gstep_vec(i) << "\t";
+      std::cout << "AFTER, INTERNAL:  fGrd[" << i <<"] = " << grad_vec_internal(i) << "\t";
+      std::cout << "fG2[" << i <<"] = " << gr2_vec_internal(i) << "\t";
+      std::cout << "fGstep[" << i <<"] = " << gstep_vec_internal(i) << "\t";
       std::cout << "x[" << i << "] = " << xtf << "\t";
       std::cout << "fVal = " << fVal << "\t";
       std::cout << std::endl;
 
-      grad_vec(i)  /= DInt2Ext(parameters[i], xtf);
-      gr2_vec(i)   /= D2Int2Ext(parameters[i], xtf);
-      gstep_vec(i) /= GStepInt2Ext(parameters[i], xtf);
+      grad_vec(i)  = grad_vec_internal(i) / DInt2Ext(parameters[i], xtf);
+      gr2_vec(i)   = gr2_vec_internal(i) / D2Int2Ext(parameters[i], xtf);
+      gstep_vec(i) = gstep_vec_internal(i) / GStepInt2Ext(parameters[i], xtf);
 
       std::cout << "AFTER, EXTERNAL:  fGrd[" << i <<"] = " << grad_vec(i) << "\t";
       std::cout << "fG2[" << i <<"] = " << gr2_vec(i) << "\t";
@@ -315,6 +322,7 @@ namespace RooFit {
 //    }
 
     fG = ROOT::Minuit2::FunctionGradient(grad_vec, gr2_vec, gstep_vec);
+    fG_internal = ROOT::Minuit2::FunctionGradient(grad_vec_internal, gr2_vec_internal, gstep_vec_internal);
     return fG;
   }
 
@@ -437,6 +445,9 @@ namespace RooFit {
     ROOT::Minuit2::MnAlgebraicVector grad_vec(fFunction->NDim()),
                                      gr2_vec(fFunction->NDim()),
                                      gstep_vec(fFunction->NDim());
+    ROOT::Minuit2::MnAlgebraicVector grad_vec_internal(fG_internal.Grad()),
+        gr2_vec_internal(fG_internal.G2()),
+        gstep_vec_internal(fG_internal.Gstep());
 
     unsigned ix = 0;
     for (auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter, ++ix) {
@@ -522,6 +533,9 @@ namespace RooFit {
       gr2_vec(ix) = g2 / D2Int2Ext(*parameter, var);
       gstep_vec(ix) = gstep / GStepInt2Ext(*parameter, var);
 
+      grad_vec_internal(ix) = grd;
+      gr2_vec_internal(ix) = g2;
+      gstep_vec_internal(ix) = gstep;
 
       std::cout << "INTERNAL: fGrd[" << ix <<"] = " << grd << "\t";
       std::cout << "fG2[" << ix <<"] = " << g2 << "\t";
@@ -533,6 +547,7 @@ namespace RooFit {
     }
 
     fG = ROOT::Minuit2::FunctionGradient(grad_vec, gr2_vec, gstep_vec);
+    fG_internal = ROOT::Minuit2::FunctionGradient(grad_vec_internal, gr2_vec_internal, gstep_vec_internal);
   }
 
 
