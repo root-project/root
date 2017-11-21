@@ -69,3 +69,5 @@ else()
             DICTIONARY_OPTIONS "-writeEmptyRootPCM"
             DEPENDENCIES Core Hist Graf Matrix Tree Minuit Minuit2 RIO MathCore Foam)
 endif()
+
+add_subdirectory(test/gtest)

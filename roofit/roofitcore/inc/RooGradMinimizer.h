@@ -64,6 +64,7 @@ public:
   void setMinimizerType(const char* type);
 
   static void cleanup() ;
+  static RooFitResult* lastMinuitFit(const RooArgList& varList=RooArgList());
 
   void saveStatus(const char* label, Int_t status) { _statusHistory.push_back(std::pair<std::string,int>(label,status)) ; }
 
