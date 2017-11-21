@@ -121,7 +121,7 @@ bool NegativeG2LineSearch::HasNegativeG2(const FunctionGradient& grad, const MnM
 
    for(unsigned int i = 0; i < grad.Vec().size(); i++) {
 
-     std::cout << grad.G2()(i) << std::endl;
+//     std::cout << grad.G2()(i) << std::endl;
      if (grad.G2()(i) <= 0) {
 
        return true;

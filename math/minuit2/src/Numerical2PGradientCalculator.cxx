@@ -81,7 +81,7 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 //    std::cout << "position[" << i <<"] = " << par.Vec()(i) << std::endl << std::endl;
 //  }
 
-  std::cout << "########### Numerical2PDerivative::operator()" <<std::endl;
+//  std::cout << "########### Numerical2PDerivative::operator()" <<std::endl;
 
    assert(par.IsValid());
 
@@ -106,10 +106,10 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    MnAlgebraicVector g2 = Gradient.G2();
    MnAlgebraicVector gstep = Gradient.Gstep();
 
-  for (int i = 0; i < n; ++i) {
-    std::cout << par.Vec()(i) << "\t";
-  }
-  std::cout << std::endl;
+//  for (int i = 0; i < n; ++i) {
+//    std::cout << par.Vec()(i) << "\t";
+//  }
+//  std::cout << std::endl;
 
 #ifndef _OPENMP
    MPIProcess mpiproc(n,0);
@@ -153,13 +153,13 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
       MnAlgebraicVector x = par.Vec();
 #endif
 
-     std::cout << "BEFORE: ";
-     std::cout << "fGrd[" << i <<"] = " << grd(i) << "\t";
-     std::cout << "fG2[" << i <<"] = " << g2(i) << "\t";
-     std::cout << "fGstep[" << i <<"] = " << gstep(i) << "\t";
-     std::cout << "x[" << i << "] = " << x(i) << "\t";
-     std::cout << "fVal = " << fcnmin << "\t";
-     std::cout << std::endl;
+//     std::cout << "BEFORE: ";
+//     std::cout << "fGrd[" << i <<"] = " << grd(i) << "\t";
+//     std::cout << "fG2[" << i <<"] = " << g2(i) << "\t";
+//     std::cout << "fGstep[" << i <<"] = " << gstep(i) << "\t";
+//     std::cout << "x[" << i << "] = " << x(i) << "\t";
+//     std::cout << "fVal = " << fcnmin << "\t";
+//     std::cout << std::endl;
 
      double xtf = x(i);
       double epspri = eps2 + fabs(grd(i)*eps2);
@@ -207,13 +207,13 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
                    << " grd " << grd(i) << " g2 " << g2(i) << std::endl;
          std::cout.precision(pr);
 #endif
-        std::cout << "AFTER:  ";
-        std::cout << "fGrd[" << i <<"] = " << grd(i) << "\t";
-        std::cout << "fG2[" << i <<"] = " << g2(i) << "\t";
-        std::cout << "fGstep[" << i <<"] = " << gstep(i) << "\t";
-        std::cout << "x[" << i << "] = " << xtf << "\t";
-        std::cout << "fVal = " << fcnmin << "\t";
-        std::cout << std::endl;
+//        std::cout << "AFTER:  ";
+//        std::cout << "fGrd[" << i <<"] = " << grd(i) << "\t";
+//        std::cout << "fG2[" << i <<"] = " << g2(i) << "\t";
+//        std::cout << "fGstep[" << i <<"] = " << gstep(i) << "\t";
+//        std::cout << "x[" << i << "] = " << xtf << "\t";
+//        std::cout << "fVal = " << fcnmin << "\t";
+//        std::cout << std::endl;
 
         if(fabs(grdb4-grd(i))/(fabs(grd(i))+dfmin/step) < GradTolerance())  {
             //    std::cout<<"j= "<<j<<std::endl;

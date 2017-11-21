@@ -33,7 +33,7 @@ namespace ROOT {
 FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters& par) const {
    // initial rough  estimate of the gradient using the parameter step size
 
-   std::cout << "########### InitialGradientCalculator::operator()" <<std::endl;
+//   std::cout << "########### InitialGradientCalculator::operator()" <<std::endl;
 
    assert(par.IsValid());
 
@@ -83,9 +83,9 @@ FunctionGradient InitialGradientCalculator::operator()(const MinimumParameters& 
       gr2(i) = g2;
       gst(i) = gstep;
 
-      std::cout << "fGrd[" << i <<"] = " << gr(i) << "\t";
-      std::cout << "fG2[" << i <<"] = " << gr2(i) << "\t";
-      std::cout << "fGstep[" << i <<"] = " << gst(i) << std::endl;
+//      std::cout << "fGrd[" << i <<"] = " << gr(i) << "\t";
+//      std::cout << "fG2[" << i <<"] = " << gr2(i) << "\t";
+//      std::cout << "fGstep[" << i <<"] = " << gst(i) << std::endl;
 
 #ifdef DEBUG
       std::cout << "computing initial gradient for parameter " << Trafo().Name(exOfIn) << " value = " << var

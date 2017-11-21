@@ -650,15 +650,14 @@ void RooGradMinimizerFcn::InitGradient() const {
 
 void RooGradMinimizerFcn::run_derivator(const double *x) const {
   for (int i = 0; i < _nDim; ++i) {
-    std::cout << "x[" << i << "] = " << x[i] << std::endl;
+//    std::cout << "x[" << i << "] = " << x[i] << std::endl;
   }
   if (!_grad_initialized) {
     InitGradient();
   }
   // check whether the derivative was already calculated for this set of parameters
   if (std::equal(_grad_params.begin(), _grad_params.end(), x)) {
-    std::cout << "gradient already calculated for these parameters, use cached value" << std::endl;
-//    return _grad[icoord];
+//    std::cout << "gradient already calculated for these parameters, use cached value" << std::endl;
   } else {
     // if not, set the _grad_params to the current input parameters
     std::vector<double> new_grad_params(x, x + _nDim);
@@ -678,7 +677,6 @@ void RooGradMinimizerFcn::run_derivator(const double *x) const {
 
 double RooGradMinimizerFcn::DoDerivative(const double *x, unsigned int icoord) const {
   run_derivator(x);
-//  std::cout << "grad value " << _grad[icoord] << std::endl;
   return _grad.Grad()(icoord);
 }
 

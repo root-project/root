@@ -50,7 +50,7 @@ namespace ROOT {
 
 MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculator& gc, const MnUserParameterState& st, const MnStrategy& stra) const {
 
-  std::cout << "MnSeedGenerator::operator() for general GradientCalculator" << std::endl;
+//  std::cout << "MnSeedGenerator::operator() for general GradientCalculator" << std::endl;
 
    // find seed (initial minimization point) using the calculated gradient
    unsigned int n = st.VariableParameters();
@@ -140,7 +140,7 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
 
 MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradientCalculator& gc, const MnUserParameterState& st, const MnStrategy& stra) const {
 
-  std::cout << "MnSeedGenerator::operator() for AnalyticalGradientCalculator" << std::endl;
+//  std::cout << "MnSeedGenerator::operator() for AnalyticalGradientCalculator" << std::endl;
 
   // find seed (initial point for minimization) using analytical gradient
    unsigned int n = st.VariableParameters();

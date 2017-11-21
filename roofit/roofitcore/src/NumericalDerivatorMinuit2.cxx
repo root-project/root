@@ -168,7 +168,7 @@ namespace RooFit {
 //      std::cout << "fGstep[" << i <<"] = " << fGstep[i] << std::endl;
 //    }
 
-    std::cout << "########### NumericalDerivatorMinuit2::Differentiate()" <<std::endl;
+//    std::cout << "########### NumericalDerivatorMinuit2::Differentiate()" <<std::endl;
 
     assert(fFunction != 0);
     std::vector<double> vx(fFunction->NDim()), vx_external(fFunction->NDim());
@@ -180,9 +180,9 @@ namespace RooFit {
 
     // convert to Minuit internal parameters
     for (int i = 0; i < int(fN); i++) {
-      std::cout << vx[i] << "\t";
+//      std::cout << vx[i] << "\t";
       vx[i] = Ext2int(parameters[i], vx[i]);
-      std::cout << vx[i] << std::endl;
+//      std::cout << vx[i] << std::endl;
     }
 
     double step_tolerance = fStepTolerance;
@@ -214,23 +214,19 @@ namespace RooFit {
 
     for (int i = 0; i < int(fN); i++) {
 
-      std::cout << "BEFORE, EXTERNAL: fGrd[" << i <<"] = " << grad_vec(i) << "\t";
-      std::cout << "fG2[" << i <<"] = " << gr2_vec(i) << "\t";
-      std::cout << "fGstep[" << i <<"] = " << gstep_vec(i) << "\t";
-      std::cout << "x[" << i << "] = " << vx_external[i] << "\t";
-      std::cout << "fVal = " << fVal << "\t";
-      std::cout << std::endl;
+//      std::cout << "BEFORE, EXTERNAL: fGrd[" << i <<"] = " << grad_vec(i) << "\t";
+//      std::cout << "fG2[" << i <<"] = " << gr2_vec(i) << "\t";
+//      std::cout << "fGstep[" << i <<"] = " << gstep_vec(i) << "\t";
+//      std::cout << "x[" << i << "] = " << vx_external[i] << "\t";
+//      std::cout << "fVal = " << fVal << "\t";
+//      std::cout << std::endl;
 
-//      grad_vec(i)  *= DInt2Ext(parameters[i], vx[i]);
-//      gr2_vec(i)   *= D2Int2Ext(parameters[i], vx[i]);
-//      gstep_vec(i) *= GStepInt2Ext(parameters[i], vx[i]);
-
-      std::cout << "BEFORE, INTERNAL: fGrd[" << i <<"] = " << grad_vec_internal(i) << "\t";
-      std::cout << "fG2[" << i <<"] = " << gr2_vec_internal(i) << "\t";
-      std::cout << "fGstep[" << i <<"] = " << gstep_vec_internal(i) << "\t";
-      std::cout << "x[" << i << "] = " << vx[i] << "\t";
-      std::cout << "fVal = " << fVal << "\t";
-      std::cout << std::endl;
+//      std::cout << "BEFORE, INTERNAL: fGrd[" << i <<"] = " << grad_vec_internal(i) << "\t";
+//      std::cout << "fG2[" << i <<"] = " << gr2_vec_internal(i) << "\t";
+//      std::cout << "fGstep[" << i <<"] = " << gstep_vec_internal(i) << "\t";
+//      std::cout << "x[" << i << "] = " << vx[i] << "\t";
+//      std::cout << "fVal = " << fVal << "\t";
+//      std::cout << std::endl;
 
       double xtf = vx[i];
       double epspri = eps2 + std::abs(grad_vec_internal(i) * eps2);
@@ -294,23 +290,23 @@ namespace RooFit {
         }
       }
 
-      std::cout << "AFTER, INTERNAL:  fGrd[" << i <<"] = " << grad_vec_internal(i) << "\t";
-      std::cout << "fG2[" << i <<"] = " << gr2_vec_internal(i) << "\t";
-      std::cout << "fGstep[" << i <<"] = " << gstep_vec_internal(i) << "\t";
-      std::cout << "x[" << i << "] = " << xtf << "\t";
-      std::cout << "fVal = " << fVal << "\t";
-      std::cout << std::endl;
+//      std::cout << "AFTER, INTERNAL:  fGrd[" << i <<"] = " << grad_vec_internal(i) << "\t";
+//      std::cout << "fG2[" << i <<"] = " << gr2_vec_internal(i) << "\t";
+//      std::cout << "fGstep[" << i <<"] = " << gstep_vec_internal(i) << "\t";
+//      std::cout << "x[" << i << "] = " << xtf << "\t";
+//      std::cout << "fVal = " << fVal << "\t";
+//      std::cout << std::endl;
 
       grad_vec(i)  = grad_vec_internal(i) / DInt2Ext(parameters[i], xtf);
       gr2_vec(i)   = gr2_vec_internal(i) / D2Int2Ext(parameters[i], xtf);
       gstep_vec(i) = gstep_vec_internal(i) / GStepInt2Ext(parameters[i], xtf);
 
-      std::cout << "AFTER, EXTERNAL:  fGrd[" << i <<"] = " << grad_vec(i) << "\t";
-      std::cout << "fG2[" << i <<"] = " << gr2_vec(i) << "\t";
-      std::cout << "fGstep[" << i <<"] = " << gstep_vec(i) << "\t";
-      std::cout << "x[" << i << "] = " << vx_external[i] << "\t";
-      std::cout << "fVal = " << fVal << "\t";
-      std::cout << std::endl;
+//      std::cout << "AFTER, EXTERNAL:  fGrd[" << i <<"] = " << grad_vec(i) << "\t";
+//      std::cout << "fG2[" << i <<"] = " << gr2_vec(i) << "\t";
+//      std::cout << "fGstep[" << i <<"] = " << gstep_vec(i) << "\t";
+//      std::cout << "x[" << i << "] = " << vx_external[i] << "\t";
+//      std::cout << "fVal = " << fVal << "\t";
+//      std::cout << std::endl;
 
     }
 
@@ -432,7 +428,7 @@ namespace RooFit {
     // set an initial gradient using some given steps
     // (used in the first iteration)
 
-    std::cout << "########### NumericalDerivatorMinuit2::SetInitialGradient()" <<std::endl;
+//    std::cout << "########### NumericalDerivatorMinuit2::SetInitialGradient()" <<std::endl;
 
     double eps2 = precision.Eps2();
 
@@ -537,12 +533,12 @@ namespace RooFit {
       gr2_vec_internal(ix) = g2;
       gstep_vec_internal(ix) = gstep;
 
-      std::cout << "INTERNAL: fGrd[" << ix <<"] = " << grd << "\t";
-      std::cout << "fG2[" << ix <<"] = " << g2 << "\t";
-      std::cout << "fGstep[" << ix <<"] = " << gstep << std::endl;
-      std::cout << "EXTERNAL: fGrd[" << ix <<"] = " << grad_vec(ix) << "\t";
-      std::cout << "fG2[" << ix <<"] = " << gr2_vec(ix) << "\t";
-      std::cout << "fGstep[" << ix <<"] = " << gstep_vec(ix) << std::endl;
+//      std::cout << "INTERNAL: fGrd[" << ix <<"] = " << grd << "\t";
+//      std::cout << "fG2[" << ix <<"] = " << g2 << "\t";
+//      std::cout << "fGstep[" << ix <<"] = " << gstep << std::endl;
+//      std::cout << "EXTERNAL: fGrd[" << ix <<"] = " << grad_vec(ix) << "\t";
+//      std::cout << "fG2[" << ix <<"] = " << gr2_vec(ix) << "\t";
+//      std::cout << "fGstep[" << ix <<"] = " << gstep_vec(ix) << std::endl;
 
     }
 
