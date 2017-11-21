@@ -99,7 +99,7 @@ ROOT_BUILD_OPTION(cocoa OFF "Use native Cocoa/Quartz graphics backend (MacOS X o
 ROOT_BUILD_OPTION(cuda OFF "Use CUDA if it is found in the system")
 ROOT_BUILD_OPTION(cxx11 ON "Build using C++11 compatible mode, requires gcc > 4.7.x or clang")
 ROOT_BUILD_OPTION(cxx14 OFF "Build using C++14 compatible mode, requires gcc > 4.9.x or clang")
-#ROOT_BUILD_OPTION(cxx17 OFF "Build using C++17 compatible mode, requires gcc >= 7.1.0 or clang")
+ROOT_BUILD_OPTION(cxx17 OFF "Build using C++17 compatible mode, requires gcc >= 7.2.0 or clang")
 ROOT_BUILD_OPTION(cxxmodules OFF "Compile with C++ modules enabled.")
 ROOT_BUILD_OPTION(davix ON "DavIx library for HTTP/WEBDAV access")
 ROOT_BUILD_OPTION(dcache OFF "dCache support, requires libdcap from DESY")
