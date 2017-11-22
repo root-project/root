@@ -108,6 +108,7 @@ RooGradMinimizer::RooGradMinimizer(RooAbsReal& function)
   if (_theFitter) delete _theFitter ;
   _theFitter = new ROOT::Fit::Fitter;
   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+  setEps(1.0); // default tolerance
 
   _fcn = new RooGradMinimizerFcn(_func,this,_verbose);
 
@@ -414,6 +415,14 @@ void RooGradMinimizer::setErrorLevel(Double_t level)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Change MINUIT epsilon
+
+void RooGradMinimizer::setEps(Double_t eps)
+{
+  _theFitter->Config().MinimizerOptions().SetTolerance(eps);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Choose the minimizer algorithm.
 
 void RooGradMinimizer::setMinimizerType(const char* type)
@@ -446,7 +455,7 @@ void RooGradMinimizer::setVerbose(Bool_t flag) {
 }
 
 
-RooFitResult* RooMinimizer::lastMinuitFit(const RooArgList& varList)
+RooFitResult* RooGradMinimizer::lastMinuitFit(const RooArgList& varList)
 {
   // Import the results of the last fit performed, interpreting
   // the fit parameters as the given varList of parameters.

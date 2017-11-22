@@ -158,7 +158,8 @@ protected:
   
   friend class RooMinuit ;
   friend class RooMinimizer ;
-  void setCovarianceMatrix(TMatrixDSym& V) ; 
+  friend class RooGradMinimizer ;
+  void setCovarianceMatrix(TMatrixDSym& V) ;
   void setConstParList(const RooArgList& list) ;
   void setInitParList(const RooArgList& list) ;
   void setFinalParList(const RooArgList& list) ;

@@ -49,7 +49,7 @@ public:
   Int_t setPrintLevel(Int_t newLevel);
   void setStrategy(Int_t strat);
   void setErrorLevel(Double_t level);
-
+  void setEps(Double_t eps);
   void optimizeConst(Int_t flag) ;
 
   RooFitResult* fit(const char* options) ;
