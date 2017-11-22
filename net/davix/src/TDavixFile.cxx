@@ -254,9 +254,29 @@ Davix_fd *TDavixFileInternal::Open()
    DavixError *davixErr = NULL;
    Davix_fd *fd = davixPosix->open(davixParam, fUrl.GetUrl(), oflags, &davixErr);
    if (fd == NULL) {
-      Error("DavixOpen", "can not open file with davix: %s (%d)",
-            davixErr->getErrMsg().c_str(), davixErr->getStatus());
-      DavixError::clearError(&davixErr);
+       // An error has occurred.. We might be able to recover with metalinks.
+       // Try to populate the replicas vector. If successful, TFile will try
+       // the replicas one by one
+
+       replicas.clear();
+       DavixError *davixErr2 = NULL;
+       try {
+           DavFile file(*davixContext, Davix::Uri(fUrl.GetUrl()));
+           std::vector<DavFile> replicasLocal = file.getReplicas(NULL, &davixErr2);
+           for(size_t i = 0; i < replicasLocal.size(); i++) {
+             replicas.push_back(replicasLocal[i].getUri().getString());
+           }
+       }
+       catch(...) {}
+       DavixError::clearError(&davixErr2);
+
+       if(replicas.empty()) {
+           // I was unable to retrieve a list of replicas: propagate the original
+           // error.
+           Error("DavixOpen", "can not open file with davix: %s (%d)",
+                davixErr->getErrMsg().c_str(), davixErr->getStatus());
+        }
+        DavixError::clearError(&davixErr);
    } else {
       // setup ROOT style read
       davixPosix->fadvise(fd, 0, 300, Davix::AdviseRandom);
@@ -485,6 +505,7 @@ void TDavixFileInternal::init()
    davixPosix = new DavPosix(davixContext);
    davixParam = new RequestParams();
    davixParam->setUserAgent(gUserAgent);
+   davixParam->setMetalinkMode(Davix::MetalinkMode::Disable);
    ConfigureDavixLogLevel();
    parseConfig();
    parseParams(opt);
@@ -542,6 +563,20 @@ void TDavixFile::Init(Bool_t init)
    TFile::Init(kFALSE);
    fOffset = 0;
    fD = -2; // so TFile::IsOpen() will return true when in TFile::~TFi */
+}
+
+TString TDavixFile::GetNewUrl() {
+   std::vector<std::string> replicas = d_ptr->getReplicas();
+   TString newUrl;
+   if(!replicas.empty()) {
+      std::stringstream ss;
+      for(size_t i = 0; i < replicas.size(); i++) {
+         ss << replicas[i];
+         if(i != replicas.size()-1) ss << "|";
+      }
+      newUrl = ss.str();
+   }
+   return newUrl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
