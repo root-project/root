@@ -52,6 +52,7 @@ The following people have contributed to this new version:
 ## RooFit Libraries
 
 ## 2D Graphics Libraries
+   - `TMultiGraph::GetHistogram` now works even if the multigraph is not drawn.
 
 ## 3D Graphics Libraries
 
