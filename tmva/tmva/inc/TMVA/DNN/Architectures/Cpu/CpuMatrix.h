@@ -133,7 +133,7 @@ public:
    AFloat *       GetRawDataPointer()        {return fBuffer;}
    const AFloat * GetRawDataPointer()  const {return fBuffer;}
 
-   ROOT::TThreadExecutor &GetThreadExecutor() const { return TMVA::Config::Instance().GetThreadExecutor(); }
+   static ROOT::TThreadExecutor &GetThreadExecutor() { return TMVA::Config::Instance().GetThreadExecutor(); }
 
     // static function to get the number of elements for task
    static size_t GetNWorkItems(size_t nelements); 

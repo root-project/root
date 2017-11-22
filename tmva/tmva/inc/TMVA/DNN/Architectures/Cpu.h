@@ -18,6 +18,8 @@
 #ifndef TMVA_DNN_ARCHITECTURES_CPU
 #define TMVA_DNN_ARCHITECTURES_CPU
 
+#include "TMVA/DNN/Functions.h"
+
 #include "Cpu/CpuBuffer.h"
 #include "Cpu/CpuMatrix.h"
 #include <vector>
@@ -26,6 +28,7 @@ namespace TMVA
 {
 namespace DNN
 {
+   //class EActivationFunction;
 
 /** The TCpu architecture class.
  *
@@ -296,6 +299,14 @@ public:
    static void AddConvBiases(TCpuMatrix<Scalar_t> &output, const TCpuMatrix<Scalar_t> &biases);
    ///@}
 
+   /** Forward propagation in the Convolutional layer */
+   static void ConvLayerForward(std::vector<TCpuMatrix<Scalar_t>> & output, std::vector<TCpuMatrix<Scalar_t>> & derivatives,
+                                const std::vector<TCpuMatrix<Scalar_t>> &input,
+                                const TCpuMatrix<Scalar_t> & weights, const TCpuMatrix<Scalar_t> & biases,
+                                EActivationFunction func, const std::vector<int> & vIndices,
+                                size_t nlocalViews, size_t nlocalViewPixels,
+                                Scalar_t dropoutProbability, bool applyDropout);
+
    /** @name Backward Propagation in Convolutional Layer
     */
    ///@{
@@ -320,7 +331,7 @@ public:
    /** Utility function for calculating the activation gradients of the layer
     *  before the convolutional layer. */
    static void CalculateConvActivationGradients(std::vector<TCpuMatrix<Scalar_t>> &activationGradientsBackward,
-                                                std::vector<TCpuMatrix<Scalar_t>> &df,
+                                                const std::vector<TCpuMatrix<Scalar_t>> &df,
                                                 const TCpuMatrix<Scalar_t> &weights, size_t batchSize,
                                                 size_t inputHeight, size_t inputWidth, size_t depth, size_t height,
                                                 size_t width, size_t filterDepth, size_t filterHeight,
@@ -329,7 +340,7 @@ public:
    /** Utility function for calculating the weight gradients of the convolutional
     * layer. */
    static void CalculateConvWeightGradients(TCpuMatrix<Scalar_t> &weightGradients,
-                                            std::vector<TCpuMatrix<Scalar_t>> &df,
+                                            const std::vector<TCpuMatrix<Scalar_t>> &df,
                                             const std::vector<TCpuMatrix<Scalar_t>> &activations_backward,
                                             size_t batchSize, size_t inputHeight, size_t inputWidth, size_t depth,
                                             size_t height, size_t width, size_t filterDepth, size_t filterHeight,
@@ -337,7 +348,7 @@ public:
 
    /** Utility function for calculating the bias gradients of the convolutional
     *  layer */
-   static void CalculateConvBiasGradients(TCpuMatrix<Scalar_t> &biasGradients, std::vector<TCpuMatrix<Scalar_t>> &df,
+   static void CalculateConvBiasGradients(TCpuMatrix<Scalar_t> &biasGradients, const std::vector<TCpuMatrix<Scalar_t>> &df,
                                           size_t batchSize, size_t depth, size_t nLocalViews);
    ///@}
 
