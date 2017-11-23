@@ -1088,6 +1088,28 @@ inline bool TCling::TUniqueString::Append(const std::string& str)
    return notPresent;
 }
 
+///\returns true if the module was loaded.
+static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp) {
+   clang::CompilerInstance &CI = *interp.getCI();
+
+   assert(CI.getLangOpts().Modules && "Function only relevant when C++ modules are turned on!");
+
+   clang::Preprocessor &PP = CI.getPreprocessor();
+   clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
+   clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+
+   cling::Transaction* T = nullptr;
+   interp.declare("/*This is decl is to get a valid sloc...*/;", &T);
+   SourceLocation ValidLoc = T->decls_begin()->m_DGR.getSingleDecl()->getLocStart();
+   // CreateImplicitModuleImportNoInit creates decls.
+   cling::Interpreter::PushTransactionRAII RAII(&interp);
+   if (clang::Module *M = moduleMap.findModule(ModuleName)) {
+      clang::IdentifierInfo *II = PP.getIdentifierInfo(M->Name);
+      return !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
+   }
+   return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Loads the basic C++ modules that we require to run any ROOT program.
 /// This is just supposed to make the declarations in their headers available
@@ -1103,81 +1125,19 @@ static void LoadCoreModules(cling::Interpreter &interp)
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
    // List of core modules we can load, but it's ok if they are missing because
    // the system doesn't have these modules.
-   std::vector<std::string> optionalCoreModuleNames = {"stl", "libc"};
+   if (clang::Module *LIBCM = moduleMap.findModule("libc"))
+      if (!LoadModule(LIBCM->Name, interp))
+         Error("TCling::LoadCodeModule", "Cannot load module %s", LIBCM->Name.c_str());
 
-   // List of core modules we need to load.
-   std::vector<std::string> neededCoreModuleNames = {"Core", "RIO"};
-   std::vector<std::string> missingCoreModuleNames;
+   if (clang::Module *STLM = moduleMap.findModule("stl"))
+      if (!LoadModule(STLM->Name, interp))
+         Error("TCling::LoadCodeModule", "Cannot load module %s", STLM->Name.c_str());
 
-   std::vector<clang::Module *> coreModules;
+   if (!LoadModule(moduleMap.findModule("Core")->Name, interp))
+      Error("TCling::LoadCodeModule", "Cannot load module Core");
 
-   // Lookup the optional core modules in the modulemap by name.
-   for (std::string moduleName : optionalCoreModuleNames) {
-      clang::Module *module = moduleMap.findModule(moduleName);
-      // Don't report an error here, the module is optional.
-      if (module)
-         coreModules.push_back(module);
-   }
-   // Lookup the core modules in the modulemap by name.
-   for (std::string moduleName : neededCoreModuleNames) {
-      clang::Module *module = moduleMap.findModule(moduleName);
-      if (module) {
-         coreModules.push_back(module);
-      } else {
-         // If we can't find a needed module, we record that to report it later.
-         missingCoreModuleNames.push_back(moduleName);
-      }
-   }
-
-   // If we couldn't find some modules, so let's print an error message.
-   if (!missingCoreModuleNames.empty()) {
-      std::string MissingModuleNameList;
-      for (const std::string &name : missingCoreModuleNames) {
-         MissingModuleNameList += " " + name;
-      }
-
-      Error("TCling::LoadCoreModules",
-            "Internal error, couldn't find core "
-            "C++ modules in modulemap:%s\n",
-            MissingModuleNameList.c_str());
-   }
-
-   // Collect all submodules in the found core modules.
-   for (size_t i = 0; i < coreModules.size(); ++i) {
-      for (clang::Module *subModule : coreModules[i]->submodules())
-         coreModules.push_back(subModule);
-   }
-
-   // Now we collect all header files from the previously collected modules.
-   std::vector<StringRef> moduleHeaders;
-   for (clang::Module *module : coreModules) {
-      ROOT::TMetaUtils::foreachHeaderInModule(
-         *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.push_back(h.NameAsWritten); });
-   }
-
-   // Turn the list of found header files into C++ code that includes all of
-   // them. This will be wrapped into an `import` declaration by clang, so we
-   // only make those modules available, not actually textually include those
-   // headers.
-   // FIXME: Use clang::ASTReader::makeModuleVisible.
-   std::stringstream declarations;
-   for (StringRef H : moduleHeaders) {
-      declarations << "#include \"" << H.str() << "\"\n";
-   }
-
-   // C99 decided that it's a very good idea to name a macro `I` (the letter I).
-   // This seems to screw up nearly all the template code out there as `I` is
-   // common template parameter name and iterator variable name.
-   // Let's follow the GCC recommendation and undefine `I` in case any of the
-   // core modules have defined it:
-   // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
-   declarations << "#ifdef I\n #undef I\n #endif\n";
-
-   auto result = interp.declare(declarations.str());
-
-   if (result != cling::Interpreter::CompilationResult::kSuccess) {
-      Error("TCling::LoadCoreModules", "Couldn't parse core headers: %s\n", declarations.str().c_str());
-   }
+   if (!LoadModule(moduleMap.findModule("RIO")->Name, interp))
+      Error("TCling::LoadCodeModule", "Cannot load module RIO");
 }
 
 static bool FileExists(const char *file)
@@ -1951,11 +1911,13 @@ void TCling::RegisterModule(const char* modulename,
    if (fClingCallbacks)
      oldValue = SetClassAutoloading(false);
 
+   clang::Sema &TheSema = fInterpreter->getSema();
+
    { // scope within which diagnostics are de-activated
    // For now we disable diagnostics because we saw them already at
    // dictionary generation time. That won't be an issue with the PCMs.
 
-      clangDiagSuppr diagSuppr(fInterpreter->getSema().getDiagnostics());
+      clangDiagSuppr diagSuppr(TheSema.getDiagnostics());
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
