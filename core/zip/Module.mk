@@ -19,8 +19,10 @@ ZIPDICTH     := $(MODDIRI)/Compression.h
 ZIPOLDH      := $(MODDIRI)/RZip.h     \
                 $(MODDIRI)/Compression.h
 
-ZIPOLDS      := $(MODDIRS)/ZDeflate.c   \
-                $(MODDIRS)/ZInflate.c
+ZIPOLDS      := $(MODDIRS)/Bits.c     \
+                $(MODDIRS)/ZDeflate.c \
+                $(MODDIRS)/ZInflate.c \
+                $(MODDIRS)/ZTrees.c
 
 ZIPNEWH      := $(MODDIRI)/zlib.h \
                 $(MODDIRI)/zconf.h
