@@ -1088,6 +1088,57 @@ inline bool TCling::TUniqueString::Append(const std::string& str)
    return notPresent;
 }
 
+static std::string ResolveModuleFileName(clang::Module *M, const clang::Preprocessor &PP)
+{
+   const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
+
+   std::string ModuleFileName;
+   bool LoadFromPrebuiltModulePath = false;
+   // We try to load the module from the prebuilt module paths. If not
+   // successful, we then try to find it in the module cache.
+   if (!HSOpts.PrebuiltModulePaths.empty()) {
+      // Load the module from the prebuilt module path.
+      ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(M->Name, "", /*UsePrebuiltPath*/ true);
+      if (!ModuleFileName.empty())
+         LoadFromPrebuiltModulePath = true;
+   }
+   if (!LoadFromPrebuiltModulePath && M) {
+      // Load the module from the module cache.
+      ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(M);
+   }
+   bool Exists = false;
+   {
+      std::ifstream f(ModuleFileName);
+      Exists = f.good();
+   }
+   return (Exists) ? ModuleFileName : "";
+}
+
+///\returns true if the module was loaded.
+static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp) {
+   clang::CompilerInstance &CI = *interp.getCI();
+
+   assert(CI.getLangOpts().Modules && "Function only relevant when C++ modules are turned on!");
+
+   clang::Preprocessor &PP = CI.getPreprocessor();
+   clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
+   clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+
+   cling::Transaction* T = nullptr;
+   interp.declare("/*This is decl is to get a valid sloc...*/;", &T);
+   SourceLocation ValidLoc = T->decls_begin()->m_DGR.getSingleDecl()->getLocStart();
+   // CreateImplicitModuleImportNoInit creates decls.
+   cling::Interpreter::PushTransactionRAII RAII(&interp);
+   if (clang::Module *M = moduleMap.findModule(ModuleName)) {
+      std::string ModuleFileName = ResolveModuleFileName(M, PP);
+      if (ModuleFileName == "")
+         return false; // Module exists but a module file was not generated.
+      CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(PP.getIdentifierInfo(M->Name), ValidLoc));
+      return true;
+   }
+   return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Loads the basic C++ modules that we require to run any ROOT program.
 /// This is just supposed to make the declarations in their headers available
@@ -1951,11 +2002,21 @@ void TCling::RegisterModule(const char* modulename,
    if (fClingCallbacks)
      oldValue = SetClassAutoloading(false);
 
+   clang::Sema &TheSema = fInterpreter->getSema();
+
+   if (TheSema.getLangOpts().Modules) {
+     std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
+     bool success = LoadModule(ModuleName, *fInterpreter);
+     if(success)
+       return;
+     Info("TCling::RegisterModule", "Failed to load module %s", ModuleName.c_str());
+   }
+
    { // scope within which diagnostics are de-activated
    // For now we disable diagnostics because we saw them already at
    // dictionary generation time. That won't be an issue with the PCMs.
 
-      clangDiagSuppr diagSuppr(fInterpreter->getSema().getDiagnostics());
+      clangDiagSuppr diagSuppr(TheSema.getDiagnostics());
 
 #if defined(R__MUST_REVISIT)
 #if R__MUST_REVISIT(6,2)
