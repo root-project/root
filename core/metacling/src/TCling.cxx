@@ -1927,6 +1927,13 @@ void TCling::RegisterModule(const char* modulename,
 
    clang::Sema &TheSema = fInterpreter->getSema();
 
+   if (TheSema.getLangOpts().Modules) {
+     std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
+     bool success = LoadModule(ModuleName, *fInterpreter);
+     if (!success)
+        Info("TCling::RegisterModule", "Failed to load module %s", ModuleName.c_str());
+   }
+
    { // scope within which diagnostics are de-activated
    // For now we disable diagnostics because we saw them already at
    // dictionary generation time. That won't be an issue with the PCMs.
