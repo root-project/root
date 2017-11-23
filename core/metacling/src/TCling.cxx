@@ -1363,6 +1363,11 @@ TCling::~TCling()
 void TCling::Initialize()
 {
    fClingCallbacks->Initialize();
+   if (fInterpreter->getCI()->getLangOpts().Modules && !IsFromRootCling()) {
+      // Load modules that we can't automatically load via rootmap files as they
+      // contain decls in namespaces which aren't supported.
+      LoadModules({"TMVA", "TreePlayer", "Graf"}, *fInterpreter);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
