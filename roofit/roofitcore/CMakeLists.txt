@@ -70,4 +70,4 @@ else()
             DEPENDENCIES Core Hist Graf Matrix Tree Minuit Minuit2 RIO MathCore Foam)
 endif()
 
-add_subdirectory(test/gtest)
+add_subdirectory(test)
