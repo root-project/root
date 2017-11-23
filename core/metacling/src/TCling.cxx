@@ -1121,10 +1121,13 @@ static void LoadCoreModules(cling::Interpreter &interp)
    if (!CI.getLangOpts().Modules)
       return;
 
+   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+
    clang::HeaderSearch &headerSearch = CI.getPreprocessor().getHeaderSearchInfo();
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
    // List of core modules we can load, but it's ok if they are missing because
    // the system doesn't have these modules.
+
    if (clang::Module *LIBCM = moduleMap.findModule("libc"))
       if (!LoadModule(LIBCM->Name, interp))
          Error("TCling::LoadCoreModules", "Cannot load module %s", LIBCM->Name.c_str());
@@ -1154,6 +1157,13 @@ static void LoadCoreModules(cling::Interpreter &interp)
    // core modules have defined it:
    // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
    interp.declare("#ifdef I\n #undef I\n #endif\n");
+
+   if (!fromRootCling) {
+      if (!LoadModule(moduleMap.findModule("TreePlayer")->Name, interp))
+         Error("TCling::LoadCodeModules", "Cannot load module TreePlayer");
+      if (!LoadModule(moduleMap.findModule("TMVA")->Name, interp))
+         Error("TCling::LoadCodeModules", "Cannot load module TMVA");
+   }
 }
 
 static bool FileExists(const char *file)
