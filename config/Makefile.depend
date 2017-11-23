@@ -332,9 +332,10 @@ MLPLIBEXTRA             = lib/libHist.lib lib/libMatrix.lib lib/libTree.lib \
                           lib/libTreePlayer.lib lib/libMathCore.lib
 SPECTRUMLIBEXTRA        = lib/libHist.lib lib/libMatrix.lib
 UNFOLDLIBEXTRA          = lib/libHist.lib lib/libMatrix.lib lib/libXMLParser.lib
-TMVALIBEXTRA            = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
+TMVALIBEXTRA            = lib/libNet.lib lib/libMultiProc.lib \
+                          lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libGraf.lib lib/libGpad.lib \
-                          lib/libTreePlayer.lib  lib/libMLP.lib \
+                          lib/libTreePlayer.lib lib/libMLP.lib \
                           lib/libMinuit.lib lib/libMathCore.lib lib/libXMLIO.lib
 TMVAGUILIBEXTRA         = lib/libRIO.lib lib/libHist.lib lib/libMatrix.lib \
                           lib/libTree.lib lib/libGui.lib lib/libGraf.lib lib/libGpad.lib \
@@ -509,7 +510,7 @@ MLPLIBEXTRA             = -Llib -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lTreePlayer -lMathCore
 SPECTRUMLIBEXTRA        = -Llib -lHist -lMatrix
 UNFOLDLIBEXTRA          = -Llib -lHist -lMatrix -lXMLParser
-TMVALIBEXTRA            = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
+TMVALIBEXTRA            = -Llib -lRIO -lNet -lMultiProc -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lTreePlayer -lMLP -lMinuit -lMathCore -lXMLIO
 TMVAGUILIBEXTRA         = -Llib -lRIO -lHist -lMatrix -lTree -lGraf -lGpad \
                           -lGui -lTreePlayer -lTreeViewer -lMLP -lMinuit -lMathCore -lXMLIO -lTMVA
