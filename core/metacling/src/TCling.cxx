@@ -1099,6 +1099,8 @@ static void LoadCoreModules(cling::Interpreter &interp)
    if (!CI.getLangOpts().Modules)
       return;
 
+   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+
    clang::HeaderSearch &headerSearch = CI.getPreprocessor().getHeaderSearchInfo();
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
    // List of core modules we can load, but it's ok if they are missing because
@@ -1107,6 +1109,12 @@ static void LoadCoreModules(cling::Interpreter &interp)
 
    // List of core modules we need to load.
    std::vector<std::string> neededCoreModuleNames = {"Core", "RIO"};
+
+   if (!fromRootCling) {
+      neededCoreModuleNames.push_back("TreePlayer");
+      neededCoreModuleNames.push_back("TMVA");
+   }
+
    std::vector<std::string> missingCoreModuleNames;
 
    std::vector<clang::Module *> coreModules;
