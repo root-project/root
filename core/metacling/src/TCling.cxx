@@ -1101,9 +1101,24 @@ static void LoadCoreModules(cling::Interpreter &interp)
 
    clang::HeaderSearch &headerSearch = CI.getPreprocessor().getHeaderSearchInfo();
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
-   // List of core modules we can load, but it's ok if they are missing because
-   // the system doesn't have these modules.
-   std::vector<std::string> optionalCoreModuleNames = {"stl", "libc"};
+   // Preloading the system modules will give us similar behavior to having a PCH.
+   headerSearch.loadTopLevelSystemModules();
+
+   cling::Transaction* T = nullptr;
+   interp.declare("/*This is decl is to get a valid sloc...*/;", &T);
+   SourceLocation ValidLoc = T->decls_begin()->m_DGR.getSingleDecl()->getLocStart();
+   clang::Sema &TheSema = CI.getSema();
+   // createImplicitModuleImportForErrorRecovery creates decls.
+   cling::Interpreter::PushTransactionRAII RAII(&interp);
+   for (auto I = moduleMap.module_begin(), E = moduleMap.module_end(); I != E; ++I) {
+     clang::Module *M = I->second;
+     assert(M);
+     if (M->IsSystem && !M->IsMissingRequirement) {
+       TheSema.createImplicitModuleImportForErrorRecovery(ValidLoc, M);
+       for (clang::Module *subModule : M->submodules())
+         TheSema.createImplicitModuleImportForErrorRecovery(ValidLoc, subModule);
+     }
+   }
 
    // List of core modules we need to load.
    std::vector<std::string> neededCoreModuleNames = {"Core", "RIO"};
@@ -1111,13 +1126,6 @@ static void LoadCoreModules(cling::Interpreter &interp)
 
    std::vector<clang::Module *> coreModules;
 
-   // Lookup the optional core modules in the modulemap by name.
-   for (std::string moduleName : optionalCoreModuleNames) {
-      clang::Module *module = moduleMap.findModule(moduleName);
-      // Don't report an error here, the module is optional.
-      if (module)
-         coreModules.push_back(module);
-   }
    // Lookup the core modules in the modulemap by name.
    for (std::string moduleName : neededCoreModuleNames) {
       clang::Module *module = moduleMap.findModule(moduleName);
