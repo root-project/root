@@ -20,7 +20,7 @@ THREADDH     := $(THREADDS:.cxx=.h)
 
 THREADH      := $(MODDIRI)/TCondition.h $(MODDIRI)/TConditionImp.h \
                 $(MODDIRI)/TMutex.h $(MODDIRI)/TMutexImp.h \
-                $(MODDIRI)/TRWLock.h $(MODDIRI)/TSemaphore.h \
+                $(MODDIRI)/TRWLock.h $(MODDIRI)/ROOT/TRWSpinLock.hxx $(MODDIRI)/TSemaphore.h \
                 $(MODDIRI)/TThread.h $(MODDIRI)/TThreadFactory.h \
                 $(MODDIRI)/TThreadImp.h $(MODDIRI)/TAtomicCount.h \
                 $(MODDIRI)/TThreadPool.h $(MODDIRI)/ThreadLocalStorage.h \
@@ -47,7 +47,8 @@ endif
 
 THREADS      := $(MODDIRS)/TCondition.cxx $(MODDIRS)/TConditionImp.cxx \
                 $(MODDIRS)/TMutex.cxx $(MODDIRS)/TMutexImp.cxx \
-                $(MODDIRS)/TRWLock.cxx $(MODDIRS)/TSemaphore.cxx \
+                $(MODDIRS)/TRWLock.cxx $(MODDIRS)/TRWSpinLock.cxx \
+                $(MODDIRS)/TRWMutexImp.cxx $(MODDIRS)/TSemaphore.cxx \
                 $(MODDIRS)/TThread.cxx $(MODDIRS)/TThreadFactory.cxx \
                 $(MODDIRS)/TThreadImp.cxx $(MODDIRS)/TReentrantRWLock.cxx
 ifneq ($(ARCH),win32)
