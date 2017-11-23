@@ -604,10 +604,25 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
    TF2 * f1 = dynamic_cast<TF2*>(fobj);
    if (!f1) { Error("FillRandom", "Function: %s is not a TF2",fname); return; }
 
+
+   TAxis & xAxis = fXaxis;
+   TAxis & yAxis = fYaxis;
+   
+   // in case axes of histogram are not defined use the function axis
+   if (fXaxis.GetXmax() <= fXaxis.GetXmin()  || fYaxis.GetXmax() <= fYaxis.GetXmin()) {
+      Double_t xmin,xmax,ymin,ymax;
+      f1->GetRange(xmin,ymin,xmax,ymax);
+      Info("FillRandom","Using function axis and range ([%g,%g],[%g,%g])",xmin, xmax,ymin,ymax);
+      xAxis = *(f1->GetHistogram()->GetXaxis());
+      yAxis = *(f1->GetHistogram()->GetYaxis());
+   }
+
+
    // Allocate temporary space to store the integral and compute integral
-   Int_t nbinsx = GetNbinsX();
-   Int_t nbinsy = GetNbinsY();
+   Int_t nbinsx = xAxis.GetNbins();
+   Int_t nbinsy = yAxis.GetNbins();
    Int_t nbins  = nbinsx*nbinsy;
+
 
    Double_t *integral = new Double_t[nbins+1];
    ibin = 0;
@@ -615,7 +630,7 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
    for (biny=1;biny<=nbinsy;biny++) {
       for (binx=1;binx<=nbinsx;binx++) {
          ibin++;
-         Double_t fint = f1->Integral(fXaxis.GetBinLowEdge(binx), fXaxis.GetBinUpEdge(binx), fYaxis.GetBinLowEdge(biny), fYaxis.GetBinUpEdge(biny));
+         Double_t fint = f1->Integral(xAxis.GetBinLowEdge(binx), xAxis.GetBinUpEdge(binx), yAxis.GetBinLowEdge(biny), yAxis.GetBinUpEdge(biny));
          integral[ibin] = integral[ibin-1] + fint;
       }
    }
@@ -634,8 +649,8 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
       biny = ibin/nbinsx;
       binx = 1 + ibin - nbinsx*biny;
       biny++;
-      x    = fXaxis.GetBinCenter(binx);
-      y    = fYaxis.GetBinCenter(biny);
+      x    = xAxis.GetBinCenter(binx);
+      y    = yAxis.GetBinCenter(biny);
       Fill(x,y);
    }
    delete [] integral;
