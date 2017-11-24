@@ -67,7 +67,6 @@ public:
 
    /// Terminate http server and ROOT application
    void Terminate();
-
 };
 
 } // namespace Experimental
