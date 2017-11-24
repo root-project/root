@@ -1113,6 +1113,7 @@ static void LoadCoreModules(cling::Interpreter &interp)
    if (!fromRootCling) {
       neededCoreModuleNames.push_back("TreePlayer");
       neededCoreModuleNames.push_back("TMVA");
+      neededCoreModuleNames.push_back("Graf");
    }
 
    std::vector<std::string> missingCoreModuleNames;
