@@ -22,18 +22,21 @@ One could specify several options when creating http server. They could be add a
 
 Following parameters are supported:
 
-   - thrds=N   - number of threads used by the civetweb (default is 5)
+   - thrds=N   - number of threads used by the civetweb (default is 10)
    - top=name  - configure top name, visible in the web browser
    - auth_file=filename  - authentication file name, created with htdigets utility
    - auth_domain=domain   - authentication domain
    - loopback  - bind specified port to loopback 127.0.0.1 address
    - debug  - enable debug mode, server always returns html page with request info
+   - websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
+   - websocket_disable - disable web sockets handling (default enabled)
+   - cors=domain  - define value for CORS header "Access-Control-Allow-Origin" in server response
 
 If necessary, one could bind http server to specific IP address like:
 
     new THttpServer("http:192.168.1.17:8080")
 
-One also can provide extra arguments for THttpServer itself 
+One also can provide extra arguments for THttpServer itself:
 
    - readonly, ro   - use server in read-only mode (default)
    - readwrite, rw  - use server in read-write mode
