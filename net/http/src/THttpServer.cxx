@@ -49,23 +49,18 @@
 
 class THttpTimer : public TTimer {
 public:
-   THttpServer *fServer; //!
+   THttpServer *fServer; ///!< server processing requests
 
-   THttpTimer(Long_t milliSec, Bool_t mode, THttpServer *serv) : TTimer(milliSec, mode), fServer(serv)
-   {
-      // construtor
-   }
+   /// constructor
+   THttpTimer(Long_t milliSec, Bool_t mode, THttpServer *serv) : TTimer(milliSec, mode), fServer(serv) {}
 
-   virtual ~THttpTimer()
-   {
-      // destructor
-   }
+   /// destructor
+   virtual ~THttpTimer() { fServer = nullptr; }
 
+   /// timeout handler
+   /// used to process http requests in main ROOT thread
    virtual void Timeout()
    {
-      // timeout handler
-      // used to process http requests in main ROOT thread
-
       if (fServer)
          fServer->ProcessRequests();
    }
@@ -84,34 +79,41 @@ public:
 
 class TLongPollEngine : public THttpWSEngine {
 protected:
-   THttpCallArg *fPoll; ///< polling request, which can be used for the next sending
-   TString fBuf;        ///< single entry to keep data which is not yet send to the client
+   THttpCallArg *fPoll; ///!< polling request, which can be used for the next sending
+   TString fBuf;        ///!< single entry to keep data which is not yet send to the client
 
 public:
-   TLongPollEngine(const char *name, const char *title) : THttpWSEngine(name, title), fPoll(0), fBuf() {}
+   /// constructor
+   TLongPollEngine(const char *name, const char *title) : THttpWSEngine(name, title), fPoll(nullptr), fBuf() {}
 
+   /// destructor
    virtual ~TLongPollEngine() {}
 
+   /// returns ID of the engine, created from this pointer
    virtual UInt_t GetId() const
    {
       const void *ptr = (const void *)this;
       return TString::Hash((void *)&ptr, sizeof(void *));
    }
 
+   /// clear request, waiting for next portion of data
    virtual void ClearHandle()
    {
       if (fPoll) {
          fPoll->Set404();
          fPoll->NotifyCondition();
-         fPoll = 0;
+         fPoll = nullptr;
       }
    }
 
+   /// Send binary data via connection - not supported
    virtual void Send(const void * /*buf*/, int /*len*/)
    {
       Error("TLongPollEngine::Send", "Should never be called, only text is supported");
    }
 
+   /// Send const char data
+   /// Either do it immediately or keep in internal buffer
    virtual void SendCharStar(const char *buf)
    {
       if (fPoll) {
@@ -126,10 +128,11 @@ public:
       }
    }
 
+   /// Preview data for given socket
+   /// function called in the user code before processing correspondent websocket data
+   /// returns kTRUE when user should ignore such http request - it is for internal use
    virtual Bool_t PreviewData(THttpCallArg *arg)
    {
-      // function called in the user code before processing correspondent websocket data
-      // returns kTRUE when user should ignore such http request - it is for internal use
 
       // this is normal request, deliver and process it as any other
       if (!strstr(arg->GetQuery(), "&dummy"))
@@ -146,7 +149,7 @@ public:
          fPoll->SetContentType("text/plain");
          fPoll->SetContent("<<nope>>"); // normally should never happen
          fPoll->NotifyCondition();
-         fPoll = 0;
+         fPoll = nullptr;
       }
 
       if (fBuf.Length() > 0) {
@@ -239,9 +242,9 @@ ClassImp(THttpServer);
 /// but one could set JSROOTSYS shell variable to specify alternative location
 
 THttpServer::THttpServer(const char *engine)
-   : TNamed("http", "ROOT http server"), fEngines(), fTimer(0), fSniffer(0), fMainThrdId(0), fJSROOTSYS(),
-     fTopName("ROOT"), fJSROOT(), fLocations(), fDefaultPage(), fDefaultPageCont(), fDrawPage(), fDrawPageCont(),
-     fCallArgs()
+   : TNamed("http", "ROOT http server"), fEngines(), fTimer(nullptr), fSniffer(nullptr), fTerminated(kFALSE),
+     fMainThrdId(0), fJSROOTSYS(), fTopName("ROOT"), fJSROOT(), fLocations(), fDefaultPage(), fDefaultPageCont(),
+     fDrawPage(), fDrawPageCont(), fCallArgs()
 {
    fLocations.SetOwner(kTRUE);
 
@@ -252,7 +255,7 @@ THttpServer::THttpServer(const char *engine)
 #endif
 
    const char *jsrootsys = gSystem->Getenv("JSROOTSYS");
-   if (jsrootsys != 0)
+   if (jsrootsys)
       fJSROOTSYS = jsrootsys;
 
    if (fJSROOTSYS.Length() == 0) {
@@ -313,7 +316,7 @@ THttpServer::~THttpServer()
 {
    fEngines.Delete();
 
-   SetSniffer(0);
+   SetSniffer(nullptr);
 
    SetTimer(0);
 }
@@ -328,6 +331,21 @@ void THttpServer::SetSniffer(TRootSniffer *sniff)
       delete fSniffer;
    fSniffer = sniff;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set termination flag,
+/// No any further requests will be processed, server only can be destroyed afterwards
+
+void THttpServer::SetTerminate()
+{
+   fTerminated = kTRUE;
+
+   TIter iter(&fEngines);
+   THttpEngine *engine = 0;
+   while ((engine = (THttpEngine *)iter()) != 0)
+      engine->Terminate();
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns read-only mode
@@ -356,7 +374,7 @@ void THttpServer::SetReadOnly(Bool_t readonly)
 
 void THttpServer::AddLocation(const char *prefix, const char *path)
 {
-   if ((prefix == 0) || (*prefix == 0))
+   if (!prefix || (*prefix == 0))
       return;
 
    TNamed *obj = dynamic_cast<TNamed *>(fLocations.FindObject(prefix));
@@ -487,7 +505,7 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
    if (fTimer) {
       fTimer->Stop();
       delete fTimer;
-      fTimer = 0;
+      fTimer = nullptr;
    }
    if (milliSec > 0) {
       fTimer = new THttpTimer(milliSec, mode, this);
@@ -501,7 +519,7 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
 
 Bool_t THttpServer::VerifyFilePath(const char *fname)
 {
-   if ((fname == 0) || (*fname == 0))
+   if (!fname || (*fname == 0))
       return kFALSE;
 
    Int_t level = 0;
@@ -550,7 +568,7 @@ Bool_t THttpServer::VerifyFilePath(const char *fname)
 
 Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 {
-   if ((uri == 0) || (strlen(uri) == 0))
+   if (!uri || (*uri == 0))
       return kFALSE;
 
    TString fname(uri);
@@ -580,6 +598,8 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 
 Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 {
+   if (fTerminated) return kFALSE;
+
    if ((fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
       // should not happen, but one could process requests directly without any signaling
 
@@ -609,6 +629,8 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 
 Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately)
 {
+   if (fTerminated) return kFALSE;
+
    if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
       ProcessRequest(arg);
       return kTRUE;
@@ -638,7 +660,7 @@ void THttpServer::ProcessRequests()
 
    std::unique_lock<std::mutex> lk(fMutex, std::defer_lock);
    while (true) {
-      THttpCallArg *arg = 0;
+      THttpCallArg *arg = nullptr;
 
       lk.lock();
       if (fCallArgs.GetSize() > 0) {
@@ -679,6 +701,11 @@ void THttpServer::ProcessRequests()
 void THttpServer::ProcessRequest(THttpCallArg *arg)
 {
 
+   if (fTerminated) {
+      arg->Set404();
+      return;
+   }
+
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
 
       THttpWSHandler *handler(0);
@@ -690,7 +717,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
          arg->fContent = handler->GetDefaultPageContent();
 
-         if (arg->fContent.Index("file:")==0) {
+         if (arg->fContent.Index("file:") == 0) {
             TString fname = arg->fContent.Data() + 5;
             arg->fContent.Clear();
             fname.ReplaceAll("$jsrootsys", fJSROOTSYS);
