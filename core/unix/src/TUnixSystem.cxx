@@ -4595,6 +4595,18 @@ static const char *DynamicPath(const char *newpath = 0, Bool_t reset = kFALSE)
       if (!ldpath.IsNull())
          ldpath += ":";
       ldpath += gSystem->Getenv("DYLD_FALLBACK_LIBRARY_PATH");
+      if (!ldpath.IsNull())
+         ldpath += ":";
+      // Workaround for recent macOS default behaviour
+      TString dyldpath;
+      // Allow explicit control if override variable defined
+      if (gSystem->Getenv("ROOT_DYLD_LIBRARY_PATH")) {
+         dyldpath = gSystem->Getenv("ROOT_DYLD_LIBRARY_PATH");
+      } else {
+         dyldpath = gSystem->Getenv("PATH");
+         dyldpath.ReplaceAll("/bin", "/lib");
+      }
+      ldpath += dyldpath;
 #else
       ldpath = gSystem->Getenv("LD_LIBRARY_PATH");
 #endif
