@@ -569,7 +569,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       conn->fGetMenu = cdata;
    } else if (arg == "QUIT") {
       // use window manager to correctly terminate http server
-      TWebWindowsManager::Instance()->Terminate(0);
+      TWebWindowsManager::Instance()->Terminate();
       return;
    } else if (arg == "RELOAD") {
       conn->fSend = 0; // reset send version, causes new data sending
