@@ -29,7 +29,6 @@
 #include <fstream>
 
 #include "TList.h"
-#include "TApplication.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TBufferJSON.h"
@@ -569,8 +568,8 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
       cdata.erase(0, 8);
       conn->fGetMenu = cdata;
    } else if (arg == "QUIT") {
-      if (gApplication)
-         gApplication->Terminate(0);
+      // use window manager to correctly terminate http server
+      TWebWindowsManager::Instance()->Terminate(0);
       return;
    } else if (arg == "RELOAD") {
       conn->fSend = 0; // reset send version, causes new data sending
