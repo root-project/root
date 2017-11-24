@@ -238,28 +238,20 @@ const ColumnNames_t SelectColumns(unsigned int nArgs, const ColumnNames_t &bl, c
 ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols,
                                  const ColumnNames_t &dataSourceColumns);
 
+// clang-format off
 namespace ActionTypes {
-struct Histo1D {
-};
-struct Histo2D {
-};
-struct Histo3D {
-};
-struct Profile1D {
-};
-struct Profile2D {
-};
-struct Min {
-};
-struct Max {
-};
-struct Sum {
-};
-struct Mean {
-};
-struct Fill {
-};
+struct Histo1D {};
+struct Histo2D {};
+struct Histo3D {};
+struct Profile1D {};
+struct Profile2D {};
+struct Min {};
+struct Max {};
+struct Sum {};
+struct Mean {};
+struct Fill {};
 }
+// clang-format on
 
 /// Check whether a histogram type is a classic or v7 histogram.
 template <typename T>
