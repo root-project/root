@@ -1099,6 +1099,8 @@ static void LoadCoreModules(cling::Interpreter &interp)
    if (!CI.getLangOpts().Modules)
       return;
 
+   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+
    clang::HeaderSearch &headerSearch = CI.getPreprocessor().getHeaderSearchInfo();
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
    // List of core modules we can load, but it's ok if they are missing because
@@ -1107,6 +1109,13 @@ static void LoadCoreModules(cling::Interpreter &interp)
 
    // List of core modules we need to load.
    std::vector<std::string> neededCoreModuleNames = {"Core", "RIO"};
+
+   if (!fromRootCling) {
+      neededCoreModuleNames.push_back("TreePlayer");
+      neededCoreModuleNames.push_back("TMVA");
+      neededCoreModuleNames.push_back("Graf");
+   }
+
    std::vector<std::string> missingCoreModuleNames;
 
    std::vector<clang::Module *> coreModules;
@@ -1333,9 +1342,6 @@ TCling::TCling(const char *name, const char *title)
                             "using namespace std;");
    }
 
-   // Setup core C++ modules if we have any to setup.
-   LoadCoreModules(*fInterpreter);
-
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
    fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck, TClingLookupHelper__AutoParse);
@@ -1408,6 +1414,9 @@ TCling::~TCling()
 void TCling::Initialize()
 {
    fClingCallbacks->Initialize();
+
+   // Setup core C++ modules if we have any to setup.
+   LoadCoreModules(*fInterpreter);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
