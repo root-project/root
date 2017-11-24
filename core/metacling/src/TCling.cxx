@@ -1341,9 +1341,6 @@ TCling::TCling(const char *name, const char *title)
                             "using namespace std;");
    }
 
-   // Setup core C++ modules if we have any to setup.
-   LoadCoreModules(*fInterpreter);
-
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
    fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck, TClingLookupHelper__AutoParse);
@@ -1416,6 +1413,9 @@ TCling::~TCling()
 void TCling::Initialize()
 {
    fClingCallbacks->Initialize();
+
+   // Setup core C++ modules if we have any to setup.
+   LoadCoreModules(*fInterpreter);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
