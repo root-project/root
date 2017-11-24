@@ -60,7 +60,7 @@ int websocket_connect_handler(const struct mg_connection *conn, void *)
       return 1;
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0)
+   if ((engine == 0) || engine->IsShutdown())
       return 1;
    THttpServer *serv = engine->GetServer();
    if (serv == 0)
@@ -84,7 +84,7 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0)
+   if ((engine == 0) || engine->IsShutdown())
       return;
    THttpServer *serv = engine->GetServer();
    if (serv == 0)
@@ -112,7 +112,7 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
       return 1;
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0)
+   if ((engine == 0) || engine->IsShutdown())
       return 1;
    THttpServer *serv = engine->GetServer();
    if (serv == 0)
@@ -142,7 +142,7 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0)
+   if ((engine == 0) || engine->IsShutdown())
       return;
    THttpServer *serv = engine->GetServer();
    if (serv == 0)
@@ -182,7 +182,7 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0)
+   if ((engine == 0) || engine->IsShutdown())
       return 0;
    THttpServer *serv = engine->GetServer();
    if (serv == 0)
@@ -352,7 +352,8 @@ ClassImp(TCivetweb);
 /// constructor
 
 TCivetweb::TCivetweb()
-   : THttpEngine("civetweb", "compact embedded http server"), fCtx(0), fCallbacks(0), fTopName(), fDebug(kFALSE)
+   : THttpEngine("civetweb", "compact embedded http server"), fCtx(0), fCallbacks(0), fTopName(), fDebug(kFALSE),
+     fShutdown(kFALSE)
 {
 }
 
@@ -361,6 +362,7 @@ TCivetweb::TCivetweb()
 
 TCivetweb::~TCivetweb()
 {
+   fShutdown = kTRUE;
    if (fCtx != 0)
       mg_stop((struct mg_context *)fCtx);
    if (fCallbacks != 0)

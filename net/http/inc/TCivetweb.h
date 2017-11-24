@@ -21,6 +21,7 @@ protected:
    void *fCallbacks; ///<! call-back table for civetweb webserver
    TString fTopName; ///<! name of top item
    Bool_t fDebug;    ///<! debug mode
+   Bool_t fShutdown; ///<! server doing shutdown and not react on requests
 
 public:
    TCivetweb();
@@ -31,6 +32,8 @@ public:
    const char *GetTopName() const { return fTopName.Data(); }
 
    Bool_t IsDebugMode() const { return fDebug; }
+
+   Bool_t IsShutdown() const { return fShutdown; }
 
    Int_t ProcessLog(const char *message);
 
