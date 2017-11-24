@@ -544,6 +544,8 @@ N: Sergey Linev
 E: S.Linev@gsi.de
 D: XML interface package
 D: SQL interface extensions, ODBC driver
+D: THttpServer class
+D: JavaScript ROOT package (together with Bertrand Bellenot)
 
 N: Yan Liu
 E: liuyan@fnal.gov
