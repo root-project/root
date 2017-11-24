@@ -26,6 +26,9 @@ protected:
 
    void SetServer(THttpServer *serv) { fServer = serv; }
 
+   /** Method called when server want to be terminated */
+   virtual void Terminate() {}
+
    /** Method regularly called in main ROOT context */
    virtual void Process() {}
 
