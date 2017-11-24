@@ -10,7 +10,6 @@
 # Coarse-grained ownership
 * @Axel-Naumann
 /bindings/ @etejedor
-/cmake/ @amadio
 /core/ @Axel-Naumann
 /core/ @pcanal
 /documentation/ @couet
@@ -55,5 +54,8 @@
 /net/http/ @linev
 /tree/treeplayer/**/TDataFrame.* @dpiparo @bluehood
 /tree/treeplayer/**/TDF* @dpiparo @bluehood
-CMakeLists.txt @amadio
 
+/cmake/ @amadio
+*.cmake @amadio
+*/CMakeLists.txt @amadio
+CMakeLists.txt @amadio
