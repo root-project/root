@@ -387,14 +387,18 @@ Int_t TCivetweb::ProcessLog(const char *message)
 /// As main argument, http port should be specified like "8090".
 /// Or one can provide combination of ipaddress and portnumber like 127.0.0.1:8090
 /// Extra parameters like in URL string could be specified after '?' mark:
-///    thrds=N   - there N is number of threads used by the civetweb (default is 5)
+///    thrds=N   - there N is number of threads used by the civetweb (default is 10)
 ///    top=name  - configure top name, visible in the web browser
 ///    auth_file=filename  - authentication file name, created with htdigets utility
 ///    auth_domain=domain   - authentication domain
 ///    websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
+///    websocket_disable - disable web sockets handling (default enabled)
 ///    loopback  - bind specified port to loopback 127.0.0.1 address
 ///    debug   - enable debug mode, server always returns html page with request info
 ///    log=filename  - configure civetweb log file
+///  Examples:
+///     http:8080?websocket_disable
+///     http:7546?thrds=30&websocket_timeout=20
 
 Bool_t TCivetweb::Create(const char *args)
 {
@@ -402,8 +406,9 @@ Bool_t TCivetweb::Create(const char *args)
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
    //((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;
    ((struct mg_callbacks *)fCallbacks)->log_message = log_message_handler;
-   TString sport = "8080", num_threads = "5", websocket_timeout = "300000";
+   TString sport = "8080", num_threads = "10", websocket_timeout = "300000";
    TString auth_file, auth_domain, log_file, ssl_cert;
+   Bool_t use_ws = kTRUE;
 
    // extract arguments
    if ((args != 0) && (strlen(args) > 0)) {
@@ -448,8 +453,13 @@ Bool_t TCivetweb::Create(const char *args)
                ssl_cert = sslc;
 
             Int_t wtmout = url.GetIntValueFromOptions("websocket_timeout");
-            if (wtmout > 0)
+            if (wtmout > 0) {
                websocket_timeout.Format("%d", wtmout * 1000);
+               use_ws = kTRUE;
+            }
+
+            if (url.HasOption("websocket_disable"))
+               use_ws = kFALSE;
 
             if (url.HasOption("debug"))
                fDebug = kTRUE;
@@ -474,8 +484,11 @@ Bool_t TCivetweb::Create(const char *args)
    options[op++] = sport.Data();
    options[op++] = "num_threads";
    options[op++] = num_threads.Data();
-   options[op++] = "websocket_timeout_ms";
-   options[op++] = websocket_timeout.Data();
+
+   if (use_ws) {
+      options[op++] = "websocket_timeout_ms";
+      options[op++] = websocket_timeout.Data();
+   }
 
    if ((auth_file.Length() > 0) && (auth_domain.Length() > 0)) {
       options[op++] = "global_auth_file";
@@ -504,8 +517,9 @@ Bool_t TCivetweb::Create(const char *args)
 
    mg_set_request_handler((struct mg_context *)fCtx, "/", begin_request_handler, 0);
 
-   mg_set_websocket_handler((struct mg_context *)fCtx, "**root.websocket$", websocket_connect_handler,
-                            websocket_ready_handler, websocket_data_handler, websocket_close_handler, 0);
+   if (use_ws)
+      mg_set_websocket_handler((struct mg_context *)fCtx, "**root.websocket$", websocket_connect_handler,
+                               websocket_ready_handler, websocket_data_handler, websocket_close_handler, 0);
 
    return kTRUE;
 }
