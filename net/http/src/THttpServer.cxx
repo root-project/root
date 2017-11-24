@@ -339,13 +339,7 @@ void THttpServer::SetSniffer(TRootSniffer *sniff)
 void THttpServer::SetTerminate()
 {
    fTerminated = kTRUE;
-
-   TIter iter(&fEngines);
-   THttpEngine *engine = 0;
-   while ((engine = (THttpEngine *)iter()) != 0)
-      engine->Terminate();
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// returns read-only mode
@@ -445,11 +439,11 @@ void THttpServer::SetDrawPage(const char *filename)
 
 Bool_t THttpServer::CreateEngine(const char *engine)
 {
-   if (engine == 0)
+   if (!engine)
       return kFALSE;
 
    const char *arg = strchr(engine, ':');
-   if (arg == 0)
+   if (!arg)
       return kFALSE;
 
    TString clname;
@@ -465,11 +459,11 @@ Bool_t THttpServer::CreateEngine(const char *engine)
 
    // ensure that required engine class exists before we try to create it
    TClass *engine_class = gROOT->LoadClass(clname.Data());
-   if (engine_class == 0)
+   if (!engine_class)
       return kFALSE;
 
    THttpEngine *eng = (THttpEngine *)engine_class->New();
-   if (eng == 0)
+   if (!eng)
       return kFALSE;
 
    eng->SetServer(this);
@@ -598,7 +592,8 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 
 Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 {
-   if (fTerminated) return kFALSE;
+   if (fTerminated)
+      return kFALSE;
 
    if ((fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
       // should not happen, but one could process requests directly without any signaling
@@ -629,7 +624,8 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 
 Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately)
 {
-   if (fTerminated) return kFALSE;
+   if (fTerminated)
+      return kFALSE;
 
    if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
       ProcessRequest(arg);
@@ -688,9 +684,12 @@ void THttpServer::ProcessRequests()
 
    // regularly call Process() method of engine to let perform actions in ROOT context
    TIter iter(&fEngines);
-   THttpEngine *engine = 0;
-   while ((engine = (THttpEngine *)iter()) != 0)
+   THttpEngine *engine = nullptr;
+   while ((engine = (THttpEngine *)iter()) != nullptr) {
+      if (fTerminated)
+         engine->Terminate();
       engine->Process();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
