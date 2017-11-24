@@ -1127,7 +1127,6 @@ static void LoadCoreModules(cling::Interpreter &interp)
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
    // List of core modules we can load, but it's ok if they are missing because
    // the system doesn't have these modules.
-
    if (clang::Module *LIBCM = moduleMap.findModule("libc"))
       if (!LoadModule(LIBCM->Name, interp))
          Error("TCling::LoadCoreModules", "Cannot load module %s", LIBCM->Name.c_str());
@@ -1163,6 +1162,8 @@ static void LoadCoreModules(cling::Interpreter &interp)
          Error("TCling::LoadCodeModules", "Cannot load module TreePlayer");
       if (!LoadModule(moduleMap.findModule("TMVA")->Name, interp))
          Error("TCling::LoadCodeModules", "Cannot load module TMVA");
+      if (!LoadModule(moduleMap.findModule("Graf")->Name, interp))
+         Error("TCling::LoadCodeModule", "Cannot load module Graf");
    }
 }
 
