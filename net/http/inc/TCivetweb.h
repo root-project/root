@@ -23,6 +23,8 @@ protected:
    Bool_t fDebug;    ///<! debug mode
    Bool_t fShutdown; ///<! server doing shutdown and not react on requests
 
+   virtual void Terminate() { fShutdown = kTRUE; }
+
 public:
    TCivetweb();
    virtual ~TCivetweb();
