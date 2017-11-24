@@ -30,6 +30,7 @@
 #include "TRandom.h"
 #include "TString.h"
 #include "TStopwatch.h"
+#include "TApplication.h"
 
 /** \class ROOT::Experimental::TWebWindowManager
 \ingroup webdisplay
@@ -317,4 +318,16 @@ int ROOT::Experimental::TWebWindowsManager::WaitFor(WebWindowWaitFunc_t check, d
    printf("WAITING RES %d tm %4.2f cnt %d\n", res, spent, cnt);
 
    return res;
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// Terminate http server and ROOT application
+
+void ROOT::Experimental::TWebWindowsManager::Terminate(int code)
+{
+   if (fServer)
+      fServer->SetTerminate();
+
+   if (gApplication)
+      gApplication->Terminate(code);
 }
