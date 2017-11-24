@@ -15,7 +15,7 @@
 #include "TH3.h"
 #include "TProfile2D.h"
 #include "TH2.h"
-#include "TF1.h"
+#include "TF3.h"
 #include "TVirtualPad.h"
 #include "TVirtualHistPainter.h"
 #include "THLimitsFinder.h"
@@ -78,8 +78,14 @@ TH3::TH3(const char *name,const char *title,Int_t nbinsx,Double_t xlow,Double_t 
       TAtt3D()
 {
    fDimension   = 3;
-   if (nbinsy <= 0) {Warning("TH3","nbinsy is <=0 - set to nbinsy = 1"); nbinsy = 1; }
-   if (nbinsz <= 0) nbinsz = 1;
+   if (nbinsy <= 0) {
+      Warning("TH3","nbinsy is <=0 - set to nbinsy = 1");
+      nbinsy = 1;
+   }
+   if (nbinsz <= 0) {
+      Warning("TH3","nbinsz is <=0 - set to nbinsz = 1");
+      nbinsz = 1;
+   }
    fYaxis.Set(nbinsy,ylow,yup);
    fZaxis.Set(nbinsz,zlow,zup);
    fNcells      = (nbinsx+2)*(nbinsy+2)*(nbinsz+2);
@@ -653,6 +659,10 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
 ///     - Fill histogram channel
 ///   ntimes random numbers are generated
 ///
+/// N.B. By dfault this methods approximates the integral of the function in each bin with the
+///      function value at the center of the bin, mutiplied by the bin width
+///      
+///
 ///  One can also call TF1::GetRandom to get a random variate from a function.
 
 void TH3::FillRandom(const char *fname, Int_t ntimes)
@@ -660,27 +670,47 @@ void TH3::FillRandom(const char *fname, Int_t ntimes)
    Int_t bin, binx, biny, binz, ibin, loop;
    Double_t r1, x, y,z, xv[3];
    //  Search for fname in the list of ROOT defined functions
-   TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
+   TF3 *f1 = dynamic_cast<TF3*>(gROOT->GetFunction(fname) );
    if (!f1) { Error("FillRandom", "Unknown function: %s",fname); return; }
 
+   TAxis & xAxis = fXaxis;
+   TAxis & yAxis = fYaxis;
+   TAxis & zAxis = fZaxis;
+
+   // in case axes of histogram are not defined use the function axis
+   if (fXaxis.GetXmax() <= fXaxis.GetXmin()  || fYaxis.GetXmax() <= fYaxis.GetXmin() || fZaxis.GetXmax() <= fZaxis.GetXmin() ) {
+      Double_t xmin,xmax,ymin,ymax,zmin,zmax;
+      f1->GetRange(xmin,ymin,zmin,xmax,ymax,zmax);
+      Info("FillRandom","Using function axis and range ([%g,%g],[%g,%g],[%g,%g])",xmin, xmax,ymin,ymax,zmin,zmax);
+      xAxis = *(f1->GetHistogram()->GetXaxis());
+      yAxis = *(f1->GetHistogram()->GetYaxis());
+      zAxis = *(f1->GetHistogram()->GetZaxis());
+   }
+
    //  Allocate temporary space to store the integral and compute integral
-   Int_t nbinsx = GetNbinsX();
-   Int_t nbinsy = GetNbinsY();
-   Int_t nbinsz = GetNbinsZ();
-   Int_t nxy    = nbinsx*nbinsy;
-   Int_t nbins  = nxy*nbinsz;
+   Int_t nbinsx = xAxis.GetNbins();
+   Int_t nbinsy = yAxis.GetNbins();
+   Int_t nbinsz = zAxis.GetNbins();
+   Int_t nxy = nbinsx*nbinsy; 
+   Int_t nbins  = nbinsx*nbinsy*nbinsz;
 
    Double_t *integral = new Double_t[nbins+1];
    ibin = 0;
    integral[ibin] = 0;
+   // approximate integral with function value at bin center
    for (binz=1;binz<=nbinsz;binz++) {
-      xv[2] = fZaxis.GetBinCenter(binz);
+      xv[2] = zAxis.GetBinCenter(binz);
       for (biny=1;biny<=nbinsy;biny++) {
-         xv[1] = fYaxis.GetBinCenter(biny);
+         xv[1] = yAxis.GetBinCenter(biny);
          for (binx=1;binx<=nbinsx;binx++) {
-            xv[0] = fXaxis.GetBinCenter(binx);
+            xv[0] = xAxis.GetBinCenter(binx);
             ibin++;
-            integral[ibin] = integral[ibin-1] + f1->Eval(xv[0],xv[1],xv[2]);
+            Double_t fint = f1->EvalPar(xv, nullptr);
+            // uncomment this line to have the integral computation in a bin
+            // Double_t fint = f1->Integral(xAxis.GetBinLowEdge(binx), xAxis.GetBinUpEdge(binx),
+            //                              yAxis.GetBinLowEdge(biny), yAxis.GetBinUpEdge(biny),
+            //                              zAxis.GetBinLowEdge(binz), zAxis.GetBinUpEdge(binz));
+            integral[ibin] = integral[ibin-1] + fint; 
          }
       }
    }
@@ -703,9 +733,9 @@ void TH3::FillRandom(const char *fname, Int_t ntimes)
       binx = 1 + ibin - nbinsx*(biny + nbinsy*binz);
       if (nbinsz) binz++;
       if (nbinsy) biny++;
-      x    = fXaxis.GetBinCenter(binx);
-      y    = fYaxis.GetBinCenter(biny);
-      z    = fZaxis.GetBinCenter(binz);
+      x    = xAxis.GetBinCenter(binx);
+      y    = yAxis.GetBinCenter(biny);
+      z    = zAxis.GetBinCenter(binz);
       Fill(x,y,z, 1.);
    }
    delete [] integral;
