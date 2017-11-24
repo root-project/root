@@ -410,3 +410,20 @@ TEST(TEST_CATEGORY, TakeCarrays)
 
    gSystem->Unlink(fileName);
 }
+
+TEST(TEST_CATEGORY, Reduce)
+{
+   auto d = TDataFrame(5).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<int>(e) + 1; });
+   auto r1 = d.Reduce([](int x, int y) { return x + y; }, "x");
+   auto r2 = d.Reduce([](int x, int y) { return x * y; }, "x", 1);
+   EXPECT_EQ(*r1, 15);
+   EXPECT_EQ(*r2, 120);
+
+   ROOT::EnableImplicitMT(2);
+   auto d2 = TDataFrame(5).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<int>(e) + 1; });
+   auto r3 = d2.Reduce([](int x, int y) { return x + y; }, "x");
+   auto r4 = d2.Reduce([](int x, int y) { return x * y; }, "x", 1);
+   EXPECT_EQ(*r3, 15);
+   EXPECT_EQ(*r4, 120);
+   ROOT::DisableImplicitMT();
+}
