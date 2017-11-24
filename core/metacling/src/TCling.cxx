@@ -1088,6 +1088,32 @@ inline bool TCling::TUniqueString::Append(const std::string& str)
    return notPresent;
 }
 
+static std::string ResolveModuleFileName(clang::Module *M, const clang::Preprocessor &PP)
+{
+   const HeaderSearchOptions &HSOpts = PP.getHeaderSearchInfo().getHeaderSearchOpts();
+
+   std::string ModuleFileName;
+   bool LoadFromPrebuiltModulePath = false;
+   // We try to load the module from the prebuilt module paths. If not
+   // successful, we then try to find it in the module cache.
+   if (!HSOpts.PrebuiltModulePaths.empty()) {
+     // Load the module from the prebuilt module path.
+     ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(M->Name, "", /*UsePrebuiltPath*/ true);
+     if (!ModuleFileName.empty())
+       LoadFromPrebuiltModulePath = true;
+   }
+   if (!LoadFromPrebuiltModulePath && M) {
+     // Load the module from the module cache.
+     ModuleFileName = PP.getHeaderSearchInfo().getModuleFileName(M);
+   }
+   bool Exists = false;
+   {
+     std::ifstream f(ModuleFileName);
+     Exists = f.good();
+   }
+   return (Exists) ? ModuleFileName : "";
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Loads the basic C++ modules that we require to run any ROOT program.
 /// This is just supposed to make the declarations in their headers available
@@ -1101,82 +1127,70 @@ static void LoadCoreModules(cling::Interpreter &interp)
 
    clang::HeaderSearch &headerSearch = CI.getPreprocessor().getHeaderSearchInfo();
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
-   // List of core modules we can load, but it's ok if they are missing because
-   // the system doesn't have these modules.
-   std::vector<std::string> optionalCoreModuleNames = {"stl", "libc"};
+   // Preloading the system modules will give us similar behavior to having a PCH.
+   headerSearch.loadTopLevelSystemModules();
 
-   // List of core modules we need to load.
-   std::vector<std::string> neededCoreModuleNames = {"Core", "RIO"};
-   std::vector<std::string> missingCoreModuleNames;
-
-   std::vector<clang::Module *> coreModules;
-
-   // Lookup the optional core modules in the modulemap by name.
-   for (std::string moduleName : optionalCoreModuleNames) {
-      clang::Module *module = moduleMap.findModule(moduleName);
-      // Don't report an error here, the module is optional.
-      if (module)
-         coreModules.push_back(module);
+   cling::Transaction* T = nullptr;
+   interp.declare("/*This is decl is to get a valid sloc...*/;", &T);
+   SourceLocation ValidLoc = T->decls_begin()->m_DGR.getSingleDecl()->getLocStart();
+   clang::Sema &TheSema = CI.getSema();
+   clang::Preprocessor &PP = CI.getPreprocessor();
+   // createImplicitModuleImportForErrorRecovery creates decls.
+   cling::Interpreter::PushTransactionRAII RAII(&interp);
+   std::vector<std::pair<clang::Module*, std::string>> TopLevelModulesToLoad;
+   for (auto I = moduleMap.module_begin(), E = moduleMap.module_end(); I != E; ++I) {
+     clang::Module *M = I->second;
+     assert(M);
+     // We skip the modules in the modulemap which are not built.
+     // FIXME: We should iterate and build the not-yet-built-for-some-reason modules. See PR1147.
+     std::string ModuleFileName = ResolveModuleFileName(M, PP);
+     if (ModuleFileName == "") {
+        // if (M->IsSystem)
+        //    Error("TCling::LoadCoreModules", "Cannot load system module %s because it was not generated",
+        //          M->Name.c_str());
+        // else
+        //    Info("TCling::LoadCoreModules", "Cannot load module %s because it was not generated", M->Name.c_str());
+       continue;
+     }
+     if (M->IsSystem && !M->IsMissingRequirement) {
+       CI.loadModuleFile(ModuleFileName.c_str());
+       TheSema.createImplicitModuleImportForErrorRecovery(ValidLoc, M);
+     }
+     else if (!M->IsSystem && !M->IsMissingRequirement)
+        TopLevelModulesToLoad.push_back(std::make_pair(M, ModuleFileName));
    }
-   // Lookup the core modules in the modulemap by name.
-   for (std::string moduleName : neededCoreModuleNames) {
-      clang::Module *module = moduleMap.findModule(moduleName);
-      if (module) {
-         coreModules.push_back(module);
-      } else {
-         // If we can't find a needed module, we record that to report it later.
-         missingCoreModuleNames.push_back(moduleName);
-      }
+   // Those two modules are required to be preloaded by ROOT. If they are not around we have a big problem.
+   // FIXME: We should probably tag Core and RIO as [system] modules in the module map. This would simplify this code.
+   clang::Module *CoreM = moduleMap.findModule("Core");
+   clang::Module *RIOM = moduleMap.findModule("RIO");
+   if (CoreM) {
+      CI.loadModuleFile(ResolveModuleFileName(CoreM, PP));
+      TheSema.createImplicitModuleImportForErrorRecovery(ValidLoc, CoreM);
    }
-
-   // If we couldn't find some modules, so let's print an error message.
-   if (!missingCoreModuleNames.empty()) {
-      std::string MissingModuleNameList;
-      for (const std::string &name : missingCoreModuleNames) {
-         MissingModuleNameList += " " + name;
-      }
-
-      Error("TCling::LoadCoreModules",
-            "Internal error, couldn't find core "
-            "C++ modules in modulemap:%s\n",
-            MissingModuleNameList.c_str());
+   else
+      Error("TCling::LoadCoreModules", "Internal error, couldn't find C++ module Core in modulemap.");
+   if (RIOM) {
+      CI.loadModuleFile(ResolveModuleFileName(RIOM, PP));
+      TheSema.createImplicitModuleImportForErrorRecovery(ValidLoc, RIOM);
    }
+   else
+      Error("TCling::LoadCoreModules", "Internal error, couldn't find C++ module RIO in modulemap.");
 
-   // Collect all submodules in the found core modules.
-   for (size_t i = 0; i < coreModules.size(); ++i) {
-      for (clang::Module *subModule : coreModules[i]->submodules())
-         coreModules.push_back(subModule);
-   }
+   // Loading all other modules in rootcling would mean injecting extra (needless) dependencies to the pcms.
+   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+   if (fromRootCling)
+     return;
 
-   // Now we collect all header files from the previously collected modules.
-   std::vector<StringRef> moduleHeaders;
-   for (clang::Module *module : coreModules) {
-      ROOT::TMetaUtils::foreachHeaderInModule(
-         *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.push_back(h.NameAsWritten); });
-   }
-
-   // Turn the list of found header files into C++ code that includes all of
-   // them. This will be wrapped into an `import` declaration by clang, so we
-   // only make those modules available, not actually textually include those
-   // headers.
-   // FIXME: Use clang::ASTReader::makeModuleVisible.
-   std::stringstream declarations;
-   for (StringRef H : moduleHeaders) {
-      declarations << "#include \"" << H.str() << "\"\n";
-   }
-
-   // C99 decided that it's a very good idea to name a macro `I` (the letter I).
-   // This seems to screw up nearly all the template code out there as `I` is
-   // common template parameter name and iterator variable name.
-   // Let's follow the GCC recommendation and undefine `I` in case any of the
-   // core modules have defined it:
-   // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
-   declarations << "#ifdef I\n #undef I\n #endif\n";
-
-   auto result = interp.declare(declarations.str());
-
-   if (result != cling::Interpreter::CompilationResult::kSuccess) {
-      Error("TCling::LoadCoreModules", "Couldn't parse core headers: %s\n", declarations.str().c_str());
+   // FIXME: The performance of loading all modules at start up is comparable to the non-modules one. However we can
+   // do better: use the global module index to avoid loading all modules and load only the ones that contain the
+   // looked up identifier.
+   for (auto M : TopLevelModulesToLoad) {
+      assert(M.first && M.second != "");
+      // Skip Core and RIO: we alread loaded them.
+      if (M.first == CoreM || M.first == RIOM)
+        continue;
+      CI.loadModuleFile(M.second.c_str());
+      TheSema.createImplicitModuleImportForErrorRecovery(ValidLoc, M.first);
    }
 }
 
@@ -1333,9 +1347,6 @@ TCling::TCling(const char *name, const char *title)
                             "using namespace std;");
    }
 
-   // Setup core C++ modules if we have any to setup.
-   LoadCoreModules(*fInterpreter);
-
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
    fLookupHelper = new ROOT::TMetaUtils::TClingLookupHelper(*fInterpreter, *fNormalizedCtxt, TClingLookupHelper__ExistingTypeCheck, TClingLookupHelper__AutoParse);
@@ -1408,6 +1419,9 @@ TCling::~TCling()
 void TCling::Initialize()
 {
    fClingCallbacks->Initialize();
+   // Setup core C++ modules if we have any to setup.
+   LoadCoreModules(*fInterpreter);
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
