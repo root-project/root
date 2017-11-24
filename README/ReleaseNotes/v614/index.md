@@ -53,6 +53,8 @@ The following people have contributed to this new version:
 
 ## 2D Graphics Libraries
    - `TMultiGraph::GetHistogram` now works even if the multigraph is not drawn.
+   - X11 line `width = 0` doesn't work on OpenSuSE Thumbleweed for non solid lines. Now fixed.
+   - TCanvas::SetWindowsSize has been changed to get the same window size in interactive mode…and batch mode.
 
 ## 3D Graphics Libraries
 
