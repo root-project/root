@@ -2007,8 +2007,6 @@ void TCling::RegisterModule(const char* modulename,
    if (TheSema.getLangOpts().Modules) {
      std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
      bool success = LoadModule(ModuleName, *fInterpreter);
-     if(success)
-       return;
      Info("TCling::RegisterModule", "Failed to load module %s", ModuleName.c_str());
    }
 
