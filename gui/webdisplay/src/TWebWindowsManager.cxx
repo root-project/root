@@ -31,6 +31,7 @@
 #include "TString.h"
 #include "TStopwatch.h"
 #include "TApplication.h"
+#include "TTimer.h"
 
 /** \class ROOT::Experimental::TWebWindowManager
 \ingroup webdisplay
@@ -323,11 +324,12 @@ int ROOT::Experimental::TWebWindowsManager::WaitFor(WebWindowWaitFunc_t check, d
 //////////////////////////////////////////////////////////////////////////
 /// Terminate http server and ROOT application
 
-void ROOT::Experimental::TWebWindowsManager::Terminate(int code)
+void ROOT::Experimental::TWebWindowsManager::Terminate()
 {
    if (fServer)
       fServer->SetTerminate();
 
+   // use timer to avoid situation when calling object is deleted by terminate
    if (gApplication)
-      gApplication->Terminate(code);
+      TTimer::SingleShot(100, "TApplication", gApplication, "Terminate()");
 }
