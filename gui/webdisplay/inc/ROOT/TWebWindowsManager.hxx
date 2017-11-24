@@ -64,6 +64,10 @@ public:
 
    /// Wait until provided function returns non-zero value
    int WaitFor(WebWindowWaitFunc_t check, double tm);
+
+   /// Terminate http server and ROOT application
+   void Terminate(int code = 0);
+
 };
 
 } // namespace Experimental
