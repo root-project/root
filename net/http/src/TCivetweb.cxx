@@ -42,7 +42,7 @@ public:
 
    virtual UInt_t GetId() const { return TString::Hash((void *)fWSconn, sizeof(void *)); }
 
-   virtual void ClearHandle() { fWSconn = 0; }
+   virtual void ClearHandle() { fWSconn = nullptr; }
 
    virtual void Send(const void *buf, int len)
    {
@@ -56,14 +56,14 @@ public:
 int websocket_connect_handler(const struct mg_connection *conn, void *)
 {
    const struct mg_request_info *request_info = mg_get_request_info(conn);
-   if (request_info == 0)
+   if (!request_info)
       return 1;
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if ((engine == 0) || engine->IsShutdown())
+   if (!engine || engine->IsShutdown())
       return 1;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0)
+   if (!serv)
       return 1;
 
    THttpCallArg arg;
@@ -84,10 +84,10 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if ((engine == 0) || engine->IsShutdown())
+   if (!engine || engine->IsShutdown())
       return;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0)
+   if (!serv)
       return;
 
    THttpCallArg arg;
@@ -112,10 +112,10 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
       return 1;
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if ((engine == 0) || engine->IsShutdown())
+   if (!engine || engine->IsShutdown())
       return 1;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0)
+   if (!serv)
       return 1;
 
    // seems to be, appears when connection is broken
@@ -142,10 +142,10 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if ((engine == 0) || engine->IsShutdown())
+   if (!engine || engine->IsShutdown())
       return;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0)
+   if (!serv)
       return;
 
    THttpCallArg arg;
@@ -182,10 +182,10 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if ((engine == 0) || engine->IsShutdown())
+   if (!engine || engine->IsShutdown())
       return 0;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0)
+   if (!serv)
       return 0;
 
    THttpCallArg arg;
@@ -352,8 +352,8 @@ ClassImp(TCivetweb);
 /// constructor
 
 TCivetweb::TCivetweb()
-   : THttpEngine("civetweb", "compact embedded http server"), fCtx(0), fCallbacks(0), fTopName(), fDebug(kFALSE),
-     fShutdown(kFALSE)
+   : THttpEngine("civetweb", "compact embedded http server"), fCtx(nullptr), fCallbacks(nullptr), fTopName(),
+     fDebug(kFALSE), fShutdown(kFALSE)
 {
 }
 
@@ -363,12 +363,12 @@ TCivetweb::TCivetweb()
 TCivetweb::~TCivetweb()
 {
    fShutdown = kTRUE;
-   if (fCtx != 0)
+   if (fCtx)
       mg_stop((struct mg_context *)fCtx);
-   if (fCallbacks != 0)
+   if (fCallbacks)
       free(fCallbacks);
-   fCtx = 0;
-   fCallbacks = 0;
+   fCtx = nullptr;
+   fCallbacks = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -499,7 +499,7 @@ Bool_t TCivetweb::Create(const char *args)
    // Start the web server.
    fCtx = mg_start((struct mg_callbacks *)fCallbacks, this, options);
 
-   if (fCtx == 0)
+   if (!fCtx)
       return kFALSE;
 
    mg_set_request_handler((struct mg_context *)fCtx, "/", begin_request_handler, 0);
