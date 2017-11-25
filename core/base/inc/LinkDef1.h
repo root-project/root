@@ -170,7 +170,7 @@
 #pragma link C++ class TControlBarImp+;
 #pragma link C++ class TInspectorImp+;
 #pragma link C++ class TDatime-;
-#pragma link C++ class TDirectory;
+#pragma link C++ class TDirectory-;
 #pragma link C++ class TEnv+;
 #pragma link C++ class TEnvRec+;
 #pragma link C++ class TFileHandler+;

@@ -1296,3 +1296,30 @@ void TDirectory::TContext::CdNull()
 {
    gDirectory = 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// TDirectory Streamer.
+void TDirectory::Streamer(TBuffer &R__b)
+{
+   // Stream an object of class TDirectory.
+
+   UInt_t R__s, R__c;
+   if (R__b.IsReading()) {
+      Version_t R__v = R__b.ReadVersion(&R__s, &R__c); if (R__v) { }
+      TNamed::Streamer(R__b);
+      R__b >> fMother;
+      R__b >> fList;
+      fList->UseRWLock();
+      fUUID.Streamer(R__b);
+      R__b.StreamObject(&(fSpinLock),typeid(fSpinLock));
+      R__b.CheckByteCount(R__s, R__c, TDirectory::IsA());
+   } else {
+      R__c = R__b.WriteVersion(TDirectory::IsA(), kTRUE);
+      TNamed::Streamer(R__b);
+      R__b << fMother;
+      R__b << fList;
+      fUUID.Streamer(R__b);
+      R__b.StreamObject(&(fSpinLock),typeid(fSpinLock));
+      R__b.SetByteCount(R__c, kTRUE);
+   }
+}
