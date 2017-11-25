@@ -373,7 +373,7 @@ TObject *THashTable::Remove(TObject *obj)
 TObject *THashTable::RemoveSlow(TObject *obj)
 {
 
-   R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+   R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    for (int i = 0; i < fSize; i++) {
       if (fCont[i]) {
