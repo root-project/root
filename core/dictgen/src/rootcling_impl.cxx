@@ -4264,6 +4264,11 @@ int RootClingMain(int argc,
    // and we actually do lex with __CINT__ and reuse this variable later,
    // we have to copy it now.
    auto clingArgsInterpreter = clingArgs;
+
+   if (sharedLibraryPathName.empty()) {
+      sharedLibraryPathName = dictpathname;
+   }
+
    if (!isPCH && getenv("ROOT_MODULES")) {
       // We just pass -fmodules, the CIFactory will do the rest and configure
       // clang correctly once it sees this flag.
@@ -4488,10 +4493,6 @@ int RootClingMain(int argc,
    if (!firstInputFile) {
       ROOT::TMetaUtils::Error(0, "%s: no input files specified\n", argv[0]);
       return 1;
-   }
-
-   if (sharedLibraryPathName.empty()) {
-      sharedLibraryPathName = dictpathname;
    }
 
    // We have a multiDict request. This implies generating a pcm which is of the form
