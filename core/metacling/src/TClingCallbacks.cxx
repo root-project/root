@@ -88,7 +88,11 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
                                          const clang::FileEntry *FE,
                                          llvm::StringRef /*SearchPath*/,
                                          llvm::StringRef /*RelativePath*/,
-                                         const clang::Module * /*Imported*/) {
+                                         const clang::Module * Imported) {
+   // We found a module. Do not try to do anything else.
+   if (Imported)
+      return;
+
    // Method called via Callbacks->InclusionDirective()
    // in Preprocessor::HandleIncludeDirective(), invoked whenever an
    // inclusion directive has been processed, and allowing us to try
