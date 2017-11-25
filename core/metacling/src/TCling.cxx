@@ -1088,8 +1088,9 @@ inline bool TCling::TUniqueString::Append(const std::string& str)
    return notPresent;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 ///\returns true if the module was loaded.
-static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp) {
+static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp, bool Complain = true) {
    clang::CompilerInstance &CI = *interp.getCI();
 
    assert(CI.getLangOpts().Modules && "Function only relevant when C++ modules are turned on!");
@@ -1103,68 +1104,34 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
       clang::IdentifierInfo *II = PP.getIdentifierInfo(M->Name);
       SourceLocation ValidLoc = M->DefinitionLoc;
       bool success = !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
-      // Also make the module visible in the preprocessor to export its macros.
-      PP.makeModuleVisible(M, ValidLoc);
-      return success;
+      if (success) {
+        // Also make the module visible in the preprocessor to export its macros.
+        PP.makeModuleVisible(M, ValidLoc);
+        return success;
+      }
+      if (Complain) {
+         if (M->IsSystem)
+            Error("TCling::LoadModule", "Module %s failed to load", M->Name.c_str());
+         else
+            Info("TCling::LoadModule", "Module %s failed to load", M->Name.c_str());
+      }
    }
+   if (Complain)
+     Error ("TCling::LoadModule", "Module %s not found!", ModuleName.c_str());
    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Loads the basic C++ modules that we require to run any ROOT program.
-/// This is just supposed to make the declarations in their headers available
-/// to the interpreter.
-static void LoadCoreModules(cling::Interpreter &interp)
+/// Loads the C++ modules that we require to run any ROOT program. This is just
+/// supposed to make a C++ module from a modulemap available to the interpreter.
+static void LoadModules(const std::vector<std::string> &modules, cling::Interpreter &interp)
 {
-   clang::CompilerInstance &CI = *interp.getCI();
    // Without modules, this function is just a no-op.
-   if (!CI.getLangOpts().Modules)
+   if (!interp.getCI()->getLangOpts().Modules)
       return;
 
-   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
-
-   clang::HeaderSearch &headerSearch = CI.getPreprocessor().getHeaderSearchInfo();
-   clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
-   // List of core modules we can load, but it's ok if they are missing because
-   // the system doesn't have these modules.
-   if (clang::Module *LIBCM = moduleMap.findModule("libc"))
-      if (!LoadModule(LIBCM->Name, interp))
-         Error("TCling::LoadCoreModules", "Cannot load module %s", LIBCM->Name.c_str());
-
-   if (clang::Module *STLM = moduleMap.findModule("stl"))
-      if (!LoadModule(STLM->Name, interp))
-         Error("TCling::LoadCoreModules", "Cannot load module %s", STLM->Name.c_str());
-
-   // ROOT_Types is a module outside core because we need C and -no-rtti compatibility.
-   // Preload it as it is an integral part of module Core.
-   if (!LoadModule(moduleMap.findModule("ROOT_Types")->Name, interp))
-      Error("TCling::LoadCoreModules", "Cannot load module ROOT_Types");
-
-   if (!LoadModule(moduleMap.findModule("Core")->Name, interp))
-      Error("TCling::LoadCoreModules", "Cannot load module Core");
-
-   if (!LoadModule(moduleMap.findModule("RIO")->Name, interp))
-      Error("TCling::LoadCoreModules", "Cannot load module RIO");
-
-   // Check that the gROOT macro was exported by any core module.
-   assert(interp.getMacro("gROOT") && "Couldn't load gROOT macro?");
-
-   // C99 decided that it's a very good idea to name a macro `I` (the letter I).
-   // This seems to screw up nearly all the template code out there as `I` is
-   // common template parameter name and iterator variable name.
-   // Let's follow the GCC recommendation and undefine `I` in case any of the
-   // core modules have defined it:
-   // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
-   interp.declare("#ifdef I\n #undef I\n #endif\n");
-
-   if (!fromRootCling) {
-      if (!LoadModule(moduleMap.findModule("TreePlayer")->Name, interp))
-         Error("TCling::LoadCodeModules", "Cannot load module TreePlayer");
-      if (!LoadModule(moduleMap.findModule("TMVA")->Name, interp))
-         Error("TCling::LoadCodeModules", "Cannot load module TMVA");
-      if (!LoadModule(moduleMap.findModule("Graf")->Name, interp))
-         Error("TCling::LoadCodeModule", "Cannot load module Graf");
-   }
+   for (const auto &modName : modules)
+      LoadModule(modName, interp);
 }
 
 static bool FileExists(const char *file)
@@ -1303,6 +1270,20 @@ TCling::TCling(const char *name, const char *title)
    static llvm::raw_fd_ostream fMPOuts (STDOUT_FILENO, /*ShouldClose*/false);
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter, fMPOuts);
 
+   // Setup core C++ modules if we have any to setup.
+   LoadModules({"libc", "stl", "ROOT_Types", "Core", "RIO"}, *fInterpreter);
+
+   // Check that the gROOT macro was exported by any core module.
+   assert(fInterpreter->getMacro("gROOT") && "Couldn't load gROOT macro?");
+
+   // C99 decided that it's a very good idea to name a macro `I` (the letter I).
+   // This seems to screw up nearly all the template code out there as `I` is
+   // common template parameter name and iterator variable name.
+   // Let's follow the GCC recommendation and undefine `I` in case any of the
+   // core modules have defined it:
+   // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
+   fInterpreter->declare("#ifdef I\n #undef I\n #endif\n");
+
    // For the list to also include string, we have to include it now.
    // rootcling does parts already if needed, e.g. genreflex does not want using
    // namespace std.
@@ -1311,6 +1292,7 @@ TCling::TCling(const char *name, const char *title)
                             "#include <string>\n"
                             "using std::string;");
    } else {
+      LoadModules({"TreePlayer", "TMVA", "Graf"}, *fInterpreter);
       fInterpreter->declare("#include \"Rtypes.h\"\n"
                             + gClassDefInterpMacro + "\n"
                             + gInterpreterClassDef + "\n"
@@ -1319,9 +1301,6 @@ TCling::TCling(const char *name, const char *title)
                             "#include <string>\n"
                             "using namespace std;");
    }
-
-   // Setup core C++ modules if we have any to setup.
-   LoadCoreModules(*fInterpreter);
 
    // We are now ready (enough is loaded) to init the list of opaque typedefs.
    fNormalizedCtxt = new ROOT::TMetaUtils::TNormalizedCtxt(fInterpreter->getLookupHelper());
