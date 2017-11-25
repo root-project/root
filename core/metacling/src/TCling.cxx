@@ -1230,9 +1230,10 @@ TCling::TCling(const char *name, const char *title)
 
    // Activate C++ modules support. If we are running within rootcling, it's up
    // to rootcling to set this flag depending on whether it wants to produce
-   // C++ modules.
+   // C++ modules. Unless we are running in stage 2 where rootcling will require
+   // TCling's interpreter information.
    TString vfsArg;
-   if (useCxxModules && !fromRootCling) {
+   if (useCxxModules && getenv("ROOT_MODULES")) {
       // We only set this flag, rest is done by the CIFactory.
       interpArgs.push_back("-fmodules");
       // We should never build modules during runtime, so let's enable the
