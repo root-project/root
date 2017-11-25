@@ -108,6 +108,9 @@ TDirectory::~TDirectory()
    }
 
    if (fList) {
+      if (!fList->IsUsingRWLock())
+         Fatal("~TDirectory","In %s:%p the fList (%p) is not using the RWLock\n",
+               GetName(),this,fList);
       fList->Delete("slow");
       SafeDelete(fList);
    }
