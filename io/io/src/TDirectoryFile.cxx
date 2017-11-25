@@ -317,6 +317,7 @@ void TDirectoryFile::Build(TFile* motherFile, TDirectory* motherDir)
    fSeekKeys   = 0;
    fList       = new THashList(100,50);
    fKeys       = new THashList(100,50);
+   fList->UseRWLock();
    fMother     = motherDir;
    fFile       = motherFile ? motherFile : TFile::CurrentFile();
    SetBit(kCanDelete);
@@ -1686,6 +1687,7 @@ void TDirectoryFile::Streamer(TBuffer &b)
             fUUID.Streamer(b);
          }
       }
+      fList->UseRWLock();
       R__LOCKGUARD(gROOTMutex);
       gROOT->GetUUIDs()->AddUUID(fUUID,this);
       if (fSeekKeys) ReadKeys();
