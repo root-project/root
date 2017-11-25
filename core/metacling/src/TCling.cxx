@@ -1932,6 +1932,13 @@ void TCling::RegisterModule(const char* modulename,
       std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
       ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter);
       if (!ModuleWasSuccessfullyLoaded) {
+         // Only report if we found the module in the modulemap.
+         clang::Preprocessor &PP = TheSema.getPreprocessor();
+         clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
+         clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+         if (moduleMap.findModule(ModuleName))
+            Info("TCling::RegisterModule", "Module %s in modulemap failed to load.", ModuleName.c_str());
+      }
    }
 
    { // scope within which diagnostics are de-activated
