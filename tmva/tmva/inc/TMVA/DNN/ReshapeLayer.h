@@ -144,6 +144,8 @@ auto TReshapeLayer<Architecture_t>::Backward(std::vector<Matrix_t> &gradients_ba
                                              std::vector<Matrix_t> & /*inp1*/, std::vector<Matrix_t> &
                                              /*inp2*/) -> void
 {
+   // in case of first layer size is zero - do nothing
+   if (gradients_backward.size() == 0) return; 
    if (fFlattening) {
       size_t size = gradients_backward.size();
       size_t nRows = gradients_backward[0].GetNrows();
