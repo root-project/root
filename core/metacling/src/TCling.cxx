@@ -1144,6 +1144,14 @@ static void LoadCoreModules(cling::Interpreter &interp)
 
    // Check that the gROOT macro was exported by any core module.
    assert(interp.getMacro("gROOT") && "Couldn't load gROOT macro?");
+
+   // C99 decided that it's a very good idea to name a macro `I` (the letter I).
+   // This seems to screw up nearly all the template code out there as `I` is
+   // common template parameter name and iterator variable name.
+   // Let's follow the GCC recommendation and undefine `I` in case any of the
+   // core modules have defined it:
+   // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
+   interp.declare("#ifdef I\n #undef I\n #endif\n");
 }
 
 static bool FileExists(const char *file)
