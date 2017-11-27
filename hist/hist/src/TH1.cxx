@@ -6787,8 +6787,11 @@ void TH1::SavePrimitiveHelp(std::ostream &out, const char *hname, Option_t *opti
       obj = lnk->GetObject();
       obj->SavePrimitive(out,Form("nodraw #%d\n",++funcNumber));
       if (obj->InheritsFrom(TF1::Class())) {
+         TString fname;
+         fname.Form("%s%d",obj->GetName(),funcNumber);
+         out << "   " << fname << "->SetParent(" << hname << ");\n";
          out<<"   "<<hname<<"->GetListOfFunctions()->Add("
-            <<Form("%s%d",obj->GetName(),funcNumber)<<");"<<std::endl;
+            << fname <<");"<<std::endl;
       } else if (obj->InheritsFrom("TPaveStats")) {
          out<<"   "<<hname<<"->GetListOfFunctions()->Add(ptstats);"<<std::endl;
          out<<"   ptstats->SetParent("<<hname<<");"<<std::endl;
