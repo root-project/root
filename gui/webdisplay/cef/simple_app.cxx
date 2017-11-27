@@ -309,9 +309,9 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
       CefWindowInfo window_info;
 
 #if defined(OS_WIN) || defined(OS_LINUX)
-      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect);
+      if (!rect.IsEmpty()) window_info.SetAsChild(0, rect);
 #else
-      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect.x, rect.y, rect.width, rect.height );
+      if (!rect.IsEmpty()) window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
 #endif
 
       window_info.SetAsWindowless(0);
@@ -357,9 +357,9 @@ void SimpleApp::StartWindow(const std::string &addr, bool batch, CefRect &rect)
       CefWindowInfo window_info;
 
 #if defined(OS_WIN) || defined(OS_LINUX)
-      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect);
+      if (!rect.IsEmpty()) window_info.SetAsChild(0, rect);
 #else
-      if (!rect.IsEmpty()) window_info.SetAsChild(NULL, rect.x, rect.y, rect.width, rect.height );
+      if (!rect.IsEmpty()) window_info.SetAsChild(0, rect.x, rect.y, rect.width, rect.height );
 #endif
 
 #if defined(OS_WIN)
