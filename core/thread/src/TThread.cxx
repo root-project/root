@@ -347,7 +347,9 @@ void TThread::Init()
    {
      R__LOCKGUARD(gGlobalMutex);
      if (!ROOT::gCoreMutex) {
-       ROOT::gCoreMutex = new ROOT::TRWMutexImp<TMutex, ROOT::Internal::UniqueLockRecurseCount>();
+        // To avoid dead locks, caused by shared library opening and/or static initialization
+        // taking the same lock as 'tls_get_addr_tail', we can not use UniqueLockRecurseCount.
+        ROOT::gCoreMutex = new ROOT::TRWMutexImp<TMutex, ROOT::Internal::RecurseCounts>();
      }
      gInterpreterMutex = ROOT::gCoreMutex;
      gROOTMutex = gInterpreterMutex;
