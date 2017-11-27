@@ -111,7 +111,7 @@ public:
    Bool_t ExecuteHttp(THttpCallArg *arg);
 
    /** Submit HTTP request */
-   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE);
+   Bool_t SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately = kFALSE, Bool_t ownership = kFALSE);
 
    /** Process submitted requests, must be called from main thread */
    void ProcessRequests();
