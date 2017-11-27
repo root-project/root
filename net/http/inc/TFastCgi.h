@@ -24,7 +24,7 @@ protected:
    TThread *fThrd;      ///<! thread which takes requests, can be many later
    Bool_t fTerminating; ///<! set when http server wants to terminate all engines
 
-   virtual void Terminate() override { fTerminating = kTRUE; }
+   virtual void Terminate() { fTerminating = kTRUE; }
 
 public:
    TFastCgi();
@@ -32,7 +32,7 @@ public:
 
    Int_t GetSocket() const { return fSocket; }
 
-   virtual Bool_t Create(const char *args) override;
+   virtual Bool_t Create(const char *args);
 
    static void *run_func(void *);
 

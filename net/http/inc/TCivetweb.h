@@ -23,13 +23,13 @@ protected:
    Bool_t fDebug;       ///<! debug mode
    Bool_t fTerminating; ///<! server doing shutdown and not react on requests
 
-   virtual void Terminate() override { fTerminating = kTRUE; }
+   virtual void Terminate() { fTerminating = kTRUE; }
 
 public:
    TCivetweb();
    virtual ~TCivetweb();
 
-   virtual Bool_t Create(const char *args) override;
+   virtual Bool_t Create(const char *args);
 
    const char *GetTopName() const { return fTopName.Data(); }
 
