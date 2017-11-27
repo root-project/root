@@ -581,19 +581,19 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
    DoInitialize(addToGlobList);
 }
 TF1::EAddToList GetGlobalListOption(Option_t * opt)  {
-   if (opt == nullptr) return TF1::EAddToList::kDefault; 
+   if (opt == nullptr) return TF1::EAddToList::kDefault;
    TString option(opt);
    option.ToUpper();
    if (option.Contains("NL")) return TF1::EAddToList::kNo;
-   if (option.Contains("GL")) return TF1::EAddToList::kAdd;   
-   return TF1::EAddToList::kDefault; 
+   if (option.Contains("GL")) return TF1::EAddToList::kAdd;
+   return TF1::EAddToList::kDefault;
 }
 bool GetVectorizedOption(Option_t * opt)  {
-   if (opt == nullptr) return false; 
+   if (opt == nullptr) return false;
    TString option(opt);
    option.ToUpper();
    if (option.Contains("VEC")) return true;
-   return false; 
+   return false;
 }
 TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Option_t * opt) :
 ////////////////////////////////////////////////////////////////////////////////
@@ -3114,15 +3114,18 @@ void TF1::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    }
    f1Name += f1Number;
 
+   const char *addToGlobList = fParent ? ", TF1::EAddToList::kNo" : ", TF1::EAddToList::kDefault";
+
    if (!fType) {
-      out << "   TF1 *" << f1Name.Data() << " = new TF1(" << quote << GetName() << quote << "," << quote << GetTitle() << quote << "," << fXmin << "," << fXmax << ");" << std::endl;
+      out << "   TF1 *" << f1Name.Data() << " = new TF1(" << quote << GetName() << quote << "," << quote << GetTitle() << quote << "," << fXmin << "," << fXmax <<  addToGlobList << ");" << std::endl;
       if (fNpx != 100) {
          out << "   " << f1Name.Data() << "->SetNpx(" << fNpx << ");" << std::endl;
       }
    } else {
       out << "   TF1 *" << f1Name.Data() << " = new TF1(" << quote << "*" << GetName() << quote << "," << fXmin << "," << fXmax << "," << GetNpar() << ");" << std::endl;
       out << "    //The original function : " << GetTitle() << " had originally been created by:" << std::endl;
-      out << "    //TF1 *" << GetName() << " = new TF1(" << quote << GetName() << quote << "," << GetTitle() << "," << fXmin << "," << fXmax << "," << GetNpar() << ");" << std::endl;
+      out << "    //TF1 *" << GetName() << " = new TF1(" << quote << GetName() << quote << "," << GetTitle() << "," << fXmin << "," << fXmax << "," << GetNpar();
+      out << ", 1" << addToGlobList << ");" << std::endl;
       out << "   " << f1Name.Data() << "->SetRange(" << fXmin << "," << fXmax << ");" << std::endl;
       out << "   " << f1Name.Data() << "->SetName(" << quote << GetName() << quote << ");" << std::endl;
       out << "   " << f1Name.Data() << "->SetTitle(" << quote << GetTitle() << quote << ");" << std::endl;
