@@ -600,7 +600,13 @@ public:
    }
    virtual void TriggerChildrenCount() = 0;
    unsigned int GetNSlots() const { return fNSlots; }
-   virtual void ResetReportCount() = 0;
+   void ResetReportCount()
+   {
+      assert(!fName.empty()); // this method is to only be called on named filters
+      // fAccepted and fRejected could be different than 0 if this is not the first event-loop run using this filter
+      std::fill(fAccepted.begin(), fAccepted.end(), 0);
+      std::fill(fRejected.begin(), fRejected.end(), 0);
+   }
    virtual void ClearValueReaders(unsigned int slot) = 0;
 };
 
@@ -684,14 +690,6 @@ public:
    {
       assert(!fName.empty()); // this method is to only be called on named filters
       fPrevData.IncrChildrenCount();
-   }
-
-   void ResetReportCount() final
-   {
-      assert(!fName.empty()); // this method is to only be called on named filters
-      // fAccepted and fRejected could be different than 0 if this is not the first event-loop run using this filter
-      std::fill(fAccepted.begin(), fAccepted.end(), 0);
-      std::fill(fRejected.begin(), fRejected.end(), 0);
    }
 
    virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
