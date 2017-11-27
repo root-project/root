@@ -1523,7 +1523,9 @@ public:
          return;
 
       auto df = GetDataFrameChecked();
-      if (!df->HasRunAtLeastOnce())
+      // TODO: we could do better and check if the Report was asked for Filters that have already run
+      // and in that case skip the event-loop
+      if (df->MustRunNamedFilters())
          df->Run();
       fProxiedPtr->Report();
    }
