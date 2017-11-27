@@ -311,7 +311,7 @@ void TLoopManager::InitNodes()
 /// Perform clean-up operations. To be called at the end of each event loop.
 void TLoopManager::CleanUpNodes()
 {
-   fHasRunAtLeastOnce = true;
+   fMustRunNamedFilters = false;
 
    // forget TActions and detach TResultProxies
    fBookedActions.clear();
@@ -421,6 +421,7 @@ void TLoopManager::Book(const FilterBasePtr_t &filterPtr)
    fBookedFilters.emplace_back(filterPtr);
    if (filterPtr->HasName()) {
       fBookedNamedFilters.emplace_back(filterPtr);
+      fMustRunNamedFilters = true;
    }
 }
 
