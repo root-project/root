@@ -304,6 +304,23 @@ THttpServer::THttpServer(const char *engine)
 
 THttpServer::~THttpServer()
 {
+   THttpCallArg *arg = nullptr;
+   Bool_t owner = kFALSE;
+   while (true) {
+      // delete outside the locked mutex area
+      if (owner && arg)
+         delete arg;
+
+      std::unique_lock<std::mutex> lk(fMutex);
+
+      if (fCallArgs.GetSize() == 0)
+         break;
+      arg = static_cast<THttpCallArg *>(fCallArgs.First());
+      const char *opt = fCallArgs.FirstLink()->GetAddOption();
+      owner = opt && !strcmp(opt, "owner");
+      fCallArgs.RemoveFirst();
+   }
+
    fEngines.Delete();
 
    SetSniffer(nullptr);
@@ -610,21 +627,28 @@ Bool_t THttpServer::ExecuteHttp(THttpCallArg *arg)
 /// Method can be called from any thread
 /// Actual execution will be done in main ROOT thread, where analysis code is running.
 /// When called from main thread and can_run_immediately==kTRUE, will be
-/// executed immediately. Returns kTRUE when was executed.
+/// executed immediately.
+/// If ownership==kTRUE, THttpCallArg object will be destroyed by the THttpServer
+/// Returns kTRUE when was executed.
 
-Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately)
+Bool_t THttpServer::SubmitHttp(THttpCallArg *arg, Bool_t can_run_immediately, Bool_t ownership)
 {
-   if (fTerminated)
+   if (fTerminated) {
+      if (ownership)
+         delete arg;
       return kFALSE;
+   }
 
    if (can_run_immediately && (fMainThrdId != 0) && (fMainThrdId == TThread::SelfId())) {
       ProcessRequest(arg);
+      if (ownership)
+         delete arg;
       return kTRUE;
    }
 
    // add call arg to the list
    std::unique_lock<std::mutex> lk(fMutex);
-   fCallArgs.Add(arg);
+   fCallArgs.Add(arg, ownership ? "owner" : "");
    return kFALSE;
 }
 
@@ -647,10 +671,13 @@ void THttpServer::ProcessRequests()
    std::unique_lock<std::mutex> lk(fMutex, std::defer_lock);
    while (true) {
       THttpCallArg *arg = nullptr;
+      Bool_t owner = kFALSE;
 
       lk.lock();
       if (fCallArgs.GetSize() > 0) {
          arg = static_cast<THttpCallArg *>(fCallArgs.First());
+         const char *opt = fCallArgs.FirstLink()->GetAddOption();
+         owner = opt && !strcmp(opt, "owner");
          fCallArgs.RemoveFirst();
       }
       lk.unlock();
@@ -670,6 +697,9 @@ void THttpServer::ProcessRequests()
       // workaround for longpoll handle, it sometime notifies condition before server
       if (!arg->fNotifyFlag)
          arg->NotifyCondition();
+
+      if (owner)
+         delete arg;
    }
 
    // regularly call Process() method of engine to let perform actions in ROOT context
