@@ -67,8 +67,8 @@ int websocket_connect_handler(const struct mg_connection *conn, void *)
       return 1;
 
    THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->uri); // path and file name
-   arg.SetQuery(request_info->query_string);  // query arguments
+   arg.SetPathAndFileName(request_info->local_uri); // path and file name
+   arg.SetQuery(request_info->query_string);        // query arguments
    arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
    arg.SetMethod("WS_CONNECT");
 
@@ -91,8 +91,8 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
       return;
 
    THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->uri); // path and file name
-   arg.SetQuery(request_info->query_string);  // query arguments
+   arg.SetPathAndFileName(request_info->local_uri); // path and file name
+   arg.SetQuery(request_info->query_string);        // query arguments
    arg.SetMethod("WS_READY");
 
    arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
@@ -123,8 +123,8 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
       return 0;
 
    THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->uri); // path and file name
-   arg.SetQuery(request_info->query_string);  // query arguments
+   arg.SetPathAndFileName(request_info->local_uri); // path and file name
+   arg.SetQuery(request_info->query_string);        // query arguments
    arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
    arg.SetMethod("WS_DATA");
 
@@ -149,8 +149,8 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
       return;
 
    THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->uri); // path and file name
-   arg.SetQuery(request_info->query_string);  // query arguments
+   arg.SetPathAndFileName(request_info->local_uri); // path and file name
+   arg.SetQuery(request_info->query_string);        // query arguments
    arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
    arg.SetMethod("WS_CLOSE");
 
@@ -194,7 +194,7 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 
    Bool_t execres = kTRUE, debug = engine->IsDebugMode();
 
-   if (!debug && serv->IsFileRequested(request_info->uri, filename)) {
+   if (!debug && serv->IsFileRequested(request_info->local_uri, filename)) {
       if ((filename.Index(".js") != kNPOS) || (filename.Index(".css") != kNPOS)) {
          Int_t length = 0;
          char *buf = THttpServer::ReadFileContent(filename.Data(), length);
@@ -210,8 +210,8 @@ static int begin_request_handler(struct mg_connection *conn, void *)
          arg.SetFile(filename.Data());
       }
    } else {
-      arg.SetPathAndFileName(request_info->uri); // path and file name
-      arg.SetQuery(request_info->query_string);  // query arguments
+      arg.SetPathAndFileName(request_info->local_uri); // path and file name
+      arg.SetQuery(request_info->query_string);        // query arguments
       arg.SetTopName(engine->GetTopName());
       arg.SetMethod(request_info->request_method); // method like GET or POST
       if (request_info->remote_user != 0)
