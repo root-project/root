@@ -56,6 +56,16 @@ int main() {
    // only "mtf2" listed
    f3.Report();
 
+   // Consecutive reports on the same TDataFrame
+   ROOT::Experimental::TDataFrame df2(10);
+   auto dwx = df2.DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<int>(e); });
+   auto dwF = dwx.Filter([](int x) { return x > 3; }, {"x"}, "fx1").Filter([](int x) { return x > 5; }, {"x"}, "fx2");
+   std::cout << "--\n";
+   dwF.Report();
+   auto dwFF = dwF.Filter([](int x) { return x > 8; }, {"x"}, "fx3");
+   std::cout << "--\n";
+   dwFF.Report();
+
    return 0;
 }
 

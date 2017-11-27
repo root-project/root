@@ -5,3 +5,10 @@ mtf       : pass=100        all=100000     --    0.100 %
 --
 --
 mtf2      : pass=94999      all=100000     --   94.999 %
+--
+fx1       : pass=6          all=10         --   60.000 %
+fx2       : pass=4          all=6          --   66.667 %
+--
+fx1       : pass=6          all=10         --   60.000 %
+fx2       : pass=4          all=6          --   66.667 %
+fx3       : pass=1          all=4          --   25.000 %
