@@ -90,8 +90,15 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
                                          llvm::StringRef /*RelativePath*/,
                                          const clang::Module * Imported) {
    // We found a module. Do not try to do anything else.
-   if (Imported)
-      return;
+   if (Imported) {
+      Sema &SemaR = m_Interpreter->getSema();
+      // FIXME: We should make the module visible at that point.
+      if (!SemaR.isModuleVisible(Imported))
+         ROOT::TMetaUtils::Info("TClingCallbacks::InclusionDirective",
+                                "Module %s resolved but not visible!", Imported->Name.c_str());
+      else
+        return;
+   }
 
    // Method called via Callbacks->InclusionDirective()
    // in Preprocessor::HandleIncludeDirective(), invoked whenever an
