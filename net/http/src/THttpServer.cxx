@@ -49,20 +49,16 @@
 
 class THttpTimer : public TTimer {
 public:
-   THttpServer *fServer; ///!< server processing requests
+   THttpServer &fServer; ///!< server processing requests
 
    /// constructor
-   THttpTimer(Long_t milliSec, Bool_t mode, THttpServer *serv) : TTimer(milliSec, mode), fServer(serv) {}
-
-   /// destructor
-   virtual ~THttpTimer() { fServer = nullptr; }
+   THttpTimer(Long_t milliSec, Bool_t mode, THttpServer &serv) : TTimer(milliSec, mode), fServer(serv) {}
 
    /// timeout handler
    /// used to process http requests in main ROOT thread
    virtual void Timeout()
    {
-      if (fServer)
-         fServer->ProcessRequests();
+      fServer.ProcessRequests();
    }
 };
 
@@ -499,7 +495,7 @@ void THttpServer::SetTimer(Long_t milliSec, Bool_t mode)
       fTimer = nullptr;
    }
    if (milliSec > 0) {
-      fTimer = new THttpTimer(milliSec, mode, this);
+      fTimer = new THttpTimer(milliSec, mode, *this);
       fTimer->TurnOn();
    }
 }
