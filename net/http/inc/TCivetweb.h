@@ -17,10 +17,10 @@
 
 class TCivetweb : public THttpEngine {
 protected:
-   void *fCtx;       ///<! civetweb context
-   void *fCallbacks; ///<! call-back table for civetweb webserver
-   TString fTopName; ///<! name of top item
-   Bool_t fDebug;    ///<! debug mode
+   void *fCtx;          ///<! civetweb context
+   void *fCallbacks;    ///<! call-back table for civetweb webserver
+   TString fTopName;    ///<! name of top item
+   Bool_t fDebug;       ///<! debug mode
    Bool_t fTerminating; ///<! server doing shutdown and not react on requests
 
    virtual void Terminate() override { fTerminating = kTRUE; }
@@ -29,7 +29,7 @@ public:
    TCivetweb();
    virtual ~TCivetweb();
 
-   virtual Bool_t Create(const char *args);
+   virtual Bool_t Create(const char *args) override;
 
    const char *GetTopName() const { return fTopName.Data(); }
 
