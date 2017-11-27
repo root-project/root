@@ -33,8 +33,6 @@ protected:
    virtual void Process() {}
 
 public:
-   virtual ~THttpEngine();
-
    /** Method to create all components of engine. Called once from by the server */
    virtual Bool_t Create(const char *) { return kFALSE; }
 
@@ -43,6 +41,5 @@ public:
 
    ClassDef(THttpEngine, 0) // abstract class which should provide http-based protocol for server
 };
-
 
 #endif
