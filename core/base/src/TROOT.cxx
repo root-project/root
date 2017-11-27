@@ -1102,6 +1102,33 @@ namespace {
       // use objects (on the interpreter stack).
       files->Clear("nodelete");
    }
+
+   static void R__ListSlowDeleteContent(TList *files)
+   {
+      // Routine to delete the content of list of files using the 'slow' techniques
+
+      static TObject harmless;
+      TObjLink *cursor = files->FirstLink();
+      while (cursor) {
+         TDirectory *dir = dynamic_cast<TDirectory*>( cursor->GetObject() );
+         if (dir) {
+            // In order for the iterator to stay valid, we must
+            // prevent the removal of the object (dir) from the list
+            // (which is done in TFile::Close).   We can also can not
+            // just move to the next iterator since the Close might
+            // also (indirectly) remove that file.
+            // So we SetObject to a harmless value, so that 'dir'
+            // is not seen as part of the list.
+            // We will later, remove all the object (see files->Clear()
+            cursor->SetObject(&harmless); // this must not be zero otherwise things go wrong.
+            // See related comment at the files->Clear("nodelete");
+            dir->GetList()->Delete("slow");
+            // Put it back
+            cursor->SetObject(dir);
+         }
+         cursor = cursor->Next();
+      };
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1188,10 +1215,18 @@ void TROOT::CloseFiles()
 
 void TROOT::EndOfProcessCleanups()
 {
+   // This will not delete the objects 'held' by the TFiles so that
+   // they can still be 'reacheable' when ResetGlobals is run.
    CloseFiles();
 
    if (gInterpreter) {
       gInterpreter->ResetGlobals();
+   }
+
+   // Now delete the objects 'held' by the TFiles so that it
+   // is done before the tear down of the libraries.
+   if (fClosedObjects && fClosedObjects->First()) {
+      R__ListSlowDeleteContent(static_cast<TList*>(fClosedObjects));
    }
 
    // Now a set of simpler things to delete.  See the same ordering in
