@@ -136,7 +136,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
-   bool fHasRunAtLeastOnce{false};
+   bool fMustRunNamedFilters{true};
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
@@ -186,7 +186,7 @@ public:
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const { return fNSlots; }
-   bool HasRunAtLeastOnce() const { return fHasRunAtLeastOnce; }
+   bool MustRunNamedFilters() const { return fMustRunNamedFilters; }
    void Report() const;
    /// End of recursive chain of calls, does nothing
    void PartialReport() const {}
