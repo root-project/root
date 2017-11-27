@@ -1098,12 +1098,9 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
    clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
 
-   cling::Transaction* T = nullptr;
-   interp.declare("/*This is decl is to get a valid sloc...*/;", &T);
-   SourceLocation ValidLoc = T->decls_begin()->m_DGR.getSingleDecl()->getLocStart();
-   // CreateImplicitModuleImportNoInit creates decls.
-   cling::Interpreter::PushTransactionRAII RAII(&interp);
    if (clang::Module *M = moduleMap.findModule(ModuleName)) {
+      cling::Interpreter::PushTransactionRAII RAII(&interp);
+      SourceLocation ValidLoc = M->DefinitionLoc;
       clang::IdentifierInfo *II = PP.getIdentifierInfo(M->Name);
       bool Result = !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
       PP.makeModuleVisible(M, ValidLoc);
