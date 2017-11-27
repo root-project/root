@@ -331,10 +331,22 @@ void THashList::RecursiveRemove(TObject *obj)
    }
 
    // Scan again the list and invoke RecursiveRemove for all objects
-   TIter next(this);
-   TObject *object;
-   while ((object = next())) {
-      if (object->TestBit(kNotDeleted)) object->RecursiveRemove(obj);
+   // We need to make sure to go through all the node even those
+   // marked as empty by another thread (Eventhough we hold the
+   // read lock if one of the call to RecursiveRemove request
+   // the write lock then the read lock will be suspended and
+   // another thread can modify the list; thanks to the shared_pointer
+   // forward-and-backward links, our view of the list is still intact
+   // but might contains node will nullptr payload)
+   auto lnk  = fFirst;
+   decltype(lnk) next;
+   while (lnk.get()) {
+      next = lnk->NextSP();
+      TObject *ob = lnk->GetObject();
+      if (ob && ob->TestBit(kNotDeleted)) {
+         ob->RecursiveRemove(obj);
+      }
+      lnk = next;
    }
 }
 
