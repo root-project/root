@@ -263,6 +263,8 @@ inline Double_t Tan(Double_t);
 inline Double_t SinH(Double_t);
 inline Double_t CosH(Double_t);
 inline Double_t TanH(Double_t);
+inline Double_t padeTanH(Double_t);
+inline Float_t padeTanH(Float_t);
 inline Double_t ASin(Double_t);
 inline Double_t ACos(Double_t);
 inline Double_t ATan(Double_t);
@@ -561,6 +563,57 @@ inline Double_t TMath::CosH(Double_t x)
 
 inline Double_t TMath::TanH(Double_t x)
    { return tanh(x); }
+
+inline Double_t TMath::padeTanH(Double_t x)
+  {
+    // for very large |x| > 20, tanh(x) is x/|x| anyway (at least to double
+    // precision)
+    //
+    // NB: branch-free code takes longer to execute
+    if (std::abs(x) > 20.) return std::copysign(1., x);
+    // strategy for large arguments: tanh(2x) = 2 tanh(x)/(1 + tanh^2(x))
+    // idea is to use this "argument halving" a couple of times, and use a
+    // very short Padé approximation for the rest of the way
+    const auto xx = x * 0.125;
+    const auto xx2 = xx * xx;
+#ifndef VECTORCLASS_H // from Agner Fog's VectorClass library
+    const auto numer = 135135 + xx2 * (17325 + xx2 * ( 378 + xx2 *  1));
+    const auto denom = 135135 + xx2 * (62370 + xx2 * (3150 + xx2 * 28));
+
+    auto tanh = xx * numer / denom;
+#else // same code SIMD'ified
+    auto sum = xx2 * Vec2d{ 1, 28 } + Vec2d{ 378, 3150 };
+    sum = xx2 * sum + Vec2d{ 17325, 62370 };
+    sum = xx2 * sum + Vec2d{ 135135, 135135 };
+    auto tanh = xx * sum[0] / sum[1];
+#endif
+    tanh = 2 * tanh / (tanh * tanh + 1);
+    tanh = 2 * tanh / (tanh * tanh + 1);
+    return 2 * tanh / (tanh * tanh + 1);
+  }
+
+inline Float_t TMath::padeTanH(Float_t x)
+  {
+    // same strategy as double version above, but even shorter Padé
+    // approximation is sufficient for float
+    //
+    // NB: branch-free code takes longer to execute
+    if (std::abs(x) > 9.1f) return std::copysign(1.f, x);
+    const auto xx = x * 0.125f;
+    const auto xx2 = xx * xx;
+#ifndef PLACEHOLDER
+    auto tanh = xx * (xx2 + 15) / (6 * xx2 + 15);
+#else // same code SIMD'ified - same speed as pedestrian code above
+    // unfortunately, there's only a variant that works on four floats at a
+    // time, so we (have to) leave half the SIMD register empty
+    typedef float fv4 __attribute__ ((vector_size(16)));
+    const fv4 sum = xx2 * fv4{ 1, 6 } + fv4{ 15, 15 };
+    auto tanh = xx * sum[0] / sum[1];
+#endif
+    tanh = 2 * tanh / (tanh * tanh + 1);
+    tanh = 2 * tanh / (tanh * tanh + 1);
+    return 2 * tanh / (tanh * tanh + 1);
+  }
 
 inline Double_t TMath::ASin(Double_t x)
    { if (x < -1.) return -TMath::Pi()/2;
