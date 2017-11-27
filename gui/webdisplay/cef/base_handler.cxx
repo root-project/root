@@ -142,7 +142,7 @@ public:
       // <path>::connect, replied with ws handler id
       // <path>::<connid>::post::<data> or <path>::<connid>::close
 
-      int pos = message.find("::");
+      std::size_t pos = message.find("::");
       if (pos == std::string::npos)
          return false;
 
