@@ -1925,7 +1925,11 @@ void TCling::RegisterModule(const char* modulename,
 #endif
 #endif
 
-      if (!hasHeaderParsingOnDemand){
+      llvm::StringRef CxxModule = StringRef(modulename);
+      bool b = CxxModule.consume_front("lib");
+      (void)b;
+      if (LoadModule(CxxModule, *fInterpreter)) {
+      } else if (!hasHeaderParsingOnDemand){
          SuspendAutoParsing autoParseRaii(this);
 
          const cling::Transaction* watermark = fInterpreter->getLastTransaction();
