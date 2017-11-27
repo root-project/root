@@ -1105,7 +1105,9 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
    cling::Interpreter::PushTransactionRAII RAII(&interp);
    if (clang::Module *M = moduleMap.findModule(ModuleName)) {
       clang::IdentifierInfo *II = PP.getIdentifierInfo(M->Name);
-      return !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
+      bool Result = !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
+      PP.makeModuleVisible(M, ValidLoc);
+      return Result;
    }
    return false;
 }
@@ -1138,6 +1140,8 @@ static void LoadCoreModules(cling::Interpreter &interp)
 
    if (!LoadModule(moduleMap.findModule("RIO")->Name, interp))
       Error("TCling::LoadCodeModule", "Cannot load module RIO");
+
+   assert(interp.getMacro("gROOT") && "Couldn't load gROOT macro?");
 }
 
 static bool FileExists(const char *file)
