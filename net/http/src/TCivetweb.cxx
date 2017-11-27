@@ -60,7 +60,7 @@ int websocket_connect_handler(const struct mg_connection *conn, void *)
       return 1;
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (!engine || engine->IsShutdown())
+   if (!engine || engine->IsTerminating())
       return 1;
    THttpServer *serv = engine->GetServer();
    if (!serv)
@@ -84,7 +84,7 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (!engine || engine->IsShutdown())
+   if (!engine || engine->IsTerminating())
       return;
    THttpServer *serv = engine->GetServer();
    if (!serv)
@@ -112,7 +112,7 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
       return 1;
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (!engine || engine->IsShutdown())
+   if (!engine || engine->IsTerminating())
       return 1;
    THttpServer *serv = engine->GetServer();
    if (!serv)
@@ -142,7 +142,7 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (!engine || engine->IsShutdown())
+   if (!engine || engine->IsTerminating())
       return;
    THttpServer *serv = engine->GetServer();
    if (!serv)
@@ -182,7 +182,7 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (!engine || engine->IsShutdown())
+   if (!engine || engine->IsTerminating())
       return 0;
    THttpServer *serv = engine->GetServer();
    if (!serv)

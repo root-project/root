@@ -21,9 +21,9 @@ protected:
    void *fCallbacks; ///<! call-back table for civetweb webserver
    TString fTopName; ///<! name of top item
    Bool_t fDebug;    ///<! debug mode
-   Bool_t fShutdown; ///<! server doing shutdown and not react on requests
+   Bool_t fTerminating; ///<! server doing shutdown and not react on requests
 
-   virtual void Terminate() { fShutdown = kTRUE; }
+   virtual void Terminate() override { fTerminating = kTRUE; }
 
 public:
    TCivetweb();
@@ -35,7 +35,7 @@ public:
 
    Bool_t IsDebugMode() const { return fDebug; }
 
-   Bool_t IsShutdown() const { return fShutdown; }
+   Bool_t IsTerminating() const { return fTerminating; }
 
    Int_t ProcessLog(const char *message);
 
