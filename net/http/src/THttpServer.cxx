@@ -121,7 +121,7 @@ public:
    /// Preview data for given socket
    /// function called in the user code before processing correspondent websocket data
    /// returns kTRUE when user should ignore such http request - it is for internal use
-   virtual Bool_t PreviewData(THttpCallArg *arg)
+   virtual Bool_t PreviewData(THttpCallArg *arg) override
    {
 
       // this is normal request, deliver and process it as any other
