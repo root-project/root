@@ -86,18 +86,15 @@ public:
    /// constructor
    TLongPollEngine(const char *name, const char *title) : THttpWSEngine(name, title), fPoll(nullptr), fBuf() {}
 
-   /// destructor
-   virtual ~TLongPollEngine() {}
-
    /// returns ID of the engine, created from this pointer
-   virtual UInt_t GetId() const
+   virtual UInt_t GetId() const override
    {
       const void *ptr = (const void *)this;
       return TString::Hash((void *)&ptr, sizeof(void *));
    }
 
    /// clear request, waiting for next portion of data
-   virtual void ClearHandle()
+   virtual void ClearHandle() override
    {
       if (fPoll) {
          fPoll->Set404();
@@ -107,14 +104,14 @@ public:
    }
 
    /// Send binary data via connection - not supported
-   virtual void Send(const void * /*buf*/, int /*len*/)
+   virtual void Send(const void * /*buf*/, int /*len*/) override
    {
       Error("TLongPollEngine::Send", "Should never be called, only text is supported");
    }
 
    /// Send const char data
    /// Either do it immediately or keep in internal buffer
-   virtual void SendCharStar(const char *buf)
+   virtual void SendCharStar(const char *buf) override
    {
       if (fPoll) {
          fPoll->SetContentType("text/plain");
