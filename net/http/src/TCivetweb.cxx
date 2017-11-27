@@ -367,8 +367,6 @@ TCivetweb::~TCivetweb()
       mg_stop((struct mg_context *)fCtx);
    if (fCallbacks)
       free(fCallbacks);
-   fCtx = nullptr;
-   fCallbacks = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
