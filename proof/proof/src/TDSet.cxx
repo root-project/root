@@ -153,6 +153,25 @@ TDSetElement::~TDSetElement()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Reset TDSet element.
+
+void TDSetElement::Reset()
+{
+   fFirst = 0;
+   fNum   = -1;
+   fTDSetOffset = 0;
+   fEntryList   = 0;
+   fValid       = kFALSE;
+   fEntries     = -1;
+   fMaxProcTime = -1.;
+
+   ResetBit(kHasBeenLookedUp);
+   ResetBit(kEmpty);
+   ResetBit(kNewRun);
+   ResetBit(kNewPacket);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Check if 'elem' is overlapping or subsequent and, if the case, return
 /// a merged element.
 /// Returns:
@@ -1877,6 +1896,14 @@ void TDSet::SetEntryList(TObject *aList)
    if (!aList) {
       // Nothing to do, except making sure to disable any previous setting
       fEntryList = 0;
+      // Reset the element lists
+      // TEntryList
+      TIter next(fElements);
+      TDSetElement *el=0;
+      while ((el=(TDSetElement*)next())){
+         el->SetEntryList(aList);
+         el->Reset();
+      }
       return;
    }
 

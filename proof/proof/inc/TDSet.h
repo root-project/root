@@ -139,6 +139,8 @@ public:
    void             SetLookedUp() { SetBit(kHasBeenLookedUp); }
    TFileInfo       *GetFileInfo(const char *type = "TTree");
 
+   void             Reset();
+
    Float_t          GetMaxProcTime() const { return fMaxProcTime; }
    void             SetMaxProcTime(Float_t mpt) { fMaxProcTime = mpt; }
 
