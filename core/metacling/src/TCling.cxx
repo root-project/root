@@ -1105,7 +1105,10 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
    cling::Interpreter::PushTransactionRAII RAII(&interp);
    if (clang::Module *M = moduleMap.findModule(ModuleName)) {
       clang::IdentifierInfo *II = PP.getIdentifierInfo(M->Name);
-      return !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
+      bool Result = !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
+      // Also make the module visible in the preprocessor to export its macros.
+      PP.makeModuleVisible(M, ValidLoc);
+      return Result;
    }
    return false;
 }
@@ -1138,6 +1141,10 @@ static void LoadCoreModules(cling::Interpreter &interp)
 
    if (!LoadModule(moduleMap.findModule("RIO")->Name, interp))
       Error("TCling::LoadCoreModules", "Cannot load module RIO");
+
+   // Check that the gROOT macro was exported by any core module.
+   assert(interp.getMacro("gROOT") && "Couldn't load gROOT macro?");
+>>>>>>> [cxxmodules] Fixed macro loading in LoadModule
 }
 
 static bool FileExists(const char *file)
