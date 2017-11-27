@@ -1140,6 +1140,7 @@ static void LoadCoreModules(cling::Interpreter &interp)
 
    assert(interp.getMacro("gROOT") && "Couldn't load gROOT macro?");
    interp.declare("#include <cassert>\n");
+   interp.declare("#ifdef I\n #undef I\n #endif\n");
 }
 
 static bool FileExists(const char *file)
