@@ -110,7 +110,7 @@ public:
          fPoll->SetContentType("text/plain");
          fPoll->SetContent(buf);
          fPoll->NotifyCondition();
-         fPoll = 0;
+         fPoll = nullptr;
       } else if (fBuf.Length() == 0) {
          fBuf = buf;
       } else {
@@ -240,7 +240,7 @@ THttpServer::THttpServer(const char *engine)
 
 #ifdef COMPILED_WITH_DABC
    const char *dabcsys = gSystem->Getenv("DABCSYS");
-   if (dabcsys != 0)
+   if (dabcsys)
       fJSROOTSYS = TString::Format("%s/plugins/root/js", dabcsys);
 #endif
 
@@ -362,7 +362,7 @@ void THttpServer::AddLocation(const char *prefix, const char *path)
       return;
 
    TNamed *obj = dynamic_cast<TNamed *>(fLocations.FindObject(prefix));
-   if (obj != 0) {
+   if (obj) {
       obj->SetTitle(path);
    } else {
       fLocations.Add(new TNamed(prefix, path));
@@ -557,8 +557,8 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
 
    TString fname(uri);
    TIter iter(&fLocations);
-   TObject *obj(0);
-   while ((obj = iter()) != 0) {
+   TObject *obj(nullptr);
+   while ((obj = iter()) != nullptr) {
       Ssiz_t pos = fname.Index(obj->GetName());
       if (pos == kNPOS)
          continue;
@@ -650,21 +650,21 @@ void THttpServer::ProcessRequests()
 
       lk.lock();
       if (fCallArgs.GetSize() > 0) {
-         arg = (THttpCallArg *)fCallArgs.First();
+         arg = static_cast<THttpCallArg *>(fCallArgs.First());
          fCallArgs.RemoveFirst();
       }
       lk.unlock();
 
-      if (arg == 0)
+      if (!arg)
          break;
 
       fSniffer->SetCurrentCallArg(arg);
 
       try {
          ProcessRequest(arg);
-         fSniffer->SetCurrentCallArg(0);
+         fSniffer->SetCurrentCallArg(nullptr);
       } catch (...) {
-         fSniffer->SetCurrentCallArg(0);
+         fSniffer->SetCurrentCallArg(nullptr);
       }
 
       // workaround for longpoll handle, it sometime notifies condition before server
@@ -806,8 +806,8 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          if ((arg->fQuery.Index("no_root_json") == kNPOS) && (arg->fQuery.Index("webcanvas") == kNPOS) &&
              (arg->fContent.Index(rootjsontag) != kNPOS)) {
             TString str;
-            void *bindata = 0;
-            Long_t bindatalen = 0;
+            void *bindata(nullptr);
+            Long_t bindatalen(0);
             if (fSniffer->Produce(arg->fPathName.Data(), "root.json", "compact=3", bindata, bindatalen, str)) {
                arg->fContent.ReplaceAll(rootjsontag, str);
             }
@@ -959,7 +959,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
    } else if (fSniffer->Produce(arg->fPathName.Data(), filename.Data(), arg->fQuery.Data(), bindata, bindatalen,
                                 arg->fContent)) {
-      if (bindata != 0)
+      if (bindata)
          arg->SetBinData(bindata, bindatalen);
 
       // define content type base on extension
