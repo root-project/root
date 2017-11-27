@@ -353,7 +353,7 @@ ClassImp(TCivetweb);
 
 TCivetweb::TCivetweb()
    : THttpEngine("civetweb", "compact embedded http server"), fCtx(nullptr), fCallbacks(nullptr), fTopName(),
-     fDebug(kFALSE), fShutdown(kFALSE)
+     fDebug(kFALSE), fTerminating(kFALSE)
 {
 }
 
@@ -362,7 +362,7 @@ TCivetweb::TCivetweb()
 
 TCivetweb::~TCivetweb()
 {
-   fShutdown = kTRUE;
+   fTerminating = kTRUE;
    if (fCtx)
       mg_stop((struct mg_context *)fCtx);
    if (fCallbacks)
