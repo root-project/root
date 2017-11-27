@@ -148,13 +148,13 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    if (!serv)
       return;
 
-   THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->local_uri); // path and file name
-   arg.SetQuery(request_info->query_string);        // query arguments
-   arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
-   arg.SetMethod("WS_CLOSE");
+   THttpCallArg *arg = new THttpCallArg;
+   arg->SetPathAndFileName(request_info->local_uri); // path and file name
+   arg->SetQuery(request_info->query_string);        // query arguments
+   arg->SetWSId(TString::Hash((void *)conn, sizeof(void *)));
+   arg->SetMethod("WS_CLOSE");
 
-   serv->ExecuteHttp(&arg);
+   serv->SubmitHttp(arg, kFALSE, kTRUE); // delegate ownership to server
 }
 
 //////////////////////////////////////////////////////////////////////////
