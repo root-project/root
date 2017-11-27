@@ -56,10 +56,7 @@ public:
 
    /// timeout handler
    /// used to process http requests in main ROOT thread
-   virtual void Timeout()
-   {
-      fServer.ProcessRequests();
-   }
+   virtual void Timeout() { fServer.ProcessRequests(); }
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
