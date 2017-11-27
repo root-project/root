@@ -2101,8 +2101,13 @@ void TGraph::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
          out << "   graph->GetListOfFunctions()->Add(ptstats);" << std::endl;
          out << "   ptstats->SetParent(graph->GetListOfFunctions());" << std::endl;
       } else {
+         TString objname;
+         objname.Form("%s%d",obj->GetName(),frameNumber);
+         if (obj->InheritsFrom("TF1")) {
+            out << "   " << objname << "->SetParent(graph);\n";
+         }
          out << "   graph->GetListOfFunctions()->Add("
-             << Form("%s%d",obj->GetName(),frameNumber) << ");" << std::endl;
+             << objname << ");" << std::endl;
       }
    }
 

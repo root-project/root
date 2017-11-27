@@ -1502,7 +1502,10 @@ void TGraph2D::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
       out << "   graph2d->GetListOfFunctions()->Add(" << obj->GetName() << ");" << std::endl;
       if (obj->InheritsFrom("TPaveStats")) {
          out << "   ptstats->SetParent(graph2d->GetListOfFunctions());" << std::endl;
+      } else if (obj->InheritsFrom("TF1")) {
+         out << "   " << obj->GetName()  << "->SetParent(graph);\n";
       }
+
    }
 
    out << "   graph2d->Draw(" << quote << option << quote << ");" << std::endl;
