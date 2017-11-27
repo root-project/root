@@ -1142,6 +1142,7 @@ static void LoadCoreModules(cling::Interpreter &interp)
       Error("TCling::LoadCodeModule", "Cannot load module RIO");
 
    assert(interp.getMacro("gROOT") && "Couldn't load gROOT macro?");
+   interp.declare("#include <cassert>\n");
 }
 
 static bool FileExists(const char *file)
