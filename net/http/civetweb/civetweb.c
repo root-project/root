@@ -17245,12 +17245,14 @@ mg_get_system_info_impl(char *buffer, int buflen)
 
 	/* Build date */
 	{
-#if defined(__GNUC__)
-#pragma GCC diagnostic push
+
+// Sergey Linev: remove this kind of warning suppression, most probably for old GCC
+//#if defined(__GNUC__)
+//#pragma GCC diagnostic push
 /* Disable bogus compiler warning -Wdate-time */
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Werror"
-#endif
+// #pragma GCC diagnostic ignored "-Wall"
+// #pragma GCC diagnostic ignored "-Werror"
+//#endif
 		mg_snprintf(NULL,
 		            NULL,
 		            block,
@@ -17259,9 +17261,9 @@ mg_get_system_info_impl(char *buffer, int buflen)
 		            __DATE__,
 		            eol);
 
-#if defined(__GNUC__)
-#pragma GCC diagnostic pop
-#endif
+//#if defined(__GNUC__)
+//#pragma GCC diagnostic pop
+//#endif
 
 		system_info_length += (int)strlen(block);
 		if (system_info_length < buflen) {
