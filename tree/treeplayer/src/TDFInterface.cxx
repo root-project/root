@@ -88,14 +88,16 @@ std::vector<std::string> FindUsedColumnNames(std::string_view expression, const 
    return usedBranches;
 }
 
-// Jit a string filter or a string temporary column, call this->Define or this->Filter as needed
-// Return pointer to the new functional chain node returned by the call, cast to Long_t
-Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string_view interfaceTypeName,
-                         std::string_view name, std::string_view expression,
-                         const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
-                         const std::vector<std::string> &customColumns,
-                         const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
-                         std::string_view returnTypeName, TDataSource *ds)
+struct JitTransformationData {
+   std::string lambda;
+   bool exprNeedsVariables;
+   std::vector<std::string> usedBranches;
+};
+
+JitTransformationData GetJitData(std::string_view expression, const std::map<std::string, std::string> &aliasMap,
+                                 const ColumnNames_t &branches, const std::vector<std::string> &customColumns,
+                                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
+                                 TDataSource *ds)
 {
    const auto &dsColumns = ds ? ds->GetColumnNames() : ColumnNames_t{};
    auto usedBranches = FindUsedColumnNames(expression, branches, customColumns, dsColumns, aliasMap);
@@ -107,7 +109,7 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    std::vector<std::string> usedBranchesTypes;
    static unsigned int iNs = 0U;
    std::stringstream dummyDecl;
-   dummyDecl << "namespace __tdf_" << std::to_string(iNs++) << "{ auto __tdf_lambda = []() {";
+   dummyDecl << "namespace __tdf_" << std::to_string(iNs++) << "{ auto __tdf_filterlambda = []() {";
 
    // Declare variables with the same name as the column used by this transformation
    auto aliasMapEnd = aliasMap.end();
@@ -166,40 +168,42 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
    else
       ss << "){return " << expression << "\n;}";
 
-   auto filterLambda = ss.str();
+   return {ss.str(), exprNeedsVariables, usedBranches};
+}
+
+// Jit a string filter, and jit-and-call this->Filter with the appropriate arguments
+// Return pointer to the new functional chain node returned by the call, cast to Long_t
+Long_t JitFilter(void *thisPtr, std::string_view interfaceTypeName, std::string_view name, std::string_view expression,
+                 const std::map<std::string, std::string> &aliasMap, const ColumnNames_t &branches,
+                 const std::vector<std::string> &customColumns,
+                 const std::map<std::string, TmpBranchBasePtr_t> &tmpBookedBranches, TTree *tree,
+                 std::string_view returnTypeName, TDataSource *ds)
+{
+   const auto jitData = GetJitData(expression, aliasMap, branches, customColumns, tmpBookedBranches, tree, ds);
 
    // The TInterface type to convert the result to. For example, Filter returns a TInterface<TFilter<F,P>> but when
    // returning it from a jitted call we need to convert it to TInterface<TFilterBase> as we are missing information
    // on types F and P at compile time.
    const auto targetTypeName = "ROOT::Experimental::TDF::TInterface<" + std::string(returnTypeName) + ">";
 
-   // Here we have two cases: filter and column
-   ss.str("");
-   ss << targetTypeName << "(((" << interfaceTypeName << "*)" << thisPtr << ")->" << methodName << "(";
-   if (methodName == "Define") {
-      ss << "\"" << name << "\", ";
-   }
-   ss << filterLambda << ", {";
-   for (auto brName : usedBranches) {
+   std::stringstream ss;
+   ss << targetTypeName << "(((" << interfaceTypeName << "*)" << thisPtr << ")->Filter(";
+   ss << jitData.lambda << ", {";
+   auto aliasMapEnd = aliasMap.end();
+   for (auto brName : jitData.usedBranches) {
       // Here we selectively replace the brName with the real column name if it's necessary.
       auto aliasMapIt = aliasMap.find(brName);
       auto &realBrName = aliasMapEnd == aliasMapIt ? brName : aliasMapIt->second;
       ss << "\"" << realBrName << "\", ";
    }
-   if (exprNeedsVariables)
+   if (jitData.exprNeedsVariables)
       ss.seekp(-2, ss.cur); // remove the last ",
-   ss << "}";
-
-   if (methodName == "Filter") {
-      ss << ", \"" << name << "\"";
-   }
-
-   ss << "));";
+   ss << "}, \"" << name << "\"));";
 
    TInterpreter::EErrorCode interpErrCode;
    auto retVal = gInterpreter->Calc(ss.str().c_str(), &interpErrCode);
    if (TInterpreter::EErrorCode::kNoError != interpErrCode || !retVal) {
-      std::string msg = "Cannot interpret the invocation to " + std::string(methodName) + ":  ";
+      std::string msg = "Cannot interpret the invocation to Filter:  ";
       msg += ss.str();
       if (TInterpreter::EErrorCode::kNoError != interpErrCode) {
          msg += "\nInterpreter error code is " + std::to_string(interpErrCode) + ".";
@@ -207,6 +211,34 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
       throw std::runtime_error(msg);
    }
    return retVal;
+}
+
+// Jit a string filter, produce string that calls this->Define with the appropriate arguments
+// Return this string, for deferred jitting
+std::string JitDefine(TLoopManager& lm, std::string_view name, std::string_view expression, TDataSource *ds)
+{
+   auto &aliasMap = lm.GetAliasMap();
+   auto tree = lm.GetTree();
+   auto branches = tree ? GetBranchNames(*tree) : ColumnNames_t();
+   const auto jitData =
+      GetJitData(expression, aliasMap, branches, lm.GetCustomColumnNames(), lm.GetBookedColumns(), tree, ds);
+
+   std::stringstream ss;
+   ss << "ROOT::Internal::TDF::JittedDefineImpl(*reinterpret_cast<ROOT::Detail::TDF::TLoopManager*>(" << &lm << "),\""
+      << name << "\", " << jitData.lambda << ", {";
+
+   auto aliasMapEnd = aliasMap.end();
+   for (auto brName : jitData.usedBranches) {
+      // Here we selectively replace the brName with the real column name if it's necessary.
+      auto aliasMapIt = aliasMap.find(brName);
+      auto &realBrName = aliasMapEnd == aliasMapIt ? brName : aliasMapIt->second;
+      ss << "\"" << realBrName << "\", ";
+   }
+   if (jitData.exprNeedsVariables)
+      ss.seekp(-2, ss.cur); // remove the last ",
+   ss << "});";
+
+   return ss.str();
 }
 
 // Jit and call something equivalent to "this->BuildAndBook<BranchTypes...>(params...)"

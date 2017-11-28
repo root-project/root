@@ -182,6 +182,7 @@ public:
    void Book(const ActionBasePtr_t &actionPtr);
    void Book(const FilterBasePtr_t &filterPtr);
    void Book(const TCustomColumnBasePtr_t &branchPtr);
+   void BookJitted(const TCustomColumnBasePtr_t &branchPtr);
    void Book(const std::shared_ptr<bool> &branchPtr);
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);
@@ -197,6 +198,7 @@ public:
    const ColumnNames_t &GetDefinedDataSourceColumns() const { return fDefinedDataSourceColumns; }
    void AddDataSourceColumn(std::string_view name) { fDefinedDataSourceColumns.emplace_back(name); }
    void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
+   void AddCustomColumn(std::string_view name) { fCustomColumnNames.emplace_back(name); }
    const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
    void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
 };
