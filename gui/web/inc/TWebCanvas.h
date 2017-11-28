@@ -28,36 +28,34 @@
 #include "TString.h"
 #endif
 
-#include "THttpWSHandler.h"
-
 #include <list>
 
-class THttpWSEngine;
+#include <ROOT/TWebWindow.hxx>
+
 class TVirtualPad;
 class TPad;
 class TList;
 class TWebSnapshot;
 class TPadWebSnapshot;
 
-class TWebCanvas : public THttpWSHandler, public TCanvasImp {
+class TWebCanvas : public TCanvasImp {
 
 protected:
 
    struct WebConn {
-      THttpWSEngine  *fHandle;       ///<! websocket handle
-      Bool_t          fReady;
+      unsigned        fConnId;       ///<! websocket handle
       TString         fGetMenu;      ///<! object id for menu request
       Long64_t        fDrawVersion;  ///<! canvas version drawn by client
       TString         fSend;         ///<! extra data which should be send to the client
-      WebConn() : fHandle(0), fReady(kFALSE), fGetMenu(), fDrawVersion(0), fSend() {}
+      WebConn() : fConnId(0), fGetMenu(), fDrawVersion(0), fSend() {}
    };
 
    typedef std::list<WebConn> WebConnList;
 
    WebConnList     fWebConn;      ///<! connections list
 
-   TString         fAddr;         ///<! URL address of the canvas
-   void           *fServer;       ///<! THttpServer, required only for direct communications from CEF or Qt5
+   std::shared_ptr<ROOT::Experimental::TWebWindow> fWindow; ///!< configured display
+
    Bool_t          fHasSpecials;  ///<! has special objects which may require pad ranges
    Long64_t        fCanvVersion;  ///<! actual canvas version, changed with every new Modified() call
 
@@ -88,14 +86,14 @@ protected:
 
 public:
    TWebCanvas();
-   TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, TString addr, void *server);
+   TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TWebCanvas();
 
    virtual Int_t  InitWindow();
    virtual void   Close();
    virtual void   Show();
 
-   virtual Bool_t ProcessWS(THttpCallArg *arg);
+   void ProcessData(unsigned connid, const std::string &arg);
 
    virtual UInt_t GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
 

@@ -10,8 +10,6 @@
 
 #include "TWebCanvas.h"
 
-#include "THttpCallArg.h"
-#include "THttpWSEngine.h"
 #include "TWebSnapshot.h"
 #include "TWebPadPainter.h"
 #include "TWebVirtualX.h"
@@ -28,48 +26,34 @@
 #include "TH1.h"
 #include "TGraph.h"
 #include "TBufferJSON.h"
-#include "TApplication.h"
 #include "Riostream.h"
+
+#include <ROOT/TWebWindowsManager.hxx>
 
 #include <stdio.h>
 #include <string.h>
 
 
-ClassImp(TWebCanvas)
+ClassImp(TWebCanvas);
 
 TWebCanvas::TWebCanvas() :
-   THttpWSHandler("", ""),
    TCanvasImp(),
    fWebConn(),
-   fAddr(),
-   fServer(0),
    fHasSpecials(kFALSE),
    fCanvVersion(1)
 {
 }
 
-TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height, TString addr, void *serv) :
-   THttpWSHandler(name, "title"),
+TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height) :
    TCanvasImp(c, name, x, y, width, height),
    fWebConn(),
-   fAddr(addr),
-   fServer(serv),
    fHasSpecials(kFALSE),
    fCanvVersion(1)
 {
-   UInt_t hash = TString::Hash(&c, sizeof(c));
-   SetName(Form("0x%u", hash)); // make name very screwed
 }
 
 TWebCanvas::~TWebCanvas()
 {
-   for (WebConnList::iterator iter = fWebConn.begin(); iter != fWebConn.end(); ++iter) {
-      if (iter->fHandle) {
-         iter->fHandle->ClearHandle();
-         delete iter->fHandle;
-         iter->fHandle = 0;
-      }
-   }
 }
 
 Int_t TWebCanvas::InitWindow()
@@ -339,6 +323,7 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *pr
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
    // gDebug = 0;
 
+   // TODO: this is only for debugging, remove it later
    TBufferJSON::ExportToFile("snapshot.json", curr);
 
    delete curr; // destroy created snapshot
@@ -367,7 +352,9 @@ void TWebCanvas::CheckDataToSend()
    for (WebConnList::iterator citer = fWebConn.begin(); citer != fWebConn.end(); ++citer) {
       WebConn& conn = *citer;
 
-      if (!conn.fReady || !conn.fHandle) continue;
+      // check if direct data sending is possible
+      if (!fWindow->CanSend(conn.fConnId, true))
+         continue;
 
       TString buf;
 
@@ -399,8 +386,7 @@ void TWebCanvas::CheckDataToSend()
 
       if (buf.Length() > 0) {
          // sending of data can be moved into separate thread - not to block user code
-         conn.fReady = kFALSE;
-         conn.fHandle->SendCharStar(buf.Data());
+         fWindow->Send(buf.Data(), conn.fConnId);
       }
    }
 }
@@ -412,68 +398,22 @@ void TWebCanvas::Close()
 
 void TWebCanvas::Show()
 {
-   TString addr;
-
-   Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
-   if (symbol_qt5) {
-      typedef void (*FunctionQt5)(const char *, void *, bool);
-
-      addr.Form("://dummy:8080/web6gui/%s/draw.htm?longpollcanvas&no_root_json%s&qt5", GetName(),
-                (gROOT->IsBatch() ? "&batch_mode" : ""));
-      // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
-
-      Info("NewDisplay", "Show canvas in Qt5 window:  %s", addr.Data());
-
-      FunctionQt5 func = (FunctionQt5)symbol_qt5;
-      func(addr.Data(), fServer, gROOT->IsBatch());
-      return;
-   }
-
-   // TODO: one should try to load CEF libraries only when really needed
-   // probably, one should create separate DLL with CEF-related code
-   Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
-   const char *cef_path = gSystem->Getenv("CEF_PATH");
-   const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys) {
-      typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *);
-
-      addr.Form("/web6gui/%s/draw.htm?cef_canvas&no_root_json%s", GetName(), (gROOT->IsBatch() ? "&batch_mode" : ""));
-
-      Info("NewDisplay", "Show canvas in CEF window:  %s", addr.Data());
-
-      FunctionCef3 func = (FunctionCef3)symbol_cef;
-      func(addr.Data(), fServer, gROOT->IsBatch(), rootsys, cef_path);
-
-      return;
-   }
-
-   addr.Form("%s/web6gui/%s/draw.htm?webcanvas", fAddr.Data(), GetName());
-
-   Info("Show", "Call TWebCanvas::Show:  %s", addr.Data());
-
-   // exec.Form("setsid chromium --app=http://localhost:8080/Canvases/%s/draw.htm?websocket </dev/null >/dev/null 2>/dev/null &", Canvas()->GetName());
-
-
    const char *swhere = gSystem->Getenv("WEBGUI_WHERE"); // let configure place like with ROOT7
    std::string where = swhere ? swhere : "browser";
 
-   TString exec;
+   if (!fWindow) {
+      fWindow = ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
 
-   if (where != "browser") {
-      if (where.find("$url") != std::string::npos) {
-         exec = where.c_str();
-         exec.ReplaceAll("$url", addr);
-      } else {
-         exec.Form("%s %s", where.c_str(), addr.Data());
-      }
-   } else
-   if (gSystem->InheritsFrom("TMacOSXSystem"))
-      exec.Form("open %s", addr.Data());
-   else
-      exec.Form("xdg-open %s &", addr.Data());
-   printf("Exec %s\n", exec.Data());
+      fWindow->SetConnLimit(0); // allow any number of connections
 
-   gSystem->Exec(exec);
+      fWindow->SetDefaultPage("file:$jsrootsys/files/canvas6.htm");
+
+      fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
+
+      // fWindow->SetGeometry(500,300);
+   }
+
+   fWindow->Show(where);
 }
 
 void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
@@ -482,7 +422,7 @@ void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
    for (WebConnList::iterator citer = fWebConn.begin(); citer != fWebConn.end(); ++citer) {
       WebConn& conn = *citer;
 
-      if (!conn.fHandle) continue;
+      if (!conn.fConnId) continue;
 
       conn.fSend = "SHOW:";
       conn.fSend.Append(arg);
@@ -491,7 +431,6 @@ void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
 
    CheckDataToSend();
 }
-
 
 
 Bool_t TWebCanvas::DecodePadRanges(TPad *pad, const char *arg)
@@ -547,175 +486,139 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
    return kTRUE;
 }
 
-
-Bool_t TWebCanvas::ProcessWS(THttpCallArg *arg)
+void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 {
-   if (!arg) return kTRUE;
+   if (arg.empty()) return;
 
-   // try to identify connection for given WS request
-   WebConn* conn = 0;
-   Int_t connid = 0;
-   WebConnList::iterator iter = fWebConn.begin();
-   while (iter != fWebConn.end()) {
-      if (iter->fHandle && (iter->fHandle->GetId() == arg->GetWSId()) && arg->GetWSId()) {
-         conn = &(*iter); break;
-      }
-      ++iter; ++connid;
-   }
-
-   if (strcmp(arg->GetMethod(),"WS_CONNECT")==0) {
-
-      // accept all requests, in future one could limit number of connections
-      // arg->Set404(); // refuse connection
-
-   } else
-   if (strcmp(arg->GetMethod(),"WS_READY")==0) {
-      THttpWSEngine* wshandle = dynamic_cast<THttpWSEngine*> (arg->TakeWSHandle());
-
-      if (conn != 0) Error("ProcessWS","WSHandle with given websocket id exists!!!");
+   if (arg == "CONN_READY") {
 
       WebConn newconn;
-      newconn.fHandle = wshandle;
+      newconn.fConnId = connid;
 
       fWebConn.push_back(newconn);
 
-      // if (gDebug>0) Info("ProcessRequest","Set WebSocket handle %p", wshandle);
+      CheckDataToSend();
 
-      // connection is established
-   } else
-   if (strcmp(arg->GetMethod(),"WS_DATA")==0) {
-      // process received data
+      return;
+   }
 
-      if (!conn) {
-         Error("ProcessWS","Get websocket data without valid connection - ignore!!!");
-         return kFALSE;
+   // try to identify connection for given WS request
+   WebConn* conn(nullptr);
+   WebConnList::iterator iter = fWebConn.begin();
+   while (iter != fWebConn.end()) {
+      if (iter->fConnId == connid) {
+         conn = &(*iter); break;
       }
+      ++iter;
+   }
 
-      if (conn->fHandle->PreviewData(arg)) return kTRUE;
+   if (!conn) {
+      printf("Get data without not existing connection %u\n", connid);
+      return;
+   }
 
-      const char* cdata = (arg->GetPostDataLength()<=0) ? "" : (const char*) arg->GetPostData();
+   const char *cdata = arg.c_str();
 
-      // printf("GET: %s\n", cdata);
+   if (arg == "CONN_CLOSED") {
+      fWebConn.erase(iter);
+   } else if (strncmp(cdata,"READY",5)==0) {
+      CheckDataToSend();
+   } else if (strncmp(cdata, "RREADY:", 7)==0) {
+      cdata += 7;
 
-      if (strncmp(cdata,"READY",5)==0) {
-         conn->fReady = kTRUE;
-         CheckDataToSend();
-      } else
-      if (strncmp(cdata, "RREADY:", 7)==0) {
-         conn->fReady = kTRUE;
-         cdata += 7;
+      const char *separ = strchr(cdata, ':');
+      if (!separ) {
+         conn->fDrawVersion = TString(cdata).Atoll();
+      } else {
+         conn->fDrawVersion = TString(cdata, separ-cdata).Atoll();
+         cdata = separ+1;
+         if (gDebug>1) Info("ProcessData", "RANGES %s", cdata);
+         if (connid==0) DecodeAllRanges(cdata); // only first connection get ranges
+      }
+      CheckDataToSend();
+   } else if (strncmp(cdata,"GETMENU:",8)==0) {
+      conn->fGetMenu = cdata+8;
+      CheckDataToSend();
+   } else if (strncmp(cdata,"OBJEXEC:",8)==0) {
+      TString buf(cdata+8);
+      Int_t pos = buf.First(':');
 
-         const char *separ = strchr(cdata, ':');
-         if (!separ) {
-            conn->fDrawVersion = TString(cdata).Atoll();
-         } else {
-            conn->fDrawVersion = TString(cdata, separ-cdata).Atoll();
-            cdata = separ+1;
-            if (gDebug>1) Info("ProcessWS", "RANGES %s", cdata);
-            if (connid==0) DecodeAllRanges(cdata); // only first connection get ranges
+      if (pos>0) {
+         TString sid(buf, pos);
+         buf.Remove(0, pos+1);
+
+         TObject* obj = FindPrimitive(sid.Data());
+         if (obj && (buf.Length()>0)) {
+            TString exec;
+            exec.Form("((%s*) %p)->%s;", obj->ClassName(), obj, buf.Data());
+            Info("ProcessWS", "Obj %s Execute %s", obj->GetName(), exec.Data());
+            gROOT->ProcessLine(exec);
+
+            // PerformUpdate(); // check that canvas was changed
+            if (IsAnyPadModified(Canvas())) fCanvVersion++;
+            CheckDataToSend();
          }
-         CheckDataToSend();
-      } else
-      if (strncmp(cdata,"GETMENU:",8)==0) {
-         conn->fReady = kTRUE;
-         conn->fGetMenu = cdata+8;
-         CheckDataToSend();
-      } else if (strncmp(cdata,"OBJEXEC:",8)==0) {
-         TString buf(cdata+8);
-         Int_t pos = buf.First(':');
+      }
+   } else if (strncmp(cdata,"EXECANDSEND:",12)==0) {
+      TString buf(cdata+12), reply;
+      TObject *obj = 0;
 
+      Int_t pos = buf.First(':');
+
+      if (pos>0) {
+         reply.Append(buf, pos);
+         buf.Remove(0, pos+1);
+         pos = buf.First(':');
          if (pos>0) {
             TString sid(buf, pos);
             buf.Remove(0, pos+1);
-
-            TObject* obj = FindPrimitive(sid.Data());
-            if (obj && (buf.Length()>0)) {
-               TString exec;
-               exec.Form("((%s*) %p)->%s;", obj->ClassName(), obj, buf.Data());
-               Info("ProcessWS", "Obj %s Execute %s", obj->GetName(), exec.Data());
-               gROOT->ProcessLine(exec);
-
-               // PerformUpdate(); // check that canvas was changed
-               if (IsAnyPadModified(Canvas())) fCanvVersion++;
-               CheckDataToSend();
-            }
+            obj = FindPrimitive(sid.Data());
          }
-      } else if (strncmp(cdata,"EXECANDSEND:",12)==0) {
-         TString buf(cdata+12), reply;
-         TObject *obj = 0;
-
-         Int_t pos = buf.First(':');
-
-         if (pos>0) {
-            reply.Append(buf, pos);
-            buf.Remove(0, pos+1);
-            pos = buf.First(':');
-            if (pos>0) {
-               TString sid(buf, pos);
-               buf.Remove(0, pos+1);
-               obj = FindPrimitive(sid.Data());
-            }
-         }
-
-         if (obj && (buf.Length()>0) && (reply.Length()>0)) {
-            TString exec;
-            exec.Form("((%s*) %p)->%s;", obj->ClassName(), obj, buf.Data());
-            if (gDebug > 1) Info("ProcessWS", "Obj %s Exec %s", obj->GetName(), exec.Data());
-
-            Long_t res = gROOT->ProcessLine(exec);
-            TObject *resobj = (TObject *) res;
-            if (resobj) {
-               conn->fSend = reply;
-               conn->fSend.Append(":");
-               conn->fSend.Append(TBufferJSON::ConvertToJSON(resobj,23));
-               if (reply[0]=='D') delete resobj; // delete object if first symbol in reply is D
-            }
-
-            CheckDataToSend(); // check if data should be send
-         }
-      } else if (strncmp(cdata,"QUIT",4)==0) {
-         if (gApplication)
-            gApplication->Terminate(0);
-      } else if (strncmp(cdata,"RELOAD",6)==0) {
-         conn->fDrawVersion = 0;
-         CheckDataToSend();
-      } else if (strncmp(cdata,"GETIMG:",7)==0) {
-         const char* img = cdata+7;
-
-         const char* separ = strchr(img,':');
-         if (separ) {
-            TString filename(img, separ-img);
-            img = separ+1;
-            filename.Append(".svg"); // temporary - JSROOT returns SVG
-
-            std::ofstream ofs(filename);
-            ofs << "<?xml version=\"1.0\" standalone=\"no\"?>";
-            ofs << img;
-            ofs.close();
-
-            Info("ProcessWS", "SVG file %s has been created", filename.Data());
-         }
-         conn->fReady = kTRUE;
-         CheckDataToSend();
-      } else if (strncmp(cdata,"KEEPALIVE",9)==0) {
-      } else {
-         Error("ProcessWS", "GET unknown request %d %s", (int) strlen(cdata), cdata);
       }
 
-   } else
-   if (strcmp(arg->GetMethod(),"WS_CLOSE")==0) {
-      // connection is closed, one can remove handle
+      if (obj && (buf.Length()>0) && (reply.Length()>0)) {
+         TString exec;
+         exec.Form("((%s*) %p)->%s;", obj->ClassName(), obj, buf.Data());
+         if (gDebug > 1) Info("ProcessData", "Obj %s Exec %s", obj->GetName(), exec.Data());
 
-      if (conn && conn->fHandle) {
-         conn->fHandle->ClearHandle();
-         delete conn->fHandle;
-         conn->fHandle = 0;
+         Long_t res = gROOT->ProcessLine(exec);
+         TObject *resobj = (TObject *) res;
+         if (resobj) {
+            conn->fSend = reply;
+            conn->fSend.Append(":");
+            conn->fSend.Append(TBufferJSON::ConvertToJSON(resobj,23));
+            if (reply[0]=='D') delete resobj; // delete object if first symbol in reply is D
+         }
+
+         CheckDataToSend(); // check if data should be send
       }
+   } else if (strncmp(cdata,"QUIT",4)==0) {
+      // use window manager to correctly terminate http server
+      ROOT::Experimental::TWebWindowsManager::Instance()->Terminate();
+   } else if (strncmp(cdata,"RELOAD",6)==0) {
+      conn->fDrawVersion = 0;
+      CheckDataToSend();
+   } else if (strncmp(cdata,"GETIMG:",7)==0) {
+      const char* img = cdata+7;
 
-      if (conn) fWebConn.erase(iter);
+      const char* separ = strchr(img,':');
+      if (separ) {
+         TString filename(img, separ-img);
+         img = separ+1;
+         filename.Append(".svg"); // temporary - JSROOT returns SVG
+
+         std::ofstream ofs(filename);
+         ofs << "<?xml version=\"1.0\" standalone=\"no\"?>";
+         ofs << img;
+         ofs.close();
+
+         Info("ProcessWS", "SVG file %s has been created", filename.Data());
+      }
+      CheckDataToSend();
+   } else if (arg == "KEEPALIVE") {
+   } else {
+      Error("ProcessWS", "GET unknown request %d %30s", (int) arg.length(), cdata);
    }
-
-   return kTRUE;
 }
 
 Bool_t TWebCanvas::IsAnyPadModified(TPad *pad)

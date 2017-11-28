@@ -22,24 +22,14 @@
 #include "TGuiFactory.h"
 #endif
 
-class THttpServer;
-
 class TWebGuiFactory : public TGuiFactory {
 
 private:
    TGuiFactory *fGuiProxy;
 
-   static THttpServer *gServer;
-
-   TString fAddr;
-
-   Bool_t CreateHttpServer();
-
 public:
    TWebGuiFactory();
    virtual ~TWebGuiFactory();
-
-   static THttpServer *GetHttpServer();
 
    virtual TApplicationImp *CreateApplicationImp(const char *classname, int *argc, char **argv);
 
