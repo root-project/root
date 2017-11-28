@@ -1098,14 +1098,13 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
    clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
 
-   cling::Transaction* T = nullptr;
-   interp.declare("/*This is decl is to get a valid sloc...*/;", &T);
-   SourceLocation ValidLoc = T->decls_begin()->m_DGR.getSingleDecl()->getLocStart();
-   // CreateImplicitModuleImportNoInit creates decls.
-   cling::Interpreter::PushTransactionRAII RAII(&interp);
    if (clang::Module *M = moduleMap.findModule(ModuleName)) {
+      cling::Interpreter::PushTransactionRAII RAII(&interp);
+      SourceLocation ValidLoc = M->DefinitionLoc;
       clang::IdentifierInfo *II = PP.getIdentifierInfo(M->Name);
-      return !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
+      bool Result = !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
+      PP.makeModuleVisible(M, ValidLoc);
+      return Result;
    }
    return false;
 }
@@ -1138,6 +1137,10 @@ static void LoadCoreModules(cling::Interpreter &interp)
 
    if (!LoadModule(moduleMap.findModule("RIO")->Name, interp))
       Error("TCling::LoadCodeModule", "Cannot load module RIO");
+
+   assert(interp.getMacro("gROOT") && "Couldn't load gROOT macro?");
+   interp.declare("#include <cassert>\n");
+   interp.declare("#ifdef I\n #undef I\n #endif\n");
 }
 
 static bool FileExists(const char *file)
@@ -1925,7 +1928,11 @@ void TCling::RegisterModule(const char* modulename,
 #endif
 #endif
 
-      if (!hasHeaderParsingOnDemand){
+      llvm::StringRef CxxModule = StringRef(modulename);
+      bool b = CxxModule.consume_front("lib");
+      (void)b;
+      if (LoadModule(CxxModule, *fInterpreter)) {
+      } else if (!hasHeaderParsingOnDemand){
          SuspendAutoParsing autoParseRaii(this);
 
          const cling::Transaction* watermark = fInterpreter->getLastTransaction();
