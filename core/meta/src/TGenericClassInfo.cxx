@@ -24,17 +24,26 @@
 #include "TInterpreter.h"
 #include "TClassTable.h"
 
+#include <iostream>
+
 namespace ROOT {
 namespace Internal {
    std::string TTypeNameExtractionBase::GetImpl(const char* derived_funcname) {
       constexpr static const char tag[] = "TypeNameExtraction<";
       const char* start = strstr(derived_funcname, tag);
-      if (!start)
-         return "";
+      if (!start) {
+         std::cerr << "Failed to deduce type for '" << derived_funcname << "'\n";
+         std::abort();
+         // return "";
+      }
       start += sizeof(tag) - 1;
       const char* end = strstr(start, ">::Get(");
-      if (!end)
-         return "";
+
+      if (!end) {
+         std::cerr << "Failed to deduce type for '" << derived_funcname << "'\n";
+         std::abort();
+         // return "";
+      }
 
       if (std::string_view(start, end - start).compare("T") == 0) {
          // PRETTY_FUNCTION with gcc 7.1.0 gives :
@@ -46,14 +55,24 @@ namespace Internal {
          const char *startWithT = strstr(start, withTtag);
          startWithT += sizeof(withTtag) - 1;
          const char *endWithT = strstr(startWithT, ";");
-         if (!endWithT)
-            return "";
+         if (!endWithT) {
+            std::cerr << "Failed to deduce type for '" << derived_funcname << "'\n";
+            std::abort();
+            // return "";
+         }
          start = startWithT;
          end = endWithT;
       }
 
       std::string ret;
       TClassEdit::GetNormalizedName(ret, std::string_view(start, end - start));
+
+      if (ret == "T") {
+         std::cerr << "Failed to deduce type for '" << derived_funcname << "'\n";
+         std::cerr << "Deduced type is '" << ret << "'\n";
+         std::abort();
+      }
+
       return ret;
    }
 
