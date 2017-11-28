@@ -40,6 +40,9 @@ AutoDict_*.cxx
 *_dictContent.h
 *_dictUmbrella.h
 
+# Eclipse
+.project
+
 # /
 /root_version
 
