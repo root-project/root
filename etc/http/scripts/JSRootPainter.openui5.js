@@ -31,7 +31,7 @@
    JSROOT.sources.push("openui5");
 
    var load_callback = JSROOT.complete_script_load;
-   JSROOT.complete_script_load = null; // normal callback is intercepted - we need to instantiate openui5
+   delete JSROOT.complete_script_load; // normal callback is intercepted - we need to instantiate openui5
 
    JSROOT.completeUI5Loading = function() {
       // console.log('complete ui5 loading', typeof sap);
@@ -58,14 +58,14 @@
    element.setAttribute('data-sap-ui-compatVersion', 'edge');
    // element.setAttribute('data-sap-ui-bindingSyntax', 'complex');
 
-   element.setAttribute('data-sap-ui-preload', 'async');
-   // for the moment specify path in the THttpServer, later can adjust for offline case
-   element.setAttribute('data-sap-ui-resourceroots', '{ "sap.ui.jsroot": "/jsrootsys/openui5/" }');
+   element.setAttribute('data-sap-ui-preload', 'async'); // '' to disable Component-preload.js
+
+   // configure path for openui5 scripts
+   element.setAttribute('data-sap-ui-resourceroots', '{ "sap.ui.jsroot": "' + JSROOT.source_dir + 'openui5/" }');
 
    element.setAttribute('data-sap-ui-evt-oninit', "JSROOT.completeUI5Loading()");
 
    document.getElementsByTagName("head")[0].appendChild(element);
-
 
    // function allows to create menu with openui
    // for the moment deactivated - can be used later
@@ -73,7 +73,7 @@
 
       var menu = { painter: painter,  element: null, cnt: 1, stack: [], items: [], separ: false };
 
-      // this is slighly modified version of original MenuItem.render function.
+      // this is slightly modified version of original MenuItem.render function.
       // need to be updated with any further changes
       function RenderCustomItem(rm, oItem, oMenu, oInfo) {
          var oSubMenu = oItem.getSubmenu();
@@ -336,7 +336,7 @@
 
    JSROOT.TCanvasPainter.prototype.SelectObjectPainter = function(painter) {
       var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
-      var ged = main ? main.getController().getGed() : null;
+      var ged = main ? main.getController().getLeftController("Ged") : null;
       if (ged) ged.onObjectSelect(this, painter);
    }
 
@@ -355,9 +355,24 @@
       if (main) main.getController().ShowCanvasStatus(lbl1,lbl2,lbl3,lbl4);
    }
 
+   JSROOT.TCanvasPainter.prototype.ShowUI5ProjectionArea = function(kind, call_back) {
+      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
+      if (main) main.getController().showProjectionArea(kind, call_back);
+   }
+
+   JSROOT.TCanvasPainter.prototype.DrawInUI5ProjectionArea = function(obj, opt, call_back) {
+      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
+      if (main) main.getController().drawInProjectionArea(obj, opt, call_back);
+   }
+
    JSROOT.TCanvasPainter.prototype.ShowMessage = function(msg) {
       var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
       if (main) main.getController().showMessage(msg);
+   }
+
+   JSROOT.TCanvasPainter.prototype.ShowSection = function(that, on) {
+      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
+      if (main) main.getController().showSection(that, on);
    }
 
    JSROOT.TCanvasPainter.prototype.MethodsDialog = function(painter, method, menu_obj_id) {
@@ -373,6 +388,8 @@
 
       main.getController().showMethodsDialog(method, function(args) {
 
+         if (painter.ExecuteMenuCommand(method, args)) return;
+
          var exec = method.fExec;
          if (args) exec = exec.substr(0,exec.length-1) + args + ')';
 
@@ -381,7 +398,18 @@
 
          pthis.SendWebsocket('OBJEXEC:' + menu_obj_id + ":" + exec);
       });
+   }
 
+   // ====================================================================================
+
+   if (JSROOT.v7 && JSROOT.v7.TCanvasPainter)
+
+   JSROOT.v7.TCanvasPainter.prototype.ActivatePanel = function(name, handle, callback) {
+      // function used to actiavte FitPanel
+
+      var main = JSROOT.sap.ui.getCore().byId("TopCanvasId");
+      if (!main) return JSROOT.CallBack(callback, false);
+      main.getController().showPanelInLeftArea(name, handle, callback);
    }
 
    return JSROOT;

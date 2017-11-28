@@ -236,7 +236,7 @@ void TGLScene::TSceneInfo::DumpDrawStats()
          std::map<TClass*, UInt_t>::const_iterator it = fByShapeCnt.begin();
          while (it != fByShapeCnt.end()) {
             out += Form("\t%-20s  %u\n", it->first->GetName(), it->second);
-            it++;
+            ++it;
          }
       }
       Info("TGLScene::DumpDrawStats()", "%s",out.Data());
@@ -281,7 +281,10 @@ TGLScene::TGLScene() :
    fInSmartRefresh(kFALSE),
    fLastPointSizeScale (0),
    fLastLineWidthScale (0)
-{}
+{
+   if (fSceneID == 1)
+      TGLLogicalShape::SetEnvDefaults();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destroy scene objects

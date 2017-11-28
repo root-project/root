@@ -251,7 +251,7 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       list(APPEND _list_of_header_dependencies ${fp})
     else()
       find_file(headerFile ${fp} HINTS ${localinclude} ${incdirs} NO_DEFAULT_PATH)
-      find_file(headerFile ${fp})
+      find_file(headerFile ${fp} NO_SYSTEM_ENVIRONMENT_PATH)
       if(headerFile)
         list(APPEND headerfiles ${headerFile})
         list(APPEND _list_of_header_dependencies ${headerFile})
@@ -340,9 +340,9 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
       set(newargs -s ${library_output_dir}/${library_name})
       set(pcm_name ${library_output_dir}/${libprefix}${ARG_MODULE}_rdict.pcm)
       set(rootmap_name ${library_output_dir}/${libprefix}${ARG_MODULE}.rootmap)
+      set(cpp_module ${ARG_MODULE})
       if(runtime_cxxmodules)
-        set(cpp_module ${ARG_MODULE})
-        set(cpp_module_file ${cpp_module}.pcm)
+        set(cpp_module_file ${library_output_dir}/${cpp_module}.pcm)
       endif()
     endif()
   else()
@@ -513,7 +513,50 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   endforeach()
   #set(modulemap_entry "${modulemap_entry}  link \"lib/${library}\"\n")
   set(modulemap_entry "${modulemap_entry}  export *\n}\n\n")
-  set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT ${modulemap_entry})
+  # Non ROOT projects need a modulemap generated for them in the current
+  # directory. The same happens with test dictionaries in ROOT which are not
+  # exposed via the main modulemap. This is exposed by setting the
+  # ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR.
+  if (NOT "${CMAKE_PROJECT_NAME}" STREQUAL ROOT OR ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR)
+    set(modulemap_output_file "${CMAKE_CURRENT_BINARY_DIR}/module.modulemap")
+
+    # It's possible that multiple modulemaps are needed in the current
+    # directory and we need to merge them. As we don't want to have multiple
+    # modules in the same moduluemap when rerunning CMake, we do a quick
+    # check if the current module is already in the modulemap (in which case
+    # we know we rerun CMake at the moment and start writing a new modulemap
+    # instead of appending new modules).
+
+    # The string we use to identify if the current module is already in the
+    # modulemap.
+    set(modulemap_needle "module \"${library}\"")
+    # Check if the needle is in the modulemap. If the file doesn't exist
+    # we just pretend we didn't found the string in the modulemap.
+    set(match_result -1)
+    if (EXISTS "${modulemap_output_file}")
+      file(READ "${modulemap_output_file}" existing_contents)
+      string(FIND "${existing_contents}" "${modulemap_needle}" match_result)
+    endif()
+    # Append our new module to the existing modulemap containing other modules.
+    if(${match_result} EQUAL -1)
+      file(APPEND "${modulemap_output_file}" "${modulemap_entry}")
+    else()
+      file(WRITE "${modulemap_output_file}" "${modulemap_entry}")
+    endif()
+
+    # Sanity check that the string we're looking for is actually in the content
+    # we're writing to this file.
+    string(FIND "${modulemap_entry}" "${modulemap_needle}" match_result)
+    if(${match_result} EQUAL -1)
+      message(AUTHOR_WARNING "Couldn't find module declaration in modulemap file."
+                             "This would break the modulemap generation when "
+                             " rerunning CMake. Module needle was "
+                             "'${modulemap_needle}' and the content was '${modulemap_entry}'")
+    endif()
+
+  else()
+    set_property(GLOBAL APPEND PROPERTY ROOT_CXXMODULES_EXTRA_MODULEMAP_CONTENT ${modulemap_entry})
+  endif()
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
@@ -539,6 +582,7 @@ function(ROOT_LINKER_LIBRARY library)
   if(WIN32 AND ARG_TYPE STREQUAL SHARED AND NOT ARG_DLLEXPORT)
     #---create a list of all the object files-----------------------------
     if(CMAKE_GENERATOR MATCHES "Visual Studio")
+      set(library_name ${libprefix}${library})
       #foreach(src1 ${lib_srcs})
       #  if(NOT src1 MATCHES "[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
       #    string (REPLACE ${CMAKE_CURRENT_SOURCE_DIR} "" src2 ${src1})
@@ -548,7 +592,7 @@ function(ROOT_LINKER_LIBRARY library)
       #    set(lib_objs ${lib_objs} ${library}.dir/${CMAKE_CFG_INTDIR}/${name}.obj)
       #  endif()
       #endforeach()
-     set(lib_objs ${lib_objs} ${library}.dir/${CMAKE_CFG_INTDIR}/*.obj)
+      set(lib_objs ${lib_objs} ${library}.dir/${CMAKE_CFG_INTDIR}/*.obj)
     else()
       foreach(src1 ${lib_srcs})
         if(NOT src1 MATCHES "[.]h$|[.]icc$|[.]hxx$|[.]hpp$")
@@ -564,15 +608,7 @@ function(ROOT_LINKER_LIBRARY library)
     #---create a shared library with the .def file------------------------
     add_library(${library} ${_all} SHARED ${lib_srcs})
     target_link_libraries(${library} ${ARG_LIBRARIES} ${ARG_DEPENDENCIES})
-    set_target_properties(${library} PROPERTIES ${ROOT_LIBRARY_PROPERTIES} LINK_FLAGS -DEF:${library}.def)
-
-    #---set the .def file as generated------------------------------------
-    set_source_files_properties(${library}.def PROPERTIES GENERATED 1)
-    #---create a custom pre-link command that runs bindexplib
-    add_custom_command(TARGET ${library} PRE_LINK
-                       COMMAND bindexplib
-                       ARGS -o ${library}.def ${libprefix}${library} ${lib_objs}
-                       DEPENDS bindexplib )
+    set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
   else()
     #---Need to add a dummy source file if all sources are OBJECT libraries (Xcode, ...)
     if(NOT lib_srcs MATCHES "(^|[;])[^$][^<]")
@@ -658,6 +694,9 @@ function(ROOT_OBJECT_LIBRARY library)
   # creates extra module variants, and not useful because we don't use these
   # macros.
   set_target_properties(${library} PROPERTIES DEFINE_SYMBOL "")
+  if(WIN32)
+    set_target_properties(${library} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
+  endif()
 
   if(ARG_BUILTINS)
     foreach(arg1 ${ARG_BUILTINS})
@@ -817,7 +856,7 @@ function(ROOT_INSTALL_HEADERS)
       add_custom_command(
         OUTPUT ${dst}
         COMMAND ${CMAKE_COMMAND} -E copy ${src} ${dst}
-        COMMENT "Copying header ${src} to /include"
+        COMMENT "Copying header ${src} to ${CMAKE_BINARY_DIR}/include"
         DEPENDS ${src})
       list(APPEND dst_list ${dst})
     endforeach()

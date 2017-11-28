@@ -9,21 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTrapEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/trap_pic.gif">
+/** \class TGeoTrapEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoTrap.
+
+\image html geom_trap_pic.png
+
+\image html geom_trap_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/trap_ed.jpg">
-*/
-//End_Html
 
 #include "TGeoTrapEditor.h"
 #include "TGeoTabManager.h"
@@ -63,7 +58,7 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t width,
    MakeTitle("Name");
    fShapeName = new TGTextEntry(this, new TGTextBuffer(50), kTRAP_NAME);
    fShapeName->Resize(135, fShapeName->GetDefaultHeight());
-   fShapeName->SetToolTipText("Enter the parallelipiped name");
+   fShapeName->SetToolTipText("Enter the parallelepiped name");
    fShapeName->Associate(this);
    AddFrame(fShapeName, new TGLayoutHints(kLHintsLeft, 3, 1, 2, 5));
 
@@ -136,7 +131,7 @@ TGeoTrapEditor::TGeoTrapEditor(const TGWindow *p, Int_t width,
    fEDz->SetNumAttr(TGNumberFormat::kNEAPositive);
    fEDz->Resize(100, fEDz->GetDefaultHeight());
    nef = (TGTextEntry*)fEDz->GetNumberEntry();
-   nef->SetToolTipText("Enter the half-lenth in Z");
+   nef->SetToolTipText("Enter the half-length in Z");
    fEDz->Associate(this);
    f1->AddFrame(fEDz, new TGLayoutHints(kLHintsRight, 2, 2, 4, 4));
    AddFrame(f1, new TGLayoutHints(kLHintsLeft, 2, 2, 4, 4));
@@ -509,21 +504,16 @@ enum ETGeoGtraWid {
    kGTRA_TWIST
 };
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoGtraEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/gtra_pic.gif">
+/** \class TGeoGtraEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoGtra.
+
+\image html geom_gtra_pic.png
+
+\image html geom_gtra_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/gtra_ed.jpg">
-*/
-//End_Html
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor for gtra editor

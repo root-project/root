@@ -96,11 +96,12 @@ void FCGX_ROOT_send_file(FCGX_Request *request, const char *fname)
 
 ClassImp(TFastCgi);
 
-   ////////////////////////////////////////////////////////////////////////////////
-   /// normal constructor
+////////////////////////////////////////////////////////////////////////////////
+/// normal constructor
 
-   TFastCgi::TFastCgi()
-   : THttpEngine("fastcgi", "fastcgi interface to webserver"), fSocket(0), fDebugMode(kFALSE), fTopName(), fThrd(0)
+TFastCgi::TFastCgi()
+   : THttpEngine("fastcgi", "fastcgi interface to webserver"), fSocket(0), fDebugMode(kFALSE), fTopName(),
+     fThrd(nullptr), fTerminating(kFALSE)
 {
 }
 
@@ -113,7 +114,7 @@ TFastCgi::~TFastCgi()
       // running thread will be killed
       fThrd->Kill();
       delete fThrd;
-      fThrd = 0;
+      fThrd = nullptr;
    }
 
    if (fSocket > 0) {
@@ -138,10 +139,12 @@ Bool_t TFastCgi::Create(const char *args)
 
       // first extract port number
       sport = ":";
-      while ((*args != 0) && (*args >= '0') && (*args <= '9')) sport.Append(*args++);
+      while ((*args != 0) && (*args >= '0') && (*args <= '9'))
+         sport.Append(*args++);
 
       // than search for extra parameters
-      while ((*args != 0) && (*args != '?')) args++;
+      while ((*args != 0) && (*args != '?'))
+         args++;
 
       if (*args == '?') {
          TUrl url(TString::Format("http://localhost/folder%s", args));
@@ -150,10 +153,12 @@ Bool_t TFastCgi::Create(const char *args)
 
             url.ParseOptions();
 
-            if (url.GetValueFromOptions("debug") != 0) fDebugMode = kTRUE;
+            if (url.GetValueFromOptions("debug") != 0)
+               fDebugMode = kTRUE;
 
             const char *top = url.GetValueFromOptions("top");
-            if (top != 0) fTopName = top;
+            if (top != 0)
+               fTopName = top;
          }
       }
    }
@@ -186,11 +191,12 @@ void *TFastCgi::run_func(void *args)
 
    int count = 0;
 
-   while (1) {
+   while (!engine->fTerminating) {
 
       int rc = FCGX_Accept_r(&request);
 
-      if (rc != 0) continue;
+      if (rc != 0)
+         continue;
 
       count++;
 
@@ -200,12 +206,17 @@ void *TFastCgi::run_func(void *args)
       const char *inp_length = FCGX_GetParam("CONTENT_LENGTH", request.envp);
 
       THttpCallArg arg;
-      if (inp_path != 0) arg.SetPathAndFileName(inp_path);
-      if (inp_query != 0) arg.SetQuery(inp_query);
-      if (inp_method != 0) arg.SetMethod(inp_method);
-      if (engine->fTopName.Length() > 0) arg.SetTopName(engine->fTopName.Data());
+      if (inp_path != 0)
+         arg.SetPathAndFileName(inp_path);
+      if (inp_query != 0)
+         arg.SetQuery(inp_query);
+      if (inp_method != 0)
+         arg.SetMethod(inp_method);
+      if (engine->fTopName.Length() > 0)
+         arg.SetTopName(engine->fTopName.Data());
       int len = 0;
-      if (inp_length != 0) len = strtol(inp_length, NULL, 10);
+      if (inp_length != 0)
+         len = strtol(inp_length, NULL, 10);
       if (len > 0) {
          void *buf = malloc(len + 1); // one myte more for null-termination
          int nread = FCGX_GetStr((char *)buf, len, request.in);
@@ -229,7 +240,8 @@ void *TFastCgi::run_func(void *args)
       arg.SetRequestHeader(header);
 
       TString username = arg.GetRequestHeader("REMOTE_USER");
-      if ((username.Length() > 0) && (arg.GetRequestHeader("AUTH_TYPE").Length() > 0)) arg.SetUserName(username);
+      if ((username.Length() > 0) && (arg.GetRequestHeader("AUTH_TYPE").Length() > 0))
+         arg.SetUserName(username);
 
       if (engine->fDebugMode) {
          FCGX_FPrintF(request.out, "Status: 200 OK\r\n"
@@ -274,7 +286,8 @@ void *TFastCgi::run_func(void *args)
       } else {
 
          // TODO: check in request header that gzip encoding is supported
-         if (arg.GetZipping() > 0) arg.CompressWithGzip();
+         if (arg.GetZipping() > 0)
+            arg.CompressWithGzip();
 
          arg.FillHttpHeader(hdr, "Status:");
          FCGX_FPrintF(request.out, hdr.Data());

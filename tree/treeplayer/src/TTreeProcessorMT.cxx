@@ -65,6 +65,7 @@ std::vector<ROOT::Internal::TreeViewCluster> TTreeProcessorMT::MakeClusters()
    const auto &fileNames = treeView->GetFileNames();
    const auto nFileNames = fileNames.size();
    const auto &treeName = treeView->GetTreeName();
+   Long64_t offset = 0;
    for (auto i = 0u; i < nFileNames; ++i) { // TTreeViewCluster requires the index of the file the cluster belongs to
       std::unique_ptr<TFile> f(TFile::Open(fileNames[i].c_str())); // need TFile::Open to load plugins if need be
       TTree *t = nullptr;                                          // not a leak, t will be deleted by f
@@ -75,8 +76,10 @@ std::vector<ROOT::Internal::TreeViewCluster> TTreeProcessorMT::MakeClusters()
       // Iterate over the clusters in the current file and generate a task for each of them
       while ((start = clusterIter()) < entries) {
          end = clusterIter.GetNextEntry();
-         clusters.emplace_back(ROOT::Internal::TreeViewCluster{start, end, i});
+         // Add the current file's offset to start and end to make them (chain) global
+         clusters.emplace_back(ROOT::Internal::TreeViewCluster{start + offset, end + offset});
       }
+      offset += entries;
    }
    return clusters;
 }
@@ -106,12 +109,15 @@ void TTreeProcessorMT::Process(std::function<void(TTreeReader &)> func)
    auto clusters = MakeClusters();
 
    auto mapFunction = [this, &func](const ROOT::Internal::TreeViewCluster &c) {
-      // get the idx to the TreeViewInput for this task in the current thread
-      const auto dataIdx = treeView->FindOrOpenFile(c.filenameIdx);
-      auto readerAndEntryList = treeView->GetTreeReader(dataIdx, c.startEntry, c.endEntry);
+      // This task will operate with the tree that contains startEntry
+      treeView->PushLoadedEntry(c.startEntry);
+
+      auto readerAndEntryList = treeView->GetTreeReader(c.startEntry, c.endEntry);
       auto &reader = std::get<0>(readerAndEntryList);
       func(*reader);
-      treeView->Cleanup(dataIdx);
+
+      // In case of task interleaving, we need to load here the tree of the parent task
+      treeView->RestoreLoadedEntry();
    };
 
    // Assume number of threads has been initialized via ROOT::EnableImplicitMT

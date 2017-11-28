@@ -88,7 +88,7 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
                                          const clang::FileEntry *FE,
                                          llvm::StringRef /*SearchPath*/,
                                          llvm::StringRef /*RelativePath*/,
-                                         const clang::Module */*Imported*/) {
+                                         const clang::Module * /*Imported*/) {
    // Method called via Callbacks->InclusionDirective()
    // in Preprocessor::HandleIncludeDirective(), invoked whenever an
    // inclusion directive has been processed, and allowing us to try
@@ -100,7 +100,9 @@ void TClingCallbacks::InclusionDirective(clang::SourceLocation sLoc/*HashLoc*/,
    //    or TH1F in presence of TH1F.h.
    // Strategy 2) is tried only if 1) fails.
 
-   if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively || !FileName.endswith(".h")) return;
+   bool isHeaderFile = FileName.endswith(".h") || FileName.endswith(".hxx") || FileName.endswith(".hpp");
+   if (!IsAutoloadingEnabled() || fIsAutoloadingRecursively || !isHeaderFile)
+      return;
 
    std::string localString(FileName.str());
 
@@ -371,50 +373,43 @@ bool TClingCallbacks::tryAutoParseInternal(llvm::StringRef Name, LookupResult &R
      fIsAutoloadingRecursively = true;
 
      bool lookupSuccess = false;
-     if (SemaR.getLangOpts().Modules) {
-        if (TCling__AutoParseCallback(Name.str().c_str())) {
-           lookupSuccess = FE || SemaR.LookupName(R, S);
-        }
-     }
-     else {
-        // Save state of the PP
-        Parser& P = const_cast<Parser&>(m_Interpreter->getParser());
+     // Save state of the PP
+     Parser &P = const_cast<Parser &>(m_Interpreter->getParser());
 
-        ParsingStateRAII raii(P,SemaR);
+     ParsingStateRAII raii(P, SemaR);
 
-        // First see whether we have a fwd decl of this name.
-        // We shall only do that if lookup makes sense for it (!FE).
-        if (!FE) {
-           lookupSuccess = SemaR.LookupName(R, S);
-           if (lookupSuccess) {
-              if (R.isSingleResult()) {
-                 if (isa<clang::RecordDecl>(R.getFoundDecl())) {
-                    // Good enough; RequireCompleteType() will tell us if we
-                    // need to auto parse.
-                    // But we might need to auto-load.
-                    TCling__AutoLoadCallback(Name.data());
-                    fIsAutoloadingRecursively = false;
-                    return true;
-                 }
+     // First see whether we have a fwd decl of this name.
+     // We shall only do that if lookup makes sense for it (!FE).
+     if (!FE) {
+        lookupSuccess = SemaR.LookupName(R, S);
+        if (lookupSuccess) {
+           if (R.isSingleResult()) {
+              if (isa<clang::RecordDecl>(R.getFoundDecl())) {
+                 // Good enough; RequireCompleteType() will tell us if we
+                 // need to auto parse.
+                 // But we might need to auto-load.
+                 TCling__AutoLoadCallback(Name.data());
+                 fIsAutoloadingRecursively = false;
+                 return true;
               }
            }
         }
+     }
 
-        if (TCling__AutoParseCallback(Name.str().c_str())) {
-           // Shouldn't we pop more?
-           raii.fPushedDCAndS.pop();
-           raii.fCleanupRAII.pop();
-           lookupSuccess = FE || SemaR.LookupName(R, S);
-        } else if (FE && TCling__GetClassSharedLibs(Name.str().c_str())) {
-           // We are "autoparsing" a header, and the header was not parsed.
-           // But its library is known - so we do know about that header.
-           // Do the parsing explicitly here, while recursive autoloading is
-           // disabled.
-           std::string incl = "#include \"";
-           incl += FE->getName();
-           incl += '"';
-           m_Interpreter->declare(incl);
-        }
+     if (TCling__AutoParseCallback(Name.str().c_str())) {
+        // Shouldn't we pop more?
+        raii.fPushedDCAndS.pop();
+        raii.fCleanupRAII.pop();
+        lookupSuccess = FE || SemaR.LookupName(R, S);
+     } else if (FE && TCling__GetClassSharedLibs(Name.str().c_str())) {
+        // We are "autoparsing" a header, and the header was not parsed.
+        // But its library is known - so we do know about that header.
+        // Do the parsing explicitly here, while recursive autoloading is
+        // disabled.
+        std::string incl = "#include \"";
+        incl += FE->getName();
+        incl += '"';
+        m_Interpreter->declare(incl);
      }
 
      fIsAutoloadingRecursively = false;

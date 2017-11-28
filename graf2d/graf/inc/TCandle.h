@@ -115,8 +115,8 @@ public:
    Double_t       GetQ3() const {return fBoxDown;}
    Bool_t         IsHorizontal() {return (IsOption(kHorizontal)); }
    Bool_t         IsVertical() {return (!IsOption(kHorizontal)); }
-   Bool_t         IsCandleScaled() {return fScaledCandle; }
-   Bool_t         IsViolinScaled() {return fScaledViolin; }
+   Bool_t         IsCandleScaled();
+   Bool_t         IsViolinScaled();
 
    void           SetOption(CandleOption opt) { fOption = opt; }
    void           SetLog(int x, int y, int z) { fLogX = x; fLogY = y; fLogZ = z;}

@@ -60,6 +60,9 @@ protected:
 
    static  Bool_t     fgIgnoreSizeForCameraInterest;
 
+   static  Bool_t     fgUseDLs;            //! global flag for usage of display-lists
+   static  Bool_t     fgUseDLsForVertArrs; //! global flag for usage of display-lists in shapes that use vertex arrays
+
 public:
    TGLLogicalShape();
    TGLLogicalShape(TObject* obj);
@@ -112,6 +115,8 @@ public:
 
    static Bool_t GetIgnoreSizeForCameraInterest();
    static void   SetIgnoreSizeForCameraInterest(Bool_t isfci);
+
+   static void   SetEnvDefaults();
 
    ClassDef(TGLLogicalShape,0) // a logical (non-placed, local frame) drawable object
 };

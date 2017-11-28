@@ -80,7 +80,7 @@ of a main program creating an interactive version is shown below:
 #include "Windows4Root.h"
 #include <Psapi.h>
 #define RTLD_DEFAULT ((void *)::GetModuleHandle(NULL))
-#define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
+//#define dlsym(library, function_name) ::GetProcAddress((HMODULE)library, function_name)
 #define dlopen(library_name, flags) ::LoadLibrary(library_name)
 #define dlclose(library) ::FreeLibrary((HMODULE)library)
 char *dlerror() {
@@ -89,6 +89,25 @@ char *dlerror() {
                  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), Msg,
                  sizeof(Msg), NULL);
    return Msg;
+}
+FARPROC dlsym(void *library, const char *function_name)
+{
+   HMODULE hMods[1024];
+   DWORD cbNeeded;
+   FARPROC address = NULL;
+   unsigned int i;
+   if (library == RTLD_DEFAULT) {
+      if (EnumProcessModules(::GetCurrentProcess(), hMods, sizeof(hMods), &cbNeeded)) {
+         for (i = 0; i < (cbNeeded / sizeof(HMODULE)); i++) {
+            address = ::GetProcAddress((HMODULE)hMods[i], function_name);
+            if (address)
+               return address;
+         }
+      }
+      return address;
+   } else {
+      return ::GetProcAddress((HMODULE)library, function_name);
+   }
 }
 #else
 #include <dlfcn.h>
@@ -135,6 +154,7 @@ char *dlerror() {
 #include "TListOfFunctionTemplates.h"
 #include "TFunctionTemplate.h"
 #include "ThreadLocalStorage.h"
+#include "TVirtualRWMutex.h"
 
 #include <string>
 namespace std {} using namespace std;
@@ -157,6 +177,7 @@ static void *gInterpreterLib = 0;
 
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = 0;
+ROOT::TVirtualRWMutex *ROOT::gCoreMutex = nullptr;
 
 // For accessing TThread::Tsd indirectly.
 void **(*gThreadTsd)(void*,Int_t) = 0;
@@ -332,7 +353,7 @@ namespace Internal {
    // This mechanism was primarily intended to fix the issues with order in which
    // global TROOT and LLVM globals are initialized. TROOT was initializing
    // Cling, but Cling could not be used yet due to LLVM globals not being
-   // initialized yet.  The solution is to delay initializing the interpreter in
+   // Initialized yet.  The solution is to delay initializing the interpreter in
    // TROOT till after main() when all LLVM globals are initialized.
 
    // Technically, the mechanism used actually delay the interpreter
@@ -481,6 +502,15 @@ namespace Internal {
 #endif
    }
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Keeps track of the status of ImplicitMT w/o resorting to the load of
+   /// libImt
+   static Bool_t &IsImplicitMTEnabledImpl()
+   {
+      static Bool_t isImplicitMTEnabled = kFALSE;
+      return isImplicitMTEnabled;
+   }
+
 } // end of Internal sub namespace
 // back to ROOT namespace
 
@@ -529,6 +559,7 @@ namespace Internal {
       static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableImplicitMT");
       if (sym)
          sym(numthreads);
+      ROOT::Internal::IsImplicitMTEnabledImpl() = kTRUE;
 #else
       ::Warning("EnableImplicitMT", "Cannot enable implicit multi-threading with %d threads, please build ROOT with -Dimt=ON", numthreads);
 #endif
@@ -542,6 +573,7 @@ namespace Internal {
       static void (*sym)() = (void(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_DisableImplicitMT");
       if (sym)
          sym();
+      ROOT::Internal::IsImplicitMTEnabledImpl() = kFALSE;
 #else
       ::Warning("DisableImplicitMT", "Cannot disable implicit multi-threading, please build ROOT with -Dimt=ON");
 #endif
@@ -551,15 +583,7 @@ namespace Internal {
    /// Returns true if the implicit multi-threading in ROOT is enabled.
    Bool_t IsImplicitMTEnabled()
    {
-#ifdef R__USE_IMT
-      static Bool_t (*sym)() = (Bool_t(*)())Internal::GetSymInLibImt("ROOT_TImplicitMT_IsImplicitMTEnabled");
-      if (sym)
-         return sym();
-      else
-         return kFALSE;
-#else
-      return kFALSE;
-#endif
+      return ROOT::Internal::IsImplicitMTEnabledImpl();
    }
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -649,9 +673,6 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    ROOT::Internal::gROOTLocal = this;
    gDirectory = 0;
 
-   // initialize gClassTable is not already done
-   if (!gClassTable) new TClassTable;
-
    SetName(name);
    SetTitle(title);
 
@@ -700,9 +721,9 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    ReadGitInfo();
 
-   fClasses         = new THashTable(800,3);
+   fClasses         = new THashTable(800,3); fClasses->UseRWLock();
    //fIdMap           = new IdMap_t;
-   fStreamerInfo    = new TObjArray(100);
+   fStreamerInfo    = new TObjArray(100); fStreamerInfo->UseRWLock();
    fClassGenerators = new TList;
 
    // usedToIdentifyRootClingByDlSym is available when TROOT is part of
@@ -720,34 +741,40 @@ TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
 
    TSystemDirectory *workdir = new TSystemDirectory("workdir", gSystem->WorkingDirectory());
 
+   auto setNameLocked = [](TSeqCollection *l, const char *collection_name) {
+      l->SetName(collection_name);
+      l->UseRWLock();
+      return l;
+   };
+
    fTimer       = 0;
    fApplication = 0;
-   fColors      = new TObjArray(1000); fColors->SetName("ListOfColors");
+   fColors      = setNameLocked(new TObjArray(1000), "ListOfColors");
    fTypes       = 0;
    fGlobals     = 0;
    fGlobalFunctions = 0;
    // fList was created in TDirectory::Build but with different sizing.
    delete fList;
-   fList        = new THashList(1000,3);
-   fClosedObjects = new TList; fClosedObjects->SetName("ClosedFiles");
-   fFiles       = new TList; fFiles->SetName("Files");
-   fMappedFiles = new TList; fMappedFiles->SetName("MappedFiles");
-   fSockets     = new TList; fSockets->SetName("Sockets");
-   fCanvases    = new TList; fCanvases->SetName("Canvases");
-   fStyles      = new TList; fStyles->SetName("Styles");
-   fFunctions   = new TList; fFunctions->SetName("Functions");
-   fTasks       = new TList; fTasks->SetName("Tasks");
-   fGeometries  = new TList; fGeometries->SetName("Geometries");
-   fBrowsers    = new TList; fBrowsers->SetName("Browsers");
-   fSpecials    = new TList; fSpecials->SetName("Specials");
-   fBrowsables  = new TList; fBrowsables->SetName("Browsables");
-   fCleanups    = new THashList; fCleanups->SetName("Cleanups");
-   fMessageHandlers = new TList; fMessageHandlers->SetName("MessageHandlers");
-   fSecContexts = new TList; fSecContexts->SetName("SecContexts");
-   fProofs      = new TList; fProofs->SetName("Proofs");
-   fClipboard   = new TList; fClipboard->SetName("Clipboard");
-   fDataSets    = new TList; fDataSets->SetName("DataSets");
-   fTypes       = new TListOfTypes;
+   fList        = new THashList(1000,3); fList->UseRWLock();
+   fClosedObjects = setNameLocked(new TList, "ClosedFiles");
+   fFiles       = setNameLocked(new TList, "Files");
+   fMappedFiles = setNameLocked(new TList, "MappedFiles");
+   fSockets     = setNameLocked(new TList, "Sockets");
+   fCanvases    = setNameLocked(new TList, "Canvases");
+   fStyles      = setNameLocked(new TList, "Styles");
+   fFunctions   = setNameLocked(new TList, "Functions");
+   fTasks       = setNameLocked(new TList, "Tasks");
+   fGeometries  = setNameLocked(new TList, "Geometries");
+   fBrowsers    = setNameLocked(new TList, "Browsers");
+   fSpecials    = setNameLocked(new TList, "Specials");
+   fBrowsables  = (TList*)setNameLocked(new TList, "Browsables");
+   fCleanups    = setNameLocked(new THashList, "Cleanups");
+   fMessageHandlers = setNameLocked(new TList, "MessageHandlers");
+   fSecContexts = setNameLocked(new TList, "SecContexts");
+   fProofs      = setNameLocked(new TList, "Proofs");
+   fClipboard   = setNameLocked(new TList, "Clipboard");
+   fDataSets    = setNameLocked(new TList, "DataSets");
+   fTypes       = new TListOfTypes; fTypes->UseRWLock();
 
    TProcessID::AddProcessID();
    fUUIDs = new TProcessUUID();
@@ -1062,7 +1089,8 @@ namespace {
             // is not seen as part of the list.
             // We will later, remove all the object (see files->Clear()
             cursor->SetObject(&harmless); // this must not be zero otherwise things go wrong.
-            dir->Close();
+            // See related comment at the files->Clear("nodelete");
+            dir->Close("nodelete");
             // Put it back
             cursor->SetObject(dir);
          }
@@ -1935,6 +1963,7 @@ void TROOT::InitInterpreter()
       // Can't use gSystem->DynFindSymbol() because that iterates over all *known*
       // libraries which is not the same!
       LLVMEnablePrettyStackTraceAddr = dlsym(RTLD_DEFAULT, "LLVMEnablePrettyStackTrace");
+      // FIXME: When we configure with -Dclingtest=On we intentionally export the symbols. Silence this error.
       if (LLVMEnablePrettyStackTraceAddr) {
          Error("InitInterpreter()", "LLVM SYMBOLS ARE EXPOSED TO CLING! "
                "This will cause problems; please hide them or dlopen() them "
@@ -1985,6 +2014,10 @@ void TROOT::InitInterpreter()
    fInterpreter->SetBit(kMustCleanup);
 
    fgRootInit = kTRUE;
+
+   // initialize gClassTable is not already done
+   if (!gClassTable)
+      new TClassTable;
 
    // Initialize all registered dictionaries.
    for (std::vector<ModuleHeaderInfo_t>::const_iterator
@@ -2356,6 +2389,19 @@ const char *TROOT::GetGitDate()
       fGitDate.Form("%s %02d %4d, %02d:%02d:00", months[imonth-1], iday, iyear, ihour, imin);
    }
    return fGitDate;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Recursively remove this object from the list of Cleanups.
+/// Typically RecursiveRemove is implemented by classes that can contain
+/// mulitple references to a same object or shared ownership of the object
+/// with others.
+
+void TROOT::RecursiveRemove(TObject *obj)
+{
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+
+   fCleanups->RecursiveRemove(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -17,6 +17,7 @@
 #include <string.h>
 
 #include "THttpServer.h"
+#include "THttpWSEngine.h"
 #include "TUrl.h"
 
 //////////////////////////////////////////////////////////////////////////
@@ -41,7 +42,7 @@ public:
 
    virtual UInt_t GetId() const { return TString::Hash((void *)fWSconn, sizeof(void *)); }
 
-   virtual void ClearHandle() { fWSconn = 0; }
+   virtual void ClearHandle() { fWSconn = nullptr; }
 
    virtual void Send(const void *buf, int len)
    {
@@ -55,19 +56,19 @@ public:
 int websocket_connect_handler(const struct mg_connection *conn, void *)
 {
    const struct mg_request_info *request_info = mg_get_request_info(conn);
-   if (request_info == 0)
+   if (!request_info)
       return 1;
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0)
+   if (!engine || engine->IsTerminating())
       return 1;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0)
+   if (!serv)
       return 1;
 
    THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->uri); // path and file name
-   arg.SetQuery(request_info->query_string);  // query arguments
+   arg.SetPathAndFileName(request_info->local_uri); // path and file name
+   arg.SetQuery(request_info->query_string);        // query arguments
    arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
    arg.SetMethod("WS_CONNECT");
 
@@ -83,15 +84,15 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0)
+   if (!engine || engine->IsTerminating())
       return;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0)
+   if (!serv)
       return;
 
    THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->uri); // path and file name
-   arg.SetQuery(request_info->query_string);  // query arguments
+   arg.SetPathAndFileName(request_info->local_uri); // path and file name
+   arg.SetQuery(request_info->query_string);        // query arguments
    arg.SetMethod("WS_READY");
 
    arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
@@ -111,15 +112,19 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
       return 1;
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0)
+   if (!engine || engine->IsTerminating())
       return 1;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0)
+   if (!serv)
       return 1;
 
+   // seems to be, appears when connection is broken
+   if ((len == 2) && ((int)data[0] == 3) && ((int)data[1] == -23))
+      return 0;
+
    THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->uri); // path and file name
-   arg.SetQuery(request_info->query_string);  // query arguments
+   arg.SetPathAndFileName(request_info->local_uri); // path and file name
+   arg.SetQuery(request_info->query_string);        // query arguments
    arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
    arg.SetMethod("WS_DATA");
 
@@ -137,19 +142,19 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0)
+   if (!engine || engine->IsTerminating())
       return;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0)
+   if (!serv)
       return;
 
-   THttpCallArg arg;
-   arg.SetPathAndFileName(request_info->uri); // path and file name
-   arg.SetQuery(request_info->query_string);  // query arguments
-   arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
-   arg.SetMethod("WS_CLOSE");
+   THttpCallArg *arg = new THttpCallArg;
+   arg->SetPathAndFileName(request_info->local_uri); // path and file name
+   arg->SetQuery(request_info->query_string);        // query arguments
+   arg->SetWSId(TString::Hash((void *)conn, sizeof(void *)));
+   arg->SetMethod("WS_CLOSE");
 
-   serv->ExecuteHttp(&arg);
+   serv->SubmitHttp(arg, kFALSE, kTRUE); // delegate ownership to server
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -177,10 +182,10 @@ static int begin_request_handler(struct mg_connection *conn, void *)
    const struct mg_request_info *request_info = mg_get_request_info(conn);
 
    TCivetweb *engine = (TCivetweb *)request_info->user_data;
-   if (engine == 0)
+   if (!engine || engine->IsTerminating())
       return 0;
    THttpServer *serv = engine->GetServer();
-   if (serv == 0)
+   if (!serv)
       return 0;
 
    THttpCallArg arg;
@@ -189,7 +194,7 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 
    Bool_t execres = kTRUE, debug = engine->IsDebugMode();
 
-   if (!debug && serv->IsFileRequested(request_info->uri, filename)) {
+   if (!debug && serv->IsFileRequested(request_info->local_uri, filename)) {
       if ((filename.Index(".js") != kNPOS) || (filename.Index(".css") != kNPOS)) {
          Int_t length = 0;
          char *buf = THttpServer::ReadFileContent(filename.Data(), length);
@@ -205,8 +210,8 @@ static int begin_request_handler(struct mg_connection *conn, void *)
          arg.SetFile(filename.Data());
       }
    } else {
-      arg.SetPathAndFileName(request_info->uri); // path and file name
-      arg.SetQuery(request_info->query_string);  // query arguments
+      arg.SetPathAndFileName(request_info->local_uri); // path and file name
+      arg.SetQuery(request_info->query_string);        // query arguments
       arg.SetTopName(engine->GetTopName());
       arg.SetMethod(request_info->request_method); // method like GET or POST
       if (request_info->remote_user != 0)
@@ -316,8 +321,9 @@ static int begin_request_handler(struct mg_connection *conn, void *)
 //                                                                      //
 // http server implementation, based on civetweb embedded server        //
 // It is default kind of engine, created for THttpServer                //
+// Currently v1.8 from https://github.com/civetweb/civetweb is used     //
 //                                                                      //
-// Following additional options can be specified                        //
+// Following additional options can be specified:                       //
 //    top=foldername - name of top folder, seen in the browser          //
 //    thrds=N - use N threads to run civetweb server (default 5)        //
 //    auth_file - global authentication file                            //
@@ -346,7 +352,8 @@ ClassImp(TCivetweb);
 /// constructor
 
 TCivetweb::TCivetweb()
-   : THttpEngine("civetweb", "compact embedded http server"), fCtx(0), fCallbacks(0), fTopName(), fDebug(kFALSE)
+   : THttpEngine("civetweb", "compact embedded http server"), fCtx(nullptr), fCallbacks(nullptr), fTopName(),
+     fDebug(kFALSE), fTerminating(kFALSE)
 {
 }
 
@@ -355,12 +362,11 @@ TCivetweb::TCivetweb()
 
 TCivetweb::~TCivetweb()
 {
-   if (fCtx != 0)
+   fTerminating = kTRUE;
+   if (fCtx)
       mg_stop((struct mg_context *)fCtx);
-   if (fCallbacks != 0)
+   if (fCallbacks)
       free(fCallbacks);
-   fCtx = 0;
-   fCallbacks = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -379,13 +385,18 @@ Int_t TCivetweb::ProcessLog(const char *message)
 /// As main argument, http port should be specified like "8090".
 /// Or one can provide combination of ipaddress and portnumber like 127.0.0.1:8090
 /// Extra parameters like in URL string could be specified after '?' mark:
-///    thrds=N   - there N is number of threads used by the civetweb (default is 5)
+///    thrds=N   - there N is number of threads used by the civetweb (default is 10)
 ///    top=name  - configure top name, visible in the web browser
 ///    auth_file=filename  - authentication file name, created with htdigets utility
 ///    auth_domain=domain   - authentication domain
 ///    websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
+///    websocket_disable - disable web sockets handling (default enabled)
 ///    loopback  - bind specified port to loopback 127.0.0.1 address
-///    debug  - enable debug mode, server always returns html page with request info
+///    debug   - enable debug mode, server always returns html page with request info
+///    log=filename  - configure civetweb log file
+///  Examples:
+///     http:8080?websocket_disable
+///     http:7546?thrds=30&websocket_timeout=20
 
 Bool_t TCivetweb::Create(const char *args)
 {
@@ -393,8 +404,9 @@ Bool_t TCivetweb::Create(const char *args)
    memset(fCallbacks, 0, sizeof(struct mg_callbacks));
    //((struct mg_callbacks *) fCallbacks)->begin_request = begin_request_handler;
    ((struct mg_callbacks *)fCallbacks)->log_message = log_message_handler;
-   TString sport = "8080", num_threads = "5", websocket_timeout = "300000";
+   TString sport = "8080", num_threads = "10", websocket_timeout = "300000";
    TString auth_file, auth_domain, log_file, ssl_cert;
+   Bool_t use_ws = kTRUE;
 
    // extract arguments
    if ((args != 0) && (strlen(args) > 0)) {
@@ -439,8 +451,13 @@ Bool_t TCivetweb::Create(const char *args)
                ssl_cert = sslc;
 
             Int_t wtmout = url.GetIntValueFromOptions("websocket_timeout");
-            if (wtmout > 0)
+            if (wtmout > 0) {
                websocket_timeout.Format("%d", wtmout * 1000);
+               use_ws = kTRUE;
+            }
+
+            if (url.HasOption("websocket_disable"))
+               use_ws = kFALSE;
 
             if (url.HasOption("debug"))
                fDebug = kTRUE;
@@ -465,8 +482,11 @@ Bool_t TCivetweb::Create(const char *args)
    options[op++] = sport.Data();
    options[op++] = "num_threads";
    options[op++] = num_threads.Data();
-   options[op++] = "websocket_timeout_ms";
-   options[op++] = websocket_timeout.Data();
+
+   if (use_ws) {
+      options[op++] = "websocket_timeout_ms";
+      options[op++] = websocket_timeout.Data();
+   }
 
    if ((auth_file.Length() > 0) && (auth_domain.Length() > 0)) {
       options[op++] = "global_auth_file";
@@ -490,13 +510,14 @@ Bool_t TCivetweb::Create(const char *args)
    // Start the web server.
    fCtx = mg_start((struct mg_callbacks *)fCallbacks, this, options);
 
-   if (fCtx == 0)
+   if (!fCtx)
       return kFALSE;
 
    mg_set_request_handler((struct mg_context *)fCtx, "/", begin_request_handler, 0);
 
-   mg_set_websocket_handler((struct mg_context *)fCtx, "**root.websocket$", websocket_connect_handler,
-                            websocket_ready_handler, websocket_data_handler, websocket_close_handler, 0);
+   if (use_ws)
+      mg_set_websocket_handler((struct mg_context *)fCtx, "**root.websocket$", websocket_connect_handler,
+                               websocket_ready_handler, websocket_data_handler, websocket_close_handler, 0);
 
    return kTRUE;
 }

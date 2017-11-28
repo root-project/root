@@ -212,7 +212,9 @@ namespace {
                                         opts.NoBuiltinInc ? nullptr : &UnivSDK,
                                         Verbose)) {
         if (!opts.NoCXXInc) {
-          const std::string VSIncl = VSDir + "\\VC\\include";
+          // The Visual Studio 2017 path is very different than the previous
+          // versions (see also GetVisualStudioDirs() in PlatformWin.cpp)
+          const std::string VSIncl = VSDir + "\\include";
           if (Verbose)
             cling::log() << "Adding VisualStudio SDK: '" << VSIncl << "'\n";
           sArguments.addArgument("-I", std::move(VSIncl));
@@ -224,6 +226,7 @@ namespace {
               cling::log() << "Adding Windows SDK: '" << WinSDK << "'\n";
             sArguments.addArgument("-I", std::move(WinSDK));
           } else {
+            // Since Visual Studio 2017, this is not valid anymore...
             VSDir.append("\\VC\\PlatformSDK\\Include");
             if (Verbose)
               cling::log() << "Adding Platform SDK: '" << VSDir << "'\n";
@@ -252,6 +255,12 @@ namespace {
       sArguments.addArgument("-Wno-nonportable-include-path");
       sArguments.addArgument("-Wno-microsoft-enum-value");
       sArguments.addArgument("-Wno-expansion-to-defined");
+
+      // silent many warnings (mostly during ROOT compilation)
+      sArguments.addArgument("-Wno-constant-conversion");
+      sArguments.addArgument("-Wno-unknown-escape-sequence");
+      sArguments.addArgument("-Wno-microsoft-unqualified-friend");
+      sArguments.addArgument("-Wno-deprecated-declarations");
 
       //sArguments.addArgument("-Wno-dllimport-static-field-def");
       //sArguments.addArgument("-Wno-microsoft-template");
@@ -700,7 +709,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       PPOpts.addMacroDef("__CLING__CXX14");
 
     if (CI->getDiagnostics().hasErrorOccurred()) {
-      cling::errs() << "Compiler error to early in initialization.\n";
+      cling::errs() << "Compiler error too early in initialization.\n";
       return false;
     }
 
@@ -812,6 +821,20 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
       // Disable the warning when we import a module from extern C. Some headers
       // from the STL are doing this and we can't really do anything about this.
       argvCompile.push_back("-Wno-module-import-in-extern-c");
+      // Disable the warning when we import a module in a function body. This
+      // is a ROOT-specific issue tracked by ROOT-9088.
+      // FIXME: Remove after merging ROOT's PR1306.
+      argvCompile.push_back("-Wno-modules-import-nested-redundant");
+      // FIXME: We get an error "'cling/module.modulemap' from the precompiled
+      //  header has been overridden". This comes from a bug that rootcling
+      // introduces by adding a lot of garbage in the PCH/PCM files because it
+      // essentially serializes its current state of the AST. That usually
+      // includes a few memory buffers which override their own contents.
+      // We know how to remove this: just implement a callback in clang
+      // which calls back the interpreter when a module file is built. This is
+      // a lot of work as it needs fixing rootcling. See RE-0003.
+      argvCompile.push_back("-Xclang");
+      argvCompile.push_back("-fno-validate-pch");
     }
 
     if (!COpts.Language) {
@@ -1065,8 +1088,9 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     }
 
     // With C++ modules, we now attach the consumers that will handle the
-    // generation of the PCM file itself.
-    if (COpts.CxxModules) {
+    // generation of the PCM file itself in case we want to generate
+    // a C++ module with the current interpreter instance.
+    if (COpts.CxxModules && !COpts.ModuleName.empty()) {
       // Code below from the (private) code in the GenerateModuleAction class.
       llvm::SmallVector<char, 256> Output;
       llvm::sys::path::append(Output, COpts.CachePath,
@@ -1124,7 +1148,10 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     CGOpts.CXXCtorDtorAliases = 1;
 #endif
     // Reduce amount of emitted symbols by optimizing more.
-    CGOpts.OptimizationLevel = 2;
+    // FIXME: We have a bug when we switch to -O2, for some cases it takes
+    // several minutes to optimize, while the same code compiled by clang -O2
+    // takes only a few seconds.
+    CGOpts.OptimizationLevel = 0;
     // Taken from a -O2 run of clang:
     CGOpts.DiscardValueNames = 1;
     CGOpts.OmitLeafFramePointer = 1;

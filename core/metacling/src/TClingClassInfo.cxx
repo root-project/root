@@ -70,7 +70,7 @@ static std::string FullyQualifiedName(const Decl *decl) {
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, Bool_t all)
    : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(all),
-     fDecl(0), fType(0), fOffsetCache(0)
+     fIsIter(true), fDecl(0), fType(0), fOffsetCache(0)
 {
    TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
@@ -81,6 +81,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, Bool_t all)
    else
       fIter = TU->noload_decls_begin();
 
+   // Set
    InternalNext();
    fFirstTime = true;
    // CINT had this odd behavior where a ClassInfo created without any
@@ -100,7 +101,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, Bool_t all)
 }
 
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
-   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE), fDecl(0),
+   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE), fIsIter(false), fDecl(0),
      fType(0), fTitle(""), fOffsetCache(0)
 {
    const cling::LookupHelper& lh = fInterp->getLookupHelper();
@@ -136,7 +137,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, const char *name)
 TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
                                  const Type &tag)
    : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE),
-     fDecl(0), fType(0), fTitle(""), fOffsetCache(0)
+     fIsIter(false), fDecl(0), fType(0), fTitle(""), fOffsetCache(0)
 {
    Init(tag);
 }
@@ -682,6 +683,7 @@ void TClingClassInfo::Init(const char *name)
 {
    fFirstTime = true;
    fDescend = false;
+   fIsIter = false;
    fIter = DeclContext::decl_iterator();
    fDecl = 0;
    fType = 0;
@@ -710,6 +712,7 @@ void TClingClassInfo::Init(const Decl* decl)
 {
    fFirstTime = true;
    fDescend = false;
+   fIsIter = false;
    fIter = DeclContext::decl_iterator();
    fDecl = decl;
    fType = 0;
@@ -835,9 +838,9 @@ int TClingClassInfo::InternalNext()
 
    R__LOCKGUARD(gInterpreterMutex);
 
-   if (!*fIter) {
-      // Iterator is already invalid.
-      if (fFirstTime && fDecl) {
+   if (!fIsIter) {
+      // Object was not setup for iteration.
+      if (fDecl) {
          std::string buf;
          if (const NamedDecl* ND =
                llvm::dyn_cast<NamedDecl>(fDecl)) {
@@ -847,7 +850,10 @@ int TClingClassInfo::InternalNext()
             ND->getNameForDiagnostic(stream, Policy, /*Qualified=*/false);
          }
          Error("TClingClassInfo::InternalNext",
-            "Next called but iteration not prepared for %s!", buf.c_str());
+               "Next called but iteration not prepared for %s!", buf.c_str());
+      } else {
+         Error("TClingClassInfo::InternalNext",
+               "Next called but iteration not prepared!");
       }
       return 0;
    }
@@ -857,6 +863,9 @@ int TClingClassInfo::InternalNext()
       if (fFirstTime) {
          // The cint semantics are strange.
          fFirstTime = false;
+         if (!*fIter) {
+            return 0;
+         }
       }
       else {
          // Advance the iterator one decl, descending into the current decl
@@ -1119,6 +1128,10 @@ long TClingClassInfo::Property() const
 
    long property = 0L;
    property |= kIsCPPCompiled;
+
+   // Modules can deserialize while querying the various decls for information.
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+
    const clang::DeclContext *ctxt = fDecl->getDeclContext();
    clang::NamespaceDecl *std_ns =fInterp->getSema().getStdNamespace();
    while (! ctxt->isTranslationUnit())  {

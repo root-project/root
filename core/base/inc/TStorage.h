@@ -113,7 +113,6 @@ R__INTENTIONALLY_UNINIT_BEGIN
 R__INTENTIONALLY_UNINIT_END
 }
 
-#ifndef WIN32
 inline size_t TStorage::GetMaxBlockSize() { return fgMaxBlockSize; }
 
 inline void TStorage::SetMaxBlockSize(size_t size) { fgMaxBlockSize = size; }
@@ -127,7 +126,5 @@ R__EXTERN FreeIfTMapFile_t *gFreeIfTMapFile;
 R__EXTERN void *gMmallocDesc;
 }
 }
-
-#endif
 
 #endif

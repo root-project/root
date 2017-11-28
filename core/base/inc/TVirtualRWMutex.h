@@ -26,6 +26,15 @@
 #include "TVirtualMutex.h"
 
 
+namespace ROOT {
+
+class TVirtualRWMutex;
+
+// Global mutex set in TThread::Init
+// Use either R__READ_LOCKGUARD(ROOT::gCoreMutex);
+//         or R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+R__EXTERN TVirtualRWMutex *gCoreMutex;
+
 class TVirtualRWMutex : public TVirtualMutex  {
 
 public:
@@ -44,6 +53,78 @@ public:
    ClassDefOverride(TVirtualRWMutex, 0)  // Virtual mutex lock class
 };
 
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TReadLockGuard                                                       //
+//                                                                      //
+// This class provides RW mutex resource management in a guaranteed and //
+// exception safe way. Use like this:                                   //
+// {                                                                    //
+//    TReadLockGuard guard(mutex);                                      //
+//    ... // read something                                             //
+// }                                                                    //
+// when guard goes out of scope the mutex is unlocked in the TLockGuard //
+// destructor. The exception mechanism takes care of calling the dtors  //
+// of local objects so it is exception safe.                            //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TReadLockGuard {
+
+private:
+   TVirtualRWMutex *const fMutex;
+
+   TReadLockGuard(const TReadLockGuard&) = delete;
+   TReadLockGuard& operator=(const TReadLockGuard&) = delete;
+
+public:
+   TReadLockGuard(TVirtualRWMutex *mutex) : fMutex(mutex) {
+      if (fMutex) fMutex->ReadLock();
+   }
+
+   ~TReadLockGuard() { if (fMutex) fMutex->ReadUnLock(); }
+
+   ClassDefNV(TReadLockGuard,0)  // Exception safe read locking/unlocking of mutex
+};
+
+class TWriteLockGuard {
+
+private:
+   TVirtualRWMutex *const fMutex;
+
+   TWriteLockGuard(const TWriteLockGuard&) = delete;
+   TWriteLockGuard& operator=(const TWriteLockGuard&) = delete;
+
+public:
+   TWriteLockGuard(TVirtualRWMutex *mutex) : fMutex(mutex) {
+      if (fMutex) fMutex->WriteLock();
+   }
+
+   ~TWriteLockGuard() { if (fMutex) fMutex->WriteUnLock(); }
+
+   ClassDefNV(TWriteLockGuard,0)  // Exception safe read locking/unlocking of mutex
+};
+
+} // namespace ROOT.
+
+// Zero overhead macros in case not compiled with thread support
+#if defined (_REENTRANT) || defined (WIN32)
+
+#define R__READ_LOCKGUARD(mutex) ::ROOT::TReadLockGuard _R__UNIQUE_(R__readguard)(mutex)
+#define R__READ_LOCKGUARD_NAMED(name,mutex) ::ROOT::TReadLockGuard _NAME2_(R__readguard,name)(mutex)
+
+#define R__WRITE_LOCKGUARD(mutex) ::ROOT::TWriteLockGuard _R__UNIQUE_(R__readguard)(mutex)
+#define R__WRITE_LOCKGUARD_NAMED(name,mutex) ::ROOT::TWriteLockGuard _NAME2_(R__readguard,name)(mutex)
+
+#else
+
+#define R__READ_LOCKGUARD(mutex) (void)mutex
+#define R__READ_LOCKGUARD_NAMED(name,mutex) (void)mutex
+
+#define R__WRITE_LOCKGUARD(mutex) (void)mutex
+#define R__WRITE_LOCKGUARD_NAMED(name,mutex) (void)mutex
+
+#endif
 
 
 #endif

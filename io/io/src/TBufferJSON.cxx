@@ -9,27 +9,27 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//________________________________________________________________________
-//
-// TBufferJSON
-//
-// Class for serializing object into JavaScript Object Notation (JSON) format.
-// It creates such object representation, which can be directly
-// used in JavaScript ROOT (JSROOT) for drawing.
-//
-// TBufferJSON implements TBuffer interface, therefore most of
-// ROOT and user classes can be converted into JSON.
-// There are certain limitations for classes with custom streamers,
-// which should be equipped specially for this purposes (see TCanvas::Streamer() as example).
-//
-// To perform conversion, one should use TBufferJSON::ConvertToJSON method like:
-//
-//    TH1* h1 = new TH1I("h1","title",100, 0, 10);
-//    h1->FillRandom("gaus",10000);
-//    TString json = TBufferJSON::ConvertToJSON(h1);
-//
-//________________________________________________________________________
+/**
+\class TBufferJSON
+\ingroup IO
 
+Class for serializing object into JavaScript Object Notation (JSON) format.
+It creates such object representation, which can be directly
+used in JavaScript ROOT (JSROOT) for drawing.
+
+TBufferJSON implements TBuffer interface, therefore most of
+ROOT and user classes can be converted into JSON.
+There are certain limitations for classes with custom streamers,
+which should be equipped specially for this purposes (see TCanvas::Streamer()
+as example).
+
+To perform conversion, one should use TBufferJSON::ConvertToJSON method like:
+~~~{.cpp}
+   TH1* h1 = new TH1I("h1","title",100, 0, 10);
+   h1->FillRandom("gaus",10000);
+   TString json = TBufferJSON::ConvertToJSON(h1);
+~~~
+*/
 
 #include "TBufferJSON.h"
 
@@ -346,14 +346,16 @@ TBufferJSON::~TBufferJSON()
 ////////////////////////////////////////////////////////////////////////////////
 /// Converts object, inherited from TObject class, to JSON string
 /// Lower digit of compact parameter define formatting rules
-///   0 - no any compression, human-readable form
-///   1 - exclude spaces in the begin
-///   2 - remove newlines
-///   3 - exclude spaces as much as possible
+///  - 0 - no any compression, human-readable form
+///  - 1 - exclude spaces in the begin
+///  - 2 - remove newlines
+///  - 3 - exclude spaces as much as possible
+///
 /// Second digit of compact parameter defines algorithm for arrays compression
-///   0 - no compression, standard JSON array
-///   1 - exclude leading, trailing zeros, required JSROOT v5
-///   2 - check values repetition and empty gaps, required JSROOT v5
+///  - 0 - no compression, standard JSON array
+///  - 1 - exclude leading, trailing zeros, required JSROOT v5
+///  - 2 - check values repetition and empty gaps, required JSROOT v5
+///
 /// Maximal compression achieved when compact parameter equal to 23
 /// When member_name specified, converts only this data member
 
@@ -375,14 +377,15 @@ TString TBufferJSON::ConvertToJSON(const TObject *obj, Int_t compact, const char
 ////////////////////////////////////////////////////////////////////////////////
 // Set level of space/newline/array compression
 // Lower digit of compact parameter define formatting rules
-//   0 - no any compression, human-readable form
-//   1 - exclude spaces in the begin
-//   2 - remove newlines
-//   3 - exclude spaces as much as possible
+//  - 0 - no any compression, human-readable form
+//  - 1 - exclude spaces in the begin
+//  - 2 - remove newlines
+//  - 3 - exclude spaces as much as possible
+//
 // Second digit of compact parameter defines algorithm for arrays compression
-//   0 - no compression, standard JSON array
-//   1 - exclude leading, trailing zeros, required JSROOT v5
-//   2 - check values repetition and empty gaps, required JSROOT v5
+//  - 0 - no compression, standard JSON array
+//  - 1 - exclude leading, trailing zeros, required JSROOT v5
+//  - 2 - check values repetition and empty gaps, required JSROOT v5
 
 void TBufferJSON::SetCompact(int level)
 {
@@ -396,14 +399,16 @@ void TBufferJSON::SetCompact(int level)
 /// Converts any type of object to JSON string
 /// One should provide pointer on object and its class name
 /// Lower digit of compact parameter define formatting rules
-///   0 - no any compression, human-readable form
-///   1 - exclude spaces in the begin
-///   2 - remove newlines
-///   3 - exclude spaces as much as possible
+///  - 0 - no any compression, human-readable form
+///  - 1 - exclude spaces in the begin
+///  - 2 - remove newlines
+///  - 3 - exclude spaces as much as possible
+///
 /// Second digit of compact parameter defines algorithm for arrays compression
-///   0 - no compression, standard JSON array
-///   1 - exclude leading, trailing zeros, required JSROOT v5
-///   2 - check values repetition and empty gaps, required JSROOT v5
+///  - 0 - no compression, standard JSON array
+///  - 1 - exclude leading, trailing zeros, required JSROOT v5
+///  - 2 - check values repetition and empty gaps, required JSROOT v5
+///
 /// Maximal compression achieved when compact parameter equal to 23
 /// When member_name specified, converts only this data member
 
@@ -1423,7 +1428,7 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
 /// Should be called in the beginning of custom class streamer.
 /// Informs buffer data about class which will be streamed now.
 ///
-/// ClassBegin(), ClassEnd() and ClassMemeber() should be used in
+/// ClassBegin(), ClassEnd() and ClassMember() should be used in
 /// custom class streamers to specify which kind of data are
 /// now streamed. Such information is used to correctly
 /// convert class data to JSON. Without that functions calls
@@ -1451,23 +1456,34 @@ void TBufferJSON::ClassEnd(const TClass *)
 ///    This is a case, when data of parent class "ClassName" should be streamed.
 ///     For instance, if class directly inherited from TObject, custom
 ///     streamer should include following code:
+/// ~~~{.cpp}
 ///       b.ClassMember("TObject");
 ///       TObject::Streamer(b);
+/// ~~~
 /// 2. Basic data type
+/// ~~~{.cpp}
 ///      b.ClassMember("fInt","Int_t");
 ///      b >> fInt;
+/// ~~~
 /// 3. Array of basic data types
+/// ~~~{.cpp}
 ///      b.ClassMember("fArr","Int_t", 5);
 ///      b.ReadFastArray(fArr, 5);
+/// ~~~
 /// 4. Object as data member
-///      b.ClassMemeber("fName","TString");
+/// ~~~{.cpp}
+///      b.ClassMember("fName","TString");
 ///      fName.Streamer(b);
+/// ~~~
 /// 5. Pointer on object as data member
-///      b.ClassMemeber("fObj","TObject*");
+/// ~~~{.cpp}
+///      b.ClassMember("fObj","TObject*");
 ///      b.StreamObject(fObj);
-///  arrsize1 and arrsize2 arguments (when specified) indicate first and
-///  second dimension of array. Can be used for array of basic types.
-///  See ClassBegin() method for more details.
+/// ~~~
+///
+/// arrsize1 and arrsize2 arguments (when specified) indicate first and
+/// second dimension of array. Can be used for array of basic types.
+/// See ClassBegin() method for more details.
 
 void TBufferJSON::ClassMember(const char *name, const char *typeName,
                               Int_t arrsize1, Int_t arrsize2)
@@ -2913,7 +2929,7 @@ void TBufferJSON::ReadTString(TString & /*s*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads a std::string
 
-void TBufferJSON::ReadStdString(std::string */*s*/)
+void TBufferJSON::ReadStdString(std::string * /*s*/)
 {
 }
 
@@ -3148,11 +3164,11 @@ void TBufferJSON::JsonWriteBasic(Long64_t value)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// method compress float string, excluding exp and/or move float point
-///    1.000000e-01 -> 0.1
-///    3.750000e+00 -> 3.75
-///    3.750000e-03 -> 0.00375
-///    3.750000e-04 -> 3.75e-4
-///    1.100000e-10 -> 1.1e-10
+///  - 1.000000e-01 -> 0.1
+///  - 3.750000e+00 -> 3.75
+///  - 3.750000e-03 -> 0.00375
+///  - 3.750000e-04 -> 3.75e-4
+///  - 1.100000e-10 -> 1.1e-10
 
 void TBufferJSON::CompactFloatString(char* sbuf, unsigned len)
 {
@@ -3547,9 +3563,9 @@ namespace {
 /// a pointer to a "ptrClass". The actual type of the object pointed to
 /// can be any class derived from "ptrClass".
 /// Return:
-///  0: failure
-///  1: success
-///  2: truncated success (i.e actual class is missing. Only ptrClass saved.)
+///  - 0: failure
+///  - 1: success
+///  - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
 
 Int_t TBufferJSON::WriteObjectAny(const void *obj, const TClass *ptrClass)
 {

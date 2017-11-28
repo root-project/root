@@ -44,19 +44,19 @@ struct TPadHorizVert {
 struct TPadExtent: Internal::TPadHorizVert {
    using Internal::TPadHorizVert::TPadHorizVert;
 
-   /// Add two `TPadPos`s.
+   /// Add two `TPadExtent`s.
    friend TPadExtent operator+(TPadExtent lhs, const TPadExtent &rhs)
    {
       return {lhs.fHoriz + rhs.fHoriz, lhs.fVert + rhs.fVert};
    }
 
-   /// Subtract two `TPadPos`s.
+   /// Subtract two `TPadExtent`s.
    friend TPadExtent operator-(TPadExtent lhs, const TPadExtent &rhs)
    {
       return {lhs.fHoriz - rhs.fHoriz, lhs.fVert - rhs.fVert};
    }
 
-   /// Add a `TPadPos`.
+   /// Add a `TPadExtent`.
    TPadExtent &operator+=(const TPadExtent &rhs)
    {
       fHoriz += rhs.fHoriz;
@@ -64,7 +64,7 @@ struct TPadExtent: Internal::TPadHorizVert {
       return *this;
    };
 
-   /// Subtract a `TPadPos`.
+   /// Subtract a `TPadExtent`.
    TPadExtent &operator-=(const TPadExtent &rhs)
    {
       fHoriz -= rhs.fHoriz;

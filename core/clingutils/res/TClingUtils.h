@@ -14,12 +14,15 @@
 
 #include "RConversionRuleParser.h"
 
+#include <functional>
 #include <set>
 #include <string>
 #include <unordered_set>
 
 //#include <atomic>
 #include <stdlib.h>
+
+#include "clang/Basic/Module.h"
 
 namespace llvm {
    class StringRef;
@@ -38,7 +41,6 @@ namespace clang {
    class DeclaratorDecl;
    class FieldDecl;
    class FunctionDecl;
-   class Module;
    class NamedDecl;
    class ParmVarDecl;
    class PresumedLoc;
@@ -446,6 +448,9 @@ void WritePointersSTL(const AnnotatedRecordDecl &cl, const cling::Interpreter &i
 int GetClassVersion(const clang::RecordDecl *cl, const cling::Interpreter &interp);
 
 //______________________________________________________________________________
+std::pair<bool, int> GetTrivialIntegralReturnValue(const clang::FunctionDecl *funcCV, const cling::Interpreter &interp);
+
+//______________________________________________________________________________
 int IsSTLContainer(const AnnotatedRecordDecl &annotated);
 
 //______________________________________________________________________________
@@ -453,6 +458,9 @@ ROOT::ESTLType IsSTLContainer(const clang::FieldDecl &m);
 
 //______________________________________________________________________________
 int IsSTLContainer(const clang::CXXBaseSpecifier &base);
+
+void foreachHeaderInModule(const clang::Module &module,
+                           const std::function<void(const clang::Module::Header &)> &closure);
 
 //______________________________________________________________________________
 const char *ShortTypeName(const char *typeDesc);

@@ -546,6 +546,17 @@ TFile::~TFile()
 {
    Close();
 
+   // In case where the TFile is still open at 'tear-down' time the order of operation will be
+   // call Close("nodelete")
+   // then later call delete TFile
+   // which means that at this point we might still have object held and those
+   // might requires a 'valid' TFile object in their desctructor (for example,
+   // TTree call's GetReadCache which expects a non-null fCacheReadMap).
+   // So delete the objects (if any) now.
+
+   if (fList)
+      fList->Delete("slow");
+
    SafeDelete(fAsyncHandle);
    SafeDelete(fCacheRead);
    SafeDelete(fCacheReadMap);
@@ -2977,7 +2988,7 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
          std::vector<std::string> inside;
          int nestedLoc;
          TClassEdit::GetSplit( info->GetName(), inside, nestedLoc, TClassEdit::kLong64 );
-         Int_t stlkind =  TClassEdit::STLKind(inside[0].c_str());
+         Int_t stlkind =  TClassEdit::STLKind(inside[0]);
          TClass *key = TClass::GetClass(inside[1].c_str());
          if (key) {
             TString what;

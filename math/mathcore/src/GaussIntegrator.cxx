@@ -14,6 +14,7 @@
 #include "Math/IFunction.h"
 #include "Math/IFunctionfwd.h"
 #include <cmath>
+#include <algorithm>
 
 namespace ROOT {
 namespace Math {

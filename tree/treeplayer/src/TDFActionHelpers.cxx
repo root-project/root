@@ -32,6 +32,11 @@ void CountHelper::Finalize()
    }
 }
 
+ULong64_t &CountHelper::PartialUpdate(unsigned int slot)
+{
+   return fCounts[slot];
+}
+
 void FillHelper::UpdateMinMax(unsigned int slot, double v)
 {
    auto &thisMin = fMin[slot];
@@ -41,7 +46,7 @@ void FillHelper::UpdateMinMax(unsigned int slot, double v)
 }
 
 FillHelper::FillHelper(const std::shared_ptr<Hist_t> &h, const unsigned int nSlots)
-   : fResultHist(h), fNSlots(nSlots), fBufSize(fgTotalBufSize / nSlots),
+   : fResultHist(h), fNSlots(nSlots), fBufSize(fgTotalBufSize / nSlots), fPartialHists(fNSlots),
      fMin(nSlots, std::numeric_limits<BufEl_t>::max()), fMax(nSlots, std::numeric_limits<BufEl_t>::lowest())
 {
    fBuffers.reserve(fNSlots);
@@ -65,6 +70,17 @@ void FillHelper::Exec(unsigned int slot, double v, double w)
    UpdateMinMax(slot, v);
    fBuffers[slot].emplace_back(v);
    fWBuffers[slot].emplace_back(w);
+}
+
+Hist_t &FillHelper::PartialUpdate(unsigned int slot)
+{
+   auto &partialHist = fPartialHists[slot];
+   // TODO it is inefficient to re-create the partial histogram everytime the callback is called
+   //      ideally we could incrementally fill it with the latest entries in the buffers
+   partialHist.reset(new Hist_t(*fResultHist));
+   auto weights = fWBuffers[slot].empty() ? nullptr : fWBuffers[slot].data();
+   partialHist->FillN(fBuffers[slot].size(), fBuffers[slot].data(), weights);
+   return *partialHist;
 }
 
 void FillHelper::Finalize()
@@ -100,54 +116,21 @@ template void FillHelper::Exec(unsigned int, const std::vector<char> &, const st
 template void FillHelper::Exec(unsigned int, const std::vector<int> &, const std::vector<int> &);
 template void FillHelper::Exec(unsigned int, const std::vector<unsigned int> &, const std::vector<unsigned int> &);
 
-MinHelper::MinHelper(const std::shared_ptr<double> &minVPtr, const unsigned int nSlots)
-   : fResultMin(minVPtr), fMins(nSlots, std::numeric_limits<double>::max())
-{
-}
+// TODO
+// template void MinHelper::Exec(unsigned int, const std::vector<float> &);
+// template void MinHelper::Exec(unsigned int, const std::vector<double> &);
+// template void MinHelper::Exec(unsigned int, const std::vector<char> &);
+// template void MinHelper::Exec(unsigned int, const std::vector<int> &);
+// template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-void MinHelper::Exec(unsigned int slot, double v)
-{
-   fMins[slot] = std::min(v, fMins[slot]);
-}
-
-void MinHelper::Finalize()
-{
-   *fResultMin = std::numeric_limits<double>::max();
-   for (auto &m : fMins) *fResultMin = std::min(m, *fResultMin);
-}
-
-template void MinHelper::Exec(unsigned int, const std::vector<float> &);
-template void MinHelper::Exec(unsigned int, const std::vector<double> &);
-template void MinHelper::Exec(unsigned int, const std::vector<char> &);
-template void MinHelper::Exec(unsigned int, const std::vector<int> &);
-template void MinHelper::Exec(unsigned int, const std::vector<unsigned int> &);
-
-MaxHelper::MaxHelper(const std::shared_ptr<double> &maxVPtr, const unsigned int nSlots)
-   : fResultMax(maxVPtr), fMaxs(nSlots, std::numeric_limits<double>::lowest())
-{
-}
-
-void MaxHelper::Exec(unsigned int slot, double v)
-{
-   fMaxs[slot] = std::max(v, fMaxs[slot]);
-}
-
-void MaxHelper::Finalize()
-{
-   *fResultMax = std::numeric_limits<double>::lowest();
-   for (auto &m : fMaxs) {
-      *fResultMax = std::max(m, *fResultMax);
-   }
-}
-
-template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
-template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
-template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
-template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
-template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<float> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<double> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<char> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<int> &);
+// template void MaxHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
 MeanHelper::MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots)
-   : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0)
+   : fResultMean(meanVPtr), fCounts(nSlots, 0), fSums(nSlots, 0), fPartialMeans(nSlots)
 {
 }
 
@@ -164,6 +147,12 @@ void MeanHelper::Finalize()
    ULong64_t sumOfCounts = 0;
    for (auto &c : fCounts) sumOfCounts += c;
    *fResultMean = sumOfSums / (sumOfCounts > 0 ? sumOfCounts : 1);
+}
+
+double &MeanHelper::PartialUpdate(unsigned int slot)
+{
+   fPartialMeans[slot] = fSums[slot] / fCounts[slot];
+   return fPartialMeans[slot];
 }
 
 template void MeanHelper::Exec(unsigned int, const std::vector<float> &);

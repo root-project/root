@@ -88,12 +88,26 @@ const VarDecl *CXXForRangeStmt::getLoopVariable() const {
 }
 
 CoroutineBodyStmt *CoroutineBodyStmt::Create(
-    const ASTContext &C, CoroutineBodyStmt::CtorArgs const& Args) {
+    const ASTContext &C, CoroutineBodyStmt::CtorArgs const &Args) {
   std::size_t Size = totalSizeToAlloc<Stmt *>(
       CoroutineBodyStmt::FirstParamMove + Args.ParamMoves.size());
 
   void *Mem = C.Allocate(Size, alignof(CoroutineBodyStmt));
   return new (Mem) CoroutineBodyStmt(Args);
+}
+
+CoroutineBodyStmt *CoroutineBodyStmt::Create(const ASTContext &C, EmptyShell,
+                                             unsigned NumParams) {
+  std::size_t Size = totalSizeToAlloc<Stmt *>(
+      CoroutineBodyStmt::FirstParamMove + NumParams);
+
+  void *Mem = C.Allocate(Size, alignof(CoroutineBodyStmt));
+  auto *Result = new (Mem) CoroutineBodyStmt(CtorArgs());
+  Result->NumParams = NumParams;
+  auto *ParamBegin = Result->getStoredStmts() + SubStmt::FirstParamMove;
+  std::uninitialized_fill(ParamBegin, ParamBegin + NumParams,
+                          static_cast<Stmt *>(nullptr));
+  return Result;
 }
 
 CoroutineBodyStmt::CoroutineBodyStmt(CoroutineBodyStmt::CtorArgs const &Args)
@@ -108,6 +122,8 @@ CoroutineBodyStmt::CoroutineBodyStmt(CoroutineBodyStmt::CtorArgs const &Args)
   SubStmts[CoroutineBodyStmt::Allocate] = Args.Allocate;
   SubStmts[CoroutineBodyStmt::Deallocate] = Args.Deallocate;
   SubStmts[CoroutineBodyStmt::ReturnValue] = Args.ReturnValue;
+  SubStmts[CoroutineBodyStmt::ResultDecl] = Args.ResultDecl;
+  SubStmts[CoroutineBodyStmt::ReturnStmt] = Args.ReturnStmt;
   SubStmts[CoroutineBodyStmt::ReturnStmtOnAllocFailure] =
       Args.ReturnStmtOnAllocFailure;
   std::copy(Args.ParamMoves.begin(), Args.ParamMoves.end(),

@@ -2909,6 +2909,22 @@ int main() { return std::invoke([](int i){return i;}, 0); }' '$(CXX11FLAGS)'
     fi
 fi
 
+######################################################################
+#
+### echo %%% always_inline
+#
+
+has_found_attribute_always_inline="undef"
+message "Checking for always inline attribute"
+check_code 'inline __attribute__((always_inline)) bool TestBit(unsigned long f) { return f != 0; };
+int main() { return TestBit(0); }' '$(CXX11FLAGS)'
+
+if test $include_result -eq 1 ; then
+   has_found_attribute_always_inline="define"
+   result ‘always inline attribute’
+else
+   result “no force inlining”
+fi
 
 ######################################################################
 #
@@ -3738,9 +3754,11 @@ if test ! "x$enable_mysql" = "xno"; then
           else
              result "ok"
              mysqllib=`$mysql_config --libs | sed -e s/\'//g`
-             mysqlincdir=`$mysql_config --cflags | sed -e 's,^.*-I\([^ ]*\).*$,\1,' -e s/\'//g`
              mysqllibdir=""
+             mysqlincdir=`$mysql_config --cflags | sed -e s/\'//g | tr ' ' '\n' | grep ^-I | sed -e 's,^-I,,' | tr '\n' ' '`
              check_header "mysql.h" "" $mysqlincdir
+             mysqlinc=$found_hdr
+             mysqlincdir=$found_dir
              if test "x$found_hdr" = "x"; then
                 enable_mysql="no"
              fi
@@ -8199,6 +8217,7 @@ sed \
     -e "s|@hasstodstringview@|$hasstodstringview|" \
     -e "s|@hasstdapply@|$hasstdapply|" \
     -e "s|@hasstdinvoke@|$hasstdinvoke|" \
+    -e "s|@has_found_attribute_always_inline@|$has_found_attribute_always_inline|" \
     -e "s|@hasllvm@|$hasllvm|"             \
     -e "s|@llvmdir@|$llvmdir|"             \
     -e "s|@useimt@|$useimt|"               \

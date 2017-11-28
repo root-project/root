@@ -24,6 +24,7 @@
 #include "TInterpreter.h"
 #include "TFormula.h"
 #include "TRegexp.h"
+#include <array>
 #include <cassert>
 #include <iostream>
 #include <unordered_map>
@@ -231,7 +232,7 @@ Bool_t TFormula::IsHexadecimal(const TString & formula, int i)
 Bool_t TFormula::IsAParameterName(const TString & formula, int pos) {
 
    Bool_t foundOpenParenthesis = false;
-   if (pos == 0 || pos == formula.Length()-1) return false; 
+   if (pos == 0 || pos == formula.Length()-1) return false;
    for (int i = pos-1; i >=0; i--) {
       if (formula[i] == ']' ) return false;
       if (formula[i] == '[' ) {
@@ -239,13 +240,13 @@ Bool_t TFormula::IsAParameterName(const TString & formula, int pos) {
          break;
       }
    }
-   if (!foundOpenParenthesis ) return false; 
+   if (!foundOpenParenthesis ) return false;
 
    // search after the position
    for (int i = pos+1; i < formula.Length(); i++) {
       if (formula[i] == ']' ) return true;
    }
-   return false; 
+   return false;
 }
 
 
@@ -362,7 +363,7 @@ TFormula::~TFormula()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   :
+TFormula::TFormula(const char *name, const char *formula, bool addToGlobList, bool vectorize)   :
    TNamed(name,formula),
    fClingInput(formula),fFormula(formula)
 {
@@ -374,6 +375,10 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   
    fNumber = 0;
    fMethod = 0;
    fLambdaPtr = nullptr;
+   fVectorized = vectorize;
+#ifndef R__HAS_VECCORE
+   fVectorized = false;
+#endif
 
    FillDefaults();
 
@@ -403,7 +408,7 @@ TFormula::TFormula(const char *name, const char *formula, bool addToGlobList)   
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor from a full compileable C++ expression
+/// Constructor from a full compile-able C++ expression
 
 TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bool addToGlobList)   :
    TNamed(name,formula),
@@ -452,44 +457,9 @@ TFormula::TFormula(const char *name, const char *formula, int ndim, int npar, bo
 
 ////////////////////////////////////////////////////////////////////////////////
 TFormula::TFormula(const TFormula &formula) :
-   TNamed(formula.GetName(),formula.GetTitle())
+   TNamed(formula.GetName(),formula.GetTitle()), fMethod(nullptr)
 {
-   fReadyToExecute = false;
-   fClingInitialized = false;
-   fMethod = 0;
-   fNdim = formula.GetNdim();
-   fNpar = formula.GetNpar();
-   fNumber = formula.GetNumber();
-   fFormula = formula.GetExpFormula();   // returns fFormula in case of Lambda's
-   fLambdaPtr = nullptr;
-   fFuncPtr = nullptr;
-
-   // case of function based on a C++  expression (lambda's) which is ready to be compiled
-   if (formula.fLambdaPtr && formula.TestBit(TFormula::kLambda)) {
-
-      fClingInput = fFormula;
-      fParams = formula.fParams;
-      fClingParameters = formula.fClingParameters;
-      fAllParametersSetted = formula.fAllParametersSetted;
-
-      bool ret = InitLambdaExpression(fFormula);
-
-      if (ret)  {
-         SetBit(TFormula::kLambda);
-         fReadyToExecute = true;
-      }
-      else
-         Error("TFormula","Syntax error in building the lambda expression %s", fFormula.Data() );
-
-   }
-   else {
-
-      FillDefaults();
-
-      PreProcessFormula(fFormula);
-      PrepareFormula(fFormula);
-   }
-
+   formula.Copy(*this);
 
    if (!TestBit(TFormula::kNotGlobal) && gROOT ) {
       R__LOCKGUARD(gROOTMutex);
@@ -611,6 +581,7 @@ void TFormula::Copy(TObject &obj) const
    fnew.fNdim = fNdim;
    fnew.fNpar = fNpar;
    fnew.fNumber = fNumber;
+   fnew.fVectorized = fVectorized;
    fnew.SetParameters(GetParameters());
    // copy Linear parts (it is a vector of TFormula pointers) needs to be copied one by one
    // looping at all the elements
@@ -709,20 +680,22 @@ void TFormula::Clear(Option_t * )
 
 bool TFormula::PrepareEvalMethod()
 {
-
    if (!fMethod) {
       fMethod = new TMethodCall();
 
       Bool_t hasParameters = (fNpar > 0);
       Bool_t hasVariables = (fNdim > 0);
       TString prototypeArguments = "";
-      if (hasVariables) {
-         prototypeArguments.Append("Double_t*");
-      }
-      if (hasVariables && hasParameters) {
-         prototypeArguments.Append(",");
+      if (hasVariables || hasParameters) {
+         if (fVectorized)
+            prototypeArguments.Append("ROOT::Double_v*");
+         else
+            prototypeArguments.Append("Double_t*");
       }
       if (hasParameters) {
+         prototypeArguments.Append(",");
+//      }
+//      if (hasParameters) {
          prototypeArguments.Append("Double_t*");
       }
       // init method call using real function name (cling name) which is defined in ProcessFormula
@@ -762,6 +735,8 @@ void TFormula::InputFormulaIntoCling()
 {
 
    if (!fClingInitialized && fReadyToExecute && fClingInput.Length() > 0) {
+      // add pragma for optimization of the formula
+      fClingInput = TString("#pragma cling optimize(2)\n") + fClingInput;
       gCling->Declare(fClingInput);
       fClingInitialized = PrepareEvalMethod();
    }
@@ -814,7 +789,7 @@ void TFormula::FillDefaults()
       fVars[var] = TFormulaVariable(var, 0, pos);
       fClingVariables.push_back(0);
    }
-   // add also the variables definesd like x[0],x[1],x[2],...
+   // add also the variables defined like x[0],x[1],x[2],...
    // support up to x[9] - if needed extend that to higher value
    // const int maxdim = 10;
    // for (int i = 0; i < maxdim;  ++i) {
@@ -826,54 +801,44 @@ void TFormula::FillDefaults()
    for (auto con : defconsts) {
       fConsts[con.first] = con.second;
    }
-   for (auto fun : funShortcuts) {
+   if (fVectorized) {
+      FillVecFunctionsShurtCuts();
+   } else {
+      for (auto fun : funShortcuts) {
+         fFunctionsShortcuts[fun.first] = fun.second;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///    Fill the shortcuts for vectorized functions
+///    We will replace for example sin with vecCore::Mat::Sin
+///
+
+void TFormula::FillVecFunctionsShurtCuts() {
+#ifdef R__HAS_VECCORE
+   const pair<TString,TString> vecFunShortcuts[] =
+      { {"sin","vecCore::math::Sin" },
+        {"cos","vecCore::math::Cos" }, {"exp","vecCore::math::Exp"}, {"log","vecCore::math::Log"}, {"log10","vecCore::math::Log10"},
+        {"tan","vecCore::math::Tan"},
+        //{"sinh","vecCore::math::Sinh"}, {"cosh","vecCore::math::Cosh"},{"tanh","vecCore::math::Tanh"},
+        {"asin","vecCore::math::ASin"},
+        {"acos","TMath::Pi()/2-vecCore::math::ASin"},
+        {"atan","vecCore::math::ATan"},
+        {"atan2","vecCore::math::ATan2"}, {"sqrt","vecCore::math::Sqrt"},
+        {"ceil","vecCore::math::Ceil"}, {"floor","vecCore::math::Floor"}, {"pow","vecCore::math::Pow"},
+        {"cbrt","vecCore::math::Cbrt"},{"abs","vecCore::math::Abs"},
+        {"min","vecCore::math::Min"},{"max","vecCore::math::Max"},{"sign","vecCore::math::Sign" }
+        //{"sq","TMath::Sq"}, {"binomial","TMath::Binomial"}  // this last two functions will not work in vectorized mode
+      };
+   // replace in the data member maps fFunctionsShortcuts
+   for (auto fun : vecFunShortcuts) {
       fFunctionsShortcuts[fun.first] = fun.second;
    }
-
-   /*** - old code to support C++03
-        #else
-
-        TString  defvarsNames[] = {"x","y","z","t"};
-        Int_t    defvarsLength = sizeof(defvarsNames)/sizeof(TString);
-
-        TString  defconstsNames[] =
-   {"pi","sqrt2","infinity","e","ln10","loge","c","g","h","k","sigma","r","eg","true","false"};
-        Double_t defconstsValues[] =
-   {TMath::Pi(),TMath::Sqrt2(),TMath::Infinity(),TMath::E(),TMath::Ln10(),TMath::LogE(),
-        TMath::C(),TMath::G(),TMath::H(),TMath::K(),TMath::Sigma(),TMath::R(),TMath::EulerGamma(), 1, 0};
-        Int_t    defconstsLength = sizeof(defconstsNames)/sizeof(TString);
-
-        TString  funShortcutsNames[] =
-   {"sin","cos","exp","log","tan","sinh","cosh","tanh","asin","acos","atan","atan2","sqrt",
-        "ceil","floor","pow","binomial","abs"};
-        TString  funShortcutsExtendedNames[] =
-   {"TMath::Sin","TMath::Cos","TMath::Exp","TMath::Log","TMath::Tan","TMath::SinH",
-        "TMath::CosH","TMath::TanH","TMath::ASin","TMath::ACos","TMath::ATan","TMath::ATan2",
-        "TMath::Sqrt","TMath::Ceil","TMath::Floor","TMath::Power","TMath::Binomial","TMath::Abs"};
-        Int_t    funShortcutsLength = sizeof(funShortcutsNames)/sizeof(TString);
-
-        for(Int_t i = 0; i < defvarsLength; ++i)
-        {
-        TString var = defvarsNames[i];
-        Double_t value = 0;
-        unsigned int pos = fVars.size();
-        fVars[var] = TFormulaVariable(var,value,pos);
-        fClingVariables.push_back(value);
-        }
-
-        for(Int_t i = 0; i < defconstsLength; ++i)
-        {
-        fConsts[defconstsNames[i]] = defconstsValues[i];
-        }
-        for(Int_t i = 0; i < funShortcutsLength; ++i)
-        {
-        pair<TString,TString> fun(funShortcutsNames[i],funShortcutsExtendedNames[i]);
-        fFunctionsShortcuts[fun.first] = fun.second;
-        }
-
-        #endif
-   ***/
+#endif
+   // do nothing in case Veccore is not enabled
 }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 ///    Handling polN
@@ -895,7 +860,7 @@ void TFormula::HandlePolN(TString &formula)
       Int_t degree, counter;
       TString sdegree;
       if (!defaultCounter) {
-         // veryfy first of opening parenthesis belongs to pol expression
+         // verify first of opening parenthesis belongs to pol expression
          // character between 'pol' and '(' must all be digits
          sdegree = formula(polPos + 3, openingBracketPos - polPos - 3);
          if (!sdegree.IsDigit())
@@ -935,7 +900,7 @@ void TFormula::HandlePolN(TString &formula)
          param++;
          tmp++;
       }
-      // add paranthesis before and after
+      // add parenthesis before and after
       if (degree > 0) {
          replacement.Insert(0, '(');
          replacement.Append(')');
@@ -1094,7 +1059,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
                variables[Nvar] = varName;
             }
          }
-         // chech if dimension obtained from [...] is compatible with what is defined in existing pre-defined functions
+         // check if dimension obtained from [...] is compatible with what is defined in existing pre-defined functions
          // std::cout << " Found dim = " << dim  << " and function dimension is " << funDim << std::endl;
          if (dim != funDim) {
             pair<TString, Int_t> key = make_pair(funName, dim);
@@ -1698,8 +1663,8 @@ Bool_t TFormula::PrepareFormula(TString &formula)
    fFormula.ReplaceAll("{","");
    fFormula.ReplaceAll("}","");
 
-   //std::cout << "functors are extracted formula is " << std::endl;
-   //std::cout << fFormula << std::endl << std::endl;
+   // std::cout << "functors are extracted formula is " << std::endl;
+   // std::cout << fFormula << std::endl << std::endl;
 
    fFuncs.sort();
    fFuncs.unique();
@@ -1738,7 +1703,7 @@ void TFormula::ExtractFunctors(TString &formula)
          Int_t tmp = i;
          i++;
          TString param = "";
-         while (formula[i] != ']' && i < formula.Length()) {
+         while (i < formula.Length() && formula[i] != ']') {
             param.Append(formula[i++]);
          }
          i++;
@@ -1761,7 +1726,7 @@ void TFormula::ExtractFunctors(TString &formula)
             Int_t oldParamLength  = param.Length();
             param.ReplaceAll("\\s", " ");
             // we need to change index i after replacing since string length changes
-            i -= param.Length() - oldParamLength; 
+            i -= param.Length() - oldParamLength;
 
             // only add if parameter does not already exist, because maybe
             // `HandleFunctionArguments` already assigned a default value to the
@@ -1807,8 +1772,8 @@ void TFormula::ExtractFunctors(TString &formula)
          // std::cout << "character : " << i << " " << formula[i] << " is not an operator and is alpha " <<
          // std::endl;
 
-         while (IsFunctionNameChar(formula[i]) && i < formula.Length()) {
-            // need special case for separting operator  ":" from scope operator "::"
+         while (i < formula.Length() && IsFunctionNameChar(formula[i])) {
+            // need special case for separating operator  ":" from scope operator "::"
             if (formula[i] == ':' && ((i + 1) < formula.Length())) {
                if (formula[i + 1] == ':') {
                   // case of :: (scopeOperator)
@@ -1913,7 +1878,7 @@ void TFormula::ExtractFunctors(TString &formula)
                // set parameter value from replacement formula
                for (int jpar = 0; jpar < f->GetNpar(); ++jpar) {
                   if (nparOffset > 0) {
-                     // parameter have an offset- so take this into accound
+                     // parameter have an offset- so take this into account
                      assert((int)newNames.size() == f->GetNpar());
                      SetParameter(newNames[jpar], f->GetParameter(jpar));
                   } else
@@ -2007,7 +1972,7 @@ void TFormula::ProcessFormula(TString &formula)
          if (fun.fName.Contains("::")) // add support for nested namespaces
          {
             // look for last occurence of "::"
-            std::string name(fun.fName.Data());
+            std::string name(fun.fName);
             size_t index = name.rfind("::");
             assert(index != std::string::npos);
             TString className = fun.fName(0, fun.fName(0, index).Length());
@@ -2075,7 +2040,7 @@ void TFormula::ProcessFormula(TString &formula)
             if (!fVars[name].fFound) {
 
                fVars[name].fFound = true;
-               int varDim = (*varsIt).second.fArrayPos; // variable dimenions (0 for x, 1 for y, 2, for z)
+               int varDim = (*varsIt).second.fArrayPos; // variable dimensions (0 for x, 1 for y, 2, for z)
                if (varDim >= fNdim) {
                   fNdim = varDim + 1;
 
@@ -2157,7 +2122,7 @@ void TFormula::ProcessFormula(TString &formula)
          fun.fFound = false;
       }
    }
-   //std::cout << "End: formula is " << formula << std::endl;
+   // std::cout << "End: formula is " << formula << std::endl;
 
    // ignore case of functors have been matched - try to pass it to Cling
    if (!fReadyToExecute) {
@@ -2167,23 +2132,33 @@ void TFormula::ProcessFormula(TString &formula)
       if (!hasParameters) {
          fAllParametersSetted = true;
       }
-      // assume a function without variables is always 1-dimensional
-      if (hasParameters && !hasVariables) {
-         fNdim = 1;
-         AddVariable("x", 0);
-         hasVariables = true;
-      }
-      Bool_t hasBoth = hasVariables && hasParameters;
+      // assume a function without variables is always 1-dimensional ???
+      // if (hasParameters && !hasVariables) {
+      //    fNdim = 1;
+      //    AddVariable("x", 0);
+      //    hasVariables = true;
+      // }
+      // does not make sense to vectorize function which is of FNDim=0
+      if (!hasVariables) fVectorized=false;
+      // when there are no variables but only parameter we still need to ad
+      //Bool_t hasBoth = hasVariables && hasParameters;
       Bool_t inputIntoCling = (formula.Length() > 0);
       if (inputIntoCling) {
-
          // save copy of inputFormula in a std::strig for the unordered map
          // and also formula is same as FClingInput typically and it will be modified
-         std::string inputFormula = std::string(formula.Data());
+         std::string inputFormula = std::string(formula);
 
-         // valid input formula - try to put into Cling
-         TString argumentsPrototype = TString::Format("%s%s%s", (hasVariables ? "Double_t *x" : ""),
-                                                      (hasBoth ? "," : ""), (hasParameters ? "Double_t *p" : ""));
+         // The name we really use for the unordered map will have a flag that
+         // says whether the formula is vectorized
+         std::string inputFormulaVecFlag = inputFormula;
+         if (fVectorized)
+            inputFormulaVecFlag += " (vectorized)";
+
+         TString argType = fVectorized ? "ROOT::Double_v" : "Double_t";
+
+         // valid input formula - try to put into Cling (in case of no variables but only parameter we need to add the standard signature)
+         TString argumentsPrototype = TString::Format("%s%s%s", ( (hasVariables || hasParameters) ? (argType + " *x").Data() : ""),
+                                                      (hasParameters ? "," : ""), (hasParameters ? "Double_t *p" : ""));
 
          // set the name for Cling using the hash_function
          fClingName = gNamePrefix;
@@ -2191,7 +2166,11 @@ void TFormula::ProcessFormula(TString &formula)
          // check if formula exist already in the map
          R__LOCKGUARD(gROOTMutex);
 
-         auto funcit = gClingFunctions.find(inputFormula);
+         // std::cout << "gClingFunctions list" << std::endl;
+         // for (auto thing : gClingFunctions)
+         //    std::cout << "gClingFunctions : " << thing.first << std::endl;
+
+         auto funcit = gClingFunctions.find(inputFormulaVecFlag);
 
          if (funcit != gClingFunctions.end()) {
             fFuncPtr = (TInterpreter::CallFuncIFacePtr_t::Generic_t)funcit->second;
@@ -2199,12 +2178,22 @@ void TFormula::ProcessFormula(TString &formula)
             inputIntoCling = false;
          }
 
+
+
          // set the cling name using hash of the static formulae map
          auto hasher = gClingFunctions.hash_function();
-         fClingName = TString::Format("%s__id%zu", gNamePrefix.Data(), hasher(inputFormula));
+         fClingName = TString::Format("%s__id%zu", gNamePrefix.Data(), hasher(inputFormulaVecFlag));
 
-         fClingInput = TString::Format("Double_t %s(%s){ return %s ; }", fClingName.Data(), argumentsPrototype.Data(),
-                                       inputFormula.c_str());
+         fClingInput = TString::Format("%s %s(%s){ return %s ; }", argType.Data(), fClingName.Data(),
+                                       argumentsPrototype.Data(), inputFormula.c_str());
+
+
+         // std::cout << "Input Formula " << inputFormula << " \t vec formula  :  " << inputFormulaVecFlag << std::endl;
+         // std::cout << "Cling functions existing " << std::endl;
+         // for (auto & ff : gClingFunctions)
+         //    std::cout << ff.first << std::endl;
+         // std::cout << "\n";
+         // std::cout << fClingName << std::endl;
 
          // this is not needed (maybe can be re-added in case of recompilation of identical expressions
          // // check in case of a change if need to re-initialize
@@ -2218,10 +2207,10 @@ void TFormula::ProcessFormula(TString &formula)
          if (inputIntoCling) {
             InputFormulaIntoCling();
             if (fClingInitialized) {
-               // if Cling has been succesfully initialized
+               // if Cling has been successfully initialized
                // dave function ptr in the static map
                R__LOCKGUARD(gROOTMutex);
-               gClingFunctions.insert(std::make_pair(inputFormula, (void *)fFuncPtr));
+               gClingFunctions.insert(std::make_pair(inputFormulaVecFlag, (void *)fFuncPtr));
             }
 
          } else {
@@ -2232,11 +2221,10 @@ void TFormula::ProcessFormula(TString &formula)
    }
 
    // IN case of a Cling Error check components wich are not found in Cling
-   // check that all formula components arematched otherwise emit an error
+   // check that all formula components are matched otherwise emit an error
    if (!fClingInitialized) {
       Bool_t allFunctorsMatched = true;
-      for(list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); it++)
-         {
+      for (list<TFormulaFunction>::iterator it = fFuncs.begin(); it != fFuncs.end(); ++it) {
          if (!it->fFound) {
             allFunctorsMatched = false;
             if (it->GetNargs() == 0)
@@ -2252,9 +2240,10 @@ void TFormula::ProcessFormula(TString &formula)
    }
 
    // clean up un-used default variables in case formula is valid
-   if (fClingInitialized && fReadyToExecute) {
-      auto itvar = fVars.begin();
-      do {
+   if (fClingInitialized && fReadyToExecute) {\
+       auto itvar = fVars.begin();
+       // need this loop because after erase change iterators
+       do {
          if (!itvar->second.fFound) {
             // std::cout << "Erase variable " << itvar->first << std::endl;
             itvar = fVars.erase(itvar);
@@ -2262,7 +2251,6 @@ void TFormula::ProcessFormula(TString &formula)
             itvar++;
       } while (itvar != fVars.end());
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2610,7 +2598,7 @@ void TFormula::DoAddParameter(const TString &name, Double_t value, Bool_t proces
       // fParams.insert(std::make_pair<TString,TFormulaVariable>(name,TFormulaVariable(name,value,pos)));
       auto ret = fParams.insert(std::make_pair(name, pos));
       // map returns a std::pair<iterator, bool>
-      // use map the order for defult position of parameters in the vector
+      // use map the order for default position of parameters in the vector
       // (i.e use the alphabetic order)
       if (ret.second) {
          // a new element is inserted
@@ -2745,8 +2733,7 @@ void TFormula::SetParameter(const char *name, Double_t value)
    fParams[name].fFound = true;
    fClingParameters[fParams[name].fArrayPos] = value;
    fAllParametersSetted = true;
-   for(map<TString,TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); it++)
-      {
+   for (map<TString, TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); ++it) {
       if (!it->second.fFound) {
          fAllParametersSetted = false;
          break;
@@ -2778,8 +2765,7 @@ void TFormula::SetParameters(const pair<TString,Double_t> *params,const Int_t si
       fClingParameters[fParams[p.first].fArrayPos] = p.second;
    }
    fAllParametersSetted = true;
-   for(map<TString,TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); it++)
-      {
+   for (map<TString, TFormulaVariable>::iterator it = fParams.begin(); it != fParams.end(); ++it) {
       if (!it->second.fFound) {
          fAllParametersSetted = false;
          break;
@@ -2807,7 +2793,7 @@ void TFormula::DoSetParameters(const Double_t *params, Int_t size)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a vector of parameters value.
-/// Order in the vector is by default the aphabetic order given to the parameters
+/// Order in the vector is by default the alphabetic order given to the parameters
 /// apart if the users has defined explicitly the parameter names
 
 void TFormula::SetParameters(const Double_t *params)
@@ -2817,7 +2803,7 @@ void TFormula::SetParameters(const Double_t *params)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a list of parameters.
-/// The order is by default the aphabetic order given to the parameters
+/// The order is by default the alphabetic order given to the parameters
 /// apart if the users has defined explicitly the parameter names
 
 void TFormula::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double_t p3, Double_t p4, Double_t p5, Double_t p6,
@@ -2838,7 +2824,7 @@ void TFormula::SetParameters(Double_t p0, Double_t p1, Double_t p2, Double_t p3,
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set a parameter given a parameter index
-/// The parameter index is by default the aphabetic order given to the parameters
+/// The parameter index is by default the alphabetic order given to the parameters
 /// apart if the users has defined explicitly the parameter names
 
 void TFormula::SetParameter(Int_t param, Double_t value)
@@ -2936,10 +2922,118 @@ void TFormula::ReplaceParamName(TString & formula, const TString & oldName, cons
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+void TFormula::SetVectorized(Bool_t vectorized)
+{
+#ifdef R__HAS_VECCORE
+   if (fNdim == 0) {
+      Info("SetVectorized","Cannot vectorized a function of zero dimension");
+      return;
+   }
+   if (vectorized != fVectorized) {
+      if (!fFormula)
+         Error("SetVectorized", "Cannot set vectorized to %d -- Formula is missing", vectorized);
+
+      fVectorized = vectorized;
+      // no need to JIT a new signature in case of zero dimension
+      //if (fNdim== 0) return;
+      fClingInitialized = false;
+      fReadyToExecute = false;
+      fClingName = "";
+      fClingInput = fFormula;
+
+      if (fMethod)
+         fMethod->Delete();
+      fMethod = nullptr;
+
+      FillVecFunctionsShurtCuts();   // to replace with the right vectorized signature (e.g. sin  -> vecCore::math::Sin)
+      PreProcessFormula(fFormula);
+      PrepareFormula(fFormula);
+   }
+#else
+   if (vectorized)
+      Warning("SetVectorized", "Cannot set vectorized -- try building with option -Dbuiltin_veccore=On");
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
 Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 {
-   return DoEval(x, params);
+   if (!fVectorized)
+      return DoEval(x, params);
+
+#ifdef R__HAS_VECCORE
+
+   if (fNdim == 0 || !x) {
+      ROOT::Double_v ret =  DoEvalVec(nullptr, params);
+      return vecCore::Get( ret, 0 );
+   }
+
+    // otherwise, regular Double_t inputs on a vectorized function
+
+   // convert our input into vectors then convert back
+   if (gDebug)
+      Info("EvalPar", "Function is vectorized - converting Double_t into ROOT::Double_v and back");
+
+   if (fNdim < 5) {
+      const int maxDim = 4;
+      std::array<ROOT::Double_v, maxDim> xvec;
+      for (int i = 0; i < fNdim; i++)
+         xvec[i] = x[i];
+
+      ROOT::Double_v ans = DoEvalVec(xvec.data(), params);
+      return vecCore::Get(ans, 0);
+   }
+   // allocating a vector is much slower (we do only for dim > 4)
+   std::vector<ROOT::Double_v> xvec(fNdim);
+   for (int i = 0; i < fNdim; i++)
+      xvec[i] = x[i];
+
+   ROOT::Double_v ans = DoEvalVec(xvec.data(), params);
+   return  vecCore::Get(ans, 0);
+
+#else
+   // this should never happen, because fVectorized can only be set true with
+   // R__HAS_VECCORE, but just in case:
+   Error("EvalPar", "Formula is vectorized (even though VECCORE is disabled!)");
+   return TMath::QuietNaN();
+#endif
 }
+
+////////////////////////////////////////////////////////////////////////////////
+#ifdef R__HAS_VECCORE
+// ROOT::Double_v TFormula::Eval(ROOT::Double_v x, ROOT::Double_v y, ROOT::Double_v z, ROOT::Double_v t) const
+// {
+//    ROOT::Double_v xxx[] = {x, y, z, t};
+//    return EvalPar(xxx, nullptr);
+// }
+
+ROOT::Double_v TFormula::EvalParVec(const ROOT::Double_v *x, const Double_t *params) const
+{
+   if (fVectorized)
+      return DoEvalVec(x, params);
+
+   if (fNdim == 0 || !x)
+      return DoEval(nullptr, params); // automatic conversion to vectorized
+
+   // otherwise, trying to input vectors into a scalar function
+
+   if (gDebug)
+      Info("EvalPar", "Function is not vectorized - converting ROOT::Double_v into Double_t and back");
+
+   const int vecSize = vecCore::VectorSize<ROOT::Double_v>();
+   std::vector<Double_t>  xscalars(vecSize*fNdim);
+
+   for (int i = 0; i < vecSize; i++)
+      for (int j = 0; j < fNdim; j++)
+         xscalars[i*fNdim+j] = vecCore::Get(x[j],i);
+
+   ROOT::Double_v answers(0.);
+   for (int i = 0; i < vecSize; i++)
+      vecCore::Set(answers, i, DoEval(&xscalars[i*fNdim], params));
+
+   return answers;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Sets first 4  variables (e.g. x, y, z, t) and evaluate formula.
@@ -2947,7 +3041,7 @@ Double_t TFormula::EvalPar(const Double_t *x,const Double_t *params) const
 Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 {
    double xxx[4] = {x,y,z,t};
-   return DoEval(xxx);
+   return EvalPar(xxx, nullptr); // takes care of case where formula is vectorized
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2956,7 +3050,7 @@ Double_t TFormula::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 Double_t TFormula::Eval(Double_t x, Double_t y , Double_t z) const
 {
    double xxx[3] = {x,y,z};
-   return DoEval(xxx);
+   return EvalPar(xxx, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2965,7 +3059,7 @@ Double_t TFormula::Eval(Double_t x, Double_t y , Double_t z) const
 Double_t TFormula::Eval(Double_t x, Double_t y) const
 {
    double xxx[2] = {x,y};
-   return DoEval(xxx);
+   return EvalPar(xxx, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2973,16 +3067,15 @@ Double_t TFormula::Eval(Double_t x, Double_t y) const
 
 Double_t TFormula::Eval(Double_t x) const
 {
-   //double xxx[1] = {x};
    double * xxx = &x;
-   return DoEval(xxx);
+   return EvalPar(xxx, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Evaluate formula.
 /// If formula is not ready to execute(missing parameters/variables),
 /// print these which are not known.
-/// If parameter has default value, and has not been setted, appropriate warning is shown.
+/// If parameter has default value, and has not been set, appropriate warning is shown.
 
 Double_t TFormula::DoEval(const double * x, const double * params) const
 {
@@ -2997,6 +3090,7 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
       }
       return TMath::QuietNaN();
    }
+
    if (fLambdaPtr && TestBit(TFormula::kLambda)) {// case of lambda functions
       std::function<double(double *, double *)> & fptr = * ( (std::function<double(double *, double *)> *) fLambdaPtr);
       assert(x);
@@ -3007,7 +3101,7 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    }
    // this is needed when reading from a file
    if (!fClingInitialized) {
-      Error("Eval","Formula is invalid or not properly initialized - try calling TFormula::Compile");
+      Error("DoEval", "Formula is invalid or not properly initialized - try calling TFormula::Compile");
       return TMath::QuietNaN();
 #ifdef EVAL_IS_NOT_CONST
       // need to replace in cling the name of the pointer of this object
@@ -3022,15 +3116,61 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    void* args[2];
    double * vars = (x) ? const_cast<double*>(x) : const_cast<double*>(fClingVariables.data());
    args[0] = &vars;
-   if (fNpar <= 0)
+   if (fNpar <= 0) {
       (*fFuncPtr)(0, 1, args, &result);
-   else {
-      double * pars = (params) ? const_cast<double*>(params) : const_cast<double*>(fClingParameters.data());
+   } else {
+      double *pars = (params) ? const_cast<double *>(params) : const_cast<double *>(fClingParameters.data());
       args[1] = &pars;
       (*fFuncPtr)(0, 2, args, &result);
    }
    return result;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// Copied from DoEval, but this is the vectorized version
+#ifdef R__HAS_VECCORE
+ROOT::Double_v TFormula::DoEvalVec(const ROOT::Double_v *x, const double *params) const
+{
+   if (!fReadyToExecute) {
+      Error("Eval", "Formula is invalid and not ready to execute ");
+      for (auto it = fFuncs.begin(); it != fFuncs.end(); ++it) {
+         TFormulaFunction fun = *it;
+         if (!fun.fFound) {
+            printf("%s is unknown.\n", fun.GetName());
+         }
+      }
+      return TMath::QuietNaN();
+   }
+   // todo maybe save lambda ptr stuff for later
+
+   if (!fClingInitialized) {
+      Error("DoEvalVec", "Formula is invalid or not properly initialized - try calling TFormula::Compile");
+      return TMath::QuietNaN();
+// todo: the below never gets executed anyway?
+#ifdef EVAL_IS_NOT_CONST
+      // need to replace in cling the name of the pointer of this object
+      TString oldClingName = fClingName;
+      fClingName.Replace(fClingName.Index("_0x") + 1, fClingName.Length(), TString::Format("%p", this));
+      fClingInput.ReplaceAll(oldClingName, fClingName);
+      InputFormulaIntoCling();
+#endif
+   }
+
+   ROOT::Double_v result = 0;
+   void *args[2];
+
+   ROOT::Double_v *vars = const_cast<ROOT::Double_v *>(x);
+   args[0] = &vars;
+   if (fNpar <= 0) {
+      (*fFuncPtr)(0, 1, args, &result);
+   }else {
+      double *pars = (params) ? const_cast<double *>(params) : const_cast<double *>(fClingParameters.data());
+      args[1] = &pars;
+      (*fFuncPtr)(0, 2, args, &result);
+   }
+   return result;
+}
+#endif // R__HAS_VECCORE
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the expression formula.
@@ -3105,7 +3245,7 @@ TString TFormula::GetExpFormula(Option_t *option) const
       }
       return expFormula;
    }
-   Warning("GetExpFormula","Invalid option - return defult formula expression");
+   Warning("GetExpFormula","Invalid option - return default formula expression");
    return fFormula;
 }
 
@@ -3155,7 +3295,7 @@ void TFormula::Print(Option_t *option) const
    }
    if (!fAllParametersSetted) {
       // we can skip this
-      // Info("Print","Not all parameters are setted.");
+      // Info("Print","Not all parameters are set.");
       // for(map<TString,TFormulaVariable>::const_iterator it = fParams.begin(); it != fParams.end(); ++it)
       // {
       //    pair<TString,TFormulaVariable> param = *it;

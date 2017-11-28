@@ -19,20 +19,20 @@
 #include "TVirtualGeoPainter.h"
 #include "TGeoTrack.h"
 
-//______________________________________________________________________________
-// TGeoTrack - Class for user-defined tracks attached to a geometry.
-//             Tracks are 3D objects made of points and they store a
-//             pointer to a TParticle. The geometry manager holds a list
-//             of all tracks that will be deleted on destruction of
-//             gGeoManager.
-//
-//______________________________________________________________________________
+/** \class TGeoTrack
+\ingroup Geometry_classes
+
+Class for user-defined tracks attached to a geometry.
+Tracks are 3D objects made of points and they store a
+pointer to a TParticle. The geometry manager holds a list
+of all tracks that will be deleted on destruction of
+gGeoManager.
+*/
 
 ClassImp(TGeoTrack);
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*Tracks default constructor*-*-*-*-*-*-*-*-*
-///*-*                  ==========================
+/// Default constructor.
 
 TGeoTrack::TGeoTrack()
 {
@@ -298,14 +298,15 @@ Int_t TGeoTrack::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw this track overimposed on a geometry, according to option.
+/// Draw this track over-imposed on a geometry, according to option.
 /// Options (case sensitive):
-///  default : track without daughters
-///  /D      : track and first level descendents only
-///  /*      : track and all descendents
-///  /Ntype
-///          : descendents of this track with particle name matching input type.
+///  - default : track without daughters
+///  - /D      : track and first level descendents only
+///  - /*      : track and all descendents
+///  - /Ntype  : descendents of this track with particle name matching input type.
+///
 /// Options can appear only once but can be combined : e.g. Draw("/D /Npion-")
+///
 /// Time range for visible track segments can be set via TGeoManager::SetTminTmax()
 
 void TGeoTrack::Draw(Option_t *option)

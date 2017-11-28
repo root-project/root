@@ -9,24 +9,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-// TOCCToStep Class                                                     //
-//                                                                      //
-// This class contains implementation of writing OpenCascade's          //
-// geometry shapes to the STEP file reproducing the originary ROOT      //
-// geometry tree. The TRootStep Class takes a gGeoManager pointer and   //
-// gives back a STEP file.                                              //
-// The OCCShapeCreation(TGeoManager *m) method starting from            //
-// the top of the ROOT geometry tree translates each ROOT shape in the  //
-// OCC one. A fLabel is created for each OCC shape and the              //
-// correspondance bewteen the the fLabel and the shape is saved         //
-// in a map. The OCCTreeCreation(TGeoManager *m) method starting from   //
-// the top of the ROOT geometry and using the fLabel-shape map          //
-// reproduce the ROOT tree that will be written to the STEP file using  //
-// the OCCWriteStep(const char * fname ) method.                        //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
+/** \class TOCCToStep
+\ingroup Geometry_cad
 
+This class contains implementation of writing OpenCascade's
+geometry shapes to the STEP file reproducing the original ROOT
+geometry tree. The TRootStep Class takes a gGeoManager pointer and
+gives back a STEP file.
+The OCCShapeCreation(TGeoManager *m) method starting from
+the top of the ROOT geometry tree translates each ROOT shape in the
+OCC one. A fLabel is created for each OCC shape and the
+correspondance between the the fLabel and the shape is saved
+in a map. The OCCTreeCreation(TGeoManager *m) method starting from
+the top of the ROOT geometry and using the fLabel-shape map
+reproduce the ROOT tree that will be written to the STEP file using
+the OCCWriteStep(const char * fname ) method.
+
+*/
 #include "TOCCToStep.h"
 #include "TGeoToOCC.h"
 
@@ -171,7 +170,7 @@ TDF_Label TOCCToStep::GetLabelOfVolume(TGeoVolume * v)
 TGeoVolume * TOCCToStep::GetVolumeOfLabel(TDF_Label fLabel)
 {
    map <TGeoVolume *,TDF_Label>::iterator it;
-   for(it = fTree.begin(); it != fTree.end(); it++)
+   for(it = fTree.begin(); it != fTree.end(); ++it)
       if (it->second.IsEqual(fLabel))
          return it->first;
    return 0;

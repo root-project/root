@@ -45,6 +45,15 @@ TStatistic::TStatistic(const char *name, Int_t n, const Double_t *val, const Dou
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// TStatistic destructor.
+
+TStatistic::~TStatistic()
+{
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+}
+
 void TStatistic::Fill(Double_t val, Double_t w) {
       // Incremental quantities
    // use formula 1.4 in Chan-Golub, LeVeque

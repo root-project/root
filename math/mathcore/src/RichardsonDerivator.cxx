@@ -12,6 +12,7 @@
 #include "Math/IFunctionfwd.h"
 #include <cmath>
 #include <limits>
+#include <algorithm>
 
 #include "Math/Error.h"
 

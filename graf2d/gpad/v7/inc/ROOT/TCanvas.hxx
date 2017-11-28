@@ -16,6 +16,7 @@
 #ifndef ROOT7_TCanvas
 #define ROOT7_TCanvas
 
+#include "ROOT/TColor.hxx"
 #include "ROOT/TPad.hxx"
 #include "ROOT/TVirtualCanvasPainter.hxx"
 
@@ -26,16 +27,16 @@
 namespace ROOT {
 namespace Experimental {
 
-namespace Internal {
-class TCanvasSharedPtrMaker;
-}
+class TDrawingOptsBaseNoDefault;
+template <class PRIMITIVE>
+class TDrawingAttrRef;
 
 /** \class ROOT::Experimental::TCanvas
   A window's topmost `TPad`.
   Access is through TCanvasPtr.
   */
 
-class TCanvas: public Internal::TPadBase {
+class TCanvas: public TPadBase {
 private:
    /// Title of the canvas.
    std::string fTitle;
@@ -43,13 +44,22 @@ private:
    /// Size of the canvas in pixels,
    std::array<TPadCoord::Pixel, 2> fSize;
 
+   /// Colors used by drawing options in the pad and any sub-pad.
+   Internal::TDrawingAttrTable<TColor> fColorTable;
+
+   /// Integers used by drawing options in the pad and any sub-pad.
+   Internal::TDrawingAttrTable<long long> fIntAttrTable;
+
+   /// Floating points used by drawing options in the pad and any sub-pad.
+   Internal::TDrawingAttrTable<double> fFPAttrTable;
+
    /// Modify counter, incremented every time canvas is changed
-   uint64_t fModified;                    ///<!
+   uint64_t fModified; ///<!
 
    /// The painter of this canvas, bootstrapping the graphics connection.
    /// Unmapped canvases (those that never had `Draw()` invoked) might not have
    /// a painter.
-   std::unique_ptr<Internal::TVirtualCanvasPainter> fPainter;  ///<!
+   std::unique_ptr<Internal::TVirtualCanvasPainter> fPainter; ///<!
 
    /// Disable copy construction for now.
    TCanvas(const TCanvas &) = delete;
@@ -57,11 +67,36 @@ private:
    /// Disable assignment for now.
    TCanvas &operator=(const TCanvas &) = delete;
 
+   ///\{
+   ///\name Drawing options attribute handling
+
+   /// Attribute table (non-const access).
+   Internal::TDrawingAttrTable<TColor> &GetAttrTable(TColor *) { return fColorTable; }
+   Internal::TDrawingAttrTable<long long> &GetAttrTable(long long *) { return fIntAttrTable; }
+   Internal::TDrawingAttrTable<double> &GetAttrTable(double *) { return fFPAttrTable; }
+
+   /// Attribute table (const access).
+   const Internal::TDrawingAttrTable<TColor> &GetAttrTable(TColor *) const { return fColorTable; }
+   const Internal::TDrawingAttrTable<long long> &GetAttrTable(long long *) const { return fIntAttrTable; }
+   const Internal::TDrawingAttrTable<double> &GetAttrTable(double *) const { return fFPAttrTable; }
+
+   friend class ROOT::Experimental::TDrawingOptsBaseNoDefault;
+   template <class PRIMITIVE>
+   friend class ROOT::Experimental::TDrawingAttrRef;
+   ///\}
+
 public:
    static std::shared_ptr<TCanvas> Create(const std::string &title);
 
    /// Create a temporary TCanvas; for long-lived ones please use Create().
    TCanvas() = default;
+
+   ~TCanvas() { Wipe(); /* FIXME: this should become Attrs owned and referenced by the TPads */}
+
+   const TCanvas &GetCanvas() const override { return *this; }
+
+   /// Access to the top-most canvas, if any (non-const version).
+   TCanvas &GetCanvas() override { return *this; }
 
    /// Return canvas pixel size as array with two elements - width and height
    const std::array<TPadCoord::Pixel, 2> &GetSize() const { return fSize; }
@@ -70,13 +105,24 @@ public:
    void SetSize(const std::array<TPadCoord::Pixel, 2> &sz) { fSize = sz; }
 
    /// Set canvas pixel size - width and height
-   void SetSize(const TPadCoord::Pixel &width, const TPadCoord::Pixel &height) { fSize[0] = width; fSize[1] = height; }
+   void SetSize(const TPadCoord::Pixel &width, const TPadCoord::Pixel &height)
+   {
+      fSize[0] = width;
+      fSize[1] = height;
+   }
 
    /// Display the canvas.
    void Show(const std::string &where = "");
 
    /// Close all canvas displays
    void Hide();
+
+   /// Insert panel into the canvas, canvas should be shown at this moment
+   template <class PANEL>
+   bool AddPanel(std::shared_ptr<PANEL> &panel) {
+      if (!fPainter) return false;
+      return fPainter->AddPanel(panel->GetWindow());
+   }
 
    // Indicates that primitives list was changed or any primitive was modified
    void Modified() { fModified++; }

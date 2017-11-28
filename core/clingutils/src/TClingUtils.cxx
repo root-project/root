@@ -58,6 +58,10 @@
 
 #include "TClingUtils.h"
 
+#ifdef _WIN32
+#define strncasecmp _strnicmp
+#endif
+
 namespace ROOT {
 namespace TMetaUtils {
 
@@ -1652,7 +1656,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
       csymbol.insert(0,"::");
    }
 
-   int stl = TClassEdit::IsSTLCont(classname.c_str());
+   int stl = TClassEdit::IsSTLCont(classname);
    bool bset = TClassEdit::IsSTLBitset(classname.c_str());
 
    bool isStd = TMetaUtils::IsStdClass(*decl);
@@ -1891,7 +1895,7 @@ void ROOT::TMetaUtils::WriteClassInit(std::ostream& finalString,
               ((stl > 0 && stl<ROOT::kSTLend) || (stl < 0 && stl>-ROOT::kSTLend)) && // is an stl container
               (stl != ROOT::kSTLbitset && stl !=-ROOT::kSTLbitset) ){     // is no bitset
       int idx = classname.find("<");
-      int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx).c_str()) : 0;
+      int stlType = (idx!=(int)std::string::npos) ? TClassEdit::STLKind(classname.substr(0,idx)) : 0;
       const char* methodTCP=0;
       switch(stlType)  {
          case ROOT::kSTLvector:
@@ -2468,23 +2472,42 @@ int ROOT::TMetaUtils::GetClassVersion(const clang::RecordDecl *cl, const cling::
       return -1;
    }
    const clang::FunctionDecl* funcCV = ROOT::TMetaUtils::ClassInfo__HasMethod(CRD,"Class_Version",interp);
+
    // if we have no Class_Info() return -1.
    if (!funcCV) return -1;
+
    // if we have many Class_Info() (?!) return 1.
    if (funcCV == (clang::FunctionDecl*)-1) return 1;
 
+   return GetTrivialIntegralReturnValue(funcCV, interp).second;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// If the function contains 'just': return SomeValue;
+/// this routine will extract this value and return it.
+/// The first element is set to true we have the body of the function and it
+/// is indeed a trivial function with just a return of a value.
+/// The second element contains the value (or -1 is case of failure)
+
+std::pair<bool, int>
+ROOT::TMetaUtils::GetTrivialIntegralReturnValue(const clang::FunctionDecl *funcCV, const cling::Interpreter &interp)
+{
+   using res_t = std::pair<bool, int>;
+
    const clang::CompoundStmt* FuncBody
       = llvm::dyn_cast_or_null<clang::CompoundStmt>(funcCV->getBody());
-   if (!FuncBody) return -1;
+   if (!FuncBody)
+      return res_t{false, -1};
    if (FuncBody->size() != 1) {
       // This is a non-ClassDef(), complex function - it might depend on state
       // and thus we'll need the runtime and cannot determine the result
       // statically.
-      return -1;
+      return res_t{false, -1};
    }
    const clang::ReturnStmt* RetStmt
       = llvm::dyn_cast<clang::ReturnStmt>(FuncBody->body_back());
-   if (!RetStmt) return -1;
+   if (!RetStmt)
+      return res_t{false, -1};
    const clang::Expr* RetExpr = RetStmt->getRetValue();
    // ClassDef controls the content of Class_Version() but not the return
    // expression which is CPP expanded from what the user provided as second
@@ -2493,12 +2516,12 @@ int ROOT::TMetaUtils::GetClassVersion(const clang::RecordDecl *cl, const cling::
    // Go through ICE to be more general.
    llvm::APSInt RetRes;
    if (!RetExpr->isIntegerConstantExpr(RetRes, funcCV->getASTContext()))
-      return -1;
+      return res_t{false, -1};
    if (RetRes.isSigned()) {
-      return (Version_t)RetRes.getSExtValue();
+      return res_t{true, (Version_t)RetRes.getSExtValue()};
    }
    // else
-   return (Version_t)RetRes.getZExtValue();
+   return res_t{true, (Version_t)RetRes.getZExtValue()};
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2531,6 +2554,33 @@ int ROOT::TMetaUtils::IsSTLContainer(const clang::CXXBaseSpecifier &base)
 
    if (decl) return TMetaUtils::IsSTLCont(*decl);
    else return ROOT::kNotSTL;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Calls the given lambda on every header in the given module.
+void ROOT::TMetaUtils::foreachHeaderInModule(const clang::Module &module,
+                                             const std::function<void(const clang::Module::Header &)> &closure)
+{
+   // Iterates over all headers in a module and calls the closure on each.
+
+   // FIXME: We currently have to hardcode '4' to do this. Maybe we
+   // will have a nicer way to do this in the future.
+   // NOTE: This is on purpose '4', not '5' which is the size of the
+   // vector. The last element is the list of excluded headers which we
+   // obviously don't want to check here.
+   const std::size_t publicHeaderIndex = 4;
+
+   // Integrity check in case this array changes its size at some point.
+   const std::size_t maxArrayLength = ((sizeof module.Headers) / (sizeof *module.Headers));
+   static_assert(publicHeaderIndex + 1 == maxArrayLength,
+                 "'Headers' has changed it's size, we need to update publicHeaderIndex");
+
+   for (std::size_t i = 0; i < publicHeaderIndex; i++) {
+      auto &headerList = module.Headers[i];
+      for (const clang::Module::Header &moduleHeader : headerList) {
+         closure(moduleHeader);
+      }
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2678,7 +2728,7 @@ void ROOT::TMetaUtils::WriteClassCode(CallWriteStreamer_t WriteStreamerFunc,
 
    std::string fullname;
    ROOT::TMetaUtils::GetQualifiedName(fullname,cl);
-   if (TClassEdit::IsSTLCont(fullname.c_str()) ) {
+   if (TClassEdit::IsSTLCont(fullname) ) {
       Internal::RStl::Instance().GenerateTClassFor(cl.GetNormalizedName(), llvm::dyn_cast<clang::CXXRecordDecl>(cl.GetRecordDecl()), interp, normCtxt);
       return;
    }
@@ -3195,6 +3245,7 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       const DirectoryLookup *foundDir = 0;
       // use HeaderSearch on the basename, to make sure it takes a header from
       // the include path (e.g. not from /usr/include/bits/)
+      assert(headerFE && "Couldn't find FileEntry from FID!");
       const FileEntry *FEhdr
          = HdrSearch.LookupFile(llvm::sys::path::filename(headerFE->getName()),
                                 SourceLocation(),
@@ -3208,6 +3259,16 @@ llvm::StringRef ROOT::TMetaUtils::GetFileName(const clang::Decl& decl,
       if (FEhdr) break;
       headerFID = sourceManager.getFileID(includeLoc);
       headerFE = sourceManager.getFileEntryForID(headerFID);
+      // If we have a system header in a module we can't just trace back the
+      // original include with the preprocessor. But it should be enough if
+      // we trace it back to the top-level system header that includes this
+      // declaration.
+      if (interp.getCI()->getLangOpts().Modules && !headerFE) {
+         assert(decl.isFirstDecl() && "Couldn't trace back include from a decl"
+                                      " that is not from an AST file");
+         assert(StringRef(includeLoc.printToString(sourceManager)).startswith("<module-includes>"));
+         break;
+      }
       includeLoc = getFinalSpellingLoc(sourceManager,
                                        sourceManager.getIncludeLoc(headerFID));
    }
@@ -3803,6 +3864,8 @@ clang::QualType ROOT::TMetaUtils::GetNormalizedType(const clang::QualType &type,
 {
    clang::ASTContext &ctxt = interpreter.getCI()->getASTContext();
 
+   // Modules can trigger deserialization.
+   cling::Interpreter::PushTransactionRAII RAII(const_cast<cling::Interpreter*>(&interpreter));
    clang::QualType normalizedType = cling::utils::Transform::GetPartiallyDesugaredType(ctxt, type, normCtxt.GetConfig(), true /* fully qualify */);
 
    // Readd missing default template parameters

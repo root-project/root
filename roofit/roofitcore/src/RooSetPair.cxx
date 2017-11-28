@@ -23,14 +23,20 @@ RooSetPair is a utility class that stores a pair of RooArgSets
 **/
 
 #include "RooFit.h"
+#include "TROOT.h"
 
 #define ROOSETPAIR_CXX
 #include "RooSetPair.h"
 
 using namespace std;
 
-ClassImp(RooSetPair); 
-;
+ClassImp(RooSetPair);
 
+////////////////////////////////////////////////////////////////////////////////
+/// RooSetPair destructor.
 
-
+RooSetPair::~RooSetPair()
+{
+   // Required since we overload TObject::Hash.
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
+}

@@ -107,7 +107,6 @@ bool   gImageSource;   // True the source of the current macro should be shown
 int    gInMacro;       // >0 if parsing a macro in a class documentation.
 int    gImageID;       // Image Identifier.
 int    gMacroID;       // Macro identifier in class documentation.
-int    gShowTutSource; // >0 if the tutorial source code should be shown
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,7 +125,6 @@ int main(int argc, char *argv[])
    gMacroID       = 0;
    gOutputName    = "stdout.dat";
    gImageType     = "png";
-   gShowTutSource = 0;
    if (EndsWith(gFileName,".cxx")) gSource = true;
    if (EndsWith(gFileName,".h"))   gHeader = true;
    if (EndsWith(gFileName,".py"))  gPython = true;
@@ -273,9 +271,17 @@ void FilterTutorial()
    // File for inline macros.
    FILE *m = 0;
 
+   int showTutSource = 0;
+   int incond = 0;
+
    // Extract the macro name
-   int i1      = gFileName.rfind('/')+1;
-   int i2      = gFileName.rfind('C');
+   int i1 = gFileName.rfind('/')+1;
+   int i2;
+   if (gPython) {
+      i2 = gFileName.rfind('y');
+   } else {
+      i2 = gFileName.rfind('C');
+   }
    gMacroName  = gFileName.substr(i1,i2-i1+1);
    gImageName  = StringFormat("%s.%s", gMacroName.c_str(), gImageType.c_str()); // Image name
    gOutputName = StringFormat("%s.out", gMacroName.c_str()); // output name
@@ -311,7 +317,7 @@ void FilterTutorial()
 
       // \macro_code found
       if (gLineString.find("\\macro_code") != string::npos) {
-         gShowTutSource = 1;
+         showTutSource = 1;
          m = fopen(StringFormat("%s/macros/%s",gOutDir.c_str(),gMacroName.c_str()).c_str(), "w");
          ReplaceAll(gLineString, "\\macro_code", StringFormat("\\include %s",gMacroName.c_str()));
       }
@@ -339,19 +345,23 @@ void FilterTutorial()
       }
 
       // \author is the last comment line.
-      if (gLineString.find("\\author")  != string::npos) {
+      if (gLineString.find("\\author") != string::npos) {
          if (gPython) printf("%s",StringFormat("%s \n## \\cond \n",gLineString.c_str()).c_str());
          else         printf("%s",StringFormat("%s \n/// \\cond \n",gLineString.c_str()).c_str());
-         if (gShowTutSource == 1) gShowTutSource = 2;
+         if (showTutSource == 1) showTutSource = 2;
+         incond = 1;
       } else {
          printf("%s",gLineString.c_str());
-         if (m && gShowTutSource == 2) fprintf(m,"%s",gLineString.c_str());
+         if (m && showTutSource == 2) fprintf(m,"%s",gLineString.c_str());
       }
    }
 
-   if (m) {
+   if (incond) {
       if (gPython) printf("## \\endcond \n");
       else         printf("/// \\endcond \n");
+   }
+
+   if (m) {
       fclose(m);
    }
 }

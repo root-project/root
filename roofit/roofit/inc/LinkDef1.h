@@ -45,10 +45,12 @@
 #pragma link C++ class RooIntegralMorph+ ;
 #pragma link C++ class RooIntegralMorph::MorphCacheElem+ ;
 #pragma link C++ class RooMomentMorph+ ;
+#pragma link C++ class RooMomentMorphFunc + ;
+#pragma link C++ class RooMomentMorphND + ;
+#pragma link C++ class RooMomentMorphFuncND + ;
+#pragma link C++ class RooMomentMorphFuncND::Grid2 + ;
 #pragma link C++ class RooStepFunction+ ;
 #pragma link C++ class RooMultiBinomial+ ;
-#pragma link C++ class Roo1DMomentMorphFunction+ ;
-#pragma link C++ class Roo2DMomentMorphFunction+ ;
 /* #pragma link C++ class std::vector< TVector2 >; */
 /* #pragma link C++ class std::vector< TVector2 >::iterator ; */
 /* #pragma link C++ class RooPolyMorph2D+ ; */

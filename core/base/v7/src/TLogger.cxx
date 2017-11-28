@@ -39,7 +39,7 @@ bool TLogHandlerDefault::Emit(const ROOT::Experimental::TLogEntry &entry)
    if (!entry.fFuncName.empty())
       std::cerr << " in " << entry.fFuncName;
    std::cerr << ":\n"
-             << "   " << entry.str();
+             << "   " << entry.str() << '\n';
    return true;
 }
 } // unnamed namespace

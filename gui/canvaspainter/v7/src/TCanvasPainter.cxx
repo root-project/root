@@ -19,20 +19,17 @@
 #include <ROOT/TDisplayItem.hxx>
 #include <ROOT/TMenuItem.hxx>
 
+#include <ROOT/TWebWindow.hxx>
+#include <ROOT/TWebWindowsManager.hxx>
+
 #include <memory>
 #include <string>
 #include <vector>
 #include <list>
 #include <fstream>
 
-#include "THttpEngine.h"
-#include "THttpServer.h"
-#include "TSystem.h"
 #include "TList.h"
-#include "TRandom.h"
-#include "TPad.h"
 #include "TROOT.h"
-#include "TApplication.h"
 #include "TClass.h"
 #include "TBufferJSON.h"
 
@@ -127,24 +124,28 @@ std::string base64_decode(std::string const &encoded_string)
       char_array_4[i++] = encoded_string[in_];
       in_++;
       if (i == 4) {
-         for (i = 0; i < 4; i++) char_array_4[i] = base64_chars.find(char_array_4[i]);
+         for (i = 0; i < 4; i++)
+            char_array_4[i] = base64_chars.find(char_array_4[i]);
 
          char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
          char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
          char_array_3[2] = ((char_array_4[2] & 0x3) << 6) + char_array_4[3];
 
-         for (i = 0; (i < 3); i++) ret += char_array_3[i];
+         for (i = 0; (i < 3); i++)
+            ret += char_array_3[i];
          i = 0;
       }
    }
 
    if (i) {
-      for (j = 0; j < i; j++) char_array_4[j] = base64_chars.find(char_array_4[j]);
+      for (j = 0; j < i; j++)
+         char_array_4[j] = base64_chars.find(char_array_4[j]);
 
       char_array_3[0] = (char_array_4[0] << 2) + ((char_array_4[1] & 0x30) >> 4);
       char_array_3[1] = ((char_array_4[1] & 0xf) << 4) + ((char_array_4[2] & 0x3c) >> 2);
 
-      for (j = 0; (j < i - 1); j++) ret += char_array_3[j];
+      for (j = 0; (j < i - 1); j++)
+         ret += char_array_3[j];
    }
 
    return ret;
@@ -152,41 +153,38 @@ std::string base64_decode(std::string const &encoded_string)
 
 } // namespace
 
-// ==================================================================
+// ==========================================================================================================
 
-namespace {
+// new implementation of canvas painter, using TWebWindow
 
-/** \class TCanvasPainter
-  Handles TCanvas communication with THttpServer.
-  */
+namespace ROOT {
+namespace Experimental {
 
-class TCanvasPainter : public THttpWSHandler,
-                       public ROOT::Experimental::Internal::TVirtualCanvasPainter /*, THttpSocketListener*/ {
+class TCanvasPainter : public Internal::TVirtualCanvasPainter {
 private:
    struct WebConn {
-      THttpWSEngine *fHandle; ///<! websocket handle
-      bool fReady;            ///!< when connection ready to send new data
-      bool fDrawReady;        ///!< when first drawing is performed
-      std::string fGetMenu;   ///<! object id for menu request
-      uint64_t fSend;         ///<! indicates version send to connection
-      uint64_t fDelivered;    ///<! indicates version confirmed from canvas
-      WebConn() : fHandle(0), fReady(false), fDrawReady(false), fGetMenu(), fSend(0), fDelivered(0) {}
+      unsigned fConnId{0};    ///<! connection id
+      bool fDrawReady{false}; ///!< when first drawing is performed
+      std::string fGetMenu{}; ///<! object id for menu request
+      uint64_t fSend{0};      ///<! indicates version send to connection
+      uint64_t fDelivered{0}; ///<! indicates version confirmed from canvas
+      WebConn() = default;
    };
 
    struct WebCommand {
-      std::string fId;                                ///<! command identifier
-      std::string fName;                              ///<! command name
-      std::string fArg;                               ///<! command arg
-      bool fRunning;                                  ///<! true when command submitted
-      ROOT::Experimental::CanvasCallback_t fCallback; ///<! callback function associated with command
-      UInt_t fConnId;                                 ///<! connection id was used to send command
-      WebCommand() : fId(), fName(), fArg(), fRunning(false), fCallback(), fConnId(0) {}
+      std::string fId{};            ///<! command identifier
+      std::string fName{};          ///<! command name
+      std::string fArg{};           ///<! command arg
+      bool fRunning{false};         ///<! true when command submitted
+      CanvasCallback_t fCallback{}; ///<! callback function associated with command
+      unsigned fConnId{0};          ///<! connection id was used to send command
+      WebCommand() = default;
    };
 
    struct WebUpdate {
-      uint64_t fVersion;                              ///<! canvas version
-      ROOT::Experimental::CanvasCallback_t fCallback; ///<! callback function associated with command
-      WebUpdate() : fVersion(0), fCallback() {}
+      uint64_t fVersion{0};         ///<! canvas version
+      CanvasCallback_t fCallback{}; ///<! callback function associated with command
+      WebUpdate() = default;
    };
 
    typedef std::list<WebConn> WebConnList;
@@ -198,23 +196,23 @@ private:
    typedef std::vector<ROOT::Experimental::Detail::TMenuItem> MenuItemsVector;
 
    /// The canvas we are painting. It might go out of existence while painting.
-   const ROOT::Experimental::TCanvas &fCanvas;
+   const TCanvas &fCanvas; ///<!  Canvas
 
-   Bool_t fBatchMode; ///<! indicate if canvas works in batch mode (can be independent from gROOT->isBatch())
+   bool fBatchMode; ///<! indicate if canvas works in batch mode (can be independent from gROOT->isBatch())
 
-   WebConnList fWebConn;                             ///<! connections list
-   ROOT::Experimental::TPadDisplayItem fDisplayList; ///!< full list of items to display
-   WebCommandsList fCmds;                            ///!< list of submitted commands
-   uint64_t fCmdsCnt;                                ///!< commands counter
-   std::string fWaitingCmdId;                        ///!< command id waited for complition
+   std::shared_ptr<TWebWindow> fWindow; ///!< configured display
+
+   WebConnList fWebConn;         ///<! connections list
+   bool fHadWebConn;             ///<! true if any connection were existing
+   TPadDisplayItem fDisplayList; ///!< full list of items to display
+   WebCommandsList fCmds;        ///!< list of submitted commands
+   uint64_t fCmdsCnt;            ///!< commands counter
+   std::string fWaitingCmdId;    ///!< command id waited for completion
 
    uint64_t fSnapshotVersion;   ///!< version of snapshot
    std::string fSnapshot;       ///!< last produced snapshot
    uint64_t fSnapshotDelivered; ///!< minimal version delivered to all connections
    WebUpdatesList fUpdatesLst;  ///!< list of callbacks for canvas update
-
-   static TString fAddr;        ///<! real http address (when assigned)
-   static THttpServer *gServer; ///<! server
 
    /// Disable copy construction.
    TCanvasPainter(const TCanvasPainter &) = delete;
@@ -222,360 +220,115 @@ private:
    /// Disable assignment.
    TCanvasPainter &operator=(const TCanvasPainter &) = delete;
 
-   ROOT::Experimental::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
+   void CancelUpdates();
 
-   bool CreateHttpServer(bool with_http = false);
+   void CancelCommands(unsigned connid = 0);
+
    void CheckDataToSend();
 
-   bool WaitWhenCanvasPainted(uint64_t ver);
+   void ProcessData(unsigned connid, const std::string &arg);
 
    std::string CreateSnapshot(const ROOT::Experimental::TCanvas &can);
 
-   /// Send the canvas primitives to the THttpServer.
-   // void SendCanvas();
-
-   bool FrontCommandReplied(const std::string &reply);
-
-   void PopFrontCommand(bool res = false);
+   ROOT::Experimental::TDrawable *FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id);
 
    void SaveCreatedFile(std::string &reply);
 
-   virtual Bool_t ProcessWS(THttpCallArg *arg) override;
+   bool FrontCommandReplied(const std::string &reply);
 
-   void CancelCommands(bool cancel_all, UInt_t connid = 0);
+   void PopFrontCommand(bool result);
 
-   void CancelUpdates();
+   int CheckDeliveredVersion(uint64_t ver, double);
 
-   void CloseConnections();
+   int CheckWaitingCmd(const std::string &cmdname, double);
 
 public:
-   /// Create a TVirtualCanvasPainter for the given canvas.
-   /// The painter observes it; it needs to know should the TCanvas be deleted.
-   TCanvasPainter(const std::string &name, const ROOT::Experimental::TCanvas &canv, bool batch_mode)
-      : THttpWSHandler(name.c_str(), "title"), fCanvas(canv), fBatchMode(batch_mode), fWebConn(), fDisplayList(),
-        fCmds(), fCmdsCnt(0), fWaitingCmdId(), fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0), fUpdatesLst()
+   TCanvasPainter(const TCanvas &canv, bool batch_mode)
+      : fCanvas(canv), fBatchMode(batch_mode), fWindow(), fWebConn(), fHadWebConn(false), fDisplayList(), fCmds(),
+        fCmdsCnt(0), fWaitingCmdId(), fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0), fUpdatesLst()
    {
-      CreateHttpServer();
-      gServer->Register("/web7gui", this);
    }
 
-   virtual ~TCanvasPainter()
-   {
-      CancelCommands(true);
-      CancelUpdates();
-      CloseConnections();
+   virtual ~TCanvasPainter();
 
-      if (gServer)
-         gServer->Unregister(this);
-      // TODO: should we close server when all canvases are closed?
-   }
-
+   /// returns true is canvas used in batch mode
    virtual bool IsBatchMode() const override { return fBatchMode; }
 
-   virtual void AddDisplayItem(ROOT::Experimental::TDisplayItem *item) final;
+   virtual void AddDisplayItem(TDisplayItem *item) override { fDisplayList.Add(item); }
 
-   virtual void CanvasUpdated(uint64_t, bool, ROOT::Experimental::CanvasCallback_t) override;
+   virtual void CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental::CanvasCallback_t callback) override;
 
-   virtual bool IsCanvasModified(uint64_t) const override;
+   /// return true if canvas modified since last painting
+   virtual bool IsCanvasModified(uint64_t id) const override { return fSnapshotDelivered != id; }
 
    /// perform special action when drawing is ready
-   virtual void DoWhenReady(const std::string &cmd, const std::string &arg, bool async,
-                            ROOT::Experimental::CanvasCallback_t callback) final;
+   virtual void
+   DoWhenReady(const std::string &name, const std::string &arg, bool async, CanvasCallback_t callback) override;
 
-   // open new display for the canvas
    virtual void NewDisplay(const std::string &where) override;
 
-   // void ReactToSocketNews(...) override { SendCanvas(); }
+   virtual bool AddPanel(std::shared_ptr<TWebWindow>) override;
 
    /** \class CanvasPainterGenerator
-       Creates TCanvasPainter objects.
-     */
+          Creates TCanvasPainter objects.
+        */
 
    class GeneratorImpl : public Generator {
    public:
       /// Create a new TCanvasPainter to paint the given TCanvas.
-      std::unique_ptr<TVirtualCanvasPainter> Create(const ROOT::Experimental::TCanvas &canv,
-                                                    bool batch_mode) const override
+      std::unique_ptr<TVirtualCanvasPainter>
+      Create(const ROOT::Experimental::TCanvas &canv, bool batch_mode) const override
       {
-         return std::make_unique<TCanvasPainter>("name", canv, batch_mode);
+         return std::make_unique<TCanvasPainter>(canv, batch_mode);
       }
       ~GeneratorImpl() = default;
 
       /// Set TVirtualCanvasPainter::fgGenerator to a new GeneratorImpl object.
       static void SetGlobalPainter()
       {
-         if (TVirtualCanvasPainter::fgGenerator) {
-            R__ERROR_HERE("CanvasPainter") << "Generator is already set! Skipping second initialization.";
+         if (GetGenerator()) {
+            R__ERROR_HERE("NewPainter") << "Generator is already set! Skipping second initialization.";
             return;
          }
-         TVirtualCanvasPainter::fgGenerator.reset(new GeneratorImpl());
+         GetGenerator().reset(new GeneratorImpl());
       }
 
       /// Release the GeneratorImpl object.
-      static void ResetGlobalPainter() { TVirtualCanvasPainter::fgGenerator.reset(); }
+      static void ResetGlobalPainter() { GetGenerator().reset(); }
    };
 };
 
-TString TCanvasPainter::fAddr = "";
-THttpServer *TCanvasPainter::gServer = 0;
+struct TNewCanvasPainterReg {
+   TNewCanvasPainterReg() { TCanvasPainter::GeneratorImpl::SetGlobalPainter(); }
+   ~TNewCanvasPainterReg() { TCanvasPainter::GeneratorImpl::ResetGlobalPainter(); }
+} newCanvasPainterReg;
 
-/** \class TCanvasPainterReg
-  Registers TCanvasPainterGenerator as generator with ROOT::Experimental::Internal::TVirtualCanvasPainter.
-  */
-struct TCanvasPainterReg {
-   TCanvasPainterReg() { TCanvasPainter::GeneratorImpl::SetGlobalPainter(); }
-   ~TCanvasPainterReg() { TCanvasPainter::GeneratorImpl::ResetGlobalPainter(); }
-} canvasPainterReg;
+} // namespace Experimental
+} // namespace ROOT
 
-/// \}
-
-} // unnamed namespace
-
-bool TCanvasPainter::CreateHttpServer(bool with_http)
+ROOT::Experimental::TCanvasPainter::~TCanvasPainter()
 {
-   if (!gServer)
-      gServer = new THttpServer("dummy");
-
-   if (!with_http || (fAddr.Length() > 0))
-      return true;
-
-   // gServer = new THttpServer("http:8080?loopback&websocket_timeout=10000");
-
-   int http_port = 0;
-   const char *ports = gSystem->Getenv("WEBGUI_PORT");
-   if (ports)
-      http_port = TString(ports).Atoi();
-   if (!http_port)
-      gRandom->SetSeed(0);
-
-   for (int ntry = 0; ntry < 100; ++ntry) {
-      if (!http_port)
-         http_port = (int)(8800 + 1000 * gRandom->Rndm(1));
-
-      // TODO: ensure that port can be used
-      if (gServer->CreateEngine(TString::Format("http:%d?websocket_timeout=10000", http_port))) {
-         fAddr.Form("http://localhost:%d", http_port);
-         return true;
-      }
-
-      http_port = 0;
-   }
-
-   return false;
+   CancelCommands();
+   CancelUpdates();
+   if (fWindow)
+      fWindow->CloseConnections();
 }
 
-//////////////////////////////////////////////////////////////////////////
-/// Create new display for the canvas
-/// Parameter \par where specified  which program could be used for display creation
-/// Possible values:
-///
-///      cef - Chromium Embeded Framework, local display, local communication
-///      qt5 - Qt5 WebEngine (when running via rootqt5), local display, local communication
-///  browser - default system web-browser, communication via random http port from range 8800 - 9800
-///  <prog> - any program name which will be started instead of default browser, like firefox or /usr/bin/opera
-///           one could also specify $url in program name, which will be replaced with canvas URL
-///  native - either any available local display or default browser
-///
-///  Canvas can be displayed in several different places
-
-void TCanvasPainter::NewDisplay(const std::string &where)
+/// Checks if specified version was delivered to all clients
+/// Used to wait for such condition
+int ROOT::Experimental::TCanvasPainter::CheckDeliveredVersion(uint64_t ver, double)
 {
-   TString addr;
-
-   bool is_native = where.empty() || (where == "native"), is_qt5 = (where == "qt5"), ic_cef = (where == "cef");
-
-   Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
-
-   if (symbol_qt5 && (is_native || is_qt5)) {
-      typedef void (*FunctionQt5)(const char *, void *, bool);
-
-      addr.Form("://dummy:8080/web7gui/%s/draw.htm?longpollcanvas&no_root_json%s&qt5", GetName(),
-                (IsBatchMode() ? "&batch_mode" : ""));
-      // addr.Form("example://localhost:8080/Canvases/%s/draw.htm", Canvas()->GetName());
-
-      Info("NewDisplay", "Show canvas in Qt5 window:  %s", addr.Data());
-
-      FunctionQt5 func = (FunctionQt5)symbol_qt5;
-      func(addr.Data(), gServer, IsBatchMode());
-      return;
-   }
-
-   // TODO: one should try to load CEF libraries only when really needed
-   // probably, one should create separate DLL with CEF-related code
-   Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
-   const char *cef_path = gSystem->Getenv("CEF_PATH");
-   const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || ic_cef)) {
-      typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *);
-
-      // addr.Form("/web7gui/%s/draw.htm?cef_canvas%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
-      addr.Form("/web7gui/%s/draw.htm?cef_canvas&no_root_json%s", GetName(), (IsBatchMode() ? "&batch_mode" : ""));
-
-      Info("NewDisplay", "Show canvas in CEF window:  %s", addr.Data());
-
-      FunctionCef3 func = (FunctionCef3)symbol_cef;
-      func(addr.Data(), gServer, IsBatchMode(), rootsys, cef_path);
-
-      return;
-   }
-
-   if (!CreateHttpServer(true)) {
-      Error("NewDisplay", "Fail to start HTTP server");
-      return;
-   }
-
-   addr.Form("%s/web7gui/%s/draw.htm?webcanvas", fAddr.Data(), GetName());
-
-   TString exec;
-
-   if (!is_native && !ic_cef && !is_qt5 && (where != "browser")) {
-      if (where.find("$url") != std::string::npos) {
-         exec = where.c_str();
-         exec.ReplaceAll("$url", addr);
-      } else {
-         exec.Form("%s %s", where.c_str(), addr.Data());
-      }
-   } else if (gSystem->InheritsFrom("TMacOSXSystem"))
-      exec.Form("open %s", addr.Data());
-   else
-      exec.Form("xdg-open %s &", addr.Data());
-
-   Info("NewDisplay", "Show canvas in browser with cmd:  %s", exec.Data());
-
-   gSystem->Exec(exec);
-}
-
-void TCanvasPainter::CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental::CanvasCallback_t callback)
-{
-   if (ver && fSnapshotDelivered && (ver <= fSnapshotDelivered)) {
-      // if given canvas version was already delivered to clients, can return immediately
-      if (callback)
-         callback(true);
-      return;
-   }
-
-   fSnapshotVersion = ver;
-   fSnapshot = CreateSnapshot(fCanvas);
-
-   CheckDataToSend();
-
-   if (callback) {
-      WebUpdate item;
-      item.fVersion = ver;
-      item.fCallback = callback;
-      fUpdatesLst.push_back(item);
-   }
-
-   if (!async)
-      WaitWhenCanvasPainted(ver);
-}
-
-bool TCanvasPainter::WaitWhenCanvasPainted(uint64_t ver)
-{
-   // simple polling loop until specified version delivered to the clients
-
-   uint64_t cnt = 0;
-   bool had_connection = false;
-
-   while (true) {
-      if (fWebConn.size() > 0)
-         had_connection = true;
-      if ((fWebConn.size() == 0) && (had_connection || (cnt > 1000)))
-         return false; // wait ~1 min if no new connection established
-      if (fSnapshotDelivered >= ver) {
-         printf("PAINT READY!!!\n");
-         return true;
-      }
-      gSystem->ProcessEvents();
-      gSystem->Sleep((++cnt < 500) ? 1 : 100); // increase sleep interval when do very often
-   }
-
-   return false;
-}
-
-void TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async,
-                                 ROOT::Experimental::CanvasCallback_t callback)
-{
-   if (!async && !fWaitingCmdId.empty()) {
-      Error("DoWhenReady", "Fail to submit sync command when previous is still awaited - use async");
-      async = true;
-   }
-
-   WebCommand cmd;
-   cmd.fId = TString::ULLtoa(++fCmdsCnt, 10);
-   cmd.fName = name;
-   cmd.fArg = arg;
-   cmd.fRunning = false;
-   cmd.fCallback = callback;
-   fCmds.push_back(cmd);
-
-   if (!async)
-      fWaitingCmdId = cmd.fId;
-
-   CheckDataToSend();
-
-   if (async)
-      return;
-
-   uint64_t cnt = 0;
-   bool had_connection = false;
-
-   while (true) {
-      if (fWebConn.size() > 0)
-         had_connection = true;
-      if ((fWebConn.size() == 0) && (had_connection || (cnt > 1000)))
-         return; // wait ~1 min if no new connection established
-      if (fWaitingCmdId.empty()) {
-         printf("Command %s waiting READY!!!\n", name.c_str());
-         return;
-      }
-      gSystem->ProcessEvents();
-      gSystem->Sleep((++cnt < 500) ? 1 : 100); // increase sleep interval when do very often
-   }
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-/// Remove front command from the command queue
-/// If necessary, configured call-back will be invoked
-
-void TCanvasPainter::PopFrontCommand(bool result)
-{
-   if (fCmds.size() == 0)
-      return;
-
-   // simple condition, which will be checked in waiting loop
-   if (!fWaitingCmdId.empty() && (fWaitingCmdId == fCmds.front().fId))
-      fWaitingCmdId.clear();
-
-   if (fCmds.front().fCallback)
-      fCmds.front().fCallback(result);
-
-   fCmds.pop_front();
-}
-
-/////////////////////////////////////////////////////////////////////////////////////////////
-/// Cancel commands for given connection ID
-/// Invoke all callbacks
-
-void TCanvasPainter::CancelCommands(bool cancel_all, UInt_t connid)
-{
-   auto iter = fCmds.begin();
-   while (iter != fCmds.end()) {
-      auto next = iter;
-      next++;
-      if (cancel_all || (iter->fConnId == connid)) {
-         if (fWaitingCmdId == iter->fId)
-            fWaitingCmdId.clear();
-         iter->fCallback(false);
-         fCmds.erase(iter);
-      }
-   }
+   if ((fWebConn.size() == 0) && fHadWebConn)
+      return -1;
+   if (fSnapshotDelivered >= ver)
+      return 1;
+   return 0;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
 /// Cancel all pending Canvas::Update()
 
-void TCanvasPainter::CancelUpdates()
+void ROOT::Experimental::TCanvasPainter::CancelUpdates()
 {
    fSnapshotDelivered = 0;
    auto iter = fUpdatesLst.begin();
@@ -587,234 +340,23 @@ void TCanvasPainter::CancelUpdates()
    }
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-/// Close all web connections - will lead to close
-
-void TCanvasPainter::CloseConnections()
+void ROOT::Experimental::TCanvasPainter::CancelCommands(unsigned connid)
 {
-   for (auto &&conn : fWebConn) {
-
-      if (!conn.fHandle)
-         continue;
-
-      conn.fReady = kFALSE;
-      conn.fHandle->SendCharStar("CLOSE");
-      conn.fHandle->ClearHandle();
-      delete conn.fHandle;
-      conn.fHandle = nullptr;
+   auto iter = fCmds.begin();
+   while (iter != fCmds.end()) {
+      auto next = iter;
+      next++;
+      if (!connid || (iter->fConnId == connid)) {
+         if (fWaitingCmdId == iter->fId)
+            fWaitingCmdId.clear();
+         iter->fCallback(false);
+         fCmds.erase(iter);
+      }
    }
-
-   fWebConn.clear();
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////
-/// Process reply of first command in the queue
-/// For the moment commands use to create image files
-
-bool TCanvasPainter::FrontCommandReplied(const std::string &reply)
+void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 {
-   WebCommand &cmd = fCmds.front();
-
-   cmd.fRunning = false;
-
-   bool result = false;
-
-   if ((cmd.fName == "SVG") || (cmd.fName == "PNG") || (cmd.fName == "JPEG")) {
-      if (reply.length() == 0) {
-         Error("FrontCommandReplied", "Fail to produce %s image %s", cmd.fName.c_str(), cmd.fArg.c_str());
-      } else {
-         std::string content = base64_decode(reply);
-         std::ofstream ofs(cmd.fArg);
-         ofs.write(content.c_str(), content.length());
-         ofs.close();
-         Info("FrontCommandReplied", "Create %s file %s len %d", cmd.fName.c_str(), cmd.fArg.c_str(), (int)content.length());
-         result = true;
-      }
-   } else {
-      Error("FrontCommandReplied", "Unknown command %s", cmd.fName.c_str());
-   }
-
-   return result;
-}
-
-/// Method called when GUI sends file to save on local disk
-/// File coded with base64 coding
-void TCanvasPainter::SaveCreatedFile(std::string &reply)
-{
-   size_t pos = reply.find(":");
-   if ((pos == std::string::npos) || (pos==0)) {
-      Error("SaveCreatedFile", "Not found : separator");
-      return;
-   }
-
-   std::string fname(reply, 0, pos);
-   reply.erase(0, pos+1);
-
-   std::string binary = base64_decode(reply);
-   std::ofstream ofs(fname);
-   ofs.write(binary.c_str(), binary.length());
-   ofs.close();
-
-   Info("SaveCreatedFile", "Create file %s len %d", fname.c_str(), (int)binary.length());
-}
-
-
-Bool_t TCanvasPainter::ProcessWS(THttpCallArg *arg)
-{
-   if (!arg)
-      return kTRUE;
-
-   // try to identify connection for given WS request
-   WebConn *conn = 0;
-   WebConnList::iterator iter = fWebConn.begin();
-   while (iter != fWebConn.end()) {
-      if (iter->fHandle && (iter->fHandle->GetId() == arg->GetWSId()) && arg->GetWSId()) {
-         conn = &(*iter);
-         break;
-      }
-      ++iter;
-   }
-
-   if (strcmp(arg->GetMethod(), "WS_CONNECT") == 0) {
-
-      // accept all requests, in future one could limit number of connections
-      // arg->Set404(); // refuse connection
-      return kTRUE;
-   }
-
-   if (strcmp(arg->GetMethod(), "WS_READY") == 0) {
-      THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(arg->TakeWSHandle());
-
-      if (conn != 0)
-         Error("ProcessWSRequest", "WSHandle with given websocket id exists!!!");
-
-      WebConn newconn;
-      newconn.fHandle = wshandle;
-
-      fWebConn.push_back(newconn);
-      // printf("socket is ready %d\n", fWebConn.back().fReady);
-
-      CheckDataToSend();
-
-      return kTRUE;
-   }
-
-   if (strcmp(arg->GetMethod(), "WS_CLOSE") == 0) {
-      // connection is closed, one can remove handle
-
-      printf("Connection closed\n");
-
-      UInt_t connid = 0;
-
-      if (conn && conn->fHandle) {
-         connid = conn->fHandle->GetId();
-         conn->fHandle->ClearHandle();
-         delete conn->fHandle;
-         conn->fHandle = 0;
-      }
-
-      if (conn)
-         fWebConn.erase(iter);
-
-      // if there are no other connections - cancel all submitted commands
-      CancelCommands((fWebConn.size() == 0), connid);
-
-      CheckDataToSend(); // check if data should be send via other connections
-
-      return kTRUE;
-   }
-
-   if (strcmp(arg->GetMethod(), "WS_DATA") != 0) {
-      Error("ProcessWSRequest", "WSHandle DATA request expected!");
-      return kFALSE;
-   }
-
-   if (!conn) {
-      Error("ProcessWSRequest", "Get websocket data without valid connection - ignore!!!");
-      return kFALSE;
-   }
-
-   if (conn->fHandle->PreviewData(arg))
-      return kTRUE;
-
-   if (arg->GetPostDataLength() <= 0)
-      return kTRUE;
-
-   std::string cdata((const char *)arg->GetPostData(), arg->GetPostDataLength());
-
-   if (cdata.find("READY") == 0) {
-      conn->fReady = kTRUE;
-      CheckDataToSend();
-   } else if (cdata.find("SNAPDONE:") == 0) {
-      cdata.erase(0, 9);
-      conn->fReady = kTRUE;
-      conn->fDrawReady = kTRUE;                       // at least first drawing is performed
-      conn->fDelivered = (uint64_t)std::stoll(cdata); // delivered version of the snapshot
-      CheckDataToSend();
-   } else if (cdata.find("RREADY:") == 0) {
-      conn->fReady = kTRUE;
-      conn->fDrawReady = kTRUE; // at least first drawing is performed
-      CheckDataToSend();
-   } else if (cdata.find("GETMENU:") == 0) {
-      conn->fReady = kTRUE;
-      cdata.erase(0, 8);
-      conn->fGetMenu = cdata;
-      CheckDataToSend();
-   } else if (cdata == "QUIT") {
-      if (gApplication)
-         gApplication->Terminate(0);
-   } else if (cdata == "RELOAD") {
-      conn->fSend = 0; // reset send version, causes new data sending
-      CheckDataToSend();
-   } else if (cdata == "INTERRUPT") {
-      gROOT->SetInterrupt();
-   } else if (cdata.find("REPLY:") == 0) {
-      cdata.erase(0, 6);
-      const char *sid = cdata.c_str();
-      const char *separ = strchr(sid, ':');
-      std::string id;
-      if (separ)
-         id.append(sid, separ - sid);
-      if (fCmds.size() == 0) {
-         Error("ProcessWS", "Get REPLY without command");
-      } else if (!fCmds.front().fRunning) {
-         Error("ProcessWS", "Front command is not running when get reply");
-      } else if (fCmds.front().fId != id) {
-         Error("ProcessWS", "Mismatch with front command and ID in REPLY");
-      } else {
-         bool res = FrontCommandReplied(separ + 1);
-         PopFrontCommand(res);
-      }
-      conn->fReady = kTRUE;
-      CheckDataToSend();
-   } else if (cdata.find("SAVE:") == 0) {
-      cdata.erase(0,5);
-      SaveCreatedFile(cdata);
-   } else if (cdata.find("OBJEXEC:") == 0) {
-      cdata.erase(0, 8);
-      size_t pos = cdata.find(':');
-
-      if ((pos != std::string::npos) && (pos > 0)) {
-         std::string id(cdata, 0, pos);
-         cdata.erase(0, pos + 1);
-         ROOT::Experimental::TDrawable *drawable = FindDrawable(fCanvas, id);
-         if (drawable && (cdata.length() > 0)) {
-            printf("Execute %s for drawable %p\n", cdata.c_str(), drawable);
-            drawable->Execute(cdata);
-         } else if (id == ROOT::Experimental::TDisplayItem::MakeIDFromPtr((void *)&fCanvas)) {
-            printf("Execute %s for canvas itself (ignore for the moment)\n", cdata.c_str());
-         }
-      }
-   } else if (cdata == "KEEPALIVE") {
-      // do nothing, it is just keep alive message for websocket
-   }
-
-   return kTRUE;
-}
-
-void TCanvasPainter::CheckDataToSend()
-{
-
    uint64_t min_delivered = 0;
 
    for (auto &&conn : fWebConn) {
@@ -822,7 +364,8 @@ void TCanvasPainter::CheckDataToSend()
       if (conn.fDelivered && (!min_delivered || (min_delivered < conn.fDelivered)))
          min_delivered = conn.fDelivered;
 
-      if (!conn.fReady || !conn.fHandle)
+      // check if direct data sending is possible
+      if (!fWindow->CanSend(conn.fConnId, true))
          continue;
 
       TString buf;
@@ -834,9 +377,9 @@ void TCanvasPainter::CheckDataToSend()
          buf.Append(cmd.fId);
          buf.Append(":");
          buf.Append(cmd.fName);
-         cmd.fConnId = conn.fHandle->GetId();
+         cmd.fConnId = conn.fConnId;
       } else if (!conn.fGetMenu.empty()) {
-         ROOT::Experimental::TDrawable *drawable = FindDrawable(fCanvas, conn.fGetMenu);
+         TDrawable *drawable = FindDrawable(fCanvas, conn.fGetMenu);
 
          printf("Request menu for object %s found drawable %p\n", conn.fGetMenu.c_str(), drawable);
 
@@ -867,8 +410,7 @@ void TCanvasPainter::CheckDataToSend()
 
       if (buf.Length() > 0) {
          // sending of data can be moved into separate thread - not to block user code
-         conn.fReady = kFALSE;
-         conn.fHandle->SendCharStar(buf.Data());
+         fWindow->Send(buf.Data(), conn.fConnId);
       }
    }
 
@@ -891,44 +433,255 @@ void TCanvasPainter::CheckDataToSend()
    }
 }
 
-bool TCanvasPainter::IsCanvasModified(uint64_t id) const
+void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
+                                                       ROOT::Experimental::CanvasCallback_t callback)
 {
-   return fSnapshotDelivered != id;
-}
-
-void TCanvasPainter::AddDisplayItem(ROOT::Experimental::TDisplayItem *item)
-{
-   fDisplayList.Add(item);
-}
-
-ROOT::Experimental::TDrawable *TCanvasPainter::FindDrawable(const ROOT::Experimental::TCanvas &can,
-                                                                      const std::string &id)
-{
-
-   std::string search = id;
-   size_t pos = search.find("#");
-   // exclude extra specifier, later can be used for menu and commands execution
-   if (pos != std::string::npos) search.resize(pos);
-
-   for (auto &&drawable : can.GetPrimitives()) {
-
-      if (search == ROOT::Experimental::TDisplayItem::MakeIDFromPtr(&(*drawable)))
-         return &(*drawable);
+   if (ver && fSnapshotDelivered && (ver <= fSnapshotDelivered)) {
+      // if given canvas version was already delivered to clients, can return immediately
+      if (callback)
+         callback(true);
+      return;
    }
 
-   return nullptr;
+   if (!fWindow || !fWindow->IsShown()) {
+      if (callback)
+         callback(false);
+      return;
+   }
+
+   fSnapshotVersion = ver;
+   fSnapshot = CreateSnapshot(fCanvas);
+
+   CheckDataToSend();
+
+   if (callback) {
+      WebUpdate item;
+      item.fVersion = ver;
+      item.fCallback = callback;
+      fUpdatesLst.push_back(item);
+   }
+
+   // wait 100 seconds that canvas is painted
+   if (!async)
+      fWindow->WaitFor([this, ver](double tm) { return CheckDeliveredVersion(ver, tm); }, 100);
 }
 
-std::string TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &can)
+///////////////////////////////////////////////////
+/// Used to wait until submited command executed
+
+int ROOT::Experimental::TCanvasPainter::CheckWaitingCmd(const std::string &cmdname, double)
+{
+   if ((fWebConn.size() == 0) && fHadWebConn)
+      return -1;
+   if (fWaitingCmdId.empty()) {
+      printf("Command %s waiting READY!!!\n", cmdname.c_str());
+      return 1;
+   }
+   return 0;
+}
+
+/// perform special action when drawing is ready
+void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async,
+                                                     CanvasCallback_t callback)
+{
+   if (!async && !fWaitingCmdId.empty()) {
+      R__ERROR_HERE("DoWhenReady") << "Fail to submit sync command when previous is still awaited - use async";
+      async = true;
+   }
+
+   if (!fWindow || !fWindow->IsShown()) {
+      if (callback)
+         callback(false);
+      return;
+   }
+
+   WebCommand cmd;
+   cmd.fId = TString::ULLtoa(++fCmdsCnt, 10);
+   cmd.fName = name;
+   cmd.fArg = arg;
+   cmd.fRunning = false;
+   cmd.fCallback = callback;
+   fCmds.push_back(cmd);
+
+   if (!async)
+      fWaitingCmdId = cmd.fId;
+
+   CheckDataToSend();
+
+   if (!async)
+      fWindow->WaitFor([this, name](double tm) { return CheckWaitingCmd(name, tm); }, 100);
+}
+
+void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
+{
+   if (arg == "CONN_READY") {
+      // special argument from TWebWindow itself
+      // indication that new connection appeared
+
+      WebConn newconn;
+      newconn.fConnId = connid;
+
+      fWebConn.push_back(newconn);
+      printf("websocket is ready %u\n", connid);
+
+      fHadWebConn = true;
+
+      CheckDataToSend();
+      return;
+   }
+
+   WebConn *conn(0);
+   auto iter = fWebConn.begin();
+   while (iter != fWebConn.end()) {
+      if (iter->fConnId == connid) {
+         conn = &(*iter);
+         break;
+      }
+      ++iter;
+   }
+
+   if (!conn)
+      return; // no connection found
+
+   printf("Get data %u %.30s\n", connid, arg.c_str());
+
+   if (arg == "CONN_CLOSED") {
+      // special argument from TWebWindow itself
+      // connection is closed
+
+      fWebConn.erase(iter);
+
+      // if there are no other connections - cancel all submitted commands
+      CancelCommands(connid);
+
+   } else if (arg.find("READY") == 0) {
+
+   } else if (arg.find("SNAPDONE:") == 0) {
+      std::string cdata = arg;
+      cdata.erase(0, 9);
+      conn->fDrawReady = kTRUE;                       // at least first drawing is performed
+      conn->fDelivered = (uint64_t)std::stoll(cdata); // delivered version of the snapshot
+   } else if (arg.find("RREADY:") == 0) {
+      conn->fDrawReady = kTRUE; // at least first drawing is performed
+   } else if (arg.find("GETMENU:") == 0) {
+      std::string cdata = arg;
+      cdata.erase(0, 8);
+      conn->fGetMenu = cdata;
+   } else if (arg == "QUIT") {
+      // use window manager to correctly terminate http server
+      TWebWindowsManager::Instance()->Terminate();
+      return;
+   } else if (arg == "RELOAD") {
+      conn->fSend = 0; // reset send version, causes new data sending
+   } else if (arg == "INTERRUPT") {
+      gROOT->SetInterrupt();
+   } else if (arg.find("REPLY:") == 0) {
+      std::string cdata = arg;
+      cdata.erase(0, 6);
+      const char *sid = cdata.c_str();
+      const char *separ = strchr(sid, ':');
+      std::string id;
+      if (separ)
+         id.append(sid, separ - sid);
+      if (fCmds.size() == 0) {
+         printf("Get REPLY without command\n");
+      } else if (!fCmds.front().fRunning) {
+         printf("Front command is not running when get reply\n");
+      } else if (fCmds.front().fId != id) {
+         printf("Mismatch with front command and ID in REPLY\n");
+      } else {
+         bool res = FrontCommandReplied(separ + 1);
+         PopFrontCommand(res);
+      }
+   } else if (arg.find("SAVE:") == 0) {
+      std::string cdata = arg;
+      cdata.erase(0, 5);
+      SaveCreatedFile(cdata);
+   } else if (arg.find("OBJEXEC:") == 0) {
+      std::string cdata = arg;
+      cdata.erase(0, 8);
+      size_t pos = cdata.find(':');
+
+      if ((pos != std::string::npos) && (pos > 0)) {
+         std::string id(cdata, 0, pos);
+         cdata.erase(0, pos + 1);
+         TDrawable *drawable = FindDrawable(fCanvas, id);
+         if (drawable && (cdata.length() > 0)) {
+            printf("Execute %s for drawable %p\n", cdata.c_str(), drawable);
+            drawable->Execute(cdata);
+         } else if (id == TDisplayItem::MakeIDFromPtr((void *)&fCanvas)) {
+            printf("Execute %s for canvas itself (ignore for the moment)\n", cdata.c_str());
+         }
+      }
+   } else {
+      printf("Got not recognized reply %s\n", arg.c_str());
+   }
+
+   CheckDataToSend();
+}
+
+void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
+{
+   if (!fWindow) {
+      fWindow = TWebWindowsManager::Instance()->CreateWindow(IsBatchMode());
+
+      fWindow->SetConnLimit(0); // allow any number of connections
+
+      fWindow->SetDefaultPage("file:$jsrootsys/files/canvas.htm");
+
+      fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
+
+      // fWindow->SetGeometry(500,300);
+   }
+
+   fWindow->Show(where);
+}
+
+/// append window and panel inside canvas window
+
+bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> win)
+{
+   printf("TCanvasPainter::AddPanel %p\n", win.get());
+
+   if (!fWindow) {
+      R__ERROR_HERE("AddPanel") << "Canvas not yet shown";
+      return false;
+   }
+
+   if (IsBatchMode()) {
+      R__ERROR_HERE("AddPanel") << "Canvas shown in batch mode";
+      return false;
+   }
+
+   std::string addr = fWindow->RelativeAddr(win);
+
+   if (addr.length() == 0) {
+      R__ERROR_HERE("AddPanel") << "Cannot attach panel to canvas";
+      return false;
+   }
+
+   // connection is assigned, but can be refused by the client later
+   // therefore handle may be removed later
+
+   std::string cmd("ADDPANEL:");
+   cmd.append(addr);
+
+   /// one could use async mode
+   DoWhenReady(cmd, "AddPanel", true, nullptr);
+
+   return true;
+}
+
+// #include <fstream>
+
+std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &can)
 {
 
    fDisplayList.Clear();
 
    fDisplayList.SetObjectIDAsPtr((void *)&can);
 
-   TPad *dummy = new TPad(); // just provide old class where all kind of info (size, ranges) already provided
-
-   auto *snap = new ROOT::Experimental::TUniqueDisplayItem<TPad>(dummy);
+   auto *snap = new ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TCanvas>(&can);
    snap->SetObjectIDAsPtr((void *)&can);
    fDisplayList.Add(snap);
 
@@ -946,15 +699,99 @@ std::string TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &ca
 
    TString res = TBufferJSON::ConvertToJSON(&fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
 
+   //   TBufferJSON::ExportToFile("canv.json", &fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+
    fDisplayList.Clear();
 
-   // printf("JSON %s\n", res.Data());
+   //   std::ofstream ofs("snap.json");
+   //   ofs << res.Data() << std::endl;
 
    return std::string(res.Data());
 }
 
-// void TCanvasPainter::SendCanvas() {
-//  for (auto &&drawable: fCanvas.GetPrimitives()) {
-//    drawable->Paint(*this);
-//  }
-//}
+ROOT::Experimental::TDrawable *
+ROOT::Experimental::TCanvasPainter::FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id)
+{
+   std::string search = id;
+   size_t pos = search.find("#");
+   // exclude extra specifier, later can be used for menu and commands execution
+   if (pos != std::string::npos)
+      search.resize(pos);
+
+   for (auto &&drawable : can.GetPrimitives()) {
+
+      if (search == ROOT::Experimental::TDisplayItem::MakeIDFromPtr(&(*drawable)))
+         return &(*drawable);
+   }
+
+   return nullptr;
+}
+
+/// Method called when GUI sends file to save on local disk
+/// File coded with base64 coding
+void ROOT::Experimental::TCanvasPainter::SaveCreatedFile(std::string &reply)
+{
+   size_t pos = reply.find(":");
+   if ((pos == std::string::npos) || (pos == 0)) {
+      R__ERROR_HERE("SaveCreatedFile") << "Not found : separator";
+      return;
+   }
+
+   std::string fname(reply, 0, pos);
+   reply.erase(0, pos + 1);
+
+   std::string binary = base64_decode(reply);
+   std::ofstream ofs(fname);
+   ofs.write(binary.c_str(), binary.length());
+   ofs.close();
+
+   printf("Create file %s len %d\n", fname.c_str(), (int)binary.length());
+}
+
+bool ROOT::Experimental::TCanvasPainter::FrontCommandReplied(const std::string &reply)
+{
+   WebCommand &cmd = fCmds.front();
+
+   cmd.fRunning = false;
+
+   bool result = false;
+
+   if ((cmd.fName == "SVG") || (cmd.fName == "PNG") || (cmd.fName == "JPEG")) {
+      if (reply.length() == 0) {
+         R__ERROR_HERE("FrontCommandReplied") << "Fail to produce image" << cmd.fArg;
+      } else {
+         std::string content = base64_decode(reply);
+         std::ofstream ofs(cmd.fArg);
+         ofs.write(content.c_str(), content.length());
+         ofs.close();
+         printf("Create %s file %s len %d\n", cmd.fName.c_str(), cmd.fArg.c_str(), (int)content.length());
+         result = true;
+      }
+   } else if (cmd.fName.find("ADDPANEL:") == 0) {
+      printf("Get reply for ADDPANEL %s\n", reply.c_str());
+      result = (reply == "true");
+   } else {
+      R__ERROR_HERE("FrontCommandReplied") << "Unknown command " << cmd.fName;
+   }
+
+   return result;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////
+/// Remove front command from the command queue
+/// If necessary, configured call-back will be invoked
+
+void ROOT::Experimental::TCanvasPainter::PopFrontCommand(bool result)
+{
+   if (fCmds.size() == 0)
+      return;
+
+   // simple condition, which will be checked in waiting loop
+   if (!fWaitingCmdId.empty() && (fWaitingCmdId == fCmds.front().fId))
+      fWaitingCmdId.clear();
+
+   if (fCmds.front().fCallback)
+      fCmds.front().fCallback(result);
+
+   fCmds.pop_front();
+}

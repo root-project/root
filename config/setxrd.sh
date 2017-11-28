@@ -27,7 +27,7 @@ xrdset="xrdset"
 xrdsys=$1
 xrdbinpath=""
 xrdlibpath=""
-manpath=""
+xrdmanpath=""
 if test "x$xrdsys" = "x"; then
    echo "$xrdset: ERROR, you must specify the path to the xrootd installed"
    return 1;
@@ -60,25 +60,25 @@ fi
 if test ! "x$XRDSYS" = "x" ; then
    # Trim $PATH
    if [ -n "${PATH}" ]; then
-      drop_from_path $PATH $xrdbinpath
+      drop_from_path "$PATH" "$xrdbinpath"
       PATH=$newpath
    fi
 
    # Trim $LD_LIBRARY_PATH
    if [ -n "${LD_LIBRARY_PATH}" ]; then
-      drop_from_path $LD_LIBRARY_PATH $xrdlibpath
+      drop_from_path "$LD_LIBRARY_PATH" "$xrdlibpath"
       LD_LIBRARY_PATH=$newpath
    fi
 
    # Trim $DYLD_LIBRARY_PATH
    if [ -n "${DYLD_LIBRARY_PATH}" ]; then
-      drop_from_path $DYLD_LIBRARY_PATH $xrdlibpath
+      drop_from_path "$DYLD_LIBRARY_PATH" "$xrdlibpath"
       DYLD_LIBRARY_PATH=$newpath
    fi
 
    # Trim $MANPATH
    if [ -n "${MANPATH}" ]; then
-      drop_from_path $MANPATH $xrdmanpath
+      drop_from_path "$MANPATH" "$xrdmanpath"
       MANPATH=$newpath
    fi
 fi
@@ -115,3 +115,5 @@ if [ -z "${MANPATH}" ]; then
 else
    MANPATH=$xrdmanpath:$MANPATH; export MANPATH
 fi
+
+unset -f drop_from_path

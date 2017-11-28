@@ -86,21 +86,19 @@ if(builtin_freetype)
   set(FREETYPE_LIBRARY ${CMAKE_BINARY_DIR}/FREETYPE-prefix/src/FREETYPE/objs/.libs/${CMAKE_STATIC_LIBRARY_PREFIX}freetype${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
     if(winrtdebug)
-      set(freetypeliba objs/freetype261MT_D.lib)
-      set(freetypebuild "freetype - Win32 Debug Multithreaded")
+      set(freetypebuild "Debug")
     else()
-      set(freetypeliba objs/freetype261MT.lib)
-      set(freetypebuild "freetype - Win32 Release Multithreaded")
+      set(freetypebuild "Release")
     endif()
     ExternalProject_Add(
       FREETYPE
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/win32 builds/windows/visualc/.
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND ${CMAKE_COMMAND} -E chdir builds/windows/visualc/
-                    nmake -nologo -f freetype.mak CFG=${freetypebuild} NMAKECXXFLAGS=-D_CRT_SECURE_NO_DEPRECATE 
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypeliba} ./libs/freetype.lib     
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      URL_HASH SHA256=0a3c7dfbda6da1e8fce29232e8e96d987ababbbf71ebc8c75659e4132c367014
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${freetypebuild}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${freetypebuild}/freetype.lib ${FREETYPE_LIBRARY}
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 0
       BUILD_BYPRODUCTS ${FREETYPE_LIBRARY})
   else()
     set(_freetype_cflags -O)
@@ -110,6 +108,7 @@ if(builtin_freetype)
     ExternalProject_Add(
       FREETYPE
       URL ${CMAKE_SOURCE_DIR}/graf2d/freetype/src/freetype-${freetype_version}.tar.gz
+      URL_HASH SHA256=0a3c7dfbda6da1e8fce29232e8e96d987ababbbf71ebc8c75659e4132c367014
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic 
                          --disable-shared --with-png=no --with-bzip2=no 
                          --with-harfbuzz=no ${_freetype_zlib}
@@ -139,19 +138,21 @@ if(builtin_pcre)
   message(STATUS "Building pcre version ${pcre_version} included in ROOT itself")
   set(PCRE_LIBRARY ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}pcre${CMAKE_STATIC_LIBRARY_SUFFIX})
   if(WIN32)
-    if(winrtdebug)
-      set(pcrebuild "libpcre - Win32 Debug")
-     else()
-      set(pcrebuild "libpcre - Win32 Release")
+    if (winrtdebug)
+      set(pcre_lib pcred.lib)
+      set(pcre_build_type Debug)
+    else()
+      set(pcre_lib pcre.lib)
+      set(pcre_build_type Release)
     endif()
     ExternalProject_Add(
       PCRE
       URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
-      PATCH_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/core/pcre/src/win32 .
-      CONFIGURE_COMMAND ""
-      BUILD_COMMAND ${CMAKE_COMMAND} nmake -nologo -f Makefile.msc 
-                                     CFG=${pcrebuild} NMCXXFLAGS=${CMAKE_CC_FLAGS}
-      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different libpcre-8.37.lib  <INSTALL_DIR>/lib/pcre.lib
+      URL_HASH SHA256=19d490a714274a8c4c9d131f651489b8647cdb40a159e9fb7ce17ba99ef992ab
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+#      CMAKE_ARGS -G ${CMAKE_GENERATOR} -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+      BUILD_COMMAND ${CMAKE_COMMAND} --build . --config ${pcre_build_type}
+      INSTALL_COMMAND ${CMAKE_COMMAND} -E copy_if_different ${pcre_build_type}/${pcre_lib} ${PCRE_LIBRARY}
               COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre.h  <INSTALL_DIR>/include
               COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre_scanner.h  <INSTALL_DIR>/include
               COMMAND ${CMAKE_COMMAND} -E copy_if_different pcre_stringpiece.h  <INSTALL_DIR>/include
@@ -165,6 +166,7 @@ if(builtin_pcre)
     ExternalProject_Add(
       PCRE
       URL ${CMAKE_SOURCE_DIR}/core/pcre/src/pcre-${pcre_version}.tar.gz
+      URL_HASH SHA256=19d490a714274a8c4c9d131f651489b8647cdb40a159e9fb7ce17ba99ef992ab
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND ./configure --prefix <INSTALL_DIR> --with-pic --disable-shared
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_pcre_cflags}
@@ -194,7 +196,7 @@ if(builtin_lzma)
     ExternalProject_Add(
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}-win32.tar.gz
-      #URL_MD5  65693dc257802b6778c28ed53ecca678
+      URL_HASH SHA256=ce92be2df485a2bd461939908ba9666c88f44e3194d4fb2d4990ac8de7c5929f
       PREFIX LZMA
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND "" BUILD_COMMAND ""
@@ -214,7 +216,7 @@ if(builtin_lzma)
     ExternalProject_Add(
       LZMA
       URL ${CMAKE_SOURCE_DIR}/core/lzma/src/xz-${lzma_version}.tar.gz
-      URL_MD5 3e44c766c3fb4f19e348e646fcd5778a
+      URL_HASH SHA256=b918b6648076e74f8d7ae19db5ee663df800049e187259faf5eb997a7b974681
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR> --libdir <INSTALL_DIR>/lib
                         --with-pic --disable-shared --quiet
@@ -244,20 +246,51 @@ if(builtin_lz4)
     set(LZ4_CFLAGS "-Wno-format-nonliteral")
   elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
     set(LZ4_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179")
+  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
+    set(LZ4_CFLAGS "/Zl")
   endif()
+  set(LZ4_URL ${lcgpackages}/lz4-${lz4_version}.tar.gz)
   set(LZ4_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
-  ExternalProject_Add(
-    LZ4
-    URL ${lcgpackages}/lz4-${lz4_version}.tar.gz
-    URL_MD5 c9610c5ce97eb431dddddf0073d919b9
-    INSTALL_DIR ${CMAKE_BINARY_DIR}
-    CONFIGURE_COMMAND  /bin/sh -c "PREFIX=<INSTALL_DIR> CMAKE_PARAMS='-DCMAKE_C_COMPILER=\\\"${CMAKE_C_COMPILER}\\\" -DCMAKE_C_FLAGS=\\\"${CMAKE_C_FLAGS}\\\" -DCMAKE_OSX_SYSROOT=\\\"${CMAKE_OSX_SYSROOT}\\\"' make cmake"
-    BUILD_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> MOREFLAGS=-fPIC make"
-    INSTALL_COMMAND /bin/sh -c "PREFIX=<INSTALL_DIR> make install"
-    LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-    BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
+  if(CMAKE_MINIMUM_REQUIRED_VERSION VERSION_GREATER 3.6.99)
+    message(WARNING "Obsoleted code needs to be removed since the the minimal required version of CMake make it useless")
+  endif()
+  if(CMAKE_VERSION VERSION_LESS 3.7.0)
+    ExternalProject_Add(
+      LZ4
+      URL ${LZ4_URL}
+      URL_HASH SHA256=0190cacd63022ccb86f44fa5041dc6c3804407ad61550ca21c382827319e7e7e
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND ${CMAKE_COMMAND} 
+                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+                -DBUILD_SHARED_LIBS=OFF
+                -DCMAKE_INSTALL_LIBDIR=lib
+                -G${CMAKE_GENERATOR}
+                <SOURCE_DIR>/contrib/cmake_unofficial
+      BUILD_COMMAND ${CMAKE_COMMAND} --build .
+      INSTALL_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -P cmake_install.cmake
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
+  else()
+    ExternalProject_Add(
+      LZ4
+      URL ${LZ4_URL}
+      URL_HASH SHA256=0190cacd63022ccb86f44fa5041dc6c3804407ad61550ca21c382827319e7e7e
+      INSTALL_DIR ${CMAKE_BINARY_DIR}
+      SOURCE_SUBDIR contrib/cmake_unofficial
+      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
+                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
+                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
+                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
+                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
+                -DBUILD_SHARED_LIBS=OFF
+                -DCMAKE_INSTALL_LIBDIR=lib
+      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
+      BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
+  endif()
   set(LZ4_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-  set(LZ4_DEFINITIONS -DBUILTIN_LZ4)
 endif()
 
 
@@ -356,8 +389,9 @@ if(builtin_afterimage)
       AFTERIMAGE
       DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/graf2d/asimage/src/libAfterImage AFTERIMAGE
       INSTALL_DIR ${CMAKE_BINARY_DIR}
+      CONFIGURE_COMMAND ""
       BUILD_COMMAND nmake -nologo -f libAfterImage.mak FREETYPEDIRI=-I${FREETYPE_INCLUDE_DIR}
-                    CFG=${astepbld} NMAKECXXFLAGS="${CMAKE_CXX_FLAGS} /wd4244"
+                    CFG=${astepbld} NMAKECXXFLAGS=${CMAKE_CXX_FLAGS}
       INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different libAfterImage.lib <INSTALL_DIR>/lib/.
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
       BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES})
@@ -434,6 +468,7 @@ if(mathmore OR builtin_gsl)
       GSL
       # http://mirror.switch.ch/ftp/mirror/gnu/gsl/gsl-${gsl_version}.tar.gz
       URL ${lcgpackages}/gsl-${gsl_version}.tar.gz
+      URL_HASH SHA256=59ad06837397617f698975c494fe7b2b698739a59e2fcf830b776428938a0c66
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
                         --libdir=<INSTALL_DIR>/lib
@@ -624,6 +659,7 @@ if(ssl OR builtin_openssl)
     ExternalProject_Add(
       OPENSSL
       URL ${lcgpackages}/openssl-${openssl_version}.tar.gz
+      URL_HASH SHA256=671c36487785628a703374c652ad2cebea45fa920ae5681515df25d9f2c9a8c8
       CONFIGURE_COMMAND ${openssl_config_cmd} no-shared --prefix=<INSTALL_DIR>
       BUILD_COMMAND make -j1 CC=${CMAKE_C_COMPILER}\ -fPIC
       INSTALL_COMMAND make install_sw
@@ -800,6 +836,7 @@ if(builtin_fftw3)
   ExternalProject_Add(
     FFTW3
     URL ${lcgpackages}/fftw-${FFTW_VERSION}.tar.gz
+    URL_HASH SHA256=e1b92e97fe27efcbd150212d0d287ac907bd2fef0af32e16284fef5d1c1c26bf
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ./configure --prefix=<INSTALL_DIR>
     BUILD_COMMAND make CFLAGS=-fPIC
@@ -823,6 +860,7 @@ if(fitsio OR builtin_cfitsio)
       CFITSIO
       # ftp://heasarc.gsfc.nasa.gov/software/fitsio/c/cfitsio${cfitsio_version_no_dots}.tar.gz
       URL ${lcgpackages}/cfitsio${cfitsio_version_no_dots}.tar.gz
+      URL_HASH SHA256=de8ce3f14c2f940fadf365fcc4a4f66553dd9045ee27da249f6e2c53e95362b3
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CONFIGURE_COMMAND <SOURCE_DIR>/configure --prefix <INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -901,6 +939,7 @@ if(builtin_xrootd)
   ExternalProject_Add(
     XROOTD
     URL ${XROOTD_SRC_URI}
+    URL_HASH SHA256=0261ce760e8788f85d68918d7702ae30ec677a8f331dae14adc979b4cc7badf5
     INSTALL_DIR ${XROOTD_ROOTDIR}
     CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -1121,6 +1160,7 @@ if(davix OR builtin_davix)
       DAVIX
       # http://grid-deployment.web.cern.ch/grid-deployment/dms/lcgutil/tar/davix/davix-embedded-${DAVIX_VERSION}.tar.gz
       URL ${lcgpackages}/davix-embedded-${DAVIX_VERSION}.tar.gz
+      URL_HASH SHA256=4db74681ab83307c5477d29f0680953f1e6359efed001d52a6e8cff47291165b
       PATCH_COMMAND patch -p1 -i ${CMAKE_SOURCE_DIR}/cmake/patches/davix-${DAVIX_VERSION}.patch
       CMAKE_CACHE_ARGS -DCMAKE_PREFIX_PATH:STRING=${OPENSSL_PREFIX}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
@@ -1209,14 +1249,22 @@ if(imt)
 endif()  
 if(builtin_tbb)
   set(tbb_version 2017_U5)
+  if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
+    set(_tbb_compiler compiler=clang)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL Intel)
+    set(_tbb_compiler compiler=icc)
+  elseif(CMAKE_CXX_COMPILER_ID STREQUAL GNU)
+    set(_tbb_compiler compiler=gcc)
+  endif()
   ROOT_ADD_CXX_FLAG(_tbb_cxxflags -mno-rtm)
   set(TBB_LIBRARIES ${CMAKE_BINARY_DIR}/lib/libtbb${CMAKE_SHARED_LIBRARY_SUFFIX})
   ExternalProject_Add(
     TBB
     URL ${lcgpackages}/tbb${tbb_version}.tar.gz
+    URL_HASH SHA256=780baf0ad520f23b54dd20dc97bf5aae4bc562019e0a70f53bfc4c1afec6e545
     INSTALL_DIR ${CMAKE_BINARY_DIR}
     CONFIGURE_COMMAND ""
-    BUILD_COMMAND make CXXFLAGS=${_tbb_cxxflags} CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
+    BUILD_COMMAND make ${_tbb_compiler} CXXFLAGS=${_tbb_cxxflags} CPLUS=${CMAKE_CXX_COMPILER} CONLY=${CMAKE_C_COMPILER}
     INSTALL_COMMAND ${CMAKE_COMMAND} -Dinstall_dir=<INSTALL_DIR> -Dsource_dir=<SOURCE_DIR>
                                      -P ${CMAKE_SOURCE_DIR}/cmake/scripts/InstallTBB.cmake
     INSTALL_COMMAND ""
@@ -1301,7 +1349,6 @@ if(vc AND NOT Vc_FOUND)
   set(Vc_VERSION "1.3.2")
   set(Vc_PROJECT "Vc-${Vc_VERSION}")
   set(Vc_SRC_URI "${lcgpackages}/${Vc_PROJECT}.tar.gz")
-  set(Vc_SRC_MD5 "f996a2dcab9f0ef3e21ba0d0feba9c3e")
   set(Vc_DESTDIR "${CMAKE_BINARY_DIR}/externals")
   set(Vc_ROOTDIR "${Vc_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
   set(Vc_LIBNAME "${CMAKE_STATIC_LIBRARY_PREFIX}Vc${CMAKE_STATIC_LIBRARY_SUFFIX}")
@@ -1309,7 +1356,7 @@ if(vc AND NOT Vc_FOUND)
 
   ExternalProject_Add(VC
     URL     ${Vc_SRC_URI}
-    URL_MD5 ${Vc_SRC_MD5}
+    URL_HASH SHA256=3eae2b05836a1a57545e624b38345ad33cfde23d527e12575edde784c4c330ee
     BUILD_IN_SOURCE 0
     BUILD_BYPRODUCTS ${Vc_LIBRARY}
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -1386,13 +1433,12 @@ if(veccore AND NOT VecCore_FOUND)
   set(VecCore_VERSION "0.4.2")
   set(VecCore_PROJECT "VecCore-${VecCore_VERSION}")
   set(VecCore_SRC_URI "${lcgpackages}/${VecCore_PROJECT}.tar.gz")
-  set(VecCore_SRC_MD5 "98f14acc557318d991ab9b748c7145e4")
   set(VecCore_DESTDIR "${CMAKE_BINARY_DIR}/externals")
   set(VecCore_ROOTDIR "${VecCore_DESTDIR}/${CMAKE_INSTALL_PREFIX}")
 
   ExternalProject_Add(VECCORE
     URL     ${VecCore_SRC_URI}
-    URL_MD5 ${VecCore_SRC_MD5}
+    URL_HASH SHA256=79f418e466c211d0a5ff1d9127a82d84bceefe5321878cd37e77f50bc91f4cc2
     BUILD_IN_SOURCE 0
     LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
     CMAKE_ARGS -G ${CMAKE_GENERATOR}
@@ -1471,6 +1517,7 @@ if(vdt OR builtin_vdt)
     ExternalProject_Add(
       VDT
       URL ${lcgpackages}/vdt-${vdt_version}.tar.gz
+      URL_HASH SHA256=1662d21037a29cae717ee50b73bd177bea79582f4138b7ad11404fc4be4e542e
       INSTALL_DIR ${CMAKE_BINARY_DIR}
       CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1
@@ -1504,7 +1551,16 @@ endif()
 #---Check for CUDA and BLAS ---------------------------------------------------------
 if(tmva AND cuda)
   message(STATUS "Looking for CUDA for optional parts of TMVA")
-  find_package(CUDA 7.5)
+
+  if(cxx11)
+    find_package(CUDA 7.5)
+  elseif(cxx14)
+    message(STATUS "Detected request for c++14, requiring minimum version CUDA 9.0 (default 7.5)")
+    find_package(CUDA 9.0)
+  elseif(cxx17)
+    message(FATAL_ERROR "Using CUDA with c++17 currently not supported")
+  endif()
+
   if(NOT CUDA_FOUND)
     if(fail-on-missing)
       message(FATAL_ERROR "CUDA not found. Ensure that the installation of CUDA is in the CMAKE_PREFIX_PATH")
@@ -1537,6 +1593,12 @@ if (testing)
     ${_gtest_byproduct_binary_dir}/libgmock_main.a
     )
 
+  if(MSVC)
+    set(EXTRA_GTEST_OPTS
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=\\\"\\\"
+      -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=\\\"\\\")
+  endif()
+
   ExternalProject_Add(
     googletest
     GIT_REPOSITORY https://github.com/google/googletest.git
@@ -1555,6 +1617,7 @@ if (testing)
                   -DCMAKE_CXX_COMPILER=${CMAKE_CXX_COMPILER}
                   -DCMAKE_CXX_FLAGS=${CMAKE_CXX_FLAGS}
                   -DCMAKE_INSTALL_PREFIX=${CMAKE_INSTALL_PREFIX}
+                  ${EXTRA_GTEST_OPTS}
     # Disable install step
     INSTALL_COMMAND ""
     BUILD_BYPRODUCTS ${_gtest_byproducts}
@@ -1577,10 +1640,10 @@ if (testing)
     add_library(${lib} IMPORTED STATIC GLOBAL)
     add_dependencies(${lib} googletest)
   endforeach()
-  set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/libgtest.a)
-  set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/libgtest_main.a)
-  set_property(TARGET gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/libgmock.a)
-  set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/libgmock_main.a)
+  set_property(TARGET gtest PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/${CMAKE_STATIC_LIBRARY_PREFIX}gtest${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set_property(TARGET gtest_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/gtest/${CMAKE_STATIC_LIBRARY_PREFIX}gtest_main${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set_property(TARGET gmock PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock${CMAKE_STATIC_LIBRARY_SUFFIX})
+  set_property(TARGET gmock_main PROPERTY IMPORTED_LOCATION ${_G_LIBRARY_PATH}/${CMAKE_STATIC_LIBRARY_PREFIX}gmock_main${CMAKE_STATIC_LIBRARY_SUFFIX})
 
 endif()
 

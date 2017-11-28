@@ -1,6 +1,7 @@
 #include <ROOT/TDFUtils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/TTrivialDS.hxx>
+#include <ROOT/RMakeUnique.hxx>
 
 namespace ROOT {
 namespace Experimental {
@@ -39,12 +40,10 @@ std::string TTrivialDS::GetTypeName(std::string_view) const
    return "ULong64_t";
 }
 
-const std::vector<std::pair<ULong64_t, ULong64_t>> &TTrivialDS::GetEntryRanges() const
+std::vector<std::pair<ULong64_t, ULong64_t>> TTrivialDS::GetEntryRanges()
 {
-   if (fEntryRanges.empty()) {
-      throw std::runtime_error("No ranges are available. Did you set the number of slots?");
-   }
-   return fEntryRanges;
+   auto ranges(std::move(fEntryRanges)); // empty fEntryRanges
+   return ranges;
 }
 
 void TTrivialDS::SetEntry(unsigned int slot, ULong64_t entry)
@@ -59,8 +58,11 @@ void TTrivialDS::SetNSlots(unsigned int nSlots)
    fNSlots = nSlots;
    fCounter.resize(fNSlots);
    fCounterAddr.resize(fNSlots);
+}
 
-   auto chunkSize = fSize / fNSlots;
+void TTrivialDS::Initialise()
+{
+   const auto chunkSize = fSize / fNSlots;
    auto start = 0UL;
    auto end = 0UL;
    for (auto i : ROOT::TSeqUL(fNSlots)) {
@@ -75,8 +77,7 @@ void TTrivialDS::SetNSlots(unsigned int nSlots)
 
 TDataFrame MakeTrivialDataFrame(ULong64_t size)
 {
-   std::unique_ptr<TTrivialDS> tds(new TTrivialDS(size));
-   ROOT::Experimental::TDataFrame tdf(std::move(tds));
+   ROOT::Experimental::TDataFrame tdf(std::make_unique<TTrivialDS>(size));
    return tdf;
 }
 

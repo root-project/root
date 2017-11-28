@@ -26,6 +26,38 @@
 
    JSROOT.sources.push("hierarchy");
 
+
+   // ===========================================================================================
+
+   /// function use to draw all items from TList or TObjArray inserted into the TCanvas list of primitives
+   function drawList(divid, lst, opt, callback) {
+      if (!lst || !lst.arr) return JSROOT.CallBack(callback);
+
+      var obj = {
+        divid: divid,
+        lst: lst,
+        opt: opt,
+        indx: -1,
+        callback: callback,
+        draw_next: function() {
+           while (++this.indx < this.lst.arr.length) {
+              var handle = { func: this.draw_bind },
+                  item = this.lst.arr[this.indx],
+                  opt = this.lst.opt ? this.lst.opt[this.indx] : this.opt;
+              if (!item) continue;
+              JSROOT.draw(this.divid, item, opt, handle);
+              if (!handle.completed) return;
+           }
+
+           return JSROOT.CallBack(this.callback);
+        }
+      }
+
+      obj.draw_bind = obj.draw_next.bind(obj);
+
+      obj.draw_next();
+   }
+
    // ===================== hierarchy scanning functions ==================================
 
    function FolderHierarchy(item, obj) {
@@ -394,6 +426,8 @@
 
                if (inparent) {
                   item._value = "{ prnt }";
+                  item._vclass = 'h_value_num';
+                  item._more = false;
                   simple = true;
                } else {
                   item._obj = fld;
@@ -2157,49 +2191,6 @@
 
       myDiv.style('position',"absolute").style('left',0).style('top',0).style('bottom',0).style('right',0).style('padding',1);
 
-      var socket_kind = null, use_openui = true;
-      if (JSROOT.GetUrlOption("webcanvas")!==null) socket_kind = "websocket"; else
-      if (JSROOT.GetUrlOption("longpollcanvas")!==null) socket_kind = "longpoll"; else
-      if (JSROOT.GetUrlOption("cef_canvas")!==null) socket_kind = "cefquery";
-      if (JSROOT.GetUrlOption("qt5")!==null) JSROOT.browser.qt5 = true;
-
-      if (drawing && socket_kind) {
-
-         var painter = new JSROOT.TCanvasPainter(null);
-         painter.plain_layout = painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
-         if (painter.batch_mode) JSROOT.BatchMode = true;
-
-         if (window) {
-            window.onbeforeunload = painter.WindowBeforeUnloadHanlder.bind(painter);
-            if (JSROOT.browser.qt5) window.onqt5unload = window.onbeforeunload;
-         }
-
-         if (use_openui && !painter.batch_mode) {
-
-            painter.plain_layout = true;
-
-            painter._configured_socket_kind = socket_kind;
-
-            JSROOT.openui5_canvas_painter = painter;
-
-            return JSROOT.AssertPrerequisites('openui5', function() {
-               new JSROOT.sap.ui.xmlview({
-                  id: "TopCanvasId",
-                  viewName: "sap.ui.jsroot.view.Canvas"
-               }).placeAt(myDiv.attr("id"));
-            });
-         };
-
-         painter.SetDivId(myDiv.attr("id"), -1); // just assign id, nothing else is happens
-
-         painter.OpenWebsocket(socket_kind); // when connection activated, ROOT must send new instance of the canvas
-
-         if (!painter.batch_mode) JSROOT.RegisterForResize(painter);
-
-         return;
-      }
-
-
       var hpainter = new JSROOT.HierarchyPainter('root', null);
 
       hpainter.is_online = online;
@@ -2586,6 +2577,7 @@
    GridDisplay.prototype = Object.create(MDIDisplay.prototype);
 
    GridDisplay.prototype.CreateGroup = function(handle, main, num, childs, sizes) {
+
       if (!sizes) sizes = new Array(num);
       var sum1 = 0, sum2 = 0;
       for (var n=0;n<num;++n) sum1 += (sizes[n] || 1);
@@ -2690,6 +2682,8 @@
 
 
    // export all functions and classes
+
+   JSROOT.Painter.drawList = drawList;
 
    JSROOT.Painter.FolderHierarchy = FolderHierarchy;
    JSROOT.Painter.ObjectHierarchy = ObjectHierarchy;

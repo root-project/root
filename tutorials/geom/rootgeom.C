@@ -10,7 +10,7 @@
 void rootgeom()
 {
    // gStyle->SetCanvasPreferGL(true);
-   gSystem->Load("libGeom");
+
    TGeoManager *geom = new TGeoManager("simple1", "Simple geometry");
 
    //--- define some materials

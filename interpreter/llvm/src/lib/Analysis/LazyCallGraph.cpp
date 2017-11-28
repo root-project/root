@@ -8,10 +8,9 @@
 //===----------------------------------------------------------------------===//
 
 #include "llvm/Analysis/LazyCallGraph.h"
-#include "llvm/ADT/ScopeExit.h"
-#include "llvm/ADT/Sequence.h"
 #include "llvm/ADT/STLExtras.h"
 #include "llvm/ADT/ScopeExit.h"
+#include "llvm/ADT/Sequence.h"
 #include "llvm/IR/CallSite.h"
 #include "llvm/IR/InstVisitor.h"
 #include "llvm/IR/Instructions.h"
@@ -107,6 +106,13 @@ LazyCallGraph::EdgeSequence &LazyCallGraph::Node::populateSlow() {
             LazyCallGraph::Edge::Ref);
   });
 
+  // Add implicit reference edges to any defined libcall functions (if we
+  // haven't found an explicit edge).
+  for (auto *F : G->LibFunctions)
+    if (!Visited.count(F))
+      addEdge(Edges->Edges, Edges->EdgeIndexMap, G->get(*F),
+              LazyCallGraph::Edge::Ref);
+
   return *Edges;
 }
 
@@ -121,15 +127,34 @@ LLVM_DUMP_METHOD void LazyCallGraph::Node::dump() const {
 }
 #endif
 
-LazyCallGraph::LazyCallGraph(Module &M) {
+static bool isKnownLibFunction(Function &F, TargetLibraryInfo &TLI) {
+  LibFunc LF;
+
+  // Either this is a normal library function or a "vectorizable" function.
+  return TLI.getLibFunc(F, LF) || TLI.isFunctionVectorizable(F.getName());
+}
+
+LazyCallGraph::LazyCallGraph(Module &M, TargetLibraryInfo &TLI) {
   DEBUG(dbgs() << "Building CG for module: " << M.getModuleIdentifier()
                << "\n");
-  for (Function &F : M)
-    if (!F.isDeclaration() && !F.hasLocalLinkage()) {
-      DEBUG(dbgs() << "  Adding '" << F.getName()
-                   << "' to entry set of the graph.\n");
-      addEdge(EntryEdges.Edges, EntryEdges.EdgeIndexMap, get(F), Edge::Ref);
-    }
+  for (Function &F : M) {
+    if (F.isDeclaration())
+      continue;
+    // If this function is a known lib function to LLVM then we want to
+    // synthesize reference edges to it to model the fact that LLVM can turn
+    // arbitrary code into a library function call.
+    if (isKnownLibFunction(F, TLI))
+      LibFunctions.insert(&F);
+
+    if (F.hasLocalLinkage())
+      continue;
+
+    // External linkage defined functions have edges to them from other
+    // modules.
+    DEBUG(dbgs() << "  Adding '" << F.getName()
+                 << "' to entry set of the graph.\n");
+    addEdge(EntryEdges.Edges, EntryEdges.EdgeIndexMap, get(F), Edge::Ref);
+  }
 
   // Now add entry nodes for functions reachable via initializers to globals.
   SmallVector<Constant *, 16> Worklist;
@@ -150,7 +175,8 @@ LazyCallGraph::LazyCallGraph(Module &M) {
 LazyCallGraph::LazyCallGraph(LazyCallGraph &&G)
     : BPA(std::move(G.BPA)), NodeMap(std::move(G.NodeMap)),
       EntryEdges(std::move(G.EntryEdges)), SCCBPA(std::move(G.SCCBPA)),
-      SCCMap(std::move(G.SCCMap)), LeafRefSCCs(std::move(G.LeafRefSCCs)) {
+      SCCMap(std::move(G.SCCMap)), LeafRefSCCs(std::move(G.LeafRefSCCs)),
+      LibFunctions(std::move(G.LibFunctions)) {
   updateGraphPtrs();
 }
 
@@ -161,6 +187,7 @@ LazyCallGraph &LazyCallGraph::operator=(LazyCallGraph &&G) {
   SCCBPA = std::move(G.SCCBPA);
   SCCMap = std::move(G.SCCMap);
   LeafRefSCCs = std::move(G.LeafRefSCCs);
+  LibFunctions = std::move(G.LibFunctions);
   updateGraphPtrs();
   return *this;
 }
@@ -457,8 +484,10 @@ updatePostorderSequenceForEdgeInsertion(
   return make_range(SCCs.begin() + SourceIdx, SCCs.begin() + TargetIdx);
 }
 
-SmallVector<LazyCallGraph::SCC *, 1>
-LazyCallGraph::RefSCC::switchInternalEdgeToCall(Node &SourceN, Node &TargetN) {
+bool
+LazyCallGraph::RefSCC::switchInternalEdgeToCall(
+    Node &SourceN, Node &TargetN,
+    function_ref<void(ArrayRef<SCC *> MergeSCCs)> MergeCB) {
   assert(!(*SourceN)[TargetN].isCall() && "Must start with a ref edge!");
   SmallVector<SCC *, 1> DeletedSCCs;
 
@@ -476,7 +505,7 @@ LazyCallGraph::RefSCC::switchInternalEdgeToCall(Node &SourceN, Node &TargetN) {
   // we've just added more connectivity.
   if (&SourceSCC == &TargetSCC) {
     SourceN->setEdgeKind(TargetN, Edge::Call);
-    return DeletedSCCs;
+    return false; // No new cycle.
   }
 
   // At this point we leverage the postorder list of SCCs to detect when the
@@ -489,7 +518,7 @@ LazyCallGraph::RefSCC::switchInternalEdgeToCall(Node &SourceN, Node &TargetN) {
   int TargetIdx = SCCIndices[&TargetSCC];
   if (TargetIdx < SourceIdx) {
     SourceN->setEdgeKind(TargetN, Edge::Call);
-    return DeletedSCCs;
+    return false; // No new cycle.
   }
 
   // Compute the SCCs which (transitively) reach the source.
@@ -556,12 +585,16 @@ LazyCallGraph::RefSCC::switchInternalEdgeToCall(Node &SourceN, Node &TargetN) {
       SourceSCC, TargetSCC, SCCs, SCCIndices, ComputeSourceConnectedSet,
       ComputeTargetConnectedSet);
 
+  // Run the user's callback on the merged SCCs before we actually merge them.
+  if (MergeCB)
+    MergeCB(makeArrayRef(MergeRange.begin(), MergeRange.end()));
+
   // If the merge range is empty, then adding the edge didn't actually form any
   // new cycles. We're done.
   if (MergeRange.begin() == MergeRange.end()) {
     // Now that the SCC structure is finalized, flip the kind to call.
     SourceN->setEdgeKind(TargetN, Edge::Call);
-    return DeletedSCCs;
+    return false; // No new cycle.
   }
 
 #ifndef NDEBUG
@@ -597,8 +630,8 @@ LazyCallGraph::RefSCC::switchInternalEdgeToCall(Node &SourceN, Node &TargetN) {
   // Now that the SCC structure is finalized, flip the kind to call.
   SourceN->setEdgeKind(TargetN, Edge::Call);
 
-  // And we're done!
-  return DeletedSCCs;
+  // And we're done, but we did form a new cycle.
+  return true;
 }
 
 void LazyCallGraph::RefSCC::switchTrivialInternalEdgeToRef(Node &SourceN,
@@ -1574,6 +1607,11 @@ void LazyCallGraph::removeDeadFunction(Function &F) {
   // functions which recursively call themselves.
   assert(F.use_empty() &&
          "This routine should only be called on trivially dead functions!");
+
+  // We shouldn't remove library functions as they are never really dead while
+  // the call graph is in use -- every function definition refers to them.
+  assert(!isLibFunction(F) &&
+         "Must not remove lib functions from the call graph!");
 
   auto NI = NodeMap.find(&F);
   if (NI == NodeMap.end())

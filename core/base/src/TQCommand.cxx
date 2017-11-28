@@ -288,14 +288,16 @@ void TQCommand::Delete(Option_t *opt)
       return;
    }
 
-   TObjLink *lnk = fFirst;
-   TObjLink *sav;
+   auto lnk = fFirst;
+   decltype(lnk) sav;
 
    while (lnk) {
-      sav = lnk->Next();
+      sav = lnk->Next()->shared_from_this();
       TString ostr = lnk->GetOption();
       if (ostr.Contains(opt)) {   // remove command
-         delete lnk->GetObject();
+         TObject *obj = lnk->GetObject();
+         lnk->SetObject(nullptr);
+         delete obj;
          Remove(lnk);
       }
       lnk = sav;
@@ -602,12 +604,12 @@ void TQCommand::Redo(Option_t *)
    }
 
    // execute merged commands
-   TObjLink *lnk = fFirst;
+   auto lnk = fFirst;
    while (lnk) {
       TQCommand *c = (TQCommand *)lnk->GetObject();
       c->Redo();
       done = kTRUE;
-      lnk = lnk->Next();
+      lnk = lnk->Next()->shared_from_this();
    }
 
    if (done) Emit("Redo()");
@@ -628,7 +630,7 @@ void TQCommand::Undo(Option_t *)
    gActiveCommand = this;
 
    // unexecute merged commands
-   TObjLink *lnk = fLast;
+   auto lnk = fLast;
    while (lnk) {
       TQCommand *c = (TQCommand *)lnk->GetObject();
       TString opt = lnk->GetOption();
@@ -639,7 +641,7 @@ void TQCommand::Undo(Option_t *)
          delete lnk->GetObject();
          Remove(lnk);
       }
-      lnk = sav;
+      lnk = sav->shared_from_this();
    }
    if (fNUargs > 0) {
       if (fUndo) {
@@ -680,7 +682,7 @@ const char *TQCommand::GetName() const
       name += fRedo->GetName();
    }
    TQCommand *c;
-   TObjLink *lnk = fFirst;
+   TObjLink *lnk = fFirst.get();
 
    while (lnk && (fName.Length() < maxname)) {
       c = (TQCommand *)lnk->GetObject();
@@ -835,7 +837,7 @@ void TQCommand::ls(Option_t *) const
    TString name = GetName();
    printf("%d %s\n", fStatus, name.Data());
 
-   TObjLink *lnk = fFirst;
+   TObjLink *lnk = fFirst.get();
    while (lnk) {
       printf("\t");
       lnk->GetObject()->ls();
@@ -886,7 +888,7 @@ TQUndoManager::~TQUndoManager()
 void TQUndoManager::ls(Option_t *option) const
 {
    if (!IsEmpty()) {
-      TObjLink *lnk = fFirst;
+      TObjLink *lnk = fFirst.get();
       while (lnk) {
          if (lnk == fCursor) {
             printf("->");
@@ -984,7 +986,7 @@ void TQUndoManager::Add(TObject *obj, Option_t *opt)
    }
 
    TList::AddLast(obj, ostr.Data());
-   fCursor = fLast;
+   fCursor = fLast.get();
    Redo(ostr.Data());
 
    if ((fSize > 0) && ((UInt_t)fSize > fLimit)) {
@@ -1017,7 +1019,7 @@ void TQUndoManager::Undo(Option_t *option)
       fCurrent->Undo(option);
       fState = 0;
       done = kTRUE;
-      fCursor = fCursor->Prev() ? fCursor->Prev() : fFirst;
+      fCursor = fCursor->Prev() ? fCursor->Prev() : fFirst.get();
    } else {
       fCursor = fCursor->Prev();
       fCurrent = (TQCommand*)fCursor->GetObject();
@@ -1049,7 +1051,7 @@ void TQUndoManager::Redo(Option_t *option)
       fCurrent->Redo(option);
       fState = 0;
       done = kTRUE;
-      fCursor = fCursor->Next() ? fCursor->Next() : fLast;
+      fCursor = fCursor->Next() ? fCursor->Next() : fLast.get();
    } else {
       fCursor = fCursor->Next();
       fCurrent = (TQCommand*)fCursor->GetObject();

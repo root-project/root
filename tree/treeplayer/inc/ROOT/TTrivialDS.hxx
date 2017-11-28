@@ -24,9 +24,10 @@ public:
    const std::vector<std::string> &GetColumnNames() const;
    bool HasColumn(std::string_view colName) const;
    std::string GetTypeName(std::string_view) const;
-   const std::vector<std::pair<ULong64_t, ULong64_t>> &GetEntryRanges() const;
+   std::vector<std::pair<ULong64_t, ULong64_t>> GetEntryRanges();
    void SetEntry(unsigned int slot, ULong64_t entry);
    void SetNSlots(unsigned int nSlots);
+   void Initialise();
 };
 
 TDataFrame MakeTrivialDataFrame(ULong64_t size);

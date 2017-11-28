@@ -16,7 +16,7 @@
 
 #include <memory>
 
-#if __cplusplus < 201402L
+#if __cplusplus < 201402L && !defined(_MSC_VER)
 
 #include <utility>
 

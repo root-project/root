@@ -1452,7 +1452,7 @@ Int_t TUnfoldDensity::ScanTau
       // locate minimum
       Double_t logTauYMin=(*i0).first;
       Double_t yMin=(*i0).second;
-      for(;i0!=curve.end();i0++) {
+      for (; i0 != curve.end(); ++i0) {
          if((*i0).second<yMin) {
             yMin=(*i0).second;
             logTauYMin=(*i0).first;
@@ -1464,7 +1464,7 @@ Int_t TUnfoldDensity::ScanTau
       i1=i0;
       Double_t distMax=0.0;
       Double_t logTau=0.0;
-      for(i1++;i1!=curve.end();i1++) {
+      for (++i1; i1 != curve.end(); ++i1) {
          Double_t dist;
          // check size of rho interval
          dist=TMath::Abs((*i0).first-(*i1).first)
@@ -1496,7 +1496,7 @@ Int_t TUnfoldDensity::ScanTau
    Double_t *cTi=new Double_t[curve.size()];
    Double_t *cCi=new Double_t[curve.size()];
    Int_t n=0;
-   for(TauScan_t::const_iterator i=curve.begin();i!=curve.end();i++) {
+   for (TauScan_t::const_iterator i = curve.begin(); i != curve.end(); ++i) {
       cTi[n]=(*i).first;
       cCi[n]=(*i).second;
       n++;
@@ -1592,7 +1592,7 @@ Int_t TUnfoldDensity::ScanTau
       Double_t *y=new Double_t[curve.size()];
       Double_t *logT=new Double_t[curve.size()];
       int n=0;
-      for( TauScan_t::const_iterator i=curve.begin();i!=curve.end();i++) {
+      for (TauScan_t::const_iterator i = curve.begin(); i != curve.end(); ++i) {
          if(logTauFin==(*i).first) {
             bestChoice=n;
          }
@@ -1617,7 +1617,7 @@ Int_t TUnfoldDensity::ScanTau
       Double_t *x=new Double_t[lcurve.size()];
       Double_t *y=new Double_t[lcurve.size()];
       Int_t n=0;
-      for(LCurve_t::const_iterator i=lcurve.begin();i!=lcurve.end();i++) {
+      for (LCurve_t::const_iterator i = lcurve.begin(); i != lcurve.end(); ++i) {
          logT[n]=(*i).first;
          x[n]=(*i).second.first;
          y[n]=(*i).second.second;

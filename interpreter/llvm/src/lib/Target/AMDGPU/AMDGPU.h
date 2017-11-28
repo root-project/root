@@ -27,35 +27,40 @@ class PassRegistry;
 class Module;
 
 // R600 Passes
-FunctionPass *createR600VectorRegMerger(TargetMachine &tm);
-FunctionPass *createR600ExpandSpecialInstrsPass(TargetMachine &tm);
+FunctionPass *createR600VectorRegMerger();
+FunctionPass *createR600ExpandSpecialInstrsPass();
 FunctionPass *createR600EmitClauseMarkers();
-FunctionPass *createR600ClauseMergePass(TargetMachine &tm);
-FunctionPass *createR600Packetizer(TargetMachine &tm);
-FunctionPass *createR600ControlFlowFinalizer(TargetMachine &tm);
+FunctionPass *createR600ClauseMergePass();
+FunctionPass *createR600Packetizer();
+FunctionPass *createR600ControlFlowFinalizer();
 FunctionPass *createAMDGPUCFGStructurizerPass();
 
 // SI Passes
-FunctionPass *createSITypeRewriter();
 FunctionPass *createSIAnnotateControlFlowPass();
 FunctionPass *createSIFoldOperandsPass();
 FunctionPass *createSIPeepholeSDWAPass();
 FunctionPass *createSILowerI1CopiesPass();
 FunctionPass *createSIShrinkInstructionsPass();
-FunctionPass *createSILoadStoreOptimizerPass(TargetMachine &tm);
+FunctionPass *createSILoadStoreOptimizerPass();
 FunctionPass *createSIWholeQuadModePass();
 FunctionPass *createSIFixControlFlowLiveIntervalsPass();
 FunctionPass *createSIFixSGPRCopiesPass();
 FunctionPass *createSIDebuggerInsertNopsPass();
 FunctionPass *createSIInsertWaitsPass();
 FunctionPass *createSIInsertWaitcntsPass();
-FunctionPass *createAMDGPUCodeGenPreparePass(const GCNTargetMachine *TM = nullptr);
+FunctionPass *createAMDGPUCodeGenPreparePass();
+FunctionPass *createAMDGPUMachineCFGStructurizerPass();
 
-ModulePass *createAMDGPUAnnotateKernelFeaturesPass(const TargetMachine *TM = nullptr);
+void initializeAMDGPUMachineCFGStructurizerPass(PassRegistry&);
+extern char &AMDGPUMachineCFGStructurizerID;
+
+void initializeAMDGPUAlwaysInlinePass(PassRegistry&);
+
+Pass *createAMDGPUAnnotateKernelFeaturesPass();
 void initializeAMDGPUAnnotateKernelFeaturesPass(PassRegistry &);
 extern char &AMDGPUAnnotateKernelFeaturesID;
 
-ModulePass *createAMDGPULowerIntrinsicsPass(const TargetMachine *TM = nullptr);
+ModulePass *createAMDGPULowerIntrinsicsPass();
 void initializeAMDGPULowerIntrinsicsPass(PassRegistry &);
 extern char &AMDGPULowerIntrinsicsID;
 
@@ -93,7 +98,7 @@ void initializeSIOptimizeExecMaskingPass(PassRegistry &);
 extern char &SIOptimizeExecMaskingID;
 
 // Passes common to R600 and SI
-FunctionPass *createAMDGPUPromoteAlloca(const TargetMachine *TM = nullptr);
+FunctionPass *createAMDGPUPromoteAlloca();
 void initializeAMDGPUPromoteAllocaPass(PassRegistry&);
 extern char &AMDGPUPromoteAllocaID;
 

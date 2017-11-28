@@ -9,21 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoPgonEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/pgon_pic.gif">
+/** \class TGeoPgonEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoPgon.
+
+\image html geom_pgon_pic.png
+
+\image html geom_pgon_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/pgon_ed.jpg">
-*/
-//End_Html
 
 #include "TGeoPgonEditor.h"
 #include "TGeoTabManager.h"
@@ -46,7 +41,7 @@ enum ETGeoPgonWid {
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Constructor for polycone editor
+/// Constructor for polygone editor
 
 TGeoPgonEditor::TGeoPgonEditor(const TGWindow *p, Int_t width,
                                Int_t height, UInt_t options, Pixel_t back)
@@ -75,7 +70,7 @@ TGeoPgonEditor::~TGeoPgonEditor()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Connect to a given pcon.
+/// Connect to a given pgon.
 
 void TGeoPgonEditor::SetModel(TObject* obj)
 {

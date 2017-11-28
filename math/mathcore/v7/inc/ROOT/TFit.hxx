@@ -19,7 +19,7 @@
 #include <array>
 #include <functional>
 
-#include "ROOT/RArrayView.h"
+#include "ROOT/RArrayView.hxx"
 
 #include "ROOT/THist.hxx"
 

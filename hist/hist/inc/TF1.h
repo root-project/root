@@ -312,7 +312,8 @@ public:
    };
 
    TF1();
-   TF1(const char *name, const char *formula, Double_t xmin = 0, Double_t xmax = 1, EAddToList addToGlobList = EAddToList::kDefault);
+   TF1(const char *name, const char *formula, Double_t xmin = 0, Double_t xmax = 1, EAddToList addToGlobList = EAddToList::kDefault, bool vectorize = false);
+   TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Option_t * option);  // same as above but using a string for option
    TF1(const char *name, Double_t xmin, Double_t xmax, Int_t npar, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
    TF1(const char *name, Double_t (*fcn)(Double_t *, Double_t *), Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
    TF1(const char *name, Double_t (*fcn)(const Double_t *, const Double_t *), Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault);
@@ -321,8 +322,7 @@ public:
    TF1(const char *name, std::function<T(const T *data, const Double_t *param)> &fcn, Double_t xmin = 0, Double_t xmax = 1, Int_t npar = 0, Int_t ndim = 1, EAddToList addToGlobList = EAddToList::kDefault):
       TF1(EFType::kTemplScalar, name, xmin, xmax, npar, ndim, addToGlobList, new TF1Parameters(npar), new TF1FunctorPointerImpl<T>(fcn))
    {
-      using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(fcn)>::type;
-      fType = std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
+      fType = std::is_same<T, double>::value ? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
    }
 
    ////////////////////////////////////////////////////////////////////////////////
@@ -362,14 +362,11 @@ public:
    }
 
    // backward compatible interface
-
    template <typename Func>
    TF1(const char *name, Func f, Double_t xmin, Double_t xmax, Int_t npar, const char *, EAddToList addToGlobList = EAddToList::kDefault) :
       TF1(EFType::kTemplScalar, name, xmin, xmax, npar, 1, addToGlobList, new TF1Parameters(npar))
    {
-      using Fnc_t = typename ROOT::Internal::GetFunctorType<decltype(ROOT::Internal::GetTheRightOp(&Func::operator()))>::type;
-      fType = std::is_same<Fnc_t, double>::value? TF1::EFType::kTemplScalar : TF1::EFType::kTemplVec;
-      fFunctor = new TF1FunctorPointerImpl<Fnc_t>(ROOT::Math::ParamFunctorTempl<Fnc_t>(f));
+      ROOT::Internal::TF1Builder<Func>::Build(this, f);
    }
 
 
@@ -417,6 +414,7 @@ public:
    virtual TObject *DrawIntegral(Option_t *option = "al"); // *MENU*
    virtual void     DrawF1(Double_t xmin, Double_t xmax, Option_t *option = "");
    virtual Double_t Eval(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
+   //template <class T> T Eval(T x, T y = 0, T z = 0, T t = 0) const; 
    virtual Double_t EvalPar(const Double_t *x, const Double_t *params = 0);
    template <class T> T EvalPar(const T *x, const Double_t *params = 0);
    virtual Double_t operator()(Double_t x, Double_t y = 0, Double_t z = 0, Double_t t = 0) const;
@@ -425,7 +423,7 @@ public:
    virtual void     FixParameter(Int_t ipar, Double_t value);
    bool      IsVectorized()
    {
-      return fType == EFType::kTemplVec;
+      return (fType == EFType::kTemplVec) || (fType == EFType::kFormula && fFormula && fFormula->IsVectorized());
    }
    Double_t     GetChisquare() const
    {
@@ -657,6 +655,13 @@ public:
    virtual void     SetRange(Double_t xmin, Double_t ymin, Double_t zmin,  Double_t xmax, Double_t ymax, Double_t zmax);
    virtual void     SetSavedPoint(Int_t point, Double_t value);
    virtual void     SetTitle(const char *title = ""); // *MENU*
+   virtual void     SetVectorized(Bool_t vectorized)
+   {
+      if (fType == EFType::kFormula && fFormula)
+         fFormula->SetVectorized(vectorized);
+      else
+         Warning("SetVectorized", "Can only set vectorized flag on formula-based TF1");
+   }
    virtual void     Update();
 
    static  TF1     *GetCurrent();
@@ -743,14 +748,31 @@ inline T TF1::operator()(const T *x, const Double_t *params)
    return EvalPar(x, params);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+///   EvalPar for vectorized
 template <class T>
 T TF1::EvalPar(const T *x, const Double_t *params)
 {
   if (fType == EFType::kTemplVec || fType == EFType::kTemplScalar) {
-    return EvalParTempl(x, params);
-   } else
-      return TF1::EvalPar((double *) x, params);
+     return EvalParTempl(x, params);
+  } else if (fType == EFType::kFormula) {
+     return fFormula->EvalPar(x, params);
+  } else
+     return TF1::EvalPar((double *)x, params);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+///   Eval for vectorized functions
+// template <class T>
+// T TF1::Eval(T x, T y, T z, T t) const 
+// {
+//    if (fType == EFType::kFormula)
+//       return fFormula->Eval(x, y, z, t);
+
+//    T xx[] = {x, y, z, t};
+//    Double_t *pp = (Double_t *)fParams->GetParameters();
+//    return ((TF1 *)this)->EvalPar(xx, pp);
+// }
 
 // Internal to TF1. Evaluates Templated interfaces
 template <class T>

@@ -130,11 +130,6 @@ public:
 //***** Need to add classes and globals to LinkDef.h *****
 };
 
-////////////////////////////////////////////////////////////////////////////
-//                                                                        //
-// TGeoMixture - mixtures of elements                                     //
-//                                                                        //
-////////////////////////////////////////////////////////////////////////////
 
 class TGeoMixture : public TGeoMaterial
 {
@@ -145,6 +140,7 @@ protected :
    Double_t                *fAmixture;   // [fNelements] array of A of the elements
    Double_t                *fWeights;    // [fNelements] array of relative proportions by mass
    Int_t                   *fNatoms;     // [fNelements] array of numbers of atoms
+   Double_t                *fVecNbOfAtomsPerVolume; //[fNelements] array of numbers of atoms per unit volume
    TObjArray               *fElements;   // array of elements composing the mixture
 // methods
    TGeoMixture(const TGeoMixture&); // Not implemented
@@ -187,8 +183,11 @@ public:
    virtual void             SetA(Double_t a) {fA = a;}
    virtual void             SetZ(Double_t z) {fZ = z;}
    virtual void             SetDensity(Double_t density) {fDensity = density; AverageProperties();}
+   void                     ComputeDerivedQuantities();
+   void                     ComputeRadiationLength();
+   void                     ComputeNuclearInterLength();
 
-   ClassDef(TGeoMixture, 2)              // material mixtures
+   ClassDef(TGeoMixture, 3)              // material mixtures
 };
 
 inline void TGeoMixture::DefineElement(Int_t, Double_t a, Double_t z, Double_t weight)

@@ -25,7 +25,7 @@ TEST(TTrivialDS, EntryRanges)
    TTrivialDS tds(32);
    const auto nSlots = 4U;
    tds.SetNSlots(nSlots);
-
+   tds.Initialise();
    auto ranges = tds.GetEntryRanges();
 
    EXPECT_EQ(4U, ranges.size());
@@ -45,6 +45,7 @@ TEST(TTrivialDS, ColumnReaders)
    const auto nSlots = 4U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<ULong64_t>("col0");
+   tds.Initialise();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    for (auto &&range : ranges) {
@@ -88,6 +89,8 @@ TEST(TTrivialDS, FromATDF)
    EXPECT_DOUBLE_EQ(22., *min2);
 }
 
+#ifdef R__B64
+
 TEST(TTrivialDS, FromATDFWithJitting)
 {
    std::unique_ptr<TDataSource> tds(new TTrivialDS(32));
@@ -105,26 +108,22 @@ TEST(TTrivialDS, FromATDFWithJitting)
 
 TEST(TTrivialDS, DefineSlotCheckMT)
 {
-   auto nSlots = 4U;
+   const auto nSlots = 4U;
    ROOT::EnableImplicitMT(nSlots);
 
-   std::hash<std::thread::id> hasher;
-   using H_t = decltype(hasher(std::this_thread::get_id()));
-
-   std::vector<H_t> ids(nSlots, 0);
+   std::vector<unsigned int> ids(nSlots, 0u);
    std::unique_ptr<TDataSource> tds(new TTrivialDS(nSlots));
    TDataFrame d(std::move(tds));
    auto m = d.DefineSlot("x", [&](unsigned int slot) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                ids[slot] = hasher(std::this_thread::get_id());
-                return 1.;
+                ids[slot] = 1u;
+                return 1;
              }).Max("x");
-
    EXPECT_EQ(1, *m); // just in case
 
-   std::set<H_t> s(ids.begin(), ids.end());
-   EXPECT_EQ(nSlots, s.size());
-   EXPECT_TRUE(s.end() == s.find(0));
+   const auto nUsedSlots = std::accumulate(ids.begin(), ids.end(), 0u);
+   EXPECT_GT(nUsedSlots, 0u);
+   EXPECT_LE(nUsedSlots, nSlots);
+   ROOT::DisableImplicitMT();
 }
 
 TEST(TTrivialDS, FromATDFMT)
@@ -157,5 +156,32 @@ TEST(TTrivialDS, FromATDFWithJittingMT)
    EXPECT_DOUBLE_EQ(22., *min);
 }
 
-#endif
+TEST(TTrivialDS, Snapshot)
+{
+   std::unique_ptr<TDataSource> tds(new TTrivialDS(10));
+   TDataFrame tdf(std::move(tds));
+   auto tdf2 = tdf.Snapshot("t", "f.root", "col0");
+   auto c = tdf2.Take<ULong64_t>("col0");
+   auto i = 0u;
+   for (auto e : c) {
+      EXPECT_EQ(e, i);
+      ++i;
+   }
+}
 
+TEST(TTrivialDS, Cache)
+{
+   std::unique_ptr<TDataSource> tds(new TTrivialDS(10));
+   TDataFrame tdf(std::move(tds));
+   auto tdfCached = tdf.Cache("col0");
+   auto c = tdfCached.Take<ULong64_t>("col0");
+   auto i = 0u;
+   for (auto e : c) {
+      EXPECT_EQ(e, i);
+      ++i;
+   }
+}
+
+#endif // R__USE_IMT
+
+#endif // R__B64

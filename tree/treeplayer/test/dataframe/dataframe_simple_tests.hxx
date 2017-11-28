@@ -1,16 +1,20 @@
-#include "ROOT/TDataFrame.hxx"
 #include "Compression.h"
-#include "TFile.h"
+#include "ROOT/TDataFrame.hxx"
+#include "ROOT/TSeq.hxx"
 #include "TInterpreter.h"
+#include "TFile.h"
 #include "TRandom.h"
+#include "TSystem.h"
 
 #include "gtest/gtest.h"
 
+#include <algorithm> // std::sort
 #include <chrono>
 #include <thread>
 #include <set>
 
 using namespace ROOT::Experimental;
+using namespace ROOT::Experimental::TDF;
 
 namespace TEST_CATEGORY {
 
@@ -160,6 +164,29 @@ TEST(TEST_CATEGORY, Define_jitted_complex)
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
+TEST(TEST_CATEGORY, Define_jitted_complex_array_sum)
+{
+   TDataFrame tdf(10);
+   auto d = tdf.Define("x", "3.0")
+               .Define("y", "4.0")
+               .Define("z", "12.0")
+               .Define("v", "std::array<double, 3> v{x, y, z}; return v;")
+               .Define("r", "double r2 = 0.0; for (auto&& w : v) r2 += w*w; return sqrt(r2);");
+   auto m = d.Max("r");
+   EXPECT_DOUBLE_EQ(13.0, *m);
+}
+
+TEST(TEST_CATEGORY, Define_jitted_defines_with_return)
+{
+   TDataFrame tdf(10);
+   auto d = tdf.Define("my_return_x", "3.0")
+               .Define("return_y", "4.0 // with a comment")
+               .Define("v", "std::array<double, 2> v{my_return_x, return_y}; return v; // also with comment")
+               .Define("r", "double r2 = 0.0; for (auto&& w : v) r2 += w*w; return sqrt(r2);");
+   auto m = d.Max("r");
+   EXPECT_DOUBLE_EQ(5.0, *m);
+}
+
 // Define + Filters
 TEST(TEST_CATEGORY, Define_Filter)
 {
@@ -242,6 +269,25 @@ TEST(TEST_CATEGORY, Define_jitted_Filter_named_jitted)
    EXPECT_EQ(7.867497533559811628, *m);
 }
 
+TEST(TEST_CATEGORY, Define_jitted_Filter_complex_array)
+{
+   gInterpreter->ProcessLine("r.SetSeed(1);");
+   TDataFrame tdf(50);
+   auto d = tdf.Define("x", "r.Uniform(0.0, 1.0)")
+               .Define("y", "r.Uniform(0.0, 1.0)")
+               .Define("z", "r.Uniform(0.0, 1.0)")
+               .Define("v", "std::array<double, 3> v{x, y, z}; return v;")
+               .Define("r", "double r2 = 0.0; for (auto&& w : v) r2 += w*w; return sqrt(r2);");
+   auto dfin = d.Filter("r <= 1.0", "inside");
+   auto dfout = d.Filter("bool out = r > 1.0; return out;", "outside");
+   auto in  = dfin.Count();
+   auto out = dfout.Count();
+
+   EXPECT_TRUE(*in  < 50U);
+   EXPECT_TRUE(*out < 50U);
+   EXPECT_EQ(50U, *in + *out);
+}
+
 TEST(TEST_CATEGORY, DefineSlotConsistency)
 {
    TDataFrame df(8);
@@ -262,93 +308,30 @@ TEST(TEST_CATEGORY, DefineSlot)
 
 TEST(TEST_CATEGORY, DefineSlotCheckMT)
 {
-   auto nSlots = NSLOTS;
+   const auto nSlots = NSLOTS;
 
-   std::hash<std::thread::id> hasher;
-   using H_t = decltype(hasher(std::this_thread::get_id()));
-
-   std::vector<H_t> ids(nSlots, 0);
+   std::vector<unsigned int> ids(nSlots, 0u);
    TDataFrame d(nSlots);
    auto m = d.DefineSlot("x", [&](unsigned int slot) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                ids[slot] = hasher(std::this_thread::get_id());
-                return 1.;
+                ids[slot] = 1u;
+                return 1;
              }).Max("x");
-
    EXPECT_EQ(1, *m); // just in case
 
-   std::set<H_t> s(ids.begin(), ids.end());
-   EXPECT_EQ(nSlots, s.size());
-   EXPECT_TRUE(s.end() == s.find(0));
+   const auto nUsedSlots = std::accumulate(ids.begin(), ids.end(), 0u);
+   EXPECT_GT(nUsedSlots, 0u);
+   EXPECT_LE(nUsedSlots, nSlots);
 }
 
-TEST(TEST_CATEGORY, Snapshot_update)
+TEST(TEST_CATEGORY, DefineSlotEntry)
 {
-   using TSnapshotOptions = ROOT::Experimental::TDF::TSnapshotOptions;
-
-   TSnapshotOptions opts;
-
-   opts.fMode = "UPDATE";
-
-   TDataFrame tdf1(1000);
-   auto s1 = tdf1.Define("one", []() { return 1.0; }).Snapshot<double>("mytree1", "snapshot_test_update.root", {"one"});
-
-   EXPECT_EQ(1000U, *s1.Count());
-
-   EXPECT_EQ(1.0, *s1.Min("one"));
-   EXPECT_EQ(1.0, *s1.Max("one"));
-   EXPECT_EQ(1.0, *s1.Mean("one"));
-
-   TDataFrame tdf2(1000);
-   auto s2 =
-      tdf2.Define("two", []() { return 2.0; }).Snapshot<double>("mytree2", "snapshot_test_update.root", {"two"}, opts);
-
-   EXPECT_EQ(1000U, *s2.Count());
-
-   EXPECT_EQ(2.0, *s2.Min("two"));
-   EXPECT_EQ(2.0, *s2.Max("two"));
-   EXPECT_EQ(2.0, *s2.Mean("two"));
-
-   TFile *f = TFile::Open("snapshot_test_update.root", "READ");
-   auto mytree1 = (TTree *)f->Get("mytree1");
-   auto mytree2 = (TTree *)f->Get("mytree2");
-
-   EXPECT_NE(nullptr, mytree1);
-   EXPECT_NE(nullptr, mytree2);
-
-   f->Close();
-   delete f;
-}
-
-TEST(TEST_CATEGORY, Snapshot_action_with_options)
-{
-   using TSnapshotOptions = ROOT::Experimental::TDF::TSnapshotOptions;
-
-   TSnapshotOptions opts;
-   opts.fAutoFlush = 10;
-   opts.fMode = "RECREATE";
-
-   for (auto algorithm : {ROOT::kZLIB, ROOT::kLZMA, ROOT::kLZ4}) {
-      TDataFrame tdf(1000);
-
-      opts.fCompressionLevel = 6;
-      opts.fCompressionAlgorithm = algorithm;
-
-      auto s =
-         tdf.Define("one", []() { return 1.0; }).Snapshot<double>("mytree", "snapshot_test_opts.root", {"one"}, opts);
-
-      EXPECT_EQ(1000U, *s.Count());
-      EXPECT_EQ(1.0, *s.Min("one"));
-      EXPECT_EQ(1.0, *s.Max("one"));
-      EXPECT_EQ(1.0, *s.Mean("one"));
-
-      TFile *f = TFile::Open("snapshot_test_opts.root", "READ");
-
-      EXPECT_EQ(algorithm, f->GetCompressionAlgorithm());
-      EXPECT_EQ(6, f->GetCompressionLevel());
-
-      f->Close();
-      delete f;
+   const auto nEntries = 8u;
+   TDataFrame df(nEntries);
+   auto es = df.DefineSlotEntry("e", [](unsigned int, ULong64_t e) { return e; }).Take<ULong64_t>("e");
+   auto entries = *es;
+   std::sort(entries.begin(), entries.end());
+   for (auto i = 0u; i < nEntries; ++i) {
+      EXPECT_EQ(i, entries[i]);
    }
 }
 
@@ -371,13 +354,59 @@ TEST(TEST_CATEGORY, CArraysFromTree)
    TDataFrame df(treename, filename);
 
    // no jitting
-   auto h = df.Filter([](double b1, unsigned int n, std::array_view<double> b3,
-                         std::array_view<int> b4) { return b3[0] == b1 && b4[0] == 21 && b4.size() == n; },
+   auto h = df.Filter([](double b1, unsigned int n, TArrayBranch<double> b3,
+                         TArrayBranch<int> b4) { return b3[0] == b1 && b4[0] == 21 && b4.size() == n; },
                       {"b1", "n", "b3", "b4"})
-               .Histo1D<std::array_view<double>>("b3");
+               .Histo1D<TArrayBranch<double>>("b3");
    EXPECT_EQ(20, h->GetEntries());
 
    // jitting
    auto h_jit = df.Filter(/*"b3[0] == b1"*/"b4[0] == 21"/*"b4.size() == n"*/).Histo1D("b3");
    EXPECT_EQ(20, h_jit->GetEntries());
+}
+
+
+TEST(TEST_CATEGORY, TakeCarrays)
+{
+   auto treeName = "t";
+   auto fileName = "CacheCarrays.root";
+
+   {
+      TFile f(fileName, "RECREATE");
+      TTree t(treeName, treeName);
+      float arr[4];
+      t.Branch("arr", arr, "arr[4]/F");
+      for (auto i : ROOT::TSeqU(4)) {
+         for (auto j : ROOT::TSeqU(4)) {
+            arr[j] = i + j;
+         }
+         t.Fill();
+      }
+      t.Write();
+   }
+
+   TDataFrame tdf(treeName, fileName);
+   // no auto here: we check that the type is a COLL<vector<float>>!
+   using ColType_t = TDF::TArrayBranch<float>;
+   std::vector<std::vector<float>> v = *tdf.Take<ColType_t>("arr");
+   std::deque<std::vector<float>> d = *tdf.Take<ColType_t, std::deque<ColType_t>>("arr");
+   std::list<std::vector<float>> l = *tdf.Take<ColType_t, std::list<ColType_t>>("arr");
+
+   auto lit = l.begin();
+   auto ifloat = 0.f;
+   for (auto i : ROOT::TSeqU(4)) {
+      const auto &vv = v[i];
+      const auto &dv = d[i];
+      const auto &lv = *lit;
+      for (auto j : ROOT::TSeqU(4)) {
+         const auto ref = ifloat + j;
+         EXPECT_EQ(ref, vv[j]);
+         EXPECT_EQ(ref, dv[j]);
+         EXPECT_EQ(ref, lv[j]);
+      }
+      ifloat++;
+      lit++;
+   }
+
+   gSystem->Unlink(fileName);
 }

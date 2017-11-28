@@ -128,7 +128,7 @@ void TInetAddress::Print(Option_t *) const
 
    int i = 0;
    AddressList_t::const_iterator ai;
-   for (ai = fAddresses.begin(); ai != fAddresses.end(); ai++) {
+   for (ai = fAddresses.begin(); ai != fAddresses.end(); ++ai) {
       if (!i) printf("%s:", fAddresses.size() == 1 ? "Address" : "Addresses");
       printf(" %s", GetHostAddress(*ai));
       i++;
@@ -137,7 +137,7 @@ void TInetAddress::Print(Option_t *) const
 
    i = 0;
    AliasList_t::const_iterator ali;
-   for (ali = fAliases.begin(); ali != fAliases.end(); ali++) {
+   for (ali = fAliases.begin(); ali != fAliases.end(); ++ali) {
       if (!i) printf("%s:", fAliases.size() == 1 ? "Alias" : "Aliases");
       printf(" %s", ali->Data());
       i++;

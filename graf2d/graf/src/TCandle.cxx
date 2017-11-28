@@ -182,6 +182,16 @@ TCandle::~TCandle() {
    if (fIsRaw && fProj) delete fProj;
 }
 
+Bool_t TCandle::IsCandleScaled()
+{
+   return fScaledCandle;
+}
+
+Bool_t TCandle::IsViolinScaled()
+{
+   return fScaledViolin;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Static function to set fWhiskerRange, by setting whisker-range, one can force
 /// the whiskers to cover the fraction of the distribution.

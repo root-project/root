@@ -422,7 +422,7 @@ TF1::TF1():
 /// the formula string is "fffffff" and "xxxx" and "yyyy" are the
 /// titles for the X and Y axis respectively.
 
-TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EAddToList addToGlobList) :
+TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EAddToList addToGlobList, bool vectorize) :
    TNamed(name, formula), TAttLine(), TAttFill(), TAttMarker(), fType(EFType::kFormula)
 {
    if (xmin < xmax) {
@@ -439,7 +439,7 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       // Look for single ',' delimiter
       int delimPosition = -1;
       int parenCount = 0;
-      for (uint i = 5; i < strlen(formula) - 1; i++) {
+      for (unsigned int i = 5; i < strlen(formula) - 1; i++) {
          if (formula[i] == '(')
             parenCount++;
          else if (formula[i] == ')')
@@ -563,9 +563,10 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       }
 
    } else { // regular TFormula
-      fFormula = new TFormula(name, formula, false);
+      fFormula = new TFormula(name, formula, false, vectorize);
       fNpar = fFormula->GetNpar();
-      fNdim = fFormula->GetNdim();
+      // TFormula can have dimension zero, but since this is a TF1 minimal dim is 1
+      fNdim = fFormula->GetNdim() == 0 ? 1 : fFormula->GetNdim();
    }
    if (fNpar) {
       fParErrors.resize(fNpar);
@@ -579,7 +580,32 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
 
    DoInitialize(addToGlobList);
 }
-
+TF1::EAddToList GetGlobalListOption(Option_t * opt)  {
+   if (opt == nullptr) return TF1::EAddToList::kDefault; 
+   TString option(opt);
+   option.ToUpper();
+   if (option.Contains("NL")) return TF1::EAddToList::kNo;
+   if (option.Contains("GL")) return TF1::EAddToList::kAdd;   
+   return TF1::EAddToList::kDefault; 
+}
+bool GetVectorizedOption(Option_t * opt)  {
+   if (opt == nullptr) return false; 
+   TString option(opt);
+   option.ToUpper();
+   if (option.Contains("VEC")) return true;
+   return false; 
+}
+TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, Option_t * opt) :
+////////////////////////////////////////////////////////////////////////////////
+/// Same constructor as above (for TFormula based function) but passing an option strings
+///  available options
+///  VEC -  vectorize the formula expressions (not possible for lambda based expressions)
+///  NL   - function is not stores in the global list of functions
+///  GL   -  function will be always stored in the global list of functions ,
+///         independently of the global setting of TF1::DefaultAddToGlobalList
+///////////////////////////////////////////////////////////////////////////////////
+   TF1(name, formula, xmin, xmax, GetGlobalListOption(opt), GetVectorizedOption(opt) )
+{}
 ////////////////////////////////////////////////////////////////////////////////
 /// F1 constructor using name of an interpreted function.
 ///
@@ -1309,7 +1335,7 @@ Double_t TF1::Eval(Double_t x, Double_t y, Double_t z, Double_t t) const
 
    Double_t xx[4] = {x, y, z, t};
    Double_t *pp = (Double_t *)fParams->GetParameters();
-   if (fType == EFType::kInterpreted)((TF1 *)this)->InitArgs(xx, pp);
+   // if (fType == EFType::kInterpreted)((TF1 *)this)->InitArgs(xx, pp);
    return ((TF1 *)this)->EvalPar(xx, pp);
 }
 
@@ -1394,7 +1420,6 @@ Double_t TF1::EvalPar(const Double_t *x, const Double_t *params)
 
    return result;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.

@@ -9,22 +9,22 @@
 /// \author Axel Naumann
 
 auto Select = [](ROOT::Experimental::TDataFrame &dataFrame) {
-   using Farrayiew_t = std::array_view<float>;
-   using Iarrayiew_t = std::array_view<int>;
+   using Farray_t = ROOT::Experimental::TDF::TArrayBranch<float>;
+   using Iarray_t = ROOT::Experimental::TDF::TArrayBranch<int>;
 
    auto ret =
       dataFrame.Filter("TMath::Abs(md0_d - 1.8646) < 0.04")
          .Filter("ptds_d > 2.5")
          .Filter("TMath::Abs(etads_d) < 1.5")
-         .Filter([](int ik, int ipi, Iarrayiew_t nhitrp) { return nhitrp[ik - 1] * nhitrp[ipi - 1] > 1; },
+         .Filter([](int ik, int ipi, Iarray_t nhitrp) { return nhitrp[ik - 1] * nhitrp[ipi - 1] > 1; },
                  {"ik", "ipi", "nhitrp"})
-         .Filter([](int ik, Farrayiew_t rstart,
-                    Farrayiew_t rend) { return rend[ik - 1] - rstart[ik - 1] > 22; }, {"ik", "rstart", "rend"})
-         .Filter([](int ipi, Farrayiew_t rstart,
-                    Farrayiew_t rend) { return rend[ipi - 1] - rstart[ipi - 1] > 22; }, {"ipi", "rstart", "rend"})
-         .Filter([](int ik, Farrayiew_t nlhk) { return nlhk[ik - 1] > 0.1; }, {"ik", "nlhk"})
-         .Filter([](int ipi, Farrayiew_t nlhpi) { return nlhpi[ipi - 1] > 0.1; }, {"ipi", "nlhpi"})
-         .Filter([](int ipis, Farrayiew_t nlhpi) { return nlhpi[ipis - 1] > 0.1; }, {"ipis", "nlhpi"})
+         .Filter([](int ik, Farray_t rstart, Farray_t rend) { return rend[ik - 1] - rstart[ik - 1] > 22; },
+                 {"ik", "rstart", "rend"})
+         .Filter([](int ipi, Farray_t rstart, Farray_t rend) { return rend[ipi - 1] - rstart[ipi - 1] > 22; },
+                 {"ipi", "rstart", "rend"})
+         .Filter([](int ik, Farray_t nlhk) { return nlhk[ik - 1] > 0.1; }, {"ik", "nlhk"})
+         .Filter([](int ipi, Farray_t nlhpi) { return nlhpi[ipi - 1] > 0.1; }, {"ipi", "nlhpi"})
+         .Filter([](int ipis, Farray_t nlhpi) { return nlhpi[ipis - 1] > 0.1; }, {"ipis", "nlhpi"})
          .Filter("njets >= 1");
 
    return ret;
@@ -35,7 +35,8 @@ const Double_t dxbin = (0.17 - 0.13) / 40; // Bin-width
 Double_t fdm5(Double_t *xx, Double_t *par)
 {
    Double_t x = xx[0];
-   if (x <= 0.13957) return 0;
+   if (x <= 0.13957)
+      return 0;
    Double_t xp3 = (x - par[3]) * (x - par[3]);
    Double_t res =
       dxbin * (par[0] * pow(x - 0.13957, par[1]) + par[2] / 2.5066 / par[4] * exp(-xp3 / 2 / par[4] / par[4]));
@@ -46,7 +47,8 @@ Double_t fdm2(Double_t *xx, Double_t *par)
 {
    static const Double_t sigma = 0.0012;
    Double_t x = xx[0];
-   if (x <= 0.13957) return 0;
+   if (x <= 0.13957)
+      return 0;
    Double_t xp3 = (x - 0.1454) * (x - 0.1454);
    Double_t res = dxbin * (par[0] * pow(x - 0.13957, 0.25) + par[1] / 2.5066 / sigma * exp(-xp3 / 2 / sigma / sigma));
    return res;
@@ -66,7 +68,6 @@ void FitAndPlotHdmd(TH1 &hdmd)
    hdmd.Fit("f5", "lr");
 
    hdmd.DrawClone();
-
 }
 
 void FitAndPlotH2(TH2 &h2)

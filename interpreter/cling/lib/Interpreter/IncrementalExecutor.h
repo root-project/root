@@ -116,7 +116,9 @@ namespace cling {
     ///\brief Function registered via __cxa_atexit, atexit, or one of
     /// it's C++ overloads that should be run when a module is unloaded.
     ///
-    typedef utils::OrderedMap<llvm::Module*, std::vector<CXAAtExitElement>>
+    // FIXME: We should probably try using a weak_ptr instead of a shared_ptr.
+    typedef utils::OrderedMap<std::shared_ptr<llvm::Module>,
+                              std::vector<CXAAtExitElement>>
         AtExitFunctions;
     AtExitFunctions m_AtExitFuncs;
 
@@ -161,22 +163,11 @@ namespace cling {
     }
     void installLazyFunctionCreator(LazyFunctionCreatorFunc_t fp);
 
-    ///\brief Send all collected modules to the JIT, making their symbols
-    /// available to jitting (but not necessarily jitting them all).
-    Transaction::ExeUnloadHandle emitToJIT() {
-      size_t handle = m_JIT->addModules(std::move(m_ModulesToJIT));
-      m_ModulesToJIT.clear();
-      //m_JIT->finalizeMemory();
-      return Transaction::ExeUnloadHandle{(void*)handle};
-    }
-
     ///\brief Unload a set of JIT symbols.
-    bool unloadFromJIT(llvm::Module* M, Transaction::ExeUnloadHandle H) {
-      auto iMod = std::find(m_ModulesToJIT.begin(), m_ModulesToJIT.end(), M);
-      if (iMod != m_ModulesToJIT.end())
-        m_ModulesToJIT.erase(iMod);
-      else
-        m_JIT->removeModules((size_t)H.m_Opaque);
+    bool unloadModule(const std::shared_ptr<llvm::Module>& M) {
+      // FIXME: Propagate the error in a more verbose way.
+      if (auto Err = m_JIT->removeModule(M))
+        return false;
       return true;
     }
 
@@ -219,14 +210,15 @@ namespace cling {
     ///
     bool addSymbol(const char* Name, void* Address, bool JIT = false);
 
-    ///\brief Add a llvm::Module to the JIT.
+    ///\brief Emit a llvm::Module to the JIT.
     ///
     /// @param[in] module - The module to pass to the execution engine.
     /// @param[in] optLevel - The optimization level to be used.
-    void addModule(llvm::Module* module, int optLevel) {
+    void emitModule(const std::shared_ptr<llvm::Module>& module, int optLevel) {
       if (m_BackendPasses)
         m_BackendPasses->runOnModule(*module, optLevel);
-      m_ModulesToJIT.push_back(module);
+
+      m_JIT->addModule(module);
     }
 
     ///\brief Tells the execution context that we are shutting down the system.
@@ -256,7 +248,8 @@ namespace cling {
 
     ///\brief Keep track of the entities whose dtor we need to call.
     ///
-    void AddAtExitFunc(void (*func) (void*), void* arg, llvm::Module* M);
+    void AddAtExitFunc(void (*func)(void*), void* arg,
+                       const std::shared_ptr<llvm::Module>& M);
 
     ///\brief Try to resolve a symbol through our LazyFunctionCreators;
     /// print an error message if that fails.

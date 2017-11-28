@@ -20,9 +20,9 @@
 #include <vector>
 
 #include "ROOT/TDrawable.hxx"
+#include "ROOT/TFrame.hxx"
 #include "ROOT/TPadExtent.hxx"
 #include "ROOT/TPadPos.hxx"
-#include "ROOT/TPadUserCoordBase.hxx"
 #include "ROOT/TypeTraits.hxx"
 
 namespace ROOT {
@@ -34,9 +34,7 @@ namespace Internal {
 class TVirtualCanvasPainter;
 }
 
-namespace Internal {
-
-/** \class ROOT::Experimental::Internal::TPadBase
+/** \class ROOT::Experimental::TPadBase
   Base class for graphic containers for `TDrawable`-s.
   */
 
@@ -48,8 +46,8 @@ private:
    /// Content of the pad.
    Primitives_t fPrimitives;
 
-   /// User coordinate system used by this pad.
-   std::unique_ptr<Detail::TPadUserCoordBase> fUserCoord;
+   /// TFrame with user coordinate system, if used by this pad.
+   std::unique_ptr<TFrame> fFrame;
 
    /// Disable copy construction.
    TPadBase(const TPadBase &) = delete;
@@ -57,12 +55,13 @@ private:
    /// Disable assignment.
    TPadBase &operator=(const TPadBase &) = delete;
 
+   /// Adds a `DRAWABLE` to `fPrimitives`, returning the drawing options as given by `DRAWABLE::Options()`.
    template <class DRAWABLE>
-   DRAWABLE &AddDrawable(std::unique_ptr<DRAWABLE> &&uPtr)
+   auto &AddDrawable(std::unique_ptr<DRAWABLE> &&uPtr)
    {
       DRAWABLE &drw = *uPtr;
       fPrimitives.emplace_back(std::move(uPtr));
-      return drw;
+      return drw.GetOptions();
    }
 
 protected:
@@ -85,16 +84,7 @@ public:
    auto &Draw(const std::shared_ptr<T> &what)
    {
       // Requires GetDrawable(what) to be known!
-      return AddDrawable(GetDrawable(what));
-   }
-
-   /// Add something to be painted, with options.
-   /// The pad observes what's lifetime through a weak pointer.
-   template <class T, class OPTIONS>
-   auto &Draw(const std::shared_ptr<T> &what, const OPTIONS &options)
-   {
-      // Requires GetDrawable(what, options) to be known!
-      return AddDrawable(GetDrawable(what, options));
+      return AddDrawable(GetDrawable(what, *this));
    }
 
    /// Add something to be painted. The pad claims ownership.
@@ -102,15 +92,7 @@ public:
    auto &Draw(std::unique_ptr<T> &&what)
    {
       // Requires GetDrawable(what) to be known!
-      return AddDrawable(GetDrawable(std::move(what)));
-   }
-
-   /// Add something to be painted, with options. The pad claims ownership.
-   template <class T, class OPTIONS>
-   auto &Draw(std::unique_ptr<T> &&what, const OPTIONS &options)
-   {
-      // Requires GetDrawable(what, options) to be known!
-      return AddDrawable(GetDrawable(std::move(what), options));
+      return AddDrawable(GetDrawable(std::move(what), *this));
    }
 
    /// Add a copy of something to be painted.
@@ -121,17 +103,14 @@ public:
       return Draw(std::make_unique<T>(what));
    }
 
-   /// Add a copy of something to be painted, with options.
-   template <class T, class OPTIONS,
-             class = typename std::enable_if<!ROOT::TypeTraits::IsSmartOrDumbPtr<T>::value>::type>
-   auto &Draw(const T &what, const OPTIONS &options)
-   {
-      // Requires GetDrawable(what, options) to be known!
-      return Draw(std::make_unique<T>(what), options);
-   }
-
    /// Remove an object from the list of primitives.
-   // TODO: void Wipe();
+   // TODO: void Wipe(???);
+
+   /// Wipe the pad by clearing the list of primitives.
+   void Wipe()
+   {
+      fPrimitives.clear();
+   }
 
    /// Get the elements contained in the canvas.
    const Primitives_t &GetPrimitives() const { return fPrimitives; }
@@ -139,63 +118,53 @@ public:
    /// Convert a `Pixel` position to Canvas-normalized positions.
    virtual std::array<TPadCoord::Normal, 2> PixelsToNormal(const std::array<TPadCoord::Pixel, 2> &pos) const = 0;
 
+   /// Access to the top-most canvas, if any (const version).
+   virtual const TCanvas &GetCanvas() const = 0;
+
+   /// Access to the top-most canvas, if any (non-const version).
+   virtual TCanvas &GetCanvas() = 0;
+
    /// Convert user coordinates to normal coordinates.
    std::array<TPadCoord::Normal, 2> UserToNormal(const std::array<TPadCoord::User, 2> &pos) const
    {
-      return fUserCoord->ToNormal(pos);
+      return fFrame->UserToNormal(pos);
    }
 };
-} // namespace Internal
 
-
-/** \class TPadDrawable
-   Draw a TPad, by drawing its contained graphical elements at the pad offset in the parent pad.'
-   */
-class TPadDrawable: public TDrawable {
-private:
-   const std::unique_ptr<TPad> fPad; ///< The pad to be painted
-   TPadPos fPos;                     ///< Offset with respect to parent TPad.
-
-public:
-   TPadDrawable() = default;
-
-   TPadDrawable(std::unique_ptr<TPad> &&pPad, const TPadPos &pos): fPad(std::move(pPad)), fPos(pos) {}
-
-   /// Paint the pad.
-   void Paint(Internal::TVirtualCanvasPainter & /*canv*/) final
-   {
-      // FIXME: and then what? Something with fPad.GetListOfPrimitives()?
-   }
-
-   TPad *Get() const { return fPad.get(); }
-};
+class TPadDrawable;
 
 /** \class ROOT::Experimental::TPad
   Graphic container for `TDrawable`-s.
   */
 
-class TPad: public Internal::TPadBase {
+class TPad: public TPadBase {
 private:
    /// Pad containing this pad as a sub-pad.
-   const TPadBase *fParent = nullptr;
+   TPadBase *fParent = nullptr; //-> This must never be nullptr!
 
    /// Size of the pad in the parent's (!) coordinate system.
    TPadExtent fSize;
 
-
 public:
-
-   friend std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, const TPadPos &pos)
-   {
-      return std::make_unique<TPadDrawable>(std::move(pad), pos);
-   }
-
+   friend std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, const TPadBase &parent);
 
    /// Create a child pad.
-   TPad(const TPadBase &parent, const TPadExtent &size): fParent(&parent), fSize(size) {}
+   TPad(TPadBase &parent, const TPadExtent &size): fParent(&parent), fSize(size) {}
 
    /// Destructor to have a vtable.
    virtual ~TPad();
+
+   /// Access to the parent pad (const version).
+   const TPadBase &GetParent() const { return *fParent; }
+
+   /// Access to the parent pad (non-const version).
+   TPadBase &GetParent() { return *fParent; }
+
+   /// Access to the top-most canvas (const version).
+   const TCanvas &GetCanvas() const override { return fParent->GetCanvas(); }
+
+   /// Access to the top-most canvas (non-const version).
+   TCanvas &GetCanvas() override { return fParent->GetCanvas(); }
 
    /// Get the size of the pad in parent (!) coordinates.
    const TPadExtent &GetSize() const { return fSize; }
@@ -223,6 +192,52 @@ public:
                pos.fVert.fNormal + pixelsInNormal[1] + userInNormal[1]}};
    }
 };
+
+/** \class TPadDrawingOpts
+ Drawing options for a TPad
+ */
+
+class TPadDrawingOpts: public TDrawingOptsBase<TPadDrawingOpts> {
+   TPadPos fPos; ///< Offset with respect to parent TPad.
+public:
+   TPadDrawingOpts(TPadBase &parent): TDrawingOptsBase<TPadDrawingOpts>(parent, "Pad") {}
+
+   /// Set the position of this pad with respect to the parent pad.
+   TPadDrawingOpts &At(const TPadPos &pos)
+   {
+      fPos = pos;
+      return *this;
+   }
+};
+
+/** \class TPadDrawable
+   Draw a TPad, by drawing its contained graphical elements at the pad offset in the parent pad.'
+   */
+class TPadDrawable: public TDrawable {
+private:
+   const std::unique_ptr<TPad> fPad; ///< The pad to be painted
+   TPadDrawingOpts fOpts;            ///< The drawing options.
+
+public:
+   /// Move a sub-pad into this (i.e. parent's) list of drawables.
+   TPadDrawable(std::unique_ptr<TPad> &&pPad, TPadBase &parent);
+
+   /// Paint the pad.
+   void Paint(Internal::TVirtualCanvasPainter & /*canv*/) final
+   {
+      // FIXME: and then what? Something with fPad.GetListOfPrimitives()?
+   }
+
+   TPad *Get() const { return fPad.get(); }
+
+   /// Drawing options.
+   TPadDrawingOpts &GetOptions() { return fOpts; }
+};
+
+inline std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, TPadBase &parent)
+{
+   return std::make_unique<TPadDrawable>(std::move(pad), parent);
+}
 
 } // namespace Experimental
 } // namespace ROOT

@@ -1,7 +1,7 @@
 ############################################################################
 # CMakeLists.txt file for building ROOT bindings/pyroot package
 ############################################################################
-include_directories(${PYTHON_INCLUDE_DIRS})
+include_directories(SYSTEM ${PYTHON_INCLUDE_DIRS})
 
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fno-strict-aliasing)
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-parentheses-equality)
@@ -20,12 +20,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
                               DEPENDENCIES Core MathCore Net Tree Rint)
 ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core)
 
-
 if(MSVC)
   add_custom_command(TARGET PyROOT POST_BUILD
                      COMMAND link -dll -nologo -IGNORE:4001 -machine:ix86 -export:initlibPyROOT
-                    $<TARGET_LINKER_FILE:PyROOT> -nodefaultlib kernel32.lib msvcrt.lib
-                    -out:$<TARGET_FILE_DIR:PyROOT>/libPyROOT.pyd)
+                     $<TARGET_LINKER_FILE:PyROOT> msvcrt.lib
+                     -out:$<TARGET_FILE_DIR:PyROOT>/libPyROOT.pyd)
   install(FILES  ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}/libPyROOT.pyd
                  DESTINATION ${CMAKE_INSTALL_BINDIR}
                  COMPONENT libraries)

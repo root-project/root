@@ -31,21 +31,21 @@
 #include "llvm/ADT/Statistic.h"
 #include "llvm/Analysis/AliasAnalysis.h"
 #include "llvm/CodeGen/FaultMaps.h"
-#include "llvm/CodeGen/Passes.h"
 #include "llvm/CodeGen/MachineFunction.h"
-#include "llvm/CodeGen/MachineMemOperand.h"
-#include "llvm/CodeGen/MachineOperand.h"
 #include "llvm/CodeGen/MachineFunctionPass.h"
 #include "llvm/CodeGen/MachineInstrBuilder.h"
-#include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/MachineMemOperand.h"
 #include "llvm/CodeGen/MachineModuleInfo.h"
+#include "llvm/CodeGen/MachineOperand.h"
+#include "llvm/CodeGen/MachineRegisterInfo.h"
+#include "llvm/CodeGen/Passes.h"
 #include "llvm/IR/BasicBlock.h"
 #include "llvm/IR/Instruction.h"
 #include "llvm/IR/LLVMContext.h"
 #include "llvm/Support/CommandLine.h"
 #include "llvm/Support/Debug.h"
-#include "llvm/Target/TargetSubtargetInfo.h"
 #include "llvm/Target/TargetInstrInfo.h"
+#include "llvm/Target/TargetSubtargetInfo.h"
 
 using namespace llvm;
 
@@ -359,30 +359,15 @@ ImplicitNullChecks::isSuitableMemoryOp(MachineInstr &MI, unsigned PointerReg,
         Offset < PageSize))
     return SR_Unsuitable;
 
-  // Finally, we need to make sure that the access instruction actually is
-  // accessing from PointerReg, and there isn't some re-definition of PointerReg
-  // between the compare and the memory access.
-  // If PointerReg has been redefined before then there is no sense to continue
-  // lookup due to this condition will fail for any further instruction.
-  SuitabilityResult Suitable = SR_Suitable;
-  for (auto *PrevMI : PrevInsts)
-    for (auto &PrevMO : PrevMI->operands()) {
-      if (PrevMO.isReg() && PrevMO.getReg() && PrevMO.isDef() &&
-          TRI->regsOverlap(PrevMO.getReg(), PointerReg))
-        return SR_Impossible;
-
-      // Check whether the current memory access aliases with previous one.
-      // If we already found that it aliases then no need to continue.
-      // But we continue base pointer check as it can result in SR_Impossible.
-      if (Suitable == SR_Suitable) {
-        AliasResult AR = areMemoryOpsAliased(MI, PrevMI);
-        if (AR == AR_WillAliasEverything)
-          return SR_Impossible;
-        if (AR == AR_MayAlias)
-          Suitable = SR_Unsuitable;
-      }
-    }
-  return Suitable;
+  // Finally, check whether the current memory access aliases with previous one.
+  for (auto *PrevMI : PrevInsts) {
+    AliasResult AR = areMemoryOpsAliased(MI, PrevMI);
+    if (AR == AR_WillAliasEverything)
+      return SR_Impossible;
+    if (AR == AR_MayAlias)
+      return SR_Unsuitable;
+  }
+  return SR_Suitable;
 }
 
 bool ImplicitNullChecks::canHoistInst(MachineInstr *FaultingMI,
@@ -569,6 +554,12 @@ bool ImplicitNullChecks::analyzeBlockForNullChecks(
       return true;
     }
 
+    // If MI re-defines the PointerReg then we cannot move further.
+    if (any_of(MI.operands(), [&](MachineOperand &MO) {
+          return MO.isReg() && MO.getReg() && MO.isDef() &&
+                 TRI->regsOverlap(MO.getReg(), PointerReg);
+        }))
+      return false;
     InstsSeenSoFar.push_back(&MI);
   }
 
@@ -607,8 +598,20 @@ MachineInstr *ImplicitNullChecks::insertFaultingInstr(
                  .addMBB(HandlerMBB)
                  .addImm(MI->getOpcode());
 
-  for (auto &MO : MI->uses())
-    MIB.add(MO);
+  for (auto &MO : MI->uses()) {
+    if (MO.isReg()) {
+      MachineOperand NewMO = MO;
+      if (MO.isUse()) {
+        NewMO.setIsKill(false);
+      } else {
+        assert(MO.isDef() && "Expected def or use");
+        NewMO.setIsDead(false);
+      }
+      MIB.add(NewMO);
+    } else {
+      MIB.add(MO);
+    }
+  }
 
   MIB.setMemRefs(MI->memoperands_begin(), MI->memoperands_end());
 
@@ -674,8 +677,8 @@ void ImplicitNullChecks::rewriteNullChecks(
 
 char ImplicitNullChecks::ID = 0;
 char &llvm::ImplicitNullChecksID = ImplicitNullChecks::ID;
-INITIALIZE_PASS_BEGIN(ImplicitNullChecks, "implicit-null-checks",
+INITIALIZE_PASS_BEGIN(ImplicitNullChecks, DEBUG_TYPE,
                       "Implicit null checks", false, false)
 INITIALIZE_PASS_DEPENDENCY(AAResultsWrapperPass)
-INITIALIZE_PASS_END(ImplicitNullChecks, "implicit-null-checks",
+INITIALIZE_PASS_END(ImplicitNullChecks, DEBUG_TYPE,
                     "Implicit null checks", false, false)

@@ -9,22 +9,18 @@
 
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
-void fill_tree(const char *filename, const char *treeName)
+void fill_tree(const char *treeName, const char *fileName)
 {
-   TFile f(filename, "RECREATE");
-   TTree t(treeName, treeName);
-   int b1;
-   float b2;
-   t.Branch("b1", &b1);
-   t.Branch("b2", &b2);
-   for (int i = 0; i < 100; ++i) {
-      b1 = i;
-      b2 = i * i;
-      t.Fill();
-   }
-   t.Write();
-   f.Close();
-   return;
+   ROOT::Experimental::TDataFrame d(100);
+   int i(0);
+   d.Define("b1", [&i]() { return i; })
+      .Define("b2",
+              [&i]() {
+                 float j = i * i;
+                 ++i;
+                 return j;
+              })
+      .Snapshot(treeName, fileName);
 }
 
 int tdf006_ranges()
@@ -33,7 +29,7 @@ int tdf006_ranges()
    // We prepare an input tree to run on
    auto fileName = "tdf006_ranges.root";
    auto treeName = "myTree";
-   fill_tree(fileName, treeName);
+   fill_tree(treeName, fileName);
 
    // We read the tree from the file and create a TDataFrame.
    ROOT::Experimental::TDataFrame d(treeName, fileName);

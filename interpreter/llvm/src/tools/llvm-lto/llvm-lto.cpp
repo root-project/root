@@ -383,7 +383,7 @@ loadAllFilesForIndex(const ModuleSummaryIndex &Index) {
 
   for (auto &ModPath : Index.modulePaths()) {
     const auto &Filename = ModPath.first();
-    auto CurrentActivity = "loading file '" + Filename + "'";
+    std::string CurrentActivity = ("loading file '" + Filename + "'").str();
     auto InputOrErr = MemoryBuffer::getFile(Filename);
     error(InputOrErr, "error " + CurrentActivity);
     InputBuffers.push_back(std::move(*InputOrErr));
@@ -475,7 +475,7 @@ private:
     std::vector<std::unique_ptr<MemoryBuffer>> InputBuffers;
     for (unsigned i = 0; i < InputFilenames.size(); ++i) {
       auto &Filename = InputFilenames[i];
-      StringRef CurrentActivity = "loading file '" + Filename + "'";
+      std::string CurrentActivity = "loading file '" + Filename + "'";
       auto InputOrErr = MemoryBuffer::getFile(Filename);
       error(InputOrErr, "error " + CurrentActivity);
       InputBuffers.push_back(std::move(*InputOrErr));
@@ -669,24 +669,30 @@ private:
     if (!ThinLTOIndex.empty())
       errs() << "Warning: -thinlto-index ignored for codegen stage";
 
+    std::vector<std::unique_ptr<MemoryBuffer>> InputBuffers;
     for (auto &Filename : InputFilenames) {
       LLVMContext Ctx;
-      auto TheModule = loadModule(Filename, Ctx);
-
-      auto Buffer = ThinGenerator.codegen(*TheModule);
+      auto InputOrErr = MemoryBuffer::getFile(Filename);
+      error(InputOrErr, "error " + CurrentActivity);
+      InputBuffers.push_back(std::move(*InputOrErr));
+      ThinGenerator.addModule(Filename, InputBuffers.back()->getBuffer());
+    }
+    ThinGenerator.setCodeGenOnly(true);
+    ThinGenerator.run();
+    for (auto BinName :
+         zip(ThinGenerator.getProducedBinaries(), InputFilenames)) {
       std::string OutputName = OutputFilename;
-      if (OutputName.empty()) {
-        OutputName = Filename + ".thinlto.o";
-      }
-      if (OutputName == "-") {
-        outs() << Buffer->getBuffer();
+      if (OutputName.empty())
+        OutputName = std::get<1>(BinName) + ".thinlto.o";
+      else if (OutputName == "-") {
+        outs() << std::get<0>(BinName)->getBuffer();
         return;
       }
 
       std::error_code EC;
       raw_fd_ostream OS(OutputName, EC, sys::fs::OpenFlags::F_None);
       error(EC, "error opening the file '" + OutputName + "'");
-      OS << Buffer->getBuffer();
+      OS << std::get<0>(BinName)->getBuffer();
     }
   }
 
@@ -704,7 +710,7 @@ private:
     std::vector<std::unique_ptr<MemoryBuffer>> InputBuffers;
     for (unsigned i = 0; i < InputFilenames.size(); ++i) {
       auto &Filename = InputFilenames[i];
-      StringRef CurrentActivity = "loading file '" + Filename + "'";
+      std::string CurrentActivity = "loading file '" + Filename + "'";
       auto InputOrErr = MemoryBuffer::getFile(Filename);
       error(InputOrErr, "error " + CurrentActivity);
       InputBuffers.push_back(std::move(*InputOrErr));

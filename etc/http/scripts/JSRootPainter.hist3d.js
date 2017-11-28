@@ -104,9 +104,19 @@
       var max3d = Math.max(0.75*this.size_xy3d, this.size_z3d);
       this.camera.position.set(-1.6*max3d, -3.5*max3d, 1.4*this.size_z3d);
 
+      var pad = this.root_pad();
+      if (pad && (pad.fTheta!==undefined) && (pad.fPhi!==undefined) && (pad.fTheta !== 30) || (pad.fPhi !== 30)) {
+         max3d = 3*Math.max(this.size_xy3d, this.size_z3d);
+         var phi = (-pad.fPhi-90)/180*Math.PI, theta = pad.fTheta/180*Math.PI;
+
+         this.camera.position.set(max3d*Math.cos(phi)*Math.cos(theta),
+                                  max3d*Math.sin(phi)*Math.cos(theta),
+                                  this.size_z3d + max3d*Math.sin(theta));
+      }
+
       this.pointLight = new THREE.PointLight(0xffffff,1);
-      this.camera.add( this.pointLight );
-      this.pointLight.position.set( this.size_xy3d/2, this.size_xy3d/2, this.size_z3d/2 );
+      this.camera.add(this.pointLight);
+      this.pointLight.position.set(this.size_xy3d/2, this.size_xy3d/2, this.size_z3d/2);
 
       var lookat = new THREE.Vector3(0,0,0.8*this.size_z3d);
 
@@ -137,7 +147,7 @@
       this.add_3d_canvas(sz, this.renderer.domElement);
 
       this.first_render_tm = 0;
-      this.enable_hightlight = false;
+      this.enable_highlight = false;
       this.tooltip_allowed = (JSROOT.gStyle.Tooltip > 0);
 
       if (JSROOT.BatchMode) return;
@@ -211,6 +221,15 @@
    }
 
    JSROOT.THistPainter.prototype.Render3D = function(tmout) {
+      // call 3D rendering of the histogram drawing
+      // tmout specified delay, after which actual rendering will be invoked
+      // Timeout used to avoid multiple rendering of the picture when several 3D drawings
+      // superimposed with each other.
+      // If tmeout<=0, rendering performed immediately
+      // Several special values are used:
+      //   -1111 - immediate rendering with SVG renderer
+      //   -2222 - rendering performed only if there were previous calls, which causes timeout activation
+
       if (tmout === -1111) {
          // special handling for direct SVG renderer
          // probably, here one can use canvas renderer - after modifications
@@ -229,8 +248,11 @@
       if (tmout === undefined) tmout = 5; // by default, rendering happens with timeout
 
       if ((tmout <= 0) || this.usesvg) {
-         if ('render_tmout' in this)
+         if ('render_tmout' in this) {
             clearTimeout(this.render_tmout);
+         } else {
+            if (tmout === -2222) return; // special case to check if rendering timeout was active
+         }
 
          if (this.renderer === undefined) return;
 
@@ -248,7 +270,7 @@
 
          if (this.first_render_tm === 0) {
             this.first_render_tm = tm2.getTime() - tm1.getTime();
-            this.enable_hightlight = (this.first_render_tm < 1200) && this.tooltip_allowed;
+            this.enable_highlight = (this.first_render_tm < 1200) && this.tooltip_allowed;
             console.log('First render tm = ' + this.first_render_tm);
          }
 
@@ -292,7 +314,7 @@
    JSROOT.THistPainter.prototype.BinHighlight3D = function(tip, selfmesh) {
 
       var changed = false, tooltip_mesh = null, changed_self = true,
-          want_remove = !tip || (tip.x1===undefined) || !this.enable_hightlight;
+          want_remove = !tip || (tip.x1===undefined) || !this.enable_highlight;
 
       if (this.tooltip_selfmesh) {
          changed_self = (this.tooltip_selfmesh !== selfmesh)
@@ -375,6 +397,60 @@
       }
    }
 
+   function HPainter_TestAxisVisibility(camera, toplevel, fb, bb) {
+      var top;
+      for (var n=0;n<toplevel.children.length;++n) {
+         top = toplevel.children[n];
+         if (top.axis_draw) break;
+         top = undefined;
+      }
+
+      if (!top) return;
+
+      if (!camera) {
+         // this is case when axis drawing want to be removed
+         toplevel.remove(top);
+         delete this.TestAxisVisibility;
+         return;
+      }
+
+      fb = fb ? true : false;
+      bb = bb ? true : false;
+
+      var qudrant = 1, pos = camera.position;
+      if ((pos.x < 0) && (pos.y >= 0)) qudrant = 2;
+      if ((pos.x >= 0) && (pos.y >= 0)) qudrant = 3;
+      if ((pos.x >= 0) && (pos.y < 0)) qudrant = 4;
+
+      function testvisible(id, range) {
+         if (id <= qudrant) id+=4;
+         return (id > qudrant) && (id < qudrant+range);
+      }
+
+      for (var n=0;n<top.children.length;++n) {
+         var chld = top.children[n];
+         if (chld.grid) chld.visible = bb && testvisible(chld.grid, 3); else
+         if (chld.zid) chld.visible = testvisible(chld.zid, 2); else
+         if (chld.xyid) chld.visible = testvisible(chld.xyid, 3); else
+         if (chld.xyboxid) {
+            var range = 5, shift = 0;
+            if (bb && !fb) { range = 3; shift = -2; } else
+            if (fb && !bb) range = 3; else
+            if (!fb && !bb) range = (chld.bottom ? 3 : 0);
+            chld.visible = testvisible(chld.xyboxid + shift, range);
+            if (!chld.visible && chld.bottom && bb)
+               chld.visible = testvisible(chld.xyboxid, 3);
+         } else
+         if (chld.zboxid) {
+            var range = 2, shift = 0;
+            if (fb && bb) range = 5; else
+            if (bb && !fb) range = 4; else
+            if (!bb && fb) { shift = -2; range = 4; }
+            chld.visible = testvisible(chld.zboxid + shift, range);
+         }
+      }
+   }
+
    JSROOT.THistPainter.prototype.DrawXYZ = function(toplevel, opts) {
       if (!opts) opts = {};
 
@@ -383,7 +459,7 @@
           grminz = 0, grmaxz = 2*this.size_z3d,
           textsize = Math.round(this.size_z3d * 0.05),
           pad = this.root_pad(),
-          histo = this.histo,
+          histo = this.GetHisto(),
           xmin = this.xmin, xmax = this.xmax,
           ymin = this.ymin, ymax = this.ymax,
           zmin = this.zmin, zmax = this.zmax,
@@ -420,13 +496,13 @@
       // factor 1.1 used in ROOT for lego plots
       if ((opts.zmult !== undefined) && !z_zoomed) zmax *= opts.zmult;
 
-      this.TestAxisVisibility = JSROOT.Painter.HPainter_TestAxisVisibility;
+      this.TestAxisVisibility = HPainter_TestAxisVisibility;
 
       if (pad && pad.fLogx) {
          if (xmax <= 0) xmax = 1.;
          if ((xmin <= 0) && (this.nbinsx > 0))
             for (var i=0;i<this.nbinsx;++i) {
-               xmin = Math.max(xmin, this.GetBinX(i));
+               xmin = Math.max(xmin, histo.fXaxis.GetBinLowEdge(i+1));
                if (xmin>0) break;
             }
          if (xmin <= 0) xmin = 1e-4*xmax;
@@ -435,7 +511,7 @@
       } else {
          this.grx = d3.scaleLinear();
          if (histo && histo.fXaxis.fLabels) this.x_kind = "labels";
-                                       else this.x_kind = "lin";
+                                       else this.x_kind = "normal";
       }
 
       this.logx = (this.x_kind === "log");
@@ -450,7 +526,7 @@
          if (ymax <= 0) ymax = 1.;
          if ((ymin <= 0) && (this.nbinsy>0))
             for (var i=0;i<this.nbinsy;++i) {
-               ymin = Math.max(ymin, this.GetBinY(i));
+               ymin = Math.max(ymin, histo.fYaxis.GetBinLowEdge(i+1));
                if (ymin>0) break;
             }
 
@@ -460,7 +536,7 @@
       } else {
          this.gry = d3.scaleLinear();
          if (histo && histo.fYaxis.fLabels) this.y_kind = "labels";
-                                       else this.y_kind = "lin";
+                                       else this.y_kind = "normal";
       }
 
       this.logy = (this.y_kind === "log");
@@ -478,38 +554,42 @@
          this.z_kind = "log";
       } else {
          this.grz = d3.scaleLinear();
-         this.z_kind = "lin";
+         this.z_kind = "normal";
+         if ((this.Dimension()==3) && histo && histo.fZaxis.fLabels) this.z_kind = "labels";
       }
 
       this.logz = (this.z_kind === "log");
 
       this.grz.domain([ zmin, zmax ]).range([ grminz, grmaxz ]);
 
+      this.SetRootPadRange(pad, true); // set some coordinates typical for 3D projections in ROOT
+
       this.z_handle = new JSROOT.TAxisPainter(histo ? histo.fZaxis : null);
       this.z_handle.SetAxisConfig("zaxis", this.z_kind, this.grz, this.zmin, this.zmax, zmin, zmax);
       this.z_handle.CreateFormatFuncs();
       this.scale_zmin = zmin; this.scale_zmax = zmax;
 
+      this.x_handle.debug = true;
+
       var textMaterial = new THREE.MeshBasicMaterial({ color: 0x000000 }),
           lineMaterial = new THREE.LineBasicMaterial({ color: 0x000000 }),
           ticklen = textsize*0.5, text, tick, lbls = [], text_scale = 1,
-          xticks = this.x_handle.CreateTicks(),
-          yticks = this.y_handle.CreateTicks(),
-          zticks = this.z_handle.CreateTicks();
-
+          xticks = this.x_handle.CreateTicks(false, true),
+          yticks = this.y_handle.CreateTicks(false, true),
+          zticks = this.z_handle.CreateTicks(false, true);
 
       // main element, where all axis elements are placed
       var top = new THREE.Object3D();
       top.axis_draw = true; // mark element as axis drawing
       toplevel.add(top);
 
-      var ticks = [], maxtextheight = 0;
+      var ticks = [], maxtextheight = 0, xaxis = histo ? histo.fXaxis : null;
 
       while (xticks.next()) {
-         var grx = xticks.grpos;
-         var is_major = (xticks.kind===1);
-         var lbl = this.x_handle.format(xticks.tick, true, true);
-         if (xticks.last_major()) lbl = "x"; else
+         var grx = xticks.grpos,
+            is_major = (xticks.kind===1),
+            lbl = this.x_handle.format(xticks.tick, true, true);
+         if (xticks.last_major()) { if (!xaxis || !xaxis.fTitle) lbl = "x"; } else
             if (lbl === null) { is_major = false; lbl = ""; }
 
          if (is_major && lbl && (lbl.length>0)) {
@@ -517,7 +597,9 @@
             text3d.computeBoundingBox();
             var draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
                 draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
-            text3d.translate(-draw_width/2, 0, 0);
+            text3d.center = true; // place central
+
+            // text3d.translate(-draw_width/2, 0, 0);
 
             maxtextheight = Math.max(maxtextheight, draw_height);
 
@@ -535,25 +617,14 @@
          ticks.push(grx, 0, 0, grx, (is_major ? -ticklen : -ticklen * 0.6), 0);
       }
 
-/*
-      var ggg1 = new THREE.Geometry(), ggg2 = new THREE.Geometry();
-
-      lbls.forEach(function(lbl) {
-         var m = new THREE.Matrix4();
-         // matrix to swap y and z scales and shift along z to its position
-         m.set(text_scale, 0,           0,  lbl.grx,
-               0,          text_scale,  0,  -maxtextheight*text_scale - 1.5*ticklen,
-               0,          0,           1,  0);
-
-         ggg1.merge(lbl, m);
-
-         m.set(-text_scale, 0,           0, lbl.grx,
-               0,           text_scale,  0, -maxtextheight*text_scale - 1.5*ticklen,
-               0,           0,           1, 0);
-
-         ggg2.merge(lbl, m);
-      });
-*/
+      if (xaxis && xaxis.fTitle) {
+         var text3d = new THREE.TextGeometry(xaxis.fTitle, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
+         text3d.computeBoundingBox();
+         text3d.center = (xaxis.TestBit(JSROOT.EAxisBits.kCenterTitle));
+         text3d.gry = 2; // factor 2 shift
+         text3d.grx = (grminx + grmaxx)/2; // default position for centered title
+         lbls.push(text3d);
+      }
 
       this.Get3DZoomCoord = function(point, kind) {
          // return axis coordinate from intersection point with axis geometry
@@ -673,10 +744,12 @@
       xcont.add(xtickslines);
 
       lbls.forEach(function(lbl) {
-         var m = new THREE.Matrix4();
+         var w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+             posx = lbl.center ? lbl.grx - w/2 : grmaxx - w,
+             m = new THREE.Matrix4();
          // matrix to swap y and z scales and shift along z to its position
-         m.set(text_scale, 0,           0,  lbl.grx,
-               0,          text_scale,  0,  -maxtextheight*text_scale - 1.5*ticklen,
+         m.set(text_scale, 0,           0,  posx,
+               0,          text_scale,  0,  (-maxtextheight*text_scale - 1.5*ticklen) * (lbl.gry || 1),
                0,          0,           1,  0,
                0,          0,           0,  1);
 
@@ -684,8 +757,6 @@
          mesh.applyMatrix(m);
          xcont.add(mesh);
       });
-
-      // xcont.add(new THREE.Mesh(ggg1, textMaterial));
 
       if (opts.zoom) xcont.add(CreateZoomMesh("x", this.size_xy3d));
       top.add(xcont);
@@ -695,10 +766,13 @@
       xcont.rotation.x = 3/4*Math.PI;
       xcont.add(new THREE.LineSegments(xtickslines.geometry, lineMaterial));
       lbls.forEach(function(lbl) {
-         var m = new THREE.Matrix4();
+
+         var w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+             posx = lbl.center ? lbl.grx + w/2 : grmaxx,
+             m = new THREE.Matrix4();
          // matrix to swap y and z scales and shift along z to its position
-         m.set(-text_scale, 0,           0, lbl.grx,
-               0,           text_scale,  0, -maxtextheight*text_scale - 1.5*ticklen,
+         m.set(-text_scale, 0,           0, posx,
+               0,           text_scale,  0, (-maxtextheight*text_scale - 1.5*ticklen) * (lbl.gry || 1),
                0,           0,           -1, 0,
                0,            0,           0, 1);
          var mesh = new THREE.Mesh(lbl, textMaterial);
@@ -713,11 +787,13 @@
 
       lbls = []; text_scale = 1; maxtextheight = 0; ticks = [];
 
+      var yaxis = histo ? histo.fYaxis : null
+
       while (yticks.next()) {
-         var gry = yticks.grpos;
-         var is_major = (yticks.kind===1);
-         var lbl = this.y_handle.format(yticks.tick, true, true);
-         if (yticks.last_major()) lbl = "y"; else
+         var gry = yticks.grpos,
+             is_major = (yticks.kind===1),
+             lbl = this.y_handle.format(yticks.tick, true, true);
+         if (yticks.last_major()) { if (!yaxis || !yaxis.fTitle) lbl = "y"; }  else
             if (lbl === null) { is_major = false; lbl = ""; }
 
          if (is_major) {
@@ -725,7 +801,8 @@
             text3d.computeBoundingBox();
             var draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
                 draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
-            text3d.translate(-draw_width/2, 0, 0);
+            // text3d.translate(-draw_width/2, 0, 0);
+            text3d.center = true;
 
             maxtextheight = Math.max(maxtextheight, draw_height);
 
@@ -742,44 +819,31 @@
          ticks.push(0,gry,0, (is_major ? -ticklen : -ticklen*0.6), gry, 0);
       }
 
-/*
-      var ggg1 = new THREE.Geometry(), ggg2 = new THREE.Geometry();
-
-      lbls.forEach(function(lbl) {
-         var m = new THREE.Matrix4();
-         m.set(0, text_scale,  0, -maxtextheight*text_scale - 1.5*ticklen,
-               -text_scale,  0, 0, lbl.gry,
-               0, 0,  1, 0);
-
-         ggg1.merge(lbl, m);
-
-         m.set(0, text_scale,  0, -maxtextheight*text_scale - 1.5*ticklen,
-               text_scale,  0, 0, lbl.gry,
-               0, 0,  1, 0);
-
-         ggg2.merge(lbl, m);
-
-      });
-
-      ggg1 = new THREE.BufferGeometry().fromGeometry(ggg1);
-      ggg2 = new THREE.BufferGeometry().fromGeometry(ggg2);
-    */
+      if (yaxis && yaxis.fTitle) {
+         var text3d = new THREE.TextGeometry(yaxis.fTitle, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
+         text3d.computeBoundingBox();
+         text3d.center = yaxis.TestBit(JSROOT.EAxisBits.kCenterTitle);
+         text3d.grx = 2; // factor 2 shift
+         text3d.gry = (grminy + grmaxy)/2; // default position for centered title
+         lbls.push(text3d);
+      }
 
       if (!opts.use_y_for_z) {
-
-         var yticksline = JSROOT.Painter.createLineSegments( ticks, lineMaterial );
-
-         var ycont = new THREE.Object3D();
+         var yticksline = JSROOT.Painter.createLineSegments(ticks, lineMaterial),
+             ycont = new THREE.Object3D();
          ycont.position.set(grminx, 0, grminz);
          ycont.rotation.y = -1/4*Math.PI;
          ycont.add(yticksline);
          //ycont.add(new THREE.Mesh(ggg1, textMaterial));
 
          lbls.forEach(function(lbl) {
-            var m = new THREE.Matrix4();
+
+            var w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+                posy = lbl.center ? lbl.gry + w/2 : grmaxy,
+                m = new THREE.Matrix4();
             // matrix to swap y and z scales and shift along z to its position
-            m.set(0, text_scale,  0, -maxtextheight*text_scale - 1.5*ticklen,
-                  -text_scale,  0, 0, lbl.gry,
+            m.set(0, text_scale,  0, (-maxtextheight*text_scale - 1.5*ticklen)*(lbl.grx || 1),
+                  -text_scale,  0, 0, posy,
                   0, 0,  1, 0,
                   0, 0,  0, 1);
 
@@ -798,9 +862,11 @@
          ycont.add(new THREE.LineSegments(yticksline.geometry, lineMaterial));
          //ycont.add(new THREE.Mesh(ggg2, textMaterial));
          lbls.forEach(function(lbl) {
-            var m = new THREE.Matrix4();
-            m.set(0, text_scale, 0,  -maxtextheight*text_scale - 1.5*ticklen,
-                  text_scale, 0, 0,  lbl.gry,
+            var w = lbl.boundingBox.max.x - lbl.boundingBox.min.x,
+                posy = lbl.center ? lbl.gry - w/2 : grmaxy - w,
+                m = new THREE.Matrix4();
+            m.set(0, text_scale, 0,  (-maxtextheight*text_scale - 1.5*ticklen)*(lbl.grx || 1),
+                  text_scale, 0, 0,  posy,
                   0,         0, -1,  0,
                   0, 0, 0, 1);
 
@@ -818,20 +884,21 @@
 
       ticks = []; // just array, will be used for the buffer geometry
 
-      var zgridx = null, zgridy = null, lastmajorz = null;
+      var zgridx = null, zgridy = null, lastmajorz = null,
+          zaxis = histo ? histo.fZaxis : null, maxzlblwidth = 0;
+
       if (this.size_z3d) {
          zgridx = []; zgridy = [];
       }
 
       while (zticks.next()) {
-         var grz = zticks.grpos;
-         var is_major = zticks.kind == 1;
-
-         var lbl = this.z_handle.format(zticks.tick, true, true);
+         var grz = zticks.grpos,
+            is_major = (zticks.kind == 1),
+            lbl = this.z_handle.format(zticks.tick, true, true);
          if (lbl === null) { is_major = false; lbl = ""; }
 
-         if (is_major && lbl && (lbl.length > 0)) {
-            var text3d = new THREE.TextGeometry(lbl, { font: JSROOT.threejs_font_helvetiker_regular, size : textsize, height : 0, curveSegments : 5 });
+         if (is_major && lbl) {
+            var text3d = new THREE.TextGeometry(lbl, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
             text3d.computeBoundingBox();
             var draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
                 draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y;
@@ -842,26 +909,26 @@
             if ((lastmajorz !== null) && (draw_height>0))
                text_scale = Math.min(text_scale, 0.9*(grz - lastmajorz)/draw_height);
 
+            maxzlblwidth = Math.max(maxzlblwidth, draw_width);
+
             lastmajorz = grz;
          }
 
          // create grid
          if (zgridx && is_major)
-            zgridx.push(grminx, 0, grz, grmaxx, 0, grz);
+            zgridx.push(grminx,0,grz, grmaxx,0,grz);
 
          if (zgridy && is_major)
-            zgridy.push(0, grminy, grz, 0, grmaxy, grz);
+            zgridy.push(0,grminy,grz, 0,grmaxy,grz);
 
          ticks.push(0, 0, grz, (is_major ? ticklen : ticklen * 0.6), 0, grz);
       }
 
       if (zgridx && (zgridx.length > 0)) {
 
-         // var material = new THREE.LineBasicMaterial({ color: 0x0, linewidth: 0.5 });
-         var material = new THREE.LineDashedMaterial( { color: 0x0, dashSize: 2, gapSize: 2 } );
+         var material = new THREE.LineDashedMaterial({ color: 0x0, dashSize: 2, gapSize: 2 });
 
          var lines1 = JSROOT.Painter.createLineSegments(zgridx, material);
-
          lines1.position.set(0,grmaxy,0);
          lines1.grid = 2; // mark as grid
          lines1.visible = false;
@@ -876,11 +943,9 @@
 
       if (zgridy && (zgridy.length > 0)) {
 
-         // var material = new THREE.LineBasicMaterial({ color: 0x0, linewidth: 0.5 });
-         var material = new THREE.LineDashedMaterial( { color: 0x0, dashSize: 2, gapSize: 2  } );
+         var material = new THREE.LineDashedMaterial({ color: 0x0, dashSize: 2, gapSize: 2 });
 
-         var lines1 = JSROOT.Painter.createLineSegments( zgridy, material );
-
+         var lines1 = JSROOT.Painter.createLineSegments(zgridy, material);
          lines1.position.set(grmaxx,0, 0);
          lines1.grid = 3; // mark as grid
          lines1.visible = false;
@@ -893,27 +958,9 @@
          top.add(lines2);
       }
 
-
-/*      var ggg = new THREE.Geometry();
-
-      lbls.forEach(function(lbl) {
-         var m = new THREE.Matrix4();
-         // matrix to swap y and z scales and shift along z to its position
-         m.set(-text_scale,          0,  0, 2*ticklen,
-                        0,          0,  1, 0,
-                        0, text_scale,  0, lbl.grz);
-
-         ggg.merge(lbl, m);
-      });
-
-      ggg = new THREE.BufferGeometry().fromGeometry(ggg);
-*/
-
-
       var zcont = [], zticksline = JSROOT.Painter.createLineSegments( ticks, lineMaterial );
       for (var n=0;n<4;++n) {
          zcont.push(new THREE.Object3D());
-         //zcont[n].add(new THREE.Mesh(ggg, textMaterial));
 
          lbls.forEach(function(lbl) {
             var m = new THREE.Matrix4();
@@ -925,6 +972,24 @@
             mesh.applyMatrix(m);
             zcont[n].add(mesh);
          });
+
+         if (zaxis && zaxis.fTitle) {
+            var text3d = new THREE.TextGeometry(zaxis.fTitle, { font: JSROOT.threejs_font_helvetiker_regular, size: textsize, height: 0, curveSegments: 5 });
+            text3d.computeBoundingBox();
+            var draw_width = text3d.boundingBox.max.x - text3d.boundingBox.min.x,
+                draw_height = text3d.boundingBox.max.y - text3d.boundingBox.min.y,
+                posz = zaxis.TestBit(JSROOT.EAxisBits.kCenterTitle) ? (grmaxz + grminz - draw_width)/2 : grmaxz - draw_width;
+
+            text3d.rotateZ(Math.PI/2);
+
+            var m = new THREE.Matrix4();
+            m.set(-text_scale,          0,  0, 3*ticklen + maxzlblwidth,
+                            0,          0,  1, 0,
+                            0, text_scale,  0, posz);
+            var mesh = new THREE.Mesh(text3d, textMaterial);
+            mesh.applyMatrix(m);
+            zcont[n].add(mesh);
+         }
 
          zcont[n].add(n==0 ? zticksline : new THREE.LineSegments(zticksline.geometry, lineMaterial));
          if (opts.zoom) zcont[n].add(CreateZoomMesh("z", this.size_z3d, opts.use_y_for_z));
@@ -949,7 +1014,7 @@
       // for TAxis3D do not show final cube
       if (this.size_z3d === 0) return;
 
-      var linex_geom = JSROOT.Painter.createLineSegments( [grminx, 0, 0, grmaxx, 0, 0], lineMaterial, null, true);
+      var linex_geom = JSROOT.Painter.createLineSegments([grminx,0,0, grmaxx,0,0], lineMaterial, null, true);
       for(var n=0;n<2;++n) {
          var line = new THREE.LineSegments(linex_geom, lineMaterial);
          line.position.set(0, grminy, (n===0) ? grminz : grmaxz);
@@ -962,7 +1027,7 @@
          top.add(line);
       }
 
-      var liney_geom = JSROOT.Painter.createLineSegments( [0, grminy,0, 0, grmaxy, 0], lineMaterial, null, true );
+      var liney_geom = JSROOT.Painter.createLineSegments([0,grminy,0, 0,grmaxy,0], lineMaterial, null, true);
       for(var n=0;n<2;++n) {
          var line = new THREE.LineSegments(liney_geom, lineMaterial);
          line.position.set(grminx, 0, (n===0) ? grminz : grmaxz);
@@ -975,7 +1040,7 @@
          top.add(line);
       }
 
-      var linez_geom = JSROOT.Painter.createLineSegments( [0, 0, grminz, 0, 0, grmaxz], lineMaterial, null, true );
+      var linez_geom = JSROOT.Painter.createLineSegments([0,0,grminz, 0,0,grmaxz], lineMaterial, null, true);
       for(var n=0;n<4;++n) {
          var line = new THREE.LineSegments(linez_geom, lineMaterial);
          line.zboxid = zcont[n].zid;
@@ -1018,7 +1083,7 @@
           i, j, x1, x2, y1, y2, binz1, binz2, reduced, nobottom, notop,
           pthis = this,
           histo = this.GetObject(),
-          basehisto = histo ? histo['$baseh'] : null,
+          basehisto = histo ? histo.$baseh : null,
           split_faces = (this.options.Lego === 11) || (this.options.Lego === 13); // split each layer on two parts
 
       if ((i1 >= i2) || (j1 >= j2)) return;
@@ -1201,21 +1266,21 @@
             if ((intersect.index<0) || (intersect.index >= this.bins_index.length)) return null;
             var p = this.painter,
                 main = p.main_painter(),
-                hist = p.GetObject(),
+                histo = p.GetHisto(),
                 tip = p.Get3DToolTip( this.bins_index[intersect.index] );
 
-            tip.x1 = Math.max(-main.size_xy3d, main.grx(p.GetBinX(tip.ix-1)));
-            tip.x2 = Math.min(main.size_xy3d, main.grx(p.GetBinX(tip.ix)));
+            tip.x1 = Math.max(-main.size_xy3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix)));
+            tip.x2 = Math.min(main.size_xy3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix+1)));
             if (p.Dimension()===1) {
                tip.y1 = main.gry(0);
                tip.y2 = main.gry(1);
             } else {
-               tip.y1 = Math.max(-main.size_xy3d, main.gry(p.GetBinY(tip.iy-1)));
-               tip.y2 = Math.min(main.size_xy3d, main.gry(p.GetBinY(tip.iy)));
+               tip.y1 = Math.max(-main.size_xy3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy)));
+               tip.y2 = Math.min(main.size_xy3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy+1)));
             }
 
             var binz1 = this.baseline, binz2 = tip.value;
-            if (hist['$baseh']) binz1 = hist['$baseh'].getBinContent(tip.ix, tip.iy);
+            if (histo['$baseh']) binz1 = histo['$baseh'].getBinContent(tip.ix, tip.iy);
             if (binz2<binz1) { var v = binz1; binz1 = binz2; binz2 = v; }
 
             tip.z1 = main.grz(Math.max(this.zmin,binz1));
@@ -1385,7 +1450,7 @@
 
          main.adjustCameraPosition();
 
-         main.TestAxisVisibility = JSROOT.Painter.HPainter_TestAxisVisibility;
+         main.TestAxisVisibility = HPainter_TestAxisVisibility;
 
          main.Render3D();
       }
@@ -1412,12 +1477,12 @@
 
          this.DeleteAtt();
 
+         this.ScanContent(true); // may be required for axis drawings
+
          if (main === this) {
             this.Create3DScene();
             this.DrawXYZ(this.toplevel, { use_y_for_z: true, zmult: 1.1, zoom: JSROOT.gStyle.Zooming });
          }
-
-         this.ScanContent(true);
 
          this.Draw3DBins();
 
@@ -1496,14 +1561,11 @@
    JSROOT.TH2Painter.prototype.DrawContour3D = function(realz) {
       // for contour plots one requires handle with full range
       var main = this.main_painter(),
-          handle = this.PrepareColorDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 });
-
-      // get levels
-      var histo = this.GetObject(),
+          handle = this.PrepareColorDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 }),
+          histo = this.GetObject(), // get levels
           levels = this.GetContour(), // init contour if not exists
           palette = this.GetPalette(),
-          painter = this,
-          layerz = 2*main.size_z3d;
+          layerz = 2*main.size_z3d, pnts = [];
 
       this.BuildContour(handle, levels, palette,
          function(colindx,xp,yp,iminus,iplus,ilevel) {
@@ -1515,23 +1577,15 @@
                 if ((layerz < 0) || (layerz > 2*main.size_z3d)) return;
              }
 
-             var linepos = new Float32Array((iplus-iminus+1)*3), indx = 0;
-             for (var i=iminus;i<=iplus;++i) {
-                linepos[indx] = xp[i];
-                linepos[indx+1] = yp[i];
-                linepos[indx+2] = layerz;
-                indx+=3;
+             for (var i=iminus;i<iplus;++i) {
+                pnts.push(xp[i], yp[i], layerz);
+                pnts.push(xp[i+1], yp[i+1], layerz);
              }
-
-             var geometry = new THREE.BufferGeometry();
-             geometry.addAttribute( 'position', new THREE.BufferAttribute( linepos, 3 ) );
-
-             var material = new THREE.LineBasicMaterial({ color: new THREE.Color(main.get_color(histo.fLineColor)) });
-
-             var line = new THREE.Line(geometry, material);
-             main.toplevel.add(line);
          }
       );
+
+      var lines = JSROOT.Painter.createLineSegments(pnts, JSROOT.Painter.Create3DLineMaterial(this, histo));
+      main.toplevel.add(lines);
    }
 
    JSROOT.TH2Painter.prototype.DrawSurf = function() {
@@ -1857,7 +1911,7 @@
          var material;
 
          if (this.options.Surf === 1)
-            material = new THREE.LineDashedMaterial( { color: 0x0, dashSize: 2, gapSize: 2  } );
+            material = new THREE.LineDashedMaterial( { color: 0x0, dashSize: 2, gapSize: 2 } );
          else
             material = new THREE.LineBasicMaterial({ color: new THREE.Color(this.get_color(histo.fLineColor)) });
 
@@ -2011,14 +2065,14 @@
        line.tooltip = function(intersect) {
           var pos = Math.floor(intersect.index / 6);
           if ((pos<0) || (pos >= this.intersect_index.length)) return null;
-          var p = this.painter,
+          var p = this.painter, histo = this.GetHisto(),
               main = p.main_painter(),
               tip = p.Get3DToolTip(this.intersect_index[pos]);
 
-          tip.x1 = Math.max(-main.size_xy3d, main.grx(p.GetBinX(tip.ix-1)));
-          tip.x2 = Math.min(main.size_xy3d, main.grx(p.GetBinX(tip.ix)));
-          tip.y1 = Math.max(-main.size_xy3d, main.gry(p.GetBinY(tip.iy-1)));
-          tip.y2 = Math.min(main.size_xy3d, main.gry(p.GetBinY(tip.iy)));
+          tip.x1 = Math.max(-main.size_xy3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix)));
+          tip.x2 = Math.min(main.size_xy3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix+1)));
+          tip.y1 = Math.max(-main.size_xy3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy)));
+          tip.y2 = Math.min(main.size_xy3d, main.gry(histo.fXaxis.GetBinLowEdge(tip.iy+1)));
 
           tip.z1 = main.grz(tip.value-tip.error < this.zmin ? this.zmin : tip.value-tip.error);
           tip.z2 = main.grz(tip.value+tip.error > this.zmax ? this.zmax : tip.value+tip.error);
@@ -2028,7 +2082,7 @@
           return tip;
        }
 
-       this.toplevel.add(line);
+       main.toplevel.add(line);
    }
 
    JSROOT.TH2Painter.prototype.DrawPolyLego = function() {
@@ -2275,7 +2329,7 @@
    }
 
    TH3Painter.prototype.CountStat = function() {
-      var histo = this.GetObject(),
+      var histo = this.GetHisto(), xaxis = histo.fXaxis, yaxis = histo.fYaxis, zaxis = histo.fZaxis,
           stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumz1 = 0, stat_sumx2 = 0, stat_sumy2 = 0, stat_sumz2 = 0,
           i1 = this.GetSelectIndex("x", "left"),
@@ -2284,22 +2338,22 @@
           j2 = this.GetSelectIndex("y", "right"),
           k1 = this.GetSelectIndex("z", "left"),
           k2 = this.GetSelectIndex("z", "right"),
-          res = { entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0 },
+          res = { name: histo.fName, entries: 0, integral: 0, meanx: 0, meany: 0, meanz: 0, rmsx: 0, rmsy: 0, rmsz: 0 },
           xi, yi, zi, xx, xside, yy, yside, zz, zside, cont;
 
       for (xi = 0; xi < this.nbinsx+2; ++xi) {
 
-         xx = this.GetBinX(xi - 0.5);
+         xx = xaxis.GetBinCoord(xi - 0.5);
          xside = (xi < i1) ? 0 : (xi > i2 ? 2 : 1);
 
          for (yi = 0; yi < this.nbinsy+2; ++yi) {
 
-            yy = this.GetBinY(yi - 0.5);
+            yy = yaxis.GetBinCoord(yi - 0.5);
             yside = (yi < j1) ? 0 : (yi > j2 ? 2 : 1);
 
             for (zi = 0; zi < this.nbinsz+2; ++zi) {
 
-               zz = this.GetBinZ(zi - 0.5);
+               zz = zaxis.GetBinCoord(zi - 0.5);
                zside = (zi < k1) ? 0 : (zi > k2 ? 2 : 1);
 
                cont = histo.getBinContent(xi, yi, zi);
@@ -2345,10 +2399,11 @@
    }
 
    TH3Painter.prototype.FillStatistic = function(stat, dostat, dofit) {
-      if (this.GetObject()===null) return false;
 
-      var pave = stat.GetObject(),
-          data = this.CountStat(),
+      // no need to refill statistic if histogram is dummy
+      if (this.IgnoreStatsFill()) return false;
+
+      var data = this.CountStat(),
           print_name = dostat % 10,
           print_entries = Math.floor(dostat / 10) % 10,
           print_mean = Math.floor(dostat / 100) % 10,
@@ -2359,60 +2414,54 @@
       //var print_skew = Math.floor(dostat / 10000000) % 10;
       //var print_kurt = Math.floor(dostat / 100000000) % 10;
 
+      stat.ClearPave();
+
       if (print_name > 0)
-         pave.AddText(this.GetObject().fName);
+         stat.AddText(data.name);
 
       if (print_entries > 0)
-         pave.AddText("Entries = " + stat.Format(data.entries,"entries"));
+         stat.AddText("Entries = " + stat.Format(data.entries,"entries"));
 
       if (print_mean > 0) {
-         pave.AddText("Mean x = " + stat.Format(data.meanx));
-         pave.AddText("Mean y = " + stat.Format(data.meany));
-         pave.AddText("Mean z = " + stat.Format(data.meanz));
+         stat.AddText("Mean x = " + stat.Format(data.meanx));
+         stat.AddText("Mean y = " + stat.Format(data.meany));
+         stat.AddText("Mean z = " + stat.Format(data.meanz));
       }
 
       if (print_rms > 0) {
-         pave.AddText("Std Dev x = " + stat.Format(data.rmsx));
-         pave.AddText("Std Dev y = " + stat.Format(data.rmsy));
-         pave.AddText("Std Dev z = " + stat.Format(data.rmsz));
+         stat.AddText("Std Dev x = " + stat.Format(data.rmsx));
+         stat.AddText("Std Dev y = " + stat.Format(data.rmsy));
+         stat.AddText("Std Dev z = " + stat.Format(data.rmsz));
       }
 
       if (print_integral > 0) {
-         pave.AddText("Integral = " + stat.Format(data.integral,"entries"));
+         stat.AddText("Integral = " + stat.Format(data.integral,"entries"));
       }
 
-      // adjust the size of the stats box with the number of lines
-
-      var nlines = pave.fLines.arr.length,
-          stath = nlines * JSROOT.gStyle.StatFontSize;
-      if (stath <= 0 || 3 == (JSROOT.gStyle.StatFont % 10)) {
-         stath = 0.25 * nlines * JSROOT.gStyle.StatH;
-         pave.fY1NDC = 0.93 - stath;
-         pave.fY2NDC = 0.93;
-      }
+      if (dofit) stat.FillFunctionStat(this.FindFunction('TF1'), dofit);
 
       return true;
    }
 
    TH3Painter.prototype.GetBinTips = function (ix, iy, iz) {
-      var lines = [], pmain = this.main_painter();
+      var lines = [], pmain = this.main_painter(), histo = this.GetHisto();
 
       lines.push(this.GetTipName());
 
       if (pmain.x_kind == 'labels')
-         lines.push("x = " + pmain.AxisAsText("x", this.GetBinX(ix)) + "  xbin=" + (ix+1));
+         lines.push("x = " + pmain.AxisAsText("x", histo.fXaxis.GetBinLowEdge(ix+1)) + "  xbin=" + (ix+1));
       else
-         lines.push("x = [" + pmain.AxisAsText("x", this.GetBinX(ix)) + ", " + pmain.AxisAsText("x", this.GetBinX(ix+1)) + ")   xbin=" + (ix+1));
+         lines.push("x = [" + pmain.AxisAsText("x", histo.fXaxis.GetBinLowEdge(ix+1)) + ", " + pmain.AxisAsText("x", histo.fXaxis.GetBinLowEdge(ix+2)) + ")   xbin=" + (ix+1));
 
       if (pmain.y_kind == 'labels')
-         lines.push("y = " + pmain.AxisAsText("y", this.GetBinY(iy))  + "  ybin=" + (iy+1));
+         lines.push("y = " + pmain.AxisAsText("y", histo.fYaxis.GetBinLowEdge(iy+1))  + "  ybin=" + (iy+1));
       else
-         lines.push("y = [" + pmain.AxisAsText("y", this.GetBinY(iy)) + ", " + pmain.AxisAsText("y", this.GetBinY(iy+1)) + ")  ybin=" + (iy+1));
+         lines.push("y = [" + pmain.AxisAsText("y", histo.fYaxis.GetBinLowEdge(iy+1)) + ", " + pmain.AxisAsText("y", histo.fYaxis.GetBinLowEdge(iy+2)) + ")  ybin=" + (iy+1));
 
       if (pmain.z_kind == 'labels')
-         lines.push("z = " + pmain.AxisAsText("z", this.GetBinZ(iz))  + "  zbin=" + (iz+1));
+         lines.push("z = " + pmain.AxisAsText("z", histo.fZaxis.GetBinLowEdge(iz+1))  + "  zbin=" + (iz+1));
       else
-         lines.push("z = [" + pmain.AxisAsText("z", this.GetBinZ(iz)) + ", " + pmain.AxisAsText("z", this.GetBinZ(iz+1)) + ")  zbin=" + (iz+1));
+         lines.push("z = [" + pmain.AxisAsText("z", histo.fZaxis.GetBinLowEdge(iz+1)) + ", " + pmain.AxisAsText("z", histo.fZaxis.GetBinLowEdge(iz+2)) + ")  zbin=" + (iz+1));
 
       var binz = this.GetObject().getBinContent(ix+1, iy+1, iz+1);
       if (binz === Math.round(binz))
@@ -2468,9 +2517,9 @@
                var num = Math.round(bin_content*coef);
 
                for (var n=0;n<num;++n) {
-                  var binx = this.GetBinX(i+Math.random()),
-                      biny = this.GetBinY(j+Math.random()),
-                      binz = this.GetBinZ(k+Math.random());
+                  var binx = histo.fXaxis.GetBinCoord(i+Math.random()),
+                      biny = histo.fYaxis.GetBinCoord(j+Math.random()),
+                      binz = histo.fZaxis.GetBinCoord(k+Math.random());
 
                   // remember bin index for tooltip
                   bins[nbin++] = histo.getBin(i+1, j+1, k+1);
@@ -2492,15 +2541,15 @@
          var indx = Math.floor(intersect.index / this.nvertex);
          if ((indx<0) || (indx >= this.bins.length)) return null;
 
-         var p = this.painter,
+         var p = this.painter, histo = p.GetHisto(),
              tip = p.Get3DToolTip(this.bins[indx]);
 
-         tip.x1 = p.grx(p.GetBinX(tip.ix-1));
-         tip.x2 = p.grx(p.GetBinX(tip.ix));
-         tip.y1 = p.gry(p.GetBinY(tip.iy-1));
-         tip.y2 = p.gry(p.GetBinY(tip.iy));
-         tip.z1 = p.grz(p.GetBinZ(tip.iz-1));
-         tip.z2 = p.grz(p.GetBinZ(tip.iz));
+         tip.x1 = p.grx(histo.fXaxis.GetBinLowEdge(tip.ix));
+         tip.x2 = p.grx(histo.fXaxis.GetBinLowEdge(tip.ix+1));
+         tip.y1 = p.gry(histo.fYaxis.GetBinLowEdge(tip.iy));
+         tip.y2 = p.gry(histo.fYaxis.GetBinLowEdge(tip.iy+1));
+         tip.z1 = p.grz(histo.fZaxis.GetBinLowEdge(tip.iz));
+         tip.z2 = p.grz(histo.fZaxis.GetBinLowEdge(tip.iz+1));
          tip.color = this.tip_color;
          tip.opacity = 0.3;
 
@@ -2520,6 +2569,7 @@
 
       var rootcolor = this.GetObject().fFillColor,
           fillcolor = this.get_color(rootcolor),
+          main = this.main_painter(),
           buffer_size = 0, use_lambert = false,
           use_helper = false, use_colors = false, use_opacity = 1, use_scale = true,
           single_bin_verts, single_bin_norms,
@@ -2597,7 +2647,7 @@
       if (use_scale)
          use_scale = (this.gminbin || this.gmaxbin) ? 1 / Math.max(Math.abs(this.gminbin), Math.abs(this.gmaxbin)) : 1;
 
-      var histo = this.GetObject(),
+      var histo = this.GetHisto(),
           i1 = this.GetSelectIndex("x", "left", 0.5),
           i2 = this.GetSelectIndex("x", "right", 0),
           j1 = this.GetSelectIndex("y", "left", 0.5),
@@ -2608,9 +2658,9 @@
 
       if ((i2<=i1) || (j2<=j1) || (k2<=k1)) return;
 
-      var scalex = (this.grx(this.GetBinX(i2)) - this.grx(this.GetBinX(i1))) / (i2-i1),
-          scaley = (this.gry(this.GetBinY(j2)) - this.gry(this.GetBinY(j1))) / (j2-j1),
-          scalez = (this.grz(this.GetBinZ(k2)) - this.grz(this.GetBinZ(k1))) / (k2-k1);
+      var scalex = (this.grx(histo.fXaxis.GetBinLowEdge(i2+1)) - this.grx(histo.fXaxis.GetBinLowEdge(i1+1))) / (i2-i1),
+          scaley = (this.gry(histo.fYaxis.GetBinLowEdge(j2+1)) - this.gry(histo.fYaxis.GetBinLowEdge(j1+1))) / (j2-j1),
+          scalez = (this.grz(histo.fZaxis.GetBinLowEdge(k2+1)) - this.grz(histo.fZaxis.GetBinLowEdge(k1+1))) / (k2-k1);
 
       var nbins = 0, i, j, k, wei, bin_content, cols_size = [], num_colors = 0, cols_sequence = [];
 
@@ -2683,9 +2733,9 @@
       var binx, grx, biny, gry, binz, grz;
 
       for (i = i1; i < i2; ++i) {
-         binx = this.GetBinX(i+0.5); grx = this.grx(binx);
+         binx = histo.fXaxis.GetBinCenter(i+1); grx = this.grx(binx);
          for (j = j1; j < j2; ++j) {
-            biny = this.GetBinY(j+0.5); gry = this.gry(biny);
+            biny = histo.fYaxis.GetBinCenter(j+1); gry = this.gry(biny);
             for (k = k1; k < k2; ++k) {
                bin_content = histo.getBinContent(i+1, j+1, k+1);
                if ((bin_content===0) || (bin_content < this.gminbin)) continue;
@@ -2702,7 +2752,7 @@
 
                nbins = cols_nbins[nseq];
 
-               binz = this.GetBinZ(k+0.5); grz = this.grz(binz);
+               binz = histo.fZaxis.GetBinCenter(k+1); grz = this.grz(binz);
 
                // remember bin index for tooltip
                bin_tooltips[nseq][nbins] = histo.getBin(i+1, j+1, k+1);
@@ -2781,11 +2831,11 @@
             var indx = Math.floor(intersect.index / this.bins_faces);
             if ((indx<0) || (indx >= this.bins.length)) return null;
 
-            var p = this.painter,
+            var p = this.painter, histo = p.GetHisto(),
                 tip = p.Get3DToolTip(this.bins[indx]),
-                grx = p.grx(p.GetBinX(tip.ix-0.5)),
-                gry = p.gry(p.GetBinY(tip.iy-0.5)),
-                grz = p.grz(p.GetBinZ(tip.iz-0.5)),
+                grx = p.grx(histo.fXaxis.GetBinCoord(tip.ix-0.5)),
+                gry = p.gry(histo.fYaxis.GetBinCoord(tip.iy-0.5)),
+                grz = p.grz(histo.fZaxis.GetBinCoord(tip.iz-0.5)),
                 wei = this.use_scale ? Math.pow(Math.abs(tip.value*this.use_scale), 0.3333) : 1;
 
             tip.x1 = grx - this.scalex*wei; tip.x2 = grx + this.scalex*wei;
@@ -2797,7 +2847,7 @@
             return tip;
          }
 
-         this.toplevel.add(combined_bins);
+         main.toplevel.add(combined_bins);
 
          if (helper_kind[nseq] > 0) {
             var lcolor = this.get_color(this.GetObject().fLineColor),
@@ -2811,7 +2861,7 @@
                lines = JSROOT.Painter.createLineSegments( helper_positions[nseq], helper_material );
             }
 
-            this.toplevel.add(lines);
+            main.toplevel.add(lines);
          }
       }
    }
@@ -2845,14 +2895,9 @@
 
    TH3Painter.prototype.CanZoomIn = function(axis,min,max) {
       // check if it makes sense to zoom inside specified axis range
-
-      if ((axis=="x") && (this.GetIndexX(max,0.5) - this.GetIndexX(min,0) > 1)) return true;
-
-      if ((axis=="y") && (this.GetIndexY(max,0.5) - this.GetIndexY(min,0) > 1)) return true;
-
-      if ((axis=="z") && (this.GetIndexZ(max,0.5) - this.GetIndexZ(min,0) > 1)) return true;
-
-      return false;
+      var obj = this.GetHisto();
+      if (obj) obj = obj["f"+axis.toUpperCase()+"axis"];
+      return !obj || (obj.FindBin(max,0.5) - obj.FindBin(min,0) > 1);
    }
 
    TH3Painter.prototype.AutoZoom = function() {
@@ -2896,20 +2941,20 @@
       if ((kleft === kright-1) && (kleft > k1+1) && (kright < k2-1)) { kleft--; kright++; }
 
       if ((ileft > i1 || iright < i2) && (ileft < iright - 1)) {
-         xmin = this.GetBinX(ileft);
-         xmax = this.GetBinX(iright);
+         xmin = histo.fXaxis.GetBinLowEdge(ileft+1);
+         xmax = histo.fXaxis.GetBinLowEdge(iright+1);
          isany = true;
       }
 
       if ((jleft > j1 || jright < j2) && (jleft < jright - 1)) {
-         ymin = this.GetBinY(jleft);
-         ymax = this.GetBinY(jright);
+         ymin = histo.fYaxis.GetBinLowEdge(jleft+1);
+         ymax = histo.fYaxis.GetBinLowEdge(jright+1);
          isany = true;
       }
 
       if ((kleft > k1 || kright < k2) && (kleft < kright - 1)) {
-         zmin = this.GetBinZ(kleft);
-         zmax = this.GetBinZ(kright);
+         zmin = histo.fZaxis.GetBinLowEdge(kleft+1);
+         zmax = histo.fZaxis.GetBinLowEdge(kright+1);
          isany = true;
       }
 
@@ -2944,10 +2989,8 @@
 
       painter.Redraw();
 
-      if (JSROOT.gStyle.AutoStat && (painter.create_canvas || histo.$snapid)) {
-         var stats = painter.CreateStat(histo.$custom_stat);
-         if (stats) JSROOT.draw(painter.divid, stats, "");
-      }
+      var stats = painter.CreateStat(); // only when required
+      if (stats) JSROOT.draw(painter.divid, stats, "");
 
       painter.FillToolbar();
 
@@ -2965,11 +3008,11 @@
    TGraph2DPainter.prototype.DecodeOptions = function(opt) {
       var d = new JSROOT.DrawOptions(opt);
 
-      var res = { Color: d.check("COL"),
+      var res = { Color: d.check("COL"), Line: d.check("LINE"),
                   Error: d.check("ERR") && this.MatchObjectType("TGraph2DErrors"),
-                  Markers: d.check("P") };
+                  Circles: d.check("P0"), Markers: d.check("P") };
 
-      if (!res.Markers && !res.Error) res.Markers = true;
+      if (!res.Markers && !res.Error && !res.Circles && !res.Line) res.Markers = true;
       if (!res.Markers) res.Color = false;
 
       return res;
@@ -3043,20 +3086,34 @@
       var p = this.painter,
           grx = p.grx(this.graph.fX[indx]),
           gry = p.gry(this.graph.fY[indx]),
-          grz = p.grz(this.graph.fZ[indx]),
-          tip = { info: this.tip_name + "<br/>" +
-                "pnt: " + indx + "<br/>" +
-                "x: " + p.x_handle.format(this.graph.fX[indx]) + "<br/>" +
-                "y: " + p.y_handle.format(this.graph.fY[indx]) + "<br/>" +
-                "z: " + p.z_handle.format(this.graph.fZ[indx]) };
+          grz = p.grz(this.graph.fZ[indx]);
 
-      tip.x1 = grx - this.scale0; tip.x2 = grx + this.scale0;
-      tip.y1 = gry - this.scale0; tip.y2 = gry + this.scale0;
-      tip.z1 = grz - this.scale0; tip.z2 = grz + this.scale0;
+      if (this.check_next && indx+1<this.graph.fX.length) {
+         function sqr(v) { return v*v; }
+         var d = intersect.point,
+             grx1 = p.grx(this.graph.fX[indx+1]),
+             gry1 = p.gry(this.graph.fY[indx+1]),
+             grz1 = p.grz(this.graph.fZ[indx+1]);
+         if (sqr(d.x-grx1)+sqr(d.y-gry1)+sqr(d.z-grz1) < sqr(d.x-grx)+sqr(d.y-gry)+sqr(d.z-grz)) {
+            grx = grx1; gry = gry1; grz = grz1; indx++;
+         }
+      }
 
-      tip.color = this.tip_color;
-
-      return tip;
+      return {
+         x1: grx - this.scale0,
+         x2: grx + this.scale0,
+         y1: gry - this.scale0,
+         y2: gry + this.scale0,
+         z1: grz - this.scale0,
+         z2: grz + this.scale0,
+         color: this.tip_color,
+         lines: [ this.tip_name,
+                  "pnt: " + indx,
+                  "x: " + p.x_handle.format(this.graph.fX[indx]),
+                  "y: " + p.y_handle.format(this.graph.fY[indx]),
+                  "z: " + p.z_handle.format(this.graph.fZ[indx])
+                ]
+      }
    }
 
    TGraph2DPainter.prototype.Redraw = function() {
@@ -3091,9 +3148,11 @@
       }
 
       var markeratt = new JSROOT.TAttMarkerHandler(graph),
-         palette = null,
-         levels = [main.scale_zmin, main.scale_zmax],
-         scale = main.size_xy3d / 100 * markeratt.size * markeratt.scale;
+          palette = null,
+          levels = [main.scale_zmin, main.scale_zmax],
+          scale = main.size_xy3d / 100 * markeratt.GetFullSize();
+
+      if (this.options.Circles) scale = 0.06*main.size_xy3d;
 
       if (main.usesvg) scale*=0.3;
 
@@ -3112,13 +3171,16 @@
          var size = Math.floor(CountSelected(lvl_zmin, lvl_zmax) / step),
              pnts = null, select = 0,
              index = new Int32Array(size), icnt = 0,
-             err = null, ierr = 0;
+             err = null, line = null, ierr = 0, iline = 0;
 
-         if (this.options.Markers)
+         if (this.options.Markers || this.options.Circles)
             pnts = new JSROOT.Painter.PointsCreator(size, main.webgl, scale/3);
 
          if (this.options.Error)
             err = new Float32Array(size*6*3);
+
+         if (this.options.Line)
+            line = new Float32Array((size-1)*6);
 
          for (var i=0; i < graph.fNpoints; ++i) {
             if ((graph.fX[i] < main.scale_xmin) || (graph.fX[i] > main.scale_xmax) ||
@@ -3162,6 +3224,38 @@
                ierr+=6;
             }
 
+            if (line) {
+               if (iline>=6) {
+                  line[iline] = line[iline-3];
+                  line[iline+1] = line[iline-2];
+                  line[iline+2] = line[iline-1];
+                  iline+=3;
+               }
+               line[iline] = x;
+               line[iline+1] = y;
+               line[iline+2] = z;
+               iline+=3;
+            }
+         }
+
+         if (line && (iline>3) && (line.length == iline)) {
+            var lcolor = this.get_color(this.GetObject().fLineColor),
+                material = new THREE.LineBasicMaterial({ color: new THREE.Color(lcolor) });
+            if (!JSROOT.browser.isIE) material.linewidth = this.GetObject().fLineWidth;
+            var linemesh = JSROOT.Painter.createLineSegments(line, material);
+            main.toplevel.add(linemesh);
+
+            linemesh.graph = graph;
+            linemesh.index = index;
+            linemesh.painter = main;
+            linemesh.scale0 = 0.7*scale;
+            linemesh.tip_name = this.GetTipName();
+            linemesh.tip_color = (graph.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
+            linemesh.nvertex = 2;
+            linemesh.check_next = true;
+
+            linemesh.tooltip = this.Graph2DTooltip;
+
          }
 
          if (err) {
@@ -3184,8 +3278,11 @@
 
          if (pnts) {
 
-            var fcolor = palette ? palette.calcColor(lvl, levels.length) :
-                                   this.get_color(graph.fMarkerColor);
+            var fcolor = 'blue';
+
+            if (!this.options.Circles)
+               fcolor = palette ? palette.calcColor(lvl, levels.length) :
+                                  this.get_color(graph.fMarkerColor);
 
             var mesh = pnts.CreatePoints(fcolor);
 
@@ -3286,6 +3383,7 @@
          main.toplevel.add(mesh);
 
          mesh.tip_color = (poly.fMarkerColor === 3) ? 0xFF0000 : 0x00FF00;
+         mesh.tip_name = poly.fName || "Poly3D";
          mesh.poly = poly;
          mesh.painter = main;
          mesh.scale0 = 0.7*pnts.scale;
@@ -3297,24 +3395,27 @@
 
             indx = this.index[indx];
 
-            var p = this.painter;
-
-            var tip = { info: "bin: " + indx/3 + "<br/>" +
-                  "x: " + p.x_handle.format(this.poly.fP[indx]) + "<br/>" +
-                  "y: " + p.y_handle.format(this.poly.fP[indx+1]) + "<br/>" +
-                  "z: " + p.z_handle.format(this.poly.fP[indx+2]) };
-
-            var grx = p.grx(this.poly.fP[indx]),
+            var p = this.painter,
+                grx = p.grx(this.poly.fP[indx]),
                 gry = p.gry(this.poly.fP[indx+1]),
                 grz = p.grz(this.poly.fP[indx+2]);
 
-            tip.x1 = grx - this.scale0; tip.x2 = grx + this.scale0;
-            tip.y1 = gry - this.scale0; tip.y2 = gry + this.scale0;
-            tip.z1 = grz - this.scale0; tip.z2 = grz + this.scale0;
+            return  {
+               x1: grx - this.scale0,
+               x2: grx + this.scale0,
+               y1: gry - this.scale0,
+               y2: gry + this.scale0,
+               z1: grz - this.scale0,
+               z2: grz + this.scale0,
+               color: this.tip_color,
+               lines: [ this.tip_name,
+                        "pnt: " + indx/3,
+                        "x: " + p.x_handle.format(this.poly.fP[indx]),
+                        "y: " + p.y_handle.format(this.poly.fP[indx+1]),
+                        "z: " + p.z_handle.format(this.poly.fP[indx+2])
+                      ]
+            }
 
-            tip.color = this.tip_color;
-
-            return tip;
          }
 
          main.Render3D(100); // set large timeout to be able draw other points

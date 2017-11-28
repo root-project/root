@@ -362,6 +362,8 @@ void ExprEngine::processCFGElement(const CFGElement E, ExplodedNode *Pred,
     case CFGElement::TemporaryDtor:
       ProcessImplicitDtor(E.castAs<CFGImplicitDtor>(), Pred);
       return;
+    case CFGElement::LifetimeEnds:
+      return;
   }
 }
 
@@ -1176,6 +1178,7 @@ void ExprEngine::Visit(const Stmt *S, ExplodedNode *Pred,
         }
       }
       // FALLTHROUGH
+      LLVM_FALLTHROUGH;
     }
     case Stmt::CallExprClass:
     case Stmt::CXXMemberCallExprClass:

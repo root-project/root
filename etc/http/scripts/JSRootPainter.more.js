@@ -31,38 +31,41 @@
       var text = this.GetObject(),
           w = this.pad_width(), h = this.pad_height(),
           pos_x = text.fX, pos_y = text.fY,
-          tcolor = JSROOT.Painter.root_colors[text.fTextColor],
-          use_pad = true, latex_kind = 0, fact = 1.;
+          tcolor = this.get_color(text.fTextColor),
+          use_frame = false,
+          fact = 1., textsize = text.fTextSize || 0.05,
+          main = this.main_painter();
 
       if (text.TestBit(JSROOT.BIT(14))) {
          // NDC coordinates
          pos_x = pos_x * w;
          pos_y = (1 - pos_y) * h;
-      } else
-      if (this.main_painter() !== null) {
-         w = this.frame_width(); h = this.frame_height(); use_pad = false;
-         pos_x = this.main_painter().grx(pos_x);
-         pos_y = this.main_painter().gry(pos_y);
-      } else
-      if (this.root_pad() !== null) {
+      } else if (main && !main.mode3d) {
+         w = this.frame_width(); h = this.frame_height(); use_frame = "upper_layer";
+         pos_x = main.grx(pos_x);
+         pos_y = main.gry(pos_y);
+      } else if (this.root_pad() !== null) {
          pos_x = this.ConvertToNDC("x", pos_x) * w;
          pos_y = (1 - this.ConvertToNDC("y", pos_y)) * h;
       } else {
          text.fTextAlign = 22;
          pos_x = w/2;
          pos_y = h/2;
-         if (text.fTextSize === 0) text.fTextSize = 0.05;
-         if (text.fTextColor === 0) text.fTextColor = 1;
+         if (!tcolor) tcolor = 'black';
       }
 
-      this.RecreateDrawG(use_pad, use_pad ? "text_layer" : "upper_layer");
+      this.CreateG(use_frame);
 
-      if (text._typename == 'TLatex') { latex_kind = 1; fact = 0.9; } else
-      if (text._typename == 'TMathText') { latex_kind = 2; fact = 0.8; }
+      var arg = { align: text.fTextAlign, x: Math.round(pos_x), y: Math.round(pos_y), text: text.fTitle, color: tcolor, latex: 0 };
 
-      this.StartTextDrawing(text.fTextFont, Math.round(text.fTextSize*Math.min(w,h)*fact));
+      if (text.fTextAngle) arg.rotate = -text.fTextAngle;
 
-      this.DrawText(text.fTextAlign, Math.round(pos_x), Math.round(pos_y), 0, 0, text.fTitle, tcolor, latex_kind);
+      if (text._typename == 'TLatex') { arg.latex = 1; fact = 0.9; } else
+      if (text._typename == 'TMathText') { arg.latex = 2; fact = 0.8; }
+
+      this.StartTextDrawing(text.fTextFont, Math.round((textsize>1) ? textsize : textsize*Math.min(w,h)*fact));
+
+      this.DrawText(arg);
 
       this.FinishTextDrawing();
    }
@@ -77,7 +80,7 @@
           isndc = line.TestBit(kLineNDC);
 
       // create svg:g container for line drawing
-      this.RecreateDrawG(true, "text_layer");
+      this.CreateG();
 
       this.draw_g
           .append("svg:line")
@@ -100,12 +103,14 @@
           cmd = "";
 
       // create svg:g container for polyline drawing
-      this.RecreateDrawG(true, "text_layer");
+      this.CreateG();
 
       for (var n=0;n<=polyline.fLastPoint;++n)
          cmd += ((n>0) ? "L" : "M") +
                 this.AxisToSvg("x", polyline.fX[n], isndc) + "," +
                 this.AxisToSvg("y", polyline.fY[n], isndc);
+
+      if (polyline._typename != "TPolyLine") fillatt.color = "none";
 
       if (fillatt.color!=='none') cmd+="Z";
 
@@ -126,12 +131,53 @@
       if (!this.fillatt) this.fillatt = this.createAttFill(ellipse);
 
       // create svg:g container for ellipse drawing
-      this.RecreateDrawG(true, "text_layer");
+      this.CreateG();
 
       var x = this.AxisToSvg("x", ellipse.fX1, false),
           y = this.AxisToSvg("y", ellipse.fY1, false),
           rx = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR1, false) - x,
           ry = y - this.AxisToSvg("y", ellipse.fY1 + ellipse.fR2, false);
+
+      if (ellipse._typename == "TCrown") {
+         if (ellipse.fR1 <= 0) {
+            // handle same as ellipse with equal radius
+            rx = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR2, false) - x;
+         } else {
+            var rx1 = rx, ry2 = ry,
+                ry1 = y - this.AxisToSvg("y", ellipse.fY1 + ellipse.fR1, false),
+                rx2 = this.AxisToSvg("x", ellipse.fX1 + ellipse.fR2, false) - x;
+
+            var elem = this.draw_g
+                          .attr("transform","translate("+x+","+y+")")
+                          .append("svg:path")
+                          .call(this.lineatt.func).call(this.fillatt.func);
+
+            if ((ellipse.fPhimin == 0) && (ellipse.fPhimax == 360)) {
+               elem.attr("d", "M-"+rx1+",0" +
+                              "A"+rx1+","+ry1+",0,1,0,"+rx1+",0" +
+                              "A"+rx1+","+ry1+",0,1,0,-"+rx1+",0" +
+                              "M-"+rx2+",0" +
+                              "A"+rx2+","+ry2+",0,1,0,"+rx2+",0" +
+                              "A"+rx2+","+ry2+",0,1,0,-"+rx2+",0");
+
+            } else {
+               var large_arc = (ellipse.fPhimax-ellipse.fPhimin>=180) ? 1 : 0;
+
+               var a1 = ellipse.fPhimin*Math.PI/180, a2 = ellipse.fPhimax*Math.PI/180,
+                   dx1 = rx1 * Math.cos(a1), dy1 = ry1 * Math.sin(a1),
+                   dx2 = rx1 * Math.cos(a2), dy2 = ry1 * Math.sin(a2),
+                   dx3 = rx2 * Math.cos(a1), dy3 = ry2 * Math.sin(a1),
+                   dx4 = rx2 * Math.cos(a2), dy4 = ry2 * Math.sin(a2);
+
+               elem.attr("d", "M"+Math.round(dx2)+","+Math.round(dy2)+
+                              "A"+rx1+","+ry1+",0,"+large_arc+",0,"+Math.round(dx1)+","+Math.round(dy1)+
+                              "L"+Math.round(dx3)+","+Math.round(dy3) +
+                              "A"+rx2+","+ry2+",0,"+large_arc+",1,"+Math.round(dx4)+","+Math.round(dy4)+"Z");
+            }
+
+            return;
+         }
+      }
 
       if ((ellipse.fPhimin == 0) && (ellipse.fPhimax == 360) && (ellipse.fTheta == 0)) {
             // this is simple case, which could be drawn with svg:ellipse
@@ -156,13 +202,64 @@
           y2 = -dx2*st - dy2*ct;
 
       this.draw_g
-         .attr("transform","translate("+x.toFixed(1)+","+y.toFixed(1)+")")
+         .attr("transform","translate("+x+","+y+")")
          .append("svg:path")
-         .attr("d", "M 0,0" +
-                    " L " + x1.toFixed(1) + "," + y1.toFixed(1) +
-                    " A " + rx.toFixed(1) + " " + ry.toFixed(1) + " " + -ellipse.fTheta.toFixed(1) + " 1 0 " + x2.toFixed(1) + "," + y2.toFixed(1) +
-                    " L 0,0 Z")
+         .attr("d", "M0,0" +
+                    "L" + Math.round(x1) + "," + Math.round(y1) +
+                    "A"+rx+ ","+ry + "," + Math.round(-ellipse.fTheta) + ",1,0," + Math.round(x2) + "," + Math.round(y2) +
+                    "Z")
          .call(this.lineatt.func).call(this.fillatt.func);
+   }
+
+   // ==============================================================================
+
+   function drawPie() {
+      var pie = this.GetObject();
+
+      // create svg:g container for ellipse drawing
+      this.CreateG();
+
+      var xc = this.AxisToSvg("x", pie.fX, false),
+          yc = this.AxisToSvg("y", pie.fY, false),
+          rx = this.AxisToSvg("x", pie.fX + pie.fRadius, false) - xc,
+          ry = this.AxisToSvg("y", pie.fY + pie.fRadius, false) - yc;
+
+      this.draw_g.attr("transform","translate("+xc+","+yc+")");
+
+      // Draw the slices
+      var nb, slice, title, value, total, lineatt, fillatt;
+      nb = pie.fPieSlices.length;
+
+      total = 0;
+      for (var n=0;n<nb; n++) {
+         slice = pie.fPieSlices[n];
+         total = total + slice.fValue;
+      }
+
+      var af = (pie.fAngularOffset*Math.PI)/180.;
+      var x1 = rx*Math.cos(af);
+      var y1 = ry*Math.sin(af);
+      var x2, y2, a = af;
+
+      for (var n=0;n<nb; n++) {
+         slice = pie.fPieSlices[n];
+         lineatt = new JSROOT.TAttLineHandler(slice);
+         fillatt = this.createAttFill(slice);
+         value   = slice.fValue;
+         a       = a + ((2*Math.PI)/total)*value;
+         x2      = rx*Math.cos(a);
+         y2      = ry*Math.sin(a);
+         title   = slice.fTitle;
+         this.draw_g
+             .append("svg:path")
+             .attr("d", "M0,0L"+x1+","+y1+"A"+
+                         rx+","+ry+",0,0,0,"+x2+","+y2+
+                        "Z")
+             .call(lineatt.func)
+             .call(fillatt.func);
+         x1 = x2;
+         y1 = y2;
+      }
    }
 
    // =============================================================================
@@ -175,24 +272,47 @@
           fillatt = this.createAttFill(box);
 
       // create svg:g container for box drawing
-      this.RecreateDrawG(true, "text_layer");
+      this.CreateG();
 
       var x1 = this.AxisToSvg("x", box.fX1, false),
           x2 = this.AxisToSvg("x", box.fX2, false),
           y1 = this.AxisToSvg("y", box.fY1, false),
-          y2 = this.AxisToSvg("y", box.fY2, false);
+          y2 = this.AxisToSvg("y", box.fY2, false),
+          xx = Math.min(x1,x2), yy = Math.min(y1,y2),
+          ww = Math.abs(x2-x1), hh = Math.abs(y1-y2);
 
       // if box filled, contour line drawn only with "L" draw option:
       if ((fillatt.color != 'none') && !draw_line) lineatt.color = "none";
 
       this.draw_g
           .append("svg:rect")
-          .attr("x", Math.min(x1,x2))
-          .attr("y", Math.min(y1,y2))
-          .attr("width", Math.abs(x2-x1))
-          .attr("height", Math.abs(y1-y2))
+          .attr("x", xx).attr("y", yy)
+          .attr("width", ww)
+          .attr("height", hh)
           .call(lineatt.func)
           .call(fillatt.func);
+
+      if (box.fBorderMode && box.fBorderSize && (fillatt.color!=='none')) {
+         var pww = box.fBorderSize, phh = box.fBorderSize,
+             side1 = "M"+xx+","+yy + "h"+ww + "l"+(-pww)+","+phh + "h"+(2*pww-ww) +
+                     "v"+(hh-2*phh)+ "l"+(-pww)+","+phh + "z",
+             side2 = "M"+(xx+ww)+","+(yy+hh) + "v"+(-hh) + "l"+(-pww)+","+phh + "v"+(hh-2*phh)+
+                     "h"+(2*pww-ww) + "l"+(-pww)+","+phh + "z";
+
+         if (box.fBorderMode<0) { var s = side1; side1 = side2; side2 = s; }
+
+         this.draw_g.append("svg:path")
+                    .attr("d", side1)
+                    .style("stroke","none")
+                    .call(fillatt.func)
+                    .style("fill", d3.rgb(fillatt.color).brighter(0.5).toString());
+
+         this.draw_g.append("svg:path")
+             .attr("d", side2)
+             .style("stroke","none")
+             .call(fillatt.func)
+             .style("fill", d3.rgb(fillatt.color).darker(0.5).toString());
+      }
    }
 
    // =============================================================================
@@ -204,13 +324,13 @@
           isndc = marker.TestBit(kMarkerNDC);
 
       // create svg:g container for box drawing
-      this.RecreateDrawG(true, "text_layer");
+      this.CreateG();
 
       var x = this.AxisToSvg("x", marker.fX, isndc),
           y = this.AxisToSvg("y", marker.fY, isndc),
           path = att.create(x,y);
 
-      if (path && path.length > 0)
+      if (path)
          this.draw_g.append("svg:path")
              .attr("d", path)
              .call(att.func);
@@ -224,7 +344,7 @@
           isndc = false;
 
       // create svg:g container for box drawing
-      this.RecreateDrawG(true, "text_layer");
+      this.CreateG();
 
       var path = "";
 
@@ -241,43 +361,52 @@
    // ======================================================================================
 
    function drawArrow() {
-      var arrow = this.GetObject();
+      var arrow = this.GetObject(),
+          wsize = Math.max(3, Math.round(Math.max(this.pad_width(), this.pad_height()) * arrow.fArrowSize)),
+          hsize = Math.round(wsize * Math.tan(arrow.fAngle/2*Math.PI/180));
+
       if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(arrow);
       if (!this.fillatt) this.fillatt = this.createAttFill(arrow);
 
-      var wsize = Math.max(this.pad_width(), this.pad_height()) * arrow.fArrowSize;
-      if (wsize<3) wsize = 3;
-      var hsize = wsize * Math.tan(arrow.fAngle/2 * (Math.PI/180));
-
       // create svg:g container for line drawing
-      this.RecreateDrawG(true, "text_layer");
+      this.CreateG();
 
       var x1 = this.AxisToSvg("x", arrow.fX1, false),
           y1 = this.AxisToSvg("y", arrow.fY1, false),
           x2 = this.AxisToSvg("x", arrow.fX2, false),
           y2 = this.AxisToSvg("y", arrow.fY2, false),
-          right_arrow = "M0,0" + " L"+wsize.toFixed(1) +","+hsize.toFixed(1) + " L0," + (hsize*2).toFixed(1),
-          left_arrow =  "M" + wsize.toFixed(1) + ", 0" + " L 0," + hsize.toFixed(1) + " L " + wsize.toFixed(1) + "," + (hsize*2).toFixed(1),
+          right_arrow = "M0,0" + "L"+wsize+","+hsize + "L0,"+(2*hsize),
+          left_arrow =  "M"+wsize+",0" + "L0,"+hsize + "L"+wsize+","+(2*hsize),
           m_start = null, m_mid = null, m_end = null, defs = null,
-          oo = arrow.fOption, len = oo.length;
+          oo = arrow.fOption, oolen = oo.length;
 
       if (oo.indexOf("<")==0) {
          var closed = (oo.indexOf("<|") == 0);
          if (!defs) defs = this.draw_g.append("defs");
          m_start = "jsroot_arrowmarker_" +  JSROOT.id_counter++;
-         var beg = defs.append("svg:marker")
+         var mbeg = defs.append("svg:marker")
                        .attr("id", m_start)
-                       .attr("markerWidth", wsize.toFixed(1))
-                       .attr("markerHeight", (hsize*2).toFixed(1))
-                       .attr("refX", "0")
-                       .attr("refY", hsize.toFixed(1))
+                       .attr("markerWidth", wsize)
+                       .attr("markerHeight", 2*hsize)
+                       .attr("refX", 0)
+                       .attr("refY", hsize)
                        .attr("orient", "auto")
-                       .attr("markerUnits", "userSpaceOnUse")
-                       .append("svg:path")
+                       .attr("markerUnits", "userSpaceOnUse");
+         var pbeg = mbeg.append("svg:path")
                        .style("fill","none")
-                       .attr("d", left_arrow + (closed ? " Z" : ""))
+                       .attr("d", left_arrow + (closed ? "Z" : ""))
                        .call(this.lineatt.func);
-         if (closed) beg.call(this.fillatt.func);
+         if (closed) {
+            pbeg.call(this.fillatt.func);
+            if ((this.fillatt.color == this.lineatt.color) && this.fillatt.isSolid()) pbeg.style('stroke-width',1);
+            var dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx + dy*dy);
+            if (len>wsize) {
+               var ratio = wsize/len;
+               x1 += ratio*dx;
+               y1 += ratio*dy;
+               mbeg.attr("refX", wsize);
+            }
+         }
       }
 
       var midkind = 0;
@@ -291,46 +420,59 @@
          if (!defs) defs = this.draw_g.append("defs");
          m_mid = "jsroot_arrowmarker_" + JSROOT.id_counter++;
 
-         var mid = defs.append("svg:marker")
+         var pmid = defs.append("svg:marker")
                       .attr("id", m_mid)
-                      .attr("markerWidth", wsize.toFixed(1))
-                      .attr("markerHeight", (hsize*2).toFixed(1))
-                      .attr("refX", (wsize*0.5).toFixed(1))
-                      .attr("refY", hsize.toFixed(1))
+                      .attr("markerWidth", wsize)
+                      .attr("markerHeight", 2*hsize)
+                      .attr("refX", Math.round(wsize*0.5))
+                      .attr("refY", hsize)
                       .attr("orient", "auto")
                       .attr("markerUnits", "userSpaceOnUse")
                       .append("svg:path")
                       .style("fill","none")
                       .attr("d", ((midkind % 10 == 1) ? right_arrow : left_arrow) +
-                            ((midkind > 10) ? " Z" : ""))
+                            ((midkind > 10) ? "Z" : ""))
                             .call(this.lineatt.func);
-         if (midkind > 10) mid.call(this.fillatt.func);
+         if (midkind > 10) {
+            pmid.call(this.fillatt.func);
+            if ((this.fillatt.color == this.lineatt.color) && this.fillatt.isSolid()) pmid.style('stroke-width',1);
+         }
       }
 
-      if (oo.lastIndexOf(">") == len-1) {
-         var closed = (oo.lastIndexOf("|>") == len-2) && (len>1);
+      if (oo.lastIndexOf(">") == oolen-1) {
+         var closed = (oo.lastIndexOf("|>") == oolen-2) && (oolen>1);
          if (!defs) defs = this.draw_g.append("defs");
          m_end = "jsroot_arrowmarker_" + JSROOT.id_counter++;
-         var end = defs.append("svg:marker")
+         var mend = defs.append("svg:marker")
                        .attr("id", m_end)
-                       .attr("markerWidth", wsize.toFixed(1))
-                       .attr("markerHeight", (hsize*2).toFixed(1))
-                       .attr("refX", wsize.toFixed(1))
-                       .attr("refY", hsize.toFixed(1))
+                       .attr("markerWidth", wsize)
+                       .attr("markerHeight", 2*hsize)
+                       .attr("refX", wsize)
+                       .attr("refY", hsize)
                        .attr("orient", "auto")
-                       .attr("markerUnits", "userSpaceOnUse")
-                       .append("svg:path")
+                       .attr("markerUnits", "userSpaceOnUse");
+         var pend = mend.append("svg:path")
                        .style("fill","none")
-                       .attr("d", right_arrow + (closed ? " Z" : ""))
+                       .attr("d", right_arrow + (closed ? "Z" : ""))
                        .call(this.lineatt.func);
-         if (closed) end.call(this.fillatt.func);
+         if (closed) {
+            pend.call(this.fillatt.func);
+            if ((this.fillatt.color == this.lineatt.color) && this.fillatt.isSolid()) pend.style('stroke-width',1);
+            var dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx + dy*dy);
+            if (len>wsize) {
+               var ratio = wsize/len;
+               x2 -= ratio*dx;
+               y2 -= ratio*dy;
+               mend.attr("refX", 0);
+            }
+         }
       }
 
       var path = this.draw_g
            .append("svg:path")
-           .attr("d",  "M" + x1 + "," + y1 +
-                       ((m_mid == null) ? "" : "L" + (x1/2+x2/2).toFixed(1) + "," + (y1/2+y2/2).toFixed(1)) +
-                       " L" + x2 + "," + y2)
+           .attr("d",  "M"+Math.round(x1)+","+Math.round(y1) +
+                       ((m_mid == null) ? "" : "L" + Math.round(x1/2+x2/2) + "," + Math.round(y1/2+y2/2)) +
+                       "L"+Math.round(x2)+","+Math.round(y2))
             .call(this.lineatt.func);
 
       if (m_start) path.style("marker-start","url(#" + m_start + ")");
@@ -401,7 +543,7 @@
          return res;
       }
 
-      var xmin = tf1.fXmin, xmax = tf1.fXmax, logx = false, pad = this.root_pad();
+      var xmin = tf1.fXmin, xmax = tf1.fXmax, logx = false;
 
       if (gxmin !== gxmax) {
          if (gxmin > xmin) xmin = gxmin;
@@ -432,7 +574,7 @@
       var xmin = 0, xmax = 1, ymin = 0, ymax = 1,
           bins = this.CreateBins(true);
 
-      if ((bins!==null) && (bins.length > 0)) {
+      if (bins && (bins.length > 0)) {
 
          xmin = xmax = bins[0].x;
          ymin = ymax = bins[0].y;
@@ -452,15 +594,7 @@
           tf1 = this.GetObject();
 
       histo.fName = tf1.fName + "_hist";
-      if (tf1.fTitle.indexOf(';')!==0) {
-         var array = tf1.fTitle.split(';');
-         histo.fTitle = array[0];
-         if (array.length>1)
-            histo.fXaxis.fTitle = array[1];
-         if (array.length>2)
-            histo.fYaxis.fTitle = array[2];
-      }
-      else histo.fTitle = tf1.fTitle;
+      histo.fTitle = tf1.fTitle;
 
       histo.fXaxis.fXmin = xmin;
       histo.fXaxis.fXmax = xmax;
@@ -470,7 +604,7 @@
       return histo;
    }
 
-   TF1Painter.prototype.ProcessTooltipFunc = function(pnt) {
+   TF1Painter.prototype.ProcessTooltip = function(pnt) {
       var cleanup = false;
 
       if ((pnt === null) || (this.bins === null)) {
@@ -514,11 +648,11 @@
                   color1: this.lineatt.color,
                   color2: this.fillatt.color,
                   lines: [],
-                  exact : (Math.abs(bin.grx - pnt.x) < radius) && (Math.abs(bin.gry - pnt.y) < radius) };
+                  exact: (Math.abs(bin.grx - pnt.x) < radius) && (Math.abs(bin.gry - pnt.y) < radius) };
 
       res.changed = gbin.property("current_bin") !== best;
       res.menu = res.exact;
-      res.menu_dist = Math.sqrt((bin.grx-pnt.x)*(bin.grx-pnt.x) + (bin.gry-pnt.y)*(bin.grx-pnt.x));
+      res.menu_dist = Math.sqrt((bin.grx-pnt.x)*(bin.grx-pnt.x) + (bin.gry-pnt.y)*(bin.gry-pnt.y));
 
       if (res.changed)
          gbin.attr("cx", bin.grx)
@@ -537,30 +671,26 @@
 
    TF1Painter.prototype.Redraw = function() {
 
-      var w = this.frame_width(), h = this.frame_height(), tf1 = this.GetObject();
+      var w = this.frame_width(), h = this.frame_height(),
+          tf1 = this.GetObject(), pmain = this.main_painter(),
+          name = this.GetTipName("\n");
 
-      this.RecreateDrawG(false, "main_layer");
+      this.CreateG(true);
 
       // recalculate drawing bins when necessary
       this.bins = this.CreateBins(false);
 
-      var pthis = this;
-      var pmain = this.main_painter();
-      var name = this.GetTipName("\n");
-
       if (!this.lineatt)
          this.lineatt = new JSROOT.TAttLineHandler(tf1);
       this.lineatt.used = false;
+
       if (!this.fillatt)
          this.fillatt = this.createAttFill(tf1, undefined, undefined, 1);
       this.fillatt.used = false;
 
-      var n, bin;
       // first calculate graphical coordinates
-      for(n=0; n<this.bins.length; ++n) {
-         bin = this.bins[n];
-         //bin.grx = Math.round(pmain.grx(bin.x));
-         //bin.gry = Math.round(pmain.gry(bin.y));
+      for(var n=0; n<this.bins.length; ++n) {
+         var bin = this.bins[n];
          bin.grx = pmain.grx(bin.x);
          bin.gry = pmain.gry(bin.y);
       }
@@ -589,11 +719,6 @@
                .style("stroke", "none")
                .call(this.fillatt.func);
       }
-
-      delete this.ProcessTooltip;
-
-     if (JSROOT.gStyle.Tooltip > 0)
-        this.ProcessTooltip = this.ProcessTooltipFunc;
    }
 
    TF1Painter.prototype.CanZoomIn = function(axis,min,max) {
@@ -669,17 +794,20 @@
 
    TGraphPainter.prototype.DecodeOptions = function(opt) {
 
-      var d = new JSROOT.DrawOptions(opt);
-
-      var res = { Line:0, Curve:0, Rect:0, Mark:0, Bar:0, OutRange: 0,  EF:0, Fill:0,
-                  Errors: 0, MainError: 1, Ends: 1, Axis: "AXIS", original: opt };
-
-      var graph = this.GetObject();
+      var graph = this.GetObject(),
+          d = new JSROOT.DrawOptions(opt),
+          res = { Line:0, Curve:0, Rect:0, Mark:0, Bar:0, OutRange: 0,  EF:0, Fill:0,
+                  Errors: 0, MainError: 1, Ends: 1, Axis: "", original: opt };
 
       if (this.has_errors) res.Errors = 1;
 
+      res._pfc = d.check("PFC");
+      res._plc = d.check("PLC");
+      res._pmc = d.check("PMC");
+
       if (d.check('L')) res.Line = 1;
       if (d.check('F')) res.Fill = 1;
+      if (d.check('IA')) res.Axis = "A"; else
       if (d.check('A')) res.Axis = "AXIS";
       if (d.check('X+')) res.Axis += "X+";
       if (d.check('Y+')) res.Axis += "Y+";
@@ -712,6 +840,14 @@
       if (graph._typename == 'TGraphErrors') {
          if (d3.max(graph.fEX) < 1.0e-300 && d3.max(graph.fEY) < 1.0e-300)
             res.Errors = 0;
+      }
+
+      if (!res.Axis) {
+         // check if axis should be drawn
+         // either graph drawn directly or
+         // graph is first object in list of primitives
+         var pad = this.root_pad();
+         if (!pad || !pad.fPrimitives || (pad.fPrimitives.arr[0] === graph)) res.Axis = "AXIS";
       }
 
       return res;
@@ -824,12 +960,12 @@
       return optbins;
    }
 
-   TGraphPainter.prototype.TooltipText = function(d, asarray) {
+   TGraphPainter.prototype.TooltipText = function(d) {
       var pmain = this.main_painter(), lines = [];
 
       lines.push(this.GetTipName());
 
-      if (d) {
+      if (d && pmain) {
          lines.push("x = " + pmain.AxisAsText("x", d.x));
          lines.push("y = " + pmain.AxisAsText("y", d.y));
 
@@ -839,37 +975,82 @@
          if ((this.options.Errors || (this.options.EF > 0)) && (pmain.y_kind=='normal') && ('eylow' in d) && ((d.eylow!=0) || (d.eyhigh!=0)))
             lines.push("error y = -" + pmain.AxisAsText("y", d.eylow) + "/+" + pmain.AxisAsText("y", d.eyhigh));
       }
-      if (asarray) return lines;
+      return lines;
+   }
 
-      var res = "";
-      for (var n=0;n<lines.length;++n) res += ((n>0 ? "\n" : "") + lines[n]);
-      return res;
+   TGraphPainter.prototype.get_main = function() {
+      var pmain = this.main_painter();
+
+      if (pmain && pmain.grx && pmain.gry) return pmain;
+
+      pmain = {
+          pad_layer: true,
+          pad: this.root_pad(),
+          pw: this.pad_width(),
+          ph: this.pad_height(),
+          grx: function(value) {
+             if (this.pad.fLogx)
+                value = (value>0) ? JSROOT.log10(value) : this.pad.fUxmin;
+             else
+                value = (value - this.pad.fX1) / (this.pad.fX2 - this.pad.fX1);
+             return value*this.pw;
+          },
+          gry: function(value) {
+             if (this.pad.fLogy)
+                value = (value>0) ? JSROOT.log10(value) : this.pad.fUymin;
+             else
+                value = (value - this.pad.fY1) / (this.pad.fY2 - this.pad.fY1);
+             return (1-value)*this.ph;
+          }
+      }
+
+      return pmain.pad ? pmain : null;
    }
 
    TGraphPainter.prototype.DrawBins = function() {
 
-      this.RecreateDrawG(false, "main_layer");
-
       var pthis = this,
-          pmain = this.main_painter(),
+          pmain = this.get_main(),
           w = this.frame_width(),
           h = this.frame_height(),
           graph = this.GetObject(),
           excl_width = 0;
 
+      if (!pmain) return;
+
+      this.CreateG(!pmain.pad_layer);
+
+      if (this.options._pfc || this.options._plc || this.options._pmc) {
+         if (!this.pallette && JSROOT.Painter.GetColorPalette)
+            this.palette = JSROOT.Painter.GetColorPalette();
+
+         var pp = this.pad_painter(true);
+         if (this.palette && pp) {
+            var indx = pp.GetCurrentPrimitiveIndx(), num = pp.GetNumPrimitives();
+
+            var color = this.palette.calcColor(indx, num);
+            var icolor = this.add_color(color);
+
+            if (this.options._pfc) { graph.fFillColor = icolor; delete this.fillatt; }
+            if (this.options._plc) { graph.fLineColor = icolor; delete this.lineatt; }
+            if (this.options._pmc) { graph.fMarkerColor = icolor; delete this.markeratt; }
+         }
+
+         this.options._pfc = this.options._plc = this.options._pmc = false;
+      }
+
       if (!this.lineatt)
          this.lineatt = new JSROOT.TAttLineHandler(graph, undefined, true);
       if (!this.fillatt)
          this.fillatt = this.createAttFill(graph, undefined, undefined, 1);
-      this.fillatt.used = false;
+      this.fillatt.used = false; // mark used only when really used
 
-      if (this.fillatt) this.fillatt.used = false; // mark used only when really used
       this.draw_kind = "none"; // indicate if special svg:g were created for each bin
       this.marker_size = 0; // indicate if markers are drawn
 
-      if (this.lineatt.excl_side!=0) {
-         excl_width = this.lineatt.excl_side * this.lineatt.excl_width;
-         if (this.lineatt.width>0) this.options.Line = 1;
+      if (this.lineatt.excl_side != 0) {
+         excl_width = this.lineatt.excl_width;
+         if (this.lineatt.width > 0) this.options.Line = 1;
       }
 
       var drawbins = null;
@@ -1117,7 +1298,7 @@
          else
             this.markeratt.Change(undefined, this.options.Mark - 100);
 
-         this.marker_size = this.markeratt.size;
+         this.marker_size = this.markeratt.GetFullSize();
 
          this.markeratt.reset_pos();
 
@@ -1201,7 +1382,7 @@
       var res = { name: this.GetObject().fName, title: this.GetObject().fTitle,
                   x: d.grx1, y: d.gry1,
                   color1: this.lineatt.color,
-                  lines: this.TooltipText(d, true),
+                  lines: this.TooltipText(d),
                   rect: best, d3bin: findbin  };
 
       if (this.fillatt && this.fillatt.used) res.color2 = this.fillatt.color;
@@ -1248,11 +1429,8 @@
    }
 
    TGraphPainter.prototype.ProcessTooltip = function(pnt) {
-
       var hint = this.ExtractTooltip(pnt);
-
       if (!pnt || !pnt.disabled) this.ShowTooltip(hint);
-
       return hint;
    }
 
@@ -1287,23 +1465,18 @@
 
       var radius = Math.max(this.lineatt.width + 3, 4);
 
-      if (this.marker_size > 0) radius = Math.max(Math.round(this.marker_size*7), radius);
+      if (this.marker_size > 0) radius = Math.max(this.marker_size, radius);
 
-      if (bestbin !== null)
+      if (bestbin)
          bestdist = Math.sqrt(Math.pow(pnt.x-pmain.grx(bestbin.x),2) + Math.pow(pnt.y-pmain.gry(bestbin.y),2));
 
-      if (!islines && !ismark && (bestdist > radius)) bestbin = null;
+      if (!islines && (bestdist > radius)) bestbin = null;
 
-      if (ismark && (bestbin!==null)) {
-         if ((pnt.nproc == 1) && (bestdist > radius)) bestbin = null; else
-         if ((this.bins.length==1) && (bestdist > 3*radius)) bestbin = null;
-      }
+      if (!bestbin) bestindx = -1;
 
-      if (bestbin === null) bestindx = -1;
+      var res = { bin: bestbin, indx: bestindx, dist: bestdist, radius: Math.round(radius) };
 
-      var res = { bin: bestbin, indx: bestindx, dist: bestdist, radius: radius };
-
-      if ((bestbin===null) && islines) {
+      if (!bestbin && islines) {
 
          bestdist = 10000;
 
@@ -1375,7 +1548,7 @@
                   x: best.bin ? pmain.grx(best.bin.x) : best.linex,
                   y: best.bin ? pmain.gry(best.bin.y) : best.liney,
                   color1: this.lineatt.color,
-                  lines: this.TooltipText(best.bin, true),
+                  lines: this.TooltipText(best.bin),
                   usepath: true };
 
       res.ismark = ismark;
@@ -1440,18 +1613,18 @@
                  .attr("class","h1bin")
                  .style("pointer-events","none")
                  .style("opacity", "0.3")
-                 .attr("x", (hint.x - hint.radius).toFixed(1))
-                 .attr("y", (hint.y - hint.radius).toFixed(1))
-                 .attr("width", (2*hint.radius).toFixed(1))
-                 .attr("height", (2*hint.radius).toFixed(1));
+                 .attr("x", Math.round(hint.x - hint.radius))
+                 .attr("y", Math.round(hint.y - hint.radius))
+                 .attr("width", 2*hint.radius)
+                 .attr("height", 2*hint.radius);
          } else {
-            ttbin.append("svg:circle").attr("cy", hint.gry1.toFixed(1))
+            ttbin.append("svg:circle").attr("cy", Math.round(hint.gry1))
             if (Math.abs(hint.gry1-hint.gry2) > 1)
-               ttbin.append("svg:circle").attr("cy", hint.gry2.toFixed(1));
+               ttbin.append("svg:circle").attr("cy", Math.round(hint.gry2));
 
             var elem = ttbin.selectAll("circle")
                             .attr("r", hint.radius)
-                            .attr("cx", hint.x.toFixed(1));
+                            .attr("cx", Math.round(hint.x));
 
             if (!hint.islines) {
                elem.style('stroke', hint.color1 == 'black' ? 'green' : 'black').style('fill','none');
@@ -1516,20 +1689,19 @@
       return menu.size() > 0;
    }
 
-
-   TGraphPainter.prototype.ExecuteMenuCommand = function(item) {
-      if (JSROOT.TObjectPainter.prototype.ExecuteMenuCommand.call(this,item)) return true;
+   TGraphPainter.prototype.ExecuteMenuCommand = function(method, args) {
+      if (JSROOT.TObjectPainter.prototype.ExecuteMenuCommand.call(this,method,args)) return true;
 
       var canp = this.pad_painter(), fp = this.frame_painter();
 
-      if ((item.fName == 'RemovePoint') || (item.fName == 'InsertPoint')) {
+      if ((method.fName == 'RemovePoint') || (method.fName == 'InsertPoint')) {
          var pnt = fp ? fp.GetLastEventPos() : null;
 
          if (!canp || !fp || !pnt) return true; // ignore function
 
          var hint = this.ExtractTooltip(pnt);
 
-         if (item.fName == 'InsertPoint') {
+         if (method.fName == 'InsertPoint') {
             var main = this.main_painter(),
                 userx = main && main.RevertX ? main.RevertX(pnt.x) : 0,
                 usery = main && main.RevertY ? main.RevertY(pnt.y) : 0;
@@ -1543,7 +1715,6 @@
 
          return true; // call is processed
       }
-
 
       return false;
    }
@@ -1599,6 +1770,84 @@
       return true;
    }
 
+   TGraphPainter.prototype.FindFunc = function() {
+      var gr = this.GetObject();
+      if (gr && gr.fFunctions)
+         for (var i = 0; i < gr.fFunctions.arr.length; ++i) {
+            var func = gr.fFunctions.arr[i];
+            if ((func._typename == 'TF1') || (func._typename == 'TF2')) return func;
+         }
+      return func;
+   }
+
+   TGraphPainter.prototype.FindStat = function() {
+      var gr = this.GetObject();
+      if (gr && gr.fFunctions)
+         for (var i = 0; i < gr.fFunctions.arr.length; ++i) {
+            var func = gr.fFunctions.arr[i];
+            if ((func._typename == 'TPaveStats') && (func.fName == 'stats')) return func;
+         }
+
+      return null;
+   }
+
+   TGraphPainter.prototype.CreateStat = function() {
+      var func = this.FindFunc();
+      if (!func) return null;
+
+      var stats = this.FindStat();
+      if (stats) return stats;
+
+      // do not create stats box when drawing canvas
+      var pp = this.pad_painter();
+      if (pp && pp.normal_canvas) return null;
+
+      this.create_stats = true;
+
+      var st = JSROOT.gStyle;
+
+      stats = JSROOT.Create('TPaveStats');
+      JSROOT.extend(stats, { fName : 'stats',
+                             fOptStat: 0,
+                             fOptFit: st.fOptFit || 111,
+                             fBorderSize : 1} );
+
+      stats.fX1NDC = st.fStatX - st.fStatW;
+      stats.fY1NDC = st.fStatY - st.fStatH;
+      stats.fX2NDC = st.fStatX;
+      stats.fY2NDC = st.fStatY;
+
+      stats.fFillColor = st.fStatColor;
+      stats.fFillStyle = st.fStatStyle;
+
+      stats.fTextAngle = 0;
+      stats.fTextSize = st.fStatFontSize; // 9 ??
+      stats.fTextAlign = 12;
+      stats.fTextColor = st.fStatTextColor;
+      stats.fTextFont = st.fStatFont;
+
+      stats.AddText(func.fName);
+
+      // while TF1 was found, one can be sure that stats is existing
+      this.GetObject().fFunctions.Add(stats);
+
+      return stats;
+   }
+
+   TGraphPainter.prototype.FillStatistic = function(stat, dostat, dofit) {
+
+      // cannot fill stats without func
+      var func = this.FindFunc();
+
+      if (!func || !dofit || !this.create_stats) return false;
+
+      stat.ClearPave();
+
+      stat.FillFunctionStat(func, dofit);
+
+      return true;
+   }
+
    TGraphPainter.prototype.DrawNextFunction = function(indx, callback) {
       // method draws next function from the functions list
 
@@ -1607,8 +1856,13 @@
       if (!graph.fFunctions || (indx >= graph.fFunctions.arr.length))
          return JSROOT.CallBack(callback);
 
-      JSROOT.draw(this.divid, graph.fFunctions.arr[indx], graph.fFunctions.opt[indx],
-                  this.DrawNextFunction.bind(this, indx+1, callback));
+      var func = graph.fFunctions.arr[indx], opt = graph.fFunctions.opt[indx];
+
+      //  required for stats filling
+      // TODO: use weak reference (via pad list of painters and any kind of string)
+      func.$main_painter = this;
+
+      JSROOT.draw(this.divid, func, opt, this.DrawNextFunction.bind(this, indx+1, callback));
    }
 
    TGraphPainter.prototype.PerformDrawing = function(divid, hpainter) {
@@ -1619,17 +1873,19 @@
       return this;
    }
 
-   JSROOT.Painter.drawGraph = function(divid, graph, opt) {
+   function drawGraph(divid, graph, opt) {
 
       var painter = new TGraphPainter(graph);
 
-      painter.options = painter.DecodeOptions(opt);
-
       painter.SetDivId(divid, -1); // just to get access to existing elements
+
+      painter.options = painter.DecodeOptions(opt);
 
       painter.CreateBins();
 
-      if (!painter.main_painter()) {
+      painter.CreateStat();
+
+      if (!painter.main_painter() && painter.options.Axis) {
          if (!graph.fHistogram)
             graph.fHistogram = painter.CreateHistogram();
          JSROOT.draw(divid, graph.fHistogram, painter.options.Axis, painter.PerformDrawing.bind(painter, divid));
@@ -1638,6 +1894,969 @@
       }
 
       return painter;
+   }
+
+   // ==============================================================
+
+   function TGraphPolargramPainter(polargram) {
+      JSROOT.TooltipHandler.call(this, polargram);
+      this.$polargram = true; // indicate that this is polargram
+      this.zoom_rmin = this.zoom_rmax = 0;
+   }
+
+   TGraphPolargramPainter.prototype = Object.create(JSROOT.TooltipHandler.prototype);
+
+   TGraphPolargramPainter.prototype.translate = function(angle, radius, keep_float) {
+      var _rx = this.r(radius), _ry = _rx/this.szx*this.szy,
+          pos = {
+            x: _rx * Math.cos(-angle - this.angle),
+            y: _ry * Math.sin(-angle - this.angle),
+            rx: _rx,
+            ry: _ry
+         };
+
+      if (!keep_float) {
+         pos.x = Math.round(pos.x);
+         pos.y = Math.round(pos.y);
+         pos.rx =  Math.round(pos.rx);
+         pos.ry =  Math.round(pos.ry);
+      }
+      return pos;
+   }
+
+   TGraphPolargramPainter.prototype.format = function(radius) {
+      // used to format label for radius ticks
+
+      if (radius === Math.round(radius)) return radius.toString();
+      if (this.ndig>10) return radius.toExponential(4);
+
+      return radius.toFixed((this.ndig > 0) ? this.ndig : 0);
+   }
+
+   TGraphPolargramPainter.prototype.AxisAsText = function(axis, value) {
+
+      if (axis == "r") {
+         if (value === Math.round(value)) return value.toString();
+         if (this.ndig>10) return value.toExponential(4);
+         return value.toFixed(this.ndig+2);
+      }
+
+      value *= 180/Math.PI;
+      return (value === Math.round(value)) ? value.toString() : value.toFixed(1);
+   }
+
+   TGraphPolargramPainter.prototype.MouseEvent = function(kind) {
+      var layer = this.svg_layer("primitives_layer"),
+          interactive = layer.select(".interactive_ellipse");
+      if (interactive.empty()) return;
+
+      var pnt = null;
+
+      if (kind !== 'leave') {
+         var pos = d3.mouse(interactive.node());
+         pnt = { x: pos[0], y: pos[1], touch: false };
+      }
+
+      this.ProcessTooltipEvent(pnt);
+   }
+
+   TGraphPolargramPainter.prototype.GetFrameRect = function() {
+      var pad = this.root_pad(),
+          w = this.pad_width(),
+          h = this.pad_height(),
+          rect = {};
+
+      rect.szx = Math.round(Math.max(0.1, 0.5 - Math.max(pad.fLeftMargin, pad.fRightMargin))*w);
+      rect.szy = Math.round(Math.max(0.1, 0.5 - Math.max(pad.fBottomMargin, pad.fTopMargin))*h);
+
+      rect.width = 2*rect.szx;
+      rect.height = 2*rect.szy;
+      rect.midx = Math.round(w/2);
+      rect.midy = Math.round(h/2);
+      rect.x = rect.midx - rect.szx;
+      rect.y = rect.midy - rect.szy;
+
+      rect.hint_delta_x = rect.szx;
+      rect.hint_delta_y = rect.szy;
+
+      rect.transform = "translate(" + rect.x + "," + rect.y + ")";
+
+      return rect;
+   }
+
+   TGraphPolargramPainter.prototype.MouseWheel = function() {
+      d3.event.stopPropagation();
+      d3.event.preventDefault();
+
+      this.ProcessTooltipEvent(null); // remove all tooltips
+
+      var polar = this.GetObject();
+
+      if (!d3.event || !polar) return;
+
+      var delta = d3.event.wheelDelta ? -d3.event.wheelDelta : (d3.event.deltaY || d3.event.detail);
+      if (!delta) return;
+
+      delta = (delta<0) ? -0.2 : 0.2;
+
+      var rmin = this.scale_rmin, rmax = this.scale_rmax, range = rmax - rmin;
+
+      // rmin -= delta*range;
+      rmax += delta*range;
+
+      if ((rmin<polar.fRwrmin) || (rmax>polar.fRwrmax)) rmin = rmax = 0;
+
+      if ((this.zoom_rmin != rmin) || (this.zoom_rmax != rmax)) {
+         this.zoom_rmin = rmin;
+         this.zoom_rmax = rmax;
+         this.RedrawPad();
+      }
+   }
+
+   TGraphPolargramPainter.prototype.Redraw = function() {
+      if (!this.is_main_painter()) return;
+
+      var pad = this.root_pad(),
+          polar = this.GetObject(),
+          rect = this.GetFrameRect();
+
+      this.CreateG();
+
+      this.draw_g.attr("transform", "translate(" + rect.midx + "," + rect.midy + ")");
+      this.szx = rect.szx;
+      this.szy = rect.szy;
+
+      this.scale_rmin = polar.fRwrmin;
+      this.scale_rmax = polar.fRwrmax;
+      if (this.zoom_rmin != this.zoom_rmax) {
+         this.scale_rmin = this.zoom_rmin;
+         this.scale_rmax = this.zoom_rmax;
+      }
+
+      this.r = d3.scaleLinear().domain([this.scale_rmin, this.scale_rmax]).range([ 0, this.szx ]);
+      this.angle = polar.fAxisAngle || 0;
+
+      var ticks = this.r.ticks(5),
+          nminor = Math.floor((polar.fNdivRad % 10000) / 100);
+
+      if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(polar);
+      if (!this.gridatt) this.gridatt = new JSROOT.TAttLineHandler({ fLineColor: polar.fLineColor, fLineStyle: 2, fLineWidth: 1 });
+
+      var range = Math.abs(polar.fRwrmax - polar.fRwrmin);
+      this.ndig = (range <= 0) ? -3 : Math.round(JSROOT.log10(ticks.length / range));
+
+      // verify that all radius labels are unique
+      var lbls = [], indx = 0;
+      while (indx<ticks.length) {
+         var lbl = this.format(ticks[indx]);
+         if (lbls.indexOf(lbl)>=0) {
+            if (++this.ndig>10) break;
+            lbls = []; indx = 0; continue;
+          }
+         lbls.push(lbl);
+         indx++;
+      }
+
+      var exclude_last = false;
+
+      if ((ticks[ticks.length-1] < polar.fRwrmax) && (this.zoom_rmin == this.zoom_rmax)) {
+         ticks.push(polar.fRwrmax);
+         exclude_last = true;
+      }
+
+      this.StartTextDrawing(polar.fRadialLabelFont, Math.round(polar.fRadialTextSize * this.szy * 2));
+
+      for (var n=0;n<ticks.length;++n) {
+         var rx = this.r(ticks[n]), ry = rx/this.szx*this.szy;
+         this.draw_g.append("ellipse")
+             .attr("cx",0)
+             .attr("cy",0)
+             .attr("rx",Math.round(rx))
+             .attr("ry",Math.round(ry))
+             .style("fill", "none")
+             .call(this.lineatt.func);
+
+         if ((n < ticks.length-1) || !exclude_last)
+            this.DrawText({ align: 23, x: Math.round(rx), y: Math.round(polar.fRadialTextSize * this.szy * 0.5),
+                            text: this.format(ticks[n]), color: this.get_color[polar.fRadialLabelColor], latex: 0 });
+
+         if ((nminor>1) && ((n < ticks.length-1) || !exclude_last)) {
+            var dr = (ticks[1] - ticks[0]) / nminor;
+            for (var nn=1;nn<nminor;++nn) {
+               var gridr = ticks[n] + dr*nn;
+               if (gridr > this.scale_rmax) break;
+               rx = this.r(gridr); ry = rx/this.szx*this.szy;
+               this.draw_g.append("ellipse")
+                   .attr("cx",0)
+                   .attr("cy",0)
+                   .attr("rx",Math.round(rx))
+                   .attr("ry",Math.round(ry))
+                   .style("fill", "none")
+                   .call(this.gridatt.func);
+            }
+         }
+      }
+
+      this.FinishTextDrawing();
+
+      var fontsize = Math.round(polar.fPolarTextSize * this.szy * 2);
+      this.StartTextDrawing(polar.fPolarLabelFont, fontsize);
+
+      var nmajor = polar.fNdivPol % 100;
+      if ((nmajor !== 8) && (nmajor !== 3)) nmajor = 8;
+
+      var lbls = (nmajor==8) ? ["0", "#frac{#pi}{4}", "#frac{#pi}{2}", "#frac{3#pi}{4}", "#pi", "#frac{5#pi}{4}", "#frac{3#pi}{2}", "#frac{7#pi}{4}"] : ["0", "#frac{2#pi}{3}", "#frac{4#pi}{3}"],
+          aligns = [12, 11, 21, 31, 32, 33, 23, 13 ];
+
+      for (var n=0;n<nmajor;++n) {
+         var angle = -n*2*Math.PI/nmajor - this.angle;
+         this.draw_g.append("line")
+             .attr("x1",0)
+             .attr("y1",0)
+             .attr("x2", Math.round(this.szx*Math.cos(angle)))
+             .attr("y2", Math.round(this.szy*Math.sin(angle)))
+             .call(this.lineatt.func);
+
+         var aindx = Math.round(16 -angle/Math.PI*4) % 8; // index in align table, here absolute angle is important
+
+         this.DrawText({ align: aligns[aindx],
+                         x: Math.round((this.szx+fontsize)*Math.cos(angle)),
+                         y: Math.round((this.szy + fontsize/this.szx*this.szy)*(Math.sin(angle))),
+                         text: lbls[n],
+                          color: this.get_color[polar.fPolarLabelColor], latex: 1 });
+      }
+
+      this.FinishTextDrawing();
+
+      var nminor = Math.floor((polar.fNdivPol % 10000) / 100);
+
+      if (nminor > 1)
+         for (var n=0;n<nmajor*nminor;++n) {
+            if (n % nminor === 0) continue;
+            var angle = -n*2*Math.PI/nmajor/nminor - this.angle;
+            this.draw_g.append("line")
+                .attr("x1",0)
+                .attr("y1",0)
+                .attr("x2", Math.round(this.szx*Math.cos(angle)))
+                .attr("y2", Math.round(this.szy*Math.sin(angle)))
+                .call(this.gridatt.func);
+         }
+
+
+      if (JSROOT.BatchMode) return;
+
+      var layer = this.svg_layer("primitives_layer"),
+          interactive = layer.select(".interactive_ellipse");
+
+      if (interactive.empty())
+         interactive = layer.append("g")
+                            .classed("most_upper_primitives", true)
+                            .append("ellipse")
+                            .classed("interactive_ellipse", true)
+                            .attr("cx",0)
+                            .attr("cy",0)
+                            .style("fill", "none")
+                            .style("pointer-events","visibleFill")
+                            .on('mouseenter', this.MouseEvent.bind(this,'enter'))
+                            .on('mousemove', this.MouseEvent.bind(this,'move'))
+                            .on('mouseleave', this.MouseEvent.bind(this,'leave'));
+
+      interactive.attr("rx", this.szx).attr("ry", this.szy);
+
+      d3.select(interactive.node().parentNode).attr("transform", this.draw_g.attr("transform"));
+
+      if (JSROOT.gStyle.Zooming && JSROOT.gStyle.ZoomWheel)
+         interactive.on("wheel", this.MouseWheel.bind(this));
+   }
+
+   JSROOT.Painter.drawGraphPolargram = function(divid, polargram, opt) {
+
+      var painter = new TGraphPolargramPainter(polargram);
+
+      painter.SetDivId(divid, -1); // just to get access to existing elements
+
+      var main = painter.main_painter();
+
+      if (main) {
+         if (main.GetObject() !== polargram)
+             console.error('Cannot superimpose TGraphPolargram with any other drawings');
+          return null;
+      }
+      painter.SetDivId(divid, 4); // main object without need of frame
+      painter.Redraw();
+      return painter.DrawingReady();
+   }
+
+   // ==============================================================
+
+   function TGraphPolarPainter(graph) {
+      JSROOT.TObjectPainter.call(this, graph);
+   }
+
+   TGraphPolarPainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+
+   TGraphPolarPainter.prototype.Redraw = function() {
+      this.DrawBins();
+   }
+
+   TGraphPolarPainter.prototype.DecodeOptions = function(opt) {
+
+      var d = new JSROOT.DrawOptions(opt || "L");
+
+      this.options = {
+          mark: d.check("P"),
+          err: d.check("E"),
+          fill: d.check("F"),
+          line: d.check("L"),
+          curve: d.check("C")
+      }
+   }
+
+   TGraphPolarPainter.prototype.DrawBins = function() {
+      var graph = this.GetObject(),
+          main = this.main_painter();
+
+      if (!graph || !main || !main.$polargram) return;
+
+      if (this.options.mark && !this.markeratt) this.markeratt = new JSROOT.TAttMarkerHandler(graph);
+      if ((this.options.err || this.options.line || this.options.curve) && !this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(graph);
+      if (this.options.fill && !this.fillatt) this.fillatt = this.createAttFill(graph);
+
+      this.CreateG();
+
+      this.draw_g.attr("transform", main.draw_g.attr("transform"));
+
+      var mpath = "", epath = "", lpath = "", bins = [];
+
+      for (var n=0;n<graph.fNpoints;++n) {
+
+         if (graph.fY[n] > main.scale_rmax) continue;
+
+         if (this.options.err) {
+            var pos1 = main.translate(graph.fX[n], graph.fY[n] - graph.fEY[n]),
+                pos2 = main.translate(graph.fX[n], graph.fY[n] + graph.fEY[n]);
+            epath += "M" + pos1.x + "," + pos1.y + "L" + pos2.x + "," + pos2.y;
+
+            pos1 = main.translate(graph.fX[n] + graph.fEX[n], graph.fY[n]);
+            pos2 = main.translate(graph.fX[n] - graph.fEX[n], graph.fY[n]);
+
+            epath += "M" + pos1.x + "," + pos1.y + "A" + pos2.rx + "," + pos2.ry+ ",0,0,1," + pos2.x + "," + pos2.y;
+         }
+
+         var pos = main.translate(graph.fX[n], graph.fY[n]);
+
+         if (this.options.mark) {
+            mpath += this.markeratt.create(pos.x, pos.y);
+         }
+
+         if (this.options.line || this.options.fill) {
+            lpath += (lpath ? "L" : "M") + pos.x + "," + pos.y;
+         }
+
+         if (this.options.curve) {
+            pos.grx = pos.x;
+            pos.gry = pos.y;
+            bins.push(pos);
+         }
+      }
+
+      if (this.options.fill && lpath)
+         this.draw_g.append("svg:path")
+             .attr("d",lpath + "Z")
+             .style("stroke","none")
+             .call(this.fillatt.func);
+
+      if (this.options.line && lpath)
+         this.draw_g.append("svg:path")
+             .attr("d", lpath)
+             .style("fill", "none")
+             .call(this.lineatt.func);
+
+      if (this.options.curve && bins.length)
+         this.draw_g.append("svg:path")
+                 .attr("d", JSROOT.Painter.BuildSvgPath("bezier", bins).path)
+                 .style("fill", "none")
+                 .call(this.lineatt.func);
+
+      if (epath)
+         this.draw_g.append("svg:path")
+             .attr("d",epath)
+             .style("fill","none")
+             .call(this.lineatt.func);
+
+      if (mpath)
+         this.draw_g.append("svg:path")
+               .attr("d",mpath)
+               .call(this.markeratt.func);
+
+   }
+
+   TGraphPolarPainter.prototype.CreatePolargram = function() {
+      var polargram = JSROOT.Create("TGraphPolargram"),
+          gr = this.GetObject();
+
+      var rmin = gr.fY[0] || 0, rmax = rmin;
+      for (var n=0;n<gr.fNpoints;++n) {
+         rmin = Math.min(rmin, gr.fY[n] - gr.fEY[n]);
+         rmax = Math.max(rmax, gr.fY[n] + gr.fEY[n]);
+      }
+
+      polargram.fRwrmin = rmin - (rmax-rmin)*0.1;
+      polargram.fRwrmax = rmax + (rmax-rmin)*0.1;
+
+      return polargram;
+   }
+
+   TGraphPolarPainter.prototype.ExtractTooltip = function(pnt) {
+      if (!pnt) return null;
+
+      var graph = this.GetObject(),
+          main = this.main_painter(),
+          best_dist2 = 1e10, bestindx = -1, bestpos = null;
+
+      for (var n=0;n<graph.fNpoints;++n) {
+         var pos = main.translate(graph.fX[n], graph.fY[n]);
+
+         var dist2 = (pos.x-pnt.x)*(pos.x-pnt.x) + (pos.y-pnt.y)*(pos.y-pnt.y);
+         if (dist2<best_dist2) { best_dist2 = dist2; bestindx = n; bestpos = pos; }
+      }
+
+      var match_distance = 5;
+      if (this.markeratt && this.markeratt.used) match_distance = this.markeratt.GetFullSize();
+
+      if (Math.sqrt(best_dist2) > match_distance) return null;
+
+      var res = { name: this.GetObject().fName, title: this.GetObject().fTitle,
+                  x: bestpos.x, y: bestpos.y,
+                  color1: this.markeratt && this.markeratt.used ? this.markeratt.color : this.lineatt.color,
+                  exact: Math.sqrt(best_dist2) < 4,
+                  lines: [ this.GetTipName() ],
+                  binindx: bestindx,
+                  menu_dist: match_distance,
+                  radius: match_distance
+                };
+
+      res.lines.push("r = " + main.AxisAsText("r", graph.fY[bestindx]));
+      res.lines.push("phi = " + main.AxisAsText("phi",graph.fX[bestindx]));
+
+      if (graph.fEY && graph.fEY[bestindx])
+         res.lines.push("error r = " + main.AxisAsText("r", graph.fEY[bestindx]));
+
+      if (graph.fEX && graph.fEX[bestindx])
+         res.lines.push("error phi = " + main.AxisAsText("phi", graph.fEX[bestindx]));
+
+      return res;
+   }
+
+   TGraphPolarPainter.prototype.ShowTooltip = function(hint) {
+
+      if (!this.draw_g) return;
+
+      var ttcircle = this.draw_g.select(".tooltip_bin");
+
+      if (!hint) {
+         ttcircle.remove();
+         return;
+      }
+
+      if (ttcircle.empty())
+         ttcircle = this.draw_g.append("svg:ellipse")
+                             .attr("class","tooltip_bin")
+                             .style("pointer-events","none");
+
+      hint.changed = ttcircle.property("current_bin") !== hint.binindx;
+
+      if (hint.changed)
+         ttcircle.attr("cx", hint.x)
+               .attr("cy", hint.y)
+               .attr("rx", Math.round(hint.radius))
+               .attr("ry", Math.round(hint.radius))
+               .style("fill", "none")
+               .style("stroke", hint.color1)
+               .property("current_bin", hint.binindx);
+   }
+
+   TGraphPolarPainter.prototype.ProcessTooltip = function(pnt) {
+      var hint = this.ExtractTooltip(pnt);
+      if (!pnt || !pnt.disabled) this.ShowTooltip(hint);
+      return hint;
+   }
+
+   TGraphPolarPainter.prototype.PerformDrawing = function(divid) {
+      this.SetDivId(divid);
+      this.DrawBins();
+      this.DrawingReady();
+   }
+
+   JSROOT.Painter.drawGraphPolar = function(divid, graph, opt) {
+
+      var painter = new TGraphPolarPainter(graph);
+
+      painter.DecodeOptions(opt);
+
+      painter.SetDivId(divid, -1); // just to get access to existing elements
+
+      var main = painter.main_painter();
+      if (main) {
+         if (!main.$polargram) {
+            console.error('Cannot superimpose TGraphPolar with plain histograms');
+            return null;
+         }
+         painter.PerformDrawing(divid);
+      } else {
+         if (!graph.fPolargram) graph.fPolargram = painter.CreatePolargram();
+
+         JSROOT.draw(divid, graph.fPolargram, "", painter.PerformDrawing.bind(painter, divid));
+      }
+
+      return painter;
+   }
+
+   // ==============================================================
+
+   function TSplinePainter(spline) {
+      JSROOT.TObjectPainter.call(this, spline);
+      this.bins = null;
+   }
+
+   TSplinePainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+
+   TSplinePainter.prototype.UpdateObject = function(obj, opt) {
+      var spline = this.GetObject();
+
+      if (spline._typename != obj._typename) return false;
+
+      if (spline !== obj) JSROOT.extend(spline, obj);
+
+      if (opt !== undefined) this.DecodeOptions(opt);
+
+      return true;
+   }
+
+   TSplinePainter.prototype.Eval = function(knot, x) {
+      var dx = x - knot.fX;
+
+      if (knot._typename == "TSplinePoly3")
+         return knot.fY + dx*(knot.fB + dx*(knot.fC + dx*knot.fD));
+
+      if (knot._typename == "TSplinePoly5")
+         return knot.fY + dx*(knot.fB + dx*(knot.fC + dx*(knot.fD + dx*(knot.fE + dx*knot.fF))));
+
+      return knot.fY + dx;
+   }
+
+   TSplinePainter.prototype.FindX = function(x) {
+      var spline = this.GetObject(),
+          klow = 0, khig = spline.fNp - 1;
+
+      if (x <= spline.fXmin) return 0;
+      if (x >= spline.fXmax) return khig;
+
+      if(spline.fKstep) {
+         // Equidistant knots, use histogramming
+         klow = Math.round((x - spline.fXmin)/spline.fDelta);
+         // Correction for rounding errors
+         if (x < spline.fPoly[klow].fX) {
+            klow = Math.max(klow-1,0);
+         } else if (klow < khig) {
+            if (x > spline.fPoly[klow+1].fX) ++klow;
+         }
+      } else {
+         // Non equidistant knots, binary search
+         while(khig-klow>1) {
+            var khalf = Math.round((klow+khig)/2);
+            if(x > spline.fPoly[khalf].fX) klow = khalf;
+                                      else khig = khalf;
+         }
+      }
+      return klow;
+   }
+
+   TSplinePainter.prototype.CreateDummyHisto = function() {
+
+      var xmin = 0, xmax = 1, ymin = 0, ymax = 1,
+          spline = this.GetObject();
+
+      if (spline && spline.fPoly) {
+
+         xmin = xmax = spline.fPoly[0].fX;
+         ymin = ymax = spline.fPoly[0].fY;
+
+         spline.fPoly.forEach(function(knot) {
+            xmin = Math.min(knot.fX, xmin);
+            xmax = Math.max(knot.fX, xmax);
+            ymin = Math.min(knot.fY, ymin);
+            ymax = Math.max(knot.fY, ymax);
+         });
+
+         if (ymax > 0.0) ymax *= 1.05;
+         if (ymin < 0.0) ymin *= 1.05;
+      }
+
+      var histo = JSROOT.Create("TH1I");
+
+      histo.fName = spline.fName + "_hist";
+      histo.fTitle = spline.fTitle;
+
+      histo.fXaxis.fXmin = xmin;
+      histo.fXaxis.fXmax = xmax;
+      histo.fYaxis.fXmin = ymin;
+      histo.fYaxis.fXmax = ymax;
+
+      return histo;
+   }
+
+   TSplinePainter.prototype.ProcessTooltip = function(pnt) {
+
+      var cleanup = false,
+          spline = this.GetObject(),
+          main = this.main_painter(),
+          xx, yy, knot = null, indx = 0;
+
+      if ((pnt === null) || !spline || !main) {
+         cleanup = true;
+      } else {
+         xx = main.RevertX(pnt.x);
+         indx = this.FindX(xx);
+         knot = spline.fPoly[indx];
+         yy = this.Eval(knot, xx);
+
+         if ((indx < spline.fN-1) && (Math.abs(spline.fPoly[indx+1].fX-xx) < Math.abs(xx-knot.fX))) knot = spline.fPoly[++indx];
+
+         if (Math.abs(main.grx(knot.fX) - pnt.x) < 0.5*this.knot_size) {
+            xx = knot.fX; yy = knot.fY;
+         } else {
+            knot = null;
+            if ((xx < spline.fXmin) || (xx > spline.fXmax)) cleanup = true;
+         }
+      }
+
+      if (cleanup) {
+         if (this.draw_g !== null)
+            this.draw_g.select(".tooltip_bin").remove();
+         return null;
+      }
+
+      var gbin = this.draw_g.select(".tooltip_bin"),
+          radius = this.lineatt.width + 3;
+
+      if (gbin.empty())
+         gbin = this.draw_g.append("svg:circle")
+                           .attr("class", "tooltip_bin")
+                           .style("pointer-events","none")
+                           .attr("r", radius)
+                           .style("fill", "none")
+                           .call(this.lineatt.func);
+
+      var res = { name: this.GetObject().fName,
+                  title: this.GetObject().fTitle,
+                  x: main.grx(xx),
+                  y: main.gry(yy),
+                  color1: this.lineatt.color,
+                  lines: [],
+                  exact: (knot !== null) || (Math.abs(main.gry(yy) - pnt.y) < radius) };
+
+      res.changed = gbin.property("current_xx") !== xx;
+      res.menu = res.exact;
+      res.menu_dist = Math.sqrt((res.x-pnt.x)*(res.x-pnt.x) + (res.y-pnt.y)*(res.y-pnt.y));
+
+      if (res.changed)
+         gbin.attr("cx", Math.round(res.x))
+             .attr("cy", Math.round(res.y))
+             .property("current_xx", xx);
+
+      var name = this.GetTipName();
+      if (name.length > 0) res.lines.push(name);
+      res.lines.push("x = " + main.AxisAsText("x", xx))
+      res.lines.push("y = " + main.AxisAsText("y", yy));
+      if (knot !== null) {
+         res.lines.push("knot = " + indx);
+         res.lines.push("B = " + JSROOT.FFormat(knot.fB, JSROOT.gStyle.fStatFormat));
+         res.lines.push("C = " + JSROOT.FFormat(knot.fC, JSROOT.gStyle.fStatFormat));
+         res.lines.push("D = " + JSROOT.FFormat(knot.fD, JSROOT.gStyle.fStatFormat));
+         if ((knot.fE!==undefined) && (knot.fF!==undefined)) {
+            res.lines.push("E = " + JSROOT.FFormat(knot.fE, JSROOT.gStyle.fStatFormat));
+            res.lines.push("F = " + JSROOT.FFormat(knot.fF, JSROOT.gStyle.fStatFormat));
+         }
+      }
+
+      return res;
+   }
+
+   TSplinePainter.prototype.Redraw = function() {
+
+      var w = this.frame_width(),
+          h = this.frame_height(),
+          spline = this.GetObject(),
+          pmain = this.main_painter(),
+          name = this.GetTipName("\n");
+
+      this.CreateG(true);
+
+      this.knot_size = 5; // used in tooltip handling
+
+      if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(spline);
+
+      if (this.options.Line || this.options.Curve) {
+
+         var npx = Math.max(10, spline.fNpx);
+
+         var xmin = Math.max(pmain.scale_xmin, spline.fXmin),
+             xmax = Math.min(pmain.scale_xmax, spline.fXmax),
+             indx = this.FindX(xmin),
+             bins = []; // index of current knot
+
+         if (pmain.logx) {
+            xmin = Math.log(xmin);
+            xmax = Math.log(xmax);
+         }
+
+         for (var n=0;n<npx;++n) {
+            var xx = xmin + (xmax-xmin)/npx*(n-1);
+            if (pmain.logx) xx = Math.exp(xx);
+
+            while ((indx < spline.fNp-1) && (xx > spline.fPoly[indx+1].fX)) ++indx;
+
+            var yy = this.Eval(spline.fPoly[indx], xx);
+
+            bins.push({ x: xx, y: yy, grx: pmain.grx(xx), gry: pmain.gry(yy) });
+         }
+
+         var h0 = h;  // use maximal frame height for filling
+         if ((pmain.hmin!==undefined) && (pmain.hmin>=0)) {
+            h0 = Math.round(pmain.gry(0));
+            if ((h0 > h) || (h0 < 0)) h0 = h;
+         }
+
+         var path = JSROOT.Painter.BuildSvgPath("bezier", bins, h0, 2);
+
+         this.draw_g.append("svg:path")
+             .attr("class", "line")
+             .attr("d", path.path)
+             .style("fill", "none")
+             .call(this.lineatt.func);
+      }
+
+      if (this.options.Mark) {
+
+         // for tooltips use markers only if nodes where not created
+         var path = "";
+
+         if (!this.markeratt)
+            this.markeratt = new JSROOT.TAttMarkerHandler(spline);
+
+         this.markeratt.reset_pos();
+
+         this.knot_size = this.markeratt.GetFullSize();
+
+         for (var n=0; n<spline.fPoly.length; n++) {
+            var knot = spline.fPoly[n],
+                grx = pmain.grx(knot.fX);
+            if ((grx > -this.knot_size) && (grx < w + this.knot_size)) {
+               var gry = pmain.gry(knot.fY);
+               if ((gry > -this.knot_size) && (gry < h + this.knot_size)) {
+                  path += this.markeratt.create(grx, gry);
+               }
+            }
+         }
+
+         if (path)
+            this.draw_g.append("svg:path")
+                       .attr("d", path)
+                       .call(this.markeratt.func);
+      }
+
+   }
+
+   TSplinePainter.prototype.CanZoomIn = function(axis,min,max) {
+      if (axis!=="x") return false;
+
+      var spline = this.GetObject();
+      if (!spline) return false;
+
+      // if function calculated, one always could zoom inside
+      return true;
+   }
+
+   TSplinePainter.prototype.DecodeOptions = function(opt) {
+      var d = new JSROOT.DrawOptions(opt);
+
+      this.options = {
+         Same: d.check('SAME'),
+         Line: d.check('L'),
+         Curve: d.check('C'),
+         Mark: d.check('P')
+      }
+   }
+
+   TSplinePainter.prototype.FirstDraw = function() {
+      this.SetDivId(this.divid);
+      this.Redraw();
+      return this.DrawingReady();
+   }
+
+   JSROOT.Painter.drawSpline = function(divid, spline, opt) {
+
+      var painter = new TSplinePainter(spline);
+
+      painter.SetDivId(divid, -1);
+      painter.DecodeOptions(opt);
+
+      if (!painter.main_painter()) {
+         if (painter.options.Same) {
+            console.warn('TSpline painter requires histogram to be drawn');
+            return null;
+         }
+         var histo = painter.CreateDummyHisto();
+         JSROOT.draw(divid, histo, "AXIS", painter.FirstDraw.bind(painter));
+         return painter;
+      }
+
+      return painter.FirstDraw();
+   }
+
+   // =============================================================
+
+   function TGraphTimePainter(gr) {
+      JSROOT.TObjectPainter.call(this, gr);
+   }
+
+   TGraphTimePainter.prototype = Object.create(JSROOT.TObjectPainter.prototype);
+
+   TGraphTimePainter.prototype.Redraw = function() {
+      if (this.step === undefined) this.StartDrawing(false);
+   }
+
+   TGraphTimePainter.prototype.DecodeOptions = function(opt) {
+
+      var d = new JSROOT.DrawOptions(opt || "REPEAT");
+
+      this.options = {
+          once: d.check("ONCE"),
+          repeat: d.check("REPEAT"),
+          first: d.check("FIRST")
+      }
+   }
+
+   TGraphTimePainter.prototype.DrawPrimitives = function(indx, callback, ppainter) {
+
+      if (indx===0) {
+         this._doing_primitives = true;
+      }
+
+      var lst = this.GetObject().fSteps.arr[this.step];
+
+      while (true) {
+         if (ppainter) ppainter.$grtimeid = this.selfid; // indicator that painter created by ourself
+
+         if (!lst || (indx >= lst.arr.length)) {
+            delete this._doing_primitives;
+            return JSROOT.CallBack(callback);
+         }
+
+         // handle use to invoke callback only when necessary
+         var handle = { func: this.DrawPrimitives.bind(this, indx+1, callback) };
+
+         ppainter = JSROOT.draw(this.divid, lst.arr[indx], lst.opt[indx], handle);
+
+         if (!handle.completed) return;
+         indx++;
+      }
+   }
+
+   TGraphTimePainter.prototype.Selector = function(p) {
+      return p && (p.$grtimeid === this.selfid);
+   }
+
+   TGraphTimePainter.prototype.ContineDrawing = function() {
+      var gr = this.GetObject();
+
+      if (!this.ready_called) {
+         this.ready_called = true;
+         this.DrawingReady(); // do it already here, animation will continue in background
+      }
+
+      if (this.options.first) {
+         // draw only single frame, cancel all others
+         delete this.step;
+         return;
+      }
+
+      if (this.wait_animation_frame) {
+         delete this.wait_animation_frame;
+
+         // clear pad
+         var pp = this.pad_painter(true);
+         if (!pp) {
+            // most probably, pad is cleared
+            delete this.step;
+            return;
+         }
+
+         // clear primitives produced by the TGraphTime
+         pp.CleanPrimitives(this.Selector.bind(this));
+
+         // draw ptrimitives again
+         this.DrawPrimitives(0, this.ContineDrawing.bind(this));
+      } else if (this.running_timeout) {
+         clearTimeout(this.running_timeout);
+         delete this.running_timeout;
+
+         this.wait_animation_frame = true;
+         // use animation frame to disable update in inactive form
+         requestAnimationFrame(this.ContineDrawing.bind(this));
+      } else {
+
+         var sleeptime = gr.fSleepTime;
+         if (!sleeptime || (sleeptime<100)) sleeptime = 10;
+
+         if (++this.step > gr.fSteps.arr.length) {
+            if (this.options.repeat) {
+               this.step = 0; // start again
+               sleeptime = Math.max(5000, 5*sleeptime); // increase sleep time
+            } else {
+               delete this.step;    // clear indicator that animation running
+               return;
+            }
+         }
+
+         this.running_timeout = setTimeout(this.ContineDrawing.bind(this), sleeptime);
+      }
+   }
+
+   TGraphTimePainter.prototype.StartDrawing = function(once_again) {
+      if (once_again!==false) this.SetDivId(this.divid);
+
+      this.step = 0;
+
+      this.DrawPrimitives(0, this.ContineDrawing.bind(this));
+   }
+
+   JSROOT.Painter.drawGraphTime = function(divid,gr,opt) {
+
+      var painter = new TGraphTimePainter(gr);
+      painter.SetDivId(divid,-1);
+
+      if (painter.main_painter()) {
+         console.error('Cannot draw graph time on top of other histograms');
+         return null;
+      }
+
+      if (!gr.fFrame) {
+         console.error('Frame histogram not exists');
+         return null;
+      }
+
+      painter.DecodeOptions(opt);
+
+      if (!gr.fFrame.fTitle && gr.fTitle) gr.fFrame.fTitle = gr.fTitle;
+
+      painter.selfid = "grtime" + JSROOT.id_counter++; // use to identify primitives which should be clean
+
+      JSROOT.draw(divid, gr.fFrame, "AXIS", painter.StartDrawing.bind(painter));
+
+      return painter;
+
    }
 
    // =============================================================
@@ -1874,12 +3093,10 @@
       if (mgraph.fMaximum != -1111)
          rw.ymax = maximum = mgraph.fMaximum;
 
-      if (minimum < 0 && rw.ymin >= 0 && logy)
-         minimum = 0.9 * rw.ymin;
-      if (maximum > 0 && rw.ymax <= 0 && logy)
-         maximum = 1.1 * rw.ymax;
-      if (minimum <= 0 && logy)
-         minimum = 0.001 * maximum;
+      if (minimum < 0 && rw.ymin >= 0 && logy) minimum = 0.9 * rw.ymin;
+      if (maximum > 0 && rw.ymax <= 0 && logy) maximum = 1.1 * rw.ymax;
+      if (minimum <= 0 && logy) minimum = 0.001 * maximum;
+      if (!logy && minimum > 0 && minimum < 0.05*maximum) minimum = 0;
       if (uxmin <= 0 && logx)
          uxmin = (uxmax > 1000) ? 1 : 0.001 * uxmax;
 
@@ -1926,8 +3143,10 @@
       var graphs = this.GetObject().fGraphs;
 
       // at the end of graphs drawing draw functions (if any)
-      if (indx >= graphs.arr.length)
+      if (indx >= graphs.arr.length) {
+         this._pfc = this._plc = this._pmc = false; // disable auto coloring at the end
          return this.DrawNextFunction(0, this.DrawingReady.bind(this));
+      }
 
       // if there is auto colors assignment, try to provide it
       if (this._pfc || this._plc || this._pmc) {
@@ -1935,17 +3154,13 @@
             this.palette = JSROOT.Painter.GetColorPalette();
          if (this.palette) {
             var color = this.palette.calcColor(indx, graphs.arr.length+1);
-            var icolor = JSROOT.Painter.root_colors.indexOf(color);
-            if (icolor<0) {
-               icolor = JSROOT.Painter.root_colors.length;
-               JSROOT.Painter.root_colors.push(color);
-            }
+            var icolor = this.add_color(color);
+
             if (this._pfc) graphs.arr[indx].fFillColor = icolor;
             if (this._plc) graphs.arr[indx].fLineColor = icolor;
             if (this._pmc) graphs.arr[indx].fMarkerColor = icolor;
          }
       }
-
 
       JSROOT.draw(this.divid, graphs.arr[indx], graphs.opt[indx] || opt,
                   this.DrawNextGraph.bind(this, indx+1, opt));
@@ -1995,7 +3210,7 @@
              lineatt = null, fillatt = null, markeratt = null;
          if (!obj || !obj.fOper) return;
 
-         this.RecreateDrawG(true, "special_layer");
+         this.CreateG();
 
          for (var k=0;k<obj.fOper.arr.length;++k) {
             var oper = obj.fOper.opt[k];
@@ -2011,20 +3226,21 @@
                       x2 = this.AxisToSvg("x", obj.fBuf[indx++]),
                       y2 = this.AxisToSvg("y", obj.fBuf[indx++]);
 
-                  if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
-
                   var rect = this.draw_g
                      .append("svg:rect")
                      .attr("x", Math.min(x1,x2))
                      .attr("y", Math.min(y1,y2))
                      .attr("width", Math.abs(x2-x1))
-                     .attr("height", Math.abs(y1-y2))
-                     .call(lineatt.func);
+                     .attr("height", Math.abs(y1-y2));
 
                   if (oper === "box") {
                      if (!fillatt) fillatt = this.createAttFill(attr);
-                     rect.call(fillatt.func);
+                     rect.call(fillatt.func).style('stroke','none');
+                  } else {
+                     if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
+                     rect.call(lineatt.func).style('fill','none');
                   }
+
                   continue;
                }
                case "line":
@@ -2046,26 +3262,27 @@
                }
                case "polyline":
                case "polylinendc":
-               case "fillarea": {
+               case "fillarea":
+               case "fillareandc": {
 
-                  var npoints = parseInt(obj.fOper.arr[k].fString), cmd = "";
-
-                  if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
+                  var npoints = parseInt(obj.fOper.arr[k].fString),
+                      cmd = "", isndc = (oper.indexOf("ndc") > 0);
 
                   for (var n=0;n<npoints;++n)
                      cmd += ((n>0) ? "L" : "M") +
-                            this.AxisToSvg("x", obj.fBuf[indx++], false) + "," +
-                            this.AxisToSvg("y", obj.fBuf[indx++], false);
+                            this.AxisToSvg("x", obj.fBuf[indx++], isndc) + "," +
+                            this.AxisToSvg("y", obj.fBuf[indx++], isndc);
 
-                  if (oper == "fillarea") cmd+="Z";
-                  var path = this.draw_g
-                          .append("svg:path")
-                          .attr("d", cmd)
-                          .call(lineatt.func);
+                  if (oper.indexOf("fillarea") == 0) cmd+="Z";
 
-                  if (oper == "fillarea") {
+                  var path = this.draw_g.append("svg:path").attr("d", cmd);
+
+                  if (oper.indexOf("fillarea") == 0) {
                      if (!fillatt) fillatt = this.createAttFill(attr);
-                     path.call(fillatt.func);
+                     path.call(fillatt.func).attr('stroke','none');
+                  } else {
+                     if (!lineatt) lineatt = new JSROOT.TAttLineHandler(attr);
+                     path.call(lineatt.func).attr('fill', 'none');
                   }
 
                   continue;
@@ -2102,12 +3319,10 @@
 
                      var angle = attr.fTextAngle;
                      angle -= Math.floor(angle/360) * 360;
-                     if (angle>0) angle = -360 + angle; // rotation angle in ROOT and SVG has different meaning
-
-                     var enable_latex = 0; // 0-off, 1 - when make sense, 2 - always
 
                      // todo - correct support of angle
-                     this.DrawText(attr.fTextAlign, xx, yy, 0, angle, obj.fOper.arr[k].fString, JSROOT.Painter.root_colors[attr.fTextColor], enable_latex, group);
+                     this.DrawText({ align: attr.fTextAlign, x: xx, y: yy, rotate: angle,
+                                     text: obj.fOper.arr[k].fString, color: JSROOT.Painter.root_colors[attr.fTextColor], latex: 0, draw_g: group });
 
                      this.FinishTextDrawing(group);
                   }
@@ -2130,21 +3345,24 @@
       return painter.DrawingReady();
    }
 
-
    JSROOT.Painter.drawText = drawText;
    JSROOT.Painter.drawLine = drawLine;
    JSROOT.Painter.drawPolyLine = drawPolyLine;
    JSROOT.Painter.drawArrow = drawArrow;
    JSROOT.Painter.drawEllipse = drawEllipse;
+   JSROOT.Painter.drawPie = drawPie;
    JSROOT.Painter.drawBox = drawBox;
    JSROOT.Painter.drawMarker = drawMarker;
    JSROOT.Painter.drawPolyMarker = drawPolyMarker;
    JSROOT.Painter.drawWebPainting = drawWebPainting;
    JSROOT.Painter.drawRooPlot = drawRooPlot;
+   JSROOT.Painter.drawGraph = drawGraph;
 
    JSROOT.TF1Painter = TF1Painter;
    JSROOT.TGraphPainter = TGraphPainter;
+   JSROOT.TGraphPolarPainter = TGraphPolarPainter;
    JSROOT.TMultiGraphPainter = TMultiGraphPainter;
+   JSROOT.TSplinePainter = TSplinePainter;
 
    return JSROOT;
 

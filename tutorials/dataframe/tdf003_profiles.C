@@ -12,22 +12,13 @@
 
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
-void fill_tree(const char *filename, const char *treeName)
+void fill_tree(const char *treeName, const char *fileName)
 {
-   TFile f(filename, "RECREATE");
-   TTree t(treeName, treeName);
-   float px, py, pz;
-   t.Branch("px", &px);
-   t.Branch("py", &py);
-   t.Branch("pz", &pz);
-   for (int i = 0; i < 25000; i++) {
-      gRandom->Rannor(px, py);
-      pz = px * px + py * py;
-      t.Fill();
-   }
-   t.Write();
-   f.Close();
-   return;
+   ROOT::Experimental::TDataFrame d(25000);
+   d.Define("px", []() { return gRandom->Gaus(); })
+      .Define("py", []() { return gRandom->Gaus(); })
+      .Define("pz", [](double px, double py) { return sqrt(px * px + py * py); }, {"px", "py"})
+      .Snapshot(treeName, fileName);
 }
 
 void tdf003_profiles()
@@ -35,14 +26,14 @@ void tdf003_profiles()
    // We prepare an input tree to run on
    auto fileName = "tdf003_profiles.root";
    auto treeName = "myTree";
-   fill_tree(fileName, treeName);
+   fill_tree(treeName, fileName);
 
    // We read the tree from the file and create a TDataFrame.
    ROOT::Experimental::TDataFrame d(treeName, fileName, {"px", "py", "pz"});
 
    // Create the profiles
-   auto hprof1d = d.Profile1D(TProfile("hprof1d", "Profile of pz versus px", 64, -4, 4));
-   auto hprof2d = d.Profile2D(TProfile2D("hprof2d", "Profile of pz versus px and py", 40, -4, 4, 40, -4, 4, 0, 20));
+   auto hprof1d = d.Profile1D({"hprof1d", "Profile of pz versus px", 64, -4, 4});
+   auto hprof2d = d.Profile2D({"hprof2d", "Profile of pz versus px and py", 40, -4, 4, 40, -4, 4, 0, 20});
 
    // And Draw
    auto c1 = new TCanvas("c1", "Profile histogram example", 200, 10, 700, 500);

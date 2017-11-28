@@ -14,6 +14,7 @@
 #include "TTree.h"
 #include "TBranch.h"
 #include "TFile.h"
+#include "TLeaf.h"
 #include "TBufferFile.h"
 #include "TMath.h"
 #include "TROOT.h"
@@ -21,6 +22,7 @@
 #include "TVirtualMutex.h"
 #include "TVirtualPerfStats.h"
 #include "TTimeStamp.h"
+#include "ROOT/TIOFeatures.hxx"
 #include "RZip.h"
 
 #include <bitset>
@@ -41,60 +43,34 @@ See picture in TTree.
 ////////////////////////////////////////////////////////////////////////////////
 /// Default contructor.
 
-TBasket::TBasket() : fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
+TBasket::TBasket()
 {
-   fDisplacement  = 0;
-   fEntryOffset   = 0;
-   fBufferRef     = 0;
-   fBuffer        = 0;
-   fHeaderOnly    = kFALSE;
-   fBufferSize    = 0;
-   fNevBufSize    = 0;
-   fNevBuf        = 0;
-   fLast          = 0;
-   fBranch        = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor used during reading.
 
-TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
+TBasket::TBasket(TDirectory *motherDir) : TKey(motherDir)
 {
-   fDisplacement  = 0;
-   fEntryOffset   = 0;
-   fBufferRef     = 0;
-   fBuffer        = 0;
-   fHeaderOnly    = kFALSE;
-   fBufferSize    = 0;
-   fNevBufSize    = 0;
-   fNevBuf        = 0;
-   fLast          = 0;
-   fBranch        = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Basket normal constructor, used during writing.
 
-TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
-   TKey(branch->GetDirectory()),fCompressedBufferRef(0), fOwnsCompressedBuffer(kFALSE), fLastWriteBufferSize(0)
+TBasket::TBasket(const char *name, const char *title, TBranch *branch)
+   : TKey(branch->GetDirectory()), fBufferSize(branch->GetBasketSize()), fNevBufSize(branch->GetEntryOffsetLen()),
+     fHeaderOnly(kTRUE), fIOBits(branch->GetIOFeatures().GetFeatures())
 {
    SetName(name);
    SetTitle(title);
    fClassName   = "TBasket";
-   fBufferSize  = branch->GetBasketSize();
-   fNevBufSize  = branch->GetEntryOffsetLen();
-   fNevBuf      = 0;
-   fEntryOffset = 0;
-   fDisplacement= 0;
-   fBuffer      = 0;
+   fBuffer = nullptr;
    fBufferRef   = new TBufferFile(TBuffer::kWrite, fBufferSize);
    fVersion    += 1000;
    if (branch->GetDirectory()) {
       TFile *file = branch->GetFile();
       fBufferRef->SetParent(file);
    }
-   fHeaderOnly  = kTRUE;
-   fLast        = 0; // Must initialize before calling Streamer()
    if (branch->GetTree()) {
 #ifdef R__USE_IMT
       fCompressedBufferRef = branch->GetTransientBuffer(fBufferSize);
@@ -107,12 +83,12 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
          fOwnsCompressedBuffer = kTRUE;
       }
    }
+   fBranch = branch;
    Streamer(*fBufferRef);
    fKeylen      = fBufferRef->Length();
    fObjlen      = fBufferSize - fKeylen;
    fLast        = fKeylen;
    fBuffer      = 0;
-   fBranch      = branch;
    fHeaderOnly  = kFALSE;
    if (fNevBufSize) {
       fEntryOffset = new Int_t[fNevBufSize];
@@ -127,12 +103,11 @@ TBasket::TBasket(const char *name, const char *title, TBranch *branch) :
 TBasket::~TBasket()
 {
    if (fDisplacement) delete [] fDisplacement;
-   if (fEntryOffset)  delete [] fEntryOffset;
+   ResetEntryOffset();
    if (fBufferRef) delete fBufferRef;
    fBufferRef = 0;
    fBuffer = 0;
    fDisplacement= 0;
-   fEntryOffset = 0;
    // Note we only delete the compressed buffer if we own it
    if (fCompressedBufferRef && fOwnsCompressedBuffer) {
       delete fCompressedBufferRef;
@@ -178,8 +153,7 @@ Long64_t TBasket::CopyTo(TFile *to)
 
 void TBasket::DeleteEntryOffset()
 {
-   if (fEntryOffset) delete [] fEntryOffset;
-   fEntryOffset = 0;
+   ResetEntryOffset();
    fNevBufSize  = 0;
 }
 
@@ -191,7 +165,7 @@ Int_t TBasket::DropBuffers()
    if (!fBuffer && !fBufferRef) return 0;
 
    if (fDisplacement) delete [] fDisplacement;
-   if (fEntryOffset)  delete [] fEntryOffset;
+   ResetEntryOffset();
    if (fBufferRef)    delete fBufferRef;
    if (fCompressedBufferRef && fOwnsCompressedBuffer) delete fCompressedBufferRef;
    fBufferRef   = 0;
@@ -204,12 +178,50 @@ Int_t TBasket::DropBuffers()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Calculates the entry offset array, if possible.
+///
+/// Result is cached, meaning that this should only be invoked once per basket.
+
+Int_t *TBasket::GetCalculatedEntryOffset()
+{
+   if (fEntryOffset != reinterpret_cast<Int_t *>(-1)) {
+      return fEntryOffset;
+   }
+
+   if (R__unlikely(!fBranch)) {
+      Error("GetCalculatedEntryOffset", "Basket entry offset calculation requested, but no associated TBranch!");
+      return nullptr;
+   }
+   if (R__unlikely(fBranch->GetNleaves() != 1)) {
+      Error("GetCalculatedEntryOffset", "Branch contains multiple leaves - unable to calculated entry offsets!");
+      return nullptr;
+   }
+   TLeaf *leaf = static_cast<TLeaf *>((*fBranch->GetListOfLeaves())[0]);
+   fEntryOffset = leaf->GenerateOffsetArray(fKeylen, fNevBuf);
+   return fEntryOffset;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Determine whether we can generate the offset array when this branch is read.
+///
+
+Bool_t TBasket::CanGenerateOffsetArray()
+{
+   if (fBranch->GetNleaves() != 1) {
+      return kFALSE;
+   }
+   TLeaf *leaf = static_cast<TLeaf *>((*fBranch->GetListOfLeaves())[0]);
+   return leaf->CanGenerateOffsetArray();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Get pointer to buffer for internal entry.
 
 Int_t TBasket::GetEntryPointer(Int_t entry)
 {
    Int_t offset;
-   if (fEntryOffset) offset = fEntryOffset[entry];
+   Int_t *entryOffset = GetEntryOffset();
+   if (entryOffset)  offset = entryOffset[entry];
    else              offset = fKeylen + entry*fNevBufSize;
    fBufferRef->SetBufferOffset(offset);
    return offset;
@@ -293,8 +305,9 @@ void TBasket::MoveEntries(Int_t dentries)
    Int_t bufbegin;
    Int_t moved;
 
-   if (fEntryOffset) {
-      bufbegin = fEntryOffset[dentries];
+   Int_t *entryOffset = GetEntryOffset();
+   if (entryOffset) {
+      bufbegin = entryOffset[dentries];
       moved = bufbegin-GetKeylen();
 
       // First store the original location in the fDisplacement array
@@ -304,12 +317,12 @@ void TBasket::MoveEntries(Int_t dentries)
          fDisplacement = new Int_t[fNevBufSize];
       }
       for (i = 0; i<(fNevBufSize-dentries); ++i) {
-         fDisplacement[i] = fEntryOffset[i+dentries];
-         fEntryOffset[i]  = fEntryOffset[i+dentries] - moved;
+         fDisplacement[i] = entryOffset[i + dentries];
+         entryOffset[i] = entryOffset[i + dentries] - moved;
       }
       for (i = fNevBufSize-dentries; i<fNevBufSize; ++i) {
          fDisplacement[i] = 0;
-         fEntryOffset[i]  = 0;
+         entryOffset[i] = 0;
       }
 
    } else {
@@ -344,7 +357,7 @@ Int_t TBasket::ReadBasketBuffersUncompressedCase()
 
    // Usage of this mode assume the existance of only ONE
    // entry in this basket.
-   delete [] fEntryOffset; fEntryOffset = 0;
+   ResetEntryOffset();
    delete [] fDisplacement; fDisplacement = 0;
 
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
@@ -413,6 +426,14 @@ void inline TBasket::InitializeCompressedBuffer(Int_t len, TFile* file)
    if (R__unlikely(!compressedBufferExists)) {
       fOwnsCompressedBuffer = kTRUE;
    }
+}
+
+void TBasket::ResetEntryOffset()
+{
+   if (fEntryOffset != reinterpret_cast<Int_t *>(-1)) {
+      delete[] fEntryOffset;
+   }
+   fEntryOffset = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -617,19 +638,31 @@ AfterBuffer:
    fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
 
    // Read offsets table if needed.
-   if (!fBranch->GetEntryOffsetLen()) {
+   // If there's no EntryOffsetLen in the branch -- or the fEntryOffset is marked to be calculated-on-demand --
+   // then we skip reading out.
+   if (!fBranch->GetEntryOffsetLen() || (fEntryOffset == reinterpret_cast<Int_t *>(-1))) {
       return 0;
    }
-   delete [] fEntryOffset;
-   fEntryOffset = 0;
+   // At this point, we're required to read out an offset array.
+   ResetEntryOffset(); // TODO: every basket, we reset the offset array.  Is this necessary?
+                       // Could we instead switch to std::vector?
    fBufferRef->SetBufferOffset(fLast);
    fBufferRef->ReadArray(fEntryOffset);
-   if (!fEntryOffset) {
+   if (R__unlikely(!fEntryOffset)) {
       fEntryOffset = new Int_t[fNevBuf+1];
       fEntryOffset[0] = fKeylen;
       Warning("ReadBasketBuffers","basket:%s has fNevBuf=%d but fEntryOffset=0, pos=%lld, len=%d, fNbytes=%d, fObjlen=%d, trying to repair",GetName(),fNevBuf,pos,len,fNbytes,fObjlen);
       return 0;
    }
+   if (fIOBits & static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap)) {
+      // In this case, we cannot regenerate the offset array at runtime -- but we wrote out an array of
+      // sizes instead of offsets (as sizes compress much better).
+      fEntryOffset[0] = fKeylen;
+      for (Int_t idx = 1; idx < fNevBuf + 1; idx++) {
+         fEntryOffset[idx] += fEntryOffset[idx - 1];
+      }
+   }
+   fReadEntryOffset = kTRUE;
    // Read the array of diplacement if any.
    delete [] fDisplacement;
    fDisplacement = 0;
@@ -710,12 +743,9 @@ void TBasket::Reset()
 
    Int_t newNevBufSize = fBranch->GetEntryOffsetLen();
    if (newNevBufSize==0) {
-      delete [] fEntryOffset;
-      fEntryOffset = 0;
-   } else if (newNevBufSize != fNevBufSize) {
-      delete [] fEntryOffset;
-      fEntryOffset = new Int_t[newNevBufSize];
-   } else if (!fEntryOffset) {
+      ResetEntryOffset();
+   } else if ((newNevBufSize != fNevBufSize) || (fEntryOffset <= reinterpret_cast<Int_t *>(-1))) {
+      ResetEntryOffset();
       fEntryOffset = new Int_t[newNevBufSize];
    }
    fNevBufSize = newNevBufSize;
@@ -818,8 +848,13 @@ void TBasket::Streamer(TBuffer &b)
       b >> fLast;
       b >> flag;
       if (fLast > fBufferSize) fBufferSize = fLast;
-      if (flag && (flag % 10 != 2)) {
-         delete [] fEntryOffset;
+      Bool_t mustGenerateOffsets = false;
+      if (flag && (flag >= 80)) {
+         mustGenerateOffsets = true;
+         flag -= 80;
+      }
+      if (!mustGenerateOffsets && flag && (flag % 10 != 2)) {
+         ResetEntryOffset();
          fEntryOffset = new Int_t[fNevBufSize];
          if (fNevBuf) b.ReadArray(fEntryOffset);
          if (20<flag && flag<40) {
@@ -831,6 +866,11 @@ void TBasket::Streamer(TBuffer &b)
             fDisplacement = new Int_t[fNevBufSize];
             b.ReadArray(fDisplacement);
          }
+      } else if (mustGenerateOffsets) {
+         // We currently believe that in all cases when offsets can be generated, then the
+         // displacement array must be zero.
+         assert(flag <= 40);
+         fEntryOffset = reinterpret_cast<Int_t *>(-1);
       }
       if (flag == 1 || flag > 10) {
          fBufferRef = new TBufferFile(TBuffer::kRead,fBufferSize);
@@ -844,6 +884,7 @@ void TBasket::Streamer(TBuffer &b)
          //   fBranch->GetTree()->IncrementTotalBuffers(fBufferSize);
       }
    } else {
+
       TKey::Streamer(b);   //this must be first
       b.WriteVersion(TBasket::IsA());
       if (fBufferRef) {
@@ -851,37 +892,6 @@ void TBasket::Streamer(TBuffer &b)
          if (!fHeaderOnly && !fSeekKey && curLast > fLast) fLast = curLast;
       }
       if (fLast > fBufferSize) fBufferSize = fLast;
-
-//   static TStopwatch timer;
-//   timer.Start(kFALSE);
-
-//       //  Check may be fEntryOffset is equidistant
-//       //  This attempts by Victor fails :(
-//       int equidist = 0;
-//       if (1 && fEntryOffset && fNevBuf>=3) {
-//          equidist = 1;
-//          int dist = fEntryOffset[1]-fEntryOffset[0];
-//          int curr = fEntryOffset[1];
-//          for (int i=1;i<fNevBuf;i++,curr+=dist) {
-//             if (fEntryOffset[i]==curr) continue;
-//             equidist = 0;
-//             break;
-//          }
-//          if (equidist) {
-//             fNevBufSize=dist;
-//             delete [] fEntryOffset; fEntryOffset = 0;
-//          }
-//           if (equidist) {
-//              fprintf(stderr,"detected an equidistant case fNbytes==%d fLast==%d\n",fNbytes,fLast);
-//           }
-//       }
-//  also he add (a little further
-//       if (!fEntryOffset || equidist)  flag  = 2;
-
-//   timer.Stop();
-//   Double_t rt1 = timer.RealTime();
-//   Double_t cp1 = timer.CpuTime();
-//   fprintf(stderr,"equidist cost :  RT=%6.2f s  Cpu=%6.2f s\n",rt1,cp1);
 
       b << fBufferSize;
       if (fIOBits) {
@@ -892,17 +902,33 @@ void TBasket::Streamer(TBuffer &b)
       }
       b << fNevBuf;
       b << fLast;
+      Bool_t mustGenerateOffsets = fEntryOffset && fNevBuf &&
+                                   (fIOBits & static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap)) &&
+                                   CanGenerateOffsetArray();
+      // We currently believe that in all cases when offsets can be generated, then the
+      // displacement array must be zero.
+      assert(!mustGenerateOffsets || fDisplacement == nullptr);
       if (fHeaderOnly) {
-         flag = 0;
+         flag = mustGenerateOffsets ? 80 : 0;
          b << flag;
       } else {
+         // On return from this function, we are guaranteed that fEntryOffset
+         // is either a valid pointer or nullptr.
+         if (fNevBuf) {
+            GetEntryOffset();
+         }
          flag = 1;
-         if (!fEntryOffset)  flag  = 2;
+         if (!fNevBuf || !fEntryOffset)
+            flag = 2;
          if (fBufferRef)     flag += 10;
          if (fDisplacement)  flag += 40;
+         // Test if we can skip writing out the offset map.
+         if (mustGenerateOffsets) {
+            flag += 80;
+         }
          b << flag;
 
-         if (fEntryOffset && fNevBuf) {
+         if (!mustGenerateOffsets && fEntryOffset && fNevBuf) {
             b.WriteArray(fEntryOffset, fNevBuf);
             if (fDisplacement) b.WriteArray(fDisplacement, fNevBuf);
          }
@@ -919,7 +945,8 @@ void TBasket::Streamer(TBuffer &b)
 
 void TBasket::Update(Int_t offset, Int_t skipped)
 {
-   if (fEntryOffset) {
+   Int_t *entryOffset = GetEntryOffset();
+   if (entryOffset) {
       if (fNevBuf+1 >= fNevBufSize) {
          Int_t newsize = TMath::Max(10,2*fNevBufSize);
          Int_t *newoff = TStorage::ReAllocInt(fEntryOffset, newsize,
@@ -1003,18 +1030,35 @@ Int_t TBasket::WriteBuffer()
 
    // Transfer fEntryOffset table at the end of fBuffer.
    fLast = fBufferRef->Length();
-   if (fEntryOffset) {
-      // Note: We might want to investigate the compression gain if we
-      // transform the Offsets to fBuffer in entry length to optimize
-      // compression algorithm.  The aggregate gain on a (random) CMS files
-      // is around 5.5%. So the code could something like:
-      //      for(Int_t z = fNevBuf; z > 0; --z) {
-      //         if (fEntryOffset[z]) fEntryOffset[z] = fEntryOffset[z] - fEntryOffset[z-1];
-      //      }
-      fBufferRef->WriteArray(fEntryOffset,fNevBuf+1);
+   Int_t *entryOffset = GetEntryOffset();
+   if (entryOffset) {
+      Bool_t hasOffsetBit = fIOBits & static_cast<UChar_t>(TBasket::EIOBits::kGenerateOffsetMap);
+      if (!CanGenerateOffsetArray()) {
+         // If we have set the offset map flag, but cannot dynamically generate the map, then
+         // we should at least convert the offset array to a size array.  Note that we always
+         // write out (fNevBuf+1) entries to match the original case.
+         if (hasOffsetBit) {
+            for (Int_t idx = fNevBuf; idx > 0; idx--) {
+               entryOffset[idx] -= entryOffset[idx - 1];
+            }
+            entryOffset[0] = 0;
+         }
+         fBufferRef->WriteArray(entryOffset, fNevBuf + 1);
+         // Convert back to offset format: keeping both sizes and offsets in-memory were considered,
+         // but it seems better to use CPU than memory.
+         if (hasOffsetBit) {
+            entryOffset[0] = fKeylen;
+            for (Int_t idx = 1; idx < fNevBuf + 1; idx++) {
+               entryOffset[idx] += entryOffset[idx - 1];
+            }
+         }
+      } else if (!hasOffsetBit) { // In this case, write out as normal
+         fBufferRef->WriteArray(entryOffset, fNevBuf + 1);
+      }
       if (fDisplacement) {
-         fBufferRef->WriteArray(fDisplacement,fNevBuf+1);
-         delete [] fDisplacement; fDisplacement = 0;
+         fBufferRef->WriteArray(fDisplacement, fNevBuf + 1);
+         delete[] fDisplacement;
+         fDisplacement = 0;
       }
    }
 
@@ -1025,7 +1069,7 @@ Int_t TBasket::WriteBuffer()
    fHeaderOnly = kTRUE;
    fCycle = fBranch->GetWriteBasket();
    Int_t cxlevel = fBranch->GetCompressionLevel();
-   Int_t cxAlgorithm = fBranch->GetCompressionAlgorithm();
+   ROOT::ECompressionAlgorithm cxAlgorithm = static_cast<ROOT::ECompressionAlgorithm>(fBranch->GetCompressionAlgorithm());
    if (cxlevel > 0) {
       Int_t nbuffers = 1 + (fObjlen - 1) / kMAXZIPBUF;
       Int_t buflen = fKeylen + fObjlen + 9 * nbuffers + 28; //add 28 bytes in case object is placed in a deleted gap

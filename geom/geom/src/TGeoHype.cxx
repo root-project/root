@@ -403,7 +403,7 @@ Double_t TGeoHype::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2, dZ
 
 void TGeoHype::GetBoundingCylinder(Double_t *param) const
@@ -413,7 +413,7 @@ void TGeoHype::GetBoundingCylinder(Double_t *param) const
    param[1] = TMath::Sqrt(RadiusHypeSq(fDz, kFALSE)); // Rmax
    param[1] *= param[1];
    param[2] = 0.;    // Phi1
-   param[3] = 360.;  // Phi1
+   param[3] = 360.;  // Phi2
 }
 
 ////////////////////////////////////////////////////////////////////////////////

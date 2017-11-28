@@ -28,6 +28,8 @@
 
 #include "TString.h"
 
+#include "TVirtualRWMutex.h"
+
 #include <assert.h>
 
 class TClass;
@@ -136,7 +138,11 @@ private:
    void operator=(const TCollection &); //are too complex to be automatically copied
 
 protected:
-   enum EStatusBits { kIsOwner = BIT(14) };
+   enum EStatusBits {
+      kIsOwner   = BIT(14),
+      // BIT(15) is used by TClonesArray and TMap
+      kUseRWLock = BIT(16)
+   };
 
    TString   fName;               //name of the collection
    Int_t     fSize;               //number of elements in collection
@@ -150,7 +156,7 @@ protected:
 public:
    enum { kInitCapacity = 16, kInitHashTableCapacity = 17 };
 
-   virtual            ~TCollection() { }
+   virtual            ~TCollection();
    virtual void       Add(TObject *obj) = 0;
    void               AddVector(TObject *obj1, ...);
    virtual void       AddAll(const TCollection *col);
@@ -195,8 +201,11 @@ public:
    void               SetCurrentCollection();
    void               SetName(const char *name) { fName = name; }
    virtual void       SetOwner(Bool_t enable = kTRUE);
+   virtual bool       UseRWLock();
    virtual Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
    virtual Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
+
+   R__ALWAYS_INLINE Bool_t IsUsingRWLock() const { return TestBit(TCollection::kUseRWLock); }
 
    static TCollection  *GetCurrentCollection();
    static void          StartGarbageCollection();
@@ -407,6 +416,27 @@ public:
    ROOT::Internal::TRangeDynCastIterator<T> begin() const { return fCollection.begin(); }
    ROOT::Internal::TRangeDynCastIterator<T> end() const { return fCollection.end(); }
 };
+
+// Zero overhead macros in case not compiled with thread support
+#if defined (_REENTRANT) || defined (WIN32)
+
+#define R__COLL_COND_MUTEX(mutex) this->IsUsingRWLock() ? mutex : nullptr
+
+#define R__COLLECTION_READ_LOCKGUARD(mutex) ::ROOT::TReadLockGuard _R__UNIQUE_(R__readguard)(R__COLL_COND_MUTEX(mutex))
+#define R__COLLECTION_READ_LOCKGUARD_NAMED(name,mutex) ::ROOT::TReadLockGuard _NAME2_(R__readguard,name)(R__COLL_COND_MUTEX(mutex))
+
+#define R__COLLECTION_WRITE_LOCKGUARD(mutex) ::ROOT::TWriteLockGuard _R__UNIQUE_(R__readguard)(R__COLL_COND_MUTEX(mutex))
+#define R__COLLECTION_WRITE_LOCKGUARD_NAMED(name,mutex) ::ROOT::TWriteLockGuard _NAME2_(R__readguard,name)(R__COLL_COND_MUTEX(mutex))
+
+#else
+
+#define R__COLLECTION_READ_LOCKGUARD(mutex) (void)mutex
+#define R__COLLECTION_COLLECTION_READ_LOCKGUARD_NAMED(name,mutex) (void)mutex
+
+#define R__COLLECTION_WRITE_LOCKGUARD(mutex) (void)mutex
+#define R__COLLECTION_WRITE_LOCKGUARD_NAMED(name,mutex) (void)mutex
+
+#endif
 
 //---- R__FOR_EACH macro -------------------------------------------------------
 

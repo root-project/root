@@ -42,6 +42,8 @@
 
 #include "TBranchIMTHelper.h"
 
+#include "ROOT/TIOFeatures.hxx"
+
 #include <atomic>
 #include <cstddef>
 #include <string.h>
@@ -176,14 +178,15 @@ TBranch::TBranch()
 ///
 ///    Note that this function is invoked by TTree::Branch
 
-TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leaflist, Int_t basketsize, Int_t compress)
-: TNamed(name, leaflist)
+TBranch::TBranch(TTree *tree, const char *name, void *address, const char *leaflist, Int_t basketsize, Int_t compress)
+   : TNamed(name, leaflist)
 , TAttFill(0, 1001)
 , fCompress(compress)
 , fBasketSize((basketsize < 100) ? 100 : basketsize)
 , fEntryOffsetLen(0)
 , fWriteBasket(0)
 , fEntryNumber(0)
+, fIOFeatures(tree ? tree->GetIOFeatures().GetFeatures() : 0)
 , fOffset(0)
 , fMaxBaskets(10)
 , fNBaskets(0)
@@ -207,7 +210,7 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
 , fTree(tree)
 , fMother(0)
 , fParent(0)
-, fAddress((char*) address)
+, fAddress((char *)address)
 , fDirectory(fTree->GetDirectory())
 , fFileName("")
 , fEntryBuffer(0)
@@ -226,7 +229,8 @@ TBranch::TBranch(TTree *tree, const char* name, void* address, const char* leafl
 /// See documentation for
 /// TBranch::TBranch(TTree *, const char *, void *, const char *, Int_t, Int_t)
 
-TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* leaflist, Int_t basketsize, Int_t compress)
+TBranch::TBranch(TBranch *parent, const char *name, void *address, const char *leaflist, Int_t basketsize,
+                 Int_t compress)
 : TNamed(name, leaflist)
 , TAttFill(0, 1001)
 , fCompress(compress)
@@ -234,6 +238,7 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
 , fEntryOffsetLen(0)
 , fWriteBasket(0)
 , fEntryNumber(0)
+, fIOFeatures(parent->fIOFeatures)
 , fOffset(0)
 , fMaxBaskets(10)
 , fNBaskets(0)
@@ -257,7 +262,7 @@ TBranch::TBranch(TBranch *parent, const char* name, void* address, const char* l
 , fTree(parent ? parent->GetTree() : 0)
 , fMother(parent ? parent->GetMother() : 0)
 , fParent(parent)
-, fAddress((char*) address)
+, fAddress((char *)address)
 , fDirectory(fTree ? fTree->GetDirectory() : 0)
 , fFileName("")
 , fEntryBuffer(0)
@@ -1128,7 +1133,12 @@ TBasket* TBranch::GetBasket(Int_t basketnumber)
    if (file == 0) {
       return 0;
    }
-   basket = GetFreshBasket();
+   // if cluster pre-fetching or retaining is on, do not re-use existing baskets
+   // unless a new cluster is used.
+   if (fTree->GetMaxVirtualSize() < 0 || fTree->GetClusterPrefetch())
+      basket = GetFreshCluster();
+   else
+      basket = GetFreshBasket();
 
    // fSkipZip is old stuff still maintained for CDF
    if (fSkipZip) basket->SetBit(TBufferFile::kNotDecompressed);
@@ -1278,6 +1288,14 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
             fFirstBasketEntry = -1;
             fNextBasketEntry = -1;
             return -1;
+         }
+         if (fTree->GetClusterPrefetch()) {
+            TTree::TClusterIterator clusterIterator = fTree->GetClusterIterator(entry);
+            clusterIterator.Next();
+            Int_t nextClusterEntry = clusterIterator.GetNextEntry();
+            for (Int_t i = fReadBasket + 1; i < fMaxBaskets && fBasketEntry[i] < nextClusterEntry; i++) {
+               GetBasket(i);
+            }
          }
       }
       fCurrentBasket = basket;
@@ -1490,6 +1508,72 @@ TBasket* TBranch::GetFreshBasket()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Drops the cluster two behind the current cluster and returns a fresh basket
+/// by either reusing or creating a new one
+
+TBasket *TBranch::GetFreshCluster()
+{
+   TBasket *basket = 0;
+
+   // If GetClusterIterator is called with a negative entry then GetStartEntry will be 0
+   // So we need to check if we reach the zero before we have gone back (1-VirtualSize) clusters
+   // if this is the case, we want to keep everything in memory so we return a new basket
+   TTree::TClusterIterator iter = fTree->GetClusterIterator(fBasketEntry[fReadBasket]);
+   if (iter.GetStartEntry() == 0) {
+      return fTree->CreateBasket(this);
+   }
+
+   // Iterate backwards (1-VirtualSize) clusters to reach cluster to be unloaded from memory,
+   // skipped if VirtualSize > 0.
+   for (Int_t j = 0; j < -fTree->GetMaxVirtualSize(); j++) {
+      if (iter.Previous() == 0) {
+         return fTree->CreateBasket(this);
+      }
+   }
+
+   Int_t entryToUnload = iter.Previous();
+   // Finds the basket to unload from memory. Since the basket should be close to current
+   // basket, just iterate backwards until the correct basket is reached. This should
+   // be fast as long as the number of baskets per cluster is small
+   Int_t basketToUnload = fReadBasket;
+   while (fBasketEntry[basketToUnload] != entryToUnload) {
+      basketToUnload--;
+      if (basketToUnload < 0) {
+         return fTree->CreateBasket(this);
+      }
+   }
+
+   // Retrieves the basket that is going to be unloaded from memory. If the basket did not
+   // exist, create a new one
+   basket = (TBasket *)fBaskets.UncheckedAt(basketToUnload);
+   if (basket) {
+      fBaskets.AddAt(0, basketToUnload);
+      --fNBaskets;
+   } else {
+      basket = fTree->CreateBasket(this);
+   }
+   ++basketToUnload;
+
+   // Clear the rest of the baskets. While it would be ideal to reuse these baskets
+   // for other baskets in the new cluster. It would require the function to go
+   // beyond its current scope. In the ideal case when each cluster only has 1 basket
+   // this will perform well
+   iter.Next();
+   while (fBasketEntry[basketToUnload] < iter.GetStartEntry()) {
+      TBasket *oldbasket = (TBasket *)fBaskets.UncheckedAt(basketToUnload);
+      if (oldbasket) {
+         oldbasket->DropBuffers();
+         delete oldbasket;
+         fBaskets.AddAt(0, basketToUnload);
+         --fNBaskets;
+      }
+      ++basketToUnload;
+   }
+   fBaskets.SetLast(-1);
+   return basket;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Return pointer to the 1st Leaf named name in thisBranch
 
 TLeaf* TBranch::GetLeaf(const char* name) const
@@ -1673,6 +1757,14 @@ Long64_t TBranch::GetZipBytes(Option_t *option) const
       if (branch) zipbytes += branch->GetZipBytes();
    }
    return zipbytes;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the IO settings currently in use for this branch.
+
+ROOT::TIOFeatures TBranch::GetIOFeatures() const
+{
+   return fIOFeatures;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

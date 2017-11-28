@@ -16,14 +16,15 @@
 
 class TH1Merger {
 
-public: 
-
+public:
    enum EMergerType {
-      kNotCompatible = -1, // histogram arenot compatible and cannot be merged
-      kAllSameAxes = 0,   // histogram have all some axes
-      kAllNoLimits  = 1,  // all histogram don't have limits (the buffer is used)
-      kHasNewLimits  = 2,  // all histogram don't have limits (the buffer is used)
-      kAllLabel = 3  // histogram have labels all axis
+      kNotCompatible = -1,   // histogram arenot compatible and cannot be merged
+      kAllSameAxes = 0,      // histogram have all some axes
+      kAllNoLimits = 1,      // all histogram don't have limits (the buffer is used)
+      kHasNewLimits = 2,     // all histogram don't have limits (the buffer is used)
+      kAllLabel = 3,         // histogram have labels all axis
+      kAutoP2HaveLimits = 4, // P2 (power-of-2) algorithm: all histogram have limits
+      kAutoP2NeedLimits = 5  // P2 algorithm: some histogram still need projections
    };
 
    static Bool_t AxesHaveLimits(const TH1 * h);
@@ -65,13 +66,20 @@ public:
    // function douing the actual merge
    Bool_t operator() ();
 
-private: 
+private:
+   Bool_t AutoP2BuildAxes(TH1 *);
 
    EMergerType ExamineHistograms();
 
-   void DefineNewAxes(); 
-   
+   void DefineNewAxes();
+
+   void CopyBuffer(TH1 *hsrc, TH1 *hdes);
+
    Bool_t BufferMerge();
+
+   Bool_t AutoP2BufferMerge();
+
+   Bool_t AutoP2Merge();
 
    Bool_t SameAxesMerge();
 

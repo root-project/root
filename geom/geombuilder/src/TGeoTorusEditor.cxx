@@ -9,21 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoTorusEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/torus_pic.gif">
+/** \class TGeoTorusEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoTorus.
+
+\image html geom_torus_pic.png
+
+\image html geom_torus_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/torus_ed.jpg">
-*/
-//End_Html
 
 #include "TGeoTorusEditor.h"
 #include "TGeoTabManager.h"

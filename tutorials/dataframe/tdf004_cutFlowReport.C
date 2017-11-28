@@ -14,22 +14,18 @@ using CylFourVector = ROOT::Math::RhoEtaPhiVector;
 
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
-void fill_tree(const char *filename, const char *treeName)
+void fill_tree(const char *treeName, const char *fileName)
 {
-   TFile f(filename, "RECREATE");
-   TTree t(treeName, treeName);
-   double b1;
-   int b2;
-   t.Branch("b1", &b1);
-   t.Branch("b2", &b2);
-   for (int i = 0; i < 50; ++i) {
-      b1 = i;
-      b2 = i * i;
-      t.Fill();
-   }
-   t.Write();
-   f.Close();
-   return;
+   ROOT::Experimental::TDataFrame d(50);
+   int i(0);
+   d.Define("b1", [&i]() { return (double)i; })
+      .Define("b2",
+              [&i]() {
+                 auto j = i * i;
+                 ++i;
+                 return j;
+              })
+      .Snapshot(treeName, fileName);
 }
 
 void tdf004_cutFlowReport()
@@ -38,7 +34,7 @@ void tdf004_cutFlowReport()
    // We prepare an input tree to run on
    auto fileName = "tdf004_cutFlowReport.root";
    auto treeName = "myTree";
-   fill_tree(fileName, treeName);
+   fill_tree(treeName, fileName);
 
    // We read the tree from the file and create a TDataFrame
    ROOT::Experimental::TDataFrame d(treeName, fileName, {"b1", "b2"});

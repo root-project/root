@@ -125,11 +125,9 @@ namespace cling {
       // we need a transaction.
       PushTransactionRAII pushedT(i);
 
-      m_State.reset(new ClangInternalState(CI.getASTContext(),
-                                           CI.getPreprocessor(),
-                                           CG ? CG->GetModule() : 0,
-                                           CG,
-                                           "aName"));
+      m_State.reset(
+          new ClangInternalState(CI.getASTContext(), CI.getPreprocessor(),
+                                 CG ? CG->GetModule() : nullptr, CG, "aName"));
     }
   }
 
@@ -184,6 +182,20 @@ namespace cling {
     return Opts.ShowVersion || Opts.Help;
   }
 
+  static void setupCallbacks(Interpreter& Interp,
+                             const Interpreter* parentInterp) {
+    // We need InterpreterCallbacks only if it is a parent Interpreter.
+    if (parentInterp) return;
+
+    // Disable suggestions for ROOT
+    bool showSuggestions =
+        !llvm::StringRef(ClingStringify(CLING_VERSION)).startswith("ROOT");
+
+    std::unique_ptr<InterpreterCallbacks> AutoLoadCB(
+        new AutoloadCallback(&Interp, showSuggestions));
+    Interp.setCallbacks(std::move(AutoLoadCB));
+  }
+
   Interpreter::Interpreter(int argc, const char* const *argv,
                            const char* llvmdir /*= 0*/, bool noRuntime,
                            const Interpreter* parentInterp) :
@@ -204,7 +216,7 @@ namespace cling {
 
     // Initialize the opt level to what CodeGenOpts says.
     if (m_OptLevel == -1)
-      m_OptLevel = getCI()->getCodeGenOpts().OptimizationLevel;
+      setDefaultOptLevel(getCI()->getCodeGenOpts().OptimizationLevel);
 
     Sema& SemaRef = getSema();
     Preprocessor& PP = SemaRef.getPreprocessor();
@@ -228,6 +240,23 @@ namespace cling {
     DiagnosticConsumer& DClient = getCI()->getDiagnosticClient();
     DClient.BeginSourceFile(getCI()->getLangOpts(), &PP);
 
+    bool usingCxxModules = getSema().getLangOpts().Modules;
+
+    if (usingCxxModules) {
+      // Explicitly create the modulemanager now. If we would create it later
+      // implicitly then it would just overwrite our callbacks we set below.
+      m_IncrParser->getCI()->createModuleManager();
+    }
+
+    // When using C++ modules, we setup the callbacks now that we have them
+    // ready before we parse code for the first time. Without C++ modules
+    // we can't setup the calls now because the clang PCH currently just
+    // overwrites it in the Initialize method and we have no simple way to
+    // initialize them earlier. We handle the non-modules case below.
+    if (usingCxxModules) {
+      setupCallbacks(*this, parentInterp);
+    }
+
     llvm::SmallVector<IncrementalParser::ParseResultTransaction, 2>
       IncrParserTransactions;
     if (!m_IncrParser->Initialize(IncrParserTransactions, parentInterp)) {
@@ -237,6 +266,13 @@ namespace cling {
       for (auto&& I: IncrParserTransactions)
         m_IncrParser->commitTransaction(I, false);
       return;
+    }
+
+    // When not using C++ modules, we now have a PCH and we can safely setup
+    // our callbacks without fearing that they get ovewritten by clang code.
+    // The modules setup is handled above.
+    if (!usingCxxModules) {
+      setupCallbacks(*this, parentInterp);
     }
 
     llvm::SmallVector<llvm::StringRef, 6> Syms;
@@ -251,7 +287,7 @@ namespace cling {
     // and overrides.
     if (!isInSyntaxOnlyMode()) {
       if (const Transaction* T = getLastTransaction()) {
-        if (llvm::Module* M = T->getModule()) {
+        if (auto M = T->getModule()) {
           for (const llvm::StringRef& Sym : Syms) {
             const llvm::GlobalValue* GV = M->getNamedValue(Sym);
   #if defined(__GLIBCXX__) && !defined(__APPLE__)
@@ -269,16 +305,6 @@ namespace cling {
           }
         }
       }
-    }
-
-    // Disable suggestions for ROOT
-    bool showSuggestions = !llvm::StringRef(ClingStringify(CLING_VERSION)).startswith("ROOT");
-
-    // We need InterpreterCallbacks only if it is a parent Interpreter.
-    if (!parentInterp) {
-      std::unique_ptr<InterpreterCallbacks>
-         AutoLoadCB(new AutoloadCallback(this, showSuggestions));
-      setCallbacks(std::move(AutoLoadCB));
     }
 
     m_IncrParser->SetTransformers(parentInterp);
@@ -532,11 +558,9 @@ namespace cling {
     // This may induce deserialization
     PushTransactionRAII RAII(this);
     CodeGenerator* CG = m_IncrParser->getCodeGenerator();
-    ClangInternalState* state
-      = new ClangInternalState(getCI()->getASTContext(),
-                               getCI()->getPreprocessor(),
-                               getLastTransaction()->getModule(),
-                               CG, name);
+    ClangInternalState* state = new ClangInternalState(
+        getCI()->getASTContext(), getCI()->getPreprocessor(),
+        getLastTransaction()->getModule().get(), CG, name);
     m_StoredStates.push_back(state);
   }
 
@@ -696,7 +720,7 @@ namespace cling {
 
     // Copied from PPDirectives.cpp
     SmallVector<std::pair<IdentifierInfo *, SourceLocation>, 2> path;
-    for (Module *mod = suggestedModule.getModule(); mod; mod = mod->Parent) {
+    for (auto mod = suggestedModule.getModule(); mod; mod = mod->Parent) {
       IdentifierInfo* II
         = &getSema().getPreprocessor().getIdentifierTable().get(mod->Name);
       path.push_back(std::make_pair(II, fileNameLoc));
@@ -1282,10 +1306,10 @@ namespace cling {
   void Interpreter::unload(Transaction& T) {
     // Clear any stored states that reference the llvm::Module.
     // Do it first in case
-    llvm::Module* const Module = T.getModule();
+    auto Module = T.getModule();
     if (Module && !m_StoredStates.empty()) {
-      const auto Predicate = [&Module](const ClangInternalState *S) {
-        return S->getModule() == Module;
+      const auto Predicate = [&Module](const ClangInternalState* S) {
+        return S->getModule() == Module.get();
       };
       auto Itr =
           std::find_if(m_StoredStates.begin(), m_StoredStates.end(), Predicate);
@@ -1311,14 +1335,8 @@ namespace cling {
 
     if (InterpreterCallbacks* callbacks = getCallbacks())
       callbacks->TransactionUnloaded(T);
-    if (m_Executor) { // we also might be in fsyntax-only mode.
+    if (m_Executor) // we also might be in fsyntax-only mode.
       m_Executor->runAndRemoveStaticDestructors(&T);
-      if (!T.getExecutor()) {
-        // this transaction might be queued in the executor
-        m_Executor->unloadFromJIT(Module,
-                                  Transaction::ExeUnloadHandle({(void*)(size_t)-1}));
-      }
-    }
 
     // We can revert the most recent transaction or a nested transaction of a
     // transaction that is not in the middle of the transaction collection
@@ -1482,14 +1500,14 @@ namespace cling {
     assert(!isInSyntaxOnlyMode() && "Running on what?");
     assert(T.getState() == Transaction::kCommitted && "Must be committed");
 
-    llvm::Module* const M = T.getModule();
+    const std::shared_ptr<llvm::Module>& M = T.getModule();
     if (!M)
       return Interpreter::kExeNoModule;
 
     IncrementalExecutor::ExecutionResult ExeRes
        = IncrementalExecutor::kExeSuccess;
-    if (!isPracticallyEmptyModule(M)) {
-      T.setExeUnloadHandle(m_Executor.get(), m_Executor->emitToJIT());
+    if (!isPracticallyEmptyModule(M.get())) {
+      m_Executor->emitModule(M, T.getCompilationOpts().OptLevel);
 
       // Forward to IncrementalExecutor; should not be called by
       // anyone except for IncrementalParser.
@@ -1506,11 +1524,6 @@ namespace cling {
 
     return m_Executor->addSymbol(symbolName, symbolAddress);
   }
-
-  void Interpreter::addModule(llvm::Module* module, int OptLevel) {
-    m_Executor->addModule(module, OptLevel);
-  }
-
 
   void* Interpreter::getAddressOfGlobal(const GlobalDecl& GD,
                                         bool* fromJIT /*=0*/) const {

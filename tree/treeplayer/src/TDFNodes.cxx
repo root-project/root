@@ -117,17 +117,20 @@ unsigned int TSlotStack::GetSlot()
 
 TLoopManager::TLoopManager(TTree *tree, const ColumnNames_t &defaultBranches)
    : fTree(std::shared_ptr<TTree>(tree, [](TTree *) {})), fDefaultColumns(defaultBranches),
-     fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kROOTFiles)
+     fNSlots(TDFInternal::GetNSlots()),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kROOTFilesMT : ELoopType::kROOTFiles)
 {
 }
 
 TLoopManager::TLoopManager(ULong64_t nEmptyEntries)
-   : fNEmptyEntries(nEmptyEntries), fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kNoFiles)
+   : fNEmptyEntries(nEmptyEntries), fNSlots(TDFInternal::GetNSlots()),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kNoFilesMT : ELoopType::kNoFiles)
 {
 }
 
 TLoopManager::TLoopManager(std::unique_ptr<TDataSource> ds, const ColumnNames_t &defaultBranches)
-   : fDefaultColumns(defaultBranches), fNSlots(TDFInternal::GetNSlots()), fLoopType(ELoopType::kDataSource),
+   : fDefaultColumns(defaultBranches), fNSlots(TDFInternal::GetNSlots()),
+     fLoopType(ROOT::IsImplicitMTEnabled() ? ELoopType::kDataSourceMT : ELoopType::kDataSource),
      fDataSource(std::move(ds))
 {
    fDataSource->SetNSlots(fNSlots);
@@ -139,9 +142,9 @@ void TLoopManager::RunEmptySourceMT()
 #ifdef R__USE_IMT
    TSlotStack slotStack(fNSlots);
    // Working with an empty tree.
-   // Evenly partition the entries according to fNSlots
-   const auto nEntriesPerSlot = fNEmptyEntries / fNSlots;
-   auto remainder = fNEmptyEntries % fNSlots;
+   // Evenly partition the entries according to fNSlots. Produce around 2 tasks per slot.
+   const auto nEntriesPerSlot = fNEmptyEntries / (fNSlots * 2);
+   auto remainder = fNEmptyEntries % (fNSlots * 2);
    std::vector<std::pair<ULong64_t, ULong64_t>> entryRanges;
    ULong64_t start = 0;
    while (start < fNEmptyEntries) {
@@ -214,22 +217,29 @@ void TLoopManager::RunTreeReader()
    while (r.Next() && fNStopsReceived < fNChildren) {
       RunAndCheckFilters(0, r.GetCurrentEntry());
    }
+   fTree->GetEntry(0);
 }
 
 /// Run event loop over data accessed through a DataSource, in sequence.
 void TLoopManager::RunDataSource()
 {
    assert(fDataSource != nullptr);
-   const auto &rangePairs = fDataSource->GetEntryRanges();
-   InitNodeSlots(nullptr, 0);
-   fDataSource->InitSlot(0, 0);
-   // we are running single-thread, so all ranges are squashed together
-   const auto lastEntry = rangePairs.back().second;
-   for (ULong64_t i = 0ull; i < lastEntry; ++i) {
-      fDataSource->SetEntry(0, i);
-      RunAndCheckFilters(0, i);
+   fDataSource->Initialise();
+   auto ranges = fDataSource->GetEntryRanges();
+   while (!ranges.empty()) {
+      InitNodeSlots(nullptr, 0u);
+      fDataSource->InitSlot(0u, 0ull);
+      for (const auto &range : ranges) {
+         auto end = range.second;
+         for (auto entry = range.first; entry < end; ++entry) {
+            fDataSource->SetEntry(0u, entry);
+            RunAndCheckFilters(0u, entry);
+         }
+      }
+      fDataSource->FinaliseSlot(0u);
+      ranges = fDataSource->GetEntryRanges();
    }
-   fDataSource->FinaliseSlot(0);
+   fDataSource->Finalise();
 }
 
 /// Run event loop over data accessed through a DataSource, in parallel.
@@ -237,25 +247,31 @@ void TLoopManager::RunDataSourceMT()
 {
 #ifdef R__USE_IMT
    assert(fDataSource != nullptr);
-   auto rangePairs = fDataSource->GetEntryRanges();
    TSlotStack slotStack(fNSlots);
+   ROOT::TThreadExecutor pool;
 
    // Each task works on a subrange of entries
-   auto doWork = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
+   auto runOnRange = [this, &slotStack](const std::pair<ULong64_t, ULong64_t> &range) {
       const auto slot = slotStack.GetSlot();
       InitNodeSlots(nullptr, slot);
       fDataSource->InitSlot(slot, range.first);
-      for (auto currEntry = range.first; currEntry < range.second; ++currEntry) {
-         fDataSource->SetEntry(slot, currEntry);
-         RunAndCheckFilters(slot, currEntry);
+      const auto end = range.second;
+      for (auto entry = range.first; entry < end; ++entry) {
+         fDataSource->SetEntry(slot, entry);
+         RunAndCheckFilters(slot, entry);
       }
       CleanUpTask(slot);
       fDataSource->FinaliseSlot(slot);
       slotStack.ReturnSlot(slot);
    };
 
-   ROOT::TThreadExecutor pool;
-   pool.Foreach(doWork, rangePairs);
+   fDataSource->Initialise();
+   auto ranges = fDataSource->GetEntryRanges();
+   while (!ranges.empty()) {
+      pool.Foreach(runOnRange, ranges);
+      ranges = fDataSource->GetEntryRanges();
+   }
+   fDataSource->Finalise();
 #endif // not implemented otherwise (never called)
 }
 
@@ -265,6 +281,7 @@ void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 {
    for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, entry);
    for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, entry);
+   for (auto &callback : fCallbacks) callback(slot);
 }
 
 /// Build TTreeReaderValues for all nodes
@@ -274,11 +291,11 @@ void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 /// a particular slot will be using.
 void TLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 {
-   // booked branches must be initialized first
-   // because actions and filters might need to point to the values encapsulate
+   // booked branches must be initialized first because other nodes might need to point to the values they encapsulate
    for (auto &bookedBranch : fBookedCustomColumns) bookedBranch.second->InitSlot(r, slot);
    for (auto &ptr : fBookedActions) ptr->InitSlot(r, slot);
    for (auto &ptr : fBookedFilters) ptr->InitSlot(r, slot);
+   for (auto &callback : fCallbacksOnce) callback(slot);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
@@ -294,7 +311,7 @@ void TLoopManager::InitNodes()
 /// Perform clean-up operations. To be called at the end of each event loop.
 void TLoopManager::CleanUpNodes()
 {
-   fHasRunAtLeastOnce = true;
+   fMustRunNamedFilters = false;
 
    // forget TActions and detach TResultProxies
    fBookedActions.clear();
@@ -308,6 +325,9 @@ void TLoopManager::CleanUpNodes()
    fNStopsReceived = 0;
    for (auto &ptr : fBookedFilters) ptr->ResetChildrenCount();
    for (auto &ptr : fBookedRanges) ptr->ResetChildrenCount();
+
+   fCallbacks.clear();
+   fCallbacksOnce.clear();
 }
 
 /// Perform clean-up operations. To be called at the end of each task execution.
@@ -352,23 +372,14 @@ void TLoopManager::Run()
 
    InitNodes();
 
-#ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled()) {
-      switch (fLoopType) {
-      case ELoopType::kNoFiles: RunEmptySourceMT(); break;
-      case ELoopType::kROOTFiles: RunTreeProcessorMT(); break;
-      case ELoopType::kDataSource: RunDataSourceMT(); break;
-      }
-   } else {
-#endif // R__USE_IMT
-      switch (fLoopType) {
-      case ELoopType::kNoFiles: RunEmptySource(); break;
-      case ELoopType::kROOTFiles: RunTreeReader(); break;
-      case ELoopType::kDataSource: RunDataSource(); break;
-      }
-#ifdef R__USE_IMT
+   switch (fLoopType) {
+   case ELoopType::kNoFilesMT: RunEmptySourceMT(); break;
+   case ELoopType::kROOTFilesMT: RunTreeProcessorMT(); break;
+   case ELoopType::kDataSourceMT: RunDataSourceMT(); break;
+   case ELoopType::kNoFiles: RunEmptySource(); break;
+   case ELoopType::kROOTFiles: RunTreeReader(); break;
+   case ELoopType::kDataSource: RunDataSource(); break;
    }
-#endif // R__USE_IMT
 
    CleanUpNodes();
 }
@@ -410,6 +421,7 @@ void TLoopManager::Book(const FilterBasePtr_t &filterPtr)
    fBookedFilters.emplace_back(filterPtr);
    if (filterPtr->HasName()) {
       fBookedNamedFilters.emplace_back(filterPtr);
+      fMustRunNamedFilters = true;
    }
 }
 
@@ -440,6 +452,14 @@ bool TLoopManager::CheckFilters(int, unsigned int)
 void TLoopManager::Report() const
 {
    for (const auto &fPtr : fBookedNamedFilters) fPtr->PrintReport();
+}
+
+void TLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f)
+{
+   if (everyNEvents == 0ull)
+      fCallbacksOnce.emplace_back(std::move(f), fNSlots);
+   else
+      fCallbacks.emplace_back(everyNEvents, std::move(f), fNSlots);
 }
 
 TRangeBase::TRangeBase(TLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,

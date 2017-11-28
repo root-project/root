@@ -22,6 +22,8 @@
 #include "ROOT/TSpinMutex.hxx"
 #include "TMutex.h"
 
+namespace ROOT {
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Take the Read Lock of the mutex.
 
@@ -92,3 +94,5 @@ template class TRWMutexImp<TMutex>;
 template class TRWMutexImp<ROOT::TSpinMutex>;
 template class TRWMutexImp<TMutex, ROOT::Internal::UniqueLockRecurseCount>;
 template class TRWMutexImp<ROOT::TSpinMutex, ROOT::Internal::UniqueLockRecurseCount>;
+
+} // End of namespace ROOT

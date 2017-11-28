@@ -18,9 +18,16 @@ For more information see the Mersenne Twister homepage
 Advantage: 
 
 -  large period 2**19937 -1
--  relativly fast (slightly slower than TRandom1 and TRandom2 but much faster than TRandom1)
+-  relativly fast (slightly slower than TRandom2 but much faster than TRandom1)
 
-Drawback:  a relative large internal state of 624 integers
+Drawback: 
+-  a relative large internal state of 624 integers 
+- generate only 32 random bits 
+- not passing all the random generator tests. It fails some tests in TestU01
+ (see [http://simul.iro.umontreal.ca/testu01/tu01.html])
+
+An altenativly excellent generator passing all tests of TestU01, having 61 random bits and 
+fast as Mersenne and Twister is MIXMAX (TRandomMixMax). 
 
 @ingroup Random
 
@@ -67,7 +74,7 @@ namespace {
 ClassImp(TRandom3);
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*default constructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
+/// Default constructor
 /// If seed is 0, the seed is automatically computed via a TUUID object.
 /// In this case the seed is guaranteed to be unique in space and time.
 
@@ -79,8 +86,7 @@ TRandom3::TRandom3(UInt_t seed)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///*-*-*-*-*-*-*-*-*-*-*default destructor*-*-*-*-*-*-*-*-*-*-*-*-*-*-*
-///*-*                  ==================
+/// Default destructor
 
 TRandom3::~TRandom3()
 {

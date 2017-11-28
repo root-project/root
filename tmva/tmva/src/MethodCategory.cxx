@@ -147,7 +147,7 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
                                                 const TString& theTitle,
                                                 const TString& theOptions )
 {
-   std::string addedMethodName = std::string(Types::Instance().GetMethodName(theMethod).Data());
+   std::string addedMethodName = std::string(Types::Instance().GetMethodName(theMethod));
 
    Log() << kINFO << "Adding sub-classifier: " << addedMethodName << "::" << theTitle << Endl;
 
@@ -447,8 +447,6 @@ void TMVA::MethodCategory::AddWeightsXMLTo( void* parent ) const
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "NSubMethods", fMethods.size() );
    void* submethod(0);
-
-   std::vector<IMethod*>::iterator itrMethod;
 
    // iterate over methods and write them to XML file
    for (UInt_t i=0; i<fMethods.size(); i++) {

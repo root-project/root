@@ -14,7 +14,11 @@ if(NOT WIN32)
 endif()
 ROOT_EXECUTABLE(root.exe rmain.cxx LIBRARIES Core Rint)
 ROOT_EXECUTABLE(proofserv.exe pmain.cxx LIBRARIES Core MathCore)
-ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore MultiProc)
+if(MSVC)
+  ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore)
+else()
+  ROOT_EXECUTABLE(hadd hadd.cxx LIBRARIES Core RIO Net Hist Graf Graf3d Gpad Tree Matrix MathCore MultiProc)
+endif()
 ROOT_EXECUTABLE(rootnb.exe nbmain.cxx LIBRARIES Core)
 
 if(fortran AND CMAKE_Fortran_COMPILER)
@@ -64,10 +68,18 @@ ROOT_EXECUTABLE(rootcling src/rootcling.cxx
                           LIBRARIES RIO Core Cling ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARIES}
                                     ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                                     ${corelinklibs})
+# rootcling includes the ROOT complex header which would build the complex
+# dictionary with modules. To make sure that rootcling_stage1 builds this
+# dict before we use it, we add a dependency here.
+add_dependencies(rootcling complexDict)
+
 target_include_directories(rootcling PRIVATE
         ${CMAKE_CURRENT_SOURCE_DIR}/../core/metacling/res
         ${CMAKE_CURRENT_SOURCE_DIR}/../core/dictgen/res
         ${CMAKE_CURRENT_SOURCE_DIR}/../io/rootpcm/res)
+if(WIN32)
+  set_target_properties(rootcling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
+endif()
 
 # Create aliases: rootcint, genreflex.
 if(WIN32)

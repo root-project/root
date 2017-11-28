@@ -94,6 +94,53 @@ public:
    ClassDefNV(TLockGuard,0)  // Exception safe locking/unlocking of mutex
 };
 
+namespace ROOT {
+
+//////////////////////////////////////////////////////////////////////////
+//                                                                      //
+// TLockSuspend                                                         //
+//                                                                      //
+// This class provides mutex supension management in a guaranteed and   //
+// exception safe way. Use like this:                                   //
+// {                                                                    //
+//    TLockSuspend guard(mutex);                                        //
+//    ... // do something                                               //
+// }                                                                    //
+// when guard is created, 'suspend' the lock by calling Reset on the    //
+// on the mutex and when the guard goes out of scope the mutex is       //
+// restored in the TLockSuspend destructor.                             //
+// The exception mechanism takes care of calling the dtors              //
+// of local objects so it is exception safe.                            //
+//                                                                      //
+//////////////////////////////////////////////////////////////////////////
+
+class TLockSuspend {
+private:
+   TVirtualMutex *const fMutex;
+
+   std::unique_ptr<TVirtualMutex::State> fState;
+
+   TLockSuspend(const TLockSuspend &) = delete;
+   TLockSuspend &operator=(const TLockSuspend &) = delete;
+
+public:
+   TLockSuspend(TVirtualMutex *mutex) : fMutex(mutex)
+   {
+      if (fMutex)
+         fState = mutex->Reset();
+   }
+
+   ~TLockSuspend()
+   {
+      if (fMutex)
+         fMutex->Restore(std::move(fState));
+   }
+
+   ClassDefNV(TLockSuspend, 0) // Exception safe Reset/Restore of mutex
+};
+
+} // Namespace ROOT.
+
 // Zero overhead macros in case not compiled with thread support
 #if defined (_REENTRANT) || defined (WIN32)
 
@@ -108,11 +155,13 @@ public:
    R__LOCKGUARD(mutex)
 #define R__LOCKGUARD_NAMED(name,mutex) TLockGuard _NAME2_(R__guard,name)(mutex)
 #define R__LOCKGUARD_UNLOCK(name) _NAME2_(R__guard,name).UnLock()
+#define R__LOCK_SUSPEND(mutex) TLockSuspend _R__UNIQUE_(R__guard)(mutex)
 #else
-#define R__LOCKGUARD(mutex)  if (mutex) { }
-#define R__LOCKGUARD_NAMED(name,mutex) if (mutex) { }
-#define R__LOCKGUARD2(mutex) if (mutex) { }
+#define R__LOCKGUARD(mutex)  (void)mutex; { }
+#define R__LOCKGUARD_NAMED(name,mutex) (void)mutex; { }
+#define R__LOCKGUARD2(mutex) (void)mutex; { }
 #define R__LOCKGUARD_UNLOCK(name) { }
+#define R__LOCK_SUSPEND(mutex) { }
 #endif
 
 #ifdef R__USE_IMT

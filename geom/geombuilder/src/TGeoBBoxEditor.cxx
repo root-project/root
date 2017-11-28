@@ -9,21 +9,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoBBoxEditor                                                      //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-//Begin_Html
-/*
-<img src="gif/box_pic.gif">
+/** \class TGeoBBoxEditor
+\ingroup Geometry_builder
+
+Editor for a TGeoBBox.
+
+\image html geom_box_pic.png
+
+\image html geom_box_ed.png
+
 */
-//End_Html
-//Begin_Html
-/*
-<img src="gif/box_ed.jpg">
-*/
-//End_Html
 
 #include "TGeoBBoxEditor.h"
 #include "TGeoTabManager.h"
@@ -79,7 +74,7 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
    fBoxDx = new TGNumberEntry(f1, 0., 5, kBOX_X);
    fBoxDx->SetNumAttr(TGNumberFormat::kNEAPositive);
    nef = (TGTextEntry*)fBoxDx->GetNumberEntry();
-   nef->SetToolTipText("Enter the box half-lenth in X");
+   nef->SetToolTipText("Enter the box half-length in X");
    fBoxDx->Associate(this);
    f1->AddFrame(fBoxDx, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f1, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
@@ -91,7 +86,7 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
    fBoxDy = new TGNumberEntry(f2, 0., 5, kBOX_Y);
    fBoxDy->SetNumAttr(TGNumberFormat::kNEAPositive);
    nef = (TGTextEntry*)fBoxDy->GetNumberEntry();
-   nef->SetToolTipText("Enter the box half-lenth in Y");
+   nef->SetToolTipText("Enter the box half-length in Y");
    fBoxDy->Associate(this);
    f2->AddFrame(fBoxDy, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f2, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
@@ -103,7 +98,7 @@ TGeoBBoxEditor::TGeoBBoxEditor(const TGWindow *p, Int_t width,
    fBoxDz = new TGNumberEntry(f3, 0., 5, kBOX_Z);
    fBoxDz->SetNumAttr(TGNumberFormat::kNEAPositive);
    nef = (TGTextEntry*)fBoxDz->GetNumberEntry();
-   nef->SetToolTipText("Enter the box half-lenth in Z");
+   nef->SetToolTipText("Enter the box half-length in Z");
    fBoxDz->Associate(this);
    f3->AddFrame(fBoxDz, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));
    compxyz->AddFrame(f3, new TGLayoutHints(kLHintsLeft | kLHintsExpandX , 2, 2, 4, 4));

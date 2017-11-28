@@ -201,7 +201,13 @@ public:
    virtual void      SetFixedAspectRatio(Bool_t fixed = kTRUE);  // *TOGGLE*
    void              SetGrayscale(Bool_t set = kTRUE); // *TOGGLE* *GETTER=IsGrayscale
    void              SetWindowPosition(Int_t x, Int_t y) { if (fCanvasImp) fCanvasImp->SetWindowPosition(x, y); }
-   void              SetWindowSize(UInt_t ww, UInt_t wh) { if (fCanvasImp) fCanvasImp->SetWindowSize(ww, wh); }
+   void SetWindowSize(UInt_t ww, UInt_t wh)
+   {
+      if (fBatch)
+         SetCanvasSize((ww + fCw) / 2, (wh + fCh) / 2);
+      else if (fCanvasImp)
+         fCanvasImp->SetWindowSize(ww, wh);
+   }
    void              SetCanvasImp(TCanvasImp *i) { fCanvasImp = i; }
    void              SetCanvasSize(UInt_t ww, UInt_t wh); // *MENU*
    void              SetHighLightColor(Color_t col) { fHighLightColor = col; }

@@ -97,7 +97,8 @@ VOID_METHOD_ARG0_LOCK(Interpreter,UpdateListOfGlobals)
 VOID_METHOD_ARG0_LOCK(Interpreter,UpdateListOfGlobalFunctions)
 VOID_METHOD_ARG0_LOCK(Interpreter,UpdateListOfTypes)
 VOID_METHOD_ARG2_LOCK(Interpreter,SetClassInfo,TClass*,cl,Bool_t,reload)
-RETURN_METHOD_ARG3(Interpreter,Bool_t,CheckClassInfo,const char*,name,Bool_t,autoload,Bool_t,isClassOrNamespaceOnly)
+RETURN_METHOD_ARG3(Interpreter, TInterpreter::ECheckClassInfo, CheckClassInfo, const char *, name, Bool_t, autoload,
+                   Bool_t, isClassOrNamespaceOnly)
 RETURN_METHOD_ARG1(Interpreter,Bool_t,CheckClassTemplate,const char*,name)
 RETURN_METHOD_ARG2(Interpreter,Long_t,Calc,const char*,line,TInterpreter::EErrorCode*,error)
 VOID_METHOD_ARG1_LOCK(Interpreter,CreateListOfBaseClasses,TClass*,cl)
@@ -119,6 +120,7 @@ RETURN_METHOD_ARG2(Interpreter,Long_t,ExecuteMacro,const char*,filename,TInterpr
 RETURN_METHOD_ARG1(Interpreter,Bool_t,SetErrorMessages,Bool_t,enable)
 VOID_METHOD_ARG1(Interpreter,SetProcessLineLock,Bool_t,lock,1)
 RETURN_METHOD_ARG1(Interpreter,const char*,TypeName,const char*,s)
-//Bool_t TGWin32InterpreterProxy::CheckClassInfo(const char* name) { return RealObject()->CheckClassInfo(name); }
+// TInterpreter::ECheckClassInfo TGWin32InterpreterProxy::CheckClassInfo(const char* name) { return
+// RealObject()->CheckClassInfo(name); }
 
 #endif

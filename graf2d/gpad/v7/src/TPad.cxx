@@ -19,12 +19,13 @@
 #include "ROOT/TPadExtent.hxx"
 #include "ROOT/TPadPos.hxx"
 
+#include <cassert>
 #include <limits>
 
-ROOT::Experimental::Internal::TPadBase::~TPadBase() = default;
+ROOT::Experimental::TPadBase::~TPadBase() = default;
 
 std::vector<std::vector<ROOT::Experimental::TPad *>>
-ROOT::Experimental::Internal::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &padding /*= {}*/)
+ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &padding /*= {}*/)
 {
    std::vector<std::vector<TPad *>> ret;
    if (!nHoriz)
@@ -47,10 +48,18 @@ ROOT::Experimental::Internal::TPadBase::Divide(int nHoriz, int nVert, const TPad
       for (int iVert = 0; iVert < nVert; ++iVert) {
          TPadPos subPos = offset;
          subPos *= {1. * nHoriz, 1. * nVert};
-         ret[iHoriz][iVert] = Draw(std::make_unique<TPad>(*this, size), subPos).Get();
+         auto uniqPad = std::make_unique<TPad>(*this, size);
+         ret[iHoriz][iVert] = uniqPad.get();
+         Draw(std::move(uniqPad)).At(subPos);
       }
    }
    return ret;
 }
 
 ROOT::Experimental::TPad::~TPad() = default;
+
+ROOT::Experimental::TPadDrawable::TPadDrawable(std::unique_ptr<TPad> &&pPad, TPadBase &parent)
+   : fPad(std::move(pPad)), fOpts(parent)
+{
+   assert(&fPad->GetParent() == &parent && "Parent mismatch!");
+}

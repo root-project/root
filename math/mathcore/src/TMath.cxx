@@ -363,7 +363,7 @@ Double_t TMath::Gamma(Double_t z)
 ///  P(a, x) = \frac{1}{\Gamma(a)} \int_{0}^{x} t^{a-1} e^{-t} dt
 ///  \f]
 ///
-///--- Nve 14-nov-1998 UU-SAP Utrecht
+/// \author NvE 14-nov-1998 UU-SAP Utrecht
 
 Double_t TMath::Gamma(Double_t a,Double_t x)
 {
@@ -374,7 +374,7 @@ Double_t TMath::Gamma(Double_t a,Double_t x)
 /// Computation of the incomplete gamma function P(a,x)
 /// via its continued fraction representation.
 ///
-///--- Nve 14-nov-1998 UU-SAP Utrecht
+/// \author NvE 14-nov-1998 UU-SAP Utrecht
 
 Double_t TMath::GamCf(Double_t a,Double_t x)
 {
@@ -411,7 +411,7 @@ Double_t TMath::GamCf(Double_t a,Double_t x)
 /// Computation of the incomplete gamma function P(a,x)
 /// via its series representation.
 ///
-///--- Nve 14-nov-1998 UU-SAP Utrecht
+/// \author NvE 14-nov-1998 UU-SAP Utrecht
 
 Double_t TMath::GamSer(Double_t a,Double_t x)
 {
@@ -484,7 +484,7 @@ Double_t TMath::Landau(Double_t x, Double_t mu, Double_t sigma, Bool_t norm)
 ///
 /// The accuracy of the result is better than 2e-10.
 ///
-///--- Nve 14-nov-1998 UU-SAP Utrecht
+/// \author NvE 14-nov-1998 UU-SAP Utrecht
 
 Double_t TMath::LnGamma(Double_t z)
 {
@@ -619,7 +619,7 @@ Double_t TMath::PoissonI(Double_t x, Double_t par)
 /// which denotes the probability that an observed Chi-squared exceeds
 /// the value chi2 by chance, even for a correct model.
 ///
-///--- NvE 14-nov-1998 UU-SAP Utrecht
+/// \author NvE 14-nov-1998 UU-SAP Utrecht
 
 Double_t TMath::Prob(Double_t chi2,Int_t ndf)
 {
@@ -1076,7 +1076,8 @@ Double_t TMath::Voigt(Double_t xx, Double_t sigma, Double_t lg, Int_t r)
 ///    ==> there are 3 real roots a,b,c
 /// If the boolean returned by the method is true:
 ///    ==> there is one real root a and 2 complex conjugates roots (b+i*c,b-i*c)
-/// Author: Francois-Xavier Gentit
+///
+/// \author Francois-Xavier Gentit
 
 Bool_t TMath::RootsCubic(const Double_t coef[4],Double_t &a, Double_t &b, Double_t &c)
 {
@@ -1278,7 +1279,7 @@ void TMath::Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Do
 /// of arr1 with arr2[0] corresponding to the largest arr1 value and
 /// arr2[Narr] the smallest.
 ///
-///  Author: Adrian Bevan (bevan@slac.stanford.edu)
+/// \author Adrian Bevan (bevan@slac.stanford.edu)
 
 void TMath::BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2)
 {
@@ -1317,7 +1318,7 @@ void TMath::BubbleHigh(Int_t Narr, Double_t *arr1, Int_t *arr2)
 ////////////////////////////////////////////////////////////////////////////////
 /// Opposite ordering of the array arr2[] to that of BubbleHigh.
 ///
-///  Author: Adrian Bevan (bevan@slac.stanford.edu)
+/// \author Adrian Bevan (bevan@slac.stanford.edu)
 
 void TMath::BubbleLow(Int_t Narr, Double_t *arr1, Int_t *arr2)
 {
@@ -1390,7 +1391,7 @@ ULong_t TMath::Hash(const char *txt)
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute the modified Bessel function I_0(x) for any real x.
 ///
-///--- NvE 12-mar-2000 UU-SAP Utrecht
+/// \author NvE 12-mar-2000 UU-SAP Utrecht
 
 Double_t TMath::BesselI0(Double_t x)
 {
@@ -1424,7 +1425,7 @@ Double_t TMath::BesselI0(Double_t x)
 ///  M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
 ///     Applied Mathematics Series vol. 55 (1964), Washington.
 ///
-///--- NvE 12-mar-2000 UU-SAP Utrecht
+/// \author NvE 12-mar-2000 UU-SAP Utrecht
 
 Double_t TMath::BesselK0(Double_t x)
 {
@@ -1458,7 +1459,7 @@ Double_t TMath::BesselK0(Double_t x)
 ///  M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
 ///     Applied Mathematics Series vol. 55 (1964), Washington.
 ///
-///--- NvE 12-mar-2000 UU-SAP Utrecht
+/// \author NvE 12-mar-2000 UU-SAP Utrecht
 
 Double_t TMath::BesselI1(Double_t x)
 {
@@ -1493,7 +1494,7 @@ Double_t TMath::BesselI1(Double_t x)
 ///  M.Abramowitz and I.A.Stegun, Handbook of Mathematical Functions,
 ///     Applied Mathematics Series vol. 55 (1964), Washington.
 ///
-///--- NvE 12-mar-2000 UU-SAP Utrecht
+/// \author NvE 12-mar-2000 UU-SAP Utrecht
 
 Double_t TMath::BesselK1(Double_t x)
 {
@@ -1525,7 +1526,7 @@ Double_t TMath::BesselK1(Double_t x)
 /// Compute the Integer Order Modified Bessel function K_n(x)
 /// for n=0,1,2,... and positive real x.
 ///
-///--- NvE 12-mar-2000 UU-SAP Utrecht
+/// \author NvE 12-mar-2000 UU-SAP Utrecht
 
 Double_t TMath::BesselK(Int_t n,Double_t x)
 {
@@ -1554,7 +1555,7 @@ Double_t TMath::BesselK(Int_t n,Double_t x)
 /// Compute the Integer Order Modified Bessel function I_n(x)
 /// for n=0,1,2,... and any real x.
 ///
-///--- NvE 12-mar-2000 UU-SAP Utrecht
+/// \author NvE 12-mar-2000 UU-SAP Utrecht
 
 Double_t TMath::BesselI(Int_t n,Double_t x)
 {
@@ -3114,3 +3115,20 @@ Double_t TMath::VavilovDenEval(Double_t rlam, Double_t *AC, Double_t *HC, Int_t 
    }
    return v;
 }
+
+
+//explicity instantiate template functions from VecCore
+#ifdef R__HAS_VECCORE
+#include <Math/Types.h>
+template ROOT::Double_v vecCore::math::Sin(const ROOT::Double_v & x);
+template ROOT::Double_v vecCore::math::Cos(const ROOT::Double_v & x);
+template ROOT::Double_v vecCore::math::ASin(const ROOT::Double_v & x);
+template ROOT::Double_v vecCore::math::ATan(const ROOT::Double_v & x);
+template ROOT::Double_v vecCore::math::ATan2(const ROOT::Double_v & x,const ROOT::Double_v & y);
+// missing in veccore
+// template ROOT::Double_v vecCore::math::ACos(const ROOT::Double_v & x);
+// template ROOT::Double_v vecCore::math::Sinh(const ROOT::Double_v & x);
+// template ROOT::Double_v vecCore::math::Cosh(const ROOT::Double_v & x);
+// template ROOT::Double_v vecCore::math::Tanh(const ROOT::Double_v & x);
+// template ROOT::Double_v vecCore::math::Cbrt(const ROOT::Double_v & x);
+#endif

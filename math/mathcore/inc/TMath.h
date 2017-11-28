@@ -297,8 +297,8 @@ Double_t Log2(Double_t x);
 inline Double_t Log10(Double_t x);
 inline Int_t Finite(Double_t x);
 inline Int_t Finite(Float_t x);
-inline Int_t IsNaN(Double_t x);
-inline Int_t IsNaN(Float_t x);
+inline Bool_t IsNaN(Double_t x);
+inline Bool_t IsNaN(Float_t x);
 
 inline Double_t QuietNaN();
 inline Double_t SignalingNaN();
@@ -490,7 +490,6 @@ struct Limits {
 #if defined(R__WIN32) && !defined(__CINT__)
 #   ifndef finite
 #      define finite _finite
-#      define isnan  _isnan
 #   endif
 #endif
 #if defined(R__AIX) || defined(R__SOLARIS_CC50) || \
@@ -738,7 +737,7 @@ namespace Math {
       (ix1) = ew_u.parts.lsw;                                       \
    } while (0)
 
-   inline Int_t IsNaN(Double_t x)
+   inline Bool_t IsNaN(Double_t x)
    {
       UInt_t hx, lx;
       
@@ -761,7 +760,7 @@ namespace Math {
       (i) = gf_u.word;                                              \
     } while (0)
 
-   inline Int_t IsNaN(Float_t x)
+   inline Bool_t IsNaN(Float_t x)
    {
       UInt_t wx;
       GET_FLOAT_WORD (wx, x);
@@ -772,11 +771,11 @@ namespace Math {
 #endif // End R__FAST_MATH
 
 #if defined(R__FAST_MATH)
-   inline Int_t TMath::IsNaN(Double_t x) { return ROOT::Internal::Math::IsNaN(x); }
-   inline Int_t TMath::IsNaN(Float_t x) { return ROOT::Internal::Math::IsNaN(x); }
+   inline Bool_t TMath::IsNaN(Double_t x) { return ROOT::Internal::Math::IsNaN(x); }
+   inline Bool_t TMath::IsNaN(Float_t x) { return ROOT::Internal::Math::IsNaN(x); }
 #else
-   inline Int_t TMath::IsNaN(Double_t x) { return std::isnan(x); }
-   inline Int_t TMath::IsNaN(Float_t x) { return std::isnan(x); }
+   inline Bool_t TMath::IsNaN(Double_t x) { return std::isnan(x); }
+   inline Bool_t TMath::IsNaN(Float_t x) { return std::isnan(x); }
 #endif
 
 //--------wrapper to numeric_limits

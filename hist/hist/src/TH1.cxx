@@ -14,9 +14,11 @@
 #include <stdio.h>
 #include <ctype.h>
 #include <sstream>
+#include <cmath>
 
 #include "Riostream.h"
 #include "TROOT.h"
+#include "TEnv.h"
 #include "TClass.h"
 #include "TMath.h"
 #include "THashList.h"
@@ -582,6 +584,8 @@ TH1::~TH1()
    delete[] fBuffer;
    fBuffer = 0;
    if (fFunctions) {
+      R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
       fFunctions->SetBit(kInvalidObject);
       TObject* obj = 0;
       //special logic to support the case where the same object is
@@ -745,6 +749,7 @@ void TH1::Build()
    if (TH1::AddDirectoryStatus()) {
       fDirectory = gDirectory;
       if (fDirectory) {
+         fFunctions->UseRWLock();
          fDirectory->Append(this,kTRUE);
       }
    }
@@ -1221,6 +1226,109 @@ void TH1::AddDirectory(Bool_t add)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary function to get the power of 2 next (larger) or previous (smaller)
+/// a given x
+///
+///    next = kTRUE  : next larger
+///    next = kFALSE : previous smaller
+///
+/// Used by the autobin power of 2 algorithm
+
+inline Double_t TH1::AutoP2GetPower2(Double_t x, Bool_t next)
+{
+   Int_t nn;
+   Double_t f2 = std::frexp(x, &nn);
+   return ((next && x > 0.) || (!next && x <= 0.)) ? std::ldexp(std::copysign(1., f2), nn)
+                                                   : std::ldexp(std::copysign(1., f2), --nn);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Auxilliary function to get the next power of 2 integer value larger then n
+///
+/// Used by the autobin power of 2 algorithm
+
+inline Int_t TH1::AutoP2GetBins(Int_t n)
+{
+   Int_t nn;
+   Double_t f2 = std::frexp(n, &nn);
+   if (TMath::Abs(f2 - .5) > 0.001)
+      return (Int_t)std::ldexp(1., nn);
+   return n;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Buffer-based estimate of the histogram range using the power of 2 algorithm.
+///
+/// Used by the autobin power of 2 algorithm.
+///
+/// Works on arguments (min and max from fBuffer) and internal inputs: fXmin,
+/// fXmax, NBinsX (from fXaxis), ...
+/// Result save internally in fXaxis.
+///
+/// Overloaded by TH2 and TH3.
+///
+/// Return -1 if internal inputs are incosistent, 0 otherwise.
+///
+
+Int_t TH1::AutoP2FindLimits(Double_t xmi, Double_t xma)
+{
+   // We need meaningful raw limits
+   if (xmi >= xma)
+      return -1;
+
+   THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this, xmi, xma);
+   Double_t xhmi = fXaxis.GetXmin();
+   Double_t xhma = fXaxis.GetXmax();
+
+   // Now adjust
+   if (TMath::Abs(xhma) > TMath::Abs(xhmi)) {
+      // Start from the upper limit
+      xhma = TH1::AutoP2GetPower2(xhma);
+      xhmi = xhma - TH1::AutoP2GetPower2(xhma - xhmi);
+   } else {
+      // Start from the lower limit
+      xhmi = TH1::AutoP2GetPower2(xhmi, kFALSE);
+      xhma = xhmi + TH1::AutoP2GetPower2(xhma - xhmi);
+   }
+
+   // Round the bins to the next power of 2; take into account the possible inflation
+   // of the range
+   Double_t rr = (xhma - xhmi) / (xma - xmi);
+   Int_t nb = TH1::AutoP2GetBins((Int_t)(rr * GetNbinsX()));
+
+   // Adjust using the same bin width and offsets
+   Double_t bw = (xhma - xhmi) / nb;
+   // Bins to left free on each side
+   Double_t autoside = gEnv->GetValue("Hist.Binning.Auto.Side", 0.05);
+   Int_t nbside = (Int_t)(nb * autoside);
+
+   // Side up
+   Int_t nbup = (xhma - xma) / bw;
+   if (nbup % 2 != 0)
+      nbup++; // Must be even
+   if (nbup != nbside) {
+      // Accounts also for both case: larger or smaller
+      xhma -= bw * (nbup - nbside);
+      nb -= (nbup - nbside);
+   }
+
+   // Side low
+   Int_t nblw = (xmi - xhmi) / bw;
+   if (nblw % 2 != 0)
+      nblw++; // Must be even
+   if (nblw != nbside) {
+      // Accounts also for both case: larger or smaller
+      xhmi += bw * (nblw - nbside);
+      nb -= (nblw - nbside);
+   }
+
+   // Set everything and project
+   SetBins(nb, xhmi, xhma);
+
+   // Done
+   return 0;
+}
+
 /// Fill histogram with all entries in the buffer.
 ///
 ///  - action = -1 histogram is reset and refilled from the buffer (called by THistPainter::Paint)
@@ -1273,12 +1381,19 @@ Int_t TH1::BufferEmpty(Int_t action)
          if (x > xmax) xmax = x;
       }
       if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
-         THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this,xmin,xmax);
+         Int_t rc = -1;
+         if (TestBit(TH1::kAutoBinPTwo)) {
+            if ((rc = AutoP2FindLimits(xmin, xmax)) < 0)
+               Warning("BufferEmpty",
+                       "incosistency found by power-of-2 autobin algorithm: fallback to standard method");
+         }
+         if (rc < 0)
+            THLimitsFinder::GetLimitsFinder()->FindGoodLimits(this, xmin, xmax);
       } else {
          fBuffer = 0;
          Int_t keep = fBufferSize; fBufferSize = 0;
-         if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin,&fXaxis);
-         if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax,&fXaxis);
+         if (xmin <  fXaxis.GetXmin()) ExtendAxis(xmin, &fXaxis);
+         if (xmax >= fXaxis.GetXmax()) ExtendAxis(xmax, &fXaxis);
          fBuffer = buffer;
          fBufferSize = keep;
       }
@@ -1295,8 +1410,8 @@ Int_t TH1::BufferEmpty(Int_t action)
    if (action > 0) {
       delete [] fBuffer;
       fBuffer = 0;
-      fBufferSize = 0;}
-   else {
+      fBufferSize = 0;
+   } else {
       // if number of entries is consistent with buffer - set it negative to avoid
       // refilling the histogram every time BufferEmpty(0) is called
       // In case it is not consistent, by setting fBuffer[0]=0 is like resetting the buffer
@@ -2529,6 +2644,7 @@ void TH1::Copy(TObject &obj) const
    // any directory (fDirectory = 0)
    if (fgAddDirectory && gDirectory) {
       gDirectory->Append(&obj);
+      ((TH1&)obj).fFunctions->UseRWLock();
       ((TH1&)obj).fDirectory = gDirectory;
    } else
       ((TH1&)obj).fDirectory = 0;
@@ -5914,6 +6030,8 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
 
 void TH1::RecursiveRemove(TObject *obj)
 {
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+
    if (fFunctions) {
       if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
    }
@@ -7306,13 +7424,12 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
 ///    -  "D" Put out a line of "Debug" printout
 ///    -  "M" Return the Maximum Kolmogorov distance instead of prob
 ///    -  "X" Run the pseudo experiments post-processor with the following procedure:
-///       make pseudoexperiments based on random values from the parent
-///       distribution and compare the KS distance of the pseudoexperiment
-///       to the parent distribution. Bin the KS distances in a histogram,
-///       and then take the integral of all the KS values above the value
+///       make pseudoexperiments based on random values from the parent distribution,
+///       compare the KS distance of the pseudoexperiment to the parent
+///       distribution, and count all the KS values above the value
 ///       obtained from the original data to Monte Carlo distribution.
 ///       The number of pseudo-experiments nEXPT is currently fixed at 1000.
-///       The function returns the integral.
+///       The function returns the probability.
 ///       (thanks to Ben Kilminster to submit this procedure). Note that
 ///       this option "X" is much slower.
 ///
@@ -8072,7 +8189,10 @@ void TH1::SetDirectory(TDirectory *dir)
    if (fDirectory == dir) return;
    if (fDirectory) fDirectory->Remove(this);
    fDirectory = dir;
-   if (fDirectory) fDirectory->Append(this);
+   if (fDirectory) {
+      fFunctions->UseRWLock();
+      fDirectory->Append(this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8324,11 +8444,11 @@ void TH1::GetLowEdge(Double_t *edge) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the bin Error
-/// Note that this resets the bin eror option to be of Normal Type and for the 
+/// Note that this resets the bin eror option to be of Normal Type and for the
 /// non-empty bin the bin error is set by default to the square root of their content,
 /// but in case the user sets explicitly a new bin content (using SetBinContent) he needs to provide also
 /// the error, otherwise a default error = 0 is used.
-/// 
+///
 /// See convention for numbering bins in TH1::GetBin
 
 void TH1::SetBinError(Int_t bin, Double_t error)
@@ -9034,7 +9154,7 @@ void TH1I::AddBinContent(Int_t bin)
 
 void TH1I::AddBinContent(Int_t bin, Double_t w)
 {
-   Int_t newval = fArray[bin] + Int_t(w);
+   Long64_t newval = fArray[bin] + Long64_t(w);
    if (newval > -2147483647 && newval < 2147483647) {fArray[bin] = Int_t(newval); return;}
    if (newval < -2147483647) fArray[bin] = -2147483647;
    if (newval >  2147483647) fArray[bin] =  2147483647;

@@ -198,19 +198,27 @@ if(cxxmodules)
   endif()
 endif(cxxmodules)
 
+if(MSVC)
+  set(_os_cat "type")
+else()
+  set(_os_cat "cat")
+endif()
+file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" _from_native)
+file(TO_NATIVE_PATH "${CMAKE_BINARY_DIR}/include/module.modulemap" _to_native)
+
 add_custom_target(copymodulemap DEPENDS "${CMAKE_BINARY_DIR}/include/module.modulemap")
 add_custom_command(
                   OUTPUT "${CMAKE_BINARY_DIR}/include/module.modulemap"
                   DEPENDS build/unix/module.modulemap "${CMAKE_BINARY_DIR}/include/module.modulemap.extra"
                   COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_SOURCE_DIR}/build/unix/module.modulemap" "${CMAKE_BINARY_DIR}/include/module.modulemap"
-                  COMMAND cat "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" >> "${CMAKE_BINARY_DIR}/include/module.modulemap"
+                  COMMAND ${_os_cat} "${_from_native}" >> "${_to_native}"
 )
 install(FILES "${CMAKE_BINARY_DIR}/include/module.modulemap" DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
 
 add_dependencies(move_artifacts copymodulemap)
 
 # Provide our own modulemap for implementations other than libcxx.
-if (NOT libcxx)
+if (NOT WIN32 AND NOT libcxx)
   # Write a empty overlay file to the output directory that CMake can run its compiler tests.
   # We will create the actual overlay later in the configuration.
   file(WRITE ${CMAKE_BINARY_DIR}/include/modulemap.overlay.yaml "{'version' : 0, 'roots' : []}")
@@ -287,6 +295,8 @@ get_property(__modulemap_extra_content GLOBAL PROPERTY ROOT_CXXMODULES_EXTRA_MOD
 string(REPLACE ";" "" __modulemap_extra_content "${__modulemap_extra_content}")
 file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_extra_content}")
 
+# From now on we handled all exposed module and want to make all new modulemaps private to ROOT.
+set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
 add_custom_target(move_headers ALL DEPENDS ${__allHeaders})
@@ -307,6 +317,11 @@ if(cxxmodules)
   string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS_SEPARATE ${CMAKE_CXX_FLAGS_SEPARATE})
 endif(cxxmodules)
 string(REGEX REPLACE "[ ]-" ";-" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE} ${CORE_OS_DICT_CXX_FLAGS}")
+if(MSVC)
+  string(REPLACE "-nologo" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+  string(REPLACE "-EHsc-" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+  string(REPLACE "-GR" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+endif()
 
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
                           etc/dictpch/allHeaders.h
@@ -320,21 +335,32 @@ foreach(d ${incdirs})
     set(__allIncludes ${__allIncludes} -I${d})
   endif()
 endforeach()
+if(WIN32)
+  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/glib)
+  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src)
+  set(__allIncludes ${__allIncludes} -I${CMAKE_SOURCE_DIR}/graf2d/win32gdk/gdk/src/gdk)
+endif()
 
-add_custom_command(OUTPUT etc/allDict.cxx.pch
-                   COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
-                   DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
-                           etc/dictpch/allLinkDefs.h
-                           etc/dictpch/allHeaders.h
-                           etc/dictpch/allCppflags.txt
-                           rootcling)
-add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
-set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
-add_dependencies(onepcm ${__allTargets})
-install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
-install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+if(runtime_cxxmodules)
+  # Dummy target that does nothing, we don't need a PCH for modules.
+  add_custom_target(onepcm)
+else()
+  add_custom_command(OUTPUT etc/allDict.cxx.pch
+                    COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
+                    DEPENDS ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py
+                            etc/dictpch/allLinkDefs.h
+                            etc/dictpch/allHeaders.h
+                            etc/dictpch/allCppflags.txt
+                            rootcling)
+  add_custom_target(onepcm ALL DEPENDS etc/allDict.cxx.pch)
+  set_source_files_properties(${__allFiles} PROPERTIES GENERATED TRUE)
+  add_dependencies(onepcm ${__allTargets})
+  install(FILES ${CMAKE_BINARY_DIR}/etc/allDict.cxx.pch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+  install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/dictpch DESTINATION ${CMAKE_INSTALL_SYSCONFDIR})
+endif()
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
+if(NOT WIN32)
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
 if(WIN32)
@@ -353,11 +379,14 @@ else()
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 endif()
 install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
+endif()
 
 #---version--------------------------------------------------------------------------------------
+if(NOT WIN32)
 add_custom_target(version COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makeversion.sh ${CMAKE_BINARY_DIR}
                           WORKING_DIRECTORY ${CMAKE_SOURCE_DIR})
 #add_dependencies(version root.exe)
+endif()
 
 #---distribution commands------------------------------------------------------------------------
 add_custom_target(distsrc COMMAND ${CMAKE_SOURCE_DIR}/build/unix/makedistsrc.sh ${CMAKE_SOURCE_DIR}
@@ -418,6 +447,27 @@ if(testing)
       execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} http://root.cern.ch/git/roottest.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(roottest)
+    endif()
+  endif()
+  if(rootbench)
+    find_package(Git REQUIRED)
+    execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                    OUTPUT_VARIABLE GIT_BRANCH OUTPUT_STRIP_TRAILING_WHITESPACE)
+    #---Is the rootbench source directory around?
+    if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
+      set(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
+    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../rootbench)
+      get_filename_component(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/../rootbench ABSOLUTE)
+    endif()
+    if(rootbenchdir)
+      file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/rootbench)
+      add_subdirectory(${rootbenchdir} rootbench)
+    else()
+      message("-- Could not find rootbench directory! Cloning from the repository...")
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} https://github.com/root-project/rootbench.git
+                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+      add_subdirectory(rootbench)
     endif()
   endif()
 endif()

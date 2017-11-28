@@ -21,6 +21,11 @@ elseif(cxx14)
   set(LLVM_ENABLE_CXX1Y ON CACHE BOOL "" FORCE)
 endif()
 
+if(builtin_zlib)
+  set(ZLIB_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include CACHE BOOL "" FORCE)
+  set(ZLIB_LIBRARY ${CMAKE_BINARY_DIR}/lib/libZLIB.a CACHE BOOL "" FORCE)
+endif()
+
 # The llvm::ReverseIterate<bool>::value symbol from llvm's SmallPtrSet.h
 # somehow lands in our cling libraries on OS X and doesn't get hidden
 # by visibility-inlines-hidden, so we suddenly have a global weak symbol
@@ -55,15 +60,27 @@ elseif(ROOT_ARCHITECTURE MATCHES linux)
   set(ROOT_CLING_TARGET "X86")
 elseif(ROOT_ARCHITECTURE MATCHES macosx)
   set(ROOT_CLING_TARGET "X86")
+elseif(ROOT_ARCHITECTURE MATCHES win32)
+  set(ROOT_CLING_TARGET "X86")
 else()
   set(ROOT_CLING_TARGET "all")
+endif()
+
+if(MSVC)
+  # replace dashes in the -EH* and -GR* flags with slashes (/EH* /GR*)
+  string(REPLACE " -EH" " /EH" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  string(REPLACE " -GR" " /GR" CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /ignore:4049,4206,4217,4221")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /ignore:4049,4206,4217,4221")
+  set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /ignore:4049,4206,4217,4221")
 endif()
 
 set(LLVM_TARGETS_TO_BUILD ${ROOT_CLING_TARGET} CACHE STRING "Semicolon-separated list of targets to build, or \"all\".")
 
 if(clingtest)
   message("-- cling test suite enabled: llvm / clang symbols in libCling will be visible!")
-  set(CLING_INCLUDE_TESTS ON CACHE BOOL "")
+  set(CLING_INCLUDE_TESTS ON CACHE BOOL "" FORCE)
+  ROOT_ADD_TEST(clingtest-check-cling COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target check-cling)
 else()
   #---Build LLVM/Clang with symbol visibility=hidden--------------------------------------------------
   ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -fvisibility=hidden)
@@ -105,8 +122,6 @@ else()
 endif()
 set(CMAKE_BUILD_TYPE ${LLVM_BUILD_TYPE})
 set(BUILD_SHARED_LIBS "NO")
-#--- Do not build cling as part of llvm.
-set(LLVM_NOCLING "YES")
 
 set(CLANG_ENABLE_STATIC_ANALYZER OFF CACHE BOOL "")
 set(CLANG_ENABLE_ARCMT OFF CACHE BOOL "")

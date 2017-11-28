@@ -11,6 +11,7 @@
 #include "ROOT/TDataFrame.hxx"
 using namespace ROOT::Experimental;
 
+// clang-format off
 /**
 * \class ROOT::Experimental::TDataFrame
 * \ingroup dataframe
@@ -190,9 +191,10 @@ You can think of your data as "flowing" through the chain of calls, being transf
 perform actions. Multiple `Filter` calls can be chained one after another.
 
 Using string filters is nice for simple things, but they are limited to specifying the equivalent of a single return
-statement. They also add a small runtime overhead, as ROOT needs to just-in-time compile the string into c++ code.
-When more freedom is required or runtime is very important, a c++ callable can be specified instead (a lambda in the
-following snippet, but it can be any kind of function or even a functor class), together with a list of branch names.
+statement or the body of a lambda, so it's cumbersome to use strings with more complex filters. They also add a small
+runtime overhead, as ROOT needs to just-in-time compile the string into C++ code. When more freedom is required or
+runtime performance is very important, a C++ callable can be specified instead (a lambda in the following snippet,
+but it can be any kind of function or even a functor class), together with a list of branch names.
 This snippet is analogous to the one above:
 ~~~{.cpp}
 TDataFrame d("myTree", "file.root");
@@ -200,6 +202,21 @@ auto metCut = [](double x) { return x > 4.; }; // a c++11 lambda function checki
 auto c = d.Filter(metCut, {"MET"}).Count();
 std::cout << *c << std::endl;
 ~~~
+
+An example of a more complex filter expressed as a string containing C++ code is shown below
+
+~~~{.cpp}
+TDataFrame d("myTree", "file.root");
+auto df = d.Define("p", "std::array<double, 4> p{px, py, pz, E}; return p;")
+           .Filter("double p2 = 0.0; for (auto&& x : p) p2 += x*x; return sqrt(p2) < 10.0;");
+~~~
+
+The code snippet above defines a column `p` that is a fixed-size array using the component column names and then
+filters on its magnitude by looping over its elements. It must be noted that the usage of strings to define columns
+like the one above is a major advantage when using PyROOT. However, only constants and data coming from other columns
+in the dataset can be involved in the code passed as a string. Local variables and functions cannot be used, since
+the interpreter will not know how to find them. When capturing local state is necessary, a C++ callable can be used.
+
 More information on filters and how to use them to automatically generate cutflow reports can be found [below](#Filters).
 
 ### Defining custom columns
@@ -379,6 +396,25 @@ std::cout << "rms of b: " << std::sqrt(sumSq / n) << std::endl;
 You see how we created one `double` variable for each thread in the pool, and later merged their results via
 `std::accumulate`.
 
+### Friend trees
+Friend trees are supported by TDataFrame.
+In order to deal with friend trees with TDataFrame, the user is required to build
+the tree and its friends and instantiate a TDataFrame with it.
+Two caveats are presents when using jitted `Define`s and `Filter`s:
+1) the only columns which can be used in the strings passed to the aforementioned transformations are the top level branches of the friend trees.
+2) the "friend columns" cannot be written with the notation involving a dot. For example, if a tree is created like this:
+~~~{.cpp}
+TTree t([...]);
+TTree ft([...]);
+t.AddFriend(t,"myFriend");
+~~~
+in order to access a certain column `col` of the tree ft, it will be necessary to alias it before. To continue the example:
+~~~{.cpp}
+TDataFrame d(t);
+d.Alias("myFriend.MyCol", "myFriend_MyCol");
+auto f = d.Filter("myFriend_MyCol == 42");
+~~~
+
 ### <a name="callgraphs"></a>Call graphs (storing and reusing sets of transformations)
 **Sets of transformations can be stored as variables** and reused multiple times to create **call graphs** in which
 several paths of filtering/creation of columns are executed simultaneously; we often refer to this as "storing the
@@ -544,6 +580,7 @@ thread-safety, see [here](#generic-actions).
 
 <a name="reference"></a>
 */
+// clang-format on
 
 ////////////////////////////////////////////////////////////////////////////
 /// \brief Build the dataframe
@@ -588,6 +625,25 @@ TDataFrame::TDataFrame(std::string_view treeName, std::string_view filenameglob,
    const std::string filenameglobInt(filenameglob);
    auto chain = std::make_shared<TChain>(treeNameInt.c_str());
    chain->Add(filenameglobInt.c_str());
+   GetProxiedPtr()->SetTree(chain);
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// \brief Build the dataframe
+/// \param[in] treeName Name of the tree contained in the directory
+/// \param[in] filenames Collection of file names
+/// \param[in] defaultBranches Collection of default branches.
+///
+/// The default branches are looked at in case no branch is specified in the booking of actions or transformations.
+/// See TInterface for the documentation of the methods available.
+TDataFrame::TDataFrame(std::string_view treeName, const std::vector<std::string> &filenames,
+                       const ColumnNames_t &defaultBranches)
+   : TDF::TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
+{
+   std::string treeNameInt(treeName);
+   auto chain = std::make_shared<TChain>(treeNameInt.c_str());
+   for (auto &fileName : filenames)
+      chain->Add(TDFInternal::ToConstCharPtr(fileName));
    GetProxiedPtr()->SetTree(chain);
 }
 

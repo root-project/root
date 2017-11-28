@@ -41,7 +41,9 @@
 using namespace std;
 
 #ifdef WIN32
+#include <process.h>
 static string pathsep("\\");
+#define execlp _execlp
 #else
 static string pathsep("/");
 #endif
@@ -173,9 +175,9 @@ static bool CreateStamp(string dest)
 
 int main()
 {
-   string rootbin(TROOT::GetBinDir().Data());
-   string rootlib(TROOT::GetLibDir().Data());
-   string rootetc(TROOT::GetEtcDir().Data());
+   string rootbin(TROOT::GetBinDir());
+   string rootlib(TROOT::GetLibDir());
+   string rootetc(TROOT::GetEtcDir());
 
    // If needed, install ROOT notebook files in the user's home directory
 #ifdef WIN32

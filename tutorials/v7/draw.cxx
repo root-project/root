@@ -22,6 +22,7 @@ R__LOAD_LIBRARY(libGpad);
 
 #include "ROOT/THist.hxx"
 #include "ROOT/TCanvas.hxx"
+#include "ROOT/TColor.hxx"
 #include "ROOT/TDirectory.hxx"
 
 void draw()
@@ -45,7 +46,7 @@ void draw()
 
    // Create a canvas to be displayed.
    auto canvas = Experimental::TCanvas::Create("Canvas Title");
-   canvas->Draw(pHist);
+   canvas->Draw(pHist).SetLineColor(Experimental::TColor::kRed);
 
    canvas->Show();
 }

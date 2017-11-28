@@ -156,6 +156,7 @@ the proxy holds a function, and will trigger an assert
 #include "RooChi2Var.h"
 #include "RooMinimizer.h"
 #include "RooRealIntegral.h"
+#include "RooWorkspace.h"
 #include "Math/CholeskyDecomp.h"
 #include <string>
 
@@ -919,9 +920,12 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     nll = new RooAddition(baseName.c_str(),"-log(likelihood)",nllList,kTRUE) ;
   }
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
-  
+
   // Collect internal and external constraint specifications
   RooArgSet allConstraints ;
+
+////LM:   This code below has been removed in ab6de0cac6f9d37b48be1a86e4e043bfc24bc298
+///      re-added now
   if (cPars && cPars->getSize()>0) {
     RooArgSet* constraints = getAllConstraints(*data.get(),*cPars,doStripDisconnected) ;
     allConstraints.add(*constraints) ;
@@ -932,6 +936,44 @@ RooAbsReal* RooAbsPdf::createNLL(RooAbsData& data, const RooLinkedList& cmdList)
     allConstraints.add(*extCons) ;
   }
 
+/// LM: remove changes in https://github.com/root-project/root/commit/ab6de0cac6f9d37b48be1a86e4e043bfc24bc298#diff-0ffabaeb842dbfd09c09e55b4c7b40c5
+/// which  make stressRooStats failing for computing significance in a simultaneous model.
+/// Error is caused by a wrong value of constraint term in nll when doing a second fit
+#if 0
+
+
+  if (_myws && _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()))) {
+
+     // retrieve from cache
+     const RooArgSet *constr =
+        _myws->set(Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()));
+     coutI(Minimization) << "createNLL picked up cached consraints from workspace with " << constr->getSize()
+                         << " entries" << endl;
+     allConstraints.add(*constr);
+
+  } else {
+
+     if (cPars && cPars->getSize() > 0) {
+        RooArgSet *constraints = getAllConstraints(*data.get(), *cPars, doStripDisconnected);
+        allConstraints.add(*constraints);
+        delete constraints;
+     }
+     if (extCons) {
+        allConstraints.add(*extCons);
+     }
+
+     // write to cache
+     if (_myws) {
+        // cout << "createNLL: creating cache for allconstraints=" << allConstraints << endl ;
+        coutI(Minimization) << "createNLL: caching constraint set under name "
+                            << Form("CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content())
+                            << " with " << allConstraints.getSize() << " entries" << endl;
+        _myws->defineSetInternal(
+           Form("CACHE_CONSTR_OF_PDF_%s_FOR_OBS_%s", GetName(), RooNameSet(*data.get()).content()), allConstraints);
+     }
+  }
+#endif
+  
   // Include constraints, if any, in likelihood
   RooAbsReal* nllCons(0) ;
   if (allConstraints.getSize()>0 && cPars) {   

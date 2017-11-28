@@ -29,10 +29,8 @@ static Error visitKnownRecord(CVSymbol &Record,
   return Error::success();
 }
 
-Error CVSymbolVisitor::visitSymbolRecord(CVSymbol &Record) {
-  if (auto EC = Callbacks.visitSymbolBegin(Record))
-    return EC;
-
+static Error finishVisitation(CVSymbol &Record,
+                              SymbolVisitorCallbacks &Callbacks) {
   switch (Record.Type) {
   default:
     if (auto EC = Callbacks.visitUnknownSymbol(Record))
@@ -46,7 +44,7 @@ Error CVSymbolVisitor::visitSymbolRecord(CVSymbol &Record) {
   }
 #define SYMBOL_RECORD_ALIAS(EnumName, EnumVal, Name, AliasName)                \
   SYMBOL_RECORD(EnumVal, EnumVal, AliasName)
-#include "llvm/DebugInfo/CodeView/CVSymbolTypes.def"
+#include "llvm/DebugInfo/CodeView/CodeViewSymbols.def"
   }
 
   if (auto EC = Callbacks.visitSymbolEnd(Record))
@@ -55,10 +53,32 @@ Error CVSymbolVisitor::visitSymbolRecord(CVSymbol &Record) {
   return Error::success();
 }
 
+Error CVSymbolVisitor::visitSymbolRecord(CVSymbol &Record) {
+  if (auto EC = Callbacks.visitSymbolBegin(Record))
+    return EC;
+  return finishVisitation(Record, Callbacks);
+}
+
+Error CVSymbolVisitor::visitSymbolRecord(CVSymbol &Record, uint32_t Offset) {
+  if (auto EC = Callbacks.visitSymbolBegin(Record, Offset))
+    return EC;
+  return finishVisitation(Record, Callbacks);
+}
+
 Error CVSymbolVisitor::visitSymbolStream(const CVSymbolArray &Symbols) {
   for (auto I : Symbols) {
     if (auto EC = visitSymbolRecord(I))
       return EC;
+  }
+  return Error::success();
+}
+
+Error CVSymbolVisitor::visitSymbolStream(const CVSymbolArray &Symbols,
+                                         uint32_t InitialOffset) {
+  for (auto I : Symbols) {
+    if (auto EC = visitSymbolRecord(I, InitialOffset))
+      return EC;
+    InitialOffset += I.length();
   }
   return Error::success();
 }

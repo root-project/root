@@ -33,6 +33,8 @@
 
 #include "TDataType.h"
 
+#include "ROOT/TIOFeatures.hxx"
+
 class TTree;
 class TBasket;
 class TLeaf;
@@ -55,6 +57,7 @@ namespace ROOT {
 }
 
 class TBranch : public TNamed , public TAttFill {
+   using TIOFeatures = ROOT::TIOFeatures;
 
 protected:
    friend class TTreeCloner;
@@ -78,6 +81,7 @@ protected:
    Int_t       fEntryOffsetLen;   ///<  Initial Length of fEntryOffset table in the basket buffers
    Int_t       fWriteBasket;      ///<  Last basket number written
    Long64_t    fEntryNumber;      ///<  Current entry number (last one filled in this branch)
+   TIOFeatures fIOFeatures;       ///<  IO features for newly-created baskets.
    Int_t       fOffset;           ///<  Offset of this branch
    Int_t       fMaxBaskets;       ///<  Maximum number of Baskets so far
    Int_t       fNBaskets;         ///<! Number of baskets in memory
@@ -124,6 +128,7 @@ protected:
    void     Init(const char *name, const char *leaflist, Int_t compress);
 
    TBasket *GetFreshBasket();
+   TBasket *GetFreshCluster();
    Int_t    WriteBasket(TBasket* basket, Int_t where) { return WriteBasketImpl(basket, where, nullptr); }
 
    TString  GetRealFileName() const;
@@ -183,6 +188,7 @@ public:
            Long64_t  GetZipBytes(Option_t *option="")    const;
            Long64_t  GetEntryNumber() const {return fEntryNumber;}
            Long64_t  GetFirstEntry()  const {return fFirstEntry; }
+         TIOFeatures GetIOFeatures() const;
          TObjArray  *GetListOfBaskets()  {return &fBaskets;}
          TObjArray  *GetListOfBranches() {return &fBranches;}
          TObjArray  *GetListOfLeaves()   {return &fLeaves;}
@@ -220,6 +226,7 @@ public:
    virtual void      SetFirstEntry( Long64_t entry );
    virtual void      SetFile(TFile *file=0);
    virtual void      SetFile(const char *filename);
+   void              SetIOFeatures(TIOFeatures &features) {fIOFeatures = features;}
    virtual Bool_t    SetMakeClass(Bool_t decomposeObj = kTRUE);
    virtual void      SetOffset(Int_t offset=0) {fOffset=offset;}
    virtual void      SetStatus(Bool_t status=1);
@@ -230,7 +237,7 @@ public:
 
    static  void      ResetCount();
 
-   ClassDef(TBranch,12);  //Branch descriptor
+   ClassDef(TBranch, 13); // Branch descriptor
 };
 
 //______________________________________________________________________________

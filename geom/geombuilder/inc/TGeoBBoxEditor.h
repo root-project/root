@@ -11,14 +11,6 @@
 #ifndef ROOT_TGeoBBoxEditor
 #define ROOT_TGeoBBoxEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoBBoxEditor                                                      //
-//                                                                      //
-//  Editor for a TGeoBBox.                                              //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 

@@ -34,10 +34,21 @@
 #include "TGraph.h"
 #include "TMath.h"
 
+#include <algorithm>
 #include <vector>
 #include <cassert>
 
 using namespace std;
+
+auto tupleSort = [](std::tuple<Float_t, Float_t, Bool_t> _a, std::tuple<Float_t, Float_t, Bool_t> _b) {
+   return std::get<0>(_a) < std::get<0>(_b);
+};
+
+//_______________________________________________________________________
+TMVA::ROCCurve::ROCCurve(const std::vector<std::tuple<Float_t, Float_t, Bool_t>> &mvas)
+   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(NULL), fMva(mvas)
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -50,14 +61,10 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaValues, const std::vecto
    assert(mvaValues.size() == mvaWeights.size());
 
    for (UInt_t i = 0; i < mvaValues.size(); i++) {
-      if (mvaTargets[i]) {
-         fMvaSignal.push_back(mvaValues[i]);
-         fMvaSignalWeights.push_back(mvaWeights[i]);
-      } else {
-         fMvaBackground.push_back(mvaValues[i]);
-         fMvaBackgroundWeights.push_back(mvaWeights[i]);
-      }
+      fMva.emplace_back(mvaValues[i], mvaWeights[i], mvaTargets[i]);
    }
+
+   std::sort(fMva.begin(), fMva.end(), tupleSort);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -69,12 +76,10 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaValues, const std::vecto
    assert(mvaValues.size() == mvaTargets.size());
 
    for (UInt_t i = 0; i < mvaValues.size(); i++) {
-      if (mvaTargets[i]) {
-         fMvaSignal.push_back(mvaValues[i]);
-      } else {
-         fMvaBackground.push_back(mvaValues[i]);
-      }
+      fMva.emplace_back(mvaValues[i], 1, mvaTargets[i]);
    }
+
+   std::sort(fMva.begin(), fMva.end(), tupleSort);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -83,8 +88,15 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaValues, const std::vecto
 TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vector<Float_t> &mvaBackground)
    : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(NULL)
 {
-   fMvaSignal = mvaSignal;
-   fMvaBackground = mvaBackground;
+   for (UInt_t i = 0; i < mvaSignal.size(); i++) {
+      fMva.emplace_back(mvaSignal[i], 1, kTRUE);
+   }
+
+   for (UInt_t i = 0; i < mvaBackground.size(); i++) {
+      fMva.emplace_back(mvaBackground[i], 1, kFALSE);
+   }
+
+   std::sort(fMva.begin(), fMva.end(), tupleSort);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,13 +104,20 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vecto
 
 TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vector<Float_t> &mvaBackground,
                          const std::vector<Float_t> &mvaSignalWeights, const std::vector<Float_t> &mvaBackgroundWeights)
-   : ROCCurve(mvaSignal, mvaBackground)
+   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(NULL)
 {
    assert(mvaSignal.size() == mvaSignalWeights.size());
    assert(mvaBackground.size() == mvaBackgroundWeights.size());
 
-   fMvaSignalWeights = mvaSignalWeights;
-   fMvaBackgroundWeights = mvaBackgroundWeights;
+   for (UInt_t i = 0; i < mvaSignal.size(); i++) {
+      fMva.emplace_back(mvaSignal[i], mvaSignalWeights[i], kTRUE);
+   }
+
+   for (UInt_t i = 0; i < mvaBackground.size(); i++) {
+      fMva.emplace_back(mvaBackground[i], mvaBackgroundWeights[i], kFALSE);
+   }
+
+   std::sort(fMva.begin(), fMva.end(), tupleSort);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -107,6 +126,13 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vecto
 TMVA::ROCCurve::~ROCCurve() {
    delete fLogger;
    if(fGraph) delete fGraph;
+}
+
+TMVA::MsgLogger &TMVA::ROCCurve::Log() const
+{
+   if (!fLogger)
+      fLogger = new TMVA::MsgLogger("ROCCurve");
+   return *fLogger;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,33 +144,30 @@ std::vector<Double_t> TMVA::ROCCurve::ComputeSpecificity(const UInt_t num_points
       return {0.0, 1.0};
    }
 
-   UInt_t num_divisions = num_points - 1;
    std::vector<Double_t> specificity_vector;
-   specificity_vector.push_back(0.0);
+   std::vector<Double_t> true_negatives;
+   specificity_vector.reserve(fMva.size());
+   true_negatives.reserve(fMva.size());
 
-   for (Double_t threshold = -1.0; threshold < 1.0; threshold += (1.0 / num_divisions)) {
-      Double_t false_positives = 0.0;
-      Double_t true_negatives = 0.0;
+   Double_t true_negatives_sum = 0.0;
+   for (auto &ev : fMva) {
+      // auto value = std::get<0>(ev);
+      auto weight = std::get<1>(ev);
+      auto isSignal = std::get<2>(ev);
 
-      for (size_t i = 0; i < fMvaBackground.size(); ++i) {
-         auto value = fMvaBackground.at(i);
-         auto weight = fMvaBackgroundWeights.empty() ? (1.0) : fMvaBackgroundWeights.at(i);
-
-         if (value > threshold) {
-            false_positives += weight;
-         } else {
-            true_negatives += weight;
-         }
-      }
-
-      Double_t total_background = false_positives + true_negatives;
-      Double_t specificity =
-         (total_background <= std::numeric_limits<Double_t>::min()) ? (0.0) : (true_negatives / total_background);
-
-      specificity_vector.push_back(specificity);
+      true_negatives_sum += weight * (not isSignal);
+      true_negatives.push_back(true_negatives_sum);
    }
 
+   specificity_vector.push_back(0.0);
+   Double_t total_background = true_negatives_sum;
+   for (auto &tn : true_negatives) {
+      Double_t specificity =
+         (total_background <= std::numeric_limits<Double_t>::min()) ? (0.0) : (tn / total_background);
+      specificity_vector.push_back(specificity);
+   }
    specificity_vector.push_back(1.0);
+
    return specificity_vector;
 }
 
@@ -157,32 +180,30 @@ std::vector<Double_t> TMVA::ROCCurve::ComputeSensitivity(const UInt_t num_points
       return {1.0, 0.0};
    }
 
-   UInt_t num_divisions = num_points - 1;
    std::vector<Double_t> sensitivity_vector;
+   std::vector<Double_t> true_positives;
+   sensitivity_vector.reserve(fMva.size());
+   true_positives.reserve(fMva.size());
+
+   Double_t true_positives_sum = 0.0;
+   for (auto it = fMva.rbegin(); it != fMva.rend(); ++it) {
+      // auto value = std::get<0>(*it);
+      auto weight = std::get<1>(*it);
+      auto isSignal = std::get<2>(*it);
+
+      true_positives_sum += weight * (isSignal);
+      true_positives.push_back(true_positives_sum);
+   }
+   std::reverse(true_positives.begin(), true_positives.end());
+
    sensitivity_vector.push_back(1.0);
-
-   for (Double_t threshold = -1.0; threshold < 1.0; threshold += (1.0 / num_divisions)) {
-      Double_t true_positives = 0.0;
-      Double_t false_negatives = 0.0;
-
-      for (size_t i = 0; i < fMvaSignal.size(); ++i) {
-         auto value = fMvaSignal.at(i);
-         auto weight = fMvaSignalWeights.empty() ? (1.0) : fMvaSignalWeights.at(i);
-
-         if (value > threshold) {
-            true_positives += weight;
-         } else {
-            false_negatives += weight;
-         }
-      }
-
-      Double_t total_signal = true_positives + false_negatives;
-      Double_t sensitivity =
-         (total_signal <= std::numeric_limits<Double_t>::min()) ? (0.0) : (true_positives / total_signal);
+   Double_t total_signal = true_positives_sum;
+   for (auto &tp : true_positives) {
+      Double_t sensitivity = (total_signal <= std::numeric_limits<Double_t>::min()) ? (0.0) : (tp / total_signal);
       sensitivity_vector.push_back(sensitivity);
    }
-
    sensitivity_vector.push_back(0.0);
+
    return sensitivity_vector;
 }
 

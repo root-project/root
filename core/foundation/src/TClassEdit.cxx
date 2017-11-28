@@ -731,7 +731,7 @@ static bool IsDefElement(const char *elementName, const char* defaultElementName
       TClassEdit::GetNormalizedName(keypart,std::string_view(c.c_str()+pos,end-pos));
 
       std::string norm_key;
-      TClassEdit::GetNormalizedName(norm_key,k.c_str());
+      TClassEdit::GetNormalizedName(norm_key,k);
 
       if (keypart != norm_key) {
          return false;
@@ -1280,7 +1280,7 @@ ROOT::ESTLType TClassEdit::IsSTLCont(std::string_view type)
       return ROOT::kNotSTL;
    }
 
-   return STLKind({type.data(),pos});
+   return STLKind(type.substr(0,pos));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1652,7 +1652,10 @@ string TClassEdit::ResolveTypedef(const char *tname, bool /* resolveAll */)
    //    vector<MyObjTypedef> return vector<MyObj>
    //
 
-   if ( tname==0 || tname[0]==0 || !gInterpreterHelper) return "";
+   if (tname == 0 || tname[0] == 0)
+      return "";
+   if (!gInterpreterHelper)
+      return tname;
 
    std::string result;
 

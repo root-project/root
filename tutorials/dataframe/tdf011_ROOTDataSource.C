@@ -12,19 +12,11 @@
 /// \date September 2017
 /// \author Danilo Piparo
 
-void fill_tree(const char *fileName, const char *treeName)
+void fill_tree(const char *treeName, const char *fileName)
 {
-   TFile f(fileName, "RECREATE");
-   TTree t(treeName, treeName);
-   int b1;
-   t.Branch("b1", &b1);
-   for (int i = 0; i < 10000; ++i) {
-      b1 = i;
-      t.Fill();
-   }
-   t.Write();
-   f.Close();
-   return;
+   ROOT::Experimental::TDataFrame d(10000);
+   auto i = 0.;
+   d.Define("b1", [&i]() { return i++; }).Snapshot(treeName, fileName);
 }
 
 using TDS = ROOT::Experimental::TDF::TDataSource;
@@ -34,7 +26,7 @@ int tdf011_ROOTDataSource()
 {
    auto fileName = "tdf011_ROOTDataSources.root";
    auto treeName = "myTree";
-   fill_tree(fileName, treeName);
+   fill_tree(treeName, fileName);
 
    auto d_s = ROOT::Experimental::TDF::MakeRootDataFrame(treeName, fileName);
 

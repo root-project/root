@@ -36,7 +36,7 @@ set(headers4 NeuralNet.h TNeuron.h TSynapse.h TActivationChooser.h TActivation.h
 	     VariableTransformBase.h VarTransformHandler.h VariableIdentityTransform.h VariableDecorrTransform.h VariablePCATransform.h
 	     VariableGaussTransform.h VariableNormalizeTransform.h VariableRearrangeTransform.h VariableTransform.h ROCCalc.h ROCCurve.h)
 
-set(headers5 Envelope.h VariableImportance.h CrossValidation.h HyperParameterOptimisation.h Event.h Results.h ResultsClassification.h ResultsRegression.h ResultsMulticlass.h VariableInfo.h ClassInfo.h DataLoader.h DataSet.h DataSetInfo.h DataInputHandler.h DataSetManager.h DataSetFactory.h LossFunction.h)
+set(headers5 Envelope.h VariableImportance.h CrossValidation.h HyperParameterOptimisation.h Classification.h Event.h Results.h ResultsClassification.h ResultsRegression.h ResultsMulticlass.h VariableInfo.h ClassInfo.h DataLoader.h DataSet.h DataSetInfo.h DataInputHandler.h DataSetManager.h DataSetFactory.h LossFunction.h )
 
 #---Need to suffix each header name by TMVA/  -----------------
 foreach(hs headers1 headers2 headers3 headers4 headers5)
@@ -95,6 +95,7 @@ if(NOT gnuinstall)
 endif()
 
 ROOT_ADD_TEST_SUBDIRECTORY(test/DNN)
+ROOT_ADD_TEST_SUBDIRECTORY(test/Method)
 ROOT_ADD_TEST_SUBDIRECTORY(test/ROC)
 
 

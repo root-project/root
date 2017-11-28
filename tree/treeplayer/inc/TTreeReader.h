@@ -131,6 +131,16 @@ public:
       kEntryBeyondEnd ///< last entry loop has reached its end
    };
 
+   static constexpr const char * const fgEntryStatusText[kEntryBeyondEnd + 1] = {
+      "valid entry",
+      "the tree does not exist",
+      "the tree entry number does not exist",
+      "cannot access chain element",
+      "problem in opening a chain's file",
+      "problem reading dictionary info from tree",
+      "last entry loop has reached its end"
+   };
+
    TTreeReader() = default;
 
    TTreeReader(TTree* tree, TEntryList* entryList = nullptr);

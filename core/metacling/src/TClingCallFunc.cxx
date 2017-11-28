@@ -1791,15 +1791,17 @@ void TClingCallFunc::execWithULL(void *address, cling::Value *val)
 
 
 #define R__CF_InitRetAndExec(T, address, QT, ret)                 \
+{                                                                 \
    *ret = cling::Value::Create<T>(QT.getAsOpaquePtr(), *fInterp); \
    /* Release lock during user function execution*/               \
-   R__LOCKGUARD_UNLOCK(global);                                   \
+   R__LOCK_SUSPEND(gInterpreterMutex);                            \
                                                                   \
    static_assert(std::is_integral<T>::value, "Must be called with integral T"); \
    if (std::is_signed<T>::value)                                  \
-      execWithLL<T>(address, ret);                            \
+      execWithLL<T>(address, ret);                                \
    else                                                           \
-      execWithULL<T>(address, ret)
+      execWithULL<T>(address, ret);                               \
+}
 
 
 void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
@@ -1820,14 +1822,14 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
       QualType QT = Context.getLValueReferenceType(ClassTy);
       *ret = cling::Value(QT, *fInterp);
       // Store the new()'ed address in getPtr()
-      R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
+      R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
       exec(address, &ret->getPtr());
       return;
    }
    QualType QT = FD->getReturnType().getCanonicalType();
    if (QT->isReferenceType()) {
       *ret = cling::Value(QT, *fInterp);
-      R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
+      R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
       exec(address, &ret->getPtr());
       return;
    } else if (QT->isMemberPointerType()) {
@@ -1839,24 +1841,24 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
          // But that's not relevant: we use it as a non-builtin, allocated
          // type.
          *ret = cling::Value(QT, *fInterp);
-         R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
+         R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
          exec(address, ret->getPtr());
          return;
       }
       // We are a function member pointer.
       *ret = cling::Value(QT, *fInterp);
-      R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
+      R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
       exec(address, &ret->getPtr());
       return;
    } else if (QT->isPointerType() || QT->isArrayType()) {
       // Note: ArrayType is an illegal function return value type.
       *ret = cling::Value::Create<void*>(QT.getAsOpaquePtr(), *fInterp);
-      R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
+      R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
       exec(address, &ret->getPtr());
       return;
    } else if (QT->isRecordType()) {
       *ret = cling::Value(QT, *fInterp);
-      R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
+      R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
       exec(address, ret->getPtr());
       return;
    } else if (const EnumType *ET = dyn_cast<EnumType>(&*QT)) {
@@ -1864,17 +1866,18 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
       //       of the enum here.
       (void) ET;
       *ret = cling::Value(QT, *fInterp);
-      R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
+      R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
       execWithLL<int>(address, ret);
       return;
    } else if (const BuiltinType *BT = dyn_cast<BuiltinType>(&*QT)) {
       switch (BT->getKind()) {
-         case BuiltinType::Void:
+         case BuiltinType::Void: {
             *ret = cling::Value::Create<void>(QT.getAsOpaquePtr(), *fInterp);
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
+            R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
             exec(address, 0);
             return;
             break;
+         }
 
             //
             //  Unsigned Types
@@ -1967,24 +1970,27 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
                   "Invalid type 'Half'!");
             return;
             break;
-         case BuiltinType::Float:
+         case BuiltinType::Float: {
             *ret = cling::Value::Create<float>(QT.getAsOpaquePtr(), *fInterp);
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
+            R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
             exec(address, &ret->getFloat());
             return;
             break;
-         case BuiltinType::Double:
+         }
+         case BuiltinType::Double: {
             *ret = cling::Value::Create<double>(QT.getAsOpaquePtr(), *fInterp);
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
+            R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
             exec(address, &ret->getDouble());
             return;
             break;
-         case BuiltinType::LongDouble:
+         }
+         case BuiltinType::LongDouble: {
             *ret = cling::Value::Create<long double>(QT.getAsOpaquePtr(), *fInterp);
-            R__LOCKGUARD_UNLOCK(global); // Release lock during user function execution
+            R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
             exec(address, &ret->getLongDouble());
             return;
             break;
+         }
             //
             //  Language-Specific Types
             //

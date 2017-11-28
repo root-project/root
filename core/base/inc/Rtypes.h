@@ -31,6 +31,9 @@
 #include <string.h>
 #include <typeinfo>
 
+#if defined(R__WIN32)
+#define __attribute__(unused)
+#endif
 
 //---- forward declared class types --------------------------------------------
 
@@ -200,7 +203,7 @@ template <class T>
    struct TTypeNameExtraction: TTypeNameExtractionBase {
       static std::string Get() {
 #ifdef _MSC_VER // Visual Studio
-# define R__TNE_PRETTY_FUNCTION __FUNCTION__
+# define R__TNE_PRETTY_FUNCTION __FUNCSIG__
 #else
 # define R__TNE_PRETTY_FUNCTION __PRETTY_FUNCTION__
 #endif
@@ -223,7 +226,7 @@ template <typename T>
 class ClassDefGenerateInitInstanceLocalInjector:
    public TCDGIILIBase {
       static atomic_TClass_ptr fgIsA;
-      static std::string fgName;
+      static ::ROOT::TGenericClassInfo *fgGenericInfo;
    public:
       static void *New(void *p) { return p ? new(p) T : new T; };
       static void *NewArray(Long_t nElements, void *p) {
@@ -236,40 +239,77 @@ class ClassDefGenerateInitInstanceLocalInjector:
          static ::ROOT::TGenericClassInfo
             R__instance(T::Class_Name(), T::Class_Version(),
                         T::DeclFileName(), T::DeclFileLine(),
-                        typeid(T), ROOT::Internal::DefineBehavior((T*)0, (T*)0),
+                        typeid(T), ::ROOT::Internal::DefineBehavior((T*)0, (T*)0),
                         &T::Dictionary, isa_proxy, 0, sizeof(T) );
          SetInstance(R__instance, &New, &NewArray, &Delete, &DeleteArray, &Destruct);
          return &R__instance;
       }
-      static TClass *Dictionary() { fgIsA = GenerateInitInstanceLocal()->GetClass(); return fgIsA; }
+      // We need a reference to the template instance static member in a concrete function in order
+      // to force its instantiation (even before the function is actually run)
+      // Since we do have a reference to Dictionary (in T::Dictionary), using fgGenericInfo
+      // here will insure that it is initialized at process start or library load time.
+      static TClass *Dictionary() { fgIsA = fgGenericInfo->GetClass(); return fgIsA; }
       static TClass *Class() { SetfgIsA(fgIsA, &Dictionary); return fgIsA; }
       static const char* Name() {
-         if (fgName.empty())
-            SetName(TTypeNameExtraction<T>::Get(), fgName);
-         return fgName.c_str();
+         static std::string gName;
+         if (gName.empty())
+            SetName(TTypeNameExtraction<T>::Get(), gName);
+         return gName.c_str();
       }
    };
 
    template<typename T>
    atomic_TClass_ptr ClassDefGenerateInitInstanceLocalInjector<T>::fgIsA{};
    template<typename T>
-   std::string ClassDefGenerateInitInstanceLocalInjector<T>::fgName{};
+   ::ROOT::TGenericClassInfo *ClassDefGenerateInitInstanceLocalInjector<T>::fgGenericInfo {
+      ClassDefGenerateInitInstanceLocalInjector<T>::GenerateInitInstanceLocal()
+   };
+
+   template <typename T>
+   struct THashConsistencyHolder {
+      static Bool_t fgHashConsistency;
+   };
+
+   template <typename T>
+   Bool_t THashConsistencyHolder<T>::fgHashConsistency;
 
    void DefaultStreamer(TBuffer &R__b, const TClass *cl, void *objpointer);
+   Bool_t HasConsistentHashMember(TClass &clRef);
+   Bool_t HasConsistentHashMember(const char *clName);
 }} // namespace ROOT::Internal
 
 
 // Common part of ClassDef definition.
 // DeclFileLine() is not part of it since CINT uses that as trigger for
 // the class comment string.
-#define _ClassDefBase_(name,id, virtual_keyword, overrd) \
-public: \
-   static Version_t Class_Version() { return id; } \
-   virtual_keyword TClass *IsA() const overrd { return name::Class(); } \
-   virtual_keyword void ShowMembers(TMemberInspector&insp) const overrd { ::ROOT::Class_ShowMembers(name::Class(), this, insp); } \
-   void StreamerNVirtual(TBuffer&ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
+#define _ClassDefBase_(name, id, virtual_keyword, overrd)                                                       \
+private:                                                                                                        \
+   virtual_keyword Bool_t CheckTObjectHashConsistency() const overrd                                            \
+   {                                                                                                            \
+      static std::atomic<UChar_t> recurseBlocker(0);                                                            \
+      if (R__likely(recurseBlocker >= 2)) {                                                                     \
+         return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;                   \
+      } else if (recurseBlocker == 1) {                                                                         \
+         return false;                                                                                          \
+      } else if (recurseBlocker++ == 0) {                                                                       \
+         ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency =                         \
+            ::ROOT::Internal::HasConsistentHashMember(_QUOTE_(name)) ||                                         \
+            ::ROOT::Internal::HasConsistentHashMember(*IsA());                                                  \
+         ++recurseBlocker;                                                                                      \
+         return ::ROOT::Internal::THashConsistencyHolder<decltype(*this)>::fgHashConsistency;                   \
+      }                                                                                                         \
+      return false; /* unreacheable */                                                                          \
+   }                                                                                                            \
+                                                                                                                \
+public:                                                                                                         \
+   static Version_t Class_Version() { return id; }                                                              \
+   virtual_keyword TClass *IsA() const overrd { return name::Class(); }                                         \
+   virtual_keyword void ShowMembers(TMemberInspector &insp) const overrd                                        \
+   {                                                                                                            \
+      ::ROOT::Class_ShowMembers(name::Class(), this, insp);                                                     \
+   }                                                                                                            \
+   void StreamerNVirtual(TBuffer &ClassDef_StreamerNVirtual_b) { name::Streamer(ClassDef_StreamerNVirtual_b); } \
    static const char *DeclFileName() { return __FILE__; }
-
 
 #define _ClassDefOutline_(name,id, virtual_keyword, overrd) \
    _ClassDefBase_(name,id, virtual_keyword, overrd)       \
@@ -283,15 +323,18 @@ public: \
    static TClass *Class(); \
    virtual_keyword void Streamer(TBuffer&) overrd;
 
-#define _ClassDefInline_(name, id, virtual_keyword, overrd)                                                            \
-   _ClassDefBase_(name, id, virtual_keyword, overrd) public : static int ImplFileLine() { return -1; }                 \
-   static const char *ImplFileName() { return 0; }                                                                     \
-   static const char *Class_Name() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name(); } \
-   static TClass *Dictionary()                                                                                         \
-   {                                                                                                                   \
-      return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();                            \
-   }                                                                                                                   \
-   static TClass *Class() { return ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); }         \
+#define _ClassDefInline_(name, id, virtual_keyword, overrd)                                                      \
+   _ClassDefBase_(name, id, virtual_keyword, overrd) public : static int ImplFileLine() { return -1; }           \
+   static const char *ImplFileName() { return 0; }                                                               \
+   static const char *Class_Name()                                                                               \
+   {                                                                                                             \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Name();                          \
+   }                                                                                                             \
+   static TClass *Dictionary()                                                                                   \
+   {                                                                                                             \
+      return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Dictionary();                    \
+   }                                                                                                             \
+   static TClass *Class() { return ::ROOT::Internal::ClassDefGenerateInitInstanceLocalInjector<name>::Class(); } \
    virtual_keyword void Streamer(TBuffer &R__b) overrd { ::ROOT::Internal::DefaultStreamer(R__b, name::Class(), this); }
 
 #define ClassDef(name,id) \
@@ -328,7 +371,7 @@ public: \
    namespace ROOT { \
       TGenericClassInfo *GenerateInitInstance(const name*); \
       namespace { \
-         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) __attribute__ ((unused)) = \
+         static int _R__UNIQUE_(_NAME2_(R__dummyint,key)) __attribute__((unused)) = \
             GenerateInitInstance((name*)0x0)->SetImplFile(__FILE__, __LINE__); \
          R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyint,key))); \
       } \
@@ -371,13 +414,11 @@ public: \
 
 #define ClassDefT2(name,Tmpl)
 
-
-
-#define templateClassImpUnique(name,key) \
-   namespace ROOT { \
-      static TNamed *_R__UNIQUE_(_NAME2_(R__dummyholder,key)) = \
-         ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
-      R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyholder,key))); \
+#define templateClassImpUnique(name, key)                                                                           \
+   namespace ROOT {                                                                                                 \
+   static TNamed *                                                                                                  \
+      _R__UNIQUE_(_NAME2_(R__dummyholder, key)) = ::ROOT::RegisterClassTemplate(_QUOTE_(name), __FILE__, __LINE__); \
+   R__UseDummy(_R__UNIQUE_(_NAME2_(R__dummyholder, key)));                                                          \
    }
 #define templateClassImp(name) templateClassImpUnique(name,default)
 
@@ -425,7 +466,11 @@ namespace ROOT {                                                     \
 // prevent compilation errors with complex diagnostics due to
 //   TString BAD_DO_NOT_TRY = "lib";
 //   R__LOAD_LIBRARY(BAD_DO_NOT_TRY + "BAD_DO_NOT_TRY.so") // ERROR!
+#ifdef _MSC_VER // Visual Studio
+#define _R_PragmaStr(x) __pragma(#x)
+#else
 #define _R_PragmaStr(x) _Pragma(#x)
+#endif
 #ifdef __CLING__
 # define R__LOAD_LIBRARY(LIBRARY) _R_PragmaStr(cling load ( #LIBRARY ))
 # define R__ADD_INCLUDE_PATH(PATH) _R_PragmaStr(cling add_include_path ( #PATH ))

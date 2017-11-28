@@ -5,6 +5,7 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm> // std::accumulate
 #include <iostream>
 
 using namespace ROOT::Experimental;
@@ -54,6 +55,7 @@ TEST(TRootTDS, EntryRanges)
 {
    TRootDS tds(treeName, fileGlob);
    tds.SetNSlots(3U);
+   tds.Initialise();
 
    // Still dividing in equal parts...
    auto ranges = tds.GetEntryRanges();
@@ -73,6 +75,7 @@ TEST(TRootTDS, ColumnReaders)
    const auto nSlots = 3U;
    tds.SetNSlots(nSlots);
    auto vals = tds.GetColumnReaders<int>("i");
+   tds.Initialise();
    auto ranges = tds.GetEntryRanges();
    auto slot = 0U;
    for (auto &&range : ranges) {
@@ -98,6 +101,8 @@ TEST(TRootTDS, SetNSlotsTwice)
    ASSERT_DEATH(theTest(), "Setting the number of slots even if the number of slots is different from zero.");
 }
 #endif
+
+#ifdef R__B64
 
 TEST(TRootTDS, FromATDF)
 {
@@ -126,28 +131,23 @@ TEST(TRootTDS, FromATDFWithJitting)
 // NOW MT!-------------
 #ifdef R__USE_IMT
 
-TEST(TRootTDS, DefineSlotCheckMT)
+TEST(TRootTDS, DefineSlotMT)
 {
-   auto nSlots = 4U;
+   const auto nSlots = 4U;
    ROOT::EnableImplicitMT(nSlots);
 
-   std::hash<std::thread::id> hasher;
-   using H_t = decltype(hasher(std::this_thread::get_id()));
-
-   std::vector<H_t> ids(nSlots, 0);
+   std::vector<unsigned int> ids(nSlots, 0u);
    std::unique_ptr<TDataSource> tds(new TRootDS(treeName, fileGlob));
    TDataFrame d(std::move(tds));
    auto m = d.DefineSlot("x", [&](unsigned int slot) {
-                std::this_thread::sleep_for(std::chrono::milliseconds(100));
-                ids[slot] = hasher(std::this_thread::get_id());
-                return 1.;
+                ids[slot] = 1u;
+                return 1;
              }).Max("x");
-
    EXPECT_EQ(1, *m); // just in case
 
-   std::set<H_t> s(ids.begin(), ids.end());
-   EXPECT_EQ(nSlots, s.size());
-   EXPECT_TRUE(s.end() == s.find(0));
+   const auto nUsedSlots = std::accumulate(ids.begin(), ids.end(), 0u);
+   EXPECT_GT(nUsedSlots, 0u);
+   EXPECT_LE(nUsedSlots, nSlots);
 }
 
 TEST(TRootTDS, FromATDFMT)
@@ -174,4 +174,6 @@ TEST(TRootTDS, FromATDFWithJittingMT)
    EXPECT_DOUBLE_EQ(5., *min);
 }
 
-#endif
+#endif // R__USE_IMT
+
+#endif // R__B64

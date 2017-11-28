@@ -13,7 +13,7 @@
 
 #include "ROOT/TDataSource.hxx" // ColumnName2ColumnTypeName
 #include "ROOT/TypeTraits.hxx"
-#include "ROOT/RArrayView.hxx"
+#include "ROOT/TArrayBranch.hxx"
 #include "Compression.h"
 #include "TH1.h"
 #include "TTreeReaderArray.h"
@@ -21,11 +21,13 @@
 
 #include <array>
 #include <cstddef> // std::size_t
+#include <deque>
 #include <functional>
 #include <memory>
 #include <string>
 #include <type_traits> // std::decay
 #include <vector>
+
 class TTree;
 class TTreeReader;
 
@@ -35,11 +37,19 @@ namespace TDF {
 /// A collection of options to steer the creation of the dataset on file
 struct TSnapshotOptions {
    using ECAlgo = ::ROOT::ECompressionAlgorithm;
-   std::string fMode = "RECREATE";            //< Mode of creation of output file
-   ECAlgo fCompressionAlgorithm = ROOT::kLZ4; //< Compression algorithm of output file
-   Int_t fCompressionLevel = 1;               //< Compression level of output file
-   Int_t fAutoFlush = 0;                      //< AutoFlush value for output tree
-   Int_t fSplitLevel = 99;                    //< Split level of output tree
+   TSnapshotOptions() = default;
+   TSnapshotOptions(const TSnapshotOptions &) = default;
+   TSnapshotOptions(TSnapshotOptions &&) = default;
+   TSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel)
+      : fMode(mode), fCompressionAlgorithm(comprAlgo), fCompressionLevel{comprLevel}, fAutoFlush(autoFlush),
+        fSplitLevel(splitLevel)
+   {
+   }
+   std::string fMode = "RECREATE";             //< Mode of creation of output file
+   ECAlgo fCompressionAlgorithm = ROOT::kZLIB; //< Compression algorithm of output file
+   int fCompressionLevel = 1;                  //< Compression level of output file
+   int fAutoFlush = 0;                         //< AutoFlush value for output tree
+   int fSplitLevel = 99;                       //< Split level of output tree
 };
 }
 }
@@ -143,14 +153,14 @@ const char *ToConstCharPtr(const std::string &s);
 unsigned int GetNSlots();
 
 /// Choose between TTreeReader{Array,Value} depending on whether the branch type
-/// T is a `std::array_view<T>` or any other type (respectively).
+/// T is a `TArrayBranch<T>` or any other type (respectively).
 template <typename T>
 struct TReaderValueOrArray {
    using Proxy_t = TTreeReaderValue<T>;
 };
 
 template <typename T>
-struct TReaderValueOrArray<std::array_view<T>> {
+struct TReaderValueOrArray<TArrayBranch<T>> {
    using Proxy_t = TTreeReaderArray<T>;
 };
 
@@ -191,6 +201,8 @@ void CheckFilter(Filter &)
    using FilterRet_t = typename TDF::CallableTraits<Filter>::ret_type;
    static_assert(std::is_same<FilterRet_t, bool>::value, "filter functions must return a bool");
 }
+
+ColumnNames_t GetBranchNames(TTree &t);
 
 void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
                        const ColumnNames_t &dataSourceColumns);
@@ -241,6 +253,8 @@ struct Min {
 };
 struct Max {
 };
+struct Sum {
+};
 struct Mean {
 };
 struct Fill {
@@ -282,6 +296,81 @@ struct RemoveFirstParameterIf {
 template <typename TypeList>
 struct RemoveFirstParameterIf<true, TypeList> {
    using type = RemoveFirstParameter_t<TypeList>;
+};
+
+template <bool MustRemove, typename TypeList>
+struct RemoveFirstTwoParametersIf {
+   using type = TypeList;
+};
+
+template <typename TypeList>
+struct RemoveFirstTwoParametersIf<true, TypeList> {
+   using typeTmp = typename RemoveFirstParameterIf<true, TypeList>::type;
+   using type = typename RemoveFirstParameterIf<true, typeTmp>::type;
+};
+
+bool IsInternalColumn(std::string_view colName);
+
+// Check if a condition is true for all types
+template <bool...>
+struct TBoolPack;
+template <bool... bs>
+using IsTrueForAllImpl_t = typename std::is_same<TBoolPack<bs..., true>, TBoolPack<true, bs...>>;
+
+template <bool... Conditions>
+struct TEvalAnd {
+   static constexpr bool value = IsTrueForAllImpl_t<Conditions...>::value;
+};
+
+// Check if a class is a specialisation of stl containers templates
+
+template <typename>
+struct IsVector_t : std::false_type {
+};
+
+template <typename T>
+struct IsVector_t<std::vector<T>> : std::true_type {
+};
+
+template <typename>
+struct IsList_t : std::false_type {
+};
+
+template <typename T>
+struct IsList_t<std::list<T>> : std::true_type {
+};
+
+template <typename>
+struct IsDeque_t : std::false_type {
+};
+
+template <typename T>
+struct IsDeque_t<std::deque<T>> : std::true_type {
+};
+
+template <typename>
+struct IsTArrayBranch_t : std::false_type {
+};
+
+template <typename T>
+struct IsTArrayBranch_t<ROOT::Experimental::TDF::TArrayBranch<T>> : std::true_type {
+};
+
+// Check the value_type type of a type with a SFINAE to allow compilation in presence
+// fundamental types
+template <typename T, bool IsContainer = IsContainer<typename std::decay<T>::type>::value>
+struct ValueType {
+   using value_type = typename T::value_type;
+};
+
+template <typename T>
+struct ValueType<T, false> {
+   using value_type = T;
+};
+
+template <typename T>
+struct ValueType<ROOT::Experimental::TDF::TArrayBranch<T>, false> {
+   using value_type = T;
 };
 
 } // end NS TDF

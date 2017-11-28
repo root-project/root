@@ -14,22 +14,18 @@
 
 // A simple helper function to fill a test tree: this makes the example
 // stand-alone.
-void fill_tree(const char *filename, const char *treeName)
+void fill_tree(const char *treeName, const char *fileName)
 {
-   TFile f(filename, "RECREATE");
-   TTree t(treeName, treeName);
-   double b1;
-   int b2;
-   t.Branch("b1", &b1);
-   t.Branch("b2", &b2);
-   for (int i = 0; i < 10; ++i) {
-      b1 = i;
-      b2 = i * i;
-      t.Fill();
-   }
-   t.Write();
-   f.Close();
-   return;
+   ROOT::Experimental::TDataFrame d(10);
+   int i(0);
+   d.Define("b1", [&i]() { return (double)i; })
+      .Define("b2",
+              [&i]() {
+                 auto j = i * i;
+                 ++i;
+                 return j;
+              })
+      .Snapshot(treeName, fileName);
 }
 
 int tdf001_introduction()
@@ -38,7 +34,7 @@ int tdf001_introduction()
    // We prepare an input tree to run on
    auto fileName = "tdf001_introduction.root";
    auto treeName = "myTree";
-   fill_tree(fileName, treeName);
+   fill_tree(treeName, fileName);
 
    // We read the tree from the file and create a TDataFrame, a class that
    // allows us to interact with the data contained in the tree.
@@ -93,7 +89,8 @@ int tdf001_introduction()
    auto b1List = b1_cut.Take<double, std::list<double>>();
 
    std::cout << "Selected b1 entries" << std::endl;
-   for (auto b1_entry : *b1List) std::cout << b1_entry << " ";
+   for (auto b1_entry : *b1List)
+      std::cout << b1_entry << " ";
    std::cout << std::endl;
    auto b1VecCl = TClass::GetClass(typeid(*b1Vec));
    std::cout << "The type of b1Vec is " << b1VecCl->GetName() << std::endl;
@@ -157,6 +154,16 @@ int tdf001_introduction()
    // is just in time compiled.
    auto entries_sum2 = d.Define("sum2", "b1 + b2").Filter("sum2 > 4.2").Count();
    std::cout << *entries_sum2 << std::endl;
+
+   // It is possible at any moment to read the entry number and the processing
+   // slot number. The latter may change when implicit multithreading is active.
+   // The special columns which provide the entry number and the slot index are
+   // called "tdfentry_" and "tdfslot_" respectively. Their types are an unsigned
+   // 64 bit integer and an unsigned integer.
+   auto printEntrySlot = [](ULong64_t iEntry, unsigned int slot) {
+      std::cout << "Entry: " << iEntry << " Slot: " << slot << std::endl;
+   };
+   d.Foreach(printEntrySlot, {"tdfentry_", "tdfslot_"});
 
    return 0;
 }

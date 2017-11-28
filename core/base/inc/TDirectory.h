@@ -71,16 +71,7 @@ public:
          if ( newCurrent ) newCurrent->cd();
          else CdNull();
       }
-      ~TContext()
-      {
-         // Destructor.   Reset the current directory to its
-         // previous state.
-         if ( fDirectory ) {
-            fDirectory->UnregisterContext(this);
-            fDirectory->cd();
-         }
-         else CdNull();
-      }
+      ~TContext();
    };
 
 protected:
@@ -90,6 +81,9 @@ protected:
    TUUID         fUUID;            //Unique identifier
    TString       fPathBuffer;      //!Buffer for GetPath() function
    TContext     *fContext;         //!Pointer to a list of TContext object pointing to this TDirectory
+
+   mutable std::atomic_flag fSpinLock; // MSVC doesn't support = ATOMIC_FLAG_INIT;
+
    static Bool_t fgAddDirectory;   //!flag to add histograms, graphs,etc to the directory
 
           Bool_t  cd1(const char *path);

@@ -15,6 +15,9 @@
 
 #include "ROOT/TCanvas.hxx"
 
+#include "ROOT/TLogger.hxx"
+
+#include <algorithm>
 #include <memory>
 #include <stdio.h>
 #include <string.h>

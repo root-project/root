@@ -75,7 +75,7 @@ void ROOT::Internal::RStl::GenerateTClassFor(const clang::QualType &type, const 
             ROOT::TMetaUtils::GetQualifiedName(*stlclass).c_str());
    }
 
-   if ( TClassEdit::STLKind( stlclass->getName().str().c_str() )  == ROOT::kSTLvector ) {
+   if ( TClassEdit::STLKind( stlclass->getName().str() )  == ROOT::kSTLvector ) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(0) );
       if (arg.getKind() == clang::TemplateArgument::Type) {
          const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
@@ -108,7 +108,7 @@ void ROOT::Internal::RStl::GenerateTClassFor(const clang::QualType &type, const 
       if (arg.getKind() == clang::TemplateArgument::Type) {
          const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
 
-         if (decl && TClassEdit::STLKind( decl->getName().str().c_str() ) != 0 )
+         if (decl && TClassEdit::STLKind( decl->getName().str() ) != 0 )
             {
                const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
                if (clxx) {
@@ -134,7 +134,7 @@ void ROOT::Internal::RStl::GenerateTClassFor(const char *requestedName, const cl
    }
 
 
-   if ( TClassEdit::STLKind( stlclass->getName().str().c_str() )  == ROOT::kSTLvector ) {
+   if ( TClassEdit::STLKind( stlclass->getName().str() )  == ROOT::kSTLvector ) {
       const clang::TemplateArgument &arg( templateCl->getTemplateArgs().get(0) );
       if (arg.getKind() == clang::TemplateArgument::Type) {
          const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
@@ -156,7 +156,7 @@ void ROOT::Internal::RStl::GenerateTClassFor(const char *requestedName, const cl
       if (arg.getKind() == clang::TemplateArgument::Type) {
          const clang::NamedDecl *decl = arg.getAsType().getTypePtr()->getAsCXXRecordDecl();
 
-         if (decl && TClassEdit::STLKind( decl->getName().str().c_str() ) != 0 )
+         if (decl && TClassEdit::STLKind( decl->getName().str() ) != 0 )
             {
                const clang::CXXRecordDecl *clxx = llvm::dyn_cast<clang::CXXRecordDecl>(decl);
                if (clxx) {

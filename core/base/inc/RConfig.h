@@ -36,10 +36,18 @@
 #define R__ANSISTREAM      /* ANSI C++ Standard Library conformant */
 #define R__SSTREAM         /* use sstream or strstream header */
 
-#if defined(__cplusplus) && (__cplusplus < 201103L)
-# error "ROOT requires support for C++11 or higher."
-# if defined(__GNUC__) || defined(__clang__)
-#  error "Pass `-std=c++11` as compiler argument."
+#if defined(_MSC_VER)
+# if (_MSC_VER < 1910)
+#  error "ROOT requires Visual Studio 2017 or higher."
+# else
+#  define R__NULLPTR
+# endif
+#else
+# if defined(__cplusplus) && (__cplusplus < 201103L)
+#  error "ROOT requires support for C++11 or higher."
+#  if defined(__GNUC__) || defined(__clang__)
+#   error "Pass `-std=c++11` as compiler argument."
+#  endif
 # endif
 #endif
 
@@ -372,7 +380,8 @@
 #   endif
 #   define R__BYTESWAP
 #   define R__ACCESS_IN_SYMBOL
-#   define thread_local static __declspec(thread)
+//#   define __attribute__(X)
+//#   define thread_local static __declspec(thread)
 #endif
 
 #ifdef __SC__
@@ -517,6 +526,11 @@
 
 #endif
 
+#ifdef R__HAS_ATTRIBUTE_ALWAYS_INLINE
+#define R__ALWAYS_INLINE inline __attribute__((always_inline))
+#else
+#define R__ALWAYS_INLINE inline
+#endif
 
 /*---- unlikely / likely expressions -----------------------------------------*/
 // These are meant to use in cases like:

@@ -1128,7 +1128,9 @@ TGeoNode *TGeoNavigator::FindNextDaughterBoundary(Double_t *point, Double_t *dir
          if (voxels && voxels->IsSafeVoxel(point, i, fStep)) continue;
          current->MasterToLocal(point, lpoint);
          current->MasterToLocalVect(dir, ldir);
-         if (current->IsOverlapping() && current->GetVolume()->Contains(lpoint)) continue;
+         if (current->IsOverlapping() &&
+             current->GetVolume()->Contains(lpoint) &&
+             current->GetVolume()->GetShape()->Safety(lpoint, kTRUE) > gTolerance) continue;
          snext = current->GetVolume()->GetShape()->DistFromOutside(lpoint, ldir, 3, fStep);
          if (snext<fStep-gTolerance) {
             if (idebug>4) {
@@ -2216,7 +2218,7 @@ Int_t TGeoNavigator::GetTouchedCluster(Int_t start, Double_t *point,
    }
 
    Int_t jst=0, i, j;
-   while ((ovlps[jst]<=check_list[start]) && (jst<novlps))  jst++;
+   while ((jst<novlps) && (ovlps[jst]<=check_list[start]))  jst++;
    if (jst==novlps) return 0;
    for (i=start; i<ncheck; i++) {
       for (j=jst; j<novlps; j++) {

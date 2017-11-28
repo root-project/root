@@ -12,14 +12,6 @@
 #ifndef ROOT_TGeoManagerEditor
 #define ROOT_TGeoManagerEditor
 
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-//  TGeoManagerEditor                                                   //
-//                                                                      //
-//  Editor for a TGeoManager.                                           //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
 #include "TGWidget.h"
 #include "TGeoGedFrame.h"
 
@@ -57,28 +49,28 @@ protected:
    TGTextEntry         *fMatrixName;        // Matrix name text entry
    TGTextEntry         *fMaterialName;      // Material name text entry
    TGTextEntry         *fVolumeName;        // Volume name text entry
-   TGeoMaterial        *fSelectedMaterial;   // Selected material
-   TGeoMaterial        *fSelectedMaterial2;  // Selected material for medium creation
+   TGeoMaterial        *fSelectedMaterial;  // Selected material
+   TGeoMaterial        *fSelectedMaterial2; // Selected material for medium creation
    TGLabel             *fLSelMaterial;      // Selected material label
-   TGLabel             *fLSelMaterial2;      // Selected material label
+   TGLabel             *fLSelMaterial2;     // Selected material label
    TGPictureButton     *fBSelMaterial;      // Button for selecting a material
-   TGPictureButton     *fBSelMaterial2;      // Button for selecting a material
+   TGPictureButton     *fBSelMaterial2;     // Button for selecting a material
    TGeoVolume          *fSelectedVolume;    // Selected volume
    TGLabel             *fLSelVolume;        // Selected volume label
    TGPictureButton     *fBSelVolume;        // Button for selecting a volume
    TGeoShape           *fSelectedShape;     // Selected shape
    TGeoShape           *fSelectedShape2;    // Selected shape for volume creation
    TGLabel             *fLSelShape;         // Selected shape label
-   TGLabel             *fLSelShape2;         // Selected shape label
+   TGLabel             *fLSelShape2;        // Selected shape label
    TGPictureButton     *fBSelShape;         // Button for selecting a shape
-   TGPictureButton     *fBSelShape2;         // Button for selecting a shape
+   TGPictureButton     *fBSelShape2;        // Button for selecting a shape
    TGeoMatrix          *fSelectedMatrix;    // Selected matrix
    TGLabel             *fLSelMatrix;        // Selected matrix label
    TGPictureButton     *fBSelMatrix;        // Button for selecting a matrix
    TGeoMedium          *fSelectedMedium;    // Selected medium
-   TGeoMedium          *fSelectedMedium2;    // Selected medium for volume creation
+   TGeoMedium          *fSelectedMedium2;   // Selected medium for volume creation
    TGLabel             *fLSelMedium;        // Selected medium label
-   TGLabel             *fLSelMedium2;        // Selected medium label
+   TGLabel             *fLSelMedium2;       // Selected medium label
    TGPictureButton     *fBSelMedium;        // Button for selecting a medium
    TGPictureButton     *fBSelMedium2;       // Button for selecting a medium
    TGPictureButton     *fShapeButton[21];   // List of shape buttons

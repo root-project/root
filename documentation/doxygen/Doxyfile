@@ -767,11 +767,8 @@ INPUT                  = . \
                          ../../core/unix/ \
                          ../../core/winnt/ \
                          ../../core/imt/ \
-                         ../../geom/gdml/ \
-                         ../../geom/geocad/ \
-                         ../../geom/geom \
-                         ../../geom/geombuilder/ \
-                         ../../geom/geompainter/ \
+                         ../../core/zip/inc/Compression.h \
+                         ../../geom/ \
                          ../../graf2d/asimage/ \
                          ../../graf2d/cocoa/ \
                          ../../graf2d/fitsio/ \
@@ -836,7 +833,6 @@ INPUT                  = . \
 #                         ../../core/lzma/
 #                         ../../core/newdelete/
 #                         ../../core/textinput/
-#                         ../../core/zip/
 #                         ../../graf2d/ios/
 #                         ../../graf2d/qt/ \
 #                         ../../graf2d/mathtext/
@@ -940,7 +936,7 @@ EXCLUDE_PATTERNS       =  */G__* \
                           */doc/v6* */doc/v5* \
                           */win32gdk/gdk/* \
                           */bindings/pyroot/*.py \
-                          makeimage.C filter.cxx \
+                          makeimage.C libs.C filter.cxx \
                           *gl2ps* *CsgOps* \
                           converttonotebook.py \
                           makeimage.py \

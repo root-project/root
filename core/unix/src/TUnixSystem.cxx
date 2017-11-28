@@ -4074,8 +4074,6 @@ int TUnixSystem::UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
          *id = 0x6969;
       else if (!strcmp(statfsbuf.f_fstypename, MOUNT_MSDOS))
          *id = 0x4d44;
-      else if (!strcmp(statfsbuf.f_fstypename, MOUNT_PROCFS))
-         *id = 0x9fa0;
       else if (!strcmp(statfsbuf.f_fstypename, MOUNT_EXT2FS))
          *id = 0xef53;
       else if (!strcmp(statfsbuf.f_fstypename, MOUNT_CD9660))

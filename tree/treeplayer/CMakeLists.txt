@@ -11,11 +11,20 @@ list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/treeplayer/inc/TBranchProx
 
 ROOT_GLOB_SOURCES(sources src/*.cxx)
 
+if(MSVC)
+  list(REMOVE_ITEM dictHeaders ${CMAKE_SOURCE_DIR}/tree/treeplayer/inc/TMPWorkerTree.h)
+  list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TTreeProcessorMT.h)
+  list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TProcessExecutor.hxx)
+  list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TTreeProcessorMP.hxx)
+  list(REMOVE_ITEM sources ${CMAKE_SOURCE_DIR}/tree/treeplayer/src/TMPWorkerTree.cxx)
+  list(REMOVE_ITEM sources ${CMAKE_SOURCE_DIR}/tree/treeplayer/src/TTreeProcessorMP.cxx)
+else()
+  set(TREEPLAYER_DEPENDENCIES MultiProc Imt)
+endif()
+
 if(NOT imt)
   list(REMOVE_ITEM dictHeaders ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/TTreeProcessorMT.h)
   list(REMOVE_ITEM sources ${CMAKE_CURRENT_SOURCE_DIR}/src/TTreeProcessorMT.cxx)
-else()
-  include_directories(SYSTEM ${TBB_INCLUDE_DIRS})
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
@@ -23,7 +32,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TreePlayer
                               SOURCES ${sources}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES ${TBB_LIBRARIES}
-                              DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore MultiProc Imt)
+                              DEPENDENCIES Tree Graf3d Graf Hist Gpad RIO MathCore
+                              ${TREEPLAYER_DEPENDENCIES})
 
 #---Extra rules-------------------------------------------------------
 if(APPLE)

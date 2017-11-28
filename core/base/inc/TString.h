@@ -279,9 +279,12 @@ public:
 
    // Type conversion
    operator const char*() const { return GetPointer(); }
-   operator std::string_view() const { return std::string_view(GetPointer(),Length()); }
 #if __cplusplus >= 201700L
    explicit operator std::string() const { return std::string(GetPointer(),Length()); }
+   explicit operator ROOT::Internal::TStringView() const { return ROOT::Internal::TStringView(GetPointer(),Length()); }
+   operator std::string_view() const { return std::string_view(GetPointer(),Length()); }
+#else
+   operator ROOT::Internal::TStringView() const { return ROOT::Internal::TStringView(GetPointer(),Length()); }
 #endif
 
    // Assignment
@@ -416,6 +419,7 @@ public:
    void         ToUpper();                              // Change self to upper-case
    TObjArray   *Tokenize(const TString &delim) const;
    Bool_t       Tokenize(TString &tok, Ssiz_t &from, const char *delim = " ") const;
+   std::string_view View() const { return std::string_view(GetPointer(),Length()); }
 
    // Static member functions
    static UInt_t  Hash(const void *txt, Int_t ntxt);    // Calculates hash index from any char string.
@@ -778,17 +782,18 @@ inline Bool_t operator!=(const TString &s1, const TSubString &s2)
 inline Bool_t operator!=(const char *s1, const TSubString &s2)
 { return !(s2 == s1); }
 
-
+#ifndef WIN32
 // To avoid ambiguities.
-inline Bool_t operator==(const char *s1, std::string_view &s2)
+inline Bool_t operator==(const char *s1, const std::string_view &s2)
 {
   return std::string_view(s1) == s2;
 }
 
-inline Bool_t operator==(std::string_view &s1, const char *s2)
+inline Bool_t operator==(const std::string_view &s1, const char *s2)
 {
   return s1 == std::string_view(s2);
 }
+#endif
 
 namespace llvm {
    class raw_ostream;

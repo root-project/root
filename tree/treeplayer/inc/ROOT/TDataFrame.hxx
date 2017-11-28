@@ -41,36 +41,13 @@ class TDataFrame : public TDF::TInterface<TDFDetail::TLoopManager> {
    using TDataSource = ROOT::Experimental::TDF::TDataSource;
 public:
    TDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches = {});
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Build the dataframe
-   /// \tparam FILENAMESCOLL The type of the file collection: only requirement: must have begin and end.
-   /// \param[in] treeName Name of the tree contained in the directory
-   /// \param[in] filenamescoll Collection of file names, for example a list of strings.
-   /// \param[in] defaultBranches Collection of default branches.
-   ///
-   /// The default branches are looked at in case no branch is specified in the
-   /// booking of actions or transformations.
-   /// See TInterface for the documentation of the
-   /// methods available.
-   template <typename FILENAMESCOLL = std::vector<std::string>,
-             typename std::enable_if<TTraits::IsContainer<FILENAMESCOLL>::value, int>::type = 0>
-   TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll, const ColumnNames_t &defaultBranches = {});
+   TDataFrame(std::string_view treename, const std::vector<std::string> &filenames,
+              const ColumnNames_t &defaultBranches = {});
    TDataFrame(std::string_view treeName, ::TDirectory *dirPtr, const ColumnNames_t &defaultBranches = {});
    TDataFrame(TTree &tree, const ColumnNames_t &defaultBranches = {});
    TDataFrame(ULong64_t numEntries);
    TDataFrame(std::unique_ptr<TDataSource>, const ColumnNames_t &defaultBranches = {});
 };
-
-template <typename FILENAMESCOLL, typename std::enable_if<TTraits::IsContainer<FILENAMESCOLL>::value, int>::type>
-TDataFrame::TDataFrame(std::string_view treeName, const FILENAMESCOLL &filenamescoll,
-                       const ColumnNames_t &defaultBranches)
-   : TDF::TInterface<TDFDetail::TLoopManager>(std::make_shared<TDFDetail::TLoopManager>(nullptr, defaultBranches))
-{
-   std::string treeNameInt(treeName);
-   auto chain = std::make_shared<TChain>(treeNameInt.c_str());
-   for (auto &fileName : filenamescoll) chain->Add(TDFInternal::ToConstCharPtr(fileName));
-   GetProxiedPtr()->SetTree(chain);
-}
 
 } // end NS Experimental
 } // end NS ROOT

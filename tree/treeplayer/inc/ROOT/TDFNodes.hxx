@@ -14,10 +14,11 @@
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/TDataSource.hxx"
 #include "ROOT/TDFUtils.hxx"
-#include "ROOT/RArrayView.hxx"
+#include "ROOT/TArrayBranch.hxx"
 #include "ROOT/TSpinMutex.hxx"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
+#include "TError.h"
 
 #include <map>
 #include <numeric> // std::accumulate (PrintReport), std::iota (TSlotStack)
@@ -26,6 +27,7 @@
 #include <cassert>
 #include <climits>
 #include <deque> // std::vector substitute in case of vector<bool>
+#include <functional>
 
 namespace ROOT {
 
@@ -59,7 +61,6 @@ public:
    void ReturnSlot(unsigned int slotNumber);
    unsigned int GetSlot();
 };
-
 }
 }
 
@@ -82,7 +83,44 @@ using RangeBaseVec_t = std::vector<RangeBasePtr_t>;
 
 class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    using TDataSource = ROOT::Experimental::TDF::TDataSource;
-   enum class ELoopType { kROOTFiles, kNoFiles, kDataSource };
+   enum class ELoopType { kROOTFiles, kROOTFilesMT, kNoFiles, kNoFilesMT, kDataSource, kDataSourceMT };
+
+   using Callback_t = std::function<void(unsigned int)>;
+   class TCallback {
+      const Callback_t fFun;
+      const ULong64_t fEveryN;
+      std::vector<ULong64_t> fCounters;
+
+   public:
+      TCallback(ULong64_t everyN, Callback_t &&f, unsigned int nSlots)
+         : fFun(std::move(f)), fEveryN(everyN), fCounters(nSlots, 0ull) {}
+
+      void operator()(unsigned int slot)
+      {
+         auto &c = fCounters[slot];
+         ++c;
+         if (c == fEveryN) {
+            c = 0ull;
+            fFun(slot);
+         }
+      }
+   };
+
+   class TOneTimeCallback {
+      const Callback_t fFun;
+      std::vector<int> fHasBeenCalled; // std::vector<bool> is thread-unsafe for our purposes (and generally evil)
+
+   public:
+      TOneTimeCallback(Callback_t &&f, unsigned int nSlots) : fFun(std::move(f)), fHasBeenCalled(nSlots, 0) {}
+
+      void operator()(unsigned int slot)
+      {
+         if (fHasBeenCalled[slot] == 1)
+            return;
+         fFun(slot);
+         fHasBeenCalled[slot] = 1;
+      }
+   };
 
    ActionBaseVec_t fBookedActions;
    FilterBaseVec_t fBookedFilters;
@@ -93,18 +131,21 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    std::vector<std::shared_ptr<bool>> fResProxyReadiness;
    ::TDirectory *const fDirPtr{nullptr};
    std::shared_ptr<TTree> fTree{nullptr}; //< Shared pointer to the input TTree/TChain. It does not own the pointee if
-                                          //the TTree/TChain was passed directly as an argument to TDataFrame's ctor (in
-                                          //which case we let users retain ownership).
+   // the TTree/TChain was passed directly as an argument to TDataFrame's ctor (in
+   // which case we let users retain ownership).
    const ColumnNames_t fDefaultColumns;
    const ULong64_t fNEmptyEntries{0};
    const unsigned int fNSlots{1};
-   bool fHasRunAtLeastOnce{false};
+   bool fMustRunNamedFilters{true};
    unsigned int fNChildren{0};      ///< Number of nodes of the functional graph hanging from this object
    unsigned int fNStopsReceived{0}; ///< Number of times that a children node signaled to stop processing entries.
    const ELoopType fLoopType; ///< The kind of event loop that is going to be run (e.g. on ROOT files, on no files)
    std::string fToJit;        ///< string containing all `BuildAndBook` actions that should be jitted before running
    const std::unique_ptr<TDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
-   ColumnNames_t fDefinedDataSourceColumns; ///< List of data-source columns that have been `Define`d so far
+   ColumnNames_t fDefinedDataSourceColumns;        ///< List of data-source columns that have been `Define`d so far
+   std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
+   std::vector<TCallback> fCallbacks; ///< Registered callbacks
+   std::vector<TOneTimeCallback> fCallbacksOnce; ///< Registered callbacks to invoke just once before running the loop
 
    void RunEmptySourceMT();
    void RunEmptySource();
@@ -145,7 +186,7 @@ public:
    void Book(const RangeBasePtr_t &rangePtr);
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const { return fNSlots; }
-   bool HasRunAtLeastOnce() const { return fHasRunAtLeastOnce; }
+   bool MustRunNamedFilters() const { return fMustRunNamedFilters; }
    void Report() const;
    /// End of recursive chain of calls, does nothing
    void PartialReport() const {}
@@ -155,6 +196,9 @@ public:
    void Jit(const std::string &s) { fToJit.append(s); }
    const ColumnNames_t &GetDefinedDataSourceColumns() const { return fDefinedDataSourceColumns; }
    void AddDataSourceColumn(std::string_view name) { fDefinedDataSourceColumns.emplace_back(name); }
+   void AddColumnAlias(const std::string &alias, const std::string &colName) { fAliasColumnNameMap[alias] = colName; }
+   const std::map<std::string, std::string> &GetAliasMap() const { return fAliasColumnNameMap; }
+   void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
 };
 } // end ns TDF
 } // end ns Detail
@@ -186,18 +230,26 @@ value for the column via the `Get` method.
 **/
 template <typename T>
 class TColumnValue {
-   // following line is equivalent to pseudo-code: ProxyParam_t == array_view<U> ? U : T
-   // ReaderValueOrArray_t is a TTreeReaderValue<T> unless T is array_view<U>
+   // following line is equivalent to pseudo-code: ProxyParam_t == TArrayBranch<U> ? U : T
+   // ReaderValueOrArray_t is a TTreeReaderValue<T> unless T is TArrayBranch<U>
    using ProxyParam_t = typename std::conditional<std::is_same<ReaderValueOrArray_t<T>, TTreeReaderValue<T>>::value, T,
                                                   TakeFirstParameter_t<T>>::type;
+
+   /// TColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a TDataFrame Define
+   /// or a TDataSource. It stores which it is as an enum.
+   enum class EColumnKind { kTreeValue, kTreeArray, kCustomColumn, kDataSource, kInvalid };
+   // Set to the correct value by MakeProxy or SetTmpColumn
+   EColumnKind fColumnKind = EColumnKind::kInvalid;
+   /// The slot this value belongs to. Only needed when querying custom column values, it is set in `SetTmpColumn`.
+   unsigned int fSlot = std::numeric_limits<unsigned int>::max();
 
    // Each element of the following data members will be in use by a _single task_.
    // The vectors are used as very small stacks (1-2 elements typically) that fill in case of interleaved task execution
    // i.e. when more than one task needs readers in this worker thread.
 
-   /// Owning ptrs to a TTreeReaderValue. Used for non-temporary columns when T != std::array_view<U>
+   /// Owning ptrs to a TTreeReaderValue. Used for non-temporary columns when T != TArrayBranch<U>
    std::vector<std::unique_ptr<TTreeReaderValue<T>>> fReaderValues;
-   /// Owning ptrs to a TTreeReaderArray. Used for non-temporary columns when T == std::array_view<U>.
+   /// Owning ptrs to a TTreeReaderArray. Used for non-temporary columns when T == TArrayBranch<U>.
    std::vector<std::unique_ptr<TTreeReaderArray<ProxyParam_t>>> fReaderArrays;
    /// Non-owning ptrs to the value of a custom column.
    std::vector<T *> fCustomValuePtrs;
@@ -205,10 +257,9 @@ class TColumnValue {
    std::vector<T **> fDSValuePtrs;
    /// Non-owning ptrs to the node responsible for the custom column. Needed when querying custom values.
    std::vector<TCustomColumnBase *> fCustomColumns;
-   /// The slot this value belongs to. Needed when querying custom column values.
-   unsigned int fSlot;
-   /// Whether this column value refers to a data-source column. Only relevant when querying custom column values.
-   bool fIsDataSourceColumn = false;
+   /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
+   /// in contiguous memory. Only used when T == TArrayBranch<U>.
+   bool fArrayHasBeenChecked = false;
 
 public:
    TColumnValue() = default;
@@ -217,11 +268,14 @@ public:
 
    void MakeProxy(TTreeReader *r, const std::string &bn)
    {
-      bool useReaderValue = std::is_same<ProxyParam_t, T>::value;
-      if (useReaderValue)
+      constexpr bool useReaderValue = std::is_same<ProxyParam_t, T>::value;
+      if (useReaderValue) {
+         fColumnKind = EColumnKind::kTreeValue;
          fReaderValues.emplace_back(new TTreeReaderValue<T>(*r, bn.c_str()));
-      else
+      } else {
+         fColumnKind = EColumnKind::kTreeArray;
          fReaderArrays.emplace_back(new TTreeReaderArray<ProxyParam_t>(*r, bn.c_str()));
+      }
    }
 
    template <typename U = T,
@@ -229,32 +283,44 @@ public:
    T &Get(Long64_t entry);
 
    template <typename U = T, typename std::enable_if<!std::is_same<ProxyParam_t, U>::value, int>::type = 0>
-   std::array_view<ProxyParam_t> Get(Long64_t)
+   TArrayBranch<ProxyParam_t> Get(Long64_t)
    {
       auto &readerArray = *fReaderArrays.back();
-      if (readerArray.GetSize() > 1 && 1 != (&readerArray[1] - &readerArray[0])) {
-         std::string exceptionText = "Branch ";
-         exceptionText += readerArray.GetBranchName();
-         exceptionText += " hangs from a non-split branch. For this reason, it cannot be accessed via an array_view."
-                          " Please read the top level branch instead.";
-         throw std::runtime_error(exceptionText);
+      // We only use TTreeReaderArrays to read columns that users flagged as type `TArrayBranch`, so we need to check
+      // that the branch stores the array as contiguous memory that we can actually wrap in an `TArrayBranch`.
+      // Currently we need the first entry to have been loaded to perform the check
+      // TODO Move check to `MakeProxy` once Axel implements this kind of check in TTreeReaderArray using TBranchProxy
+      if (!fArrayHasBeenChecked) {
+         if (readerArray.GetSize() > 1) {
+            if (1 != (&readerArray[1] - &readerArray[0])) {
+               std::string exceptionText = "Branch ";
+               exceptionText += readerArray.GetBranchName();
+               exceptionText +=
+                  " hangs from a non-split branch. For this reason, it cannot be accessed via a TArrayBranch."
+                  " Please read the top level branch instead.";
+               throw std::runtime_error(exceptionText);
+            }
+            fArrayHasBeenChecked = true;
+         }
       }
 
-      return std::array_view<ProxyParam_t>(readerArray.begin(), readerArray.end());
+      return TArrayBranch<ProxyParam_t>(readerArray);
    }
 
    void Reset()
    {
-      if (!fReaderValues.empty()) // we must be using TTreeReaderValues
-         fReaderValues.pop_back();
-      else if (!fReaderArrays.empty()) // we must be using TTreeReaderArrays
-         fReaderArrays.pop_back();
-      else { // we must be using a custom column
+      switch (fColumnKind) {
+      case EColumnKind::kTreeValue: fReaderValues.pop_back(); break;
+      case EColumnKind::kTreeArray: fReaderArrays.pop_back(); break;
+      case EColumnKind::kCustomColumn:
          fCustomColumns.pop_back();
-         if (!fCustomValuePtrs.empty())
-            fCustomValuePtrs.pop_back();
-         else
-            fDSValuePtrs.pop_back();
+         fCustomValuePtrs.pop_back();
+         break;
+      case EColumnKind::kDataSource:
+         fCustomColumns.pop_back();
+         fDSValuePtrs.pop_back();
+         break;
+      case EColumnKind::kInvalid: throw std::runtime_error("ColumnKind not set for this TColumnValue");
       }
    }
 };
@@ -282,9 +348,9 @@ void ResetTDFValueTuple(ValueTuple &values, StaticSeq<S...>)
 
 class TActionBase {
 protected:
-   TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional
-                           /// graph. It is only guaranteed to contain a valid address during an
-                           /// event loop.
+   TLoopManager *fImplPtr;     ///< A raw pointer to the TLoopManager at the root of this functional
+                               /// graph. It is only guaranteed to contain a valid address during an
+                               /// event loop.
    const unsigned int fNSlots; ///< Number of thread slots used by this node.
 
 public:
@@ -298,6 +364,9 @@ public:
    virtual void TriggerChildrenCount() = 0;
    virtual void ClearValueReaders(unsigned int slot) = 0;
    unsigned int GetNSlots() const { return fNSlots; }
+   /// This method is invoked to update a partial result during the event loop, right before passing the result to a
+   /// user-defined callback registered via TResultProxy::RegisterCallback
+   virtual void *PartialUpdate(unsigned int slot) = 0;
 };
 
 template <typename Helper, typename PrevDataFrame, typename BranchTypes_t = typename Helper::BranchTypes_t>
@@ -344,6 +413,24 @@ public:
    void TriggerChildrenCount() final { fPrevData.IncrChildrenCount(); }
 
    virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
+
+   /// This method is invoked to update a partial result during the event loop, right before passing the result to a
+   /// user-defined callback registered via TResultProxy::RegisterCallback
+   /// TODO the PartialUpdateImpl trick can go away once all action helpers will implement PartialUpdate
+   void *PartialUpdate(unsigned int slot) final { return PartialUpdateImpl(slot); }
+
+private:
+   // this overload is SFINAE'd out if Helper does not implement `PartialUpdate`
+   // the template parameter is required to defer instantiation of the method to SFINAE time
+   template <typename H = Helper>
+   auto PartialUpdateImpl(unsigned int slot) -> decltype(std::declval<H>().PartialUpdate(slot), (void *)(nullptr))
+   {
+      return &fHelper.PartialUpdate(slot);
+   }
+   // this one is always available but has lower precedence thanks to `...`
+   void *PartialUpdateImpl(...) {
+      throw std::runtime_error("This action does not support callbacks yet!");
+   }
 };
 
 } // end NS TDF
@@ -378,10 +465,28 @@ public:
    bool IsDataSourceColumn() const { return fIsDataSourceColumn; }
 };
 
-template <typename F, bool PassSlotNumber = false>
+namespace TCCHelperTypes {
+struct TNothing {
+};
+struct TSlot {
+};
+struct TSlotAndEntry {
+};
+}
+
+template <typename F, typename UPDATE_HELPER_TYPE = TCCHelperTypes::TNothing>
 class TCustomColumn final : public TCustomColumnBase {
+   // shortcuts
+   using TNothing = TCCHelperTypes::TNothing;
+   using TSlot = TCCHelperTypes::TSlot;
+   using TSlotAndEntry = TCCHelperTypes::TSlotAndEntry;
+   using UHT_t = UPDATE_HELPER_TYPE;
+   // other types
    using FunParamTypes_t = typename CallableTraits<F>::arg_types;
-   using BranchTypes_t = typename TDFInternal::RemoveFirstParameterIf<PassSlotNumber, FunParamTypes_t>::type;
+   using BranchTypesTmp_t =
+      typename TDFInternal::RemoveFirstParameterIf<std::is_same<TSlot, UHT_t>::value, FunParamTypes_t>::type;
+   using BranchTypes_t = typename TDFInternal::RemoveFirstTwoParametersIf<std::is_same<TSlotAndEntry, UHT_t>::value,
+                                                                          BranchTypesTmp_t>::type;
    using TypeInd_t = TDFInternal::GenStaticSeq_t<BranchTypes_t::list_size>;
    using ret_type = typename CallableTraits<F>::ret_type;
    // Avoid instantiating vector<bool> as `operator[]` returns temporaries in that case. Use std::deque instead.
@@ -418,18 +523,29 @@ public:
    {
       if (entry != fLastCheckedEntry[slot]) {
          // evaluate this filter, cache the result
-         UpdateHelper(slot, entry, TypeInd_t(), BranchTypes_t(), std::integral_constant<bool, PassSlotNumber>());
+         UpdateHelper(slot, entry, TypeInd_t(), BranchTypes_t(), (UPDATE_HELPER_TYPE *)nullptr);
          fLastCheckedEntry[slot] = entry;
       }
    }
 
-   const std::type_info &GetTypeId() const {
+   const std::type_info &GetTypeId() const
+   {
       return fIsDataSourceColumn ? typeid(typename std::remove_pointer<ret_type>::type) : typeid(ret_type);
    }
 
    template <int... S, typename... BranchTypes>
    void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
-                     std::true_type /*shouldPassSlotNumber*/)
+                     TCCHelperTypes::TNothing *)
+   {
+      fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
+      // silence "unused parameter" warnings in gcc
+      (void)slot;
+      (void)entry;
+   }
+
+   template <int... S, typename... BranchTypes>
+   void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
+                     TCCHelperTypes::TSlot *)
    {
       fLastResults[slot] = fExpression(slot, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
@@ -439,9 +555,9 @@ public:
 
    template <int... S, typename... BranchTypes>
    void UpdateHelper(unsigned int slot, Long64_t entry, TDFInternal::StaticSeq<S...>, TypeList<BranchTypes...>,
-                     std::false_type /*shouldPassSlotNumber*/)
+                     TCCHelperTypes::TSlotAndEntry *)
    {
-      fLastResults[slot] = fExpression(std::get<S>(fValues[slot]).Get(entry)...);
+      fLastResults[slot] = fExpression(slot, entry, std::get<S>(fValues[slot]).Get(entry)...);
       // silence "unused parameter" warnings in gcc
       (void)slot;
       (void)entry;
@@ -484,7 +600,13 @@ public:
    }
    virtual void TriggerChildrenCount() = 0;
    unsigned int GetNSlots() const { return fNSlots; }
-   virtual void ResetReportCount() = 0;
+   void ResetReportCount()
+   {
+      assert(!fName.empty()); // this method is to only be called on named filters
+      // fAccepted and fRejected could be different than 0 if this is not the first event-loop run using this filter
+      std::fill(fAccepted.begin(), fAccepted.end(), 0);
+      std::fill(fRejected.begin(), fRejected.end(), 0);
+   }
    virtual void ClearValueReaders(unsigned int slot) = 0;
 };
 
@@ -500,8 +622,8 @@ class TFilter final : public TFilterBase {
 
 public:
    TFilter(FilterF &&f, const ColumnNames_t &bl, PrevDataFrame &pd, std::string_view name = "")
-      : TFilterBase(pd.GetImplPtr(), name, pd.GetNSlots()), fFilter(std::move(f)), fBranches(bl),
-        fPrevData(pd), fValues(fNSlots)
+      : TFilterBase(pd.GetImplPtr(), name, pd.GetNSlots()), fFilter(std::move(f)), fBranches(bl), fPrevData(pd),
+        fValues(fNSlots)
    {
    }
 
@@ -568,14 +690,6 @@ public:
    {
       assert(!fName.empty()); // this method is to only be called on named filters
       fPrevData.IncrChildrenCount();
-   }
-
-   void ResetReportCount() final
-   {
-      assert(!fName.empty()); // this method is to only be called on named filters
-      // fAccepted and fRejected could be different than 0 if this is not the first event-loop run using this filter
-      std::fill(fAccepted.begin(), fAccepted.end(), 0);
-      std::fill(fRejected.begin(), fRejected.end(), 0);
    }
 
    virtual void ClearValueReaders(unsigned int slot) final { ResetTDFValueTuple(fValues[slot], TypeInd_t()); }
@@ -680,23 +794,27 @@ public:
 
 } // namespace TDF
 } // namespace Detail
-} // namespace ROOT
 
 // method implementations
+namespace Internal {
+namespace TDF {
+
 template <typename T>
-void ROOT::Internal::TDF::TColumnValue<T>::SetTmpColumn(unsigned int slot,
-                                                        ROOT::Detail::TDF::TCustomColumnBase *customColumn)
+void TColumnValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::TDF::TCustomColumnBase *customColumn)
 {
    fCustomColumns.emplace_back(customColumn);
-   fIsDataSourceColumn = customColumn->IsDataSourceColumn();
    if (customColumn->GetTypeId() != typeid(T))
       throw std::runtime_error(
          std::string("TColumnValue: type specified for column \"" + customColumn->GetName() + "\" is ") +
          typeid(T).name() + " but temporary column has type " + customColumn->GetTypeId().name());
-   if (fIsDataSourceColumn)
+
+   if (customColumn->IsDataSourceColumn()) {
+      fColumnKind = EColumnKind::kDataSource;
       fDSValuePtrs.emplace_back(static_cast<T **>(customColumn->GetValuePtr(slot)));
-   else
+   } else {
+      fColumnKind = EColumnKind::kCustomColumn;
       fCustomValuePtrs.emplace_back(static_cast<T *>(customColumn->GetValuePtr(slot)));
+   }
    fSlot = slot;
 }
 
@@ -706,16 +824,18 @@ void ROOT::Internal::TDF::TColumnValue<T>::SetTmpColumn(unsigned int slot,
 // the branch to be executed)
 template <typename T>
 template <typename U,
-          typename std::enable_if<std::is_same<typename ROOT::Internal::TDF::TColumnValue<U>::ProxyParam_t, U>::value,
-                                  int>::type>
-T &ROOT::Internal::TDF::TColumnValue<T>::Get(Long64_t entry)
+          typename std::enable_if<std::is_same<typename TColumnValue<U>::ProxyParam_t, U>::value, int>::type>
+T &TColumnValue<T>::Get(Long64_t entry)
 {
-   if (!fReaderValues.empty()) {
+   if (fColumnKind == EColumnKind::kTreeValue) {
       return *(fReaderValues.back()->Get());
    } else {
       fCustomColumns.back()->Update(fSlot, entry);
-      return fIsDataSourceColumn ? **fDSValuePtrs.back() : *fCustomValuePtrs.back();
+      return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.back() : **fDSValuePtrs.back();
    }
 }
 
+} // namespace TDF
+} // namespace Internal
+} // namespace ROOT
 #endif // ROOT_TDFNODES

@@ -8,6 +8,25 @@
 
 using namespace std;
 
+class MyClass {
+public:
+   double operator()(double *x, double *p) { return *x + *p; };
+};
+
+class MyClassConst {
+public:
+   double operator()(const double *x, const double *p) { return *x + *p; };
+};
+
+double func(const double *x, const double *p)
+{
+   return *x + *p;
+}
+double functionConst(const double *x, const double *p)
+{
+   return *x + *p;
+}
+
 Float_t delta = 0.00000000001;
 
 void coeffNamesGeneric(TString &formula, TObjArray *coeffNames)
@@ -176,4 +195,27 @@ TEST(TF1, SetRange)
 TEST(TF1, CopyClone)
 {
    test_copyClone();
+}
+
+TEST(TF1, Constructors)
+{
+
+   MyClass testObj, testObjConst;
+   double x = 1;
+   double p = 1;
+
+   std::function<double(const double *data, const double *param)> stdFunction = functionConst;
+   std::vector<TF1> vtf1;
+   vtf1.emplace_back(TF1("Functor", testObj, 0, 1, 0));
+   vtf1.emplace_back(TF1("FunctorConst", testObjConst, 0, 1, 0));
+   vtf1.emplace_back(TF1("FunctorPtr", &testObj, 0, 1, 0));
+   vtf1.emplace_back(TF1("FunctorConstPtr", &testObjConst, 0, 1, 0));
+   vtf1.emplace_back(TF1("function", func));
+   vtf1.emplace_back(TF1("functionConst", functionConst));
+   vtf1.emplace_back(TF1("lambda", [](double *x1, double *x2) { return *x1 + *x2; }));
+   vtf1.emplace_back(TF1("lambdaConst", [](double *x1, double *x2) { return *x1 + *x2; }));
+   vtf1.emplace_back(TF1("stdFunction", stdFunction));
+
+   for (auto tf1 : vtf1)
+      EXPECT_EQ(tf1(&x, &p), 2);
 }

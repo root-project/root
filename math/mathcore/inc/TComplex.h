@@ -164,7 +164,7 @@ public:
    static Int_t Finite(const TComplex& c)
       {return TMath::Min(TMath::Finite(c.Re()),TMath::Finite(c.Im()));}
    static Int_t IsNaN(const TComplex& c)
-      {return TMath::Max(TMath::IsNaN(c.Re()),TMath::IsNaN(c.Im()));}
+      {return TMath::IsNaN(c.Re()) || TMath::IsNaN(c.Im());}
 
    static TComplex Min(const TComplex &a, const TComplex &b)
       {return a.Rho()<=b.Rho()?a:b;}

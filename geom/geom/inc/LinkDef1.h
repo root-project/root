@@ -21,6 +21,8 @@
 #pragma link C++ class TGeoSubtraction+;
 #pragma link C++ class TGeoMedium+;
 #pragma link C++ class TGeoElement+;
+#pragma read sourceClass="TGeoElement" targetClass="TGeoElement" version="[1-2]" source="" target="" \
+    code="{ newObj->ComputeDerivedQuantities() ; }" 
 #pragma link C++ class TGeoElementRN+;
 #pragma link C++ class TGeoIsotope+;
 #pragma link C++ class TGeoDecayChannel+;
@@ -78,6 +80,8 @@
 #pragma link C++ class TGeoNodeMatrix+;
 #pragma link C++ class TGeoNodeOffset+;
 #pragma link C++ class TGeoManager-;
+#pragma link C++ class TGeoRegionCut+;
+#pragma link C++ class TGeoRegion+;
 #pragma link C++ class TVirtualGeoPainter+;
 #pragma link C++ class TVirtualGeoTrack+;
 #pragma link C++ class TVirtualGeoConverter+;

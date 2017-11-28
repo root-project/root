@@ -29,24 +29,32 @@ using namespace ROOT::Experimental::Internal;
 namespace {
 class THistPainter1D: public THistPainterBase<1> {
 public:
-   void Paint(TDrawable &hist, THistDrawOptions<1> /*opts*/, TVirtualCanvasPainter & /*canv*/) final
+   void Paint(TDrawable &drw, const THistDrawingOpts<1> & /*opts*/, TVirtualCanvasPainter &canv) final
    {
       // TODO: paint!
-      std::cout << "Painting histogram @" << &hist << '\n';
+      std::cout << "Painting 1D histogram @" << &drw << '\n';
+
+      assert(dynamic_cast<THistDrawable<1> *>(&drw) && "Wrong drawable type");
+      THistDrawable<1> &hd = static_cast<THistDrawable<1> &>(drw);
+
+      ROOT::Experimental::TDisplayItem *res = new ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::THistDrawable<1>>(&hd);
+      // res->SetOption("col");
+
+      canv.AddDisplayItem(res);
    }
    virtual ~THistPainter1D() final {}
 };
 
 class THistPainter2D: public THistPainterBase<2> {
 public:
-   void Paint(TDrawable &drw, THistDrawOptions<2> /*opts*/, TVirtualCanvasPainter &canv) final
+   void Paint(TDrawable &drw, const THistDrawingOpts<2> & /*opts*/, TVirtualCanvasPainter &canv) final
    {
-      std::cout << "Painting histogram @" << &drw << '\n';
+      std::cout << "Painting 2D histogram @" << &drw << '\n';
       assert(dynamic_cast<THistDrawable<2> *>(&drw) && "Wrong drawable type");
       THistDrawable<2> &hd = static_cast<THistDrawable<2> &>(drw);
 
-      ROOT::Experimental::TDisplayItem *res = new TOrdinaryDisplayItem<TH1>(hd.GetOldHist());
-      res->SetOption("col");
+      ROOT::Experimental::TDisplayItem *res = new ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::THistDrawable<2>>(&hd);
+      // res->SetOption("col");
 
       canv.AddDisplayItem(res);
 
@@ -57,10 +65,10 @@ public:
 
 class THistPainter3D: public THistPainterBase<3> {
 public:
-   void Paint(TDrawable &hist, THistDrawOptions<3> /*opts*/, TVirtualCanvasPainter & /*canv*/) final
+   void Paint(TDrawable &hist, const THistDrawingOpts<3> & /*opts*/, TVirtualCanvasPainter & /*canv*/) final
    {
       // TODO: paint!
-      std::cout << "Painting histogram @" << &hist << '\n';
+      std::cout << "Painting 3D histogram (to be done) @" << &hist << '\n';
    }
    virtual ~THistPainter3D() final {}
 };

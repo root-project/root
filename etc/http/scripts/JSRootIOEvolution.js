@@ -293,12 +293,6 @@
       return true;
    }
 
-   TBuffer.prototype.ReadString = function() {
-      // TODO: delete after next major release
-
-      return this.ReadFastString(-1);
-   }
-
    TBuffer.prototype.ReadTString = function() {
       // stream a TString object from buffer
       // std::string uses similar binary format
@@ -1134,12 +1128,10 @@
              subname = keyname.substr(pos+1),
              dir = this.GetDir(dirname);
 
-         if (dir!=null) return dir.GetKey(subname, cycle, getkey_callback);
+         if (dir) return dir.GetKey(subname, cycle, getkey_callback);
 
          var dirkey = this.GetKey(dirname);
-         if ((dirkey !== null) && (getkey_callback != null) &&
-             (dirkey.fClassName.indexOf("TDirectory")==0)) {
-
+         if (dirkey && getkey_callback && (dirkey.fClassName.indexOf("TDirectory")==0)) {
             this.ReadObject(dirname, function(newdir) {
                if (newdir) newdir.GetKey(subname, cycle, getkey_callback);
             });
@@ -1160,7 +1152,7 @@
 
       this.ReadBuffer([key.fSeekKey + key.fKeylen, key.fNbytes - key.fKeylen], function(blob1) {
 
-         if (blob1==null) return callback(null);
+         if (!blob1) return callback(null);
 
          var buf = null;
 
@@ -1168,7 +1160,7 @@
             buf = JSROOT.CreateTBuffer(blob1, 0, file);
          } else {
             var objbuf = JSROOT.R__unzip(blob1, key.fObjlen);
-            if (objbuf==null) return callback(null);
+            if (!objbuf) return callback(null);
             buf = JSROOT.CreateTBuffer(objbuf, 0, file);
          }
 
@@ -1239,7 +1231,7 @@
             buf.MapObject(1, obj); // tag object itself with id==1
             buf.ClassStreamer(obj, key.fClassName);
 
-            if (key.fClassName==='TF1')
+            if ((key.fClassName==='TF1') || (key.fClassName==='TF2'))
                return file.ReadFormulas(obj, user_call_back, -1);
 
             if (file.readTrees)
@@ -1269,8 +1261,8 @@
       var file = this;
 
       this.ReadObject(this.fKeys[indx].fName, this.fKeys[indx].fCycle, function(formula) {
-          tf1.addFormula(formula);
-          file.ReadFormulas(tf1, user_call_back, indx);
+         tf1.addFormula(formula);
+         file.ReadFormulas(tf1, user_call_back, indx);
       });
    }
 
@@ -1354,7 +1346,7 @@
             file.fEND = buf.ntou4();
             file.fSeekFree = buf.ntou4();
             file.fNbytesFree = buf.ntou4();
-            var nfree = buf.ntoi4();
+            buf.shift(4); // var nfree = buf.ntoi4();
             file.fNbytesName = buf.ntou4();
             file.fUnits = buf.ntou1();
             file.fCompress = buf.ntou4();
@@ -1364,7 +1356,7 @@
             file.fEND = buf.ntou8();
             file.fSeekFree = buf.ntou8();
             file.fNbytesFree = buf.ntou4();
-            var nfree = buf.ntou4();
+            buf.shift(4); // var nfree = buf.ntou4();
             file.fNbytesName = buf.ntou4();
             file.fUnits = buf.ntou1();
             file.fCompress = buf.ntou4();
@@ -1421,8 +1413,8 @@
                for (var i = 0; i < nkeys; ++i)
                   file.fKeys.push(buf4.ReadTKey());
 
-               var buf5 = JSROOT.CreateTBuffer(blobs[1], 0, file);
-               var si_key = buf5.ReadTKey();
+               var buf5 = JSROOT.CreateTBuffer(blobs[1], 0, file),
+                   si_key = buf5.ReadTKey();
                if (!si_key) return JSROOT.CallBack(readkeys_callback, null);
 
                file.fKeys.push(si_key);
@@ -2462,6 +2454,14 @@
          marker.fName = (ver > 1) ? buf.ReadTString() : "TPolyMarker3D";
       };
 
+      cs['TPolyLine3D'] = function(buf, obj) {
+         buf.ClassStreamer(obj, "TObject");
+         buf.ClassStreamer(obj, "TAttLine");
+         obj.fN = buf.ntoi4();
+         obj.fP = buf.ReadFastArray(obj.fN*3, JSROOT.IO.kFloat);
+         obj.fOption = buf.ReadTString();
+      };
+
       cs['TStreamerInfo'] = function(buf, obj) {
          // stream an object of class TStreamerInfo from the I/O buffer
          buf.ClassStreamer(obj, "TNamed");
@@ -2626,7 +2626,7 @@
 
       var ds = JSROOT.IO.DirectStreamers;
 
-      ds['TQObject'] = function(buf,obj) {
+      ds['TQObject'] = ds['TGraphStruct'] = ds['TGraphNode'] = ds['TGraphEdge'] = function(buf,obj) {
          // do nothing
       };
 
@@ -2675,7 +2675,6 @@
          dir.fSeekKeys = (version > 1000) ? buf.ntou8() : buf.ntou4();
          // if ((version % 1000) > 2) buf.shift(18); // skip fUUID
       }
-
 
       ds['TBasket'] = function(buf,obj) {
          buf.ClassStreamer(obj, 'TKey');
@@ -2761,16 +2760,6 @@
       }
 
       if (elem.fType > 0) return elem; // basic type
-
-/*
-      if (typename.indexOf('string')===0) {
-         elem._typename = 'TStreamerSTLstring';
-         elem.fType = JSROOT.IO.kStreamer;
-         elem.fSTLtype = 10000; // any positive number
-         elem.fCtype = 0;
-         return elem;
-      }
-*/
 
       // check if there are STL containers
       var stltype = JSROOT.IO.kNotSTL, pos = typename.indexOf("<");

@@ -4,6 +4,7 @@
 #include <TClass.h>
 #include <TROOT.h>         // For the gROOTMutex
 #include <TVirtualMutex.h> // For the R__LOCKGUARD
+#include <ROOT/RMakeUnique.hxx>
 
 #include <algorithm>
 #include <vector>
@@ -82,7 +83,7 @@ void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    TString setBranches;
    for (auto i : ROOT::TSeqU(fListOfBranches.size())) {
       auto colName = fListOfBranches[i].c_str();
-      auto &addr = fBranchAddresses.at(i).at(slot);
+      auto &addr = fBranchAddresses[i][slot];
       auto typeName = GetTypeName(colName);
       auto typeClass = TClass::GetClass(typeName.c_str());
       if (typeClass) {
@@ -98,12 +99,10 @@ void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
    fChains[slot].reset(chain);
 }
 
-const std::vector<std::pair<ULong64_t, ULong64_t>> &TRootDS::GetEntryRanges() const
+std::vector<std::pair<ULong64_t, ULong64_t>> TRootDS::GetEntryRanges()
 {
-   if (fEntryRanges.empty()) {
-      throw std::runtime_error("No ranges are available. Did you set the number of slots?");
-   }
-   return fEntryRanges;
+   auto entryRanges(std::move(fEntryRanges)); // empty fEntryRanges
+   return entryRanges;
 }
 
 void TRootDS::SetEntry(unsigned int slot, ULong64_t entry)
@@ -122,9 +121,13 @@ void TRootDS::SetNSlots(unsigned int nSlots)
    fBranchAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
 
    fChains.resize(fNSlots);
-   auto nentries = fModelChain.GetEntries();
-   auto chunkSize = nentries / fNSlots;
-   auto reminder = 1U == fNSlots ? 0 : nentries % fNSlots;
+}
+
+void TRootDS::Initialise()
+{
+   const auto nentries = fModelChain.GetEntries();
+   const auto chunkSize = nentries / fNSlots;
+   const auto reminder = 1U == fNSlots ? 0 : nentries % fNSlots;
    auto start = 0UL;
    auto end = 0UL;
    for (auto i : ROOT::TSeqU(fNSlots)) {
@@ -138,8 +141,7 @@ void TRootDS::SetNSlots(unsigned int nSlots)
 
 TDataFrame MakeRootDataFrame(std::string_view treeName, std::string_view fileNameGlob)
 {
-   std::unique_ptr<TDF::TRootDS> tds(new TDF::TRootDS(treeName, fileNameGlob));
-   ROOT::Experimental::TDataFrame tdf(std::move(tds));
+   ROOT::Experimental::TDataFrame tdf(std::make_unique<TRootDS>(treeName, fileNameGlob));
    return tdf;
 }
 

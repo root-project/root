@@ -29,7 +29,7 @@ ClassImp(TEllipse);
 Draw Ellipses.
 
 The ellipse can be truncated and rotated. It is defined by its center `(x1,y1)`
-and two radius`r1` and `r2`.
+and two radius `r1` and `r2`.
 
 A minimum and maximum angle may be specified `(phimin, phimax)`.
 The ellipse may be rotated with an angle `theta`. All these

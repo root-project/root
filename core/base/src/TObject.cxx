@@ -54,6 +54,7 @@ Bool_t TObject::fgObjectStat = kTRUE;
 
 ClassImp(TObject);
 
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Copy this to obj.
 
@@ -80,15 +81,7 @@ TObject::~TObject()
    // if (!TestBit(kNotDeleted))
    //    Fatal("~TObject", "object deleted twice");
 
-   TROOT *root = ROOT::Internal::gROOTLocal;
-   if (root) {
-      if (root->MustClean()) {
-         if (root == this) return;
-         if (TestBit(kMustCleanup)) {
-            root->GetListOfCleanups()->RecursiveRemove(this);
-         }
-      }
-   }
+   ROOT::CallRecursiveRemoveIfNeeded(*this);
 
    fBits &= ~kNotDeleted;
 
@@ -422,6 +415,20 @@ Bool_t TObject::HandleTimer(TTimer *)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return hash value for this object.
+///
+/// Note: If this routine is overloaded in a derived class, this derived class
+/// should also add
+/// ~~~ {.cpp}
+///    ROOT::CallRecursiveRemoveIfNeeded(*this)
+/// ~~~
+/// Otherwise, when RecursiveRemove is called (by ~TObject or example) for this
+/// type of object, the transversal of THashList and THashTable containers will
+/// will have to be done without call Hash (and hence be linear rather than
+/// logarithmic complexity).  You will also see warnings like
+/// ~~~
+/// Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SomeName overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
+/// ~~~
+///
 
 ULong_t TObject::Hash() const
 {

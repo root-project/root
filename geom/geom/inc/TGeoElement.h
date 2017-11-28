@@ -48,10 +48,17 @@ protected:
    Double_t                 fA;          // A of element
    TObjArray               *fIsotopes;   // List of isotopes
    Double_t                *fAbundances; //[fNisotopes] Array of relative isotope abundances
+   Double_t                 fCoulomb;    // Coulomb correction factor
+   Double_t                 fRadTsai;    // Tsai formula for the radiation length
 
 private:
-  TGeoElement(const TGeoElement &other);
-  TGeoElement &operator=(const TGeoElement &other);
+   TGeoElement(const TGeoElement &other);
+   TGeoElement &operator=(const TGeoElement &other);
+
+   // Compute the Coulomb correction factor
+   void                     ComputeCoulombFactor();
+   // Compute the Tsai formula for the radiation length
+   void                     ComputeLradTsaiFactor();
 
 public:
    // constructors
@@ -71,6 +78,8 @@ public:
    Int_t                    GetNisotopes() const {return fNisotopes;}
    TGeoIsotope             *GetIsotope(Int_t i) const;
    Double_t                 GetRelativeAbundance(Int_t i) const;
+   // Calculate properties for an atomic number
+   void                     ComputeDerivedQuantities();
    // Specific activity (in Bq/gram)
    virtual Double_t         GetSpecificActivity() const {return 0.;}
    Bool_t                   HasIsotopes() const {return (fNisotopes==0)?kFALSE:kTRUE;}
@@ -81,9 +90,12 @@ public:
    void                     SetDefined(Bool_t flag=kTRUE) {TObject::SetBit(kElemDefined,flag);}
    void                     SetUsed(Bool_t flag=kTRUE) {TObject::SetBit(kElemUsed,flag);}
    static TGeoElementTable *GetElementTable();
+   // Coulomb correction factor
+   inline Double_t          GetfCoulomb() const {return fCoulomb;}
+   // Tsai formula for the radiation length
+   inline Double_t          GetfRadTsai() const {return fRadTsai;}
 
-
-   ClassDef(TGeoElement, 2)              // base element class
+   ClassDef(TGeoElement, 3)              // base element class
 };
 
 ////////////////////////////////////////////////////////////////////////////

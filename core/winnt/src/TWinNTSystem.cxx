@@ -815,7 +815,9 @@ namespace {
 
       // determine the fileopen.C file path:
       TString fileopen = "fileopen.C";
-      gSystem->PrependPathName(TROOT::GetMacroDir(), fileopen);
+      TString rootmacrodir = "macros";
+      sys->PrependPathName(getenv("ROOTSYS"), rootmacrodir);
+      sys->PrependPathName(rootmacrodir.Data(), fileopen);
 
       if (regROOTwrite) {
          // only write to registry if fileopen.C is readable
@@ -1179,7 +1181,7 @@ const char *TWinNTSystem::BaseName(const char *name)
       char *cp;
       char *bslash = (char *)strrchr(&symbol[idx],'\\');
       char *rslash = (char *)strrchr(&symbol[idx],'/');
-      if (cp = std::max(rslash, bslash)) {
+      if (cp = (std::max)(rslash, bslash)) {
          //return StrDup(++cp);
          return ++cp;
       }
@@ -2178,7 +2180,7 @@ char *TWinNTSystem::GetWorkingDirectory(char driveletter) const
 const char *TWinNTSystem::HomeDirectory(const char *userName)
 {
    static char mydir[kMAXPATHLEN] = "./";
-   FillWithHomeDirectory(mydir);
+   FillWithHomeDirectory(userName, mydir);
    return mydir;
 }
 
@@ -2188,7 +2190,7 @@ const char *TWinNTSystem::HomeDirectory(const char *userName)
 std::string TWinNTSystem::GetHomeDirectory(const char *userName) const
 {
    char mydir[kMAXPATHLEN] = "./";
-   FillWithHomeDirectory(mydir); 
+   FillWithHomeDirectory(userName, mydir);
    return std::string(mydir); 
 }
 
@@ -2221,7 +2223,6 @@ void TWinNTSystem::FillWithHomeDirectory(const char *userName, char *mydir) cons
    // Make sure the drive letter is upper case
    if (mydir[1] == ':')
       mydir[0] = toupper(mydir[0]);
-   return mydir;
 }
 
 
@@ -2385,7 +2386,7 @@ const char *TWinNTSystem::DirName(const char *pathname)
       if (strchr(pathname, '/') || strchr(pathname, '\\')) {
          const char *rslash = strrchr(pathname, '/');
          const char *bslash = strrchr(pathname, '\\');
-         const char *r = std::max(rslash, bslash);
+         const char *r = (std::max)(rslash, bslash);
          const char *ptr = pathname;
          while (ptr <= r) {
             if (*ptr == ':') {
@@ -2412,18 +2413,19 @@ const char *TWinNTSystem::DirName(const char *pathname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/////////////////////////////////////////////////////////////////////////////
-/// Return the drive letter in pathname. DriveName of 'c:/user/root' is 'c'//
-///   Input:                                                               //
-///      pathname - the string containing file name                        //
-///   Return:                                                              //
-///     = Letter presenting the drive letter in the file name              //
-///     = The current drive if the pathname has no drive assigment         //
-///     = 0 if pathname is an empty string  or uses UNC syntax             //
-///   Note:                                                                //
-///      It doesn't chech whether pathname presents the 'real filename     //
-///      This subroutine looks for 'single letter' is follows with a ':'   //
-/////////////////////////////////////////////////////////////////////////////
+/// Return the drive letter in pathname. DriveName of 'c:/user/root' is 'c'
+///
+///   Input:
+///     - pathname - the string containing file name
+///
+///   Return:
+///     - Letter representing the drive letter in the file name
+///     - The current drive if the pathname has no drive assigment
+///     - 0 if pathname is an empty string  or uses UNC syntax
+///
+///   Note:
+///      It doesn't check whether pathname represents a 'real' filename.
+///      This subroutine looks for 'single letter' followed by a ':'.
 
 const char TWinNTSystem::DriveName(const char *pathname)
 {
@@ -3862,6 +3864,7 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
             gROOT->ProcessLine(TString::Format("((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()->CloseWindow();",
                                                (ULong_t)b));
       }
+      gROOT->EndOfProcessCleanups();
    }
    if (gInterpreter) {
       gInterpreter->ResetGlobals();

@@ -64,9 +64,9 @@
 #endif
 
 #ifdef _WIN32
-#include "win32/afterbase.h"
 #include <io.h>
 #include <windows.h>
+#include "win32/afterbase.h"
 #define access _access
 #else
 #include "afterbase.h"
@@ -1279,7 +1279,7 @@ asim_my_scandir_ext ( const char *dirname, int (*filter_func) (const char *),
 		{
 			int i = 0; 
 			/* Fill in the fields using stat() */
-			do{ p[i] = e->d_name[i]; ++i ; }while(  e->d_name[i] && i < PATH_MAX ); 
+			do{ p[i] = e->d_name[i]; ++i ; }while(  i < PATH_MAX && e->d_name[i] );
 			p[i] ='\0' ;
 			if (stat (filename, &stat_info) != -1)
 			{	

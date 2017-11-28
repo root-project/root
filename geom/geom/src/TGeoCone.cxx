@@ -39,7 +39,7 @@ End_Macro
 */
 
 
-/** \class TGeoConeSeg -
+/** \class TGeoConeSeg
 \ingroup Geometry_classes
 
 A phi segment of a conical tube. Has 7 parameters :
@@ -358,11 +358,11 @@ Double_t TGeoCone::DistFromInside(const Double_t *point, const Double_t *dir, In
 ////////////////////////////////////////////////////////////////////////////////
 /// Compute distance from outside point to surface of the tube
 /// Boundary safe algorithm.
-/// compute distance to Z planes
 
 Double_t TGeoCone::DistFromOutsideS(const Double_t *point, const Double_t *dir, Double_t dz,
                              Double_t rmin1, Double_t rmax1, Double_t rmin2, Double_t rmax2)
 {
+   // compute distance to Z planes
    if (dz<=0) return TGeoShape::Big();
    Double_t snxt;
    Double_t xp, yp, zp;
@@ -488,16 +488,16 @@ Double_t TGeoCone::DistFromOutsideS(const Double_t *point, const Double_t *dir, 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// compute distance from outside point to surface of the tube
-/// compute safe radius
 
 Double_t TGeoCone::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
+   // compute safe radius
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
-// Check if the bounding box is crossed within the requested distance
+   // Check if the bounding box is crossed within the requested distance
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
    // compute distance to Z planes
@@ -551,7 +551,7 @@ Int_t TGeoCone::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Divide this cone shape belonging to volume "voldiv" into ndiv volumes
+/// Divide this cone shape belonging to volume "voldiv" into ndiv volumes
 /// called divname, from start position with the given step. Returns pointer
 /// to created division cell volume in case of Z divisions. For Z division
 /// creates all volumes with different shapes and returns pointer to volume that
@@ -652,7 +652,7 @@ Double_t TGeoCone::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2, dZ
 
 void TGeoCone::GetBoundingCylinder(Double_t *param) const
@@ -662,7 +662,7 @@ void TGeoCone::GetBoundingCylinder(Double_t *param) const
    param[1] = TMath::Max(fRmax1, fRmax2); // Rmax
    param[1] *= param[1];
    param[2] = 0.;                         // Phi1
-   param[3] = 360.;                       // Phi1
+   param[3] = 360.;                       // Phi2
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1206,6 +1206,7 @@ TGeoConeSeg::TGeoConeSeg()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Default constructor specifying minimum and maximum radius
 
 TGeoConeSeg::TGeoConeSeg(Double_t dz, Double_t rmin1, Double_t rmax1,
                           Double_t rmin2, Double_t rmax2, Double_t phi1, Double_t phi2)
@@ -1213,7 +1214,6 @@ TGeoConeSeg::TGeoConeSeg(Double_t dz, Double_t rmin1, Double_t rmax1,
              fPhi1(0.), fPhi2(0.), fS1(0.), fC1(0.), fS2(0.), fC2(0.), fSm(0.), fCm(0.), fCdfi(0.)
 
 {
-// Default constructor specifying minimum and maximum radius
    SetShapeBit(TGeoShape::kGeoConeSeg);
    SetConsDimensions(dz, rmin1, rmax1, rmin2, rmax2, phi1, phi2);
    ComputeBBox();
@@ -1686,7 +1686,7 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
       // We may cross again a phi of rmin boundary
       // check first if we are on phi1 or phi2
          Double_t un;
-         if (TMath::Abs(point[1]-s1*r) < TMath::Abs(point[1]-s2*r)) {
+         if (point[0]*c1 + point[1]*s1 > point[0]*c2 + point[1]*s2) {
             un = dir[0]*s1-dir[1]*c1;
             if (un < 0) return 0.0;
             if (cdfi>=0) return TGeoShape::Big();
@@ -1882,16 +1882,16 @@ Double_t TGeoConeSeg::DistFromOutsideS(const Double_t *point, const Double_t *di
 
 ////////////////////////////////////////////////////////////////////////////////
 /// compute distance from outside point to surface of the tube
-/// compute safe radius
 
 Double_t TGeoConeSeg::DistFromOutside(const Double_t *point, const Double_t *dir, Int_t iact, Double_t step, Double_t *safe) const
 {
+   // compute safe radius
    if (iact<3 && safe) {
       *safe = Safety(point, kFALSE);
       if (iact==0) return TGeoShape::Big();
       if ((iact==1) && (*safe>step)) return TGeoShape::Big();
    }
-// Check if the bounding box is crossed within the requested distance
+   // Check if the bounding box is crossed within the requested distance
    Double_t sdist = TGeoBBox::DistFromOutside(point,dir, fDX, fDY, fDZ, fOrigin, step);
    if (sdist>=step) return TGeoShape::Big();
    if ((fPhi2-fPhi1)>=360.) return TGeoCone::DistFromOutsideS(point,dir,fDz,fRmin1,fRmax1,fRmin2,fRmax2);
@@ -1909,7 +1909,7 @@ Int_t TGeoConeSeg::DistancetoPrimitive(Int_t px, Int_t py)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Divide this cone segment shape belonging to volume "voldiv" into ndiv volumes
+/// Divide this cone segment shape belonging to volume "voldiv" into ndiv volumes
 /// called divname, from start position with the given step. Returns pointer
 /// to created division cell volume in case of Z divisions. For Z division
 /// creates all volumes with different shapes and returns pointer to volume that
@@ -1997,7 +1997,7 @@ Double_t TGeoConeSeg::GetAxisRange(Int_t iaxis, Double_t &xlo, Double_t &xhi) co
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///--- Fill vector param[4] with the bounding cylinder parameters. The order
+/// Fill vector param[4] with the bounding cylinder parameters. The order
 /// is the following : Rmin, Rmax, Phi1, Phi2
 
 void TGeoConeSeg::GetBoundingCylinder(Double_t *param) const

@@ -33,6 +33,12 @@ before_install:
     DEPS_DIR="${TRAVIS_BUILD_DIR}/../deps"
     mkdir -p "${DEPS_DIR}"
 
+allow_failures:
+    # clang-tidy-modernize is still experimental
+    - env: TOOL=clang-tidy-modernize
+    # a lot of code doesn't follow clang-format yet
+    - env: TOOL=clang-format
+
 install:
   - |
     cd "${DEPS_DIR}"

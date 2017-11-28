@@ -113,8 +113,14 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
+#if defined(_MSC_VER)
+#define R__LOG_PRETTY_FUNCTION __FUNCSIG__
+#else
+#define R__LOG_PRETTY_FUNCTION __PRETTY_FUNCTION__
+#endif
+
 #define R__LOG_HERE(LEVEL, GROUP) \
-   ROOT::Experimental::TLogEntry(LEVEL, GROUP).SetFile(__FILE__).SetLine(__LINE__).SetFunction(__PRETTY_FUNCTION__)
+   ROOT::Experimental::TLogEntry(LEVEL, GROUP).SetFile(__FILE__).SetLine(__LINE__).SetFunction(R__LOG_PRETTY_FUNCTION)
 
 #define R__FATAL_HERE(GROUP) R__LOG_HERE(ROOT::Experimental::ELogLevel::kFatal, GROUP)
 #define R__ERROR_HERE(GROUP) R__LOG_HERE(ROOT::Experimental::ELogLevel::kError, GROUP)

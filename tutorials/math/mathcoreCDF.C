@@ -20,7 +20,6 @@
 
 void mathcoreCDF(){
 
-   gSystem->Load("libMathCore");
    TF2 *f1a = new TF2("f1a","ROOT::Math::breitwigner_cdf_c(x, y)",-10,10,0,10);
    TF2 *f2a = new TF2("f2a","ROOT::Math::cauchy_cdf(x,y)",0,20, 0,20);
    TF2 *f3a = new TF2("f3a","ROOT::Math::normal_cdf(x,y)",-10,10,0,5);

@@ -1155,7 +1155,8 @@ void TEveCaloLegoGL::DrawSelectedCells(TGLRnrCtx & rnrCtx, TEveCaloData::vCellId
       fM->fData->Rebin(fEtaAxis, fPhiAxis, cellsSelected, fM->fPlotEt, rebinDataSelected);
       if (fM->fNormalizeRebin) {
          Float_t scale = 1.f / (fBinStep * fBinStep);
-         for (std::vector<Float_t>::iterator it = rebinDataSelected.fSliceData.begin(); it != rebinDataSelected.fSliceData.end(); it++)
+         for (std::vector<Float_t>::iterator it = rebinDataSelected.fSliceData.begin();
+              it != rebinDataSelected.fSliceData.end(); ++it)
             (*it) *= scale;
       }
    }
@@ -1296,8 +1297,8 @@ void TEveCaloLegoGL::DirectDraw(TGLRnrCtx & rnrCtx) const
          if (fM->fNormalizeRebin)
          {
             Float_t scale = 1.f / (fBinStep * fBinStep);
-            for (std::vector<Float_t>::iterator it = fRebinData.fSliceData.begin(); it != fRebinData.fSliceData.end(); it++)
-            {
+            for (std::vector<Float_t>::iterator it = fRebinData.fSliceData.begin(); it != fRebinData.fSliceData.end();
+                 ++it) {
                (*it) *= scale;
             }
             fMaxVal *= scale;

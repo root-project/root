@@ -10,7 +10,6 @@
 void assembly()
 {
 //--- Definition of a simple geometry
-   gSystem->Load("libGeom");
    TGeoManager *geom = new TGeoManager("Assemblies",
       "Geometry using assemblies");
    Int_t i;

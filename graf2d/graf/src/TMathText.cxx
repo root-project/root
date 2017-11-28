@@ -278,8 +278,8 @@ public:
       mathtext::bounding_box_t ret =
          bounding_box(*iterator, current_x, family);
 
-      iterator++;
-      for(; iterator != string.end(); iterator++) {
+      ++iterator;
+      for (; iterator != string.end(); ++iterator) {
          const mathtext::point_t position =
             mathtext::point_t(current_x, 0);
          const mathtext::bounding_box_t glyph_bounding_box =
@@ -302,8 +302,7 @@ public:
       float advance = 0;
 
       buf[1] = L'\0';
-      for(std::wstring::const_iterator iterator = string.begin();
-         iterator != string.end(); iterator++) {
+      for (std::wstring::const_iterator iterator = string.begin(); iterator != string.end(); ++iterator) {
          buf[0] = *iterator;
          const bool cyrillic_or_cjk = is_cyrillic_or_cjk(buf[0]);
 

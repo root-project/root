@@ -9,31 +9,17 @@
 
 import ROOT
 
-fill_tree_code = '''
-void fill_tree(const char *filename, const char *treeName)
-{
-   TFile f(filename, "RECREATE");
-   TTree t(treeName, treeName);
-   int b1;
-   float b2;
-   t.Branch("b1", &b1);
-   t.Branch("b2", &b2);
-   for (int i = 0; i < 100; ++i) {
-      b1 = i;
-      b2 = i * i;
-      t.Fill();
-   }
-   t.Write();
-   f.Close();
-   return;
-}
-'''
+def fill_tree(treeName, fileName):
+    tdf = ROOT.ROOT.Experimental.TDataFrame(100)
+    tdf.Define("b1", "(int) tdfentry_")\
+       .Define("b2", "(float) tdfentry_ * tdfentry_").Snapshot(treeName, fileName)
+
 
 # We prepare an input tree to run on
 fileName = "tdf006_ranges_py.root"
 treeName = "myTree"
-ROOT.gInterpreter.Declare(fill_tree_code)
-ROOT.fill_tree(fileName, treeName)
+
+fill_tree(treeName, fileName)
 
 # We read the tree from the file and create a TDataFrame.
 TDF = ROOT.ROOT.Experimental.TDataFrame

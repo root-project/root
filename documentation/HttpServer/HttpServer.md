@@ -22,18 +22,21 @@ One could specify several options when creating http server. They could be add a
 
 Following parameters are supported:
 
-   - thrds=N   - number of threads used by the civetweb (default is 5)
+   - thrds=N   - number of threads used by the civetweb (default is 10)
    - top=name  - configure top name, visible in the web browser
    - auth_file=filename  - authentication file name, created with htdigets utility
    - auth_domain=domain   - authentication domain
    - loopback  - bind specified port to loopback 127.0.0.1 address
    - debug  - enable debug mode, server always returns html page with request info
+   - websocket_timeout=tm  - set web sockets timeout in seconds (default 300)
+   - websocket_disable - disable web sockets handling (default enabled)
+   - cors=domain  - define value for CORS header "Access-Control-Allow-Origin" in server response
 
 If necessary, one could bind http server to specific IP address like:
 
     new THttpServer("http:192.168.1.17:8080")
 
-One also can provide extra arguments for THttpServer itself 
+One also can provide extra arguments for THttpServer itself:
 
    - readonly, ro   - use server in read-only mode (default)
    - readwrite, rw  - use server in read-write mode
@@ -430,3 +433,68 @@ To use `multi.json` request from the JavaScript, one should create special 'POST
 
 Here argument "multi" identifies, that server response should be parsed with `JSROOT.parse_multi()` function, which correctly interprets JSON code, produced by `multi.json` request. When sending such request to the server, one should provide list of objects names and not forget "?number=N" parameter in the request URL string.
 
+
+## Websockets supports
+
+Websockets support available starting from ROOT v6.12. 
+Minimal example provided in `$ROOTSYS/tutorials/http/ws.C` macro.
+
+To work with websockets, subclass of THttpWSHandler should be created and registered to THttpServer:
+
+    #include "THttpWSHandler.h"
+
+    class TUserHandler : public THttpWSHandler {
+    public:
+       TUserHandler(const char *name, const char *title) : THttpWSHandler(name, title) {}
+
+       // provide custom HTML page when open correpondent address
+       TString GetDefaultPageContent() { return ""; }
+
+       virtual Bool_t ProcessWS(THttpCallArg *arg);
+    };
+  
+Central method is `TUserHandler::ProcessWS(THttpCallArg *arg)`, where four kinds of websockets events should be handled:
+  
+   * WS_CONNECT - clients attempts to create websockets, return false when refusing connection
+   * WS_READY   - connection is ready to use, **wsid** can be obtained with `arg->GetWSId()` calls   
+   * WS_DATA    - new portion of data received by webcosket 
+   * WS_CLOSE   - connection closed by the client, **wsid** is no longer valid  
+
+These kinds are coded as method name of THttpCallArg class and can be used like:
+
+    Bool_t TUserHandler::ProcessWS(THttpCallArg *arg)
+    {
+       if (arg->IsMethod("WS_CONNECT")) {
+          return kTRUE; // accept all connections
+       }
+
+       if (arg->IsMethod("WS_READY")) {
+          SendCharStartWS(arg->GetWSId(), "Init"); // immediately send message to the web socket
+          return kTRUE;
+       }
+
+       if (arg->IsMethod("WS_CLOSE")) {
+          return kTRUE; // just confirm connection
+       }
+
+       if (arg->IsMethod("WS_DATA")) {
+          TString str = arg->GetPostDataAsString();
+          printf("Client msg: %s\n", str.Data());
+          SendCharStarWS(arg->GetWSId(), "Confirm");
+          return kTRUE;
+       }
+
+       return kFALSE; // ignore all other kind of requests
+    }
+ 
+Instance of **TUserHandler** should be registered to the THttpServer like:
+
+    THttpServer *serv = new THttpServer("http:8080");
+    TUserHandler *handler = new TUserHandler("name1","title");
+    serv->Register(handler);
+    
+After that web socket connection can be established with the address `ws://host_name:8080/name1/root.websocket`
+Example client code can be found in `$ROOTSYS/tutorials/http/ws.htm` file. Actually, custom HTML page for
+websocket handler can be specified with `TUserHandler::GetDefaultPageContent()` method returning `"file:ws.htm"`.
+ 
+ 

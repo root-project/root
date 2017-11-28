@@ -71,6 +71,7 @@
  */
 
 #include "RConfig.h"
+#include "ROOT/TIOFeatures.hxx"
 #include <string>
 #include "TFile.h"
 #include "THashList.h"
@@ -83,9 +84,12 @@
 #include "ROOT/StringConv.hxx"
 #include <stdlib.h>
 #include <climits>
+#include <sstream>
 
 #include "TFileMerger.h"
+#ifndef R__WIN32
 #include "ROOT/TProcessExecutor.hxx"
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -93,7 +97,7 @@ int main( int argc, char **argv )
 {
    if ( argc < 3 || "-h" == std::string(argv[1]) || "--help" == std::string(argv[1]) ) {
       std::cout << "Usage: " << argv[0] << " [-f[fk][0-9]] [-k] [-T] [-O] [-a] \n"
-      "            [-n maxopenedfiles] [-cachesize size] [-v [verbosity]] \n"
+      "            [-n maxopenedfiles] [-cachesize size] [-j ncpus] [-v [verbosity]] \n"
       "            targetfile source1 [source2 source3 ...]\n" << std::endl;
       std::cout << "This program will add histograms from a list of root files and write them" << std::endl;
       std::cout << "   to a target root file. The target file is newly created and must not" << std::endl;
@@ -117,6 +121,8 @@ int main( int argc, char **argv )
                    "   to request to use the system maximum." << std::endl;
       std::cout << "If the option -cachesize is used, hadd will resize (or disable if 0) the\n"
                    "   prefetching cache use to speed up I/O operations." << std::endl;
+      std::cout << "If the option -experimental-io-features is used (and an argument provided), then\n"
+                   "   the corresponding experimental feature will be enabled for output trees." << std::endl;
       std::cout << "When -the -f option is specified, one can also specify the compression level of\n"
                    "   the target file.  By default the compression level is 1." <<std::endl;
       std::cout << "If \"-fk\" is specified, the target file contain the baskets with the same\n"
@@ -141,6 +147,7 @@ int main( int argc, char **argv )
       return 1;
    }
 
+   ROOT::TIOFeatures features;
    Bool_t append = kFALSE;
    Bool_t force = kFALSE;
    Bool_t skip_errors = kFALSE;
@@ -265,6 +272,21 @@ int main( int argc, char **argv )
                cacheSize.Append(argv[a+1]);
                ++a;
                ++ffirst;
+            }
+         }
+         ++ffirst;
+      } else if (!strcmp(argv[a], "-experimental-io-features")) {
+         if (a+1 >= argc) {
+            std::cerr << "Error: no IO feature was specified after -experimental-io-features; ignoring\n";
+         } else {
+            std::stringstream ss;
+            ss.str(argv[++a]);
+            ++ffirst;
+            std::string item;
+            while (std::getline(ss, item, ',')) {
+               if (!features.Set(item)) {
+                  std::cerr << "Ignoring unknown feature request: " << item << std::endl;
+               }
             }
          }
          ++ffirst;
@@ -452,6 +474,7 @@ int main( int argc, char **argv )
       }
       merger.SetNotrees(noTrees);
       merger.SetMergeOptions(cacheSize);
+      merger.SetIOFeatures(features);
       Bool_t status;
       if (append)
          status = merger.PartialMerge(TFileMerger::kIncremental | TFileMerger::kAll);
@@ -510,6 +533,7 @@ int main( int argc, char **argv )
 
    Bool_t status;
 
+#ifndef R__WIN32
    if (multiproc) {
       ROOT::TProcessExecutor p(nProcesses);
       auto res = p.Map(parallelMerge, ROOT::TSeqI(ffirst, argc, step));
@@ -527,6 +551,9 @@ int main( int argc, char **argv )
    } else {
       status = sequentialMerge(fileMerger, ffirst, filesToProcess);
    }
+#else
+   status = sequentialMerge(fileMerger, ffirst, filesToProcess);
+#endif
 
    if (status) {
       if (verbosity == 1) {

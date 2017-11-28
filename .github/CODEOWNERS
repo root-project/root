@@ -9,8 +9,7 @@
 
 # Coarse-grained ownership
 * @Axel-Naumann
-/bindings/ @peremato
-/cmake/ @peremato
+/bindings/ @etejedor
 /core/ @Axel-Naumann
 /core/ @pcanal
 /documentation/ @couet
@@ -28,20 +27,17 @@
 /main/ @pcanal
 /math/ @lmoneta
 /misc/ @Axel-Naumann
-/montecarlo/ @peremato
+/montecarlo/ @Axel-Naumann
 /net/ @gganis
 /proof/ @gganis
 /roofit/ @lmoneta
 /rootx/ @Axel-Naumann
 /sql/ @pcanal
-/test/ @peremato
 /tmva/ @lmoneta
 /tree/ @pcanal
 /tutorials/ @couet
 
 # Projects that span over several code modules:
-/bindings/pyroot/ @peremato
-/bindings/pyroot/JupyROOT @etejedor
 /bindings/r/ @omazapa
 /core/base/ @pcanal
 /core/cont/ @pcanal
@@ -58,4 +54,8 @@
 /net/http/ @linev
 /tree/treeplayer/**/TDataFrame.* @dpiparo @bluehood
 /tree/treeplayer/**/TDF* @dpiparo @bluehood
-CMakeLists.txt @peremato
+
+/cmake/ @amadio
+*.cmake @amadio
+*/CMakeLists.txt @amadio
+CMakeLists.txt @amadio

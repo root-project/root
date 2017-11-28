@@ -336,6 +336,7 @@ End_Macro
 #include "RConfig.h"
 #include "TTree.h"
 
+#include "ROOT/TIOFeatures.hxx"
 #include "TArrayC.h"
 #include "TBufferFile.h"
 #include "TBaseClass.h"
@@ -606,7 +607,7 @@ Long64_t TTree::TClusterIterator::Next()
       fNextEntry = fStartEntry + clusterEstimate;
    } else {
       if (fClusterRange == fTree->fNClusterRange) {
-         // We are looking at the last range ; its size
+         // We are looking at a range which size
          // is defined by AutoFlush itself and goes to the GetEntries.
          fNextEntry += fTree->GetAutoFlush();
       } else {
@@ -634,6 +635,44 @@ Long64_t TTree::TClusterIterator::Next()
    }
    if (fNextEntry > fTree->GetEntries()) {
       fNextEntry = fTree->GetEntries();
+   }
+   return fStartEntry;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Move on to the previous cluster and return the starting entry
+/// of this previous cluster
+
+Long64_t TTree::TClusterIterator::Previous()
+{
+   fNextEntry = fStartEntry;
+   if (fTree->GetAutoFlush() <= 0) {
+      // Case of old files before November 9 2009
+      Long64_t clusterEstimate = GetEstimatedClusterSize();
+      fStartEntry = fNextEntry - clusterEstimate;
+   } else {
+      if (fClusterRange == 0 || fTree->fNClusterRange == 0) {
+         // We are looking at a range which size
+         // is defined by AutoFlush itself.
+         fStartEntry -= fTree->GetAutoFlush();
+      } else {
+         if (fNextEntry <= fTree->fClusterRangeEnd[fClusterRange]) {
+            --fClusterRange;
+         }
+         if (fClusterRange == 0) {
+            // We are looking at the first range.
+            fStartEntry = 0;
+         } else {
+            Long64_t clusterSize = fTree->fClusterSize[fClusterRange];
+            if (clusterSize == 0) {
+               clusterSize = GetEstimatedClusterSize();
+            }
+            fStartEntry -= clusterSize;
+         }
+      }
+   }
+   if (fStartEntry < 0) {
+      fStartEntry = 0;
    }
    return fStartEntry;
 }
@@ -703,6 +742,7 @@ TTree::TTree()
 , fFriendLockStatus(0)
 , fTransientBuffer(0)
 , fCacheDoAutoInit(kTRUE)
+, fCacheDoClusterPrefetch(kFALSE)
 , fCacheUserSet(kFALSE)
 , fIMTEnabled(ROOT::IsImplicitMTEnabled())
 , fNEntriesSinceSorting(0)
@@ -782,6 +822,7 @@ TTree::TTree(const char* name, const char* title, Int_t splitlevel /* = 99 */,
 , fFriendLockStatus(0)
 , fTransientBuffer(0)
 , fCacheDoAutoInit(kTRUE)
+, fCacheDoClusterPrefetch(kFALSE)
 , fCacheUserSet(kFALSE)
 , fIMTEnabled(ROOT::IsImplicitMTEnabled())
 , fNEntriesSinceSorting(0)
@@ -3029,6 +3070,10 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
    //       a chain we get the chain's current tree.
    TTree* thistree = GetTree();
 
+   // We will use this to override the IO features on the cloned branches.
+   ROOT::TIOFeatures features = this->GetIOFeatures();
+   ;
+
    // Note: For a chain, the returned clone will be
    //       a clone of the chain's first tree.
    TTree* newtree = (TTree*) thistree->Clone();
@@ -3083,6 +3128,7 @@ TTree* TTree::CloneTree(Long64_t nentries /* = -1 */, Option_t* option /* = "" *
       if (branch && (newcomp > -1)) {
          branch->SetCompressionSettings(newcomp);
       }
+      if (branch) branch->SetIOFeatures(features);
       if (!branch || !branch->TestBit(kDoNotProcess)) {
          continue;
       }
@@ -4394,17 +4440,17 @@ void TTree::DropBuffers(Int_t)
 Int_t TTree::Fill()
 {
    Int_t nbytes = 0;
+   Int_t nwrite = 0;
    Int_t nerror = 0;
-   Int_t nb = fBranches.GetEntriesFast();
-   if (nb == 1) {
-      // Case of one single super branch. Automatically update
-      // all the branch addresses if a new object was created.
-      TBranch* branch = (TBranch*) fBranches.UncheckedAt(0);
-      branch->UpdateAddress();
-   }
-   if (fBranchRef) {
+   Int_t nbranches = fBranches.GetEntriesFast();
+
+   // Case of one single super branch. Automatically update
+   // all the branch addresses if a new object was created.
+   if (nbranches == 1)
+      ((TBranch *)fBranches.UncheckedAt(0))->UpdateAddress();
+
+   if (fBranchRef)
       fBranchRef->Clear();
-   }
 
 #ifdef R__USE_IMT
    ROOT::Internal::TBranchIMTHelper imtHelper;
@@ -4415,30 +4461,32 @@ Int_t TTree::Fill()
    }
 #endif
 
-   for (Int_t i = 0; i < nb; ++i) {
+   for (Int_t i = 0; i < nbranches; ++i) {
       // Loop over all branches, filling and accumulating bytes written and error counts.
-      TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
-      if (branch->TestBit(kDoNotProcess)) {
+      TBranch *branch = (TBranch *)fBranches.UncheckedAt(i);
+
+      if (branch->TestBit(kDoNotProcess))
          continue;
-      }
+
 #ifndef R__USE_IMT
-      Int_t nwrite = branch->FillImpl(nullptr);
+      nwrite = branch->FillImpl(nullptr);
 #else
-      Int_t nwrite = branch->FillImpl(fIMTEnabled ? &imtHelper : nullptr);
+      nwrite = branch->FillImpl(fIMTEnabled ? &imtHelper : nullptr);
 #endif
-      if (nwrite < 0)  {
+      if (nwrite < 0) {
          if (nerror < 2) {
             Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld\n"
-                  " This error is symptomatic of a Tree created as a memory-resident Tree\n"
-                  " Instead of doing:\n"
-                  "    TTree *T = new TTree(...)\n"
-                  "    TFile *f = new TFile(...)\n"
-                  " you should do:\n"
-                  "    TFile *f = new TFile(...)\n"
-                  "    TTree *T = new TTree(...)",
-                  GetName(), branch->GetName(), nwrite,fEntries+1);
+                          " This error is symptomatic of a Tree created as a memory-resident Tree\n"
+                          " Instead of doing:\n"
+                          "    TTree *T = new TTree(...)\n"
+                          "    TFile *f = new TFile(...)\n"
+                          " you should do:\n"
+                          "    TFile *f = new TFile(...)\n"
+                          "    TTree *T = new TTree(...)\n\n",
+                  GetName(), branch->GetName(), nwrite, fEntries + 1);
          } else {
-            Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld", GetName(), branch->GetName(), nwrite,fEntries+1);
+            Error("Fill", "Failed filling branch:%s.%s, nbytes=%d, entry=%lld", GetName(), branch->GetName(), nwrite,
+                  fEntries + 1);
          }
          ++nerror;
       } else {
@@ -4450,40 +4498,56 @@ Int_t TTree::Fill()
    if (fIMTFlush) {
       imtHelper.Wait();
       fIMTFlush = false;
-      const_cast<TTree*>(this)->AddTotBytes(fIMTTotBytes);
-      const_cast<TTree*>(this)->AddZipBytes(fIMTZipBytes);
+      const_cast<TTree *>(this)->AddTotBytes(fIMTTotBytes);
+      const_cast<TTree *>(this)->AddZipBytes(fIMTZipBytes);
       nbytes += imtHelper.GetNbytes();
       nerror += imtHelper.GetNerrors();
    }
 #endif
 
-   if (fBranchRef) {
+   if (fBranchRef)
       fBranchRef->Fill();
-   }
+
    ++fEntries;
-   if (fEntries > fMaxEntries) {
+
+   if (fEntries > fMaxEntries)
       KeepCircular();
-   }
-   if (gDebug > 0) Info("TTree::Fill", " - A:  %d %lld %lld %lld %lld %lld %lld \n",
-       nbytes, fEntries, fAutoFlush,fAutoSave,GetZipBytes(),fFlushedBytes,fSavedBytes);
+
+   if (gDebug > 0)
+      Info("TTree::Fill", " - A: %d %lld %lld %lld %lld %lld %lld \n", nbytes, fEntries, fAutoFlush, fAutoSave,
+           GetZipBytes(), fFlushedBytes, fSavedBytes);
+
+   bool autoFlush = false;
+   bool autoSave = false;
 
    if (fAutoFlush != 0 || fAutoSave != 0) {
       // Is it time to flush or autosave baskets?
       if (fFlushedBytes == 0) {
+         // If fFlushedBytes == 0, it means we never flushed or saved, so
+         // we need to check if it's time to do it and recompute the values
+         // of fAutoFlush and fAutoSave in terms of the number of entries.
          // Decision can be based initially either on the number of bytes
          // or the number of entries written.
          Long64_t zipBytes = GetZipBytes();
-         if ((fAutoFlush<0 && zipBytes > -fAutoFlush)  ||
-             (fAutoSave <0 && zipBytes > -fAutoSave )  ||
-             (fAutoFlush>0 && fEntries%TMath::Max((Long64_t)1,fAutoFlush) == 0) ||
-             (fAutoSave >0 && fEntries%TMath::Max((Long64_t)1,fAutoSave)  == 0) ) {
 
-            //First call FlushBasket to make sure that fTotBytes is up to date.
+         if (fAutoFlush)
+            autoFlush = fAutoFlush < 0 ? (zipBytes > -fAutoFlush) : fEntries % fAutoFlush == 0;
+
+         if (fAutoSave)
+            autoSave = fAutoSave < 0 ? (zipBytes > -fAutoSave) : fEntries % fAutoSave == 0;
+
+         if (autoFlush || autoSave) {
+            // First call FlushBasket to make sure that fTotBytes is up to date.
             FlushBaskets();
-            OptimizeBaskets(GetTotBytes(),1,"");
-            if (gDebug > 0) Info("TTree::Fill","OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,GetZipBytes(),fFlushedBytes);
+            OptimizeBaskets(GetTotBytes(), 1, "");
+            autoFlush = false; // avoid auto flushing again later
+
+            if (gDebug > 0)
+               Info("TTree::Fill", "OptimizeBaskets called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",
+                    fEntries, GetZipBytes(), fFlushedBytes);
+
             fFlushedBytes = GetZipBytes();
-            fAutoFlush    = fEntries;  // Use test on entries rather than bytes
+            fAutoFlush = fEntries; // Use test on entries rather than bytes
 
             // subsequently in run
             if (fAutoSave < 0) {
@@ -4492,62 +4556,64 @@ Int_t TTree::Fill()
                // < (minus the input value of fAutoSave)
                Long64_t totBytes = GetTotBytes();
                if (zipBytes != 0) {
-                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/zipBytes)/fEntries));
+                  fAutoSave = TMath::Max(fAutoFlush, fEntries * ((-fAutoSave / zipBytes) / fEntries));
                } else if (totBytes != 0) {
-                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/totBytes)/fEntries));
+                  fAutoSave = TMath::Max(fAutoFlush, fEntries * ((-fAutoSave / totBytes) / fEntries));
                } else {
                   TBufferFile b(TBuffer::kWrite, 10000);
-                  TTree::Class()->WriteBuffer(b, (TTree*) this);
+                  TTree::Class()->WriteBuffer(b, (TTree *)this);
                   Long64_t total = b.Length();
-                  fAutoSave =  TMath::Max( fAutoFlush, fEntries*((-fAutoSave/total)/fEntries));
+                  fAutoSave = TMath::Max(fAutoFlush, fEntries * ((-fAutoSave / total) / fEntries));
                }
-            } else if(fAutoSave > 0) {
-               fAutoSave = fAutoFlush*(fAutoSave/fAutoFlush);
+            } else if (fAutoSave > 0) {
+               fAutoSave = fAutoFlush * (fAutoSave / fAutoFlush);
             }
-            if (fAutoSave!=0 && fEntries >= fAutoSave) AutoSave();    // FlushBaskets not called in AutoSave
-            if (gDebug > 0) Info("TTree::Fill","First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
+
+            if (fAutoSave != 0 && fEntries >= fAutoSave)
+               autoSave = true;
+
+            if (gDebug > 0)
+               Info("TTree::Fill", "First AutoFlush.  fAutoFlush = %lld, fAutoSave = %lld\n", fAutoFlush, fAutoSave);
          }
-      } else if (fNClusterRange && fAutoFlush && ( (fEntries-fClusterRangeEnd[fNClusterRange-1]) % fAutoFlush == 0)  ) {
-         if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
-            //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
-            AutoSave("flushbaskets");
-            if (gDebug > 0) Info("TTree::Fill","AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,GetZipBytes(),fSavedBytes);
-         } else {
-            //We only FlushBaskets
-            FlushBaskets();
-            if (gDebug > 0) Info("TTree::Fill","FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,GetZipBytes(),fFlushedBytes);
+      } else {
+         // Check if we need to auto flush
+         if (fAutoFlush) {
+            if (fNClusterRange == 0)
+               autoFlush = fEntries > 1 && fEntries % fAutoFlush == 0;
+            else
+               autoFlush = (fEntries - fClusterRangeEnd[fNClusterRange - 1]) % fAutoFlush == 0;
          }
-         fFlushedBytes = GetZipBytes();
-      } else if (fNClusterRange == 0 && fEntries > 1 && fAutoFlush && fEntries%fAutoFlush == 0) {
-         if (fAutoSave != 0 && fEntries%fAutoSave == 0) {
-            //We are at an AutoSave point. AutoSave flushes baskets and saves the Tree header
-            AutoSave("flushbaskets");
-            if (gDebug > 0) Info("TTree::Fill","AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n",fEntries,GetZipBytes(),fSavedBytes);
-         } else {
-            //We only FlushBaskets
-            FlushBaskets();
-            if (gDebug > 0) Info("TTree::Fill","FlushBasket called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n",fEntries,GetZipBytes(),fFlushedBytes);
-         }
-         fFlushedBytes = GetZipBytes();
+         // Check if we need to auto save
+         if (fAutoSave)
+            autoSave = fEntries % fAutoSave == 0;
       }
    }
+
+   if (autoFlush) {
+      FlushBaskets();
+      if (gDebug > 0)
+         Info("TTree::Fill", "FlushBaskets() called at entry %lld, fZipBytes=%lld, fFlushedBytes=%lld\n", fEntries,
+              GetZipBytes(), fFlushedBytes);
+      fFlushedBytes = GetZipBytes();
+   }
+
+   if (autoSave) {
+      AutoSave(); // does not call FlushBaskets() again
+      if (gDebug > 0)
+         Info("TTree::Fill", "AutoSave called at entry %lld, fZipBytes=%lld, fSavedBytes=%lld\n", fEntries,
+              GetZipBytes(), fSavedBytes);
+   }
+
    // Check that output file is still below the maximum size.
    // If above, close the current file and continue on a new file.
    // Currently, the automatic change of file is restricted
    // to the case where the tree is in the top level directory.
-   if (!fDirectory) {
-      return nbytes;
-   }
-   TFile* file = fDirectory->GetFile();
-   if (file && (file->GetEND() > fgMaxTreeSize)) {
-      if (fDirectory == (TDirectory*) file) {
-         ChangeFile(file);
-      }
-   }
-   if (nerror) {
-      return -1;
-   }
-   return nbytes;
+   if (fDirectory)
+      if (TFile *file = fDirectory->GetFile())
+         if ((TDirectory *)file == fDirectory && (file->GetEND() > fgMaxTreeSize))
+            ChangeFile(file);
+
+   return nerror == 0 ? nbytes : -1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -5741,7 +5807,7 @@ const char* TTree::GetFriendAlias(TTree* tree) const
          return fe->GetName();
       }
       // Case of a chain:
-      if (t->GetTree() == tree) {
+      if (t && t->GetTree() == tree) {
          return fe->GetName();
       }
    }
@@ -5756,6 +5822,13 @@ const char* TTree::GetFriendAlias(TTree* tree) const
       }
    }
    return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Returns the current set of IO settings
+ROOT::TIOFeatures TTree::GetIOFeatures() const
+{
+   return fIOFeatures;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6607,7 +6680,12 @@ Long64_t TTree::Merge(TCollection* li, TFileMergeInfo *info)
    const char *options = info ? info->fOptions.Data() : "";
    if (info && info->fIsFirst && info->fOutputDirectory && info->fOutputDirectory->GetFile() != GetCurrentFile()) {
       TDirectory::TContext ctxt(info->fOutputDirectory);
+      TIOFeatures saved_features = fIOFeatures;
+      if (info->fIOFeatures) {
+         fIOFeatures = *(info->fIOFeatures);
+      }
       TTree *newtree = CloneTree(-1, options);
+      fIOFeatures = saved_features;
       if (newtree) {
          newtree->Write();
          delete newtree;
@@ -8606,6 +8684,27 @@ void TTree::SetEstimate(Long64_t n /* = 1000000 */)
    if (fPlayer) {
       fPlayer->SetEstimate(n);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Provide the end-user with the ability to enable/disable various experimental
+/// IO features for this TTree.
+///
+/// Returns all the newly-set IO settings.
+
+ROOT::TIOFeatures TTree::SetIOFeatures(const ROOT::TIOFeatures &features)
+{
+   // Purposely ignore all unsupported bits; TIOFeatures implementation already warned the user about the
+   // error of their ways; this is just a safety check.
+   UChar_t featuresRequested = features.GetFeatures() & static_cast<UChar_t>(TBasket::EIOBits::kSupported);
+
+   UChar_t curFeatures = fIOFeatures.GetFeatures();
+   UChar_t newFeatures = ~curFeatures & featuresRequested;
+   curFeatures |= newFeatures;
+   fIOFeatures.Set(curFeatures);
+
+   ROOT::TIOFeatures newSettings(newFeatures);
+   return newSettings;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

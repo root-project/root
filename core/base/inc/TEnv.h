@@ -106,6 +106,7 @@ private:
 
 public:
    TEnvRec(): fName(), fType(), fValue(), fLevel(kEnvAll), fModified(kTRUE) { }
+   ~TEnvRec();
    const char *GetName() const { return fName; }
    const char *GetValue() const { return fValue; }
    const char *GetType() const { return fType; }
@@ -131,22 +132,22 @@ private:
    TEnv(const TEnv&);            // not implemented
    TEnv& operator=(const TEnv&); // not implemented
 
-   const char       *Getvalue(const char *name);
+   const char       *Getvalue(const char *name) const;
 
 public:
    TEnv(const char *name="");
    virtual ~TEnv();
 
    THashList          *GetTable() const { return fTable; }
-   Bool_t              Defined(const char *name)
+   Bool_t              Defined(const char *name) const
                                     { return Getvalue(name) != 0; }
 
    virtual const char *GetRcName() const { return fRcName; }
    virtual void        SetRcName(const char *name) { fRcName = name; }
 
-   virtual Int_t       GetValue(const char *name, Int_t dflt);
-   virtual Double_t    GetValue(const char *name, Double_t dflt);
-   virtual const char *GetValue(const char *name, const char *dflt);
+   virtual Int_t       GetValue(const char *name, Int_t dflt) const;
+   virtual Double_t    GetValue(const char *name, Double_t dflt) const;
+   virtual const char *GetValue(const char *name, const char *dflt) const;
 
    virtual void        SetValue(const char *name, const char *value,
                                 EEnvLevel level = kEnvChange,
@@ -155,7 +156,7 @@ public:
    virtual void        SetValue(const char *name, Int_t value);
    virtual void        SetValue(const char *name, Double_t value);
 
-   virtual TEnvRec    *Lookup(const char *n);
+   virtual TEnvRec    *Lookup(const char *n) const;
    virtual Int_t       ReadFile(const char *fname, EEnvLevel level);
    virtual Int_t       WriteFile(const char *fname, EEnvLevel level = kEnvAll);
    virtual void        Save();

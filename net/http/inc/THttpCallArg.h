@@ -115,13 +115,19 @@ public:
    const char *GetMethod() const { return fMethod.Data(); }
 
    /** returns kTRUE if post method is used */
-   Bool_t IsPostMethod() const { return fMethod.CompareTo("POST") == 0; }
+   Bool_t IsMethod(const char *name) const { return fMethod.CompareTo(name) == 0; }
+
+   /** returns kTRUE if post method is used */
+   Bool_t IsPostMethod() const { return IsMethod("POST"); }
 
    /** return pointer on posted with request data */
    void *GetPostData() const { return fPostData; }
 
    /** return length of posted with request data */
    Long_t GetPostDataLength() const { return fPostDataLength; }
+
+   /** returns post data as TString */
+   TString GetPostDataAsString() const { return TString((const char *) GetPostData(), GetPostDataLength()); }
 
    /** returns path name from request URL */
    const char *GetPathName() const { return fPathName.Data(); }

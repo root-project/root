@@ -39,7 +39,6 @@ ClassImp(TProfile2D);
  The following formulae show the cumulated contents (capital letters) and the values
  displayed by the printing or plotting routines (small letters) of the elements for cell I, J.
 
-                                                       2
        H(I,J)  =  sum Z                  E(I,J)  =  sum Z
        l(I,J)  =  sum l                  L(I,J)  =  sum l
        h(I,J)  =  H(I,J)/L(I,J)          s(I,J)  =  sqrt(E(I,J)/L(I,J)- h(I,J)**2)
