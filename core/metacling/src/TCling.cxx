@@ -1298,7 +1298,8 @@ TCling::TCling(const char *name, const char *title)
    if (fromRootCling) {
       fInterpreter->declare("#include \"RtypesCore.h\"\n"
                             "#include <string>\n"
-                            "using std::string;");
+                            "using std::string;\n"
+                            "#include <cassert>\n");
    } else {
       fInterpreter->declare("#include \"Rtypes.h\"\n"
                             + gClassDefInterpMacro + "\n"
@@ -1306,7 +1307,8 @@ TCling::TCling(const char *name, const char *title)
                             + "#undef ClassImp\n"
                             "#define ClassImp(X);\n"
                             "#include <string>\n"
-                            "using namespace std;");
+                            "using namespace std;\n"
+                            "#include <cassert>\n");
    }
 
    // Setup core C++ modules if we have any to setup.
