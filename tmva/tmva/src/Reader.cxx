@@ -401,8 +401,8 @@ TMVA::IMethod* TMVA::Reader::BookMVA( const TString& methodTag, const TString& w
 
 TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const TString& weightfile )
 {
-   IMethod* im = ClassifierFactory::Instance().Create(std::string(Types::Instance().GetMethodName( methodType )),
-                                                      DataInfo(), weightfile );
+   IMethod *im =
+      ClassifierFactory::Instance().Create(Types::Instance().GetMethodName(methodType).Data(), DataInfo(), weightfile);
 
    MethodBase *method = (dynamic_cast<MethodBase*>(im));
 
@@ -440,8 +440,8 @@ TMVA::IMethod* TMVA::Reader::BookMVA( TMVA::Types::EMVA methodType, const char* 
 #if ROOT_VERSION_CODE >= ROOT_VERSION(5,26,00)
 
    // books MVA method from weightfile
-   IMethod* im = ClassifierFactory::Instance().Create(std::string(Types::Instance().GetMethodName( methodType )),
-                                                      DataInfo(), "" );
+   IMethod *im =
+      ClassifierFactory::Instance().Create(Types::Instance().GetMethodName(methodType).Data(), DataInfo(), "");
 
    MethodBase *method = (dynamic_cast<MethodBase*>(im));
 

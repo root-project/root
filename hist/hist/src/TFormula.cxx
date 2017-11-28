@@ -1972,7 +1972,7 @@ void TFormula::ProcessFormula(TString &formula)
          if (fun.fName.Contains("::")) // add support for nested namespaces
          {
             // look for last occurence of "::"
-            std::string name(fun.fName);
+            std::string name(fun.fName.Data());
             size_t index = name.rfind("::");
             assert(index != std::string::npos);
             TString className = fun.fName(0, fun.fName(0, index).Length());
@@ -2146,7 +2146,7 @@ void TFormula::ProcessFormula(TString &formula)
       if (inputIntoCling) {
          // save copy of inputFormula in a std::strig for the unordered map
          // and also formula is same as FClingInput typically and it will be modified
-         std::string inputFormula = std::string(formula);
+         std::string inputFormula(formula.Data());
 
          // The name we really use for the unordered map will have a flag that
          // says whether the formula is vectorized
