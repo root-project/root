@@ -82,7 +82,7 @@ protected:
    TString       fPathBuffer;      //!Buffer for GetPath() function
    TContext     *fContext;         //!Pointer to a list of TContext object pointing to this TDirectory
 
-   mutable std::atomic_flag fSpinLock; // MSVC doesn't support = ATOMIC_FLAG_INIT;
+   mutable std::atomic_flag fSpinLock; //! MSVC doesn't support = ATOMIC_FLAG_INIT;
 
    static Bool_t fgAddDirectory;   //!flag to add histograms, graphs,etc to the directory
 
