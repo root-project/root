@@ -563,7 +563,7 @@ void TXMLEngine::FreeAllAttr(XMLNodePointer_t xmlnode)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return first attribute in the list, namespace (if exists) will be skiped
+/// return first attribute in the list, namespace (if exists) will be skipped
 
 XMLAttrPointer_t TXMLEngine::GetFirstAttr(XMLNodePointer_t xmlnode)
 {
@@ -690,7 +690,6 @@ const char* TXMLEngine::GetNSReference(XMLNsPointer_t ns)
    return GetAttrValue((XMLAttrPointer_t)ns);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// add child element to xmlnode
 
@@ -801,7 +800,7 @@ Bool_t TXMLEngine::AddDocRawLine(XMLDocPointer_t xmldoc, const char* line)
 /// Creates <?xml-stylesheet alternate="yes" title="compact" href="small-base.css" type="text/css"?>
 /// Attributes href and type must be supplied,
 ///  other attributes: title, alternate, media, charset are optional
-/// if alternate==0, attribyte alternate="no" will be created,
+/// if alternate==0, attribute alternate="no" will be created,
 /// if alternate>0, attribute alternate="yes"
 /// if alternate<0, attribute will not be created
 
@@ -862,7 +861,7 @@ Bool_t TXMLEngine::AddDocStyleSheet(XMLDocPointer_t xmldoc,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// unlink (dettach) xml node from parent
+/// unlink (detach) xml node from parent
 
 void TXMLEngine::UnlinkNode(XMLNodePointer_t xmlnode)
 {
@@ -887,8 +886,8 @@ void TXMLEngine::UnlinkNode(XMLNodePointer_t xmlnode)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// release all memory, allocated fro this node and
-/// destroyes node itself
+/// release all memory, allocated from this node and
+/// destroys node itself
 
 void TXMLEngine::FreeNode(XMLNodePointer_t xmlnode)
 {
@@ -1113,7 +1112,7 @@ XMLDocPointer_t TXMLEngine::NewDoc(const char* version)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// assignes dtd filename to document
+/// assigns dtd filename to document
 
 void TXMLEngine::AssignDtd(XMLDocPointer_t xmldoc, const char* dtdname, const char* rootname)
 {
@@ -1141,7 +1140,7 @@ void TXMLEngine::FreeDoc(XMLDocPointer_t xmldoc)
 ////////////////////////////////////////////////////////////////////////////////
 /// store document content to file
 /// if layout<=0, no any spaces or newlines will be placed between
-/// xmlnodes. Xml file will have minimum size, but nonreadable structure
+/// xmlnodes. Xml file will have minimum size, but non-readable structure
 /// if (layout>0) each node will be started from new line,
 /// and number of spaces will correspond to structure depth.
 
@@ -1270,7 +1269,7 @@ Bool_t TXMLEngine::ValidateVersion(XMLDocPointer_t xmldoc, const char* version)
 ////////////////////////////////////////////////////////////////////////////////
 /// convert single xml node (and its child node) to string
 /// if layout<=0, no any spaces or newlines will be placed between
-/// xmlnodes. Xml file will have minimum size, but nonreadable structure
+/// xmlnodes. Xml file will have minimum size, but non-readable structure
 /// if (layout>0) each node will be started from new line,
 /// and number of spaces will correspond to structure depth.
 
@@ -1331,7 +1330,7 @@ char* TXMLEngine::Makenstr(const char* str, int len)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Allocates new xml node with specified namelength
+/// Allocates new xml node with specified name length
 
 XMLNodePointer_t TXMLEngine::AllocateNode(int namelen, XMLNodePointer_t parent)
 {
@@ -1783,8 +1782,6 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
       return node;
    }
 
-
-
    EXmlNodeType nodetype = kXML_NODE;
    Bool_t canhaschildren = true;
    char endsymbol = '/';
@@ -1909,5 +1906,4 @@ void TXMLEngine::DisplayError(Int_t error, Int_t linenumber)
       case -1: Error("ParseFile", "Unexpected end of xml file"); break;
       default: Error("ParseFile", "XML syntax error at line %d", linenumber); break;
    }
-
 }
