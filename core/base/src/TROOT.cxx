@@ -915,11 +915,12 @@ TROOT::~TROOT()
       fSecContexts->Delete("slow"); SafeDelete(fSecContexts); // and security contexts
       fSockets->Delete();           SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
-      delete fUUIDs;
-      TProcessID::Cleanup();                            // and list of ProcessIDs
       TSeqCollection *tl = fMappedFiles; fMappedFiles = 0; delete tl;
 
       SafeDelete(fClosedObjects);
+
+      delete fUUIDs;
+      TProcessID::Cleanup();                            // and list of ProcessIDs
 
       fFunctions->Delete();  SafeDelete(fFunctions);   // etc..
       fGeometries->Delete(); SafeDelete(fGeometries);
