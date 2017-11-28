@@ -31,8 +31,8 @@ TDrawingOptsReader::Attrs_t TDrawingOptsReader::ReadDefaults()
 {
    Attrs_t ret;
    TDrawingOptsReader reader(ret);
-   reader.AddFromStyleFile(std::string(TROOT::GetEtcDir()) + "/system.rootstylerc");
-   reader.AddFromStyleFile(std::string(gSystem->GetHomeDirectory()) + "/.rootstylerc");
+   reader.AddFromStyleFile(std::string(TROOT::GetEtcDir().Data()) + "/system.rootstylerc");
+   reader.AddFromStyleFile(gSystem->GetHomeDirectory() + "/.rootstylerc");
    reader.AddFromStyleFile(".rootstylerc");
    return ret;
 }

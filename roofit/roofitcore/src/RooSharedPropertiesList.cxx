@@ -93,9 +93,9 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
   //std::cout << "REGISTER properties " << prop->asString() << " - list size = " << _propList.GetSize() << std::endl;
   RooSharedProperties* tmp ;
   
-  std::map<std::string, RooSharedProperties *>::iterator it; 
+  std::map<std::string, RooSharedProperties *>::iterator it;
 
-  it = _newPropList.find( std::string(prop->asString()) ); 
+  it = _newPropList.find(prop->asString().Data());
   if (it != _newPropList.end() ) {
      tmp = it->second; 
      if (tmp != prop) { 
@@ -107,7 +107,7 @@ RooSharedProperties* RooSharedPropertiesList::registerProperties(RooSharedProper
   }
   prop->setInSharedList() ;
   prop->increaseRefCount() ;
-  _newPropList[ std::string(prop->asString()) ] = prop; 
+  _newPropList[prop->asString().Data()] = prop;
 
   return prop ;
 }
@@ -125,8 +125,8 @@ void RooSharedPropertiesList::unregisterProperties(RooSharedProperties* prop)
   if (prop->refCount()==0) {
     _propList.Remove(prop) ;
 
-    std::map<std::string, RooSharedProperties *>::iterator it; 
-    it = _newPropList.find( std::string(prop->asString()) ); 
+    std::map<std::string, RooSharedProperties *>::iterator it;
+    it = _newPropList.find(prop->asString().Data());
     if (it != _newPropList.end() )  _newPropList.erase(it);
     
     // We own object if ref-counted list. If count drops to zero, delete object
