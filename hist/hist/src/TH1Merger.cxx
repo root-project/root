@@ -633,7 +633,8 @@ Bool_t TH1Merger::AutoP2Merge()
    }
 
    if (!hist) {
-      Warning("TH1Merger::AutoP2Merge", "all histograms look empty!");
+      if (gDebug)
+         Info("TH1Merger::AutoP2Merge", "all histograms look empty!");
       return kFALSE;
    }
 
