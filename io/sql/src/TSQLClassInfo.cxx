@@ -24,30 +24,20 @@ List of this objects are kept by TSQLFile class.
 
 #include "TObjArray.h"
 
-
 ClassImp(TSQLClassColumnInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
 
-TSQLClassColumnInfo::TSQLClassColumnInfo() :
-   TObject(),
-   fName(),
-   fSQLName(),
-   fSQLType()
+TSQLClassColumnInfo::TSQLClassColumnInfo() : TObject(), fName(), fSQLName(), fSQLType()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// normal constructor
 
-TSQLClassColumnInfo::TSQLClassColumnInfo(const char* name,
-                                         const char* sqlname,
-                                         const char* sqltype) :
-   TObject(),
-   fName(name),
-   fSQLName(sqlname),
-   fSQLType(sqltype)
+TSQLClassColumnInfo::TSQLClassColumnInfo(const char *name, const char *sqlname, const char *sqltype)
+   : TObject(), fName(name), fSQLName(sqlname), fSQLType(sqltype)
 {
 }
 
@@ -58,21 +48,14 @@ TSQLClassColumnInfo::~TSQLClassColumnInfo()
 {
 }
 
-
 ClassImp(TSQLClassInfo);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
 
-TSQLClassInfo::TSQLClassInfo() :
-   TObject(),
-   fClassName(),
-   fClassVersion(0),
-   fClassId(0),
-   fClassTable(),
-   fRawTable(),
-   fColumns(0),
-   fRawtableExist(kFALSE)
+TSQLClassInfo::TSQLClassInfo()
+   : TObject(), fClassName(), fClassVersion(0), fClassId(0), fClassTable(), fRawTable(), fColumns(0),
+     fRawtableExist(kFALSE)
 {
 }
 
@@ -80,17 +63,9 @@ TSQLClassInfo::TSQLClassInfo() :
 /// normal constructor of TSQLClassInfo class
 /// Sets names of tables, which are used for that version of class
 
-TSQLClassInfo::TSQLClassInfo(Long64_t classid,
-                             const char* classname,
-                             Int_t version) :
-   TObject(),
-   fClassName(classname),
-   fClassVersion(version),
-   fClassId(classid),
-   fClassTable(),
-   fRawTable(),
-   fColumns(0),
-   fRawtableExist(kFALSE)
+TSQLClassInfo::TSQLClassInfo(Long64_t classid, const char *classname, Int_t version)
+   : TObject(), fClassName(classname), fClassVersion(version), fClassId(classid), fClassTable(), fRawTable(),
+     fColumns(0), fRawtableExist(kFALSE)
 {
    fClassTable.Form("%s_ver%d", classname, version);
    fRawTable.Form("%s_raw%d", classname, version);
@@ -101,7 +76,7 @@ TSQLClassInfo::TSQLClassInfo(Long64_t classid,
 
 TSQLClassInfo::~TSQLClassInfo()
 {
-   if (fColumns!=0) {
+   if (fColumns != 0) {
       fColumns->Delete();
       delete fColumns;
    }
@@ -110,9 +85,9 @@ TSQLClassInfo::~TSQLClassInfo()
 ////////////////////////////////////////////////////////////////////////////////
 /// assigns new list of columns
 
-void TSQLClassInfo::SetColumns(TObjArray* columns)
+void TSQLClassInfo::SetColumns(TObjArray *columns)
 {
-   if (fColumns!=0) {
+   if (fColumns != 0) {
       fColumns->Delete();
       delete fColumns;
    }
@@ -122,7 +97,7 @@ void TSQLClassInfo::SetColumns(TObjArray* columns)
 ////////////////////////////////////////////////////////////////////////////////
 /// set current status of class tables
 
-void TSQLClassInfo::SetTableStatus(TObjArray* columns, Bool_t israwtable)
+void TSQLClassInfo::SetTableStatus(TObjArray *columns, Bool_t israwtable)
 {
    SetColumns(columns);
    fRawtableExist = israwtable;
@@ -135,19 +110,21 @@ void TSQLClassInfo::SetTableStatus(TObjArray* columns, Bool_t israwtable)
 /// or for name, used as column name (sqlname = kTRUE)
 /// Return index of column in list (-1 if not found)
 
-Int_t TSQLClassInfo::FindColumn(const char* name, Bool_t sqlname)
+Int_t TSQLClassInfo::FindColumn(const char *name, Bool_t sqlname)
 {
-   if ((name==0) || (fColumns==0)) return -1;
+   if ((name == 0) || (fColumns == 0))
+      return -1;
 
    TIter next(fColumns);
 
-   TSQLClassColumnInfo* col = 0;
+   TSQLClassColumnInfo *col = 0;
 
    Int_t indx = 0;
 
-   while ((col = (TSQLClassColumnInfo*) next()) != 0) {
-      const char* colname = sqlname ? col->GetSQLName() : col->GetName();
-      if (strcmp(colname, name)==0) return indx;
+   while ((col = (TSQLClassColumnInfo *)next()) != 0) {
+      const char *colname = sqlname ? col->GetSQLName() : col->GetName();
+      if (strcmp(colname, name) == 0)
+         return indx;
       indx++;
    }
 
