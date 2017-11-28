@@ -39,7 +39,7 @@ TKeyXML::TKeyXML() :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates TKeyXML and convert obj data to xml structures
+/// Creates TKeyXML and convert object data to xml structures
 
 TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, const TObject* obj, const char* name, const char* title) :
     TKey(mother),
@@ -70,7 +70,7 @@ TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, const TObject* obj, const c
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates TKeyXML and convert obj data to xml structures
+/// Creates TKeyXML and convert object data to xml structures
 
 TKeyXML::TKeyXML(TDirectory* mother, Long64_t keyid, const void* obj, const TClass* cl, const char* name, const char* title) :
    TKey(mother),

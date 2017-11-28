@@ -472,13 +472,13 @@ void TXMLFile::ProduceFileNames(const char* filename, TString& fname, TString& d
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Saves xml structures to file
+/// Saves xml structures to the file
 /// xml elements are kept in list of TKeyXML objects
 /// When saving, all this elements are linked to root xml node
-/// In the end StreamerInfo structures are added
+/// At the end StreamerInfo structures are added
 /// After xml document is saved, all nodes will be unlinked from root node
 /// and kept in memory.
-/// Only Close() or destructor relase memory, used by xml structures
+/// Only Close() or destructor release memory, used by xml structures
 
 void TXMLFile::SaveToFile()
 {
@@ -571,9 +571,9 @@ void TXMLFile::CombineNodesTree(TDirectory* dir, XMLNodePointer_t topnode, Bool_
 
 ////////////////////////////////////////////////////////////////////////////////
 /// read document from file
-/// Now full content of docuument reads into the memory
+/// Now full content of document reads into the memory
 /// Then document decomposed to separate keys and streamer info structures
-/// All inrelevant data will be cleaned
+/// All irrelevant data will be cleaned
 
 Bool_t TXMLFile::ReadFromFile()
 {
@@ -931,8 +931,8 @@ void TXMLFile::SetXmlLayout(EXMLLayout layout)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// If true, all correspondent to file TStreamerInfo objects will be stored in file
-/// this allows to apply schema avolution later for this file
-/// may be usefull, when file used outside ROOT and TStreamerInfo objects does not required
+/// this allows to apply schema evolution later for this file
+/// may be useful, when file used outside ROOT and TStreamerInfo objects does not required
 /// Can be changed only for newly created file.
 
 void TXMLFile::SetStoreStreamerInfos(Bool_t iConvert)
@@ -953,7 +953,7 @@ void TXMLFile::SetUsedDtd(Bool_t use)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Specifiy usage of namespaces in xml file
+/// Specify usage of namespaces in xml file
 /// In current implementation every instrumented class in file gets its unique namespace,
 /// which is equal to name of class and refer to root documentation page like
 /// <TAttPad xmlns:TAttPad="http://root.cern.ch/root/htmldoc/TAttPad.html" version="3">
@@ -984,13 +984,12 @@ Bool_t TXMLFile::AddXmlComment(const char* comment)
    return fXML->AddDocComment(fDoc, comment);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Adds style sheet definition on the top of xml document
 /// Creates <?xml-stylesheet alternate="yes" title="compact" href="small-base.css" type="text/css"?>
 /// Attributes href and type must be supplied,
 ///  other attributes: title, alternate, media, charset are optional
-/// if alternate==0, attribyte alternate="no" will be created,
+/// if alternate==0, attribute alternate="no" will be created,
 /// if alternate>0, attribute alternate="yes"
 /// if alternate<0, attribute will not be created
 /// This style sheet definition cannot be later access with TXMLFile methods.
@@ -1037,7 +1036,7 @@ Long64_t TXMLFile::DirCreateEntry(TDirectory* dir)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Serach for key which correspond to direcory dir
+/// Search for key which correspond to directory dir
 
 TKeyXML* TXMLFile::FindDirKey(TDirectory* dir)
 {
@@ -1080,7 +1079,7 @@ TDirectory* TXMLFile::FindKeyDir(TDirectory* motherdir, Long64_t keyid)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read keys for directory
-/// Make sence only once, while next time no new subnodes will be created
+/// Make sense only once, while next time no new subnodes will be created
 
 Int_t TXMLFile::DirReadKeys(TDirectory* dir)
 {

@@ -48,7 +48,7 @@ class TXMLPlayer : public TObject {
 
       TString fGetterName;                   //!  buffer for name of getter method
       TString fSetterName;                   //!  buffer for name of setter method
-      TXMLSetup fXmlSetup;                   //!  buffer for xml names convertion
+      TXMLSetup fXmlSetup;                   //!  buffer for xml names conversion
 
    ClassDef(TXMLPlayer,1) // Generation of external xml streamers
 };

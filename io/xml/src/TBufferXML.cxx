@@ -79,7 +79,7 @@ TBufferXML::TBufferXML() :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates buffer object to serailize/deserialize data to/from xml.
+/// Creates buffer object to serialize/deserialize data to/from xml.
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferXML::TBufferXML(TBuffer::EMode mode) :
@@ -105,7 +105,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Creates buffer object to serailize/deserialize data to/from xml.
+/// Creates buffer object to serialize/deserialize data to/from xml.
 /// This constructor should be used, if data from buffer supposed to be stored in file.
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
@@ -303,7 +303,7 @@ void TBufferXML::WriteObject(const TObject *obj)
 }
 
 // TXMLStackObj is used to keep stack of object hierarchy,
-// stored in TBuffer. For instnace, data for parent class(es)
+// stored in TBuffer. For example, data for parent class(es)
 // stored in subnodes, but initial object node will be kept.
 
 class TXMLStackObj : public TObject {
@@ -656,7 +656,7 @@ Bool_t TBufferXML::ExtractPointer(XMLNodePointer_t node, void* &ptr, TClass* &cl
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Analyse, if node has "ref" attribute and register it to object map
+/// Analyze if node has "ref" attribute and register it to object map
 
 void TBufferXML::ExtractReference(XMLNodePointer_t node, const void* ptr, const TClass* cl)
 {
@@ -682,7 +682,7 @@ void TBufferXML::ExtractReference(XMLNodePointer_t node, const void* ptr, const 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check, if node has specified name
+/// Check if node has specified name
 
 Bool_t TBufferXML::VerifyNode(XMLNodePointer_t node, const char* name, const char* errinfo)
 {
@@ -790,7 +790,7 @@ void TBufferXML::CreateElemNode(const TStreamerElement* elem)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Checks, if stack node correspond to TStreamerElement object
+/// Checks if stack node correspond to TStreamerElement object
 
 Bool_t TBufferXML::VerifyElemNode(const TStreamerElement* elem)
 {
@@ -897,7 +897,7 @@ void* TBufferXML::XmlReadObject(void* obj, TClass** cl)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
+/// Function is called from TStreamerInfo WriteBuffer and ReadBuffer functions
 /// and indent new level in xml structure.
 /// This call indicates, that TStreamerInfo functions starts streaming
 /// object data of correspondent class
@@ -968,7 +968,7 @@ void  TBufferXML::WorkWithClass(TStreamerInfo* sinfo, const TClass* cl)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
+/// Function is called from TStreamerInfo WriteBuffer and ReadBuffer functions
 /// and decrease level in xml structure.
 
 void TBufferXML::DecrementLevel(TVirtualStreamerInfo* info)
@@ -999,7 +999,7 @@ void TBufferXML::DecrementLevel(TVirtualStreamerInfo* info)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Function is called from TStreamerInfo WriteBuffer and Readbuffer functions
+/// Function is called from TStreamerInfo WriteBuffer and ReadBuffer functions
 /// and add/verify next element of xml structure
 /// This calls allows separate data, correspondent to one class member, from another
 
@@ -1010,9 +1010,9 @@ void TBufferXML::SetStreamerElementNumber(TStreamerElement *elem, Int_t comptype
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is a part of SetStreamerElementNumber method.
-/// It is introduced for reading of data for specified data memeber of class.
+/// It is introduced for reading of data for specified data member of class.
 /// Used also in ReadFastArray methods to resolve problem of compressed data,
-/// when several data memebers of the same basic type streamed with single ...FastArray call
+/// when several data members of the same basic type streamed with single ...FastArray call
 
 void TBufferXML::WorkWithElement(TStreamerElement* elem, Int_t comp_type)
 {
@@ -1682,7 +1682,7 @@ void TBufferXML::ReadWithNbits(Float_t *ptr, Int_t /* nbits */)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the factor and minimun value have been specified
+/// Read a Double32_t from the buffer when the factor and minimum value have been specified
 /// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
 /// Currently TBufferXML does not optimize space in this case.
 

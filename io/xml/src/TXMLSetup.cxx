@@ -13,7 +13,7 @@
 //
 // Class TXMLSetup is used as storage of xml file settings
 // This class is used in TXMLFile and in TXmlBuffer classes.
-// Xml settings can be codded via a string in following format
+// Xml settings can be coded via a string in following format
 //
 //   "2xoo"
 //    ||| \ .
@@ -114,7 +114,7 @@ void TXMLSetup::SetNameSpaceBase(const char* namespacebase)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// defaule constructor of TXMLSetup class
+/// default constructor of TXMLSetup class
 
 TXMLSetup::TXMLSetup() :
    fXmlLayout(kSpecialized),
@@ -126,7 +126,7 @@ TXMLSetup::TXMLSetup() :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// contsruct TXMLSetup object getting values from string
+/// creates TXMLSetup object getting values from string
 
 TXMLSetup::TXMLSetup(const char* opt) :
    fXmlLayout(kSpecialized),
@@ -139,7 +139,7 @@ TXMLSetup::TXMLSetup(const char* opt) :
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// copy sonstructor of TXMLSetup class
+/// copy constructor of TXMLSetup class
 
 TXMLSetup::TXMLSetup(const TXMLSetup& src) :
    fXmlLayout(src.fXmlLayout),
