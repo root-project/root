@@ -1127,17 +1127,17 @@ static void LoadCoreModules(cling::Interpreter &interp)
    // the system doesn't have these modules.
    if (clang::Module *LIBCM = moduleMap.findModule("libc"))
       if (!LoadModule(LIBCM->Name, interp))
-         Error("TCling::LoadCodeModule", "Cannot load module %s", LIBCM->Name.c_str());
+         Error("TCling::LoadCoreModules", "Cannot load module %s", LIBCM->Name.c_str());
 
    if (clang::Module *STLM = moduleMap.findModule("stl"))
       if (!LoadModule(STLM->Name, interp))
-         Error("TCling::LoadCodeModule", "Cannot load module %s", STLM->Name.c_str());
+         Error("TCling::LoadCoreModules", "Cannot load module %s", STLM->Name.c_str());
 
    if (!LoadModule(moduleMap.findModule("Core")->Name, interp))
-      Error("TCling::LoadCodeModule", "Cannot load module Core");
+      Error("TCling::LoadCoreModules", "Cannot load module Core");
 
    if (!LoadModule(moduleMap.findModule("RIO")->Name, interp))
-      Error("TCling::LoadCodeModule", "Cannot load module RIO");
+      Error("TCling::LoadCoreModules", "Cannot load module RIO");
 }
 
 static bool FileExists(const char *file)
