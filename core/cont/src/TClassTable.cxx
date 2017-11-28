@@ -342,10 +342,13 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
          // This okay we just keep the old one.
          return;
       }
-//       if (splitname.IsSTLCont()==0) {
+
+      if (strcmp(cname, "") == 0)
+         ::Fatal("TClassTable::Add", "Trying to add class with empty name to TClassTable");
+
       if (!TClassEdit::IsStdClass(cname)) {
          // Warn only for class that are not STD classes
-         ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
+         ::Warning("TClassTable::Add", "class '%s' already in TClassTable", cname);
       }
       return;
    } else if (ROOT::Internal::gROOTLocal && gCling) {
@@ -733,6 +736,9 @@ void ROOT::AddClass(const char *cname, Version_t id,
                     DictFuncPtr_t dict,
                     Int_t pragmabits)
 {
+   if (strcmp(cname, "") == 0)
+      std::cerr << "Error: called ROOT::AddClass(\"\") when class is '" << info.name() << "'\n";
+
    if (!TROOT::Initialized() && !gClassTable) {
       auto r = std::unique_ptr<TClassRec>(new TClassRec(nullptr));
       r->fName = StrDup(cname);
