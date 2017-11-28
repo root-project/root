@@ -257,7 +257,19 @@ TObject* TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
 
 void* TKeySQL::ReadObjectAny(const TClass* expectedClass)
 {
-   return ReadKeyObject(0, expectedClass);
+   void *res = ReadKeyObject(0, expectedClass);
+
+   if (res && (expectedClass == TDirectoryFile::Class())) {
+      TDirectoryFile *dir = (TDirectoryFile *) res;
+      dir->SetName(GetName());
+      dir->SetTitle(GetTitle());
+      dir->SetSeekDir(GetDBKeyId());
+      dir->SetMother(fMotherDir);
+      dir->ReadKeys();
+      fMotherDir->Append(dir);
+   }
+
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
