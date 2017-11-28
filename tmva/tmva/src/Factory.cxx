@@ -392,30 +392,24 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
    // initialize methods
    IMethod* im;
    if (!boostNum) {
-      im = ClassifierFactory::Instance().Create( std::string(theMethodName),
-                                                 fJobName,
-                                                 methodTitle,
-                                                 loader->DefaultDataSetInfo(),
-                                                 theOption );
+      im = ClassifierFactory::Instance().Create(theMethodName.Data(), fJobName, methodTitle,
+                                                loader->DefaultDataSetInfo(), theOption);
    }
    else {
       // boosted classifier, requires a specific definition, making it transparent for the user
      Log() << kDEBUG <<"Boost Number is " << boostNum << " > 0: train boosted classifier" << Endl;
-      im = ClassifierFactory::Instance().Create( std::string("Boost"),
-                                                 fJobName,
-                                                 methodTitle,
-                                                 loader->DefaultDataSetInfo(),
-                                                 theOption );
-      MethodBoost* methBoost = dynamic_cast<MethodBoost*>(im); // DSMTEST divided into two lines
-      if (!methBoost) // DSMTEST
-         Log() << kFATAL << "Method with type kBoost cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
+     im = ClassifierFactory::Instance().Create("Boost", fJobName, methodTitle, loader->DefaultDataSetInfo(), theOption);
+     MethodBoost *methBoost = dynamic_cast<MethodBoost *>(im); // DSMTEST divided into two lines
+     if (!methBoost)                                           // DSMTEST
+        Log() << kFATAL << "Method with type kBoost cannot be casted to MethodCategory. /Factory" << Endl; // DSMTEST
 
-      if(fModelPersistence) methBoost->SetWeightFileDir(fFileDir);
-      methBoost->SetModelPersistence(fModelPersistence);
-      methBoost->SetBoostedMethodName( theMethodName ); // DSMTEST divided into two lines
-      methBoost->fDataSetManager = loader->fDataSetManager; // DSMTEST
-      methBoost->SetFile(fgTargetFile);
-      methBoost->SetSilentFile(IsSilentFile());
+     if (fModelPersistence)
+        methBoost->SetWeightFileDir(fFileDir);
+     methBoost->SetModelPersistence(fModelPersistence);
+     methBoost->SetBoostedMethodName(theMethodName);       // DSMTEST divided into two lines
+     methBoost->fDataSetManager = loader->fDataSetManager; // DSMTEST
+     methBoost->SetFile(fgTargetFile);
+     methBoost->SetSilentFile(IsSilentFile());
    }
 
    MethodBase *method = dynamic_cast<MethodBase*>(im);
@@ -1124,9 +1118,8 @@ void TMVA::Factory::TrainAllMethods()
        delete m; //itrMethod[i];
 
        // recreate
-       m = dynamic_cast<MethodBase*>( ClassifierFactory::Instance()
-                   .Create( std::string(Types::Instance().GetMethodName(methodType)),
-                      dataSetInfo, weightfile ) );
+       m = dynamic_cast<MethodBase *>(ClassifierFactory::Instance().Create(
+          Types::Instance().GetMethodName(methodType).Data(), dataSetInfo, weightfile));
        if( m->GetMethodType() == Types::kCategory ){
       MethodCategory *methCat = (dynamic_cast<MethodCategory*>(m));
       if( !methCat ) Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory. /Factory" << Endl;
