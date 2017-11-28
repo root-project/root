@@ -315,7 +315,21 @@ TObject* TKeyXML::ReadObjWithBuffer(char * /*bufferRead*/)
 
 void* TKeyXML::ReadObjectAny(const TClass *expectedClass)
 {
-   return XmlReadAny(0, expectedClass);
+   void *res = XmlReadAny(0, expectedClass);
+
+   if (res && (expectedClass == TDirectoryFile::Class())) {
+      TDirectoryFile *dir = (TDirectoryFile *) res;
+      dir->SetName(GetName());
+      dir->SetTitle(GetTitle());
+      dir->SetSeekDir(GetKeyId());
+      // set mother before reading keys
+      dir->SetMother(fMotherDir);
+      dir->ReadKeys();
+      fMotherDir->Append(dir);
+      fSubdir = kTRUE;
+   }
+
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
