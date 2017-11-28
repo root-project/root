@@ -1,22 +1,21 @@
 ## \file
-##    \ingroup tutorial_math
+## \ingroup tutorial_math
 ## \notebook
 ## Principal Components Analysis (PCA) example
 ##
 ## Example of using TPrincipal as a stand alone class.
 ##
-## We create n-dimensional data points, where c = trunc(n / 5) + 1
+## I create n-dimensional data points, where c = trunc(n / 5) + 1
 ## are  correlated with the rest n - c randomly distributed variables.
+##
+## Based on principal.C by Rene Brun and Christian Holm Christensen
 ##
 ## \macro_output
 ## \macro_code
 ##
 ## \authors Juan Fernando Jaramillo Botero
-##
-## based on principal.C by Rene Brun and Christian Holm Christensen
 
 from ROOT import TPrincipal, gRandom, TBrowser
-import numpy
 
 
 def principal(n=10, m=10000):
@@ -43,7 +42,7 @@ def principal(n=10, m=10000):
     # Make the m data-points
     # Make a variable to hold our data
     # Allocate memory for the data point
-    data = []
+    data = ROOT.vector('double')()
     for i in range(m):
         # First we create the un-correlated, random variables, according
         # to one of three distributions
@@ -62,7 +61,7 @@ def principal(n=10, m=10000):
                 data[n - c + j] += data[k]
 
         # Finally we're ready to add this datapoint to the PCA
-        principal.AddRow(numpy.array(data))
+        principal.AddRow(data.data())
 
     # Do the actual analysis
     principal.MakePrincipals()
@@ -77,10 +76,9 @@ def principal(n=10, m=10000):
     principal.MakeHistograms()
 
     # Make two functions to map between feature and pattern space
-    principal.MakeCode()
-
     # Start a browser, so that we may browse the histograms generated
     # above
+    principal.MakeCode()
     b = TBrowser("principalBrowser", principal)
 
 
