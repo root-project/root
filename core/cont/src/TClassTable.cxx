@@ -333,6 +333,9 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
    if (!gClassTable)
       new TClassTable;
 
+   if (!cname || *cname == 0)
+      ::Fatal("TClassTable::Add()", "Failed to deduce type for '%s'", info.name());
+
    // check if already in table, if so return
    TClassRec *r = FindElementImpl(cname, kTRUE);
    if (r->fName && r->fInfo) {
@@ -342,7 +345,6 @@ void TClassTable::Add(const char *cname, Version_t id,  const std::type_info &in
          // This okay we just keep the old one.
          return;
       }
-//       if (splitname.IsSTLCont()==0) {
       if (!TClassEdit::IsStdClass(cname)) {
          // Warn only for class that are not STD classes
          ::Warning("TClassTable::Add", "class %s already in TClassTable", cname);
