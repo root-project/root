@@ -21,8 +21,6 @@
 #include "TWebCanvas.h"
 #include "TWebVirtualX.h"
 
-#include "THttpServer.h"
-#include "THttpEngine.h"
 #include "TCanvas.h"
 #include "TSystem.h"
 #include "TRandom.h"

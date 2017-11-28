@@ -399,7 +399,7 @@ void TWebCanvas::Close()
 void TWebCanvas::Show()
 {
    const char *swhere = gSystem->Getenv("WEBGUI_WHERE"); // let configure place like with ROOT7
-   std::string where = swhere ? swhere : "browser";
+   std::string where = swhere ? swhere : "";
 
    if (!fWindow) {
       fWindow = ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
