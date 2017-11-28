@@ -37,7 +37,7 @@ TIgnoreErrorLevelRAII::~TIgnoreErrorLevelRAII()
 }
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
-/// column created by Define.
+/// column created by Define. Returns an empty string if type name deduction fails.
 std::string
 ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch, TDataSource *ds)
 {
@@ -76,6 +76,8 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
             type = "double";
          else if (typeCode == 'F')
             type = "float";
+         else if (typeCode == 'n')
+            type = "Float_t";
          else if (typeCode == 'L')
             type = "Long64_t";
          else if (typeCode == 'l')
