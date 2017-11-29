@@ -295,17 +295,6 @@ TSQLObjectData *TBufferSQL2::SqlObjectData(Long64_t objid, TSQLClassInfo *sqlinf
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert object into sql structures.
-/// <b>It should be used only by TBufferSQL2 itself</b>
-/// Use SqlWrite() functions to convert your object to sql
-/// Redefined here to avoid gcc 3.x warning
-
-void TBufferSQL2::WriteObject(const TObject *obj)
-{
-   TBufferFile::WriteObject(obj);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Write object to buffer.
 /// If object was written before, only pointer will be stored
 /// Return id of saved object
