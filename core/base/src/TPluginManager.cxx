@@ -466,6 +466,11 @@ void TPluginManager::LoadHandlersFromPluginDirs(const char *base)
 
    R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
+   // While waiting for the lock, another thread may
+   // have process the requested plugin.
+   if (fBasesLoaded && fBasesLoaded->FindObject(sbase))
+      return;
+
    if (!fBasesLoaded) {
       fBasesLoaded = new THashTable();
       fBasesLoaded->SetOwner();
