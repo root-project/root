@@ -82,8 +82,6 @@ TDirectory::TDirectory(const char *name, const char *title, Option_t * /*classna
    }
 
    Build(initMotherDir ? initMotherDir->GetFile() : 0, initMotherDir);
-
-   R__LOCKGUARD(gROOTMutex);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
