@@ -478,7 +478,7 @@ public:
       }
 #endif
 
-      for (size_t i = 0; i < xN.size(); ++i) {
+      for (auto i = 0; i < xN.size(); ++i) {
          Fill(xN[i], weightN[i]);
       }
    }
