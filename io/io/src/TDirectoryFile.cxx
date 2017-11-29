@@ -82,6 +82,14 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
    , fBufferSize(0), fSeekDir(0), fSeekParent(0), fSeekKeys(0)
    , fFile(0), fKeys(0)
 {
+   // We must not publish this objects to the list of RecursiveRemove (indirectly done
+   // by 'Appending' this object to it's mother) before the object is completely
+   // initialized.
+   // However a better option would be to delay the publishing until the very end,
+   // but it is currently done in the middle of the initialization (by Build which
+   // is a public interface) ....
+   R__LOCKGUARD(gROOTMutex);
+
    fName = name;
    fTitle = title;
 
@@ -127,8 +135,12 @@ TDirectoryFile::TDirectoryFile(const char *name, const char *title, Option_t *cl
 
    fModified = kFALSE;
 
-   R__LOCKGUARD(gROOTMutex);
+   // Temporarily redundant, see comment on lock early in the function.
+   // R__LOCKGUARD(gROOTMutex);
    gROOT->GetUUIDs()->AddUUID(fUUID,this);
+   // We should really be doing this now rather than in Build, see
+   // comment at the start of the function.
+   // if (initMotherDir && strlen(GetName()) != 0) initMotherDir->Append(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
