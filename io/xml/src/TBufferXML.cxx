@@ -264,17 +264,6 @@ void *TBufferXML::XmlReadAny(XMLNodePointer_t node, void *obj, TClass **cl)
    return res;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Convert object into xml structures.
-/// !!! Should be used only by TBufferXML itself.
-/// Use ConvertToXML() methods to convert your object to xml
-/// Redefined here to avoid gcc 3.x warning
-
-void TBufferXML::WriteObject(const TObject *obj)
-{
-   TBufferFile::WriteObject(obj);
-}
-
 // TXMLStackObj is used to keep stack of object hierarchy,
 // stored in TBuffer. For example, data for parent class(es)
 // stored in subnodes, but initial object node will be kept.

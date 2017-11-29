@@ -805,20 +805,6 @@ Bool_t TBufferJSON::CheckObject(const void *ptr, const TClass * /*cl*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Convert object into json structures.
-/// !!! Should be used only by TBufferJSON itself.
-/// Use ConvertToJSON() methods to convert object to json
-/// Redefined here to avoid gcc 3.x warning
-
-void TBufferJSON::WriteObject(const TObject *obj)
-{
-   if (gDebug > 1)
-      Info("WriteObject", "Object %p", obj);
-
-   WriteObjectAny(obj, TObject::Class());
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// add new level to the structures stack
 
 TJSONStackObj *TBufferJSON::PushStack(Int_t inclevel)

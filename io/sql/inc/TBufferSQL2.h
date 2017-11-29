@@ -152,8 +152,6 @@ public:
    virtual void ClassEnd(const TClass *);
    virtual void ClassMember(const char *name, const char *typeName = 0, Int_t arrsize1 = -1, Int_t arrsize2 = -1);
 
-   virtual void WriteObject(const TObject *obj);
-
    virtual void ReadFloat16(Float_t *f, TStreamerElement *ele = 0);
    virtual void WriteFloat16(Float_t *f, TStreamerElement *ele = 0);
    virtual void ReadDouble32(Double_t *d, TStreamerElement *ele = 0);
