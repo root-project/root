@@ -87,7 +87,6 @@ public:
    Int_t    Uncompress();
    char    *CompBuffer() const { return fBufComp; }
    Int_t    CompLength() const { return (Int_t)(fBufCompCur - fBufComp); }
-   void     WriteObject(const TObject *obj);
    UShort_t WriteProcessID(TProcessID *pid);
 
    static void   EnableSchemaEvolutionForAll(Bool_t enable = kTRUE);
