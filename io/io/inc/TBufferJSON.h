@@ -76,6 +76,8 @@ public:
 
    virtual void     WriteObject(const TObject *obj);
 
+   using TBuffer::WriteObject;
+
    virtual void     ReadFloat16(Float_t *f, TStreamerElement *ele = 0);
    virtual void     WriteFloat16(Float_t *f, TStreamerElement *ele = 0);
    virtual void     ReadDouble32(Double_t *d, TStreamerElement *ele = 0);
