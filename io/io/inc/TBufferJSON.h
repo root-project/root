@@ -74,7 +74,7 @@ public:
    virtual void     ClassEnd(const TClass *);
    virtual void     ClassMember(const char *name, const char *typeName = 0, Int_t arrsize1 = -1, Int_t arrsize2 = -1);
 
-   virtual void     WriteObject(const TObject *obj);
+   virtual void     WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE);
 
    using TBuffer::WriteObject;
 
@@ -222,7 +222,7 @@ public:
 
    virtual   Int_t    WriteClones(TClonesArray *a, Int_t nobjects);
 
-   virtual   Int_t    WriteObjectAny(const void *obj, const TClass *ptrClass);
+   virtual   Int_t    WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
    virtual   Int_t    WriteClassBuffer(const TClass *cl, void *pointer);
 
    virtual Int_t      ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
@@ -412,7 +412,7 @@ public:
 protected:
    // redefined protected virtual functions
 
-   virtual void     WriteObjectClass(const void *actualObjStart, const TClass *actualClass);
+   virtual void     WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse);
 
    // end redefined protected virtual functions
 

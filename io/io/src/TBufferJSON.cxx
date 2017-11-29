@@ -805,6 +805,19 @@ Bool_t TBufferJSON::CheckObject(const void *ptr, const TClass * /*cl*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Convert object into json structures.
+/// !!! Should be used only by TBufferJSON itself.
+/// Use ConvertToJSON() methods to convert object to json
+
+void TBufferJSON::WriteObject(const TObject *obj, Bool_t cacheReuse /* = kTRUE */)
+{
+   if (gDebug > 1)
+      Info("WriteObject", "Object %p", obj);
+
+   WriteObjectAny(obj, TObject::Class(), cacheReuse);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// add new level to the structures stack
 
 TJSONStackObj *TBufferJSON::PushStack(Int_t inclevel)
@@ -1772,12 +1785,13 @@ void TBufferJSON::SkipObjectAny()
 /// Write object to buffer. Only used from TBuffer
 
 void TBufferJSON::WriteObjectClass(const void *actualObjStart,
-                                   const TClass *actualClass)
+                                   const TClass *actualClass,
+                                   Bool_t cacheReuse)
 {
    if (gDebug > 3)
       Info("WriteObjectClass", "Class %s", (actualClass ? actualClass->GetName() : " null"));
 
-   JsonWriteObject(actualObjStart, actualClass);
+   JsonWriteObject(actualObjStart, actualClass, cacheReuse);
 }
 
 #define TJSONPushValue()                                 \
@@ -3552,11 +3566,17 @@ namespace {
 ///  - 0: failure
 ///  - 1: success
 ///  - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
+///
+/// If 'cacheReuse' is true (default) upon seeing an object address a second time,
+/// we record the offset where its was written the first time rather than streaming
+/// the object a second time.
+/// If 'cacheReuse' is false, we always stream the object.  This allows the (re)use
+/// of temporary object to store different data in the same buffer.
 
-Int_t TBufferJSON::WriteObjectAny(const void *obj, const TClass *ptrClass)
+Int_t TBufferJSON::WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse /* = kTRUE */)
 {
    if (!obj) {
-      WriteObjectClass(0, 0);
+      WriteObjectClass(0, 0, kTRUE);
       return 1;
    }
 
@@ -3575,15 +3595,15 @@ Int_t TBufferJSON::WriteObjectAny(const void *obj, const TClass *ptrClass)
       Warning("WriteObjectAny",
               "An object of type %s (from type_info) passed through a %s pointer was truncated (due a missing dictionary)!!!",
               typeid(*d_ptr).name(), ptrClass->GetName());
-      WriteObjectClass(obj, ptrClass);
+      WriteObjectClass(obj, ptrClass, cacheReuse);
       return 2;
    } else if (clActual && (clActual != ptrClass)) {
       const char *temp = (const char *) obj;
       temp -= clActual->GetBaseClassOffset(ptrClass);
-      WriteObjectClass(temp, clActual);
+      WriteObjectClass(temp, clActual, cacheReuse);
       return 1;
    } else {
-      WriteObjectClass(obj, ptrClass);
+      WriteObjectClass(obj, ptrClass, cacheReuse);
       return 1;
    }
 }

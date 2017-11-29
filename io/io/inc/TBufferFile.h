@@ -73,7 +73,7 @@ protected:
    void   CheckCount(UInt_t offset);
    UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
 
-   virtual  void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass);
+   virtual  void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse);
 
 public:
    enum { kMapSize = 503 };
@@ -139,11 +139,11 @@ public:
    virtual void       WriteClass(const TClass *cl);
 
    virtual TObject   *ReadObject(const TClass *cl);
-   virtual void       WriteObject(const TObject *obj);
+   virtual void       WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE);
 
    using TBuffer::WriteObject;
 
-   virtual Int_t      WriteObjectAny(const void *obj, const TClass *ptrClass);
+   virtual Int_t      WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
 
    UShort_t GetPidOffset() const {
       // See comment in TBuffer::SetPidOffset

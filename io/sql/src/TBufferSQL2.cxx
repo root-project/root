@@ -146,7 +146,7 @@ TSQLStructure *TBufferSQL2::SqlWriteAny(const void *obj, const TClass *cl, Long6
    fFirstObjId = objid;
    fObjIdCounter = objid;
 
-   SqlWriteObject(obj, cl);
+   SqlWriteObject(obj, cl, kTRUE);
 
    if (gDebug > 3)
       if (fStructure != 0) {
@@ -299,7 +299,7 @@ TSQLObjectData *TBufferSQL2::SqlObjectData(Long64_t objid, TSQLClassInfo *sqlinf
 /// If object was written before, only pointer will be stored
 /// Return id of saved object
 
-Int_t TBufferSQL2::SqlWriteObject(const void *obj, const TClass *cl, TMemberStreamer *streamer, Int_t streamer_index)
+Int_t TBufferSQL2::SqlWriteObject(const void *obj, const TClass *cl, Bool_t cacheReuse, TMemberStreamer *streamer, Int_t streamer_index)
 {
    if (gDebug > 1)
       std::cout << " SqlWriteObject " << obj << " : cl = " << (cl ? cl->GetName() : "null") << std::endl;
@@ -333,11 +333,13 @@ Int_t TBufferSQL2::SqlWriteObject(const void *obj, const TClass *cl, TMemberStre
 
    Stack()->SetObjectRef(objid, cl);
 
-   ULong_t hash = TString::Hash(&obj, sizeof(void *));
-   if (fObjMap == 0)
-      fObjMap = new TExMap();
-   if (fObjMap->GetValue(hash, (Long_t)obj) == 0)
-      fObjMap->Add(hash, (Long_t)obj, (Long_t)objid - fFirstObjId + 1);
+  if (cacheReuse) {
+      ULong_t hash = TString::Hash(&obj, sizeof(void *));
+      if (fObjMap == 0)
+         fObjMap = new TExMap();
+      if (fObjMap->GetValue(hash, (Long_t)obj) == 0)
+         fObjMap->Add(hash, (Long_t)obj, (Long_t)objid - fFirstObjId + 1);
+   }
 
    if (streamer != 0)
       (*streamer)(*this, (void *)obj, streamer_index);
@@ -977,12 +979,12 @@ void TBufferSQL2::SkipObjectAny()
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object to buffer. Only used from TBuffer
 
-void TBufferSQL2::WriteObjectClass(const void *actualObjStart, const TClass *actualClass)
+void TBufferSQL2::WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse)
 {
    if (gDebug > 2)
       std::cout << "TBufferSQL2::WriteObject of class " << (actualClass ? actualClass->GetName() : " null")
                 << std::endl;
-   SqlWriteObject(actualObjStart, actualClass);
+   SqlWriteObject(actualObjStart, actualClass, cacheReuse);
 }
 
 #define SQLReadArrayUncompress(vname, arrsize) \
@@ -2078,7 +2080,7 @@ void TBufferSQL2::StreamObject(void *obj, const TClass *cl, const TClass *onFile
    if (IsReading())
       SqlReadObject(obj, 0, 0, 0, onFileClass);
    else
-      SqlWriteObject(obj, cl);
+      SqlWriteObject(obj, cl, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2105,7 +2107,7 @@ void TBufferSQL2::StreamObject(void *obj, TMemberStreamer *streamer, const TClas
    if (IsReading())
       SqlReadObject(obj, 0, streamer, n, onFileClass);
    else
-      SqlWriteObject(obj, cl, streamer, n);
+      SqlWriteObject(obj, cl, kTRUE, streamer, n);
 }
 
 // macro for right shift operator for basic type

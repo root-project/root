@@ -56,7 +56,7 @@ protected:
 
    // redefined protected virtual functions
 
-   virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass);
+   virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse);
 
    // end redefined protected virtual functions
 
@@ -103,11 +103,12 @@ protected:
    const char *SqlReadCharStarValue();
 
    Int_t
-   SqlWriteObject(const void *obj, const TClass *objClass, TMemberStreamer *streamer = 0, Int_t streamer_index = 0);
+   SqlWriteObject(const void *obj, const TClass *objClass, Bool_t cacheReuse, TMemberStreamer *streamer = 0, Int_t streamer_index = 0);
    void *SqlReadObject(void *obj, TClass **cl = 0, TMemberStreamer *streamer = 0, Int_t streamer_index = 0,
                        const TClass *onFileClass = 0);
    void *SqlReadObjectDirect(void *obj, TClass **cl, Long64_t objid, TMemberStreamer *streamer = 0,
                              Int_t streamer_index = 0, const TClass *onFileClass = 0);
+
 
 public:
    TBufferSQL2(TBuffer::EMode mode);

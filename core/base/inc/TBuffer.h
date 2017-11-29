@@ -149,11 +149,11 @@ public:
    virtual void       WriteClass(const TClass *cl) = 0;
 
    virtual TObject   *ReadObject(const TClass *cl) = 0;
-   virtual void       WriteObject(const TObject *obj) = 0;
+   virtual void       WriteObject(const TObject *obj, Bool_t cacheReuse) = 0;
 
-   template <class T> Int_t WriteObject(const T *objptr);
+   template <class T> Int_t WriteObject(const T *objptr, Bool_t cacheReuse = kTRUE);
 
-   virtual Int_t      WriteObjectAny(const void *obj, const TClass *ptrClass) = 0;
+   virtual Int_t      WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE) = 0;
 
    virtual UShort_t   GetPidOffset() const  = 0;
    virtual void       SetPidOffset(UShort_t offset) = 0;
@@ -409,10 +409,10 @@ inline TBuffer &operator<<(TBuffer &buf, const TObject *obj)
    { buf.WriteObjectAny(obj, TObject::Class()); return buf; }
 
 template <class T>
-inline Int_t TBuffer::WriteObject(const T *objptr)
+inline Int_t TBuffer::WriteObject(const T *objptr, Bool_t cacheReuse)
 {
    TClass *cl = (objptr) ? TBuffer::GetClass(typeid(T)) : 0;
-   return WriteObjectAny(objptr, cl);
+   return WriteObjectAny(objptr, cl, cacheReuse);
 }
 
 #endif // ROOT_TBuffer
