@@ -5866,6 +5866,9 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    //  function name.
    //
 
+   if (!strncmp(name.c_str(), "public: __thiscall ", sizeof("public: __thiscall ")-1)) {
+      name.erase(0, sizeof("public: __thiscall ")-1);
+   }
    if (!strncmp(name.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
       name.erase(0, sizeof("typeinfo for ")-1);
    } else if (!strncmp(name.c_str(), "vtable for ", sizeof("vtable for ")-1)) {
