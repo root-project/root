@@ -343,7 +343,7 @@ endif()
 
 if(runtime_cxxmodules)
   # Dummy target that does nothing, we don't need a PCH for modules.
-  add_custom_target(onepcm)
+  add_custom_target(onepcm DEPENDS TreePlayer TMVA Graf)
 else()
   add_custom_command(OUTPUT etc/allDict.cxx.pch
                     COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
