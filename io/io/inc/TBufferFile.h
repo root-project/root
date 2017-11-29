@@ -141,6 +141,8 @@ public:
    virtual TObject   *ReadObject(const TClass *cl);
    virtual void       WriteObject(const TObject *obj);
 
+   using TBuffer::WriteObject;
+
    virtual Int_t      WriteObjectAny(const void *obj, const TClass *ptrClass);
 
    UShort_t GetPidOffset() const {
