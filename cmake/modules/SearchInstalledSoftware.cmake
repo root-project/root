@@ -342,7 +342,7 @@ endif()
 
 #---Check for all kind of graphics includes needed by libAfterImage--------------------
 if(asimage)
-  if(NOT x11 AND NOT cocoa)
+  if(NOT x11 AND NOT cocoa AND NOT WIN32)
     message(STATUS "Switching off 'asimage' because neither 'x11' nor 'cocoa' are enabled")
     set(asimage OFF CACHE BOOL "" FORCE)
   endif()
@@ -395,6 +395,7 @@ if(builtin_afterimage)
       INSTALL_COMMAND  ${CMAKE_COMMAND} -E copy_if_different libAfterImage.lib <INSTALL_DIR>/lib/.
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
       BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES})
+    set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/AFTERIMAGE-prefix/src/AFTERIMAGE)
   else()
     message(STATUS "Building AfterImage library included in ROOT itself")
     if(JPEG_FOUND)
@@ -434,11 +435,11 @@ if(builtin_afterimage)
                         CC=${CMAKE_C_COMPILER} CFLAGS=${_after_cflags}
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
       BUILD_BYPRODUCTS ${AFTERIMAGE_LIBRARIES})
+    set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/libAfterImage)
   endif()
   if(builtin_freetype)
     add_dependencies(AFTERIMAGE FREETYPE)
   endif()
-  set(AFTERIMAGE_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include/libAfterImage)
   set(AFTERIMAGE_TARGET AFTERIMAGE)
 endif()
 
