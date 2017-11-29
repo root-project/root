@@ -6,6 +6,9 @@
  * (See http://www.boost.org/LICENSE_1_0.txt)
  *
  */
+
+ #ifndef ROOT_span_hxx
+ #define ROOT_span_hxx
  
 #include <cstddef>		// for std::ptrdiff_t
 #include <array>		// for std::array
@@ -53,7 +56,8 @@ constexpr span<char, ((Extent == dynamic_extent) ? dynamic_extent :
 
 constexpr std::ptrdiff_t dynamic_extent = -1;
 
-
+namespace ROOT {
+  namespace backport {
 // A view over a contiguous, single-dimension sequence of objects 
 template <typename _Tp, ptrdiff_t _Extent = dynamic_extent>
 class span {
@@ -188,3 +192,12 @@ constexpr bool operator==(const span<ElementType1, Extent1>& __lhs, const span<E
 // template <class ElementType, std::ptrdiff_t Extent>
 // 	constexpr span<      byte, ((Extent == dynamic_extent) ? dynamic_extent : (sizeof(ElementType) * Extent))> as_writeable_bytes(span<ElementType, Extent> ) noexcept;
 
+  } // namespace backport
+} // namespace ROOT
+
+namespace std {
+  template <typename _Tp, ptrdiff_t _Extent = dynamic_extent>
+  using span = ROOT::backport::span<_Tp, _Extent>;
+}
+
+#endif // ROOT_span_hxx
