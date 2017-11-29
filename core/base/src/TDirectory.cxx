@@ -224,12 +224,14 @@ void TDirectory::Browse(TBrowser *b)
 
 void TDirectory::Build(TFile* /*motherFile*/, TDirectory* motherDir)
 {
-   if (motherDir && strlen(GetName()) != 0) motherDir->Append(this);
-
    fList       = new THashList(100,50);
    fList->UseRWLock();
    fMother     = motherDir;
    SetBit(kCanDelete);
+
+   // Build is done and is the last part of the constructor (and is not
+   // being called from the derived classes) so we can publish.
+   if (motherDir && strlen(GetName()) != 0) motherDir->Append(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
