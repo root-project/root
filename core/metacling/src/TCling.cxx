@@ -1121,28 +1121,22 @@ static void LoadCoreModules(cling::Interpreter &interp)
    if (!CI.getLangOpts().Modules)
       return;
 
-   clang::HeaderSearch &headerSearch = CI.getPreprocessor().getHeaderSearchInfo();
-   clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
-   // List of core modules we can load, but it's ok if they are missing because
-   // the system doesn't have these modules.
-   if (clang::Module *LIBCM = moduleMap.findModule("libc"))
-      if (!LoadModule(LIBCM->Name, interp))
-         Error("TCling::LoadCoreModules", "Cannot load module %s", LIBCM->Name.c_str());
+   // Modules we need to load with a pair of module name and a bool if we should
+   // error out when we can't load it.
+   std::vector<std::pair<std::string, bool> > ModulesToLoad = {
+     // libc and stl shall be loaded if they are available on the system.
+     {"libc", false},
+     {"stl", false},
+     // Core (which includes ROOT_TYPES) and RIO are expected to be available
+     // on startup of ROOT.
+     {"ROOT_Types", true},
+     {"Core", true},
+     {"RIO", true}
+   };
 
-   if (clang::Module *STLM = moduleMap.findModule("stl"))
-      if (!LoadModule(STLM->Name, interp))
-         Error("TCling::LoadCoreModules", "Cannot load module %s", STLM->Name.c_str());
-
-   // ROOT_Types is a module outside core because we need C and -no-rtti compatibility.
-   // Preload it as it is an integral part of module Core.
-   if (!LoadModule(moduleMap.findModule("ROOT_Types")->Name, interp))
-      Error("TCling::LoadCoreModules", "Cannot load module ROOT_Types");
-
-   if (!LoadModule(moduleMap.findModule("Core")->Name, interp))
-      Error("TCling::LoadCoreModules", "Cannot load module Core");
-
-   if (!LoadModule(moduleMap.findModule("RIO")->Name, interp))
-      Error("TCling::LoadCoreModules", "Cannot load module RIO");
+   for (const auto& M : ModulesToLoad)
+      if (!LoadModule(M.first, interp) && M.second)
+         Error("TCling::LoadCoreModules", "Cannot load module %s", M.first.c_str());
 
    // Check that the gROOT macro was exported by any core module.
    assert(interp.getMacro("gROOT") && "Couldn't load gROOT macro?");
