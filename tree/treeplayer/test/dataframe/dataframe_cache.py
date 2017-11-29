@@ -25,7 +25,7 @@ class Cache(unittest.TestCase):
 
     def test_TakeArrays(self):
         tdf = TDataFrame("t", "fileName.root")
-        ColType_t = "std::array_view<float>"
+        ColType_t = "std::span<float>"
         v = tdf.Take(ColType_t)("arr").GetVal()
         d = tdf.Take(ColType_t+", std::deque("+ColType_t+")")("arr").GetVal()
         # commented out until we do not understand iteration

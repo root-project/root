@@ -101,8 +101,8 @@ struct BinEdges {
 
    using AConf_t = Experimental::TAxisConfig;
 
-   AConf_t GetConfigX() const { return AConf_t(std::array_view<double>(fXBins).to_vector()); }
-   AConf_t GetConfigY() const { return AConf_t(std::array_view<double>(fYBins).to_vector()); }
+   AConf_t GetConfigX() const { return AConf_t(std::span<double>(fXBins).to_vector()); }
+   AConf_t GetConfigY() const { return AConf_t(std::span<double>(fYBins).to_vector()); }
 };
 
 template <typename T>
@@ -203,7 +203,7 @@ struct Dim<T, 2> {
       {
          Timer t(title.c_str(), input.size() / 2);
          for (size_t i = 0; i < (input.size() - (stride * 2 - 1)); i += (stride * 2), values += 32) {
-            std::array_view<array_t> coords(values, 32);
+            std::span<array_t> coords(values, 32);
             hist.FillN(coords);
          }
       }
@@ -285,7 +285,7 @@ struct Dim<T, 1> {
       {
          Timer t(title.c_str(), input.size());
          for (size_t i = 0; i < (input.size() - (stride - 1)); i += (stride), values += 32) {
-            std::array_view<array_t> coords(values, 32);
+            std::span<array_t> coords(values, 32);
             hist.FillN(coords);
          }
       }

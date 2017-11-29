@@ -19,7 +19,7 @@
 #include <array>
 #include <functional>
 
-#include "ROOT/RArrayView.hxx"
+#include "ROOT/span.hxx"
 
 #include "ROOT/THist.hxx"
 
@@ -32,12 +32,12 @@ class TFitResult {
 template <int DIMENSION>
 class TFunction {
 public:
-   TFunction(std::function<double(const std::array<double, DIMENSION> &, const std::array_view<double> &par)> func) {}
+   TFunction(std::function<double(const std::array<double, DIMENSION> &, const std::span<double> &par)> func) {}
 };
 
 template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
 TFitResult FitTo(const THist<DIMENSIONS, PRECISION, STAT...> &hist, const TFunction<DIMENSIONS> &func,
-                 std::array_view<double> paramInit)
+                 std::span<double> paramInit)
 {
    return TFitResult();
 }
