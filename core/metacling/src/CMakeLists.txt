@@ -40,7 +40,12 @@ ROOT_LINKER_LIBRARY(Cling
 
 if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  set(cling_exports ??1Value@cling@@QAE@XZ
+  set(cling_exports ??_7type_info@@6B@
+      cling_runtime_internal_throwIfInvalidPointer
+      ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
+      ??1Value@cling@@QAE@XZ
+      ?isValid@Value@cling@@QBE_NXZ
+      ?AssertOnUnsupportedTypeCast@Value@cling@@IBEXXZ
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D@Z
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DM@Z
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DN@Z
@@ -49,6 +54,7 @@ if(MSVC)
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DPBX@Z
       ?setValueWithAlloc@internal@runtime@cling@@YAPAXPAX00D@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PB_N@Z
+      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBX@Z
       ??$toUTF8@D@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBDID@Z
       ?EvaluateDynamicExpression@internal@runtime@cling@@YA?AVValue@3@PAVInterpreter@3@PAVDynamicExprInfo@123@PAVDeclContext@clang@@@Z
   )
