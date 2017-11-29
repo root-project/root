@@ -2,6 +2,7 @@
 # CMakeLists.txt file for building ROOT (global) core package
 ############################################################################
 
+add_subdirectory(backport)
 add_subdirectory(clib)
 add_subdirectory(clingutils)
 add_subdirectory(cont)
