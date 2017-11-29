@@ -234,7 +234,7 @@ protected:
 
    // redefined protected virtual functions
 
-   virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass);
+   virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse);
 
    // end redefined protected virtual functions
 
@@ -313,7 +313,7 @@ protected:
    void XmlReadBasic(ULong64_t &value);
    const char *XmlReadValue(const char *name);
 
-   XMLNodePointer_t XmlWriteObject(const void *obj, const TClass *objClass);
+   XMLNodePointer_t XmlWriteObject(const void *obj, const TClass *objClass, Bool_t cacheReuse);
    void *XmlReadObject(void *obj, TClass **cl = 0);
 
    void BeforeIOoperation();
