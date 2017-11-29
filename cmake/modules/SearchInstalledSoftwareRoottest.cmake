@@ -1,5 +1,14 @@
 include(ExternalProject)
 
+set(_gtest_byproduct_binary_dir
+    ${CMAKE_CURRENT_BINARY_DIR}/googletest-prefix/src/googletest-build/googlemock/)
+set(_gtest_byproducts
+    ${_gtest_byproduct_binary_dir}/gtest/libgtest.a
+    ${_gtest_byproduct_binary_dir}/gtest/libgtest_main.a
+    ${_gtest_byproduct_binary_dir}/libgmock.a
+    ${_gtest_byproduct_binary_dir}/libgmock_main.a
+)
+
 #---Download googletest--------------------------------------------------------------
 ExternalProject_Add(
     googletest
