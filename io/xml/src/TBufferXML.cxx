@@ -233,7 +233,7 @@ XMLNodePointer_t TBufferXML::XmlWriteAny(const void *obj, const TClass *cl)
    if (fXML == 0)
       return 0;
 
-   XMLNodePointer_t res = XmlWriteObject(obj, cl);
+   XMLNodePointer_t res = XmlWriteObject(obj, cl, kTRUE);
 
    return res;
 }
@@ -794,7 +794,7 @@ Bool_t TBufferXML::VerifyElemNode(const TStreamerElement *elem)
 /// If object was written before, only pointer will be stored
 /// Return pointer to top xml node, representing object
 
-XMLNodePointer_t TBufferXML::XmlWriteObject(const void *obj, const TClass *cl)
+XMLNodePointer_t TBufferXML::XmlWriteObject(const void *obj, const TClass *cl, Bool_t cacheReuse)
 {
    XMLNodePointer_t objnode = fXML->NewChild(StackNode(), 0, xmlio::Object, 0);
 
@@ -807,7 +807,7 @@ XMLNodePointer_t TBufferXML::XmlWriteObject(const void *obj, const TClass *cl)
 
    fXML->NewAttr(objnode, 0, xmlio::ObjClass, clname);
 
-   RegisterPointer(obj, objnode);
+   if (cacheReuse) RegisterPointer(obj, objnode);
 
    PushStack(objnode);
 
@@ -1608,12 +1608,12 @@ void TBufferXML::SkipObjectAny()
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object to buffer. Only used from TBuffer
 
-void TBufferXML::WriteObjectClass(const void *actualObjStart, const TClass *actualClass)
+void TBufferXML::WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse)
 {
    BeforeIOoperation();
    if (gDebug > 2)
       Info("WriteObject", "Class %s", (actualClass ? actualClass->GetName() : " null"));
-   XmlWriteObject(actualObjStart, actualClass);
+   XmlWriteObject(actualObjStart, actualClass, cacheReuse);
 }
 
 // Macro to read content of uncompressed array
@@ -2622,7 +2622,7 @@ void TBufferXML::StreamObject(void *obj, const TClass *cl, const TClass * /* onf
    if (IsReading())
       XmlReadObject(obj);
    else
-      XmlWriteObject(obj, cl);
+      XmlWriteObject(obj, cl, kTRUE);
 }
 
 // macro for right shift operator for basic type
