@@ -33,9 +33,6 @@
 #include "Varargs.h"
 #include "Rtypes.h"
 #include <string.h>
-#ifdef R__GLOBALSTL
-namespace std { using ::string; }
-#endif
 
 int gDebug;
 

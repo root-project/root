@@ -40,10 +40,6 @@
 #include "rpdconn.h"
 #include "rpdpriv.h"
 
-#ifdef R__GLOBALSTL
-namespace std { using ::string; }
-#endif
-
 static int gType = 0;
 static int gDebug = 0;
 static FILE *gLogger = 0;

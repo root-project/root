@@ -28,9 +28,6 @@
 
 #include <set>
 #include <string>
-#ifdef R__GLOBALSTL
-namespace std { using ::set; using ::string; }
-#endif
 
 class TStatus : public TNamed {
 
