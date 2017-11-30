@@ -1143,18 +1143,18 @@ static bool isFromRootCling() {
   return foundSymbol;
 }
 
-static void loadModulePath(HeaderSearch& hdrSearch, const char* environmentVariable) {
-  const char* LD_LIBRARY_PATH = getenv(environmentVariable);
-  if (LD_LIBRARY_PATH) {
-     StringRef path = LD_LIBRARY_PATH;
+static void loadModulePath(HeaderSearch& hdrSearch, const char* inputPath) {
+  if (inputPath) {
+     StringRef path = inputPath;
      SmallVector<StringRef, 32> paths;
      path.split(paths, ":");
+
      for (StringRef path : paths) {
         SmallString<128> ModuleMapFilePath = path;
-        llvm::sys::path::append(ModuleMapFilePath, "module.modulemap");
 
-        if (auto file = hdrSearch.getFileMgr().getFile(ModuleMapFilePath))
+        if (auto file = hdrSearch.getFileMgr().getFile(ModuleMapFilePath)) {
            hdrSearch.loadModuleMapFile(file, false, FileID());
+        }
     }
   }
 }
@@ -1292,7 +1292,7 @@ TCling::TCling(const char *name, const char *title)
    if (fInterpreter->getCI()->getLangOpts().Modules) {
       HeaderSearch& hdrSearch = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo();
       hdrSearch.loadTopLevelSystemModules();
-      loadModulePath(hdrSearch, "LD_LIBRARY_PATH");
+      loadModulePath(hdrSearch, gSystem->GetDynamicPath());
 
       // Setup core C++ modules if we have any to setup.
       LoadModules({"libc", "stl", "ROOT_Types", "Core", "RIO"}, *fInterpreter);
