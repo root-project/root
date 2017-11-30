@@ -1179,6 +1179,7 @@ TCling::TCling(const char *name, const char *title)
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
    }
+   clingArgsStorage.push_back("-DVc_NO_VERSION_CHECK");
 
    std::vector<const char*> interpArgs;
    for (std::vector<std::string>::const_iterator iArg = clingArgsStorage.begin(),
