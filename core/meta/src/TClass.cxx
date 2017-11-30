@@ -317,11 +317,7 @@ namespace ROOT {
      // This wrapper class allow to avoid putting #include <map> in the
      // TROOT.h header file.
    public:
-#ifdef R__GLOBALSTL
-      typedef map<string,TClass*>                 IdMap_t;
-#else
       typedef std::map<std::string,TClass*>       IdMap_t;
-#endif
       typedef IdMap_t::key_type                   key_type;
       typedef IdMap_t::const_iterator             const_iterator;
       typedef IdMap_t::size_type                  size_type;

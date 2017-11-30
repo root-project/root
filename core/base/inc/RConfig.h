@@ -364,6 +364,7 @@
 #      define R__OLDHPACC
 #      define R__TEMPLATE_OVERLOAD_BUG
 #      define R__GLOBALSTL       /* STL in global name space */
+#      error "ROOT requires proper support for C++11 or higher"
 #   else
 #      define R__PLACEMENTDELETE /* supports overloading placement delete */
 #      define R__TMPLTSTREAM     /* std::iostream implemented with templates */
