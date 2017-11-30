@@ -32,7 +32,7 @@ using namespace TMVA::DNN;
  *  layer l. dx is added as an offset to the current value of the weight. */
 //______________________________________________________________________________
 template <typename Architecture>
-auto evaluate_net_weight(TDeepNet<Architecture> &net, typename Architecture::Matrix_t & /*X*/,
+auto evaluate_net_weight(TDeepNet<Architecture> &net, std::vector<typename Architecture::Matrix_t> & X,
                          const typename Architecture::Matrix_t &Y, const typename Architecture::Matrix_t &W, size_t l,
                          size_t k, size_t i, size_t j, typename Architecture::Scalar_t dx) ->
    typename Architecture::Scalar_t
@@ -40,7 +40,7 @@ auto evaluate_net_weight(TDeepNet<Architecture> &net, typename Architecture::Mat
     using Scalar_t = typename Architecture::Scalar_t;
 
     net.GetLayerAt(l)->GetWeightsAt(k).operator()(i,j) += dx;
-    Scalar_t res = net.Loss(Y, W, false);
+    Scalar_t res = net.Loss(X, Y, W, false, false);
     net.GetLayerAt(l)->GetWeightsAt(k).operator()(i,j) -= dx;
     return res;
 }
@@ -49,14 +49,14 @@ auto evaluate_net_weight(TDeepNet<Architecture> &net, typename Architecture::Mat
  *  layer l. dx is added as an offset to the current value of the weight. */
 //______________________________________________________________________________
 template <typename Architecture>
-auto evaluate_net_bias(TDeepNet<Architecture> &net, typename Architecture::Matrix_t & /*X*/,
+auto evaluate_net_bias(TDeepNet<Architecture> &net, std::vector<typename Architecture::Matrix_t> & X,
                        const typename Architecture::Matrix_t &Y, const typename Architecture::Matrix_t &W, size_t l,
                        size_t k, size_t i, typename Architecture::Scalar_t dx) -> typename Architecture::Scalar_t
 {
     using Scalar_t = typename Architecture::Scalar_t;
 
     net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0) += dx;
-    Scalar_t res = net.Loss(Y, W, false);
+    Scalar_t res = net.Loss(X, Y, W, false, false);
     net.GetLayerAt(l)->GetBiasesAt(k).operator()(i,0) -= dx;
     return res;
 }
@@ -107,7 +107,7 @@ auto testBackpropagationWeightsLinear(typename Architecture::Scalar_t dx)
       for (size_t i = 0; i < layer->GetWidth(); i++) {
          for (size_t j = 0; j < layer->GetInputWidth(); j++) {
             auto f = [&net, &X, &Y, &weights, l, i, j](Scalar_t x) {
-               return evaluate_net_weight(net, X[0], Y, weights, l, 0, i, j, x);
+               return evaluate_net_weight(net, X, Y, weights, l, 0, i, j, x);
             };
             Scalar_t dy = finiteDifference(f, dx) / (2.0 * dx);
             Scalar_t dy_ref = W(i, j);
@@ -179,7 +179,7 @@ auto testBackpropagationL1Regularization(typename Architecture::Scalar_t dx)
             // Avoid running into the non-derivable point at 0.0.
             if (std::abs(W(i,j)) > dx) {
                auto f = [&net, &X, &Y, &weights, l, i, j](Scalar_t x) {
-                  return evaluate_net_weight(net, X[0], Y, weights, l, 0, i, j, x);
+                  return evaluate_net_weight(net, X, Y, weights, l, 0, i, j, x);
                };
                Scalar_t dy     = finiteDifference(f, dx) / (2.0 * dx);
                Scalar_t dy_ref = dW(i,j);
@@ -254,7 +254,7 @@ auto testBackpropagationL2Regularization(typename Architecture::Scalar_t dx)
          for (size_t j = 0; j < layer->GetInputWidth(); j++)
          {
             auto f = [&net, &X, &Y, &weights, l, i, j](Scalar_t x) {
-               return evaluate_net_weight(net, X[0], Y, weights, l, 0, i, j, x);
+               return evaluate_net_weight(net, X, Y, weights, l, 0, i, j, x);
             };
             Scalar_t dy     = finiteDifference(f, dx) / (2.0 * dx);
             Scalar_t dy_ref = W(i,j);
@@ -324,7 +324,7 @@ auto testBackpropagationBiasesLinear(typename Architecture::Scalar_t dx)
 
       for (size_t i = 0; i < layer->GetWidth(); i++)
       {
-         auto f = [&net, &X, &Y, &weights, l, i](Scalar_t x) { return evaluate_net_bias(net, X[0], Y, weights, l, 0, i, x); };
+         auto f = [&net, &X, &Y, &weights, l, i](Scalar_t x) { return evaluate_net_bias(net, X, Y, weights, l, 0, i, x); };
          Scalar_t dy     = finiteDifference(f, dx);
          Scalar_t dy_ref = dtheta(i,0) * 2.0 * dx;
 

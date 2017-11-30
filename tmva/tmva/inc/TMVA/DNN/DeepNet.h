@@ -263,7 +263,7 @@ public:
    Scalar_t Loss(const Matrix_t &groundTruth, const Matrix_t &weights, bool includeRegularization = true) const;
 
    /*! Function for evaluating the loss, based on the propagation of the given input. */
-   Scalar_t Loss(std::vector<Matrix_t> input, const Matrix_t &groundTruth, const Matrix_t &weights,
+   Scalar_t Loss(std::vector<Matrix_t> &input, const Matrix_t &groundTruth, const Matrix_t &weights,
                  bool applyDropout = false, bool includeRegularization = true);
 
    /*! Prediction based on activations stored in the last layer. */
@@ -1084,7 +1084,7 @@ auto TDeepNet<Architecture_t, Layer_t>::Loss(const Matrix_t &groundTruth, const 
 
 //______________________________________________________________________________
 template <typename Architecture_t, typename Layer_t>
-auto TDeepNet<Architecture_t, Layer_t>::Loss(std::vector<Matrix_t> input, const Matrix_t &groundTruth,
+auto TDeepNet<Architecture_t, Layer_t>::Loss(std::vector<Matrix_t> &input, const Matrix_t &groundTruth,
                                              const Matrix_t &weights, bool applyDropout, bool includeRegularization)
    -> Scalar_t
 {
