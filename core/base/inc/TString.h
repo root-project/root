@@ -32,10 +32,6 @@
 #include <stdio.h>
 #include <string>
 
-#ifdef R__GLOBALSTL
-namespace std { using ::string; }
-#endif
-
 class TRegexp;
 class TPRegexp;
 class TString;
