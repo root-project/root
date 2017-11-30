@@ -1,4 +1,4 @@
-/// \file ROOT/RMakeUnique.h
+/// \file ROOT/memory.hxx
 /// \ingroup Base StdExt
 /// \author Danilo Piparo
 /// \date 2017-09-22
@@ -11,8 +11,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RMakeUnique
-#define ROOT_RMakeUnique
+#ifndef ROOT_memory
+#define ROOT_memory
 
 #include <memory>
 
