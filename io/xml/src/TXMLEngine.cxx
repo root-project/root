@@ -732,6 +732,10 @@ void TXMLEngine::AddChild(XMLNodePointer_t parent, XMLNodePointer_t child)
       return;
    SXmlNode_t *pnode = (SXmlNode_t *)parent;
    SXmlNode_t *cnode = (SXmlNode_t *)child;
+
+   if (cnode->fParent)
+      UnlinkNode(child);
+
    cnode->fParent = pnode;
    if (pnode->fLastChild == 0) {
       pnode->fChild = cnode;
@@ -753,6 +757,10 @@ void TXMLEngine::AddChildFirst(XMLNodePointer_t parent, XMLNodePointer_t child)
       return;
    SXmlNode_t *pnode = (SXmlNode_t *)parent;
    SXmlNode_t *cnode = (SXmlNode_t *)child;
+
+   if (cnode->fParent)
+      UnlinkNode(child);
+
    cnode->fParent = pnode;
 
    cnode->fNext = pnode->fChild;
@@ -781,6 +789,9 @@ void TXMLEngine::AddChildAfter(XMLNodePointer_t parent, XMLNodePointer_t child, 
       AddChild(parent, child);
       return;
    }
+
+   if (cnode->fParent)
+      UnlinkNode(child);
 
    cnode->fNext = anode->fNext;
    anode->fNext = cnode;
