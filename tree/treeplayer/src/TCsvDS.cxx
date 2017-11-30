@@ -74,7 +74,7 @@ important to check both how much memory is available and the size of the CSV fil
 #include <ROOT/TDFUtils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/TCsvDS.hxx>
-#include <ROOT/RMakeUnique.hxx>
+#include <ROOT/memory.hxx>
 
 #include <algorithm>
 #include <iostream>

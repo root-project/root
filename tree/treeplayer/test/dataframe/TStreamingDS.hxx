@@ -2,7 +2,7 @@
 #define ROOT_TSTREAMINGDS
 
 #include "ROOT/TDataSource.hxx"
-#include "ROOT/RMakeUnique.hxx"
+#include "ROOT/memory.hxx"
 #include <chrono>
 #include <thread>
 #include <type_traits>

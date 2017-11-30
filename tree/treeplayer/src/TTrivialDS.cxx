@@ -1,7 +1,7 @@
 #include <ROOT/TDFUtils.hxx>
 #include <ROOT/TSeq.hxx>
 #include <ROOT/TTrivialDS.hxx>
-#include <ROOT/RMakeUnique.hxx>
+#include <ROOT/memory.hxx>
 
 namespace ROOT {
 namespace Experimental {
