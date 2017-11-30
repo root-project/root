@@ -936,8 +936,8 @@ void TXMLEngine::UnlinkNode(XMLNodePointer_t xmlnode)
 {
    if (xmlnode == 0)
       return;
-   SXmlNode_t *node = (SXmlNode_t *)xmlnode;
 
+   SXmlNode_t *node = (SXmlNode_t *)xmlnode;
    SXmlNode_t *parent = node->fParent;
 
    if (parent == 0)
@@ -955,6 +955,9 @@ void TXMLEngine::UnlinkNode(XMLNodePointer_t xmlnode)
       if (parent->fLastChild == node)
          parent->fLastChild = ch;
    }
+
+   node->fParent = 0;
+   node->fNext = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1790,7 +1793,6 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
             if (lastentity != beg)
                AddNodeContent(xmlparent, lastentity, beg - lastentity);
 
-            // printf("Find entity %s in content\n", entity->GetName());
             if (entity->IsSystem()) {
                XMLDocPointer_t entitydoc = ParseFile(entity->GetTitle());
                if (entitydoc == 0) {
@@ -1962,9 +1964,6 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
 
                inp->AddEntity(new TXMLEntity(entity_name, entity_value, is_system));
                continue;
-
-               // printf("Entity:%s system:%s value:%s\n", entity_name.Data(), is_system ? "true" : "false",
-               // entity_value.Data());
             }
 
             if (inp->CheckFor("<!ELEMENT")) {
