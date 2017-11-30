@@ -793,6 +793,8 @@ void TXMLEngine::AddChildAfter(XMLNodePointer_t parent, XMLNodePointer_t child, 
    if (cnode->fParent)
       UnlinkNode(child);
 
+   cnode->fParent = pnode;
+
    cnode->fNext = anode->fNext;
    anode->fNext = cnode;
 
