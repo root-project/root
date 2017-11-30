@@ -11,6 +11,7 @@
 /// \author Sergey Linev
 
 #include "TXMLEngine.h"
+#include <stdio.h>
 
 void DisplayNode(TXMLEngine &xml, XMLNodePointer_t node, Int_t level)
 {
