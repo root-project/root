@@ -763,6 +763,33 @@ void TXMLEngine::AddChildFirst(XMLNodePointer_t parent, XMLNodePointer_t child)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Insert new child node after already existing node
+
+void TXMLEngine::AddChildAfter(XMLNodePointer_t parent, XMLNodePointer_t child, XMLNodePointer_t afternode)
+{
+   if (afternode == 0) {
+      AddChild(parent, child);
+      return;
+   }
+
+   SXmlNode_t *pnode = (SXmlNode_t *)parent;
+   SXmlNode_t *cnode = (SXmlNode_t *)child;
+   SXmlNode_t *anode = (SXmlNode_t *)afternode;
+
+   if (anode->fParent != pnode) {
+      Error("InsertChildAfter", "Specified afternode is not in childs list of parent node");
+      AddChild(parent, child);
+      return;
+   }
+
+   cnode->fNext = anode->fNext;
+   anode->fNext = cnode;
+
+   if (pnode->fLastChild == anode)
+      pnode->fLastChild = cnode;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Adds comment line to the node
 
 Bool_t TXMLEngine::AddComment(XMLNodePointer_t xmlnode, const char *comment)
