@@ -43,6 +43,9 @@ public:
    static Int_t     ExportToFile(const char* filename, const TObject *obj, const char* option = 0);
    static Int_t     ExportToFile(const char* filename, const void *obj, const TClass *cl, const char* option = 0);
 
+   static TObject *ConvertFromJSON(const char *str);
+   static void    *ConvertFromJSONAny(const char *str, TClass **cl = 0);
+
    // suppress class writing/reading
 
    virtual TClass  *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0);
