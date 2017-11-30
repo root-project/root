@@ -496,7 +496,7 @@ auto maximumRelativeError(const Matrix1 &X, const Matrix2 &Y) -> Double_t
 template <typename F, typename AFloat>
 inline AFloat finiteDifference(F f, AFloat dx)
 {
-   return f(dx) - f(0.0 - dx);
+   return f(dx) - f(-dx);
 }
 
 /*! Color code error. */
