@@ -3095,10 +3095,11 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
 TClass *TClass::GetClass(const std::type_info& typeinfo, Bool_t load, Bool_t /* silent */)
 {
-   //protect access to TROOT::GetListOfClasses
-   R__LOCKGUARD(gInterpreterMutex);
+   if (!gROOT->GetListOfClasses())
+      return 0;
 
-   if (!gROOT->GetListOfClasses())    return 0;
+   //protect access to TROOT::GetIdMap
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
 
    TClass* cl = GetIdMap()->Find(typeinfo.name());
 
@@ -3120,6 +3121,8 @@ TClass *TClass::GetClass(const std::type_info& typeinfo, Bool_t load, Bool_t /* 
    }
 
    if (!load) return 0;
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    DictFuncPtr_t dict = TClassTable::GetDict(typeinfo);
    if (dict) {
