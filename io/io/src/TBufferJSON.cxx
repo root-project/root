@@ -74,6 +74,9 @@ To perform conversion, one should use TBufferJSON::ConvertToJSON method like:
 #define FULong64   "%llu"
 #endif
 
+
+#include "json.hpp"
+
 ClassImp(TBufferJSON);
 
 
@@ -630,6 +633,53 @@ Int_t TBufferJSON::ExportToFile(const char* filename, const void *obj, const TCl
    ofs.close();
 
    return json.Length();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read TObject-based class from JSON, produced by ConvertToJSON() method.
+/// If object does not inherit from TObject class, return 0.
+
+TObject *TBufferJSON::ConvertFromJSON(const char *str)
+{
+   TClass *cl = nullptr;
+   void *obj = ConvertFromJSONAny(str, &cl);
+
+   if (!cl || !obj)
+      return nullptr;
+
+   Int_t delta = cl->GetBaseClassOffset(TObject::Class());
+
+   if (delta < 0) {
+      cl->Destructor(obj);
+      return nullptr;
+   }
+
+   return (TObject *)(((char *)obj) + delta);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read object from JSON, produced by ConvertToJSON() method.
+
+void *TBufferJSON::ConvertFromJSONAny(const char *str, TClass **cl)
+{
+   if (cl) *cl = nullptr;
+
+   auto docu = nlohmann::json::parse(str);
+
+   if (docu.is_null()) return nullptr;
+
+   if (!docu.is_object()) {
+      // Error("ConvertFromJSONAny", "Only JSON objects are supported");
+      return nullptr;
+   }
+
+   // TBufferJSON buf; // (TBuffer::kRead);
+
+   void *obj = nullptr;
+
+   // void *obj = buf.JsonReadAny(xmlnode, 0, cl);
+
+   return obj;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
