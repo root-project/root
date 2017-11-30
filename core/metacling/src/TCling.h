@@ -205,7 +205,8 @@ public: // Public Interface
                           void (*triggerFunc)(),
                           const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                           const char** classesHeaders,
-                          Bool_t lateRegistration = false);
+                          Bool_t lateRegistration = false,
+                          Bool_t hasCxxModule = false);
    void    RegisterTClassUpdate(TClass *oldcl,DictFuncPtr_t dict);
    void    UnRegisterTClassUpdate(const TClass *oldcl);
 
