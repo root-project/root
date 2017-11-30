@@ -16,6 +16,8 @@ FOUNDATIONDIRR  := $(FOUNDATIONDIR)/res
 BACKPORTTH       += $(MODDIRI)/libcpp_string_view.h
 BACKPORTTH       += $(MODDIRI)/RWrap_libcpp_string_view.h
 BACKPORTTH       += $(MODDIRI)/ROOT/span.hxx
+BACKPORTTH       += $(MODDIRI)/ROOT/memory.hxx
+BACKPORTTH       += $(MODDIRI)/ROOT/tuple.hxx
 
 FOUNDATIONO     := $(call stripsrc,$(FOUNDATIONS:.cxx=.o))
 
