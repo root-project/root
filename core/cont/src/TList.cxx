@@ -840,8 +840,8 @@ TObject *TList::Remove(TObject *obj)
       fLast->fNext.reset();
       //DeleteLink(lnk);
    } else {
-    lnk->Next()->fPrev = lnk->fPrev;
-    lnk->Prev()->fNext = lnk->fNext;
+      lnk->Next()->fPrev = lnk->fPrev;
+      lnk->Prev()->fNext = lnk->fNext;
       //DeleteLink(lnk);
    }
    fSize--;
