@@ -5138,28 +5138,21 @@ void TStreamerInfo::Streamer(TBuffer &R__b)
       //////////////////////////////////////////////////////////////////////////
 
       R__b.ClassMember("fElements","TObjArray*");
-#if NOTYET
-      if (has_no_artificial_member) {
-         R__b << fElements;
-      } else
-#endif
       {
-         R__LOCKGUARD(gInterpreterMutex);
-         Int_t nobjects = fElements->GetEntriesFast();
-         TObjArray store( *fElements );
+         TObjArray elements(fElements->GetEntriesFast());
          TStreamerElement *el;
+         Int_t nobjects = fElements->GetEntriesFast();
          for (Int_t i = 0; i < nobjects; i++) {
-            el = (TStreamerElement*)fElements->UncheckedAt(i);
-            if( el != 0 && (el->IsA() == TStreamerArtificial::Class() || el->TestBit(TStreamerElement::kRepeat))) {
-               fElements->RemoveAt( i );
-            } else if( el !=0 && (el->TestBit(TStreamerElement::kCache) && !el->TestBit(TStreamerElement::kWrite)) ) {
-               fElements->RemoveAt( i );
+            el = (TStreamerElement *)fElements->UncheckedAt(i);
+            if (el != 0 && (el->IsA() == TStreamerArtificial::Class() || el->TestBit(TStreamerElement::kRepeat))) {
+               // skip
+            } else if (el != 0 && (el->TestBit(TStreamerElement::kCache) && !el->TestBit(TStreamerElement::kWrite))) {
+               // skip
+            } else if (el != 0) {
+               elements.AddLast(el);
             }
          }
-         fElements->Compress();
-         R__b << fElements;
-         R__ASSERT(!fElements->IsOwner());
-         *fElements = store;
+         R__b.WriteObjectAny(&elements, TObjArray::Class(), kFALSE);
       }
       R__b.ClassEnd(TStreamerInfo::Class());
       R__b.SetByteCount(R__c, kTRUE);
