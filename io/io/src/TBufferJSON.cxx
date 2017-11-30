@@ -260,10 +260,12 @@ public:
    Int_t             fLevel;          //! indent level
    TArrayIndexProducer *fIndx;        //! producer of ndim indexes
 
+   JSONObject_t      fNode;           //! reading JSON node
+
    TJSONStackObj() :
       TObject(),
-      fInfo(0),
-      fElem(0),
+      fInfo(nullptr),
+      fElem(nullptr),
       fIsStreamerInfo(kFALSE),
       fIsElemOwner(kFALSE),
       fIsPostProcessed(kFALSE),
@@ -271,7 +273,8 @@ public:
       fAccObjects(kFALSE),
       fValues(),
       fLevel(0),
-      fIndx(0)
+      fIndx(nullptr),
+      fNode(nullptr)
    {
       fValues.SetOwner(kTRUE);
    }
@@ -286,6 +289,7 @@ public:
    {
       return fIsStreamerInfo;
    }
+
    Bool_t IsStreamerElement() const
    {
       return !fIsStreamerInfo && (fElem != 0);
@@ -302,8 +306,8 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates buffer object to serialize data into json.
 
-TBufferJSON::TBufferJSON() :
-   TBuffer(TBuffer::kWrite),
+TBufferJSON::TBufferJSON(TBuffer::EMode mode) :
+   TBuffer(mode),
    fOutBuffer(),
    fOutput(0),
    fValue(),
@@ -673,11 +677,9 @@ void *TBufferJSON::ConvertFromJSONAny(const char *str, TClass **cl)
       return nullptr;
    }
 
-   // TBufferJSON buf; // (TBuffer::kRead);
+   TBufferJSON buf(TBuffer::kRead);
 
-   void *obj = nullptr;
-
-   // void *obj = buf.JsonReadAny(xmlnode, 0, cl);
+   void *obj = buf.JsonReadAny(&docu, 0, cl);
 
    return obj;
 }
@@ -880,6 +882,24 @@ TJSONStackObj *TBufferJSON::PushStack(Int_t inclevel)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// add new level to the structures stack for reading
+
+TJSONStackObj *TBufferJSON::PushStackR(JSONObject_t current, Bool_t simple)
+{
+   if (!simple) {
+       printf("Not a simple case, how we should support it?\n");
+      //current = fXML->GetChild(current);
+      //fXML->SkipEmpty(current);
+   }
+
+   TJSONStackObj *stack = new TJSONStackObj();
+   stack->fNode = current;
+   fStack.Add(stack);
+   return stack;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// remove one level from stack
 
 TJSONStackObj *TBufferJSON::PopStack()
@@ -993,7 +1013,7 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/// disable post-processing of the code
 void TBufferJSON::JsonDisablePostprocessing()
 {
    TJSONStackObj *stack = Stack();
@@ -1248,6 +1268,28 @@ post_process:
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Recreate object from json structure.
+/// Return pointer to read object.
+/// if (cl!=0) returns pointer to class of object
+
+void *TBufferJSON::JsonReadAny(JSONObject_t node, void *obj, TClass **cl)
+{
+   if (!node)
+      return nullptr;
+
+   if (cl)
+      *cl = nullptr;
+
+   PushStackR(node, kTRUE);
+
+   void *res = JsonReadObject(obj, cl);
+
+   PopStack();
+
+   return res;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// store content of collection
 
 void TBufferJSON::JsonStreamCollection(TCollection *col, const TClass *)
@@ -1314,6 +1356,13 @@ void TBufferJSON::JsonStreamCollection(TCollection *col, const TClass *)
    fValue.Clear();
 }
 
+
+void *TBufferJSON::JsonReadObject(void *obj, TClass **cl)
+{
+   if (cl) *cl = nullptr;
+
+   return obj;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Function is called from TStreamerInfo WriteBuffer and ReadBuffer functions
