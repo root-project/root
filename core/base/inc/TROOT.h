@@ -375,7 +375,7 @@ namespace ROOT {
       R__EXTERN TROOT *gROOTLocal;
    }
 
-   /// @Brief call RecursiveRemove for obj if gROOT is valid
+   /// \brief call RecursiveRemove for obj if gROOT is valid
    /// and obj.TestBit(kMustCleanup) is true.
    /// Note: this reset the kMustCleanup bit to allow
    /// harmless multiple call to this function.

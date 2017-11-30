@@ -13,11 +13,10 @@
 \class TKeySQL
 \ingroup IO
 
-TKeySQL represents metainforamtion about object, which was written to
+TKeySQL represents meta-inforamtion about object, which was written to
 SQL database. It keeps object id, which used to locate object data
 from database tables.
 */
-
 
 #include "TKeySQL.h"
 
@@ -37,58 +36,57 @@ ClassImp(TKeySQL);
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
 
-TKeySQL::TKeySQL() :
-   TKey(),
-   fKeyId(-1),
-   fObjId(-1)
+TKeySQL::TKeySQL() : TKey(), fKeyId(-1), fObjId(-1)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates TKeySQL and convert obj data to TSQLStructure via TBufferSQL2
 
-TKeySQL::TKeySQL(TDirectory* mother, const TObject* obj, const char* name, const char* title) :
-    TKey(mother),
-    fKeyId(-1),
-    fObjId(-1)
+TKeySQL::TKeySQL(TDirectory *mother, const TObject *obj, const char *name, const char *title)
+   : TKey(mother), fKeyId(-1), fObjId(-1)
 {
-   if (name) SetName(name); else
-      if (obj!=0) {SetName(obj->GetName());  fClassName=obj->ClassName();}
-      else SetName("Noname");
+   if (name)
+      SetName(name);
+   else if (obj != 0) {
+      SetName(obj->GetName());
+      fClassName = obj->ClassName();
+   } else
+      SetName("Noname");
 
-   if (title) SetTitle(title);
+   if (title)
+      SetTitle(title);
 
-   StoreKeyObject((void*)obj, obj ? obj->IsA() : 0);
+   StoreKeyObject((void *)obj, obj ? obj->IsA() : 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates TKeySQL and convert obj data to TSQLStructure via TBufferSQL2
 
-TKeySQL::TKeySQL(TDirectory* mother, const void* obj, const TClass* cl, const char* name, const char* title) :
-    TKey(mother),
-    fKeyId(-1),
-    fObjId(-1)
+TKeySQL::TKeySQL(TDirectory *mother, const void *obj, const TClass *cl, const char *name, const char *title)
+   : TKey(mother), fKeyId(-1), fObjId(-1)
 {
-   if (name && *name) SetName(name);
-   else SetName(cl ? cl->GetName() : "Noname");
+   if (name && *name)
+      SetName(name);
+   else
+      SetName(cl ? cl->GetName() : "Noname");
 
-   if (title) SetTitle(title);
+   if (title)
+      SetTitle(title);
 
    StoreKeyObject(obj, cl);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Create TKeySQL object, which correponds to single entry in keys table
+/// Create TKeySQL object, which corresponds to single entry in keys table
 
-TKeySQL::TKeySQL(TDirectory* mother, Long64_t keyid, Long64_t objid,
-                 const char* name, const char* title,
-                 const char* keydatetime, Int_t cycle, const char* classname) :
-    TKey(mother),
-    fKeyId(keyid),
-    fObjId(objid)
+TKeySQL::TKeySQL(TDirectory *mother, Long64_t keyid, Long64_t objid, const char *name, const char *title,
+                 const char *keydatetime, Int_t cycle, const char *classname)
+   : TKey(mother), fKeyId(keyid), fObjId(objid)
 {
    SetName(name);
-   if (title) SetTitle(title);
+   if (title)
+      SetTitle(title);
    TDatime dt(keydatetime);
    fDatime = dt;
    fCycle = cycle;
@@ -107,30 +105,40 @@ TKeySQL::~TKeySQL()
 /// Used in TFile::StreamKeysForDirectory() method to verify data for that keys
 /// should be updated
 
-Bool_t TKeySQL::IsKeyModified(const char* keyname, const char* keytitle, const char* keydatime, Int_t cycle, const char* classname)
+Bool_t TKeySQL::IsKeyModified(const char *keyname, const char *keytitle, const char *keydatime, Int_t cycle,
+                              const char *classname)
 {
-   Int_t len1 = (GetName()==0) ? 0 : strlen(GetName());
-   Int_t len2 = (keyname==0) ? 0 : strlen(keyname);
-   if (len1!=len2) return kTRUE;
-   if ((len1>0) && (strcmp(GetName(), keyname)!=0)) return kTRUE;
+   Int_t len1 = (GetName() == 0) ? 0 : strlen(GetName());
+   Int_t len2 = (keyname == 0) ? 0 : strlen(keyname);
+   if (len1 != len2)
+      return kTRUE;
+   if ((len1 > 0) && (strcmp(GetName(), keyname) != 0))
+      return kTRUE;
 
-   len1 = (GetTitle()==0) ? 0 : strlen(GetTitle());
-   len2 = (keytitle==0) ? 0 : strlen(keytitle);
-   if (len1!=len2) return kTRUE;
-   if ((len1>0) && (strcmp(GetTitle(), keytitle)!=0)) return kTRUE;
+   len1 = (GetTitle() == 0) ? 0 : strlen(GetTitle());
+   len2 = (keytitle == 0) ? 0 : strlen(keytitle);
+   if (len1 != len2)
+      return kTRUE;
+   if ((len1 > 0) && (strcmp(GetTitle(), keytitle) != 0))
+      return kTRUE;
 
-   const char* tm = GetDatime().AsSQLString();
-   len1 = (tm==0) ? 0 : strlen(tm);
-   len2 = (keydatime==0) ? 0 : strlen(keydatime);
-   if (len1!=len2) return kTRUE;
-   if ((len1>0) && (strcmp(tm, keydatime)!=0)) return kTRUE;
+   const char *tm = GetDatime().AsSQLString();
+   len1 = (tm == 0) ? 0 : strlen(tm);
+   len2 = (keydatime == 0) ? 0 : strlen(keydatime);
+   if (len1 != len2)
+      return kTRUE;
+   if ((len1 > 0) && (strcmp(tm, keydatime) != 0))
+      return kTRUE;
 
-   if (cycle!=GetCycle()) return kTRUE;
+   if (cycle != GetCycle())
+      return kTRUE;
 
-   len1 = (GetClassName()==0) ? 0 : strlen(GetClassName());
-   len2 = (classname==0) ? 0 : strlen(classname);
-   if (len1!=len2) return kTRUE;
-   if ((len1>0) && (strcmp(GetClassName(), classname)!=0)) return kTRUE;
+   len1 = (GetClassName() == 0) ? 0 : strlen(GetClassName());
+   len2 = (classname == 0) ? 0 : strlen(classname);
+   if (len1 != len2)
+      return kTRUE;
+   if ((len1 > 0) && (strcmp(GetClassName(), classname) != 0))
+      return kTRUE;
 
    return kFALSE;
 }
@@ -141,9 +149,9 @@ Bool_t TKeySQL::IsKeyModified(const char* keyname, const char* keytitle, const c
 
 void TKeySQL::Delete(Option_t * /*option*/)
 {
-   TSQLFile* f = (TSQLFile*) GetFile();
+   TSQLFile *f = (TSQLFile *)GetFile();
 
-   if (f!=0)
+   if (f != 0)
       f->DeleteKeyFromDB(GetDBKeyId());
 
    fMotherDir->GetListOfKeys()->Remove(this);
@@ -160,9 +168,9 @@ Long64_t TKeySQL::GetDBDirId() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Stores object, associated with key, into data tables
 
-void TKeySQL::StoreKeyObject(const void* obj, const TClass* cl)
+void TKeySQL::StoreKeyObject(const void *obj, const TClass *cl)
 {
-   TSQLFile* f = (TSQLFile*) GetFile();
+   TSQLFile *f = (TSQLFile *)GetFile();
 
    fCycle = GetMotherDir()->AppendKey(this);
 
@@ -170,20 +178,21 @@ void TKeySQL::StoreKeyObject(const void* obj, const TClass* cl)
 
    fObjId = f->StoreObjectInTables(fKeyId, obj, cl);
 
-   if (cl) fClassName = cl->GetName();
+   if (cl)
+      fClassName = cl->GetName();
 
-   if (GetDBObjId()>=0) {
+   if (GetDBObjId() >= 0) {
       fDatime.Set();
       if (!f->WriteKeyData(this)) {
          // cannot add entry to keys table
-         Error("StoreKeyObject","Cannot write data to key tables");
+         Error("StoreKeyObject", "Cannot write data to key tables");
          // delete everything relevant for that key
          f->DeleteKeyFromDB(GetDBKeyId());
          fObjId = -1;
       }
    }
 
-   if (GetDBObjId()<0)
+   if (GetDBObjId() < 0)
       GetMotherDir()->GetListOfKeys()->Remove(this);
    // fix me !!! One should delete object by other means
    // delete this;
@@ -195,27 +204,29 @@ void TKeySQL::StoreKeyObject(const void* obj, const TClass* cl)
 /// Before invoking this function, obj has been created via the
 /// default constructor.
 
-Int_t TKeySQL::Read(TObject* tobj)
+Int_t TKeySQL::Read(TObject *tobj)
 {
-   if (tobj==0) return 0;
+   if (tobj == 0)
+      return 0;
 
-   void* res = ReadKeyObject(tobj, 0);
+   void *res = ReadKeyObject(tobj, 0);
 
-   return res==0 ? 0 : 1;
+   return res == 0 ? 0 : 1;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object derived from TObject class
 /// If it is not TObject or in case of error, return 0
 
-TObject* TKeySQL::ReadObj()
+TObject *TKeySQL::ReadObj()
 {
-   TObject* tobj = (TObject*) ReadKeyObject(0, TObject::Class());
+   TObject *tobj = (TObject *)ReadKeyObject(0, TObject::Class());
 
-   if (tobj!=0) {
-      if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
+   if (tobj != 0) {
+      if (gROOT->GetForceStyle())
+         tobj->UseCurrentStyle();
       if (tobj->IsA() == TDirectoryFile::Class()) {
-         TDirectoryFile *dir = (TDirectoryFile*) tobj;
+         TDirectoryFile *dir = (TDirectoryFile *)tobj;
          dir->SetName(GetName());
          dir->SetTitle(GetTitle());
          dir->SetSeekDir(GetDBKeyId());
@@ -232,14 +243,15 @@ TObject* TKeySQL::ReadObj()
 /// Read object derived from TObject class
 /// If it is not TObject or in case of error, return 0
 
-TObject* TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
+TObject *TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
 {
-   TObject* tobj = (TObject*) ReadKeyObject(0, TObject::Class());
+   TObject *tobj = (TObject *)ReadKeyObject(0, TObject::Class());
 
-   if (tobj!=0) {
-      if (gROOT->GetForceStyle()) tobj->UseCurrentStyle();
+   if (tobj != 0) {
+      if (gROOT->GetForceStyle())
+         tobj->UseCurrentStyle();
       if (tobj->IsA() == TDirectoryFile::Class()) {
-         TDirectoryFile *dir = (TDirectoryFile*) tobj;
+         TDirectoryFile *dir = (TDirectoryFile *)tobj;
          dir->SetName(GetName());
          dir->SetTitle(GetTitle());
          dir->SetSeekDir(GetDBKeyId());
@@ -255,43 +267,57 @@ TObject* TKeySQL::ReadObjWithBuffer(char * /*bufferRead*/)
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object of any type from SQL database
 
-void* TKeySQL::ReadObjectAny(const TClass* expectedClass)
+void *TKeySQL::ReadObjectAny(const TClass *expectedClass)
 {
-   return ReadKeyObject(0, expectedClass);
+   void *res = ReadKeyObject(0, expectedClass);
+
+   if (res && (expectedClass == TDirectoryFile::Class())) {
+      TDirectoryFile *dir = (TDirectoryFile *)res;
+      dir->SetName(GetName());
+      dir->SetTitle(GetTitle());
+      dir->SetSeekDir(GetDBKeyId());
+      dir->SetMother(fMotherDir);
+      dir->ReadKeys();
+      fMotherDir->Append(dir);
+   }
+
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object, associated with key, from database
 
-void* TKeySQL::ReadKeyObject(void* obj, const TClass* expectedClass)
+void *TKeySQL::ReadKeyObject(void *obj, const TClass *expectedClass)
 {
-   TSQLFile* f = (TSQLFile*) GetFile();
+   TSQLFile *f = (TSQLFile *)GetFile();
 
-   if ((GetDBKeyId()<=0) || (f==0)) return obj;
+   if ((GetDBKeyId() <= 0) || (f == 0))
+      return obj;
 
    TBufferSQL2 buffer(TBuffer::kRead, f);
 
-   TClass* cl = 0;
+   TClass *cl = 0;
 
-   void* res = buffer.SqlReadAny(GetDBKeyId(), GetDBObjId(), &cl, obj);
+   void *res = buffer.SqlReadAny(GetDBKeyId(), GetDBObjId(), &cl, obj);
 
-   if ((cl==0) || (res==0)) return 0;
+   if ((cl == 0) || (res == 0))
+      return 0;
 
    Int_t delta = 0;
 
-   if (expectedClass!=0) {
+   if (expectedClass != 0) {
       delta = cl->GetBaseClassOffset(expectedClass);
-      if (delta<0) {
-         if (obj==0) cl->Destructor(res);
+      if (delta < 0) {
+         if (obj == 0)
+            cl->Destructor(res);
          return 0;
       }
       if (cl->GetState() > TClass::kEmulated && expectedClass->GetState() <= TClass::kEmulated) {
-         //we cannot mix a compiled class with an emulated class in the inheritance
-         Warning("XmlReadAny",
-                 "Trying to read an emulated class (%s) to store in a compiled pointer (%s)",
-                 cl->GetName(),expectedClass->GetName());
+         // we cannot mix a compiled class with an emulated class in the inheritance
+         Warning("XmlReadAny", "Trying to read an emulated class (%s) to store in a compiled pointer (%s)",
+                 cl->GetName(), expectedClass->GetName());
       }
    }
 
-   return ((char*)res) + delta;
+   return ((char *)res) + delta;
 }

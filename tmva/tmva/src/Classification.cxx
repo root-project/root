@@ -46,14 +46,12 @@
 #include <TObjString.h>
 #include <TSystem.h>
 #include <TCanvas.h>
-
 #include <iostream>
 #include <memory>
-
 #define MinNoTrainingEvents 10
 
 //_______________________________________________________________________
-TMVA::Experimental::ClassificationResult::ClassificationResult()
+TMVA::Experimental::ClassificationResult::ClassificationResult() : fROCIntegral(0)
 {
 }
 
@@ -64,18 +62,36 @@ TMVA::Experimental::ClassificationResult::ClassificationResult(const Classificat
    fDataLoaderName = cr.fDataLoaderName;
    fMvaTrain = cr.fMvaTrain;
    fMvaTest = cr.fMvaTest;
+   fIsCuts = cr.fIsCuts;
+   fROCIntegral = cr.fROCIntegral;
 }
 
 //_______________________________________________________________________
+/**
+ * Method to get ROC-Integral value from mvas.
+ * \param iClass category, default 0 then signal
+ * \param type train/test tree, default test.
+ * \return Double_t with the ROC-Integral value.
+ */
 Double_t TMVA::Experimental::ClassificationResult::GetROCIntegral(UInt_t iClass, TMVA::Types::ETreeType type)
 {
-   auto roc = GetROC(iClass, type);
-   auto inte = roc->GetROCIntegral();
-   delete roc;
-   return inte;
+   if (fIsCuts) {
+      return fROCIntegral;
+   } else {
+      auto roc = GetROC(iClass, type);
+      auto inte = roc->GetROCIntegral();
+      delete roc;
+      return inte;
+   }
 }
 
 //_______________________________________________________________________
+/**
+ * Method to get TMVA::ROCCurve Object.
+ * \param iClass category, default 0 then signal
+ * \param type train/test tree, default test.
+ * \return TMVA::ROCCurve object.
+ */
 TMVA::ROCCurve *TMVA::Experimental::ClassificationResult::GetROC(UInt_t iClass, TMVA::Types::ETreeType type)
 {
    ROCCurve *fROCCurve = nullptr;
@@ -92,13 +108,18 @@ operator=(const TMVA::Experimental::ClassificationResult &cr)
 {
    fMethod = cr.fMethod;
    fDataLoaderName = cr.fDataLoaderName;
-   fMulticlass = cr.fMulticlass;
    fMvaTrain = cr.fMvaTrain;
    fMvaTest = cr.fMvaTest;
+   fIsCuts = cr.fIsCuts;
+   fROCIntegral = cr.fROCIntegral;
    return *this;
 }
 
 //_______________________________________________________________________
+/**
+ * Method to print the results in stdout.
+ * data loader name, method name/tittle and ROC-integ.
+ */
 void TMVA::Experimental::ClassificationResult::Show()
 {
    MsgLogger fLogger("Classification");
@@ -121,6 +142,12 @@ void TMVA::Experimental::ClassificationResult::Show()
 }
 
 //_______________________________________________________________________
+/**
+ * Method to get TGraph object with the ROC curve.
+ * \param iClass category, default 0 then signal
+ * \param type train/test tree, default test.
+ * \return TGraph object.
+ */
 TGraph *TMVA::Experimental::ClassificationResult::GetROCGraph(UInt_t iClass, TMVA::Types::ETreeType type)
 {
    TGraph *roc = GetROC(iClass, type)->GetROCCurve();
@@ -132,6 +159,12 @@ TGraph *TMVA::Experimental::ClassificationResult::GetROCGraph(UInt_t iClass, TMV
 }
 
 //_______________________________________________________________________
+/**
+ * Method to check if method was booked.
+ * \param methodname name of the method.
+ * \param methodtitle method title.
+ * \return boolean true if the method was booked, false in other case.
+ */
 Bool_t TMVA::Experimental::ClassificationResult::IsMethod(TString methodname, TString methodtitle)
 {
    return fMethod.GetValue<TString>("MethodName") == methodname &&
@@ -141,6 +174,12 @@ Bool_t TMVA::Experimental::ClassificationResult::IsMethod(TString methodname, TS
 }
 
 //_______________________________________________________________________
+/**
+ * Contructor to create a two class classifier.
+ * \param dataloader TMVA::DataLoader object with the data to train/test.
+ * \param file TFile object to save the results
+ * \param options string extra options.
+ */
 TMVA::Experimental::Classification::Classification(DataLoader *dataloader, TFile *file, TString options)
    : TMVA::Envelope("Classification", dataloader, file, options), fAnalysisType(Types::kClassification),
      fCorrelations(kFALSE), fROC(kTRUE)
@@ -155,6 +194,11 @@ TMVA::Experimental::Classification::Classification(DataLoader *dataloader, TFile
 }
 
 //_______________________________________________________________________
+/**
+ * Contructor to create a two class classifier without output file.
+ * \param dataloader TMVA::DataLoader object with the data to train/test.
+ * \param options string extra options.
+ */
 TMVA::Experimental::Classification::Classification(DataLoader *dataloader, TString options)
    : TMVA::Envelope("Classification", dataloader, NULL, options), fAnalysisType(Types::kClassification),
      fCorrelations(kFALSE), fROC(kTRUE)
@@ -183,6 +227,12 @@ TMVA::Experimental::Classification::~Classification()
 }
 
 //_______________________________________________________________________
+/**
+ * return the options for the booked method.
+ * \param methodname name of the method.
+ * \param methodtitle method title.
+ * \return string the with options for the ml method.
+ */
 TString TMVA::Experimental::Classification::GetMethodOptions(TString methodname, TString methodtitle)
 {
    for (auto &meth : fMethods) {
@@ -193,6 +243,10 @@ TString TMVA::Experimental::Classification::GetMethodOptions(TString methodname,
 }
 
 //_______________________________________________________________________
+/**
+ * Method to perform Train/Test over all ml method booked.
+ * If the option Jobs > 1 can do it in parallel with MultiProc.
+ */
 void TMVA::Experimental::Classification::Evaluate()
 {
    fTimer.Reset();
@@ -215,12 +269,26 @@ void TMVA::Experimental::Classification::Evaluate()
          TMVA::gConfig().SetDrawProgressBar(kFALSE);
          auto methodname = fMethods[workerID].GetValue<TString>("MethodName");
          auto methodtitle = fMethods[workerID].GetValue<TString>("MethodTitle");
+         auto meth = GetMethod(methodname, methodtitle);
+         if (!IsSilentFile()) {
+            auto fname = Form(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
+            auto f = new TFile(fname, "RECREATE");
+            f->mkdir(fDataLoader->GetName());
+            SetFile(f);
+            meth->SetFile(f);
+         }
          TrainMethod(methodname, methodtitle);
          TestMethod(methodname, methodtitle);
+         if (!IsSilentFile()) {
+            GetFile()->Close();
+         }
+
          return GetResults(methodname, methodtitle);
       };
 
       fResults = fWorkers.Map(executor, ROOT::TSeqI(fMethods.size()));
+      if (!IsSilentFile())
+         MergeFiles();
    }
 
    fROC = roc;
@@ -248,6 +316,9 @@ void TMVA::Experimental::Classification::Evaluate()
 }
 
 //_______________________________________________________________________
+/**
+ * Method to train all booked ml methods.
+ */
 void TMVA::Experimental::Classification::Train()
 {
    for (auto &meth : fMethods) {
@@ -256,6 +327,11 @@ void TMVA::Experimental::Classification::Train()
 }
 
 //_______________________________________________________________________
+/**
+ *  Lets train an specific ml method.
+ * \param methodname name of the method.
+ * \param methodtitle method title.
+ */
 void TMVA::Experimental::Classification::TrainMethod(TString methodname, TString methodtitle)
 {
    auto method = GetMethod(methodname, methodtitle);
@@ -287,12 +363,24 @@ void TMVA::Experimental::Classification::TrainMethod(TString methodname, TString
 }
 
 //_______________________________________________________________________
+/**
+ *  Lets train an specific ml method given the method type in enum TMVA::Types::EMVA
+ * \param method TMVA::Types::EMVA type.
+ * \param methodtitle method title.
+ */
 void TMVA::Experimental::Classification::TrainMethod(Types::EMVA method, TString methodtitle)
 {
    TrainMethod(Types::Instance().GetMethodName(method), methodtitle);
 }
 
 //_______________________________________________________________________
+/**
+ * Return a TMVA::MethodBase object. if method is not booked then return a null
+ * pointer.
+ * \param methodname name of the method.
+ * \param methodtitle method title.
+ * \return TMVA::MethodBase object
+ */
 TMVA::MethodBase *TMVA::Experimental::Classification::GetMethod(TString methodname, TString methodtitle)
 {
 
@@ -394,6 +482,13 @@ TMVA::MethodBase *TMVA::Experimental::Classification::GetMethod(TString methodna
 }
 
 //_______________________________________________________________________
+/**
+ * Allows to check if the TMVA::MethodBase was created and return the index in the vector.
+ * \param methodname name of the method.
+ * \param methodtitle method title.
+ * \param index refrence to Int_t with the position of the method into the vector fIMethods
+ * \return boolean true if the method was found.
+ */
 Bool_t TMVA::Experimental::Classification::HasMethodObject(TString methodname, TString methodtitle, Int_t &index)
 {
    if (fIMethods.empty())
@@ -410,6 +505,9 @@ Bool_t TMVA::Experimental::Classification::HasMethodObject(TString methodname, T
 }
 
 //_______________________________________________________________________
+/**
+ * Perform test evaluation in all booked methods.
+ */
 void TMVA::Experimental::Classification::Test()
 {
    for (auto &meth : fMethods) {
@@ -418,6 +516,11 @@ void TMVA::Experimental::Classification::Test()
 }
 
 //_______________________________________________________________________
+/**
+ *  Lets perform test an specific ml method.
+ * \param methodname name of the method.
+ * \param methodtitle method title.
+ */
 void TMVA::Experimental::Classification::TestMethod(TString methodname, TString methodtitle)
 {
    auto method = GetMethod(methodname, methodtitle);
@@ -707,6 +810,8 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
    // Third part of evaluation process
    // --> output
    // -----------------------------------------------------------------------
+   // putting results in the classification result object
+   auto &fResult = GetResults(methodname, methodtitle);
 
    // Binary classification
    if (fROC) {
@@ -745,9 +850,12 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
 
             if (sep[k][i] < 0 || sig[k][i] < 0) {
                // cannot compute separation/significance -> no MVA (usually for Cuts)
-               Log() << kINFO << Form("%-13s %-15s: %#1.3f", fDataLoader->GetName(), methodName.Data(), effArea[k][i])
+               fResult.fROCIntegral = effArea[k][i];
+               Log() << kINFO
+                     << Form("%-13s %-15s: %#1.3f", fDataLoader->GetName(), methodName.Data(), fResult.fROCIntegral)
                      << Endl;
             } else {
+               fResult.fROCIntegral = rocIntegral;
                Log() << kINFO << Form("%-13s %-15s: %#1.3f", datasetName.Data(), methodName.Data(), rocIntegral)
                      << Endl;
             }
@@ -783,22 +891,29 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
 
       if (gTools().CheckForSilentOption(GetOptions()))
          Log().InhibitOutput();
-   } // end fROC
+   } else if (IsCutsMethod(method)) { // end fROC
+      for (Int_t k = 0; k < 2; k++) {
+         for (Int_t i = 0; i < nmeth_used[k]; i++) {
 
-   // putting results in the classification result object
-   auto &fResult = GetResults(methodname, methodtitle);
+            if (sep[k][i] < 0 || sig[k][i] < 0) {
+               // cannot compute separation/significance -> no MVA (usually for Cuts)
+               fResult.fROCIntegral = effArea[k][i];
+            }
+         }
+      }
+   }
 
    TMVA::DataSet *dataset = method->Data();
    dataset->SetCurrentType(Types::kTesting);
 
-   //       auto rocCurveTrain = GetROC(methodname, methodtitle, 0, Types::kTraining);
-   auto rocCurveTest = GetROC(methodname, methodtitle, 0, Types::kTesting);
-   //       fResult.fMvaTrain[0] = rocCurveTrain->GetMvas();
-   fResult.fMvaTest[0] = rocCurveTest->GetMvas();
+   if (IsCutsMethod(method)) {
+      fResult.fIsCuts = kTRUE;
+   } else {
+      auto rocCurveTest = GetROC(methodname, methodtitle, 0, Types::kTesting);
+      fResult.fMvaTest[0] = rocCurveTest->GetMvas();
+   }
    TString className = method->DataInfo().GetClassInfo(0)->GetName();
    fResult.fClassNames.push_back(className);
-   //       className = method->DataInfo().GetClassInfo(1)->GetName();
-   //       fResult.fClassNames.push_back(className);
 
    if (!IsSilentFile()) {
       // write test/training trees
@@ -809,12 +924,21 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
 }
 
 //_______________________________________________________________________
+/**
+ *  Lets perform test an specific ml method given the method type in enum TMVA::Types::EMVA.
+ * \param method TMVA::Types::EMVA type.
+ * \param methodtitle method title.
+ */
 void TMVA::Experimental::Classification::TestMethod(Types::EMVA method, TString methodtitle)
 {
    TestMethod(Types::Instance().GetMethodName(method), methodtitle);
 }
 
 //_______________________________________________________________________
+/**
+ * return the the vector of TMVA::Experimental::ClassificationResult objects.
+ * \return vector of results.
+ */
 std::vector<TMVA::Experimental::ClassificationResult> &TMVA::Experimental::Classification::GetResults()
 {
    if (fResults.size() == 0)
@@ -823,12 +947,22 @@ std::vector<TMVA::Experimental::ClassificationResult> &TMVA::Experimental::Class
 }
 
 //_______________________________________________________________________
+/**
+ * Allows to check if the ml method is a Cuts method.
+ * \return boolen true if the method is a Cuts method.
+ */
 Bool_t TMVA::Experimental::Classification::IsCutsMethod(TMVA::MethodBase *method)
 {
    return method->GetMethodType() == Types::kCuts ? kTRUE : kFALSE;
 }
 
 //_______________________________________________________________________
+/**
+ * Allow to get result for an specific ml method.
+ * \param methodname name of the method.
+ * \param methodtitle method title.
+ * \return TMVA::Experimental::ClassificationResult object for the method.
+ */
 TMVA::Experimental::ClassificationResult &
 TMVA::Experimental::Classification::GetResults(TString methodname, TString methodtitle)
 {
@@ -845,6 +979,13 @@ TMVA::Experimental::Classification::GetResults(TString methodname, TString metho
 }
 
 //_______________________________________________________________________
+/**
+ * Method to get TMVA::ROCCurve Object.
+ * \param method TMVA::MethodBase object
+ * \param iClass category, default 0 then signal
+ * \param type train/test tree, default test.
+ * \return TMVA::ROCCurve object.
+ */
 TMVA::ROCCurve *
 TMVA::Experimental::Classification::GetROC(TMVA::MethodBase *method, UInt_t iClass, Types::ETreeType type)
 {
@@ -905,6 +1046,14 @@ TMVA::Experimental::Classification::GetROC(TMVA::MethodBase *method, UInt_t iCla
 }
 
 //_______________________________________________________________________
+/**
+ * Method to get TMVA::ROCCurve Object.
+ * \param methodname ml method name.
+ * \param methodtitle ml method title.
+ * \param iClass category, default 0 then signal
+ * \param type train/test tree, default test.
+ * \return TMVA::ROCCurve object.
+ */
 TMVA::ROCCurve *TMVA::Experimental::Classification::GetROC(TString methodname, TString methodtitle, UInt_t iClass,
                                                            TMVA::Types::ETreeType type)
 {
@@ -912,6 +1061,13 @@ TMVA::ROCCurve *TMVA::Experimental::Classification::GetROC(TString methodname, T
 }
 
 //_______________________________________________________________________
+/**
+ * Method to get ROC-Integral value from mvas.
+ * \param methodname ml method name.
+ * \param methodtitle ml method title.
+ * \param iClass category, default 0 then signal
+ * \return Double_t with the ROC-Integral value.
+ */
 Double_t TMVA::Experimental::Classification::GetROCIntegral(TString methodname, TString methodtitle, UInt_t iClass)
 {
    TMVA::ROCCurve *rocCurve = GetROC(methodname, methodtitle, iClass);
@@ -928,4 +1084,109 @@ Double_t TMVA::Experimental::Classification::GetROCIntegral(TString methodname, 
    delete rocCurve;
 
    return rocIntegral;
+}
+
+//_______________________________________________________________________
+void TMVA::Experimental::Classification::CopyFrom(TDirectory *src, TFile *file)
+{
+   TFile *savdir = file;
+   TDirectory *adir = savdir;
+   adir->cd();
+   // loop on all entries of this directory
+   TKey *key;
+   TIter nextkey(src->GetListOfKeys());
+   while ((key = (TKey *)nextkey())) {
+      const Char_t *classname = key->GetClassName();
+      TClass *cl = gROOT->GetClass(classname);
+      if (!cl)
+         continue;
+      if (cl->InheritsFrom(TDirectory::Class())) {
+         src->cd(key->GetName());
+         TDirectory *subdir = file;
+         adir->cd();
+         CopyFrom(subdir, file);
+         adir->cd();
+      } else if (cl->InheritsFrom(TTree::Class())) {
+         TTree *T = (TTree *)src->Get(key->GetName());
+         adir->cd();
+         TTree *newT = T->CloneTree(-1, "fast");
+         newT->Write();
+      } else {
+         src->cd();
+         TObject *obj = key->ReadObj();
+         adir->cd();
+         obj->Write();
+         delete obj;
+      }
+   }
+   adir->SaveSelf(kTRUE);
+   savdir->cd();
+}
+
+//_______________________________________________________________________
+void TMVA::Experimental::Classification::MergeFiles()
+{
+
+   auto dsdir = fFile->mkdir(fDataLoader->GetName()); // dataset dir
+   TTree *TrainTree = 0;
+   TTree *TestTree = 0;
+   TFile *ifile = 0;
+   TFile *ofile = 0;
+   for (UInt_t i = 0; i < fMethods.size(); i++) {
+      auto methodname = fMethods[i].GetValue<TString>("MethodName");
+      auto methodtitle = fMethods[i].GetValue<TString>("MethodTitle");
+      auto fname = Form(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
+      TDirectoryFile *ds = 0;
+      if (i == 0) {
+         ifile = new TFile(fname);
+         ds = (TDirectoryFile *)ifile->Get(fDataLoader->GetName());
+      } else {
+         ofile = new TFile(fname);
+         ds = (TDirectoryFile *)ofile->Get(fDataLoader->GetName());
+      }
+      auto tmptrain = (TTree *)ds->Get("TrainTree");
+      auto tmptest = (TTree *)ds->Get("TestTree");
+      fFile->cd();
+      fFile->cd(fDataLoader->GetName());
+
+      auto methdirname = Form("Method_%s", methodtitle.Data());
+      auto methdir = dsdir->mkdir(methdirname, methdirname);
+      auto methdirbase = methdir->mkdir(methodtitle.Data(), methodtitle.Data());
+      auto mfdir = (TDirectoryFile *)ds->Get(methdirname);
+      auto mfdirbase = (TDirectoryFile *)mfdir->Get(methodtitle.Data());
+
+      CopyFrom(mfdirbase, (TFile *)methdirbase);
+      dsdir->cd();
+      if (i == 0) {
+         TrainTree = tmptrain->CopyTree("");
+         TestTree = tmptest->CopyTree("");
+      } else {
+         Float_t mva = 0;
+         auto trainbranch = TrainTree->Branch(methodtitle.Data(), &mva);
+         tmptrain->SetBranchAddress(methodtitle.Data(), &mva);
+         auto entries = tmptrain->GetEntries();
+         for (UInt_t ev = 0; ev < entries; ev++) {
+            tmptrain->GetEntry(ev);
+            trainbranch->Fill();
+         }
+         auto testbranch = TestTree->Branch(methodtitle.Data(), &mva);
+         tmptest->SetBranchAddress(methodtitle.Data(), &mva);
+         entries = tmptest->GetEntries();
+         for (UInt_t ev = 0; ev < entries; ev++) {
+            tmptest->GetEntry(ev);
+            testbranch->Fill();
+         }
+         ofile->Close();
+      }
+   }
+   TrainTree->Write();
+   TestTree->Write();
+   ifile->Close();
+   // cleaning
+   for (UInt_t i = 0; i < fMethods.size(); i++) {
+      auto methodname = fMethods[i].GetValue<TString>("MethodName");
+      auto methodtitle = fMethods[i].GetValue<TString>("MethodTitle");
+      auto fname = Form(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
+      gSystem->Unlink(fname);
+   }
 }

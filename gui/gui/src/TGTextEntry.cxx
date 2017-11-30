@@ -409,7 +409,7 @@ void TGTextEntry::ReturnPressed()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// This signal is emitted when <SHIFT> and <TAB> keys are pressed.
+/// This signal is emitted when `SHIFT` and `TAB` keys are pressed.
 
 void TGTextEntry::ShiftTabPressed()
 {

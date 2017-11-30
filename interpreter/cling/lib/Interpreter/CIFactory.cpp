@@ -894,7 +894,7 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
     llvm::Triple TheTriple(llvm::sys::getProcessTriple());
 #ifdef LLVM_ON_WIN32
     // COFF format currently needs a few changes in LLVM to function properly.
-    TheTriple.setObjectFormat(llvm::Triple::ELF);
+    TheTriple.setObjectFormat(llvm::Triple::COFF);
 #endif
     clang::driver::Driver Drvr(argv[0], TheTriple.getTriple(), *Diags);
     //Drvr.setWarnMissingInput(false);
@@ -1042,6 +1042,9 @@ static void stringifyPreprocSetting(PreprocessorOptions& PPOpts,
                                           CI->getFileManager(),
                                           /*UserFilesAreVolatile*/ true);
     CI->setSourceManager(SM); // CI now owns SM
+
+    if (Invocation.getFrontendOpts().ModulesEmbedAllFiles)
+       CI->getSourceManager().setAllFilesAreTransient(true);
 
     // As main file we want
     // * a virtual file that is claiming to be huge

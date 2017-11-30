@@ -1098,14 +1098,14 @@ static bool LoadModule(const std::string &ModuleName, cling::Interpreter &interp
    clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
 
-   cling::Transaction* T = nullptr;
-   interp.declare("/*This is decl is to get a valid sloc...*/;", &T);
-   SourceLocation ValidLoc = T->decls_begin()->m_DGR.getSingleDecl()->getLocStart();
-   // CreateImplicitModuleImportNoInit creates decls.
    cling::Interpreter::PushTransactionRAII RAII(&interp);
    if (clang::Module *M = moduleMap.findModule(ModuleName)) {
       clang::IdentifierInfo *II = PP.getIdentifierInfo(M->Name);
-      return !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
+      SourceLocation ValidLoc = M->DefinitionLoc;
+      bool success = !CI.getSema().ActOnModuleImport(ValidLoc, ValidLoc, std::make_pair(II, ValidLoc)).isInvalid();
+      // Also make the module visible in the preprocessor to export its macros.
+      PP.makeModuleVisible(M, ValidLoc);
+      return success;
    }
    return false;
 }
@@ -1133,11 +1133,27 @@ static void LoadCoreModules(cling::Interpreter &interp)
       if (!LoadModule(STLM->Name, interp))
          Error("TCling::LoadCoreModules", "Cannot load module %s", STLM->Name.c_str());
 
+   // ROOT_Types is a module outside core because we need C and -no-rtti compatibility.
+   // Preload it as it is an integral part of module Core.
+   if (!LoadModule(moduleMap.findModule("ROOT_Types")->Name, interp))
+      Error("TCling::LoadCoreModules", "Cannot load module ROOT_Types");
+
    if (!LoadModule(moduleMap.findModule("Core")->Name, interp))
       Error("TCling::LoadCoreModules", "Cannot load module Core");
 
    if (!LoadModule(moduleMap.findModule("RIO")->Name, interp))
       Error("TCling::LoadCoreModules", "Cannot load module RIO");
+
+   // Check that the gROOT macro was exported by any core module.
+   assert(interp.getMacro("gROOT") && "Couldn't load gROOT macro?");
+
+   // C99 decided that it's a very good idea to name a macro `I` (the letter I).
+   // This seems to screw up nearly all the template code out there as `I` is
+   // common template parameter name and iterator variable name.
+   // Let's follow the GCC recommendation and undefine `I` in case any of the
+   // core modules have defined it:
+   // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
+   interp.declare("#ifdef I\n #undef I\n #endif\n");
 }
 
 static bool FileExists(const char *file)
@@ -1282,7 +1298,8 @@ TCling::TCling(const char *name, const char *title)
    if (fromRootCling) {
       fInterpreter->declare("#include \"RtypesCore.h\"\n"
                             "#include <string>\n"
-                            "using std::string;");
+                            "using std::string;\n"
+                            "#include <cassert>\n");
    } else {
       fInterpreter->declare("#include \"Rtypes.h\"\n"
                             + gClassDefInterpMacro + "\n"
@@ -1290,7 +1307,8 @@ TCling::TCling(const char *name, const char *title)
                             + "#undef ClassImp\n"
                             "#define ClassImp(X);\n"
                             "#include <string>\n"
-                            "using namespace std;");
+                            "using namespace std;\n"
+                            "#include <cassert>\n");
    }
 
    // Setup core C++ modules if we have any to setup.
@@ -1913,6 +1931,20 @@ void TCling::RegisterModule(const char* modulename,
 
    clang::Sema &TheSema = fInterpreter->getSema();
 
+   bool ModuleWasSuccessfullyLoaded = false;
+   if (TheSema.getLangOpts().Modules) {
+      std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
+      ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter);
+      if (!ModuleWasSuccessfullyLoaded) {
+         // Only report if we found the module in the modulemap.
+         clang::Preprocessor &PP = TheSema.getPreprocessor();
+         clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
+         clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+         if (moduleMap.findModule(ModuleName))
+            Info("TCling::RegisterModule", "Module %s in modulemap failed to load.", ModuleName.c_str());
+      }
+   }
+
    { // scope within which diagnostics are de-activated
    // For now we disable diagnostics because we saw them already at
    // dictionary generation time. That won't be an issue with the PCMs.
@@ -1925,7 +1957,7 @@ void TCling::RegisterModule(const char* modulename,
 #endif
 #endif
 
-      if (!hasHeaderParsingOnDemand){
+      if (!ModuleWasSuccessfullyLoaded && !hasHeaderParsingOnDemand){
          SuspendAutoParsing autoParseRaii(this);
 
          const cling::Transaction* watermark = fInterpreter->getLastTransaction();
@@ -1948,7 +1980,7 @@ void TCling::RegisterModule(const char* modulename,
    // make sure to 'reset' the TClass that have a class init in this module
    // but already had their type information available (using information/header
    // loaded from other modules or from class rules).
-   if (!hasHeaderParsingOnDemand) {
+   if (!ModuleWasSuccessfullyLoaded && !hasHeaderParsingOnDemand) {
       // This code is likely to be superseded by the similar code in LoadPCM,
       // and have been disabled, (inadvertently or awkwardly) by
       // commit 7903f09f3beea69e82ffba29f59fb2d656a4fd54 (Refactor the routines used for header parsing on demand)
@@ -1975,7 +2007,7 @@ void TCling::RegisterModule(const char* modulename,
    if (fClingCallbacks)
      SetClassAutoloading(oldValue);
 
-   if (!hasHeaderParsingOnDemand) {
+   if (!ModuleWasSuccessfullyLoaded && !hasHeaderParsingOnDemand) {
       // __ROOTCLING__ might be pulled in through PCH
       fInterpreter->declare("#ifdef __ROOTCLING__\n"
                             "#undef __ROOTCLING__\n"
@@ -5836,6 +5868,9 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    //  function name.
    //
 
+   if (!strncmp(name.c_str(), "public: __thiscall ", sizeof("public: __thiscall ")-1)) {
+      name.erase(0, sizeof("public: __thiscall ")-1);
+   }
    if (!strncmp(name.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
       name.erase(0, sizeof("typeinfo for ")-1);
    } else if (!strncmp(name.c_str(), "vtable for ", sizeof("vtable for ")-1)) {
