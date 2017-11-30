@@ -9,7 +9,6 @@ namespace stdext {}
 #include <set>
 #include <map>
 
-#ifndef R__GLOBALSTL
 #ifndef WIN32
 using std::vector;
 using std::list;
@@ -21,23 +20,6 @@ using std::multimap;
 #else
 using namespace std;
 using namespace stdext;
-#endif
-#endif
-#ifdef R__HPUX
-namespace std {
-  using ::make_pair;
-  using ::pair;
-}
-#endif
-
-#ifdef __CINT__
-template<class a,class b,class c> class hash_map : public map<a,b,c> {};
-template<class a,class b> class hash_set : public set<a,b> {};
-template<class a,class b,class c> class hash_multimap : public multimap<a,b,c> {};
-template<class a,class b> class hash_multiset : public multiset<a,b> {};
-#else
-//#include <hash_map>
-//#include <hash_set>
 #endif
 
 //-------------------------------------------------------------
