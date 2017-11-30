@@ -829,11 +829,14 @@ TObject *TList::Remove(TObject *obj)
 
    TObject *ob = lnk->GetObject();
    if (lnk == fFirst.get()) {
-      if (lnk == fLast.get())
-         fLast = fFirst;
-      else
-         fFirst->fPrev.reset();
       fFirst = lnk->fNext;
+      // lnk is still alive as we have either fLast
+      // or the 'new' fFirst->fPrev pointing to it.
+      if (lnk == fLast.get()) {
+         fLast.reset();
+         fFirst.reset();
+      } else
+         fFirst->fPrev.reset();
       //DeleteLink(lnk);
    } else if (lnk == fLast.get()) {
       fLast = lnk->fPrev.lock();
@@ -866,11 +869,14 @@ TObject *TList::Remove(TObjLink *lnk)
    TObject *obj = lnk->GetObject();
 
    if (lnk == fFirst.get()) {
-      if (lnk == fLast.get())
-         fLast = fFirst;
-      else
-         fFirst->fPrev.reset();
       fFirst = lnk->fNext;
+      // lnk is still alive as we have either fLast
+      // or the 'new' fFirst->fPrev pointing to it.
+      if (lnk == fLast.get()) {
+         fLast.reset();
+         fFirst.reset();
+      } else
+         fFirst->fPrev.reset();
       // DeleteLink(lnk);
    } else if (lnk == fLast.get()) {
       fLast = lnk->fPrev.lock();
