@@ -221,7 +221,7 @@ def isAnyPatternInString(patterns,theString):
    Check if any of the patterns is contained in the string
    """
    for pattern in patterns:
-      if pattern in theString: return True
+      if os.path.normpath(pattern) in theString: return True
    return False
 
 #-------------------------------------------------------------------------------
@@ -230,37 +230,37 @@ def isDirForPCH(dirName):
    Check if the directory corresponds to a module whose headers must belong to
    the PCH
    """
-   PCHPatternsWhitelist = (os.path.normpath("interpreter/"),
-                           os.path.normpath("core/"),
-                           os.path.normpath("io/io"),
-                           os.path.normpath("net/net"),
-                           os.path.normpath("math/"),
-                           os.path.normpath("hist/"),
-                           os.path.normpath("tree/"),
-                           os.path.normpath("graf2d"),
-                           os.path.normpath("graf3d/ftgl"),
-                           os.path.normpath("graf3d/g3d"),
-                           os.path.normpath("graf3d/gl"),
-                           os.path.normpath("gui/gui"),
-                           os.path.normpath("gui/fitpanel"),
-                           os.path.normpath("rootx"),
-                           os.path.normpath("bindings/pyroot"),
-                           os.path.normpath("roofit/"),
-                           os.path.normpath("tmva"),
-                           os.path.normpath("main"))
-   PCHPatternsBlacklist = (os.path.normpath("graf2d/qt"),
-                           os.path.normpath("gui/guihtml"),
-                           os.path.normpath("gui/guibuilder"),
-                           os.path.normpath("math/fftw"),
-                           os.path.normpath("math/foam"),
-                           os.path.normpath("math/fumili"),
-                           os.path.normpath("math/mlp"),
-                           os.path.normpath("math/quadp"),
-                           os.path.normpath("math/rtools"),
-                           os.path.normpath("math/splot"),
-                           os.path.normpath("math/unuran"),
-                           os.path.normpath("math/vdt"),
-                           os.path.normpath("tmva/rmva"))
+   PCHPatternsWhitelist = ("interpreter/",
+                           "core/",
+                           "io/io",
+                           "net/net",
+                           "math/",
+                           "hist/",
+                           "tree/",
+                           "graf2d",
+                           "graf3d/ftgl",
+                           "graf3d/g3d",
+                           "graf3d/gl",
+                           "gui/gui",
+                           "gui/fitpanel",
+                           "rootx",
+                           "bindings/pyroot",
+                           "roofit/",
+                           "tmva",
+                           "main")
+   PCHPatternsBlacklist = ("graf2d/qt",
+                           "gui/guihtml",
+                           "gui/guibuilder",
+                           "math/fftw",
+                           "math/foam",
+                           "math/fumili",
+                           "math/mlp",
+                           "math/quadp",
+                           "math/rtools",
+                           "math/splot",
+                           "math/unuran",
+                           "math/vdt",
+                           "tmva/rmva")
 
    accepted = isAnyPatternInString(PCHPatternsWhitelist,dirName) and \
                not isAnyPatternInString(PCHPatternsBlacklist,dirName)
