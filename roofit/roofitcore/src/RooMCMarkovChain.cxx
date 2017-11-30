@@ -166,7 +166,7 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
   double maxstep = 0.01; //maximum step size
   double alphastar = 0.234; //forced acceptance rate
 
-  //Bool_t accepted;
+  Bool_t accepted = kTRUE;
   unsigned int ntested = 0;
   size_t naccepted = 0;
 
@@ -206,8 +206,20 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
   if (pl > 0) {
     std::cout << "starting minimization" << '\n';
   }
+
+  double llh_last;
+  double llh_curr;
+
+  for(size_t index= 0; index < nparams; index++) {
+    context->setPdfParamVal(index, (*last)[index],verbose);
+  }
+  llh_curr = context->_func->getVal(); //get nll for starting point
+
   for (unsigned int i = 0; i < nstat; i++) {
-     *curr = *last;//use value of last for current then vary
+    if (accepted) {
+      *curr = *last;//use value of last for current then vary
+    }
+
 
 
     for (int j = 0; j < WN->GetNrows() ; j++) {
@@ -216,18 +228,17 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
     *SW =  *SNminusone * *WN; //Step size correction
     *curr += *SW; //vary current point
 
-    for(size_t index= 0; index < nparams; index++) {
-      context->setPdfParamVal(index, (*last)[index],verbose);
-    }
-    double llh_last = context->_func->getVal(); //get nll for last parameters
+
+    llh_last = llh_curr; //nll for last parameters from prvius iteration
+
     for(size_t index= 0; index < nparams; index++) {
       context->setPdfParamVal(index, (*curr)[index],verbose);
     }
-    double llh_curr = context->_func->getVal(); //get nll for current parameters
+    llh_curr = context->_func->getVal(); //get nll for current parameters
 
   // If out of bounds of the negative log-likelihood values gets set very high
   // to provoke big step size away from the bounds
-  // Also warning become disable, because of command line spam
+  // Also warning are disabled, because of command line spam
     if (llh_curr != llh_curr) {
       RooMsgService::instance().setGlobalKillBelow(RooFit::FATAL) ;
       // std::cout << "press Enter to continue" << std::endl;
@@ -245,11 +256,10 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
   // Computing rejection or acceptance of current point
     double alpha = std::min(1.0, exp(llh_last - llh_curr));
     double r = rnd->Uniform(0,1);
-    // accepted = false;
     //double acceptrate = double(naccepted)/double(ntested);
     if (r < alpha) {
       //success
-      // accepted = true;
+      accepted = true;
       nllval->setVal(llh_curr);
       RooArgList* point = (RooArgList*) _floatParamList->snapshot(kTRUE);
       for (size_t index = 0; index < nparams; index++) {
@@ -263,7 +273,7 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
 
     } else {
       //reset to last candidate
-      // accepted = false;
+      accepted = false;
       *curr = *last;
     }
 
