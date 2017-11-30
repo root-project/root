@@ -27,11 +27,13 @@ class TDataMember;
 class TJSONStackObj;
 
 
+typedef void *JSONObject_t;
+
 class TBufferJSON : public TBuffer {
 
 public:
 
-   TBufferJSON();
+   TBufferJSON(TBuffer::EMode mode = TBuffer::kWrite);
    virtual ~TBufferJSON();
 
    void SetCompact(int level);
@@ -422,6 +424,7 @@ protected:
    TString          JsonWriteMember(const void *ptr, TDataMember *member, TClass *memberClass, Int_t arraylen);
 
    TJSONStackObj   *PushStack(Int_t inclevel = 0);
+   TJSONStackObj   *PushStackR(JSONObject_t current, Bool_t simple = kTRUE);
    TJSONStackObj   *PopStack();
    TJSONStackObj   *Stack(Int_t depth = 0);
 
@@ -435,7 +438,7 @@ protected:
 
    void             PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_cl = 0);
 
-   void              JsonWriteBasic(Char_t value);
+   void             JsonWriteBasic(Char_t value);
    void              JsonWriteBasic(Short_t value);
    void              JsonWriteBasic(Int_t value);
    void              JsonWriteBasic(Long_t value);
@@ -454,6 +457,10 @@ protected:
    void              JsonWriteObject(const void *obj, const TClass *objClass, Bool_t check_map = kTRUE);
 
    void              JsonStreamCollection(TCollection *obj, const TClass *objClass);
+
+   void             *JsonReadAny(JSONObject_t node, void *obj, TClass **cl);
+
+   void             *JsonReadObject(void *obj, TClass **cl);
 
    void              AppendOutput(const char *line0, const char *line1 = 0);
 
