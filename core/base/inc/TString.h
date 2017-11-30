@@ -25,7 +25,7 @@
 
 #include "TMathBase.h"
 
-#include "RStringView.h"
+#include "ROOT/string_view.hxx"
 
 #include <iosfwd>
 #include <stdarg.h>

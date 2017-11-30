@@ -11,7 +11,7 @@
 #ifndef ROOT_TDATASOURCE
 #define ROOT_TDATASOURCE
 
-#include "RStringView.h"
+#include <ROOT/string_view.hxx>
 #include "RtypesCore.h" // ULong64_t
 #include <algorithm> // std::transform
 #include <vector>

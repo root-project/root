@@ -23,7 +23,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "RStringView.h"
+#include <ROOT/string_view.hxx>
 #include "ROOT/TLogger.hxx"
 
 namespace ROOT {

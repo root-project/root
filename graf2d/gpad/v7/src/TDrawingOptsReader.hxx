@@ -18,7 +18,7 @@
 
 #include <ROOT/TColor.hxx>
 
-#include <RStringView.h>
+#include <ROOT/string_view.hxx>
 
 #include <unordered_map>
 #include <vector>

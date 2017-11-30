@@ -20,7 +20,7 @@
 
 #include "TClass.h"
 
-#include "RStringView.h"
+#include <ROOT/string_view.hxx>
 #include <memory>
 #include <typeinfo>
 
