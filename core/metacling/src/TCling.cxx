@@ -1175,8 +1175,6 @@ TCling::TCling(const char *name, const char *title)
 #ifdef R__USE_CXXMODULES
    useCxxModules = true;
 #endif
-   if (useCxxModules)
-     fHeaderParsingOnDemand = false;
 
    llvm::install_fatal_error_handler(&exceptionErrorHandler);
 
@@ -1812,7 +1810,22 @@ void TCling::RegisterModule(const char* modulename,
       } // if (dyLibName)
    } // if (!lateRegistration)
 
-   if (hasHeaderParsingOnDemand && fwdDeclsCode){
+   clang::Sema &TheSema = fInterpreter->getSema();
+   bool ModuleWasSuccessfullyLoaded = false;
+   if (hasCxxModule) {
+      std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
+      ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter);
+      if (!ModuleWasSuccessfullyLoaded) {
+         // Only report if we found the module in the modulemap.
+         clang::Preprocessor &PP = TheSema.getPreprocessor();
+         clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
+         clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+         if (moduleMap.findModule(ModuleName))
+            Info("TCling::RegisterModule", "Module %s in modulemap failed to load.", ModuleName.c_str());
+      }
+   }
+
+   if (!ModuleWasSuccessfullyLoaded && hasHeaderParsingOnDemand && fwdDeclsCode){
       // We now parse the forward declarations. All the classes are then modified
       // in order for them to have an external lexical storage.
       std::string fwdDeclsCodeLessEnums;
@@ -1949,21 +1962,7 @@ void TCling::RegisterModule(const char* modulename,
    if (fClingCallbacks)
      oldValue = SetClassAutoloading(false);
 
-   clang::Sema &TheSema = fInterpreter->getSema();
 
-   bool ModuleWasSuccessfullyLoaded = false;
-   if (hasCxxModule) {
-      std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
-      ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter);
-      if (!ModuleWasSuccessfullyLoaded) {
-         // Only report if we found the module in the modulemap.
-         clang::Preprocessor &PP = TheSema.getPreprocessor();
-         clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
-         clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
-         if (moduleMap.findModule(ModuleName))
-            Info("TCling::RegisterModule", "Module %s in modulemap failed to load.", ModuleName.c_str());
-      }
-   }
 
    { // scope within which diagnostics are de-activated
    // For now we disable diagnostics because we saw them already at
