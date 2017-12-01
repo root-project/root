@@ -393,14 +393,10 @@ public:
       Error("ReadClassEmulated", "useless");
       return 0;
    }
-   virtual   Int_t    ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, const TClass * /*onfile_class*/ = 0)
-   {
-      Error("ReadClassBuffer", "useless");
-      return 0;
-   }
+   virtual   Int_t    ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, const TClass * /*onfile_class*/ = 0);
    virtual   Int_t    ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, Int_t /*version*/, UInt_t /*start*/, UInt_t /*count*/, const TClass * /*onfile_class*/ = 0)
    {
-      Error("ReadClassBuffer", "useless");
+      Error("ReadClassBuffer2", "useless");
       return 0;
    }
 
@@ -427,6 +423,7 @@ protected:
    TJSONStackObj   *PushStackR(JSONObject_t current, Bool_t simple = kTRUE);
    TJSONStackObj   *PopStack();
    TJSONStackObj   *Stack(Int_t depth = 0);
+   JSONObject_t     StackNode();
 
    void             WorkWithClass(TStreamerInfo *info, const TClass *cl = 0);
    void             WorkWithElement(TStreamerElement *elem, Int_t);
@@ -439,44 +436,52 @@ protected:
    void             PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_cl = 0);
 
    void             JsonWriteBasic(Char_t value);
-   void              JsonWriteBasic(Short_t value);
-   void              JsonWriteBasic(Int_t value);
-   void              JsonWriteBasic(Long_t value);
-   void              JsonWriteBasic(Long64_t value);
-   void              JsonWriteBasic(Float_t value);
-   void              JsonWriteBasic(Double_t value);
-   void              JsonWriteBasic(Bool_t value);
-   void              JsonWriteBasic(UChar_t value);
-   void              JsonWriteBasic(UShort_t value);
-   void              JsonWriteBasic(UInt_t value);
-   void              JsonWriteBasic(ULong_t value);
-   void              JsonWriteBasic(ULong64_t value);
+   void             JsonWriteBasic(Short_t value);
+   void             JsonWriteBasic(Int_t value);
+   void             JsonWriteBasic(Long_t value);
+   void             JsonWriteBasic(Long64_t value);
+   void             JsonWriteBasic(Float_t value);
+   void             JsonWriteBasic(Double_t value);
+   void             JsonWriteBasic(Bool_t value);
+   void             JsonWriteBasic(UChar_t value);
+   void             JsonWriteBasic(UShort_t value);
+   void             JsonWriteBasic(UInt_t value);
+   void             JsonWriteBasic(ULong_t value);
+   void             JsonWriteBasic(ULong64_t value);
 
-   void              JsonWriteConstChar(const char* value, Int_t len = -1);
+   void             JsonWriteConstChar(const char* value, Int_t len = -1);
 
-   void              JsonWriteObject(const void *obj, const TClass *objClass, Bool_t check_map = kTRUE);
+   void             JsonWriteObject(const void *obj, const TClass *objClass, Bool_t check_map = kTRUE);
 
-   void              JsonStreamCollection(TCollection *obj, const TClass *objClass);
+   void             JsonStreamCollection(TCollection *obj, const TClass *objClass);
 
-   void             *JsonReadAny(JSONObject_t node, void *obj, TClass **cl);
+   void            *JsonReadAny(JSONObject_t node, void *obj, TClass **cl);
 
-   void             *JsonReadObject(void *obj, TClass **cl);
+   void            *JsonReadObject(void *obj, TClass **cl);
 
-   void              AppendOutput(const char *line0, const char *line1 = 0);
+   void             AppendOutput(const char *line0, const char *line1 = 0);
 
-   TString                   fOutBuffer;    //!  main output buffer for json code
-   TString                  *fOutput;       //!  current output buffer for json code
-   TString                   fValue;        //!  buffer for current value
-   std::map<const void *, unsigned>  fJsonrMap;   //!  map of recorded objects, used in JsonR to restore references
-   unsigned                  fJsonrCnt;     //!  counter for all objects and arrays
-   TObjArray                 fStack;        //!  stack of streamer infos
-   Int_t                     fCompact;       //!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
-   TString                   fSemicolon;     //!  depending from compression level, " : " or ":"
-   TString                   fArraySepar;    //!  depending from compression level, ", " or ","
-   TString                   fNumericLocale; //!  stored value of setlocale(LC_NUMERIC), which should be recovered at the end
+   struct ReadObj {
+      void *obj;
+      TClass *cl;
+      ReadObj(void *_obj = nullptr, TClass *_cl = nullptr) : obj(_obj), cl(_cl) {}
+//      ReadObj(const ReadObj &src) : obj(src.obj), cl(src.cl) {}
+   };
 
-   static const char *fgFloatFmt;          //!  printf argument for floats, either "%f" or "%e" or "%10f" and so on
-   static const char *fgDoubleFmt;         //!  printf argument for doubles, either "%f" or "%e" or "%10f" and so on
+   TString                   fOutBuffer;    ///<!  main output buffer for json code
+   TString                  *fOutput;       ///<!  current output buffer for json code
+   TString                   fValue;        ///<!  buffer for current value
+   std::map<const void *, unsigned>  fJsonrMap;   ///<!  map of recorded objects, used in JsonR to restore references
+   std::map<unsigned, ReadObj> fReadMap; ///<! map of read objects, required to reconstruct references
+   unsigned                  fJsonrCnt;     ///<!  counter for all objects, used for referencing
+   TObjArray                 fStack;        ///<!  stack of streamer infos
+   Int_t                     fCompact;       ///<!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
+   TString                   fSemicolon;     ///<!  depending from compression level, " : " or ":"
+   TString                   fArraySepar;    ///<!  depending from compression level, ", " or ","
+   TString                   fNumericLocale; ///<!  stored value of setlocale(LC_NUMERIC), which should be recovered at the end
+
+   static const char *fgFloatFmt;          ///<!  printf argument for floats, either "%f" or "%e" or "%10f" and so on
+   static const char *fgDoubleFmt;         ///<!  printf argument for doubles, either "%f" or "%e" or "%10f" and so on
 
    ClassDef(TBufferJSON, 1) //a specialized TBuffer to only write objects into JSON format
 };
