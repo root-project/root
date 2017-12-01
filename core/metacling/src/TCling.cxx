@@ -1164,7 +1164,7 @@ static bool FileExists(const char *file)
 
 static bool isFromRootCling() {
   // rootcling also uses TCling for generating the dictionary ROOT files.
-  bool foundSymbol = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+  const static bool foundSymbol = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
   return foundSymbol;
 }
 
