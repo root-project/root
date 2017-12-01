@@ -1162,7 +1162,7 @@ static bool FileExists(const char *file)
    return (stat(file, &buf) == 0);
 }
 
-static bool isFromRootCling() {
+static bool IsFromRootCling() {
   // rootcling also uses TCling for generating the dictionary ROOT files.
   const static bool foundSymbol = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
   return foundSymbol;
@@ -1177,7 +1177,7 @@ TCling::TCling(const char *name, const char *title)
    fClingCallbacks(0), fAutoLoadCallBack(0),
    fTransactionCount(0), fHeaderParsingOnDemand(true), fIsAutoParsingSuspended(kFALSE)
 {
-   const bool fromRootCling = isFromRootCling();
+   const bool fromRootCling = IsFromRootCling();
 
    bool useCxxModules = false;
 #ifdef R__USE_CXXMODULES
@@ -1698,7 +1698,7 @@ void TCling::RegisterModule(const char* modulename,
                             const char** classesHeaders,
                             Bool_t lateRegistration /*=false*/)
 {
-   const bool fromRootCling = isFromRootCling();
+   const bool fromRootCling = IsFromRootCling();
    // We need the dictionary initialization but we don't want to inject the
    // declarations into the interpreter, except for those we really need for
    // I/O; see rootcling.cxx after the call to TCling__GetInterpreter().
