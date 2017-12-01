@@ -147,8 +147,8 @@ public:
 // [span.iter], span iterator support
 	iterator                 begin() const noexcept { return data(); }
 	iterator                   end() const noexcept { return data() + size(); }
-	const_iterator          cbegin() const noexcept { return data(); }
-	const_iterator            cend() const noexcept { return data() + size(); }
+	/*const_*/ iterator     cbegin() const noexcept { return data(); }
+	/*const_*/ iterator       cend() const noexcept { return data() + size(); }
 	reverse_iterator        rbegin() const noexcept { return reverse_iterator(end()); }
 	reverse_iterator          rend() const noexcept { return reverse_iterator(begin()); }
 	const_reverse_iterator crbegin() const noexcept { return const_reverse_iterator(cend()); }
