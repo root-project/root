@@ -1403,7 +1403,7 @@ void TCling::Initialize()
    if (fInterpreter->getCI()->getLangOpts().Modules && !isFromRootCling()) {
       // Load modules that we can't automatically load via rootmap files as they
       // contain decls in namespaces which aren't supported.
-      LoadModules({"TMVA", "Gpad", "RooStats", "GenVector", "Hist", "Math", "Net", "TreePlayer", "TreeViewer", "Graf"}, *fInterpreter);
+      LoadModules({"TMVA", "TMVAGui", "Gpad", "RooStats", "GenVector", "Hist", "Math", "Net", "TreePlayer", "TreeViewer", "Graf"}, *fInterpreter);
    }
 }
 
