@@ -309,7 +309,8 @@ public:
                                     const char* fwdDeclCode,
                                     void (*triggerFunc)(),
                                     const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
-                                    const char** classesHeaders);
+                                    const char** classesHeaders,
+                                    bool hasCxxModule = false);
    TObject          *Remove(TObject*);
    void              RemoveClass(TClass *);
    void              Reset(Option_t *option="");

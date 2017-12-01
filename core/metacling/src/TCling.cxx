@@ -1668,7 +1668,8 @@ void TCling::RegisterModule(const char* modulename,
                             void (*triggerFunc)(),
                             const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                             const char** classesHeaders,
-                            Bool_t lateRegistration /*=false*/)
+                            Bool_t lateRegistration /*=false*/,
+                            Bool_t hasCxxModule /*=false*/)
 {
    const bool fromRootCling = IsFromRootCling();
    // We need the dictionary initialization but we don't want to inject the
@@ -1908,7 +1909,7 @@ void TCling::RegisterModule(const char* modulename,
    clang::Sema &TheSema = fInterpreter->getSema();
 
    bool ModuleWasSuccessfullyLoaded = false;
-   if (TheSema.getLangOpts().Modules) {
+   if (hasCxxModule) {
       std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
       ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter);
       if (!ModuleWasSuccessfullyLoaded) {
