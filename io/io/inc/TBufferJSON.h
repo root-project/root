@@ -461,18 +461,17 @@ protected:
 
    void             AppendOutput(const char *line0, const char *line1 = 0);
 
-   struct ReadObj {
+   struct ObjectEntry {
       void *obj;
       TClass *cl;
-      ReadObj(void *_obj = nullptr, TClass *_cl = nullptr) : obj(_obj), cl(_cl) {}
-//      ReadObj(const ReadObj &src) : obj(src.obj), cl(src.cl) {}
+      ObjectEntry(void *_obj = nullptr, TClass *_cl = nullptr) : obj(_obj), cl(_cl) {}
    };
 
    TString                   fOutBuffer;    ///<!  main output buffer for json code
    TString                  *fOutput;       ///<!  current output buffer for json code
    TString                   fValue;        ///<!  buffer for current value
    std::map<const void *, unsigned>  fJsonrMap;   ///<!  map of recorded objects, used in JsonR to restore references
-   std::map<unsigned, ReadObj> fReadMap; ///<! map of read objects, required to reconstruct references
+   std::map<unsigned, ObjectEntry> fReadMap; ///<! map of read objects, required to reconstruct references
    unsigned                  fJsonrCnt;     ///<!  counter for all objects, used for referencing
    TObjArray                 fStack;        ///<!  stack of streamer infos
    Int_t                     fCompact;       ///<!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
