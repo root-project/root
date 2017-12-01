@@ -1226,6 +1226,8 @@ void TF1::Draw(Option_t *option)
    if (gPad && !opt.Contains("same")) gPad->Clear();
 
    AppendPad(option);
+
+   gPad->IncrementPaletteColor(1, opt);
 }
 
 
@@ -2813,9 +2815,12 @@ void TF1::Print(Option_t *option) const
 /// histogram is painted.
 /// The painted histogram can be retrieved calling afterwards the method TF1::GetHistogram()
 
-void TF1::Paint(Option_t *option)
+void TF1::Paint(Option_t *choptin)
 {
    fgCurrent = this;
+
+   char option[32];
+   strlcpy(option,choptin,32);
 
    TString opt = option;
    opt.ToLower();
@@ -2836,6 +2841,16 @@ void TF1::Paint(Option_t *option)
 
    // create an histogram using the function content (re-use it if already existing)
    fHistogram = DoCreateHistogram(xmin, xmax, kFALSE);
+
+   char *l1 = strstr(option,"PFC"); // Automatic Fill Color
+   char *l2 = strstr(option,"PLC"); // Automatic Line Color
+   char *l3 = strstr(option,"PMC"); // Automatic Marker Color
+   if (l1 || l2 || l3) {
+      Int_t i = gPad->NextPaletteColor();
+      if (l1) {strncpy(l1,"   ",3); fHistogram->SetFillColor(i);}
+      if (l2) {strncpy(l2,"   ",3); fHistogram->SetLineColor(i);}
+      if (l3) {strncpy(l3,"   ",3); fHistogram->SetMarkerColor(i);}
+   }
 
    // set the optimal minimum and maximum
    Double_t minimum   = fHistogram->GetMinimumStored();
