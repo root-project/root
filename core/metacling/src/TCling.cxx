@@ -1127,11 +1127,12 @@ static void loadModulePath(HeaderSearch& hdrSearch, const char* inputPath) {
      path.split(paths, ":");
 
      for (StringRef path : paths) {
-        SmallString<128> ModuleMapFilePath = path;
+      SmallString<128> ModuleMapFilePath = path;
+      llvm::sys::path::append(ModuleMapFilePath, "module.modulemap");
 
-        if (auto file = hdrSearch.getFileMgr().getFile(ModuleMapFilePath)) {
-           hdrSearch.loadModuleMapFile(file, false, FileID());
-        }
+      if (auto file = hdrSearch.getFileMgr().getFile(ModuleMapFilePath)) {
+         hdrSearch.loadModuleMapFile(file, false, FileID());
+      }
     }
   }
 }
@@ -5119,6 +5120,20 @@ Int_t TCling::LoadLibraryMap(const char* rootmapfile)
          }
          if (!skip) {
             void* dirp = gSystem->OpenDirectory(d);
+
+            // Load the modulemap from the dir and add it to the prebuilt module
+            // path.
+            // FIXME: This is ROOT quality code, refactor me.
+            fInterpreter->getCI()->getHeaderSearchOpts().AddPrebuiltModulePath(d.Data());
+            auto& hdrSearch = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo();
+            SmallString<128> ModuleMapFilePath = StringRef(d.Data());
+            llvm::sys::path::append(ModuleMapFilePath, "module.modulemap");
+
+            if (auto file = hdrSearch.getFileMgr().getFile(ModuleMapFilePath)) {
+               hdrSearch.loadModuleMapFile(file, false, FileID());
+            }
+
+
             if (dirp) {
                if (gDebug > 3) {
                   Info("LoadLibraryMap", "%s", d.Data());
