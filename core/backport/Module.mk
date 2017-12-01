@@ -8,23 +8,19 @@ MODDIR         := $(ROOT_SRCDIR)/core/$(MODNAME)
 MODDIRS        := $(MODDIR)/src
 MODDIRI        := $(MODDIR)/inc
 
-FOUNDATIONDIR   := $(MODDIR)
-FOUNDATIONDIRS  := $(FOUNDATIONDIR)/src
-FOUNDATIONDIRI  := $(FOUNDATIONDIR)/inc
-FOUNDATIONDIRR  := $(FOUNDATIONDIR)/res
+BACKPORTDIR    := $(MODDIR)
+BACKPORTDIRI   := $(BACKPORTDIR)/inc
 
-BACKPORTTH       = $(wildcard $(MODDIRI)/*.h) \
-                   $(wildcard $(MODDIRI)/ROOT/*.hxx)
+BACKPORTH       = $(wildcard $(MODDIRI)/*.h) \
+                  $(wildcard $(MODDIRI)/ROOT/*.hxx)
 
 # used in the main Makefile
-ALLHDRS     += $(patsubst $(MODDIRI)/%,include/%,$(FOUNDATIONH) $(FOUNDATIONTH))
+ALLHDRS     += $(patsubst $(MODDIRI)/%,include/%,$(BACKPORTH))
 
 ##### local rules #####
-.PHONY:         all-$(MODNAME) clean-$(MODNAME) distclean-$(MODNAME)
-
-include/%.h:    $(FOUNDATIONDIRI)/%.h
+include/%.h:    $(BACKPORTDIRI)/%.h
 		cp $< $@
 
-include/%.hxx:	$(FOUNDATIONDIRI)/%.hxx
+include/%.hxx:	$(BACKPORTDIRI)/%.hxx
 		mkdir -p include/ROOT
 		cp $< $@
