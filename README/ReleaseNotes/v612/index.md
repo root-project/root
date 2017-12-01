@@ -212,6 +212,7 @@ large TClonesArray where each element contains another small vector container.
 ```{.cpp}
     h->GetXaxis()->SetMaxDigits(6);
 ```
+   - Auto-coloring for TF1 (drawing options PFC, PLC and PMC) is implemented.
 
 ## 3D Graphics Libraries
 
