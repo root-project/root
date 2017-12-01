@@ -1271,6 +1271,7 @@ TCling::TCling(const char *name, const char *title)
       HeaderSearch& hdrSearch = fInterpreter->getCI()->getPreprocessor().getHeaderSearchInfo();
       hdrSearch.loadTopLevelSystemModules();
       loadModulePath(hdrSearch, gSystem->GetDynamicPath());
+      fInterpreter->getCI()->getHeaderSearchOpts().AddPrebuiltModulePath(".");
 
       // Setup core C++ modules if we have any to setup.
 
