@@ -89,8 +89,8 @@ include $(MAKEFILEDEP)
 
 ##### Modules to build #####
 
-MODULES       = build interpreter/llvm interpreter/cling core/foundation \
-                core/clingutils core/dictgen core/metacling \
+MODULES       = build interpreter/llvm interpreter/cling core/backport \
+                core/foundation core/clingutils core/dictgen core/metacling \
                 core/pcre core/clib \
                 core/textinput core/base core/cont core/meta core/thread \
                 io/rootpcm io/io math/mathcore net/net core/zip core/lzma core/lz4 \
