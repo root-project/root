@@ -57,6 +57,7 @@ The following people have contributed to this new version:
    - TCanvas::SetWindowsSize has been changed to get the same window size in interactive mode…and batch mode.
    - Change the `TGraph` default fill color to white to avoid black box in legend
      when `gPad->BuildLegend()` is called.
+   - Auto-coloring for TF1 (drawing options PFC, PLC and PMC) is implemented.
 
 ## 3D Graphics Libraries
 
