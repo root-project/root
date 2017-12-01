@@ -79,9 +79,9 @@ public:
 		{ static_assert(_Extent == dynamic_extent || _Extent == 0, "Invalid extent"); }
 	constexpr span(std::nullptr_t) : __data{nullptr}, __size{0}
 		{ static_assert(_Extent == dynamic_extent || _Extent == 0, "Invalid extent"); }
-	constexpr span(pointer __ptr, index_type __count) : __data{__ptr}, __size{__count}
+	/*constexpr*/ span(pointer __ptr, index_type __count) : __data{__ptr}, __size{__count}
 		{ assert(_Extent == dynamic_extent || _Extent == __size); }
-	constexpr span(pointer __f, pointer __l) : __data{__f}, __size{std::distance(__f, __l)}
+	/*constexpr*/ span(pointer __f, pointer __l) : __data{__f}, __size{std::distance(__f, __l)}
 		{ assert(_Extent == dynamic_extent || _Extent == __size); }
 
 	template <size_t _N>
@@ -89,12 +89,12 @@ public:
 		{ static_assert(_Extent == dynamic_extent || _Extent == __size, "Invalid extent"); }
 
 	template <size_t N>
-		constexpr span(std::array<std::remove_const_t<element_type>, N>& __arr)
+		constexpr span(std::array<typename std::remove_const<element_type>::type, N>& __arr)
 		: __data{__arr.data()}, __size{__arr.size()}
 		{ static_assert(_Extent == dynamic_extent || _Extent == __size, "Invalid extent"); }
 
 	template <size_t N>
-		constexpr span(const std::array<std::remove_const_t<element_type>, N>& __arr)
+		constexpr span(const std::array<typename std::remove_const<element_type>::type, N>& __arr)
 		: __data{__arr.data()}, __size{__arr.size()}
 		{ static_assert(_Extent == dynamic_extent || _Extent == __size, "Invalid extent"); }
 
@@ -113,8 +113,8 @@ public:
 
 	~span() noexcept = default;
 
-	constexpr span& operator=(const span&  other) noexcept = default;
-	constexpr span& operator=(      span&& other) noexcept = default;
+	/*constexpr*/ span& operator=(const span&  other) noexcept = default;
+	/*constexpr*/ span& operator=(      span&& other) noexcept = default;
 
 	template <std::ptrdiff_t _Count>
 	 	constexpr span<element_type, _Count> first() const
