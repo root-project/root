@@ -25,22 +25,33 @@
 #include "TDictionary.h"
 #include "TClassRef.h"
 
+#include <atomic>
+
 class TBrowser;
 class TClass;
 
 class TBaseClass : public TDictionary {
+#ifndef __CLING__
+   using AtomicInt_t = std::atomic<Int_t>;
+   static_assert(sizeof(std::atomic<Int_t>) == sizeof(Int_t),
+                 "We requiqre atomic<int> and <int> to have the same size but they are not");
+#else
+   // std::atomic is not yet supported in the I/O, so
+   // we hide them from Cling
+   using AtomicInt_t = Int_t;
+#endif
 
 private:
    TBaseClass(const TBaseClass &);          // Not implemented
    TBaseClass&operator=(const TBaseClass&); // Not implemented
 
 private:
-   BaseClassInfo_t   *fInfo;      //!pointer to CINT base class info
-   TClassRef          fClassPtr;  // pointer to the base class TClass
-   TClass            *fClass;     //!pointer to parent class
-   Int_t              fDelta;     // BaseClassInfo_t offset (INT_MAX if unset)
-   mutable Int_t      fProperty;  // BaseClassInfo_t's properties
-   Int_t              fSTLType;   // cache of IsSTLContainer()
+   BaseClassInfo_t    *fInfo;      //!pointer to CINT base class info
+   TClassRef           fClassPtr;  // pointer to the base class TClass
+   TClass             *fClass;     //!pointer to parent class
+   AtomicInt_t         fDelta;     // BaseClassInfo_t offset (INT_MAX if unset)
+   mutable AtomicInt_t fProperty;  // BaseClassInfo_t's properties
+   Int_t               fSTLType;   // cache of IsSTLContainer()
 
 public:
    TBaseClass(BaseClassInfo_t *info = 0, TClass *cl = 0);
