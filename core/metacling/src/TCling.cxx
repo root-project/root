@@ -543,29 +543,6 @@ void TCling::HandleNewDecl(const void* DV, bool isDeserialized, std::set<TClass*
          TCling__UpdateClassInfo(NSD);
       }
 
-      // While classes are read completely (except for function template instances,
-      // enum, data (and functions) can be added to namespaces at any time.
-      // [this section can be removed when both the list of data member and the list
-      //  of enums has been update to be active list]
-      if (const NamespaceDecl* NCtx = dyn_cast<NamespaceDecl>(ND->getDeclContext())) {
-         if (NCtx->getIdentifier()) {
-            // No need to load the TClass: if there is something to update then
-            // it must already exist.
-            std::string NCtxName;
-            PrintingPolicy Policy(NCtx->getASTContext().getPrintingPolicy());
-            llvm::raw_string_ostream stream(NCtxName);
-            // Don't trigger fopen of the source file to count lines:
-            Policy.AnonymousTagLocations = false;
-            NCtx->getNameForDiagnostic(stream, Policy, /*Qualified=*/true);
-
-            TClass* cl = (TClass*)gROOT->GetListOfClasses()->FindObject(NCtxName.c_str());
-            if (cl) {
-               modifiedTClasses.insert(cl);
-            }
-         }
-         return;
-      }
-
       // We care about declarations on the global scope.
       if (!isa<TranslationUnitDecl>(ND->getDeclContext()))
          return;
