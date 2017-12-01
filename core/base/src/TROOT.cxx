@@ -258,7 +258,8 @@ namespace {
                          const char* fwdDeclCode,
                          void (*triggerFunc)(),
                          const TROOT::FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
-                         const char** classesHeaders):
+                         const char **classesHeaders,
+                         bool hasCxxModule):
                            fModuleName(moduleName),
                            fHeaders(headers),
                            fPayloadCode(payloadCode),
@@ -266,7 +267,8 @@ namespace {
                            fIncludePaths(includePaths),
                            fTriggerFunc(triggerFunc),
                            fClassesHeaders(classesHeaders),
-                           fFwdNargsToKeepColl(fwdDeclsArgToSkip){}
+                           fFwdNargsToKeepColl(fwdDeclsArgToSkip),
+                           fHasCxxModule(hasCxxModule) {}
 
       const char* fModuleName; // module name
       const char** fHeaders; // 0-terminated array of header files
@@ -277,6 +279,7 @@ namespace {
       const char** fClassesHeaders; // 0-terminated list of classes and related header files
       const TROOT::FwdDeclArgsToKeepCollection_t fFwdNargsToKeepColl; // Collection of
                                                                       // pairs of template fwd decls and number of
+      bool fHasCxxModule; // Whether this module has a C++ module alongside it.
    };
 
    std::vector<ModuleHeaderInfo_t>& GetModuleHeaderInfoBuffer() {
@@ -2068,7 +2071,8 @@ void TROOT::InitInterpreter()
                                    li->fTriggerFunc,
                                    li->fFwdNargsToKeepColl,
                                    li->fClassesHeaders,
-                                   kTRUE /*lateRegistration*/);
+                                   kTRUE /*lateRegistration*/,
+                                   li->fHasCxxModule);
    }
    GetModuleHeaderInfoBuffer().clear();
 
@@ -2477,7 +2481,8 @@ void TROOT::RegisterModule(const char* modulename,
                            const char* fwdDeclCode,
                            void (*triggerFunc)(),
                            const TInterpreter::FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
-                           const char** classesHeaders)
+                           const char** classesHeaders,
+                           bool hasCxxModule)
 {
 
    // First a side track to insure proper end of process behavior.
@@ -2539,12 +2544,12 @@ void TROOT::RegisterModule(const char* modulename,
 
    // Now register with TCling.
    if (gCling) {
-      gCling->RegisterModule(modulename, headers, includePaths, payloadCode, fwdDeclCode,
-                             triggerFunc, fwdDeclsArgToSkip, classesHeaders);
+      gCling->RegisterModule(modulename, headers, includePaths, payloadCode, fwdDeclCode, triggerFunc,
+                             fwdDeclsArgToSkip, classesHeaders, false, hasCxxModule);
    } else {
-      GetModuleHeaderInfoBuffer()
-         .push_back(ModuleHeaderInfo_t (modulename, headers, includePaths, payloadCode, fwdDeclCode,
-                                        triggerFunc, fwdDeclsArgToSkip,classesHeaders));
+      GetModuleHeaderInfoBuffer().push_back(ModuleHeaderInfo_t(modulename, headers, includePaths, payloadCode,
+                                                               fwdDeclCode, triggerFunc, fwdDeclsArgToSkip,
+                                                               classesHeaders, hasCxxModule));
    }
 }
 

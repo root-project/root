@@ -462,7 +462,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
                               "    if (!isInitialized) {\n"
                               "      TROOT::RegisterModule(\"" << GetDemangledDictionaryName() << "\",\n"
                               "        headers, includePaths, payloadCode, fwdDeclCode,\n"
-                              "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl, " << fwdDeclnArgsToKeepString << ", classesHeaders);\n"
+                              "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl, " << fwdDeclnArgsToKeepString << ", classesHeaders, /*has C++ module?*/" << (fCI->getLangOpts().Modules ? "true" : "false") << ");\n"
                               "      isInitialized = true;\n"
                               "    }\n"
                               "  }\n"
