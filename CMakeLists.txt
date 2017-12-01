@@ -347,7 +347,7 @@ if(runtime_cxxmodules)
   # we will always load them to workaround the fact that we can't
   # load the decls in them via rootmap files (as they are inside
   # namespaces which isn't supported).
-  add_custom_target(onepcm DEPENDS Net Math TreeViewer RooStats Hist Gpad TreePlayer RooFit EG RGL TMVA TMVAGui Graf GenVector)
+  add_custom_target(onepcm DEPENDS Net MathCore TreeViewer RooStats Hist Gpad TreePlayer RooFit EG RGL TMVA TMVAGui Graf GenVector)
 else()
   add_custom_command(OUTPUT etc/allDict.cxx.pch
                     COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
