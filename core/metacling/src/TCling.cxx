@@ -1253,6 +1253,8 @@ TCling::TCling(const char *name, const char *title)
    fMetaProcessor = new cling::MetaProcessor(*fInterpreter, fMPOuts);
 
    if (fInterpreter->getCI()->getLangOpts().Modules) {
+      fInterpreter->getCI()->getHeaderSearchOpts().AddPrebuiltModulePath(".");
+
       // Setup core C++ modules if we have any to setup.
 
       // Load libc and stl first.
