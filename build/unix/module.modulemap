@@ -51,10 +51,6 @@ module ROOT_Core_Config_C {
  module "RootMetaSelection.h" { header "RootMetaSelection.h" export * }
  module "snprintf.h" { header "snprintf.h" export * } // #included by Rtypes, could go away?
 
- // Should we marked textual because of inclusion libcpp_string_view.h,
- // using macros to set up the header file.
- module "RWrap_libcpp_string_view.h" {  textual header "RWrap_libcpp_string_view.h" export * }
-
  export *
 }
 
