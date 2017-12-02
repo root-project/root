@@ -174,24 +174,6 @@ TCanvas* niceCornerPlot(RooMCMarkovChain *roomcmc)
     }
   }
 
-  // corner->SaveAs(pngname);
-  //
-  // TFile* file = new TFile("CornerPlot.root", "recreate");
-  // file->cd();
-  // for (size_t i = 0; i < hist1D.size(); i++) {
-  //   hist1D[i]->Write();
-  //   delete hist1D[i];
-  // }
-  // for (size_t i = 0; i < hist2D.size(); i++) {
-  //   hist2D[i]->Write();
-  //   delete hist2D[i];
-  // }
-  // file->Close();
-
   return corner;
-
-  // hist1D.clear();
-  // hist2D.clear();
-
 
 }
