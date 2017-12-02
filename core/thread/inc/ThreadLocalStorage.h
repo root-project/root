@@ -58,7 +58,7 @@
 #include <stddef.h>
 
 #ifdef __cplusplus
-#include "Rtypes.h"
+#include "RtypesCore.h"
 #endif
 
 #include <ROOT/RConfig.h>
