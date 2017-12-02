@@ -455,6 +455,11 @@ N: Burt Holzman
 E: burt@fnal.gov
 D: Contribution to TWebFile,rpdutils and sockets.
 
+N: Raphael Isemann
+E: teemperor@gmail.com
+D: c++ modules and runtime c++ modules co-author, integration in the CMS experiment
+D: contributions to rootcling, cling and cmake
+
 N: Marian Ivanov
 E: m.ivanov@gsi.de
 D: memory leak checker
@@ -973,6 +978,7 @@ D: author of the TMVA package
 N: Vassil Vassilev
 E: vasil.georgiev.vasilev@cern.ch
 D: cling co-author
+D: c++ modules and runtime c++ modules co-author, integration in experiments
 
 N: Helge Voss
 E: Helge.Voss@cern.ch
