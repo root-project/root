@@ -26,12 +26,6 @@ module ROOT_Types {
   export *
 }
 
-module ROOT_IsAProxy {
- module "TIsAProxy.h" { header "TIsAProxy.h" export * }
- module "TVirtualIsAProxy.h" { header "TVirtualIsAProxy.h" export * }
- export *
-}
-
 // This module is special, it contains headers which don't require rtti support
 // to build (eg. don't use dynamic_cast or typeid). They are also needed when
 // compiling rootcling with -fno-rtti. We have to keep them outside module ROOT
@@ -50,6 +44,8 @@ module ROOT_Core_Config_C {
  module "TSchemaHelper.h" { header "TSchemaHelper.h" export * }
  module "RootMetaSelection.h" { header "RootMetaSelection.h" export * }
  module "snprintf.h" { header "snprintf.h" export * } // #included by Rtypes, could go away?
+ module "TIsAProxy.h" { header "TIsAProxy.h" export * }
+ module "TVirtualIsAProxy.h" { header "TVirtualIsAProxy.h" export * }
 
  // Should we marked textual because of inclusion libcpp_string_view.h,
  // using macros to set up the header file.
