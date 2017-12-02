@@ -469,12 +469,11 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     endif()
   endif(APPLE)
 
-  set(excluded_headers RConfig.h RVersion.h RtypesImp.h
-                        Rtypes.h RtypesCore.h TClassEdit.h
+  set(excluded_headers RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
+                        RtypesCore.h TClassEdit.h
                         TIsAProxy.h TVirtualIsAProxy.h
-                        DllImport.h TGenericClassInfo.h
-                        TSchemaHelper.h ESTLType.h RStringView.h Varargs.h
-                        RootMetaSelection.h libcpp_string_view.h
+                        DllImport.h ESTLType.h RStringView.h Varargs.h
+                        libcpp_string_view.h
                         RWrap_libcpp_string_view.h
                         ThreadLocalStorage.h
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
