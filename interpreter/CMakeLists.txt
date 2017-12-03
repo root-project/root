@@ -93,10 +93,7 @@ if(cxxmodules)
   # because the cxxmodules builds in llvm have different build dependency order.
   string(REPLACE "${ROOT_CXXMODULES_CXXFLAGS}" "" CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS})
   string(REPLACE "${ROOT_CXXMODULES_CFLAGS}" "" CMAKE_C_FLAGS ${CMAKE_C_FLAGS})
-  if(libcxx)
-    # FIXME: We cannot build LLVM/clang with modules on with libstdc++, yet.
-    set (LLVM_ENABLE_MODULES ON CACHE BOOL "Override the default LLVM_ENABLE_MODULES option value." )
-  endif(libcxx)
+  set (LLVM_ENABLE_MODULES ON CACHE BOOL "Override the default LLVM_ENABLE_MODULES option value." )
 endif(cxxmodules)
 
 if(gcctoolchain)
