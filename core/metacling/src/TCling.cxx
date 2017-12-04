@@ -1104,10 +1104,18 @@ static void LoadCoreModules(cling::Interpreter &interp)
       if (!LoadModule(STLM->Name, interp))
          Error("TCling::LoadCoreModules", "Cannot load module %s", STLM->Name.c_str());
 
+   // Preload the modules which are semantically part of Core but moved outside
+   // because of C and RTTI compatibility for implicit module builds.
+   if (!LoadModule(moduleMap.findModule("ROOT_Foundation_C")->Name, interp))
+      Error("TCling::LoadCoreModules", "Cannot load module ROOT_Foundation_C");
+
+   if (!LoadModule(moduleMap.findModule("ROOT_Config")->Name, interp))
+      Error("TCling::LoadCoreModules", "Cannot load module ROOT_Config");
+
    // ROOT_Types is a module outside core because we need C and -no-rtti compatibility.
    // Preload it as it is an integral part of module Core.
-   if (!LoadModule(moduleMap.findModule("ROOT_Types")->Name, interp))
-      Error("TCling::LoadCoreModules", "Cannot load module ROOT_Types");
+   if (!LoadModule(moduleMap.findModule("ROOT_Foundation_Stage1_NoRTTI")->Name, interp))
+      Error("TCling::LoadCoreModules", "Cannot load module ROOT_Foundation_Stage1_NoRTTI");
 
    if (!LoadModule(moduleMap.findModule("Core")->Name, interp))
       Error("TCling::LoadCoreModules", "Cannot load module Core");
