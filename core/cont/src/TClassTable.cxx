@@ -256,6 +256,22 @@ TClassTable::~TClassTable()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return true fs the table exist.
+/// If the table does not exist but the delayed list does, then
+/// create the table and return true.
+
+inline Bool_t TClassTable::CheckClassTableInit() {
+   if (!gClassTable || !fgTable) {
+      if (GetDelayedAddClass().size()) {
+         new TClassTable;
+         return kTRUE;
+      }
+      return kFALSE;
+   }
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Print the class table. Before printing the table is sorted
 /// alphabetically. Only classes specified in option are listed.
 /// The default is to list all classes.
@@ -441,7 +457,7 @@ void TClassTable::AddAlternate(const char *normName, const char *alternate)
 
 Bool_t TClassTable::Check(const char *cname, std::string &normname)
 {
-   if (!gClassTable || !fgTable) return kFALSE;
+   if (!CheckClassTableInit()) return kFALSE;
 
    UInt_t slot = ROOT::ClassTableHash(cname, fgSize);
 
@@ -466,7 +482,7 @@ Bool_t TClassTable::Check(const char *cname, std::string &normname)
 
 void TClassTable::Remove(const char *cname)
 {
-   if (!gClassTable || !fgTable) return;
+   if (!CheckClassTableInit()) return;
 
    UInt_t slot = ROOT::ClassTableHash(cname,fgSize);
 
@@ -518,7 +534,7 @@ TClassRec *TClassTable::FindElementImpl(const char *cname, Bool_t insert)
 
 TClassRec *TClassTable::FindElement(const char *cname, Bool_t insert)
 {
-   if (!fgTable) return 0;
+   if (!CheckClassTableInit()) return nullptr;
 
    // The recorded name is normalized, let's make sure we convert the
    // input accordingly.
@@ -570,6 +586,8 @@ DictFuncPtr_t TClassTable::GetDict(const char *cname)
 
 DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
 {
+   if (!CheckClassTableInit()) return nullptr;
+
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s at 0x%lx", info.name(), (Long_t)&info);
       fgIdMap->Print();
@@ -586,6 +604,8 @@ DictFuncPtr_t TClassTable::GetDict(const std::type_info& info)
 
 DictFuncPtr_t TClassTable::GetDictNorm(const char *cname)
 {
+   if (!CheckClassTableInit()) return nullptr;
+
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
@@ -604,6 +624,12 @@ TProtoClass *TClassTable::GetProto(const char *cname)
 {
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
+   }
+
+   if (!CheckClassTableInit()) return nullptr;
+
+   if (gDebug > 9) {
+      ::Info("GetDict", "searches for %s", cname);
       fgIdMap->Print();
    }
 
@@ -620,6 +646,11 @@ TProtoClass *TClassTable::GetProtoNorm(const char *cname)
 {
    if (gDebug > 9) {
       ::Info("GetDict", "searches for %s", cname);
+   }
+
+   if (!CheckClassTableInit()) return nullptr;
+
+   if (gDebug > 9) {
       fgIdMap->Print();
    }
 

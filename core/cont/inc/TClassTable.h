@@ -56,6 +56,8 @@ private:
    static ROOT::TClassRec   *FindElement(const char *cname, Bool_t insert=kFALSE);
    static void         SortTable();
 
+   static Bool_t CheckClassTableInit();
+
 public:
    // bits that can be set in pragmabits
    enum {
