@@ -313,7 +313,7 @@ function(ROOTTEST_ADD_TEST testname)
                         ${errref}
                         WORKING_DIR ${test_working_dir}
                         DIFFCMD ${ROOTTEST_DIR}/scripts/custom_diff.py
-                        TIMEOUT 3600
+                        TIMEOUT 600
                         ${environment}
                         ${build}
                         ${checkstdout}
@@ -445,7 +445,7 @@ function(ROOTTEST_ADD_UNITTEST_DIR)
     ${willfail}
     ${labels}
     ${copy_to_builddir}
-    TIMEOUT 3600
+    TIMEOUT 600
     DEPENDS ${deplist}
     )
 endfunction(ROOTTEST_ADD_UNITTEST_DIR)
