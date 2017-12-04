@@ -1,31 +1,35 @@
 // @(#)root/tmva $Id$
-// Author: Omar Zapata, Thomas James Stevenson and Pourya Vakilipourtakalou. 2016
+// Author: Omar Zapata, Thomas James Stevenson and Pourya Vakilipourtakalou
+// Modified: Kim Albertsson 2017
 
-#ifndef ROOT_TMVA_CrossValidation
-#define ROOT_TMVA_CrossValidation
+/**********************************************************************************
+ * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
+ * Package: TMVA                                                                  *
+ * Class  : Factory                                                               *
+ *                                                                                *
+ * Copyright (c) 2016-2018:                                                       *
+ *      CERN, Switzerland                                                         *
+ *                                                                                *
+ * Redistribution and use in source and binary forms, with or without             *
+ * modification, are permitted according to the terms listed in LICENSE           *
+ * (http://tmva.sourceforge.net/LICENSE)                                          *
+ **********************************************************************************/
+
+#ifndef ROOT_TMVA_CROSS_EVALUATION
+#define ROOT_TMVA_CROSS_EVALUATION
 
 #include "TString.h"
-
 #include "TMultiGraph.h"
 
 #include "TMVA/IMethod.h"
-
 #include "TMVA/Configurable.h"
-
 #include "TMVA/Types.h"
-
 #include "TMVA/DataSet.h"
-
 #include "TMVA/Event.h"
-
 #include <TMVA/Results.h>
-
 #include <TMVA/Factory.h>
-
 #include <TMVA/DataLoader.h>
-
 #include <TMVA/OptionMap.h>
-
 #include <TMVA/Envelope.h>
 
 /*! \class TMVA::CrossValidationResult
@@ -42,6 +46,15 @@
 
 namespace TMVA {
 
+   class CvSplitCrossValidation;
+
+   using EventCollection_t = std::vector<Event *>;
+   using EventTypes_t      = std::vector<Bool_t>;
+   using EventOutputs_t    = std::vector<Float_t>;
+   using EventOutputsMulticlass_t = std::vector< std::vector<Float_t> >;
+
+   // Used internally to keep per-fold aggregate statistics
+   // such as ROC curves, ROC integrals and efficiencies.
    class CrossValidationResult {
       friend class CrossValidation;
 
@@ -83,28 +96,59 @@ namespace TMVA {
       std::vector<Double_t> GetTrainEff30Values() {return fTrainEff30s;}
    };
 
-
    class CrossValidation : public Envelope {
-      UInt_t fNumFolds;                            //!
-      std::vector<CrossValidationResult> fResults; //!
-      Bool_t fFoldStatus;                          //!
+
    public:
-      explicit CrossValidation(DataLoader *loader);
+      explicit CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TString options);
+      explicit CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TFile * outputFile, TString options);
       ~CrossValidation();
 
-      void SetNumFolds(UInt_t i);
-      UInt_t GetNumFolds() {return fNumFolds;}
+      void InitOptions();
+      void ParseOptions();
 
-      virtual void Evaluate();
-//    void EvaluateFold(UInt_t fold);//used in ParallelExecution
+      void SetNumFolds(UInt_t i);
+      void SetSplitExpr(TString splitExpr);
+
+      UInt_t GetNumFolds() {return fNumFolds;}
+      TString GetSplitExpr() {return fSplitExprString;}
+
+      Factory & GetFactory() {return *fFactory;}
 
       const std::vector<CrossValidationResult> &GetResults() const;
 
+      void Evaluate();
+
    private:
-      std::unique_ptr<Factory> fClassifier;
+      void ProcessFold(UInt_t iFold, UInt_t iMethod);
+      void MergeFolds();
+
+      Types::EAnalysisType fAnalysisType;
+      TString fAnalysisTypeStr;
+      Bool_t fCorrelations;
+      TString fCvFactoryOptions;
+      Bool_t fDrawProgressBar;
+      Bool_t fFoldFileOutput;  //! If true: generate output file for each fold
+      Bool_t fFoldStatus; //! If true: dataset is prepared
+      TString fJobName;
+      UInt_t fNumFolds; //! Number of folds to prepare
+      TString fOutputFactoryOptions;
+      TString fOutputEnsembling; //! How to combine output of individual folds
+      TFile * fOutputFile;
+      Bool_t fSilent;
+      TString fSplitExprString;
+      std::vector<CrossValidationResult> fResults; //!
+      Bool_t fROC;
+      TString fTransformations;
+      Bool_t fVerbose;
+      TString fVerboseLevel;
+
+      std::unique_ptr<Factory> fFoldFactory;
+      std::unique_ptr<Factory> fFactory;
+      std::unique_ptr<CvSplitCrossValidation> fSplit;
+
       ClassDef(CrossValidation, 0);
    };
 
 } // namespace TMVA
 
-#endif // ROOT_TMVA_CrossValidation
+#endif // ROOT_TMVA_CROSS_EVALUATION

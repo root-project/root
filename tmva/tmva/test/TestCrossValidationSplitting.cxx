@@ -1,7 +1,7 @@
 /// \file
 /// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
 /// - Package   : TMVA
-/// - Exectuable: TMVACrossEvaluation
+/// - Exectuable: TMVACrossValidation
 /// 
 ///
 /// Performs a verification that the cross evaluation splitting was performed as
@@ -38,7 +38,7 @@
 #include "TMVA/DataLoader.h"
 #include "TMVA/DataSet.h"
 #include "TMVA/DataSetInfo.h"
-#include "TMVA/CrossEvaluation.h"
+#include "TMVA/CrossValidation.h"
 #include "TMVA/Tools.h"
 
 #include <algorithm>
@@ -81,7 +81,7 @@ data_t createData(Int_t nPoints, UInt_t start)
 }
 
 /**
- * Performs the same split as CvSplitCrossEvaluation
+ * Performs the same split as CvSplitCrossValidation
  *
  * @param ids
  */
@@ -229,7 +229,7 @@ bool testFold(DataLoader * d, id_vec_t ids, CvSplit & split, UInt_t iFold)
 
 } // End namespace TMVA
 
-TEST(CrossEvaluationSplitting, TrainingSetSplitOnSpectator)
+TEST(CrossValidationSplitting, TrainingSetSplitOnSpectator)
 {
    TMVA::Tools::Instance();
 
@@ -258,7 +258,7 @@ TEST(CrossEvaluationSplitting, TrainingSetSplitOnSpectator)
    d->GetDataSetInfo().GetDataSet(); // Force creation of dataset.
    TMVA::MsgLogger::EnableOutput();
 
-   TMVA::CvSplitCrossEvaluation split {NUM_FOLDS, "int([id]) % int([numFolds])"};
+   TMVA::CvSplitCrossValidation split {NUM_FOLDS, "int([id]) % int([numFolds])"};
    d->MakeKFoldDataSet(split);
 
    // Actual test

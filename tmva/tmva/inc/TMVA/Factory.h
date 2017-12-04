@@ -79,7 +79,7 @@ namespace TMVA {
    
 
    class Factory : public Configurable {
-      friend class CrossEvaluation;
+      friend class CrossValidation;
    public:
 
       typedef std::vector<IMethod*> MVector;

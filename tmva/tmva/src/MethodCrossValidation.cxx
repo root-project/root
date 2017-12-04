@@ -3,7 +3,7 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : MethodCrossEvaluation                                                 *
+ * Class  : MethodCrossValidation                                                 *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -17,10 +17,10 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-/*! \class TMVA::MethodCrossEvaluation
+/*! \class TMVA::MethodCrossValidation
 \ingroup TMVA
 */
-#include "TMVA/MethodCrossEvaluation.h"
+#include "TMVA/MethodCrossValidation.h"
 
 #include "TMVA/ClassifierFactory.h"
 #include "TMVA/Config.h"
@@ -31,26 +31,26 @@
 
 #include "TSystem.h"
 
-REGISTER_METHOD(CrossEvaluation)
+REGISTER_METHOD(CrossValidation)
 
-ClassImp(TMVA::MethodCrossEvaluation);
+ClassImp(TMVA::MethodCrossValidation);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// 
 
-TMVA::MethodCrossEvaluation::MethodCrossEvaluation( const TString& jobName,
+TMVA::MethodCrossValidation::MethodCrossValidation( const TString& jobName,
                             const TString& methodTitle,
                             DataSetInfo& theData,
                             const TString& theOption ) :
-   TMVA::MethodBase( jobName, Types::kCrossEvaluation, methodTitle, theData, theOption)
+   TMVA::MethodBase( jobName, Types::kCrossValidation, methodTitle, theData, theOption)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TMVA::MethodCrossEvaluation::MethodCrossEvaluation( DataSetInfo& theData,
+TMVA::MethodCrossValidation::MethodCrossValidation( DataSetInfo& theData,
                             const TString& theWeightFile)
-   : TMVA::MethodBase( Types::kCrossEvaluation, theData, theWeightFile)
+   : TMVA::MethodBase( Types::kCrossValidation, theData, theWeightFile)
 {
 }
 
@@ -58,13 +58,13 @@ TMVA::MethodCrossEvaluation::MethodCrossEvaluation( DataSetInfo& theData,
 /// Destructor.
 ///
 
-TMVA::MethodCrossEvaluation::~MethodCrossEvaluation( void )
+TMVA::MethodCrossValidation::~MethodCrossValidation( void )
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::MethodCrossEvaluation::DeclareOptions()
+void TMVA::MethodCrossValidation::DeclareOptions()
 {
    DeclareOptionRef( fEncapsulatedMethodName, "EncapsulatedMethodName", "");
    DeclareOptionRef( fEncapsulatedMethodTypeName, "EncapsulatedMethodTypeName", "");
@@ -78,14 +78,14 @@ void TMVA::MethodCrossEvaluation::DeclareOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// Options that are used ONLY for the READER to ensure backward compatibility.
 
-void TMVA::MethodCrossEvaluation::DeclareCompatibilityOptions() {
+void TMVA::MethodCrossValidation::DeclareCompatibilityOptions() {
    MethodBase::DeclareCompatibilityOptions();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The option string is decoded, for available options see "DeclareOptions".
 
-void TMVA::MethodCrossEvaluation::ProcessOptions()
+void TMVA::MethodCrossValidation::ProcessOptions()
 {
    Log() << kINFO << "ProcessOptions -- fNumFolds: " << fNumFolds << Endl;
    Log() << kINFO << "ProcessOptions -- fEncapsulatedMethodName: " << fEncapsulatedMethodName << Endl;
@@ -94,7 +94,7 @@ void TMVA::MethodCrossEvaluation::ProcessOptions()
    // TODO: Validate fEncapsulatedMethodName
    // TODO: Validate fEncapsulatedMethodTypeName
 
-   fSplitExpr = std::unique_ptr<CvSplitCrossEvaluationExpr>(new CvSplitCrossEvaluationExpr(DataInfo(), fSplitExprString));
+   fSplitExpr = std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(DataInfo(), fSplitExprString));
 
    // TODO: To private method. DRY.
    for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
@@ -114,7 +114,7 @@ void TMVA::MethodCrossEvaluation::ProcessOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// Common initialisation with defaults for the Method.
 
-void TMVA::MethodCrossEvaluation::Init( void )
+void TMVA::MethodCrossValidation::Init( void )
 {
    fMulticlassValues = std::vector<Float_t>(DataInfo().GetNClasses());
 }
@@ -123,7 +123,7 @@ void TMVA::MethodCrossEvaluation::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the method, as if it had just been instantiated (forget all training etc.).
 
-void TMVA::MethodCrossEvaluation::Reset( void )
+void TMVA::MethodCrossValidation::Reset( void )
 {
 }
 
@@ -131,21 +131,21 @@ void TMVA::MethodCrossEvaluation::Reset( void )
 /// Call the Optimizer with the set of parameters and ranges that
 /// are meant to be tuned.
 
-// std::map<TString,Double_t>  TMVA::MethodCrossEvaluation::OptimizeTuningParameters(TString fomType, TString fitType)
+// std::map<TString,Double_t>  TMVA::MethodCrossValidation::OptimizeTuningParameters(TString fomType, TString fitType)
 // {
 // }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the tuning parameters according to the argument.
 
-// void TMVA::MethodCrossEvaluation::SetTuneParameters(std::map<TString,Double_t> tuneParameters)
+// void TMVA::MethodCrossValidation::SetTuneParameters(std::map<TString,Double_t> tuneParameters)
 // {
 // }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///  training.
 
-void TMVA::MethodCrossEvaluation::Train()
+void TMVA::MethodCrossValidation::Train()
 {
 
 }
@@ -153,7 +153,7 @@ void TMVA::MethodCrossEvaluation::Train()
 ////////////////////////////////////////////////////////////////////////////////
 ///
    
-TMVA::MethodBase * TMVA::MethodCrossEvaluation::InstantiateMethodFromXML(TString methodTypeName, TString weightfile) const
+TMVA::MethodBase * TMVA::MethodCrossValidation::InstantiateMethodFromXML(TString methodTypeName, TString weightfile) const
 {
        // recreate
       TMVA::MethodBase * m = dynamic_cast<MethodBase*>( ClassifierFactory::Instance()
@@ -188,7 +188,7 @@ TMVA::MethodBase * TMVA::MethodCrossEvaluation::InstantiateMethodFromXML(TString
 ////////////////////////////////////////////////////////////////////////////////
 /// Write weights to XML.
 
-void TMVA::MethodCrossEvaluation::AddWeightsXMLTo( void* parent ) const
+void TMVA::MethodCrossValidation::AddWeightsXMLTo( void* parent ) const
 {  
    void* wght = gTools().AddChild(parent, "Weights");
 
@@ -208,7 +208,7 @@ void TMVA::MethodCrossEvaluation::AddWeightsXMLTo( void* parent ) const
       TString weightfile  = fileDir + "/" + fEncapsulatedMethodName + "_" + foldStr + ".weights.xml";
 
       // TODO: Add a swithch in options for using either split files or only one.
-      // TODO: This would store the method inside MethodCrossEvaluation
+      // TODO: This would store the method inside MethodCrossValidation
       //       Another option is to store the folds as separate files.
       // //Retrieve encap. method for fold n
       // MethodBase * method = InstantiateMethodFromXML(fEncapsulatedMethodTypeName, weightfile);
@@ -223,7 +223,7 @@ void TMVA::MethodCrossEvaluation::AddWeightsXMLTo( void* parent ) const
 /// Reads from the xml file.
 /// 
 
-void TMVA::MethodCrossEvaluation::ReadWeightsFromXML(void* parent)
+void TMVA::MethodCrossValidation::ReadWeightsFromXML(void* parent)
 {
    gTools().ReadAttr( parent, "JobName", fJobName );
    gTools().ReadAttr( parent, "SplitExpr", fSplitExprString );
@@ -248,22 +248,22 @@ void TMVA::MethodCrossEvaluation::ReadWeightsFromXML(void* parent)
       fEncapsulatedMethods.push_back(InstantiateMethodFromXML(fEncapsulatedMethodTypeName, weightfile));
    }
 
-   fSplitExpr = std::unique_ptr<CvSplitCrossEvaluationExpr>(new CvSplitCrossEvaluationExpr(DataInfo(), fSplitExprString));
+   fSplitExpr = std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(DataInfo(), fSplitExprString));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read the weights
 /// 
 
-void  TMVA::MethodCrossEvaluation::ReadWeightsFromStream( std::istream& /*istr*/ )
+void  TMVA::MethodCrossValidation::ReadWeightsFromStream( std::istream& /*istr*/ )
 {
-   Log() << kFATAL << "CrossEvaluation currently supports only reading from XML." << Endl;
+   Log() << kFATAL << "CrossValidation currently supports only reading from XML." << Endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-Double_t TMVA::MethodCrossEvaluation::GetMvaValue( Double_t* err, Double_t* errUpper )
+Double_t TMVA::MethodCrossValidation::GetMvaValue( Double_t* err, Double_t* errUpper )
 {
    const Event* ev = GetEvent();
    
@@ -285,7 +285,7 @@ Double_t TMVA::MethodCrossEvaluation::GetMvaValue( Double_t* err, Double_t* errU
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the multiclass MVA response.
 
-const std::vector<Float_t> & TMVA::MethodCrossEvaluation::GetMulticlassValues()
+const std::vector<Float_t> & TMVA::MethodCrossValidation::GetMulticlassValues()
 {
    const Event *ev = GetEvent();
    
@@ -318,19 +318,19 @@ const std::vector<Float_t> & TMVA::MethodCrossEvaluation::GetMulticlassValues()
 ////////////////////////////////////////////////////////////////////////////////
 /// Get the regression value generated by the containing methods.
 
-const std::vector<Float_t> & TMVA::MethodCrossEvaluation::GetRegressionValues()
+const std::vector<Float_t> & TMVA::MethodCrossValidation::GetRegressionValues()
 {
-   Log() << kFATAL << "Regression not implemented for CrossEvaluation" << Endl;
+   Log() << kFATAL << "Regression not implemented for CrossValidation" << Endl;
    return fNotImplementedRetValVec;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void  TMVA::MethodCrossEvaluation::WriteMonitoringHistosToFile( void ) const
+void  TMVA::MethodCrossValidation::WriteMonitoringHistosToFile( void ) const
 {
    // // Used for evaluation, which is outside the life time of MethodCrossEval.
-   // Log() << kFATAL << "Method CrossEvaluation should not be created manually,"
+   // Log() << kFATAL << "Method CrossValidation should not be created manually,"
    //                    " only as part of using TMVA::Reader." << Endl;
    // return;
 }
@@ -338,23 +338,23 @@ void  TMVA::MethodCrossEvaluation::WriteMonitoringHistosToFile( void ) const
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void TMVA::MethodCrossEvaluation::GetHelpMessage() const
+void TMVA::MethodCrossValidation::GetHelpMessage() const
 {
-   Log() << kWARNING << "Method CrossEvaluation should not be created manually,"
+   Log() << kWARNING << "Method CrossValidation should not be created manually,"
                       " only as part of using TMVA::Reader." << Endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-const TMVA::Ranking * TMVA::MethodCrossEvaluation::CreateRanking()
+const TMVA::Ranking * TMVA::MethodCrossValidation::CreateRanking()
 {
    return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Bool_t TMVA::MethodCrossEvaluation::HasAnalysisType( Types::EAnalysisType /*type*/, UInt_t /*numberClasses*/, UInt_t /*numberTargets*/ )
+Bool_t TMVA::MethodCrossValidation::HasAnalysisType( Types::EAnalysisType /*type*/, UInt_t /*numberClasses*/, UInt_t /*numberTargets*/ )
 {
    return kTRUE;
    // if (fEncapsulatedMethods.size() == 0) {return kFALSE;}
@@ -365,16 +365,16 @@ Bool_t TMVA::MethodCrossEvaluation::HasAnalysisType( Types::EAnalysisType /*type
 ////////////////////////////////////////////////////////////////////////////////
 /// Make ROOT-independent C++ class for classifier response (classifier-specific implementation).
 
-void TMVA::MethodCrossEvaluation::MakeClassSpecific( std::ostream& /*fout*/, const TString& /*className*/ ) const
+void TMVA::MethodCrossValidation::MakeClassSpecific( std::ostream& /*fout*/, const TString& /*className*/ ) const
 {
-   Log() << kWARNING << "MakeClassSpecific not implemented for CrossEvaluation" << Endl;
+   Log() << kWARNING << "MakeClassSpecific not implemented for CrossValidation" << Endl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Specific class header.
 
-void TMVA::MethodCrossEvaluation::MakeClassSpecificHeader(  std::ostream& /*fout*/, const TString& /*className*/) const
+void TMVA::MethodCrossValidation::MakeClassSpecificHeader(  std::ostream& /*fout*/, const TString& /*className*/) const
 {
-   Log() << kWARNING << "MakeClassSpecificHeader not implemented for CrossEvaluation" << Endl;
+   Log() << kWARNING << "MakeClassSpecificHeader not implemented for CrossValidation" << Endl;
 }
 

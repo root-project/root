@@ -114,14 +114,14 @@ private:
 
 
 /* =============================================================================
-      TMVA::CvSplitCrossEvaluationExpr
+      TMVA::CvSplitCrossValidationExpr
 ============================================================================= */
 
-class CvSplitCrossEvaluationExpr
+class CvSplitCrossValidationExpr
 {
 public:
-   CvSplitCrossEvaluationExpr(DataSetInfo & dsi, TString expr);
-   ~CvSplitCrossEvaluationExpr() {}
+   CvSplitCrossValidationExpr(DataSetInfo & dsi, TString expr);
+   ~CvSplitCrossValidationExpr() {}
 
    UInt_t Eval(UInt_t numFolds, const Event * ev);
 
@@ -147,14 +147,14 @@ private:
 
 
 /* =============================================================================
-      TMVA::CvSplitCrossEvaluation
+      TMVA::CvSplitCrossValidation
 ============================================================================= */
 
-class CvSplitCrossEvaluation : public CvSplit
+class CvSplitCrossValidation : public CvSplit
 {
 public:
-   CvSplitCrossEvaluation (UInt_t numFolds, TString spectatorName);
-   ~CvSplitCrossEvaluation() override {}
+   CvSplitCrossValidation (UInt_t numFolds, TString spectatorName);
+   ~CvSplitCrossValidation() override {}
 
    void MakeKFoldDataSet (DataSetInfo & dsi) override;
    void PrepareFoldDataSet (DataSetInfo & dsi, UInt_t foldNumber, Types::ETreeType tt) override;
@@ -165,14 +165,14 @@ private:
 
 private:
    TString fSplitExprString; //! Expression used to split data into folds. Should output values between 0 and numFolds.
-   std::unique_ptr<CvSplitCrossEvaluationExpr> fSplitExpr;
+   std::unique_ptr<CvSplitCrossValidationExpr> fSplitExpr;
 
    std::vector<std::vector<TMVA::Event*>> fTrainEvents;
    std::vector<std::vector<TMVA::Event*>> fValidEvents;
    std::vector<std::vector<TMVA::Event*>> fTestEvents;
 
 private:
-   ClassDefOverride(CvSplitCrossEvaluation, 0);
+   ClassDefOverride(CvSplitCrossValidation, 0);
 };
 
 } // end namespace TMVA

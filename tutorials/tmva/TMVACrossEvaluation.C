@@ -94,7 +94,7 @@ int TMVACrossEvaluation()
                                                    ":NormMode=NumEvents"
                                                    ":!V");
 
-   // Setting up the CrossEvaluation context (which wraps a TMVA::Factory 
+   // Setting up the CrossValidation context (which wraps a TMVA::Factory 
    // internally).
    // New options for the CE context are
    //    - SplitExpr
@@ -115,7 +115,7 @@ int TMVACrossEvaluation()
    TString analysisType = "Classification";
    TString splitExpr = "int(fabs([spec1]))%int([NumFolds])";
 
-   TString methodOptions = Form("!V"
+   TString CVOptions = Form("!V"
                                 ":!Silent"
                                 ":ModelPersistence"
                                 ":AnalysisType=%s"
@@ -125,12 +125,12 @@ int TMVACrossEvaluation()
                                 numFolds,
                                 splitExpr.Data());
 
-   TMVA::CrossEvaluation ce {"TMVACrossEvaluation", dataloader, outputFile, methodOptions};
+   TMVA::CrossValidation ce {"TMVACrossEvaluation", dataloader, outputFile, CVOptions};
 
    // ### Book MVA methods
    // Boosted Decision Trees
    ce.BookMethod( TMVA::Types::kBDT, "BDTG",
-                        "!H:!V:NTrees=1000:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:nCuts=20:MaxDepth=2" );
+                        "!H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:Shrinkage=0.10:nCuts=20:MaxDepth=2" );
    
    // --------------------------------------------------------------------------------------------------
 

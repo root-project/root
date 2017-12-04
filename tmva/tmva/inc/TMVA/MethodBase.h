@@ -108,13 +108,13 @@ namespace TMVA {
 
    class MethodBase : virtual public IMethod, public Configurable {
 
-      friend class CrossEvaluation;
+      friend class CrossValidation;
       friend class Factory;
       friend class RootFinder;
       friend class MethodBoost;
-      friend class MethodCrossEvaluation;
+      friend class MethodCrossValidation;
       friend class Experimental::Classification;
-      
+
    public:
 
       enum EWeightFileType { kROOT=0, kTEXT };

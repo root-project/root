@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TMVA/CrossEvaluation.h"
+#include "TMVA/CrossValidation.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Reader.h"
 #include "TMVA/Types.h"
@@ -34,11 +34,9 @@
 class TestContex {
 public:
    virtual ~TestContex() {
-      if (fDataFile  ) { fDataFile->Close();   }
       if (fOutputFile) { fOutputFile->Close(); }
    }
 
-   void genData(UInt_t nPoints, UInt_t seed = 100);
    void setUpCe(TString jobname, TMVA::Types::EMVA methodType, TString methodName, TString methodOptions);
    void runCe();
    void setUpApplicationPhase(TString jobname, TString methodName);
@@ -46,13 +44,14 @@ public:
    void verifyApplicationPhase();
 
 private:
-   const TString fDataFileName   = ( "data.root" );
    const TString fOutputFileName = ( "TMVA.root" );
 
-   std::unique_ptr<TMVA::CrossEvaluation> fCrossEvaluate;
-   std::shared_ptr<TFile>                 fDataFile;
-   std::shared_ptr<TFile>                 fOutputFile;
-   std::unique_ptr<TMVA::Reader>          fReader;
+   TMVA::CrossValidation * fCrossEvaluate;
+   TFile * fOutputFile;
+   TMVA::Reader * fReader;
+
+   TTree * fTreeClass0;
+   TTree * fTreeClass1;
 
    Float_t fX;
    Float_t fY;
@@ -90,7 +89,7 @@ std::pair<Double_t, Double_t> generateCirclePoint (
    return std::pair<Double_t, Double_t> (x, y);
 }
 
-void createCircTree(Int_t nPoints, Double_t radius, Double_t rsig, TString name, UInt_t seed = 100)
+TTree * createCircTree(Int_t nPoints, Double_t radius, Double_t rsig, TString name, UInt_t seed = 100)
 {
    TRandom rng(seed);
    std::pair<Double_t, Double_t> p;
@@ -112,15 +111,8 @@ void createCircTree(Int_t nPoints, Double_t radius, Double_t rsig, TString name,
       id++;
    }
    
-   data->Write();
-}
-
-void TestContex::genData(UInt_t nPoints, UInt_t seed)
-{
-   TFile* dataFile = TFile::Open( fDataFileName, "RECREATE" );
-   createCircTree(nPoints/2, 3.0, 0.20, "Signal"    , seed);
-   createCircTree(nPoints/2, 3.5, 0.20, "Background", seed+1);
-   dataFile->Close();
+   data->ResetBranchAddresses();
+   return data;
 }
 
 // === END DATAGEN ===
@@ -137,24 +129,21 @@ void TestContex::genData(UInt_t nPoints, UInt_t seed)
 
 void TestContex::setUpCe(TString jobname, TMVA::Types::EMVA methodType, TString methodName, TString methodOptions)
 {
-   fDataFile = std::shared_ptr<TFile>(new TFile( fDataFileName ));
-   TTree * treeClass0 = (TTree *)fDataFile->Get("Signal");
-   TTree * treeClass1 = (TTree *)fDataFile->Get("Background");
+   fTreeClass0 = createCircTree(500, 3.0, 0.20, "Signal"    , 100);
+   fTreeClass1 = createCircTree(500, 3.5, 0.20, "Background", 101);
 
-   // Dataloader managed by CrossEvaluation
+   // Dataloader managed by CrossValidation
    TMVA::DataLoader * dataloader = new TMVA::DataLoader("dataset");
 
    dataloader->AddVariable( "x", 'D' );
    dataloader->AddVariable( "y", 'D' );
    dataloader->AddSpectator( "EventNumber", "EventNumber", "" );
    
-   dataloader->AddSignalTree( treeClass0 );
-   dataloader->AddBackgroundTree( treeClass1 );
+   dataloader->AddSignalTree( fTreeClass0 );
+   dataloader->AddBackgroundTree( fTreeClass1 );
 
-   fOutputFile    = std::shared_ptr<TFile>(new TFile( fOutputFileName, "RECREATE" ));
-   fCrossEvaluate = std::unique_ptr<TMVA::CrossEvaluation>(
-      new TMVA::CrossEvaluation(jobname, dataloader, fOutputFile.get(), "AnalysisType=Classification:SplitExpr=int([EventNumber])%int([NumFolds])")
-   );
+   fOutputFile    = new TFile( fOutputFileName, "RECREATE" );
+   fCrossEvaluate = new TMVA::CrossValidation(jobname, dataloader, fOutputFile, "!V:!ROC:!FoldFileOutput:AnalysisType=Classification:SplitExpr=int([EventNumber])%int([NumFolds])");
 
    fCrossEvaluate->BookMethod(methodType, methodName, methodOptions);
 }
@@ -163,6 +152,16 @@ void TestContex::runCe()
 {
    fCrossEvaluate->Evaluate();
    fOutputFile->Flush();
+   fOutputFile->Close();
+
+   delete fCrossEvaluate;
+   fCrossEvaluate = nullptr;
+   delete fOutputFile;
+   fOutputFile = nullptr;
+   delete fTreeClass0;
+   fTreeClass0 = nullptr;
+   delete fTreeClass1;
+   fTreeClass1 = nullptr;
 }
 
 // === END CROSS EVALUATION ===
@@ -179,7 +178,7 @@ void TestContex::runCe()
 
 void TestContex::setUpApplicationPhase(TString jobname, TString methodName)
 {
-   fReader = std::unique_ptr<TMVA::Reader>(new TMVA::Reader( "!Color:!Silent:V" ));
+   fReader = new TMVA::Reader( "!Color:!Silent:!V" );
 
    fReader->AddVariable(  "x" , &fX  );
    fReader->AddVariable(  "y" , &fY  );
@@ -191,6 +190,7 @@ void TestContex::setUpApplicationPhase(TString jobname, TString methodName)
 
 void TestContex::runApplicationPhase(TString methodName)
 {
+   fOutputFile = new TFile( fOutputFileName );
    TTree* tree = (TTree *)fOutputFile->Get("dataset/TestTree");
    tree->SetBranchAddress( "x" , &fX  );
    tree->SetBranchAddress( "y" , &fY  );
@@ -206,6 +206,9 @@ void TestContex::runApplicationPhase(TString methodName)
       
       fEvaluationResults.push_back(fMvaEval);
    }
+
+   tree->ResetBranchAddresses();
+   delete tree;
 }
 
 void TestContex::verifyApplicationPhase()
@@ -216,9 +219,10 @@ void TestContex::verifyApplicationPhase()
 
    for (UInt_t iEvent = 0; iEvent < fEvaluationResults.size(); ++iEvent) {
 
-      std::cout << "eval:appl -- " << fEvaluationResults[iEvent] << ":" << fApplicationResults[iEvent] << std::endl;
-
       if (not TMath::AreEqualAbs(fEvaluationResults[iEvent], fApplicationResults[iEvent], 1e-5)) {
+         std::cout << "eval:appl[" << iEvent << "] -- " 
+                   << fEvaluationResults[iEvent] << ":"
+                   << fApplicationResults[iEvent] << std::endl;
          throw std::runtime_error("Output not equal!");
       }
    }
@@ -237,19 +241,23 @@ void TestCeSerialise(TMVA::Types::EMVA methodType, TString methodName, TString m
 {
    TString jobname = "test_ce_serialise";
 
-   TestContex tc;
-   tc.genData(100);
-   tc.setUpCe(jobname, methodType, methodName, methodOptions);
-   tc.runCe(); // serialises CE method if modelPersitance
-   tc.setUpApplicationPhase(jobname, methodName);
-   tc.runApplicationPhase(methodName);
-   tc.verifyApplicationPhase();
+   TestContex * tc = new TestContex();
+   tc->setUpCe(jobname, methodType, methodName, methodOptions);
+   tc->runCe(); // serialises CE method if modelPersitance
+   tc->setUpApplicationPhase(jobname, methodName);
+   tc->runApplicationPhase(methodName);
+   tc->verifyApplicationPhase();
+   std::cout << "Done!" << std::endl;
+
 }
 
+void TestCrossValidationSerialise() {
+   TestCeSerialise(TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=10");
+   TestCeSerialise(TMVA::Types::kDNN, "DNN", "!H:!V:TrainingStrategy=LearningRate=1e-1,BatchSize=5,ConvergenceSteps=1");
+}
 
 int main()
 {
-   TestCeSerialise(TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=10");
-   TestCeSerialise(TMVA::Types::kDNN, "DNN", "!H:!V:TrainingStrategy=LearningRate=1e-1,BatchSize=5");
+   TestCrossValidationSerialise();
    return 0;
 }

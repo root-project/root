@@ -52,12 +52,21 @@ void TMVACrossValidation()
    dataloader->AddVariable("var1");
    dataloader->AddVariable("var2");
    dataloader->AddVariable("var3");
-   dataloader->AddVariable("var4");
+   dataloader->AddSpectator("var4");
 
    dataloader->PrepareTrainingAndTestTree("", "SplitMode=Random:NormMode=NumEvents:!V");
 
+   TString splitExpr = "int(fabs([var4]))%int([NumFolds])";
+   TString CVOptions = Form("!V"
+                            ":!Silent"
+                            ":!ModelPersistence"
+                            ":AnalysisType=Classification"
+                            ":NumFolds=4"
+                            ":SplitExpr=%s",
+                            splitExpr.Data());
+
    // Setup cross-validation with Fisher method
-   TMVA::CrossValidation cv(dataloader);
+   TMVA::CrossValidation cv("TMVACrossValidationTutorial", dataloader, CVOptions);
    cv.BookMethod(TMVA::Types::kFisher, "Fisher", "!H:!V:Fisher");
 
    // Run cross-validation and print results

@@ -12,7 +12,7 @@
 
 ClassImp(TMVA::CvSplit);
 ClassImp(TMVA::CvSplitBootstrappedStratified);
-ClassImp(TMVA::CvSplitCrossEvaluation);
+ClassImp(TMVA::CvSplitCrossValidation);
 
 
 
@@ -256,13 +256,13 @@ TMVA::CvSplitBootstrappedStratified::SplitSets (std::vector<TMVA::Event*>& oldSe
 
 
 /* =============================================================================
-      TMVA::CvSplitCrossEvaluationExpr
+      TMVA::CvSplitCrossValidationExpr
 ============================================================================= */
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-TMVA::CvSplitCrossEvaluationExpr::CvSplitCrossEvaluationExpr (DataSetInfo & dsi, TString expr)
+TMVA::CvSplitCrossValidationExpr::CvSplitCrossValidationExpr (DataSetInfo & dsi, TString expr)
    : fDsi(dsi),
      fIdxFormulaParNumFolds(std::numeric_limits<UInt_t>::max()),
      fSplitFormula("", expr),
@@ -289,7 +289,7 @@ TMVA::CvSplitCrossEvaluationExpr::CvSplitCrossEvaluationExpr (DataSetInfo & dsi,
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-UInt_t TMVA::CvSplitCrossEvaluationExpr::Eval(UInt_t numFolds, const Event * ev)
+UInt_t TMVA::CvSplitCrossValidationExpr::Eval(UInt_t numFolds, const Event * ev)
 {
    for (auto & p : fFormulaParIdxToDsiSpecIdx) {
       auto iFormulaPar = p.first;
@@ -314,7 +314,7 @@ UInt_t TMVA::CvSplitCrossEvaluationExpr::Eval(UInt_t numFolds, const Event * ev)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-Bool_t TMVA::CvSplitCrossEvaluationExpr::Validate(TString expr)
+Bool_t TMVA::CvSplitCrossValidationExpr::Validate(TString expr)
 {
    return TFormula("", expr).IsValid();
 }
@@ -322,7 +322,7 @@ Bool_t TMVA::CvSplitCrossEvaluationExpr::Validate(TString expr)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-UInt_t TMVA::CvSplitCrossEvaluationExpr::GetSpectatorIndexForName (DataSetInfo & dsi, TString name)
+UInt_t TMVA::CvSplitCrossValidationExpr::GetSpectatorIndexForName (DataSetInfo & dsi, TString name)
 {
    std::vector<VariableInfo> spectatorInfos = dsi.GetSpectatorInfos();
 
@@ -345,16 +345,16 @@ UInt_t TMVA::CvSplitCrossEvaluationExpr::GetSpectatorIndexForName (DataSetInfo &
 
 
 /* =============================================================================
-      TMVA::CvSplitCrossEvaluation
+      TMVA::CvSplitCrossValidation
 ============================================================================= */
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-TMVA::CvSplitCrossEvaluation::CvSplitCrossEvaluation (UInt_t numFolds, TString splitExpr)
+TMVA::CvSplitCrossValidation::CvSplitCrossValidation (UInt_t numFolds, TString splitExpr)
 : CvSplit(numFolds), fSplitExprString(splitExpr)
 {
-   if (not CvSplitCrossEvaluationExpr::Validate(fSplitExprString)) {
+   if (not CvSplitCrossValidationExpr::Validate(fSplitExprString)) {
       Log() << kFATAL << "Split expression \"" << fSplitExprString << "\" is not a valid TFormula." << Endl;
    }
 }
@@ -362,12 +362,12 @@ TMVA::CvSplitCrossEvaluation::CvSplitCrossEvaluation (UInt_t numFolds, TString s
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void TMVA::CvSplitCrossEvaluation::MakeKFoldDataSet (DataSetInfo & dsi)
+void TMVA::CvSplitCrossValidation::MakeKFoldDataSet (DataSetInfo & dsi)
 {
    // Validate spectator
    // fSpectatorIdx = GetSpectatorIndexForName(dsi, fSpectatorName);
    
-   fSplitExpr = std::unique_ptr<CvSplitCrossEvaluationExpr>(new CvSplitCrossEvaluationExpr(dsi, fSplitExprString));
+   fSplitExpr = std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(dsi, fSplitExprString));
 
    // No need to do it again if the sets have already been split.
    if (fMakeFoldDataSet) {
@@ -389,7 +389,7 @@ void TMVA::CvSplitCrossEvaluation::MakeKFoldDataSet (DataSetInfo & dsi)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void TMVA::CvSplitCrossEvaluation::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t foldNumber, Types::ETreeType tt)
+void TMVA::CvSplitCrossValidation::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t foldNumber, Types::ETreeType tt)
 {
    if (foldNumber >= fNumFolds) {
       Log() << kFATAL << "DataSet prepared for \"" << fNumFolds << "\" folds, requested fold \"" << foldNumber
@@ -469,10 +469,10 @@ void TMVA::CvSplitCrossEvaluation::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void TMVA::CvSplitCrossEvaluation::RecombineKFoldDataSet (DataSetInfo & dsi, Types::ETreeType tt)
+void TMVA::CvSplitCrossValidation::RecombineKFoldDataSet (DataSetInfo & dsi, Types::ETreeType tt)
 {
    if (tt != Types::kTraining) {
-      Log() << kFATAL << "Only kTraining is supported for CvSplitCrossEvaluation::RecombineKFoldDataSet currently." << std::endl;
+      Log() << kFATAL << "Only kTraining is supported for CvSplitCrossValidation::RecombineKFoldDataSet currently." << std::endl;
    }
 
    std::vector<Event *> *tempVec = new std::vector<Event *>;
@@ -491,7 +491,7 @@ void TMVA::CvSplitCrossEvaluation::RecombineKFoldDataSet (DataSetInfo & dsi, Typ
 ///
 
 std::vector<std::vector<TMVA::Event*>>
-TMVA::CvSplitCrossEvaluation::SplitSets (std::vector<TMVA::Event*>& oldSet, UInt_t numFolds)
+TMVA::CvSplitCrossValidation::SplitSets (std::vector<TMVA::Event*>& oldSet, UInt_t numFolds)
 {
    ULong64_t nEntries = oldSet.size();
    ULong64_t foldSize = nEntries / numFolds;

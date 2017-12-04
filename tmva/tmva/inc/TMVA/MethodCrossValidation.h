@@ -4,7 +4,7 @@
 /**********************************************************************************
  * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
  * Package: TMVA                                                                  *
- * Class  : MethodCrossEvaluation                                                 *
+ * Class  : MethodCrossValidation                                                 *
  * Web    : http://tmva.sourceforge.net                                           *
  *                                                                                *
  * Description:                                                                   *
@@ -18,12 +18,12 @@
  * (http://tmva.sourceforge.net/LICENSE)                                          *
  **********************************************************************************/
 
-#ifndef ROOT_TMVA_MethodCrossEvaluation
-#define ROOT_TMVA_MethodCrossEvaluation
+#ifndef ROOT_TMVA_MethodCrossValidation
+#define ROOT_TMVA_MethodCrossValidation
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// MethodCrossEvaluation                                                //
+// MethodCrossValidation                                                //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -41,20 +41,20 @@ namespace TMVA {
    class Ranking;
 
    // Looks for serialised methods of the form methodTitle + "_fold" + iFold;
-   class MethodCrossEvaluation : public MethodBase {
+   class MethodCrossValidation : public MethodBase {
 
    public:
       // constructor for training and reading
-      MethodCrossEvaluation( const TString&     jobName,
+      MethodCrossValidation( const TString&     jobName,
                              const TString&     methodTitle,
                                    DataSetInfo& theData,
                              const TString&     theOption = "");
 
       // constructor for calculating BDT-MVA using previously generatad decision trees
-      MethodCrossEvaluation(       DataSetInfo& theData,
+      MethodCrossValidation(       DataSetInfo& theData,
                              const TString&     theWeightFile);
 
-      virtual ~MethodCrossEvaluation( void );
+      virtual ~MethodCrossValidation( void );
 
       // optimize tuning parameters
       // virtual std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString fitType="FitGA");
@@ -112,7 +112,7 @@ namespace TMVA {
       TString fOutputEnsembling;
       
       TString fSplitExprString;
-      std::unique_ptr<CvSplitCrossEvaluationExpr> fSplitExpr;
+      std::unique_ptr<CvSplitCrossValidationExpr> fSplitExpr;
 
    private:
       // MethodBase::fFileDir gives path to weightfiles
@@ -130,7 +130,7 @@ namespace TMVA {
 
       // for backward compatibility
 
-      ClassDef(MethodCrossEvaluation, 0);
+      ClassDef(MethodCrossValidation, 0);
    };
 
 } // namespace TMVA

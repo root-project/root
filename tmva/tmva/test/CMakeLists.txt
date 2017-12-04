@@ -12,11 +12,11 @@ include_directories(${ROOT_INCLUDE_DIRS})
 ROOT_ADD_TEST_SUBDIRECTORY(DNN)
 
 # For google tests
-ROOT_ADD_GTEST(testCrossEvaluationSplitting TestCrossEvaluationSplitting.cxx LIBRARIES TMVA)
+ROOT_ADD_GTEST(testCrossValidationSplitting TestCrossValidationSplitting.cxx LIBRARIES TMVA)
 
 # For non-google tests
 set(Libraries Core MathCore TMVA)
 
-ROOT_EXECUTABLE(testCrossEvaluationSerialise TestCrossEvaluationSerialise.cxx
+ROOT_EXECUTABLE(testCrossValidationSerialise TestCrossValidationSerialise.cxx
     LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-CrossEvaluation-Serialise COMMAND testCrossEvaluationSerialise)
+ROOT_ADD_TEST(TMVA-CrossValidation-Serialise COMMAND testCrossValidationSerialise)
