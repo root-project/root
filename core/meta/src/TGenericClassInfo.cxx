@@ -27,30 +27,40 @@
 namespace ROOT {
 namespace Internal {
    std::string TTypeNameExtractionBase::GetImpl(const char* derived_funcname) {
-      constexpr static const char tag[] = "TypeNameExtraction<";
-      const char* start = strstr(derived_funcname, tag);
-      if (!start)
-         return "";
-      start += sizeof(tag) - 1;
-      const char* end = strstr(start, ">::Get(");
-      if (!end)
-         return "";
+      constexpr const char start_tag[] = "TypeNameExtraction<";
+      constexpr const char   end_tag[] = ">::Get()";
 
-      if (std::string_view(start, end - start).compare("T") == 0) {
-         // PRETTY_FUNCTION with gcc 7.1.0 gives :
-         //   "static std::__cxx11::string ROOT::Internal::TTypeNameExtraction<T>::Get()
-         //    [with T = ROOT::Internal::TCheckHashRecurveRemoveConsistency; std::__cxx11::string =
-         //    std::__cxx11::basic_string<char>]")
+      const char* start = strstr(derived_funcname, start_tag) + sizeof(start_tag) - 1;
+      const char*   end = strstr(start, end_tag);
 
-         constexpr static const char withTtag[] = "[with T = ";
-         const char *startWithT = strstr(start, withTtag);
-         startWithT += sizeof(withTtag) - 1;
-         const char *endWithT = strstr(startWithT, ";");
-         if (!endWithT)
-            return "";
-         start = startWithT;
-         end = endWithT;
+      // If deduced type is "T", due to "TTypeNameExtraction<T>::Get()" in input
+      // function, we need a fallback relying on "with T = TYPE" coming from the
+      // compiler. FIXME: This is a hack and must go away. For example, this
+      // will totally break if someone actually has any type named just "T", or
+      // if the template parameter is changed from "T" to e.g. "Type" since then
+      // we will have "with Type = ..." and the fallback below will fail.
+      // Moreover, some compilers output "[with T = TYPE; std::__cxx11::string = ...]"
+      // while other compilers output simply "[with T = TYPE]". Therefore, in
+      // order to correctly deduce TYPE with this method, we must accomodate
+      // for these variations below as well.
+
+      if (*start == 'T' && end == start + 1) { // if deduced type is "T"
+         constexpr char withT[] = "with T = ";
+
+         start = strstr(start, withT) + sizeof(withT) - 1;
+         end   = start + strlen(start);
+
+         const char *bracket = strstr(start, "]");
+         if (bracket > start && bracket < end)
+            end = bracket;
+
+         const char *semicolon = strstr(start, ";");
+         if (semicolon > start && semicolon < end)
+            end = semicolon;
       }
+
+      if (!start || !end || end < start)
+         return "";
 
       std::string ret;
       TClassEdit::GetNormalizedName(ret, std::string_view(start, end - start));
