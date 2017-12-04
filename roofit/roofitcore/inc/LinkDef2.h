@@ -46,6 +46,7 @@
 #pragma link C++ class RooMath+ ;
 #pragma link C++ class RooMCIntegrator+ ;
 #pragma link C++ class RooMinuit+ ;
+#pragma link C++ class RooMCMarkovChain+ ;
 #pragma link C++ class RooMPSentinel+ ;
 #pragma link C++ class RooMultiCategory+ ;
 #pragma link C++ class RooMultiCatIter+ ;
@@ -70,5 +71,4 @@
 #pragma link C++ class RooQuasiRandomGenerator+ ;
 #pragma link C++ class RooRandom+ ;
 #pragma link off class RooErrorHandler+ ;
-#endif 
- 
+#endif
