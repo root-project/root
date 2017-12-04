@@ -98,8 +98,9 @@ public:
 		: __data{__arr.data()}, __size{__arr.size()}
 		{ static_assert(_Extent == dynamic_extent || _Extent == __size, "Invalid extent"); }
 
-// 	template <class Container>
-// 		constexpr span(Container& cont);
+                              template <class Container, class = decltype(std::end(Container()) - std::begin(Container()))>
+                                                            constexpr span(Container& cont)
+                                                            : span(&std::begin(cont), std::end(cont) - std::begin(cont)) {}
 // 	template <class Container> span(const Container&&) = delete;
 
 	constexpr span(const span&  other) noexcept = default;
