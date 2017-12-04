@@ -47,39 +47,39 @@ fi
 
 if [ -n "${old_rootsys}" ] ; then
    if [ -n "${PATH}" ]; then
-      drop_from_path "$PATH" ${old_rootsys}/bin
+      drop_from_path "$PATH" "${old_rootsys}/bin"
       PATH=$newpath
    fi
    if [ -n "${LD_LIBRARY_PATH}" ]; then
-      drop_from_path $LD_LIBRARY_PATH ${old_rootsys}/lib
+      drop_from_path "$LD_LIBRARY_PATH" "${old_rootsys}/lib"
       LD_LIBRARY_PATH=$newpath
    fi
    if [ -n "${DYLD_LIBRARY_PATH}" ]; then
-      drop_from_path $DYLD_LIBRARY_PATH ${old_rootsys}/lib
+      drop_from_path "$DYLD_LIBRARY_PATH" "${old_rootsys}/lib"
       DYLD_LIBRARY_PATH=$newpath
    fi
    if [ -n "${SHLIB_PATH}" ]; then
-      drop_from_path $SHLIB_PATH ${old_rootsys}/lib
+      drop_from_path "$SHLIB_PATH" "${old_rootsys}/lib"
       SHLIB_PATH=$newpath
    fi
    if [ -n "${LIBPATH}" ]; then
-      drop_from_path $LIBPATH ${old_rootsys}/lib
+      drop_from_path "$LIBPATH" "${old_rootsys}/lib"
       LIBPATH=$newpath
    fi
    if [ -n "${PYTHONPATH}" ]; then
-      drop_from_path $PYTHONPATH ${old_rootsys}/lib
+      drop_from_path "$PYTHONPATH" "${old_rootsys}/lib"
       PYTHONPATH=$newpath
    fi
    if [ -n "${MANPATH}" ]; then
-      drop_from_path $MANPATH ${old_rootsys}/man
+      drop_from_path "$MANPATH" "${old_rootsys}/man"
       MANPATH=$newpath
    fi
    if [ -n "${CMAKE_PREFIX_PATH}" ]; then
-      drop_from_path $CMAKE_PREFIX_PATH ${old_rootsys}
+      drop_from_path "$CMAKE_PREFIX_PATH" "${old_rootsys}"
       CMAKE_PREFIX_PATH=$newpath
    fi
    if [ -n "${JUPYTER_PATH}" ]; then
-      drop_from_path $JUPYTER_PATH ${old_rootsys}/etc/notebook
+      drop_from_path "$JUPYTER_PATH" "${old_rootsys}/etc/notebook"
       JUPYTER_PATH=$newpath
    fi
 fi
@@ -151,4 +151,4 @@ fi
 
 unset old_rootsys
 unset thisroot
-
+unset -f drop_from_path
