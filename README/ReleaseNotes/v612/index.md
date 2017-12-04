@@ -134,7 +134,23 @@ large TClonesArray where each element contains another small vector container.
   - Users can now configure Snapshot to use different file open modes ("RECREATE" or "UPDATE"), compression level, compression algorithm, TTree split-level and autoflush settings
   - Users can now access multi-threading slot and entry number as pre-defined columns "tdfslot_" and "tdfentry_". Especially useful for pyROOT users.
   - Users can now specify filters and definitions as strings containing multiple C++ expressions, e.g. "static int a = 0; return ++a". Especially useful for pyROOT users.
+  - Histograms can be initialised by *models*, which allow to create histograms with the same parameters of their constructors, for example
+  ```c++
+  auto myHisto = myTdf.Histo1D({"histName", "histTitle", 64, 0, 128}, "myColumn");
+  ```
+  or
+  ```c++
+  auto myHistoCustomBinning = myTdf.Histo1D({"histName", "histTitle", 64, binEdges}, "myColumn");
+  ```
+  Models can be created as stand alone objects:
+  ```c++
+  TDF::TH1DModel myModel {"histName", "histTitle", 64, binEdges};
+  auto myHistoCustomBinning = myTdf.Histo1D(myModel, "myColumn");
+  ```
   - pyROOT users can now easily specify parameters for the TDF histograms and profiles thanks to the newly introduced tuple-initialization
+  ```python
+  myHisto = myTdf.Histo1D(('histName', 'histTitle', 64, 0, 128), 'myColumn')
+  ```
   - Add support for friend trees and chains. Just add the friends before passing the tree/chain to TDataFrame's constructor and refer to friend branches as usual.
 
 #### Fixes
