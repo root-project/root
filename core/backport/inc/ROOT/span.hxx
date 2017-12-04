@@ -90,7 +90,7 @@ public:
 
 	template <size_t N>
 		constexpr span(std::array<typename std::remove_const<element_type>::type, N>& __arr)
-		: __data{__arr.data()}, __size{__arr.size()}
+		: __data{__arr.data()}, __size{static_cast<index_type>(__arr.size())}
 		{ static_assert(_Extent == dynamic_extent || _Extent == __size, "Invalid extent"); }
 
 	template <size_t N>
