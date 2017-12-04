@@ -426,11 +426,11 @@ endmacro()
 #
 #-------------------------------------------------------------------------------
 function(ROOTTEST_ADD_OLDTEST)
-  CMAKE_PARSE_ARGUMENTS(ARG "" "" "LABELS" ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "" "" "LABELS;TIMEOUT" ${ARGN})
 
   ROOTTEST_ADD_TEST( make
                      COMMAND make cleantest
                      WORKING_DIR ${CMAKE_CURRENT_SOURCE_DIR}
                      DEPENDS roottest-root-io-event
-                     LABELS ${ARG_LABELS})
+                     LABELS ${ARG_LABELS} TIMEOUT ${ARG_TIMEOUT})
 endfunction()

@@ -122,7 +122,7 @@ endmacro(ROOTTEST_SETUP_EXECTEST)
 function(ROOTTEST_ADD_TEST testname)
   CMAKE_PARSE_ARGUMENTS(ARG "WILLFAIL"
                             "OUTREF;ERRREF;OUTREF_CINTSPECIFIC;OUTCNV;PASSRC;MACROARG;WORKING_DIR;INPUT"
-                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;LABELS;ENVIRONMENT" ${ARGN})
+                            "TESTOWNER;COPY_TO_BUILDDIR;MACRO;EXEC;COMMAND;PRECMD;POSTCMD;OUTCNVCMD;FAILREGEX;PASSREGEX;DEPENDS;OPTS;TIMEOUT;LABELS;ENVIRONMENT" ${ARGN})
   # Test name
   ROOTTEST_TARGETNAME_FROM_FILE(testprefix .)
   if(testname MATCHES "^roottest-")
@@ -303,6 +303,16 @@ function(ROOTTEST_ADD_TEST testname)
     set(infile INPUT ${infile_path})
   endif()
 
+  if(ARG_TIMEOUT)
+    set(timeout ${ARG_TIMEOUT})
+  else()
+    if("${ARG_LABELS}" MATCHES "longtest")
+      set(timeout 900)
+    else()
+      set(timeout 300)
+    endif()
+  endif()
+
   ROOT_ADD_TEST(${fulltestname} COMMAND ${command}
                         OUTPUT ${logfile}
                         ${infile}
@@ -313,7 +323,7 @@ function(ROOTTEST_ADD_TEST testname)
                         ${errref}
                         WORKING_DIR ${test_working_dir}
                         DIFFCMD ${ROOTTEST_DIR}/scripts/custom_diff.py
-                        TIMEOUT 600
+                        TIMEOUT ${timeout}
                         ${environment}
                         ${build}
                         ${checkstdout}
