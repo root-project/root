@@ -100,7 +100,7 @@ public:
 
                               template <class Container, class = decltype(std::end(Container()) - std::begin(Container()))>
                                                             constexpr span(Container& cont)
-                                                            : span(&std::begin(cont), std::end(cont) - std::begin(cont)) {}
+                                                            : span(&(*std::begin(cont)), std::end(cont) - std::begin(cont)) {}
 // 	template <class Container> span(const Container&&) = delete;
 
 	constexpr span(const span&  other) noexcept = default;
