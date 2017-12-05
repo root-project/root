@@ -12,7 +12,7 @@ void FillTree(const char* filename, const char* treeName) {
    double b;
    t.Branch("b", &b);
    for(int i = 0; i < 100000; ++i) {
-      b = i / 100000.;
+      b = static_cast<double>(i) * 1.0e-5;
       t.Fill();
    }
    t.Write();
@@ -26,7 +26,7 @@ int main() {
 
    auto cut1 = [](double b) { return b < 0.001; };
    auto cut2 = [](double b) { return b > 0.05; };
-   auto noopb = [](double b) { return true; };
+   auto noopb = [](double) { return true; };
 
    // multi-thread cutflow reports with default branch, multiple runs
 #ifdef R__USE_IMT
