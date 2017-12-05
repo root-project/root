@@ -530,6 +530,15 @@ will create a new column called "pt" the value of which is calculated starting f
 builds a just-in-time compiled function starting from the expression after having deduced the list of necessary branches
 from the names of the variables specified by the user.
 
+#### Custom columns as function of slot and entry number
+
+It is possible to create custom columns also as a function of the processing slot and entry numbers. The methods that can
+be invoked are:
+- `DefineSlot(name, f, columnList)`. In this case the callable f has this signature `R(unsigned int, T1, T2, ...)`: the
+first parameter is the slot number which ranges from 0 to ROOT::GetImplicitMTPoolSize() - 1.
+- `DefineSlotEntry(name, f, columnList)`. In this case the callable f has this signature `R(unsigned int, ULong64_t,
+T1, T2, ...)`: the first parameter is the slot number while the second one the number of the entry being processed.
+
 ##  <a name="actions"></a>Actions
 ### Instant and lazy actions
 Actions can be **instant** or **lazy**. Instant actions are executed as soon as they are called, while lazy actions are
@@ -560,6 +569,8 @@ note that all actions are only executed for events that pass all preceding filte
 | Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
 | ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Foreach` actions when using `TDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot` works just as well with single-thread execution: in that case `slot` will always be `0`. |
 | Snapshot | Writes processed data-set to disk, in a new `TTree` and `TFile`. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all). Snapshot overwrites the output file if it already exists. |
+| Cache | Caches in contiguous memory columns' entries. Custom columns can be cached as well, filtered entries are not cached. Users can specify which columns to save (default is all). |
+
 
 | **Queries** | **Description** |
 |-----------|-----------------|
