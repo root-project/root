@@ -359,7 +359,8 @@ public:
                     "TInterface<T> can only be converted to TInterface<BaseOfT>");
       return TInterface<NewProxied>(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
    }
-   using TInterfaceJittedDefine = TInterface<TTraits::TakeFirstParameter_t<decltype(TDFInternal::UpcastNode(fProxiedPtr))>>;
+   using TInterfaceJittedDefine =
+      TInterface<TTraits::TakeFirstParameter_t<decltype(TDFInternal::UpcastNode(fProxiedPtr))>>;
    /// \endcond
 
    ////////////////////////////////////////////////////////////////////////////
