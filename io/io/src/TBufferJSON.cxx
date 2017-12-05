@@ -158,6 +158,15 @@ public:
       fIsArray = fTotalLen > 1;
    }
 
+   /// returns number of array dimensions
+   Int_t NumDimensions()  { return fIndicies.GetSize(); }
+
+   /// return array with current index
+   TArrayI &GetIndices() { return fIndicies; };
+
+   /// returns total number of elements in array
+   Int_t TotalLength() { return fTotalLen; }
+
    Int_t ReduceDimension()
    {
       // reduce one dimension of the array
@@ -200,10 +209,9 @@ public:
       return fRes.Data();
    }
 
+   /// increment indexes and returns intermediate or last separator
    const char *NextSeparator()
    {
-      // return intermediate or last separator
-
       if (++fCnt >= fTotalLen)
          return GetEnd();
 
@@ -1510,10 +1518,11 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
    if (stack->IsStreamerElement()) {
       // this is post processing
 
-      if (gDebug > 3)
-         Info("WorkWithElement", "    Perform post-processing elem: %s", stack->fElem->GetName());
-
-      PerformPostProcessing(stack);
+      if (IsWriting()) {
+         if (gDebug > 3)
+            Info("WorkWithElement", "    Perform post-processing elem: %s", stack->fElem->GetName());
+         PerformPostProcessing(stack);
+      }
 
       stack = PopStack(); // go level back
    }
@@ -1546,13 +1555,22 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
 
    JsonStartElement(elem, base_class);
 
-   if (IsReading())
-      return;
+   if (IsWriting()) {
+      if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) && (elem->GetArrayDim() > 0)) {
+         stack->fIndx = new TArrayIndexProducer(elem, -1, fArraySepar.Data());
+         AppendOutput(stack->fIndx->GetBegin());
+      }
+   } else
+   if ((elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetL + 20)) {
+      stack->fIndx = new TArrayIndexProducer(elem, -1, "");
 
-   // TODO: also for reading special handling of multi-dim arrays are required
-   if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) && (elem->GetArrayDim() > 0)) {
-      stack->fIndx = new TArrayIndexProducer(elem, -1, fArraySepar.Data());
-      AppendOutput(stack->fIndx->GetBegin());
+      if (gDebug > 3)
+         Info("WorkWithElement", "    elem: %s ndim: %d totallen: %d", stack->fElem->GetName(), stack->fIndx->NumDimensions(), stack->fIndx->TotalLength());
+
+      if (!stack->fIndx->IsArray() || (stack->fIndx->NumDimensions() < 2)) {
+         delete stack->fIndx; // no need for single dimension - it can be handled directly
+         stack->fIndx = nullptr;
+      }
    }
 }
 
@@ -2276,8 +2294,23 @@ Int_t TBufferJSON::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele
    TJSONStackObj *stack = Stack();                                     \
    if (stack && stack->fNode) {                                        \
       nlohmann::json &json = *((nlohmann::json *)stack->fNode);        \
-      if ((int) json.size() != n) Error("ReadFastArray", "Mismatch array sizes %d %d", n, (int) json.size()); \
-      for (int cnt=0;cnt<n;++cnt) arg[cnt] = (cast_type) json[cnt];   \
+      if (stack->fIndx) { /* at least two dims */                      \
+         if (stack->fIndx->TotalLength() != n) Error("ReadFastArray", "Mismatch array sizes %d %d", n, (int) stack->fIndx->TotalLength()); \
+         TArrayI &indx = stack->fIndx->GetIndices();                   \
+         for (int cnt=0;cnt<n;++cnt) {                                 \
+            nlohmann::json &elem = json[indx[0]];                      \
+            switch(indx.GetSize()) {                                   \
+            case 2: arg[cnt] = (cast_type) elem[indx[1]]; break;       \
+            case 3: arg[cnt] = (cast_type) elem[indx[1]][indx[2]]; break;       \
+            case 4: arg[cnt] = (cast_type) elem[indx[1]][indx[2]][indx[3]]; break;       \
+            case 5: arg[cnt] = (cast_type) elem[indx[1]][indx[2]][indx[3]][indx[4]]; break;     \
+            }                                                          \
+            stack->fIndx->NextSeparator();                             \
+         }                                                             \
+      } else {                                                         \
+         if ((int) json.size() != n) Error("ReadFastArray", "Mismatch array sizes %d %d", n, (int) json.size()); \
+         for (int cnt=0;cnt<n;++cnt) arg[cnt] = (cast_type) json[cnt];   \
+      }                                                                 \
    }
 
 
