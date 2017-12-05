@@ -2288,12 +2288,11 @@ Int_t TBufferJSON::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele
       if ((do_check == 1) && stack->fElem &&                           \
           (stack->fElem->GetType() > TStreamerInfo::kOffsetP) &&       \
           (stack->fElem->GetType() < TStreamerInfo::kOffsetP + 20)) {  \
-             printf("Check if array %d %d dump %s\n", json.is_array(), json.is_string(), json.dump().c_str()); \
-             arg = json.is_array() || json.is_string() ? 1 : 0; return; \
-          }                                                            \
-      arg = json;                                                      \
+             arg = json.is_array() || json.is_string() ? 1 : 0;        \
+      } else {                                                         \
+         arg = json;                                                   \
+      }                                                                \
    }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2375,7 +2374,7 @@ void TBufferJSON::ReadFastArray(UInt_t *i, Int_t n)
 
 void TBufferJSON::ReadFastArray(Long_t *l, Int_t n)
 {
-   printf("TBufferJSON::ReadFastArray(Long_t %d\n", n);
+   printf("TBufferJSON::ReadFastArray(Long_t %d)\n", n);
 
    TBufferJSON_ReadFastArray(l, Long_t);
 
@@ -3018,9 +3017,9 @@ void TBufferJSON::ReadBool(Bool_t &val)
 
 void TBufferJSON::ReadChar(Char_t &val)
 {
-   int i;
-   JsonReadBasic(i, 1);
-   val = i;
+   int asint;
+   JsonReadBasic(asint, 1);
+   val = asint;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3028,7 +3027,9 @@ void TBufferJSON::ReadChar(Char_t &val)
 
 void TBufferJSON::ReadUChar(UChar_t &val)
 {
-   JsonReadBasic(val, 1);
+   unsigned asuint;
+   JsonReadBasic(asuint, 1);
+   val = asuint;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
