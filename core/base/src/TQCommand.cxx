@@ -292,7 +292,7 @@ void TQCommand::Delete(Option_t *opt)
    decltype(lnk) sav;
 
    while (lnk) {
-      sav = lnk->Next()->shared_from_this();
+      sav = lnk->NextSP();
       TString ostr = lnk->GetOption();
       if (ostr.Contains(opt)) {   // remove command
          TObject *obj = lnk->GetObject();
@@ -609,7 +609,7 @@ void TQCommand::Redo(Option_t *)
       TQCommand *c = (TQCommand *)lnk->GetObject();
       c->Redo();
       done = kTRUE;
-      lnk = lnk->Next()->shared_from_this();
+      lnk = lnk->NextSP();
    }
 
    if (done) Emit("Redo()");
@@ -634,14 +634,14 @@ void TQCommand::Undo(Option_t *)
    while (lnk) {
       TQCommand *c = (TQCommand *)lnk->GetObject();
       TString opt = lnk->GetOption();
-      TObjLink *sav = lnk->Prev();
+      auto sav = lnk->PrevSP();
       c->Undo();
       done = kTRUE;
       if (opt.Contains("remove")) {   // remove  command
          delete lnk->GetObject();
          Remove(lnk);
       }
-      lnk = sav->shared_from_this();
+      lnk = sav;
    }
    if (fNUargs > 0) {
       if (fUndo) {
