@@ -598,8 +598,19 @@ def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,re
     """
     retcode = 0
     replaceOption = replace
+    seen = {}
     for key in getKeyList(sourceFile,sourcePathSplit):
         objectName = key.GetName()
+
+        # write keys only if the cycle is higher than before
+        if objectName not in seen.keys():
+            seen[objectName] = key
+        else:
+            if seen[objectName].GetCycle() < key.GetCycle():
+                seen[objectName] = key
+            else:
+                continue
+
         if isDirectoryKey(key):
             if not isExisting(destFile,destPathSplit+[objectName]):
                 createDirectory(destFile,destPathSplit+[objectName])
