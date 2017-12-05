@@ -63,6 +63,7 @@ The following people have contributed to this new version:
      `SAME` with other drawing options.
 
 ## 3D Graphics Libraries
+  - When a LEGO plot was drawn with Theta=90, the X and Y axis were misplaced.
 
 ## Geometry Libraries
 
