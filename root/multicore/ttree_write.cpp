@@ -102,7 +102,7 @@ int main(int argc, char** argv) {
          --countdownToWrite;
          while(countdownToWrite !=0) ;
 
-         for(unsigned int i = 0; i<100000;++i) {
+         for(unsigned int i = 0; i<10000;++i) {
             listTree->Fill();
          }
          f.Write();
