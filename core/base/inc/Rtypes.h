@@ -192,26 +192,6 @@ typedef std::atomic<TClass*> atomic_TClass_ptr;
 #include "TIsAProxy.h"
 
 namespace ROOT { namespace Internal {
-struct TTypeNameExtractionBase {
-   // Implemented in TGenericClassInfo.cxx
-   static std::string GetImpl(const char* derived_funcname);
-};
-/// \class TypeNameExtraction
-/// Extracts the fully qualified type name by checking for the name of a
-/// member function as determined by the __PRETTY_FUNCTION__ macro.
-template <class T>
-   struct TTypeNameExtraction: TTypeNameExtractionBase {
-      static std::string Get() {
-#ifdef _MSC_VER // Visual Studio
-# define R__TNE_PRETTY_FUNCTION __FUNCSIG__
-#else
-# define R__TNE_PRETTY_FUNCTION __PRETTY_FUNCTION__
-#endif
-         return GetImpl(R__TNE_PRETTY_FUNCTION);
-#undef R__TNE_PRETTY_FUNCTION
-      }
-   };
-
 
 class TCDGIILIBase {
 public:
@@ -253,7 +233,7 @@ class ClassDefGenerateInitInstanceLocalInjector:
       static const char* Name() {
          static std::string gName;
          if (gName.empty())
-            SetName(TTypeNameExtraction<T>::Get(), gName);
+            SetName(GetDemangledTypeName(typeid(T)), gName);
          return gName.c_str();
       }
    };
