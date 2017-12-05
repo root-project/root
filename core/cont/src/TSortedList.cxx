@@ -90,7 +90,7 @@ void TSortedList::Add(TObject *obj, Option_t *opt)
             return;
          }
       }
-      lnk = lnk->Next()->shared_from_this();
+      lnk = lnk->NextSP();
    }
    TList::Add(obj, opt);
 }
