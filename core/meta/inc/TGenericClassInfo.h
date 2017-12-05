@@ -25,6 +25,11 @@ class TVirtualIsAProxy;
 
 namespace ROOT {
 
+   namespace Internal {
+      /// Returns a string with the demangled and normalized name for the given type.
+      std::string GetDemangledTypeName(const std::type_info&);
+   }
+
    namespace Detail {
       class TCollectionProxyInfo;
    }
