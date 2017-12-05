@@ -336,8 +336,8 @@ void TView3D::AxisVertex(Double_t, Double_t *av, Int_t &ix1, Int_t &ix2, Int_t &
 
    //        Set vertices
    Int_t icase = 0;
-   if (fTnorm[ 8] < 0) icase += 1; // z projection of (1,0,0)
-   if (fTnorm[ 9] < 0) icase += 2; // z projection of (0,1,0)
+   if (fTnorm[ 8] <= 0) icase += 1; // z projection of (1,0,0)
+   if (fTnorm[ 9] <= 0) icase += 2; // z projection of (0,1,0)
    for (Int_t i=0; i<8; ++i) {
       Int_t k = inodes[icase][i] - 1;
       av[i*3+0] = p[k][0];
