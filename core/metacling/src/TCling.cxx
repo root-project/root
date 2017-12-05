@@ -4152,12 +4152,39 @@ TInterpreter::DeclId_t TCling::GetDataMember(ClassInfo_t *opaque_cl, const char 
          bool hasIoName = ROOT::TMetaUtils::ExtractAttrPropertyFromName(*decl,"ioname",ioName);
          if (hasIoName && ioName != name) return 0;
       }
+      return d;
    }
-   else {
-      TClingClassInfo gcl(fInterpreter);
-      d = gcl.GetDataMember(name);
+   // We are looking up for something on the TU scope.
+   // FIXME: We do not want to go through TClingClassInfo(fInterpreter) because of redundant deserializations. That
+   // interface will actually construct iterators and walk over the decls on the global scope. In would return the first
+   // occurrence of a decl with the looked up name. However, that's not what C++ lookup would do: if we want to switch
+   // to a more complete C++ lookup interface we need sift through the found names and pick up the declarations which
+   // are only fulfilling ROOT's understanding for a Data Member.
+   // FIXME: We should probably deprecate the TClingClassInfo(fInterpreter) interface and replace it withe something
+   // similar as below.
+   using namespace clang;
+   Sema& SemaR = fInterpreter->getSema();
+   DeclarationName DName = &SemaR.Context.Idents.get(name);
+
+   LookupResult R(SemaR, DName, SourceLocation(), Sema::LookupOrdinaryName,
+                  Sema::ForRedeclaration);
+
+   cling::utils::Lookup::Named(&SemaR, R);
+
+   LookupResult::Filter F = R.makeFilter();
+   // Filter the data-member looking decls.
+   while (F.hasNext()) {
+      NamedDecl *D = F.next();
+      if (isa<VarDecl>(D) || isa<FieldDecl>(D) || isa<EnumConstantDecl>(D) ||
+          isa<IndirectFieldDecl>(D))
+         continue;
+      F.erase();
    }
-   return d;
+   F.done();
+
+   if (R.isSingleResult())
+      return R.getFoundDecl();
+   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
