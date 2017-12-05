@@ -6,10 +6,10 @@
 ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-declarations) # auto_ptr
 
 set(headers1 Roo1DTable.h RooAbsArg.h RooAbsBinning.h RooAbsCategory.h RooAbsCategoryLValue.h RooAbsCollection.h
-             RooAbsData.h RooAbsFunc.h RooAbsGenContext.h RooAbsTestStatistic.h RooAbsHiddenReal.h RooAbsIntegrator.h
+             RooAbsData.h RooAbsFunc.h RooAbsGenContext.h RooAbsTestStatistic.h RooAbsHiddenReal.h RooAbsIntegrator.h 
              RooAbsLValue.h RooAbsMCStudyModule.h RooAbsOptTestStatistic.h RooAbsPdf.h RooAbsProxy.h RooAbsReal.h
              RooAbsRealLValue.h RooAbsRootFinder.h RooAbsString.h RooAcceptReject.h RooAdaptiveGaussKronrodIntegrator1D.h
-             RooAddGenContext.h RooAddition.h RooAddModel.h RooAICRegistry.h RooArgList.h RooArgProxy.h RooArgSet.h
+             RooAddGenContext.h RooAddition.h RooAddModel.h RooAICRegistry.h RooArgList.h RooArgProxy.h RooArgSet.h 
              RooBanner.h RooBinning.h RooBinnedGenContext.h RooBrentRootFinder.h  RooCategory.h RooCategoryProxy.h RooCategorySharedProperties.h
              RooCatType.h RooChi2Var.h RooClassFactory.h RooCmdArg.h RooCmdConfig.h RooConstVar.h RooConvCoefVar.h
              RooConvGenContext.h RooConvIntegrandBinding.h RooCurve.h RooCustomizer.h RooDataHist.h RooDataProjBinding.h RooDataSet.h
@@ -19,11 +19,11 @@ set(headers2 RooDouble.h RooEffGenContext.h RooEllipse.h RooErrorHandler.h RooEr
              RooGrid.h RooHashTable.h RooHistError.h RooHist.h RooImproperIntegrator1D.h RooBinIntegrator.h
              RooIntegrator1D.h RooIntegrator2D.h RooIntegratorBinding.h RooInt.h RooInvTransform.h RooLinearVar.h RooLinkedListElem.h
              RooLinkedList.h RooLinkedListIter.h RooLinTransBinning.h RooList.h RooListProxy.h RooMapCatEntry.h RooMappedCategory.h RooMath.h
-             RooMCIntegrator.h RooMinuit.h RooMCMarkovChain.h RooMPSentinel.h RooMultiCategory.h RooMultiCatIter.h RooNameReg.h
+             RooMCIntegrator.h RooMinuit.h RooMPSentinel.h RooMultiCategory.h RooMultiCatIter.h RooNameReg.h
              RooNameSet.h RooNLLVar.h RooNormSetCache.h RooNumber.h RooNumConvolution.h RooNumConvPdf.h RooNumIntConfig.h RooNumIntFactory.h
              RooPlotable.h RooPlot.h RooPolyVar.h RooPrintable.h RooProdGenContext.h RooProduct.h RooPullVar.h
              RooQuasiRandomGenerator.h RooRandom.h)
-set(headers3 RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic.h RooRealBinding.h RooRealConstant.h RooRealIntegral.h
+set(headers3 RooRandomizeParamMCSModule.h RooRangeBinning.h RooRealAnalytic.h RooRealBinding.h RooRealConstant.h RooRealIntegral.h 
              RooRealMPFE.h RooRealProxy.h RooRealVar.h RooRealVarSharedProperties.h RooRefCountList.h RooScaledFunc.h
              RooSegmentedIntegrator1D.h RooSegmentedIntegrator2D.h RooSetPair.h RooSetProxy.h RooSharedProperties.h
              RooSharedPropertiesList.h RooSimGenContext.h RooSimSplitGenContext.h RooStreamParser.h RooStringVar.h RooSuperCategory.h
@@ -38,13 +38,14 @@ set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
              RooNumRunningInt.h RooHistFunc.h RooExpensiveObjectCache.h
              RooBinningCategory.h RooCintUtils.h RooFactoryWSTool.h RooTFoamBinding.h RooFunctor.h
              RooDerivative.h RooGenFunction.h RooMultiGenFunction.h RooAdaptiveIntegratorND.h
-             RooAbsNumGenerator.h RooFoamGenerator.h RooNumGenConfig.h RooNumGenFactory.h
+             RooAbsNumGenerator.h RooFoamGenerator.h RooNumGenConfig.h RooNumGenFactory.h 
              RooMultiVarGaussian.h RooXYChi2Var.h RooAbsDataStore.h RooTreeDataStore.h RooTreeData.h
              RooMinimizer.h RooMinimizerFcn.h RooMoment.h RooStudyManager.h RooAbsStudy.h
-             RooGenFitStudy.h RooProofDriverSelector.h RooStudyPackage.h RooCompositeDataStore.h RooRangeBoolean.h
+             RooGenFitStudy.h RooProofDriverSelector.h RooStudyPackage.h RooCompositeDataStore.h RooRangeBoolean.h 
              RooVectorDataStore.h RooUnitTest.h RooExtendedBinding.h RooAbsMoment.h RooFirstMoment.h RooSecondMoment.h)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
                               HEADERS ${headers1} ${headers2} ${headers3} ${headers4}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               DEPENDENCIES Core Hist Graf Matrix Tree Minuit RIO MathCore Foam)
+
