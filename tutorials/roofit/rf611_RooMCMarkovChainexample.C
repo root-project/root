@@ -66,12 +66,7 @@ void rf611_RooMCMarkovChainexample() {
 
   // Run RooMinuitMCMC fit
   RooMCMarkovChain m(*nllmcmc);
-  m.mcmc(2000,150);
-
-  // Run Minuit fit
-  RooMinuit mi(*nllminuit);
-  mi.migrad();
-  mi.hesse();
+  m.mcmc(3000,1000);
 
   // create plot
   RooPlot *frame = x.frame();
@@ -79,6 +74,13 @@ void rf611_RooMCMarkovChainexample() {
   frame->SetXTitle("value");
   datamcmc->plotOn(frame, Name("data"));
   modelmcmc.plotOn(frame, Name("modelmcmc"), LineColor(4));
+
+  // Run Minuit fit
+  RooMinuit mi(*nllminuit);
+  mi.migrad();
+  mi.hesse();
+
+
   modelmin.plotOn(frame, Name("modelmin"), LineColor(2),LineStyle(10));
   frame->Draw();
   TLegend *leg = new TLegend(0.65,0.73,0.86,0.87);
