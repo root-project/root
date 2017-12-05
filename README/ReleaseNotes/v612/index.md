@@ -310,7 +310,7 @@ large TClonesArray where each element contains another small vector container.
    - Auto-coloring for TF1 (drawing options PFC, PLC and PMC) is implemented.
 
 ## 3D Graphics Libraries
-
+  - When a LEGO plot was drawn with Theta=90, the X and Y axis were misplaced.
 
 ## Geometry Libraries
   - Added system of units and physical constants matching the CLHEP port to Geant4, adapted to ROOT by Marko Petric.
