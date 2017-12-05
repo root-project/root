@@ -2824,7 +2824,6 @@ void TF1::Paint(Option_t *choptin)
 
    TString opt = option;
    opt.ToLower();
-      printf("opt = [%s] -==> ",opt.Data());
 
    Bool_t optSAME = kFALSE;
    if (opt.Contains("same")) {
@@ -2832,8 +2831,6 @@ void TF1::Paint(Option_t *choptin)
       optSAME = kTRUE;
    }
    opt.ReplaceAll(' ', "");
-
-      printf("opt = [%s]\n",opt.Data());
 
    Double_t xmin = fXmin, xmax = fXmax, pmin = fXmin, pmax = fXmax;
    if (gPad) {
