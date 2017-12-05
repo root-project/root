@@ -359,6 +359,7 @@ public:
                     "TInterface<T> can only be converted to TInterface<BaseOfT>");
       return TInterface<NewProxied>(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
    }
+   using TInterfaceJittedDefine = TInterface<TTraits::TakeFirstParameter_t<decltype(TDFInternal::UpcastNode(fProxiedPtr))>>;
    /// \endcond
 
    ////////////////////////////////////////////////////////////////////////////
@@ -548,16 +549,14 @@ public:
    /// of branches/columns.
    ///
    /// Refer to the first overload of this method for the full documentation.
-   TInterface<TTraits::TakeFirstParameter_t<decltype(TDFInternal::UpcastNode(fProxiedPtr))>>
-   Define(std::string_view name, std::string_view expression)
+   TInterfaceJittedDefine Define(std::string_view name, std::string_view expression)
    {
       auto loopManager = GetDataFrameChecked();
       // this check must be done before jitting lest we throw exceptions in jitted code
       TDFInternal::CheckCustomColumn(name, loopManager->GetTree(), loopManager->GetCustomColumnNames(),
                                      fDataSource ? fDataSource->GetColumnNames() : ColumnNames_t{});
-      using retType = TInterface<TTraits::TakeFirstParameter_t<decltype(TDFInternal::UpcastNode(fProxiedPtr))>>;
-      auto retVal = CallJitTransformation("Define", name, expression, retType::GetNodeTypeName());
-      auto retInterface = reinterpret_cast<retType *>(retVal);
+      auto retVal = CallJitTransformation("Define", name, expression, TInterfaceJittedDefine::GetNodeTypeName());
+      auto retInterface = reinterpret_cast<TInterfaceJittedDefine *>(retVal);
       return *retInterface;
    }
 
