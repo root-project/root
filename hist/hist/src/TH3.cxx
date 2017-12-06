@@ -1807,7 +1807,7 @@ TH1D *TH3::DoProject1D(const char* name, const char * title, const TAxis* projX,
    h1->SetMarkerStyle(this->GetMarkerStyle());
 
    // Activate errors
-   if ( computeErrors ) h1->Sumw2();
+   if ( computeErrors && (h1->GetSumw2N() != h1->GetNcells() ) ) h1->Sumw2();
 
    // Set references to the axis, so that the bucle has no branches.
    const TAxis* out1 = 0;
@@ -2039,7 +2039,7 @@ TH2D *TH3::DoProject2D(const char* name, const char * title, const TAxis* projX,
    h2->SetMarkerStyle(this->GetMarkerStyle());
 
    // Activate errors
-   if ( computeErrors) h2->Sumw2();
+   if ( computeErrors && (h2->GetSumw2N() != h2->GetNcells()) ) h2->Sumw2();
 
    // Set references to the axis, so that the bucle has no branches.
    const TAxis* out = 0;
@@ -2476,7 +2476,8 @@ TProfile2D *TH3::DoProjectProfile2D(const char* name, const char * title, const 
 
    // Weights management
    bool useWeights = (GetSumw2N() > 0);
-   if (useWeights ) p2->Sumw2(); // store sum of w2 in profile if histo is weighted
+   // store sum of w2 in profile if histo is weighted
+   if (useWeights && (p2->GetBinSumw2()->fN != p2->GetNcells() ) ) p2->Sumw2(); 
 
    // Set references to the bins, so that the loop has no branches.
    Int_t *refX = 0, *refY = 0, *refZ = 0;
