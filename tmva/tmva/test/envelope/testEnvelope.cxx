@@ -97,12 +97,15 @@ TEST_F(EnvelopeTest1, Booking)
       auto mtitle = m.GetValue<TString>("MethodTitle");
       auto mopts = m.GetValue<TString>("MethodOptions");
       EXPECT_EQ(envelope->HasMethod(mname.Data(), mtitle.Data()), kTRUE);
-      if (mname == "BDT" && mtitle == "BDTG")
+      if (mname == "BDT" && mtitle == "BDTG") {
          EXPECT_EQ(mopts, "NTrees=100");
-      if (mname == "BDT" && mtitle == "BDTB")
+      }
+      if (mname == "BDT" && mtitle == "BDTB") {
          EXPECT_EQ(mopts, "BoostType=Bagging");
-      if (mname == "SVM" && mtitle == "SVM")
+      }
+      if (mname == "SVM" && mtitle == "SVM") {
          EXPECT_EQ(mopts, "Gamma=0.25:Tol=0.001:VarTransform=Norm");
+      }
    }
 }
 
