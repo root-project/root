@@ -50,7 +50,7 @@ public:
 
 
    template<class T>
-   TString ToJSON(const T* obj, Int_t compact = 0)
+   static TString ToJSON(const T* obj, Int_t compact = 0)
    {
       return ConvertToJSON(obj,TBuffer::GetClass(typeid(T)), compact);
    }
