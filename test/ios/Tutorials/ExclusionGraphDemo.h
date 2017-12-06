@@ -36,7 +36,7 @@ public:
 
    bool Supports3DRotation() const {return false;}
 private:
-   std::auto_ptr<TMultiGraph> fMultiGraph;
+   std::unique_ptr<TMultiGraph> fMultiGraph;
 
    ExclusionGraphDemo(const ExclusionGraphDemo &rhs);
    ExclusionGraphDemo &operator = (const ExclusionGraphDemo &rhs);

@@ -18,7 +18,7 @@ LegoDemo::LegoDemo()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///Just for std::auto_ptr's dtor.
+///Just for std::unique_ptr's dtor.
 
 LegoDemo::~LegoDemo()
 {
