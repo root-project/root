@@ -6030,7 +6030,7 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
 
 void TH1::RecursiveRemove(TObject *obj)
 {
-   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+   // Rely on TROOT::RecursiveRemove to take the readlock.
 
    if (fFunctions) {
       if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
