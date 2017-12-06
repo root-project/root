@@ -64,47 +64,47 @@ TEST_F(EnvelopeTest1, ParseOptions)
 {
    envelope->ParseOptions();
 
-   EXPECT_EQ(envelope->IsModelPersistence(), kTRUE);
+   EXPECT_EQ(kTRUE, envelope->IsModelPersistence());
    envelope->SetModelPersistence(kFALSE);
-   EXPECT_EQ(envelope->IsModelPersistence(), kFALSE);
+   EXPECT_EQ(kFALSE, envelope->IsModelPersistence());
 
-   EXPECT_EQ(envelope->IsVerbose(), kTRUE);
+   EXPECT_EQ(kTRUE, envelope->IsVerbose());
    envelope->SetVerbose(kFALSE);
-   EXPECT_EQ(envelope->IsVerbose(), kFALSE);
+   EXPECT_EQ(kFALSE, envelope->IsVerbose());
 
-   EXPECT_EQ(envelope->GetTransformations(), "I");
-   EXPECT_EQ(envelope->GetJobs(), 3);
+   EXPECT_EQ("I", envelope->GetTransformations());
+   EXPECT_EQ(3, envelope->GetJobs());
 
-   EXPECT_EQ(envelope->IsSilentFile(), kTRUE);
-   EXPECT_EQ(envelope->GetFile(), nullptr);
+   EXPECT_EQ(kTRUE, envelope->IsSilentFile());
+   EXPECT_EQ(nullptr, envelope->GetFile());
 
-   EXPECT_EQ(envelope->GetDataLoader(), nullptr);
+   EXPECT_EQ(nullptr, envelope->GetDataLoader());
 }
 
 TEST_F(EnvelopeTest1, Booking)
 {
    Booking();
-   EXPECT_EQ(envelope->HasMethod("BDT", "BDTG"), kTRUE);
-   EXPECT_EQ(envelope->HasMethod("SVM", "SVM"), kFALSE);
-   EXPECT_EQ(envelope->HasMethod("BDT", "BDTB"), kTRUE);
+   EXPECT_EQ(kTRUE, envelope->HasMethod("BDT", "BDTG"));
+   EXPECT_EQ(kFALSE, envelope->HasMethod("SVM", "SVM"));
+   EXPECT_EQ(kTRUE, envelope->HasMethod("BDT", "BDTB"));
 
    envelope->BookMethod(TMVA::Types::kSVM, "SVM", "Gamma=0.25:Tol=0.001:VarTransform=Norm");
-   EXPECT_EQ(envelope->HasMethod("SVM", "SVM"), kTRUE);
+   EXPECT_EQ(kTRUE, envelope->HasMethod("SVM", "SVM"));
 
    auto &meths = envelope->GetMethods();
    for (auto &m : meths) {
       auto mname = m.GetValue<TString>("MethodName");
       auto mtitle = m.GetValue<TString>("MethodTitle");
       auto mopts = m.GetValue<TString>("MethodOptions");
-      EXPECT_EQ(envelope->HasMethod(mname.Data(), mtitle.Data()), kTRUE);
+      EXPECT_EQ(kTRUE, envelope->HasMethod(mname.Data(), mtitle.Data()));
       if (mname == "BDT" && mtitle == "BDTG") {
-         EXPECT_EQ(mopts, "NTrees=100");
+         EXPECT_EQ("NTrees=100", mopts);
       }
       if (mname == "BDT" && mtitle == "BDTB") {
-         EXPECT_EQ(mopts, "BoostType=Bagging");
+         EXPECT_EQ("BoostType=Bagging", mopts);
       }
       if (mname == "SVM" && mtitle == "SVM") {
-         EXPECT_EQ(mopts, "Gamma=0.25:Tol=0.001:VarTransform=Norm");
+         EXPECT_EQ("Gamma=0.25:Tol=0.001:VarTransform=Norm", mopts);
       }
    }
 }
@@ -168,21 +168,21 @@ public:
 TEST_F(EnvelopeTest2, FileAndDataLoader)
 {
    envelope->ParseOptions();
-   EXPECT_EQ(envelope->IsSilentFile(), kFALSE);
-   ASSERT_NE(envelope->GetFile(), nullptr);
+   EXPECT_EQ(kFALSE, envelope->IsSilentFile());
+   ASSERT_NE(nullptr, envelope->GetFile());
 
-   ASSERT_NE(envelope->GetDataLoader(), nullptr);
-   ASSERT_EQ(TString(envelope->GetDataLoader()->GetName()), "dataset");
+   ASSERT_NE(nullptr, envelope->GetDataLoader());
+   ASSERT_EQ("dataset", TString(envelope->GetDataLoader()->GetName()));
 
-   EXPECT_EQ(envelope->GetDataLoaderDataInput().GetEntries("Signal"), (UInt_t)6000);
-   EXPECT_EQ(envelope->GetDataLoaderDataInput().GetEntries("Background"), (UInt_t)6000);
-   EXPECT_EQ(envelope->GetDataLoaderDataInput().GetNTrees("Signal"), (UInt_t)1);
-   EXPECT_EQ(envelope->GetDataLoaderDataInput().GetNTrees("Background"), (UInt_t)1);
+   EXPECT_EQ((UInt_t)6000, envelope->GetDataLoaderDataInput().GetEntries("Signal"));
+   EXPECT_EQ((UInt_t)6000, envelope->GetDataLoaderDataInput().GetEntries("Background"));
+   EXPECT_EQ((UInt_t)1, envelope->GetDataLoaderDataInput().GetNTrees("Signal"));
+   EXPECT_EQ((UInt_t)1, envelope->GetDataLoaderDataInput().GetNTrees("Background"));
 
-   EXPECT_EQ(envelope->GetDataLoaderDataSetInfo().GetNVariables(), (UInt_t)4);
-   EXPECT_EQ(envelope->GetDataLoaderDataSetInfo().GetNTargets(), (UInt_t)0);
-   EXPECT_EQ(envelope->GetDataLoaderDataSetInfo().GetNSpectators(), (UInt_t)2);
+   EXPECT_EQ((UInt_t)4, envelope->GetDataLoaderDataSetInfo().GetNVariables());
+   EXPECT_EQ((UInt_t)0, envelope->GetDataLoaderDataSetInfo().GetNTargets());
+   EXPECT_EQ((UInt_t)2, envelope->GetDataLoaderDataSetInfo().GetNSpectators());
 
    envelope->SetDataLoader(nullptr);
-   ASSERT_EQ(envelope->GetDataLoader(), nullptr);
+   ASSERT_EQ(nullptr, envelope->GetDataLoader());
 }
