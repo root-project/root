@@ -24,9 +24,10 @@ const UInt_t nThreads = 4U;
 const auto workSize = nNumbers / nThreads;
 
 // A simple function to fill ntuples randomly
-void fillRandom (TNtuple & ntuple, TRandom3 & rndm, UInt_t n)
+void fillRandom(TNtuple &ntuple, TRandom3 &rndm, UInt_t n)
 {
-   for (auto i : ROOT::TSeqI(n)) ntuple.Fill(rndm.Gaus());
+   for (auto i : ROOT::TSeqI(n))
+      ntuple.Fill(rndm.Gaus());
 }
 
 Int_t mtbb101_fillNtuples()
@@ -65,5 +66,4 @@ Int_t mtbb101_fillNtuples()
    pool.Map(workItem, ROOT::TSeqI(nThreads));
 
    return 0;
-
 }

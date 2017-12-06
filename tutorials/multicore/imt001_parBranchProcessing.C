@@ -12,47 +12,46 @@
 /// \date 26/09/2016
 /// \author Enric Tejedor
 
-
 int imt001_parBranchProcessing()
 {
-  // First enable implicit multi-threading globally, so that the implicit parallelisation is on.
-  // The parameter of the call specifies the number of threads to use.
-  int nthreads = 4;
-  ROOT::EnableImplicitMT(nthreads);
+   // First enable implicit multi-threading globally, so that the implicit parallelisation is on.
+   // The parameter of the call specifies the number of threads to use.
+   int nthreads = 4;
+   ROOT::EnableImplicitMT(nthreads);
 
-  // Open the file containing the tree
-  TFile *file = TFile::Open("http://root.cern.ch/files/h1/dstarmb.root");
+   // Open the file containing the tree
+   TFile *file = TFile::Open("http://root.cern.ch/files/h1/dstarmb.root");
 
-  // Get the tree
-  TTree *tree = nullptr;
-  file->GetObject<TTree>("h42", tree);
+   // Get the tree
+   TTree *tree = nullptr;
+   file->GetObject<TTree>("h42", tree);
 
-  // Read the branches in parallel.
-  // Note that the interface does not change, the parallelisation is internal
-  for (Long64_t i = 0; i < tree->GetEntries(); ++i) {
-     tree->GetEntry(i);  // parallel read
-  }
+   // Read the branches in parallel.
+   // Note that the interface does not change, the parallelisation is internal
+   for (Long64_t i = 0; i < tree->GetEntries(); ++i) {
+      tree->GetEntry(i); // parallel read
+   }
 
-  // IMT parallelisation can be disabled for a specific tree
-  tree->SetImplicitMT(false);
+   // IMT parallelisation can be disabled for a specific tree
+   tree->SetImplicitMT(false);
 
-  // If now GetEntry is invoked on the tree, the reading is sequential
-  for (Long64_t i = 0; i < tree->GetEntries(); ++i) {
-     tree->GetEntry(i);  // sequential read
-  }
+   // If now GetEntry is invoked on the tree, the reading is sequential
+   for (Long64_t i = 0; i < tree->GetEntries(); ++i) {
+      tree->GetEntry(i); // sequential read
+   }
 
-  // Parallel reading can be re-enabled
-  tree->SetImplicitMT(true);
+   // Parallel reading can be re-enabled
+   tree->SetImplicitMT(true);
 
-  // IMT can be also disabled globally.
-  // As a result, no tree will run GetEntry in parallel
-  ROOT::DisableImplicitMT();
+   // IMT can be also disabled globally.
+   // As a result, no tree will run GetEntry in parallel
+   ROOT::DisableImplicitMT();
 
-  // This is still sequential: the global flag is disabled, even if the
-  // flag for this particular tree is enabled
-  for (Long64_t i = 0; i < tree->GetEntries(); ++i) {
-     tree->GetEntry(i);  // sequential read
-  }
+   // This is still sequential: the global flag is disabled, even if the
+   // flag for this particular tree is enabled
+   for (Long64_t i = 0; i < tree->GetEntries(); ++i) {
+      tree->GetEntry(i); // sequential read
+   }
 
-  return 0;
+   return 0;
 }

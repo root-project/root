@@ -58,10 +58,12 @@ int mp104_processH1()
    auto hListFun = pool.Process(files, doH1, "h42");
 
    // Check the output
-   if (checkH1(hListFun) < 0) return -1;
+   if (checkH1(hListFun) < 0)
+      return -1;
 
    // Do the fit
-   if (doFit(hListFun, logfile.c_str()) < 0) return -1;
+   if (doFit(hListFun, logfile.c_str()) < 0)
+      return -1;
 
    stp.Print();
    stp.Start();
@@ -79,10 +81,12 @@ int mp104_processH1()
    gSystem->RedirectOutput(0, 0, &gRH);
 
    // Check the output
-   if (checkH1(hListSel) < 0) return -1;
+   if (checkH1(hListSel) < 0)
+      return -1;
 
    // Do the fit
-   if (doFit(hListSel, logfile.c_str()) < 0) return -1;
+   if (doFit(hListSel, logfile.c_str()) < 0)
+      return -1;
 
    stp.Print();
    stp.Start();

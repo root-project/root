@@ -24,9 +24,10 @@ const UInt_t nWorkers = 4U;
 const auto workSize = nNumbers / nWorkers;
 
 // A simple function to fill ntuples randomly
-void fillRandom (TNtuple & ntuple, TRandom3 & rndm, UInt_t n)
+void fillRandom(TNtuple &ntuple, TRandom3 &rndm, UInt_t n)
 {
-   for (auto i : ROOT::TSeqI(n)) ntuple.Fill(rndm.Gaus());
+   for (auto i : ROOT::TSeqI(n))
+      ntuple.Fill(rndm.Gaus());
 }
 
 Int_t mp101_fillNtuples()
@@ -67,5 +68,4 @@ Int_t mp101_fillNtuples()
    workers.Map(workItem, ROOT::TSeqI(nWorkers));
 
    return 0;
-
 }

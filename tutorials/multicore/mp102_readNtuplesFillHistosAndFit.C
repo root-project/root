@@ -38,7 +38,7 @@ Int_t mp102_readNtuplesFillHistosAndFit()
    const auto nFiles = inputChain.GetListOfFiles()->GetEntries();
 
    // This is the function invoked during the processing of the trees.
-   auto workItem = [](TTreeReader & reader) {
+   auto workItem = [](TTreeReader &reader) {
       TTreeReaderValue<Float_t> randomRV(reader, "r");
       auto partialHisto = new TH1F("outHistoMP", "Random Numbers", 128, -4, 4);
       while (reader.Next()) {

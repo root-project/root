@@ -59,7 +59,8 @@ auto checkH1 = [](TList *out) {
 auto doFit = [](TList *out, const char *lfn = 0) -> Int_t {
 
    RedirectHandle_t redH;
-   if (lfn) gSystem->RedirectOutput(lfn, "a", &redH);
+   if (lfn)
+      gSystem->RedirectOutput(lfn, "a", &redH);
 
    auto hdmd = dynamic_cast<TH1F *>(out->FindObject("hdmd"));
    auto h2 = dynamic_cast<TH2F *>(out->FindObject("h2"));
@@ -68,7 +69,8 @@ auto doFit = [](TList *out, const char *lfn = 0) -> Int_t {
    if (hdmd == 0 || h2 == 0) {
       std::cout << "doFit: hdmd = " << hdmd << " , h2 = " << h2 << "\n";
       return -1;
-      if (lfn) gSystem->RedirectOutput(0, 0, &redH);
+      if (lfn)
+         gSystem->RedirectOutput(0, 0, &redH);
    }
 
    // create the canvas for the h1analysis fit
@@ -79,12 +81,14 @@ auto doFit = [](TList *out, const char *lfn = 0) -> Int_t {
    hdmd->GetXaxis()->SetTitleOffset(1.4);
 
    // fit histogram hdmd with function f5 using the log-likelihood option
-   if (gROOT->GetListOfFunctions()->FindObject("f5")) delete gROOT->GetFunction("f5");
+   if (gROOT->GetListOfFunctions()->FindObject("f5"))
+      delete gROOT->GetFunction("f5");
 
    auto fdm5 = [](Double_t *xx, Double_t *par) -> Double_t {
       const Double_t dxbin = (0.17 - 0.13) / 40; // Bin-width
       Double_t x = xx[0];
-      if (x <= 0.13957) return 0;
+      if (x <= 0.13957)
+         return 0;
       Double_t xp3 = (x - par[3]) * (x - par[3]);
       Double_t res = dxbin * (par[0] * TMath::Power(x - 0.13957, par[1]) +
                               par[2] / 2.5066 / par[4] * TMath::Exp(-xp3 / 2 / par[4] / par[4]));
@@ -101,7 +105,8 @@ auto doFit = [](TList *out, const char *lfn = 0) -> Int_t {
       if ((TMath::Abs((f5->GetParameters())[i] - ref_f5[i]) / ref_f5[i]) > 0.001) {
          std::cout << "\n >>> Test failure: fit to 'f5': parameter '" << f5->GetParName(i) << "' has wrong value ("
                    << (f5->GetParameters())[i] << ": expected" << ref_f5[i] << ") \n";
-         if (lfn) gSystem->RedirectOutput(0, 0, &redH);
+         if (lfn)
+            gSystem->RedirectOutput(0, 0, &redH);
          return -1;
       }
    }
@@ -117,13 +122,15 @@ auto doFit = [](TList *out, const char *lfn = 0) -> Int_t {
    // with function f2 and make a histogram for each fit parameter
    // Note that the generated histograms are added to the list of objects
    // in the current directory.
-   if (gROOT->GetListOfFunctions()->FindObject("f2")) delete gROOT->GetFunction("f2");
+   if (gROOT->GetListOfFunctions()->FindObject("f2"))
+      delete gROOT->GetFunction("f2");
 
    auto fdm2 = [](Double_t *xx, Double_t *par) -> Double_t {
       const Double_t dxbin = (0.17 - 0.13) / 40; // Bin-width
       const Double_t sigma = 0.0012;
       Double_t x = xx[0];
-      if (x <= 0.13957) return 0;
+      if (x <= 0.13957)
+         return 0;
       Double_t xp3 = (x - 0.1454) * (x - 0.1454);
       Double_t res = dxbin * (par[0] * TMath::Power(x - 0.13957, 0.25) +
                               par[1] / 2.5066 / sigma * TMath::Exp(-xp3 / 2 / sigma / sigma));
@@ -144,7 +151,8 @@ auto doFit = [](TList *out, const char *lfn = 0) -> Int_t {
       if ((TMath::Abs((f2->GetParameters())[i] - ref_f2[i]) / ref_f2[i]) > 0.001) {
          std::cout << "\n >>> Test failure: fit to 'f2': parameter '" << f2->GetParName(i) << "' has wrong value ("
                    << (f2->GetParameters())[i] << ": expected" << ref_f2[i] << ") \n";
-         if (lfn) gSystem->RedirectOutput(0, 0, &redH);
+         if (lfn)
+            gSystem->RedirectOutput(0, 0, &redH);
          return -1;
       }
    }
@@ -163,7 +171,8 @@ auto doFit = [](TList *out, const char *lfn = 0) -> Int_t {
    psdmd->SetOptStat(1110);
    c1->Modified();
 
-   if (lfn) gSystem->RedirectOutput(0, 0, &redH);
+   if (lfn)
+      gSystem->RedirectOutput(0, 0, &redH);
 
    return 0;
 };
@@ -194,21 +203,31 @@ auto doH1 = [](TTreeReader &reader) {
    while (reader.Next()) {
 
       // Return as soon as a bad entry is detected
-      if (TMath::Abs(*fMd0_d - 1.8646) >= 0.04) continue;
-      if (*fPtds_d <= 2.5) continue;
-      if (TMath::Abs(*fEtads_d) >= 1.5) continue;
+      if (TMath::Abs(*fMd0_d - 1.8646) >= 0.04)
+         continue;
+      if (*fPtds_d <= 2.5)
+         continue;
+      if (TMath::Abs(*fEtads_d) >= 1.5)
+         continue;
       (*fIk)--; // original fIk used f77 convention starting at 1
       (*fIpi)--;
 
-      if (fNhitrp.At(*fIk) * fNhitrp.At(*fIpi) <= 1) continue;
+      if (fNhitrp.At(*fIk) * fNhitrp.At(*fIpi) <= 1)
+         continue;
 
-      if (fRend.At(*fIk) - fRstart.At(*fIk) <= 22) continue;
-      if (fRend.At(*fIpi) - fRstart.At(*fIpi) <= 22) continue;
-      if (fNlhk.At(*fIk) <= 0.1) continue;
-      if (fNlhpi.At(*fIpi) <= 0.1) continue;
+      if (fRend.At(*fIk) - fRstart.At(*fIk) <= 22)
+         continue;
+      if (fRend.At(*fIpi) - fRstart.At(*fIpi) <= 22)
+         continue;
+      if (fNlhk.At(*fIk) <= 0.1)
+         continue;
+      if (fNlhpi.At(*fIpi) <= 0.1)
+         continue;
       (*fIpis)--;
-      if (fNlhpi.At(*fIpis) <= 0.1) continue;
-      if (*fNjets < 1) continue;
+      if (fNlhpi.At(*fIpis) <= 0.1)
+         continue;
+      if (*fNjets < 1)
+         continue;
 
       // Fill the histograms
       hdmd->Fill(*fDm_d);
@@ -246,21 +265,31 @@ auto doH1fillList = [](TTreeReader &reader) {
    while (reader.Next()) {
 
       // Return as soon as a bad entry is detected
-      if (TMath::Abs(*fMd0_d - 1.8646) >= 0.04) continue;
-      if (*fPtds_d <= 2.5) continue;
-      if (TMath::Abs(*fEtads_d) >= 1.5) continue;
+      if (TMath::Abs(*fMd0_d - 1.8646) >= 0.04)
+         continue;
+      if (*fPtds_d <= 2.5)
+         continue;
+      if (TMath::Abs(*fEtads_d) >= 1.5)
+         continue;
       (*fIk)--; // original fIk used f77 convention starting at 1
       (*fIpi)--;
 
-      if (fNhitrp.At(*fIk) * fNhitrp.At(*fIpi) <= 1) continue;
+      if (fNhitrp.At(*fIk) * fNhitrp.At(*fIpi) <= 1)
+         continue;
 
-      if (fRend.At(*fIk) - fRstart.At(*fIk) <= 22) continue;
-      if (fRend.At(*fIpi) - fRstart.At(*fIpi) <= 22) continue;
-      if (fNlhk.At(*fIk) <= 0.1) continue;
-      if (fNlhpi.At(*fIpi) <= 0.1) continue;
+      if (fRend.At(*fIk) - fRstart.At(*fIk) <= 22)
+         continue;
+      if (fRend.At(*fIpi) - fRstart.At(*fIpi) <= 22)
+         continue;
+      if (fNlhk.At(*fIk) <= 0.1)
+         continue;
+      if (fNlhpi.At(*fIpi) <= 0.1)
+         continue;
       (*fIpis)--;
-      if (fNlhpi.At(*fIpis) <= 0.1) continue;
-      if (*fNjets < 1) continue;
+      if (fNlhpi.At(*fIpis) <= 0.1)
+         continue;
+      if (*fNjets < 1)
+         continue;
 
       // Fill the entry list
       elist->Enter(reader.GetCurrentEntry(), reader.GetTree());
