@@ -311,7 +311,11 @@ void THashList::RecursiveRemove(TObject *obj)
 {
    if (!obj) return;
 
-   R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
+   // It might not be safe to rely on TROOT::RecursiveRemove to take the readlock in case user code
+   // is calling directly gROOT->GetListOfCleanups()->RecursiveRemove(...)
+   // However this can become a significant bottleneck if there are a very large number of
+   // TDirectory object.
+   // R__COLLECTION_READ_LOCKGUARD(ROOT::gCoreMutex);
 
    if (obj->HasInconsistentHash()) {
       R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
