@@ -48,6 +48,13 @@ public:
    static TObject *ConvertFromJSON(const char *str);
    static void    *ConvertFromJSONAny(const char *str, TClass **cl = 0);
 
+
+   template<class T>
+   TString ToJSON(const T* obj, Int_t compact = 0)
+   {
+      return ConvertToJSON(obj,TBuffer::GetClass(typeid(T)), compact);
+   }
+
    // suppress class writing/reading
 
    virtual TClass  *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0);
