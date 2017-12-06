@@ -8,7 +8,6 @@
 /// \date August 2017
 /// \author Danilo Piparo
 
-
 void workItem0()
 {
    printf("Running workItem0...\n");
@@ -23,7 +22,7 @@ void mt301_TTaskGroupSimple()
    ROOT::Experimental::TTaskGroup tg;
 
    tg.Run(workItem0);
-   tg.Run([](){printf("Running workItem1...\n");});
+   tg.Run([]() { printf("Running workItem1...\n"); });
 
    printf("Running something in the \"main\" thread\n");
 
@@ -31,5 +30,4 @@ void mt301_TTaskGroupSimple()
    tg.Wait();
 
    printf("All work completed.\n");
-
 }
