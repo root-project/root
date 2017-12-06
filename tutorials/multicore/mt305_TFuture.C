@@ -8,12 +8,6 @@
 /// \author Danilo Piparo
 /// \date August 2017
 
-#include "ROOT/TFuture.hxx"
-
-#include <future>
-#include <iostream>
-#include <thread>
-
 void mt305_TFuture()
 {
    using namespace ROOT::Experimental;
