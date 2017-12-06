@@ -1860,8 +1860,9 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
 
    // check if histogram is weighted
    // in case need to store sum of weight square/bin for the profile
+   TArrayD & binSumw2 = *(h1->GetBinSumw2());
    bool useWeights = (GetSumw2N() > 0);
-   if (useWeights) h1->Sumw2();
+   if (useWeights && (binSumw2.fN != h1->GetNcells()) ) h1->Sumw2();
    // we need to set this bit because we fill the profile using a single Fill for many entries
    // This is needed for the changes applied to make automatically the histogram weighted in ROOT 6 versions
    else h1->SetBit(TH1::kIsNotW);
@@ -1869,7 +1870,6 @@ TProfile *TH2::DoProfile(bool onX, const char *name, Int_t firstbin, Int_t lastb
    // Fill the profile histogram
    // no entries/bin is available so can fill only using bin content as weight
    Double_t totcont = 0;
-   TArrayD & binSumw2 = *(h1->GetBinSumw2());
 
    // implement filling of projected histogram
    // outbin is bin number of outAxis (the projected axis). Loop is done on all bin of TH2 histograms
