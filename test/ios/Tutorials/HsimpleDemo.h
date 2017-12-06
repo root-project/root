@@ -34,7 +34,7 @@ public:
    bool Supports3DRotation() const {return false;}
 
 private:
-   std::auto_ptr<TH1F> fHist;
+   std::unique_ptr<TH1F> fHist;
 
    HsimpleDemo(const HsimpleDemo &rhs);
    HsimpleDemo &operator = (const HsimpleDemo &rhs);
