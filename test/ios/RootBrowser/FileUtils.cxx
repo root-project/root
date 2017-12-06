@@ -90,8 +90,8 @@ TObject *ReadObjectForKey(TDirectoryFile *inputFile, const TKey *key, TString &o
    if (TH1 *hist = dynamic_cast<TH1 *>(objPtr))
       hist->SetDirectory(0);
 
-   //The code below can throw, so I use auto_ptr.
-   std::auto_ptr<TObject> obj(objPtr);
+   //The code below can throw, so I use unique_ptr.
+   std::unique_ptr<TObject> obj(objPtr);
 
    //This is the trick, since ROOT seems not to preserve
    //Draw's option in a file.
@@ -245,7 +245,7 @@ void FileContainer::AttachPads()
 
    fAttachedPads.assign(fObjects.size(), 0);
    for (size_type i = 0; i < fAttachedPads.size(); ++i) {
-      std::auto_ptr<Pad> newPad(new Pad(400, 400));//400 - size is NOT important here, it'll be reset later anyway.
+      std::unique_ptr<Pad> newPad(new Pad(400, 400));//400 - size is NOT important here, it'll be reset later anyway.
       newPad->cd();
       fObjects[i]->Draw(fOptions[i].Data());
       fAttachedPads[i] = newPad.release();
@@ -288,10 +288,10 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
          const TString className(key->GetClassName());
 
          if (className == "TDirectoryFile") {
-            std::auto_ptr<TDirectoryFile> nestedDir(static_cast<TDirectoryFile *>(dir->Get(key->GetName())));
+            std::unique_ptr<TDirectoryFile> nestedDir(static_cast<TDirectoryFile *>(dir->Get(key->GetName())));
             if (nestedDir.get()) {
                //Recursion - create nested container.
-               std::auto_ptr<FileContainer> nestedContainer(new FileContainer(key->GetName()));
+               std::unique_ptr<FileContainer> nestedContainer(new FileContainer(key->GetName()));
                ScanDirectory(nestedDir.get(), visibleTypes, nestedContainer.get());
                nestedContainer->AttachPads();
 
@@ -303,7 +303,7 @@ void FileContainer::ScanDirectory(TDirectoryFile *dir, const std::set<TString> &
                nestedContainer.release();
             }
          } else if (visibleTypes.find(className) != visibleTypes.end()) {
-            std::auto_ptr<TObject> newObject(ReadObjectForKey(dir, key, option));
+            std::unique_ptr<TObject> newObject(ReadObjectForKey(dir, key, option));
             opts.push_back(option);
 
             FileContainerElement newDescriptor(key->GetName(), currentContainer, false, objs.size());
@@ -337,12 +337,12 @@ FileContainer *FileContainer::CreateFileContainer(const char *fullPath)
       std::set<TString> visibleTypes;
       FillVisibleTypes(visibleTypes);
 
-      std::auto_ptr<TFile> inputFile(TFile::Open(fullPath, "read"));
+      std::unique_ptr<TFile> inputFile(TFile::Open(fullPath, "read"));
       if (!inputFile.get())
          return 0;
 
       const std::string fileName(gSystem->BaseName(fullPath));
-      std::auto_ptr<FileContainer> topLevel(new FileContainer(fileName));
+      std::unique_ptr<FileContainer> topLevel(new FileContainer(fileName));
 
       ScanDirectory(inputFile.get(), visibleTypes, topLevel.get());
 

@@ -32,7 +32,7 @@ public:
 
    bool Supports3DRotation() const {return true;}
 private:
-   std::auto_ptr<TF2> fLego;
+   std::unique_ptr<TF2> fLego;
 
    LegoDemo(const LegoDemo &rhs);
    LegoDemo &operator = (const LegoDemo &rhs);

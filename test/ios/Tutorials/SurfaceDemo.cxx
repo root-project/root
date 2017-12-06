@@ -16,7 +16,7 @@ SurfaceDemo::SurfaceDemo()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///For auto_ptr dtor only.
+///For unique_ptr dtor only.
 
 SurfaceDemo::~SurfaceDemo()
 {

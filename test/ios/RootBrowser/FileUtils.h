@@ -38,7 +38,7 @@ enum EHistogramErrorOption {
 class FileContainer {
    //Auto ptr must delete file container in case of exception
    //in CreateFileContainer and so needs an access to private dtor.
-   friend class std::auto_ptr<FileContainer>;
+   friend class std::unique_ptr<FileContainer>;
 public:
    typedef std::vector<TObject *>::size_type size_type;
 
