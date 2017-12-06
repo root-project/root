@@ -46,7 +46,7 @@
 #include "ESTLType.h"
 
 // The following are opaque type and are never really declared
-// The specific implemenation of TInterpreter will cast the
+// The specific implementation of TInterpreter will cast the
 // value of pointer to this types to the correct type (possibly
 // distinct from these)
 class CallFunc_t;
