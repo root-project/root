@@ -42,7 +42,7 @@ Int_t mt201_parallelHistoFill()
    };
 
    // The seeds for the random number generators.
-   auto seeds = ROOT::TSeqI(1, poolSize+1);
+   auto seeds = ROOT::TSeqI(1, poolSize + 1);
 
    std::vector<std::thread> pool;
 
@@ -65,7 +65,8 @@ Int_t mt201_parallelHistoFill()
    }
 
    // Wait for the threads to finish
-   for (auto && t : pool) t.join();
+   for (auto &&t : pool)
+      t.join();
 
    // Merge the final result
    auto sumRandomHisto = ts_h.Merge();
