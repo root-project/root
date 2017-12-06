@@ -33,6 +33,7 @@ The following people have contributed to this new version:
  Enric Tejedor Saavedra, CERN/SFT,\
  Peter van Gemmeren, ANL,\
  Vassil Vassilev, Fermilab/CMS,\
+ Xavier Valls Pla, CERN/UJI
  Wouter Verkerke, NIKHEF/Atlas, RooFit
 
 ## Removed interfaces
@@ -170,10 +171,15 @@ large TClonesArray where each element contains another small vector container.
 
 
 ## Histogram Libraries
-
+- Histogram-based fits are implicitly parallelized.
+- Added new options to the histogram fitting interfaces to support explicit parallelization of the fit as well.
+- `TF1` gradient evaluation supports vectorization.
+- Refactor of `TF1` constructors, default initialization of its data members and fixed ambiguous TF1::operator().
 
 ## Math Libraries
-
+ - The Fitting functions now support vectorization and parallelization.
+ - Added padding in the fit data classes for correct loading of SIMD arrays.
+ - `TFormula` supports vectorization.
 
 ## RooFit Libraries
 
@@ -258,7 +264,8 @@ large TClonesArray where each element contains another small vector container.
   - The TFuture template has been added to the ROOT::Experimental namespace. It represents a future and is compatible
   with the ROOT::Experimental::Async function. It has the same properties of an STL future and can be initialised by
   one of these classes. For example, *TFuture<int> = std::async(myfunc,a,b,c);*
-
+  - Reintroduced greedy reduction in TProcessExecutor
+  - Fix empty chunks in the result vector of TThreadExecutor::Map. If the integer partition of the data in nChunks causes the existence of empty chunks (e.g the—rounded up—division of 12 elements in 5 chunks), the number of chunks is decreased to avoid empty chunks and, as a consequence, accesses to uninitialized memory in the reduction step.
 
 ## Language Bindings
   - PyROOT now supports list initialisation with tuples. For example, suppose to have a function `void f(const TH1F& h)`. In C++, this can be invoked with this syntax: `f({"name", "title", 64, -4, 4})`. In PyROOT this translates too `f(('name', 'title', 64, -4, 4))`.
