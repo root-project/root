@@ -8,12 +8,6 @@
 /// \author Danilo Piparo
 /// \date August 2017
 
-#include "TROOT.h"
-#include "ROOT/TFuture.hxx"
-
-#include <future>
-#include <iostream>
-
 int Fibonacci(int n)
 {
    if (n < 2) {

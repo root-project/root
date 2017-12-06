@@ -8,11 +8,6 @@
 /// \author Danilo Piparo
 /// \date August 2017
 
-#include "TROOT.h"
-#include "ROOT/TFuture.hxx"
-
-#include <iostream>
-
 int workItem0()
 {
    printf("Running workItem0...\n");
