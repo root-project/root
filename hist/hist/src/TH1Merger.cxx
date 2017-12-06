@@ -540,10 +540,12 @@ void TH1Merger::DefineNewAxes() {
 void TH1Merger::CopyBuffer(TH1 *hsrc, TH1 *hdes)
 {
    // Check inputs
-   if (!hsrc || !hsrc->fBuffer || !hdes || !hdes->fBuffer) {
+   //if (!hsrc || !hsrc->fBuffer || !hdes || !hdes->fBuffer) {
+   if (!hsrc || !hsrc->fBuffer || !hdes ) {
       void *p1 = hsrc ? hsrc->fBuffer : 0;
-      void *p2 = hdes ? hdes->fBuffer : 0;
-      Warning("TH1Merger::CopyMerge", "invalid inputs: %p, %p, %p, %p -> do nothing", hsrc, hdes, p1, p2);
+      //void *p2 = hdes ? hdes->fBuffer : 0;
+      //Warning("TH1Merger::CopyMerge", "invalid inputs: %p, %p, %p, %p -> do nothing", hsrc, hdes, p1, p2);
+      Warning("TH1Merger::CopyMerge", "invalid inputs: %p, %p, %p, -> do nothing", hsrc, hdes, p1);
    }
 
    // Entries from buffers have to be filled one by one
