@@ -124,6 +124,7 @@ in a common way for several concrete calculators.
          if (model.GetSnapshot()) SetNullParameters(*model.GetSnapshot());
          if (model.GetNuisanceParameters()) SetNuisanceParameters(*model.GetNuisanceParameters());
          if (model.GetConditionalObservables()) SetConditionalObservables(*model.GetConditionalObservables());
+         if (model.GetGlobalObservables()) SetGlobalObservables(*model.GetGlobalObservables());
       }
 
       virtual void SetNullModel( const ModelConfig &) {  // to be understood what to do
@@ -151,6 +152,9 @@ in a common way for several concrete calculators.
       /// set conditional observables needed for computing the NLL
       virtual void SetConditionalObservables(const RooArgSet& set) {fConditionalObs.removeAll(); fConditionalObs.add(set);}
 
+       /// set global observables needed for computing the NLL
+      virtual void SetGlobalObservables(const RooArgSet& set) {fGlobalObs.removeAll(); fGlobalObs.add(set);}
+
 
    protected:
 
@@ -166,9 +170,10 @@ in a common way for several concrete calculators.
       RooArgSet fAlternateParams; // RooArgSet specifying alternate parameters for hypothesis test       // Is it used ????
       RooArgSet fNuisParams;// RooArgSet specifying  nuisance parameters for interval
       RooArgSet fConditionalObs; // RooArgSet specifying the conditional observables
+      RooArgSet fGlobalObs; // RooArgSet specifying the global observables 
 
 
-      ClassDef(CombinedCalculator,1) // A base class that is for tools that can be both HypoTestCalculators and IntervalCalculators
+      ClassDef(CombinedCalculator,2) // A base class that is for tools that can be both HypoTestCalculators and IntervalCalculators
 
    };
 }
