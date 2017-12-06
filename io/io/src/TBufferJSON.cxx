@@ -2286,14 +2286,6 @@ Int_t TBufferJSON::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele
    TBufferJSON_ReadStaticArray(d);
 }
 
-// switch(indx.GetSize()) {
-// case 2: arg[cnt] = (cast_type) elem[indx[1]]; break;
-// case 3: arg[cnt] = (cast_type) elem[indx[1]][indx[2]]; break;
-// case 4: arg[cnt] = (cast_type) elem[indx[1]][indx[2]][indx[3]]; break;
-// case 5: arg[cnt] = (cast_type) elem[indx[1]][indx[2]][indx[3]][indx[4]]; break;
-// }
-
-
 // macro to read content of array, which not include size of array
 // macro also treat situation, when instead of one single array chain
 // of several elements should be produced
@@ -2312,6 +2304,9 @@ Int_t TBufferJSON::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele
             arg[cnt] = asstr ? elem->get<std::string>()[indx[lastdim]] : (*elem)[indx[lastdim]].get<cast_type>(); \
             stack->fIndx->NextSeparator();                             \
          }                                                             \
+      } else if (asstr) {                                              \
+         std::string str = json.get<std::string>();                    \
+         for (int cnt=0;cnt<n;++cnt) arg[cnt] = (cnt < (int) str.length()) ? str[cnt] : 0; \
       } else {                                                         \
          if ((int) json.size() != n) Error("ReadFastArray", "Mismatch array sizes %d %d", n, (int) json.size()); \
          for (int cnt=0;cnt<n;++cnt) arg[cnt] = json[cnt].get<cast_type>(); \
@@ -2346,16 +2341,7 @@ void TBufferJSON::ReadFastArray(Bool_t *b, Int_t n)
 
 void TBufferJSON::ReadFastArray(Char_t *c, Int_t n)
 {
-   if (Stack()->fIndx) {
-      TBufferJSON_ReadFastArray(c, char, true);
-   } else {
-      std::string str;
-
-      JsonReadBasic(str, std::string, 0);
-
-      for (int i=0;i<n;++i)
-         c[i] = (i<(int)str.length()) ? str[i] : 0;
-   }
+   TBufferJSON_ReadFastArray(c, char, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2363,12 +2349,7 @@ void TBufferJSON::ReadFastArray(Char_t *c, Int_t n)
 
 void TBufferJSON::ReadFastArrayString(Char_t *c, Int_t n)
 {
-   std::string str;
-
-   JsonReadBasic(str, std::string, 0);
-
-   for (int i=0;i<n;++i)
-      c[i] = (i<(int)str.length()) ? str[i] : 0;
+   TBufferJSON_ReadFastArray(c, char, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3174,8 +3155,22 @@ void TBufferJSON::ReadStdString(std::string *val)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads a char* string
 
-void TBufferJSON::ReadCharStar(char *& /*s*/)
+void TBufferJSON::ReadCharStar(char *&s)
 {
+   std::string str;
+   JsonReadBasic(str, std::string, 0);
+
+   if (s) {
+     delete [] s;
+     s = nullptr;
+   }
+
+   std::size_t nch = str.length();
+   if (nch > 0) {
+      s = new char[nch+1];
+      memcpy(s, str.c_str(), nch);
+      s[nch] = 0;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
