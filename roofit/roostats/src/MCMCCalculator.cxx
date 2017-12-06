@@ -96,12 +96,15 @@ void MCMCCalculator::SetModel(const ModelConfig & model) {
    fPOI.removeAll();
    fNuisParams.removeAll();
    fConditionalObs.removeAll();
+   fGlobalObs.removeAll();
    if (model.GetParametersOfInterest())
       fPOI.add(*model.GetParametersOfInterest());
    if (model.GetNuisanceParameters())
       fNuisParams.add(*model.GetNuisanceParameters());
    if (model.GetConditionalObservables())
       fConditionalObs.add( *(model.GetConditionalObservables() ) );
+   if (model.GetGlobalObservables())
+      fGlobalObs.add( *(model.GetGlobalObservables() ) );
 
 }
 
@@ -169,7 +172,7 @@ MCMCInterval* MCMCCalculator::GetInterval() const
    }
 
    RooArgSet* constrainedParams = prodPdf->getParameters(*fData);
-   RooAbsReal* nll = prodPdf->createNLL(*fData, Constrain(*constrainedParams),ConditionalObservables(fConditionalObs));
+   RooAbsReal* nll = prodPdf->createNLL(*fData, Constrain(*constrainedParams),ConditionalObservables(fConditionalObs),GlobalObservables(fGlobalObs));
    delete constrainedParams;
 
    RooArgSet* params = nll->getParameters(*fData);
