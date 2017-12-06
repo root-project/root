@@ -312,7 +312,7 @@ public:
       Error("SetWriteParam", "useless");
    }
 
-   virtual Version_t  ReadVersionForMemberWise(const TClass * /*cl*/ = 0)
+   virtual Version_t  ReadVersionForMemberWise(const TClass * /*cl*/ = nullptr)
    {
       Error("ReadVersionForMemberWise", "useless");
       return 0;
@@ -432,15 +432,15 @@ protected:
    TJSONStackObj   *Stack(Int_t depth = 0);
    JSONObject_t     StackNode();
 
-   void             WorkWithClass(TStreamerInfo *info, const TClass *cl = 0);
+   void             WorkWithClass(TStreamerInfo *info, const TClass *cl = nullptr);
    void             WorkWithElement(TStreamerElement *elem, Int_t);
 
    void             JsonDisablePostprocessing();
    Int_t            JsonSpecialClass(const TClass *cl) const;
 
-   void             JsonStartElement(const TStreamerElement *elem, const TClass *base_class = 0);
+   void             JsonStartElement(const TStreamerElement *elem, const TClass *base_class = nullptr);
 
-   void             PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_cl = 0);
+   void             PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_cl = nullptr);
 
    void             JsonWriteBasic(Char_t value);
    void             JsonWriteBasic(Short_t value);
@@ -464,9 +464,9 @@ protected:
 
    void            *JsonReadAny(JSONObject_t node, void *obj, TClass **cl);
 
-   void            *JsonReadObject(void *obj, TClass **cl);
+   void            *JsonReadObject(void *obj, TClass **cl = nullptr);
 
-   void             AppendOutput(const char *line0, const char *line1 = 0);
+   void             AppendOutput(const char *line0, const char *line1 = nullptr);
 
    struct ObjectEntry {
       void *obj;

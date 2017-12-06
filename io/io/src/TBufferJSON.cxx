@@ -1927,7 +1927,10 @@ UInt_t TBufferJSON::WriteVersion(const TClass * /*cl*/, Bool_t /* useBcnt */)
 
 void *TBufferJSON::ReadObjectAny(const TClass *)
 {
-   return 0;
+   if (gDebug > 2)
+      Info("ReadObjectAny", "From current JSON node");
+   void *res = JsonReadObject(nullptr);
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2474,19 +2477,81 @@ void TBufferJSON::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t /*nbits*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// redefined here to avoid warning message from gcc
+/// Read an array of 'n' objects from the I/O buffer.
+/// Stores the objects read starting at the address 'start'.
+/// The objects in the array are assume to be of class 'cl'.
+/// Copied code from TBufferFile
 
-void TBufferJSON::ReadFastArray(void * /*start*/, const TClass * /*cl*/, Int_t /*n*/, TMemberStreamer * /*s*/,
-                                const TClass * /*onFileClass*/)
+void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *streamer,
+                                const TClass *onFileClass)
 {
+   if (streamer) {
+      streamer->SetOnFileClass(onFileClass);
+      (*streamer)(*this,start,0);
+      return;
+   }
+
+   int objectSize = cl->Size();
+   char *obj = (char*)start;
+   char *end = obj + n*objectSize;
+
+   for(; obj<end; obj+=objectSize) ((TClass*)cl)->Streamer(obj,*this, onFileClass);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// redefined here to avoid warning message from gcc
 
-void TBufferJSON::ReadFastArray(void ** /*startp*/, const TClass * /*cl*/, Int_t /*n*/, Bool_t /*isPreAlloc*/,
-                                TMemberStreamer * /*s*/, const TClass * /*onFileClass*/)
+void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc,
+                                TMemberStreamer *streamer, const TClass *onFileClass)
 {
+   if (streamer) {
+      if (isPreAlloc) {
+         for (Int_t j=0;j<n;j++) {
+            if (!start[j]) start[j] = cl->New();
+         }
+      }
+      streamer->SetOnFileClass(onFileClass);
+      (*streamer)(*this,(void*)start,0);
+      return;
+   }
+
+   if (!isPreAlloc) {
+
+      for (Int_t j=0; j<n; j++){
+         //delete the object or collection
+         void *old = start[j];
+         start[j] = ReadObjectAny(cl);
+         if (old && old!=start[j] &&
+             TStreamerInfo::CanDelete()
+             // There are some cases where the user may set up a pointer in the (default)
+             // constructor but not mark this pointer as transient.  Sometime the value
+             // of this pointer is the address of one of the object with just created
+             // and the following delete would result in the deletion (possibly of the
+             // top level object we are goint to return!).
+             // Eventhough this is a user error, we could prevent the crash by simply
+             // adding:
+             // && !CheckObject(start[j],cl)
+             // However this can increase the read time significantly (10% in the case
+             // of one TLine pointer in the test/Track and run ./Event 200 0 0 20 30000
+             //
+             // If ReadObjectAny returned the same value as we previous had, this means
+             // that when writing this object (start[j] had already been written and
+             // is indeed pointing to the same object as the object the user set up
+             // in the default constructor).
+             ) {
+            ((TClass*)cl)->Destructor(old,kFALSE); // call delete and desctructor
+         }
+      }
+
+   } else {
+      //case //-> in comment
+
+      for (Int_t j=0; j<n; j++){
+         if (!start[j]) start[j] = ((TClass*)cl)->New();
+         ((TClass*)cl)->Streamer(start[j],*this,onFileClass);
+      }
+
+   }
 }
 
 #define TJSONWriteArrayCompress(vname, arrsize, typname)                                                       \
@@ -3004,7 +3069,10 @@ void TBufferJSON::StreamObject(void *obj, const TClass *cl, const TClass * /* on
    if (gDebug > 3)
       Info("StreamObject", "Class: %s", (cl ? cl->GetName() : "none"));
 
-   JsonWriteObject(obj, cl);
+   if (IsWriting())
+      JsonWriteObject(obj, cl);
+   else
+      JsonReadObject(obj);
 }
 
 
