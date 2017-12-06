@@ -93,7 +93,7 @@ void TBufferMerger::SetAutoSave(size_t size)
 void TBufferMerger::WriteOutputFile()
 {
    size_t buffered = 0;
-   std::vector<TMemFile *> memfiles;
+   std::vector<std::unique_ptr<TMemFile>> memfiles;
    std::unique_ptr<TBufferFile> buffer;
    TFileMerger merger;
 
@@ -123,9 +123,9 @@ void TBufferMerger::WriteOutputFile()
 
       {
          R__LOCKGUARD(gROOTMutex);
-         memfiles.push_back(new TMemFile(fFile->GetName(), buffer->Buffer() + buffer->Length(), length, "read"));
+         memfiles.emplace_back(new TMemFile(fFile->GetName(), buffer->Buffer() + buffer->Length(), length, "read"));
          buffer->SetBufferOffset(buffer->Length() + length);
-         merger.AddFile(memfiles.back(), false);
+         merger.AddFile(memfiles.back().get(), false);
 
          if (buffered > fAutoSave) {
             buffered = 0;
