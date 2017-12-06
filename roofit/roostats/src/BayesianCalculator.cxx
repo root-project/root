@@ -757,9 +757,11 @@ void BayesianCalculator::SetModel(const ModelConfig & model) {
    fPOI.removeAll();
    fNuisanceParameters.removeAll();
    fConditionalObs.removeAll();
+   fGlobalObs.removeAll();
    if (model.GetParametersOfInterest()) fPOI.add( *(model.GetParametersOfInterest()) );
    if (model.GetNuisanceParameters())  fNuisanceParameters.add( *(model.GetNuisanceParameters() ) );
    if (model.GetConditionalObservables())  fConditionalObs.add( *(model.GetConditionalObservables() ) );
+   if (model.GetGlobalObservables())  fGlobalObs.add( *(model.GetGlobalObservables() ) );
    // remove constant nuisance parameters
    RemoveConstantParameters(&fNuisanceParameters);
 
@@ -805,7 +807,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
    //constrainedParams->Print("V");
 
    // use RooFit::Constrain() to be sure constraints terms are taken into account
-   fLogLike = fPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams), RooFit::ConditionalObservables(fConditionalObs) );
+   fLogLike = fPdf->createNLL(*fData, RooFit::Constrain(*constrainedParams), RooFit::ConditionalObservables(fConditionalObs), RooFit::GlobalObservables(fGlobalObs) );
 
 
 
@@ -900,7 +902,7 @@ RooAbsReal* BayesianCalculator::GetPosteriorFunction() const
       RooArgSet* constrParams = fPdf->getParameters(*fData);
       // remove the constant parameters
       RemoveConstantParameters(constrParams);
-      fLogLike = pdfAndPrior->createNLL(*fData, RooFit::Constrain(*constrParams),RooFit::ConditionalObservables(fConditionalObs) );
+      fLogLike = pdfAndPrior->createNLL(*fData, RooFit::Constrain(*constrParams),RooFit::ConditionalObservables(fConditionalObs),RooFit::GlobalObservables(fGlobalObs) );
       delete constrParams;
 
       TString likeName = TString("likelihood_times_prior_") + TString(pdfAndPrior->GetName());
