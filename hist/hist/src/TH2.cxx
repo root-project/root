@@ -602,7 +602,7 @@ void TH2::FillRandom(const char *fname, Int_t ntimes)
    TObject *fobj = gROOT->GetFunction(fname);
    if (!fobj) { Error("FillRandom", "Unknown function: %s",fname); return; }
    TF2 * f1 = dynamic_cast<TF2*>(fobj);
-   if (!f1) { Error("FillRandom", "Function: %s is not a TF2",fname); return; }
+   if (!f1) { Error("FillRandom", "Function: %s is not a TF2, is a %s",fname,fobj->IsA()->GetName()); return; }
 
 
    TAxis & xAxis = fXaxis;
