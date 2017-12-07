@@ -464,7 +464,7 @@ protected:
 
    void            *JsonReadAny(JSONObject_t node, void *obj, TClass **cl);
 
-   void            *JsonReadObject(void *obj, TClass **cl = nullptr);
+   void            *JsonReadObject(void *obj, const TClass *objClass = nullptr, TClass **readClass = nullptr);
 
    void             AppendOutput(const char *line0, const char *line1 = nullptr);
 
