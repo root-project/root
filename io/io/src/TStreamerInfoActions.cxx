@@ -243,6 +243,15 @@ namespace TStreamerInfoActions
       return 0;
    }
 
+   INLINE_TEMPLATE_ARGS Int_t ReadTextObject(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      void *x = (void*)( ((char*)addr) + config->fOffset );
+      // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
+      buf.ReadFastArray(x, config->fCompInfo->fClass, config->fCompInfo->fLength, config->fCompInfo->fStreamer);
+      return 0;
+   }
+
+
    /** Direct copy of code from TStreamerInfo::WriteBufferAux,
     * potentially can be used later for non-text streaming */
    template<bool kIsTextT>
@@ -2968,7 +2977,20 @@ void TStreamerInfo::AddReadTextAction(TStreamerInfoActions::TActionSequence *rea
 
    if (element->TestBit(TStreamerElement::kWrite)) return;
 
-   readSequence->AddAction( GenericReadAction, new TGenericConfiguration(this,i,compinfo) );
+   Bool_t generic = kFALSE;
+
+   switch (compinfo->fType) {
+      case TStreamerInfo::kObject:   // Class      derived from TObject
+      case TStreamerInfo::kAny:      // Class  NOT derived from TObject
+      case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:
+      case TStreamerInfo::kAny     + TStreamerInfo::kOffsetL:
+         readSequence->AddAction( ReadTextObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+         break;
+      default: generic = kTRUE; break;
+   }
+
+   if (generic)
+      readSequence->AddAction( GenericReadAction, new TGenericConfiguration(this,i,compinfo) );
 }
 
 
