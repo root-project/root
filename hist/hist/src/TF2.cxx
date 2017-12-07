@@ -68,7 +68,11 @@ TF2::TF2(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
    fNpx    = 30;
    fNpy    = 30;
    fContour.Set(0);
-   if (GetNdim() != 2 && xmin < xmax && ymin < ymax) {
+   // accept 1-d formula
+   if (GetNdim() < 2) fNdim = 2; 
+   // dimension is obtained by TFormula
+   // accept cases where formula dim is less than 2 
+   if (GetNdim() > 2 && xmin < xmax && ymin < ymax) {
       Error("TF2","function: %s/%s has dimension %d instead of 2",name,formula,GetNdim());
       MakeZombie();
    }

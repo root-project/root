@@ -53,8 +53,10 @@ TF3::TF3(const char *name,const char *formula, Double_t xmin, Double_t xmax, Dou
    fZmax   = zmax;
    fNpz    = 30;
    Int_t ndim = GetNdim();
-   if (ndim != 3 && xmin < xmax) {
-      Error("TF3","function: %s/%s has %d parameters instead of 3",name,formula,ndim);
+   // accept 1-d or 2-d formula
+   if (ndim < 3) fNdim = 3; 
+   if (ndim > 3 && xmin < xmax && ymin < ymax && zmin < zmax) {
+      Error("TF3","function: %s/%s has dimension %d instead of 3",name,formula,ndim);
       MakeZombie();
    }
 }
