@@ -263,7 +263,7 @@ Bool_t RooRandomizeParamMCSModule::initializeInstance()
   }
   
   // Loop over all gaussian smearing parameters
-  std::list<UniParam>::iterator giter ;
+  std::list<GausParam>::iterator giter ;
   for (giter= _gausParams.begin() ; giter!= _gausParams.end() ; ++giter) {
 
     // Check that listed variable is actual generator model parameter
