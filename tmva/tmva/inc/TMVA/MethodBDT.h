@@ -113,9 +113,9 @@ namespace TMVA {
       // #### Multithreading only if the compilation flag is turned on
 
       #ifdef R__USE_IMT
-      // #### had to define this as a pointer so that we can set the number of CPUs to use AFTER getting
-      // #### information from the user. Needed to do this to automate timing vs nCPUs during development.
-      std::unique_ptr<ROOT::TThreadExecutor> fPool = std::unique_ptr<ROOT::TThreadExecutor>(nullptr);
+      UInt_t fNumCPUs = 1;
+      ROOT::TThreadExecutor fPool;
+
       // #### number of CPUs available for parallelization
       UInt_t GetNumCPUs(){
          SysInfo_t s;
@@ -124,8 +124,6 @@ namespace TMVA {
          return ncpu;
       };
       #endif
-
-      UInt_t fNumCPUs = 1;
 
       Double_t GetMvaValue( Double_t* err, Double_t* errUpper, UInt_t useNTrees );
       Double_t PrivateGetMvaValue( const TMVA::Event *ev, Double_t* err=0, Double_t* errUpper=0, UInt_t useNTrees=0 );

@@ -419,15 +419,6 @@ void TMVA::MethodBDT::DeclareOptions()
       fSepTypeS = "GiniIndex";
    }
 
-   // #### Number of CPUs to use in fPool multithreading, if you want the user to be able to set this
-   // rather than use all of the available CPUs, let them know about this option in the User's Guide or tutorials
-   // I just used it to time the algorithm vs number of CPUs.
-   #ifndef R__USE_IMT
-   DeclareOptionRef(fNumCPUs = 1, "NumCPUs", "Number of CPUs to use in multithreading.");
-   #else
-   DeclareOptionRef(fNumCPUs = GetNumCPUs(), "NumCPUs", "Number of CPUs to use in multithreading.");
-   #endif
-
    DeclareOptionRef(fRegressionLossFunctionBDTGS = "Huber", "RegressionLossFunctionBDTG", "Loss function for BDTG regression.");
    AddPreDefVal(TString("Huber"));
    AddPreDefVal(TString("AbsoluteDeviation"));
@@ -516,23 +507,6 @@ void TMVA::MethodBDT::ProcessOptions()
       Log() << kINFO << GetOptions() << Endl;
       Log() << kFATAL << "<ProcessOptions> unknown Regression Loss Function BDT option " << fRegressionLossFunctionBDTGS << " called" << Endl;
    }
-
-   #ifndef R__USE_IMT // multithreading is not enabled
-   if(fNumCPUs != 1){
-      Log() << kINFO << GetOptions() << Endl;
-      Log() << kWARNING << "ROOT was not compiled with -Dimt=ON (multithreading). NumCPUs will be ignored and the non multithreaded version will be run." << Endl;
-   }
-   #else // multithreading is enabled
-   if(!(fNumCPUs > 0)){
-      Log() << kINFO << GetOptions() << Endl;
-      Log() << kFATAL << "<ProcessOptions> NumCPUs must be >=1. Value given, " << fNumCPUs << ", does not match this criteria" << Endl;
-   }
-   
-   // Tell the TThreadExecutor for MethodBDT how many threads we want to use. same for the loss function's TThreadExecutor
-   fPool.reset(new ROOT::TThreadExecutor(fNumCPUs));
-   fRegressionLossFunctionBDTG->InitThreadExecutor(fNumCPUs);
-   #endif
-
 
    fPruneMethodS.ToLower();
    if      (fPruneMethodS == "expectederror")  fPruneMethod = DecisionTree::kExpectedErrorPruning;
@@ -1351,11 +1325,6 @@ void TMVA::MethodBDT::Train()
                                               fRandomisedTrees, fUseNvars, fUsePoissonNvars, fMaxDepth,
                                               itree, fNodePurityLimit, itree);
 
-         // Tell the decision tree how many threads we want to use if we are multithreading
-         #ifdef R__USE_IMT
-         dt->InitThreadExecutor(fNumCPUs);
-         #endif
-
          fForest.push_back(dt);
          fForest.back()->SetNVars(GetNvar());
          if (fUseFisherCuts) {
@@ -1530,7 +1499,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
          return 0;
       };
 
-      fPool->Map(f, seeds);
+      fPool.Map(f, seeds);
    }
    #else // ROOT was not compiled with multithreading, use standard version
    if(!first){
@@ -2536,9 +2505,6 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
       evT->SetTarget(0, rVal/Double_t(count) );
    }
    else if(fBoostType=="Grad"){
-      // #### Can parallelize this loop over the trees...
-      // #### but this doesn't take much time now that the evaluation bug
-      // #### has been fixed
       for (UInt_t itree=0; itree<fForest.size(); itree++) {
          myMVA += fForest[itree]->CheckEvent(ev,kFALSE);
       }

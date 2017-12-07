@@ -95,23 +95,12 @@ namespace TMVA {
       virtual TString Name() = 0;
       virtual Int_t Id() = 0;
 
-      #ifdef R__USE_IMT
-      void InitThreadExecutor(UInt_t nthreads){
-          fPool.reset(new ROOT::TThreadExecutor(nthreads));
-          fNumCPUs = nthreads;
-      };
-      #endif
-
    protected:
       // #### only use multithreading if the compilation flag is turned on
       #ifdef R__USE_IMT
       UInt_t fNumCPUs = 1;
-
       // #### ROOT multithreading object
-      // #### defined as a pointer so that we can define the number of CPUs to use AFTER getting
-      // #### the information from the user. Did this so that I could time the algorithm vs nCPUs
-      // #### during development. 
-      std::unique_ptr<ROOT::TThreadExecutor> fPool = std::unique_ptr<ROOT::TThreadExecutor>(nullptr);
+      ROOT::TThreadExecutor fPool;
 
       // #### number of CPUs available for parallelization
       UInt_t GetNumCPUs(){
