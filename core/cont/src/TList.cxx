@@ -775,6 +775,9 @@ void TList::RecursiveRemove(TObject *obj)
       }
    }
 
+   if (!fFirst.get())
+      return;
+
    auto lnk  = fFirst;
    decltype(lnk) next;
    while (lnk.get()) {

@@ -334,6 +334,9 @@ void THashList::RecursiveRemove(TObject *obj)
          fTable->Remove(object);
    }
 
+   if (!fFirst.get())
+      return;
+
    // Scan again the list and invoke RecursiveRemove for all objects
    // We need to make sure to go through all the node even those
    // marked as empty by another thread (Eventhough we hold the
