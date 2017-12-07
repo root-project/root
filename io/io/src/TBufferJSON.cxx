@@ -1333,7 +1333,7 @@ void *TBufferJSON::JsonReadObject(void *obj, TClass **cl)
 
    JSONObject_t node = StackNode();
 
-   if (node == nullptr)
+   if (!node)
       return obj;
 
    TClass *objClass = nullptr;
@@ -1342,11 +1342,16 @@ void *TBufferJSON::JsonReadObject(void *obj, TClass **cl)
 
    // ExtractPointer
    if (json.is_object() && (json.size() == 1) && (json.find("$ref") != json.end())) {
-      unsigned refid = json["$ref"];
+      unsigned refid = json["$ref"].get<unsigned>();
+
+      if (gDebug>2)
+         Info("JsonReadObject", "Extract object reference %u", refid);
 
       auto elem = fReadMap.find(refid);
-      if (elem == fReadMap.end())
+      if (elem == fReadMap.end()) {
+         Error("JsonReadObject", "Fail to find object for reference %u", refid);
          return nullptr;
+      }
 
       if (cl)
          *cl = elem->second.cl;
@@ -1359,16 +1364,16 @@ void *TBufferJSON::JsonReadObject(void *obj, TClass **cl)
 
    objClass = TClass::GetClass(clname.c_str());
 
-   if (objClass == nullptr) {
+   if (!objClass) {
       Error("JsonReadObject", "Cannot find class %s", clname.c_str());
       return obj;
    }
 
-   if (gDebug > 1)
-      Info("JsonReadObject", "Reading object of class %s", clname.c_str());
-
-   if (obj == nullptr)
+   if (!obj)
       obj = objClass->New();
+
+   if (gDebug > 1)
+      Info("JsonReadObject", "Reading object of class %s refid %u ptr %p", clname.c_str(), fJsonrCnt, obj);
 
    // add new element to the reading map
    fReadMap[fJsonrCnt++] = ObjectEntry(obj, objClass);
@@ -1392,12 +1397,11 @@ Int_t TBufferJSON::ReadClassBuffer(const TClass *cl, void *ptr, const TClass *)
    TStreamerInfo *sinfo = (TStreamerInfo *)cl->GetStreamerInfo();
 
    if (gDebug > 1)
-      Info("ReadClassBuffer", "Deserialize object %s sinfo ver %d\n", cl->GetName(),
+      Info("ReadClassBuffer", "Deserialize object %s sinfo ver %d", cl->GetName(),
            (sinfo ? sinfo->GetClassVersion() : -1111));
 
-   // deserialize the object
-   // TODO: use separate actions list for reading of text-based data
-   ApplySequence(*(sinfo->GetReadMemberWiseActions(kFALSE)), (char *)ptr);
+   // deserialize the object, using read text actions
+   ApplySequence(*(sinfo->GetReadTextActions()), (char *)ptr);
 
    return 0;
 }
@@ -1421,10 +1425,10 @@ void TBufferJSON::IncrementLevel(TVirtualStreamerInfo *info)
 
 void TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
 {
-   if (sinfo != nullptr)
+   if (sinfo)
       cl = sinfo->GetClass();
 
-   if (cl == nullptr)
+   if (!cl)
       return;
 
    if (gDebug > 3)
@@ -1434,7 +1438,7 @@ void TBufferJSON::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
 
    if (IsReading()) {
       stack = PushStackR(stack->fNode);
-   } else if ((stack != nullptr) && stack->IsStreamerElement() && !stack->fIsObjStarted &&
+   } else if (stack && stack->IsStreamerElement() && !stack->fIsObjStarted &&
               ((stack->fElem->GetType() == TStreamerInfo::kObject) ||
                (stack->fElem->GetType() == TStreamerInfo::kAny))) {
 
@@ -2485,6 +2489,8 @@ void TBufferJSON::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t /*nbits*/)
 void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *streamer,
                                 const TClass *onFileClass)
 {
+   if (gDebug>1) Info("ReadFastArray", "void* n:%d cl:%s", n, cl->GetName());
+
    if (streamer) {
       streamer->SetOnFileClass(onFileClass);
       (*streamer)(*this,start,0);
@@ -2493,9 +2499,41 @@ void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberS
 
    int objectSize = cl->Size();
    char *obj = (char*)start;
-   char *end = obj + n*objectSize;
 
-   for(; obj<end; obj+=objectSize) ((TClass*)cl)->Streamer(obj,*this, onFileClass);
+   TJSONStackObj *stack = Stack();
+   nlohmann::json *topnode = (nlohmann::json *)stack->fNode;
+
+   TArrayIndexProducer indexes(stack->fElem, n, "");
+   TArrayI &indx = indexes.GetIndices();
+
+   for (Int_t j = 0; j < n; j++, obj += objectSize) {
+
+      if (indexes.IsArray()) {
+         nlohmann::json *subnode = &((*topnode)[indx[0]]);
+         for (int k=1;k<indx.GetSize();++k)
+            subnode = &((*subnode)[indx[k]]);
+         indexes.NextSeparator();
+         stack->fNode = subnode;
+      }
+
+      JsonReadObject(obj);
+   }
+
+   if (indexes.IsArray()) {
+      // deselect first
+      stack->fNode = topnode;
+   }
+
+   if (Stack(0)->fIndx) {
+      Error("ReadFastArray", "(void*) superelement has index itself - not processed!!!!");
+      //AppendOutput(Stack(0)->fIndx->NextSeparator());
+   }
+
+   // for(; obj<end; obj+=objectSize)
+   //   ((TClass*)cl)->Streamer(obj,*this, onFileClass);
+      // JsonReadObject(obj);
+
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2504,6 +2542,8 @@ void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberS
 void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc,
                                 TMemberStreamer *streamer, const TClass *onFileClass)
 {
+   if (gDebug>1) Info("ReadFastArray", "void** n:%d cl:%s", n, cl->GetName());
+
    if (streamer) {
       if (isPreAlloc) {
          for (Int_t j=0;j<n;j++) {
@@ -2515,43 +2555,37 @@ void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
       return;
    }
 
-   if (!isPreAlloc) {
+   TJSONStackObj *stack = Stack();
+   nlohmann::json *topnode = (nlohmann::json *)stack->fNode;
 
-      for (Int_t j=0; j<n; j++){
-         //delete the object or collection
+   TArrayIndexProducer indexes(stack->fElem, n, "");
+   TArrayI &indx = indexes.GetIndices();
+
+   for (Int_t j=0; j<n; j++) {
+      if (indexes.IsArray()) {
+         nlohmann::json *subnode = &((*topnode)[indx[0]]);
+         for (int k=1;k<indx.GetSize();++k)
+            subnode = &((*subnode)[indx[k]]);
+         indexes.NextSeparator();
+         stack->fNode = subnode;
+      }
+
+      if (!isPreAlloc) {
          void *old = start[j];
-         start[j] = ReadObjectAny(cl);
-         if (old && old!=start[j] &&
-             TStreamerInfo::CanDelete()
-             // There are some cases where the user may set up a pointer in the (default)
-             // constructor but not mark this pointer as transient.  Sometime the value
-             // of this pointer is the address of one of the object with just created
-             // and the following delete would result in the deletion (possibly of the
-             // top level object we are goint to return!).
-             // Eventhough this is a user error, we could prevent the crash by simply
-             // adding:
-             // && !CheckObject(start[j],cl)
-             // However this can increase the read time significantly (10% in the case
-             // of one TLine pointer in the test/Track and run ./Event 200 0 0 20 30000
-             //
-             // If ReadObjectAny returned the same value as we previous had, this means
-             // that when writing this object (start[j] had already been written and
-             // is indeed pointing to the same object as the object the user set up
-             // in the default constructor).
-             ) {
+         start[j] = JsonReadObject(nullptr);
+         if (old && old!=start[j] && TStreamerInfo::CanDelete())
             ((TClass*)cl)->Destructor(old,kFALSE); // call delete and desctructor
-         }
-      }
-
-   } else {
-      //case //-> in comment
-
-      for (Int_t j=0; j<n; j++){
+      } else {
          if (!start[j]) start[j] = ((TClass*)cl)->New();
-         ((TClass*)cl)->Streamer(start[j],*this,onFileClass);
+         JsonReadObject(start[j]);
       }
-
    }
+
+   if (indexes.IsArray()) {
+      // deselect first
+      stack->fNode = topnode;
+   }
+
 }
 
 #define TJSONWriteArrayCompress(vname, arrsize, typname)                                                       \
