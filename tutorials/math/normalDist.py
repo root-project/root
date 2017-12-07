@@ -3,7 +3,6 @@
 ## \notebook
 ## Tutorial illustrating the new statistical distributions functions (pdf, cdf and quantile)
 ##
-## \author Anna Kreshuk
 ## based on Anna Kreshuk's normalDist.C
 ##
 ## \macro_image
