@@ -888,6 +888,16 @@ bool test46() {
    return ok;
 }
 
+bool test47() {
+   // test mod operator
+   // one needs to convert always to integer because % works only for int
+   auto f1 = new TF1("f1","exp(x)");
+   auto func = new TF1("modf","int(2*f1(x)) % 3");
+   bool ok = func->Eval(1) == 2;
+   ok &= func->Eval(3) == 1;
+   ok &= func->Eval(1.2) == 0; 
+   return ok;
+}
 
 
 
@@ -954,6 +964,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test44() ) { PrintError(itest); }
    IncrTest(itest); if (!test45() ) { PrintError(itest); }
    IncrTest(itest); if (!test46() ) { PrintError(itest); }
+   IncrTest(itest); if (!test47() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
