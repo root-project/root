@@ -23,10 +23,10 @@ class TRWMutexImp : public TVirtualRWMutex {
    ROOT::TReentrantRWLock<MutexT, RecurseCountsT> fMutexImp;
 
 public:
-   void ReadLock() override;
-   void ReadUnLock() override;
-   void WriteLock() override;
-   void WriteUnLock() override;
+   Hint_t * ReadLock() override;
+   void ReadUnLock(Hint_t *) override;
+   Hint_t * WriteLock() override;
+   void WriteUnLock(Hint_t *) override;
 
    TVirtualRWMutex *Factory(Bool_t /*recursive*/ = kFALSE) override;
    std::unique_ptr<TVirtualMutex::State> Reset() override;

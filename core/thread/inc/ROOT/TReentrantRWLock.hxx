@@ -15,7 +15,7 @@
 
 #include "ThreadLocalStorage.h"
 #include "ROOT/TSpinMutex.hxx"
-#include "TVirtualMutex.h"
+#include "TVirtualRWMutex.h"
 
 #include <atomic>
 #include <condition_variable>
@@ -25,8 +25,10 @@
 namespace ROOT {
 namespace Internal {
 struct UniqueLockRecurseCount {
+   using Hint_t = TVirtualRWMutex::Hint_t;
+
    struct LocalCounts {
-      int fReadersCount = 0;
+      size_t fReadersCount = 0;
       bool fIsWriter = false;
    };
    size_t fWriteRecurse = 0; ///<! Number of re-entry in the lock by the same thread.
@@ -40,15 +42,25 @@ struct UniqueLockRecurseCount {
       return &gLocal;
    }
 
-   void IncrementReadCount(local_t &local) { ++(local->fReadersCount); }
+   Hint_t *IncrementReadCount(local_t &local) {
+      ++(local->fReadersCount);
+      return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&(local->fReadersCount));
+   }
 
    template <typename MutexT>
-   void IncrementReadCount(local_t &local, MutexT &) { IncrementReadCount(local); }
+   Hint_t *IncrementReadCount(local_t &local, MutexT &) {
+      return IncrementReadCount(local);
+   }
 
-   void DecrementReadCount(local_t &local) { --(local->fReadersCount); }
+   Hint_t *DecrementReadCount(local_t &local) {
+      --(local->fReadersCount);
+      return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&(local->fReadersCount));
+   }
 
    template <typename MutexT>
-   void DecrementReadCount(local_t &local, MutexT &) { DecrementReadCount(local); }
+   Hint_t *DecrementReadCount(local_t &local, MutexT &) {
+      return DecrementReadCount(local);
+   }
 
    void ResetReadCount(local_t &local, int newvalue) {
       local->fReadersCount = newvalue;
@@ -69,11 +81,12 @@ struct UniqueLockRecurseCount {
 
    void ResetIsWriter(local_t &local) { local->fIsWriter = false; }
 
-   size_t GetLocalReadersCount(local_t &local) { return local->fReadersCount; }
+   size_t &GetLocalReadersCount(local_t &local) { return local->fReadersCount; }
 };
 
 struct RecurseCounts {
-   using ReaderColl_t = std::unordered_map<std::thread::id, int>;
+   using Hint_t = TVirtualRWMutex::Hint_t;
+   using ReaderColl_t = std::unordered_map<std::thread::id, size_t>;
    size_t fWriteRecurse; ///<! Number of re-entry in the lock by the same thread.
 
    std::thread::id fWriterThread; ///<! Holder of the write lock
@@ -83,22 +96,30 @@ struct RecurseCounts {
 
    local_t GetLocal() { return std::this_thread::get_id(); }
 
-   void IncrementReadCount(local_t &local) { ++(fReadersCount[local]); }
-
-   template <typename MutexT>
-   void IncrementReadCount(local_t &local, MutexT &mutex)
-   {
-      std::unique_lock<MutexT> lock(mutex);
-      IncrementReadCount(local);
+   Hint_t *IncrementReadCount(local_t &local) {
+      auto &count = fReadersCount[local];
+      ++(count);
+      return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&count);
    }
 
-   void DecrementReadCount(local_t &local) { --(fReadersCount[local]); }
-
    template <typename MutexT>
-   void DecrementReadCount(local_t &local, MutexT &mutex)
+   Hint_t *IncrementReadCount(local_t &local, MutexT &mutex)
    {
       std::unique_lock<MutexT> lock(mutex);
-      DecrementReadCount(local);
+      return IncrementReadCount(local);
+   }
+
+   Hint_t *DecrementReadCount(local_t &local) {
+      auto &count = fReadersCount[local];
+      --count;
+      return reinterpret_cast<TVirtualRWMutex::Hint_t *>(&count);
+   }
+
+   template <typename MutexT>
+   Hint_t *DecrementReadCount(local_t &local, MutexT &mutex)
+   {
+      std::unique_lock<MutexT> lock(mutex);
+      return DecrementReadCount(local);
    }
 
    void ResetReadCount(local_t &local, int newvalue) {
@@ -120,7 +141,7 @@ struct RecurseCounts {
 
    void ResetIsWriter(local_t & /* local */) { fWriterThread = std::thread::id(); }
 
-   size_t GetLocalReadersCount(local_t &local) { return fReadersCount[local]; }
+   size_t &GetLocalReadersCount(local_t &local) { return fReadersCount[local]; }
 
 
 };
@@ -149,10 +170,10 @@ public:
    /// Regular constructor.
    TReentrantRWLock() : fReaders(0), fReaderReservation(0), fWriterReservation(0), fWriter(false) {}
 
-   void ReadLock();
-   void ReadUnLock();
-   void WriteLock();
-   void WriteUnLock();
+   TVirtualRWMutex::Hint_t *ReadLock();
+   void ReadUnLock(TVirtualRWMutex::Hint_t *);
+   TVirtualRWMutex::Hint_t *WriteLock();
+   void WriteUnLock(TVirtualRWMutex::Hint_t *);
 
    std::unique_ptr<TVirtualMutex::State> Reset();
    void Restore(std::unique_ptr<TVirtualMutex::State>&&);

@@ -52,7 +52,7 @@ Internal::UniqueLockRecurseCount::UniqueLockRecurseCount()
 ////////////////////////////////////////////////////////////////////////////
 /// Acquire the lock in read mode.
 template <typename MutexT, typename RecurseCountsT>
-void TReentrantRWLock<MutexT, RecurseCountsT>::ReadLock()
+TVirtualRWMutex::Hint_t *TReentrantRWLock<MutexT, RecurseCountsT>::ReadLock()
 {
    ++fReaderReservation;
 
@@ -62,12 +62,14 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::ReadLock()
 
    auto local = fRecurseCounts.GetLocal();
 
+   TVirtualRWMutex::Hint_t *hint = nullptr;
+
    if (!fWriter) {
       // There is no writer, go freely to the critical section
       ++fReaders;
       --fReaderReservation;
 
-      fRecurseCounts.IncrementReadCount(local, fMutex);
+      hint = fRecurseCounts.IncrementReadCount(local, fMutex);
 
    } else if (! fRecurseCounts.IsNotCurrentWriter(local)) {
 
@@ -76,7 +78,7 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::ReadLock()
       // the read lock and ending up in the next section ("Wait for writers, if any")
       // which need to also get the local readers count and thus can
       // modify the map.
-      fRecurseCounts.IncrementReadCount(local, fMutex);
+      hint = fRecurseCounts.IncrementReadCount(local, fMutex);
       ++fReaders;
 
    } else {
@@ -103,28 +105,38 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::ReadLock()
          //   of the two.
       }
 
-      fRecurseCounts.IncrementReadCount(local);
+      hint = fRecurseCounts.IncrementReadCount(local);
 
       // This RW lock now belongs to the readers
       ++fReaders;
 
       lock.unlock();
    }
+
+   return hint;
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// Release the lock in read mode.
 template <typename MutexT, typename RecurseCountsT>
-void TReentrantRWLock<MutexT, RecurseCountsT>::ReadUnLock()
+void TReentrantRWLock<MutexT, RecurseCountsT>::ReadUnLock(TVirtualRWMutex::Hint_t *hint)
 {
-   auto local = fRecurseCounts.GetLocal();
+   size_t *localReaderCount;
+   if (!hint) {
+      // This should be very rare.
+      auto local = fRecurseCounts.GetLocal();
+      std::lock_guard<MutexT> lock(fMutex);
+      localReaderCount = &(fRecurseCounts.GetLocalReadersCount(local));
+   } else {
+      localReaderCount = reinterpret_cast<size_t*>(hint);
+   }
 
    --fReaders;
    if (fWriterReservation && fReaders == 0) {
       // We still need to lock here to prevent interleaving with a writer
       std::lock_guard<MutexT> lock(fMutex);
 
-      fRecurseCounts.DecrementReadCount(local);
+      --(*localReaderCount);
 
       // Make sure you wake up a writer, if any
       // Note: spurrious wakeups are okay, fReaders
@@ -132,14 +144,14 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::ReadUnLock()
       fCond.notify_all();
    } else {
 
-      fRecurseCounts.DecrementReadCount(local, fMutex);
+      --(*localReaderCount);
    }
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// Acquire the lock in write mode.
 template <typename MutexT, typename RecurseCountsT>
-void TReentrantRWLock<MutexT, RecurseCountsT>::WriteLock()
+TVirtualRWMutex::Hint_t *TReentrantRWLock<MutexT, RecurseCountsT>::WriteLock()
 {
    ++fWriterReservation;
 
@@ -148,7 +160,8 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::WriteLock()
    auto local = fRecurseCounts.GetLocal();
 
    // Release this thread's reader lock(s)
-   auto readerCount = fRecurseCounts.GetLocalReadersCount(local);
+   auto &readerCount = fRecurseCounts.GetLocalReadersCount(local);
+   TVirtualRWMutex::Hint_t *hint = reinterpret_cast<TVirtualRWMutex::Hint_t *>(&readerCount);
 
    fReaders -= readerCount;
 
@@ -179,12 +192,14 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::WriteLock()
    --fWriterReservation;
 
    lock.unlock();
+
+   return hint;
 }
 
 //////////////////////////////////////////////////////////////////////////
 /// Release the lock in write mode.
 template <typename MutexT, typename RecurseCountsT>
-void TReentrantRWLock<MutexT, RecurseCountsT>::WriteUnLock()
+void TReentrantRWLock<MutexT, RecurseCountsT>::WriteUnLock(TVirtualRWMutex::Hint_t *)
 {
    // We need to lock here to prevent interleaving with a reader
    std::lock_guard<MutexT> lock(fMutex);
@@ -211,6 +226,7 @@ namespace {
 template <typename MutexT, typename RecurseCountsT>
 struct TReentrantRWLockState: public TVirtualMutex::State {
     int fReadersCount = 0;
+    size_t *fReadersCountLoc = nullptr;
     size_t fWriteRecurse = 0;
     bool fIsWriter = false;
 };
@@ -224,11 +240,11 @@ std::unique_ptr<TVirtualMutex::State> TReentrantRWLock<MutexT, RecurseCountsT>::
    std::unique_ptr<State_t> pState(new State_t);
    auto local = fRecurseCounts.GetLocal();
 
-   size_t readerCount;
    {
       std::unique_lock<MutexT> lock(fMutex);
-      readerCount = fRecurseCounts.GetLocalReadersCount(local);
+      pState->fReadersCountLoc = &(fRecurseCounts.GetLocalReadersCount(local));
    }
+   size_t &readerCount(*(pState->fReadersCountLoc));
 
    pState->fReadersCount = readerCount;
 
@@ -241,23 +257,18 @@ std::unique_ptr<TVirtualMutex::State> TReentrantRWLock<MutexT, RecurseCountsT>::
       // Now set the lock (and potential read locks) for immediate release.
       fReaders -= readerCount;
       fRecurseCounts.fWriteRecurse = 1;
-      // insertion in the reader count can only happen during a ReadLock
-      // which can not execute until we release the write lock, so no
-      // need to take the local mutex here.
-      fRecurseCounts.ResetReadCount(local, 0);
+
+      *(pState->fReadersCountLoc) = 0;
 
       // Release this thread's write lock
-      WriteUnLock();
+      WriteUnLock(reinterpret_cast<TVirtualRWMutex::Hint_t *>(pState->fReadersCountLoc));
    } else if (readerCount) {
       // Now set the lock for release.
-      {
-         std::unique_lock<MutexT> lock(fMutex);
-         fReaders -= (readerCount-1);
-         fRecurseCounts.ResetReadCount(local, 1);
-      }
+      fReaders -= (readerCount-1);
+      *(pState->fReadersCountLoc) = 1;
 
       // Release this thread's reader lock(s)
-      ReadUnLock();
+      ReadUnLock(reinterpret_cast<TVirtualRWMutex::Hint_t *>(pState->fReadersCountLoc));
    }
 
    // Do something.
@@ -283,8 +294,7 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::Restore(std::unique_ptr<TVirtualM
       // Now that we go the lock, fix up the recursion count.
       std::unique_lock<MutexT> lock(fMutex);
       fRecurseCounts.fWriteRecurse = pState->fWriteRecurse;
-      auto local = fRecurseCounts.GetLocal();
-      fRecurseCounts.ResetReadCount(local, pState->fReadersCount);
+      *(pState->fReadersCountLoc) = pState->fReadersCount;
       fReaders +=  pState->fReadersCount;
    } else {
       ReadLock();
@@ -293,8 +303,7 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::Restore(std::unique_ptr<TVirtualM
       auto readerCount = pState->fReadersCount;
 
       std::unique_lock<MutexT> lock(fMutex);
-      auto local = fRecurseCounts.GetLocal();
-      fRecurseCounts.ResetReadCount(local, readerCount);
+      *(pState->fReadersCountLoc) = pState->fReadersCount;
       fReaders += readerCount - 1;
    }
 
