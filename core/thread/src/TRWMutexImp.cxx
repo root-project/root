@@ -28,36 +28,36 @@ namespace ROOT {
 /// Take the Read Lock of the mutex.
 
 template <typename MutexT, typename RecurseCountsT>
-void TRWMutexImp<MutexT, RecurseCountsT>::ReadLock()
+TVirtualRWMutex::Hint_t *TRWMutexImp<MutexT, RecurseCountsT>::ReadLock()
 {
-   fMutexImp.ReadLock();
+   return fMutexImp.ReadLock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Take the Write Lock of the mutex.
 
 template <typename MutexT, typename RecurseCountsT>
-void TRWMutexImp<MutexT, RecurseCountsT>::WriteLock()
+TVirtualRWMutex::Hint_t *TRWMutexImp<MutexT, RecurseCountsT>::WriteLock()
 {
-   fMutexImp.WriteLock();
+   return fMutexImp.WriteLock();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Release the read lock of the mutex
 
 template <typename MutexT, typename RecurseCountsT>
-void TRWMutexImp<MutexT, RecurseCountsT>::ReadUnLock()
+void TRWMutexImp<MutexT, RecurseCountsT>::ReadUnLock(TVirtualRWMutex::Hint_t *hint)
 {
-   fMutexImp.ReadUnLock();
+   fMutexImp.ReadUnLock(hint);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Release the read lock of the mutex
 
 template <typename MutexT, typename RecurseCountsT>
-void TRWMutexImp<MutexT, RecurseCountsT>::WriteUnLock()
+void TRWMutexImp<MutexT, RecurseCountsT>::WriteUnLock(TVirtualRWMutex::Hint_t *hint)
 {
-   fMutexImp.WriteUnLock();
+   fMutexImp.WriteUnLock(hint);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
