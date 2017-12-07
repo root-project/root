@@ -2505,6 +2505,9 @@ void TStreamerInfo::Compile()
    if (fReadMemberWise) fReadMemberWise->fActions.clear();
    else fReadMemberWise = new TStreamerInfoActions::TActionSequence(this,ndata);
 
+   if (fReadText) fReadText->fActions.clear();
+   else fReadText = new TStreamerInfoActions::TActionSequence(this,ndata);
+
    if (fWriteMemberWise) fWriteMemberWise->fActions.clear();
    else fWriteMemberWise = new TStreamerInfoActions::TActionSequence(this,ndata);
 
@@ -2688,6 +2691,7 @@ void TStreamerInfo::Compile()
       AddReadMemberWiseVecPtrAction(fReadMemberWiseVecPtr, i, fCompFull[i]);
       AddWriteMemberWiseVecPtrAction(fWriteMemberWiseVecPtr, i, fCompFull[i]);
 
+      AddReadTextAction(fReadText, i, fCompFull[i]);
       AddWriteTextAction(fWriteText, i, fCompFull[i]);
    }
    ComputeSize();
@@ -2954,6 +2958,19 @@ void TStreamerInfo::AddReadAction(TStreamerInfoActions::TActionSequence *readSeq
       readSequence->AddAction( UseCache, new TConfigurationUseCache(this,action,element->TestBit(TStreamerElement::kRepeat)) );
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add a read text action for the given element.
+
+void TStreamerInfo::AddReadTextAction(TStreamerInfoActions::TActionSequence *readSequence, Int_t i, TStreamerInfo::TCompInfo *compinfo)
+{
+   TStreamerElement *element = compinfo->fElem;
+
+   if (element->TestBit(TStreamerElement::kWrite)) return;
+
+   readSequence->AddAction( GenericReadAction, new TGenericConfiguration(this,i,compinfo) );
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a read action for the given element.
