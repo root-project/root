@@ -876,6 +876,21 @@ bool test45()
    return ok;
 }
 
+bool test46() {
+   // test multi-dim formula (like new xyzgaus)
+   auto func = new TF3("f3","xyzgaus");
+   func->SetParameters(2,1,2,3,4,5,6);
+   bool ok = fpEqual( func->Eval(2,4,6), 2.*TMath::Gaus(2,1,2)*TMath::Gaus(4,3,4)*TMath::Gaus(6,5,6) , true);
+
+   auto func2 = new TF3("f3","gaus(x,[0],[1],[2])*gaus(y,1,[3],[4])*gaus(z,1,[5],[6])");
+   double x[] = {2,4,6};
+   ok &= fpEqual( func->EvalPar(x,nullptr), func2->EvalPar(x, func->GetParameters() ), true ); 
+   return ok;
+}
+
+
+
+
 void PrintError(int itest)  { 
    Error("TFormula test","test%d FAILED ",itest);
    failedTests.push_back(itest);
@@ -938,6 +953,7 @@ int runTests(bool debug = false) {
    IncrTest(itest); if (!test43() ) { PrintError(itest); }
    IncrTest(itest); if (!test44() ) { PrintError(itest); }
    IncrTest(itest); if (!test45() ) { PrintError(itest); }
+   IncrTest(itest); if (!test46() ) { PrintError(itest); }
 
    std::cout << ".\n";
     
