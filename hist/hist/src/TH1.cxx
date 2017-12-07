@@ -5713,7 +5713,8 @@ void TH1::Paint(Option_t *option)
 /// in the middle of a bin in the original histogram, all entries in
 /// the split bin in the original histogram will be transfered to the
 /// lower of the two possible bins in the new histogram. This is
-/// probably not what you want.
+/// probably not what you want. A warning message is emitted in this
+/// case
 ///
 /// examples: if h1 is an existing TH1F histogram with 100 bins
 ///
@@ -5845,6 +5846,14 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       binError   = 0;
       Int_t imax = ngroup;
       Double_t xbinmax = hnew->GetXaxis()->GetBinUpEdge(bin);
+      // check bin edges for the cases when we provide an array of bins
+      // be careful in case bins can have zero width
+      if (xbins && !TMath::AreEqualAbs(fXaxis.GetBinLowEdge(oldbin),
+                                       hnew->GetXaxis()->GetBinLowEdge(bin),
+                                       TMath::Max(1.E-8 * fXaxis.GetBinWidth(oldbin), 1.E-16 )) )
+      {
+         Warning("Rebin","Bin edge %d of rebinned histogram does not much any bin edges of the old histogram. Result can be inconsistent",bin);
+      }
       for (i=0;i<ngroup;i++) {
          if( (oldbin+i > nbins) ||
              ( hnew != this && (fXaxis.GetBinCenter(oldbin+i) > xbinmax)) ) {
