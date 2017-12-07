@@ -573,6 +573,8 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fParMin.resize(fNpar);
       fParMax.resize(fNpar);
    }
+   // do we want really to have this un-documented feature where we accept cases where dim > 1
+   // by setting xmin >= xmax ??
    if (fNdim > 1 && xmin < xmax) {
       Error("TF1", "function: %s/%s has dimension %d instead of 1", name, formula, fNdim);
       MakeZombie();
