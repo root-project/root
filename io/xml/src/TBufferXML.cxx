@@ -834,7 +834,7 @@ void *TBufferXML::XmlReadObject(void *obj, TClass **cl)
    if (fErrorFlag > 0)
       return obj;
 
-   if (objnode == nullptr)
+   if (!objnode)
       return obj;
 
    if (!VerifyNode(objnode, xmlio::Object, "XmlReadObjectNew"))
@@ -854,7 +854,7 @@ void *TBufferXML::XmlReadObject(void *obj, TClass **cl)
    if (objClass == TDirectory::Class())
       objClass = TDirectoryFile::Class();
 
-   if (objClass == nullptr) {
+   if (!objClass) {
       Error("XmlReadObject", "Cannot find class %s", clname.Data());
       ShiftStack("readobjerr");
       return obj;
@@ -863,7 +863,7 @@ void *TBufferXML::XmlReadObject(void *obj, TClass **cl)
    if (gDebug > 1)
       Info("XmlReadObject", "Reading object of class %s", clname.Data());
 
-   if (obj == nullptr)
+   if (!obj)
       obj = objClass->New();
 
    ExtractReference(objnode, obj, objClass);
@@ -2596,7 +2596,7 @@ void TBufferXML::StreamObject(TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Steram object to/from buffer
+/// Stream object to/from buffer
 
 void TBufferXML::StreamObject(void *obj, const TClass *cl, const TClass * /* onfileClass */)
 {
