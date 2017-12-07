@@ -314,6 +314,7 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::Restore(std::unique_ptr<TVirtualM
 namespace ROOT {
 template class TReentrantRWLock<ROOT::TSpinMutex, ROOT::Internal::RecurseCounts>;
 template class TReentrantRWLock<TMutex, ROOT::Internal::RecurseCounts>;
+template class TReentrantRWLock<std::mutex, ROOT::Internal::RecurseCounts>;
 
 template class TReentrantRWLock<ROOT::TSpinMutex, ROOT::Internal::UniqueLockRecurseCount>;
 template class TReentrantRWLock<TMutex, ROOT::Internal::UniqueLockRecurseCount>;
