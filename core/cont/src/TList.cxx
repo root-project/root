@@ -775,6 +775,9 @@ void TList::RecursiveRemove(TObject *obj)
       }
    }
 
+   if (!fFirst.get())
+      return;
+
    auto lnk  = fFirst;
    decltype(lnk) next;
    while (lnk.get()) {
@@ -782,6 +785,7 @@ void TList::RecursiveRemove(TObject *obj)
       TObject *ob = lnk->GetObject();
       if (ob && ob->TestBit(kNotDeleted)) {
          if (ob->IsEqual(obj)) {
+            lnk->SetObject(nullptr);
             if (lnk == fFirst) {
                fFirst = next;
                if (lnk == fLast)
@@ -828,6 +832,7 @@ TObject *TList::Remove(TObject *obj)
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    TObject *ob = lnk->GetObject();
+   lnk->SetObject(nullptr);
    if (lnk == fFirst.get()) {
       fFirst = lnk->fNext;
       // lnk is still alive as we have either fLast
@@ -867,7 +872,7 @@ TObject *TList::Remove(TObjLink *lnk)
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    TObject *obj = lnk->GetObject();
-
+   lnk->SetObject(nullptr);
    if (lnk == fFirst.get()) {
       fFirst = lnk->fNext;
       // lnk is still alive as we have either fLast
@@ -905,6 +910,7 @@ void TList::RemoveLast()
    TObjLink *lnk = fLast.get();
    if (!lnk) return;
 
+   lnk->SetObject(nullptr);
    if (lnk == fFirst.get()) {
       fFirst.reset();
       fLast.reset();
