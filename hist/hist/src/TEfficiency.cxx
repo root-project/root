@@ -2277,7 +2277,7 @@ void TEfficiency::FillWeighted(Bool_t bPassed,Double_t weight,Double_t x,Double_
 {
    if(!TestBit(kUseWeights))
    {
-      Info("FillWeighted","call SetUseWeightedEvents() manually to ensure correct storage of sum of weights squared");
+      // Info("FillWeighted","call SetUseWeightedEvents() manually to ensure correct storage of sum of weights squared");
       SetUseWeightedEvents();
    }
 
@@ -3585,13 +3585,13 @@ Bool_t TEfficiency::SetTotalHistogram(const TH1& rTotal,Option_t* opt)
 void TEfficiency::SetUseWeightedEvents(bool on)
 {
    if (on && !TestBit(kUseWeights) )
-       gROOT->Info("TEfficiency::SetUseWeightedEvents","Histograms are filled with weights");
+       gROOT->Info("TEfficiency::SetUseWeightedEvents","Handle weighted events for computing efficiency");
 
    SetBit(kUseWeights,on);
 
-   if (on && fTotalHistogram->GetSumw2N() == 0)
+   if (on && fTotalHistogram->GetSumw2N() != fTotalHistogram->GetNcells())
       fTotalHistogram->Sumw2();
-   if (on && fPassedHistogram->GetSumw2N() == 0)
+   if (on && fPassedHistogram->GetSumw2N() != fTotalHistogram->GetNcells() )
       fPassedHistogram->Sumw2();
 }
 
