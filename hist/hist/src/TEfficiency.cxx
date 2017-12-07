@@ -2512,8 +2512,8 @@ Double_t TEfficiency::GetEfficiency(Int_t bin) const
 
 Double_t TEfficiency::GetEfficiencyErrorLow(Int_t bin) const
 {
-   Int_t total = (Int_t)fTotalHistogram->GetBinContent(bin);
-   Int_t passed = (Int_t)fPassedHistogram->GetBinContent(bin);
+   Double_t total = fTotalHistogram->GetBinContent(bin);
+   Double_t passed = fPassedHistogram->GetBinContent(bin);
 
    Double_t eff = GetEfficiency(bin);
 
@@ -2592,8 +2592,8 @@ Double_t TEfficiency::GetEfficiencyErrorLow(Int_t bin) const
 
 Double_t TEfficiency::GetEfficiencyErrorUp(Int_t bin) const
 {
-   Int_t total = (Int_t)fTotalHistogram->GetBinContent(bin);
-   Int_t passed = (Int_t)fPassedHistogram->GetBinContent(bin);
+   Double_t total = fTotalHistogram->GetBinContent(bin);
+   Double_t passed = fPassedHistogram->GetBinContent(bin);
 
    Double_t eff = GetEfficiency(bin);
 
