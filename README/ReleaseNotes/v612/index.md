@@ -57,6 +57,7 @@ The following interfaces have been removed, after deprecation in v6.10.
 
 ## Core Libraries
 
+- Added support for XCode 9 and MacOS High Sierra.
 - When invoking root with the "-t" argument, ROOT enables thread-safety and,
   if configured, implicit multithreading within ROOT.
 - `NULL` is not defined by `Rtypes.h` anymore. Instead, its definition is expected to be
@@ -64,7 +65,7 @@ The following interfaces have been removed, after deprecation in v6.10.
 - ROOT now supports dictionaries, autoload and autoparse for classes with template parameter packs.
 - std::make_unique has been backported
 - If a class overloads TObject::Hash, this derived class should also add
-```{.cpp}
+```
    ROOT::CallRecursiveRemoveIfNeeded(*this)
 ```
 Otherwise, when RecursiveRemove is called (by ~TObject or example) for this
@@ -74,13 +75,49 @@ logarithmic complexity).  You will also see warnings like
 ```
    Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SomeName overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 ```
-- When a container relies on TObject::Hash and RecursiveRemove, for example THashTable, the container call use ```TObject::CheckedHash()``` instead of ```TObject::Hash``` during insertion operation to record in the object whether the Hash/RecursiveRemove setup is done properly (as explain above).  It this is not the case ```TObject::HasInconsistentHash()``` will return true.  This can then be used to select, in RecursiveRemove, whether the call to Hash can be trusted or if one needs to do a linear search (as was done in v6.10 and earlier).
+- When a container relies on TObject::Hash and RecursiveRemove, for example THashTable, the container uses ```TObject::CheckedHash()``` instead of ```TObject::Hash``` during insertion operation to record in the object whether the Hash/RecursiveRemove setup is done properly (as explain above).  It this is not the case ```TObject::HasInconsistentHash()``` will return true.  This can then be used to select, in RecursiveRemove, whether the call to Hash can be trusted or if one needs to do a linear search (as was done in v6.10 and earlier).
+- In TClass::GetMissingDictionaries activate the search through the base classes.
+- Added a TStatusBitsChecker to avoid Status Bits overlap in class hierarchy deriving from TObject (and resolved a handful of conflicts).
+- Introduced support for type safe range-for-loop for ROOT collection. The typical use is:
+
+```
+   for(auto bcl : TRangeDynCast<TBaseClass>( * cl->GetListOfBases() )) {
+     if (!bcl) continue;
+     ... use bcl as a TBaseClass*
+   }
+   for(auto bcl : TRangeDynCast<TBaseClass>( cl->GetListOfBases() )) {
+      if (!bcl) continue;
+      ... use bcl as a TBaseClass*
+   }
+```
+- ClassDefInline has been enhanced even for some compiled class (without a dictionary).  ClassDefInline can still not be used for class template instance using Double32_t or Float16_t as a template parameter or for class or class template that do not have a public default constructor.
+
+
+### Thread safety
+
+Resolved the race conditions inherent to the use of the RecursiveRemove mechanism.
+
+- Introduced ```ROOT::TReentrantRWLock```, an implementation of a reentrant read-write lock with a configurable internal mutex/lock and a condition variable to synchronize readers and writers when necessary.
+
+   The implementation allows a single reader to take the write lock without releasing the reader lock.  It also allows the writer to take a read lock. In other word, the lock is re-entrant for both reading and writing.
+
+   The implementation tries to make faster the scenario when readers come and go but there is no writer. In that case, readers will not pay the price of taking the internal lock.
+Moreover, this RW lock tries to be fair with writers, giving them the possibility to claim the lock and wait for only the remaining readers, thus preventing starvation.
+
+- Switched the ROOT global to be a ```ROOT::TReentrantRWLock``` and renamed it ROOT::gCoreMutex.  The old name ```gROOTMutex``` and ```gInterpreterMutex``` are deprecated and may be removed in future releases.
+- Added ```TReadLockGuard```,```TWriteLockGuard```, ```R__READ_LOCKGUARD``` and```R__WRITE_LOCKGUARD``` to take advantage of the new lock.  The legacy ```TLockGuard``` and ```R__LOCKGUARD``` use the write lock.
+- Improved scaling of TROOT::RecursiveRemove in the case of large collection.
+- Added a thread safe mode for the following ROOT collections: THashList, THashTable, TList and TObjArray.  When ROOT's thread safe mode is enabled and the collection is set to use internal locks by calling:
+```
+  collection->UseRWLock();
+```
+all operations on the collection will take the read or write lock when needed, currently they shared the global lock (ROOT::gCoreMutex).
 
 
 ## I/O Libraries
 
 - Introduce TKey::ReadObject<typeName>.  This is a user friendly wrapper around ReadObjectAny.  For example
-```{.cpp}
+```
 auto h1 = key->ReadObject<TH1>
 ```
 after which h1 will either be null if the key contains something that is not a TH1 (or derived class)
@@ -97,8 +134,8 @@ or will be set to the address of the histogram read from the file.
       Error in <TBasket::Streamer>: The value of fNevBufSize is incorrect (-72) ; trying to recover by setting it to zero
       ```
 
-- Added an experimental feature that allows the IO libraries to skip writing out redundant information for some
-   split classes, resulting in disk space savings.  This is disabled by default and may be enabled by setting:
+- Added an experimental feature that allows the IO libraries to skip writing out redundant information for some split classes, resulting in disk space savings.  This is disabled by default and may be enabled by setting:
+
    ```
    ROOT::TIOFeatures features;
    features.Set(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap);
@@ -116,6 +153,8 @@ large TClonesArray where each element contains another small vector container.
   By setting TTree::SetClusterPrefetch(), an entire clusters will be loaded into memory, rather than single baskets.
   By setting the MaxVirtualSize of the tree to a negative value, previous clusters will be retained
   (the absolute value of MaxVirtualSize indicates how many additional clusters will be kept in memory).
+- Added ```TBranchProxy::GetEntries``` to support leaflist variable size array and added ```TBranchProxy::GetArrayLength```.
+- In ```TBranch::Streamer``` insured that we never steam already basket already written to disk.
 
 ### TDataFrame
 
