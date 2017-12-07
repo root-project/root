@@ -962,6 +962,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    functionsNumbers["crystalball"] = 500;
 
    // replace old names xygaus -> gaus[x,y]
+   formula.ReplaceAll("xyzgaus","gaus[x,y,z]");
    formula.ReplaceAll("xygaus","gaus[x,y]");
    formula.ReplaceAll("xgaus","gaus[x]");
    formula.ReplaceAll("ygaus","gaus[y]");
@@ -2298,6 +2299,9 @@ void TFormula::FillParametrizedFunctions(map<pair<TString, Int_t>, pair<TString,
       make_pair(make_pair("landau", 2),
                 make_pair("[0]*TMath::Landau({V0},[1],[2],false)*TMath::Landau({V1},[3],[4],false)", "")));
    functions.insert(make_pair(make_pair("expo", 2), make_pair("exp([0]+[1]*{V0})", "exp([0]+[1]*{V0}+[2]*{V1})")));
+   // 3-dimensional function
+   functions.insert(
+      make_pair(make_pair("gaus", 3), make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2 - 0.5*(({V2}-[5])/[6])^2)", "")));
    // gaussian with correlations
    functions.insert(
       make_pair(make_pair("bigaus", 2), make_pair("[0]*ROOT::Math::bigaussian_pdf({V0},{V1},[2],[4],[5],[1],[3])",
@@ -2323,6 +2327,16 @@ void TFormula::SetPredefinedParamNames() {
       SetParName(2,"SigmaX");
       SetParName(3,"MeanY");
       SetParName(4,"SigmaY");
+      return;
+   }
+   if (fNumber == 120) {
+      SetParName(0,"Constant");
+      SetParName(1,"MeanX");
+      SetParName(2,"SigmaX");
+      SetParName(3,"MeanY");
+      SetParName(4,"SigmaY");
+      SetParName(5,"MeanZ");
+      SetParName(6,"SigmaZ");
       return;
    }
    if (fNumber == 112) {  // bigaus
