@@ -286,7 +286,8 @@ QPixmap *TQtPixmapGuard::Pixmap(Pixmap_t id, bool needBitmap)
    if (id) {
 #if QT_VERSION < 0x40000
       found = fQClientGuard.find((QPixmap *)id);
-      assert( (thisPix  = fQClientGuard.current()) &&  (!needBitmap || thisPix->isQBitmap()) ) ;
+      thisPix  = fQClientGuard.current();
+      assert( thisPix &&  (!needBitmap || thisPix->isQBitmap()) ) ;
 #else
       found = fQClientGuard.indexOf((QPixmap *)id);
       thisPix = found>=0 ? fQClientGuard[found] : 0;
