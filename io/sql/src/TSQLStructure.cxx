@@ -1930,7 +1930,7 @@ Bool_t TSQLStructure::RecognizeTString(const char *&value)
 
    if (len == 0)
       return kFALSE;
-   if ((lenbig != 0) && ((chars == 0) || (len == 0)))
+   if ((lenbig != 0) && (chars == 0))
       return kFALSE;
 
    if (chars != 0)

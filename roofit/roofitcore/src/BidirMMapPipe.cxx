@@ -903,7 +903,7 @@ BidirMMapPipe::BidirMMapPipe(bool useExceptions, bool useSocketpair) :
             delete s_pagepool;
             s_pagepool = 0;
         }
-        throw e;
+        throw;
     }
 }
 
@@ -969,7 +969,7 @@ int BidirMMapPipe::doClose(bool force, bool holdlock)
             s_pagepool = 0;
         }
     } catch (const std::exception& e) {
-        if (!force) throw e;
+        if (!force) throw;
     }
     m_busylist = m_freelist = m_dirtylist = 0;
     // wait for child process
@@ -1391,7 +1391,7 @@ BidirMMapPipe::size_type BidirMMapPipe::read(void* addr, size_type sz)
         }
     } catch (const Exception& e) {
         m_flags |= rderrbit;
-        if (m_flags & exceptionsbit) throw e;
+        if (m_flags & exceptionsbit) throw;
     }
     return nread;
 }
@@ -1426,7 +1426,7 @@ BidirMMapPipe::size_type BidirMMapPipe::write(const void* addr, size_type sz)
         }
     } catch (const Exception& e) {
         m_flags |= wrerrbit;
-        if (m_flags & exceptionsbit) throw e;
+        if (m_flags & exceptionsbit) throw;
     }
     return written;
 }
