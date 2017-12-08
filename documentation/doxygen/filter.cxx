@@ -16,7 +16,10 @@
 /// `Begin_Macro(source)`. This parameter allows to show the macro's code in addition.
 /// `Begin_Macro` also accept the image file type as option. "png" or "svg".
 /// "png" is the default value. For example: `Begin_Macro(source, svg)` will show
-/// the code of the macro and the image will be is svg format.
+/// the code of the macro and the image will be is svg format. The "width" keyword
+/// can be added to define the width of the picture in pixel: "width=400" will
+/// scale a picture to 400 pixel width. This allow to define large picture which
+/// can then be scale done to have a better definition.
 ///
 /// ## In the ROOT tutorials
 ///
@@ -96,6 +99,7 @@ string gClassName;     // Current class name
 string gImageName;     // Current image name
 string gMacroName;     // Current macro name
 string gImageType;     // Type of image used to produce pictures (png, svg ...)
+string gImageWidth;    // Width of image
 string gCwd;           // Current working directory
 string gOutDir;        // Output directory
 string gSourceDir;     // Source directory
@@ -125,6 +129,7 @@ int main(int argc, char *argv[])
    gMacroID       = 0;
    gOutputName    = "stdout.dat";
    gImageType     = "png";
+   gImageWidth    = "";
    if (EndsWith(gFileName,".cxx")) gSource = true;
    if (EndsWith(gFileName,".h"))   gHeader = true;
    if (EndsWith(gFileName,".py"))  gPython = true;
@@ -214,7 +219,7 @@ void FilterClass()
             } else {
                if (m) fprintf(m,"%s",gLineString.c_str());
                if (BeginsWith(gLineString,"}")) {
-                  ReplaceAll(gLineString,"}", StringFormat("\\image html pict1_%s_%3.3d.%s", gClassName.c_str(), gImageID, gImageType.c_str()));
+                  ReplaceAll(gLineString,"}", StringFormat("\\image html pict1_%s_%3.3d.%s %s", gClassName.c_str(), gImageID, gImageType.c_str(), gImageWidth.c_str()));
                } else {
                   gLineString = "\n";
                }
@@ -234,6 +239,12 @@ void FilterClass()
                gImageType = "svg";
             } else {
                gImageType = "png";
+            }
+            gImageWidth = "";
+            int wpos1 = gLineString.find("\"width=");
+            if (wpos1 != string::npos) {
+               int wpos2 = gLineString.find_first_of("\"", wpos1+1);
+               gImageWidth = gLineString.substr(wpos1+1, wpos2-wpos1-1);
             }
             gImageID++;
             gInMacro++;
@@ -419,9 +430,9 @@ void ExecuteMacro()
 
    // Inline the directives to show the picture and/or the code
    if (gImageSource) {
-      gLineString = StringFormat("\\include %s\n\\image html pict1_%s\n", gMacroName.c_str(), gImageName.c_str());
+      gLineString = StringFormat("\\include %s\n\\image html pict1_%s %s\n", gMacroName.c_str(), gImageName.c_str(), gImageWidth.c_str());
    } else {
-      gLineString = StringFormat("\n\\image html pict1_%s\n", gImageName.c_str());
+      gLineString = StringFormat("\n\\image html pict1_%s %s\n", gImageName.c_str(), gImageWidth.c_str());
    }
 }
 
