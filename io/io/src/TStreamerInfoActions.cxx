@@ -331,6 +331,104 @@ namespace TStreamerInfoActions
    /** Direct copy of code from TStreamerInfo::WriteBufferAux,
     * potentially can be used later for non-text streaming */
    template<bool kIsTextT>
+   INLINE_TEMPLATE_ARGS Int_t ReadSTLp(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      TClass *cle                = config->fCompInfo->fClass;
+      TStreamerElement * aElement  = (TStreamerElement*) config->fCompInfo->fElem;
+      TMemberStreamer *pstreamer = config->fCompInfo->fStreamer;
+      //TVirtualCollectionProxy *proxy = cl->GetCollectionProxy();
+      //TClass* vClass = proxy ? proxy->GetValueClass() : 0;
+
+      UInt_t eoffset = 0; // extra parameter of TStreamerInfo::WriteBufferAux, 0 for all kind of objects writing
+      UInt_t ioffset = eoffset + config->fOffset;
+
+
+      UInt_t start,count;
+      Version_t vers = buf.ReadVersion(&start, &count, cle);
+
+      if (!kIsTextT && (vers & TBufferFile::kStreamedMemberWise) ) {
+         // Collection was saved member-wise
+
+         vers &= ~( TBufferFile::kStreamedMemberWise );
+
+         TClass *newClass = aElement->GetNewClass();
+         TClass *oldClass = aElement->GetClassPointer();
+         if( vers < 9 && newClass && newClass!=oldClass ) {
+            Error( "ReadBuffer", "Unfortunately, version %d of TStreamerInfo (used in %s) did not record enough information to convert a %s into a %s.",
+                  vers, buf.GetParent() ? buf.GetParent()->GetName() : "memory/socket", oldClass->GetName(), newClass->GetName() );
+            return 0;
+         }
+
+         Version_t vClVersion = 0; // For vers less than 9, we have to use the current version.
+         if( vers >= 9 ) {
+            vClVersion = buf.ReadVersionForMemberWise( cle->GetCollectionProxy()->GetValueClass() );
+         }
+
+         TVirtualCollectionProxy *newProxy = (newClass ? newClass->GetCollectionProxy() : 0);
+         TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
+         TStreamerInfo *subinfo = 0;
+
+         if( newProxy ) {
+            // coverity[dereference] oldProxy->GetValueClass() can not be null since this was streamed memberwise.
+            subinfo = (TStreamerInfo*)newProxy->GetValueClass()->GetConversionStreamerInfo( oldProxy->GetValueClass(), vClVersion );
+         } else {
+            subinfo = (TStreamerInfo*)oldProxy->GetValueClass()->GetStreamerInfo( vClVersion );
+            newProxy = oldProxy;
+         }
+         if (subinfo) {
+            // DOLOOP {
+               void* env;
+               void **contp = (void**)((char *) addr + ioffset);
+               for(int j=0;j<config->fCompInfo->fLength;j++) {
+                  void *cont = contp[j];
+                  if (cont==0) {
+                     contp[j] = cle->New();
+                     cont = contp[j];
+                  }
+                  TVirtualCollectionProxy::TPushPop helper( newProxy, cont );
+                  Int_t nobjects;
+                  buf >> nobjects;
+                  env = newProxy->Allocate(nobjects,true);
+                  subinfo->ReadBufferSTL(buf,newProxy,nobjects,/* offset */ 0, vers>=7 );
+                  newProxy->Commit(env);
+               }
+           // } // DOLOOP
+         }
+         buf.CheckByteCount(start,count,aElement->GetFullName());
+         return 0;
+      }
+
+      if (kIsTextT) {
+         // use same method which is used in kSTL
+         buf.ReadFastArray((void **)((char *) addr + ioffset), cle, config->fCompInfo->fLength, kFALSE, nullptr);
+      } else
+      if (pstreamer == nullptr) {
+         // DOLOOP {
+            void **contp = (void**)((char *) addr + ioffset);
+            for(int j=0;j<config->fCompInfo->fLength;j++) {
+               void *cont = contp[j];
+               if (cont == nullptr) {
+                  // int R__n;
+                  // b >> R__n;
+                  // b.SetOffset(b.GetOffset()-4); // rewind to the start of the int
+                  // if (R__n) continue;
+                  contp[j] = cle->New();
+                  cont = contp[j];
+               }
+               cle->Streamer( cont, buf );
+            }
+        // }
+      } else {
+         (*pstreamer)(buf,(char *) addr + ioffset, config->fCompInfo->fLength);
+      }
+      buf.CheckByteCount(start,count,aElement->GetFullName());
+
+      return 0;
+   }
+
+   /** Direct copy of code from TStreamerInfo::WriteBufferAux,
+    * potentially can be used later for non-text streaming */
+   template<bool kIsTextT>
    INLINE_TEMPLATE_ARGS Int_t WriteStreamerLoop(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       UInt_t eoffset = 0; // extra parameter of TStreamerInfo::WriteBufferAux, 0 for all kind of objects writing
@@ -3258,6 +3356,11 @@ void TStreamerInfo::AddReadTextAction(TStreamerInfoActions::TActionSequence *rea
       case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:
       case TStreamerInfo::kAny     + TStreamerInfo::kOffsetL:
          readSequence->AddAction( ReadTextObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+         break;
+
+      case TStreamerInfo::kSTLp:                // Pointer to container with no virtual table (stl) and no comment
+      case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:     // array of pointers to container with no virtual table (stl) and no comment
+         readSequence->AddAction( ReadSTLp<true>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
          break;
 
       case TStreamerInfo::kStreamLoop:
