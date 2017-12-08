@@ -111,9 +111,9 @@ Two sets of colors are initialized;
 ## <a name="C01"></a> Basic colors
 The following image displays the 50 basic colors.
 
-Begin_Macro(source)
+Begin_Macro(source, "width=500")
 {
-   TCanvas *c = new TCanvas("c","Fill Area colors",0,0,500,200);
+   TCanvas *c = new TCanvas("c","Fill Area colors",0,0,1500,600);
    c->DrawColorTable();
    return c;
 }
@@ -145,11 +145,12 @@ to use these keywords in user code instead of hardcoded color numbers, e.g.:
    myLine.SetLineColor(kMagenta+2);
 ~~~
 
-Begin_Macro(source)
+Begin_Macro(source, "width=400")
 {
    TColorWheel *w = new TColorWheel();
+   cw = new TCanvas("cw","cw",0,0,1200,1200);
+   w->SetCanvas(cw);
    w->Draw();
-   return w->GetCanvas();
 }
 End_Macro
 
@@ -192,14 +193,13 @@ will return grayscale values according to ITU standards (and close to b&w
 printer gray-scales), while access via HLS returns de-saturated gray-scales. The
 image below shows the ROOT color wheel in grayscale mode.
 
-Begin_Macro(source)
+Begin_Macro(source, "width=400")
 {
    TColorWheel *w = new TColorWheel();
+   cw = new TCanvas("cw","cw",0,0,1200,1200);
+   cw->GetCanvas()->SetGrayscale();
+   w->SetCanvas(cw);
    w->Draw();
-   w->GetCanvas()->SetGrayscale();
-   w->GetCanvas()->Modified();
-   w->GetCanvas()->Update();
-   return w->GetCanvas();
 }
 End_Macro
 
