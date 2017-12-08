@@ -879,15 +879,6 @@ TJSONStackObj *TBufferJSON::Stack(Int_t depth)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return current json node, using for object reading
-
-JSONObject_t TBufferJSON::StackNode()
-{
-   TJSONStackObj *stack = Stack();
-   return (stack == nullptr) ? nullptr : stack->fNode;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Append two string to the output JSON, normally separate by line break
 
 void TBufferJSON::AppendOutput(const char *line0, const char *line1)
@@ -1331,20 +1322,22 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    if (readClass)
       *readClass = nullptr;
 
-   JSONObject_t node = StackNode();
+   TJSONStackObj *stack = Stack();
 
-   if (!node)
+   if (!stack || !stack->fNode)
       return obj;
 
    // enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
 
    Int_t special_kind = JsonSpecialClass(objClass);
 
+   Bool_t isBase = (stack->fElem && objClass) ? stack->fElem->IsBase() : kFALSE; // base class
+
    TClass *jsonClass = nullptr;
 
-   nlohmann::json &json = *((nlohmann::json *)node);
+   nlohmann::json &json = *((nlohmann::json *)stack->fNode);
 
-   // ExtractPointer
+   // Extract pointer
    if (json.is_object() && (json.size() == 1) && (json.find("$ref") != json.end())) {
       unsigned refid = json["$ref"].get<unsigned>();
 
@@ -1362,15 +1355,18 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       return elem->second.obj;
    }
 
-   if (special_kind == json_stdstring) {
-      std::string *str = (std::string *) obj;
-      if (!str)
-         obj = str = new std::string;
+   // special case of strings - they do not create JSON object, but just string
+   if ((special_kind == json_stdstring) || (special_kind == json_TString)) {
+      if (!obj)
+         obj = jsonClass->New();
 
-      *str = json.get<std::string>();
+      if (special_kind == json_stdstring)
+         *((std::string *) obj) = json.get<std::string>();
+      else
+         *((TString *) obj) = json.get<std::string>().c_str();
 
-      if (gDebug>2)
-         Info("JsonReadObject","Read std string %s from %s", str->c_str(), json.dump().c_str());
+      if (gDebug > 2)
+         Info("JsonReadObject","Read string from %s", json.dump().c_str());
 
       if (readClass)
          *readClass = (TClass *) objClass;
@@ -1378,34 +1374,71 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       return obj;
    }
 
-   std::string clname = json["_typename"];
-   if (clname.empty())
-      return obj;
+   if (isBase) {
+      // base class has special handling - no additional level and no extra refid
 
-   jsonClass = TClass::GetClass(clname.c_str());
+      jsonClass = (TClass *) objClass;
+      if (!obj) {
+         Error("JsonReadObject", "No object when reading base class");
+         return obj;
+      }
 
-   if (!jsonClass) {
-      Error("JsonReadObject", "Cannot find class %s", clname.c_str());
-      return obj;
+      if (gDebug > 1)
+         Info("JsonReadObject", "Reading baseclass %s ptr %p", objClass->GetName(), obj);
+
+   } else {
+
+      std::string clname = json["_typename"];
+      if (clname.empty())
+         return obj;
+
+      jsonClass = TClass::GetClass(clname.c_str());
+
+      if (!jsonClass) {
+         Error("JsonReadObject", "Cannot find class %s", clname.c_str());
+         return obj;
+      }
+
+      if (objClass && (jsonClass!=objClass)) {
+         Error("JsonReadObject", "Class mismatch between provided %s and in JSON %s", objClass->GetName(), jsonClass->GetName());
+      }
+
+      if (!obj)
+         obj = jsonClass->New();
+
+      if (gDebug > 1)
+         Info("JsonReadObject", "Reading object of class %s refid %u ptr %p", clname.c_str(), fJsonrCnt, obj);
+
+      // add new element to the reading map
+      fReadMap[fJsonrCnt++] = ObjectEntry(obj, jsonClass);
    }
 
-   if (objClass && (jsonClass!=objClass)) {
-      Error("JsonReadObject", "Class mismatch between provided %s and in JSON %s", objClass->GetName(), jsonClass->GetName());
+   // there are two ways to handle custom streamers
+   // either prepare data before streamer and tweak basic function which are reading values like UInt32_t
+   // or try reimplement custom streamer here
+   //
+
+   if (jsonClass == TObject::Class()) {
+      if (gDebug > 1)
+         Info("JsonReadObject", "Reading TObject from %s", json.dump().c_str());
+
+      TObject *tobj = (TObject *)obj;
+
+      UInt_t uid = json["fUniqueID"].get<unsigned>();
+      UInt_t bits = json["fBits"].get<unsigned>();
+      // UInt32_t pid = json["fPID"].get<unsigned>();
+
+      tobj->SetUniqueID(uid);
+      // there is no method to set all bits directly - do it one by one
+      for (unsigned n=0;n<32;n++)
+         tobj->SetBit(n, (bits & BIT(n)) != 0);
+
+   } else {
+      jsonClass->Streamer((void *)obj, *this);
    }
 
-   if (!obj)
-      obj = jsonClass->New();
-
    if (gDebug > 1)
-      Info("JsonReadObject", "Reading object of class %s refid %u ptr %p", clname.c_str(), fJsonrCnt, obj);
-
-   // add new element to the reading map
-   fReadMap[fJsonrCnt++] = ObjectEntry(obj, jsonClass);
-
-   jsonClass->Streamer((void *)obj, *this);
-
-   if (gDebug > 1)
-      Info("JsonReadObject", "Reading object of class %s done", clname.c_str());
+      Info("JsonReadObject", "Reading object of class %s done", jsonClass->GetName());
 
    if (readClass)
       *readClass = jsonClass;
@@ -1534,7 +1567,7 @@ void TBufferJSON::SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_ty
 void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
 {
    TJSONStackObj *stack = Stack();
-   if (stack == nullptr) {
+   if (!stack) {
       Error("WorkWithElement", "stack is empty");
       return;
    }
@@ -1557,7 +1590,7 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
 
    fValue.Clear();
 
-   if (stack == nullptr) {
+   if (!stack) {
       Error("WorkWithElement", "Lost of stack");
       return;
    }
@@ -1570,7 +1603,7 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
 
    Int_t number = info ? info->GetElements()->IndexOf(elem) : -1;
 
-   if (elem == nullptr) {
+   if (!elem) {
       Error("WorkWithElement", "streamer info returns elem = 0");
       return;
    }
