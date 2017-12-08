@@ -27,12 +27,13 @@
 #ifndef ROOT_TMVA_RuleFit
 #define ROOT_TMVA_RuleFit
 
-#include <algorithm>
-
 #include "TMVA/DecisionTree.h"
 #include "TMVA/RuleEnsemble.h"
 #include "TMVA/RuleFitParams.h"
 #include "TMVA/Event.h"
+
+#include <algorithm>
+#include <random>
 
 namespace TMVA {
 
@@ -61,7 +62,10 @@ namespace TMVA {
 
       void SetTrainingEvents( const std::vector<const TMVA::Event *> & el );
 
-      void ReshuffleEvents() { std::random_shuffle(fTrainingEventsRndm.begin(),fTrainingEventsRndm.end()); }
+      void ReshuffleEvents()
+      {
+         std::shuffle(fTrainingEventsRndm.begin(), fTrainingEventsRndm.end(), fRNGEngine);
+      }
 
       void SetMethodBase( const MethodBase *rfbase );
 
@@ -169,6 +173,7 @@ namespace TMVA {
       MsgLogger& Log() const { return *fLogger; }    
 
       static const Int_t randSEED = 0; // set to 1 for debugging purposes or to zero for random seeds
+      std::default_random_engine fRNGEngine;
 
       ClassDef(RuleFit,0);  // Calculations for Friedman's RuleFit method
    };
