@@ -323,11 +323,7 @@ public:
       return 0;
    }
 
-   virtual TVirtualStreamerInfo *GetInfo()
-   {
-      Error("GetInfo", "useless");
-      return 0;
-   }
+   virtual TVirtualStreamerInfo *GetInfo();
 
    virtual TObject   *ReadObject(const TClass * /*cl*/)
    {

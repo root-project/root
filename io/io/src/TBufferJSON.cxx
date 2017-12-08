@@ -81,7 +81,7 @@ ClassImp(TBufferJSON);
 const char *TBufferJSON::fgFloatFmt = "%e";
 const char *TBufferJSON::fgDoubleFmt = "%.14e";
 
-enum { json_STLmin = 1, json_STLmax = 20, json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
+enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
 
 ///////////////////////////////////////////////////////////////
 // TArrayIndexProducer is used to correctly create
@@ -267,12 +267,12 @@ public:
    TArrayIndexProducer *fIndx; //! producer of ndim indexes
 
    JSONObject_t fNode;            //! reading JSON node
-   TArrayIndexProducer *fArrIndx; //! indexes used in plain-array reading
+   Int_t                fStlIndx;  //! index of object in STL container
 
    TJSONStackObj()
       : TObject(), fInfo(nullptr), fElem(nullptr), fIsStreamerInfo(kFALSE), fIsElemOwner(kFALSE),
         fIsPostProcessed(kFALSE), fIsObjStarted(kFALSE), fAccObjects(kFALSE), fValues(), fLevel(0), fIndx(nullptr),
-        fNode(nullptr)
+        fNode(nullptr), fStlIndx(-1)
    {
       fValues.SetOwner(kTRUE);
    }
@@ -1114,7 +1114,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    if (gDebug > 3)
       Info("JsonWriteObject", "Starting object %p write for class: %s", obj, cl->GetName());
 
-   stack->fAccObjects = special_kind < 10;
+   stack->fAccObjects = special_kind < ROOT::kSTLend;
 
    if (special_kind == json_TCollection)
       JsonStreamCollection((TCollection *)obj, cl);
@@ -1361,19 +1361,21 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    if (!stack || !stack->fNode)
       return obj;
 
-   nlohmann::json &json = *((nlohmann::json *)stack->fNode);
+   nlohmann::json *json = (nlohmann::json *)stack->fNode;
 
    // check if null pointer
-   if (json.is_null()) return nullptr;
+   if (json->is_null()) return nullptr;
+
+   Bool_t process_stl = (stack->fStlIndx >= 0);
+   if (process_stl)
+      json = &(json->at(stack->fStlIndx++));
 
    // enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
    Int_t special_kind = JsonSpecialClass(objClass);
 
-   Bool_t isBase = (stack->fElem && objClass) ? stack->fElem->IsBase() : kFALSE; // base class
-
    // Extract pointer
-   if (json.is_object() && (json.size() == 1) && (json.find("$ref") != json.end())) {
-      unsigned refid = json["$ref"].get<unsigned>();
+   if (json->is_object() && (json->size() == 1) && (json->find("$ref") != json->end())) {
+      unsigned refid = json->at("$ref").get<unsigned>();
 
       if (gDebug>2)
          Info("JsonReadObject", "Extract object reference %u", refid);
@@ -1395,18 +1397,25 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
          obj = objClass->New();
 
       if (special_kind == json_stdstring)
-         *((std::string *) obj) = json.get<std::string>();
+         *((std::string *) obj) = json->get<std::string>();
       else
-         *((TString *) obj) = json.get<std::string>().c_str();
+         *((TString *) obj) = json->get<std::string>().c_str();
 
       if (gDebug > 2)
-         Info("JsonReadObject","Read string from %s", json.dump().c_str());
+         Info("JsonReadObject","Read string from %s", json->dump().c_str());
 
       if (readClass)
          *readClass = (TClass *) objClass;
 
       return obj;
    }
+
+   // from now all operations performed with sub-element,
+   // stack should be repaired at the end
+   if (process_stl)
+      stack = PushStackR(json);
+
+   Bool_t isBase = (stack->fElem && objClass) ? stack->fElem->IsBase() : kFALSE; // base class
 
    TClass *jsonClass = nullptr;
 
@@ -1416,34 +1425,34 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       jsonClass = (TClass *) objClass;
       if (!obj) {
          Error("JsonReadObject", "No object when reading base class");
+         if (process_stl) PopStack();
          return obj;
       }
 
       if (gDebug > 1)
          Info("JsonReadObject", "Reading baseclass %s ptr %p", objClass->GetName(), obj);
 
-   } else if ((special_kind == json_TArray) || ((special_kind >= json_STLmin) && (special_kind <= json_STLmax))) {
+   } else if ((special_kind == json_TArray) || ((special_kind > 0) && (special_kind < ROOT::kSTLend))) {
 
       jsonClass = (TClass *) objClass;
 
       if (!obj)
          obj = jsonClass->New();
 
-      if (!json.is_array()) Error("JsonReadObject", "Not array when expecting such");
+      if (!json->is_array()) Error("JsonReadObject", "Not array when expecting such %s", json->dump().c_str());
 
       // add to stack array size, which will be extracted before reading array itself by custom TArray streamer
-      stack->PushIntValue(json.size());
+      stack->PushIntValue(json->size());
 
    } else {
 
-      std::string clname = json["_typename"];
-      if (clname.empty())
-         return obj;
+      std::string clname = json->at("_typename").get<std::string>();
 
-      jsonClass = TClass::GetClass(clname.c_str());
+      jsonClass = clname.empty() ? nullptr : TClass::GetClass(clname.c_str());
 
       if (!jsonClass) {
          Error("JsonReadObject", "Cannot find class %s", clname.c_str());
+         if (process_stl) PopStack();
          return obj;
       }
 
@@ -1469,12 +1478,12 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       // for TObject we reimplement custom streamer - it is much easier
 
       if (gDebug > 1)
-         Info("JsonReadObject", "Reading TObject from %s", json.dump().c_str());
+         Info("JsonReadObject", "Reading TObject from %s", json->dump().c_str());
 
       TObject *tobj = (TObject *)obj;
 
-      UInt_t uid = json["fUniqueID"].get<unsigned>();
-      UInt_t bits = json["fBits"].get<unsigned>();
+      UInt_t uid = json->at("fUniqueID").get<unsigned>();
+      UInt_t bits = json->at("fBits").get<unsigned>();
       // UInt32_t pid = json["fPID"].get<unsigned>();
 
       tobj->SetUniqueID(uid);
@@ -1484,9 +1493,16 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
    } else {
 
+      // special handling of STL which coded into arrays
+      if ((special_kind > 0) && (special_kind < ROOT::kSTLend))  stack->fStlIndx = 0;
+
       jsonClass->Streamer((void *)obj, *this);
 
+      stack->fStlIndx = -1; // reset STL index for itself to prevent looping
    }
+
+   // return back stack position
+   if (process_stl) PopStack();
 
    if (gDebug > 1)
       Info("JsonReadObject", "Reading object of class %s done", jsonClass->GetName());
@@ -1595,6 +1611,15 @@ void TBufferJSON::DecrementLevel(TVirtualStreamerInfo *info)
 
    if (gDebug > 3)
       Info("DecrementLevel", "Class: %s done", (info ? info->GetClass()->GetName() : "custom"));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return current streamer info element
+
+TVirtualStreamerInfo *TBufferJSON::GetInfo()
+{
+   TJSONStackObj *stack = Stack();
+   return stack ? stack->fInfo : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
