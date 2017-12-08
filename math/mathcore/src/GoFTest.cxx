@@ -300,7 +300,8 @@ namespace Math {
    }
 
    void GoFTest::LogSample() {
-      transform(fSamples[0].begin(), fSamples[0].end(), fSamples[0].begin(), std::ptr_fun<Double_t, Double_t>(TMath::Log));
+      transform(fSamples[0].begin(), fSamples[0].end(), fSamples[0].begin(),
+                std::function<Double_t(Double_t)>(TMath::Log));
       SetParameters();
    }
 
