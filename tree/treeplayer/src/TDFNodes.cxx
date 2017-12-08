@@ -56,9 +56,13 @@ TLoopManager *TCustomColumnBase::GetImplPtr() const
    return fImplPtr;
 }
 
+void TCustomColumnBase::InitNode()
+{
+   fLastCheckedEntry = std::vector<Long64_t>(fNSlots, -1);
+}
+
 TFilterBase::TFilterBase(TLoopManager *implPtr, std::string_view name, const unsigned int nSlots)
-   : fImplPtr(implPtr), fLastCheckedEntry(nSlots, -1), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots),
-     fName(name), fNSlots(nSlots)
+   : fImplPtr(implPtr), fLastResult(nSlots), fAccepted(nSlots), fRejected(nSlots), fName(name), fNSlots(nSlots)
 {
 }
 
@@ -83,6 +87,13 @@ void TFilterBase::PrintReport() const
       perc /= all;
    perc *= 100.;
    Printf("%-10s: pass=%-10lld all=%-10lld -- %8.3f %%", fName.c_str(), accepted, all, perc);
+}
+
+void TFilterBase::InitNode()
+{
+   fLastCheckedEntry = std::vector<Long64_t>(fNSlots, -1);
+   if (!fName.empty()) // if this is a named filter we care about its report count
+      ResetReportCount();
 }
 
 void TSlotStack::ReturnSlot(unsigned int slotNumber)
@@ -305,7 +316,8 @@ void TLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 void TLoopManager::InitNodes()
 {
    EvalChildrenCounts();
-   for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->ResetReportCount();
+   for (auto &filter : fBookedFilters) filter->InitNode();
+   for (auto &customColumn : fBookedCustomColumns) customColumn.second->InitNode();
 }
 
 /// Perform clean-up operations. To be called at the end of each event loop.
