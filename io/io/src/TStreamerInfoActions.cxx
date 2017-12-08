@@ -246,11 +246,23 @@ namespace TStreamerInfoActions
    INLINE_TEMPLATE_ARGS Int_t ReadTextObject(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       void *x = (void*)( ((char*)addr) + config->fOffset );
-      // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
       buf.ReadFastArray(x, config->fCompInfo->fClass, config->fCompInfo->fLength, config->fCompInfo->fStreamer);
       return 0;
    }
 
+   INLINE_TEMPLATE_ARGS Int_t ReadTextTObject(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      void *x = (void*)( ((char*)addr) + config->fOffset );
+      buf.StreamObject(x, TObject::Class(), TObject::Class());
+      return 0;
+   }
+
+   INLINE_TEMPLATE_ARGS Int_t ReadTextTNamed(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      void *x = (void*)( ((char*)addr) + config->fOffset );
+      buf.StreamObject(x, TNamed::Class(), TNamed::Class());
+      return 0;
+   }
 
    /** Direct copy of code from TStreamerInfo::WriteBufferAux,
     * potentially can be used later for non-text streaming */
@@ -2980,13 +2992,23 @@ void TStreamerInfo::AddReadTextAction(TStreamerInfoActions::TActionSequence *rea
    Bool_t generic = kFALSE;
 
    switch (compinfo->fType) {
+      case TStreamerInfo::kTObject:
+         readSequence->AddAction( ReadTextTObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+         break;
+
+      case TStreamerInfo::kTNamed:
+         readSequence->AddAction( ReadTextTNamed, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+         break;
+
       case TStreamerInfo::kObject:   // Class      derived from TObject
       case TStreamerInfo::kAny:      // Class  NOT derived from TObject
       case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:
       case TStreamerInfo::kAny     + TStreamerInfo::kOffsetL:
          readSequence->AddAction( ReadTextObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
          break;
-      default: generic = kTRUE; break;
+      default:
+         generic = kTRUE;
+         break;
    }
 
    if (generic)

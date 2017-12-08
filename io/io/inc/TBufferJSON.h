@@ -430,7 +430,6 @@ protected:
    TJSONStackObj   *PushStackR(JSONObject_t current, Bool_t simple = kTRUE);
    TJSONStackObj   *PopStack();
    TJSONStackObj   *Stack(Int_t depth = 0);
-   JSONObject_t     StackNode();
 
    void             WorkWithClass(TStreamerInfo *info, const TClass *cl = nullptr);
    void             WorkWithElement(TStreamerElement *elem, Int_t);
