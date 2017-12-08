@@ -81,7 +81,7 @@ ClassImp(TBufferJSON);
 const char *TBufferJSON::fgFloatFmt = "%e";
 const char *TBufferJSON::fgDoubleFmt = "%.14e";
 
-enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
+enum { json_STLmin = 1, json_STLmax = 20, json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
 
 ///////////////////////////////////////////////////////////////
 // TArrayIndexProducer is used to correctly create
@@ -1422,12 +1422,14 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       if (gDebug > 1)
          Info("JsonReadObject", "Reading baseclass %s ptr %p", objClass->GetName(), obj);
 
-   } else if (special_kind == json_TArray) {
+   } else if ((special_kind == json_TArray) || ((special_kind >= json_STLmin) && (special_kind <= json_STLmax))) {
 
       jsonClass = (TClass *) objClass;
 
       if (!obj)
          obj = jsonClass->New();
+
+      if (!json.is_array()) Error("JsonReadObject", "Not array when expecting such");
 
       // add to stack array size, which will be extracted before reading array itself by custom TArray streamer
       stack->PushIntValue(json.size());

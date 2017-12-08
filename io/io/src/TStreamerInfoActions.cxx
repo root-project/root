@@ -364,9 +364,9 @@ namespace TStreamerInfoActions
             vClVersion = buf.ReadVersionForMemberWise( cle->GetCollectionProxy()->GetValueClass() );
          }
 
-         TVirtualCollectionProxy *newProxy = (newClass ? newClass->GetCollectionProxy() : 0);
+         TVirtualCollectionProxy *newProxy = (newClass ? newClass->GetCollectionProxy() : nullptr);
          TVirtualCollectionProxy *oldProxy = oldClass->GetCollectionProxy();
-         TStreamerInfo *subinfo = 0;
+         TStreamerInfo *subinfo = nullptr;
 
          if( newProxy ) {
             // coverity[dereference] oldProxy->GetValueClass() can not be null since this was streamed memberwise.
@@ -381,7 +381,7 @@ namespace TStreamerInfoActions
                void **contp = (void**)((char *) addr + ioffset);
                for(int j=0;j<config->fCompInfo->fLength;j++) {
                   void *cont = contp[j];
-                  if (cont==0) {
+                  if (cont==nullptr) {
                      contp[j] = cle->New();
                      cont = contp[j];
                   }
