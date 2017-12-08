@@ -268,11 +268,12 @@ public:
 
    JSONObject_t fNode;            //! reading JSON node
    Int_t                fStlIndx;  //! index of object in STL container
+   Version_t            fClVersion; //! keep actual class version, workaround for ReadVersion in custom streamer
 
    TJSONStackObj()
       : TObject(), fInfo(nullptr), fElem(nullptr), fIsStreamerInfo(kFALSE), fIsElemOwner(kFALSE),
         fIsPostProcessed(kFALSE), fIsObjStarted(kFALSE), fAccObjects(kFALSE), fValues(), fLevel(0), fIndx(nullptr),
-        fNode(nullptr), fStlIndx(-1)
+        fNode(nullptr), fStlIndx(-1), fClVersion(0)
    {
       fValues.SetOwner(kTRUE);
    }
@@ -1494,9 +1495,14 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    } else {
 
       // special handling of STL which coded into arrays
-      if ((special_kind > 0) && (special_kind < ROOT::kSTLend))  stack->fStlIndx = 0;
+      if ((special_kind > 0) && (special_kind < ROOT::kSTLend)) stack->fStlIndx = 0;
+
+      // workaround for missing version in JSON structures
+      stack->fClVersion = jsonClass->GetClassVersion();
 
       jsonClass->Streamer((void *)obj, *this);
+
+      stack->fClVersion = 0;
 
       stack->fStlIndx = -1; // reset STL index for itself to prevent looping
    }
@@ -1529,6 +1535,35 @@ Int_t TBufferJSON::ReadClassBuffer(const TClass *cl, void *ptr, const TClass *)
 
    return 0;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Deserialize information from a buffer into an object.
+///
+/// Note: This function is called by the xxx::Streamer() functions in
+/// rootcint-generated dictionaries.
+/// This function assumes that the class version and the byte count
+/// information have been read.
+///
+/// \param[in] version The version number of the class
+/// \param[in] start   The starting position in the buffer b
+/// \param[in] count   The number of bytes for this object in the buffer
+///
+
+Int_t TBufferJSON::ReadClassBuffer(const TClass *cl, void *ptr, Int_t /*version*/, UInt_t /*start*/, UInt_t /*count*/, const TClass * /*onFileClass*/)
+{
+   TStreamerInfo *sinfo = (TStreamerInfo *)cl->GetStreamerInfo();
+
+   if (gDebug > 1)
+      Info("ReadClassBuffer", "Deserialize object %s sinfo ver %d", cl->GetName(),
+           (sinfo ? sinfo->GetClassVersion() : -1111));
+
+   // deserialize the object, using read text actions
+   ApplySequence(*(sinfo->GetReadTextActions()), (char *)ptr);
+
+   return 0;
+}
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Function is called from TStreamerInfo WriteBuffer and ReadBuffer functions
@@ -2033,6 +2068,14 @@ Version_t TBufferJSON::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass *cl
       *start = 0;
    if (bcnt)
       *bcnt = 0;
+
+   if (!cl) {
+      TJSONStackObj *stack = Stack();
+      if (stack && stack->fClVersion) {
+         res = stack->fClVersion;
+         stack->fClVersion = 0;
+      }
+   }
 
    if (gDebug > 3)
       Info("ReadVersion", "Result: %d Class: %s", res, (cl ? cl->GetName() : "---"));
