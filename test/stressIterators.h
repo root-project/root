@@ -57,7 +57,7 @@ struct SEnumFunctor<TMap> {
 
 //______________________________________________________________________________
 template<class T>
-struct SFind : std::binary_function<TObject*, TString, bool> {
+struct SFind : std::function<TObject*(TString, bool)> {
    bool operator()(TObject *_Obj, const TString &_ToFind) const {
       TObjString *str(dynamic_cast<TObjString*>(_Obj));
       if (!str)
@@ -68,7 +68,7 @@ struct SFind : std::binary_function<TObject*, TString, bool> {
 
 //______________________________________________________________________________
 template<>
-struct SFind<TMap> : std::binary_function<TObject*, TString, bool> {
+struct SFind<TMap> : std::function<TObject*(TString, bool)> {
    bool operator()(TObject *_Obj, const TString &_ToFind) const {
       TPair *pair(dynamic_cast<TPair*>(_Obj));
       if (!pair)
@@ -124,7 +124,7 @@ void TestContainer_find_if(const T &container, const TString &aToFind)
 
    iterator_t iter(&container);
    iterator_t found(
-      std::find_if(iter.Begin(), iterator_t::End(), bind2nd(SFind<T>(), aToFind))
+      std::find_if(iter.Begin(), iterator_t::End(), std::bind(SFind<T>(), std::placeholders::_1, aToFind))
    );
    if (!(*found))
       throw std::runtime_error("Test case <TestContainer_find_if> has failed. Can't find object.");
@@ -158,7 +158,7 @@ void TestContainer_count_if(const T &container, const TString &aToFind, Int_t Co
 
    iterator_t iter(&container);
    typename iterator_t::difference_type cnt(
-      std::count_if(iter.Begin(), iterator_t::End(), bind2nd(SFind<T>(), aToFind))
+      std::count_if(iter.Begin(), iterator_t::End(), std::bind(SFind<T>(), std::placeholders::_1, aToFind))
    );
 
    if (Count != cnt)
