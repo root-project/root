@@ -162,13 +162,13 @@ public:
    }
 
    /// returns number of array dimensions
-   Int_t NumDimensions()  { return fIndicies.GetSize(); }
+   Int_t NumDimensions() const  { return fIndicies.GetSize(); }
 
    /// return array with current index
    TArrayI &GetIndices() { return fIndicies; };
 
    /// returns total number of elements in array
-   Int_t TotalLength() { return fTotalLen; }
+   Int_t TotalLength() const { return fTotalLen; }
 
    Int_t ReduceDimension()
    {
@@ -236,6 +236,17 @@ public:
       }
       return fRes.Data();
    }
+
+   JSONObject_t ExtractNode(JSONObject_t topnode, bool next = true)
+   {
+      if (!IsArray()) return topnode;
+      nlohmann::json *subnode = &((*((nlohmann::json *) topnode))[fIndicies[0]]);
+      for (int k=1;k<fIndicies.GetSize();++k)
+         subnode = &((*subnode)[fIndicies[k]]);
+      if (next) NextSeparator();
+      return subnode;
+   }
+
 };
 
 // TJSONStackObj is used to keep stack of object hierarchy,
@@ -1327,15 +1338,15 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    if (!stack || !stack->fNode)
       return obj;
 
-   // enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
+   nlohmann::json &json = *((nlohmann::json *)stack->fNode);
 
+   // check if null pointer
+   if (json.is_null()) return nullptr;
+
+   // enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
    Int_t special_kind = JsonSpecialClass(objClass);
 
    Bool_t isBase = (stack->fElem && objClass) ? stack->fElem->IsBase() : kFALSE; // base class
-
-   TClass *jsonClass = nullptr;
-
-   nlohmann::json &json = *((nlohmann::json *)stack->fNode);
 
    // Extract pointer
    if (json.is_object() && (json.size() == 1) && (json.find("$ref") != json.end())) {
@@ -1358,7 +1369,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    // special case of strings - they do not create JSON object, but just string
    if ((special_kind == json_stdstring) || (special_kind == json_TString)) {
       if (!obj)
-         obj = jsonClass->New();
+         obj = objClass->New();
 
       if (special_kind == json_stdstring)
          *((std::string *) obj) = json.get<std::string>();
@@ -1373,6 +1384,8 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
       return obj;
    }
+
+   TClass *jsonClass = nullptr;
 
    if (isBase) {
       // base class has special handling - no additional level and no extra refid
@@ -1616,21 +1629,23 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
 
    JsonStartElement(elem, base_class);
 
-   if (IsWriting()) {
-      if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) && (elem->GetArrayDim() > 0)) {
-         stack->fIndx = new TArrayIndexProducer(elem, -1, fArraySepar.Data());
+   if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) && (elem->GetArrayDim() > 0)) {
+      // array of array, start handling here
+      stack->fIndx = new TArrayIndexProducer(elem, -1, fArraySepar.Data());
+      if (IsWriting())
          AppendOutput(stack->fIndx->GetBegin());
-      }
    } else
-   if ((elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetL + 20)) {
-      stack->fIndx = new TArrayIndexProducer(elem, -1, "");
+   if (IsReading()) {
+      if ((elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetL + 20)) {
+         stack->fIndx = new TArrayIndexProducer(elem, -1, "");
 
-      if (gDebug > 3)
-         Info("WorkWithElement", "    elem: %s ndim: %d totallen: %d", stack->fElem->GetName(), stack->fIndx->NumDimensions(), stack->fIndx->TotalLength());
+         if (gDebug > 3)
+            Info("WorkWithElement", "    elem: %s ndim: %d totallen: %d", stack->fElem->GetName(), stack->fIndx->NumDimensions(), stack->fIndx->TotalLength());
 
-      if (!stack->fIndx->IsArray() || (stack->fIndx->NumDimensions() < 2)) {
-         delete stack->fIndx; // no need for single dimension - it can be handled directly
-         stack->fIndx = nullptr;
+         if (!stack->fIndx->IsArray() || (stack->fIndx->NumDimensions() < 2)) {
+            delete stack->fIndx; // no need for single dimension - it can be handled directly
+            stack->fIndx = nullptr;
+         }
       }
    }
 }
@@ -2546,9 +2561,11 @@ void TBufferJSON::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t /*nbits*/)
 void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *streamer,
                                 const TClass *onFileClass)
 {
-   if (gDebug>1) Info("ReadFastArray", "void* n:%d cl:%s", n, cl->GetName());
+   if (gDebug>1)
+      Info("ReadFastArray", "void* n:%d cl:%s streamer:%s", n, cl->GetName(), (streamer ? "on" : "off"));
 
    if (streamer) {
+      Info("ReadFastArray", "(void*) Calling streamer - not handled correctly");
       streamer->SetOnFileClass(onFileClass);
       (*streamer)(*this,start,0);
       return;
@@ -2558,34 +2575,23 @@ void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberS
    char *obj = (char*)start;
 
    TJSONStackObj *stack = Stack();
-   nlohmann::json *topnode = (nlohmann::json *)stack->fNode;
+   JSONObject_t topnode = stack->fNode, subnode = topnode;
+   if (stack->fIndx) subnode = stack->fIndx->ExtractNode(topnode);
 
    TArrayIndexProducer indexes(stack->fElem, n, "");
-   TArrayI &indx = indexes.GetIndices();
+
+   if (gDebug>1)
+      Info("ReadFastArray", "Indexes ndim:%d totallen %d", indexes.NumDimensions(), indexes.TotalLength());
 
    for (Int_t j = 0; j < n; j++, obj += objectSize) {
 
-      if (indexes.IsArray()) {
-         nlohmann::json *subnode = &((*topnode)[indx[0]]);
-         for (int k=1;k<indx.GetSize();++k)
-            subnode = &((*subnode)[indx[k]]);
-         indexes.NextSeparator();
-         stack->fNode = subnode;
-      }
+      stack->fNode = indexes.ExtractNode(subnode);
 
       JsonReadObject(obj, cl);
    }
 
-   if (indexes.IsArray()) {
-      // deselect first
-      stack->fNode = topnode;
-   }
-
-   if (Stack(0)->fIndx) {
-      Error("ReadFastArray", "(void*) superelement has index itself - not processed!!!!");
-      //AppendOutput(Stack(0)->fIndx->NextSeparator());
-   }
-
+   // restore top node - show we use stack here?
+   stack->fNode = topnode;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2597,6 +2603,7 @@ void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
    if (gDebug>1) Info("ReadFastArray", "void** n:%d cl:%s", n, cl->GetName());
 
    if (streamer) {
+      Info("ReadFastArray", "(void**) Calling streamer - not handled correctly");
       if (isPreAlloc) {
          for (Int_t j=0;j<n;j++) {
             if (!start[j]) start[j] = cl->New();
@@ -2608,36 +2615,27 @@ void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
    }
 
    TJSONStackObj *stack = Stack();
-   nlohmann::json *topnode = (nlohmann::json *)stack->fNode;
+   JSONObject_t topnode = stack->fNode, subnode = topnode;
+   if (stack->fIndx) subnode = stack->fIndx->ExtractNode(topnode);
 
    TArrayIndexProducer indexes(stack->fElem, n, "");
-   TArrayI &indx = indexes.GetIndices();
 
    for (Int_t j=0; j<n; j++) {
-      if (indexes.IsArray()) {
-         nlohmann::json *subnode = &((*topnode)[indx[0]]);
-         for (int k=1;k<indx.GetSize();++k)
-            subnode = &((*subnode)[indx[k]]);
-         indexes.NextSeparator();
-         stack->fNode = subnode;
-      }
+
+      stack->fNode = indexes.ExtractNode(subnode);
 
       if (!isPreAlloc) {
          void *old = start[j];
          start[j] = JsonReadObject(nullptr, cl);
          if (old && old!=start[j] && TStreamerInfo::CanDelete())
-            ((TClass*)cl)->Destructor(old,kFALSE); // call delete and desctructor
+            ((TClass*)cl)->Destructor(old,kFALSE); // call delete and destruct
       } else {
          if (!start[j]) start[j] = ((TClass*)cl)->New();
          JsonReadObject(start[j], cl);
       }
    }
 
-   if (indexes.IsArray()) {
-      // deselect first
-      stack->fNode = topnode;
-   }
-
+   stack->fNode = topnode;
 }
 
 #define TJSONWriteArrayCompress(vname, arrsize, typname)                                                       \
