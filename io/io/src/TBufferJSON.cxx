@@ -266,13 +266,13 @@ public:
    Int_t fLevel;               //! indent level
    TArrayIndexProducer *fIndx; //! producer of ndim indexes
 
-   JSONObject_t fNode;         //! reading JSON node
-   Bool_t  fUseIndxF;          //! use index for reading of plain array
+   JSONObject_t fNode;            //! reading JSON node
+   TArrayIndexProducer *fArrIndx; //! indexes used in plain-array reading
 
    TJSONStackObj()
       : TObject(), fInfo(nullptr), fElem(nullptr), fIsStreamerInfo(kFALSE), fIsElemOwner(kFALSE),
         fIsPostProcessed(kFALSE), fIsObjStarted(kFALSE), fAccObjects(kFALSE), fValues(), fLevel(0), fIndx(nullptr),
-        fNode(nullptr), fUseIndxF(kFALSE)
+        fNode(nullptr)
    {
       fValues.SetOwner(kTRUE);
    }
@@ -298,6 +298,21 @@ public:
    void PushIntValue(Int_t v)
    {
       fValues.Add(new TObjString(TString::Itoa(v,10)));
+   }
+
+   TArrayIndexProducer *MakeReadIndexes()
+   {
+      if (!fElem || (fElem->GetType() <= TStreamerInfo::kOffsetL) || (fElem->GetType() >= TStreamerInfo::kOffsetL + 20))
+         return nullptr;
+
+      TArrayIndexProducer *indx = new TArrayIndexProducer(fElem, -1, "");
+
+      if (!indx->IsArray() || (indx->NumDimensions() < 2)) {
+         delete indx; // no need for single dimension - it can be handled directly
+         return nullptr;
+      }
+
+      return indx;
    }
 
 };
@@ -1656,21 +1671,6 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
       stack->fIndx = new TArrayIndexProducer(elem, -1, fArraySepar.Data());
       if (IsWriting())
          AppendOutput(stack->fIndx->GetBegin());
-   } else
-   if (IsReading()) {
-      if ((elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetL + 20)) {
-         stack->fIndx = new TArrayIndexProducer(elem, -1, "");
-
-         if (gDebug > 3)
-            Info("WorkWithElement", "    elem: %s ndim: %d totallen: %d", stack->fElem->GetName(), stack->fIndx->NumDimensions(), stack->fIndx->TotalLength());
-
-         if (!stack->fIndx->IsArray() || (stack->fIndx->NumDimensions() < 2)) {
-            delete stack->fIndx; // no need for single dimension - it can be handled directly
-            stack->fIndx = nullptr;
-         } else {
-            stack->fUseIndxF = kTRUE;
-         }
-      }
    }
 }
 
@@ -2397,16 +2397,18 @@ Int_t TBufferJSON::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele
    TJSONStackObj *stack = Stack();                                     \
    if (stack && stack->fNode) {                                        \
       nlohmann::json &json = *((nlohmann::json *)stack->fNode);        \
-      if (stack->fIndx && stack->fUseIndxF) { /* at least two dims */  \
-         TArrayI &indx = stack->fIndx->GetIndices();                   \
+      TArrayIndexProducer *indexes = stack->MakeReadIndexes();         \
+      if (indexes) { /* at least two dims */                           \
+         TArrayI &indx = indexes->GetIndices();                        \
          Int_t lastdim = indx.GetSize() - 1;                           \
-         if (stack->fIndx->TotalLength() != n) Error("ReadFastArray", "Mismatch %d-dim array sizes %d %d", lastdim+1, n, (int) stack->fIndx->TotalLength()); \
+         if (indexes->TotalLength() != n) Error("ReadFastArray", "Mismatch %d-dim array sizes %d %d", lastdim+1, n, (int) indexes->TotalLength()); \
          for (int cnt=0;cnt<n;++cnt) {                                 \
             nlohmann::json *elem = &json[indx[0]];                     \
             for (int k=1;k<lastdim;++k) elem = &((*elem)[indx[k]]);    \
             arg[cnt] = asstr ? elem->get<std::string>()[indx[lastdim]] : (*elem)[indx[lastdim]].get<cast_type>(); \
-            stack->fIndx->NextSeparator();                             \
+            indexes->NextSeparator();                                  \
          }                                                             \
+         delete indexes;                                               \
       } else if (asstr) {                                              \
          std::string str = json.get<std::string>();                    \
          for (int cnt=0;cnt<n;++cnt) arg[cnt] = (cnt < (int) str.length()) ? str[cnt] : 0; \
