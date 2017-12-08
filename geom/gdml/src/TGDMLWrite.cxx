@@ -159,11 +159,23 @@ See that function for details.
 #include <stdlib.h>
 #include <string>
 #include <map>
+#include <set>
 #include <ctime>
 
 ClassImp(TGDMLWrite);
 
 TGDMLWrite *TGDMLWrite::fgGDMLWrite = 0;
+
+namespace {
+  struct MaterialExtractor  {
+    std::set<TGeoMaterial*> materials;
+    void operator() (const TGeoVolume* v)   {
+      materials.insert(v->GetMaterial());
+      for(Int_t i=0; i<v->GetNdaughters(); ++i)
+        (*this)(v->GetNode(i)->GetVolume());
+    }
+  };
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
@@ -216,11 +228,47 @@ void TGDMLWrite::SetNamingSpeed(ENamingType naming)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+//wrapper of all main methods for extraction
+void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, TString option)
+{
+  TList* materials = geomanager->GetListOfMaterials();
+  TGeoVolume* volume = geomanager->GetTopVolume();
+  if ( !volume )   {
+    Info("WriteGDMLfile", "Top volume does not exist!");
+    return;
+  }
+  fTopVolumeName = "";
+  WriteGDMLfile(geomanager, volume, materials, filename, option);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Wrapper to only selectively write one branch of the volume hierarchy to file
+void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, const char* filename, TString option)
+{
+  TList materials;
+  MaterialExtractor extract;
+  if ( !volume )   {
+    Info("WriteGDMLfile", "Invalid Volume reference to extract GDML information!");
+    return;
+  }
+  extract(volume);
+  for(TGeoMaterial* m : extract.materials)
+    materials.Add(m);
+  fTopVolumeName = volume->GetName();
+  WriteGDMLfile(geomanager, volume, &materials, filename, option);
+  materials.Clear("nodelete");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Wrapper of all exporting methods
 /// Creates blank GDML file and fills it with gGeoManager structure converted
 /// to GDML structure of xml nodes
 
-void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, TString option)
+void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager,
+                               TGeoVolume* volume,
+                               TList* materialsLst,
+                               const char* filename,
+                               TString option)
 {
    //option processing
    option.ToLower();
@@ -298,20 +346,14 @@ void TGDMLWrite::WriteGDMLfile(TGeoManager * geomanager, const char* filename, T
    fVolCnt = 0;
    fPhysVolCnt = 0;
    fSolCnt = 0;
-   fTopVolumeName = "";
 
    //calling main extraction functions (with measuring time)
    time_t startT, endT;
    startT = time(NULL);
-   fMaterialsNode = ExtractMaterials(geomanager->GetListOfMaterials());
+   fMaterialsNode = ExtractMaterials(materialsLst);
 
    Info("WriteGDMLfile", "Extracting volumes");
-   if (geomanager->GetTopVolume()) {
-      ExtractVolumes(geomanager->GetTopVolume());
-   } else {
-      Info("WriteGDMLfile", "Top volume does not exist!");
-      return;
-   }
+   ExtractVolumes(volume);
    Info("WriteGDMLfile", "%i solids added", fSolCnt);
    Info("WriteGDMLfile", "%i volumes added", fVolCnt);
    Info("WriteGDMLfile", "%i physvolumes added", fPhysVolCnt);
