@@ -170,7 +170,7 @@ Long64_t TMVA::DataSet::GetNClassEvents( Int_t type, UInt_t classNumber )
    try {
       return fClassEvents.at(type).at(classNumber);
    }
-   catch (std::out_of_range excpt) {
+   catch (std::out_of_range) {
       ClassInfo* ci = fdsi->GetClassInfo( classNumber );
       Log() << kFATAL << Form("Dataset[%s] : ",fdsi->GetName()) << "No " << (type==0?"training":(type==1?"testing":"_unknown_type_"))
             << " events for class " << (ci==NULL?"_no_name_known_":ci->GetName()) << " (index # "<<classNumber<<")"
