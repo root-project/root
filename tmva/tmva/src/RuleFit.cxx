@@ -55,18 +55,19 @@ A class implementing various fits of rule ensembles
 #include "TROOT.h" // for gROOT
 
 #include <algorithm>
+#include <random>
 
 ClassImp(TMVA::RuleFit);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TMVA::RuleFit::RuleFit( const MethodBase *rfbase )
-: fVisHistsUseImp( kTRUE ),
-   fLogger( new MsgLogger("RuleFit") )
+TMVA::RuleFit::RuleFit(const MethodBase *rfbase)
+   : fVisHistsUseImp( kTRUE )
+   , fLogger(new MsgLogger("RuleFit"))
 {
-   Initialize( rfbase );
-   std::srand( randSEED );  // initialize random number generator used by std::random_shuffle
+   Initialize(rfbase);
+   fRNGEngine.seed(randSEED);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -77,10 +78,10 @@ TMVA::RuleFit::RuleFit()
    , fNEveEffTrain(0)
    , fMethodRuleFit(0)
    , fMethodBase(0)
-   , fVisHistsUseImp( kTRUE )
-   , fLogger( new MsgLogger("RuleFit") )
+   , fVisHistsUseImp(kTRUE)
+   , fLogger(new MsgLogger("RuleFit"))
 {
-   std::srand( randSEED ); // initialize random number generator used by std::random_shuffle
+   fRNGEngine.seed(randSEED);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -451,7 +452,7 @@ void TMVA::RuleFit::SetTrainingEvents( const std::vector<const Event *>& el )
    }
 
    // Re-shuffle the vector, ie, recreate it in a random order
-   std::random_shuffle( fTrainingEventsRndm.begin(), fTrainingEventsRndm.end() );
+   std::shuffle(fTrainingEventsRndm.begin(), fTrainingEventsRndm.end(), fRNGEngine);
 
    // fraction events per tree
    fNTreeSample = static_cast<UInt_t>(neve*fMethodRuleFit->GetTreeEveFrac());

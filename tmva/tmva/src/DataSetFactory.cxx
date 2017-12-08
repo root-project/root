@@ -43,6 +43,7 @@ Class that contains all the data information
 #include <algorithm>
 #include <functional>
 #include <numeric>
+#include <random>
 
 #include "TMVA/DataSetFactory.h"
 
@@ -984,7 +985,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
                                  const TString& normMode,
                                  UInt_t splitSeed)
 {
-   TMVA::RandomGenerator rndm( splitSeed );
+   std::default_random_engine rndm(splitSeed);
 
    // ==== splitting of undefined events to kTraining and kTesting
 
@@ -998,9 +999,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
                   << unspecifiedEvents.size()
                   << " events of class " << cls
                   << " which are not yet associated to testing or training" << Endl;
-            std::random_shuffle( unspecifiedEvents.begin(),
-                                 unspecifiedEvents.end(),
-                                 rndm );
+            std::shuffle(unspecifiedEvents.begin(), unspecifiedEvents.end(), rndm);
          }
       }
    }
@@ -1225,7 +1224,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             // make indices
             std::generate( indicesTraining.begin(), indicesTraining.end(), TMVA::Increment<UInt_t>(0) );
             // shuffle indices
-            std::random_shuffle( indicesTraining.begin(), indicesTraining.end(), rndm );
+            std::shuffle(indicesTraining.begin(), indicesTraining.end(), rndm);
             // erase indices of not needed events
             indicesTraining.erase( indicesTraining.begin()+sizeTraining-UInt_t(requestedTraining), indicesTraining.end() );
             // delete all events with the given indices
@@ -1243,7 +1242,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             // make indices
             std::generate( indicesTesting.begin(), indicesTesting.end(), TMVA::Increment<UInt_t>(0) );
             // shuffle indices
-            std::random_shuffle( indicesTesting.begin(), indicesTesting.end(), rndm );
+            std::shuffle(indicesTesting.begin(), indicesTesting.end(), rndm);
             // erase indices of not needed events
             indicesTesting.erase( indicesTesting.begin()+sizeTesting-UInt_t(requestedTesting), indicesTesting.end() );
             // delete all events with the given indices
@@ -1363,8 +1362,8 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
    if (mixMode == "RANDOM") {
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "shuffling events"<<Endl;
 
-      std::random_shuffle( trainingEventVector->begin(), trainingEventVector->end(), rndm );
-      std::random_shuffle( testingEventVector->begin(),  testingEventVector->end(),  rndm  );
+      std::shuffle(trainingEventVector->begin(), trainingEventVector->end(), rndm);
+      std::shuffle(testingEventVector->begin(),  testingEventVector->end(),  rndm);
    }
 
    Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "trainingEventVector " << trainingEventVector->size() << Endl;

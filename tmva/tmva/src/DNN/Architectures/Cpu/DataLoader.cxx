@@ -17,6 +17,7 @@
 #include "TMVA/DNN/Architectures/Cpu/DataLoader.h"
 #include "TMVA/Event.h"
 #include <iostream>
+#include <random>
 
 namespace TMVA
 {
@@ -128,7 +129,7 @@ template<typename Data_t, typename Real_t>
 auto TCpuDataLoader<Data_t, Real_t>::begin()
     -> BatchIterator_t
 {
-   random_shuffle(fSampleIndices.begin(), fSampleIndices.end());
+   std::shuffle(fSampleIndices.begin(), fSampleIndices.end(), std::default_random_engine{});
    return BatchIterator_t(*this, 0);
 }
 

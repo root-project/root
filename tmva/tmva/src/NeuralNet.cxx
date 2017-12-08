@@ -556,18 +556,13 @@ namespace TMVA
             size_t numDrops = dropFraction * _numNodes;
             if (numDrops >= _numNodes) // maintain at least one node
                 numDrops = _numNodes - 1;
-            dropContainer.insert (end (dropContainer), _numNodes-numDrops, true); // add the markers for the nodes which are enabled
-            dropContainer.insert (end (dropContainer), numDrops, false); // add the markers for the disabled nodes
-            // shuffle 
-            std::random_shuffle (end (dropContainer)-_numNodes, end (dropContainer)); // shuffle enabled and disabled markers
+            // add the markers for the nodes which are enabled
+            dropContainer.insert (end (dropContainer), _numNodes-numDrops, true);
+            // add the markers for the disabled nodes
+            dropContainer.insert (end (dropContainer), numDrops, false);
+            // shuffle enabled and disabled markers
+            std::shuffle(end(dropContainer)-_numNodes, end(dropContainer), std::default_random_engine{});
         }
-
-
-
-
-
-
-
  
     }; // namespace DNN
 }; // namespace TMVA
