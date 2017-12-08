@@ -2753,7 +2753,8 @@ Bool_t TF1::IsValid() const
    if (fMethodCall) return fMethodCall->IsValid();
    // function built on compiled functors are always valid by definition
    // (checked at compiled time)
-   if (fFunctor && fSave.empty()) return kFALSE;
+   // invalid is a TF1 where the functor is null pointer and has not been saved
+   if (!fFunctor && fSave.empty()) return kFALSE;
    return kTRUE;
 }
 
