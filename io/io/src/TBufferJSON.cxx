@@ -302,7 +302,8 @@ public:
 
    TArrayIndexProducer *MakeReadIndexes()
    {
-      if (!fElem || (fElem->GetType() <= TStreamerInfo::kOffsetL) || (fElem->GetType() >= TStreamerInfo::kOffsetL + 20))
+      if (!fElem || (fElem->GetType() <= TStreamerInfo::kOffsetL) || (fElem->GetType() >= TStreamerInfo::kOffsetL + 20) ||
+          (fElem->GetArrayDim() < 2))
          return nullptr;
 
       TArrayIndexProducer *indx = new TArrayIndexProducer(fElem, -1, "");
@@ -1428,9 +1429,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       if (!obj)
          obj = jsonClass->New();
 
-      if (gDebug>2)
-         Info("JsonReadObject", "Reading TArray len:%d from %s", json.size(), json.dump().c_str());
-
+      // add to stack array size, which will be extracted before reading array itself by custom TArray streamer
       stack->PushIntValue(json.size());
 
    } else {
