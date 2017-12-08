@@ -1079,11 +1079,13 @@ Double_t TMVA::RuleFitParams::ErrorRateRocRaw( std::vector<Double_t> & sFsig,
    //
    for (Int_t i=0; i<np; i++) {
       fcut = minf + df*Double_t(i);
-      indit = std::find_if( sFsig.begin(), sFsig.end(), std::bind2nd(std::greater_equal<Double_t>(), fcut));
+      indit = std::find_if(sFsig.begin(), sFsig.end(),
+                           std::bind(std::greater_equal<Double_t>(), std::placeholders::_1, fcut));
       nesig = sFsig.end()-indit; // number of sig accepted with F>cut
       if (TMath::Abs(pnesig-nesig)>0) {
          npok++;
-         indit = std::find_if( sFbkg.begin(), sFbkg.end(), std::bind2nd(std::greater_equal<Double_t>(), fcut));
+         indit = std::find_if(sFbkg.begin(), sFbkg.end(),
+                              std::bind(std::greater_equal<Double_t>(), std::placeholders::_1, fcut));
          nrbkg = indit-sFbkg.begin(); // number of bkg rejected with F>cut
          rejb = Double_t(nrbkg)/Double_t(nbkg);
          effs = Double_t(nesig)/Double_t(nsig);
