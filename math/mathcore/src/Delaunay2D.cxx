@@ -452,9 +452,8 @@ double Delaunay2D::DoInterpolateNormalized(double xx, double yy)
     //no triangle found return standard value
    return fZout;
 }
+#endif //HAS_CGAL
 
 } // namespace Math
 } // namespace ROOT
 
-
-#endif //HAS_CGAL

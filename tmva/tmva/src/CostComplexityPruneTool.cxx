@@ -128,7 +128,7 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
    try {
       InitTreePruningMetaData((DecisionTreeNode*)dt->GetRoot());
    }
-   catch(std::string error) {
+   catch(const std::string &error) {
       Log() << kERROR << "Couldn't initialize the tree meta data because of error ("
             << error << ")" << Endl;
       return NULL;
@@ -139,7 +139,7 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
    try {
       Optimize( dt, W );  // run the cost complexity pruning algorithm
    }
-   catch(std::string error) {
+   catch(const std::string &error) {
       Log() << kERROR << "Error optimizing pruning sequence ("
             << error << ")" << Endl;
       return NULL;

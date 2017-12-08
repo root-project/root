@@ -993,7 +993,7 @@ fGUIThreadHandle(0), fGUIThreadId(0)
    char *buf = new char[MAX_MODULE_NAME32 + 1];
 
 #ifdef ROOTPREFIX
-   if (gSystem->Getenv("ROOTIGNOREPREFIX") {
+   if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
 #endif
    // set ROOTSYS
    HMODULE hModCore = ::GetModuleHandle("libCore.dll");
