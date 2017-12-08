@@ -85,6 +85,9 @@ public:
    }
    //wrapper of all main methods for extraction
    void WriteGDMLfile(TGeoManager * geomanager, const char* filename = "test.gdml", TString option = "");
+   // Wrapper to only selectively write one branch of the volume hierarchy to file
+   void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, const char* filename = "test.gdml", TString option = "");
+
    enum ENamingType {
       kelegantButSlow = 0,
       kwithoutSufixNotUniq = 1,
@@ -149,6 +152,8 @@ private:
    TString          ExtractSolid(TGeoShape* volShape);     //adds <shape> to <solids>
    void             ExtractVolumes(TGeoVolume* volume);    //result <volume> node...  + corresp. shape
 
+   // Combined implementation to extract GDML information from the geometry tree
+   void WriteGDMLfile(TGeoManager * geomanager, TGeoVolume* volume, TList* materialsLst, const char* filename, TString option);
 
    //1.1 Materials sub methods - creating Nodes
    XMLNodePointer_t CreateAtomN(Double_t atom, const char * unit = "g/mole");
