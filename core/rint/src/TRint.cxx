@@ -156,9 +156,9 @@ TRint::TRint(const char *appClassName, Int_t *argc, char **argv, void *options,
       PrintLogo(lite);
    }
 
-   // Explicitly load libMathCore as CINT will not auto load it when using one
-   // of its globals. Once moved to Cling, which should work correctly, we
-   // can remove this statement.
+   // Explicitly load libMathCore it cannot be auto-loaded it when using one
+   // of its freestanding functions. Once functions can trigger autoloading we
+   // can get rid of this.
    if (!gClassTable->GetDict("TRandom"))
       gSystem->Load("libMathCore");
 
