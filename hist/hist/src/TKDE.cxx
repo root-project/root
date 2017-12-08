@@ -503,11 +503,13 @@ void TKDE::SetMirroredEvents() {
    std::vector<Double_t> originalWeights = fEventWeights;
   if (fMirrorLeft) {
       fEvents.resize(2 * fNEvents, 0.0);
-      transform(fEvents.begin(), fEvents.begin() + fNEvents, fEvents.begin() + fNEvents, std::bind1st(std::minus<Double_t>(), 2 * fXMin));
+      transform(fEvents.begin(), fEvents.begin() + fNEvents, fEvents.begin() + fNEvents,
+                std::bind(std::minus<Double_t>(), 2 * fXMin, std::placeholders::_1));
    }
    if (fMirrorRight) {
       fEvents.resize((fMirrorLeft + 2) * fNEvents, 0.0);
-      transform(fEvents.begin(), fEvents.begin() + fNEvents, fEvents.begin() + (fMirrorLeft + 1) * fNEvents, std::bind1st(std::minus<Double_t>(), 2 * fXMax));
+      transform(fEvents.begin(), fEvents.begin() + fNEvents, fEvents.begin() + (fMirrorLeft + 1) * fNEvents,
+                std::bind(std::minus<Double_t>(), 2 * fXMax, std::placeholders::_1));
    }
    if (!fEventWeights.empty() && (fMirrorLeft || fMirrorRight)) {
       // copy weights too
