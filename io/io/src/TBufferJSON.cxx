@@ -1374,6 +1374,9 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    // enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
    Int_t special_kind = JsonSpecialClass(objClass);
 
+   //if (gDebug>2)
+   //   Info("JsonReadObject", "Special kind %d process_stl %s clname %s", special_kind, (process_stl ? "true" : "false"), (objClass ? objClass->GetName() : "---"));
+
    // Extract pointer
    if (json->is_object() && (json->size() == 1) && (json->find("$ref") != json->end())) {
       unsigned refid = json->at("$ref").get<unsigned>();
@@ -1397,13 +1400,13 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       if (!obj)
          obj = objClass->New();
 
+      if (gDebug > 2)
+         Info("JsonReadObject","Read string from %s", json->dump().c_str());
+
       if (special_kind == json_stdstring)
          *((std::string *) obj) = json->get<std::string>();
       else
          *((TString *) obj) = json->get<std::string>().c_str();
-
-      if (gDebug > 2)
-         Info("JsonReadObject","Read string from %s", json->dump().c_str());
 
       if (readClass)
          *readClass = (TClass *) objClass;
@@ -2676,7 +2679,7 @@ void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberS
    TArrayIndexProducer indexes(stack->fElem, n, "");
 
    if (gDebug>1)
-      Info("ReadFastArray", "Indexes ndim:%d totallen %d", indexes.NumDimensions(), indexes.TotalLength());
+      Info("ReadFastArray", "Indexes ndim:%d totallen:%d", indexes.NumDimensions(), indexes.TotalLength());
 
    for (Int_t j = 0; j < n; j++, obj += objectSize) {
 
@@ -2695,7 +2698,7 @@ void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberS
 void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc,
                                 TMemberStreamer *streamer, const TClass *onFileClass)
 {
-   if (gDebug>1) Info("ReadFastArray", "void** n:%d cl:%s", n, cl->GetName());
+   if (gDebug>1) Info("ReadFastArray", "void** n:%d cl:%s prealloc:%s", n, cl->GetName(), (isPreAlloc ? "true" : "false"));
 
    if (streamer) {
       Info("ReadFastArray", "(void**) Calling streamer - not handled correctly");
@@ -3273,10 +3276,14 @@ void TBufferJSON::StreamObject(void *obj, const TClass *cl, const TClass * /* on
 
 
 
-#define JsonReadString(arg)                        \
-   TJSONStackObj *stack = Stack();                 \
-   if (stack && stack->fNode) arg = ((nlohmann::json *)stack->fNode)->get<std::string>();
-
+#define JsonReadString(arg)                                        \
+   TJSONStackObj *stack = Stack();                                 \
+   if (stack && stack->fNode) {                                    \
+      nlohmann::json *json = ((nlohmann::json *)stack->fNode);     \
+      if (stack->fStlIndx >= 0)                                    \
+         json = &(json->at(stack->fStlIndx++));                    \
+      arg = json->get<std::string>();                              \
+   }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads Bool_t value from buffer
