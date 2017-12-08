@@ -38,7 +38,7 @@ Guilherme Amadio, CERN/SFT,\
  Vassil Vassilev, Fermilab/CMS,\
  Xavier Valls Pla, CERN/UJI, \
  Wouter Verkerke, NIKHEF/Atlas, RooFit, \
- Stefan Wunsh, KIT, \
+ Stefan Wunsch, KIT, \
  Omar Zapata
 
 ## Removed interfaces
@@ -308,7 +308,7 @@ large TClonesArray where each element contains another small vector container.
   - The TFuture template has been added to the ROOT::Experimental namespace. It represents a future and is compatible
   with the ROOT::Experimental::Async function. It has the same properties of an STL future and can be initialised by
   one of these classes. For example, *TFuture<int> = std::async(myfunc,a,b,c);*
-  - Reintroduced greedy reduction in TProcessExecutor
+  - Reintroduced greedy reduction in TProcessExecutor.
   - Fix empty chunks in the result vector of TThreadExecutor::Map. If the integer partition of the data in nChunks causes the existence of empty chunks (e.g the—rounded up—division of 12 elements in 5 chunks), the number of chunks is decreased to avoid empty chunks and, as a consequence, accesses to uninitialized memory in the reduction step.
 
 ## Language Bindings
