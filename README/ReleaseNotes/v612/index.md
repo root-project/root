@@ -122,6 +122,24 @@ auto h1 = key->ReadObject<TH1>
 ```
 after which h1 will either be null if the key contains something that is not a TH1 (or derived class)
 or will be set to the address of the histogram read from the file.
+- Add the ability to store the 'same' object several time (assumingly with different data) in a single buffer.  Instead of
+
+```
+  while(...) {
+     TObjArray arr;
+     ... update the content of "arr"
+     buffer << arr;
+  }
+```
+which would only really stream the array at the first iteration because it will be detected has having the same address and thus assumed to be the same object.  We can now do:
+```
+  while(...) {
+     TObjArray arr;
+     ... update the content of "arr"
+     buffer.WriteObject(&arr, kFALSE);
+  }
+```
+where the last argument of WriteObject tells the buffer do *not* remember this object's address and to always stream it.  This feature is also available via WriteObjectAny.
 
 - Added a new mechanism for providing clean forward-compatibility breaks in a ``TTree`` (i.e., a newer version of ROOT writes a ``TTree`` an older version cannot read).  When future versions of ROOT utilize an IO feature that this version does not support, ROOT will provide a clear error message instead of crashing or returning garbage data.  In future ROOT6 releases, forward-compatibility breaks will only be allowed if a non-default feature is enabled via the ``ROOT::Experimental`` namespace; it is expected ROOT7 will enable forward-compatibility breaks by default.
 
