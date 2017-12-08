@@ -892,6 +892,7 @@ bool test47() {
    // test mod operator
    // one needs to convert always to integer because % works only for int
    auto f1 = new TF1("f1","exp(x)");
+   (void)f1; // f1 is used by modf but the compiler doesn't see that.
    auto func = new TF1("modf","int(2*f1(x)) % 3");
    bool ok = func->Eval(1) == 2;
    ok &= func->Eval(3) == 1;
