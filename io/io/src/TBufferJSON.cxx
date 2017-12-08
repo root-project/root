@@ -266,12 +266,13 @@ public:
    Int_t fLevel;               //! indent level
    TArrayIndexProducer *fIndx; //! producer of ndim indexes
 
-   JSONObject_t fNode; //! reading JSON node
+   JSONObject_t fNode;         //! reading JSON node
+   Bool_t  fUseIndxF;          //! use index for reading of plain array
 
    TJSONStackObj()
       : TObject(), fInfo(nullptr), fElem(nullptr), fIsStreamerInfo(kFALSE), fIsElemOwner(kFALSE),
         fIsPostProcessed(kFALSE), fIsObjStarted(kFALSE), fAccObjects(kFALSE), fValues(), fLevel(0), fIndx(nullptr),
-        fNode(nullptr)
+        fNode(nullptr), fUseIndxF(kFALSE)
    {
       fValues.SetOwner(kTRUE);
    }
@@ -293,6 +294,12 @@ public:
       fValues.Add(new TObjString(v));
       v.Clear();
    }
+
+   void PushIntValue(Int_t v)
+   {
+      fValues.Add(new TObjString(TString::Itoa(v,10)));
+   }
+
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1399,6 +1406,18 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       if (gDebug > 1)
          Info("JsonReadObject", "Reading baseclass %s ptr %p", objClass->GetName(), obj);
 
+   } else if (special_kind == json_TArray) {
+
+      jsonClass = (TClass *) objClass;
+
+      if (!obj)
+         obj = jsonClass->New();
+
+      if (gDebug>2)
+         Info("JsonReadObject", "Reading TArray len:%d from %s", json.size(), json.dump().c_str());
+
+      stack->PushIntValue(json.size());
+
    } else {
 
       std::string clname = json["_typename"];
@@ -1429,9 +1448,10 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    // there are two ways to handle custom streamers
    // either prepare data before streamer and tweak basic function which are reading values like UInt32_t
    // or try reimplement custom streamer here
-   //
 
    if (jsonClass == TObject::Class()) {
+      // for TObject we reimplement custom streamer - it is much easier
+
       if (gDebug > 1)
          Info("JsonReadObject", "Reading TObject from %s", json.dump().c_str());
 
@@ -1447,7 +1467,9 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
          tobj->SetBit(n, (bits & BIT(n)) != 0);
 
    } else {
+
       jsonClass->Streamer((void *)obj, *this);
+
    }
 
    if (gDebug > 1)
@@ -1645,6 +1667,8 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
          if (!stack->fIndx->IsArray() || (stack->fIndx->NumDimensions() < 2)) {
             delete stack->fIndx; // no need for single dimension - it can be handled directly
             stack->fIndx = nullptr;
+         } else {
+            stack->fUseIndxF = kTRUE;
          }
       }
    }
@@ -2373,10 +2397,10 @@ Int_t TBufferJSON::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele
    TJSONStackObj *stack = Stack();                                     \
    if (stack && stack->fNode) {                                        \
       nlohmann::json &json = *((nlohmann::json *)stack->fNode);        \
-      if (stack->fIndx) { /* at least two dims */                      \
-         if (stack->fIndx->TotalLength() != n) Error("ReadFastArray", "Mismatch array sizes %d %d", n, (int) stack->fIndx->TotalLength()); \
+      if (stack->fIndx && stack->fUseIndxF) { /* at least two dims */  \
          TArrayI &indx = stack->fIndx->GetIndices();                   \
          Int_t lastdim = indx.GetSize() - 1;                           \
+         if (stack->fIndx->TotalLength() != n) Error("ReadFastArray", "Mismatch %d-dim array sizes %d %d", lastdim+1, n, (int) stack->fIndx->TotalLength()); \
          for (int cnt=0;cnt<n;++cnt) {                                 \
             nlohmann::json *elem = &json[indx[0]];                     \
             for (int k=1;k<lastdim;++k) elem = &((*elem)[indx[k]]);    \
@@ -3162,9 +3186,21 @@ void TBufferJSON::StreamObject(void *obj, const TClass *cl, const TClass * /* on
 
 #define JsonReadBasic(arg, cast_type)                              \
    TJSONStackObj *stack = Stack();                                 \
-   if (stack && stack->fNode) {                                    \
-      arg = ((nlohmann::json *)stack->fNode)->get<cast_type>();    \
-   }
+   if (stack && stack->fNode)                                      \
+      arg = ((nlohmann::json *)stack->fNode)->get<cast_type>();
+
+// read basic, but first check if values prepend
+#define JsonReadBasicMore(arg, cast_type)                          \
+   TJSONStackObj *stack = Stack();                                 \
+   if (stack && (stack->fValues.GetLast() >= 0)) {                 \
+      TObject *str = stack->fValues.Last();                        \
+      arg = nlohmann::json::parse(str->GetName()).get<cast_type>(); \
+      stack->fValues.Remove(str);                                  \
+      delete str;                                                  \
+   } else if (stack && stack->fNode)                               \
+      arg = ((nlohmann::json *)stack->fNode)->get<cast_type>();
+
+
 
 #define JsonReadString(arg)                        \
    TJSONStackObj *stack = Stack();                 \
@@ -3228,7 +3264,7 @@ void TBufferJSON::ReadUShort(UShort_t &val)
 
 void TBufferJSON::ReadInt(Int_t &val)
 {
-   JsonReadBasic(val, Int_t);
+   JsonReadBasicMore(val, Int_t);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
