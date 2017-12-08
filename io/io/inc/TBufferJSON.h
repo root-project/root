@@ -397,11 +397,7 @@ public:
       return 0;
    }
    virtual   Int_t    ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, const TClass * /*onfile_class*/ = 0);
-   virtual   Int_t    ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, Int_t /*version*/, UInt_t /*start*/, UInt_t /*count*/, const TClass * /*onfile_class*/ = 0)
-   {
-      Error("ReadClassBuffer2", "useless");
-      return 0;
-   }
+   virtual   Int_t    ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, Int_t /*version*/, UInt_t /*start*/, UInt_t /*count*/, const TClass * /*onfile_class*/ = 0);
 
    // end of redefined virtual functions
 
