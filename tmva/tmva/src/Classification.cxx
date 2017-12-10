@@ -282,7 +282,6 @@ void TMVA::Experimental::Classification::Evaluate()
          if (!IsSilentFile()) {
             GetFile()->Close();
          }
-
          return GetResults(methodname, methodtitle);
       };
 
@@ -911,6 +910,7 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
    } else {
       auto rocCurveTest = GetROC(methodname, methodtitle, 0, Types::kTesting);
       fResult.fMvaTest[0] = rocCurveTest->GetMvas();
+      fResult.fROCIntegral = GetROCIntegral(methodname, methodtitle);
    }
    TString className = method->DataInfo().GetClassInfo(0)->GetName();
    fResult.fClassNames.push_back(className);
