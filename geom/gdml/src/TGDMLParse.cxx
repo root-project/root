@@ -882,7 +882,8 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
       // Create TGeoElement - note: Object(name, title) corresponds to Element(formula, name)
     TGeoElement* ele  = tab->FindElement(NameShort(name));
     // We cannot use elements with Z = 0, so we expect a user definition
-    if (ele && ele->Z() == 0) ele = nullptr;
+    if (ele && ele->Z() == 0)
+       ele = nullptr;
     if ( !ele )   {
         ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
         for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
@@ -946,7 +947,8 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
         // Create TGeoElement - note: Object(name, title) corresponds to Element(formula, name)
       TGeoElement* ele  = tab->FindElement(NameShort(name));
       // We cannot use elements with Z = 0, so we expect a user definition
-      if (ele && ele->Z() == 0) ele = nullptr; 
+      if (ele && ele->Z() == 0)
+         ele = nullptr;
       if ( !ele )   {
          ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
          for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
@@ -1006,8 +1008,9 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    Double_t atom2 = Value(atom);
    TGeoElement* ele  = tab->FindElement(formula);
    // We cannot use elements with Z = 0, so we expect a user definition
-   if (ele && ele->Z() == 0) ele = nullptr;
- 
+   if (ele && ele->Z() == 0)
+      ele = nullptr;
+
    if ( !ele )   {
      ele = new TGeoElement(formula, NameShort(name), z2 , atom2);
    }
@@ -1114,8 +1117,9 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
     //Note: Object(name, title) corresponds to Element(formula, name)
     TGeoElement* mat_ele = tab_ele->FindElement(mat_name);
     // We cannot use elements with Z = 0, so we expect a user definition
-    if (mat_ele && mat_ele->Z() == 0) mat_ele = nullptr;
- 
+    if (mat_ele && mat_ele->Z() == 0)
+       mat_ele = nullptr;
+
     if ( !mat_ele )  {
       mat_ele = new TGeoElement(mat_name, mat_name, atoi(tempconst), a);
     }
