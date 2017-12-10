@@ -44,6 +44,8 @@ TApplication (see TRint).
 #include "TUrl.h"
 #include "TVirtualMutex.h"
 
+#include "CommandLineOptionsHelp.h"
+
 #include <stdlib.h>
 
 #if defined(R__MACOSX) && (TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR)
@@ -361,41 +363,7 @@ char *TApplication::Argv(Int_t index) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Get and handle command line options. Arguments handled are removed
-/// from the argument array. The following arguments are handled:
-///
-///  - b : run in batch mode without graphics
-///  - x : exit on exception
-///  - e expression: request execution of the given C++ expression.
-///  - n : do not execute logon and logoff macros as specified in .rootrc
-///  - q : exit after processing command line macro files
-///  - l : do not show splash screen
-///
-/// The last three options are only relevant in conjunction with TRint.
-/// The following help and info arguments are supported:
-///
-///  - ?       : print usage
-///  - h       : print usage
-///  - -help   : print usage
-///  - config  : print ./configure options
-///  - memstat : run with memory usage monitoring
-///
-/// In addition to the above options the arguments that are not options,
-/// i.e. they don't start with - or + are treated as follows (and also removed
-/// from the argument array):
-///
-///  - `<dir>`       is considered the desired working directory and available
-///                  via WorkingDirectory(), if more than one dir is specified the
-///                  first one will prevail
-///  - `<file>`      if the file exists its added to the InputFiles() list
-///  - `<file>.root` are considered ROOT files and added to the InputFiles() list,
-///                  the file may be a remote file url
-///  - `<macro>.C`   are considered ROOT macros and also added to the InputFiles() list
-///
-/// In TRint we set the working directory to the `<dir>`, the ROOT files are
-/// connected, and the macros are executed. If your main TApplication is not
-/// TRint you have to decide yourself what to do with these options.
-/// All specified arguments (also the ones removed) can always be retrieved
-/// via the TApplication::Argv() method.
+/// from the argument array. See CommandLineOptionsHelp.h for options.
 
 void TApplication::GetOptions(Int_t *argc, char **argv)
 {
@@ -414,23 +382,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
    for (i = 1; i < *argc; i++) {
       if (!strcmp(argv[i], "-?") || !strncmp(argv[i], "-h", 2) ||
           !strncmp(argv[i], "--help", 6)) {
-         fprintf(stderr, "Usage: %s [-l] [-b] [-n] [-q] [dir] [[file:]data.root] [file1.C ... fileN.C]\n", argv[0]);
-         fprintf(stderr, "Options:\n");
-         fprintf(stderr, "  -b : run in batch mode without graphics\n");
-         fprintf(stderr, "  -x : exit on exception\n");
-         fprintf(stderr, "  -e expression: request execution of the given C++ expression\n");
-         fprintf(stderr, "  -n : do not execute logon and logoff macros as specified in .rootrc\n");
-         fprintf(stderr, "  -q : exit after processing command line macro files\n");
-         fprintf(stderr, "  -l : do not show splash screen\n");
-         fprintf(stderr, "  -t : enable thread-safety and multi-threaded mode\n");
-         fprintf(stderr, " dir : if dir is a valid directory cd to it before executing\n");
-         fprintf(stderr, "\n");
-         fprintf(stderr, "  -?      : print usage\n");
-         fprintf(stderr, "  -h      : print usage\n");
-         fprintf(stderr, "  --help  : print usage\n");
-         fprintf(stderr, "  -config : print ./configure options\n");
-         fprintf(stderr, "  -memstat : run with memory usage monitoring\n");
-         fprintf(stderr, "\n");
+         fprintf(stderr, kCommandLineOptionsHelp, argv[0]);
          Terminate(0);
       } else if (!strcmp(argv[i], "-config")) {
          fprintf(stderr, "ROOT ./configure options:\n%s\n", gROOT->GetConfigOptions());
