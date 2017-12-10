@@ -31,6 +31,8 @@ private:
 
    STEPCAFControl_Writer    fWriter; //the step file pointer
    Handle(TDocStd_Document) fDoc;    //the step document element
+
+   // The following probably shouldn't be data members. 
    LabelMap_t               fTree;   //tree of Label's volumes
    TDF_Label                fLabel;  //label of the OCC shape element
    TGeoToOCC                  fRootShape;
@@ -43,11 +45,17 @@ private:
    void            AddChildLabel(TDF_Label mother, TDF_Label child, TopLoc_Location loc);
    TopLoc_Location CalcLocation(TGeoHMatrix matrix);
 
+   void FillOCCWithNode(TGeoManager* m, TGeoNode* currentNode, TGeoIterator& nextNode, int level, int max_level, int level1_skipped);
+
 public:
    TOCCToStep();
    void      PrintAssembly();
    TDF_Label OCCShapeCreation(TGeoManager *m);
-   void      OCCTreeCreation(TGeoManager *m);
+   void      OCCTreeCreation(TGeoManager *m, int max_level = -1);
+   bool      OCCPartialTreeCreation(TGeoManager *m, const char* node_name, int max_level = -1);
+   bool      OCCPartialTreeCreation(TGeoManager *m, std::map<std::string,int> part_name_levels);
+
+
    void      OCCWriteStep(const char *fname);
 };
 
