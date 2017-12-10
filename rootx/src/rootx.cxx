@@ -18,6 +18,8 @@
 #include "RConfigure.h"
 #include "Rtypes.h"
 
+#include "CommandLineOptionsHelp.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -435,24 +437,7 @@ static void WaitChild()
 
 static void PrintUsage(char *pname)
 {
-   // This is a copy of the text in TApplication::GetOptions().
-
-   fprintf(stderr, "Usage: %s [-l] [-b] [-n] [-q] [dir] [[file:]data.root] [file1.C ... fileN.C]\n", pname);
-   fprintf(stderr, "Options:\n");
-   fprintf(stderr, "  -b : run in batch mode without graphics\n");
-   fprintf(stderr, "  -n : do not execute logon and logoff macros as specified in .rootrc\n");
-   fprintf(stderr, "  -q : exit after processing command line macro files\n");
-   fprintf(stderr, "  -l : do not show splash screen\n");
-   fprintf(stderr, "  -x : exit on exception\n");
-   fprintf(stderr, " dir : if dir is a valid directory cd to it before executing\n");
-   fprintf(stderr, " --notebook : execute ROOT notebook\n");
-   fprintf(stderr, "\n");
-   fprintf(stderr, "  -?       : print usage\n");
-   fprintf(stderr, "  -h       : print usage\n");
-   fprintf(stderr, "  --help   : print usage\n");
-   fprintf(stderr, "  -config  : print ./configure options\n");
-   fprintf(stderr, "  -memstat : run with memory usage monitoring\n");
-   fprintf(stderr, "\n");
+   fprintf(stderr, kCommandLineOptionsHelp, pname);
 }
 
 int main(int argc, char **argv)
