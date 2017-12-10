@@ -35,7 +35,7 @@ class TDirectory : public TNamed {
 public:
    /** @class Context
      *
-     *  Small helper to keep currenxwt directory context.
+     *  Small helper to keep current directory context.
      *  Automatically reverts to "old" directory
      */
    class TContext  {
