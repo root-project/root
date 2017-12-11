@@ -6,7 +6,7 @@
 ///
 /// \macro_code
 ///
-/// \author Sergey Linev
+/// \author Sergey Linev, Juan Fernando Jaramillo Botero
 
 #include <TSQLServer.h>
 #include <TSQLResult.h>
