@@ -985,7 +985,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
                                  const TString& normMode,
                                  UInt_t splitSeed)
 {
-   std::default_random_engine rndm(splitSeed);
+   TMVA::RandomGenerator rndm(splitSeed);
 
    // ==== splitting of undefined events to kTraining and kTesting
 
