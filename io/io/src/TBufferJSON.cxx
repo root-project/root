@@ -1375,12 +1375,17 @@ void TBufferJSON::JsonWriteCollection(TCollection *col, const TClass *)
 
 void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
 {
+   if (!col) return;
+
    TList *lst = nullptr;
    TMap *map = nullptr;
+   TClonesArray *clones = nullptr;
    if (col->InheritsFrom(TList::Class()))
       lst = dynamic_cast<TList *>(col);
-   if (col->InheritsFrom(TMap::Class()))
+   else if (col->InheritsFrom(TMap::Class()))
       map = dynamic_cast<TMap *>(col);
+   else if (col->InheritsFrom(TClonesArray::Class()))
+      clones = dynamic_cast<TClonesArray *>(col);
 
    nlohmann::json *json = (nlohmann::json *) Stack()->fNode;
 
@@ -1397,11 +1402,27 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
 
       PushStackR(subelem);
 
-      TClass *readClass = nullptr;
+      TClass *readClass = nullptr, *objClass = nullptr;
+      void *subobj = nullptr;
 
-      void *subobj = JsonReadObject(nullptr, nullptr, &readClass);
+      if (clones) {
+         if (n==0) {
+            if (!clones->GetClass() || (clones->GetSize() == 0)) {
+               clones->SetClass(subelem->at("_typename").get<std::string>().c_str(), size);
+            } else if (size > clones->GetSize()) {
+               Error("JsonReadCollection","TClonesArray size %d smaller than required %d\n", clones->GetSize(), size);
+               return;
+            }
+         }
+         objClass = clones->GetClass();
+         subobj = clones->ConstructedAt(n);
+      }
+
+      subobj = JsonReadObject(subobj, objClass, &readClass);
 
       PopStack();
+
+      if (clones) continue;
 
       if (!subobj || !readClass) subobj = nullptr; else
       if (readClass->GetBaseClassOffset(TObject::Class()) != 0) {
@@ -1410,7 +1431,6 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
       }
 
       TObject *tobj = static_cast<TObject *>(subobj);
-
 
       if (map) {
          PushStackR(&arr.at(n).at("second"));
@@ -1427,17 +1447,13 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
          }
 
          map->Add(tobj, static_cast<TObject *>(subobj2));
-
-         continue;
-      }
-
-      if (lst) {
+      } else if (lst) {
          std::string opt = json->at("opt").at(n).get<std::string>();
          lst->Add(tobj, opt.c_str());
-         continue;
+      } else {
+         // generic method, all kinds of TCollection should work
+         col->Add(tobj);
       }
-
-      col->Add(tobj);
    }
 }
 
