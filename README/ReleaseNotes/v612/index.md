@@ -115,6 +115,11 @@ Moreover, this RW lock tries to be fair with writers, giving them the possibilit
   collection->UseRWLock();
 ```
 all operations on the collection will take the read or write lock when needed, currently they shared the global lock (ROOT::gCoreMutex).
+
+### Interpreter
+
+- cling's LLVM is upgraded to version 5.0
+- All of cling's patches to llvm have been upstreamed.
 - The interpreter-related lock is now locking only the compilation step, not the execution step. This reduces the scope for lock contention. Most significantly, it enables the use of concurrency on the prompt!
 
 
