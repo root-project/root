@@ -1138,7 +1138,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    stack->fAccObjects = special_kind < ROOT::kSTLend;
 
    if (special_kind == json_TCollection)
-      JsonStreamCollection((TCollection *)obj, cl);
+      JsonWriteCollection((TCollection *)obj, cl);
    else
       ((TClass *)cl)->Streamer((void *)obj, *this);
 
@@ -1297,9 +1297,9 @@ void *TBufferJSON::JsonReadAny(JSONObject_t node, void *obj, TClass **cl)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// store content of collection
+/// store content of ROOT collection
 
-void TBufferJSON::JsonStreamCollection(TCollection *col, const TClass *)
+void TBufferJSON::JsonWriteCollection(TCollection *col, const TClass *)
 {
    AppendOutput(",", "\"name\"");
    AppendOutput(fSemicolon.Data());
@@ -1312,7 +1312,7 @@ void TBufferJSON::JsonStreamCollection(TCollection *col, const TClass *)
    AppendOutput("[");
 
    bool islist = col->InheritsFrom(TList::Class());
-   TMap *map = 0;
+   TMap *map = nullptr;
    if (col->InheritsFrom(TMap::Class()))
       map = dynamic_cast<TMap *>(col);
 
@@ -1325,7 +1325,7 @@ void TBufferJSON::JsonStreamCollection(TCollection *col, const TClass *)
    TIter iter(col);
    TObject *obj;
    Bool_t first = kTRUE;
-   while ((obj = iter()) != 0) {
+   while ((obj = iter()) != nullptr) {
       if (!first)
          AppendOutput(fArraySepar.Data());
 
@@ -1368,6 +1368,79 @@ void TBufferJSON::JsonStreamCollection(TCollection *col, const TClass *)
    }
    fValue.Clear();
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// read content of ROOT collection
+
+void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
+{
+   TList *lst = nullptr;
+   TMap *map = nullptr;
+   if (col->InheritsFrom(TList::Class()))
+      lst = dynamic_cast<TList *>(col);
+   if (col->InheritsFrom(TMap::Class()))
+      map = dynamic_cast<TMap *>(col);
+
+   nlohmann::json *json = (nlohmann::json *) Stack()->fNode;
+
+   std::string name = json->at("name");
+   col->SetName(name.c_str());
+
+   nlohmann::json &arr = json->at("arr");
+   int size = arr.size();
+
+   for (int n=0;n<size;++n) {
+      nlohmann::json *subelem = &arr.at(n);
+
+      if (map) subelem = &subelem->at("first");
+
+      PushStackR(subelem);
+
+      TClass *readClass = nullptr;
+
+      void *subobj = JsonReadObject(nullptr, nullptr, &readClass);
+
+      PopStack();
+
+      if (!subobj || !readClass) subobj = nullptr; else
+      if (readClass->GetBaseClassOffset(TObject::Class()) != 0) {
+         Error("JsonReadCollection", "Try to add object %s not derived from TObject", readClass->GetName());
+         subobj = nullptr;
+      }
+
+      TObject *tobj = static_cast<TObject *>(subobj);
+
+
+      if (map) {
+         PushStackR(&arr.at(n).at("second"));
+
+         readClass = nullptr;
+         void *subobj2 = JsonReadObject(nullptr, nullptr, &readClass);
+
+         PopStack();
+
+         if (!subobj2 || !readClass) subobj2 = nullptr; else
+         if (readClass->GetBaseClassOffset(TObject::Class()) != 0) {
+            Error("JsonReadCollection", "Try to add object %s not derived from TObject", readClass->GetName());
+            subobj2 = nullptr;
+         }
+
+         map->Add(tobj, static_cast<TObject *>(subobj2));
+
+         continue;
+      }
+
+      if (lst) {
+         std::string opt = json->at("opt").at(n).get<std::string>();
+         lst->Add(tobj, opt.c_str());
+         continue;
+      }
+
+      col->Add(tobj);
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object from current JSON node
@@ -1498,7 +1571,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    // either prepare data before streamer and tweak basic function which are reading values like UInt32_t
    // or try reimplement custom streamer here
 
-   if (jsonClass == TObject::Class()) {
+   if ((jsonClass == TObject::Class()) || (jsonClass == TRef::Class())) {
       // for TObject we reimplement custom streamer - it is much easier
 
       if (gDebug > 1)
@@ -1508,12 +1581,16 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
       UInt_t uid = json->at("fUniqueID").get<unsigned>();
       UInt_t bits = json->at("fBits").get<unsigned>();
-      // UInt32_t pid = json["fPID"].get<unsigned>();
+      // UInt32_t pid = json->at("fPID").get<unsigned>();
 
       tobj->SetUniqueID(uid);
       // there is no method to set all bits directly - do it one by one
       for (unsigned n=0;n<32;n++)
          tobj->SetBit(n, (bits & BIT(n)) != 0);
+
+   } else if (special_kind == json_TCollection) {
+
+      JsonReadCollection((TCollection *) obj, jsonClass);
 
    } else {
 
@@ -4071,8 +4148,8 @@ Int_t TBufferJSON::WriteClones(TClonesArray *a, Int_t /*nobjects*/)
 {
    Info("WriteClones", "Not yet tested");
 
-   if (a != 0)
-      JsonStreamCollection(a, a->IsA());
+   if (a)
+      JsonWriteCollection(a, a->IsA());
 
    return 0;
 }

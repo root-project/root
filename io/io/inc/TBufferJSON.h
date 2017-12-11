@@ -451,7 +451,9 @@ protected:
 
    void             JsonWriteObject(const void *obj, const TClass *objClass, Bool_t check_map = kTRUE);
 
-   void             JsonStreamCollection(TCollection *obj, const TClass *objClass);
+   void             JsonWriteCollection(TCollection *obj, const TClass *objClass);
+
+   void             JsonReadCollection(TCollection *obj, const TClass *objClass);
 
    void            *JsonReadAny(JSONObject_t node, void *obj, TClass **cl);
 
