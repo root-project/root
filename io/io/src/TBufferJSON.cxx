@@ -266,14 +266,15 @@ public:
    Int_t fLevel;               //! indent level
    TArrayIndexProducer *fIndx; //! producer of ndim indexes
 
-   JSONObject_t fNode;            //! reading JSON node
+   JSONObject_t         fNode;     //! reading JSON node
    Int_t                fStlIndx;  //! index of object in STL container
+   Int_t                fStlMap;   //! special iterator over STL map::key members
    Version_t            fClVersion; //! keep actual class version, workaround for ReadVersion in custom streamer
 
    TJSONStackObj()
       : TObject(), fInfo(nullptr), fElem(nullptr), fIsStreamerInfo(kFALSE), fIsElemOwner(kFALSE),
         fIsPostProcessed(kFALSE), fIsObjStarted(kFALSE), fAccObjects(kFALSE), fValues(), fLevel(0), fIndx(nullptr),
-        fNode(nullptr), fStlIndx(-1), fClVersion(0)
+        fNode(nullptr), fStlIndx(-1), fStlMap(-1), fClVersion(0)
    {
       fValues.SetOwner(kTRUE);
    }
@@ -315,6 +316,23 @@ public:
       }
 
       return indx;
+   }
+
+   Bool_t IsStl() const { return fStlIndx>=0; }
+
+   nlohmann::json *GetStlNode()
+   {
+      nlohmann::json *json = (nlohmann::json *) fNode;
+      if (!fNode || (fStlIndx<0)) return json;
+      json = &(json->at(fStlIndx++));
+      if (fStlMap < 0) return json;
+      if (fStlMap > 0) {
+         fStlMap = 0;
+         return &(json->at("second"));
+      }
+      --fStlIndx; // return counter back to read second element from same node
+      ++fStlMap;
+      return &(json->at("first"));
    }
 
 };
@@ -1362,16 +1380,11 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    if (!stack || !stack->fNode)
       return obj;
 
-   nlohmann::json *json = (nlohmann::json *)stack->fNode;
+   Bool_t process_stl = stack->IsStl();
+   nlohmann::json *json = stack->GetStlNode();
 
    // check if null pointer
    if (json->is_null()) return nullptr;
-
-   Bool_t process_stl = (stack->fStlIndx >= 0);
-   if (process_stl) {
-      json = &(json->at(stack->fStlIndx++));
-      if (json->is_null()) return nullptr; // check null again
-   }
 
    // enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
    Int_t special_kind = JsonSpecialClass(objClass);
@@ -1500,7 +1513,11 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    } else {
 
       // special handling of STL which coded into arrays
-      if ((special_kind > 0) && (special_kind < ROOT::kSTLend)) stack->fStlIndx = 0;
+      if ((special_kind > 0) && (special_kind < ROOT::kSTLend)) {
+         stack->fStlIndx = 0;
+         if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
+             (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap)) stack->fStlMap = 0;
+      }
 
       // workaround for missing version in JSON structures
       stack->fClVersion = jsonClass->GetClassVersion();
@@ -1510,6 +1527,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       stack->fClVersion = 0;
 
       stack->fStlIndx = -1; // reset STL index for itself to prevent looping
+      stack->fStlMap = -1;
    }
 
    // return back stack position
@@ -3260,10 +3278,10 @@ void TBufferJSON::StreamObject(void *obj, const TClass *cl, const TClass * /* on
 }
 
 
-#define JsonReadBasic(arg, cast_type)                              \
-   TJSONStackObj *stack = Stack();                                 \
-   if (stack && stack->fNode)                                      \
-      arg = ((nlohmann::json *)stack->fNode)->get<cast_type>();
+#define JsonReadBasic(arg, cast_type)                         \
+   TJSONStackObj *stack = Stack();                            \
+   if (stack && stack->fNode)                                 \
+      arg = stack->GetStlNode()->get<cast_type>();
 
 // read basic, but first check if values prepend
 #define JsonReadBasicMore(arg, cast_type)                          \
@@ -3274,18 +3292,12 @@ void TBufferJSON::StreamObject(void *obj, const TClass *cl, const TClass * /* on
       stack->fValues.Remove(str);                                  \
       delete str;                                                  \
    } else if (stack && stack->fNode)                               \
-      arg = ((nlohmann::json *)stack->fNode)->get<cast_type>();
+      arg = stack->GetStlNode()->get<cast_type>();
 
 
 
 #define JsonReadString(arg)                                        \
-   TJSONStackObj *stack = Stack();                                 \
-   if (stack && stack->fNode) {                                    \
-      nlohmann::json *json = ((nlohmann::json *)stack->fNode);     \
-      if (stack->fStlIndx >= 0)                                    \
-         json = &(json->at(stack->fStlIndx++));                    \
-      arg = json->get<std::string>();                              \
-   }
+   arg = Stack()->GetStlNode()->get<std::string>();
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads Bool_t value from buffer
