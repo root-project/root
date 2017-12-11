@@ -41,6 +41,12 @@ The following people have contributed to this new version:
  Stefan Wunsch, KIT,\
  Omar Zapata
 
+## General News
+
+This release now supports building with C++17 enabled using either libstdc++ or
+libc++. This requires Clang >= 5.0, or GCC >= 7.3.0. At the date of this
+release, GCC 7.2.0 still does not provide full support to compile ROOT with C++17.
+
 ## Removed interfaces
 
 The following interfaces have been removed, after deprecation in v6.10.
@@ -156,6 +162,14 @@ where the last argument of WriteObject tells the buffer do *not* remember this o
    features.Set(ROOT::Experimental::EIOFeatures::kGenerateOffsetMap);
    ttree_ref.SetIOFeatures(features);
    ```
+- Added `GetAutoSave()` and `SetAutoSave()` methods to `TBufferMerger`, to allow
+  it to accumulate several buffers in memory before merging, to reduce the
+  amount of compression work done due to `TTree` metadata.
+
+- Added a non-blocking callback mechanism to `TBufferMerger` to allow users to
+  control the rate at which data is pushed into the merging queue. The callback
+  mechanism can be used, for example, to launch tasks asynchronously whenever a
+  buffer is done processing.
 
 ## TTree Libraries
 
@@ -337,7 +351,7 @@ large TClonesArray where each element contains another small vector container.
 
 ## JavaScript ROOT
 
-Upgrade JSROOT to v5.3.1. Following new features implemented: 
+Upgrade JSROOT to v5.3.1. Following new features implemented:
 
 - New supported classes:
     - TGraphPolar
@@ -459,7 +473,9 @@ Bugfixes:
   - `rootls` has been extended.
     - option `-l` displays the year
     - option `-t` displays all details of 'THnSparse'
-
+  - `rootcp` bug fixes ([ROOT-8528](https://sft.its.cern.ch/jira/browse/ROOT-8528))
+    - Now copies only the latest version of each object instead of copying all
+      versions in wrong order.
 
 ## Class Reference Guide
   - The list of libraries needed by each class is displayed as a diagram.
