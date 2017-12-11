@@ -299,7 +299,12 @@ large TClonesArray where each element contains another small vector container.
   - When a LEGO plot was drawn with Theta=90, the X and Y axis were misplaced.
 
 ## Geometry Libraries
-
+  - Added system of units and physical constants matching the CLHEP port to Geant4, adapted to ROOT by Marko Petric.
+  - Computing radiation length and nuclear interaction length for mixtures as in Geant4 to have
+    numeric matching of average properties.
+  - Added support for reading region definition and production cuts for e+, e-, gamma, p
+    from GDML files
+  - Added support for reading/writing parts of the geometry tree to GDML (Markus Frank)
 
 ## Database Libraries
 
