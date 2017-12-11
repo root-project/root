@@ -1620,7 +1620,7 @@ TListOfFunctions *TROOT::GetGlobalFunctions()
 
 TCollection *TROOT::GetListOfFunctionOverloads(const char* name) const
 {
-   return ((TListOfFunctions*)fFunctions)->GetListForObject(name);
+   return ((TListOfFunctions*)fGlobalFunctions)->GetListForObject(name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
