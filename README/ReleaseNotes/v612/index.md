@@ -114,7 +114,7 @@ Moreover, this RW lock tries to be fair with writers, giving them the possibilit
   collection->UseRWLock();
 ```
 all operations on the collection will take the read or write lock when needed, currently they shared the global lock (ROOT::gCoreMutex).
-- The interpreter-related lock is now locking only the compilation step, not the execution step. This reduces the scope for lock contention.
+- The interpreter-related lock is now locking only the compilation step, not the execution step. This reduces the scope for lock contention. Most significantly, it enables the use of concurrency on the prompt!
 
 
 ## I/O Libraries
