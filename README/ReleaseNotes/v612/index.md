@@ -24,6 +24,7 @@ The following people have contributed to this new version:
  Gerri Ganis, CERN/SFT,\
  Andrei Gheata, CERN/SFT,\
  Enrico Guiraud, CERN/SFT,\
+ Raphael Isemann, Chalmers Univ. of Tech.,\
  Sergey Linev, GSI,\
  Timur Pocheptsov, CERN/SFT,\
  Pere Mato, CERN/SFT,\
