@@ -13,8 +13,8 @@ For more information, see:
 
 The following people have contributed to this new version:
 
-Kim Albertsson, CERN, \
-Guilherme Amadio, CERN/SFT,\
+ Kim Albertsson, CERN,\
+ Guilherme Amadio, CERN/SFT,\
  Bertrand Bellenot, CERN/SFT,\
  Brian Bockelman, UNL,\
  Rene Brun, CERN/SFT,\
@@ -29,7 +29,7 @@ Guilherme Amadio, CERN/SFT,\
  Pere Mato, CERN/SFT,\
  Lorenzo Moneta, CERN/SFT,\
  Axel Naumann, CERN/SFT,\
- Simon Pfreundschuh, \
+ Simon Pfreundschuh,\
  Danilo Piparo, CERN/SFT,\
  Fons Rademakers, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
@@ -37,8 +37,8 @@ Guilherme Amadio, CERN/SFT,\
  Peter van Gemmeren, ANL,\
  Vassil Vassilev, Fermilab/CMS,\
  Xavier Valls Pla, CERN/UJI, \
- Wouter Verkerke, NIKHEF/Atlas, RooFit, \
- Stefan Wunsch, KIT, \
+ Wouter Verkerke, NIKHEF/Atlas, RooFit,\
+ Stefan Wunsch, KIT,\
  Omar Zapata
 
 ## Removed interfaces
