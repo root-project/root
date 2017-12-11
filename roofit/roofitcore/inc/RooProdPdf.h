@@ -162,7 +162,7 @@ protected:
 
   mutable RooAICRegistry _genCode ; //! Registry of composite direct generator codes
 
-  mutable RooArgSet* _curNormSet ; //!
+  mutable RooArgSet* _curNormSet = nullptr; //!
   Double_t _cutOff ;       //  Cutoff parameter for running product
   RooListProxy _pdfList ;  //  List of PDF components
   RooLinkedList _pdfNSetList ; // List of PDF component normalization sets
