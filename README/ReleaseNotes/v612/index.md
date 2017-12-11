@@ -47,11 +47,7 @@ The following interfaces have been removed, after deprecation in v6.10.
 
 - Remove the deprecated `TSelectorCint.h` and `TSelectorCint.cxx`.
 - Remove the deprecated `Riosfwd.h` and `Rtypeinfo.h`.
-
-
-### TTreeReader
-
-`TTreeReader::SetLastEntry()` was replaced by `TTreeReader::SetEntriesRange()`.
+- `TTreeReader::SetLastEntry()` was replaced by `TTreeReader::SetEntriesRange()`.
 
 
 
