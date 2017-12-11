@@ -503,6 +503,8 @@ Bugfixes:
 - graphs/timeSeriesFromCSV_TDF.C illustrates a time axis on a TGraph with text-data read by `TDataFrame`.
 - dataframe/tdf013_InspectAnalysis.C shows how to display incremental snapshots of `TDataFrame` analysis results in a `TBrowser`
 - dataframe/tdf014_CSVDataSource.C shows reading text-data (comma separated) using a `TDataFrame`
+- dataframe/tdf012_DefinesAndFiltersAsStrings.C shows how to use jitted defines and filters by calculating pi
+  from checking how many randomly generated points in the unit square fall inside a unit circle
 - most `TDataFrame` tutorials are now provided both in C++ and python
 
 ## Command line tools
