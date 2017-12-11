@@ -501,7 +501,9 @@ Bugfixes:
 - multicore/mt303_AsyncSimple.C explains uses of `Async()` and `TFuture`.
 - multicore/mt304_fillHistos.C shows the new auto-binning mechanism.
 - graphs/timeSeriesFromCSV_TDF.C illustrates a time axis on a TGraph with text-data read by `TDataFrame`.
-- dataframe/tdf014_CSVDataSource.C shows reading text-data (comma separated) using a `TDataFrame`.
+- dataframe/tdf013_InspectAnalysis.C shows how to display incremental snapshots of `TDataFrame` analysis results in a `TBrowser`
+- dataframe/tdf014_CSVDataSource.C shows reading text-data (comma separated) using a `TDataFrame`
+- most `TDataFrame` tutorials are now provided both in C++ and python
 
 ## Command line tools
   - `rootls` has been extended.
