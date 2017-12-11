@@ -354,4 +354,5 @@ large TClonesArray where each element contains another small vector container.
 
 ## Build, Configuration and Testing Infrastructure
 
-
+This is the last release with the configure/make-based build system. It will
+be removed; please migrate to the CMake-based build system.
