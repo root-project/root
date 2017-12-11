@@ -340,6 +340,114 @@ large TClonesArray where each element contains another small vector container.
 
 ## JavaScript ROOT
 
+Upgrade JSROOT to v5.3.1. Following new features implemented: 
+
+- New supported classes:
+    - TGraphPolar
+    - TGraphTime
+    - TSpline3
+    - TSpline5
+    - TPolyLine3D
+    - TPolyMarker
+    - TEfficiency
+    - TH1K
+- New supported options:
+    * "PFC" - auto fill color (histograms and graphs)
+    * "PLC" - auto line color
+    * "PMC" - auto marker color
+    * "A"  - fully disables axes drawing for histograms painters
+    * "TEXT" - for TH2Poly
+    * "SAMES" - draw stat box for superimposed histograms
+    * "NOCOL" - ignore stored in the TCanvas colors list
+    * "NOPAL" - ignore stored in the TCanvas color palette
+- Improvements in existing painters:
+     - use color palette stored in the TCanvas
+     - draw stats box when really required
+     - let resize frames and paves in all eight directions
+     - support lines, boxes and arbitrary text positions in TPaveText
+     - automatic title positioning of vertical axis when fTitleOffset==0
+     - when pad.fTickx/y==2 draw axes labels on opposite side
+     - editing of TGraph objects - moving of the graph bins
+     - draw X/Y/Z axis titles in lego plots
+     - use canvas Theta/Phi angles to set initial camera position in 3D plots
+- New TLatex processor supports most ROOT features, still MathJax can be used
+- New X/Y projections display for TH2 histograms (aka TH2::SetShowProjectionX/Y)
+- New in geometry viewer:
+    - provide shape parameters in TGeo tooltips
+    - let inspect selected TGeoNode
+    - provide text info when geometry drawing takes too long
+- Change in JSROOT.draw functionality. Now valid painter instance can be only
+   obtained via call-back - forth argument of JSROOT.draw() function.
+- Use latest three.js r86 with improved Projector and CanvasRenderer
+   Still use own SVGRenderer which supported direct SVG text dump
+- Introduce openui5 components for webgui functionality
+- In all sources specify "use strict" directive
+- Basic JSROOT functionality can be used in Node.js:
+       var jsroot = require("path/to/JSRootCore.js");
+   One could parse ROOT JSON, read binary ROOT files (local and remote) and produce SVG.
+- Implement dropping of TTree object on the geometry drawing.
+   This automatically invokes extract_geo_tracks() function, which
+   should extract TGeoTracks from provided TTree.
+   Example can be found in demo/alice_esd.js and in api.htm.
+- Implement projection of geometry on given plane.
+   One could reuse drawing of geometry in other div (should be drawn with main option).
+   In control GUI one could change position of the projection plane
+- One of the TGeo drawing can be assigned as main. When same object drawn next time,
+   its drawing will be derived from the main. Useful for geometry projections.
+   Also all tracks and hits will be imported from main drawing.
+- Let change background color of geo drawing.
+- One can change web browser title, providing &title="any string" in URL.
+- Introduce event status line, which is similar to ROOT TCanvas.
+   Shown information similar to output in tooltip.
+   One can enable both tooltips and status line at the same time.
+- Introduce JSROOT.GEO.build function to create three.js model for
+   any supported TGeo class. Such model can be inserted in any three.js scene
+   independent from normal JSROOT drawings.
+- Improve rendering of geometries with transparency. Use EVE approach, when transparent
+   objects rendered after opaque and without writing depth buffer. Provide different
+   methods to produce render order for transparent objects.
+- Let specify initial zoom factor for geometry like opt=zoom50.
+- Support TPolyMarker3D class in geo painter.
+- Implement TGeoScaledShape.
+- Limit complexity of composite shape. If it has too many components, only most left is used.
+- When produce canvas or pad screenshot, render 3D objects with SVGRenderer.
+    Allows to combine 2D and 3D objects in same PNG image
+- Improve MathJax.js output. It scales correctly in Firefox, makes correct alignment
+    and works significantly faster.
+- When creating image in SVG format, correctly convert url("#id") references
+
+Bugfixes:
+- Show TH2 projections also when tooltip is disabled
+- use z_handle to format Z-axis labels
+- Support labels on TH3 Z axis
+- TH1 zooming in 3D mode
+- Suppress empty {} in TLatex
+- Add several math symbols for TLatex
+- Font kind 1 is italic times roman
+- Do not let expand parent item in hierarchy
+- Use correct painter to check range
+- Change proper axis attributes in context menu
+- Correctly show axis labels on 3D plot
+- Correctly handle circle (marker kind 24) as marker kind
+- Correct circle drawing with coordinates rounding
+- TLatex #frac and #splitline, adjust vertical position
+- Workaround for y range when fMinimum==fMaximum!=-1111
+- Correct tooltips for graph with marker drawing
+- Support pow(x,n) function in formula
+- Use pad.fFillColor for frame when fFrameFillColor==0
+- Correctly identify horizontal TGaxis with reverse scale
+- Correctly handle negative line width in exclusion
+- Tooltips handling for TF1
+- Potential mix-up in marker attributes handling
+- Unzomming of log scale https://root-forum.cern.ch/t/25889
+- Ignore not-supported options in TMultiGraph https://root-forum.cern.ch/t/25888
+- Correctly use fGridColor from TStyle
+- Prevent error when TPaveText includes TLine or TBox in list of lines
+- Bin errors calculations in TProfile
+- Correctly handle new TF1 parameter coding convention (jsroot#132)
+- Check if pad name can be used as element id (jsroot#133)
+- Adjust title position for vertical axis with fTitleOffset==0
+
 
 ## Tutorials
 
