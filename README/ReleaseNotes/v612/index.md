@@ -248,6 +248,12 @@ large TClonesArray where each element contains another small vector container.
 - Added new options to the histogram fitting interfaces to support explicit parallelization of the fit as well.
 - `TF1` gradient evaluation supports vectorization.
 - Refactor of `TF1` constructors, default initialization of its data members and fixed ambiguous TF1::operator().
+- Added new auto-binning algorithm, referred to as `power-2`, which uses power of 2 bin widths to create bins
+  that are mergeable. The target use-case is support for auto-binning in multi-process or multi-thread execution,
+  e.g. `TDataFrame`, without the need of a synchronization point.
+  The new `power-2` algorithm is activated by setting the new `TH1::kAutoBinPTwo` status bit on the histogram.
+  The tutorial `tutorials/multicore/mt304_fillHistos.C` gives an example of how to use the functionality with
+  `TThreadedObject<TH1D>` . The `power-2` binning is currently available only for 1D histograms.
 
 ## Math Libraries
  - The Fitting functions now support vectorization and parallelization.
