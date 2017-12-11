@@ -990,13 +990,15 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
    if (IsReading()) {
       TJSONStackObj *stack = Stack();
       if (stack && stack->fNode) {
-         nlohmann::json &json = *((nlohmann::json *)stack->fNode);
+         nlohmann::json *json = (nlohmann::json *)stack->fNode;
 
-         if (json.count(elem_name) != 1) {
+         if (json->count(elem_name) != 1) {
             Error("JsonStartElement", "Missing JSON structure for element %s", elem_name);
          } else {
-            nlohmann::json &sub = json[elem_name];
-            stack->fNode = &sub;
+            stack->fNode = &((*json)[elem_name]);
+            if ((gDebug>1) && base_class)
+               Info("JsonStartElement", "Reading baseclass %s from element %s", base_class->GetName(), elem_name);
+
          }
 
       } else {
@@ -1396,9 +1398,6 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    if (json->is_object() && (json->size() == 1) && (json->find("$ref") != json->end())) {
       unsigned refid = json->at("$ref").get<unsigned>();
 
-      if (gDebug>2)
-         Info("JsonReadObject", "Extract object reference %u", refid);
-
       auto elem = fReadMap.find(refid);
       if (elem == fReadMap.end()) {
          Error("JsonReadObject", "Fail to find object for reference %u", refid);
@@ -1407,6 +1406,10 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
       if (readClass)
          *readClass = elem->second.cl;
+
+      if (gDebug>2)
+         Info("JsonReadObject", "Extract object reference %u %p cl:%s expects:%s", refid, elem->second.obj, elem->second.cl->GetName(), (objClass ? objClass->GetName() : "---"));
+
       return elem->second.obj;
    }
 
@@ -1429,29 +1432,21 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       return obj;
    }
 
+   Bool_t isBase = (stack->fElem && objClass) ? stack->fElem->IsBase() : kFALSE; // base class
+
+   if (isBase && (!obj || !objClass)) {
+      Error("JsonReadObject", "No object when reading base class");
+      return obj;
+   }
+
    // from now all operations performed with sub-element,
    // stack should be repaired at the end
    if (process_stl)
       stack = PushStackR(json);
 
-   Bool_t isBase = (stack->fElem && objClass) ? stack->fElem->IsBase() : kFALSE; // base class
-
    TClass *jsonClass = nullptr;
 
-   if (isBase) {
-      // base class has special handling - no additional level and no extra refid
-
-      jsonClass = (TClass *) objClass;
-      if (!obj) {
-         Error("JsonReadObject", "No object when reading base class");
-         if (process_stl) PopStack();
-         return obj;
-      }
-
-      if (gDebug > 1)
-         Info("JsonReadObject", "Reading baseclass %s ptr %p", objClass->GetName(), obj);
-
-   } else if ((special_kind == json_TArray) || ((special_kind > 0) && (special_kind < ROOT::kSTLend))) {
+   if ((special_kind == json_TArray) || ((special_kind > 0) && (special_kind < ROOT::kSTLend))) {
 
       jsonClass = (TClass *) objClass;
 
@@ -1463,6 +1458,16 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       // add to stack array size, which will be extracted before reading array itself by custom TArray streamer
       stack->PushIntValue(json->size());
 
+      if (gDebug > 1)
+         Info("JsonReadObject", "Reading special kind %d %s ptr %p", special_kind, objClass->GetName(), obj);
+
+   } else if (isBase) {
+      // base class has special handling - no additional level and no extra refid
+
+      jsonClass = (TClass *) objClass;
+
+      if (gDebug > 1)
+         Info("JsonReadObject", "Reading baseclass %s ptr %p", objClass->GetName(), obj);
    } else {
 
       std::string clname = json->at("_typename").get<std::string>();
