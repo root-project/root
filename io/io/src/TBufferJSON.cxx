@@ -1368,8 +1368,10 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    if (json->is_null()) return nullptr;
 
    Bool_t process_stl = (stack->fStlIndx >= 0);
-   if (process_stl)
+   if (process_stl) {
       json = &(json->at(stack->fStlIndx++));
+      if (json->is_null()) return nullptr; // check null again
+   }
 
    // enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
    Int_t special_kind = JsonSpecialClass(objClass);
