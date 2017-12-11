@@ -843,13 +843,20 @@ public:
    /// requirements of a *processing function* besides having signature `T(T,T)`
    /// where `T` is the type of column columnName.
    ///
+   /// The returned reduced value of each thread (e.g. the initial value of a sum) is initialized to a
+   /// default-constructed T object. This is commonly expected to be the neutral/identity element for the specific
+   /// reduction operation `f` (e.g. 0 for a sum, 1 for a product). If a default-constructed T does not satisfy this
+   /// requirement, users should explicitly specify an initialization value for T by calling the appropriate `Reduce`
+   /// overload.
+   ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
    TResultProxy<T> Reduce(F f, std::string_view columnName = "")
    {
-      static_assert(std::is_default_constructible<T>::value,
-                    "reduce object cannot be default-constructed. Please provide an initialisation value (initValue)");
+      static_assert(
+         std::is_default_constructible<T>::value,
+         "reduce object cannot be default-constructed. Please provide an initialisation value (redIdentity)");
       return Reduce(std::move(f), columnName, T());
    }
 
@@ -859,11 +866,11 @@ public:
    /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] f A callable with signature `T(T,T)`
    /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
-   /// \param[in] initValue The reduced object is initialised to this value rather than being default-constructed.
+   /// \param[in] redIdentity The reduced object of each thread is initialised to this value.
    ///
    /// See the description of the first Reduce overload for more information.
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   TResultProxy<T> Reduce(F f, std::string_view columnName, const T &initValue)
+   TResultProxy<T> Reduce(F f, std::string_view columnName, const T &redIdentity)
    {
       using arg_types = typename TTraits::CallableTraits<F>::arg_types;
       TDFInternal::CheckReduce(f, arg_types());
@@ -875,7 +882,7 @@ public:
       if (fDataSource)
          TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
                                               arg_types(), *fDataSource);
-      auto redObjPtr = std::make_shared<T>(initValue);
+      auto redObjPtr = std::make_shared<T>(redIdentity);
       using Helper_t = TDFInternal::ReduceHelper<F, T>;
       using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
       auto action = std::make_shared<Action_t>(Helper_t(std::move(f), redObjPtr, fProxiedPtr->GetNSlots()),
@@ -889,13 +896,13 @@ public:
    /// \tparam F The type of the reduce callable. Automatically deduced.
    /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] f A callable with signature `T(T,T)`
-   /// \param[in] initValue The reduced object is initialised to this value rather than being default-constructed
+   /// \param[in] redIdentity The reduced object of each thread is initialised to this value.
    ///
    /// See the description of the first Reduce overload for more information.
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   TResultProxy<T> Reduce(F f, const T &initValue)
+   TResultProxy<T> Reduce(F f, const T &redIdentity)
    {
-      return Reduce(std::move(f), "", initValue);
+      return Reduce(std::move(f), "", redIdentity);
    }
 
    ////////////////////////////////////////////////////////////////////////////
