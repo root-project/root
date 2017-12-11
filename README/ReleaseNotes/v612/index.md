@@ -248,6 +248,17 @@ large TClonesArray where each element contains another small vector container.
 - Added new options to the histogram fitting interfaces to support explicit parallelization of the fit as well.
 - `TF1` gradient evaluation supports vectorization.
 - Refactor of `TF1` constructors, default initialization of its data members and fixed ambiguous TF1::operator().
+- Extend `TFormula` parsing capabilities.
+  - The parsing of arguments for defining parametric function is improved. For example a Gaussian function in y can be defined as `gaus( y , [A], [Mean], [Sigma])`.
+  - One can define the function variables or parameters using another function or an expression. Example: `gaus(x, [A], [m0]*y+[m1], [sigma])`.
+  - Support for function composition in `TFormula`, i.e. a function can be composed from another function, Again, an example: `gaus( f1(x), [A],[Mean],[Sigma])`, where `f1` is a function defined
+  previously.
+- Facilitate using Normalized sums of TF1 objects and convolutions, by adding the `NSUM` and `CONV` operators for TF1 objects built with formula expressions
+  - `TF1("model", "NSUM(gaus , expo)", xmin, xmax)`  will create a function composed of a normalized sum of a gaussian and an exponential.
+  - `TF1("voigt", "CONV(breitwigner, gausn) , -15, 15)` will create a TF1 object made of a convolution between a Breit-Wigner and a Gaussian. 
+- `TFormula` supports vectorization. All the `TF1` objected created with a formula expression can have a vectorized signature using `ROOT::Double_v`: `TF1::EvalPar( ROOT::Double_v * x,
+double * p)`. The vectorization can then be used to speed-up fitting. It is not enabled by default, but it can be enabled by callig  `TF1::SetVectorized(true)` or using the `"VEC"` option in the
+constructor of TF1, when ROOT has been built with VecCore and one vectorization library such as Vc. 
 - Added new auto-binning algorithm, referred to as `power-2`, which uses power of 2 bin widths to create bins
   that are mergeable. The target use-case is support for auto-binning in multi-process or multi-thread execution,
   e.g. `TDataFrame`, without the need of a synchronization point.
@@ -255,12 +266,28 @@ large TClonesArray where each element contains another small vector container.
   The tutorial `tutorials/multicore/mt304_fillHistos.C` gives an example of how to use the functionality with
   `TThreadedObject<TH1D>` . The `power-2` binning is currently available only for 1D histograms.
 
+
 ## Math Libraries
  - The Fitting functions now support vectorization and parallelization.
  - Added padding in the fit data classes for correct loading of SIMD arrays.
- - `TFormula` supports vectorization.
+
 
 ## RooFit Libraries
+
+- Apply several fixes from the ATLAS Higgs combination branch of RooFit. These fixes include
+- fix for computing the contraint normalization. This requires now the option GlobalObservables when creating the NLL.
+- All the `RooAbsPdf::createNLL` used in The RooStats classes have been updated to include the `GlobalObservables` option.
+- Remove the `Roo1DMomentMorphFunction` and replace  it with `RooMomentMorphFunction` and `RooMomentMorphFunctionND`
+
+## TMVA Library
+
+- Improvement and fixes in ROCCurve class.
+- Add support for event weights in the DNN
+- Add in the DNN the option to use a validation data set independent of the training/test set used for training the DNN.
+- Add option to suppress correlation outputs
+- Improvements in the support for multi-class classification.
+- Improvements in the Gradient Boostig Trees
+- Deprecate the TMVA DNN Reference Implementation. Support now only CPU and GPU implementations. 
 
 
 ## 2D Graphics Libraries
