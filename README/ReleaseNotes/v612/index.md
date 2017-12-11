@@ -336,6 +336,13 @@ large TClonesArray where each element contains another small vector container.
 
 ## Tutorials
 
+- xml/xmlreadfile.C shows how to read and parse any xml file, supported by TXMLEngine class.
+- fit/fitNormSum.C shows building of vectorized function and fitting with TF1.
+- multicore/mt303_AsyncSimple.C explains uses of `Async()` and `TFuture`.
+- multicore/mt304_fillHistos.C shows the new auto-binning mechanism.
+- graphs/timeSeriesFromCSV_TDF.C illustrates a time axis on a TGraph with text-data read by `TDataFrame`.
+- dataframe/tdf014_CSVDataSource.C shows reading text-data (comma separated) using a `TDataFrame`.
+
 ## Command line tools
   - `rootls` has been extended.
     - option `-l` displays the year
