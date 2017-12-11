@@ -37,7 +37,7 @@ The following people have contributed to this new version:
  Oksana Shadura, UNL,\
  Arthur Tsang, CERN/SFT, \
  Peter van Gemmeren, ANL,\
- Vassil Vassilev, Princeton Univ.,\
+ Vassil Vassilev, Princeton Univ./CMS,\
  Xavier Valls Pla, CERN/UJI, \
  Wouter Verkerke, NIKHEF/Atlas, RooFit,\
  Stefan Wunsch, KIT,\
