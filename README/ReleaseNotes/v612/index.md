@@ -93,6 +93,7 @@ logarithmic complexity).  You will also see warnings like
    }
 ```
 - ClassDefInline has been enhanced even for some compiled class (without a dictionary).  ClassDefInline can still not be used for class template instance using Double32_t or Float16_t as a template parameter or for class or class template that do not have a public default constructor.
+- ROOT's backport of `std::string_view` has been updated to follow what's available in C++17, notably its `to_string` member function has been removed.
 
 
 ### Thread safety
