@@ -1055,9 +1055,7 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
 /// disable post-processing of the code
 void TBufferJSON::JsonDisablePostprocessing()
 {
-   TJSONStackObj *stack = Stack();
-   if (stack != 0)
-      stack->fIsPostProcessed = kTRUE;
+   Stack()->fIsPostProcessed = kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1483,9 +1481,6 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
    TJSONStackObj *stack = Stack();
 
-   if (!stack || !stack->fNode)
-      return obj;
-
    Bool_t process_stl = stack->IsStl();
    nlohmann::json *json = stack->GetStlNode();
 
@@ -1809,8 +1804,7 @@ void TBufferJSON::DecrementLevel(TVirtualStreamerInfo *info)
 
 TVirtualStreamerInfo *TBufferJSON::GetInfo()
 {
-   TJSONStackObj *stack = Stack();
-   return stack ? stack->fInfo : nullptr;
+   return Stack()->fInfo;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2235,12 +2229,9 @@ Version_t TBufferJSON::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass *cl
    if (bcnt)
       *bcnt = 0;
 
-   if (!cl) {
-      TJSONStackObj *stack = Stack();
-      if (stack && stack->fClVersion) {
-         res = stack->fClVersion;
-         stack->fClVersion = 0;
-      }
+   if (!cl && Stack()->fClVersion) {
+      res = Stack()->fClVersion;
+      Stack()->fClVersion = 0;
    }
 
    if (gDebug > 3)
@@ -3401,11 +3392,10 @@ void TBufferJSON::ReadBool(Bool_t &val)
 
 void TBufferJSON::ReadChar(Char_t &val)
 {
-   TJSONStackObj *stack = Stack();
-   if (stack->fValues.GetLast() >= 0)
-      val = (Char_t) stack->PopIntValue();
+   if (Stack()->fValues.GetLast() >= 0)
+      val = (Char_t) Stack()->PopIntValue();
    else
-      val = stack->GetStlNode()->get<Char_t>();
+      val = Stack()->GetStlNode()->get<Char_t>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3437,11 +3427,10 @@ void TBufferJSON::ReadUShort(UShort_t &val)
 
 void TBufferJSON::ReadInt(Int_t &val)
 {
-   TJSONStackObj *stack = Stack();
-   if (stack->fValues.GetLast() >= 0)
-      val = stack->PopIntValue();
+   if (Stack()->fValues.GetLast() >= 0)
+      val = Stack()->PopIntValue();
    else
-      val = stack->GetStlNode()->get<Int_t>();
+      val = Stack()->GetStlNode()->get<Int_t>();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
