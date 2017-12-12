@@ -988,11 +988,10 @@ void TBufferJSON::AppendOutput(const char *line0, const char *line1)
 void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *base_class)
 {
    const char *elem_name = nullptr;
+   Int_t special_kind = JsonSpecialClass(base_class);
 
-   if (!base_class) {
-      elem_name = elem->GetName();
-   } else {
-      switch (JsonSpecialClass(base_class)) {
+   switch (special_kind) {
+      case 0: if (!base_class) elem_name = elem->GetName(); break;
       case TClassEdit::kVector: elem_name = "fVector"; break;
       case TClassEdit::kList: elem_name = "fList"; break;
       case TClassEdit::kForwardlist: elem_name = "fForwardlist"; break;
@@ -1009,7 +1008,6 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
       case json_TArray: elem_name = "fArray"; break;
       case json_TString:
       case json_stdstring: elem_name = "fString"; break;
-      }
    }
 
    if (!elem_name)
@@ -1023,10 +1021,12 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
          if (json->count(elem_name) != 1) {
             Error("JsonStartElement", "Missing JSON structure for element %s", elem_name);
          } else {
-            stack->fNode = &((*json)[elem_name]);
+            json = &((*json)[elem_name]);
+            stack->fNode = json;
+            if (special_kind == json_TArray)
+               stack->PushIntValue(json->size());
             if ((gDebug>1) && base_class)
                Info("JsonStartElement", "Reading baseclass %s from element %s", base_class->GetName(), elem_name);
-
          }
 
       } else {
@@ -1094,12 +1094,8 @@ Int_t TBufferJSON::JsonSpecialClass(const TClass *cl) const
 
 void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t check_map)
 {
-   // static int  cnt = 0;
-
    if (!cl)
       obj = nullptr;
-
-   // if (cnt++>100) return;
 
    if (gDebug > 0)
       Info("JsonWriteObject", "Object %p class %s check_map %s", obj, cl ? cl->GetName() : "null",
@@ -1536,7 +1532,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
          obj = objClass->New();
 
       if (gDebug > 2)
-         Info("JsonReadObject","Read string from %s", json->dump().c_str());
+         Info("JsonReadObject", "Read string from %s", json->dump().c_str());
 
       if (special_kind == json_stdstring)
          *((std::string *) obj) = json->get<std::string>();
@@ -1618,19 +1614,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    if ((jsonClass == TObject::Class()) || (jsonClass == TRef::Class())) {
       // for TObject we reimplement custom streamer - it is much easier
 
-      if (gDebug > 1)
-         Info("JsonReadObject", "Reading TObject from %s", json->dump().c_str());
-
-      TObject *tobj = (TObject *)obj;
-
-      UInt_t uid = json->at("fUniqueID").get<unsigned>();
-      UInt_t bits = json->at("fBits").get<unsigned>();
-      // UInt32_t pid = json->at("fPID").get<unsigned>();
-
-      tobj->SetUniqueID(uid);
-      // there is no method to set all bits directly - do it one by one
-      for (unsigned n=0;n<32;n++)
-         tobj->SetBit(n, (bits & BIT(n)) != 0);
+      JsonReadTObjectMembers((TObject *)obj, json);
 
    } else if (special_kind == json_TCollection) {
 
@@ -1647,6 +1631,11 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
       // workaround for missing version in JSON structures
       stack->fClVersion = jsonClass->GetClassVersion();
+
+      if (gDebug>3) Info("JsonReadObject", "Calling streamer of class %s", jsonClass->GetName());
+
+      if (isBase && (special_kind==0))
+         Error("JsonReadObject", "Should not be used for reading of base class %s", jsonClass->GetName());
 
       jsonClass->Streamer((void *)obj, *this);
 
@@ -1668,11 +1657,37 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    return obj;
 }
 
+void TBufferJSON::JsonReadTObjectMembers(TObject *tobj, JSONObject_t node)
+{
+   if (!node) node = Stack()->fNode;
+
+   nlohmann::json *json = (nlohmann::json *)node;
+
+   UInt_t uid = json->at("fUniqueID").get<unsigned>();
+   UInt_t bits = json->at("fBits").get<unsigned>();
+   // UInt32_t pid = json->at("fPID").get<unsigned>(); // ignore PID for the moment
+
+   tobj->SetUniqueID(uid);
+   // there is no method to set all bits directly - do it one by one
+   for (unsigned n=0;n<32;n++)
+      tobj->SetBit(BIT(n), (bits & BIT(n)) != 0);
+
+   if (gDebug > 2)
+      Info("JsonReadTObjectMembers", "Reading TObject part bits %u kMustCleanup %d", bits, tobj->TestBit(kMustCleanup));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Read data for specified class
 
 Int_t TBufferJSON::ReadClassBuffer(const TClass *cl, void *ptr, const TClass *)
 {
+   if (cl == TObject::Class()) {
+      // we misuse function to call custom reading node for TObject as baseclass
+      JsonReadTObjectMembers((TObject *)ptr);
+      return 0;
+   }
+
+
    TStreamerInfo *sinfo = (TStreamerInfo *)cl->GetStreamerInfo();
 
    if (gDebug > 1)
@@ -1780,10 +1795,13 @@ void TBufferJSON::DecrementLevel(TVirtualStreamerInfo *info)
    TJSONStackObj *stack = Stack();
 
    if (stack->IsStreamerElement()) {
-      if (gDebug > 3)
-         Info("DecrementLevel", "    Perform post-processing elem: %s", stack->fElem->GetName());
 
-      PerformPostProcessing(stack);
+      if (IsWriting()) {
+         if (gDebug > 3)
+            Info("DecrementLevel", "    Perform post-processing elem: %s", stack->fElem->GetName());
+
+         PerformPostProcessing(stack);
+      }
 
       stack = PopStack(); // remove stack of last element
    }
@@ -1875,6 +1893,9 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
    stack->fIsElemOwner = (number < 0);
 
    JsonStartElement(elem, base_class);
+
+   if (base_class && IsReading())
+      stack->fClVersion = base_class->GetClassVersion();
 
    if ((elem->GetType() == TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop) && (elem->GetArrayDim() > 0)) {
       // array of array, start handling here
@@ -2044,7 +2065,7 @@ void TBufferJSON::ClassMember(const char *name, const char *typeName, Int_t arrs
 
 void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_cl)
 {
-   if (stack->fIsPostProcessed || IsReading())
+   if (stack->fIsPostProcessed)
       return;
 
    const TStreamerElement *elem = stack->fElem;
@@ -3482,6 +3503,9 @@ void TBufferJSON::ReadUShort(UShort_t &val)
 
 void TBufferJSON::ReadInt(Int_t &val)
 {
+   // if (gDebug>3)
+   //   Info("ReadInt", "From the node %s", Stack()->GetStlNode()->dump().c_str());
+
    JsonReadBasicMore(val, Int_t);
 }
 
