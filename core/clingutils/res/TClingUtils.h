@@ -460,7 +460,8 @@ ROOT::ESTLType IsSTLContainer(const clang::FieldDecl &m);
 int IsSTLContainer(const clang::CXXBaseSpecifier &base);
 
 void foreachHeaderInModule(const clang::Module &module,
-                           const std::function<void(const clang::Module::Header &)> &closure);
+                           const std::function<void(const clang::Module::Header &)> &closure,
+                           bool includeDirectlyUsedModules = true);
 
 //______________________________________________________________________________
 const char *ShortTypeName(const char *typeDesc);

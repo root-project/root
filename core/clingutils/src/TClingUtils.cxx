@@ -2558,8 +2558,12 @@ int ROOT::TMetaUtils::IsSTLContainer(const clang::CXXBaseSpecifier &base)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Calls the given lambda on every header in the given module.
+/// includeDirectlyUsedModules designates if the foreach should also loop over
+/// the headers in all modules that are directly used via a `use` declaration
+/// in the modulemap.
 void ROOT::TMetaUtils::foreachHeaderInModule(const clang::Module &module,
-                                             const std::function<void(const clang::Module::Header &)> &closure)
+                                             const std::function<void(const clang::Module::Header &)> &closure,
+                                             bool includeDirectlyUsedModules)
 {
    // Iterates over all headers in a module and calls the closure on each.
 
@@ -2575,10 +2579,29 @@ void ROOT::TMetaUtils::foreachHeaderInModule(const clang::Module &module,
    static_assert(publicHeaderIndex + 1 == maxArrayLength,
                  "'Headers' has changed it's size, we need to update publicHeaderIndex");
 
-   for (std::size_t i = 0; i < publicHeaderIndex; i++) {
-      auto &headerList = module.Headers[i];
-      for (const clang::Module::Header &moduleHeader : headerList) {
-         closure(moduleHeader);
+   // Make a list of modules and submodules that we can check for headers.
+   // We use a SetVector to prevent an infinite loop in unlikely case the
+   // modules somehow are messed up and don't form a tree...
+   llvm::SetVector<const clang::Module *> modules;
+   modules.insert(&module);
+   for (size_t i = 0; i < modules.size(); ++i) {
+      const clang::Module *M = modules[i];
+      for (const clang::Module *subModule : M->submodules())
+         modules.insert(subModule);
+   }
+
+   for (const clang::Module *m : modules) {
+      if (includeDirectlyUsedModules) {
+         for (clang::Module *used : m->DirectUses) {
+            foreachHeaderInModule(*used, closure, true);
+         }
+      }
+
+      for (std::size_t i = 0; i < publicHeaderIndex; i++) {
+         auto &headerList = m->Headers[i];
+         for (const clang::Module::Header &moduleHeader : headerList) {
+            closure(moduleHeader);
+         }
       }
    }
 }
