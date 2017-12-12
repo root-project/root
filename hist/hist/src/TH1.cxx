@@ -3018,6 +3018,8 @@ TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
    TH1 *newth1 = (TH1 *)Clone(newName);
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
+   if (gPad) gPad->IncrementPaletteColor(1, opt);
+
    newth1->AppendPad(option);
    return newth1;
 }
