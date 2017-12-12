@@ -3015,12 +3015,12 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << " public:" << std::endl;
    fout << std::endl;
    fout << "   // constructor" << std::endl;
-   fout << "   " << className << "( std::vector<std::string>& theInputVars ) " << std::endl;
+   fout << "   " << className << "( std::vector<std::string>& theInputVars )" << std::endl;
    fout << "      : IClassifierReader()," << std::endl;
    fout << "        fClassName( \"" << className << "\" )," << std::endl;
    fout << "        fNvars( " << GetNvar() << " )," << std::endl;
    fout << "        fIsNormalised( " << (IsNormalised() ? "true" : "false") << " )" << std::endl;
-   fout << "   {      " << std::endl;
+   fout << "   {" << std::endl;
    fout << "      // the training input variables" << std::endl;
    fout << "      const char* inputVars[] = { ";
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
@@ -3076,9 +3076,9 @@ void TMVA::MethodBase::MakeClass( const TString& theClassFileName ) const
    fout << "   }" << std::endl;
    fout << std::endl;
    fout << "   // the classifier response" << std::endl;
-   fout << "   // \"inputValues\" is a vector of input values in the same order as the " << std::endl;
+   fout << "   // \"inputValues\" is a vector of input values in the same order as the" << std::endl;
    fout << "   // variables given to the constructor" << std::endl;
-   fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const;" << std::endl;
+   fout << "   double GetMvaValue( const std::vector<double>& inputValues ) const override;" << std::endl;
    fout << std::endl;
    fout << " private:" << std::endl;
    fout << std::endl;

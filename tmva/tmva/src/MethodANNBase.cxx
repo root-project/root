@@ -1149,9 +1149,9 @@ void TMVA::MethodANNBase::MakeClassSpecific( std::ostream& fout, const TString& 
    fncName = className+"::OutputActivationFnc";   //zjh
    fOutput->MakeFunction(fout, fncName);//zjh
 
-   fout << "   " << std::endl;
+   fout << std::endl;
    fout << "// Clean up" << std::endl;
-   fout << "inline void " << className << "::Clear() " << std::endl;
+   fout << "inline void " << className << "::Clear()" << std::endl;
    fout << "{" << std::endl;
    fout << "}" << std::endl;
 }
