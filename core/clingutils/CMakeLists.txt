@@ -46,7 +46,7 @@ foreach(dict ${stldicts})
   string(REPLACE "complex" "root_std_complex.h" header ${header})
   string(REPLACE "multi" "" header ${header})
   ROOT_STANDARD_LIBRARY_PACKAGE(${dict}Dict
-                                NO_SOURCES NO_INSTALL_HEADERS
+                                NO_SOURCES NO_INSTALL_HEADERS NO_MODULE
                                 STAGE1
                                 HEADERS ${header}
                                 LINKDEF src/${dict}Linkdef.h
