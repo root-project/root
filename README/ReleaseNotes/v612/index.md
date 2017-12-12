@@ -565,6 +565,7 @@ be removed; please migrate to the CMake-based build system.
     * [ROOT-8834] - Several CTests does not test current ROOT
     * [ROOT-8840] - CMake 3.9-rc3 complains
     * [ROOT-8853] - TMemFile may leave gDirectory of threads in an odd state
+    * [ROOT-8863] - Root include path not working after using gSystem->ChangeDirectory
     * [ROOT-8892] - ROOT classical build cannot use external Unuran
     * [ROOT-8896] - ROOT's string_view cannot be <<'ed to std::cout
     * [ROOT-8902] - ROOT's parallel build is broken if more than ~4 threads are used.
@@ -586,6 +587,7 @@ be removed; please migrate to the CMake-based build system.
     * [ROOT-8979] - Snapshot only copies a single element of an array to the new TTree
     * [ROOT-8981] - Python3.x and cmdLineUtils.py
     * [ROOT-8986] - Misleading naming & description of TArray*::AddAt() method
+    * [ROOT-8991] - Cling exports buggy include paths to AcLIC
     * [ROOT-8995] - Read branch error in TTree::GetEntry
     * [ROOT-9007] - PyROOT segfault in MethodProxy.cxx for ROOT 6.10/02
     * [ROOT-9015] - Root complication fails with XCode 9 in MacOS 10.12.6
