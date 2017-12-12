@@ -48,11 +48,18 @@ public:
    static TObject *ConvertFromJSON(const char *str);
    static void    *ConvertFromJSONAny(const char *str, TClass **cl = 0);
 
+   template<class T>
+   static TString ToJSON(const T *obj, Int_t compact = 0)
+   {
+      return ConvertToJSON(obj, TBuffer::GetClass(typeid(T)), compact);
+   }
 
    template<class T>
-   static TString ToJSON(const T* obj, Int_t compact = 0)
+   static Bool_t FromJSON(T *&obj, const char *json)
    {
-      return ConvertToJSON(obj,TBuffer::GetClass(typeid(T)), compact);
+      if (obj) return kFALSE;
+      obj = (T *) ConvertFromJSONChecked(json, TBuffer::GetClass(typeid(T)));
+      return obj != nullptr;
    }
 
    // suppress class writing/reading
@@ -415,6 +422,8 @@ protected:
    virtual void     WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse);
 
    // end redefined protected virtual functions
+
+   static void     *ConvertFromJSONChecked(const char *str, const TClass *expectedClass);
 
    TString          JsonWriteMember(const void *ptr, TDataMember *member, TClass *memberClass, Int_t arraylen);
 

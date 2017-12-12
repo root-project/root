@@ -13,7 +13,7 @@
 \class TBufferJSON
 \ingroup IO
 
-Class for serializing object into JavaScript Object Notation (JSON) format.
+Class for serializing object to and from JavaScript Object Notation (JSON) format.
 It creates such object representation, which can be directly
 used in JavaScript ROOT (JSROOT) for drawing.
 
@@ -23,12 +23,20 @@ There are certain limitations for classes with custom streamers,
 which should be equipped specially for this purposes (see TCanvas::Streamer()
 as example).
 
-To perform conversion, one should use TBufferJSON::ConvertToJSON method like:
+To perform conversion into JSON, one should use TBufferJSON::ToJSON method:
 ~~~{.cpp}
-   TH1* h1 = new TH1I("h1","title",100, 0, 10);
+   TH1 *h1 = new TH1I("h1", "title", 100, 0, 10);
    h1->FillRandom("gaus",10000);
-   TString json = TBufferJSON::ConvertToJSON(h1);
+   TString json = TBufferJSON::ToJSON(h1);
 ~~~
+
+To use reconstruct object from the JSON string, one should do:
+~~~{.cpp}
+   TH1 *hnew = nullptr;
+   TBufferJSON::FromJSON(hnew, json);
+   if (hnew) hnew->Draw("colz");
+~~~
+
 */
 
 #include "TBufferJSON.h"
@@ -706,19 +714,39 @@ void *TBufferJSON::ConvertFromJSONAny(const char *str, TClass **cl)
 
    nlohmann::json docu = nlohmann::json::parse(str);
 
-   if (docu.is_null())
+   if (docu.is_null() || !docu.is_object())
       return nullptr;
-
-   if (!docu.is_object()) {
-      // Error("ConvertFromJSONAny", "Only JSON objects are supported");
-      return nullptr;
-   }
 
    TBufferJSON buf(TBuffer::kRead);
 
-   void *obj = buf.JsonReadAny(&docu, 0, cl);
+   void *obj = buf.JsonReadAny(&docu, nullptr, cl);
 
    return obj;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read objects from JSON, one can reuse existing object
+
+void *TBufferJSON::ConvertFromJSONChecked(const char *str, const TClass *expectedClass)
+{
+   if (!expectedClass) return nullptr;
+
+   TClass *resClass = nullptr;
+
+   void *res = ConvertFromJSONAny(str, &resClass);
+
+   if (!res || !resClass) return nullptr;
+
+   if (resClass == expectedClass) return res;
+
+   Int_t offset = resClass->GetBaseClassOffset(expectedClass);
+   if (offset<0) {
+      printf("TBufferJSON::ConvertFromJSONChecked expected class %s is not base for read class %s", expectedClass->GetName(), resClass->GetName());
+      resClass->Destructor(res);
+      return nullptr;
+   }
+
+   return (char *) res - offset;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
