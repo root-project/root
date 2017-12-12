@@ -1,11 +1,12 @@
 /* adler32.c -- compute the Adler-32 checksum of a data stream
- * Copyright (C) 1995-2011 Mark Adler
+ * Copyright (C) 1995-2011, 2016 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  */
 
 /* @(#) $Id$ */
 
 #include "zutil.h"
+#include "stdint.h"
 
 #ifdef ZLIB_ENABLE_SIMD
 #include <xmmintrin.h>
@@ -80,7 +81,6 @@ static uLong adler32_combine_ OF((uLong adler1, uLong adler2, z_off64_t len2));
 /* ========================================================================= */
 uLong ZEXPORT adler32_default(uLong adler, const Bytef *buf, uInt len)
 {
-
     unsigned long sum2;
     unsigned n;
 
@@ -146,10 +146,12 @@ uLong ZEXPORT adler32_default(uLong adler, const Bytef *buf, uInt len)
     return adler | (sum2 << 16);
 }
 
+#if defined ZLIB_ENABLE_SIMD
+
+// There is no __builtin_expect() in VS
 #define likely(x)       __builtin_expect(!!(x), 1)
 #define unlikely(x)     __builtin_expect(!!(x), 0)
 
-#if defined ZLIB_ENABLE_SIMD
 /* ========================================================================= */
  __attribute__ ((target ("sse4.2")))
 uLong ZEXPORT adler32_sse42(uLong adler, const Bytef *buf, uInt len)
