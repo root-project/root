@@ -470,7 +470,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     endif()
   endif(APPLE)
 
-  set(excluded_headers RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
+  set(excluded_headers RConfig.h RVersion.h RtypesImp.h
                         Rtypes.h RtypesCore.h TClassEdit.h
                         TIsAProxy.h TVirtualIsAProxy.h
                         DllImport.h TGenericClassInfo.h
