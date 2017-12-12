@@ -59,6 +59,7 @@ The following people have contributed to this new version:
    - Change the `TGraph` default fill color to white to avoid black box in legend
      when `gPad->BuildLegend()` is called.
    - Auto-coloring for TF1 (drawing options PFC, PLC and PMC) is implemented.
+   - Auto-coloring for TH1::DrawCopy (drawing options PFC, PLC and PMC) is implemented.
    - Improve the option management in `TF1::Draw` to allow to combine the option
      `SAME` with other drawing options.
 
