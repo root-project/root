@@ -427,10 +427,9 @@ protected:
 
    TString          JsonWriteMember(const void *ptr, TDataMember *member, TClass *memberClass, Int_t arraylen);
 
-   TJSONStackObj   *PushStack(Int_t inclevel = 0);
-   TJSONStackObj   *PushStackR(JSONObject_t current, Bool_t simple = kTRUE);
+   TJSONStackObj   *PushStack(Int_t inclevel = 0, JSONObject_t readnode = nullptr);
    TJSONStackObj   *PopStack();
-   TJSONStackObj   *Stack(Int_t depth = 0);
+   TJSONStackObj   *Stack();
 
    void             WorkWithClass(TStreamerInfo *info, const TClass *cl = nullptr);
    void             WorkWithElement(TStreamerElement *elem, Int_t);
