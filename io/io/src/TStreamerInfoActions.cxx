@@ -257,6 +257,14 @@ namespace TStreamerInfoActions
       return 0;
    }
 
+   INLINE_TEMPLATE_ARGS Int_t ReadTextTObjectBase(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      // action required to call custom code for TObject as base class
+      void *x = (void*)( ((char*)addr) + config->fOffset );
+      buf.ReadClassBuffer(TObject::Class(), x, TObject::Class());
+      return 0;
+   }
+
    INLINE_TEMPLATE_ARGS Int_t ReadTextTNamed(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       void *x = (void*)( ((char*)addr) + config->fOffset );
@@ -3344,11 +3352,17 @@ void TStreamerInfo::AddReadTextAction(TStreamerInfoActions::TActionSequence *rea
 
    switch (compinfo->fType) {
       case TStreamerInfo::kTObject:
-         readSequence->AddAction( ReadTextTObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+         if (element->IsBase())
+            readSequence->AddAction( ReadTextTObjectBase, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+         else
+            readSequence->AddAction( ReadTextTObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
          break;
 
       case TStreamerInfo::kTNamed:
-         readSequence->AddAction( ReadTextTNamed, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+         if (element->IsBase())
+            generic = kTRUE; // for the base class one cannot call TClass::Streamer() as performed for the normal object
+         else
+            readSequence->AddAction( ReadTextTNamed, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
          break;
 
       case TStreamerInfo::kObject:   // Class      derived from TObject

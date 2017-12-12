@@ -464,6 +464,8 @@ protected:
 
    void             JsonReadCollection(TCollection *obj, const TClass *objClass);
 
+   void             JsonReadTObjectMembers(TObject *obj, JSONObject_t node = nullptr);
+
    void            *JsonReadAny(JSONObject_t node, void *obj, TClass **cl);
 
    void            *JsonReadObject(void *obj, const TClass *objClass = nullptr, TClass **readClass = nullptr);
