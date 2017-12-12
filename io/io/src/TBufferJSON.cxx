@@ -2299,65 +2299,9 @@ void TBufferJSON::WriteObjectClass(const void *actualObjStart,
 // macro to read array, which include size attribute
 #define TBufferJSON_ReadArray(tname, vname)  \
    {                                         \
-      printf("JSON::ReadArray %p\n", vname); \
-      if (!vname)                            \
-         return 0;                           \
-      return 1;                              \
+      Info("ReadArray", "Not implemented");  \
+      return vname ? 1 : 0;                  \
    }
-
-////////////////////////////////////////////////////////////////////////////////
-/// read a Float16_t from the buffer
-
-void TBufferJSON::ReadFloat16(Float_t *, TStreamerElement * /*ele*/)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// read a Double32_t from the buffer
-
-void TBufferJSON::ReadDouble32(Double_t *, TStreamerElement * /*ele*/)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the factor and minimun value have
-/// been specified
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferJSON does not optimize space in this case.
-
-void TBufferJSON::ReadWithFactor(Float_t *, Double_t /* factor */, Double_t /* minvalue */)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Float16_t from the buffer when the number of bits is specified
-/// (explicitly or not)
-/// see comments about Float16_t encoding at TBufferFile::WriteFloat16().
-/// Currently TBufferJSON does not optimize space in this case.
-
-void TBufferJSON::ReadWithNbits(Float_t *, Int_t /* nbits */)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the factor and minimun value have
-/// been specified
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferJSON does not optimize space in this case.
-
-void TBufferJSON::ReadWithFactor(Double_t *, Double_t /* factor */, Double_t /* minvalue */)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the number of bits is specified
-/// (explicitly or not)
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferJSON does not optimize space in this case.
-
-void TBufferJSON::ReadWithNbits(Double_t *, Int_t /* nbits */)
-{
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// write a Float16_t to the buffer
@@ -2502,10 +2446,8 @@ Int_t TBufferJSON::ReadArrayDouble32(Double_t *&d, TStreamerElement * /*ele*/)
 // dummy macro to read array from json buffer
 #define TBufferJSON_ReadStaticArray(vname)         \
    {                                               \
-      printf("JSON::ReadStaticArray %p\n", vname); \
-      if (!vname)                                  \
-         return 0;                                 \
-      return 1;                                    \
+      Info("ReadStaticArray", "Not implemented");  \
+      return vname ? 1 : 0;                        \
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3564,6 +3506,67 @@ void TBufferJSON::ReadDouble(Double_t &val)
 {
    JsonReadBasic(val, Double_t);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// read a Float16_t from the buffer
+
+void TBufferJSON::ReadFloat16(Float_t *f, TStreamerElement * /*ele*/)
+{
+   JsonReadBasic(*f, Float_t);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// read a Double32_t from the buffer
+
+void TBufferJSON::ReadDouble32(Double_t *d, TStreamerElement * /*ele*/)
+{
+   JsonReadBasic(*d, Double_t);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Double32_t from the buffer when the factor and minimun value have
+/// been specified
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
+/// Currently TBufferJSON does not optimize space in this case.
+
+void TBufferJSON::ReadWithFactor(Float_t *f, Double_t /* factor */, Double_t /* minvalue */)
+{
+   JsonReadBasic(*f, Float_t);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Float16_t from the buffer when the number of bits is specified
+/// (explicitly or not)
+/// see comments about Float16_t encoding at TBufferFile::WriteFloat16().
+/// Currently TBufferJSON does not optimize space in this case.
+
+void TBufferJSON::ReadWithNbits(Float_t *f, Int_t /* nbits */)
+{
+   JsonReadBasic(*f, Float_t);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Double32_t from the buffer when the factor and minimun value have
+/// been specified
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
+/// Currently TBufferJSON does not optimize space in this case.
+
+void TBufferJSON::ReadWithFactor(Double_t *d, Double_t /* factor */, Double_t /* minvalue */)
+{
+   JsonReadBasic(*d, Double_t);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Double32_t from the buffer when the number of bits is specified
+/// (explicitly or not)
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
+/// Currently TBufferJSON does not optimize space in this case.
+
+void TBufferJSON::ReadWithNbits(Double_t *d, Int_t /* nbits */)
+{
+   JsonReadBasic(*d, Double_t);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads array of characters from buffer
