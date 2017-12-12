@@ -634,8 +634,7 @@ set(ROOT_EXE_LINKER_FLAGS \"${CMAKE_EXE_LINKER_FLAGS}\")")
 #---To be used from the binary tree--------------------------------------------------------------------------
 set(ROOT_INCLUDE_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
-set(ROOT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include
-    ${CMAKE_BINARY_DIR}/externals/${CMAKE_INSTALL_PREFIX}/include)
+set(ROOT_INCLUDE_DIRS ${CMAKE_BINARY_DIR}/include)
 ")
 set(ROOT_LIBRARY_DIR_SETUP "
 # ROOT configured for use from the build tree - absolute paths are used.
