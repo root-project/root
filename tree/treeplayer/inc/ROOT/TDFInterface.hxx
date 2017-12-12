@@ -892,20 +892,6 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined reduce operation on the values of the first default column.
-   /// \tparam F The type of the reduce callable. Automatically deduced.
-   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
-   /// \param[in] f A callable with signature `T(T,T)`
-   /// \param[in] redIdentity The reduced object of each thread is initialised to this value.
-   ///
-   /// See the description of the first Reduce overload for more information.
-   template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   TResultProxy<T> Reduce(F f, const T &redIdentity)
-   {
-      return Reduce(std::move(f), "", redIdentity);
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
    /// \brief Return the number of entries processed (*lazy action*)
    ///
    /// Useful e.g. for counting the number of entries passing a certain filter (see also `Report`).
