@@ -2268,21 +2268,10 @@ static bool IncludeHeaders(const std::vector<std::string> &headers, cling::Inter
 static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *module,
                                   std::vector<std::string> &missingHeaders)
 {
-   // Make a list of modules and submodules that we can check for headers.
-   // We use a SetVector to prevent an infinite loop in unlikely case the
-   // modules somehow are messed up and don't form a tree...
-   llvm::SetVector<clang::Module *> modules;
-   modules.insert(module);
-   for (size_t i = 0; i < modules.size(); ++i) {
-      clang::Module *M = modules[i];
-      for (clang::Module *subModule : M->submodules()) modules.insert(subModule);
-   }
    // Now we collect all header files from the previously collected modules.
    std::set<std::string> moduleHeaders;
-   for (clang::Module *module : modules) {
-      ROOT::TMetaUtils::foreachHeaderInModule(
-         *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.insert(h.NameAsWritten); });
-   }
+   ROOT::TMetaUtils::foreachHeaderInModule(
+      *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.insert(h.NameAsWritten); });
 
    // Go through the list of headers that are required by the ModuleGenerator
    // and check for each header if it's in one of the modules we loaded.
