@@ -880,10 +880,11 @@ endfunction()
 #                                 LINKDEF LinkDef.h LinkDef2.h : linkdef files, default value is "LinkDef.h"
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
 #                                 INSTALL_OPTIONS option       : options passed to install headers
+#                                 NO_MODULE                    : don't generate a C++ module for this package
 #                                )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
-  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY)
+  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_MODULE)
   set(oneValueArgs)
   set(multiValueArgs DEPENDENCIES HEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS LINKDEF INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -916,8 +917,15 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     set(STAGE1_FLAG "STAGE1")
   endif()
 
+  # Don't pass the MODULE arg to ROOT_GENERATE_DICTIONARY when
+  # NO_MODULE is set.
+  set(MODULE_GEN_ARG MODULE ${libname})
+  if(ARG_NO_MODULE)
+    set(MODULE_GEN_ARG)
+  endif()
+
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
-                          MODULE ${libname}
+                          ${MODULE_GEN_ARG}
                           ${STAGE1_FLAG}
                           LINKDEF ${ARG_LINKDEF}
                           OPTIONS ${ARG_DICTIONARY_OPTIONS}
