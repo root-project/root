@@ -17,6 +17,7 @@
 #include "TObjArray.h"
 
 #include <map>
+#include <deque>
 
 class TVirtualStreamerInfo;
 class TStreamerInfo;
@@ -429,7 +430,7 @@ protected:
 
    TJSONStackObj   *PushStack(Int_t inclevel = 0, JSONObject_t readnode = nullptr);
    TJSONStackObj   *PopStack();
-   TJSONStackObj   *Stack();
+   TJSONStackObj   *Stack() { return fStack.back(); }
 
    void             WorkWithClass(TStreamerInfo *info, const TClass *cl = nullptr);
    void             WorkWithElement(TStreamerElement *elem, Int_t);
@@ -465,8 +466,6 @@ protected:
 
    void             JsonReadTObjectMembers(TObject *obj, JSONObject_t node = nullptr);
 
-   void            *JsonReadAny(JSONObject_t node, void *obj, TClass **cl);
-
    void            *JsonReadObject(void *obj, const TClass *objClass = nullptr, TClass **readClass = nullptr);
 
    void             AppendOutput(const char *line0, const char *line1 = nullptr);
@@ -482,8 +481,8 @@ protected:
    TString                   fValue;        ///<!  buffer for current value
    std::map<const void *, unsigned>  fJsonrMap;   ///<!  map of recorded objects, used in JsonR to restore references
    std::map<unsigned, ObjectEntry> fReadMap; ///<! map of read objects, required to reconstruct references
-   unsigned                  fJsonrCnt;     ///<!  counter for all objects, used for referencing
-   TObjArray                 fStack;        ///<!  stack of streamer infos
+   unsigned                  fJsonrCnt;      ///<!  counter for all objects, used for referencing
+   std::deque<TJSONStackObj *> fStack;       ///<!  hierarchy of currently streamead element
    Int_t                     fCompact;       ///<!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
    TString                   fSemicolon;     ///<!  depending from compression level, " : " or ":"
    TString                   fArraySepar;    ///<!  depending from compression level, ", " or ","
