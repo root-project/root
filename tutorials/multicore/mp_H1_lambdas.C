@@ -133,7 +133,7 @@ auto doFit = [](TList *out, const char *lfn = 0) -> Int_t {
          return 0;
       auto xp3 = (x - 0.1454) * (x - 0.1454);
       auto res = dxbin * (par[0] * TMath::Power(x - 0.13957, 0.25) +
-                              par[1] / 2.5066 / sigma * TMath::Exp(-xp3 / 2 / sigma / sigma));
+                          par[1] / 2.5066 / sigma * TMath::Exp(-xp3 / 2 / sigma / sigma));
       return res;
    };
 
