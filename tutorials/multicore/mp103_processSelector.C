@@ -43,11 +43,10 @@ int mp103_processSelector()
 
    ROOT::TTreeProcessorMP pool(3);
 
-   TList *out = 0;
+   TList *out = nullptr;
 #if defined(__reproduce_davix)
    // TTreeProcessorMP::Process with a single tree
    out = pool.Process(*tree, *sel);
-   ;
    sel->GetOutputList()->Delete();
 #endif
 

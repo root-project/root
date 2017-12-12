@@ -60,7 +60,7 @@ Int_t mt304_fillHistos(UInt_t nNumbers = 1001)
    auto fh1dr = h1dr.Merge();
 
    // Make the canvas
-   TCanvas *c = new TCanvas("c", "c", 800, 800);
+   auto c = new TCanvas("c", "c", 800, 800);
    c->Divide(1, 2);
 
    gStyle->SetOptStat(111110);
@@ -70,8 +70,6 @@ Int_t mt304_fillHistos(UInt_t nNumbers = 1001)
    fh1dr->DrawCopy();
 
    c->Update();
-
-   gROOTMutex = 0;
 
    return 0;
 }

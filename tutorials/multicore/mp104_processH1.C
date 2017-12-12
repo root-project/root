@@ -73,7 +73,7 @@ int mp104_processH1()
    TString selectorPath = gROOT->GetTutorialDir();
    selectorPath += "/tree/h1analysisTreeReader.C+";
    std::cout << tutname << "processing the H1 dataset with selector '" << selectorPath << "'\n";
-   TSelector *sel = TSelector::GetSelector(selectorPath);
+   auto sel = TSelector::GetSelector(selectorPath);
 
    // In a second run we use sel
    gSystem->RedirectOutput(logfile.c_str(), "w", &gRH);
