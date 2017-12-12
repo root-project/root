@@ -535,92 +535,92 @@ be removed; please migrate to the CMake-based build system.
 
 ## Bugs and Issues fixed in this release
 
-    * [ROOT-8872] - Improve performance of TTree::Fill();
-    * [ROOT-8873] - Reinforce the mechanism to detect non existing branches
-    * [ROOT-8874] - Specify compression algorithm. compression ratio and basket size to Snapshot
-    * [ROOT-8876] - Improve concurrency of ROOT I/O
-    * [ROOT-8877] - Defer jitting operations aiming to infer columns types
-    * [ROOT-9001] - Implement user callback in TBufferMerger to notify clients of queue operations
-    * [ROOT-9002] - Feature requests for TBufferMerger, output thread does too much work
-    * [ROOT-9018] - Allow to inspect intermediate results of actions during event loop
-    * [ROOT-9021] - Allow more complex Filter/Define functions as strings
-    * [ROOT-9089] - Allow TDataSource to serve to TDF events in batches
-    * [ROOT-9091] - Add a Sum action to TDF
-    * [ROOT-9092] -  return real column type from Max/Min/Sum when passed as a template parameter
-    * [ROOT-9093] - Switch array_view with TArrayBranch
-    * [ROOT-6179] - TList::Clear very slow since 5.34/09 when using cleanup mechanism
-    * [ROOT-7027] - Reloading moved sources confuses ROOT
-    * [ROOT-7718] - Using undefined variable as array crashes ROOT
-    * [ROOT-8159] - CTest doesn't test current build
-    * [ROOT-8183] - tutorials/pythia/pythia8.C cannot be compiled
-    * [ROOT-8208] - GetMissingDictionaries in TClass does not find all missing dictionaries
-    * [ROOT-8244] - CMake: G__std_unordered_map.cxx created twice
-    * [ROOT-8360] - DNNCUDA build does not work in C++14 mode
-    * [ROOT-8528] - rootcp copies all cycles but in wrong order.
-    * [ROOT-8797] - GCC 7: Setting "SetRangeUser" of TAxis fails with TClingCallFunc errors
-    * [ROOT-8823] - cling compilation fails
-    * [ROOT-8826] - Cannot use lambda captures from root prompt
-    * [ROOT-8829] - missing test?
-    * [ROOT-8832] - Pointer validation should set exit code to 1
-    * [ROOT-8834] - Several CTests does not test current ROOT
-    * [ROOT-8840] - CMake 3.9-rc3 complains
-    * [ROOT-8853] - TMemFile may leave gDirectory of threads in an odd state
-    * [ROOT-8863] - Root include path not working after using gSystem->ChangeDirectory
-    * [ROOT-8892] - ROOT classical build cannot use external Unuran
-    * [ROOT-8896] - ROOT's string_view cannot be <<'ed to std::cout
-    * [ROOT-8902] - ROOT's parallel build is broken if more than ~4 threads are used.
-    * [ROOT-8908] - atexit support is incomplete/non-compliant
-    * [ROOT-8917] - Cling header search doesn't work with some languages
-    * [ROOT-8918] - Race condition in roottest/root/dataframe/test_snapshotNFiles.C
-    * [ROOT-8924] - Crash in regression_zeroentries
-    * [ROOT-8927] - Title drawn on top of axis
-    * [ROOT-8928] - Error with "argv" in testKeras* Programs
-    * [ROOT-8934] - ROOTConfig should define ROOT_Imt_LIBRARY for the libImt library
-    * [ROOT-8941] - TGX11.h copied to include/ but not installed with CMake build for 6.10/04
-    * [ROOT-8946] - TClass::GetListOfAllPublicDataMembers->FindObject() returns wrong pointers
-    * [ROOT-8948] - compiledata.sh script not executed during ROOT build on Debian
-    * [ROOT-8949] - cmake does not rebuild core dictionary when LinkDef1/2/3.h file is changed
-    * [ROOT-8964] - ROOT_GENERATE_DICTIONARY should not use files from install directory
-    * [ROOT-8967] - Headers not added to ROOT_INCLUDE_PATH for xrootd
-    * [ROOT-8970] - Homebrew installation cannot find fonts and icons
-    * [ROOT-8975] - ROOT Data Frames crashing when using a name already existant in the tree
-    * [ROOT-8979] - Snapshot only copies a single element of an array to the new TTree
-    * [ROOT-8981] - Python3.x and cmdLineUtils.py
-    * [ROOT-8986] - Misleading naming & description of TArray*::AddAt() method
-    * [ROOT-8991] - Cling exports buggy include paths to AcLIC
-    * [ROOT-8995] - Read branch error in TTree::GetEntry
-    * [ROOT-9007] - PyROOT segfault in MethodProxy.cxx for ROOT 6.10/02
-    * [ROOT-9015] - Root complication fails with XCode 9 in MacOS 10.12.6
-    * [ROOT-9022] - compile error with -Dgminimal=ON
-    * [ROOT-9026] - Compilation fails under XCode 9
-    * [ROOT-9031] - CMake dev warning CMP0068
-    * [ROOT-9032] - Can't compile 6.10/06 with Clang 5.0.0 due to TBB
-    * [ROOT-9037] - TDataFrame ctor does not compile if std::string is passed as filename
-    * [ROOT-9047] - CMake is claiming to copy to /include
-    * [ROOT-9055] - ROOT_GENERATE_DICTIONARY finds header files in /usr/bin failing the build in centos
-    * [ROOT-9060] - Multi-thread `OnPartialResult(kOnce)` calls the call-back more than once
-    * [ROOT-9068] - RuntimeWarning: creating executor for unknown type ...
-    * [ROOT-9071] - LZ4 can't be built unless cmake is in $PATH
-    * [ROOT-9082] - import ROOT and pytest collecting tests
-    * [ROOT-9110] - rootcling should not macro-replace file names
-    * [ROOT-9117] - TDF: Reports on Filters booked after the first event loop do not re-trigger the event loop
-    * [ROOT-9118] - TDF: Cache and Snapshot do not trigger TDataSource column definitions
-    * [ROOT-9119] - TDF: Crash in Snapshot (RecursiveRemove-related)
-    * [ROOT-9121] - TDF: rare crash in TRootDS
-    * [ROOT-9127] - Intel Compiler: Warning in <TClassTable::Add>: class  already in TClassTable
-    * [ROOT-9130] - TDF: Float_t branch type is not inferred when jitting
-    * [ROOT-9132] - TDirectory has new on-file data member but no ClassDef Version bump
-    * [ROOT-9136] - TDF: failure in test-reports
-    * [ROOT-9139] - TClassTable::GetTable seg faults with templated class type_info
-    * [ROOT-8875] - TBufferMerger: Specify compression algorithm, compression ratio and output file
-    * [ROOT-8534] - Warning cleanup from GCC 7
-    * [ROOT-8825] - ROOT (master, Clang 5.0.0) segfaults while building in C++17 mode
-    * [ROOT-8871] - Improve performance of ROOT I/O
-    * [ROOT-9005] - ROOT 6.10-patches broken beetween since 16/09
-    * [ROOT-8556] - Inclusion of file in the pch causes error while running macros on linux
-    * [ROOT-8836] - rootcmdlineutils.py module not correctly installed
-    * [ROOT-8980] - variadic template warning in genreflex prohibits use in CMS build system
-    * [ROOT-9125] - Making TEnv::GetValue and Lookup const
+* [ROOT-8872] - Improve performance of TTree::Fill();
+* [ROOT-8873] - Reinforce the mechanism to detect non existing branches
+* [ROOT-8874] - Specify compression algorithm. compression ratio and basket size to Snapshot
+* [ROOT-8876] - Improve concurrency of ROOT I/O
+* [ROOT-8877] - Defer jitting operations aiming to infer columns types
+* [ROOT-9001] - Implement user callback in TBufferMerger to notify clients of queue operations
+* [ROOT-9002] - Feature requests for TBufferMerger, output thread does too much work
+* [ROOT-9018] - Allow to inspect intermediate results of actions during event loop
+* [ROOT-9021] - Allow more complex Filter/Define functions as strings
+* [ROOT-9089] - Allow TDataSource to serve to TDF events in batches
+* [ROOT-9091] - Add a Sum action to TDF
+* [ROOT-9092] -  return real column type from Max/Min/Sum when passed as a template parameter
+* [ROOT-9093] - Switch array_view with TArrayBranch
+* [ROOT-6179] - TList::Clear very slow since 5.34/09 when using cleanup mechanism
+* [ROOT-7027] - Reloading moved sources confuses ROOT
+* [ROOT-7718] - Using undefined variable as array crashes ROOT
+* [ROOT-8159] - CTest doesn't test current build
+* [ROOT-8183] - tutorials/pythia/pythia8.C cannot be compiled
+* [ROOT-8208] - GetMissingDictionaries in TClass does not find all missing dictionaries
+* [ROOT-8244] - CMake: G__std_unordered_map.cxx created twice
+* [ROOT-8360] - DNNCUDA build does not work in C++14 mode
+* [ROOT-8528] - rootcp copies all cycles but in wrong order.
+* [ROOT-8797] - GCC 7: Setting "SetRangeUser" of TAxis fails with TClingCallFunc errors
+* [ROOT-8823] - cling compilation fails
+* [ROOT-8826] - Cannot use lambda captures from root prompt
+* [ROOT-8829] - missing test?
+* [ROOT-8832] - Pointer validation should set exit code to 1
+* [ROOT-8834] - Several CTests does not test current ROOT
+* [ROOT-8840] - CMake 3.9-rc3 complains
+* [ROOT-8853] - TMemFile may leave gDirectory of threads in an odd state
+* [ROOT-8863] - Root include path not working after using gSystem->ChangeDirectory
+* [ROOT-8892] - ROOT classical build cannot use external Unuran
+* [ROOT-8896] - ROOT's string_view cannot be <<'ed to std::cout
+* [ROOT-8902] - ROOT's parallel build is broken if more than ~4 threads are used.
+* [ROOT-8908] - atexit support is incomplete/non-compliant
+* [ROOT-8917] - Cling header search doesn't work with some languages
+* [ROOT-8918] - Race condition in roottest/root/dataframe/test_snapshotNFiles.C
+* [ROOT-8924] - Crash in regression_zeroentries
+* [ROOT-8927] - Title drawn on top of axis
+* [ROOT-8928] - Error with "argv" in testKeras* Programs
+* [ROOT-8934] - ROOTConfig should define ROOT_Imt_LIBRARY for the libImt library
+* [ROOT-8941] - TGX11.h copied to include/ but not installed with CMake build for 6.10/04
+* [ROOT-8946] - TClass::GetListOfAllPublicDataMembers->FindObject() returns wrong pointers
+* [ROOT-8948] - compiledata.sh script not executed during ROOT build on Debian
+* [ROOT-8949] - cmake does not rebuild core dictionary when LinkDef1/2/3.h file is changed
+* [ROOT-8964] - ROOT_GENERATE_DICTIONARY should not use files from install directory
+* [ROOT-8967] - Headers not added to ROOT_INCLUDE_PATH for xrootd
+* [ROOT-8970] - Homebrew installation cannot find fonts and icons
+* [ROOT-8975] - ROOT Data Frames crashing when using a name already existant in the tree
+* [ROOT-8979] - Snapshot only copies a single element of an array to the new TTree
+* [ROOT-8981] - Python3.x and cmdLineUtils.py
+* [ROOT-8986] - Misleading naming & description of TArray*::AddAt() method
+* [ROOT-8991] - Cling exports buggy include paths to AcLIC
+* [ROOT-8995] - Read branch error in TTree::GetEntry
+* [ROOT-9007] - PyROOT segfault in MethodProxy.cxx for ROOT 6.10/02
+* [ROOT-9015] - Root complication fails with XCode 9 in MacOS 10.12.6
+* [ROOT-9022] - compile error with -Dgminimal=ON
+* [ROOT-9026] - Compilation fails under XCode 9
+* [ROOT-9031] - CMake dev warning CMP0068
+* [ROOT-9032] - Can't compile 6.10/06 with Clang 5.0.0 due to TBB
+* [ROOT-9037] - TDataFrame ctor does not compile if std::string is passed as filename
+* [ROOT-9047] - CMake is claiming to copy to /include
+* [ROOT-9055] - ROOT_GENERATE_DICTIONARY finds header files in /usr/bin failing the build in centos
+* [ROOT-9060] - Multi-thread `OnPartialResult(kOnce)` calls the call-back more than once
+* [ROOT-9068] - RuntimeWarning: creating executor for unknown type ...
+* [ROOT-9071] - LZ4 can't be built unless cmake is in $PATH
+* [ROOT-9082] - import ROOT and pytest collecting tests
+* [ROOT-9110] - rootcling should not macro-replace file names
+* [ROOT-9117] - TDF: Reports on Filters booked after the first event loop do not re-trigger the event loop
+* [ROOT-9118] - TDF: Cache and Snapshot do not trigger TDataSource column definitions
+* [ROOT-9119] - TDF: Crash in Snapshot (RecursiveRemove-related)
+* [ROOT-9121] - TDF: rare crash in TRootDS
+* [ROOT-9127] - Intel Compiler: Warning in <TClassTable::Add>: class  already in TClassTable
+* [ROOT-9130] - TDF: Float_t branch type is not inferred when jitting
+* [ROOT-9132] - TDirectory has new on-file data member but no ClassDef Version bump
+* [ROOT-9136] - TDF: failure in test-reports
+* [ROOT-9139] - TClassTable::GetTable seg faults with templated class type_info
+* [ROOT-8875] - TBufferMerger: Specify compression algorithm, compression ratio and output file
+* [ROOT-8534] - Warning cleanup from GCC 7
+* [ROOT-8825] - ROOT (master, Clang 5.0.0) segfaults while building in C++17 mode
+* [ROOT-8871] - Improve performance of ROOT I/O
+* [ROOT-9005] - ROOT 6.10-patches broken beetween since 16/09
+* [ROOT-8556] - Inclusion of file in the pch causes error while running macros on linux
+* [ROOT-8836] - rootcmdlineutils.py module not correctly installed
+* [ROOT-8980] - variadic template warning in genreflex prohibits use in CMS build system
+* [ROOT-9125] - Making TEnv::GetValue and Lookup const
 
 
 
