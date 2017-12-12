@@ -410,7 +410,7 @@ TBufferJSON::TBufferJSON(TBuffer::EMode mode)
 
 TBufferJSON::~TBufferJSON()
 {
-   fStack.Delete();
+   while (fStack.size() > 0) PopStack();
 
    if (fNumericLocale.Length() > 0)
       setlocale(LC_NUMERIC, fNumericLocale.Data());
@@ -521,7 +521,11 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t comp
 
    buf.SetCompact(compact);
 
+   buf.PushStack(0); // dummy stack entry to avoid extra checks in the beginning
+
    buf.JsonWriteObject(obj, cl);
+
+   buf.PopStack();
 
    return buf.fOutBuffer.Length() ? buf.fOutBuffer : buf.fValue;
 }
@@ -752,7 +756,11 @@ void *TBufferJSON::ConvertFromJSONAny(const char *str, TClass **cl)
 
    TBufferJSON buf(TBuffer::kRead);
 
-   void *obj = buf.JsonReadAny(&docu, nullptr, cl);
+   buf.PushStack(0, &docu);
+
+   void *obj = buf.JsonReadObject(nullptr, nullptr, cl);
+
+   buf.PopStack();
 
    return obj;
 }
@@ -943,12 +951,13 @@ void TBufferJSON::WriteObject(const TObject *obj, Bool_t cacheReuse /* = kTRUE *
 
 TJSONStackObj *TBufferJSON::PushStack(Int_t inclevel, JSONObject_t readnode)
 {
-   TJSONStackObj *curr = Stack();
-   TJSONStackObj *stack = new TJSONStackObj();
-   stack->fLevel = (curr ? curr->fLevel : 0) + inclevel;
-   stack->fNode = readnode;
-   fStack.Add(stack);
-   return stack;
+   TJSONStackObj *next = new TJSONStackObj();
+   next->fLevel = inclevel;
+   if (fStack.size() > 0)
+      next->fLevel += Stack()->fLevel;
+   next->fNode = readnode;
+   fStack.push_back(next);
+   return next;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -956,21 +965,12 @@ TJSONStackObj *TBufferJSON::PushStack(Int_t inclevel, JSONObject_t readnode)
 
 TJSONStackObj *TBufferJSON::PopStack()
 {
-   TObject *last = fStack.Last();
-   if (last) {
-      fStack.Remove(last);
-      delete last;
-      fStack.Compress();
+   if (fStack.size() > 0) {
+      delete fStack.back();
+      fStack.pop_back();
    }
-   return static_cast<TJSONStackObj *>(fStack.Last());
-}
 
-////////////////////////////////////////////////////////////////////////////////
-/// return stack object of specified depth
-
-TJSONStackObj *TBufferJSON::Stack()
-{
-   return static_cast<TJSONStackObj *>(fStack.Last());
+   return fStack.size() > 0 ? Stack() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -987,9 +987,8 @@ void TBufferJSON::AppendOutput(const char *line0, const char *line1)
 
       if (strlen(line1) > 0) {
          if (fCompact % 10 < 1) {
-            TJSONStackObj *stack = Stack();
-            if ((stack != nullptr) && (stack->fLevel > 0))
-               fOutput->Append(' ', stack->fLevel);
+            if (Stack()->fLevel > 0)
+               fOutput->Append(' ', Stack()->fLevel);
          }
          fOutput->Append(line1);
       }
@@ -1028,26 +1027,20 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
       return;
 
    if (IsReading()) {
-      TJSONStackObj *stack = Stack();
-      if (stack && stack->fNode) {
-         nlohmann::json *json = (nlohmann::json *)stack->fNode;
+      nlohmann::json *json = (nlohmann::json *)Stack()->fNode;
 
-         if (json->count(elem_name) != 1) {
-            Error("JsonStartElement", "Missing JSON structure for element %s", elem_name);
-         } else {
-            stack->fNode = &((*json)[elem_name]);
-            if (special_kind == json_TArray) {
-               Int_t len = stack->IsJsonArray();
-               stack->PushIntValue(len > 0 ? len : 0);
-               if (len<0)
-                  Error("JsonStartElement", "Missing array when reading TArray class for element %s", elem->GetName());
-            }
-            if ((gDebug>1) && base_class)
-               Info("JsonStartElement", "Reading baseclass %s from element %s", base_class->GetName(), elem_name);
-         }
-
+      if (json->count(elem_name) != 1) {
+         Error("JsonStartElement", "Missing JSON structure for element %s", elem_name);
       } else {
-         Error("JsonStartElement", "Missing JSON node");
+         Stack()->fNode = &((*json)[elem_name]);
+         if (special_kind == json_TArray) {
+            Int_t len = Stack()->IsJsonArray();
+            Stack()->PushIntValue(len > 0 ? len : 0);
+            if (len<0)
+               Error("JsonStartElement", "Missing array when reading TArray class for element %s", elem->GetName());
+         }
+         if ((gDebug>1) && base_class)
+            Info("JsonStartElement", "Reading baseclass %s from element %s", base_class->GetName(), elem_name);
       }
 
    } else {
@@ -1316,25 +1309,6 @@ post_process:
       else if (fObjectOutput.Length() != 0)
          Error("JsonWriteObject", "Non-empty object output for special class %s", cl->GetName());
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Recreate object from json structure.
-/// Return pointer to read object.
-/// if (cl!=0) returns pointer to class of object
-
-void *TBufferJSON::JsonReadAny(JSONObject_t node, void *obj, TClass **cl)
-{
-   if (!node)
-      return nullptr;
-
-   PushStack(0, node);
-
-   void *res = JsonReadObject(obj, nullptr, cl);
-
-   PopStack();
-
-   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
