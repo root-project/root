@@ -620,3 +620,8 @@ be removed; please migrate to the CMake-based build system.
     * [ROOT-8980] - variadic template warning in genreflex prohibits use in CMS build system
     * [ROOT-9125] - Making TEnv::GetValue and Lookup const
 
+
+
+## HEAD of the v6-12-00-patches branch
+
+These changes will be part of the future 6.12/04
