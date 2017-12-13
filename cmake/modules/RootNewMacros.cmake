@@ -367,23 +367,22 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   if(runtime_cxxmodules AND ARG_MODULE)
-    # FIXME: Once modules work better, we should use some other value like "1"
-    # to disable the module-build remarks from clang.
-    set(runtime_cxxmodules_env "ROOT_MODULES=DEBUG")
+    set(newargs -cxxmodule ${newargs})
   endif()
+
   #---what rootcling command to use--------------------------
   if(ARG_STAGE1)
-    set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" "${runtime_cxxmodules_env}" $<TARGET_FILE:rootcling_stage1>)
+    set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:rootcling_stage1>)
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
-                  "ROOTIGNOREPREFIX=1" "${runtime_cxxmodules_env}" $<TARGET_FILE:rootcling> -rootbuild)
+                  "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
       set(ROOTCINTDEP rootcling)
     elseif(TARGET ROOT::rootcling)
-      set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${ROOT_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH}" "${runtime_cxxmodules_env}" $<TARGET_FILE:ROOT::rootcling>)
+      set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${ROOT_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:ROOT::rootcling>)
     else()
-      set(command ${CMAKE_COMMAND} -E env "${runtime_cxxmodules_env}" rootcling)
+      set(command ${CMAKE_COMMAND} -E rootcling)
     endif()
   endif()
 
