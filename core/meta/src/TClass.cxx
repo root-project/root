@@ -2894,10 +2894,21 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
 
    if (!gROOT->GetListOfClasses())  return 0;
 
+   // FindObject will take the read lock before actually getting the
+   // TClass pointer so we will need not get a partially initialized
+   // object.
    TClass *cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
 
    // Early return to release the lock without having to execute the
    // long-ish normalization.
+   if (cl && (cl->IsLoaded() || cl->TestBit(kUnloading))) return cl;
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   // Now that we got the write lock, another thread may have constructed the
+   // TClass while we were waiting, so we need to do the checks again.
+
+   cl = (TClass*)gROOT->GetListOfClasses()->FindObject(name);
    if (cl) {
       if (cl->IsLoaded() || cl->TestBit(kUnloading)) return cl;
 
@@ -2920,8 +2931,6 @@ TClass *TClass::GetClass(const char *name, Bool_t load, Bool_t silent)
       //we may pass here in case of a dummy class created by TVirtualStreamerInfo
       load = kTRUE;
    }
-
-   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    // To avoid spurious auto parsing, let's check if the name as-is is
    // known in the TClassTable.
@@ -3103,6 +3112,15 @@ TClass *TClass::GetClass(const std::type_info& typeinfo, Bool_t load, Bool_t /* 
 
    TClass* cl = GetIdMap()->Find(typeinfo.name());
 
+   if (cl && cl->IsLoaded()) return cl;
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   // Now that we got the write lock, another thread may have constructed the
+   // TClass while we were waiting, so we need to do the checks again.
+
+   cl = GetIdMap()->Find(typeinfo.name());
+
    if (cl) {
       if (cl->IsLoaded()) return cl;
       //we may pass here in case of a dummy class created by TVirtualStreamerInfo
@@ -3121,8 +3139,6 @@ TClass *TClass::GetClass(const std::type_info& typeinfo, Bool_t load, Bool_t /* 
    }
 
    if (!load) return 0;
-
-   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
 
    DictFuncPtr_t dict = TClassTable::GetDict(typeinfo);
    if (dict) {
