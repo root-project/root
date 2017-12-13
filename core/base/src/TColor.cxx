@@ -216,9 +216,9 @@ This function has two parameters: the number of colors in the palette and an
 array of containing the indices of colors in the palette. The following small
 example demonstrates how to define and use the color palette:
 
-Begin_Macro(source)
+Begin_Macro(source, "width=600")
 {
-   TCanvas *c1  = new TCanvas("c1","c1",0,0,600,400);
+   TCanvas *c1  = new TCanvas("c1","c1",0,0,1200,800);
    TF2 *f1 = new TF2("f1","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",1,3,1,3);
    Int_t palette[5];
    palette[0] = 15;
@@ -236,9 +236,9 @@ End_Macro
 should use the static function `TColor::CreateGradientColorTable()`.
 The following example demonstrates how to proceed:
 
-Begin_Macro(source)
+Begin_Macro(source, "width=600")
 {
-   TCanvas *c2  = new TCanvas("c2","c2",0,0,600,400);
+   TCanvas *c2  = new TCanvas("c2","c2",0,0,1200,800);
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",1,3,1,3);
    const Int_t Number = 3;
    Double_t Red[Number]    = { 1.00, 0.00, 0.00};

@@ -65,9 +65,9 @@ class. All details about the various painting options are given in this class.
 
 The picture below gives an example:
 
-Begin_Macro(source)
+Begin_Macro(source, "width=500")
 {
-   TCanvas *c1 = new TCanvas("c1","A Simple Graph Example",200,10,700,500);
+   TCanvas *c1 = new TCanvas("c1","A Simple Graph Example",200,10,1400,1000);
    Double_t x[100], y[100];
    Int_t n = 20;
    for (Int_t i=0;i<n;i++) {
