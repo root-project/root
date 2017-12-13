@@ -539,12 +539,6 @@ llvm::StringRef GetFileName(const clang::Decl& decl,
 std::string GetModuleFileName(const char* moduleName);
 
 //______________________________________________________________________________
-// Declare a virtual module.map to clang. Returns Module on success.
-clang::Module* declareModuleMap(clang::CompilerInstance* CI,
-                                 const char* moduleFileName,
-                                 const char* headers[]);
-
-//______________________________________________________________________________
 // Return (in the argument 'output') a mangled version of the C++ symbol/type (pass as 'input')
 // that can be used in C++ as a variable name.
 void GetCppName(std::string &output, const char *input);
