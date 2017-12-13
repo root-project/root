@@ -3,12 +3,12 @@
 // FIXME: This should be separated because it introduces header dependency
 // libThread->libCore->libThread. We should figure out a way to implement it in
 // a more reasonable way.
-module ThreadLocalStorage {
+module ThreadLocalStorage [system] {
   header "ThreadLocalStorage.h"
   export *
 }
 // These can be used in C mode.
-module ROOT_Types {
+module ROOT_Types [system] {
   module "RtypesCore.h" { header "RtypesCore.h" export * }
   module "ESTLType.h" { header "ESTLType.h" export * }
   // FIXME: This module should contain only header files with types.
@@ -34,7 +34,7 @@ module ROOT_Types {
 // Rtypes.h however has an optional dependency on rtti unless one defines
 // R__NO_INLINE_CLASSDEF. We therefore keep two versions of this module: One
 // with rtti and one without rtti.
-module ROOT_Core_Config_C {
+module ROOT_Core_Config_C [system] {
  //requires cplusplus
  
  exclude header "RtypesImp.h"
@@ -63,9 +63,9 @@ module ROOT_Core_Config_C {
 // when there is no folder GL or contents in it.
 // module ROOT_Glew {
   // Depending on the platform we get some of these three installed.
-  module "glew.h" { header "GL/glew.h" export * }
-  module "wglew.h" { header "GL/wglew.h" export * }
-  module "glxew.h" { header "GL/glxew.h" export * }
+  module "glew.h" [system] { header "GL/glew.h" export * }
+  module "wglew.h" [system] { header "GL/wglew.h" export * }
+  module "glxew.h" [system] { header "GL/glxew.h" export * }
 //  link "lib/libGLEW.so"
 //}
 
