@@ -1932,6 +1932,11 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    for (i = 0; i < nprobSum; i++) {
       const Double_t r = probSum[i];
       Int_t bin  = TMath::Max(TMath::BinarySearch(npx + 1, integral.GetArray(), r), (Long64_t)0);
+      // in case the prob is 1
+      if (bin == npx) {
+         q[i] = xMax;
+         continue;
+      }
       // LM use a tolerance 1.E-12 (integral precision)
       while (bin < npx - 1 && TMath::AreEqualRel(integral[bin + 1], r, 1E-12)) {
          if (TMath::AreEqualRel(integral[bin + 2], r, 1E-12)) bin++;
