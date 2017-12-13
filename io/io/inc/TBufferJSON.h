@@ -14,7 +14,6 @@
 
 #include "TBuffer.h"
 #include "TString.h"
-#include "TObjArray.h"
 
 #include <map>
 #include <deque>
@@ -22,13 +21,9 @@
 class TVirtualStreamerInfo;
 class TStreamerInfo;
 class TStreamerElement;
-class TObjArray;
 class TMemberStreamer;
 class TDataMember;
 class TJSONStackObj;
-
-
-typedef void *JSONObject_t;
 
 class TBufferJSON : public TBuffer {
 
@@ -428,7 +423,7 @@ protected:
 
    TString          JsonWriteMember(const void *ptr, TDataMember *member, TClass *memberClass, Int_t arraylen);
 
-   TJSONStackObj   *PushStack(Int_t inclevel = 0, JSONObject_t readnode = nullptr);
+   TJSONStackObj   *PushStack(Int_t inclevel = 0, void *readnode = nullptr);
    TJSONStackObj   *PopStack();
    TJSONStackObj   *Stack() { return fStack.back(); }
 
@@ -464,7 +459,7 @@ protected:
 
    void             JsonReadCollection(TCollection *obj, const TClass *objClass);
 
-   void             JsonReadTObjectMembers(TObject *obj, JSONObject_t node = nullptr);
+   void             JsonReadTObjectMembers(TObject *obj, void *node = nullptr);
 
    void            *JsonReadObject(void *obj, const TClass *objClass = nullptr, TClass **readClass = nullptr);
 
