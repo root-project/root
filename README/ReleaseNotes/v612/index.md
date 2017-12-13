@@ -5,7 +5,7 @@
 
 ## Introduction
 
-ROOT version 6.12/02 has been released on 2017-12-12. This is the first release in the 6.12 series.
+ROOT version 6.12/04 has been released on 2017-12-13. This is the first release in the 6.12 series.
 
 For more information, see:
 
@@ -42,6 +42,9 @@ The following people have contributed to this new version:
  Wouter Verkerke, NIKHEF/Atlas, RooFit,\
  Stefan Wunsch, KIT,\
  Omar Zapata
+
+6.12/00 was skipped; 6.12/02 had a fatal issue in a fundamental component and was never published.
+
 
 ## General News
 
