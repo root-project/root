@@ -1594,11 +1594,6 @@ bool TCling::LoadPCM(TString pcmFileName,
          ::Info("TCling::LoadPCM", "Loading clang PCM %s", pcmFileName.Data());
 
    }
-   // Note: Declaring the relationship between the module (pcm) and the header
-   // probably does not yet make sense since the pcm is 'only' a root file.
-   // We also have to review if we still need to do this with the delay loading.
-   // clang::CompilerInstance* CI = fInterpreter->getCI();
-   // ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
    return kTRUE;
 }
 
