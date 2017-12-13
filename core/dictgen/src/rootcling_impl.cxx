@@ -225,6 +225,7 @@ const char *rootClingHelp =
 #include "clang/Basic/MemoryBufferCache.h"
 #include "clang/Frontend/CompilerInstance.h"
 #include "clang/Frontend/FrontendActions.h"
+#include "clang/Frontend/FrontendDiagnostic.h"
 #include "clang/Lex/HeaderSearch.h"
 #include "clang/Lex/Preprocessor.h"
 #include "clang/Lex/ModuleMap.h"
@@ -3854,6 +3855,105 @@ static bool FileExists(const char *file)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Custom diag client for clang that verifies that each implicitly build module
+/// is a system module. If not, it will let the current rootcling invocation
+/// fail with an error. All other diags beside module build remarks will be
+/// forwarded to the passed child diag client.
+///
+/// The reason why we need this is that if we built implicitly a C++ module
+/// that belongs to a ROOT dictionary, then we will miss information generated
+/// by rootcling in this file (e.g. the source code comments to annotation
+/// attributes transformation will be missing in the module file).
+class CheckModuleBuildClient : public clang::DiagnosticConsumer {
+   clang::DiagnosticConsumer *fChild;
+   bool fOwnsChild;
+   clang::ModuleMap &fMap;
+
+public:
+   CheckModuleBuildClient(clang::DiagnosticConsumer *Child, bool OwnsChild, clang::ModuleMap &Map)
+      : fChild(Child), fOwnsChild(OwnsChild), fMap(Map)
+   {
+   }
+
+   ~CheckModuleBuildClient()
+   {
+      if (fOwnsChild)
+         delete fChild;
+   }
+
+   virtual void HandleDiagnostic(clang::DiagnosticsEngine::Level DiagLevel, const clang::Diagnostic &Info) override
+   {
+      using namespace clang::diag;
+
+      // This method catches the module_build remark from clang and checks if
+      // the implicitly built module is a system module or not. We only support
+      // building system modules implicitly.
+
+      std::string moduleName;
+      const clang::Module *module = nullptr;
+
+      // Extract the module from the diag argument with index 0.
+      const auto &ID = Info.getID();
+      if (ID == remark_module_build || ID == remark_module_build_done) {
+         moduleName = Info.getArgStdStr(0);
+         module = fMap.findModule(moduleName);
+         // We should never be able to build a module without having it in the
+         // modulemap. Still, let's print a warning that we at least tell the
+         // user that this could lead to problems.
+         if (!module) {
+            ROOT::TMetaUtils::Warning(0,
+                                      "Couldn't find module %s in the available modulemaps. This"
+                                      "prevents us from correctly diagnosing wrongly built modules.\n",
+                                      moduleName.c_str());
+         }
+      }
+
+      // Skip the diag only if we build a system module. We still print the diag
+      // when building a non-system module as we will print an error below and the
+      // user should see the detailed default clang diagnostic.
+      bool isSystemModuleDiag = module && module->IsSystem;
+      if (!isSystemModuleDiag)
+         fChild->HandleDiagnostic(DiagLevel, Info);
+
+      if (ID == remark_module_build && !isSystemModuleDiag) {
+         ROOT::TMetaUtils::Error(0,
+                                 "Had to build non-system module %s implicitly. You first need to\n"
+                                 "generate the dictionary for %s or mark the C++ module as a system\n"
+                                 "module if you provided your own system modulemap file:\n"
+                                 "%s [system] { ... }\n",
+                                 moduleName.c_str(), moduleName.c_str(), moduleName.c_str());
+      }
+   }
+
+   // All methods below just forward to the child and the default method.
+   virtual void clear() override
+   {
+      fChild->clear();
+      DiagnosticConsumer::clear();
+   }
+
+   virtual void BeginSourceFile(const clang::LangOptions &LangOpts, const clang::Preprocessor *PP) override
+   {
+      fChild->BeginSourceFile(LangOpts, PP);
+      DiagnosticConsumer::BeginSourceFile(LangOpts, PP);
+   }
+
+   virtual void EndSourceFile() override
+   {
+      fChild->EndSourceFile();
+      DiagnosticConsumer::EndSourceFile();
+   }
+
+   virtual void finish() override
+   {
+      fChild->finish();
+      DiagnosticConsumer::finish();
+   }
+
+   virtual bool IncludeInDiagnosticCounts() const override { return fChild->IncludeInDiagnosticCounts(); }
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 int RootClingMain(int argc,
               char **argv,
@@ -4292,10 +4392,6 @@ int RootClingMain(int argc,
       // the shared library.
       clingArgsInterpreter.push_back("-fmodules-cache-path=" +
                                      llvm::sys::path::parent_path(sharedLibraryPathName).str());
-
-      // We enable remarks in clang for building on-demand modules. This is
-      // useful to figure out when and why on-demand modules are built by clang.
-      clingArgsInterpreter.push_back("-Rmodule-build");
    }
 
    // Convert arguments to a C array and check if they are sane
@@ -4342,9 +4438,27 @@ int RootClingMain(int argc,
       interpPtr = owningInterpPtr.get();
    }
    cling::Interpreter &interp = *interpPtr;
+   clang::CompilerInstance *CI = interp.getCI();
    // FIXME: Remove this once we switch cling to use the driver. This would handle  -fmodules-embed-all-files for us.
-   interp.getCI()->getFrontendOpts().ModulesEmbedAllFiles = true;
-   interp.getCI()->getSourceManager().setAllFilesAreTransient(true);
+   CI->getFrontendOpts().ModulesEmbedAllFiles = true;
+   CI->getSourceManager().setAllFilesAreTransient(true);
+
+   clang::Preprocessor &PP = CI->getPreprocessor();
+   clang::HeaderSearch &headerSearch = PP.getHeaderSearchInfo();
+   clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
+   auto &diags = interp.getDiagnostics();
+
+   // Manually enable the module build remarks. We don't enable them via the
+   // normal clang command line arg because otherwise we would get remarks for
+   // building STL/libc when starting the interpreter in rootcling_stage1.
+   // We can't prevent these diags in any other way because we can only attach
+   // our own diag client now after the interpreter has already started.
+   diags.setSeverity(clang::diag::remark_module_build, clang::diag::Severity::Remark, clang::SourceLocation());
+
+   // Attach our own diag client that listens to the module_build remarks from
+   // clang to check that we don't build dictionary C++ modules implicitly.
+   auto recordingClient = new CheckModuleBuildClient(diags.getClient(), diags.ownsClient(), moduleMap);
+   diags.setClient(recordingClient, true);
 
    if (ROOT::TMetaUtils::GetErrorIgnoreLevel() == ROOT::TMetaUtils::kInfo) {
       ROOT::TMetaUtils::Info(0, "\n");
@@ -4537,7 +4651,6 @@ int RootClingMain(int argc,
 
    // Ignore these #pragmas to suppress "unknown pragma" warnings.
    // See LinkdefReader.cxx.
-   clang::Preprocessor& PP = interp.getCI()->getPreprocessor();
    PP.AddPragmaHandler(new IgnoringPragmaHandler("link"));
    PP.AddPragmaHandler(new IgnoringPragmaHandler("extra_include"));
    PP.AddPragmaHandler(new IgnoringPragmaHandler("read"));
@@ -4650,7 +4763,6 @@ int RootClingMain(int argc,
    ROOT::TMetaUtils::RConstructorTypes constructorTypes;
 
    // Select using DictSelection
-   clang::CompilerInstance *CI = interp.getCI();
    const unsigned int selRulesInitialSize = selectionRules.Size();
    if (dictSelection && !onepcm)
       DictSelectionReader dictSelReader(interp, selectionRules, CI->getASTContext(), normCtxt);
