@@ -96,7 +96,6 @@ enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stds
 
 typedef void *JSONObject_t;
 
-
 ///////////////////////////////////////////////////////////////
 // TArrayIndexProducer is used to correctly create
 /// JSON array separators for multi-dimensional JSON arrays
@@ -176,7 +175,7 @@ public:
    }
 
    /// returns number of array dimensions
-   Int_t NumDimensions() const  { return fIndicies.GetSize(); }
+   Int_t NumDimensions() const { return fIndicies.GetSize(); }
 
    /// return array with current index
    TArrayI &GetIndices() { return fIndicies; };
@@ -253,14 +252,15 @@ public:
 
    JSONObject_t ExtractNode(JSONObject_t topnode, bool next = true)
    {
-      if (!IsArray()) return topnode;
-      nlohmann::json *subnode = &((*((nlohmann::json *) topnode))[fIndicies[0]]);
-      for (int k=1;k<fIndicies.GetSize();++k)
+      if (!IsArray())
+         return topnode;
+      nlohmann::json *subnode = &((*((nlohmann::json *)topnode))[fIndicies[0]]);
+      for (int k = 1; k < fIndicies.GetSize(); ++k)
          subnode = &((*subnode)[fIndicies[k]]);
-      if (next) NextSeparator();
+      if (next)
+         NextSeparator();
       return subnode;
    }
-
 };
 
 // TJSONStackObj is used to keep stack of object hierarchy,
@@ -280,10 +280,10 @@ public:
    Int_t fLevel;               //! indent level
    TArrayIndexProducer *fIndx; //! producer of ndim indexes
 
-   JSONObject_t         fNode;     //! reading JSON node
-   Int_t                fStlIndx;  //! index of object in STL container
-   Int_t                fStlMap;   //! special iterator over STL map::key members
-   Version_t            fClVersion; //! keep actual class version, workaround for ReadVersion in custom streamer
+   JSONObject_t fNode;   //! reading JSON node
+   Int_t fStlIndx;       //! index of object in STL container
+   Int_t fStlMap;        //! special iterator over STL map::key members
+   Version_t fClVersion; //! keep actual class version, workaround for ReadVersion in custom streamer
 
    TJSONStackObj()
       : TObject(), fInfo(nullptr), fElem(nullptr), fIsStreamerInfo(kFALSE), fIsElemOwner(kFALSE),
@@ -311,15 +311,11 @@ public:
       v.Clear();
    }
 
-   void PushIntValue(Int_t v)
-   {
-      fValues.Add(new TObjString(TString::Itoa(v,10)));
-   }
-
+   void PushIntValue(Int_t v) { fValues.Add(new TObjString(TString::Itoa(v, 10))); }
 
    Bool_t IsJsonString()
    {
-      nlohmann::json *json = (nlohmann::json *) fNode;
+      nlohmann::json *json = (nlohmann::json *)fNode;
       return json && json->is_string();
    }
 
@@ -327,7 +323,8 @@ public:
    // returns length of array (or -1 if failure)
    Int_t IsJsonArray(nlohmann::json *json = nullptr)
    {
-      if (!json) json = (nlohmann::json *) fNode;
+      if (!json)
+         json = (nlohmann::json *)fNode;
 
       // normal uncompressed array
       if (json->is_array())
@@ -342,7 +339,7 @@ public:
 
    Int_t PopIntValue()
    {
-      TObjString *str = (TObjString *) fValues.Last();
+      TObjString *str = (TObjString *)fValues.Last();
       Int_t res = str->String().Atoi();
       fValues.Remove(str);
       delete str;
@@ -351,8 +348,8 @@ public:
 
    TArrayIndexProducer *MakeReadIndexes()
    {
-      if (!fElem || (fElem->GetType() <= TStreamerInfo::kOffsetL) || (fElem->GetType() >= TStreamerInfo::kOffsetL + 20) ||
-          (fElem->GetArrayDim() < 2))
+      if (!fElem || (fElem->GetType() <= TStreamerInfo::kOffsetL) ||
+          (fElem->GetType() >= TStreamerInfo::kOffsetL + 20) || (fElem->GetArrayDim() < 2))
          return nullptr;
 
       TArrayIndexProducer *indx = new TArrayIndexProducer(fElem, -1, "");
@@ -365,14 +362,16 @@ public:
       return indx;
    }
 
-   Bool_t IsStl() const { return fStlIndx>=0; }
+   Bool_t IsStl() const { return fStlIndx >= 0; }
 
    nlohmann::json *GetStlNode()
    {
-      nlohmann::json *json = (nlohmann::json *) fNode;
-      if (!fNode || (fStlIndx<0)) return json;
+      nlohmann::json *json = (nlohmann::json *)fNode;
+      if (!fNode || (fStlIndx < 0))
+         return json;
       json = &(json->at(fStlIndx++));
-      if (fStlMap < 0) return json;
+      if (fStlMap < 0)
+         return json;
       if (fStlMap > 0) {
          fStlMap = 0;
          return &(json->at("second"));
@@ -381,15 +380,14 @@ public:
       ++fStlMap;
       return &(json->at("first"));
    }
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Creates buffer object to serialize data into json.
 
 TBufferJSON::TBufferJSON(TBuffer::EMode mode)
-   : TBuffer(mode), fOutBuffer(), fOutput(nullptr), fValue(), fJsonrMap(), fReadMap(), fJsonrCnt(0), fStack(), fCompact(0),
-     fSemicolon(" : "), fArraySepar(", "), fNumericLocale()
+   : TBuffer(mode), fOutBuffer(), fOutput(nullptr), fValue(), fJsonrMap(), fReadMap(), fJsonrCnt(0), fStack(),
+     fCompact(0), fSemicolon(" : "), fArraySepar(", "), fNumericLocale()
 {
    fBufSize = 1000000000;
 
@@ -416,7 +414,8 @@ TBufferJSON::TBufferJSON(TBuffer::EMode mode)
 
 TBufferJSON::~TBufferJSON()
 {
-   while (fStack.size() > 0) PopStack();
+   while (fStack.size() > 0)
+      PopStack();
 
    if (fNumericLocale.Length() > 0)
       setlocale(LC_NUMERIC, fNumericLocale.Data());
@@ -496,11 +495,11 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t comp
    TClass *clActual = obj ? cl->GetActualClass(obj) : nullptr;
    const void *actualStart = obj;
    if (clActual && (clActual != cl)) {
-      actualStart = (char *) obj - clActual->GetBaseClassOffset(cl);
+      actualStart = (char *)obj - clActual->GetBaseClassOffset(cl);
    } else {
       // We could not determine the real type of this object,
       // let's assume it is the one given by the caller.
-      clActual = const_cast<TClass*>(cl);
+      clActual = const_cast<TClass *>(cl);
    }
 
    if (member_name && actualStart) {
@@ -563,8 +562,8 @@ TString TBufferJSON::ConvertToJSON(const void *ptr, TDataMember *member, Int_t c
 
    TClass *mcl = member->IsBasic() ? nullptr : gROOT->GetClass(member->GetTypeName());
 
-   if (mcl && (mcl != TString::Class()) && !stlstring && !isstl &&
-       (mcl->GetBaseClassOffset(TArray::Class()) != 0) && (arraylen <= 0) && (member->GetArrayDim() == 0))
+   if (mcl && (mcl != TString::Class()) && !stlstring && !isstl && (mcl->GetBaseClassOffset(TArray::Class()) != 0) &&
+       (arraylen <= 0) && (member->GetArrayDim() == 0))
       return TBufferJSON::ConvertToJSON(ptr, mcl, compact);
 
    TBufferJSON buf;
@@ -786,24 +785,28 @@ void *TBufferJSON::ConvertFromJSONAny(const char *str, TClass **cl)
 
 void *TBufferJSON::ConvertFromJSONChecked(const char *str, const TClass *expectedClass)
 {
-   if (!expectedClass) return nullptr;
+   if (!expectedClass)
+      return nullptr;
 
    TClass *resClass = nullptr;
 
    void *res = ConvertFromJSONAny(str, &resClass);
 
-   if (!res || !resClass) return nullptr;
+   if (!res || !resClass)
+      return nullptr;
 
-   if (resClass == expectedClass) return res;
+   if (resClass == expectedClass)
+      return res;
 
    Int_t offset = resClass->GetBaseClassOffset(expectedClass);
-   if (offset<0) {
-      printf("TBufferJSON::ConvertFromJSONChecked expected class %s is not base for read class %s", expectedClass->GetName(), resClass->GetName());
+   if (offset < 0) {
+      printf("TBufferJSON::ConvertFromJSONChecked expected class %s is not base for read class %s",
+             expectedClass->GetName(), resClass->GetName());
       resClass->Destructor(res);
       return nullptr;
    }
 
-   return (char *) res - offset;
+   return (char *)res - offset;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1020,23 +1023,26 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
    Int_t special_kind = JsonSpecialClass(base_class);
 
    switch (special_kind) {
-      case 0: if (!base_class) elem_name = elem->GetName(); break;
-      case TClassEdit::kVector: elem_name = "fVector"; break;
-      case TClassEdit::kList: elem_name = "fList"; break;
-      case TClassEdit::kForwardlist: elem_name = "fForwardlist"; break;
-      case TClassEdit::kDeque: elem_name = "fDeque"; break;
-      case TClassEdit::kMap: elem_name = "fMap"; break;
-      case TClassEdit::kMultiMap: elem_name = "fMultiMap"; break;
-      case TClassEdit::kSet: elem_name = "fSet"; break;
-      case TClassEdit::kMultiSet: elem_name = "fMultiSet"; break;
-      case TClassEdit::kUnorderedSet: elem_name = "fUnorderedSet"; break;
-      case TClassEdit::kUnorderedMultiSet: elem_name = "fUnorderedMultiSet"; break;
-      case TClassEdit::kUnorderedMap: elem_name = "fUnorderedMap"; break;
-      case TClassEdit::kUnorderedMultiMap: elem_name = "fUnorderedMultiMap"; break;
-      case TClassEdit::kBitSet: elem_name = "fBitSet"; break;
-      case json_TArray: elem_name = "fArray"; break;
-      case json_TString:
-      case json_stdstring: elem_name = "fString"; break;
+   case 0:
+      if (!base_class)
+         elem_name = elem->GetName();
+      break;
+   case TClassEdit::kVector: elem_name = "fVector"; break;
+   case TClassEdit::kList: elem_name = "fList"; break;
+   case TClassEdit::kForwardlist: elem_name = "fForwardlist"; break;
+   case TClassEdit::kDeque: elem_name = "fDeque"; break;
+   case TClassEdit::kMap: elem_name = "fMap"; break;
+   case TClassEdit::kMultiMap: elem_name = "fMultiMap"; break;
+   case TClassEdit::kSet: elem_name = "fSet"; break;
+   case TClassEdit::kMultiSet: elem_name = "fMultiSet"; break;
+   case TClassEdit::kUnorderedSet: elem_name = "fUnorderedSet"; break;
+   case TClassEdit::kUnorderedMultiSet: elem_name = "fUnorderedMultiSet"; break;
+   case TClassEdit::kUnorderedMap: elem_name = "fUnorderedMap"; break;
+   case TClassEdit::kUnorderedMultiMap: elem_name = "fUnorderedMultiMap"; break;
+   case TClassEdit::kBitSet: elem_name = "fBitSet"; break;
+   case json_TArray: elem_name = "fArray"; break;
+   case json_TString:
+   case json_stdstring: elem_name = "fString"; break;
    }
 
    if (!elem_name)
@@ -1052,10 +1058,10 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
          if (special_kind == json_TArray) {
             Int_t len = Stack()->IsJsonArray();
             Stack()->PushIntValue(len > 0 ? len : 0);
-            if (len<0)
+            if (len < 0)
                Error("JsonStartElement", "Missing array when reading TArray class for element %s", elem->GetName());
          }
-         if ((gDebug>1) && base_class)
+         if ((gDebug > 1) && base_class)
             Info("JsonStartElement", "Reading baseclass %s from element %s", base_class->GetName(), elem_name);
       }
 
@@ -1398,13 +1404,13 @@ void TBufferJSON::JsonWriteCollection(TCollection *col, const TClass *)
    fValue.Clear();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// read content of ROOT collection
 
 void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
 {
-   if (!col) return;
+   if (!col)
+      return;
 
    TList *lst = nullptr;
    TMap *map = nullptr;
@@ -1416,7 +1422,7 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
    else if (col->InheritsFrom(TClonesArray::Class()))
       clones = dynamic_cast<TClonesArray *>(col);
 
-   nlohmann::json *json = (nlohmann::json *) Stack()->fNode;
+   nlohmann::json *json = (nlohmann::json *)Stack()->fNode;
 
    std::string name = json->at("name");
    col->SetName(name.c_str());
@@ -1424,10 +1430,11 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
    nlohmann::json &arr = json->at("arr");
    int size = arr.size();
 
-   for (int n=0;n<size;++n) {
+   for (int n = 0; n < size; ++n) {
       nlohmann::json *subelem = &arr.at(n);
 
-      if (map) subelem = &subelem->at("first");
+      if (map)
+         subelem = &subelem->at("first");
 
       PushStack(0, subelem);
 
@@ -1435,11 +1442,11 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
       void *subobj = nullptr;
 
       if (clones) {
-         if (n==0) {
+         if (n == 0) {
             if (!clones->GetClass() || (clones->GetSize() == 0)) {
                clones->SetClass(subelem->at("_typename").get<std::string>().c_str(), size);
             } else if (size > clones->GetSize()) {
-               Error("JsonReadCollection","TClonesArray size %d smaller than required %d\n", clones->GetSize(), size);
+               Error("JsonReadCollection", "TClonesArray size %d smaller than required %d\n", clones->GetSize(), size);
                return;
             }
          }
@@ -1451,10 +1458,12 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
 
       PopStack();
 
-      if (clones) continue;
+      if (clones)
+         continue;
 
-      if (!subobj || !readClass) subobj = nullptr; else
-      if (readClass->GetBaseClassOffset(TObject::Class()) != 0) {
+      if (!subobj || !readClass)
+         subobj = nullptr;
+      else if (readClass->GetBaseClassOffset(TObject::Class()) != 0) {
          Error("JsonReadCollection", "Try to add object %s not derived from TObject", readClass->GetName());
          subobj = nullptr;
       }
@@ -1469,8 +1478,9 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
 
          PopStack();
 
-         if (!subobj2 || !readClass) subobj2 = nullptr; else
-         if (readClass->GetBaseClassOffset(TObject::Class()) != 0) {
+         if (!subobj2 || !readClass)
+            subobj2 = nullptr;
+         else if (readClass->GetBaseClassOffset(TObject::Class()) != 0) {
             Error("JsonReadCollection", "Try to add object %s not derived from TObject", readClass->GetName());
             subobj2 = nullptr;
          }
@@ -1486,7 +1496,6 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
    }
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object from current JSON node
 
@@ -1501,7 +1510,8 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    nlohmann::json *json = stack->GetStlNode();
 
    // check if null pointer
-   if (json->is_null()) return nullptr;
+   if (json->is_null())
+      return nullptr;
 
    Int_t special_kind = JsonSpecialClass(objClass);
 
@@ -1518,8 +1528,9 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       if (readClass)
          *readClass = elem->second.cl;
 
-      if (gDebug>2)
-         Info("JsonReadObject", "Extract object reference %u %p cl:%s expects:%s", refid, elem->second.obj, elem->second.cl->GetName(), (objClass ? objClass->GetName() : "---"));
+      if (gDebug > 2)
+         Info("JsonReadObject", "Extract object reference %u %p cl:%s expects:%s", refid, elem->second.obj,
+              elem->second.cl->GetName(), (objClass ? objClass->GetName() : "---"));
 
       return elem->second.obj;
    }
@@ -1533,12 +1544,12 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
          Info("JsonReadObject", "Read string from %s", json->dump().c_str());
 
       if (special_kind == json_stdstring)
-         *((std::string *) obj) = json->get<std::string>();
+         *((std::string *)obj) = json->get<std::string>();
       else
-         *((TString *) obj) = json->get<std::string>().c_str();
+         *((TString *)obj) = json->get<std::string>().c_str();
 
       if (readClass)
-         *readClass = (TClass *) objClass;
+         *readClass = (TClass *)objClass;
 
       return obj;
    }
@@ -1559,7 +1570,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
    if ((special_kind == json_TArray) || ((special_kind > 0) && (special_kind < ROOT::kSTLend))) {
 
-      jsonClass = (TClass *) objClass;
+      jsonClass = (TClass *)objClass;
 
       if (!obj)
          obj = jsonClass->New();
@@ -1577,7 +1588,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    } else if (isBase) {
       // base class has special handling - no additional level and no extra refid
 
-      jsonClass = (TClass *) objClass;
+      jsonClass = (TClass *)objClass;
 
       if (gDebug > 1)
          Info("JsonReadObject", "Reading baseclass %s ptr %p", objClass->GetName(), obj);
@@ -1589,12 +1600,14 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
       if (!jsonClass) {
          Error("JsonReadObject", "Cannot find class %s", clname.c_str());
-         if (process_stl) PopStack();
+         if (process_stl)
+            PopStack();
          return obj;
       }
 
-      if (objClass && (jsonClass!=objClass)) {
-         Error("JsonReadObject", "Class mismatch between provided %s and in JSON %s", objClass->GetName(), jsonClass->GetName());
+      if (objClass && (jsonClass != objClass)) {
+         Error("JsonReadObject", "Class mismatch between provided %s and in JSON %s", objClass->GetName(),
+               jsonClass->GetName());
       }
 
       if (!obj)
@@ -1618,7 +1631,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
    } else if (special_kind == json_TCollection) {
 
-      JsonReadCollection((TCollection *) obj, jsonClass);
+      JsonReadCollection((TCollection *)obj, jsonClass);
 
    } else {
 
@@ -1626,15 +1639,17 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       if ((special_kind > 0) && (special_kind < ROOT::kSTLend)) {
          stack->fStlIndx = 0;
          if ((special_kind == TClassEdit::kMap) || (special_kind == TClassEdit::kMultiMap) ||
-             (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap)) stack->fStlMap = 0;
+             (special_kind == TClassEdit::kUnorderedMap) || (special_kind == TClassEdit::kUnorderedMultiMap))
+            stack->fStlMap = 0;
       }
 
       // workaround for missing version in JSON structures
       stack->fClVersion = jsonClass->GetClassVersion();
 
-      if (gDebug>3) Info("JsonReadObject", "Calling streamer of class %s", jsonClass->GetName());
+      if (gDebug > 3)
+         Info("JsonReadObject", "Calling streamer of class %s", jsonClass->GetName());
 
-      if (isBase && (special_kind==0))
+      if (isBase && (special_kind == 0))
          Error("JsonReadObject", "Should not be used for reading of base class %s", jsonClass->GetName());
 
       jsonClass->Streamer((void *)obj, *this);
@@ -1646,7 +1661,8 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    }
 
    // return back stack position
-   if (process_stl) PopStack();
+   if (process_stl)
+      PopStack();
 
    if (gDebug > 1)
       Info("JsonReadObject", "Reading object of class %s done", jsonClass->GetName());
@@ -1659,7 +1675,8 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
 void TBufferJSON::JsonReadTObjectMembers(TObject *tobj, void *node)
 {
-   if (!node) node = Stack()->fNode;
+   if (!node)
+      node = Stack()->fNode;
 
    nlohmann::json *json = (nlohmann::json *)node;
 
@@ -1669,7 +1686,7 @@ void TBufferJSON::JsonReadTObjectMembers(TObject *tobj, void *node)
 
    tobj->SetUniqueID(uid);
    // there is no method to set all bits directly - do it one by one
-   for (unsigned n=0;n<32;n++)
+   for (unsigned n = 0; n < 32; n++)
       tobj->SetBit(BIT(n), (bits & BIT(n)) != 0);
 
    if (gDebug > 2)
@@ -1686,7 +1703,6 @@ Int_t TBufferJSON::ReadClassBuffer(const TClass *cl, void *ptr, const TClass *)
       JsonReadTObjectMembers((TObject *)ptr);
       return 0;
    }
-
 
    TStreamerInfo *sinfo = (TStreamerInfo *)cl->GetStreamerInfo();
 
@@ -1713,7 +1729,8 @@ Int_t TBufferJSON::ReadClassBuffer(const TClass *cl, void *ptr, const TClass *)
 /// \param[in] count   The number of bytes for this object in the buffer
 ///
 
-Int_t TBufferJSON::ReadClassBuffer(const TClass *cl, void *ptr, Int_t /*version*/, UInt_t /*start*/, UInt_t /*count*/, const TClass * /*onFileClass*/)
+Int_t TBufferJSON::ReadClassBuffer(const TClass *cl, void *ptr, Int_t /*version*/, UInt_t /*start*/, UInt_t /*count*/,
+                                   const TClass * /*onFileClass*/)
 {
    TStreamerInfo *sinfo = (TStreamerInfo *)cl->GetStreamerInfo();
 
@@ -1726,8 +1743,6 @@ Int_t TBufferJSON::ReadClassBuffer(const TClass *cl, void *ptr, Int_t /*version*
 
    return 0;
 }
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Function is called from TStreamerInfo WriteBuffer and ReadBuffer functions
@@ -1908,7 +1923,6 @@ void TBufferJSON::WorkWithElement(TStreamerElement *elem, Int_t)
       // it indicates if array should be read or not
       stack->PushIntValue(stack->IsJsonString() || (stack->IsJsonArray() > 0) ? 1 : 0);
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2284,9 +2298,7 @@ void TBufferJSON::SkipObjectAny()
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object to buffer. Only used from TBuffer
 
-void TBufferJSON::WriteObjectClass(const void *actualObjStart,
-                                   const TClass *actualClass,
-                                   Bool_t cacheReuse)
+void TBufferJSON::WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse)
 {
    if (gDebug > 3)
       Info("WriteObjectClass", "Class %s", (actualClass ? actualClass->GetName() : " null"));
@@ -2299,10 +2311,10 @@ void TBufferJSON::WriteObjectClass(const void *actualObjStart,
       Stack()->PushValue(fValue);
 
 // macro to read array, which include size attribute
-#define TBufferJSON_ReadArray(tname, vname)  \
-   {                                         \
-      Info("ReadArray", "Not implemented");  \
-      return vname ? 1 : 0;                  \
+#define TBufferJSON_ReadArray(tname, vname) \
+   {                                        \
+      Info("ReadArray", "Not implemented"); \
+      return vname ? 1 : 0;                 \
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2446,10 +2458,10 @@ Int_t TBufferJSON::ReadArrayDouble32(Double_t *&d, TStreamerElement * /*ele*/)
 }
 
 // dummy macro to read array from json buffer
-#define TBufferJSON_ReadStaticArray(vname)         \
-   {                                               \
-      Info("ReadStaticArray", "Not implemented");  \
-      return vname ? 1 : 0;                        \
+#define TBufferJSON_ReadStaticArray(vname)        \
+   {                                              \
+      Info("ReadStaticArray", "Not implemented"); \
+      return vname ? 1 : 0;                       \
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2575,48 +2587,61 @@ Int_t TBufferJSON::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele
 // macro to read content of array, which not include size of array
 // macro also treat situation, when instead of one single array chain
 // of several elements should be produced
-#define TBufferJSON_ReadFastArray(arg, cast_type, asstr)            \
-   if (!arg || (n<=0)) return;                                      \
-   nlohmann::json *json = (nlohmann::json *) Stack()->fNode;        \
-   if (gDebug>2) Info("ReadFastArray", "Reading array sz %d from JSON %s", n, json->dump().c_str()); \
-   TArrayIndexProducer *indexes = Stack()->MakeReadIndexes();       \
-   if (indexes) { /* at least two dims */                           \
-      TArrayI &indx = indexes->GetIndices();                        \
-      Int_t lastdim = indx.GetSize() - 1;                           \
-      if (indexes->TotalLength() != n) Error("ReadFastArray", "Mismatch %d-dim array sizes %d %d", lastdim+1, n, (int) indexes->TotalLength()); \
-      for (int cnt=0;cnt<n;++cnt) {                                 \
-         nlohmann::json *elem = &(json->at(indx[0]));               \
-         for (int k=1;k<lastdim;++k) elem = &((*elem)[indx[k]]);    \
-         arg[cnt] = asstr ? elem->get<std::string>()[indx[lastdim]] : (*elem)[indx[lastdim]].get<cast_type>(); \
-         indexes->NextSeparator();                                  \
-      }                                                             \
-      delete indexes;                                               \
-   } else if (asstr) {                                              \
-      std::string str = json->get<std::string>();                   \
-      for (int cnt=0;cnt<n;++cnt) arg[cnt] = (cnt < (int) str.length()) ? str[cnt] : 0; \
-   } else if (json->is_object() && (json->count("$arr")==1)) {       \
-      if (json->at("len").get<int>() != n) Error("ReadFastArray", "Mismatch compressed array size %d %d", n, json->at("len").get<int>()); \
-      for (int cnt=0;cnt<n;++cnt) arg[cnt] = 0;                              \
-      int p = 0, id = 0;                                                     \
-      std::string idname = "", pname, vname, nname;                          \
-      while (p<n) {                                                          \
-         pname = std::string("p") + idname;                                  \
-         if (json->count(pname)==1) p = json->at(pname).get<int>();          \
-         vname = std::string("v") + idname;                                  \
-         if (json->count(vname)!=1) break;                                   \
-         nlohmann::json &v = json->at(vname);                                \
-         if (v.is_array()) {                                                 \
-            for (unsigned sub=0;sub<v.size();++sub) arg[p++] = v[sub].get<cast_type>(); \
-         } else {                                                            \
-            nname = std::string("n") + idname;                               \
-            unsigned ncopy = (json->count(nname) == 1) ? json->at(nname).get<unsigned>() : 1; \
-            for (unsigned sub=0;sub<ncopy;++sub) arg[p++] = v.get<cast_type>();   \
-         }                                                                   \
-         idname = std::to_string(++id);                                      \
-      }                                                                      \
-   } else {                                                                  \
-      if ((int) json->size() != n) Error("ReadFastArray", "Mismatch array sizes %d %d", n, (int) json->size()); \
-      for (int cnt=0;cnt<n;++cnt) arg[cnt] = json->at(cnt).get<cast_type>(); \
+#define TBufferJSON_ReadFastArray(arg, cast_type, asstr)                                                           \
+   if (!arg || (n <= 0))                                                                                           \
+      return;                                                                                                      \
+   nlohmann::json *json = (nlohmann::json *)Stack()->fNode;                                                        \
+   if (gDebug > 2)                                                                                                 \
+      Info("ReadFastArray", "Reading array sz %d from JSON %s", n, json->dump().c_str());                          \
+   TArrayIndexProducer *indexes = Stack()->MakeReadIndexes();                                                      \
+   if (indexes) { /* at least two dims */                                                                          \
+      TArrayI &indx = indexes->GetIndices();                                                                       \
+      Int_t lastdim = indx.GetSize() - 1;                                                                          \
+      if (indexes->TotalLength() != n)                                                                             \
+         Error("ReadFastArray", "Mismatch %d-dim array sizes %d %d", lastdim + 1, n, (int)indexes->TotalLength()); \
+      for (int cnt = 0; cnt < n; ++cnt) {                                                                          \
+         nlohmann::json *elem = &(json->at(indx[0]));                                                              \
+         for (int k = 1; k < lastdim; ++k)                                                                         \
+            elem = &((*elem)[indx[k]]);                                                                            \
+         arg[cnt] = asstr ? elem->get<std::string>()[indx[lastdim]] : (*elem)[indx[lastdim]].get<cast_type>();     \
+         indexes->NextSeparator();                                                                                 \
+      }                                                                                                            \
+      delete indexes;                                                                                              \
+   } else if (asstr) {                                                                                             \
+      std::string str = json->get<std::string>();                                                                  \
+      for (int cnt = 0; cnt < n; ++cnt)                                                                            \
+         arg[cnt] = (cnt < (int)str.length()) ? str[cnt] : 0;                                                      \
+   } else if (json->is_object() && (json->count("$arr") == 1)) {                                                   \
+      if (json->at("len").get<int>() != n)                                                                         \
+         Error("ReadFastArray", "Mismatch compressed array size %d %d", n, json->at("len").get<int>());            \
+      for (int cnt = 0; cnt < n; ++cnt)                                                                            \
+         arg[cnt] = 0;                                                                                             \
+      int p = 0, id = 0;                                                                                           \
+      std::string idname = "", pname, vname, nname;                                                                \
+      while (p < n) {                                                                                              \
+         pname = std::string("p") + idname;                                                                        \
+         if (json->count(pname) == 1)                                                                              \
+            p = json->at(pname).get<int>();                                                                        \
+         vname = std::string("v") + idname;                                                                        \
+         if (json->count(vname) != 1)                                                                              \
+            break;                                                                                                 \
+         nlohmann::json &v = json->at(vname);                                                                      \
+         if (v.is_array()) {                                                                                       \
+            for (unsigned sub = 0; sub < v.size(); ++sub)                                                          \
+               arg[p++] = v[sub].get<cast_type>();                                                                 \
+         } else {                                                                                                  \
+            nname = std::string("n") + idname;                                                                     \
+            unsigned ncopy = (json->count(nname) == 1) ? json->at(nname).get<unsigned>() : 1;                      \
+            for (unsigned sub = 0; sub < ncopy; ++sub)                                                             \
+               arg[p++] = v.get<cast_type>();                                                                      \
+         }                                                                                                         \
+         idname = std::to_string(++id);                                                                            \
+      }                                                                                                            \
+   } else {                                                                                                        \
+      if ((int)json->size() != n)                                                                                  \
+         Error("ReadFastArray", "Mismatch array sizes %d %d", n, (int)json->size());                               \
+      for (int cnt = 0; cnt < n; ++cnt)                                                                            \
+         arg[cnt] = json->at(cnt).get<cast_type>();                                                                \
    }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2788,26 +2813,27 @@ void TBufferJSON::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t /*nbits*/)
 void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *streamer,
                                 const TClass *onFileClass)
 {
-   if (gDebug>1)
+   if (gDebug > 1)
       Info("ReadFastArray", "void* n:%d cl:%s streamer:%s", n, cl->GetName(), (streamer ? "on" : "off"));
 
    if (streamer) {
       Info("ReadFastArray", "(void*) Calling streamer - not handled correctly");
       streamer->SetOnFileClass(onFileClass);
-      (*streamer)(*this,start,0);
+      (*streamer)(*this, start, 0);
       return;
    }
 
    int objectSize = cl->Size();
-   char *obj = (char*)start;
+   char *obj = (char *)start;
 
    TJSONStackObj *stack = Stack();
    JSONObject_t topnode = stack->fNode, subnode = topnode;
-   if (stack->fIndx) subnode = stack->fIndx->ExtractNode(topnode);
+   if (stack->fIndx)
+      subnode = stack->fIndx->ExtractNode(topnode);
 
    TArrayIndexProducer indexes(stack->fElem, n, "");
 
-   if (gDebug>1)
+   if (gDebug > 1)
       Info("ReadFastArray", "Indexes ndim:%d totallen:%d", indexes.NumDimensions(), indexes.TotalLength());
 
    for (Int_t j = 0; j < n; j++, obj += objectSize) {
@@ -2824,40 +2850,44 @@ void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberS
 ////////////////////////////////////////////////////////////////////////////////
 /// redefined here to avoid warning message from gcc
 
-void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc,
-                                TMemberStreamer *streamer, const TClass *onFileClass)
+void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer,
+                                const TClass *onFileClass)
 {
-   if (gDebug>1) Info("ReadFastArray", "void** n:%d cl:%s prealloc:%s", n, cl->GetName(), (isPreAlloc ? "true" : "false"));
+   if (gDebug > 1)
+      Info("ReadFastArray", "void** n:%d cl:%s prealloc:%s", n, cl->GetName(), (isPreAlloc ? "true" : "false"));
 
    if (streamer) {
       Info("ReadFastArray", "(void**) Calling streamer - not handled correctly");
       if (isPreAlloc) {
-         for (Int_t j=0;j<n;j++) {
-            if (!start[j]) start[j] = cl->New();
+         for (Int_t j = 0; j < n; j++) {
+            if (!start[j])
+               start[j] = cl->New();
          }
       }
       streamer->SetOnFileClass(onFileClass);
-      (*streamer)(*this,(void*)start,0);
+      (*streamer)(*this, (void *)start, 0);
       return;
    }
 
    TJSONStackObj *stack = Stack();
    JSONObject_t topnode = stack->fNode, subnode = topnode;
-   if (stack->fIndx) subnode = stack->fIndx->ExtractNode(topnode);
+   if (stack->fIndx)
+      subnode = stack->fIndx->ExtractNode(topnode);
 
    TArrayIndexProducer indexes(stack->fElem, n, "");
 
-   for (Int_t j=0; j<n; j++) {
+   for (Int_t j = 0; j < n; j++) {
 
       stack->fNode = indexes.ExtractNode(subnode);
 
       if (!isPreAlloc) {
          void *old = start[j];
          start[j] = JsonReadObject(nullptr, cl);
-         if (old && old!=start[j] && TStreamerInfo::CanDelete())
-            ((TClass*)cl)->Destructor(old,kFALSE); // call delete and destruct
+         if (old && old != start[j] && TStreamerInfo::CanDelete())
+            ((TClass *)cl)->Destructor(old, kFALSE); // call delete and destruct
       } else {
-         if (!start[j]) start[j] = ((TClass*)cl)->New();
+         if (!start[j])
+            start[j] = ((TClass *)cl)->New();
          JsonReadObject(start[j], cl);
       }
    }
@@ -3386,13 +3416,9 @@ void TBufferJSON::StreamObject(void *obj, const TClass *cl, const TClass * /* on
       JsonReadObject(obj, cl);
 }
 
+#define JsonReadBasic(arg, cast_type) arg = Stack()->GetStlNode()->get<cast_type>();
 
-#define JsonReadBasic(arg, cast_type)                         \
-   arg = Stack()->GetStlNode()->get<cast_type>();
-
-
-#define JsonReadString(arg)                                        \
-   arg = Stack()->GetStlNode()->get<std::string>();
+#define JsonReadString(arg) arg = Stack()->GetStlNode()->get<std::string>();
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads Bool_t value from buffer
@@ -3408,7 +3434,7 @@ void TBufferJSON::ReadBool(Bool_t &val)
 void TBufferJSON::ReadChar(Char_t &val)
 {
    if (Stack()->fValues.GetLast() >= 0)
-      val = (Char_t) Stack()->PopIntValue();
+      val = (Char_t)Stack()->PopIntValue();
    else
       val = Stack()->GetStlNode()->get<Char_t>();
 }
@@ -3564,7 +3590,6 @@ void TBufferJSON::ReadWithNbits(Double_t *d, Int_t /* nbits */)
    JsonReadBasic(*d, Double_t);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads array of characters from buffer
 
@@ -3600,13 +3625,13 @@ void TBufferJSON::ReadCharStar(char *&s)
    JsonReadString(str);
 
    if (s) {
-     delete [] s;
-     s = nullptr;
+      delete[] s;
+      s = nullptr;
    }
 
    std::size_t nch = str.length();
    if (nch > 0) {
-      s = new char[nch+1];
+      s = new char[nch + 1];
       memcpy(s, str.c_str(), nch);
       s[nch] = 0;
    }
