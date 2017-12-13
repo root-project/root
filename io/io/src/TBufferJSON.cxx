@@ -487,11 +487,21 @@ void TBufferJSON::SetCompact(int level)
 
 TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t compact, const char *member_name)
 {
-   if (member_name && obj) {
-      TRealData *rdata = cl->GetRealData(member_name);
+   TClass *clActual = obj ? cl->GetActualClass(obj) : nullptr;
+   const void *actualStart = obj;
+   if (clActual && (clActual != cl)) {
+      actualStart = (char *) obj - clActual->GetBaseClassOffset(cl);
+   } else {
+      // We could not determine the real type of this object,
+      // let's assume it is the one given by the caller.
+      clActual = const_cast<TClass*>(cl);
+   }
+
+   if (member_name && actualStart) {
+      TRealData *rdata = clActual->GetRealData(member_name);
       TDataMember *member = rdata ? rdata->GetDataMember() : nullptr;
       if (member == 0) {
-         TIter iter(cl->GetListOfRealData());
+         TIter iter(clActual->GetListOfRealData());
          while ((rdata = dynamic_cast<TRealData *>(iter())) != nullptr) {
             member = rdata->GetDataMember();
             if (member && strcmp(member->GetName(), member_name) == 0)
@@ -503,14 +513,14 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t comp
 
       Int_t arraylen = -1;
       if (member->GetArrayIndex() != 0) {
-         TRealData *idata = cl->GetRealData(member->GetArrayIndex());
+         TRealData *idata = clActual->GetRealData(member->GetArrayIndex());
          TDataMember *imember = idata ? idata->GetDataMember() : nullptr;
          if (imember && (strcmp(imember->GetTrueTypeName(), "int") == 0)) {
-            arraylen = *((int *)((char *)obj + idata->GetThisOffset()));
+            arraylen = *((int *)((char *)actualStart + idata->GetThisOffset()));
          }
       }
 
-      void *ptr = (char *)obj + rdata->GetThisOffset();
+      void *ptr = (char *)actualStart + rdata->GetThisOffset();
       if (member->IsaPointer())
          ptr = *((char **)ptr);
 
@@ -523,7 +533,7 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t comp
 
    buf.PushStack(0); // dummy stack entry to avoid extra checks in the beginning
 
-   buf.JsonWriteObject(obj, cl);
+   buf.JsonWriteObject(actualStart, clActual);
 
    buf.PopStack();
 
