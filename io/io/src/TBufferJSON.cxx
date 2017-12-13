@@ -145,8 +145,6 @@ const char *TBufferJSON::fgDoubleFmt = "%.14e";
 
 enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
 
-typedef void *JSONObject_t;
-
 ///////////////////////////////////////////////////////////////
 // TArrayIndexProducer is used to correctly create
 /// JSON array separators for multi-dimensional JSON arrays
@@ -301,7 +299,7 @@ public:
       return fRes.Data();
    }
 
-   JSONObject_t ExtractNode(JSONObject_t topnode, bool next = true)
+   nlohmann::json *ExtractNode(nlohmann::json *topnode, bool next = true)
    {
       if (!IsArray())
          return topnode;
@@ -331,10 +329,10 @@ public:
    Int_t fLevel;               //! indent level
    TArrayIndexProducer *fIndx; //! producer of ndim indexes
 
-   JSONObject_t fNode;   //! reading JSON node
-   Int_t fStlIndx;       //! index of object in STL container
-   Int_t fStlMap;        //! special iterator over STL map::key members
-   Version_t fClVersion; //! keep actual class version, workaround for ReadVersion in custom streamer
+   nlohmann::json *fNode; //! JSON node, used for reading
+   Int_t fStlIndx;        //! index of object in STL container
+   Int_t fStlMap;         //! special iterator over STL map::key members
+   Version_t fClVersion;  //! keep actual class version, workaround for ReadVersion in custom streamer
 
    TJSONStackObj()
       : TObject(), fInfo(nullptr), fElem(nullptr), fIsStreamerInfo(kFALSE), fIsElemOwner(kFALSE),
@@ -364,18 +362,14 @@ public:
 
    void PushIntValue(Int_t v) { fValues.Add(new TObjString(TString::Itoa(v, 10))); }
 
-   Bool_t IsJsonString()
-   {
-      nlohmann::json *json = (nlohmann::json *)fNode;
-      return json && json->is_string();
-   }
+   Bool_t IsJsonString() { return fNode && fNode->is_string(); }
 
    // checks if specified JSON node is array (compressed or not compressed)
    // returns length of array (or -1 if failure)
    Int_t IsJsonArray(nlohmann::json *json = nullptr)
    {
       if (!json)
-         json = (nlohmann::json *)fNode;
+         json = fNode;
 
       // normal uncompressed array
       if (json->is_array())
@@ -417,10 +411,9 @@ public:
 
    nlohmann::json *GetStlNode()
    {
-      nlohmann::json *json = (nlohmann::json *)fNode;
-      if (!fNode || (fStlIndx < 0))
-         return json;
-      json = &(json->at(fStlIndx++));
+      if (fStlIndx < 0)
+         return fNode;
+      nlohmann::json *json = &(fNode->at(fStlIndx++));
       if (fStlMap < 0)
          return json;
       if (fStlMap > 0) {
@@ -1025,7 +1018,7 @@ TJSONStackObj *TBufferJSON::PushStack(Int_t inclevel, void *readnode)
    next->fLevel = inclevel;
    if (fStack.size() > 0)
       next->fLevel += Stack()->fLevel;
-   next->fNode = readnode;
+   next->fNode = (nlohmann::json *)readnode;
    fStack.push_back(next);
    return next;
 }
@@ -1100,7 +1093,7 @@ void TBufferJSON::JsonStartElement(const TStreamerElement *elem, const TClass *b
       return;
 
    if (IsReading()) {
-      nlohmann::json *json = (nlohmann::json *)Stack()->fNode;
+      nlohmann::json *json = Stack()->fNode;
 
       if (json->count(elem_name) != 1) {
          Error("JsonStartElement", "Missing JSON structure for element %s", elem_name);
@@ -1473,7 +1466,7 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
    else if (col->InheritsFrom(TClonesArray::Class()))
       clones = dynamic_cast<TClonesArray *>(col);
 
-   nlohmann::json *json = (nlohmann::json *)Stack()->fNode;
+   nlohmann::json *json = Stack()->fNode;
 
    std::string name = json->at("name");
    col->SetName(name.c_str());
@@ -1726,10 +1719,7 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
 
 void TBufferJSON::JsonReadTObjectMembers(TObject *tobj, void *node)
 {
-   if (!node)
-      node = Stack()->fNode;
-
-   nlohmann::json *json = (nlohmann::json *)node;
+   nlohmann::json *json = node ? (nlohmann::json *)node : Stack()->fNode;
 
    UInt_t uid = json->at("fUniqueID").get<unsigned>();
    UInt_t bits = json->at("fBits").get<unsigned>();
@@ -2641,9 +2631,9 @@ Int_t TBufferJSON::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele
 #define TBufferJSON_ReadFastArray(arg, cast_type, asstr)                                                           \
    if (!arg || (n <= 0))                                                                                           \
       return;                                                                                                      \
-   nlohmann::json *json = (nlohmann::json *)Stack()->fNode;                                                        \
+   nlohmann::json *json = Stack()->fNode;                                                                          \
    if (gDebug > 2)                                                                                                 \
-      Info("ReadFastArray", "Reading array sz %d from JSON %s", n, json->dump().c_str());                          \
+      Info("ReadFastArray", "Reading array sz %d from JSON %s", n, json->dump().substr(0, 30).c_str());            \
    TArrayIndexProducer *indexes = Stack()->MakeReadIndexes();                                                      \
    if (indexes) { /* at least two dims */                                                                          \
       TArrayI &indx = indexes->GetIndices();                                                                       \
@@ -2878,7 +2868,7 @@ void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberS
    char *obj = (char *)start;
 
    TJSONStackObj *stack = Stack();
-   JSONObject_t topnode = stack->fNode, subnode = topnode;
+   nlohmann::json *topnode = stack->fNode, *subnode = topnode;
    if (stack->fIndx)
       subnode = stack->fIndx->ExtractNode(topnode);
 
@@ -2921,7 +2911,7 @@ void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
    }
 
    TJSONStackObj *stack = Stack();
-   JSONObject_t topnode = stack->fNode, subnode = topnode;
+   nlohmann::json *topnode = stack->fNode, *subnode = topnode;
    if (stack->fIndx)
       subnode = stack->fIndx->ExtractNode(topnode);
 
