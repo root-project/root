@@ -33,20 +33,20 @@ public:
 
    void SetCompact(int level);
 
-   static TString ConvertToJSON(const TObject *obj, Int_t compact = 0, const char *member_name = 0);
-   static TString ConvertToJSON(const void *obj, const TClass *cl, Int_t compact = 0, const char *member_name = 0);
+   static TString ConvertToJSON(const TObject *obj, Int_t compact = 0, const char *member_name = nullptr);
+   static TString ConvertToJSON(const void *obj, const TClass *cl, Int_t compact = 0, const char *member_name = nullptr);
    static TString ConvertToJSON(const void *obj, TDataMember *member, Int_t compact = 0, Int_t arraylen = -1);
 
-   static Int_t ExportToFile(const char *filename, const TObject *obj, const char *option = 0);
-   static Int_t ExportToFile(const char *filename, const void *obj, const TClass *cl, const char *option = 0);
+   static Int_t ExportToFile(const char *filename, const TObject *obj, const char *option = nullptr);
+   static Int_t ExportToFile(const char *filename, const void *obj, const TClass *cl, const char *option = nullptr);
 
    static TObject *ConvertFromJSON(const char *str);
-   static void *ConvertFromJSONAny(const char *str, TClass **cl = 0);
+   static void *ConvertFromJSONAny(const char *str, TClass **cl = nullptr);
 
    template <class T>
-   static TString ToJSON(const T *obj, Int_t compact = 0)
+   static TString ToJSON(const T *obj, Int_t compact = 0, const char *member_name = nullptr)
    {
-      return ConvertToJSON(obj, TBuffer::GetClass(typeid(T)), compact);
+      return ConvertToJSON(obj, TBuffer::GetClass(typeid(T)), compact, member_name);
    }
 
    template <class T>
