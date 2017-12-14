@@ -530,7 +530,11 @@
 #ifdef R__HAS_ATTRIBUTE_ALWAYS_INLINE
 #define R__ALWAYS_INLINE inline __attribute__((always_inline))
 #else
+#if defined(_MSC_VER)
+#define R__ALWAYS_INLINE __forceinline
+#else
 #define R__ALWAYS_INLINE inline
+#endif
 #endif
 
 /*---- unlikely / likely expressions -----------------------------------------*/
