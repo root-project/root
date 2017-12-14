@@ -651,7 +651,6 @@ UInt_t TString::Hash(ECaseCompare cmp) const
    // From MurmurHash.cpp:
 #if defined(_MSC_VER)
    // Microsoft Visual Studio
-#define FORCE_INLINE    __forceinline
 #include <stdlib.h>
 #define ROTL64(x,y)     _rotl64(x,y)
 #define BIG_CONSTANT(x) (x)
@@ -662,14 +661,6 @@ UInt_t TString::Hash(ECaseCompare cmp) const
       return (x << r) | (x >> (64 - r));
    }
 
-#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) <= 40101
-// gcc v4.1.1 can't inline getblock, so don't really force it.
-#define FORCE_INLINE inline
-#else
-// (at least) in gcc v4.7, __attribute__((always_inline))" does not replace "inline" and they
-// need to be used together.
-#define FORCE_INLINE __attribute__((always_inline)) inline
-#endif
 #define ROTL64(x,y)     rotl64(x,y)
 #define BIG_CONSTANT(x) (x##LLU)
 #endif // !defined(_MSC_VER)
@@ -680,7 +671,7 @@ namespace {
    /// Block read - if your platform needs to do endian-swapping or can only
    /// handle aligned reads, do the conversion here
 
-   FORCE_INLINE uint64_t getblock(const uint64_t* p, int i)
+   R__ALWAYS_INLINE uint64_t getblock(const uint64_t* p, int i)
    {
       return p[i];
    }
@@ -688,7 +679,7 @@ namespace {
    /////////////////////////////////////////////////////////////////////////////
    /// Finalization mix - force all bits of a hash block to avalanche
 
-   FORCE_INLINE uint64_t fmix(uint64_t k)
+   R__ALWAYS_INLINE uint64_t fmix(uint64_t k)
    {
       k ^= k >> 33;
       k *= BIG_CONSTANT(0xff51afd7ed558ccd);
