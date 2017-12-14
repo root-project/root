@@ -39,49 +39,82 @@ void rf611_RooMCMarkovChainexample() {
   //create a canvas
   TCanvas *c1 = new TCanvas("c1","c1",1,1,1920,1080);
 
+  TRandom3 *rnd = new TRandom3(13);
+  std::vector<RooRealVar> paraVec;
 
     // Observable
   RooRealVar x("x","x",-20,20) ;
+  double upperLimit = 20;
+  double lowerLimit = -20;
 
   // Model (intentional strong correlations)
-  RooRealVar mean_g1("mean1","mean of g2",4.0,-5.0,5.0) ;
-  RooRealVar sigma_g1("sigma1","width of g1",1.0,0.0,3) ;
+  RooRealVar mean_g1("mean1","mean of g2",4.0,lowerLimit,upperLimit) ;
+  paraVec.push_back(mean_g1);
+  RooRealVar sigma_g1("sigma1","width of g1",1.0,0.0,upperLimit) ;
+  paraVec.push_back(sigma_g1);
   RooGaussian g1("g1","g1",x,mean_g1,sigma_g1) ;
 
-  RooRealVar mean_g2("mean2","mean of g1",-2.0,-5.0,5.0) ;
-  RooRealVar sigma_g2("sigma2","width of g2",1.5,0.0,4.0) ;
+  RooRealVar mean_g2("mean2","mean of g1",-2.0,lowerLimit,upperLimit) ;
+  paraVec.push_back(mean_g2);
+  RooRealVar sigma_g2("sigma2","width of g2",1.5,0.0,upperLimit) ;
+  paraVec.push_back(sigma_g2);
   RooGaussian g2("g2","g2",x,mean_g2,sigma_g2) ;
 
   RooRealVar frac("frac","frac",0.5,0.0,1.0) ;
-  RooAddPdf modelmcmc("model","model",RooArgList(g1,g2),frac) ;
-  RooAddPdf modelmin("model","model",RooArgList(g1,g2),frac) ;
+  paraVec.push_back(frac);
+  RooAddPdf model("model","model",RooArgList(g1,g2),frac) ;
 
   // Generate 1000 events
-  RooDataSet* datamcmc = modelmcmc.generate(x,1000) ;
-  RooDataSet* datamin = modelmin.generate(x,1000) ;
+  RooDataSet* data = model.generate(x,1000) ;
 
   // Construct unbinned likelihood of model w.r.t. data
-  RooAbsReal* nllmcmc = modelmcmc.createNLL(*datamcmc);
-  RooAbsReal* nllminuit = modelmin.createNLL(*datamin);
+  RooAbsReal* nllmcmc = model.createNLL(*data);
+  RooAbsReal* nllminuit = model.createNLL(*data);
+
+  //change starting values
+  std::vector<double> startvalues;
+  for (size_t i = 0; i < paraVec.size(); i++) {
+    if (paraVec[i].getMin() == 0.0) {
+      if (paraVec[i].getMax() == 1.0) {
+        double randval = rnd->Uniform(0.1,0.9);
+        paraVec[i].setVal(randval);
+        startvalues.push_back(randval);
+      } else {
+        double randval = rnd->Uniform(0.1,upperLimit-1);
+        paraVec[i].setVal(randval);
+        startvalues.push_back(randval);
+      }
+    } else {
+      double randval = rnd->Uniform(lowerLimit+1,upperLimit-1);
+      paraVec[i].setVal(randval);
+      startvalues.push_back(randval);
+    }
+  }
+
 
   // Run RooMinuitMCMC fit
   RooMCMarkovChain m(*nllmcmc);
   m.mcmc(3000,1000);
 
-  // create plot
+  // create plot of MCMC fit
   RooPlot *frame = x.frame();
   frame->SetTitle("Fit of a double gaus");
   frame->SetXTitle("value");
-  datamcmc->plotOn(frame, Name("data"));
-  modelmcmc.plotOn(frame, Name("modelmcmc"), LineColor(4));
+  data->plotOn(frame, Name("data"));
+  model.plotOn(frame, Name("modelmcmc"), LineColor(4));
+
+  //get same starting values for Minuit
+  for (size_t i = 0; i < paraVec.size(); i++) {
+    paraVec[i].setVal(startvalues[i]);
+  }
 
   // Run Minuit fit
   RooMinuit mi(*nllminuit);
   mi.migrad();
   mi.hesse();
 
-
-  modelmin.plotOn(frame, Name("modelmin"), LineColor(2),LineStyle(10));
+  // create plot of Minuit fit + legend
+  model.plotOn(frame, Name("modelmin"), LineColor(2),LineStyle(10));
   frame->Draw();
   TLegend *leg = new TLegend(0.65,0.73,0.86,0.87);
   leg->SetFillColor(kWhite);
