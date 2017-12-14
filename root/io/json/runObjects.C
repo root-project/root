@@ -21,10 +21,10 @@
    cout << " ====== ROOT TObject/TNamed/TString as class members TJsonEx10 ===== " << endl;
    cout << TBufferJSON::ToJSON(ex10) << endl << endl;
    cout << " ============ selected data members ======== " << endl;
-   cout << "ex5.fObj1 = " << TBufferJSON::ConvertToJSON(ex5, gROOT->GetClass("TJsonEx5"), 0, "fObj1") << endl;
-   cout << "ex5.fPtr1 = " << TBufferJSON::ConvertToJSON(ex5, gROOT->GetClass("TJsonEx5"), 0, "fPtr1") << endl;
-   cout << "ex5.fSafePtr1 = " << TBufferJSON::ConvertToJSON(ex5, gROOT->GetClass("TJsonEx5"), 0, "fSafePtr1") << endl;
-   cout << "ex6.fObj1 = " << TBufferJSON::ConvertToJSON(ex6, gROOT->GetClass("TJsonEx6"), 0, "fObj1") << endl;
+   cout << "ex5.fObj1 = " << TBufferJSON::ToJSON(ex5, 0, "fObj1") << endl;
+   cout << "ex5.fPtr1 = " << TBufferJSON::ToJSON(ex5, 0, "fPtr1") << endl;
+   cout << "ex5.fSafePtr1 = " << TBufferJSON::ToJSON(ex5, 0, "fSafePtr1") << endl;
+   cout << "ex6.fObj1 = " << TBufferJSON::ToJSON(ex6, 0, "fObj1") << endl;
 
 #endif
 #ifdef ClingWorkAroundBrokenUnnamedReturn
