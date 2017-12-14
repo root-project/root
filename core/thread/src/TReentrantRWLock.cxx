@@ -14,7 +14,7 @@
     \brief An implementation of a reentrant read-write lock with a
            configurable internal mutex/lock (default Spin Lock).
 
-This class provides an implementation of a rreentrant ead-write lock
+This class provides an implementation of a reentrant read-write lock
 that uses an internal lock and a condition variable to synchronize
 readers and writers when necessary.
 
