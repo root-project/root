@@ -366,7 +366,8 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
     endforeach()
   endif()
 
-  if(runtime_cxxmodules AND ARG_MODULE)
+  set(runtime_cxxmodules_env)
+  if(runtime_cxxmodules AND ARG_MODULE AND NOT ARG_MULTIDICT)
     # FIXME: Once modules work better, we should use some other value like "1"
     # to disable the module-build remarks from clang.
     set(runtime_cxxmodules_env "ROOT_MODULES=DEBUG")

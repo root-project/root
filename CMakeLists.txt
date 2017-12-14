@@ -343,7 +343,11 @@ endif()
 
 if(runtime_cxxmodules)
   # Dummy target that does nothing, we don't need a PCH for modules.
-  add_custom_target(onepcm)
+  # However, we require that TMVA/Graf/Treeplayer are built here as
+  # we will always load them to workaround the fact that we can't
+  # load the decls in them via rootmap files (as they are inside
+  # namespaces which isn't supported).
+  add_custom_target(onepcm DEPENDS Net MathCore TreeViewer RooStats Hist Gpad TreePlayer RooFit EG RGL TMVA TMVAGui Graf GenVector)
 else()
   add_custom_command(OUTPUT etc/allDict.cxx.pch
                     COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ${PYTHON_EXECUTABLE} ${CMAKE_SOURCE_DIR}/etc/dictpch/makepch.py etc/allDict.cxx.pch ${__allIncludes} -I${CMAKE_BINARY_DIR}/include
