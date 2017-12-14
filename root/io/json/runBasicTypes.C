@@ -23,9 +23,9 @@
    cout << " ====== dynamic arrays of basic data types TJsonEx3 ===== " << endl;
    cout << TBufferJSON::ToJSON(ex3) << endl << endl;
    cout << " ============ selected data members ======== " << endl;
-   cout << "ex2.fInt = " << TBufferJSON::ConvertToJSON(ex2, gROOT->GetClass("TJsonEx2"), 0, "fInt") << endl;
-   cout << "ex3.fChar = " << TBufferJSON::ConvertToJSON(ex3, gROOT->GetClass("TJsonEx3"), 0, "fChar") << endl;
-   cout << "ex3.fLong = " << TBufferJSON::ConvertToJSON(ex3, gROOT->GetClass("TJsonEx3"), 0, "fLong") << endl;
+   cout << "ex2.fInt = " << TBufferJSON::ToJSON(ex2, 0, "fInt") << endl;
+   cout << "ex3.fChar = " << TBufferJSON::ToJSON(ex3, 0, "fChar") << endl;
+   cout << "ex3.fLong = " << TBufferJSON::ToJSON(ex3, 0, "fLong") << endl;
 
    delete ex1;
    delete ex2;
