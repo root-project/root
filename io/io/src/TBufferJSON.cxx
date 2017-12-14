@@ -802,22 +802,28 @@ TObject *TBufferJSON::ConvertFromJSON(const char *str)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read object from JSON, produced by ConvertToJSON() method.
+/// In class pointer (if specified) read class is returned
+/// One must specify expected object class, if it is TArray or STL container
 
 void *TBufferJSON::ConvertFromJSONAny(const char *str, TClass **cl)
 {
-   if (cl)
+   TClass *objClass = nullptr;
+
+   if (cl) {
+      objClass = *cl; // this is class which suppose to created when reading JSON
       *cl = nullptr;
+   }
 
    nlohmann::json docu = nlohmann::json::parse(str);
 
-   if (docu.is_null() || !docu.is_object())
+   if (docu.is_null() || (!docu.is_object() && !docu.is_array()))
       return nullptr;
 
    TBufferJSON buf(TBuffer::kRead);
 
    buf.PushStack(0, &docu);
 
-   void *obj = buf.JsonReadObject(nullptr, nullptr, cl);
+   void *obj = buf.JsonReadObject(nullptr, objClass, cl);
 
    buf.PopStack();
 
@@ -832,7 +838,7 @@ void *TBufferJSON::ConvertFromJSONChecked(const char *str, const TClass *expecte
    if (!expectedClass)
       return nullptr;
 
-   TClass *resClass = nullptr;
+   TClass *resClass = const_cast<TClass *>(expectedClass);
 
    void *res = ConvertFromJSONAny(str, &resClass);
 

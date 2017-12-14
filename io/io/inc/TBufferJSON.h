@@ -34,7 +34,8 @@ public:
    void SetCompact(int level);
 
    static TString ConvertToJSON(const TObject *obj, Int_t compact = 0, const char *member_name = nullptr);
-   static TString ConvertToJSON(const void *obj, const TClass *cl, Int_t compact = 0, const char *member_name = nullptr);
+   static TString
+   ConvertToJSON(const void *obj, const TClass *cl, Int_t compact = 0, const char *member_name = nullptr);
    static TString ConvertToJSON(const void *obj, TDataMember *member, Int_t compact = 0, Int_t arraylen = -1);
 
    static Int_t ExportToFile(const char *filename, const TObject *obj, const char *option = nullptr);
