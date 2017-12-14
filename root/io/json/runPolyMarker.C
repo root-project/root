@@ -11,7 +11,7 @@ void runPolyMarker()
    for (Int_t n=0;n<10;++n)
       marker->SetPoint(n, n*2, n*3, n*4);
 
-   TString json = TBufferJSON::ConvertToJSON(marker);
+   TString json = TBufferJSON::ToJSON(marker);
 
    cout << json << endl;
 }

@@ -156,7 +156,7 @@ Processing runSTL1.C...
   "fBitsSet64" : [false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false, true, true, false]
 }
 
- ====== STL as basec class TJsonEx8 (len=1) ===== 
+ ====== STL as basic class TJsonEx8 (len=1) ===== 
 {
   "_typename" : "TJsonEx8",
   "fVector" : [0],
