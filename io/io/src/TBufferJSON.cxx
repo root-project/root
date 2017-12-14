@@ -85,11 +85,11 @@ persistent storage for object data - only for live applications.
 #define FULong64 "%llu"
 #endif
 
-#if defined(__GNUC__)
-#if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40900
-#define DUMMY_JSON_PARSER
-#endif
-#endif
+// #if defined(__GNUC__)
+// #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40900
+// #define DUMMY_JSON_PARSER
+// #endif
+// #endif
 
 #ifdef DUMMY_JSON_PARSER
 
