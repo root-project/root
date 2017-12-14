@@ -18,13 +18,13 @@
    ex13->SetValues(1);
 
    cout << " ====== different STL containers TJsonEx7 (len=1) ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex7, gROOT->GetClass("TJsonEx7")) << endl << endl;
-   cout << " ====== STL as basec class TJsonEx8 (len=1) ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex8, gROOT->GetClass("TJsonEx8")) << endl << endl;
+   cout << TBufferJSON::ToJSON(ex7) << endl << endl;
+   cout << " ====== STL as basic class TJsonEx8 (len=1) ===== " << endl;
+   cout << TBufferJSON::ToJSON(ex8) << endl << endl;
    cout << " ====== STL vector of complex classes TJsonEx12 (len=1) ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex12, gROOT->GetClass("TJsonEx12")) << endl << endl;
+   cout << TBufferJSON::ToJSON(ex12) << endl << endl;
    cout << " ====== More exotic STL containers as set or map with TRef inside TJsonEx13 (len=1) ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex13, gROOT->GetClass("TJsonEx13")) << endl << endl;
+   cout << TBufferJSON::ToJSON(ex13) << endl << endl;
 
 #endif
 #ifdef ClingWorkAroundBrokenUnnamedReturn

@@ -16,11 +16,11 @@
    ex9_7->SetValues(7);
 
    cout << " ====== kStreamerLoop members with Counter==0 TJsonEx9 ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex9_0, gROOT->GetClass("TJsonEx9")) << endl << endl;
+   cout << TBufferJSON::ToJSON(ex9_0) << endl << endl;
    cout << " ====== kStreamerLoop members with Counter==1 TJsonEx9 ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex9_1, gROOT->GetClass("TJsonEx9")) << endl << endl;
+   cout << TBufferJSON::ToJSON(ex9_1) << endl << endl;
    cout << " ====== kStreamerLoop members with Counter==7 TJsonEx9 ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex9_7, gROOT->GetClass("TJsonEx9")) << endl << endl;
+   cout << TBufferJSON::ToJSON(ex9_7) << endl << endl;
 
 #endif
 #ifdef ClingWorkAroundBrokenUnnamedReturn

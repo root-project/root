@@ -15,11 +15,11 @@
    ex10->SetValues();
 
    cout << " ====== objects as class members TJsonEx5 ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex5, gROOT->GetClass("TJsonEx5")) << endl << endl;
+   cout << TBufferJSON::ToJSON(ex5) << endl << endl;
    cout << " ====== arrays of objects as class members TJsonEx6 ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex6, gROOT->GetClass("TJsonEx6")) << endl << endl;
+   cout << TBufferJSON::ToJSON(ex6) << endl << endl;
    cout << " ====== ROOT TObject/TNamed/TString as class members TJsonEx10 ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex10, gROOT->GetClass("TJsonEx10")) << endl << endl;
+   cout << TBufferJSON::ToJSON(ex10) << endl << endl;
    cout << " ============ selected data members ======== " << endl;
    cout << "ex5.fObj1 = " << TBufferJSON::ConvertToJSON(ex5, gROOT->GetClass("TJsonEx5"), 0, "fObj1") << endl;
    cout << "ex5.fPtr1 = " << TBufferJSON::ConvertToJSON(ex5, gROOT->GetClass("TJsonEx5"), 0, "fPtr1") << endl;

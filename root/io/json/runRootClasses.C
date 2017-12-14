@@ -26,17 +26,17 @@
 
 
    cout << " ====== TObject representation ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(obj) << endl << endl;
+   cout << TBufferJSON::ToJSON(obj) << endl << endl;
    cout << " ====== TH1I representation ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(h1) << endl << endl;
+   cout << TBufferJSON::ToJSON(h1) << endl << endl;
    cout << " ====== TBox representation ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(box) << endl << endl;
+   cout << TBufferJSON::ToJSON(box) << endl << endl;
    cout << " ====== TList representation ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(arr) << endl << endl;
+   cout << TBufferJSON::ToJSON(arr) << endl << endl;
    cout << " ====== TClonesArray representation ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(clones) << endl << endl;
+   cout << TBufferJSON::ToJSON(clones) << endl << endl;
    cout << " ====== TMap representation ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(map) << endl << endl;
+   cout << TBufferJSON::ToJSON(map) << endl << endl;
 
 #ifdef ClingWorkAroundBrokenUnnamedReturn
    gApplication->Terminate(0);

@@ -15,13 +15,13 @@
    TJsonEx11* ex11 = new TJsonEx11;
 
    cout << " ====== basic data types TJsonEx1 ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex1, gROOT->GetClass("TJsonEx1")) << endl << endl;
+   cout << TBufferJSON::ToJSON(ex1) << endl << endl;
    cout << " ====== inheritance from TJsonEx1, TJsonEx11 ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex11, gROOT->GetClass("TJsonEx11")) << endl << endl;
+   cout << TBufferJSON::ToJSON(ex11) << endl << endl;
    cout << " ====== arrays of basic data types TJsonEx2 ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex2, gROOT->GetClass("TJsonEx2")) << endl << endl;
-   cout << " ====== dinamin arrays of basic data types TJsonEx3 ===== " << endl;
-   cout << TBufferJSON::ConvertToJSON(ex3, gROOT->GetClass("TJsonEx3")) << endl << endl;
+   cout << TBufferJSON::ToJSON(ex2) << endl << endl;
+   cout << " ====== dynamic arrays of basic data types TJsonEx3 ===== " << endl;
+   cout << TBufferJSON::ToJSON(ex3) << endl << endl;
    cout << " ============ selected data members ======== " << endl;
    cout << "ex2.fInt = " << TBufferJSON::ConvertToJSON(ex2, gROOT->GetClass("TJsonEx2"), 0, "fInt") << endl;
    cout << "ex3.fChar = " << TBufferJSON::ConvertToJSON(ex3, gROOT->GetClass("TJsonEx3"), 0, "fChar") << endl;

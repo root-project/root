@@ -39,7 +39,7 @@ Processing runBasicTypes.C...
   "fDouble" : [[[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]], [[0, 0, 0, 0], [0, 1, 2, 3], [0, 2, 4, 6]]]
 }
 
- ====== dinamin arrays of basic data types TJsonEx3 ===== 
+ ====== dynamic arrays of basic data types TJsonEx3 ===== 
 {
   "_typename" : "TJsonEx3",
   "fSize" : 5,
