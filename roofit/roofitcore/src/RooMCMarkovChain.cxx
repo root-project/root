@@ -111,6 +111,7 @@ RooMCMarkovChain::RooMCMarkovChain(RooAbsReal& function)
    _theFitter->SetObjectFit(this) ;
    setPrintLevel(-1) ;
    _theFitter->Clear();
+
 }
 
 
@@ -165,7 +166,7 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
   unsigned int nparams = _nPar; //number of parameters
   unsigned int nstat = npoints*100;//number of tries
   double maxstep = 0.01; //maximum step size
-  double alphastar = 0.234; //forced acceptance rate
+  double alphastar = _alphaStar; //forced acceptance rate
 
   Bool_t accepted = kTRUE;
   unsigned int ntested = 0;
@@ -175,6 +176,8 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
   RooRealVar* nllval = new RooRealVar("nllval","nllval of parameters",-1);
   TVectorD* last = new TVectorD(nparams); //last state
   TVectorD* curr = new TVectorD(nparams); //current state
+  TVectorD* lowLimit = new TVectorD(nparams); //lower Limits
+  TVectorD* upLimit = new TVectorD(nparams); //upper Limits
   int indexofbest = -1; //index in the pointlist for the minimum
   _pointList.reserve(npoints); //reserving RAM for pointlist
 
@@ -183,6 +186,8 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
   for (size_t index = 0; index < _nPar; index++) {
     RooRealVar* var = (RooRealVar*) startpoint->at(index);
     (*last)[index] = var->getVal();
+    (*lowLimit)[index] = var->getMin();
+    (*upLimit)[index] = var->getMax();
   }
   delete startpoint; //startpoint no longer needed
 
@@ -209,6 +214,7 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
 
   double llh_last;
   double llh_curr;
+  Bool_t outofBounds = false;
 
   for (unsigned int i = 0; i < nstat; i++) {
     if (accepted) {
@@ -224,22 +230,32 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
     *SW =  *SNminusone * *WN; //Step size correction
     *curr += *SW; //vary current point
 
+
     for(size_t index= 0; index < nparams; index++) {
       context->setPdfParamVal(index, (*last)[index],verbose);
     }
     llh_last = context->_func->getVal();
 
+    outofBounds = false;
     for(size_t index= 0; index < nparams; index++) {
-      context->setPdfParamVal(index, (*curr)[index],verbose);
-    }
-    llh_curr = context->_func->getVal(); //get nll for current parameters
-
-  // If out of bounds, the negative log-likelihood values gets set very high
-  // to provoke big step size away from the bounds
-    if (llh_curr != llh_curr) {
-      llh_curr = 1e16;
+      if (
+        ((*curr)[index] < (*lowLimit)[index]) || ((*curr)[index] > (*upLimit)[index])
+      ) {
+        outofBounds = true;
+      }
     }
 
+
+    // If out of bounds, the negative log-likelihood values gets set very high
+    // to provoke big step size away from the bounds
+    if (outofBounds) {
+      llh_curr = 1e32;
+    } else {
+      for(size_t index= 0; index < nparams; index++) {
+        context->setPdfParamVal(index, (*curr)[index],verbose);
+      }
+      llh_curr = context->_func->getVal(); //get nll for current parameters
+    }
 
   // update minimum value
     if (llh_curr < minllh) {
