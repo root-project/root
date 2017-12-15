@@ -1,6 +1,7 @@
 
 Processing runSTL0.C...
  ====== different STL containers TJsonEx7 (len=0) ===== 
+TJsonEx7 store/read/store MATCHED len1:1538 len2:1538
 {
   "_typename" : "TJsonEx7",
   "fStr1" : "",
@@ -22,6 +23,7 @@ Processing runSTL0.C...
   "fVectBox" : [],
   "fVectNames" : [],
   "fVectEx11" : [],
+  "fABC" : 0,
   "fVectString" : [],
   "fVectStringPtr" : [],
   "fListDouble" : [],
@@ -32,8 +34,8 @@ Processing runSTL0.C...
   "fDequeBool" : [],
   "fDequeEx1" : [],
   "fDequeEx1Ptr" : [],
-  "fMapStrInt" : [],
   "fMapIntDouble" : [],
+  "fMapStrInt" : [],
   "fMapIntEx1" : [],
   "fMapIntEx1Ptr" : [],
   "fMultimapIntDouble" : [],
@@ -43,7 +45,8 @@ Processing runSTL0.C...
   "fBitsSet64" : [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false]
 }
 
- ====== STL as basec class TJsonEx8 (len=0) ===== 
+ ====== STL as base class TJsonEx8 (len=0) ===== 
+TJsonEx8 store/read/store MATCHED len1:83 len2:83
 {
   "_typename" : "TJsonEx8",
   "fVector" : [],
@@ -52,6 +55,7 @@ Processing runSTL0.C...
 }
 
  ====== STL vector of complex classes TJsonEx12 (len=0) ===== 
+TJsonEx12 store/read/store MATCHED len1:63 len2:63
 {
   "_typename" : "TJsonEx12",
   "vect1" : [],
@@ -59,6 +63,7 @@ Processing runSTL0.C...
 }
 
  ====== More exotic STL containers as set or map with TRef inside TJsonEx13 (len=0) ===== 
+TJsonEx13 store/read/store MATCHED len1:92 len2:92
 {
   "_typename" : "TJsonEx13",
   "set1" : [],
