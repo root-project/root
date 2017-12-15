@@ -1020,9 +1020,9 @@ public:
 
 // ______________________________________________________________________________________
 
-bool testJsonReading(TString &json)
+bool testJsonReading(TString &json, TClass *useClass = nullptr)
 {
-   TClass *cl = nullptr;
+   TClass *cl = useClass;
 
    void *obj = TBufferJSON::ConvertFromJSONAny(json, &cl);
 

@@ -53,15 +53,15 @@
    cout << json << endl << endl;
    cout << " ====== TList representation ===== " << endl;
    json = TBufferJSON::ToJSON(arr);
-   // testJsonReading(json);
+   testJsonReading(json, TList::Class());
    cout << json << endl << endl;
    cout << " ====== TClonesArray representation ===== " << endl;
    json = TBufferJSON::ToJSON(clones);
-   // testJsonReading(json);
+   testJsonReading(json, TClonesArray::Class());
    cout << json << endl << endl;
    cout << " ====== TMap representation ===== " << endl;
    json = TBufferJSON::ToJSON(map);
-   // testJsonReading(json);
+   testJsonReading(json, TMap::Class());
    cout << json << endl << endl;
    cout << " ====== TJsonEx14 with different ROOT collections ===== " << endl;
    json = TBufferJSON::ToJSON(ex14);
