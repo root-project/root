@@ -99,11 +99,13 @@ protected:
    Int_t                   *fBranchOffset;  ///<! Sub-Branch offsets with respect to current transient class
    Int_t                    fBranchID;      ///<! ID number assigned by a TRefTable.
    std::vector<Int_t>       fIDs;           ///<! List of the serial number of all the StreamerInfo to be used.
-   TStreamerInfoActions::TActionSequence *fReadActionSequence;  ///<! Set of actions to be executed to extract the data from the basket.
-   TStreamerInfoActions::TActionSequence *fFillActionSequence;  ///<! Set of actions to be executed to write the data to the basket.
-   TVirtualCollectionIterators           *fIterators;      ///<! holds the iterators when the branch is of fType==4.
-   TVirtualCollectionIterators           *fWriteIterators; ///<! holds the read (non-staging) iterators when the branch is of fType==4 and associative containers.
-   TVirtualCollectionPtrIterators        *fPtrIterators;   ///<! holds the iterators when the branch is of fType==4 and it is a split collection of pointers.
+   TStreamerInfoActions::TActionSequence     *fReadActionSequence;  ///<! Set of actions to be executed to extract the data from the basket.
+   TStreamerInfoActions::TActionSequence     *fFillActionSequence;  ///<! Set of actions to be executed to write the data to the basket.
+   TVirtualCollectionIterators               *fIterators;      ///<! holds the iterators when the branch is of fType==4.
+   TVirtualCollectionIterators               *fWriteIterators; ///<! holds the read (non-staging) iterators when the branch is of fType==4 and associative containers.
+   TVirtualCollectionPtrIterators            *fPtrIterators;   ///<! holds the iterators when the branch is of fType==4 and it is a split collection of pointers.
+   std::vector<std::pair<Long64_t,TBranch*>> fSortedBranches; ///<! Branches to be processed in parallel when IMT is on, sorted by average task time
+   std::vector<TBranch*>                     fSeqBranches;    ///<! Branches to be processed sequentially when IMT is on
 
 // Not implemented
 private:
@@ -161,6 +163,7 @@ protected:
    void FillLeavesMember(TBuffer& b);
    void SetFillLeavesPtr();
    void SetFillActionSequence();
+   void InitializeBranchLists();
 // Public Interface.
 public:
    TBranchElement();

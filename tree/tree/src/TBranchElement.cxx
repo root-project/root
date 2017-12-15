@@ -48,6 +48,12 @@ A Branch for the case of an object.
 #include "TStreamerInfoActions.h"
 #include "TSchemaRuleSet.h"
 
+#ifdef R__USE_IMT
+#include "ROOT/TThreadExecutor.hxx"
+#include <atomic>
+#include <thread>
+#endif
+
 ClassImp(TBranchElement);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2244,6 +2250,59 @@ TClass* TBranchElement::GetCurrentClass()
    return cl;
 }
 
+void TBranchElement::InitializeBranchLists()
+{
+   const auto nbranches = fBranches.GetEntriesFast();
+
+   // If the branch holds a class featuring schema rules, we cannot parallelise
+   // since a certain order is to be imposed
+   if(auto heldClass = GetClass()) { // perhaps always true
+      if (heldClass->GetSchemaRules()) {
+         // we just put all the branches in the set to be read sequentially
+         for (Int_t i = 0; i < nbranches; i++)  {
+            fSeqBranches.emplace_back((TBranch*)fBranches.UncheckedAt(i));
+         }
+         return; // nothing else to be done
+      }
+   }
+
+   // The branches to be processed sequentially are those that are the leaf count of another branch
+   TLeaf *leafCount;
+   for (Int_t i = 0; i < nbranches; i++)  {
+      auto branch = (TBranch*)fBranches.UncheckedAt(i);
+      auto listOfLeaves = branch->GetListOfLeaves();
+      if (!listOfLeaves->IsEmpty() && (leafCount = ((TLeaf*)listOfLeaves->At(0))->GetLeafCount())) {
+         auto countBranch = leafCount->GetBranch();
+         if (std::find(fSeqBranches.begin(), fSeqBranches.end(), countBranch) == fSeqBranches.end()) {
+            fSeqBranches.emplace_back(countBranch);
+         }
+      }
+
+   }
+
+   // Any branch that is not a leaf count can be safely processed in parallel when reading
+   for (Int_t i = 0; i < nbranches; i++)  {
+      Long64_t bbytes = 0;
+      auto branch = (TBranch*)fBranches.UncheckedAt(i);
+      if (std::find(fSeqBranches.begin(), fSeqBranches.end(), branch) == fSeqBranches.end()) {
+         bbytes = branch->GetTotBytes("*");
+         fSortedBranches.emplace_back(bbytes, branch);
+      }
+   }
+
+   // Initially sort parallel branches by size
+   std::sort(fSortedBranches.begin(),
+             fSortedBranches.end(),
+             [](std::pair<Long64_t,TBranch*> a, std::pair<Long64_t,TBranch*> b) {
+                return a.first > b.first;
+             });
+
+   for (size_t i = 0; i < fSortedBranches.size(); i++)  {
+      fSortedBranches[i].first = 0LL;
+   }
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Read all branches of a BranchElement and return total number of bytes.
 ///
@@ -2309,15 +2368,72 @@ Int_t TBranchElement::GetEntry(Long64_t entry, Int_t getall)
          case ROOT::kSTLunorderedmultimap:
             break;
          default:
+
             ValidateAddress(); // There is no ReadLeave for this node, so we need to do the validation here.
-            for (Int_t i = 0; i < nbranches; ++i) {
-               TBranch* branch = (TBranch*) fBranches.UncheckedAt(i);
-               Int_t nb = branch->GetEntry(entry, getall);
-               if (nb < 0) {
-                  return nb;
+            int nb(0);
+
+            auto seqProcessing = [&] () {
+               for (int i=0; i < nbranches; ++i) {
+                  auto branch = (TBranch*) fBranches.UncheckedAt(i);
+                  nb += branch->GetEntry(entry, getall);
                }
-               nbytes += nb;
+            };
+
+#ifdef R__USE_IMT
+            if (nbranches > 1 && ROOT::IsImplicitMTEnabled() && GetTree()->GetImplicitMT()) {
+               if (fSortedBranches.empty()) InitializeBranchLists();
+
+               // Count branches are processed first and sequentially
+               for (auto branch : fSeqBranches) {
+                  nb = branch->GetEntry(entry, getall);
+                  if (nb < 0) break;
+                  nbytes += nb;
+               }
+
+               std::atomic<int> pos(0);
+               std::atomic<int> nbpar(0);
+
+               auto mapFunction = [&]() {
+                     // The branch to process is obtained when the task starts to run.
+                     // This way, since branches are sorted, we make sure that branches
+                     // leading to big tasks are processed first. If we assigned the
+                     // branch at task creation time, the scheduler would not necessarily
+                     // respect our sorting.
+                     int j = pos.fetch_add(1);
+
+                     auto branch = fSortedBranches[j].second;
+
+                     if (gDebug > 0) {
+                        std::stringstream ss;
+                        ss << std::this_thread::get_id();
+                        Info("GetEntry", "[IMT] Thread %s", ss.str().c_str());
+                        Info("GetEntry", "[IMT] Running task for branch #%d: %s", j, branch->GetName());
+                     }
+
+                     std::chrono::time_point<std::chrono::system_clock> start, end;
+
+                     start = std::chrono::system_clock::now();
+                     nbpar += branch->GetEntry(entry, getall);
+                     end = std::chrono::system_clock::now();
+
+                     Long64_t tasktime = (Long64_t)std::chrono::duration_cast<std::chrono::microseconds>(end - start).count();
+                     fSortedBranches[j].first += tasktime;
+                  };
+
+                  ROOT::TThreadExecutor pool;
+                  pool.Foreach(mapFunction, fSortedBranches.size());
+
+                  if (nbpar < 0 ) return nbpar;
+                  nbytes += nbpar;
+
+            } else {
+               seqProcessing();
             }
+#else
+            seqProcessing();
+#endif // R__USE_IMT
+            if (nb < 0 ) return nb;
+            nbytes += nb;
             break;
       }
    } else {
