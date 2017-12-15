@@ -4961,7 +4961,7 @@ Int_t TTree::FlushBaskets() const
       std::atomic<Int_t> nerrpar(0);
       std::atomic<Int_t> nbpar(0);
       std::atomic<Int_t> pos(0);
-         
+
       auto mapFunction  = [&]() {
         // The branch to process is obtained when the task starts to run.
         // This way, since branches are sorted, we make sure that branches
@@ -5429,7 +5429,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    };
 
 #ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
+   if (fSortedBranches.size() > 1 && ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
       if (fSortedBranches.empty()) InitializeBranchLists(true);
 
       // Count branches are processed first and sequentially
