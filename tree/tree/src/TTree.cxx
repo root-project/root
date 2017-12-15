@@ -5429,8 +5429,13 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    };
 
 #ifdef R__USE_IMT
-   if (fSortedBranches.size() > 1 && ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
-      if (fSortedBranches.empty()) InitializeBranchLists(true);
+   // At most one parallel read with a single branch
+   unsigned int nSortedBranches(2);
+   if (nSortedBranches > 1 && ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
+      if (fSortedBranches.empty()) {
+        InitializeBranchLists(true);
+        nSortedBranches = fSortedBranches.size();
+      }
 
       // Count branches are processed first and sequentially
       for (auto branch : fSeqBranches) {
