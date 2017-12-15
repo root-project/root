@@ -2364,25 +2364,12 @@ void TBufferJSON::JsonPushValue()
       Stack()->PushValue(fValue);
 }
 
-#define TJSONPushValue()    \
-   if (fValue.Length() > 0) \
-      Stack()->PushValue(fValue);
-
-// macro to read array, which include size attribute
-#define TBufferJSON_ReadArray(tname, vname) \
-   {                                        \
-      Info("ReadArray", "Not implemented"); \
-      return vname ? 1 : 0;                 \
-   }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// write a Float16_t to the buffer
 
 void TBufferJSON::WriteFloat16(Float_t *f, TStreamerElement * /*ele*/)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(*f);
+   JsonPushWrite(*f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2390,9 +2377,7 @@ void TBufferJSON::WriteFloat16(Float_t *f, TStreamerElement * /*ele*/)
 
 void TBufferJSON::WriteDouble32(Double_t *d, TStreamerElement * /*ele*/)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(*d);
+   JsonPushWrite(*d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2400,7 +2385,7 @@ void TBufferJSON::WriteDouble32(Double_t *d, TStreamerElement * /*ele*/)
 
 Int_t TBufferJSON::ReadArray(Bool_t *&b)
 {
-   TBufferJSON_ReadArray(Bool_t, b);
+   return JsonReadArray(b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2408,7 +2393,7 @@ Int_t TBufferJSON::ReadArray(Bool_t *&b)
 
 Int_t TBufferJSON::ReadArray(Char_t *&c)
 {
-   TBufferJSON_ReadArray(Char_t, c);
+   return JsonReadArray(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2416,7 +2401,7 @@ Int_t TBufferJSON::ReadArray(Char_t *&c)
 
 Int_t TBufferJSON::ReadArray(UChar_t *&c)
 {
-   TBufferJSON_ReadArray(UChar_t, c);
+   return JsonReadArray(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2424,7 +2409,7 @@ Int_t TBufferJSON::ReadArray(UChar_t *&c)
 
 Int_t TBufferJSON::ReadArray(Short_t *&h)
 {
-   TBufferJSON_ReadArray(Short_t, h);
+   return JsonReadArray(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2432,7 +2417,7 @@ Int_t TBufferJSON::ReadArray(Short_t *&h)
 
 Int_t TBufferJSON::ReadArray(UShort_t *&h)
 {
-   TBufferJSON_ReadArray(UShort_t, h);
+   return JsonReadArray(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2440,7 +2425,7 @@ Int_t TBufferJSON::ReadArray(UShort_t *&h)
 
 Int_t TBufferJSON::ReadArray(Int_t *&i)
 {
-   TBufferJSON_ReadArray(Int_t, i);
+   return JsonReadArray(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2448,7 +2433,7 @@ Int_t TBufferJSON::ReadArray(Int_t *&i)
 
 Int_t TBufferJSON::ReadArray(UInt_t *&i)
 {
-   TBufferJSON_ReadArray(UInt_t, i);
+   return JsonReadArray(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2456,7 +2441,7 @@ Int_t TBufferJSON::ReadArray(UInt_t *&i)
 
 Int_t TBufferJSON::ReadArray(Long_t *&l)
 {
-   TBufferJSON_ReadArray(Long_t, l);
+   return JsonReadArray(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2464,7 +2449,7 @@ Int_t TBufferJSON::ReadArray(Long_t *&l)
 
 Int_t TBufferJSON::ReadArray(ULong_t *&l)
 {
-   TBufferJSON_ReadArray(ULong_t, l);
+   return JsonReadArray(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2472,7 +2457,7 @@ Int_t TBufferJSON::ReadArray(ULong_t *&l)
 
 Int_t TBufferJSON::ReadArray(Long64_t *&l)
 {
-   TBufferJSON_ReadArray(Long64_t, l);
+   return JsonReadArray(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2480,7 +2465,7 @@ Int_t TBufferJSON::ReadArray(Long64_t *&l)
 
 Int_t TBufferJSON::ReadArray(ULong64_t *&l)
 {
-   TBufferJSON_ReadArray(ULong64_t, l);
+   return JsonReadArray(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2488,7 +2473,7 @@ Int_t TBufferJSON::ReadArray(ULong64_t *&l)
 
 Int_t TBufferJSON::ReadArray(Float_t *&f)
 {
-   TBufferJSON_ReadArray(Float_t, f);
+   return JsonReadArray(f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2496,7 +2481,7 @@ Int_t TBufferJSON::ReadArray(Float_t *&f)
 
 Int_t TBufferJSON::ReadArray(Double_t *&d)
 {
-   TBufferJSON_ReadArray(Double_t, d);
+   return JsonReadArray(d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2504,7 +2489,7 @@ Int_t TBufferJSON::ReadArray(Double_t *&d)
 
 Int_t TBufferJSON::ReadArrayFloat16(Float_t *&f, TStreamerElement * /*ele*/)
 {
-   TBufferJSON_ReadArray(Float_t, f);
+   return JsonReadArray(f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2512,22 +2497,26 @@ Int_t TBufferJSON::ReadArrayFloat16(Float_t *&f, TStreamerElement * /*ele*/)
 
 Int_t TBufferJSON::ReadArrayDouble32(Double_t *&d, TStreamerElement * /*ele*/)
 {
-   TBufferJSON_ReadArray(Double_t, d);
+   return JsonReadArray(d);
 }
 
-// dummy macro to read array from json buffer
-#define TBufferJSON_ReadStaticArray(vname)        \
-   {                                              \
-      Info("ReadStaticArray", "Not implemented"); \
-      return vname ? 1 : 0;                       \
-   }
+////////////////////////////////////////////////////////////////////////////////
+/// Read static array from JSON - not used
+
+template <typename T>
+R__ALWAYS_INLINE
+Int_t TBufferJSON::JsonReadArray(T *value)
+{
+   Info("ReadArray", "Not implemented");
+   return value ? 1 : 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read array of Bool_t from buffer
 
 Int_t TBufferJSON::ReadStaticArray(Bool_t *b)
 {
-   TBufferJSON_ReadStaticArray(b);
+   return JsonReadArray(b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2535,7 +2524,7 @@ Int_t TBufferJSON::ReadStaticArray(Bool_t *b)
 
 Int_t TBufferJSON::ReadStaticArray(Char_t *c)
 {
-   TBufferJSON_ReadStaticArray(c);
+   return JsonReadArray(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2543,7 +2532,7 @@ Int_t TBufferJSON::ReadStaticArray(Char_t *c)
 
 Int_t TBufferJSON::ReadStaticArray(UChar_t *c)
 {
-   TBufferJSON_ReadStaticArray(c);
+   return JsonReadArray(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2551,7 +2540,7 @@ Int_t TBufferJSON::ReadStaticArray(UChar_t *c)
 
 Int_t TBufferJSON::ReadStaticArray(Short_t *h)
 {
-   TBufferJSON_ReadStaticArray(h);
+   return JsonReadArray(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2559,7 +2548,7 @@ Int_t TBufferJSON::ReadStaticArray(Short_t *h)
 
 Int_t TBufferJSON::ReadStaticArray(UShort_t *h)
 {
-   TBufferJSON_ReadStaticArray(h);
+   return JsonReadArray(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2567,7 +2556,7 @@ Int_t TBufferJSON::ReadStaticArray(UShort_t *h)
 
 Int_t TBufferJSON::ReadStaticArray(Int_t *i)
 {
-   TBufferJSON_ReadStaticArray(i);
+   return JsonReadArray(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2575,7 +2564,7 @@ Int_t TBufferJSON::ReadStaticArray(Int_t *i)
 
 Int_t TBufferJSON::ReadStaticArray(UInt_t *i)
 {
-   TBufferJSON_ReadStaticArray(i);
+   return JsonReadArray(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2583,7 +2572,7 @@ Int_t TBufferJSON::ReadStaticArray(UInt_t *i)
 
 Int_t TBufferJSON::ReadStaticArray(Long_t *l)
 {
-   TBufferJSON_ReadStaticArray(l);
+   return JsonReadArray(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2591,7 +2580,7 @@ Int_t TBufferJSON::ReadStaticArray(Long_t *l)
 
 Int_t TBufferJSON::ReadStaticArray(ULong_t *l)
 {
-   TBufferJSON_ReadStaticArray(l);
+   return JsonReadArray(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2599,7 +2588,7 @@ Int_t TBufferJSON::ReadStaticArray(ULong_t *l)
 
 Int_t TBufferJSON::ReadStaticArray(Long64_t *l)
 {
-   TBufferJSON_ReadStaticArray(l);
+   return JsonReadArray(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2607,7 +2596,7 @@ Int_t TBufferJSON::ReadStaticArray(Long64_t *l)
 
 Int_t TBufferJSON::ReadStaticArray(ULong64_t *l)
 {
-   TBufferJSON_ReadStaticArray(l);
+   return JsonReadArray(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2615,7 +2604,7 @@ Int_t TBufferJSON::ReadStaticArray(ULong64_t *l)
 
 Int_t TBufferJSON::ReadStaticArray(Float_t *f)
 {
-   TBufferJSON_ReadStaticArray(f);
+   return JsonReadArray(f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2623,7 +2612,7 @@ Int_t TBufferJSON::ReadStaticArray(Float_t *f)
 
 Int_t TBufferJSON::ReadStaticArray(Double_t *d)
 {
-   TBufferJSON_ReadStaticArray(d);
+   return JsonReadArray(d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2631,7 +2620,7 @@ Int_t TBufferJSON::ReadStaticArray(Double_t *d)
 
 Int_t TBufferJSON::ReadStaticArrayFloat16(Float_t *f, TStreamerElement * /*ele*/)
 {
-   TBufferJSON_ReadStaticArray(f);
+   return JsonReadArray(f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2639,75 +2628,79 @@ Int_t TBufferJSON::ReadStaticArrayFloat16(Float_t *f, TStreamerElement * /*ele*/
 
 Int_t TBufferJSON::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele*/)
 {
-   TBufferJSON_ReadStaticArray(d);
+   return JsonReadArray(d);
 }
 
-// macro to read content of array, which not include size of array
-// macro also treat situation, when instead of one single array chain
-// of several elements should be produced
-#define TBufferJSON_ReadFastArray(arg, cast_type, asstr)                                                           \
-   if (!arg || (n <= 0))                                                                                           \
-      return;                                                                                                      \
-   nlohmann::json *json = Stack()->fNode;                                                                          \
-   if (gDebug > 2)                                                                                                 \
-      Info("ReadFastArray", "Reading array sz %d from JSON %s", n, json->dump().substr(0, 30).c_str());            \
-   TArrayIndexProducer *indexes = Stack()->MakeReadIndexes();                                                      \
-   if (indexes) { /* at least two dims */                                                                          \
-      TArrayI &indx = indexes->GetIndices();                                                                       \
-      Int_t lastdim = indx.GetSize() - 1;                                                                          \
-      if (indexes->TotalLength() != n)                                                                             \
-         Error("ReadFastArray", "Mismatch %d-dim array sizes %d %d", lastdim + 1, n, (int)indexes->TotalLength()); \
-      for (int cnt = 0; cnt < n; ++cnt) {                                                                          \
-         nlohmann::json *elem = &(json->at(indx[0]));                                                              \
-         for (int k = 1; k < lastdim; ++k)                                                                         \
-            elem = &((*elem)[indx[k]]);                                                                            \
-         arg[cnt] = asstr ? elem->get<std::string>()[indx[lastdim]] : (*elem)[indx[lastdim]].get<cast_type>();     \
-         indexes->NextSeparator();                                                                                 \
-      }                                                                                                            \
-      delete indexes;                                                                                              \
-   } else if (asstr) {                                                                                             \
-      std::string str = json->get<std::string>();                                                                  \
-      for (int cnt = 0; cnt < n; ++cnt)                                                                            \
-         arg[cnt] = (cnt < (int)str.length()) ? str[cnt] : 0;                                                      \
-   } else if (json->is_object() && (json->count("$arr") == 1)) {                                                   \
-      if (json->at("len").get<int>() != n)                                                                         \
-         Error("ReadFastArray", "Mismatch compressed array size %d %d", n, json->at("len").get<int>());            \
-      for (int cnt = 0; cnt < n; ++cnt)                                                                            \
-         arg[cnt] = 0;                                                                                             \
-      int p = 0, id = 0;                                                                                           \
-      std::string idname = "", pname, vname, nname;                                                                \
-      while (p < n) {                                                                                              \
-         pname = std::string("p") + idname;                                                                        \
-         if (json->count(pname) == 1)                                                                              \
-            p = json->at(pname).get<int>();                                                                        \
-         vname = std::string("v") + idname;                                                                        \
-         if (json->count(vname) != 1)                                                                              \
-            break;                                                                                                 \
-         nlohmann::json &v = json->at(vname);                                                                      \
-         if (v.is_array()) {                                                                                       \
-            for (unsigned sub = 0; sub < v.size(); ++sub)                                                          \
-               arg[p++] = v[sub].get<cast_type>();                                                                 \
-         } else {                                                                                                  \
-            nname = std::string("n") + idname;                                                                     \
-            unsigned ncopy = (json->count(nname) == 1) ? json->at(nname).get<unsigned>() : 1;                      \
-            for (unsigned sub = 0; sub < ncopy; ++sub)                                                             \
-               arg[p++] = v.get<cast_type>();                                                                      \
-         }                                                                                                         \
-         idname = std::to_string(++id);                                                                            \
-      }                                                                                                            \
-   } else {                                                                                                        \
-      if ((int)json->size() != n)                                                                                  \
-         Error("ReadFastArray", "Mismatch array sizes %d %d", n, (int)json->size());                               \
-      for (int cnt = 0; cnt < n; ++cnt)                                                                            \
-         arg[cnt] = json->at(cnt).get<cast_type>();                                                                \
+////////////////////////////////////////////////////////////////////////////////
+/// Template method to read array from the JSON
+
+template <typename T>
+R__ALWAYS_INLINE
+void TBufferJSON::JsonReadFastArray(T *arr, Int_t arrsize, bool asstring)
+{
+   if (!arr || (arrsize <= 0))                                                                                           \
+      return;
+   nlohmann::json *json = Stack()->fNode;
+   if (gDebug > 2)
+      Info("ReadFastArray", "Reading array sz %d from JSON %s", arrsize, json->dump().substr(0, 30).c_str());
+   TArrayIndexProducer *indexes = Stack()->MakeReadIndexes();
+   if (indexes) { /* at least two dims */
+      TArrayI &indx = indexes->GetIndices();
+      Int_t lastdim = indx.GetSize() - 1;
+      if (indexes->TotalLength() != arrsize)
+         Error("ReadFastArray", "Mismatch %d-dim array sizes %d %d", lastdim + 1, arrsize, (int)indexes->TotalLength());
+      for (int cnt = 0; cnt < arrsize; ++cnt) {
+         nlohmann::json *elem = &(json->at(indx[0]));
+         for (int k = 1; k < lastdim; ++k)
+            elem = &((*elem)[indx[k]]);
+         arr[cnt] = asstring ? elem->get<std::string>()[indx[lastdim]] : (*elem)[indx[lastdim]].get<T>();
+         indexes->NextSeparator();
+      }
+      delete indexes;
+   } else if (asstring) {
+      std::string str = json->get<std::string>();
+      for (int cnt = 0; cnt < arrsize; ++cnt)
+         arr[cnt] = (cnt < (int)str.length()) ? str[cnt] : 0;
+   } else if (json->is_object() && (json->count("$arr") == 1)) {
+      if (json->at("len").get<int>() != arrsize)
+         Error("ReadFastArray", "Mismatch compressed array size %d %d", arrsize, json->at("len").get<int>());
+      for (int cnt = 0; cnt < arrsize; ++cnt)
+         arr[cnt] = 0;
+      int p = 0, id = 0;
+      std::string idname = "", pname, vname, nname;
+      while (p < arrsize) {
+         pname = std::string("p") + idname;
+         if (json->count(pname) == 1)
+            p = json->at(pname).get<int>();
+         vname = std::string("v") + idname;
+         if (json->count(vname) != 1)
+            break;
+         nlohmann::json &v = json->at(vname);
+         if (v.is_array()) {
+            for (unsigned sub = 0; sub < v.size(); ++sub)
+               arr[p++] = v[sub].get<T>();
+         } else {
+            nname = std::string("n") + idname;
+            unsigned ncopy = (json->count(nname) == 1) ? json->at(nname).get<unsigned>() : 1;
+            for (unsigned sub = 0; sub < ncopy; ++sub)
+               arr[p++] = v.get<T>();
+         }
+         idname = std::to_string(++id);
+      }
+   } else {
+      if ((int)json->size() != arrsize)
+         Error("ReadFastArray", "Mismatch array sizes %d %d", arrsize, (int)json->size());
+      for (int cnt = 0; cnt < arrsize; ++cnt)
+         arr[cnt] = json->at(cnt).get<T>();
    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// read array of Bool_t from buffer
 
 void TBufferJSON::ReadFastArray(Bool_t *b, Int_t n)
 {
-   TBufferJSON_ReadFastArray(b, bool, false);
+   JsonReadFastArray(b, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2715,7 +2708,7 @@ void TBufferJSON::ReadFastArray(Bool_t *b, Int_t n)
 
 void TBufferJSON::ReadFastArray(Char_t *c, Int_t n)
 {
-   TBufferJSON_ReadFastArray(c, char, true);
+   JsonReadFastArray(c, n, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2723,7 +2716,7 @@ void TBufferJSON::ReadFastArray(Char_t *c, Int_t n)
 
 void TBufferJSON::ReadFastArrayString(Char_t *c, Int_t n)
 {
-   TBufferJSON_ReadFastArray(c, char, true);
+   JsonReadFastArray(c, n, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2731,7 +2724,7 @@ void TBufferJSON::ReadFastArrayString(Char_t *c, Int_t n)
 
 void TBufferJSON::ReadFastArray(UChar_t *c, Int_t n)
 {
-   TBufferJSON_ReadFastArray(c, unsigned, false);
+   JsonReadFastArray(c, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2739,7 +2732,7 @@ void TBufferJSON::ReadFastArray(UChar_t *c, Int_t n)
 
 void TBufferJSON::ReadFastArray(Short_t *h, Int_t n)
 {
-   TBufferJSON_ReadFastArray(h, int, false);
+   JsonReadFastArray(h, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2747,7 +2740,7 @@ void TBufferJSON::ReadFastArray(Short_t *h, Int_t n)
 
 void TBufferJSON::ReadFastArray(UShort_t *h, Int_t n)
 {
-   TBufferJSON_ReadFastArray(h, unsigned int, false);
+   JsonReadFastArray(h, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2755,7 +2748,7 @@ void TBufferJSON::ReadFastArray(UShort_t *h, Int_t n)
 
 void TBufferJSON::ReadFastArray(Int_t *i, Int_t n)
 {
-   TBufferJSON_ReadFastArray(i, int, false);
+   JsonReadFastArray(i, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2763,7 +2756,7 @@ void TBufferJSON::ReadFastArray(Int_t *i, Int_t n)
 
 void TBufferJSON::ReadFastArray(UInt_t *i, Int_t n)
 {
-   TBufferJSON_ReadFastArray(i, unsigned, false);
+   JsonReadFastArray(i, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2771,7 +2764,7 @@ void TBufferJSON::ReadFastArray(UInt_t *i, Int_t n)
 
 void TBufferJSON::ReadFastArray(Long_t *l, Int_t n)
 {
-   TBufferJSON_ReadFastArray(l, Long_t, false);
+   JsonReadFastArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2779,7 +2772,7 @@ void TBufferJSON::ReadFastArray(Long_t *l, Int_t n)
 
 void TBufferJSON::ReadFastArray(ULong_t *l, Int_t n)
 {
-   TBufferJSON_ReadFastArray(l, ULong_t, false);
+   JsonReadFastArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2787,7 +2780,7 @@ void TBufferJSON::ReadFastArray(ULong_t *l, Int_t n)
 
 void TBufferJSON::ReadFastArray(Long64_t *l, Int_t n)
 {
-   TBufferJSON_ReadFastArray(l, Long64_t, false);
+   JsonReadFastArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2795,7 +2788,7 @@ void TBufferJSON::ReadFastArray(Long64_t *l, Int_t n)
 
 void TBufferJSON::ReadFastArray(ULong64_t *l, Int_t n)
 {
-   TBufferJSON_ReadFastArray(l, ULong64_t, false);
+   JsonReadFastArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2803,7 +2796,7 @@ void TBufferJSON::ReadFastArray(ULong64_t *l, Int_t n)
 
 void TBufferJSON::ReadFastArray(Float_t *f, Int_t n)
 {
-   TBufferJSON_ReadFastArray(f, Float_t, false);
+   JsonReadFastArray(f, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2811,7 +2804,7 @@ void TBufferJSON::ReadFastArray(Float_t *f, Int_t n)
 
 void TBufferJSON::ReadFastArray(Double_t *d, Int_t n)
 {
-   TBufferJSON_ReadFastArray(d, Double_t, false);
+   JsonReadFastArray(d, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2819,7 +2812,7 @@ void TBufferJSON::ReadFastArray(Double_t *d, Int_t n)
 
 void TBufferJSON::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement * /*ele*/)
 {
-   TBufferJSON_ReadFastArray(f, Float_t, false);
+   JsonReadFastArray(f, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2827,7 +2820,7 @@ void TBufferJSON::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement * /
 
 void TBufferJSON::ReadFastArrayWithFactor(Float_t *f, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
 {
-   TBufferJSON_ReadFastArray(f, Float_t, false);
+   JsonReadFastArray(f, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2835,7 +2828,7 @@ void TBufferJSON::ReadFastArrayWithFactor(Float_t *f, Int_t n, Double_t /* facto
 
 void TBufferJSON::ReadFastArrayWithNbits(Float_t *f, Int_t n, Int_t /*nbits*/)
 {
-   TBufferJSON_ReadFastArray(f, Float_t, false);
+   JsonReadFastArray(f, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2843,7 +2836,7 @@ void TBufferJSON::ReadFastArrayWithNbits(Float_t *f, Int_t n, Int_t /*nbits*/)
 
 void TBufferJSON::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement * /*ele*/)
 {
-   TBufferJSON_ReadFastArray(d, Double_t, false);
+   JsonReadFastArray(d, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2851,7 +2844,7 @@ void TBufferJSON::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *
 
 void TBufferJSON::ReadFastArrayWithFactor(Double_t *d, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
 {
-   TBufferJSON_ReadFastArray(d, Double_t, false);
+   JsonReadFastArray(d, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2859,7 +2852,7 @@ void TBufferJSON::ReadFastArrayWithFactor(Double_t *d, Int_t n, Double_t /* fact
 
 void TBufferJSON::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t /*nbits*/)
 {
-   TBufferJSON_ReadFastArray(d, Double_t, false);
+   JsonReadFastArray(d, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2952,7 +2945,6 @@ void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
 
    stack->fNode = topnode;
 }
-
 
 template <typename T>
 R__ALWAYS_INLINE
@@ -3169,7 +3161,7 @@ void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElemen
 // chain of several elements should be produced
 #define TBufferJSON_WriteFastArray(vname, method, typname)                             \
    {                                                                                   \
-      TJSONPushValue();                                                                \
+      JsonPushValue();                                                                 \
       if (n <= 0) { /*fJsonrCnt++;*/                                                   \
          fValue.Append("[]");                                                          \
          return;                                                                       \
@@ -3472,16 +3464,21 @@ void TBufferJSON::StreamObject(void *obj, const TClass *cl, const TClass * /* on
       JsonReadObject(obj, cl);
 }
 
-#define JsonReadBasic(arg, cast_type) arg = Stack()->GetStlNode()->get<cast_type>();
+////////////////////////////////////////////////////////////////////////////////
+/// Template function to read basic value from JSON
 
-#define JsonReadString(arg) arg = Stack()->GetStlNode()->get<std::string>();
+template <typename T>
+R__ALWAYS_INLINE void TBufferJSON::JsonReadBasic(T &value)
+{
+   value = Stack()->GetStlNode()->get<T>();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads Bool_t value from buffer
 
 void TBufferJSON::ReadBool(Bool_t &val)
 {
-   JsonReadBasic(val, Bool_t);
+   JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3500,7 +3497,7 @@ void TBufferJSON::ReadChar(Char_t &val)
 
 void TBufferJSON::ReadUChar(UChar_t &val)
 {
-   JsonReadBasic(val, UChar_t);
+   JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3508,7 +3505,7 @@ void TBufferJSON::ReadUChar(UChar_t &val)
 
 void TBufferJSON::ReadShort(Short_t &val)
 {
-   JsonReadBasic(val, Short_t);
+   JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3516,7 +3513,7 @@ void TBufferJSON::ReadShort(Short_t &val)
 
 void TBufferJSON::ReadUShort(UShort_t &val)
 {
-   JsonReadBasic(val, UShort_t);
+   JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3527,7 +3524,7 @@ void TBufferJSON::ReadInt(Int_t &val)
    if (Stack()->fValues.GetLast() >= 0)
       val = Stack()->PopIntValue();
    else
-      val = Stack()->GetStlNode()->get<Int_t>();
+      JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3535,7 +3532,7 @@ void TBufferJSON::ReadInt(Int_t &val)
 
 void TBufferJSON::ReadUInt(UInt_t &val)
 {
-   JsonReadBasic(val, UInt_t);
+   JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3543,7 +3540,7 @@ void TBufferJSON::ReadUInt(UInt_t &val)
 
 void TBufferJSON::ReadLong(Long_t &val)
 {
-   JsonReadBasic(val, Long_t);
+   JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3551,7 +3548,7 @@ void TBufferJSON::ReadLong(Long_t &val)
 
 void TBufferJSON::ReadULong(ULong_t &val)
 {
-   JsonReadBasic(val, ULong_t);
+   JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3559,7 +3556,7 @@ void TBufferJSON::ReadULong(ULong_t &val)
 
 void TBufferJSON::ReadLong64(Long64_t &val)
 {
-   JsonReadBasic(val, Long64_t);
+   JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3567,7 +3564,7 @@ void TBufferJSON::ReadLong64(Long64_t &val)
 
 void TBufferJSON::ReadULong64(ULong64_t &val)
 {
-   JsonReadBasic(val, ULong64_t);
+   JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3575,7 +3572,7 @@ void TBufferJSON::ReadULong64(ULong64_t &val)
 
 void TBufferJSON::ReadFloat(Float_t &val)
 {
-   JsonReadBasic(val, Float_t);
+   JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3583,7 +3580,7 @@ void TBufferJSON::ReadFloat(Float_t &val)
 
 void TBufferJSON::ReadDouble(Double_t &val)
 {
-   JsonReadBasic(val, Double_t);
+   JsonReadBasic(val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3591,7 +3588,7 @@ void TBufferJSON::ReadDouble(Double_t &val)
 
 void TBufferJSON::ReadFloat16(Float_t *f, TStreamerElement * /*ele*/)
 {
-   JsonReadBasic(*f, Float_t);
+   JsonReadBasic(*f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3599,7 +3596,7 @@ void TBufferJSON::ReadFloat16(Float_t *f, TStreamerElement * /*ele*/)
 
 void TBufferJSON::ReadDouble32(Double_t *d, TStreamerElement * /*ele*/)
 {
-   JsonReadBasic(*d, Double_t);
+   JsonReadBasic(*d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3610,7 +3607,7 @@ void TBufferJSON::ReadDouble32(Double_t *d, TStreamerElement * /*ele*/)
 
 void TBufferJSON::ReadWithFactor(Float_t *f, Double_t /* factor */, Double_t /* minvalue */)
 {
-   JsonReadBasic(*f, Float_t);
+   JsonReadBasic(*f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3621,7 +3618,7 @@ void TBufferJSON::ReadWithFactor(Float_t *f, Double_t /* factor */, Double_t /* 
 
 void TBufferJSON::ReadWithNbits(Float_t *f, Int_t /* nbits */)
 {
-   JsonReadBasic(*f, Float_t);
+   JsonReadBasic(*f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3632,7 +3629,7 @@ void TBufferJSON::ReadWithNbits(Float_t *f, Int_t /* nbits */)
 
 void TBufferJSON::ReadWithFactor(Double_t *d, Double_t /* factor */, Double_t /* minvalue */)
 {
-   JsonReadBasic(*d, Double_t);
+   JsonReadBasic(*d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3643,7 +3640,7 @@ void TBufferJSON::ReadWithFactor(Double_t *d, Double_t /* factor */, Double_t /*
 
 void TBufferJSON::ReadWithNbits(Double_t *d, Int_t /* nbits */)
 {
-   JsonReadBasic(*d, Double_t);
+   JsonReadBasic(*d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3660,7 +3657,7 @@ void TBufferJSON::ReadCharP(Char_t *)
 void TBufferJSON::ReadTString(TString &val)
 {
    std::string str;
-   JsonReadString(str);
+   JsonReadBasic(str);
    val = str.c_str();
 }
 
@@ -3669,7 +3666,7 @@ void TBufferJSON::ReadTString(TString &val)
 
 void TBufferJSON::ReadStdString(std::string *val)
 {
-   JsonReadString(*val);
+   JsonReadBasic(*val);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3678,7 +3675,7 @@ void TBufferJSON::ReadStdString(std::string *val)
 void TBufferJSON::ReadCharStar(char *&s)
 {
    std::string str;
-   JsonReadString(str);
+   JsonReadBasic(str);
 
    if (s) {
       delete[] s;
@@ -3698,9 +3695,7 @@ void TBufferJSON::ReadCharStar(char *&s)
 
 void TBufferJSON::WriteBool(Bool_t b)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(b);
+   JsonPushWrite(b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3708,9 +3703,7 @@ void TBufferJSON::WriteBool(Bool_t b)
 
 void TBufferJSON::WriteChar(Char_t c)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(c);
+   JsonPushWrite(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3718,9 +3711,7 @@ void TBufferJSON::WriteChar(Char_t c)
 
 void TBufferJSON::WriteUChar(UChar_t c)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(c);
+   JsonPushWrite(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3728,9 +3719,7 @@ void TBufferJSON::WriteUChar(UChar_t c)
 
 void TBufferJSON::WriteShort(Short_t h)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(h);
+   JsonPushWrite(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3738,9 +3727,7 @@ void TBufferJSON::WriteShort(Short_t h)
 
 void TBufferJSON::WriteUShort(UShort_t h)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(h);
+   JsonPushWrite(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3748,9 +3735,7 @@ void TBufferJSON::WriteUShort(UShort_t h)
 
 void TBufferJSON::WriteInt(Int_t i)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(i);
+   JsonPushWrite(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3758,9 +3743,7 @@ void TBufferJSON::WriteInt(Int_t i)
 
 void TBufferJSON::WriteUInt(UInt_t i)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(i);
+   JsonPushWrite(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3768,9 +3751,7 @@ void TBufferJSON::WriteUInt(UInt_t i)
 
 void TBufferJSON::WriteLong(Long_t l)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(l);
+   JsonPushWrite(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3778,9 +3759,7 @@ void TBufferJSON::WriteLong(Long_t l)
 
 void TBufferJSON::WriteULong(ULong_t l)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(l);
+   JsonPushWrite(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3788,9 +3767,7 @@ void TBufferJSON::WriteULong(ULong_t l)
 
 void TBufferJSON::WriteLong64(Long64_t l)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(l);
+   JsonPushWrite(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3798,9 +3775,7 @@ void TBufferJSON::WriteLong64(Long64_t l)
 
 void TBufferJSON::WriteULong64(ULong64_t l)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(l);
+   JsonPushWrite(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3808,9 +3783,7 @@ void TBufferJSON::WriteULong64(ULong64_t l)
 
 void TBufferJSON::WriteFloat(Float_t f)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(f);
+   JsonPushWrite(f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3818,9 +3791,7 @@ void TBufferJSON::WriteFloat(Float_t f)
 
 void TBufferJSON::WriteDouble(Double_t d)
 {
-   TJSONPushValue();
-
-   JsonWriteBasic(d);
+   JsonPushWrite(d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3828,7 +3799,7 @@ void TBufferJSON::WriteDouble(Double_t d)
 
 void TBufferJSON::WriteCharP(const Char_t *c)
 {
-   TJSONPushValue();
+   JsonPushValue();
 
    JsonWriteConstChar(c);
 }
@@ -3838,7 +3809,7 @@ void TBufferJSON::WriteCharP(const Char_t *c)
 
 void TBufferJSON::WriteTString(const TString &s)
 {
-   TJSONPushValue();
+   JsonPushValue();
 
    JsonWriteConstChar(s.Data(), s.Length());
 }
@@ -3848,7 +3819,7 @@ void TBufferJSON::WriteTString(const TString &s)
 
 void TBufferJSON::WriteStdString(const std::string *s)
 {
-   TJSONPushValue();
+   JsonPushValue();
 
    if (s)
       JsonWriteConstChar(s->c_str(), s->length());
@@ -3861,7 +3832,7 @@ void TBufferJSON::WriteStdString(const std::string *s)
 
 void TBufferJSON::WriteCharStar(char *s)
 {
-   TJSONPushValue();
+   JsonPushValue();
 
    JsonWriteConstChar(s);
 }
