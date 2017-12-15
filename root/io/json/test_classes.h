@@ -11,9 +11,16 @@
 
 #include "TNamed.h"
 #include "TBox.h"
+#include "TObjString.h"
+#include "TList.h"
+#include "TObjArray.h"
+#include "TMap.h"
+#include "TClonesArray.h"
 #include "TRef.h"
 #include "TArrayI.h"
 #include "Riostream.h"
+#include "TBufferJSON.h"
+#include "TClass.h"
 
 class TJsonEx1 {
    protected:
@@ -35,14 +42,25 @@ class TJsonEx1 {
      TJsonEx1()
      {
         fBool = false;
-        fChar = 'C';
-        fShort = 123;
-        fInt = 123456;
-        fLong = 7654321;
-        fFloat = 1.2;
-        fDouble = 3.8;
+        fChar = 0;
+        fShort = 0;
+        fInt = 0;
+        fLong = 0;
+        fFloat = 0;
+        fDouble = 0;
      }
      virtual ~TJsonEx1() {}
+
+     void Init(int n = 1)
+     {
+        fBool = n % 2;
+        fChar = 'C';
+        fShort = n*123;
+        fInt = n*123456;
+        fLong = n*7654321;
+        fFloat = n*1.2;
+        fDouble = n*3.8;
+     }
 
      bool operator<(const TJsonEx1& ex) const {
         return fInt < ex.fInt;
@@ -60,16 +78,6 @@ class TJsonEx1 {
          cout << "   fDouble = " << fDouble << endl;
      }
 
-     void SetValues(int n) {
-        fBool = (n % 2 != 0);
-        fChar = (char) (n % 128);
-        fShort = (short) (n % 0x8000);
-        fInt = n;
-        fLong = n*2;
-        fFloat = n*1.1;
-        fDouble = n*7.7;
-     }
-
 };
 
 class TJsonEx11 : public TJsonEx1 {
@@ -77,9 +85,15 @@ class TJsonEx11 : public TJsonEx1 {
 
       int        fInt2;
 
-      TJsonEx11() : TJsonEx1() {
-         fInt2 = 22;
+      TJsonEx11() : TJsonEx1(), fInt2(0) {
       }
+
+      void Init(int z = 1)
+      {
+         TJsonEx1::Init(z);
+         fInt2 = 27*z;
+      }
+
 };
 
 // _______________________________________________________________
@@ -98,30 +112,55 @@ class TJsonEx2 {
    public:
      TJsonEx2()
      {
-        fTest1[0] = 11111;
-        fTest1[1] = 22222;
-        fTest1[2] = 33333;
-        fTest1[3] = 44444;
+        fTest1[0] = 0;
+        fTest1[1] = 0;
+        fTest1[2] = 0;
+        fTest1[3] = 0;
 
-        fTest2[0][0] = 1;
-        fTest2[0][1] = 2;
-        fTest2[1][0] = 3;
-        fTest2[1][1] = 4;
+        fTest2[0][0] = 0;
+        fTest2[0][1] = 0;
+        fTest2[1][0] = 0;
+        fTest2[1][1] = 0;
 
         for (int i=0;i<2;i++)
           for (int j=0;j<3;j++)
             for (int k=0;k<4;k++) {
-               fBool[i][j][k] = (i+j) % 2 !=0;
-               fChar[i][j][k] = 48 + i+j+k;
-               fShort[i][j][k] = i+j+k;
-               fInt[i][j][k] = i*j+k;
-               fLong[i][j][k] = i*j*k;
-               fFloat[i][j][k] = i*j*k;
-               fDouble[i][j][k] = i*j*k;
+               fBool[i][j][k] = 0;
+               fChar[i][j][k] = 0;
+               fShort[i][j][k] = 0;
+               fInt[i][j][k] = 0;
+               fLong[i][j][k] = 0;
+               fFloat[i][j][k] = 0;
+               fDouble[i][j][k] = 0;
             }
      }
 
      virtual ~TJsonEx2() {}
+
+     void Init(int zz = 1)
+     {
+        fTest1[0] = zz*11111;
+        fTest1[1] = zz*22222;
+        fTest1[2] = zz*33333;
+        fTest1[3] = zz*44444;
+
+        fTest2[0][0] = zz*1;
+        fTest2[0][1] = zz*2;
+        fTest2[1][0] = zz*3;
+        fTest2[1][1] = zz*4;
+
+        for (int i=0;i<2;i++)
+          for (int j=0;j<3;j++)
+            for (int k=0;k<4;k++) {
+               fBool[i][j][k] = ((i+j+k) % 2) !=0;
+               fChar[i][j][k] = 48 + i+j+k;
+               fShort[i][j][k] = i+j+k+zz;
+               fInt[i][j][k] = (i+1)*(j+2)+k+zz;
+               fLong[i][j][k] = (i+1)*(j+2)*(k+3)*zz;
+               fFloat[i][j][k] = (i+4)*(j+3)*(k+2)*zz;
+               fDouble[i][j][k] = (i+1)*(j+5)*(k+9)*zz;
+            }
+     }
 
      void Print()
      {
@@ -147,27 +186,19 @@ class TJsonEx2 {
 
 class TJsonEx3 {
    protected:
-     int        fSize;
-     bool       *fBool;     // [fSize]
-     char       *fChar;     // [fSize]
-     short      *fShort;    // [fSize]
-     int        *fInt;      // [fSize]
-     long       *fLong;     // [fSize]
-     float      *fFloat;    // [fSize]
-     double     *fDouble;   // [fSize]
+     int        fSize{0};
+     bool       *fBool{nullptr};     // [fSize]
+     char       *fChar{nullptr};     // [fSize]
+     short      *fShort{nullptr};    // [fSize]
+     int        *fInt{nullptr};      // [fSize]
+     long       *fLong{nullptr};     // [fSize]
+     float      *fFloat{nullptr};    // [fSize]
+     double     *fDouble{nullptr};   // [fSize]
    public:
 
      TJsonEx3(int sz = 0)
      {
-        fSize = 0;
-        fBool = nullptr;
-        fChar = nullptr;
-        fShort = nullptr;
-        fInt = nullptr;
-        fLong = nullptr;
-        fFloat = nullptr;
-        fDouble = nullptr;
-        if (sz>0) SetValues(sz);
+        if (sz>0) Init(sz);
      }
 
      TJsonEx3(const TJsonEx3 &src)
@@ -192,6 +223,9 @@ class TJsonEx3 {
 
      void Allocate(int sz)
      {
+        Release();
+        if (sz<=0) return;
+
         fSize = sz;
         fBool = new bool[fSize];
         fChar = new char[fSize];
@@ -204,6 +238,7 @@ class TJsonEx3 {
 
      void Release()
      {
+       if (fSize<=0) return;
        delete [] fBool; fBool = nullptr;
        delete [] fChar; fChar = nullptr;
        delete [] fShort; fShort = nullptr;
@@ -211,9 +246,10 @@ class TJsonEx3 {
        delete [] fLong; fLong = nullptr;
        delete [] fFloat; fFloat = nullptr;
        delete [] fDouble; fDouble = nullptr;
+       fSize = 0;
      }
 
-     void SetValues(int sz = 5)
+     void Init(int sz = 7)
      {
         Allocate(sz);
 
@@ -255,27 +291,31 @@ class TJsonEx4 : public TJsonEx1 {
       const char* fStr3;
       const char* fStr4;
    public:
-      TJsonEx4(bool setvalues = false) : TJsonEx1()
+      TJsonEx4() : TJsonEx1()
       {
         memset(fStr1, 0, sizeof(fStr1));
         fStr2 = nullptr;
         fDummy2 = 0;
         fStr3 = nullptr;
         fStr4 = nullptr;
-        if (setvalues) {
-           strcpy(fStr1, "Value of string 1");
-           fDummy2 = 1234567;
-           fStr3 = new char[1000];
-           strcpy((char*)fStr3, "***\t\n/t/n************** Long Value of string 3 *****************************************************************************************************************************************************************************************************************************************************************************************************************");
-           fStr4 = new char[1000];
-           strcpy((char*)fStr4, "--- normal string value ---");
-        }
       }
+
       virtual ~TJsonEx4()
       {
          delete[] fStr2;
          delete[] fStr3;
          delete[] fStr4;
+      }
+
+      void Init()
+      {
+         TJsonEx1::Init();
+         strcpy(fStr1, "Value of string 1");
+         fDummy2 = 1234567;
+         fStr3 = new char[1000];
+         strcpy((char*)fStr3, "***\t\n/t/n************** Long Value of string 3 *****************************************************************************************************************************************************************************************************************************************************************************************************************");
+         fStr4 = new char[1000];
+         strcpy((char*)fStr4, "--- normal string value ---");
       }
 
       void Print()
@@ -307,7 +347,7 @@ class TJsonEx5 {
      TJsonEx1    *fPtr3;
      TJsonEx1    *fSafePtr3;   //->
 
-     TJsonEx5(bool setvalues = false)
+     TJsonEx5()
      {
         fPtr1 = nullptr;
         fPtr2 = nullptr;
@@ -316,12 +356,24 @@ class TJsonEx5 {
         fSafePtr1 = new TJsonEx1;
         fSafePtr2 = new TJsonEx2;
         fSafePtr3 = new TJsonEx1;
+     }
 
-        if (setvalues) {
-           fPtr1 = new TJsonEx1;
-           fPtr2 = new TJsonEx2;
-           fPtr3 = fPtr1;
-        }
+     void Init()
+     {
+       fObj1.Init();
+       fObj2.Init();
+       fObj3.Init();
+
+       fPtr1 = new TJsonEx1;
+       fPtr2 = new TJsonEx2;
+       fPtr3 = fPtr1;
+
+       fPtr1->Init();
+       fPtr2->Init();
+
+       fSafePtr1->Init();
+       fSafePtr2->Init();
+       fSafePtr3->Init();
      }
 
      virtual ~TJsonEx5()
@@ -396,7 +448,7 @@ class TJsonEx6 {
      TJsonEx2**  GetPtr2() { return fPtr2; }
      TJsonEx2**  GetSafePtr2() { return fSafePtr2; }
 
-     TJsonEx6(bool setvalues = false)
+     TJsonEx6()
      {
         for (int n=0;n<3;n++) {
            fPtr1[n] = nullptr;
@@ -409,25 +461,38 @@ class TJsonEx6 {
            for (int k=0;k<3;k++)
               fSafePtr33[n][k] = new TJsonEx2();
          }
-
-         if (setvalues) {
-            for (int n=0;n<3;n++) {
-              fPtr1[n] = new TJsonEx1();
-              fPtr2[n] = new TJsonEx2();
-              fPtr3[n] = fPtr1[n];
-            }
-
-            for (int n=0;n<2;n++)
-              for (int k=0;k<3;k++)
-                 for (int j=0;j<4;j++)
-                  fStringArr234[n][k][j] = Form("%d-%d-%d",n,k,j);
-
-         }
-
      }
-     virtual ~TJsonEx6()
+
+     virtual ~TJsonEx6() { }
+
+     void Init()
      {
+        for (int n=0;n<3;n++) {
+          fObj1[n].Init();
+          fObj2[n].Init();
+          fObj3[n].Init();
+
+          fPtr1[n] = new TJsonEx1();
+          fPtr2[n] = new TJsonEx2();
+          fPtr3[n] = fPtr1[n];
+
+          fPtr1[n]->Init();
+          fPtr2[n]->Init();
+
+           fSafePtr1[n]->Init();
+           fSafePtr2[n]->Init();
+           fSafePtr3[n]->Init();
+           for (int k=0;k<3;k++)
+              fSafePtr33[n][k]->Init();
+
+        }
+
+        for (int n=0;n<2;n++)
+          for (int k=0;k<3;k++)
+             for (int j=0;j<4;j++)
+              fStringArr234[n][k][j] = Form("%d-%d-%d",n,k,j);
      }
+
      void Print()
      {
         for (int n=0;n<3;n++) {
@@ -493,11 +558,14 @@ class TJsonEx7 {
 
       std::vector<TJsonEx11>      fVectEx11;
 
+      int fABC;
+
       std::vector<std::string>    fVectString;
       std::vector<std::string*>   fVectStringPtr;
 
       std::list<double>           fListDouble;
       std::list<bool>             fListBool;
+
       std::list<TJsonEx1>         fListEx1;
       std::list<TJsonEx1*>        fListEx1Ptr;
 
@@ -506,8 +574,8 @@ class TJsonEx7 {
       std::deque<TJsonEx1>        fDequeEx1;
       std::deque<TJsonEx1*>       fDequeEx1Ptr;
 
-      std::map<TString,int>       fMapStrInt;
       std::map<int,double>        fMapIntDouble;
+      std::map<TString,int>       fMapStrInt;
       std::map<int,TJsonEx1>      fMapIntEx1;
       std::map<int,TJsonEx1*>     fMapIntEx1Ptr;
       std::multimap<int,double>   fMultimapIntDouble;
@@ -518,8 +586,7 @@ class TJsonEx7 {
       std::bitset<16>             fBitsSet16;
       std::bitset<64>             fBitsSet64;
 
-
-   TJsonEx7(int numelem = 0)
+   TJsonEx7()
    {
       fStrPtr1 = nullptr;
       fStrPtr2 = nullptr;
@@ -531,14 +598,24 @@ class TJsonEx7 {
       }
 
       for (int n=0;n<10;n++) fBoolArr[n] = false;
+      fABC = 0;
 
       for (int k=0;k<16;++k)
          fBitsSet16.set(k, false);
 
       for (int k=0;k<64;++k)
         fBitsSet64.set(k, false);
+   }
+
+   virtual ~TJsonEx7()
+   {
+   }
+
+   void Init(int numelem = 5) {
 
       if (numelem <= 0) return;
+
+      fABC = numelem;
 
       fStr1 = "String with special characters: \" & < >";
       fStr2 = "Very long Value of STL string// ***********************************************************8// ***********************************************************8// ***********************************************************8// ***********************************************************8// ***********************************************************8// ***********************************************************8// ***********************************************************8// ***********************************************************8// ***********************************************************8";
@@ -554,28 +631,26 @@ class TJsonEx7 {
       fStrPtrArr[1] = new string("value of fStrPtrArr[1]");
       fStrPtrArr[2] = new string("value of fStrPtrArr[2]");
 
+      for (int n=0;n<10;n++)
+         fBoolArr[n] = (n%3 == 1);
+
       for (int n=0;n<numelem;n++) {
+
          fVectDouble.push_back(n*3);
-         fBoolArr[n] = (n%2 == 1);
          fVectBool.push_back(n%2 == 1);
 
          for (int k=0;k<3;++k)
             fVectDoubleArr[k].push_back(k*10+n);
 
          fVectEx1.push_back(TJsonEx1());
+         fVectEx1.back().Init(n+1);
          fVectEx2.push_back(TJsonEx2());
-         fVectEx3.push_back(TJsonEx3(5));
+         fVectEx2.back().Init(n+1);
+         fVectEx3.push_back(TJsonEx3());
+         fVectEx3.back().Init(n+3);
 
          fVectEx11.push_back(TJsonEx11());
-      }
-
-      int sz3 = numelem>=3 ? numelem/3 : numelem;
-
-      for (int n=0;n<sz3;n++) {
-        TJsonEx1 *ex1 = new TJsonEx1;
-        fVectEx1Ptr.push_back(ex1);
-        fVectEx1Ptr.push_back(ex1);
-        fVectEx1Ptr.push_back(ex1);
+         fVectEx11.back().Init(n+1);
       }
 
       fVectPtrDouble = new std::vector<double>;
@@ -588,6 +663,8 @@ class TJsonEx7 {
             fVectPtrDoubleArr[i]->push_back(i*100 + n*3);
       }
 
+      int sz3 = numelem>=3 ? numelem/3 : numelem;
+
       for (int n=0;n<numelem;n++) {
          TBox box(n*11,n*22,n*33,n*44);
          fVectBox.push_back(box);
@@ -595,6 +672,17 @@ class TJsonEx7 {
          TNamed name(Form("Name%d",n),Form("Title%d",n));
          fVectNames.push_back(name);
       }
+
+
+      for (int n=0;n<sz3;n++) {
+        TJsonEx1 *ex1 = new TJsonEx1;
+        ex1->Init(n*2+3);
+        fVectEx1Ptr.push_back(ex1);
+        fVectEx1Ptr.push_back(ex1);
+        fVectEx1Ptr.push_back(ex1);
+      }
+
+
 
       int sz5 = numelem>=2 ? numelem/2 : 1;
 
@@ -608,24 +696,35 @@ class TJsonEx7 {
 
          fListDouble.push_back(n*4);
          fListBool.push_back(n%2 == 1);
+
          fListEx1.push_back(TJsonEx1());
-         fListEx1Ptr.push_back(new TJsonEx1);
+         fListEx1.back().Init(n);
+         if (n == 1) fListEx1Ptr.push_back(fListEx1Ptr.front()); else
+         if (n%3 == 2) fListEx1Ptr.push_back(nullptr); else {
+            fListEx1Ptr.push_back(new TJsonEx1);
+            fListEx1Ptr.back()->Init(n+7);
+         }
 
          fDequeDouble.push_back(n*4);
          fDequeBool.push_back(n%2 == 1);
          fDequeEx1.push_back(TJsonEx1());
-         fDequeEx1Ptr.push_back(new TJsonEx1);
+         fDequeEx1.back().Init(n+11);
 
-         fMapStrInt[Form("Str%d",n)] = n + 10;
+         if (n == numelem-2) fDequeEx1Ptr.push_back(fDequeEx1Ptr.front()); else
+         if (n%3 == 1) fDequeEx1Ptr.push_back(nullptr); else {
+            fDequeEx1Ptr.push_back(new TJsonEx1);
+            fDequeEx1Ptr.back()->Init(n+1);
+         }
+
          fMapIntDouble[n] = n*5;
-         fMapIntEx1[n] = TJsonEx1();
-         fMapIntEx1Ptr[n] = &(fMapIntEx1[n]); // new TJsonEx1;
+         fMapStrInt[Form("Str%d",n)] = n + 10;
+         fMapIntEx1[n] = TJsonEx1(); fMapIntEx1[n].Init(n+8);
+         fMapIntEx1Ptr[n] = new TJsonEx1; fMapIntEx1Ptr[n]->Init(n+3);
 
          fMultimapIntDouble.insert(pair<int,double>(n,n*6));
          fMultimapIntDouble.insert(pair<int,double>(n,1000+n*6));
-
-         fSetDouble.insert(n);
-         fMultisetDouble.insert(n);
+         fSetDouble.insert(n+2);
+         fMultisetDouble.insert((n+1)*17);
       }
 
       for (int k=0;k<16;++k)
@@ -636,9 +735,6 @@ class TJsonEx7 {
    }
 
 
-   virtual ~TJsonEx7()
-   {
-   }
 
    void Print()
    {
@@ -648,14 +744,11 @@ class TJsonEx7 {
 
       cout << " fStrArr[1] = " << fStrArr[1] << endl;
 
-      cout << " fVectEx1.back().Print()" << endl;
-      fVectEx1.back().Print();
-
-      cout << " fVectEx1Ptr.size() = " << fVectEx1Ptr.size() << endl;
-
-      cout << " fVectStringPtr.size() = " << fVectStringPtr.size() << endl;
-
-      cout << " fMapIntEx1Ptr.size() = " << fMapIntEx1Ptr.size() << endl;
+      //cout << " fVectEx1.back().Print()" << endl;
+      //fVectEx1.back().Print();
+      //cout << " fVectEx1Ptr.size() = " << fVectEx1Ptr.size() << endl;
+      //cout << " fVectStringPtr.size() = " << fVectStringPtr.size() << endl;
+      //cout << " fMapIntEx1Ptr.size() = " << fMapIntEx1Ptr.size() << endl;
    }
 };
 
@@ -666,20 +759,22 @@ class TJsonEx8 : public std::vector<int> {
      int                    fInt;
      std::string            fStdString;
 
-   TJsonEx8(int numelem = 0)
+   TJsonEx8()
    {
       fInt = 0;
       fStdString = "";
-
-      if (numelem > 0) {
-         for (int n=0;n<numelem;n++)
-           push_back(n*14);
-         fInt = 12345;
-         fStdString = "Value of STL string";
-      }
    }
 
    virtual ~TJsonEx8() {}
+
+   void Init(int numelem = 11)
+   {
+     for (int n=0;n<numelem;n++)
+       push_back((n+2)*23);
+     fInt = 12345;
+     fStdString = "Value of STL string, numelem = ";
+     fStdString += std::to_string(numelem);
+   }
 
    void Print()
    {
@@ -730,20 +825,13 @@ class TJsonEx9 {
 //      fStr3 = 0;
    }
 
-   void SetValues(int cnt = 3) {
+   void Init(int cnt = 3)
+   {
       fCnt = cnt;
 
       fStr = new TString[fCnt];
-//      fStr3 = new TString*[fCnt];
       for (int n=0;n<fCnt;++n) {
          fStr[n].Form("String%d",n);
-/*         if (n%3==2) {
-            fStr3[n] = 0;
-         } else {
-            fStr3[n] = new TString();
-            fStr3[n]->Form("DynamicString%d",n);
-         }
-*/
       }
 
       for (int k=0;k<3;++k) {
@@ -804,11 +892,9 @@ class TJsonEx9 {
                fArr4[k1][k2][n].Reset(n);
             }
          }
-
    }
 
    virtual ~TJsonEx9() {
-   //   if (fStr) { delete [] fStr; fStr = 0; }
    }
 };
 
@@ -827,7 +913,7 @@ class TJsonEx10 {
       TJsonEx10() {}
       virtual ~TJsonEx10() {}
 
-      void SetValues() {
+      void Init() {
          fStr0 = "SimpleString";
          fName0.SetName("SimpleName");
          fName0.SetTitle("SimpleTitle");
@@ -852,18 +938,15 @@ public:
    TJsonEx12() : vect1(), vect9() {}
    virtual ~TJsonEx12() {}
 
-    void SetValues(int cnt) {
-      vect1.clear();
-      vect9.clear();
-      TJsonEx1 ex1;
-      TJsonEx9 ex9;
+    void Init(int cnt = 7)
+    {
+      vect1.resize(cnt);
+      vect9.resize(cnt);
       for (int n=0;n<cnt;++n) {
-         if (n>0) ex9.SetValues(n);
-         vect1.push_back(ex1);
-         vect9.push_back(ex9);
+         vect1[n].Init(n+1);
+         vect9[n].Init((n % 3) + 1);
       }
    }
-
 
 };
 
@@ -879,23 +962,101 @@ public:
    TJsonEx13() : set1(), map1(), map2(), vect1() {}
    virtual ~TJsonEx13() {}
 
-   void SetValues(int cnt) {
-      set1.clear();
-      map1.clear();
-      map2.clear();
-      vect1.clear();
+   void Init(int cnt = 4)
+   {
       TJsonEx1 ex1;
       for (int n=0;n<cnt;++n) {
          TRef ref;
-         ex1.SetValues(n);
+         ex1.Init(n);
          set1.insert(ex1);
          map1[ex1] = set1;
          map2[n] = ref;
          vect1.push_back(ref);
       }
    }
-
 };
+
+// ______________________________________________________________________________________
+
+class TJsonEx14 {
+public:
+
+   TObjArray fObjArray;
+   TList fList;
+   TClonesArray fClones;
+   TMap fMap;
+
+   TJsonEx14()
+   {
+      fObjArray.SetOwner(kTRUE);
+      fList.SetOwner(kTRUE);
+      fMap.SetOwner(kTRUE);
+
+   }
+
+   void Init(int cnt = 7)
+   {
+      for(int n=0;n<cnt;n++) {
+         TNamed* nn = new TNamed(Form("ObjArr%d",n), Form("ObjArrTitle%d",n));
+         fObjArray.Add(nn);
+      }
+
+      for(int n=0;n<cnt;n++) {
+         TBox* b = new TBox(n*10,n*100,n*20,n*200);
+         fList.Add(b, Form("option_%d_option",n));
+      }
+
+      fClones.SetClass("TBox", cnt);
+      for(int n=0;n<cnt;n++)
+         new (fClones[n]) TBox(n*7,n*77,n*17,n*27);
+
+     for (int n=0;n<cnt;n++) {
+         TObjString* str = new TObjString(Form("Str%d",n));
+         TNamed* nnn = new TNamed(Form("Name%d",n), Form("Title%d",n));
+         fMap.Add(str,nnn);
+      }
+
+   }
+};
+
+// ______________________________________________________________________________________
+
+bool testJsonReading(TString &json)
+{
+   TClass *cl = nullptr;
+
+   void *obj = TBufferJSON::ConvertFromJSONAny(json, &cl);
+
+   if (!obj) {
+      printf("Fail to read object from json %s...\n", json(0,30).Data());
+      return false;
+   }
+
+   if (!cl) {
+      printf("Fail to get class from json %s ...\n", json(0,30).Data());
+      return false;
+   }
+
+   TString json2 = TBufferJSON::ConvertToJSON(obj, cl);
+
+   bool res = (json == json2);
+
+   printf("%s store/read/store %s len1:%d len2:%d\n", cl->GetName(), res ? "MATCHED" : "FAILED", json.Length(), json2.Length());
+
+   if (!res) {
+      Int_t errcnt = 0, minlen = json.Length() < json2.Length() ? json.Length() : json2.Length();
+      for (Int_t p = 0; p < minlen-30; p+=30) {
+         if (json(p,30) != json2(p,30)) {
+            printf("DIFF pos:%d\n%s\n%s\n", p, json(p,30).Data(), json2(p,30).Data());
+            if (++errcnt > 5) break;
+         }
+      }
+   }
+
+   cl->Destructor(obj);
+
+   return res;
+}
 
 
 #endif
