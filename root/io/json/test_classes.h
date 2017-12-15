@@ -991,7 +991,6 @@ public:
       fObjArray.SetOwner(kTRUE);
       fList.SetOwner(kTRUE);
       fMap.SetOwner(kTRUE);
-
    }
 
    void Init(int cnt = 7)
