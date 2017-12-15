@@ -1,9 +1,10 @@
 
 Processing runString.C...
  ====== string data types TJsonEx4 ===== 
+TJsonEx4 store/read/store MATCHED len1:646 len2:646
 {
   "_typename" : "TJsonEx4",
-  "fBool" : false,
+  "fBool" : true,
   "fChar" : 67,
   "fShort" : 123,
   "fInt" : 123456,
