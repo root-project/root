@@ -306,12 +306,10 @@ void TBranchObject::Reset(Option_t* option)
    }
 }
 
-///______________________________________________________________________________
+////////////////////////////////////////////////////////////////////////////////
+/// Reset a Branch after a Merge operation (drop data but keep customizations)
 void TBranchObject::ResetAfterMerge(TFileMergeInfo *info)
 {
-   // Reset a Branch after a Merge operation (drop data but keep customizations)
-   //
-
    TBranch::ResetAfterMerge(info);
 
    Int_t nbranches = fBranches.GetEntriesFast();
