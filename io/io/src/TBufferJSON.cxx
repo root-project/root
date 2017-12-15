@@ -53,6 +53,7 @@ persistent storage for object data - only for live applications.
 
 #include "TArrayI.h"
 #include "TObjArray.h"
+#include "TError.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TClassTable.h"
@@ -175,7 +176,8 @@ public:
             usearrayindx = kFALSE;
             usearraylen = kTRUE;
          } else if (arraylen != elem->GetArrayLength()) {
-            printf("Problem with JSON coding of element %s type %d \n", elem->GetName(), elem->GetType());
+            ::Error("TArrayIndexProducer", "Problem with JSON coding of element %s type %d", elem->GetName(),
+                    elem->GetType());
          }
       }
 
@@ -850,8 +852,8 @@ void *TBufferJSON::ConvertFromJSONChecked(const char *str, const TClass *expecte
 
    Int_t offset = resClass->GetBaseClassOffset(expectedClass);
    if (offset < 0) {
-      printf("TBufferJSON::ConvertFromJSONChecked expected class %s is not base for read class %s",
-             expectedClass->GetName(), resClass->GetName());
+      ::Error("TBufferJSON::ConvertFromJSONChecked", "expected class %s is not base for read class %s",
+              expectedClass->GetName(), resClass->GetName());
       resClass->Destructor(res);
       return nullptr;
    }
@@ -4376,7 +4378,8 @@ Int_t TBufferJSON::WriteClassBuffer(const TClass *cl, void *pointer)
          const_cast<TClass *>(cl)->SetCurrentStreamerInfo(sinfo);
          const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
          if (gDebug > 0)
-            printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), cl->GetClassVersion());
+            Info("WriteClassBuffer", "Creating StreamerInfo for class: %s, version: %d", cl->GetName(),
+                 cl->GetClassVersion());
          sinfo->Build();
       }
    } else if (!sinfo->IsCompiled()) {
