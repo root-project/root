@@ -438,16 +438,6 @@ protected:
    R__ALWAYS_INLINE void JsonWriteArrayCompress(const T *vname, Int_t arrsize, const char *typname);
 
    template <typename T>
-   R__ALWAYS_INLINE void JsonWriteArray(const T *vname, Int_t arrsize, const char *typname);
-
-   template <typename T>
-   R__ALWAYS_INLINE void JsonPushWrite(T value)
-   {
-      JsonPushValue();
-      JsonWriteBasic(value);
-   }
-
-   template <typename T>
    R__ALWAYS_INLINE void JsonReadBasic(T &value);
 
    template <typename T>
@@ -455,6 +445,10 @@ protected:
 
    template <typename T>
    R__ALWAYS_INLINE void JsonReadFastArray(T *arr, Int_t arrsize, bool asstring = false);
+
+   template <typename T>
+   R__ALWAYS_INLINE void JsonWriteFastArray(const T *arr, Int_t arrsize, const char *typname,
+                                            void (TBufferJSON::*method)(const T *, Int_t, const char *));
 
    struct ObjectEntry {
       void *obj;
