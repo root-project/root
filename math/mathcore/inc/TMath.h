@@ -69,7 +69,7 @@ constexpr Double_t InvPi()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Conversion from  radian ro degree:
+/// Conversion from radian to degree:
 /// \f[ \frac{180}{\pi} \f]
 constexpr Double_t RadToDeg()
 {
