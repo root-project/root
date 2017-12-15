@@ -418,7 +418,7 @@ protected:
    void JsonWriteBasic(ULong_t value);
    void JsonWriteBasic(ULong64_t value);
 
-   void JsonWriteConstChar(const char *value, Int_t len = -1);
+   void JsonWriteConstChar(const char *value, Int_t len = -1, const char * /*typname*/ = nullptr);
 
    void JsonWriteObject(const void *obj, const TClass *objClass, Bool_t check_map = kTRUE);
 
@@ -431,6 +431,14 @@ protected:
    void *JsonReadObject(void *obj, const TClass *objClass = nullptr, TClass **readClass = nullptr);
 
    void AppendOutput(const char *line0, const char *line1 = nullptr);
+
+   void JsonPushValue();
+
+   template <typename T>
+   R__ALWAYS_INLINE void JsonWriteArrayCompress(const T *vname, Int_t arrsize, const char *typname);
+
+   template <typename T>
+   R__ALWAYS_INLINE void JsonWriteArray(const T *vname, Int_t arrsize, const char *typname);
 
    struct ObjectEntry {
       void *obj;
