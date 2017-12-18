@@ -82,7 +82,7 @@ namespace TMVA {
       // constructors
       LossFunction(){ 
         #ifdef R__USE_IMT
-        fNumCPUs = GetNumCPUs(); 
+        fNumPoolThreads = GetNumThreadsInPool(); 
         #endif
       };
       virtual ~LossFunction(){};
@@ -98,16 +98,13 @@ namespace TMVA {
    protected:
       // #### only use multithreading if the compilation flag is turned on
       #ifdef R__USE_IMT
-      UInt_t fNumCPUs = 1;
+      UInt_t fNumPoolThreads = 1;
       // #### ROOT multithreading object
       ROOT::TThreadExecutor fPool;
 
-      // #### number of CPUs available for parallelization
-      UInt_t GetNumCPUs(){
-         SysInfo_t s;
-         gSystem->GetSysInfo(&s);
-         UInt_t ncpu  = s.fCpus;
-         return ncpu;
+      // #### number of threads in the pool
+      UInt_t GetNumThreadsInPool(){
+         return ROOT::GetImplicitMTPoolSize();
       };
       #endif
    };

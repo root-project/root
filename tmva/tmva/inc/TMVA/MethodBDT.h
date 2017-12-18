@@ -113,15 +113,12 @@ namespace TMVA {
       // #### Multithreading only if the compilation flag is turned on
 
       #ifdef R__USE_IMT
-      UInt_t fNumCPUs = 1;
       ROOT::TThreadExecutor fPool;
+      UInt_t fNumPoolThreads = 1;
 
-      // #### number of CPUs available for parallelization
-      UInt_t GetNumCPUs(){
-         SysInfo_t s;
-         gSystem->GetSysInfo(&s);
-         UInt_t ncpu  = s.fCpus;
-         return ncpu;
+      // #### number of threads in the pool
+      UInt_t GetNumThreadsInPool(){
+         return ROOT::GetImplicitMTPoolSize();
       };
       #endif
 

@@ -215,9 +215,9 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    fRegressionLossFunctionBDTG = nullptr;
 
    #ifdef R__USE_IMT
-   fNumCPUs = GetNumCPUs();
+   fNumPoolThreads = GetNumThreadsInPool();
    #else
-   fNumCPUs = 1;
+   fNumPoolThreads = 1;
    #endif
 }
 
@@ -280,9 +280,9 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    // creating the "weight"-file
    
    #ifdef R__USE_IMT
-   fNumCPUs = GetNumCPUs();
+   fNumPoolThreads = GetNumThreadsInPool();
    #else
-   fNumCPUs = 1;
+   fNumPoolThreads = 1;
    #endif
 }
 
@@ -1484,7 +1484,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
    #ifdef R__USE_IMT // multithreaded version if ROOT was compiled with multithreading 
    if(!first){
      
-      UInt_t nPartitions = fNumCPUs;
+      UInt_t nPartitions = fNumPoolThreads;
       auto seeds = ROOT::TSeqU(nPartitions);
 
       // need a lambda function to pass to TThreadExecutor::MapReduce
