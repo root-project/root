@@ -52,6 +52,7 @@
 #include <TStyle.h>
 #include <TVector.h>
 #include <TGraph.h>
+#include <TError.h>
 
 #include "TUnfoldDensity.h"
 
@@ -92,8 +93,12 @@ Double_t GenerateRecEvent(const Double_t *shapeParm) {
    return r;
 }
 
-void testUnfold4()
+void testUnfold4(bool printInfo = false)
 {
+
+   // switch off printing Info messages
+   if (!printInfo) gErrorIgnoreLevel = kWarning; 
+   
   // switch on histogram errors
   TH1::SetDefaultSumw2();
 
