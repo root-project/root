@@ -10,8 +10,6 @@
 /// \date October 2017
 /// \author Guilherme Amadio
 
-#include "ROOT/TDataFrame.hxx"
-
 void tdf012_DefinesAndFiltersAsStrings()
 {
    // We will inefficiently calculate an approximation of pi by generating
