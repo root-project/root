@@ -55,7 +55,7 @@ namespace Math {
      All Rotations types (not only Rotation3D) can be applied to all 3D Vector classes
      (like ROOT::Math::DisplacementVector3D and ROOT::Math::PositionVector3D)
      and also to the 4D Vectors (ROOT::Math::LorentzVector classes), acting on the 3D components.
-     A rotaiton operation is applied by using the operator() or the operator *.
+     A rotation operation is applied by using the operator() or the operator *.
      With the operator * is possible also to combine rotations.
      Note that the operator is NOT commutative, the order how the rotations are applied is relevant.
 

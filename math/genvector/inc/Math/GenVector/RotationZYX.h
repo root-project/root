@@ -46,11 +46,13 @@ namespace Math {
      Rotation class with the (3D) rotation represented by
      angles describing first a rotation of
      an angle phi (yaw) about the  Z axis,
-     followed by a rotation of an angle theta (pitch) about the new Y' axis,
-     followed by a third rotation of an angle psi (roll) about the final X'' axis.
-     This is  sometimes referred to as the Euler 321 sequence.
-     It has not to be confused with the typical Goldstein definition of the Euler Angles
-     (Z-X-Z or 313 sequence) which is used by the ROOT::Math::EulerAngles class.
+     followed by a rotation of an angle theta (pitch) about the Y axis,
+     followed by a third rotation of an angle psi (roll) about the X axis.
+     Note that the rotations are extrinsic rotations happening around a fixed coordinate system. 
+     This is  different than the convention of the ROOT::Math::EulerAngles class, where the rotation are intrinsic. 
+     Also it has not to be confused with the typical Goldstein definition of the Euler Angles
+     (Z-X-Z or 313 sequence) which is used by the ROOT::Math::EulerAngles class, while the sequence here is Z-Y-X or 321.
+     Applying a RotationZYX(phi, theta, psi)  to a vector is then equal to applying RotationX(psi) * RotationY(theta) * RotationZ(phi) to the same vector. 
 
 
      @ingroup GenVector
