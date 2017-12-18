@@ -21,7 +21,7 @@ from ROOT import TPrincipal, gRandom, TBrowser, vector
 n = 10
 m = 10000
 
-c = n / 5 + 1
+c = int(n / 5) + 1
 
 print ("""*************************************************
 *         Principal Component Analysis          *
