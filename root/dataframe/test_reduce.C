@@ -41,7 +41,7 @@ void test_reduce() {
    ROOT::Experimental::TDataFrame d("reduceTree", fileName, {"i"});
    auto r = d.Reduce([](int a, int b) { return a + b; }, {"i"});
    auto rDefBranch = d.Filter([]() { return true; })
-                      .Reduce([](int a, int b) { return a*b; }, 1);
+                      .Reduce([](int a, int b) { return a*b; }, "", 1);
    auto rNoDefCtor = d.Reduce(
       [](const NoDefCtor& a, const NoDefCtor& b) { return NoDefCtor(a.GetInt() + b.GetInt()); },
       {"o"},
