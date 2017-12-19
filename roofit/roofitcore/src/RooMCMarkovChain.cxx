@@ -43,7 +43,7 @@ using namespace std;
 ClassImp(RooMCMarkovChain);
 
 /** \class RooMCMarkovChain
-  RooMCMarkovChain is used as the RooMinuit class except that it is using a Monte Carlo Markov Chain as a minimizer.A tutorial can be found in the roofit section where a basic comparison with Minuit can be performed.
+  RooMCMarkovChain is used as the RooMinuit class except that it is using a Monte Carlo Markov Chain as a minimizer. A tutorial can be found in the roofit section where a basic comparison with Minuit can be performed.
 */
 
 
@@ -134,15 +134,12 @@ RooMCMarkovChain::~RooMCMarkovChain()
 
 Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstrategy)
 {
-  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::Ignore); // turning off errors, because they are unnecessary
+  std::cout << "Starting Monte Carlo Markov Chain Fit with "<< npoints <<" points and cutoff after "<< cutoff <<" points" << '\n';
+  // RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::Ignore); // turning off errors, because they are unnecessary
   Bool_t verbose = _verbose;
   int pl = 0;
   if (_printLevel > 0) {
     pl = _printLevel;
-    if (pl > 2) {
-      verbose = kTRUE;
-    }
-    std::cout << "Starting Monte Carlo Markov Chain Fit with "<< npoints <<" points and cutoff after "<< cutoff <<" points" << '\n';
   }
 
   if (strcmp(errorstrategy, "gaus") == 0) {
@@ -173,13 +170,14 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
   size_t naccepted = 0;
 
   //creating the negative log-likelihood value
-  RooRealVar* nllval = new RooRealVar("nllval","nllval of parameters",-1);
+  double nllval;
   TVectorD* last = new TVectorD(nparams); //last state
   TVectorD* curr = new TVectorD(nparams); //current state
   TVectorD* lowLimit = new TVectorD(nparams); //lower Limits
   TVectorD* upLimit = new TVectorD(nparams); //upper Limits
   int indexofbest = -1; //index in the pointlist for the minimum
   _pointList.reserve(npoints); //reserving RAM for pointlist
+  _nameList.reserve(nparams+1);
 
   //Initialize last state
   RooArgList* startpoint = (RooArgList*) _floatParamList->snapshot(kTRUE);
@@ -188,8 +186,9 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
     (*last)[index] = var->getVal();
     (*lowLimit)[index] = var->getMin();
     (*upLimit)[index] = var->getMax();
+    _nameList.push_back(var->GetName());
   }
-  delete startpoint; //startpoint no longer needed
+  _nameList.push_back("nll value");
 
   double minllh = 1e32; //Initialize container for min value
 
@@ -205,22 +204,24 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
   *SNminusone = *S1;
   TMatrixDSym* SN = new TMatrixDSym(nparams);
   SN->Zero();
-  RooMCMarkovChain* context = (RooMCMarkovChain*) RooMCMarkovChain::_theFitter->GetObjectFit();
+  // RooMCMarkovChain* context = (RooMCMarkovChain*) RooMCMarkovChain::_theFitter->GetObjectFit();
+  _theFitter->GetObjectFit();
   TVectorD* SW = new TVectorD(nparams);
   TVectorD* WN = new TVectorD(nparams);
-  if (pl > 0) {
-    std::cout << "starting minimization" << '\n';
-  }
+
 
   double llh_last;
   double llh_curr;
   Bool_t outofBounds = false;
+  size_t progressPercent = 0;
 
+  if (pl > 0) {
+    std::cout << "starting minimization" << '\n';
+  }
   for (unsigned int i = 0; i < nstat; i++) {
     if (accepted) {
       *curr = *last;//use value of last for current then vary
     }
-
 
 
 
@@ -232,9 +233,9 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
 
 
     for(size_t index= 0; index < nparams; index++) {
-      context->setPdfParamVal(index, (*last)[index],verbose);
+      setPdfParamVal(index, (*last)[index],verbose);
     }
-    llh_last = context->_func->getVal();
+    llh_last = _func->getVal();
 
     outofBounds = false;
     for(size_t index= 0; index < nparams; index++) {
@@ -252,9 +253,9 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
       llh_curr = 1e32;
     } else {
       for(size_t index= 0; index < nparams; index++) {
-        context->setPdfParamVal(index, (*curr)[index],verbose);
+        setPdfParamVal(index, (*curr)[index],verbose);
       }
-      llh_curr = context->_func->getVal(); //get nll for current parameters
+      llh_curr = _func->getVal(); //get nll for current parameters
     }
 
   // update minimum value
@@ -268,13 +269,12 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
     double r = rnd->Uniform(0,1);
     if (r < alpha) {
       accepted = true; //success
-      nllval->setVal(llh_curr);
-      RooArgList* point = (RooArgList*) _floatParamList->snapshot(kTRUE);
+      nllval = llh_curr;
+      TVectorD *point = new TVectorD(nparams+1);
       for (size_t index = 0; index < nparams; index++) {
-        RooRealVar* var = (RooRealVar*) point->at(index);
-        var->setVal((*curr)[index]);
+        (*point)[index] = (*curr)[index];
       }
-      point->addClone(*nllval);
+      (*point)[nparams] = nllval;
       _pointList.push_back(point); //adding point the pointlist
       naccepted++;
       *last = *curr;
@@ -312,9 +312,30 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
         (*SNminusone)[row][col] = (*SNT)[row][col];
       }
     }
+    delete SNminusoneT;
+    delete WNWNT;
+    delete SNSNT;
+    delete chol;
+    delete SNT;
+
+    if ( accepted && ((naccepted % (npoints/100)) == 0) ) {
+      progressPercent++;
+      std::cout << progressPercent << "\% "<<flush;
+    }
+
     if (naccepted == npoints) {
+      // Saving minimum point
+      _bestParamList =  _pointList[indexofbest];
+      TVectorD *point = _pointList[indexofbest];
+      for(size_t index= 0; index < nparams; index++) {
+        setPdfParamVal(index, (*point)[index],verbose);
+      }
+      std::cout  << '\n';
       break;
     }
+
+
+
 
   }
 
@@ -322,13 +343,10 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
   _cutoff = cutoff;
   _cutoffList.reserve(npoints - cutoff);
   for (size_t i = cutoff; i < _pointList.size(); i++) {
-    RooArgList* point = (RooArgList*) _pointList[i];
+    TVectorD* point = _pointList[i];
     _cutoffList.push_back(point);
   }
-  std::cout << "cutoffList filled" << std::endl;
-
-  // Saving minimum point
-  _bestParamList = (RooArgList*) _pointList[indexofbest];
+  // std::cout << "cutoffList filled" << std::endl;
 
 
 // Calculate and print errors
@@ -337,14 +355,23 @@ Int_t RooMCMarkovChain::mcmc(size_t npoints, size_t cutoff, const char* errorstr
   }
   if (_interval) {
     for (size_t i = 0; i < nparams; i++) {
-      RooArgList* point = (RooArgList*) _cutoffList[0];
-      RooRealVar* var = (RooRealVar*) point->at(i);
-      const char* valname = var->GetName();
-      getPercentile(valname);
+      getPercentile(_nameList[i]);
     }
   }
 
-  RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors); // turning on Eval errors, got turned off in the beginning
+  // RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors); // turning on Eval errors, got turned off in the beginning
+
+  delete rnd;
+  delete last;
+  delete curr;
+  delete lowLimit;
+  delete upLimit;
+  delete identity;
+  delete SNminusone;
+  delete SN;
+  delete SW;
+  delete WN;
+
 
   return 1;
 }
@@ -374,26 +401,24 @@ TGraph* RooMCMarkovChain::getProfile(const char* name, Bool_t cutoff)
 
   if (cutoff) {
     for (unsigned int i = 0; i < np; i++) {
-      RooArgList* point = (RooArgList*) _cutoffList[i];
-      RooRealVar* var1 = (RooRealVar*) point->at(index);
-      RooRealVar* var2 = (RooRealVar*) point->at(_nPar);
-      x[i] = var1->getVal();
-      y[i] = var2->getVal();
+      TVectorD* point = _cutoffList[i];
+      x[i] = (*point)[index];
+      y[i] = (*point)[_nPar];
     }
 
   } else {
     for (unsigned int i = 0; i < np; i++) {
-      RooArgList* point = (RooArgList*) _pointList[i];
-      RooRealVar* var1 = (RooRealVar*) point->at(index);
-      RooRealVar* var2 = (RooRealVar*) point->at(_nPar);
-      x[i] = var1->getVal();
-      y[i] = var2->getVal();
+      TVectorD* point = _pointList[i];
+      x[i] = (*point)[index];
+      y[i] = (*point)[_nPar];
     }
   }
 
   TGraph* gr = new TGraph(x,y);
   gr->GetXaxis()->SetTitle(name);
   gr->GetYaxis()->SetTitle("nll value");
+
+
   return gr;
 }
 
@@ -425,10 +450,9 @@ TMultiGraph* RooMCMarkovChain::getWalkDis(const char* name, Bool_t cutoff)
     TVectorD y1(np);
 
     for (unsigned int i = 0; i < np; i++) {
-      RooArgList* point1 = (RooArgList*) _pointList[i];
-      RooRealVar* var1 = (RooRealVar*) point1->at(index);
+      TVectorD* point = _pointList[i];
       x1[i] = i;
-      y1[i] = var1->getVal();
+      y1[i] = (*point)[index];
     }
     TGraph* gr1 = new TGraph(x1,y1);
     gr1->SetLineColor(2);
@@ -449,10 +473,9 @@ TMultiGraph* RooMCMarkovChain::getWalkDis(const char* name, Bool_t cutoff)
   TVectorD y2(np);
 
   for (unsigned int i = 0; i < np; i++) {
-    RooArgList* point2 = (RooArgList*) _cutoffList[i];
-    RooRealVar* var2 = (RooRealVar*) point2->at(index);
+    TVectorD* point = _cutoffList[i];
     x2[i] = _cutoff+i;
-    y2[i] = var2->getVal();
+    y2[i] = (*point)[index];
   }
   TGraph* gr2 = new TGraph(x2,y2);
   if (cutoff == kFALSE) {
@@ -463,6 +486,8 @@ TMultiGraph* RooMCMarkovChain::getWalkDis(const char* name, Bool_t cutoff)
   graph->Draw("ap");
   graph->GetXaxis()->SetTitle("number of steps");
   graph->GetYaxis()->SetTitle(name);
+
+
 
   return graph;
 }
@@ -498,18 +523,16 @@ TH1F* RooMCMarkovChain::getWalkDisHis(const char* name,  Int_t nbinsx, Bool_t cu
     unsigned int np = _cutoffList.size();
 
     for (unsigned int i = 0; i < np; i++) {
-      RooArgList* point = (RooArgList*) _cutoffList[i];
-      RooRealVar* var1 = (RooRealVar*) point->at(index);
-      hist->Fill(var1->getVal());
+      TVectorD* point = _cutoffList[i];
+      hist->Fill((*point)[index]);
     }
     return hist;
   } else {
     unsigned int np = _pointList.size();
 
     for (unsigned int i = 0; i < np; i++) {
-      RooArgList* point = (RooArgList*) _pointList[i];
-      RooRealVar* var1 = (RooRealVar*) point->at(index);
-      hist->Fill(var1->getVal());
+      TVectorD* point = _pointList[i];
+      hist->Fill((*point)[index]);
     }
     return hist;
   }
@@ -525,7 +548,7 @@ Int_t RooMCMarkovChain::changeCutoff(Int_t newCutoff)
   _cutoffList.clear();
   _cutoffList.reserve(_pointList.size() - newCutoff);
   for (size_t i = newCutoff; i < _pointList.size(); i++) {
-    RooArgList* point = (RooArgList*) _pointList[i];
+    TVectorD* point = _pointList[i];
     _cutoffList.push_back(point);
   }
   return 1;
@@ -555,18 +578,6 @@ TH2D* RooMCMarkovChain::getCornerPlot(const char* name1, const char* name2, Int_
   }
   Int_t index1 = getIndex(name1);
   Int_t index2 = getIndex(name2);
-    for (size_t i = 0; i < _nPar; i++) {
-    RooArgList* point = (RooArgList*) _pointList[0];
-    RooRealVar* var1 = (RooRealVar*) point->at(i);
-    const char* varname = var1->GetName();
-    if (strcmp(name1, varname) == 0) {
-      index1 = i;
-    }
-    if (strcmp(name2, varname) == 0) {
-      index2 = i;
-    }
-  }
-
   Double_t xlow = getMin(name1);
   Double_t xup = getMax(name1);
   Double_t ylow = getMin(name2);
@@ -582,11 +593,9 @@ TH2D* RooMCMarkovChain::getCornerPlot(const char* name1, const char* name2, Int_
     Double_t y = 0;
 
     for (unsigned int i = 0; i < np; i++) {
-      RooArgList* point = (RooArgList*) _cutoffList[i];
-      RooRealVar* var1 = (RooRealVar*) point->at(index1);
-      RooRealVar* var2 = (RooRealVar*) point->at(index2);
-      x = var1->getVal();
-      y = var2->getVal();
+      TVectorD* point = _cutoffList[i];
+      x = (*point)[index1];
+      y = (*point)[index2];
       hist->Fill(x,y);
     }
 
@@ -598,11 +607,9 @@ TH2D* RooMCMarkovChain::getCornerPlot(const char* name1, const char* name2, Int_
     Double_t y = 0;
 
     for (unsigned int i = 0; i < np; i++) {
-      RooArgList* point = (RooArgList*) _pointList[i];
-      RooRealVar* var1 = (RooRealVar*) point->at(index1);
-      RooRealVar* var2 = (RooRealVar*) point->at(index2);
-      x = var1->getVal();
-      y= var2->getVal();
+      TVectorD* point = _pointList[i];
+      x = (*point)[index1];
+      y = (*point)[index2];
       hist->Fill(x,y);
     }
 
@@ -620,13 +627,13 @@ void RooMCMarkovChain::sortPointList(const char* name)
   _sortPointList.clear();
   _sortPointList.reserve(_cutoffList.size());
   for (size_t i = 0; i < _cutoffList.size(); i++) {
-    RooArgList* point = (RooArgList*) _cutoffList[i];
+    TVectorD* point = _cutoffList[i];
     _sortPointList.push_back(point);
   }
-  std::sort(_sortPointList.begin(),_sortPointList.end(), [&index](RooArgList* a, RooArgList* b){
-    RooRealVar* var1 = (RooRealVar*) a->at(index);
-    RooRealVar* var2 = (RooRealVar*) b->at(index);
-    if (var1->getVal() < var2->getVal()) {
+  std::sort(_sortPointList.begin(),_sortPointList.end(), [&index](TVectorD* a, TVectorD* b){
+    double var1 = (*a)[index];
+    double var2 = (*b)[index];
+    if (var1 < var2) {
       return kTRUE;
     }else{
       return kFALSE;
@@ -642,9 +649,7 @@ Int_t RooMCMarkovChain::getIndex(const char* name)
 {
   Int_t index = 0;
   for (size_t i = 0; i < _nPar; i++) {
-    RooArgList* point = (RooArgList*) _floatParamList;
-    RooRealVar* var1 = (RooRealVar*) point->at(i);
-    const char* varname = var1->GetName();
+    const char* varname = _nameList[i];
     if (strcmp(name, varname) == 0) {
       index = i;
       break;
@@ -671,13 +676,13 @@ Int_t RooMCMarkovChain::printError(const char* name, Double_t conf)
   Int_t index = getIndex(name);
 
   for (Int_t i = 0; i < count; i++) {
-    RooArgList* point = (RooArgList*) _sortPointList[i];
-    RooRealVar* var = (RooRealVar*) point->at(index);
-    if (var->getVal() < low) {
-      low = var->getVal();
+    TVectorD* point = _sortPointList[i];
+    double var = (*point)[index];
+    if (var < low) {
+      low = var;
     }
-    if (var->getVal() > high) {
-      high = var->getVal();
+    if (var > high) {
+      high = var;
     }
   }
   std::cout << "error on "<<name<<" = "<< (high - low)/2 << std::endl;
@@ -707,27 +712,25 @@ Int_t RooMCMarkovChain::getPercentile(const char* name, Double_t conf)
   size_t np = _sortPointList.size();
   size_t i = 0;
   while (double(i)/double(np) < (1-per)/2) {
-    RooArgList* pointl = (RooArgList*) _sortPointList[i];
-    RooRealVar* varl = (RooRealVar*) pointl->at(index);
-    left = varl->getVal();
+    TVectorD* point = _sortPointList[i];
+    left = (*point)[index];
     i++;
   }
 
   i=np-1;
   size_t n = 0;
   while (double(n)/double(np) < (1-per)/2) {
-    RooArgList* pointr = (RooArgList*) _sortPointList[i];
-    RooRealVar* varr = (RooRealVar*) pointr->at(index);
-    right = varr->getVal();
+    TVectorD* point = _sortPointList[i];
+    right = (*point)[index];
     i--;
     n++;
   }
-  RooRealVar* bestvar = (RooRealVar*) _bestParamList->at(index);
+  double bestvar = (*_bestParamList)[index];
   std::cout << "ASYMETRIC ERROR at "<<per<<" confidence level for "<< name << std::endl;
   std::cout << "INTERVAL =\t[ "<< left <<" , "<< right <<" ]"<< std::endl;
-  std::cout << "BEST     =\t"<< bestvar->getVal() << std::endl;
-  std::cout << "MINUS    =\t"<< bestvar->getVal() - left << std::endl;
-  std::cout << "PLUS     =\t"<< right - bestvar->getVal() << std::endl;
+  std::cout << "BEST     =\t"<< bestvar << std::endl;
+  std::cout << "MINUS    =\t"<< bestvar - left << std::endl;
+  std::cout << "PLUS     =\t"<< right - bestvar << std::endl;
   std::cout << "" << std::endl;
 
 
@@ -739,20 +742,14 @@ Int_t RooMCMarkovChain::getPercentile(const char* name, Double_t conf)
 Int_t RooMCMarkovChain::getGausErrors()
 {
   int nPar = _nPar;
-  std::vector<const char*> names;
-  names.reserve(nPar);
   std::vector<size_t> nOfTabs;
   nOfTabs.reserve(nPar);
   size_t maxnOfTabs = 0;
 
-  //std::cout << "getting names" << std::endl;
   for (int i = 0; i < nPar; i++) {
     size_t nOfTabscurr = 0;
-    RooArgList* point = (RooArgList*) _cutoffList[0];
-    RooRealVar* var = (RooRealVar*) point->at(i);
-    names.push_back(var->GetName());
     size_t scan = 0;
-    while (strlen(names[i]) >= scan) {
+    while (strlen(_nameList[i]) >= scan) {
       scan+=8;
       nOfTabscurr++;
     }
@@ -764,8 +761,7 @@ Int_t RooMCMarkovChain::getGausErrors()
   std::vector<TH1F*> hist1D;
   hist1D.reserve(nPar);
   for (int i = 0; i < nPar;i++) {
-    // std::cout << names[i] << std::endl;
-    TH1F* hist = getWalkDisHis(names[i],100,kTRUE);
+    TH1F* hist = getWalkDisHis(_nameList[i],100,kTRUE);
     hist1D.push_back(hist);
   }
 
@@ -773,7 +769,7 @@ Int_t RooMCMarkovChain::getGausErrors()
   hist2D.reserve(nPar*(nPar-1)/2);
   for (int i = 0; i < nPar; i++) {
     for (int j = i+1; j < nPar; j++) {
-      TH2D* hist = getCornerPlot(names[i],names[j],100,100,kTRUE);
+      TH2D* hist = getCornerPlot(_nameList[i],_nameList[j],100,100,kTRUE);
       hist2D.push_back(hist);
     }
   }
@@ -788,7 +784,7 @@ Int_t RooMCMarkovChain::getGausErrors()
   std::cout<<"VALUE"<<"\t\t"<<"ERROR"<< std::endl;
 
   for (int i = 0; i < nPar; i++) {
-    std::cout <<i+1<<std::scientific<<"\t"<<names[i];
+    std::cout <<i+1<<std::scientific<<"\t"<<_nameList[i];
     for (size_t j = 0; j < nOfTabs[i]; j++) {std::cout<<"\t";}
     if (hist1D[i]->GetMean() < 0) {
       cout<<" "<< hist1D[i]->GetMean();
@@ -860,17 +856,15 @@ Int_t RooMCMarkovChain::saveCandidatesAs(const char* name)
   ofstream candidates;
   candidates.open(name);
   for (size_t i = 0; i < _nPar; i++) {
-    RooArgList* point = (RooArgList*) _pointList[0];
-    RooRealVar* var = (RooRealVar*) point->at(i);
-    candidates << var->GetName() << "\t";
+    candidates << _nameList[i] << "\t";
   }
   candidates << "\n";
 
   for (size_t i = 0; i < _pointList.size(); i++) {
-    RooArgList* point = (RooArgList*) _pointList[i];
+    TVectorD* point = _pointList[i];
     for (size_t j = 0; j < _nPar; j++) {
-      RooRealVar* var = (RooRealVar*) point->at(j);
-      candidates << var->getVal() << "\t";
+      double var = (*point)[j];
+      candidates << var << "\t";
     }
     candidates << "\n";
   }
@@ -878,20 +872,6 @@ Int_t RooMCMarkovChain::saveCandidatesAs(const char* name)
   return 1;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-///Returns vector of the parameter names
-
-std::vector<const char*> RooMCMarkovChain::getNames()
-{
-  std::vector<const char*> names;
-  names.reserve(_nPar);
-  for (size_t i = 0; i < _nPar; i++) {
-    RooArgList* point = (RooArgList*) _cutoffList[0];
-    RooRealVar* var = (RooRealVar*) point->at(i);
-    names[i] = var->GetName();
-  }
-  return names;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Returns minimal value of a parameter
@@ -902,10 +882,10 @@ Double_t RooMCMarkovChain::getMin(const char* name)
   size_t index = getIndex(name);
   Double_t minval = 1e32;
   for (size_t i = 0; i < _cutoffList.size(); i++) {
-    RooArgList* point = (RooArgList*) _cutoffList[i];
-    RooRealVar* var = (RooRealVar*) point->at(index);
-    if (var->getVal() < minval) {
-      minval = var->getVal();
+    TVectorD* point = _cutoffList[i];
+    double var =  (*point)[index];
+    if (var < minval) {
+      minval = var;
     }
   }
   return minval;
@@ -920,10 +900,10 @@ Double_t RooMCMarkovChain::getMax(const char* name)
   size_t index = getIndex(name);
   Double_t maxval = -1e32;
   for (size_t i = 0; i < _cutoffList.size(); i++) {
-    RooArgList* point = (RooArgList*) _cutoffList[i];
-    RooRealVar* var = (RooRealVar*) point->at(index);
-    if (var->getVal() > maxval) {
-      maxval = var->getVal();
+    TVectorD* point = _cutoffList[i];
+    double var =  (*point)[index];
+    if (var > maxval) {
+      maxval = var;
     }
   }
   return maxval;
@@ -976,23 +956,31 @@ size_t RooMCMarkovChain::getNPar() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+///Returns names of parameters
+
+std::vector<const char*> RooMCMarkovChain::getNames() {
+  return _nameList;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Modify PDF parameter value by ordinal index
+
 Bool_t RooMCMarkovChain::setPdfParamVal(Int_t index, Double_t value, Bool_t verbose)
 {
-  //RooRealVar* par = (RooRealVar*)_floatParamList->at(index) ;
+  Bool_t answer= kFALSE;
   RooRealVar* par = (RooRealVar*)_floatParamVec[index] ;
 
   if (par->getVal()!=value) {
     if (verbose) cout << par->GetName() << "=" << value << ", " ;
     par->setVal(value) ;
-    return kTRUE ;
+    answer = kTRUE ;
   }
-
-  return kFALSE ;
+  return answer ;
  }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Modify PDF parameter error by ordinal index
+
 void RooMCMarkovChain::setPdfParamErr(Int_t index, Double_t value)
 {
   ((RooRealVar*)_floatParamList->at(index))->setError(value) ;
@@ -1000,6 +988,7 @@ void RooMCMarkovChain::setPdfParamErr(Int_t index, Double_t value)
 
 ////////////////////////////////////////////////////////////////////////////////
 ///Updates float vector
+
 void RooMCMarkovChain::updateFloatVec()
 {
   _floatParamVec.clear() ;

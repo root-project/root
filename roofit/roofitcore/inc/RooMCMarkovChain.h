@@ -117,11 +117,12 @@ public:
    RooArgList* _initFloatParamList ; ///< initial parameter list
    RooArgList* _constParamList ; ///< list of constant parameters
    RooArgList* _initConstParamList ; ///< intial list of constant parameters
-   RooArgList*  _bestParamList; ///< list of parameters with lowest function value
+   TVectorD*  _bestParamList; ///< list of parameters with lowest function value
    RooAbsReal* _func ; ///< function to be minimized
-   std::vector<RooArgList*> _pointList; ///< list of monte carlo markov chain points
-   std::vector<RooArgList*> _cutoffList; ///< list of points after cutoff
-   std::vector<RooArgList*> _sortPointList; ///< sorted list of points
+   std::vector<TVectorD*> _pointList; ///< list of monte carlo markov chain points
+   std::vector<const char*> _nameList;
+   std::vector<TVectorD*> _cutoffList; ///< list of points after cutoff
+   std::vector<TVectorD*> _sortPointList; ///< sorted list of points
    Bool_t      _verbose ; ///< turns verbosity on or off
    Bool_t     _gaus; ///< turns gaus errors on or off in mcmc()
    Bool_t     _interval; ///< turns asymetric errors on or off in mcmc()
