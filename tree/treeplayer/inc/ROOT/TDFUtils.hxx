@@ -228,6 +228,33 @@ void CheckReduce(F &, T)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+/// Check preconditions for TInterface::Aggregate:
+/// - the aggregator callable must have signature `U(U,T)` or `void(U&,T)`.
+/// - the merge callable must have signature `U(U,U)` or `void(std::vector<U>&)`
+template <typename R, typename Merge, typename U, typename T,
+          typename mergeArgs_t = typename CallableTraits<Merge>::arg_types_nodecay,
+          typename mergeRet_t = typename CallableTraits<Merge>::ret_type>
+void CheckAggregate(TypeList<U, T>)
+{
+   constexpr bool isAggregatorOk =
+      (std::is_same<R, U>::value) || (std::is_same<R, void>::value && std::is_lvalue_reference<U>::value);
+   static_assert(isAggregatorOk, "aggregator function must have signature `U(U,T)` or `void(U&,T)`");
+   constexpr bool isMergeOk =
+      (std::is_same<TypeList<U, U>, mergeArgs_t>::value && std::is_same<U, mergeRet_t>::value) ||
+      (std::is_same<TypeList<std::vector<typename std::remove_reference<U>::type> &>, mergeArgs_t>::value &&
+       std::is_same<void, mergeRet_t>::value);
+   static_assert(isMergeOk, "merge function must have signature `U(U,U)` or `void(std::vector<U>&)`");
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// This overload of CheckAggregate is called when the aggregator takes more than two arguments
+template <typename R, typename T>
+void CheckAggregate(T)
+{
+   static_assert(sizeof(T) == 0, "aggregator function must take exactly two arguments");
+}
+
+///////////////////////////////////////////////////////////////////////////////
 /// Check as many template parameters were passed as the number of column names, throw if this is not the case.
 void CheckSnapshot(unsigned int nTemplateParams, unsigned int nColumnNames);
 

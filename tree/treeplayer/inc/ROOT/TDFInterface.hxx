@@ -1554,6 +1554,78 @@ public:
       return allColumns;
    }
 
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
+   /// \tparam F The type of the aggregator callable. Automatically deduced.
+   /// \tparam U The type of the aggregator variable. Must be default-constructible, copy-constructible and copy-assignable. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
+   /// \param[in] aggregator A callable with signature `U(U,T)` or `void(U&,T)`, where T is the type of the column, U is the type of the aggregator variable
+   /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
+   /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
+   /// \param[in] aggIdentity The aggregator variable of each thread is initialised to this value (or is default-constructed if the parameter is omitted)
+   ///
+   /// An aggregator callable takes two values, an aggregator variable and a column value. The aggregator variable is
+   /// initialized to aggIdentity or default-constructed if aggIdentity is omitted.
+   /// This action calls the aggregator callable for each processed entry, passing in the aggregator variable and 
+   /// the value of the column columnName.
+   /// If the signature is `U(U,T)` the aggregator variable is then copy-assigned the result of the execution of the callable.
+   /// Otherwise the signature of aggregator must be `void(U&,T)`.
+   ///
+   /// The merger callable is used to merge the partial accumulation results of each processing thread. It is only called in multi-thread executions.
+   /// If its signature is `U(U,U)` the aggregator variables of each thread are merged two by two.
+   /// If its signature is `void(std::vector<U>& a)` it is assumed that it merges all aggregators in a[0].
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See TResultProxy documentation.
+   template <typename AccFun, typename MergeFun, typename R = typename TTraits::CallableTraits<AccFun>::ret_type,
+             typename ArgTypes = typename TTraits::CallableTraits<AccFun>::arg_types,
+             typename ArgTypesNoDecay = typename TTraits::CallableTraits<AccFun>::arg_types_nodecay,
+             typename U = TTraits::TakeFirstParameter_t<ArgTypes>,
+             typename T = TTraits::TakeFirstParameter_t<TTraits::RemoveFirstParameter_t<ArgTypes>>>
+   TResultProxy<U>
+   Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName, const U &aggIdentity)
+   {
+      TDFInternal::CheckAggregate<R, MergeFun>(ArgTypesNoDecay());
+      auto loopManager = GetDataFrameChecked();
+      const auto columns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      constexpr auto nColumns = ArgTypes::list_size;
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
+      if (fDataSource)
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                              ArgTypes(), *fDataSource);
+      auto accObjPtr = std::make_shared<U>(aggIdentity);
+      using Helper_t = TDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
+      using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
+      auto action = std::make_shared<Action_t>(
+         Helper_t(std::move(aggregator), std::move(merger), accObjPtr, fProxiedPtr->GetNSlots()), validColumnNames,
+         *fProxiedPtr);
+      loopManager->Book(action);
+      return MakeResultProxy(accObjPtr, loopManager, action.get());
+   }
+
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
+   /// \tparam F The type of the aggregator callable. Automatically deduced.
+   /// \tparam U The type of the aggregator variable. Must be default-constructible, copy-constructible and copy-assignable. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
+   /// \param[in] aggregator A callable with signature `U(U,T)` or `void(U,T)`, where T is the type of the column, U is the type of the aggregator variable
+   /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
+   /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
+   ///
+   /// See previous Aggregate overload for more information.
+   template <typename AccFun, typename MergeFun, typename R = typename TTraits::CallableTraits<AccFun>::ret_type,
+             typename ArgTypes = typename TTraits::CallableTraits<AccFun>::arg_types,
+             typename U = TTraits::TakeFirstParameter_t<ArgTypes>,
+             typename T = TTraits::TakeFirstParameter_t<TTraits::RemoveFirstParameter_t<ArgTypes>>>
+   TResultProxy<U>
+   Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName = "")
+   {
+      static_assert(
+         std::is_default_constructible<U>::value,
+         "aggregated object cannot be default-constructed. Please provide an initialisation value (aggIdentity)");
+      return Aggregate(std::move(aggregator), std::move(merger), columnName, U());
+   }
+
 private:
    void AddDefaultColumns()
    {
