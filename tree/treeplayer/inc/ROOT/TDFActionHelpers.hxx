@@ -764,6 +764,55 @@ public:
    }
 };
 
+template <typename Acc, typename Merge, typename R, typename T, typename U,
+          bool MustCopyAssign = std::is_same<R, U>::value>
+class AggregateHelper {
+   Acc fAggregate;
+   Merge fMerge;
+   const std::shared_ptr<U> fResult;
+   std::vector<U> fAggregators;
+
+public:
+   using BranchTypes_t = TypeList<T>;
+   AggregateHelper(Acc &&f, Merge &&m, const std::shared_ptr<U> &result, const unsigned int nSlots)
+      : fAggregate(std::move(f)), fMerge(std::move(m)), fResult(result), fAggregators(nSlots, *result) {}
+   AggregateHelper(AggregateHelper &&) = default;
+   AggregateHelper(const AggregateHelper &) = delete;
+
+   void InitSlot(TTreeReader *, unsigned int) {}
+
+   template <bool MustCopyAssign_ = MustCopyAssign, typename std::enable_if<MustCopyAssign_, int>::type = 0>
+   void Exec(unsigned int slot, const T &value)
+   {
+      fAggregators[slot] = fAggregate(fAggregators[slot], value);
+   }
+
+   template <bool MustCopyAssign_ = MustCopyAssign, typename std::enable_if<!MustCopyAssign_, int>::type = 0>
+   void Exec(unsigned int slot, const T &value)
+   {
+      fAggregate(fAggregators[slot], value);
+   }
+
+   template <typename MergeRet = typename CallableTraits<Merge>::ret_type,
+             bool MergeAll = std::is_same<void, MergeRet>::value>
+   typename std::enable_if<MergeAll, void>::type Finalize()
+   {
+      fMerge(fAggregators);
+      *fResult = fAggregators[0];
+   }
+
+   template <typename MergeRet = typename CallableTraits<Merge>::ret_type,
+             bool MergeTwoByTwo = std::is_same<U, MergeRet>::value>
+   typename std::enable_if<MergeTwoByTwo, void>::type Finalize(...) // ... needed to let compiler distinguish overloads
+   {
+      for (auto &acc : fAggregators)
+         *fResult = fMerge(*fResult, acc);
+   }
+
+   U &PartialUpdate(unsigned int slot) { return fAggregators[slot]; }
+};
+
+
 } // end of NS TDF
 } // end of NS Internal
 } // end of NS ROOT
