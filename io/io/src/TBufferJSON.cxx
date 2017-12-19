@@ -1668,6 +1668,9 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
       if (gDebug > 1)
          Info("JsonReadObject", "Reading object of class %s refid %u ptr %p", clname.c_str(), fJsonrCnt, obj);
 
+      if (!special_kind)
+         special_kind = JsonSpecialClass(jsonClass);
+
       // add new element to the reading map
       fReadMap[fJsonrCnt++] = ObjectEntry(obj, jsonClass);
    }
