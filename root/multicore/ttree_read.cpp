@@ -112,7 +112,7 @@ int main(int argc, char** argv) {
 
   for(int i=0; i< kNThreads; ++i) {
     threads.push_back(std::make_shared<std::thread>( std::thread([&kFileName, i]() {
-	while(waitToStart) ;
+	while(waitToStart) {} ;
         std::string name = std::to_string(i) + kFileName;
         std::unique_ptr<TFile> f{ TFile::Open(name.c_str()) };
 	assert(f.get());
@@ -120,10 +120,10 @@ int main(int argc, char** argv) {
 	TTree* eventTree = dynamic_cast<TTree*>(f.get()->Get("Events"));
 	assert(eventTree);
 
-	for(Long64_t i = 0, iEnd = eventTree->GetEntries();
-	    i != iEnd;
-	    ++i) {
-	  eventTree->GetEntry(i,1);
+	for(Long64_t j = 0, iEnd = eventTree->GetEntries();
+	    j != iEnd;
+	    ++j) {
+	  eventTree->GetEntry(j,1);
 	}
 
 	f.get()->Close();
