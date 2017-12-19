@@ -64,6 +64,7 @@ for i in range(m):
 
     # Finally we're ready to add this datapoint to the PCA
     principal.AddRow(data.data())
+    data.clear()
 
 # Do the actual analysis
 principal.MakePrincipals()
