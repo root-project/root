@@ -23,17 +23,17 @@ namespace ROOT {
 
 
 
-    double SqrtUpParameterTransformation::Int2ext(double value, double upper) const {
+    long double SqrtUpParameterTransformation::Int2ext(long double value, long double upper) const {
       // internal to external transformation
-      double val = upper + 1. - sqrt( value*value + 1.);
+      long double val = upper + 1. - sqrt( value*value + 1.);
       return val;
     }
 
 
-    double SqrtUpParameterTransformation::Ext2int(double value, double upper, const MnMachinePrecision& ) const {
+    long double SqrtUpParameterTransformation::Ext2int(long double value, long double upper, const MnMachinePrecision& ) const {
       // external to internal transformation
-      double yy = upper - value + 1.;
-      double yy2 = yy*yy;
+      long double yy = upper - value + 1.;
+      long double yy2 = yy*yy;
       if (yy2 < 1.  )
         return 0;
       else
@@ -41,20 +41,20 @@ namespace ROOT {
     }
 
 
-    double SqrtUpParameterTransformation::DInt2Ext(double value, double) const {
+    long double SqrtUpParameterTransformation::DInt2Ext(long double value, long double) const {
       // derivative of internal to external transofrmation :  d (Int2Ext ) / d Int
-      double val = - value/( sqrt( value*value + 1.) );
+      long double val = - value/( sqrt( value*value + 1.) );
       return val;
     }
 
 
-    double SqrtUpParameterTransformation::D2Int2Ext(double value, double) const {
+    long double SqrtUpParameterTransformation::D2Int2Ext(long double value, long double) const {
       // second derivative of internal to external transformation :  d^2 (Int2Ext) / (d Int)^2
-      double value_sq = value * value;
+      long double value_sq = value * value;
       return (value_sq / (value_sq + 1) - 1) / ( sqrt( value_sq + 1.) );
     }
 
-    double SqrtUpParameterTransformation::GStepInt2Ext(double /*value*/, double /*upper*/) const {
+    long double SqrtUpParameterTransformation::GStepInt2Ext(long double /*value*/, long double /*upper*/) const {
       return 1.;
     }
 

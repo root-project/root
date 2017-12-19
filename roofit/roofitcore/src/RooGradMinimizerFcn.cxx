@@ -704,6 +704,9 @@ double RooGradMinimizerFcn::DoStepSize(const double *x, unsigned int icoord) con
   return _grad.Gstep()(icoord);
 }
 
+bool RooGradMinimizerFcn::returnsInMinuit2ParameterSpace() const {
+  return true;
+}
 
 #endif
 

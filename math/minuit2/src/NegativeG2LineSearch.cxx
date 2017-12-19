@@ -46,7 +46,14 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
    unsigned int n = st.Parameters().Vec().size();
    FunctionGradient dgrad = st.Gradient();
    MinimumParameters pa = st.Parameters();
-   bool iterate = false;
+
+  std::cout << "-- NegativeG2LineSearch::operator():" << std::endl;
+  for (int i = 0; i < n; ++i) {
+    std::cout << std::hexfloat << "pa=("<< pa.Vec()(i) << ",\t";
+  }
+  std::cout << ")" << std::endl;
+
+  bool iterate = false;
    unsigned int iter = 0;
    do {
       iterate = false;
@@ -93,7 +100,13 @@ MinimumState NegativeG2LineSearch::operator()(const MnFcn& fcn, const MinimumSta
             step *= pp.X();
             pa = MinimumParameters(pa.Vec() + step, pp.Y());
 
-            dgrad = gc(pa, dgrad);
+           std::cout << "-- NegativeG2LineSearch::operator() B:" << std::endl;
+           for (int ix = 0; ix < n; ++ix) {
+             std::cout << std::hexfloat << "pa=("<< pa.Vec()(ix) << ",\t";
+           }
+           std::cout << ")" << std::endl;
+
+           dgrad = gc(pa, dgrad);
 
 #ifdef DEBUG
             std::cout << "Line search - iter" << iter << " param " << i << "   " << pa.Vec()(i) << " step " << step(i) << " new grad2 " << dgrad.G2()(i) << " new grad " <<  dgrad.Vec()(i) << " grad step " << dgrad.Gstep()(i) << std::endl;

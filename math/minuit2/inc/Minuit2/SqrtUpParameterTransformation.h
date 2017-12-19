@@ -42,16 +42,16 @@ namespace ROOT {
       ~SqrtUpParameterTransformation() {}
 
       // transformation from internal to external
-      double Int2ext(double Value, double Upper) const;
+      long double Int2ext(long double Value, long double Upper) const;
 
       // transformation from external to internal
-      double Ext2int(double Value, double Upper, const MnMachinePrecision&) const;
+      long double Ext2int(long double Value, long double Upper, const MnMachinePrecision&) const;
 
       // derivative of transformation from internal to external
-      double DInt2Ext(double Value, double Upper) const;
+      long double DInt2Ext(long double Value, long double Upper) const;
 
-      double D2Int2Ext(double Value, double Upper) const;
-      double GStepInt2Ext(double Value, double Upper) const;
+      long double D2Int2Ext(long double Value, long double Upper) const;
+      long double GStepInt2Ext(long double Value, long double Upper) const;
 
     private:
 

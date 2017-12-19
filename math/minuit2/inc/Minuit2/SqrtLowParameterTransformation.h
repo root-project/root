@@ -39,16 +39,16 @@ namespace ROOT {
       ~SqrtLowParameterTransformation() {}
 
       // transformation from internal to external
-      double Int2ext(double Value, double Lower) const;
+      long double Int2ext(long double Value, long double Lower) const;
 
       // transformation from external to internal
-      double Ext2int(double Value, double Lower, const MnMachinePrecision&) const;
+      long double Ext2int(long double Value, long double Lower, const MnMachinePrecision&) const;
 
       // derivative of transformation from internal to external
-      double DInt2Ext(double Value, double Lower) const;
+      long double DInt2Ext(long double Value, long double Lower) const;
 
-      double D2Int2Ext(double Value, double Lower) const;
-      double GStepInt2Ext(double Value, double Lower) const;
+      long double D2Int2Ext(long double Value, long double Lower) const;
+      long double GStepInt2Ext(long double Value, long double Lower) const;
 
     private:
     };

@@ -65,7 +65,14 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
    // initial starting values
    MnAlgebraicVector x(n);
    for(unsigned int i = 0; i < n; i++) x(i) = st.IntParameters()[i];
-   double fcnmin = fcn(x);
+
+  std::cout << "-- MnSeedGenerator::operator(.., GradientCalculator, ..):" << std::endl;
+  for (int i = 0; i < n; ++i) {
+    std::cout << std::hexfloat << "x=("<< x(i) << ",\t";
+  }
+  std::cout << ")" << std::endl;
+
+  double fcnmin = fcn(x);
 
    if (printLevel > 1) {
       std::cout << "MnSeedGenerator: for initial parameters FCN = ";
@@ -74,7 +81,9 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
 
    MinimumParameters pa(x, fcnmin);
 //  std::cout << "... doing gc(pa) ..." << std::endl;
+  std::cout << "-- hier? 1 --" << std::endl;
    FunctionGradient dgrad = gc(pa);
+  std::cout << "-- hier? 2 --" << std::endl;
 //  std::cout << "dgrad.Vec: " << dgrad.Vec() << std::endl;
 //  std::cout << "dgrad.G2: " << dgrad.G2() << std::endl;
    MnAlgebraicSymMatrix mat(n);
@@ -131,10 +140,22 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const GradientCalculat
          MnPrint::PrintState(std::cout, tmp, "MnSeedGenerator: run Hesse - new state:  ");
       }
 
-      return MinimumSeed(tmp, st.Trafo());
+     std::cout << "-- MnSeedGenerator::operator(.., GradientCalculator, ..), strategy 2 end state:" << std::endl;
+     for (int i = 0; i < n; ++i) {
+       std::cout << std::hexfloat << "x=("<< tmp.Vec()(i) << ",\t";
+     }
+     std::cout << ")" << std::endl;
+
+     return MinimumSeed(tmp, st.Trafo());
    }
 
-   return MinimumSeed(state, st.Trafo());
+  std::cout << "-- MnSeedGenerator::operator(.., GradientCalculator, ..), regular end state:" << std::endl;
+  for (int i = 0; i < n; ++i) {
+    std::cout << std::hexfloat << "x=("<< state.Vec()(i) << ",\t";
+  }
+  std::cout << ")" << std::endl;
+
+  return MinimumSeed(state, st.Trafo());
 }
 
 
@@ -151,7 +172,14 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradie
   // initial starting values
    MnAlgebraicVector x(n);
    for(unsigned int i = 0; i < n; i++) x(i) = st.IntParameters()[i];
-   double fcnmin = fcn(x);
+
+  std::cout << "-- MnSeedGenerator::operator(.., AnalyticalGradientCalculator, ..):" << std::endl;
+  for (int i = 0; i < n; ++i) {
+    std::cout << std::hexfloat << "x=("<< x(i) << ",\t";
+  }
+  std::cout << ")" << std::endl;
+
+  double fcnmin = fcn(x);
    MinimumParameters pa(x, fcnmin);
 
 //  std::cout << "... creating igc ..." << std::endl;
@@ -159,8 +187,10 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradie
 //  std::cout << "... doing igc(pa) ..." << std::endl;
 //   FunctionGradient tmp = igc(pa);
 //  std::cout << "tmp.G2: " << tmp.G2() << std::endl;
+  std::cout << "-- hier? 1 --" << std::endl;
    FunctionGradient grd = gc(pa);
 //  std::cout << "grd.G2: " << grd.G2() << std::endl;
+  std::cout << "-- hier? 2 --" << std::endl;
 
 //  FunctionGradient dgrad(grd.Grad(), tmp.G2(), tmp.Gstep());
     FunctionGradient dgrad(grd.Grad(), grd.G2(), grd.Gstep());
@@ -228,10 +258,23 @@ MinimumSeed MnSeedGenerator::operator()(const MnFcn& fcn, const AnalyticalGradie
    if(stra.Strategy() == 2 && !st.HasCovariance()) {
       //calculate full 2nd derivative
       MinimumState tmpState = MnHesse(stra)(fcn, state, st.Trafo());
-      return MinimumSeed(tmpState, st.Trafo());
+
+     std::cout << "-- MnSeedGenerator::operator(.., AnalyticalGradientCalculator, ..), strategy 2 end state:" << std::endl;
+     for (int i = 0; i < n; ++i) {
+       std::cout << std::hexfloat << "x=("<< tmpState.Vec()(i) << ",\t";
+     }
+     std::cout << ")" << std::endl;
+
+     return MinimumSeed(tmpState, st.Trafo());
    }
 
-   return MinimumSeed(state, st.Trafo());
+  std::cout << "-- MnSeedGenerator::operator(.., AnalyticalGradientCalculator, ..), regular end state:" << std::endl;
+  for (int i = 0; i < n; ++i) {
+    std::cout << std::hexfloat << "x=("<< state.Vec()(i) << ",\t";
+  }
+  std::cout << ")" << std::endl;
+
+  return MinimumSeed(state, st.Trafo());
 }
 
    }  // namespace Minuit2

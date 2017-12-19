@@ -14,33 +14,35 @@
 
 namespace ROOT {
 
-   namespace Minuit2 {
+  namespace Minuit2 {
 
 
-class FCNGradientBase;
-class MnUserTransformation;
+    class FCNGradientBase;
+    class MnUserTransformation;
 
-class AnalyticalGradientCalculator : public GradientCalculator {
+    class AnalyticalGradientCalculator : public GradientCalculator {
 
-public:
+    public:
 
-  AnalyticalGradientCalculator(const FCNGradientBase& fcn, const MnUserTransformation& state) : fGradCalc(fcn), fTransformation(state) {}
+      AnalyticalGradientCalculator(const FCNGradientBase &fcn, const MnUserTransformation &state) : fGradCalc(fcn),
+                                                                                                    fTransformation(
+                                                                                                        state) {}
 
-  ~AnalyticalGradientCalculator() {}
+      ~AnalyticalGradientCalculator() {}
 
 
-  virtual FunctionGradient operator()(const MinimumParameters&) const;
+      virtual FunctionGradient operator()(const MinimumParameters &) const;
 
-  virtual FunctionGradient operator()(const MinimumParameters&,
-                                      const FunctionGradient&) const;
+      virtual FunctionGradient operator()(const MinimumParameters &,
+                                          const FunctionGradient &) const;
 
-  virtual bool CheckGradient() const;
+      virtual bool CheckGradient() const;
 
-private:
+    protected:
 
-  const FCNGradientBase& fGradCalc;
-  const MnUserTransformation& fTransformation;
-};
+      const FCNGradientBase &fGradCalc;
+      const MnUserTransformation &fTransformation;
+    };
 
   }  // namespace Minuit2
 

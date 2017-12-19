@@ -170,6 +170,8 @@ namespace RooFit {
 
 //    std::cout << "########### NumericalDerivatorMinuit2::Differentiate()" <<std::endl;
 
+
+
     assert(fFunction != 0);
     std::vector<double> vx(fFunction->NDim()), vx_external(fFunction->NDim());
     assert (vx.size() > 0);
@@ -178,17 +180,28 @@ namespace RooFit {
     std::copy (cx, cx+fFunction->NDim(), vx.data());
     std::copy (cx, cx+fFunction->NDim(), vx_external.data());
 
-    // convert to Minuit internal parameters
+    std::cout << "cx: (";
     for (int i = 0; i < int(fN); i++) {
-//      std::cout << vx[i] << "\t";
-      vx[i] = Ext2int(parameters[i], vx[i]);
-//      std::cout << vx[i] << std::endl;
+      std::cout << "ext: " << cx[i] << "; ";
     }
+    std::cout << std::endl;
+
+    // convert to Minuit external parameters
+    std::cout << "vx_external: (";
+    for (int i = 0; i < int(fN); i++) {
+      std::cout << "int: " << vx_external[i] << "\t";
+      vx_external[i] = Int2ext(parameters[i], vx[i]);
+      std::cout << "ext: " << vx_external[i] << "; ";
+    }
+    std::cout << std::endl;
 
     double step_tolerance = fStepTolerance;
     double grad_tolerance = fGradTolerance;
     const ROOT::Math::IBaseFunctionMultiDim &f = *fFunction;
     fVal = f(vx_external.data()); //value of function at given points
+
+    std::cout << std::hexfloat << "fval= " << fVal << std::endl;
+
 
     ROOT::Minuit2::MnAlgebraicVector grad_vec(fG.Grad()),
                                      gr2_vec(fG.G2()),
@@ -207,10 +220,22 @@ namespace RooFit {
     double eps = precision.Eps();
     double eps2 = precision.Eps2();
 
+    std::cout<< std::hexfloat<<"eps= "<<eps<<std::endl;
+    std::cout<< std::hexfloat<<"eps2= "<<eps2<<std::endl;
+
     // MODIFIED: two redundant double casts removed, for dfmin and for epspri
     double dfmin = 8. * eps2 * (std::abs(fVal) + Up);
     double vrysml = 8.*eps*eps;
     unsigned int ncycle = fNCycles;
+
+    std::cout<< std::hexfloat<<"dfmin= "<<dfmin<<std::endl;
+    std::cout<< std::hexfloat<<"vrysml= "<<vrysml<<std::endl;
+    std::cout << " ncycle " << ncycle << std::endl;
+
+    for (int i = 0; i < fN; ++i) {
+      std::cout << std::hexfloat << "x=("<< vx[i] << ",\t";
+    }
+    std::cout << ")" << std::endl;
 
     for (int i = 0; i < int(fN); i++) {
 
@@ -255,22 +280,30 @@ namespace RooFit {
           break;
         }
         gstep_vec_internal(i) = step;
+        std::cout<< std::hexfloat<<"step= "<<step<<std::endl;
         step_old = step;
         // std::cout << "step = " << step << std::endl;
         vx[i] = xtf + step;
+        std::cout<< std::hexfloat<<"x(i)= "<<vx[i]<<std::endl;
         vx_external[i] = Int2ext(parameters[i], vx[i]);
         //std::cout << "x[" << i << "] = " << x[i] <<std::endl;
         double fs1 = f(vx_external.data());
+        std::cout<< std::hexfloat<<"fs1= "<<fs1<<std::endl;
         //std::cout << "xtf + step = " << x[i] << ", fs1 = " << fs1 << std::endl;
         vx[i] = xtf - step;
+        std::cout<< std::hexfloat<<"x(i)= "<<vx[i]<<std::endl;
         vx_external[i] = Int2ext(parameters[i], vx[i]);
         double fs2 = f(vx_external.data());
+        std::cout<< std::hexfloat<<"fs2= "<<fs2<<std::endl;
         //std::cout << "xtf - step = " << x[i] << ", fs2 = " << fs2 << std::endl;
         vx[i] = xtf;
+        std::cout<< std::hexfloat<<"x(i)= "<<vx[i]<<std::endl;
         vx_external[i] = Int2ext(parameters[i], vx[i]);
 
         double fGrd_old = grad_vec_internal(i);
+        std::cout<< std::hexfloat<<"grdb4= "<<fGrd_old<<std::endl;
         grad_vec_internal(i) = 0.5*(fs1-fs2)/step;
+        std::cout<< std::hexfloat<<"grd(i)= "<<grad_vec_internal(i)<<std::endl;
 //            std::cout << "int i = " << i << std::endl;
 //            std::cout << "fs1 = " << fs1 << std::endl;
 //            std::cout << "fs2 = " << fs2 << std::endl;
@@ -278,6 +311,7 @@ namespace RooFit {
 //            std::cout << "step^2 = " << (step*step) << std::endl;
 //            std::cout << std::endl;
         gr2_vec_internal(i) = (fs1 + fs2 -2.*fVal)/step/step;
+        std::cout<< std::hexfloat<<"g2(i)= "<<gr2_vec_internal(i)<<std::endl;
 
         // MODIFIED:
         // The condition below had a closing parenthesis differently than
@@ -319,7 +353,7 @@ namespace RooFit {
 
     fG = ROOT::Minuit2::FunctionGradient(grad_vec, gr2_vec, gstep_vec);
     fG_internal = ROOT::Minuit2::FunctionGradient(grad_vec_internal, gr2_vec_internal, gstep_vec_internal);
-    return fG;
+    return fG_internal;
   }
 
   ROOT::Minuit2::FunctionGradient NumericalDerivatorMinuit2::operator()(const double* x, const std::vector<ROOT::Fit::ParameterSettings>& parameters) {

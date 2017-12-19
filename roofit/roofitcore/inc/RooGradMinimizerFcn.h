@@ -86,6 +86,8 @@ public:
 
   void SynchronizeGradient(std::vector<ROOT::Fit::ParameterSettings> &parameters) const;
 
+  bool returnsInMinuit2ParameterSpace() const override;
+
 private:
 
   Double_t GetPdfParamVal(Int_t index);

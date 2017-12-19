@@ -87,17 +87,19 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
 
 
    double fcnmin = par.Fval();
-   //   std::cout<<"fval: "<<fcnmin<<std::endl;
+      std::cout<< std::hexfloat<<"fval= "<<fcnmin<<std::endl;
 
    double eps2 = Precision().Eps2();
    double eps = Precision().Eps();
+   std::cout<< std::hexfloat<<"eps= "<<eps<<std::endl;
+   std::cout<< std::hexfloat<<"eps2= "<<eps2<<std::endl;
 
    double dfmin = 8.*eps2*(fabs(fcnmin)+Fcn().Up());
    double vrysml = 8.*eps*eps;
    //   double vrysml = std::max(1.e-4, eps2);
-   //    std::cout<<"dfmin= "<<dfmin<<std::endl;
-   //    std::cout<<"vrysml= "<<vrysml<<std::endl;
-   //    std::cout << " ncycle " << Ncycle() << std::endl;
+       std::cout<< std::hexfloat<<"dfmin= "<<dfmin<<std::endl;
+       std::cout<< std::hexfloat<<"vrysml= "<<vrysml<<std::endl;
+       std::cout << " ncycle " << Ncycle() << std::endl;
 
    unsigned int n = (par.Vec()).size();
    unsigned int ncycle = Ncycle();
@@ -106,10 +108,10 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
    MnAlgebraicVector g2 = Gradient.G2();
    MnAlgebraicVector gstep = Gradient.Gstep();
 
-//  for (int i = 0; i < n; ++i) {
-//    std::cout << par.Vec()(i) << "\t";
-//  }
-//  std::cout << std::endl;
+  for (int i = 0; i < n; ++i) {
+    std::cout << std::hexfloat << "x=("<< par.Vec()(i) << ",\t";
+  }
+  std::cout << ")" << std::endl;
 
 #ifndef _OPENMP
    MPIProcess mpiproc(n,0);
@@ -185,6 +187,8 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
             break;
          }
          gstep(i) = step;
+         std::cout<< std::hexfloat<<"step= "<<step<<std::endl;
+
          stepb4 = step;
          //       MnAlgebraicVector pstep(n);
          //       pstep(i) = step;
@@ -192,14 +196,22 @@ FunctionGradient Numerical2PGradientCalculator::operator()(const MinimumParamete
          //       double fs2 = Fcn()(pstate - pstep);
 
          x(i) = xtf + step;
+         std::cout<< std::hexfloat<<"x(i)= "<<x(i)<<std::endl;
          double fs1 = Fcn()(x);
+         std::cout<< std::hexfloat<<"fs1= "<<fs1<<std::endl;
          x(i) = xtf - step;
+         std::cout<< std::hexfloat<<"x(i)= "<<x(i)<<std::endl;
          double fs2 = Fcn()(x);
+         std::cout<< std::hexfloat<<"fs2= "<<fs2<<std::endl;
          x(i) = xtf;
+         std::cout<< std::hexfloat<<"x(i)= "<<x(i)<<std::endl;
 
          double grdb4 = grd(i);
+         std::cout<< std::hexfloat<<"grdb4= "<<grdb4<<std::endl;
          grd(i) = 0.5*(fs1 - fs2)/step;
+         std::cout<< std::hexfloat<<"grd(i)= "<<grd(i)<<std::endl;
          g2(i) = (fs1 + fs2 - 2.*fcnmin)/step/step;
+         std::cout<< std::hexfloat<<"g2(i)= "<<g2(i)<<std::endl;
 
 #ifdef DEBUG
          pr = std::cout.precision(13);

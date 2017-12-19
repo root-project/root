@@ -17,6 +17,8 @@
 #include <string>
 #include <sstream>
 
+#include <iostream>
+
 namespace ROOT {
 
   namespace Minuit2 {
@@ -94,15 +96,18 @@ namespace ROOT {
 // #endif
 
     double MnUserTransformation::Int2ext(unsigned int i, double val) const {
+      std::cout << "Int2Ext in = " << val;
       // return external value from internal value for parameter i
       if(fParameters[fExtOfInt[i]].HasLimits()) {
         if(fParameters[fExtOfInt[i]].HasUpperLimit() && fParameters[fExtOfInt[i]].HasLowerLimit())
-          return fDoubleLimTrafo.Int2ext(val, fParameters[fExtOfInt[i]].UpperLimit(), fParameters[fExtOfInt[i]].LowerLimit());
+          val = fDoubleLimTrafo.Int2ext(val, fParameters[fExtOfInt[i]].UpperLimit(), fParameters[fExtOfInt[i]].LowerLimit());
         else if(fParameters[fExtOfInt[i]].HasUpperLimit() && !fParameters[fExtOfInt[i]].HasLowerLimit())
-          return fUpperLimTrafo.Int2ext(val, fParameters[fExtOfInt[i]].UpperLimit());
+          val = fUpperLimTrafo.Int2ext(val, fParameters[fExtOfInt[i]].UpperLimit());
         else
-          return fLowerLimTrafo.Int2ext(val, fParameters[fExtOfInt[i]].LowerLimit());
+          val = fLowerLimTrafo.Int2ext(val, fParameters[fExtOfInt[i]].LowerLimit());
       }
+
+      std::cout << ", out = " << val << std::endl;
 
       return val;
     }
@@ -163,14 +168,17 @@ namespace ROOT {
     double MnUserTransformation::Ext2int(unsigned int i, double val) const {
       // return the internal value for parameter i with external value val
 
+      std::cout << "Ext2Int: " << val;
       if(fParameters[i].HasLimits()) {
         if(fParameters[i].HasUpperLimit() && fParameters[i].HasLowerLimit())
-          return fDoubleLimTrafo.Ext2int(val, fParameters[i].UpperLimit(), fParameters[i].LowerLimit(), Precision());
+          val = fDoubleLimTrafo.Ext2int(val, fParameters[i].UpperLimit(), fParameters[i].LowerLimit(), Precision());
         else if(fParameters[i].HasUpperLimit() && !fParameters[i].HasLowerLimit())
-          return fUpperLimTrafo.Ext2int(val, fParameters[i].UpperLimit(), Precision());
+          val = fUpperLimTrafo.Ext2int(val, fParameters[i].UpperLimit(), Precision());
         else
-          return fLowerLimTrafo.Ext2int(val, fParameters[i].LowerLimit(), Precision());
+          val = fLowerLimTrafo.Ext2int(val, fParameters[i].LowerLimit(), Precision());
       }
+
+      std::cout << ", out = " << val << std::endl;
 
       return val;
     }
@@ -179,6 +187,7 @@ namespace ROOT {
       // return the derivative of the int->ext transformation: dPext(i) / dPint(i)
       // for the parameter i with value val
 
+      std::cout << "DInt2Ext in = " << val;
       double dd = 1.;
       if(fParameters[fExtOfInt[i]].HasLimits()) {
         if(fParameters[fExtOfInt[i]].HasUpperLimit() && fParameters[fExtOfInt[i]].HasLowerLimit())
@@ -189,6 +198,8 @@ namespace ROOT {
         else
           dd = fLowerLimTrafo.DInt2Ext(val, fParameters[fExtOfInt[i]].LowerLimit());
       }
+
+      std::cout << ", out = " << dd << std::endl;
 
       return dd;
     }

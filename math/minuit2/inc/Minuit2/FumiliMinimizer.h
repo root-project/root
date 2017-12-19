@@ -104,16 +104,16 @@ public:
       return ModularFunctionMinimizer::Minimize(fcn, par, err, stra, maxfcn,toler);
    }
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase&fcn, const std::vector<double>&par, const std::vector<double>&err, unsigned int stra=1, unsigned int maxfcn = 0, double toler = 0.1) const {
-      return ModularFunctionMinimizer::Minimize(fcn,par,err,stra,maxfcn,toler);
+   virtual FunctionMinimum Minimize(const FCNGradientBase&fcn, const std::vector<double>&par, const std::vector<double>&err, unsigned int stra=1, unsigned int maxfcn = 0, double toler = 0.1, GradientParameterSpace grad_space = GradientParameterSpace::External) const {
+      return ModularFunctionMinimizer::Minimize(fcn,par,err,stra,maxfcn,toler,grad_space);
    }
 
    virtual FunctionMinimum Minimize(const FCNBase& fcn, const std::vector<double>&par, unsigned int nrow, const std::vector<double>&cov, unsigned int stra=1, unsigned int maxfcn = 0, double toler = 0.1) const {
       return ModularFunctionMinimizer::Minimize(fcn,par,nrow,cov,stra,maxfcn,toler);
    }
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase& fcn, const std::vector<double>&par, unsigned int nrow, const std::vector<double>&cov, unsigned int stra=1, unsigned int maxfcn = 0, double toler = 0.1) const {
-      return ModularFunctionMinimizer::Minimize(fcn,par,nrow,cov,stra,maxfcn,toler);
+   virtual FunctionMinimum Minimize(const FCNGradientBase& fcn, const std::vector<double>&par, unsigned int nrow, const std::vector<double>&cov, unsigned int stra=1, unsigned int maxfcn = 0, double toler = 0.1, GradientParameterSpace grad_space = GradientParameterSpace::External) const {
+      return ModularFunctionMinimizer::Minimize(fcn,par,nrow,cov,stra,maxfcn,toler,grad_space);
    }
 
 

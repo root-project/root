@@ -32,7 +32,8 @@ namespace ROOT {
 
     */
 
-    template< class Function>
+
+    template< class Function, typename grad_real_t = double>
     class FCNGradAdapter : public FCNGradientBase {
 
     public:
@@ -40,7 +41,7 @@ namespace ROOT {
       FCNGradAdapter(const Function & f, double up = 1.) :
           fFunc(f) ,
           fUp (up) ,
-          fGrad(std::vector<double>(fFunc.NDim() ) ),
+          fGrad(std::vector<grad_real_t>(fFunc.NDim() ) ),
           fG2(fFunc.hasG2ndDerivative() ? std::vector<double>(fFunc.NDim()) : std::vector<double>(0) ),
           fGStep(fFunc.hasGStepSize()   ? std::vector<double>(fFunc.NDim()) : std::vector<double>(0) )
       {}
@@ -57,7 +58,7 @@ namespace ROOT {
 
       double Up() const {return fUp;}
 
-      virtual std::vector<double> Gradient(const std::vector<double>& v) const {
+      virtual std::vector<grad_real_t> Gradient(const std::vector<double>& v) const {
         fFunc.Gradient(v.data(), fGrad.data());
 
 #ifdef DEBUG
@@ -90,10 +91,18 @@ namespace ROOT {
         return fFunc.hasGStepSize();
       }
 
+      GradientParameterSpace gradParameterSpace() const override {
+        if (fFunc.returnsInMinuit2ParameterSpace()) {
+          return GradientParameterSpace::Internal;
+        } else {
+          return GradientParameterSpace::External;
+        }
+      }
+
     private:
       const Function & fFunc;
       double fUp;
-      mutable std::vector<double> fGrad;
+      mutable std::vector<grad_real_t> fGrad;
       mutable std::vector<double> fG2;
       mutable std::vector<double> fGStep;
     };

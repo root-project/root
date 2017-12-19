@@ -409,6 +409,10 @@ namespace ROOT {
         return false;
       }
 
+      virtual bool returnsInMinuit2ParameterSpace() const {
+        return false;
+      }
+
     };
 
 //___________________________________________________________________________________

@@ -22,17 +22,17 @@ namespace ROOT {
 
 
 
-    double SqrtLowParameterTransformation::Int2ext(double value, double lower) const {
+    long double SqrtLowParameterTransformation::Int2ext(long double value, long double lower) const {
       /// internal to external transformation
-      double val = lower - 1. + sqrt( value*value + 1.);
+      long double val = lower - 1. + sqrt( value*value + 1.);
       return val;
     }
 
 
-    double SqrtLowParameterTransformation::Ext2int(double value, double lower, const MnMachinePrecision& ) const {
+    long double SqrtLowParameterTransformation::Ext2int(long double value, long double lower, const MnMachinePrecision& ) const {
       // external to internal transformation
-      double yy = value - lower + 1.;
-      double yy2 = yy*yy;
+      long double yy = value - lower + 1.;
+      long double yy2 = yy*yy;
       if (yy2 < 1. )
         return 0;
       else
@@ -40,19 +40,19 @@ namespace ROOT {
     }
 
 
-    double SqrtLowParameterTransformation::DInt2Ext(double value, double) const {
+    long double SqrtLowParameterTransformation::DInt2Ext(long double value, long double) const {
       // derivative of internal to external transofrmation   :  d (Int2Ext) / d Int
-      double val = value/( sqrt( value*value + 1.) );
+      long double val = value/( sqrt( value*value + 1.) );
       return val;
     }
 
-    double SqrtLowParameterTransformation::D2Int2Ext(double value, double) const {
+    long double SqrtLowParameterTransformation::D2Int2Ext(long double value, long double) const {
       // second derivative of internal to external transformation :  d^2 (Int2Ext) / (d Int)^2
-      double value_sq = value * value;
+      long double value_sq = value * value;
       return (1 - value_sq / (value_sq + 1)) / ( sqrt( value_sq + 1.) );
     }
 
-    double SqrtLowParameterTransformation::GStepInt2Ext(double /*value*/, double /*lower*/) const {
+    long double SqrtLowParameterTransformation::GStepInt2Ext(long double /*value*/, long double /*lower*/) const {
       return 1.;
     }
 

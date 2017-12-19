@@ -24,6 +24,7 @@
 
 TEST(GradMinimizer, Gaussian1D) {
   for (int i = 0; i < 10; ++i) {
+    std::cout << std::endl << "run " << i << std::endl;
     // produce the same random stuff every time
     gRandom->SetSeed(1);
 
@@ -37,12 +38,14 @@ TEST(GradMinimizer, Gaussian1D) {
 
     RooDataSet *data = pdf->generate(RooArgSet(*x), 10000);
     mu->setVal(-2.9);
-    // mu->setError(0.1);
+//    mu->removeRange();
+//    mu->setError(0.3);
 
     auto nll = pdf->createNLL(*data);
 
     // save initial values for the start of all minimizations
     RooArgSet values = RooArgSet(*mu, *pdf, *nll);
+    std::cout << std::hexfloat << "mu: " << mu->getVal() << std::endl;
 
     RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
     if (savedValues == nullptr) {
@@ -55,7 +58,7 @@ TEST(GradMinimizer, Gaussian1D) {
 
     // --------
 
-//  std::cout << "starting nominal calculation" << std::endl;
+  std::cout << "starting nominal calculation" << std::endl;
 
     RooMinimizer m0(*nll);
     m0.setMinimizerType("Minuit2");
@@ -67,7 +70,7 @@ TEST(GradMinimizer, Gaussian1D) {
     m0.migrad();
     wtimer.stop();
 
-//  std::cout << "  -- nominal calculation wall clock time:        " << wtimer.timing_s() << "s" << std::endl;
+  std::cout << "  -- nominal calculation wall clock time:        " << wtimer.timing_s() << "s" << std::endl;
 
     RooFitResult *m0result = m0.lastMinuitFit();
     double minNll0 = m0result->minNll();
@@ -75,11 +78,12 @@ TEST(GradMinimizer, Gaussian1D) {
     double mu0 = mu->getVal();
     double muerr0 = mu->getError();
 
-//  std::cout << " ======== resetting initial values ======== " << std::endl;
+  std::cout << " ======== resetting initial values ======== " << std::endl;
     values = *savedValues;
 
+    std::cout << std::hexfloat << "mu: " << mu->getVal() << std::endl;
 
-//  std::cout << "starting GradMinimizer" << std::endl;
+  std::cout << "starting GradMinimizer" << std::endl;
 
     RooGradMinimizer m1(*nll);
     m1.setMinimizerType("Minuit2");
@@ -91,7 +95,7 @@ TEST(GradMinimizer, Gaussian1D) {
     m1.migrad();
     wtimer.stop();
 
-//  std::cout << "  -- GradMinimizer calculation wall clock time:  " << wtimer.timing_s() << "s" << std::endl;
+  std::cout << "  -- GradMinimizer calculation wall clock time:  " << wtimer.timing_s() << "s" << std::endl;
 
     RooFitResult *m1result = m1.lastMinuitFit();
     double minNll1 = m1result->minNll();
@@ -103,17 +107,22 @@ TEST(GradMinimizer, Gaussian1D) {
     // see discussion: https://github.com/roofit-dev/root/issues/11
     // we cast to float to do the comparison, because at double precision
     // the differences are often just slightly too large
-    EXPECT_FLOAT_EQ(minNll0, minNll1);
-    EXPECT_FLOAT_EQ(mu0, mu1);
-    EXPECT_FLOAT_EQ(muerr0, muerr1);
-    EXPECT_NEAR(edm0, edm1, 1e-4);
+//    EXPECT_FLOAT_EQ(minNll0, minNll1);
+//    EXPECT_FLOAT_EQ(mu0, mu1);
+//    EXPECT_FLOAT_EQ(muerr0, muerr1);
+//    EXPECT_NEAR(edm0, edm1, 1e-4);
+    EXPECT_EQ(minNll0, minNll1);
+    EXPECT_EQ(mu0, mu1);
+    EXPECT_EQ(muerr0, muerr1);
+    EXPECT_EQ(edm0, edm1);
+
     // these ULP functions can be used for further analysis of the differences
 //    std::cout << "ulp_diff muerr: " << ulp_diff(muerr0, muerr1) << std::endl;
 //    std::cout << "ulp_diff muerr float-casted: " << ulp_diff((float) muerr0, (float) muerr1) << std::endl;
   }
 }
 
-
+///*
 TEST(GradMinimizer, GaussianND) {
   // test RooGradMinimizer class with simple N-dimensional pdf
   int n = 5;
@@ -488,3 +497,4 @@ TEST(GradMinimizer, BranchingPDF) {
 // s0    = 3.04623  +/-  0.0982477 (limited)
 
 }
+//*/

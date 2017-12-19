@@ -31,13 +31,13 @@ namespace ROOT {
 
       ~SinParameterTransformation() {}
 
-      double Int2ext(double Value, double Upper, double Lower) const;
-      double Ext2int(double Value, double Upper, double Lower,
+      long double Int2ext(long double Value, long double Upper, long double Lower) const;
+      long double Ext2int(long double Value, long double Upper, long double Lower,
                      const MnMachinePrecision&) const;
-      double DInt2Ext(double Value, double Upper, double Lower) const;
+      long double DInt2Ext(long double Value, long double Upper, long double Lower) const;
 
-      double D2Int2Ext(double Value, double Upper, double Lower) const;
-      double GStepInt2Ext(double Value, double Upper, double Lower) const;
+      long double D2Int2Ext(long double Value, long double Upper, long double Lower) const;
+      long double GStepInt2Ext(long double Value, long double Upper, long double Lower) const;
 
     private:
 
