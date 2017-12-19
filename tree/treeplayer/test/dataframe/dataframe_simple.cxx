@@ -3,6 +3,7 @@
 #include <ROOT/TDataFrame.hxx>
 #include <ROOT/TSeq.hxx>
 #include <TFile.h>
+#include <TGraph.h>
 #include <TInterpreter.h>
 #include <TRandom.h>
 #include <TROOT.h>
@@ -438,6 +439,45 @@ TEST_P(TDFSimpleTests, Reduce)
    auto r2 = d.Reduce([](int x, int y) { return x * y; }, "x", 1);
    EXPECT_EQ(*r1, 15);
    EXPECT_EQ(*r2, 120);
+}
+
+TEST_P(TDFSimpleTests, Aggregate)
+{
+   auto d = TDataFrame(5).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<int>(e) + 1; });
+   // acc U(U,T), merge U(U,U), default initValue
+   auto r1 = d.Aggregate([](int x, int y) { return x + y; }, [](int x, int y) { return x + y; }, "x");
+   // acc U(U,T), merge U(U,U), initValue
+   auto r2 = d.Aggregate([](int x, int y) { return x * y; }, [](int x, int y) { return x * y; }, "x", 1);
+   EXPECT_EQ(*r1, 15);
+   EXPECT_EQ(*r2, 120);
+}
+
+TEST_P(TDFSimpleTests, AggregateGraph)
+{
+   auto d = TDataFrame(20).DefineSlotEntry("x", [](unsigned int, ULong64_t e) { return static_cast<double>(e); });
+   auto graph = d.Aggregate([](TGraph &g, double x) { g.SetPoint(g.GetN(), x, x * x); },
+                            [](std::vector<TGraph> &graphs) {
+                               TList l;
+                               for (auto g = graphs.begin() + 1; g != graphs.end(); ++g)
+                                  l.Add(&(*g));
+                               graphs[0].Merge(&l);
+                            },
+                            "x");
+   EXPECT_EQ(graph->GetN(), 20);
+   // collect data-points, sorted by x values (they can be scrambled in MT executions)
+   using Point_t = std::pair<double, double>;
+   std::vector<Point_t> points;
+   Point_t p;
+   for (int i = 0; i < 20; ++i) {
+      graph->GetPoint(i, p.first, p.second);
+      points.emplace_back(p);
+   }
+   // check that all data-points are retrieved correctly
+   std::sort(points.begin(), points.end(), [](const Point_t &p1, const Point_t &p2) { return p1.first < p2.first; });
+   for (int i = 0; i < 20; ++i) {
+      EXPECT_DOUBLE_EQ(points[i].first, i);
+      EXPECT_DOUBLE_EQ(points[i].second, i * i);
+   }
 }
 
 // run single-thread tests
