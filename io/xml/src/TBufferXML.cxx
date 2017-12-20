@@ -30,6 +30,7 @@ limitations for complex objects like TTree, which can not be yet converted to xm
 
 #include "TObjArray.h"
 #include "TROOT.h"
+#include "TError.h"
 #include "TClass.h"
 #include "TClassTable.h"
 #include "TDataType.h"
@@ -220,6 +221,33 @@ void *TBufferXML::ConvertFromXMLAny(const char *str, TClass **cl, Bool_t Generic
    xml.FreeNode(xmlnode);
 
    return obj;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert from XML and check if object derived from specified class
+/// When possible, cast to given class
+
+void *TBufferXML::ConvertFromXMLChecked(const char *xml, const TClass *expectedClass, Bool_t GenericLayout,
+                                        Bool_t UseNamespaces)
+{
+   TClass *objClass = nullptr;
+   void *res = ConvertFromXMLAny(xml, &objClass, GenericLayout, UseNamespaces);
+
+   if (!res || !objClass)
+      return nullptr;
+
+   if (objClass == expectedClass)
+      return res;
+
+   Int_t offset = objClass->GetBaseClassOffset(expectedClass);
+   if (offset < 0) {
+      ::Error("TBufferXML::ConvertFromXMLChecked", "expected class %s is not base for read class %s",
+              expectedClass->GetName(), objClass->GetName());
+      objClass->Destructor(res);
+      return nullptr;
+   }
+
+   return (char *)res - offset;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

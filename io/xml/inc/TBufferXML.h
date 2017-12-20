@@ -42,9 +42,24 @@ public:
    static TString
    ConvertToXML(const void *obj, const TClass *cl, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
 
+   template <class T>
+   static TString ToXML(const T *obj, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE)
+   {
+      return ConvertToXML(obj, TBuffer::GetClass(typeid(T)), GenericLayout, UseNamespaces);
+   }
+
    static TObject *ConvertFromXML(const char *str, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
    static void *
    ConvertFromXMLAny(const char *str, TClass **cl = 0, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
+
+   template <class T>
+   static Bool_t FromXML(T *&obj, const char *xml, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE)
+   {
+      if (obj)
+        return kFALSE;
+      obj = (T *)ConvertFromXMLChecked(xml, TBuffer::GetClass(typeid(T)), GenericLayout, UseNamespaces);
+      return obj != nullptr;
+   }
 
    Int_t GetIOVersion() const { return fIOVersion; }
    void SetIOVersion(Int_t v) { fIOVersion = v; }
@@ -237,6 +252,9 @@ protected:
    virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse);
 
    // end redefined protected virtual functions
+
+   static void *ConvertFromXMLChecked(const char *xml, const TClass *expectedClass, Bool_t GenericLayout = kFALSE,
+                                      Bool_t UseNamespaces = kFALSE);
 
    TXMLFile *XmlFile();
 
