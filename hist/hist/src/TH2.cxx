@@ -1542,7 +1542,21 @@ TH2 *TH2::RebinY(Int_t ngroup, const char *newname)
    return Rebin2D(1, ngroup, newname);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Override TH1::Rebin as TH2::RebinX
+/// Rebinning in variable binning as for TH1 is not allowed
+/// If a non-null pointer is given an error is flagged
+/// see RebinX and Rebin2D
 
+TH2 * TH2::Rebin( Int_t ngroup, const char*newname, const Double_t *xbins)
+{
+   if (xbins != nullptr) {
+      Error("Rebin","Rebinning a 2-d histogram into variable bins is not supported (it is possible only for 1-d histograms). Return a nullptr");
+      return nullptr; 
+   }
+   Info("Rebin","Rebinning only the x-axis. Use Rebin2D for rebinning both axes");
+   return RebinX(ngroup, newname); 
+}
 ////////////////////////////////////////////////////////////////////////////////
 /// Rebin this histogram grouping nxgroup/nygroup bins along the xaxis/yaxis together.
 ///
