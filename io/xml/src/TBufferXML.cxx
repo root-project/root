@@ -1982,61 +1982,65 @@ Int_t TBufferXML::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele*
    return XmlReadArray(d, true);
 }
 
-// macro to read content of array, which not include size of array
-// macro also treat situation, when instead of one single array chain
-// of several elements should be produced
-#define TBufferXML_ReadFastArray(vname)                                                                                \
-   {                                                                                                                   \
-      BeforeIOoperation();                                                                                             \
-      if (n <= 0)                                                                                                      \
-         return;                                                                                                       \
-      TStreamerElement *elem = Stack(0)->fElem;                                                                        \
-      if ((elem != 0) && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) && \
-          (elem->GetArrayLength() != n))                                                                               \
-         fExpectedChain = kTRUE;                                                                                       \
-      if (fExpectedChain) {                                                                                            \
-         fExpectedChain = kFALSE;                                                                                      \
-         Int_t startnumber = Stack(0)->fElemNumber;                                                                    \
-         TStreamerInfo *info = Stack(1)->fInfo;                                                                        \
-         Int_t index = 0;                                                                                              \
-         while (index < n) {                                                                                           \
-            elem = (TStreamerElement *)info->GetElements()->At(startnumber++);                                         \
-            if (elem->GetType() < TStreamerInfo::kOffsetL) {                                                           \
-               if (index > 0) {                                                                                        \
-                  PopStack();                                                                                          \
-                  ShiftStack("chainreader");                                                                           \
-                  VerifyElemNode(elem);                                                                                \
-               }                                                                                                       \
-               fCanUseCompact = kTRUE;                                                                                 \
-               XmlReadBasic(vname[index]);                                                                             \
-               index++;                                                                                                \
-            } else {                                                                                                   \
-               if (!VerifyItemNode(xmlio::Array, "ReadFastArray"))                                                     \
-                  return;                                                                                              \
-               PushStack(StackNode());                                                                                 \
-               Int_t elemlen = elem->GetArrayLength();                                                                 \
-               TXMLReadArrayContent((vname + index), elemlen);                                                         \
-               PopStack();                                                                                             \
-               ShiftStack("readfastarr");                                                                              \
-               index += elemlen;                                                                                       \
-            }                                                                                                          \
-         }                                                                                                             \
-      } else {                                                                                                         \
-         if (!VerifyItemNode(xmlio::Array, "ReadFastArray"))                                                           \
-            return;                                                                                                    \
-         PushStack(StackNode());                                                                                       \
-         TXMLReadArrayContent(vname, n);                                                                               \
-         PopStack();                                                                                                   \
-         ShiftStack("readfastarr");                                                                                    \
-      }                                                                                                                \
+
+////////////////////////////////////////////////////////////////////////////////
+/// Template method to read content of array, which not include size of array
+/// Also treated situation, when instead of one single array chain
+/// of several elements should be produced
+
+template <typename T>
+R__ALWAYS_INLINE void TBufferXML::XmlReadFastArray(T *arr, Int_t n)
+{
+   BeforeIOoperation();
+   if (n <= 0)
+      return;
+   TStreamerElement *elem = Stack(0)->fElem;
+   if ((elem != 0) && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) &&
+       (elem->GetArrayLength() != n))
+      fExpectedChain = kTRUE;
+   if (fExpectedChain) {
+      fExpectedChain = kFALSE;
+      Int_t startnumber = Stack(0)->fElemNumber;
+      TStreamerInfo *info = Stack(1)->fInfo;
+      Int_t index = 0;
+      while (index < n) {
+         elem = (TStreamerElement *)info->GetElements()->At(startnumber++);
+         if (elem->GetType() < TStreamerInfo::kOffsetL) {
+            if (index > 0) {
+               PopStack();
+               ShiftStack("chainreader");
+               VerifyElemNode(elem);
+            }
+            fCanUseCompact = kTRUE;
+            XmlReadBasic(arr[index]);
+            index++;
+         } else {
+            if (!VerifyItemNode(xmlio::Array, "ReadFastArray"))
+               return;
+            PushStack(StackNode());
+            Int_t elemlen = elem->GetArrayLength();
+            XmlReadArrayContent((arr + index), elemlen);
+            PopStack();
+            ShiftStack("readfastarr");
+            index += elemlen;
+         }
+      }
+   } else {
+      if (!VerifyItemNode(xmlio::Array, "ReadFastArray"))
+         return;
+      PushStack(StackNode());
+      XmlReadArrayContent(arr, n);
+      PopStack();
+      ShiftStack("readfastarr");
    }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read array of Bool_t from buffer
 
 void TBufferXML::ReadFastArray(Bool_t *b, Int_t n)
 {
-   TBufferXML_ReadFastArray(b);
+   XmlReadFastArray(b, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2053,8 +2057,9 @@ void TBufferXML::ReadFastArray(Char_t *c, Int_t n)
             size = n;
          memcpy(c, buf, size);
       }
-   } else
-      TBufferXML_ReadFastArray(c);
+   } else {
+      XmlReadFastArray(c, n);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2062,7 +2067,7 @@ void TBufferXML::ReadFastArray(Char_t *c, Int_t n)
 
 void TBufferXML::ReadFastArray(UChar_t *c, Int_t n)
 {
-   TBufferXML_ReadFastArray(c);
+   XmlReadFastArray(c, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2070,7 +2075,7 @@ void TBufferXML::ReadFastArray(UChar_t *c, Int_t n)
 
 void TBufferXML::ReadFastArray(Short_t *h, Int_t n)
 {
-   TBufferXML_ReadFastArray(h);
+   XmlReadFastArray(h, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2078,7 +2083,7 @@ void TBufferXML::ReadFastArray(Short_t *h, Int_t n)
 
 void TBufferXML::ReadFastArray(UShort_t *h, Int_t n)
 {
-   TBufferXML_ReadFastArray(h);
+   XmlReadFastArray(h, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2086,7 +2091,7 @@ void TBufferXML::ReadFastArray(UShort_t *h, Int_t n)
 
 void TBufferXML::ReadFastArray(Int_t *i, Int_t n)
 {
-   TBufferXML_ReadFastArray(i);
+   XmlReadFastArray(i, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2094,7 +2099,7 @@ void TBufferXML::ReadFastArray(Int_t *i, Int_t n)
 
 void TBufferXML::ReadFastArray(UInt_t *i, Int_t n)
 {
-   TBufferXML_ReadFastArray(i);
+   XmlReadFastArray(i, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2102,7 +2107,7 @@ void TBufferXML::ReadFastArray(UInt_t *i, Int_t n)
 
 void TBufferXML::ReadFastArray(Long_t *l, Int_t n)
 {
-   TBufferXML_ReadFastArray(l);
+   XmlReadFastArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2110,7 +2115,7 @@ void TBufferXML::ReadFastArray(Long_t *l, Int_t n)
 
 void TBufferXML::ReadFastArray(ULong_t *l, Int_t n)
 {
-   TBufferXML_ReadFastArray(l);
+   XmlReadFastArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2118,7 +2123,7 @@ void TBufferXML::ReadFastArray(ULong_t *l, Int_t n)
 
 void TBufferXML::ReadFastArray(Long64_t *l, Int_t n)
 {
-   TBufferXML_ReadFastArray(l);
+   XmlReadFastArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2126,7 +2131,7 @@ void TBufferXML::ReadFastArray(Long64_t *l, Int_t n)
 
 void TBufferXML::ReadFastArray(ULong64_t *l, Int_t n)
 {
-   TBufferXML_ReadFastArray(l);
+   XmlReadFastArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2134,7 +2139,7 @@ void TBufferXML::ReadFastArray(ULong64_t *l, Int_t n)
 
 void TBufferXML::ReadFastArray(Float_t *f, Int_t n)
 {
-   TBufferXML_ReadFastArray(f);
+   XmlReadFastArray(f, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2142,7 +2147,7 @@ void TBufferXML::ReadFastArray(Float_t *f, Int_t n)
 
 void TBufferXML::ReadFastArray(Double_t *d, Int_t n)
 {
-   TBufferXML_ReadFastArray(d);
+   XmlReadFastArray(d, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2150,7 +2155,7 @@ void TBufferXML::ReadFastArray(Double_t *d, Int_t n)
 
 void TBufferXML::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement * /*ele*/)
 {
-   TBufferXML_ReadFastArray(f);
+   XmlReadFastArray(f, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2158,7 +2163,7 @@ void TBufferXML::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement * /*
 
 void TBufferXML::ReadFastArrayWithFactor(Float_t *f, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
 {
-   TBufferXML_ReadFastArray(f);
+   XmlReadFastArray(f, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2166,7 +2171,7 @@ void TBufferXML::ReadFastArrayWithFactor(Float_t *f, Int_t n, Double_t /* factor
 
 void TBufferXML::ReadFastArrayWithNbits(Float_t *f, Int_t n, Int_t /*nbits*/)
 {
-   TBufferXML_ReadFastArray(f);
+   XmlReadFastArray(f, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2174,7 +2179,7 @@ void TBufferXML::ReadFastArrayWithNbits(Float_t *f, Int_t n, Int_t /*nbits*/)
 
 void TBufferXML::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement * /*ele*/)
 {
-   TBufferXML_ReadFastArray(d);
+   XmlReadFastArray(d, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2182,7 +2187,7 @@ void TBufferXML::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement * 
 
 void TBufferXML::ReadFastArrayWithFactor(Double_t *d, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
 {
-   TBufferXML_ReadFastArray(d);
+   XmlReadFastArray(d, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2190,7 +2195,7 @@ void TBufferXML::ReadFastArrayWithFactor(Double_t *d, Int_t n, Double_t /* facto
 
 void TBufferXML::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t /*nbits*/)
 {
-   TBufferXML_ReadFastArray(d);
+   XmlReadFastArray(d, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
