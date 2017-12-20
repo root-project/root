@@ -84,7 +84,9 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
             type = "ULong64_t";
          else if (typeCode == 'O')
             type = "bool";
-         if (title[title.size() - 3] == ']') {
+         if (type.empty())
+            throw std::runtime_error("could not deduce type of branch " + std::string(title));
+         if (title.size() > 3 && title[title.size() - 3] == ']') {
             // title has the form "varname[size]/X", i.e. it refers to an array (doesn't matter if size is fixed or not)
             // TDataFrame reads it as a TArrayBranch
             return "ROOT::Experimental::TDF::TArrayBranch<" + type + ">";
