@@ -4839,7 +4839,7 @@ void TPad::Print(const char *filenam, Option_t *option)
          gPad->GetCanvas()->SetHighLightColor(-1);
          gPad->Modified();
          gPad->Update();
-         if (gVirtualX->InheritsFrom("TGQt")) {
+         if (TClass::GetClass("TGQt", kFALSE) && gVirtualX->InheritsFrom("TGQt")) {
             wid = (this == GetCanvas()) ? GetCanvas()->GetCanvasID() : GetPixmapID();
             gVirtualX->WritePixmap(wid,UtoPixel(1.),VtoPixel(0.),(char *)psname.Data());
          } else {
