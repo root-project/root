@@ -835,7 +835,8 @@ XMLNodePointer_t TBufferXML::XmlWriteObject(const void *obj, const TClass *cl, B
 
    fXML->NewAttr(objnode, 0, xmlio::ObjClass, clname);
 
-   if (cacheReuse) RegisterPointer(obj, objnode);
+   if (cacheReuse)
+      RegisterPointer(obj, objnode);
 
    PushStack(objnode);
 
@@ -1653,22 +1654,22 @@ R__ALWAYS_INLINE void TBufferXML::XmlReadArrayContent(T *arr, Int_t arrsize)
 template <typename T>
 R__ALWAYS_INLINE Int_t TBufferXML::XmlReadArray(T *&arr, bool is_static)
 {
-    BeforeIOoperation();
-    if (!VerifyItemNode(xmlio::Array, is_static ? "ReadStaticArray" : "ReadArray"))
-       return 0;
-    Int_t n = fXML->GetIntAttr(StackNode(), xmlio::Size);
-    if (n <= 0)
-       return 0;
-    if (!arr) {
-       if (is_static)
-          return 0;
-       arr = new T[n];
-    }
-    PushStack(StackNode());
-    XmlReadArrayContent(arr, n);
-    PopStack();
-    ShiftStack(is_static ? "readstatarr" : "readarr");
-    return n;
+   BeforeIOoperation();
+   if (!VerifyItemNode(xmlio::Array, is_static ? "ReadStaticArray" : "ReadArray"))
+      return 0;
+   Int_t n = fXML->GetIntAttr(StackNode(), xmlio::Size);
+   if (n <= 0)
+      return 0;
+   if (!arr) {
+      if (is_static)
+         return 0;
+      arr = new T[n];
+   }
+   PushStack(StackNode());
+   XmlReadArrayContent(arr, n);
+   PopStack();
+   ShiftStack(is_static ? "readstatarr" : "readarr");
+   return n;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1991,7 +1992,6 @@ Int_t TBufferXML::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele*
    return XmlReadArray(d, true);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Template method to read content of array, which not include size of array
 /// Also treated situation, when instead of one single array chain
@@ -2242,7 +2242,6 @@ R__ALWAYS_INLINE void TBufferXML::XmlWriteArrayContent(const T *arr, Int_t arrsi
          XmlWriteBasic(arr[indx]);
    }
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array, including it size
