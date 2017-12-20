@@ -2591,19 +2591,13 @@ void TBufferXML::StreamObject(void *obj, const TClass *cl, const TClass * /* onf
       XmlWriteObject(obj, cl, kTRUE);
 }
 
-// macro for right shift operator for basic type
-#define TBufferXML_operatorin(vname) \
-   {                                 \
-      BeforeIOoperation();           \
-      XmlReadBasic(vname);           \
-   }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads Bool_t value from buffer
 
 void TBufferXML::ReadBool(Bool_t &b)
 {
-   TBufferXML_operatorin(b);
+   BeforeIOoperation();
+   XmlReadBasic(b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2611,7 +2605,8 @@ void TBufferXML::ReadBool(Bool_t &b)
 
 void TBufferXML::ReadChar(Char_t &c)
 {
-   TBufferXML_operatorin(c);
+   BeforeIOoperation();
+   XmlReadBasic(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2619,7 +2614,8 @@ void TBufferXML::ReadChar(Char_t &c)
 
 void TBufferXML::ReadUChar(UChar_t &c)
 {
-   TBufferXML_operatorin(c);
+   BeforeIOoperation();
+   XmlReadBasic(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2627,7 +2623,8 @@ void TBufferXML::ReadUChar(UChar_t &c)
 
 void TBufferXML::ReadShort(Short_t &h)
 {
-   TBufferXML_operatorin(h);
+   BeforeIOoperation();
+   XmlReadBasic(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2635,7 +2632,8 @@ void TBufferXML::ReadShort(Short_t &h)
 
 void TBufferXML::ReadUShort(UShort_t &h)
 {
-   TBufferXML_operatorin(h);
+   BeforeIOoperation();
+   XmlReadBasic(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2643,7 +2641,8 @@ void TBufferXML::ReadUShort(UShort_t &h)
 
 void TBufferXML::ReadInt(Int_t &i)
 {
-   TBufferXML_operatorin(i);
+   BeforeIOoperation();
+   XmlReadBasic(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2651,7 +2650,8 @@ void TBufferXML::ReadInt(Int_t &i)
 
 void TBufferXML::ReadUInt(UInt_t &i)
 {
-   TBufferXML_operatorin(i);
+   BeforeIOoperation();
+   XmlReadBasic(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2659,7 +2659,8 @@ void TBufferXML::ReadUInt(UInt_t &i)
 
 void TBufferXML::ReadLong(Long_t &l)
 {
-   TBufferXML_operatorin(l);
+   BeforeIOoperation();
+   XmlReadBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2667,7 +2668,8 @@ void TBufferXML::ReadLong(Long_t &l)
 
 void TBufferXML::ReadULong(ULong_t &l)
 {
-   TBufferXML_operatorin(l);
+   BeforeIOoperation();
+   XmlReadBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2675,7 +2677,8 @@ void TBufferXML::ReadULong(ULong_t &l)
 
 void TBufferXML::ReadLong64(Long64_t &l)
 {
-   TBufferXML_operatorin(l);
+   BeforeIOoperation();
+   XmlReadBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2683,7 +2686,8 @@ void TBufferXML::ReadLong64(Long64_t &l)
 
 void TBufferXML::ReadULong64(ULong64_t &l)
 {
-   TBufferXML_operatorin(l);
+   BeforeIOoperation();
+   XmlReadBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2691,7 +2695,8 @@ void TBufferXML::ReadULong64(ULong64_t &l)
 
 void TBufferXML::ReadFloat(Float_t &f)
 {
-   TBufferXML_operatorin(f);
+   BeforeIOoperation();
+   XmlReadBasic(f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2699,7 +2704,8 @@ void TBufferXML::ReadFloat(Float_t &f)
 
 void TBufferXML::ReadDouble(Double_t &d)
 {
-   TBufferXML_operatorin(d);
+   BeforeIOoperation();
+   XmlReadBasic(d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2752,19 +2758,13 @@ void TBufferXML::ReadCharStar(char *&s)
    TBufferFile::ReadCharStar(s);
 }
 
-// macro for left shift operator for basic types
-#define TBufferXML_operatorout(vname) \
-   {                                  \
-      BeforeIOoperation();            \
-      XmlWriteBasic(vname);           \
-   }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Writes Bool_t value to buffer
 
 void TBufferXML::WriteBool(Bool_t b)
 {
-   TBufferXML_operatorout(b);
+   BeforeIOoperation();
+   XmlWriteBasic(b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2772,7 +2772,8 @@ void TBufferXML::WriteBool(Bool_t b)
 
 void TBufferXML::WriteChar(Char_t c)
 {
-   TBufferXML_operatorout(c);
+   BeforeIOoperation();
+   XmlWriteBasic(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2780,7 +2781,8 @@ void TBufferXML::WriteChar(Char_t c)
 
 void TBufferXML::WriteUChar(UChar_t c)
 {
-   TBufferXML_operatorout(c);
+   BeforeIOoperation();
+   XmlWriteBasic(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2788,7 +2790,8 @@ void TBufferXML::WriteUChar(UChar_t c)
 
 void TBufferXML::WriteShort(Short_t h)
 {
-   TBufferXML_operatorout(h);
+   BeforeIOoperation();
+   XmlWriteBasic(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2796,7 +2799,8 @@ void TBufferXML::WriteShort(Short_t h)
 
 void TBufferXML::WriteUShort(UShort_t h)
 {
-   TBufferXML_operatorout(h);
+   BeforeIOoperation();
+   XmlWriteBasic(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2804,7 +2808,8 @@ void TBufferXML::WriteUShort(UShort_t h)
 
 void TBufferXML::WriteInt(Int_t i)
 {
-   TBufferXML_operatorout(i);
+   BeforeIOoperation();
+   XmlWriteBasic(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2812,7 +2817,8 @@ void TBufferXML::WriteInt(Int_t i)
 
 void TBufferXML::WriteUInt(UInt_t i)
 {
-   TBufferXML_operatorout(i);
+   BeforeIOoperation();
+   XmlWriteBasic(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2820,7 +2826,8 @@ void TBufferXML::WriteUInt(UInt_t i)
 
 void TBufferXML::WriteLong(Long_t l)
 {
-   TBufferXML_operatorout(l);
+   BeforeIOoperation();
+   XmlWriteBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2828,7 +2835,8 @@ void TBufferXML::WriteLong(Long_t l)
 
 void TBufferXML::WriteULong(ULong_t l)
 {
-   TBufferXML_operatorout(l);
+   BeforeIOoperation();
+   XmlWriteBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2836,7 +2844,8 @@ void TBufferXML::WriteULong(ULong_t l)
 
 void TBufferXML::WriteLong64(Long64_t l)
 {
-   TBufferXML_operatorout(l);
+   BeforeIOoperation();
+   XmlWriteBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2844,7 +2853,8 @@ void TBufferXML::WriteLong64(Long64_t l)
 
 void TBufferXML::WriteULong64(ULong64_t l)
 {
-   TBufferXML_operatorout(l);
+   BeforeIOoperation();
+   XmlWriteBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2852,7 +2862,8 @@ void TBufferXML::WriteULong64(ULong64_t l)
 
 void TBufferXML::WriteFloat(Float_t f)
 {
-   TBufferXML_operatorout(f);
+   BeforeIOoperation();
+   XmlWriteBasic(f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2860,7 +2871,8 @@ void TBufferXML::WriteFloat(Float_t f)
 
 void TBufferXML::WriteDouble(Double_t d)
 {
-   TBufferXML_operatorout(d);
+   BeforeIOoperation();
+   XmlWriteBasic(d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
