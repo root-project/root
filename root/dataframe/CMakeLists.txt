@@ -7,6 +7,12 @@ endif()
 
 set(DFLIBRARIES Core TreePlayer Hist Tree RIO MathCore)
 
+# ROOT-9116
+ROOTTEST_GENERATE_EXECUTABLE(test_gdirectoryRestore test_gdirectoryRestore.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_ADD_TEST(test_gdirectoryRestore
+                  EXEC test_gdirectoryRestore
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
+
 ROOTTEST_ADD_TEST(templateRecursionLimit
                   MACRO test_templateRecursionLimit.C)
 
