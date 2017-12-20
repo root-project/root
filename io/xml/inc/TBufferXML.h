@@ -317,7 +317,7 @@ protected:
    R__ALWAYS_INLINE void XmlReadArrayContent(T *arr, Int_t arrsize);
 
    template <typename T>
-   R__ALWAYS_INLINE Int_t XmlReadArray(T *&arr);
+   R__ALWAYS_INLINE Int_t XmlReadArray(T *&arr, bool is_static = false);
 
    XMLNodePointer_t XmlWriteObject(const void *obj, const TClass *objClass, Bool_t cacheReuse);
    void *XmlReadObject(void *obj, TClass **cl = 0);

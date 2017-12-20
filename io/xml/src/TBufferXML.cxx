@@ -1600,14 +1600,6 @@ void TBufferXML::WriteObjectClass(const void *actualObjStart, const TClass *actu
    XmlWriteObject(actualObjStart, actualClass, cacheReuse);
 }
 
-// Macro to read content of uncompressed array
-#define TXMLReadArrayNoncompress(vname)      \
-   {                                         \
-      for (Int_t indx = 0; indx < n; indx++) \
-         XmlReadBasic(vname[indx]);          \
-   }
-
-
 // macro to read content of array with compression
 #define TXMLReadArrayContent(vname, arrsize)                 \
    {                                                         \
@@ -1650,20 +1642,23 @@ R__ALWAYS_INLINE void TBufferXML::XmlReadArrayContent(T *arr, Int_t arrsize)
 /// If necessary, array is created
 
 template <typename T>
-R__ALWAYS_INLINE Int_t TBufferXML::XmlReadArray(T *&arr)
+R__ALWAYS_INLINE Int_t TBufferXML::XmlReadArray(T *&arr, bool is_static)
 {
     BeforeIOoperation();
-    if (!VerifyItemNode(xmlio::Array, "ReadArray"))
+    if (!VerifyItemNode(xmlio::Array, is_static ? "ReadStaticArray" : "ReadArray"))
        return 0;
     Int_t n = fXML->GetIntAttr(StackNode(), xmlio::Size);
     if (n <= 0)
        return 0;
-    if (!arr)
+    if (!arr) {
+       if (is_static)
+          return 0;
        arr = new T[n];
+    }
     PushStack(StackNode());
     XmlReadArrayContent(arr, n);
     PopStack();
-    ShiftStack("readarr");
+    ShiftStack(is_static ? "readstatarr" : "readarr");
     return n;
 }
 
@@ -1867,30 +1862,12 @@ Int_t TBufferXML::ReadArrayDouble32(Double_t *&d, TStreamerElement * /*ele*/)
    return XmlReadArray(d);
 }
 
-// macro to read array from xml buffer
-#define TBufferXML_ReadStaticArray(vname)                   \
-   {                                                        \
-      BeforeIOoperation();                                  \
-      if (!VerifyItemNode(xmlio::Array, "ReadStaticArray")) \
-         return 0;                                          \
-      Int_t n = fXML->GetIntAttr(StackNode(), xmlio::Size); \
-      if (n <= 0)                                           \
-         return 0;                                          \
-      if (!vname)                                           \
-         return 0;                                          \
-      PushStack(StackNode());                               \
-      TXMLReadArrayContent(vname, n);                       \
-      PopStack();                                           \
-      ShiftStack("readstatarr");                            \
-      return n;                                             \
-   }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Read array of Bool_t from buffer
 
 Int_t TBufferXML::ReadStaticArray(Bool_t *b)
 {
-   TBufferXML_ReadStaticArray(b);
+   return XmlReadArray(b, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1898,7 +1875,7 @@ Int_t TBufferXML::ReadStaticArray(Bool_t *b)
 
 Int_t TBufferXML::ReadStaticArray(Char_t *c)
 {
-   TBufferXML_ReadStaticArray(c);
+   return XmlReadArray(c, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1906,7 +1883,7 @@ Int_t TBufferXML::ReadStaticArray(Char_t *c)
 
 Int_t TBufferXML::ReadStaticArray(UChar_t *c)
 {
-   TBufferXML_ReadStaticArray(c);
+   return XmlReadArray(c, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1914,7 +1891,7 @@ Int_t TBufferXML::ReadStaticArray(UChar_t *c)
 
 Int_t TBufferXML::ReadStaticArray(Short_t *h)
 {
-   TBufferXML_ReadStaticArray(h);
+   return XmlReadArray(h, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1922,7 +1899,7 @@ Int_t TBufferXML::ReadStaticArray(Short_t *h)
 
 Int_t TBufferXML::ReadStaticArray(UShort_t *h)
 {
-   TBufferXML_ReadStaticArray(h);
+   return XmlReadArray(h, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1930,7 +1907,7 @@ Int_t TBufferXML::ReadStaticArray(UShort_t *h)
 
 Int_t TBufferXML::ReadStaticArray(Int_t *i)
 {
-   TBufferXML_ReadStaticArray(i);
+   return XmlReadArray(i, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1938,7 +1915,7 @@ Int_t TBufferXML::ReadStaticArray(Int_t *i)
 
 Int_t TBufferXML::ReadStaticArray(UInt_t *i)
 {
-   TBufferXML_ReadStaticArray(i);
+   return XmlReadArray(i, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1946,7 +1923,7 @@ Int_t TBufferXML::ReadStaticArray(UInt_t *i)
 
 Int_t TBufferXML::ReadStaticArray(Long_t *l)
 {
-   TBufferXML_ReadStaticArray(l);
+   return XmlReadArray(l, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1954,7 +1931,7 @@ Int_t TBufferXML::ReadStaticArray(Long_t *l)
 
 Int_t TBufferXML::ReadStaticArray(ULong_t *l)
 {
-   TBufferXML_ReadStaticArray(l);
+   return XmlReadArray(l, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1962,7 +1939,7 @@ Int_t TBufferXML::ReadStaticArray(ULong_t *l)
 
 Int_t TBufferXML::ReadStaticArray(Long64_t *l)
 {
-   TBufferXML_ReadStaticArray(l);
+   return XmlReadArray(l, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1970,7 +1947,7 @@ Int_t TBufferXML::ReadStaticArray(Long64_t *l)
 
 Int_t TBufferXML::ReadStaticArray(ULong64_t *l)
 {
-   TBufferXML_ReadStaticArray(l);
+   return XmlReadArray(l, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1978,7 +1955,7 @@ Int_t TBufferXML::ReadStaticArray(ULong64_t *l)
 
 Int_t TBufferXML::ReadStaticArray(Float_t *f)
 {
-   TBufferXML_ReadStaticArray(f);
+   return XmlReadArray(f, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1986,7 +1963,7 @@ Int_t TBufferXML::ReadStaticArray(Float_t *f)
 
 Int_t TBufferXML::ReadStaticArray(Double_t *d)
 {
-   TBufferXML_ReadStaticArray(d);
+   return XmlReadArray(d, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1994,7 +1971,7 @@ Int_t TBufferXML::ReadStaticArray(Double_t *d)
 
 Int_t TBufferXML::ReadStaticArrayFloat16(Float_t *f, TStreamerElement * /*ele*/)
 {
-   TBufferXML_ReadStaticArray(f);
+   return XmlReadArray(f, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2002,7 +1979,7 @@ Int_t TBufferXML::ReadStaticArrayFloat16(Float_t *f, TStreamerElement * /*ele*/)
 
 Int_t TBufferXML::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele*/)
 {
-   TBufferXML_ReadStaticArray(d);
+   return XmlReadArray(d, true);
 }
 
 // macro to read content of array, which not include size of array
