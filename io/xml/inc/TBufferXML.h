@@ -323,10 +323,13 @@ protected:
    R__ALWAYS_INLINE void XmlReadFastArray(T *arr, Int_t n);
 
    template <typename T>
-   R__ALWAYS_INLINE void XmlWriteArrayContent(T *arr, Int_t arrsize);
+   R__ALWAYS_INLINE void XmlWriteArrayContent(const T *arr, Int_t arrsize);
 
    template <typename T>
-   R__ALWAYS_INLINE void XmlWriteArray(T *arr, Int_t arrsize);
+   R__ALWAYS_INLINE void XmlWriteArray(const T *arr, Int_t arrsize);
+
+   template <typename T>
+   R__ALWAYS_INLINE void XmlWriteFastArray(const T *arr, Int_t n);
 
    XMLNodePointer_t XmlWriteObject(const void *obj, const TClass *objClass, Bool_t cacheReuse);
    void *XmlReadObject(void *obj, TClass **cl = 0);
