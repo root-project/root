@@ -159,10 +159,10 @@ namespace ROOT {
       MnUserFcn mfcn(fcn, st.Trafo());
       AnalyticalGradientCalculator *gc;
       if (fcn.gradParameterSpace() == GradientParameterSpace::External) {
-        std::cout << "-- ModularFunctionMinimizer::Minimize: External parameter space" << std::endl;
+//        std::cout << "-- ModularFunctionMinimizer::Minimize: External parameter space" << std::endl;
         gc = new AnalyticalGradientCalculator(fcn, st.Trafo());
       } else if (fcn.gradParameterSpace() == GradientParameterSpace::Internal) {
-        std::cout << "-- ModularFunctionMinimizer::Minimize: Internal parameter space" << std::endl;
+//        std::cout << "-- ModularFunctionMinimizer::Minimize: Internal parameter space" << std::endl;
         gc = new ExternalInternalGradientCalculator(fcn, st.Trafo());
       }
 

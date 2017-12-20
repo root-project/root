@@ -85,7 +85,7 @@ namespace RooFit {
 //    mutable std::vector <double> fG2;
 //    mutable std::vector <double> fGstep;
     mutable ROOT::Minuit2::FunctionGradient fG;
-    mutable ROOT::Minuit2::FunctionGradient fG_internal;
+//    mutable ROOT::Minuit2::FunctionGradient fG_internal;
 
     // same story for SetParameterHasLimits
     mutable std::vector <bool> _parameter_has_limits;

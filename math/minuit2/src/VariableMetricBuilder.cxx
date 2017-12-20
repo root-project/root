@@ -345,9 +345,9 @@ FunctionMinimum VariableMetricBuilder::Minimum(const MnFcn& fcn, const GradientC
 
       MinimumParameters p(s0.Vec() + pp.X()*step, pp.Y());
 
-     std::cout << "-- VariableMetricBuilder::Minimum:" << std::endl;
-     std::cout << std::hexfloat << "p.Vec()(0):    " << p.Vec()(0) << std::endl;
-     std::cout << std::hexfloat << "s0.Gradient(): " << s0.Gradient().Vec()(0) << std::endl;
+//     std::cout << "-- VariableMetricBuilder::Minimum:" << std::endl;
+//     std::cout << std::hexfloat << "p.Vec()(0):    " << p.Vec()(0) << std::endl;
+//     std::cout << std::hexfloat << "s0.Gradient(): " << s0.Gradient().Vec()(0) << std::endl;
 
       FunctionGradient g = gc(p, s0.Gradient());
 

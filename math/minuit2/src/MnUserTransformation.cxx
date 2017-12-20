@@ -96,7 +96,7 @@ namespace ROOT {
 // #endif
 
     double MnUserTransformation::Int2ext(unsigned int i, double val) const {
-      std::cout << "Int2Ext in = " << val;
+//      std::cout << "Int2Ext in = " << val; EGP
       // return external value from internal value for parameter i
       if(fParameters[fExtOfInt[i]].HasLimits()) {
         if(fParameters[fExtOfInt[i]].HasUpperLimit() && fParameters[fExtOfInt[i]].HasLowerLimit())
@@ -107,7 +107,7 @@ namespace ROOT {
           val = fLowerLimTrafo.Int2ext(val, fParameters[fExtOfInt[i]].LowerLimit());
       }
 
-      std::cout << ", out = " << val << std::endl;
+//      std::cout << ", out = " << val << std::endl; EGP
 
       return val;
     }
@@ -168,7 +168,7 @@ namespace ROOT {
     double MnUserTransformation::Ext2int(unsigned int i, double val) const {
       // return the internal value for parameter i with external value val
 
-      std::cout << "Ext2Int: " << val;
+//      std::cout << "Ext2Int: " << val; EGP
       if(fParameters[i].HasLimits()) {
         if(fParameters[i].HasUpperLimit() && fParameters[i].HasLowerLimit())
           val = fDoubleLimTrafo.Ext2int(val, fParameters[i].UpperLimit(), fParameters[i].LowerLimit(), Precision());
@@ -178,7 +178,7 @@ namespace ROOT {
           val = fLowerLimTrafo.Ext2int(val, fParameters[i].LowerLimit(), Precision());
       }
 
-      std::cout << ", out = " << val << std::endl;
+//      std::cout << ", out = " << val << std::endl; EGP
 
       return val;
     }
@@ -187,7 +187,7 @@ namespace ROOT {
       // return the derivative of the int->ext transformation: dPext(i) / dPint(i)
       // for the parameter i with value val
 
-      std::cout << "DInt2Ext in = " << val;
+//      std::cout << "DInt2Ext in = " << val; EGP
       double dd = 1.;
       if(fParameters[fExtOfInt[i]].HasLimits()) {
         if(fParameters[fExtOfInt[i]].HasUpperLimit() && fParameters[fExtOfInt[i]].HasLowerLimit())
@@ -199,7 +199,7 @@ namespace ROOT {
           dd = fLowerLimTrafo.DInt2Ext(val, fParameters[fExtOfInt[i]].LowerLimit());
       }
 
-      std::cout << ", out = " << dd << std::endl;
+//      std::cout << ", out = " << dd << std::endl; EGP
 
       return dd;
     }

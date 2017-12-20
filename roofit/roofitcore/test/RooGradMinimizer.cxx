@@ -45,7 +45,7 @@ TEST(GradMinimizer, Gaussian1D) {
 
     // save initial values for the start of all minimizations
     RooArgSet values = RooArgSet(*mu, *pdf, *nll);
-    std::cout << std::hexfloat << "mu: " << mu->getVal() << std::endl;
+//    std::cout << std::hexfloat << "mu: " << mu->getVal() << std::endl; EGP
 
     RooArgSet *savedValues = dynamic_cast<RooArgSet *>(values.snapshot());
     if (savedValues == nullptr) {
@@ -81,7 +81,7 @@ TEST(GradMinimizer, Gaussian1D) {
   std::cout << " ======== resetting initial values ======== " << std::endl;
     values = *savedValues;
 
-    std::cout << std::hexfloat << "mu: " << mu->getVal() << std::endl;
+//    std::cout << std::hexfloat << "mu: " << mu->getVal() << std::endl; EGP
 
   std::cout << "starting GradMinimizer" << std::endl;
 
@@ -122,7 +122,7 @@ TEST(GradMinimizer, Gaussian1D) {
   }
 }
 
-///*
+
 TEST(GradMinimizer, GaussianND) {
   // test RooGradMinimizer class with simple N-dimensional pdf
   int n = 5;
@@ -320,14 +320,25 @@ TEST(GradMinimizer, GaussianND) {
     }
   }
 
-  EXPECT_FLOAT_EQ(minNll0, minNll1);
-  EXPECT_NEAR(edm0, edm1, 1e-4);
+  std::cout << std::hexfloat;
+  std::cout << "minNll0: " << minNll0 << std::endl;
+  std::cout << "minNll1: " << minNll1 << std::endl;
+  std::cout << "edm0: " << edm0 << std::endl;
+  std::cout << "edm1: " << edm1 << std::endl;
+
+  EXPECT_EQ(minNll0, minNll1);
+  EXPECT_EQ(edm0, edm1);//, 1e-4);
 
   for (int ix = 0; ix < n; ++ix) {
-    EXPECT_FLOAT_EQ(mean0[ix], mean1[ix]);
-    EXPECT_FLOAT_EQ(std0[ix], std1[ix]);
+    std::cout << "mean0[" << ix <<  "]: " << mean0[ix] << std::endl;
+    std::cout << "mean1[" << ix <<  "]: " << mean1[ix] << std::endl;
+    std::cout << "std0[" << ix <<  "]: " << std0[ix] << std::endl;
+    std::cout << "std1[" << ix <<  "]: " << std1[ix] << std::endl;
+    EXPECT_EQ(mean0[ix], mean1[ix]);
+    EXPECT_EQ(std0[ix], std1[ix]);
   }
 }
+
 
 TEST(GradMinimizer, BranchingPDF) {
   // test RooGradMinimizer class with an N-dimensional pdf that forms a tree of
@@ -466,8 +477,8 @@ TEST(GradMinimizer, BranchingPDF) {
   double minNll1 = m1result->minNll();
   double edm1 = m1result->edm();
 
-  EXPECT_FLOAT_EQ(minNll0, minNll1);
-  EXPECT_NEAR(edm0, edm1, 1e-4);
+  EXPECT_EQ(minNll0, minNll1);
+  EXPECT_EQ(edm0, edm1);//, 1e-4);
 
   double N_g0__1 = N_g0.getVal();
   double N_g1__1 = N_g1.getVal();
@@ -478,14 +489,14 @@ TEST(GradMinimizer, BranchingPDF) {
   double m1__1 = dynamic_cast<RooRealVar *>(w.arg("m1"))->getVal();
   double s0__1 = dynamic_cast<RooRealVar *>(w.arg("s0"))->getVal();
 
-  EXPECT_FLOAT_EQ(N_g0__0, N_g0__1);
-  EXPECT_FLOAT_EQ(N_g1__0, N_g1__1);
-  EXPECT_FLOAT_EQ(k0_0_1__0, k0_0_1__1);
-  EXPECT_FLOAT_EQ(k1_0__0, k1_0__1);
-  EXPECT_FLOAT_EQ(m0_0__0, m0_0__1);
-  EXPECT_FLOAT_EQ(m0_0_0__0, m0_0_0__1);
-  EXPECT_FLOAT_EQ(m1__0, m1__1);
-  EXPECT_FLOAT_EQ(s0__0, s0__1);
+  EXPECT_EQ(N_g0__0, N_g0__1);
+  EXPECT_EQ(N_g1__0, N_g1__1);
+  EXPECT_EQ(k0_0_1__0, k0_0_1__1);
+  EXPECT_EQ(k1_0__0, k1_0__1);
+  EXPECT_EQ(m0_0__0, m0_0__1);
+  EXPECT_EQ(m0_0_0__0, m0_0_0__1);
+  EXPECT_EQ(m1__0, m1__1);
+  EXPECT_EQ(s0__0, s0__1);
 
 // N_g0    = 494.514  +/-  18.8621 (limited)
 // N_g1    = 505.817  +/-  24.6705 (limited)
@@ -497,4 +508,3 @@ TEST(GradMinimizer, BranchingPDF) {
 // s0    = 3.04623  +/-  0.0982477 (limited)
 
 }
-//*/
