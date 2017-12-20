@@ -33,7 +33,7 @@ namespace ROOT {
     */
 
 
-    template< class Function, typename grad_real_t = double>
+    template< class Function>
     class FCNGradAdapter : public FCNGradientBase {
 
     public:
@@ -41,7 +41,7 @@ namespace ROOT {
       FCNGradAdapter(const Function & f, double up = 1.) :
           fFunc(f) ,
           fUp (up) ,
-          fGrad(std::vector<grad_real_t>(fFunc.NDim() ) ),
+          fGrad(std::vector<double>(fFunc.NDim() ) ),
           fG2(fFunc.hasG2ndDerivative() ? std::vector<double>(fFunc.NDim()) : std::vector<double>(0) ),
           fGStep(fFunc.hasGStepSize()   ? std::vector<double>(fFunc.NDim()) : std::vector<double>(0) )
       {}
@@ -49,16 +49,16 @@ namespace ROOT {
       ~FCNGradAdapter() {}
 
 
-      double operator()(const std::vector<double>& v) const {
+      double operator()(const std::vector<double>& v) const override {
         return fFunc.operator()(&v[0]);
       }
       double operator()(const double *  v) const {
         return fFunc.operator()(v);
       }
 
-      double Up() const {return fUp;}
+      double Up() const override {return fUp;}
 
-      virtual std::vector<grad_real_t> Gradient(const std::vector<double>& v) const {
+      std::vector<double> Gradient(const std::vector<double>& v) const override {
         fFunc.Gradient(v.data(), fGrad.data());
 
 #ifdef DEBUG
@@ -71,23 +71,23 @@ namespace ROOT {
       }
       // forward interface
       //virtual double operator()(int npar, double* params,int iflag = 4) const;
-      bool CheckGradient() const { return false; }
+      bool CheckGradient() const override { return false; }
 
-      virtual std::vector<double> G2ndDerivative(const std::vector<double>& v) const {
+      std::vector<double> G2ndDerivative(const std::vector<double>& v) const override {
         fFunc.G2ndDerivative(v.data(), fG2.data());
         return fG2;
       };
 
-      virtual std::vector<double> GStepSize(const std::vector<double>& v) const {
+      std::vector<double> GStepSize(const std::vector<double>& v) const override {
         fFunc.GStepSize(v.data(), fGStep.data());
         return fGStep;
       };
 
-      virtual bool hasG2ndDerivative() const {
+      bool hasG2ndDerivative() const override {
         return fFunc.hasG2ndDerivative();
       }
 
-      virtual bool hasGStepSize() const {
+      bool hasGStepSize() const override {
         return fFunc.hasGStepSize();
       }
 
@@ -102,7 +102,7 @@ namespace ROOT {
     private:
       const Function & fFunc;
       double fUp;
-      mutable std::vector<grad_real_t> fGrad;
+      mutable std::vector<double> fGrad;
       mutable std::vector<double> fG2;
       mutable std::vector<double> fGStep;
     };
