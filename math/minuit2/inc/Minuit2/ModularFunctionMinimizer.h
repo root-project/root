@@ -49,13 +49,11 @@ public:
 // inherited interface
    virtual FunctionMinimum Minimize(const FCNBase&, const std::vector<double>&, const std::vector<double>&, unsigned int stra=1, unsigned int maxfcn = 0, double toler = 0.1) const;
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase&, const std::vector<double>&, const std::vector<double>&, unsigned int stra=1, unsigned int maxfcn = 0, double toler = 0.1,
-       GradientParameterSpace grad_space = GradientParameterSpace::External) const;
+   virtual FunctionMinimum Minimize(const FCNGradientBase&, const std::vector<double>&, const std::vector<double>&, unsigned int stra=1, unsigned int maxfcn = 0, double toler = 0.1) const;
 
    virtual FunctionMinimum Minimize(const FCNBase&, const std::vector<double>&, unsigned int, const std::vector<double>&, unsigned int stra=1, unsigned int maxfcn = 0, double toler = 0.1) const;
 
-   virtual FunctionMinimum Minimize(const FCNGradientBase&, const std::vector<double>&, unsigned int, const std::vector<double>&, unsigned int stra=1, unsigned int maxfcn = 0, double toler = 0.1,
-       GradientParameterSpace grad_space = GradientParameterSpace::External) const;
+   virtual FunctionMinimum Minimize(const FCNGradientBase&, const std::vector<double>&, unsigned int, const std::vector<double>&, unsigned int stra=1, unsigned int maxfcn = 0, double toler = 0.1) const;
 
 // extension
    virtual FunctionMinimum Minimize(const FCNBase&, const MnUserParameters&, const MnStrategy&, unsigned int maxfcn = 0, double toler = 0.1) const;

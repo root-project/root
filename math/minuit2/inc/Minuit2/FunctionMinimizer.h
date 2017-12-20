@@ -51,7 +51,7 @@ namespace ROOT {
       //starting values for parameters and errors and FCN with Gradient
       virtual FunctionMinimum
       Minimize(const FCNGradientBase &, const std::vector<double> &par, const std::vector<double> &err,
-               unsigned int strategy, unsigned int maxfcn, double toler, GradientParameterSpace grad_space) const = 0;
+               unsigned int strategy, unsigned int maxfcn, double toler) const = 0;
 
       //starting values for parameters and covariance matrix
       virtual FunctionMinimum
@@ -61,7 +61,7 @@ namespace ROOT {
       //starting values for parameters and covariance matrix and FCN with Gradient
       virtual FunctionMinimum Minimize(const FCNGradientBase &, const std::vector<double> &par, unsigned int nrow,
                                        const std::vector<double> &cov, unsigned int strategy, unsigned int maxfcn,
-                                       double toler, GradientParameterSpace grad_space) const = 0;
+                                       double toler) const = 0;
 
     };
 

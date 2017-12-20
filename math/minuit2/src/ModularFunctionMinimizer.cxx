@@ -53,8 +53,7 @@ namespace ROOT {
 
     FunctionMinimum ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, const std::vector<double> &par,
                                                        const std::vector<double> &err, unsigned int stra,
-                                                       unsigned int maxfcn, double toler,
-                                                       GradientParameterSpace grad_space) const {
+                                                       unsigned int maxfcn, double toler) const {
       // minimize from FCNGradientBase (use analytical gradient provided in FCN)
       // and std::vector of double's for parameter values and errors (step sizes)
       MnUserParameterState st(par, err);
@@ -78,7 +77,7 @@ namespace ROOT {
     FunctionMinimum
     ModularFunctionMinimizer::Minimize(const FCNGradientBase &fcn, const std::vector<double> &par, unsigned int nrow,
                                        const std::vector<double> &cov, unsigned int stra, unsigned int maxfcn,
-                                       double toler, GradientParameterSpace grad_space) const {
+                                       double toler) const {
       // minimize from FCNGradientBase (use analytical gradient provided in FCN)
       // using std::vector for parameter error and
       // an std::vector of size n*(n+1)/2 for the covariance matrix  and n (rank of cov matrix)
@@ -158,12 +157,12 @@ namespace ROOT {
 
       MnUserFcn mfcn(fcn, st.Trafo());
       AnalyticalGradientCalculator *gc;
-      if (fcn.gradParameterSpace() == GradientParameterSpace::External) {
-//        std::cout << "-- ModularFunctionMinimizer::Minimize: External parameter space" << std::endl;
-        gc = new AnalyticalGradientCalculator(fcn, st.Trafo());
-      } else if (fcn.gradParameterSpace() == GradientParameterSpace::Internal) {
+      if (fcn.gradParameterSpace() == GradientParameterSpace::Internal) {
 //        std::cout << "-- ModularFunctionMinimizer::Minimize: Internal parameter space" << std::endl;
         gc = new ExternalInternalGradientCalculator(fcn, st.Trafo());
+      } else {
+        //        std::cout << "-- ModularFunctionMinimizer::Minimize: External parameter space" << std::endl;
+        gc = new AnalyticalGradientCalculator(fcn, st.Trafo());
       }
 
       unsigned int npar = st.VariableParameters();
