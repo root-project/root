@@ -319,6 +319,9 @@ protected:
    template <typename T>
    R__ALWAYS_INLINE Int_t XmlReadArray(T *&arr, bool is_static = false);
 
+   template <typename T>
+   R__ALWAYS_INLINE void XmlReadFastArray(T *arr, Int_t n);
+
    XMLNodePointer_t XmlWriteObject(const void *obj, const TClass *objClass, Bool_t cacheReuse);
    void *XmlReadObject(void *obj, TClass **cl = 0);
 
