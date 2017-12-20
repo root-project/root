@@ -402,34 +402,6 @@ public:
    }
 };
 
-template <typename F, typename T>
-class ReduceHelper {
-   F fReduceFun;
-   const std::shared_ptr<T> fReduceRes;
-   std::vector<T> fReduceObjs;
-
-public:
-   using BranchTypes_t = TypeList<T>;
-   ReduceHelper(F &&f, const std::shared_ptr<T> &reduceRes, const unsigned int nSlots)
-      : fReduceFun(std::move(f)), fReduceRes(reduceRes), fReduceObjs(nSlots, *reduceRes)
-   {
-   }
-   ReduceHelper(ReduceHelper &&) = default;
-   ReduceHelper(const ReduceHelper &) = delete;
-
-   void InitSlot(TTreeReader *, unsigned int) {}
-
-   void Exec(unsigned int slot, const T &value) { fReduceObjs[slot] = fReduceFun(fReduceObjs[slot], value); }
-
-   void Finalize()
-   {
-      for (auto &t : fReduceObjs)
-         *fReduceRes = fReduceFun(*fReduceRes, t);
-   }
-
-   T &PartialUpdate(unsigned int slot) { return fReduceObjs[slot]; }
-};
-
 template <typename ResultType>
 class MinHelper {
    const std::shared_ptr<ResultType> fResultMin;
