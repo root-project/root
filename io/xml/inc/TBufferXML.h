@@ -56,7 +56,7 @@ public:
    static Bool_t FromXML(T *&obj, const char *xml, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE)
    {
       if (obj)
-        return kFALSE;
+         return kFALSE;
       obj = (T *)ConvertFromXMLChecked(xml, TBuffer::GetClass(typeid(T)), GenericLayout, UseNamespaces);
       return obj != nullptr;
    }
