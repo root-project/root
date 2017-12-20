@@ -872,23 +872,7 @@ public:
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
    TResultProxy<T> Reduce(F f, std::string_view columnName, const T &redIdentity)
    {
-      using arg_types = typename TTraits::CallableTraits<F>::arg_types;
-      TDFInternal::CheckReduce(f, arg_types());
-      auto loopManager = GetDataFrameChecked();
-      const auto columns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
-      constexpr auto nColumns = arg_types::list_size;
-      const auto validColumnNames =
-         TDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
-      if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
-                                              arg_types(), *fDataSource);
-      auto redObjPtr = std::make_shared<T>(redIdentity);
-      using Helper_t = TDFInternal::ReduceHelper<F, T>;
-      using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
-      auto action = std::make_shared<Action_t>(Helper_t(std::move(f), redObjPtr, fProxiedPtr->GetNSlots()),
-                                               validColumnNames, *fProxiedPtr);
-      loopManager->Book(action);
-      return MakeResultProxy(redObjPtr, loopManager, action.get());
+      return Aggregate(f, f, columnName, redIdentity);
    }
 
    ////////////////////////////////////////////////////////////////////////////

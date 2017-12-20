@@ -208,40 +208,22 @@ void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const Column
                        const ColumnNames_t &dataSourceColumns);
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Check that the callable passed to TInterface::Reduce:
-/// - takes exactly two arguments of the same type
-/// - has a return value of the same type as the arguments
-template <typename F, typename T>
-void CheckReduce(F &, TypeList<T, T>)
-{
-   using ret_type = typename CallableTraits<F>::ret_type;
-   static_assert(std::is_same<ret_type, T>::value, "reduce function must have return type equal to argument type");
-   return;
-}
-
-///////////////////////////////////////////////////////////////////////////////
-/// This overload of CheckReduce is called if T is not a TypeList<T,T>
-template <typename F, typename T>
-void CheckReduce(F &, T)
-{
-   static_assert(sizeof(F) == 0, "reduce function must take exactly two arguments of the same type");
-}
-
-///////////////////////////////////////////////////////////////////////////////
 /// Check preconditions for TInterface::Aggregate:
 /// - the aggregator callable must have signature `U(U,T)` or `void(U&,T)`.
 /// - the merge callable must have signature `U(U,U)` or `void(std::vector<U>&)`
 template <typename R, typename Merge, typename U, typename T,
-          typename mergeArgs_t = typename CallableTraits<Merge>::arg_types_nodecay,
+          typename decayedU = typename std::decay<U>::type,
+          typename mergeArgsNoDecay_t = typename CallableTraits<Merge>::arg_types_nodecay,
+          typename mergeArgs_t = typename CallableTraits<Merge>::arg_types,
           typename mergeRet_t = typename CallableTraits<Merge>::ret_type>
 void CheckAggregate(TypeList<U, T>)
 {
    constexpr bool isAggregatorOk =
-      (std::is_same<R, U>::value) || (std::is_same<R, void>::value && std::is_lvalue_reference<U>::value);
+      (std::is_same<R, decayedU>::value) || (std::is_same<R, void>::value && std::is_lvalue_reference<U>::value);
    static_assert(isAggregatorOk, "aggregator function must have signature `U(U,T)` or `void(U&,T)`");
    constexpr bool isMergeOk =
-      (std::is_same<TypeList<U, U>, mergeArgs_t>::value && std::is_same<U, mergeRet_t>::value) ||
-      (std::is_same<TypeList<std::vector<typename std::remove_reference<U>::type> &>, mergeArgs_t>::value &&
+      (std::is_same<TypeList<decayedU, decayedU>, mergeArgs_t>::value && std::is_same<decayedU, mergeRet_t>::value) ||
+      (std::is_same<TypeList<std::vector<decayedU> &>, mergeArgsNoDecay_t>::value &&
        std::is_same<void, mergeRet_t>::value);
    static_assert(isMergeOk, "merge function must have signature `U(U,U)` or `void(std::vector<U>&)`");
 }
