@@ -1600,25 +1600,6 @@ void TBufferXML::WriteObjectClass(const void *actualObjStart, const TClass *actu
    XmlWriteObject(actualObjStart, actualClass, cacheReuse);
 }
 
-// macro to read content of array with compression
-#define TXMLReadArrayContent(vname, arrsize)                 \
-   {                                                         \
-      Int_t indx = 0;                                        \
-      while (indx < arrsize) {                               \
-         Int_t cnt = 1;                                      \
-         if (fXML->HasAttr(StackNode(), xmlio::cnt))         \
-            cnt = fXML->GetIntAttr(StackNode(), xmlio::cnt); \
-         XmlReadBasic(vname[indx]);                          \
-         Int_t curr = indx;                                  \
-         indx++;                                             \
-         while (cnt > 1) {                                   \
-            vname[indx] = vname[curr];                       \
-            cnt--;                                           \
-            indx++;                                          \
-         }                                                   \
-      }                                                      \
-   }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Template method to read array content
 
@@ -2246,23 +2227,47 @@ void TBufferXML::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t 
       }                                            \
    }
 
-// macro to write array, which include size
-#define TBufferXML_WriteArray(vname)                           \
-   {                                                           \
-      BeforeIOoperation();                                     \
-      XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array); \
-      fXML->NewIntAttr(arrnode, xmlio::Size, n);               \
-      PushStack(arrnode);                                      \
-      TXMLWriteArrayContent(vname, n);                         \
-      PopStack();                                              \
+template <typename T>
+R__ALWAYS_INLINE void TBufferXML::XmlWriteArrayContent(T *arr, Int_t arrsize)
+{
+   if (fCompressLevel > 0) {
+      Int_t indx = 0;
+      while (indx < arrsize) {
+         XMLNodePointer_t elemnode = XmlWriteBasic(arr[indx]);
+         Int_t curr = indx++;
+         while ((indx < arrsize) && (arr[indx] == arr[curr]))
+            indx++;
+         if (indx - curr > 1)
+            fXML->NewIntAttr(elemnode, xmlio::cnt, indx - curr);
+      }
+   } else {
+      for (Int_t indx = 0; indx < arrsize; indx++)
+         XmlWriteBasic(arr[indx]);
    }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write array, including it size
+/// Content may be compressed
+
+template <typename T>
+R__ALWAYS_INLINE void TBufferXML::XmlWriteArray(T *arr, Int_t arrsize)
+{
+   BeforeIOoperation();
+   XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);
+   fXML->NewIntAttr(arrnode, xmlio::Size, arrsize);
+   PushStack(arrnode);
+   XmlWriteArrayContent(arr, arrsize);
+   PopStack();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Bool_t to buffer
 
 void TBufferXML::WriteArray(const Bool_t *b, Int_t n)
 {
-   TBufferXML_WriteArray(b);
+   XmlWriteArray(b, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2270,7 +2275,7 @@ void TBufferXML::WriteArray(const Bool_t *b, Int_t n)
 
 void TBufferXML::WriteArray(const Char_t *c, Int_t n)
 {
-   TBufferXML_WriteArray(c);
+   XmlWriteArray(c, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2278,7 +2283,7 @@ void TBufferXML::WriteArray(const Char_t *c, Int_t n)
 
 void TBufferXML::WriteArray(const UChar_t *c, Int_t n)
 {
-   TBufferXML_WriteArray(c);
+   XmlWriteArray(c, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2286,7 +2291,7 @@ void TBufferXML::WriteArray(const UChar_t *c, Int_t n)
 
 void TBufferXML::WriteArray(const Short_t *h, Int_t n)
 {
-   TBufferXML_WriteArray(h);
+   XmlWriteArray(h, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2294,7 +2299,7 @@ void TBufferXML::WriteArray(const Short_t *h, Int_t n)
 
 void TBufferXML::WriteArray(const UShort_t *h, Int_t n)
 {
-   TBufferXML_WriteArray(h);
+   XmlWriteArray(h, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2302,7 +2307,7 @@ void TBufferXML::WriteArray(const UShort_t *h, Int_t n)
 
 void TBufferXML::WriteArray(const Int_t *i, Int_t n)
 {
-   TBufferXML_WriteArray(i);
+   XmlWriteArray(i, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2310,7 +2315,7 @@ void TBufferXML::WriteArray(const Int_t *i, Int_t n)
 
 void TBufferXML::WriteArray(const UInt_t *i, Int_t n)
 {
-   TBufferXML_WriteArray(i);
+   XmlWriteArray(i, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2318,7 +2323,7 @@ void TBufferXML::WriteArray(const UInt_t *i, Int_t n)
 
 void TBufferXML::WriteArray(const Long_t *l, Int_t n)
 {
-   TBufferXML_WriteArray(l);
+   XmlWriteArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2326,7 +2331,7 @@ void TBufferXML::WriteArray(const Long_t *l, Int_t n)
 
 void TBufferXML::WriteArray(const ULong_t *l, Int_t n)
 {
-   TBufferXML_WriteArray(l);
+   XmlWriteArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2334,7 +2339,7 @@ void TBufferXML::WriteArray(const ULong_t *l, Int_t n)
 
 void TBufferXML::WriteArray(const Long64_t *l, Int_t n)
 {
-   TBufferXML_WriteArray(l);
+   XmlWriteArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2342,7 +2347,7 @@ void TBufferXML::WriteArray(const Long64_t *l, Int_t n)
 
 void TBufferXML::WriteArray(const ULong64_t *l, Int_t n)
 {
-   TBufferXML_WriteArray(l);
+   XmlWriteArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2350,7 +2355,7 @@ void TBufferXML::WriteArray(const ULong64_t *l, Int_t n)
 
 void TBufferXML::WriteArray(const Float_t *f, Int_t n)
 {
-   TBufferXML_WriteArray(f);
+   XmlWriteArray(f, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2358,7 +2363,7 @@ void TBufferXML::WriteArray(const Float_t *f, Int_t n)
 
 void TBufferXML::WriteArray(const Double_t *d, Int_t n)
 {
-   TBufferXML_WriteArray(d);
+   XmlWriteArray(d, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2366,7 +2371,7 @@ void TBufferXML::WriteArray(const Double_t *d, Int_t n)
 
 void TBufferXML::WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
 {
-   TBufferXML_WriteArray(f);
+   XmlWriteArray(f, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2374,7 +2379,7 @@ void TBufferXML::WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement *
 
 void TBufferXML::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
 {
-   TBufferXML_WriteArray(d);
+   XmlWriteArray(d, n);
 }
 
 // write array without size attribute
