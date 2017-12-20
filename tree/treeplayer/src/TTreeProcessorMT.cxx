@@ -61,6 +61,7 @@ TTreeProcessorMT::TTreeProcessorMT(TTree &tree, TEntryList &entries) : treeView(
 /// Divide input data in clusters, i.e. the workloads to distribute to tasks
 std::vector<ROOT::Internal::TreeViewCluster> TTreeProcessorMT::MakeClusters()
 {
+   TDirectory::TContext c;
    std::vector<ROOT::Internal::TreeViewCluster> clusters;
    const auto &fileNames = treeView->GetFileNames();
    const auto nFileNames = fileNames.size();
