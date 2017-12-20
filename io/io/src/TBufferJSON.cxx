@@ -86,58 +86,7 @@ persistent storage for object data - only for live applications.
 #define FULong64 "%llu"
 #endif
 
-// #if defined(__GNUC__)
-// #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) < 40900
-// #define DUMMY_JSON_PARSER
-// #endif
-// #endif
-
-#ifdef DUMMY_JSON_PARSER
-
-// this is just to avoid tons of #ifdefs in the code
-// provide dummy declaration of json parser, which does not compiled with gcc 4.8
-
-namespace nlohmann {
-class json {
-public:
-   json() {}
-
-   bool is_array() const { return false; }
-   bool is_object() const { return false; }
-   bool is_string() const { return false; }
-   bool is_null() const { return true; }
-
-   std::string dump() const { return ""; }
-
-   unsigned count(const std::string &) const { return 0; }
-
-   operator std::string() { return std::string(); }
-
-   unsigned size() const { return 0; }
-   json &at(const std::string &) { return *this; }
-   json &at(int) { return *this; }
-
-   json &operator[](const std::string &) { return *this; }
-   json &operator[](int) { return *this; }
-
-   int find(const std::string &) { return 0; }
-   int end() { return 0; }
-
-   template <class T>
-   T get()
-   {
-      return T();
-   }
-
-   static json parse(std::string) { return json(); }
-};
-}
-
-#else
-
 #include "json.hpp"
-
-#endif
 
 ClassImp(TBufferJSON);
 
