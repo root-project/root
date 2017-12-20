@@ -36,7 +36,7 @@ int writeHistWithInputFile()
    return nullptr == gDirectory;
 }
 
-int gdirectoryRestore()
+int test_gdirectoryRestore()
 {
    ROOT::EnableImplicitMT();
    writeHistNoInputFile();
@@ -46,5 +46,5 @@ int gdirectoryRestore()
 
 int main()
 {
-   return gdirectoryRestore();
+   return test_gdirectoryRestore();
 }
