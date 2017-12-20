@@ -78,11 +78,11 @@ int execTestMultiMerge()
    bool fastMath = false;
 #endif
    Int_t result = 0;
-   int hsimpleFTolerance = 10;
+   int hsimpleFTolerance = 16;
    result += testMergedFile("mzfile1-4.root",206,4995, kIs32bits ? 2 : 0);
    result += testMergedFile("mlz4file1-4.root",406,5030, kIs32bits ? 2 : 0);
    result += testMergedFile("mzlibfile1-4.root",106,4917, kIs32bits ? 2 : 0);
-   result += testSimpleFile("hsimple.root",25000,1,414600, kIs32bits ? (10 + fastMath*10) : (8 + fastMath*10));
+   result += testSimpleFile("hsimple.root",25000,1,414600, kIs32bits ? (12 + fastMath*10) : (8 + fastMath*10));
    result += testSimpleFile("hsimple9.root",25000,9,432216,3 + fastMath*27);
    result += testSimpleFile("hsimple101.root",25000,101,414781, kIs32bits ? 12 : (3 + fastMath*14));
    result += testSimpleFile("hsimple106.root",25000,106,432321,3 + fastMath*20);
