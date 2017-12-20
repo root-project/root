@@ -40,6 +40,9 @@ The following people have contributed to this new version:
 ## Core Libraries
 
 ## I/O Libraries
+   - Implement reading of objects data from JSON
+   - Provide TBufferJSON::ToJSON() and TBufferJSON::FromJSON() methods
+   - Provide TBufferXML::ToXML() and TBufferXML::FromXML() methods
 
 ## TTree Libraries
 
