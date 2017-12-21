@@ -19,8 +19,8 @@ db = TSQLServer.Connect("mysql://localhost/test", "nobody", "")
 print("Server info: %s" % db.ServerInfo())
 
 # list databases available on server
-print
-print "List all databases on server %s" % db.GetHost()
+print("")
+print("List all databases on server %s" % db.GetHost())
 res = db.GetDataBases()
 row = res.Next()
 while row:
@@ -28,7 +28,7 @@ while row:
     row = res.Next()
 
 # list tables in database "test" (the permission tables)
-print
+print('')
 print('List all tables in database "test" on server %s' % db.GetHost())
 res = db.GetTables("test")
 row = res.Next()
@@ -37,7 +37,7 @@ while row:
     row = res.Next()
 
 # list columns in table "runcatalog" in database "mysql"
-print
+print('')
 print('List all columns in table "runcatalog" in database "test" on server %s' %
       db.GetHost())
 res = db.GetColumns("test", "runcatalog")
@@ -59,26 +59,26 @@ sql = "select count(*) from test.runcatalog " \
 res = db.Query(sql)
 
 nrows = res.GetRowCount()
-print
+print("")
 print("Got %d rows in result" % nrows)
 
 nfields = res.GetFieldCount()
 for i in range(nfields):
-  print("%40s" % res.GetFieldName(i))
-print
-print("="*(nfields*40))
-print
+    print("%40s" % res.GetFieldName(i))
+print("")
+print("=" * (nfields * 40))
+print("")
 
 for i in range(nrows):
     row = res.Next()
     for j in range(nfields):
         print("%40s" % row.GetField(j))
-    print
+    print("")
 
 # stop timer and print results
 timer.Stop()
 rtime = timer.RealTime()
 ctime = timer.CpuTime()
 
-print
+print("")
 print("RealTime=%f seconds, CpuTime=%f seconds" % (rtime, ctime))

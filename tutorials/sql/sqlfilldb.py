@@ -36,10 +36,10 @@ for i in range(nfiles):
     rawfile = "/v1/data/lead/test/run_%d.root" % i
     tag = int(gRandom.Rndm() * 10.)
     sql = ins % (dataset, i, evt, evt + 10000, tag, 25.5, "test", "lead",
-          rawfile, "test run dummy data")
+                 rawfile, "test run dummy data")
     evt += 10000
     res = db.Query(sql)
-    #print("%s" % sql)
+    # print("%s" % sql)
 
 
 # stop timer and print results
@@ -47,6 +47,6 @@ timer.Stop()
 rtime = timer.RealTime()
 ctime = timer.CpuTime()
 
-print
-print "%d files in run catalog" % nfiles
-print "RealTime=%f seconds, CpuTime=%f seconds" % (rtime, ctime)
+print("")
+print("%d files in run catalog" % nfiles)
+print("RealTime=%f seconds, CpuTime=%f seconds" % (rtime, ctime))
