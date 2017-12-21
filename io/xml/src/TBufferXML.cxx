@@ -61,8 +61,9 @@ std::string TBufferXML::fgFloatFmt = "%e";
 /// Default constructor
 
 TBufferXML::TBufferXML()
-   : TBufferFile(), TXMLSetup(), fXML(0), fStack(), fVersionBuf(-111), fObjMap(0), fIdArray(0), fErrorFlag(0),
-     fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(0), fCompressLevel(0), fIOVersion(3)
+   : TBuffer(), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
+     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(0), fCompressLevel(0),
+     fIOVersion(3)
 {
 }
 
@@ -71,14 +72,15 @@ TBufferXML::TBufferXML()
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferXML::TBufferXML(TBuffer::EMode mode)
-   : TBufferFile(mode), TXMLSetup(), fXML(0), fStack(), fVersionBuf(-111), fObjMap(0), fIdArray(0), fErrorFlag(0),
-     fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(0), fCompressLevel(0), fIOVersion(3)
+   : TBuffer(mode), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
+     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(0), fCompressLevel(0),
+     fIOVersion(3)
 {
    fBufSize = 1000000000;
 
-   SetParent(0);
+   SetParent(nullptr);
    SetBit(kCannotHandleMemberWiseStreaming);
-   SetBit(kTextBasedStreaming);
+   // SetBit(kTextBasedStreaming);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -87,8 +89,9 @@ TBufferXML::TBufferXML(TBuffer::EMode mode)
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
-   : TBufferFile(mode), TXMLSetup(*file), fXML(0), fStack(), fVersionBuf(-111), fObjMap(0), fIdArray(0), fErrorFlag(0),
-     fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(0), fCompressLevel(0), fIOVersion(3)
+   : TBuffer(mode), TXMLSetup(*file), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
+     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(0), fCompressLevel(0),
+     fIOVersion(3)
 {
    // this is for the case when StreamerInfo reads elements from
    // buffer as ReadFastArray. When it checks if size of buffer is
@@ -98,7 +101,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
 
    SetParent(file);
    SetBit(kCannotHandleMemberWiseStreaming);
-   SetBit(kTextBasedStreaming);
+   // SetBit(kTextBasedStreaming);
    if (XmlFile()) {
       SetXML(XmlFile()->XML());
       SetCompressionSettings(XmlFile()->GetCompressionSettings());
@@ -1561,6 +1564,17 @@ Version_t TBufferXML::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Read class version from I/O buffer, when the caller knows for sure that
+/// there is no checksum written/involved.
+
+Version_t TBufferXML::ReadVersionNoCheckSum(UInt_t *, UInt_t *)
+{
+   Info("ReadVersionNoCheckSum", "No idea if required");
+
+   return ReadVersion();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Checks buffer, filled by WriteVersion
 /// if next data is arriving, version should be stored in buffer
 
@@ -1602,7 +1616,7 @@ void *TBufferXML::ReadObjectAny(const TClass *)
    BeforeIOoperation();
    if (gDebug > 2)
       Info("ReadObjectAny", "From node %s", fXML->GetNodeName(StackNode()));
-   void *res = XmlReadObject(0);
+   void *res = XmlReadObject(nullptr);
    return res;
 }
 
@@ -2066,6 +2080,15 @@ void TBufferXML::ReadFastArray(Char_t *c, Int_t n)
    } else {
       XmlReadFastArray(c, n);
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of n characters from the I/O buffer.
+/// Used only from TLeafC, dummy implementation here
+
+void TBufferXML::ReadFastArrayString(Char_t *c, Int_t n)
+{
+   ReadFastArray(c, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2625,6 +2648,15 @@ void TBufferXML::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerEleme
 void TBufferXML::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
 {
    XmlWriteFastArray(d, n);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of n characters into the I/O buffer.
+/// Used only by TLeafC, just dummy implementation here
+
+void TBufferXML::WriteFastArrayString(const Char_t *c, Int_t n)
+{
+   WriteFastArray(c, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3613,4 +3645,472 @@ Int_t TBufferXML::ApplySequence(const TStreamerInfoActions::TActionSequence &seq
 
    DecrementLevel(info);
    return 0;
+}
+
+// abstract TBuffer methods, probably dedicated to have them in the TBufferText
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the specified object of the specified class is already in
+/// the buffer. Returns kTRUE if object already in the buffer,
+/// kFALSE otherwise (also if obj is 0 ).
+
+Bool_t TBufferXML::CheckObject(const TObject *obj)
+{
+   return CheckObject(obj, TObject::Class());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the specified object of the specified class is already in
+/// the buffer. Returns kTRUE if object already in the buffer,
+/// kFALSE otherwise (also if obj is 0 ).
+
+Bool_t TBufferXML::CheckObject(const void *obj, const TClass *ptrClass)
+{
+   if (!obj || !ptrClass || !fObjMap)
+      return kFALSE;
+
+   TClass *clActual = ptrClass->GetActualClass(obj);
+
+   const char *temp = (const char *)obj;
+
+   if (clActual && (ptrClass != clActual))
+      temp -= clActual->GetBaseClassOffset(ptrClass);
+
+   return fObjMap->GetValue(TString::Hash(&temp, sizeof(void *)), (Long_t)temp) != 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return current streamer info element
+
+TVirtualStreamerInfo *TBufferXML::GetInfo()
+{
+   return Stack()->fInfo;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Deserialize information from a buffer into an object.
+///
+/// Note: This function is called by the xxx::Streamer() functions in
+/// rootcint-generated dictionaries.
+/// This function assumes that the class version and the byte count
+/// information have been read.
+///
+/// \param[in] version The version number of the class
+/// \param[in] start   The starting position in the buffer b
+/// \param[in] count   The number of bytes for this object in the buffer
+///
+
+Int_t TBufferXML::ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count,
+                                  const TClass *onFileClass)
+{
+
+   //---------------------------------------------------------------------------
+   // The ondisk class has been specified so get foreign streamer info
+   /////////////////////////////////////////////////////////////////////////////
+
+   TStreamerInfo *sinfo = 0;
+   if (onFileClass) {
+      sinfo = (TStreamerInfo *)cl->GetConversionStreamerInfo(onFileClass, version);
+      if (!sinfo) {
+         Error("ReadClassBuffer",
+               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
+               onFileClass->GetName(), version, cl->GetName(), Length());
+         CheckByteCount(start, count, onFileClass);
+         return 0;
+      }
+   }
+   //---------------------------------------------------------------------------
+   // Get local streamer info
+   /////////////////////////////////////////////////////////////////////////////
+   /// The StreamerInfo should exist at this point.
+
+   else {
+      R__LOCKGUARD(gInterpreterMutex);
+      auto infos = cl->GetStreamerInfos();
+      auto ninfos = infos->GetSize();
+      if (version < -1 || version >= ninfos) {
+         Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+               cl->GetName(), version, Length());
+         CheckByteCount(start, count, cl);
+         return 0;
+      }
+      sinfo = (TStreamerInfo *)infos->At(version);
+      if (sinfo == 0) {
+         // Unless the data is coming via a socket connection from with schema evolution
+         // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
+         // one for the current version, otherwise let's complain ...
+         // We could also get here if there old class version was '1' and the new class version is higher than 1
+         // AND the checksum is the same.
+         if (version == cl->GetClassVersion() || version == 1) {
+            const_cast<TClass *>(cl)->BuildRealData(pointer);
+            // This creation is alright since we just checked within the
+            // current 'locked' section.
+            sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
+            const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
+            if (gDebug > 0)
+               printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
+            sinfo->Build();
+         } else if (version == 0) {
+            // When the object was written the class was version zero, so
+            // there is no StreamerInfo to be found.
+            // Check that the buffer position corresponds to the byte count.
+            CheckByteCount(start, count, cl);
+            return 0;
+         } else {
+            Error("ReadClassBuffer",
+                  "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+                  version, cl->GetName(), Length());
+            CheckByteCount(start, count, cl);
+            return 0;
+         }
+      } else if (!sinfo->IsCompiled()) { // Note this read is protected by the above lock.
+         // Streamer info has not been compiled, but exists.
+         // Therefore it was read in from a file and we have to do schema evolution.
+         const_cast<TClass *>(cl)->BuildRealData(pointer);
+         sinfo->BuildOld();
+      }
+   }
+
+   // Deserialize the object.
+   ApplySequence(*(sinfo->GetReadObjectWiseActions()), (char *)pointer);
+   if (sinfo->IsRecovered())
+      count = 0;
+
+   // Check that the buffer position corresponds to the byte count.
+   CheckByteCount(start, count, cl);
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Deserialize information from a buffer into an object.
+///
+/// Note: This function is called by the xxx::Streamer()
+/// functions in rootcint-generated dictionaries.
+///
+
+Int_t TBufferXML::ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onFileClass)
+{
+   // Read the class version from the buffer.
+   UInt_t R__s = 0; // Start of object.
+   UInt_t R__c = 0; // Count of bytes.
+   Version_t version;
+
+   if (onFileClass)
+      version = ReadVersion(&R__s, &R__c, onFileClass);
+   else
+      version = ReadVersion(&R__s, &R__c, cl);
+
+   Bool_t v2file = kFALSE;
+   TFile *file = (TFile *)GetParent();
+   if (file && file->GetVersion() < 30000) {
+      version = -1; // This is old file
+      v2file = kTRUE;
+   }
+
+   //---------------------------------------------------------------------------
+   // The ondisk class has been specified so get foreign streamer info
+   /////////////////////////////////////////////////////////////////////////////
+
+   TStreamerInfo *sinfo = 0;
+   if (onFileClass) {
+      sinfo = (TStreamerInfo *)cl->GetConversionStreamerInfo(onFileClass, version);
+      if (!sinfo) {
+         Error("ReadClassBuffer",
+               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
+               onFileClass->GetName(), version, cl->GetName(), Length());
+         CheckByteCount(R__s, R__c, onFileClass);
+         return 0;
+      }
+   }
+   //---------------------------------------------------------------------------
+   // Get local streamer info
+   /////////////////////////////////////////////////////////////////////////////
+   /// The StreamerInfo should exist at this point.
+
+   else {
+      TStreamerInfo *guess = (TStreamerInfo *)cl->GetLastReadInfo();
+      if (guess && guess->GetClassVersion() == version) {
+         sinfo = guess;
+      } else {
+         // The last one is not the one we are looking for.
+         {
+            R__LOCKGUARD(gInterpreterMutex);
+
+            const TObjArray *infos = cl->GetStreamerInfos();
+            Int_t infocapacity = infos->Capacity();
+            if (infocapacity) {
+               if (version < -1 || version >= infocapacity) {
+                  Error("ReadClassBuffer",
+                        "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+                        cl->GetName(), version, Length());
+                  CheckByteCount(R__s, R__c, cl);
+                  return 0;
+               }
+               sinfo = (TStreamerInfo *)infos->UncheckedAt(version);
+               if (sinfo) {
+                  if (!sinfo->IsCompiled()) {
+                     // Streamer info has not been compiled, but exists.
+                     // Therefore it was read in from a file and we have to do schema evolution?
+                     R__LOCKGUARD(gInterpreterMutex);
+                     const_cast<TClass *>(cl)->BuildRealData(pointer);
+                     sinfo->BuildOld();
+                  }
+                  // If the compilation succeeded, remember this StreamerInfo.
+                  // const_cast okay because of the lock on gInterpreterMutex.
+                  if (sinfo->IsCompiled())
+                     const_cast<TClass *>(cl)->SetLastReadInfo(sinfo);
+               }
+            }
+         }
+
+         if (sinfo == 0) {
+            // Unless the data is coming via a socket connection from with schema evolution
+            // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
+            // one for the current version, otherwise let's complain ...
+            // We could also get here when reading a file prior to the introduction of StreamerInfo.
+            // We could also get here if there old class version was '1' and the new class version is higher than 1
+            // AND the checksum is the same.
+            if (v2file || version == cl->GetClassVersion() || version == 1) {
+               R__LOCKGUARD(gInterpreterMutex);
+
+               // We need to check if another thread did not get here first
+               // and did the StreamerInfo creation already.
+               auto infos = cl->GetStreamerInfos();
+               auto ninfos = infos->GetSize();
+               if (!(version < -1 || version >= ninfos)) {
+                  sinfo = (TStreamerInfo *)infos->At(version);
+               }
+               if (!sinfo) {
+                  const_cast<TClass *>(cl)->BuildRealData(pointer);
+                  sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
+                  sinfo->SetClassVersion(version);
+                  const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
+                  if (gDebug > 0)
+                     printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
+                  if (v2file) {
+                     sinfo->Build();             // Get the elements.
+                     sinfo->Clear("build");      // Undo compilation.
+                     sinfo->BuildEmulated(file); // Fix the types and redo compilation.
+                  } else {
+                     sinfo->Build();
+                  }
+               }
+            } else if (version == 0) {
+               // When the object was written the class was version zero, so
+               // there is no StreamerInfo to be found.
+               // Check that the buffer position corresponds to the byte count.
+               CheckByteCount(R__s, R__c, cl);
+               return 0;
+            } else {
+               Error("ReadClassBuffer",
+                     "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+                     version, cl->GetName(), Length());
+               CheckByteCount(R__s, R__c, cl);
+               return 0;
+            }
+         }
+      }
+   }
+
+   // deserialize the object
+   ApplySequence(*(sinfo->GetReadObjectWiseActions()), (char *)pointer);
+   if (sinfo->TStreamerInfo::IsRecovered())
+      R__c = 0; // 'TStreamerInfo::' avoids going via a virtual function.
+
+   // Check that the buffer position corresponds to the byte count.
+   CheckByteCount(R__s, R__c, cl);
+
+   if (gDebug > 2)
+      printf(" ReadBuffer for class: %s has read %d bytes\n", cl->GetName(), R__c);
+
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Function called by the Streamer functions to serialize object at p
+/// to buffer b. The optional argument info may be specified to give an
+/// alternative StreamerInfo instead of using the default StreamerInfo
+/// automatically built from the class definition.
+/// For more information, see class TStreamerInfo.
+
+Int_t TBufferXML::WriteClassBuffer(const TClass *cl, void *pointer)
+{
+   // build the StreamerInfo if first time for the class
+   TStreamerInfo *sinfo = (TStreamerInfo *)const_cast<TClass *>(cl)->GetCurrentStreamerInfo();
+   if (sinfo == 0) {
+      // Have to be sure between the check and the taking of the lock if the current streamer has changed
+      R__LOCKGUARD(gInterpreterMutex);
+      sinfo = (TStreamerInfo *)const_cast<TClass *>(cl)->GetCurrentStreamerInfo();
+      if (sinfo == 0) {
+         const_cast<TClass *>(cl)->BuildRealData(pointer);
+         sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
+         const_cast<TClass *>(cl)->SetCurrentStreamerInfo(sinfo);
+         const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
+         if (gDebug > 0)
+            printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), cl->GetClassVersion());
+         sinfo->Build();
+      }
+   } else if (!sinfo->IsCompiled()) {
+      R__LOCKGUARD(gInterpreterMutex);
+      // Redo the test in case we have been victim of a data race on fIsCompiled.
+      if (!sinfo->IsCompiled()) {
+         const_cast<TClass *>(cl)->BuildRealData(pointer);
+         sinfo->BuildOld();
+      }
+   }
+
+   // write the class version number and reserve space for the byte count
+   UInt_t R__c = WriteVersion(cl, kTRUE);
+
+   // NOTE: In the future Philippe wants this to happen via a custom action
+   TagStreamerInfo(sinfo);
+   ApplySequence(*(sinfo->GetWriteObjectWiseActions()), (char *)pointer);
+
+   // write the byte count at the start of the buffer
+   SetByteCount(R__c, kTRUE);
+
+   if (gDebug > 2)
+      printf(" WriteBuffer for class: %s version %d has written %d bytes\n", cl->GetName(), cl->GetClassVersion(),
+             UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t));
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Mark the classindex of the current file as using this TStreamerInfo
+
+void TBufferXML::TagStreamerInfo(TVirtualStreamerInfo *info)
+{
+   TFile *file = (TFile *)GetParent();
+   if (file) {
+      TArrayC *cindex = file->GetClassIndex();
+      Int_t nindex = cindex->GetSize();
+      Int_t number = info->GetNumber();
+      if (number < 0 || number >= nindex) {
+         Error("TagStreamerInfo", "StreamerInfo: %s number: %d out of range[0,%d] in file: %s", info->GetName(), number,
+               nindex, file->GetName());
+         return;
+      }
+      if (cindex->fArray[number] == 0) {
+         cindex->fArray[0] = 1;
+         cindex->fArray[number] = 1;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Convert object into json structures.
+/// !!! Should be used only by TBufferJSON itself.
+/// Use ConvertToJSON() methods to convert object to json
+
+void TBufferXML::WriteObject(const TObject *obj, Bool_t cacheReuse /* = kTRUE */)
+{
+   WriteObjectAny(obj, TObject::Class(), cacheReuse);
+}
+
+namespace {
+struct DynamicType {
+   // Helper class to enable typeid on any address
+   // Used in code similar to:
+   //    typeid( * (DynamicType*) void_ptr );
+   virtual ~DynamicType() {}
+};
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write object to I/O buffer.
+/// This function assumes that the value in 'obj' is the value stored in
+/// a pointer to a "ptrClass". The actual type of the object pointed to
+/// can be any class derived from "ptrClass".
+/// Return:
+///  - 0: failure
+///  - 1: success
+///  - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
+///
+/// If 'cacheReuse' is true (default) upon seeing an object address a second time,
+/// we record the offset where its was written the first time rather than streaming
+/// the object a second time.
+/// If 'cacheReuse' is false, we always stream the object.  This allows the (re)use
+/// of temporary object to store different data in the same buffer.
+
+Int_t TBufferXML::WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse /* = kTRUE */)
+{
+   if (!obj) {
+      WriteObjectClass(0, 0, kTRUE);
+      return 1;
+   }
+
+   if (!ptrClass) {
+      Error("WriteObjectAny", "ptrClass argument may not be 0");
+      return 0;
+   }
+
+   TClass *clActual = ptrClass->GetActualClass(obj);
+
+   if (!clActual) {
+      // The ptrClass is a class with a virtual table and we have no
+      // TClass with the actual type_info in memory.
+
+      DynamicType *d_ptr = (DynamicType *)obj;
+      Warning("WriteObjectAny", "An object of type %s (from type_info) passed through a %s pointer was truncated (due "
+                                "a missing dictionary)!!!",
+              typeid(*d_ptr).name(), ptrClass->GetName());
+      WriteObjectClass(obj, ptrClass, cacheReuse);
+      return 2;
+   } else if (clActual && (clActual != ptrClass)) {
+      const char *temp = (const char *)obj;
+      temp -= clActual->GetBaseClassOffset(ptrClass);
+      WriteObjectClass(temp, clActual, cacheReuse);
+      return 1;
+   } else {
+      WriteObjectClass(obj, ptrClass, cacheReuse);
+      return 1;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// force writing the TStreamerInfo to the file
+
+void TBufferXML::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force)
+{
+   if (info)
+      info->ForceWriteInfo((TFile *)GetParent(), force);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure TStreamerInfo is not optimized, otherwise it will not be
+/// possible to support schema evolution in read mode.
+/// In case the StreamerInfo has already been computed and optimized,
+/// one must disable the option BypassStreamer.
+
+void TBufferXML::ForceWriteInfoClones(TClonesArray *a)
+{
+   TStreamerInfo *sinfo = (TStreamerInfo *)a->GetClass()->GetStreamerInfo();
+   ForceWriteInfo(sinfo, kFALSE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to TStreamerInfo::ReadBufferClones.
+
+Int_t TBufferXML::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers)
+{
+   char **arr = (char **)a->GetObjectRef(0);
+   char **end = arr + nobjects;
+   // a->GetClass()->GetStreamerInfo()->ReadBufferClones(*this,a,nobjects,-1,0);
+   TStreamerInfo *info = (TStreamerInfo *)a->GetClass()->GetStreamerInfo(objvers);
+   // return info->ReadBuffer(*this,arr,-1,nobjects,0,1);
+   return ApplySequenceVecPtr(*(info->GetReadMemberWiseActions(kTRUE)), arr, end);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to TStreamerInfo::WriteBufferClones.
+
+Int_t TBufferXML::WriteClones(TClonesArray *a, Int_t nobjects)
+{
+   char **arr = reinterpret_cast<char **>(a->GetObjectRef(0));
+   // a->GetClass()->GetStreamerInfo()->WriteBufferClones(*this,(TClonesArray*)a,nobjects,-1,0);
+   TStreamerInfo *info = (TStreamerInfo *)a->GetClass()->GetStreamerInfo();
+   // return info->WriteBufferAux(*this,arr,-1,nobjects,0,1);
+   char **end = arr + nobjects;
+   // No need to tell call ForceWriteInfo as it by ForceWriteInfoClones.
+   return ApplySequenceVecPtr(*(info->GetWriteMemberWiseActions(kTRUE)), arr, end);
 }
