@@ -281,7 +281,7 @@ namespace Detail {
 namespace TDF {
 
 template <typename T, typename COLL = std::vector<T>>
-struct TakeRealTypes {
+struct TTakeRealTypes {
    // We cannot put in the output collection C arrays: the ownership is not defined.
    // We therefore proceed to check if T is an TArrayBranch
    // If yes, we check what type is the output collection and we rebuild it.
@@ -299,7 +299,8 @@ struct TakeRealTypes {
       typename std::conditional<isAB && TDFInternal::IsDeque_t<NewC1_t>::value, std::deque<VTColl_t>, NewC1_t>::type;
    using RealColl_t = NewC2_t;
 };
-
+template<typename T, typename C>
+using ColType_t = typename TTakeRealTypes<T, C>::RealColl_t;
 } // namespace TDF
 } // namespace Detail
 
@@ -920,7 +921,7 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T, typename COLL = std::vector<T>>
-   TResultProxy<typename TDFDetail::TakeRealTypes<T, COLL>::RealColl_t> Take(std::string_view column = "")
+   TResultProxy<typename TDFDetail::ColType_t<T, COLL>> Take(std::string_view column = "")
    {
       auto loopManager = GetDataFrameChecked();
       const auto columns = column.empty() ? ColumnNames_t() : ColumnNames_t({std::string(column)});
@@ -930,8 +931,8 @@ public:
          TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<1>(),
                                               TTraits::TypeList<T>(), *fDataSource);
 
-      using RealT_t = typename TDFDetail::TakeRealTypes<T, COLL>::RealT_t;
-      using RealColl_t = typename TDFDetail::TakeRealTypes<T, COLL>::RealColl_t;
+      using RealT_t = typename TDFDetail::TTakeRealTypes<T, COLL>::RealT_t;
+      using RealColl_t = typename TDFDetail::TTakeRealTypes<T, COLL>::RealColl_t;
 
       using Helper_t = TDFInternal::TakeHelper<RealT_t, T, RealColl_t>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
@@ -1819,7 +1820,7 @@ private:
          TDFInternal::DefineDataSourceColumns(columnList, *lm, s, TTraits::TypeList<BranchTypes...>(), *fDataSource);
       }
       std::tuple<
-         TDFInternal::CacheColumnHolder<typename TDFDetail::TakeRealTypes<BranchTypes>::RealColl_t::value_type>...>
+         TDFInternal::CacheColumnHolder<typename TDFDetail::TTakeRealTypes<BranchTypes>::RealColl_t::value_type>...>
          colHolders;
 
       // TODO: really fix the type of the Take....
