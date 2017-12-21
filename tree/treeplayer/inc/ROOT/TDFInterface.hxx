@@ -915,8 +915,8 @@ public:
    /// \tparam COLL The type of collection used to store the values.
    /// \param[in] column The name of the column to collect the values of.
    ///
-   /// If the type of the column is TArrayBranch<T>, i.e. in the ROOT dataset this is
-   /// a C-style array, the type stored in the return container is a std::vector<T> to
+   /// If the type of the column is `TArrayBranch<T>`, i.e. in the ROOT dataset this is
+   /// a C-style array, the type stored in the return container is a `std::vector<T>` to
    /// guarantee the lifetime of the data involved.
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
@@ -949,7 +949,7 @@ public:
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] vName The name of the column that will fill the histogram.
    ///
-   /// Columns can be of a container type (e.g. std::vector<double>), in which case the histogram
+   /// Columns can be of a container type (e.g. `std::vector<double>`), in which case the histogram
    /// is filled with each one of the elements of the container. In case multiple columns of container type
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
@@ -1425,6 +1425,7 @@ public:
    ///
    /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
+   /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
@@ -1444,6 +1445,7 @@ public:
    ///
    /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
+   /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
@@ -1483,6 +1485,7 @@ public:
    ///
    /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
+   /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
