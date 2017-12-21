@@ -249,9 +249,9 @@ public:
 
    virtual void TagStreamerInfo(TVirtualStreamerInfo * /*info*/) {}
 
-   virtual Bool_t CheckObject(const TObject * /*obj*/);
+   virtual Bool_t CheckObject(const TObject *obj);
 
-   virtual Bool_t CheckObject(const void * /*ptr*/, const TClass * /*cl*/);
+   virtual Bool_t CheckObject(const void *ptr, const TClass *cl);
 
    // abstract virtual methods from TBuffer, which should be redefined
 
