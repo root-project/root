@@ -39,6 +39,10 @@ ROOTTEST_ADD_TEST(execSharedPtr
                   MACRO execSharedPtr.C
                   ERRREF execSharedPtr.eref)
 
+ROOTTEST_ADD_TEST(execMTInit
+                  MACRO execMTInit.C
+                  ERRREF execMTInit.eref)
+
 ROOTTEST_ADD_TEST(execTmpltD
                   MACRO execTmpltD.cxx+
                   OUTREF execTmpltD.ref)
