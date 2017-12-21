@@ -54,7 +54,7 @@ TKeyXML::TKeyXML(TDirectory *mother, Long64_t keyid, const TObject *obj, const c
 
    TXMLEngine *xml = XMLEngine();
    if (xml)
-      fKeyNode = xml->NewChild(nullptr, nullptr, xmlio::Xmlkey, nullptr);
+      fKeyNode = xml->NewChild(nullptr, nullptr, xmlio::Xmlkey);
 
    fDatime.Set();
 
@@ -80,7 +80,7 @@ TKeyXML::TKeyXML(TDirectory *mother, Long64_t keyid, const void *obj, const TCla
 
    TXMLEngine *xml = XMLEngine();
    if (xml)
-      fKeyNode = xml->NewChild(nullptr, nullptr, xmlio::Xmlkey, nullptr);
+      fKeyNode = xml->NewChild(nullptr, nullptr, xmlio::Xmlkey);
 
    fDatime.Set();
 
