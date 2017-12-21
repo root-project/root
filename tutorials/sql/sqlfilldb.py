@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_sql
+## \notebook -nodraw
 ## Fill run catalog with nfiles entries
 ##
 ## Based on sqlfill.C by Sergey Linev

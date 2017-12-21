@@ -1,5 +1,6 @@
 ## \file
 ## \ingroup tutorial_sql
+## \notebook -nodraw
 ## Create a runcatalog table in a MySQL test database.
 ##
 ## Based on the code sqlcreatedb.C by Sergey Linev
