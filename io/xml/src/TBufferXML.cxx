@@ -90,9 +90,9 @@ TBufferXML::TBufferXML(TBuffer::EMode mode)
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
-   : TBufferText(mode, file), TXMLSetup(*file), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
-     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0),
-     fIOVersion(3)
+   : TBufferText(mode, file), TXMLSetup(*file), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr),
+     fIdArray(nullptr), fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(nullptr),
+     fCompressLevel(0), fIOVersion(3)
 {
    // this is for the case when StreamerInfo reads elements from
    // buffer as ReadFastArray. When it checks if size of buffer is
@@ -4039,52 +4039,4 @@ Int_t TBufferXML::WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t
       WriteObjectClass(obj, ptrClass, cacheReuse);
       return 1;
    }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// force writing the TStreamerInfo to the file
-
-void TBufferXML::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force)
-{
-   if (info)
-      info->ForceWriteInfo((TFile *)GetParent(), force);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Make sure TStreamerInfo is not optimized, otherwise it will not be
-/// possible to support schema evolution in read mode.
-/// In case the StreamerInfo has already been computed and optimized,
-/// one must disable the option BypassStreamer.
-
-void TBufferXML::ForceWriteInfoClones(TClonesArray *a)
-{
-   TStreamerInfo *sinfo = (TStreamerInfo *)a->GetClass()->GetStreamerInfo();
-   ForceWriteInfo(sinfo, kFALSE);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface to TStreamerInfo::ReadBufferClones.
-
-Int_t TBufferXML::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers)
-{
-   char **arr = (char **)a->GetObjectRef(0);
-   char **end = arr + nobjects;
-   // a->GetClass()->GetStreamerInfo()->ReadBufferClones(*this,a,nobjects,-1,0);
-   TStreamerInfo *info = (TStreamerInfo *)a->GetClass()->GetStreamerInfo(objvers);
-   // return info->ReadBuffer(*this,arr,-1,nobjects,0,1);
-   return ApplySequenceVecPtr(*(info->GetReadMemberWiseActions(kTRUE)), arr, end);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface to TStreamerInfo::WriteBufferClones.
-
-Int_t TBufferXML::WriteClones(TClonesArray *a, Int_t nobjects)
-{
-   char **arr = reinterpret_cast<char **>(a->GetObjectRef(0));
-   // a->GetClass()->GetStreamerInfo()->WriteBufferClones(*this,(TClonesArray*)a,nobjects,-1,0);
-   TStreamerInfo *info = (TStreamerInfo *)a->GetClass()->GetStreamerInfo();
-   // return info->WriteBufferAux(*this,arr,-1,nobjects,0,1);
-   char **end = arr + nobjects;
-   // No need to tell call ForceWriteInfo as it by ForceWriteInfoClones.
-   return ApplySequenceVecPtr(*(info->GetWriteMemberWiseActions(kTRUE)), arr, end);
 }
