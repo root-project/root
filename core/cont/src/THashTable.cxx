@@ -70,6 +70,21 @@ THashTable::~THashTable()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Helper function doing the actual add to the table give a slot and object.
+/// This does not take any lock.
+
+inline
+void THashTable::AddImpl(Int_t slot, TObject *obj)
+{
+   if (!fCont[slot]) {
+      fCont[slot] = new TList;
+      ++fUsedSlots;
+   }
+   fCont[slot]->Add(obj);
+   ++fEntries;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add object to the hash table. Its position in the table will be
 /// determined by the value returned by its Hash() function.
 
@@ -80,12 +95,8 @@ void THashTable::Add(TObject *obj)
    Int_t slot = GetCheckedHashValue(obj);
 
    R__COLLECTION_WRITE_LOCKGUARD(ROOT::gCoreMutex);
-   if (!fCont[slot]) {
-      fCont[slot] = new TList;
-      fUsedSlots++;
-   }
-   fCont[slot]->Add(obj);
-   fEntries++;
+
+   AddImpl(slot,obj);
 
    if (fRehashLevel && AverageCollisions() > fRehashLevel)
       Rehash(fEntries);
@@ -319,10 +330,11 @@ void THashTable::Rehash(Int_t newCapacity, Bool_t checkObjValidity)
 
    if (checkObjValidity && TObject::GetObjectStat() && gObjectTable) {
       while ((obj = next()))
-         if (gObjectTable->PtrIsValid(obj)) ht->Add(obj);
+         if (gObjectTable->PtrIsValid(obj))
+            ht->AddImpl(ht->GetHashValue(obj),obj);
    } else {
       while ((obj = next()))
-         ht->Add(obj);
+         ht->AddImpl(ht->GetHashValue(obj),obj);
    }
 
    Clear("nodelete");

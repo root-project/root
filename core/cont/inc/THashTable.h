@@ -47,6 +47,8 @@ private:
    Int_t       GetHashValue(TString &s) const { return s.Hash() % fSize; }
    Int_t       GetHashValue(const char *str) const { return ::Hash(str) % fSize; }
 
+   void        AddImpl(Int_t slot, TObject *object);
+
    THashTable(const THashTable&);             // not implemented
    THashTable& operator=(const THashTable&);  // not implemented
 
