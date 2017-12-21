@@ -30,18 +30,19 @@ actions list for both are the same.
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
+#include "TArrayC.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-TBufferText::TBufferText() : TBuffer()
+TBufferText::TBufferText() : TBuffer(), fPidOffset(0)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor
 
-TBufferText::TBufferText(TBuffer::EMode mode, TObject *parent) : TBuffer(mode)
+TBufferText::TBufferText(TBuffer::EMode mode, TObject *parent) : TBuffer(mode), fPidOffset(0)
 {
    fBufSize = 1000000000;
 
@@ -115,4 +116,27 @@ UShort_t TBufferText::WriteProcessID(TProcessID *pid)
    if (!file)
       return 0;
    return file->WriteProcessID(pid);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Mark the classindex of the current file as using this TStreamerInfo
+
+void TBufferText::TagStreamerInfo(TVirtualStreamerInfo *info)
+{
+   TFile *file = (TFile *)GetParent();
+   if (file) {
+      TArrayC *cindex = file->GetClassIndex();
+      Int_t nindex = cindex->GetSize();
+      Int_t number = info->GetNumber();
+      if (number < 0 || number >= nindex) {
+         Error("TagStreamerInfo", "StreamerInfo: %s number: %d out of range[0,%d] in file: %s", info->GetName(), number,
+               nindex, file->GetName());
+         return;
+      }
+      if (cindex->fArray[number] == 0) {
+         cindex->fArray[0] = 1;
+         cindex->fArray[number] = 1;
+      }
+   }
 }

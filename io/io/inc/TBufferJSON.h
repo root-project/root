@@ -247,20 +247,11 @@ public:
    virtual Int_t
    ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
 
-   virtual void TagStreamerInfo(TVirtualStreamerInfo * /*info*/) {}
-
    virtual Bool_t CheckObject(const TObject *obj);
 
    virtual Bool_t CheckObject(const void *ptr, const TClass *cl);
 
    // abstract virtual methods from TBuffer, which should be redefined
-
-   virtual Int_t ReadBuf(void * /*buf*/, Int_t /*max*/)
-   {
-      Error("ReadBuf", "useless");
-      return 0;
-   }
-   virtual void WriteBuf(const void * /*buf*/, Int_t /*max*/) { Error("WriteBuf", "useless"); }
 
    virtual char *ReadString(char * /*s*/, Int_t /*max*/)
    {
@@ -288,11 +279,6 @@ public:
    {
       Error("MapObject", "useless");
    }
-   virtual void Reset() { Error("Reset", "useless"); }
-   virtual void InitMap() { Error("InitMap", "useless"); }
-   virtual void ResetMap() { Error("ResetMap", "useless"); }
-   virtual void SetReadParam(Int_t /*mapsize*/) { Error("SetReadParam", "useless"); }
-   virtual void SetWriteParam(Int_t /*mapsize*/) { Error("SetWriteParam", "useless"); }
 
    virtual Version_t ReadVersionForMemberWise(const TClass * /*cl*/ = nullptr)
    {
@@ -312,20 +298,6 @@ public:
       Error("ReadObject", "useless");
       return 0;
    }
-
-   virtual UShort_t GetPidOffset() const
-   {
-      Error("GetPidOffset", "useless");
-      return 0;
-   }
-   virtual void SetPidOffset(UShort_t /*offset*/) { Error("SetPidOffset", "useless"); }
-   virtual Int_t GetBufferDisplacement() const
-   {
-      Error("GetBufferDisplacement", "useless");
-      return 0;
-   }
-   virtual void SetBufferDisplacement() { Error("SetBufferDisplacement", "useless"); }
-   virtual void SetBufferDisplacement(Int_t /*skipped*/) { Error("SetBufferDisplacement", "useless"); }
 
    // Utilities for TStreamerInfo
    virtual void ForceWriteInfo(TVirtualStreamerInfo * /*info*/, Bool_t /*force*/)
