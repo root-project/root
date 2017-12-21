@@ -15,13 +15,20 @@
 
 Class for serializing/deserializing object to/from xml.
 
-It redefines most of TBuffer class function to convert simple types,
-array of simple types and objects to/from xml.
-Instead of writing a binary data it creates a set of xml structures as
-nodes and attributes
+The simple way to create XML representation is:
+~~~{.cpp}
+   TNamed *obj = new TNamed("name", "title");
+   TString xml = TBufferXML::ToXML(obj);
+~~~
+Produced xml can be decoded into new object:
+~~~{.cpp}
+   TNamed *obj2 = nullptr;
+   TBufferXML::FromXML(obj2, xml);
+~~~
+
 TBufferXML class uses streaming mechanism, provided by ROOT system,
-therefore most of ROOT and user classes can be stored to xml. There are
-limitations for complex objects like TTree, which can not be yet converted to xml.
+therefore most of ROOT and user classes can be stored to xml.
+There are limitations for complex objects like TTree, which can not be converted to xml.
 */
 
 #include "TBufferXML.h"
@@ -303,8 +310,8 @@ void *TBufferXML::XmlReadAny(XMLNodePointer_t node, void *obj, TClass **cl)
 class TXMLStackObj : public TObject {
 public:
    TXMLStackObj(XMLNodePointer_t node)
-      : TObject(), fNode(node), fInfo(nullptr), fElem(nullptr), fElemNumber(0), fCompressedClassNode(kFALSE), fClassNs(nullptr),
-        fIsStreamerInfo(kFALSE), fIsElemOwner(kFALSE)
+      : TObject(), fNode(node), fInfo(nullptr), fElem(nullptr), fElemNumber(0), fCompressedClassNode(kFALSE),
+        fClassNs(nullptr), fIsStreamerInfo(kFALSE), fIsElemOwner(kFALSE)
    {
    }
 
