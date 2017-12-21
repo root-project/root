@@ -6991,7 +6991,8 @@ Bool_t ROOT::Internal::HasConsistentHashMember(const char *cname)
       "TEnvRec",    "TDataType",      "TObjArray",    "TList",   "THashList",
       "TClass",     "TCling",         "TInterpreter", "TMethod", "ROOT::Internal::TCheckHashRecurveRemoveConsistency",
       "TCheckHashRecurveRemoveConsistency", "TGWindow",
-      "TDirectory", "TDirectoryFile", "TObject",      "TH1"};
+      "TDirectory", "TDirectoryFile", "TObject",      "TH1",
+      "TQClass" };
 
    if (cname && cname[0]) {
       for (auto cursor : handVerified) {
