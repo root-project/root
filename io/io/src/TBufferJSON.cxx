@@ -932,25 +932,33 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member, TClas
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check that object already stored in the buffer
+/// Check if the specified object of the specified class is already in
+/// the buffer. Returns kTRUE if object already in the buffer,
+/// kFALSE otherwise (also if obj is 0 ).
 
 Bool_t TBufferJSON::CheckObject(const TObject *obj)
 {
-   if (!obj)
-      return kTRUE;
-
-   return fJsonrMap.find(obj) != fJsonrMap.end();
+   return CheckObject(obj, TObject::Class());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check that object already stored in the buffer
+/// Check if the specified object of the specified class is already in
+/// the buffer. Returns kTRUE if object already in the buffer,
+/// kFALSE otherwise (also if obj is 0 ).
 
-Bool_t TBufferJSON::CheckObject(const void *ptr, const TClass * /*cl*/)
+Bool_t TBufferJSON::CheckObject(const void *obj, const TClass *ptrClass)
 {
-   if (!ptr)
-      return kTRUE;
+   if (!obj || !ptrClass || (fJsonrMap.size() == 0))
+      return kFALSE;
 
-   return fJsonrMap.find(ptr) != fJsonrMap.end();
+   TClass *clActual = ptrClass->GetActualClass(obj);
+
+   const char *temp = (const char *)obj;
+
+   if (clActual && (ptrClass != clActual))
+      temp -= clActual->GetBaseClassOffset(ptrClass);
+
+   return fJsonrMap.find(temp) != fJsonrMap.end();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
