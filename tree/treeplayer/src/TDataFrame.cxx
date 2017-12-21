@@ -321,6 +321,28 @@ Simple as that. More details are given [below](#parallel-execution).
 Here is a list of the most important features that have been omitted in the "Crash course" for brevity.
 You don't need to read all these to start using `TDataFrame`, but they are useful to save typing time and runtime.
 
+### Treatment of columns holding collections
+When using TDataFrame to read data from a ROOT file, users can specify that the type of a branch is `TArrayBranch<T>` to indicate the branch is a c-style array, an STL array or any other collection type associated to a contiguous storage in memory.
+
+Column values of type `TArrayBranch<T>` perform no copy of the underlying array data, it's in some sense a view, and offer a minimal array-like interface to access the array elements: either via square brackets, or with range-based for loops.
+
+The `TArrayBranch<T>` type signals to TDataFrame that a special behaviour needs to be adopted when snapshotting a dataset on disk. Indeed, if columns which are variable size C arrays are treated via the `TArrayBranch<T>`, TDataFrame will correctly persistify them - if anything else is adopted, for example `std::span`, only the first element of the array will be written.
+
+### Callbacks
+Acting on a TResultProxy, it is possible to register a callback that TDataFrame will execute "everyNEvents" on a partial result.
+
+The callback must be a callable that takes a reference to the result type as argument and returns nothing.
+TDataFrame, acting as a full fledged data processing framework, will invoke registered callbacks passing partial action results as arguments to them (e.g. a histogram filled with a part of the selected events).
+
+Callbacks can be used e.g. to inspect partial results of the analysis while the event loop is running. For
+example one can draw an up-to-date version of a result histogram every 100 entries like this:
+~~~{.cpp}
+auto h = tdf.Histo1D("x");
+TCanvas c("c","x hist");
+h.OnPartialResult(100, [&c](TH1D &h_) { c.cd(); h_.Draw(); c.Update(); });
+h->Draw(); // event loop runs here, this `Draw` is executed after the event loop is finished
+~~~
+
 ### Default branch lists
 When constructing a `TDataFrame` object, it is possible to specify a **default column list** for your analysis, in the
 usual form of a list of strings representing branch/column names. The default column list will be used as a fallback
@@ -362,8 +384,7 @@ dataFrame.Min<MyNumber_t>("myObject"); // OK, "myObject" is deduced to be of typ
 ~~~
 
 Deducing types at runtime requires the just-in-time compilation of the relevant actions, which has a small runtime
-overhead, so specifying the type of the columns as template parameters to the action is good practice when performance
-is a goal.
+overhead, so specifying the type of the columns as template parameters to the action is good practice when performance is a goal.
 
 ### Generic actions
 `TDataFrame` strives to offer a comprehensive set of standard actions that can be performed on each event. At the same
@@ -580,7 +601,7 @@ note that all actions are only executed for events that pass all preceding filte
 |---------------------|-----------------|
 | Foreach | Execute a user-defined function on each entry. Users are responsible for the thread-safety of this lambda when executing with implicit multi-threading enabled. |
 | ForeachSlot | Same as `Foreach`, but the user-defined function must take an extra `unsigned int slot` as its first parameter. `slot` will take a different value, `0` to `nThreads - 1`, for each thread of execution. This is meant as a helper in writing thread-safe `Foreach` actions when using `TDataFrame` after `ROOT::EnableImplicitMT()`. `ForeachSlot` works just as well with single-thread execution: in that case `slot` will always be `0`. |
-| Snapshot | Writes processed data-set to disk, in a new `TTree` and `TFile`. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all). Snapshot overwrites the output file if it already exists. |
+| Snapshot | Writes processed data-set to disk, in a new `TTree` and `TFile`. Custom columns can be saved as well, filtered entries are not saved. Users can specify which columns to save (default is all). Snapshot, by default, overwrites the output file if it already exists. |
 | Cache | Caches in contiguous memory columns' entries. Custom columns can be cached as well, filtered entries are not cached. Users can specify which columns to save (default is all). |
 
 
