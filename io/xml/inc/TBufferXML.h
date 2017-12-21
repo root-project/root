@@ -312,12 +312,8 @@ public:
       return 0;
    }
 
-   virtual UShort_t GetPidOffset() const
-   {
-      Error("GetPidOffset", "useless");
-      return 0;
-   }
-   virtual void SetPidOffset(UShort_t /*offset*/) { Error("SetPidOffset", "useless"); }
+   virtual UShort_t GetPidOffset() const { return fPidOffset; }
+   virtual void SetPidOffset(UShort_t offset) { fPidOffset = offset; }
    virtual Int_t GetBufferDisplacement() const
    {
       Error("GetBufferDisplacement", "useless");
@@ -331,21 +327,9 @@ public:
       Error("GetLastProcessID", "useless");
       return 0;
    }
-   virtual UInt_t GetTRefExecId()
-   {
-      Error("GetTRefExecId", "useless");
-      return 0;
-   }
-   virtual TProcessID *ReadProcessID(UShort_t /*pidf*/)
-   {
-      Error("ReadProcessID", "useless");
-      return 0;
-   }
-   virtual UShort_t WriteProcessID(TProcessID * /*pid*/)
-   {
-      // Error("WriteProcessID", "useless");
-      return 0;
-   }
+   virtual UInt_t GetTRefExecId();
+   virtual TProcessID *ReadProcessID(UShort_t pidf);
+   virtual UShort_t WriteProcessID(TProcessID *pid);
 
    // Utilities for TStreamerInfo
    virtual void ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force);
@@ -507,6 +491,8 @@ protected:
    TClass *fExpectedBaseClass; ///<!   Pointer to class, which should be stored as parent of current
    Int_t fCompressLevel;       ///<!   Compression level and algorithm
    Int_t fIOVersion;           ///<!   Indicates format of ROOT xml file
+
+   UShort_t fPidOffset; ///<! PID offset
 
    static std::string
       fgFloatFmt; ///<!   Printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on

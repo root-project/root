@@ -4120,3 +4120,49 @@ Int_t TBufferXML::WriteClones(TClonesArray *a, Int_t nobjects)
    // No need to tell call ForceWriteInfo as it by ForceWriteInfoClones.
    return ApplySequenceVecPtr(*(info->GetWriteMemberWiseActions(kTRUE)), arr, end);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// The TProcessID with number pidf is read from file.
+/// If the object is not already entered in the gROOT list, it is added.
+
+TProcessID *TBufferXML::ReadProcessID(UShort_t pidf)
+{
+   TFile *file = (TFile *)GetParent();
+   if (!file) {
+      if (!pidf)
+         return TProcessID::GetPID(); // may happen when cloning an object
+      return 0;
+   }
+
+   TProcessID *pid = nullptr;
+   {
+      R__LOCKGUARD_IMT(gInterpreterMutex); // Lock for parallel TTree I/O
+      pid = file->ReadProcessID(pidf);
+   }
+
+   return pid;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the ProcessID pid is already in the file.
+/// If not, add it and return the index number in the local file list.
+
+UShort_t TBufferXML::WriteProcessID(TProcessID *pid)
+{
+   TFile *file = (TFile *)GetParent();
+   if (!file)
+      return 0;
+   return file->WriteProcessID(pid);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the exec id stored in the current TStreamerInfo element.
+/// The execid has been saved in the unique id of the TStreamerElement
+/// being read by TStreamerElement::Streamer.
+/// The current element (fgElement) is set as a static global
+/// by TStreamerInfo::ReadBuffer (Clones) when reading this TRef.
+
+UInt_t TBufferXML::GetTRefExecId()
+{
+   return TStreamerInfo::GetCurrentElement()->GetUniqueID();
+}
