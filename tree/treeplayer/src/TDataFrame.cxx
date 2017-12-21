@@ -446,6 +446,23 @@ d.Alias("myFriend.MyCol", "myFriend_MyCol");
 auto f = d.Filter("myFriend_MyCol == 42");
 ~~~
 
+### Reading file formats different from ROOT's
+TDataFrame can be interfaced with TDataSources. The TDataSource interface defines an API that TDataFrame can use to read arbitrary data formats.
+
+A concrete TDataSource implementation (i.e. a class that inherits from TDataSource and implements all of its pure
+methods) provides an adaptor that TDataFrame can leverage to read any kind of tabular data formats.
+TDataFrame calls into TDataSource to retrieve information about the data, retrieve (thread-local) readers or "cursors" for selected columns and to advance the readers to the desired data entry.
+Some predefined TDataSources are natively provided by ROOT such as the `TCsvDS` which allows to read comma separated files:
+~~~{.cpp}
+auto tdf = ROOT::Experimental::TDF::MakeCsvDataFrame("MuRun2010B.csv");
+auto filteredEvents =
+   tdf.Filter("Q1 * Q2 == -1")
+      .Define("m", "sqrt(pow(E1 + E2, 2) - (pow(px1 + px2, 2) + pow(py1 + py2, 2) + pow(pz1 + pz2, 2)))");
+auto h = filteredEvents.Histo1D("m");
+h->Draw();
+~~~
+
+
 ### <a name="callgraphs"></a>Call graphs (storing and reusing sets of transformations)
 **Sets of transformations can be stored as variables** and reused multiple times to create **call graphs** in which
 several paths of filtering/creation of columns are executed simultaneously; we often refer to this as "storing the
