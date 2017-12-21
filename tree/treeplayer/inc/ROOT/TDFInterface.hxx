@@ -264,21 +264,21 @@ struct TMinReturnType<T, true> {
    using type = TTraits::TakeFirstParameter_t<T>;
 };
 
+} // namespace TDF
+} // namespace Internal
+
+namespace Detail {
+namespace TDF {
+
 /// The aliased type is `double` if `T == TInferType`, `U` if `T == container<U>`, `T` otherwise.
 template <typename T>
-using MinReturnType_t = typename TMinReturnType<T>::type;
+using MinReturnType_t = typename TDFInternal::TMinReturnType<T>::type;
 
 template <typename T>
 using MaxReturnType_t = MinReturnType_t<T>;
 
 template <typename T>
 using SumReturnType_t = MinReturnType_t<T>;
-
-} // namespace TDF
-} // namespace Internal
-
-namespace Detail {
-namespace TDF {
 
 template <typename T, typename COLL = std::vector<T>>
 struct TTakeRealTypes {
@@ -1429,10 +1429,10 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<TDFInternal::MinReturnType_t<T>> Min(std::string_view columnName = "")
+   TResultProxy<TDFDetail::MinReturnType_t<T>> Min(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
-      using RetType_t = TDFInternal::MinReturnType_t<T>;
+      using RetType_t = TDFDetail::MinReturnType_t<T>;
       auto minV = std::make_shared<RetType_t>(std::numeric_limits<RetType_t>::max());
       return CreateAction<TDFInternal::ActionTypes::Min, T>(userColumns, minV);
    }
@@ -1448,10 +1448,10 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<TDFInternal::MaxReturnType_t<T>> Max(std::string_view columnName = "")
+   TResultProxy<TDFDetail::MaxReturnType_t<T>> Max(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
-      using RetType_t = TDFInternal::MaxReturnType_t<T>;
+      using RetType_t = TDFDetail::MaxReturnType_t<T>;
       auto maxV = std::make_shared<RetType_t>(std::numeric_limits<RetType_t>::lowest());
       return CreateAction<TDFInternal::ActionTypes::Max, T>(userColumns, maxV);
    }
@@ -1487,12 +1487,12 @@ public:
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<TDFInternal::SumReturnType_t<T>>
+   TResultProxy<TDFDetail::SumReturnType_t<T>>
    Sum(std::string_view columnName = "",
-       const TDFInternal::SumReturnType_t<T> &initValue = TDFInternal::SumReturnType_t<T>{})
+       const TDFDetail::SumReturnType_t<T> &initValue = TDFDetail::SumReturnType_t<T>{})
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
-      auto sumV = std::make_shared<TDFInternal::SumReturnType_t<T>>(initValue);
+      auto sumV = std::make_shared<TDFDetail::SumReturnType_t<T>>(initValue);
       return CreateAction<TDFInternal::ActionTypes::Sum, T>(userColumns, sumV);
    }
    // clang-format on
