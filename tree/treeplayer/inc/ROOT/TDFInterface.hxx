@@ -299,7 +299,7 @@ struct TTakeRealTypes {
       typename std::conditional<isAB && TDFInternal::IsDeque_t<NewC1_t>::value, std::deque<VTColl_t>, NewC1_t>::type;
    using RealColl_t = NewC2_t;
 };
-template<typename T, typename C>
+template <typename T, typename C>
 using ColType_t = typename TTakeRealTypes<T, C>::RealColl_t;
 } // namespace TDF
 } // namespace Detail
@@ -1542,6 +1542,7 @@ public:
       return allColumns;
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
    /// \tparam F The type of the aggregator callable. Automatically deduced.
@@ -1564,13 +1565,13 @@ public:
    /// If its signature is `void(std::vector<U>& a)` it is assumed that it merges all aggregators in a[0].
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See TResultProxy documentation.
+   // clang-format on
    template <typename AccFun, typename MergeFun, typename R = typename TTraits::CallableTraits<AccFun>::ret_type,
              typename ArgTypes = typename TTraits::CallableTraits<AccFun>::arg_types,
              typename ArgTypesNoDecay = typename TTraits::CallableTraits<AccFun>::arg_types_nodecay,
              typename U = TTraits::TakeFirstParameter_t<ArgTypes>,
              typename T = TTraits::TakeFirstParameter_t<TTraits::RemoveFirstParameter_t<ArgTypes>>>
-   TResultProxy<U>
-   Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName, const U &aggIdentity)
+   TResultProxy<U> Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName, const U &aggIdentity)
    {
       TDFInternal::CheckAggregate<R, MergeFun>(ArgTypesNoDecay());
       auto loopManager = GetDataFrameChecked();
@@ -1591,6 +1592,7 @@ public:
       return MakeResultProxy(accObjPtr, loopManager, action.get());
    }
 
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
    /// \tparam F The type of the aggregator callable. Automatically deduced.
@@ -1601,12 +1603,12 @@ public:
    /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
    ///
    /// See previous Aggregate overload for more information.
+   // clang-format on
    template <typename AccFun, typename MergeFun, typename R = typename TTraits::CallableTraits<AccFun>::ret_type,
              typename ArgTypes = typename TTraits::CallableTraits<AccFun>::arg_types,
              typename U = TTraits::TakeFirstParameter_t<ArgTypes>,
              typename T = TTraits::TakeFirstParameter_t<TTraits::RemoveFirstParameter_t<ArgTypes>>>
-   TResultProxy<U>
-   Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName = "")
+   TResultProxy<U> Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName = "")
    {
       static_assert(
          std::is_default_constructible<U>::value,
