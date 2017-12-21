@@ -252,14 +252,6 @@ public:
 
    virtual Bool_t CheckObject(const void *ptr, const TClass *cl);
 
-   virtual Int_t ReadBuf(void * /*buf*/, Int_t /*max*/)
-   {
-      Error("ReadBuf", "useless");
-      return 0;
-   }
-
-   virtual void WriteBuf(const void * /*buf*/, Int_t /*max*/) { Error("WriteBuf", "useless"); }
-
    virtual char *ReadString(char * /*s*/, Int_t /*max*/)
    {
       Error("ReadString", "useless");
@@ -287,11 +279,6 @@ public:
    {
       Error("MapObject", "useless");
    }
-   virtual void Reset() { Error("Reset", "useless"); }
-   virtual void InitMap() { Error("InitMap", "useless"); }
-   virtual void ResetMap() { Error("ResetMap", "useless"); }
-   virtual void SetReadParam(Int_t /*mapsize*/) { Error("SetReadParam", "useless"); }
-   virtual void SetWriteParam(Int_t /*mapsize*/) { Error("SetWriteParam", "useless"); }
 
    virtual Version_t ReadVersionForMemberWise(const TClass * /*cl*/ = nullptr)
    {
@@ -312,16 +299,6 @@ public:
       return 0;
    }
 
-   virtual UShort_t GetPidOffset() const { return fPidOffset; }
-   virtual void SetPidOffset(UShort_t offset) { fPidOffset = offset; }
-   virtual Int_t GetBufferDisplacement() const
-   {
-      Error("GetBufferDisplacement", "useless");
-      return 0;
-   }
-   virtual void SetBufferDisplacement() { Error("SetBufferDisplacement", "useless"); }
-   virtual void SetBufferDisplacement(Int_t /*skipped*/) { Error("SetBufferDisplacement", "useless"); }
-
    // Utilities for TStreamerInfo
    virtual void ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force);
    virtual void ForceWriteInfoClones(TClonesArray *a);
@@ -340,8 +317,6 @@ public:
                                  UInt_t /*count*/, const TClass * /*onfile_class*/ = nullptr);
 
    virtual Int_t WriteClassBuffer(const TClass *cl, void *pointer);
-
-   virtual void TagStreamerInfo(TVirtualStreamerInfo * /*info*/);
 
    virtual void WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE);
    virtual Int_t WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);

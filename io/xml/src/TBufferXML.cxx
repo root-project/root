@@ -3972,29 +3972,7 @@ Int_t TBufferXML::WriteClassBuffer(const TClass *cl, void *pointer)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Mark the classindex of the current file as using this TStreamerInfo
-
-void TBufferXML::TagStreamerInfo(TVirtualStreamerInfo *info)
-{
-   TFile *file = (TFile *)GetParent();
-   if (file) {
-      TArrayC *cindex = file->GetClassIndex();
-      Int_t nindex = cindex->GetSize();
-      Int_t number = info->GetNumber();
-      if (number < 0 || number >= nindex) {
-         Error("TagStreamerInfo", "StreamerInfo: %s number: %d out of range[0,%d] in file: %s", info->GetName(), number,
-               nindex, file->GetName());
-         return;
-      }
-      if (cindex->fArray[number] == 0) {
-         cindex->fArray[0] = 1;
-         cindex->fArray[number] = 1;
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Convert object into json structures.
+/// Convert object into XML structures.
 /// !!! Should be used only by TBufferJSON itself.
 /// Use ConvertToJSON() methods to convert object to json
 
