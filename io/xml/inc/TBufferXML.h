@@ -12,11 +12,13 @@
 #ifndef ROOT_TBufferXML
 #define ROOT_TBufferXML
 
-#include "TBufferFile.h"
+#include "TBuffer.h"
 #include "TXMLSetup.h"
 #include "TXMLEngine.h"
 #include "TString.h"
 #include "TObjArray.h"
+#include "TArrayC.h"
+#include "TClonesArray.h"
 
 #include <string>
 
@@ -29,7 +31,7 @@ class TMemberStreamer;
 class TXMLFile;
 class TXMLStackObj;
 
-class TBufferXML : public TBufferFile, public TXMLSetup {
+class TBufferXML : public TBuffer, public TXMLSetup {
 
    friend class TKeyXML;
 
@@ -77,7 +79,8 @@ public:
 
    virtual void SkipVersion(const TClass *cl = nullptr);
    virtual Version_t ReadVersion(UInt_t *start = nullptr, UInt_t *bcnt = nullptr, const TClass *cl = nullptr); // SL
-   virtual UInt_t WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);                                     // SL
+   virtual Version_t ReadVersionNoCheckSum(UInt_t *, UInt_t *);
+   virtual UInt_t WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE); // SL
 
    virtual void *ReadObjectAny(const TClass *clCast);
    virtual void SkipObjectAny();
@@ -144,6 +147,7 @@ public:
    virtual void ReadFastArray(ULong64_t *l, Int_t n);
    virtual void ReadFastArray(Float_t *f, Int_t n);
    virtual void ReadFastArray(Double_t *d, Int_t n);
+   virtual void ReadFastArrayString(Char_t *c, Int_t n);
    virtual void ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *ele = nullptr);
    virtual void ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *ele = nullptr);
    virtual void ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor, Double_t minvalue);
@@ -184,6 +188,7 @@ public:
    virtual void WriteFastArray(const ULong64_t *l, Int_t n);
    virtual void WriteFastArray(const Float_t *f, Int_t n);
    virtual void WriteFastArray(const Double_t *d, Int_t n);
+   virtual void WriteFastArrayString(const Char_t *c, Int_t n);
    virtual void WriteFastArrayFloat16(const Float_t *d, Int_t n, TStreamerElement *ele = nullptr);
    virtual void WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele = nullptr);
    virtual void WriteFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = nullptr);
@@ -240,6 +245,135 @@ public:
    ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
 
    // end of redefined virtual functions
+
+   // abstract TBuffer methods, probably dedicated for TBufferText
+
+   virtual Bool_t CheckObject(const TObject *obj);
+
+   virtual Bool_t CheckObject(const void *ptr, const TClass *cl);
+
+   virtual Int_t ReadBuf(void * /*buf*/, Int_t /*max*/)
+   {
+      Error("ReadBuf", "useless");
+      return 0;
+   }
+
+   virtual void WriteBuf(const void * /*buf*/, Int_t /*max*/) { Error("WriteBuf", "useless"); }
+
+   virtual char *ReadString(char * /*s*/, Int_t /*max*/)
+   {
+      Error("ReadString", "useless");
+      return 0;
+   }
+
+   virtual void WriteString(const char * /*s*/) { Error("WriteString", "useless"); }
+
+   virtual Int_t GetVersionOwner() const
+   {
+      Error("GetVersionOwner", "useless");
+      return 0;
+   }
+   virtual Int_t GetMapCount() const
+   {
+      Error("GetMapCount", "useless");
+      return 0;
+   }
+   virtual void GetMappedObject(UInt_t /*tag*/, void *& /*ptr*/, TClass *& /*ClassPtr*/) const
+   {
+      Error("GetMappedObject", "useless");
+   }
+   virtual void MapObject(const TObject * /*obj*/, UInt_t /*offset*/ = 1) { Error("MapObject", "useless"); }
+   virtual void MapObject(const void * /*obj*/, const TClass * /*cl*/, UInt_t /*offset*/ = 1)
+   {
+      Error("MapObject", "useless");
+   }
+   virtual void Reset() { Error("Reset", "useless"); }
+   virtual void InitMap() { Error("InitMap", "useless"); }
+   virtual void ResetMap() { Error("ResetMap", "useless"); }
+   virtual void SetReadParam(Int_t /*mapsize*/) { Error("SetReadParam", "useless"); }
+   virtual void SetWriteParam(Int_t /*mapsize*/) { Error("SetWriteParam", "useless"); }
+
+   virtual Version_t ReadVersionForMemberWise(const TClass * /*cl*/ = nullptr)
+   {
+      Error("ReadVersionForMemberWise", "useless");
+      return 0;
+   }
+   virtual UInt_t WriteVersionMemberWise(const TClass * /*cl*/, Bool_t /*useBcnt*/ = kFALSE)
+   {
+      Error("WriteVersionMemberWise", "useless");
+      return 0;
+   }
+
+   virtual TVirtualStreamerInfo *GetInfo();
+
+   virtual TObject *ReadObject(const TClass * /*cl*/)
+   {
+      Error("ReadObject", "useless");
+      return 0;
+   }
+
+   virtual UShort_t GetPidOffset() const
+   {
+      Error("GetPidOffset", "useless");
+      return 0;
+   }
+   virtual void SetPidOffset(UShort_t /*offset*/) { Error("SetPidOffset", "useless"); }
+   virtual Int_t GetBufferDisplacement() const
+   {
+      Error("GetBufferDisplacement", "useless");
+      return 0;
+   }
+   virtual void SetBufferDisplacement() { Error("SetBufferDisplacement", "useless"); }
+   virtual void SetBufferDisplacement(Int_t /*skipped*/) { Error("SetBufferDisplacement", "useless"); }
+
+   virtual TProcessID *GetLastProcessID(TRefTable * /*reftable*/) const
+   {
+      Error("GetLastProcessID", "useless");
+      return 0;
+   }
+   virtual UInt_t GetTRefExecId()
+   {
+      Error("GetTRefExecId", "useless");
+      return 0;
+   }
+   virtual TProcessID *ReadProcessID(UShort_t /*pidf*/)
+   {
+      Error("ReadProcessID", "useless");
+      return 0;
+   }
+   virtual UShort_t WriteProcessID(TProcessID * /*pid*/)
+   {
+      // Error("WriteProcessID", "useless");
+      return 0;
+   }
+
+   // Utilities for TStreamerInfo
+   virtual void ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force);
+   virtual void ForceWriteInfoClones(TClonesArray *a);
+   virtual Int_t ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers);
+   virtual Int_t WriteClones(TClonesArray *a, Int_t nobjects);
+
+   // Utilities for TClass
+   virtual Int_t ReadClassEmulated(const TClass * /*cl*/, void * /*object*/, const TClass * /*onfile_class*/ = nullptr)
+   {
+      Error("ReadClassEmulated", "useless");
+      return 0;
+   }
+
+   virtual Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, const TClass * /*onfile_class*/ = nullptr);
+   virtual Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, Int_t /*version*/, UInt_t /*start*/,
+                                 UInt_t /*count*/, const TClass * /*onfile_class*/ = nullptr);
+
+   virtual Int_t WriteClassBuffer(const TClass *cl, void *pointer);
+
+   virtual void TagStreamerInfo(TVirtualStreamerInfo * /*info*/);
+
+   virtual void WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE);
+   virtual Int_t WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
+
+   using TBuffer::WriteObject;
+
+   // end of abstract TBuffer methods, probably dedicated for TBufferText
 
    static void SetFloatFormat(const char *fmt = "%e");
    static const char *GetFloatFormat();
