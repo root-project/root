@@ -94,7 +94,7 @@ ClassImp(TXMLFile);
 ////////////////////////////////////////////////////////////////////////////////
 /// default TXMLFile constructor
 
-TXMLFile::TXMLFile() : TFile(), TXMLSetup(), fDoc(0), fStreamerInfoNode(0), fXML(0), fKeyCounter(0)
+TXMLFile::TXMLFile() : TFile(), TXMLSetup(), fDoc(nullptr), fStreamerInfoNode(nullptr), fXML(nullptr), fKeyCounter(0)
 {
    SetBit(kBinaryFile, kFALSE);
    fIOVersion = TXMLFile::Class_Version();
@@ -120,10 +120,10 @@ TXMLFile::TXMLFile() : TFile(), TXMLSetup(), fDoc(0), fStreamerInfoNode(0), fXML
 ///
 /// For more details see comments for TFile::TFile() constructor
 ///
-/// For a moment TXMLFile does not support TTree objects and subdirectories
+/// TXMLFile does not support TTree objects
 
 TXMLFile::TXMLFile(const char *filename, Option_t *option, const char *title, Int_t compression)
-   : TFile(), TXMLSetup(), fDoc(0), fStreamerInfoNode(0), fXML(0), fKeyCounter(0)
+   : TFile(), TXMLSetup(), fDoc(nullptr), fStreamerInfoNode(nullptr), fXML(nullptr), fKeyCounter(0)
 {
    fXML = new TXMLEngine();
 
@@ -133,7 +133,7 @@ TXMLFile::TXMLFile(const char *filename, Option_t *option, const char *title, In
    if (filename && !strncmp(filename, "xml:", 4))
       filename += 4;
 
-   gDirectory = 0;
+   gDirectory = nullptr;
    SetName(filename);
    SetTitle(title);
    TDirectoryFile::Build(this, 0);
@@ -178,7 +178,7 @@ TXMLFile::TXMLFile(const char *filename, Option_t *option, const char *title, In
    }
 
    Bool_t devnull = kFALSE;
-   const char *fname = 0;
+   const char *fname = nullptr;
 
    if (!filename || !filename[0]) {
       Error("TXMLFile", "file name is not specified");
@@ -280,7 +280,7 @@ void TXMLFile::InitXmlFile(Bool_t create)
 
    if (create) {
       fDoc = fXML->NewDoc();
-      XMLNodePointer_t fRootNode = fXML->NewChild(0, 0, xmlio::Root, 0);
+      XMLNodePointer_t fRootNode = fXML->NewChild(nullptr, nullptr, xmlio::Root);
       fXML->DocSetRootElement(fDoc, fRootNode);
    } else {
       ReadFromFile();
@@ -293,9 +293,9 @@ void TXMLFile::InitXmlFile(Bool_t create)
    cd();
 
    fNProcessIDs = 0;
-   TKey *key = 0;
+   TKey *key = nullptr;
    TIter iter(fKeys);
-   while ((key = (TKey *)iter()) != 0) {
+   while ((key = (TKey *)iter()) != nullptr) {
       if (!strcmp(key->GetClassName(), "TProcessID"))
          fNProcessIDs++;
    }
@@ -476,7 +476,7 @@ void TXMLFile::ProduceFileNames(const char *filename, TString &fname, TString &d
 
 void TXMLFile::SaveToFile()
 {
-   if (fDoc == 0)
+   if (!fDoc)
       return;
 
    if (gDebug > 1)
@@ -485,25 +485,25 @@ void TXMLFile::SaveToFile()
    XMLNodePointer_t fRootNode = fXML->DocGetRootElement(fDoc);
 
    fXML->FreeAttr(fRootNode, xmlio::Setup);
-   fXML->NewAttr(fRootNode, 0, xmlio::Setup, GetSetupAsString());
+   fXML->NewAttr(fRootNode, nullptr, xmlio::Setup, GetSetupAsString());
 
    fXML->FreeAttr(fRootNode, xmlio::Ref);
-   fXML->NewAttr(fRootNode, 0, xmlio::Ref, xmlio::Null);
+   fXML->NewAttr(fRootNode, nullptr, xmlio::Ref, xmlio::Null);
 
    if (GetIOVersion() > 1) {
 
       fXML->FreeAttr(fRootNode, xmlio::CreateTm);
-      fXML->NewAttr(fRootNode, 0, xmlio::CreateTm, fDatimeC.AsSQLString());
+      fXML->NewAttr(fRootNode, nullptr, xmlio::CreateTm, fDatimeC.AsSQLString());
 
       fXML->FreeAttr(fRootNode, xmlio::ModifyTm);
-      fXML->NewAttr(fRootNode, 0, xmlio::ModifyTm, fDatimeM.AsSQLString());
+      fXML->NewAttr(fRootNode, nullptr, xmlio::ModifyTm, fDatimeM.AsSQLString());
 
       fXML->FreeAttr(fRootNode, xmlio::ObjectUUID);
-      fXML->NewAttr(fRootNode, 0, xmlio::ObjectUUID, fUUID.AsString());
+      fXML->NewAttr(fRootNode, nullptr, xmlio::ObjectUUID, fUUID.AsString());
 
       fXML->FreeAttr(fRootNode, xmlio::Title);
       if (strlen(GetTitle()) > 0)
-         fXML->NewAttr(fRootNode, 0, xmlio::Title, GetTitle());
+         fXML->NewAttr(fRootNode, nullptr, xmlio::Title, GetTitle());
 
       fXML->FreeAttr(fRootNode, xmlio::IOVersion);
       fXML->NewIntAttr(fRootNode, xmlio::IOVersion, GetIOVersion());
@@ -517,8 +517,8 @@ void TXMLFile::SaveToFile()
 
    /*
       TIter iter(GetListOfKeys());
-      TKeyXML* key = 0;
-      while ((key=(TKeyXML*)iter()) !=0)
+      TKeyXML* key = nullptr;
+      while ((key=(TKeyXML*)iter()) != nullptr)
          fXML->AddChild(fRootNode, key->KeyNode());
    */
 
@@ -534,7 +534,7 @@ void TXMLFile::SaveToFile()
    fXML->SaveDoc(fDoc, fname, layout);
 
    /*   iter.Reset();
-      while ((key=(TKeyXML*)iter()) !=0)
+      while ((key=(TKeyXML*)iter()) != nullptr)
          fXML->UnlinkNode(key->KeyNode());
    */
    CombineNodesTree(this, fRootNode, kFALSE);
@@ -548,13 +548,13 @@ void TXMLFile::SaveToFile()
 
 void TXMLFile::CombineNodesTree(TDirectory *dir, XMLNodePointer_t topnode, Bool_t dolink)
 {
-   if (dir == 0)
+   if (!dir)
       return;
 
    TIter iter(dir->GetListOfKeys());
-   TKeyXML *key = 0;
+   TKeyXML *key = nullptr;
 
-   while ((key = (TKeyXML *)iter()) != 0) {
+   while ((key = (TKeyXML *)iter()) != nullptr) {
       if (dolink)
          fXML->AddChild(topnode, key->KeyNode());
       else
@@ -573,14 +573,14 @@ void TXMLFile::CombineNodesTree(TDirectory *dir, XMLNodePointer_t topnode, Bool_
 Bool_t TXMLFile::ReadFromFile()
 {
    fDoc = fXML->ParseFile(fRealName);
-   if (fDoc == 0)
+   if (!fDoc)
       return kFALSE;
 
    XMLNodePointer_t fRootNode = fXML->DocGetRootElement(fDoc);
 
-   if ((fRootNode == 0) || !fXML->ValidateVersion(fDoc)) {
+   if (!fRootNode || !fXML->ValidateVersion(fDoc)) {
       fXML->FreeDoc(fDoc);
-      fDoc = 0;
+      fDoc = nullptr;
       return kFALSE;
    }
 
@@ -614,20 +614,20 @@ Bool_t TXMLFile::ReadFromFile()
 
    fStreamerInfoNode = fXML->GetChild(fRootNode);
    fXML->SkipEmpty(fStreamerInfoNode);
-   while (fStreamerInfoNode != 0) {
+   while (fStreamerInfoNode) {
       if (strcmp(xmlio::SInfos, fXML->GetNodeName(fStreamerInfoNode)) == 0)
          break;
       fXML->ShiftToNext(fStreamerInfoNode);
    }
    fXML->UnlinkNode(fStreamerInfoNode);
 
-   if (fStreamerInfoNode != 0)
+   if (fStreamerInfoNode)
       ReadStreamerInfo();
 
    if (IsUseDtd())
       if (!fXML->ValidateDocument(fDoc, gDebug > 0)) {
          fXML->FreeDoc(fDoc);
-         fDoc = 0;
+         fDoc = nullptr;
          return kFALSE;
       }
 
@@ -643,14 +643,14 @@ Bool_t TXMLFile::ReadFromFile()
 
 Int_t TXMLFile::ReadKeysList(TDirectory *dir, XMLNodePointer_t topnode)
 {
-   if ((dir == 0) || (topnode == 0))
+   if (!dir || !topnode)
       return 0;
 
    Int_t nkeys = 0;
 
    XMLNodePointer_t keynode = fXML->GetChild(topnode);
    fXML->SkipEmpty(keynode);
-   while (keynode != 0) {
+   while (keynode) {
       XMLNodePointer_t next = fXML->GetNext(keynode);
 
       if (strcmp(xmlio::Xmlkey, fXML->GetNodeName(keynode)) == 0) {
@@ -679,7 +679,7 @@ void TXMLFile::WriteStreamerInfo()
 {
    if (fStreamerInfoNode) {
       fXML->FreeNode(fStreamerInfoNode);
-      fStreamerInfoNode = 0;
+      fStreamerInfoNode = nullptr;
    }
 
    if (!IsStoreStreamerInfos())
@@ -689,9 +689,9 @@ void TXMLFile::WriteStreamerInfo()
 
    TIter iter(gROOT->GetListOfStreamerInfo());
 
-   TStreamerInfo *info = 0;
+   TStreamerInfo *info = nullptr;
 
-   while ((info = (TStreamerInfo *)iter()) != 0) {
+   while ((info = (TStreamerInfo *)iter()) != nullptr) {
       Int_t uid = info->GetNumber();
       if (fClassIndex->fArray[uid])
          list.Add(info);
@@ -700,26 +700,25 @@ void TXMLFile::WriteStreamerInfo()
    if (list.GetSize() == 0)
       return;
 
-   fStreamerInfoNode = fXML->NewChild(0, 0, xmlio::SInfos);
+   fStreamerInfoNode = fXML->NewChild(nullptr, nullptr, xmlio::SInfos);
    for (int n = 0; n <= list.GetLast(); n++) {
       info = (TStreamerInfo *)list.At(n);
 
-      XMLNodePointer_t infonode = fXML->NewChild(fStreamerInfoNode, 0, "TStreamerInfo");
+      XMLNodePointer_t infonode = fXML->NewChild(fStreamerInfoNode, nullptr, "TStreamerInfo");
 
-      fXML->NewAttr(infonode, 0, "name", info->GetName());
-      fXML->NewAttr(infonode, 0, "title", info->GetTitle());
+      fXML->NewAttr(infonode, nullptr, "name", info->GetName());
+      fXML->NewAttr(infonode, nullptr, "title", info->GetTitle());
 
       fXML->NewIntAttr(infonode, "v", info->IsA()->GetClassVersion());
       fXML->NewIntAttr(infonode, "classversion", info->GetClassVersion());
-      fXML->NewAttr(infonode, 0, "canoptimize",
+      fXML->NewAttr(infonode, nullptr, "canoptimize",
                     (info->TestBit(TStreamerInfo::kCannotOptimize) ? xmlio::False : xmlio::True));
       fXML->NewIntAttr(infonode, "checksum", info->GetCheckSum());
 
       TIter iter2(info->GetElements());
-      TStreamerElement *elem = 0;
-      while ((elem = (TStreamerElement *)iter2()) != 0) {
+      TStreamerElement *elem = nullptr;
+      while ((elem = (TStreamerElement *)iter2()) != nullptr)
          StoreStreamerElement(infonode, elem);
-      }
    }
 }
 
@@ -729,15 +728,15 @@ void TXMLFile::WriteStreamerInfo()
 
 TList *TXMLFile::GetStreamerInfoList()
 {
-   if (fStreamerInfoNode == 0)
-      return 0;
+   if (!fStreamerInfoNode)
+      return nullptr;
 
    TList *list = new TList();
 
    XMLNodePointer_t sinfonode = fXML->GetChild(fStreamerInfoNode);
    fXML->SkipEmpty(sinfonode);
 
-   while (sinfonode != 0) {
+   while (sinfonode) {
       if (strcmp("TStreamerInfo", fXML->GetNodeName(sinfonode)) == 0) {
          TString fname = fXML->GetAttr(sinfonode, "name");
          TString ftitle = fXML->GetAttr(sinfonode, "title");
@@ -754,14 +753,14 @@ TList *TXMLFile::GetStreamerInfoList()
          info->SetCheckSum(checksum);
 
          const char *canoptimize = fXML->GetAttr(sinfonode, "canoptimize");
-         if ((canoptimize == 0) || (strcmp(canoptimize, xmlio::False) == 0))
+         if (!canoptimize || (strcmp(canoptimize, xmlio::False) == 0))
             info->SetBit(TStreamerInfo::kCannotOptimize);
          else
             info->ResetBit(TStreamerInfo::kCannotOptimize);
 
          XMLNodePointer_t node = fXML->GetChild(sinfonode);
          fXML->SkipEmpty(node);
-         while (node != 0) {
+         while (node) {
             ReadStreamerElement(node, info);
             fXML->ShiftToNext(node);
          }
@@ -781,20 +780,20 @@ void TXMLFile::StoreStreamerElement(XMLNodePointer_t infonode, TStreamerElement 
 {
    TClass *cl = elem->IsA();
 
-   XMLNodePointer_t node = fXML->NewChild(infonode, 0, cl->GetName());
+   XMLNodePointer_t node = fXML->NewChild(infonode, nullptr, cl->GetName());
 
    char sbuf[100], namebuf[100];
 
-   fXML->NewAttr(node, 0, "name", elem->GetName());
+   fXML->NewAttr(node, nullptr, "name", elem->GetName());
    if (strlen(elem->GetTitle()) > 0)
-      fXML->NewAttr(node, 0, "title", elem->GetTitle());
+      fXML->NewAttr(node, nullptr, "title", elem->GetTitle());
 
    fXML->NewIntAttr(node, "v", cl->GetClassVersion());
 
    fXML->NewIntAttr(node, "type", elem->GetType());
 
    if (strlen(elem->GetTypeName()) > 0)
-      fXML->NewAttr(node, 0, "typename", elem->GetTypeName());
+      fXML->NewAttr(node, nullptr, "typename", elem->GetTypeName());
 
    fXML->NewIntAttr(node, "size", elem->GetSize());
 
@@ -810,19 +809,19 @@ void TXMLFile::StoreStreamerElement(XMLNodePointer_t infonode, TStreamerElement 
    if (cl == TStreamerBase::Class()) {
       TStreamerBase *base = (TStreamerBase *)elem;
       sprintf(sbuf, "%d", base->GetBaseVersion());
-      fXML->NewAttr(node, 0, "baseversion", sbuf);
+      fXML->NewAttr(node, nullptr, "baseversion", sbuf);
       sprintf(sbuf, "%d", base->GetBaseCheckSum());
-      fXML->NewAttr(node, 0, "basechecksum", sbuf);
+      fXML->NewAttr(node, nullptr, "basechecksum", sbuf);
    } else if (cl == TStreamerBasicPointer::Class()) {
       TStreamerBasicPointer *bptr = (TStreamerBasicPointer *)elem;
       fXML->NewIntAttr(node, "countversion", bptr->GetCountVersion());
-      fXML->NewAttr(node, 0, "countname", bptr->GetCountName());
-      fXML->NewAttr(node, 0, "countclass", bptr->GetCountClass());
+      fXML->NewAttr(node, nullptr, "countname", bptr->GetCountName());
+      fXML->NewAttr(node, nullptr, "countclass", bptr->GetCountClass());
    } else if (cl == TStreamerLoop::Class()) {
       TStreamerLoop *loop = (TStreamerLoop *)elem;
       fXML->NewIntAttr(node, "countversion", loop->GetCountVersion());
-      fXML->NewAttr(node, 0, "countname", loop->GetCountName());
-      fXML->NewAttr(node, 0, "countclass", loop->GetCountClass());
+      fXML->NewAttr(node, nullptr, "countname", loop->GetCountName());
+      fXML->NewAttr(node, nullptr, "countclass", loop->GetCountClass());
    } else if ((cl == TStreamerSTL::Class()) || (cl == TStreamerSTLstring::Class())) {
       TStreamerSTL *stl = (TStreamerSTL *)elem;
       fXML->NewIntAttr(node, "STLtype", stl->GetSTLtype());
@@ -836,7 +835,7 @@ void TXMLFile::StoreStreamerElement(XMLNodePointer_t infonode, TStreamerElement 
 void TXMLFile::ReadStreamerElement(XMLNodePointer_t node, TStreamerInfo *info)
 {
    TClass *cl = TClass::GetClass(fXML->GetNodeName(node));
-   if ((cl == 0) || !cl->InheritsFrom(TStreamerElement::Class()))
+   if (!cl || !cl->InheritsFrom(TStreamerElement::Class()))
       return;
 
    TStreamerElement *elem = (TStreamerElement *)cl->New();
@@ -975,7 +974,7 @@ void TXMLFile::SetUseNamespaces(Bool_t iUseNamespaces)
 
 Bool_t TXMLFile::AddXmlComment(const char *comment)
 {
-   if (!IsWritable() || (fXML == 0))
+   if (!IsWritable() || !fXML)
       return kFALSE;
 
    return fXML->AddDocComment(fDoc, comment);
@@ -994,7 +993,7 @@ Bool_t TXMLFile::AddXmlComment(const char *comment)
 Bool_t TXMLFile::AddXmlStyleSheet(const char *href, const char *type, const char *title, int alternate,
                                   const char *media, const char *charset)
 {
-   if (!IsWritable() || (fXML == 0))
+   if (!IsWritable() || !fXML)
       return kFALSE;
 
    return fXML->AddDocStyleSheet(fDoc, href, type, title, alternate, media, charset);
@@ -1009,7 +1008,7 @@ Bool_t TXMLFile::AddXmlStyleSheet(const char *href, const char *type, const char
 
 Bool_t TXMLFile::AddXmlLine(const char *line)
 {
-   if (!IsWritable() || (fXML == 0))
+   if (!IsWritable() || !fXML)
       return kFALSE;
 
    return fXML->AddDocRawLine(fDoc, line);
@@ -1021,7 +1020,7 @@ Bool_t TXMLFile::AddXmlLine(const char *line)
 Long64_t TXMLFile::DirCreateEntry(TDirectory *dir)
 {
    TDirectory *mother = dir->GetMotherDir();
-   if (mother == 0)
+   if (!mother)
       mother = this;
 
    TKeyXML *key = new TKeyXML(mother, ++fKeyCounter, dir, dir->GetName(), dir->GetTitle());
@@ -1037,21 +1036,21 @@ Long64_t TXMLFile::DirCreateEntry(TDirectory *dir)
 TKeyXML *TXMLFile::FindDirKey(TDirectory *dir)
 {
    TDirectory *motherdir = dir->GetMotherDir();
-   if (motherdir == 0)
+   if (!motherdir)
       motherdir = this;
 
    TIter next(motherdir->GetListOfKeys());
-   TObject *obj = 0;
+   TObject *obj = nullptr;
 
-   while ((obj = next()) != 0) {
+   while ((obj = next()) != nullptr) {
       TKeyXML *key = dynamic_cast<TKeyXML *>(obj);
 
-      if (key != 0)
+      if (key)
          if (key->GetKeyId() == dir->GetSeekDir())
             return key;
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1059,20 +1058,20 @@ TKeyXML *TXMLFile::FindDirKey(TDirectory *dir)
 
 TDirectory *TXMLFile::FindKeyDir(TDirectory *motherdir, Long64_t keyid)
 {
-   if (motherdir == 0)
+   if (!motherdir)
       motherdir = this;
 
    TIter next(motherdir->GetList());
-   TObject *obj = 0;
+   TObject *obj = nullptr;
 
-   while ((obj = next()) != 0) {
+   while ((obj = next()) != nullptr) {
       TDirectory *dir = dynamic_cast<TDirectory *>(obj);
-      if (dir != 0)
+      if (dir)
          if (dir->GetSeekDir() == keyid)
             return dir;
    }
 
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1082,7 +1081,7 @@ TDirectory *TXMLFile::FindKeyDir(TDirectory *motherdir, Long64_t keyid)
 Int_t TXMLFile::DirReadKeys(TDirectory *dir)
 {
    TKeyXML *key = FindDirKey(dir);
-   if (key == 0)
+   if (!key)
       return 0;
 
    return ReadKeysList(dir, key->KeyNode());
@@ -1094,11 +1093,11 @@ Int_t TXMLFile::DirReadKeys(TDirectory *dir)
 void TXMLFile::DirWriteKeys(TDirectory *)
 {
    TIter next(GetListOfKeys());
-   TObject *obj = 0;
+   TObject *obj = nullptr;
 
-   while ((obj = next()) != 0) {
+   while ((obj = next()) != nullptr) {
       TKeyXML *key = dynamic_cast<TKeyXML *>(obj);
-      if (key != 0)
+      if (key)
          key->UpdateAttributes();
    }
 }
@@ -1109,6 +1108,6 @@ void TXMLFile::DirWriteKeys(TDirectory *)
 void TXMLFile::DirWriteHeader(TDirectory *dir)
 {
    TKeyXML *key = FindDirKey(dir);
-   if (key != 0)
+   if (key)
       key->UpdateObject(dir);
 }
