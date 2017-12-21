@@ -45,7 +45,6 @@ There are limitations for complex objects like TTree, which can not be converted
 #include "TMethodCall.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "TProcessID.h"
 #include "TFile.h"
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
@@ -68,7 +67,7 @@ std::string TBufferXML::fgFloatFmt = "%e";
 /// Default constructor
 
 TBufferXML::TBufferXML()
-   : TBuffer(), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
+   : TBufferText(), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
      fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0),
      fIOVersion(3)
 {
@@ -79,15 +78,10 @@ TBufferXML::TBufferXML()
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferXML::TBufferXML(TBuffer::EMode mode)
-   : TBuffer(mode), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
+   : TBufferText(mode), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
      fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0),
      fIOVersion(3)
 {
-   fBufSize = 1000000000;
-
-   SetParent(nullptr);
-   SetBit(kCannotHandleMemberWiseStreaming);
-   // SetBit(kTextBasedStreaming);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,7 +90,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode)
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
-   : TBuffer(mode), TXMLSetup(*file), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
+   : TBufferText(mode, file), TXMLSetup(*file), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
      fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0),
      fIOVersion(3)
 {
@@ -104,11 +98,7 @@ TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
    // buffer as ReadFastArray. When it checks if size of buffer is
    // too small and skip reading. Actually, more improved method should
    // be used here.
-   fBufSize = 1000000000;
 
-   SetParent(file);
-   SetBit(kCannotHandleMemberWiseStreaming);
-   // SetBit(kTextBasedStreaming);
    if (XmlFile()) {
       SetXML(XmlFile()->XML());
       SetCompressionSettings(XmlFile()->GetCompressionSettings());
@@ -4119,50 +4109,4 @@ Int_t TBufferXML::WriteClones(TClonesArray *a, Int_t nobjects)
    char **end = arr + nobjects;
    // No need to tell call ForceWriteInfo as it by ForceWriteInfoClones.
    return ApplySequenceVecPtr(*(info->GetWriteMemberWiseActions(kTRUE)), arr, end);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// The TProcessID with number pidf is read from file.
-/// If the object is not already entered in the gROOT list, it is added.
-
-TProcessID *TBufferXML::ReadProcessID(UShort_t pidf)
-{
-   TFile *file = (TFile *)GetParent();
-   if (!file) {
-      if (!pidf)
-         return TProcessID::GetPID(); // may happen when cloning an object
-      return 0;
-   }
-
-   TProcessID *pid = nullptr;
-   {
-      R__LOCKGUARD_IMT(gInterpreterMutex); // Lock for parallel TTree I/O
-      pid = file->ReadProcessID(pidf);
-   }
-
-   return pid;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the ProcessID pid is already in the file.
-/// If not, add it and return the index number in the local file list.
-
-UShort_t TBufferXML::WriteProcessID(TProcessID *pid)
-{
-   TFile *file = (TFile *)GetParent();
-   if (!file)
-      return 0;
-   return file->WriteProcessID(pid);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the exec id stored in the current TStreamerInfo element.
-/// The execid has been saved in the unique id of the TStreamerElement
-/// being read by TStreamerElement::Streamer.
-/// The current element (fgElement) is set as a static global
-/// by TStreamerInfo::ReadBuffer (Clones) when reading this TRef.
-
-UInt_t TBufferXML::GetTRefExecId()
-{
-   return TStreamerInfo::GetCurrentElement()->GetUniqueID();
 }

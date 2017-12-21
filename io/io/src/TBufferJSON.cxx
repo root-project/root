@@ -381,15 +381,9 @@ public:
 /// Creates buffer object to serialize data into json.
 
 TBufferJSON::TBufferJSON(TBuffer::EMode mode)
-   : TBuffer(mode), fOutBuffer(), fOutput(nullptr), fValue(), fJsonrMap(), fReadMap(), fJsonrCnt(0), fStack(),
+   : TBufferText(mode), fOutBuffer(), fOutput(nullptr), fValue(), fJsonrMap(), fReadMap(), fJsonrCnt(0), fStack(),
      fCompact(0), fSemicolon(" : "), fArraySepar(", "), fNumericLocale()
 {
-   fBufSize = 1000000000;
-
-   SetParent(nullptr);
-   SetBit(kCannotHandleMemberWiseStreaming);
-   // SetBit(kTextBasedStreaming);
-
    fOutBuffer.Capacity(10000);
    fValue.Capacity(1000);
    fOutput = &fOutBuffer;
