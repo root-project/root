@@ -135,10 +135,10 @@ TXMLFile *TBufferXML::XmlFile()
 
 TString TBufferXML::ConvertToXML(const TObject *obj, Bool_t GenericLayout, Bool_t UseNamespaces)
 {
-   TClass *clActual = 0;
+   TClass *clActual = nullptr;
    void *ptr = (void *)obj;
 
-   if (obj != 0) {
+   if (obj) {
       clActual = TObject::Class()->GetActualClass(obj);
       if (!clActual)
          clActual = TObject::Class();
@@ -183,17 +183,17 @@ TString TBufferXML::ConvertToXML(const void *obj, const TClass *cl, Bool_t Gener
 
 TObject *TBufferXML::ConvertFromXML(const char *str, Bool_t GenericLayout, Bool_t UseNamespaces)
 {
-   TClass *cl = 0;
+   TClass *cl = nullptr;
    void *obj = ConvertFromXMLAny(str, &cl, GenericLayout, UseNamespaces);
 
-   if ((cl == 0) || (obj == 0))
-      return 0;
+   if (!cl || !obj)
+      return nullptr;
 
    Int_t delta = cl->GetBaseClassOffset(TObject::Class());
 
    if (delta < 0) {
       cl->Destructor(obj);
-      return 0;
+      return nullptr;
    }
 
    return (TObject *)(((char *)obj) + delta);
@@ -258,8 +258,8 @@ XMLNodePointer_t TBufferXML::XmlWriteAny(const void *obj, const TClass *cl)
 {
    fErrorFlag = 0;
 
-   if (fXML == 0)
-      return 0;
+   if (!fXML)
+      return nullptr;
 
    XMLNodePointer_t res = XmlWriteObject(obj, cl, kTRUE);
 
@@ -273,15 +273,16 @@ XMLNodePointer_t TBufferXML::XmlWriteAny(const void *obj, const TClass *cl)
 
 void *TBufferXML::XmlReadAny(XMLNodePointer_t node, void *obj, TClass **cl)
 {
-   if (node == 0)
-      return 0;
+   if (!node)
+      return nullptr;
+
    if (cl)
-      *cl = 0;
+      *cl = nullptr;
 
    fErrorFlag = 0;
 
-   if (fXML == 0)
-      return 0;
+   if (!fXML)
+      return nullptr;
 
    PushStack(node, kTRUE);
 
@@ -343,12 +344,12 @@ TXMLStackObj *TBufferXML::PushStack(XMLNodePointer_t current, Bool_t simple)
 TXMLStackObj *TBufferXML::PopStack()
 {
    TObject *last = fStack.Last();
-   if (last != 0) {
+   if (last) {
       fStack.Remove(last);
       delete last;
       fStack.Compress();
    }
-   return dynamic_cast<TXMLStackObj *>(fStack.Last());
+   return static_cast<TXMLStackObj *>(fStack.Last());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -356,10 +357,7 @@ TXMLStackObj *TBufferXML::PopStack()
 
 TXMLStackObj *TBufferXML::Stack(Int_t depth)
 {
-   TXMLStackObj *stack = nullptr;
-   if (depth <= fStack.GetLast())
-      stack = dynamic_cast<TXMLStackObj *>(fStack.At(fStack.GetLast() - depth));
-   return stack;
+   return (depth <= fStack.GetLast()) ? static_cast<TXMLStackObj *>(fStack.At(fStack.GetLast() - depth)) : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -367,8 +365,8 @@ TXMLStackObj *TBufferXML::Stack(Int_t depth)
 
 XMLNodePointer_t TBufferXML::StackNode()
 {
-   TXMLStackObj *stack = dynamic_cast<TXMLStackObj *>(fStack.Last());
-   return (stack == nullptr) ? nullptr : stack->fNode;
+   TXMLStackObj *stack = static_cast<TXMLStackObj *>(fStack.Last());
+   return stack ? stack->fNode : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -376,7 +374,7 @@ XMLNodePointer_t TBufferXML::StackNode()
 
 void TBufferXML::ShiftStack(const char *errinfo)
 {
-   TXMLStackObj *stack = dynamic_cast<TXMLStackObj *>(fStack.Last());
+   TXMLStackObj *stack = static_cast<TXMLStackObj *>(fStack.Last());
    if (stack) {
       fXML->ShiftToNext(stack->fNode);
       if (gDebug > 4)
@@ -436,7 +434,7 @@ void TBufferXML::SetCompressionSettings(Int_t settings)
 
 void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
 {
-   if ((node == 0) || (Length() == 0))
+   if (!node || (Length() == 0))
       return;
 
    const char *src = Buffer();
@@ -497,7 +495,7 @@ void TBufferXML::XmlWriteBlock(XMLNodePointer_t node)
 
 void TBufferXML::XmlReadBlock(XMLNodePointer_t blocknode)
 {
-   if (blocknode == 0)
+   if (!blocknode)
       return;
 
    Int_t blockSize = fXML->GetIntAttr(blocknode, xmlio::Size);
@@ -546,18 +544,17 @@ void TBufferXML::XmlReadBlock(XMLNodePointer_t blocknode)
 
    if (fUnzipBuffer) {
 
-      int srcsize;
-      int tgtsize;
+      int srcsize(0), tgtsize(0), unzipRes(0);
       int status = R__unzip_header(&srcsize, (UChar_t *)fUnzipBuffer, &tgtsize);
 
-      int unzipRes = 0;
-      if (status == 0) {
+      if (status == 0)
          R__unzip(&readSize, (unsigned char *)fUnzipBuffer, &blockSize, (unsigned char *)Buffer(), &unzipRes);
-      }
+
       if (status != 0 || unzipRes != blockSize)
          Error("XmlReadBlock", "Decompression error %d", unzipRes);
       else if (gDebug > 2)
          Info("XmlReadBlock", "Unzip ok");
+
       delete[] fUnzipBuffer;
    }
 }
@@ -569,26 +566,26 @@ void TBufferXML::XmlReadBlock(XMLNodePointer_t blocknode)
 
 Bool_t TBufferXML::ProcessPointer(const void *ptr, XMLNodePointer_t node)
 {
-   if (node == 0)
+   if (!node)
       return kFALSE;
 
    TString refvalue;
 
-   if (ptr == 0)
+   if (!ptr) {
       refvalue = xmlio::Null; // null
-   else {
-      if (fObjMap == 0)
+   } else {
+      if (!fObjMap)
          return kFALSE;
 
       ULong_t hash = TString::Hash(&ptr, sizeof(void *));
 
       XMLNodePointer_t refnode = (XMLNodePointer_t)(Long_t)fObjMap->GetValue(hash, (Long_t)ptr);
-      if (refnode == 0)
+      if (!refnode)
          return kFALSE;
 
-      if (fXML->HasAttr(refnode, xmlio::Ref))
+      if (fXML->HasAttr(refnode, xmlio::Ref)) {
          refvalue = fXML->GetAttr(refnode, xmlio::Ref);
-      else {
+      } else {
          refvalue = xmlio::IdBase;
          if (XmlFile())
             refvalue += XmlFile()->GetNextRefCounter();
@@ -611,12 +608,12 @@ Bool_t TBufferXML::ProcessPointer(const void *ptr, XMLNodePointer_t node)
 
 void TBufferXML::RegisterPointer(const void *ptr, XMLNodePointer_t node)
 {
-   if ((node == 0) || (ptr == 0))
+   if (!node || !ptr)
       return;
 
    ULong_t hash = TString::Hash(&ptr, sizeof(void *));
 
-   if (fObjMap == 0)
+   if (!fObjMap)
       fObjMap = new TExMap();
 
    if (fObjMap->GetValue(hash, (Long_t)ptr) == 0)
@@ -636,7 +633,7 @@ Bool_t TBufferXML::ExtractPointer(XMLNodePointer_t node, void *&ptr, TClass *&cl
 
    const char *ptrid = fXML->GetAttr(node, xmlio::Ptr);
 
-   if (ptrid == nullptr)
+   if (!ptrid)
       return kFALSE;
 
    // null
@@ -645,10 +642,10 @@ Bool_t TBufferXML::ExtractPointer(XMLNodePointer_t node, void *&ptr, TClass *&cl
       return kTRUE;
    }
 
-   if ((fIdArray == nullptr) || (fObjMap == nullptr))
+   if (!fIdArray || !fObjMap)
       return kFALSE;
 
-   TNamed *obj = (TNamed *)fIdArray->FindObject(ptrid);
+   TNamed *obj = static_cast<TNamed *>(fIdArray->FindObject(ptrid));
    if (obj) {
       ptr = (void *)(Long_t)fObjMap->GetValue((Long_t)fIdArray->IndexOf(obj));
       cl = TClass::GetClass(obj->GetTitle());
@@ -662,22 +659,22 @@ Bool_t TBufferXML::ExtractPointer(XMLNodePointer_t node, void *&ptr, TClass *&cl
 
 void TBufferXML::ExtractReference(XMLNodePointer_t node, const void *ptr, const TClass *cl)
 {
-   if ((node == nullptr) || (ptr == nullptr))
+   if (!node || !ptr)
       return;
 
    const char *refid = fXML->GetAttr(node, xmlio::Ref);
 
-   if (refid == nullptr)
+   if (!refid)
       return;
 
-   if (fIdArray == nullptr) {
+   if (!fIdArray) {
       fIdArray = new TObjArray;
       fIdArray->SetOwner(kTRUE);
    }
    TNamed *nid = new TNamed(refid, cl->GetName());
    fIdArray->Add(nid);
 
-   if (fObjMap == nullptr)
+   if (!fObjMap)
       fObjMap = new TExMap();
 
    fObjMap->Add((Long_t)fIdArray->IndexOf(nid), (Long_t)ptr);
@@ -691,7 +688,7 @@ void TBufferXML::ExtractReference(XMLNodePointer_t node, const void *ptr, const 
 
 Bool_t TBufferXML::VerifyNode(XMLNodePointer_t node, const char *name, const char *errinfo)
 {
-   if ((name == 0) || (node == 0))
+   if (!name || !node)
       return kFALSE;
 
    if (strcmp(fXML->GetNodeName(node), name) != 0) {
@@ -717,10 +714,11 @@ Bool_t TBufferXML::VerifyStackNode(const char *name, const char *errinfo)
 
 Bool_t TBufferXML::VerifyAttr(XMLNodePointer_t node, const char *name, const char *value, const char *errinfo)
 {
-   if ((node == 0) || (name == 0) || (value == 0))
+   if (!node || !name || !value)
       return kFALSE;
+
    const char *cont = fXML->GetAttr(node, name);
-   if (((cont == 0) || (strcmp(cont, value) != 0))) {
+   if ((!cont || (strcmp(cont, value) != 0))) {
       if (errinfo) {
          Error("VerifyAttr", "%s : attr %s = %s, expected: %s", errinfo, name, cont, value);
          fErrorFlag = 1;
@@ -933,10 +931,10 @@ void TBufferXML::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
    fCanUseCompact = kFALSE;
    fExpectedChain = kFALSE;
 
-   if (sinfo != 0)
+   if (sinfo)
       cl = sinfo->GetClass();
 
-   if (cl == 0)
+   if (!cl)
       return;
 
    TString clname = XmlConvertClassName(cl->GetName());
@@ -944,14 +942,14 @@ void TBufferXML::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
    if (gDebug > 2)
       Info("IncrementLevel", "Class: %s", clname.Data());
 
-   Bool_t compressClassNode = fExpectedBaseClass == cl;
-   fExpectedBaseClass = 0;
+   Bool_t compressClassNode = (fExpectedBaseClass == cl);
+   fExpectedBaseClass = nullptr;
 
    TXMLStackObj *stack = Stack();
 
    if (IsWriting()) {
 
-      XMLNodePointer_t classnode = 0;
+      XMLNodePointer_t classnode = nullptr;
       if (compressClassNode) {
          classnode = StackNode();
       } else {
@@ -1058,7 +1056,7 @@ void TBufferXML::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
       PopStack(); // go level back
       if (IsReading())
          ShiftStack("startelem"); // shift to next element, only for reading
-      stack = dynamic_cast<TXMLStackObj *>(fStack.Last());
+      stack = static_cast<TXMLStackObj *>(fStack.Last());
    }
 
    if (!stack) {
@@ -1236,7 +1234,7 @@ void TBufferXML::ClassMember(const char *name, const char *typeName, Int_t arrsi
       elem = new TStreamerElement(name, "title", 0, typ_id, "raw:data");
    } else if (typ_id == TStreamerInfo::kBase) {
       TClass *cl = TClass::GetClass(tname.Data());
-      if (cl != 0) {
+      if (cl) {
          TStreamerBase *b = new TStreamerBase(tname.Data(), "title", 0);
          b->SetBaseVersion(cl->GetClassVersion());
          elem = b;
@@ -1310,7 +1308,7 @@ void TBufferXML::PerformPostProcessing()
                return;
             nodeint = node;
          } else if (strcmp(name, xmlio::CharStar) == 0) {
-            if (nodecharstar != 0)
+            if (nodecharstar)
                return;
             nodecharstar = node;
          } else
@@ -1547,13 +1545,12 @@ Version_t TBufferXML::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*
 
    if (VerifyItemNode(xmlio::OnlyVersion)) {
       res = AtoI(XmlReadValue(xmlio::OnlyVersion));
-   } else if ((fExpectedBaseClass != 0) && (fXML->HasAttr(Stack(1)->fNode, xmlio::ClassVersion))) {
+   } else if (fExpectedBaseClass && (fXML->HasAttr(Stack(1)->fNode, xmlio::ClassVersion))) {
       res = fXML->GetIntAttr(Stack(1)->fNode, xmlio::ClassVersion);
    } else if (fXML->HasAttr(StackNode(), xmlio::ClassVersion)) {
       res = fXML->GetIntAttr(StackNode(), xmlio::ClassVersion);
    } else {
       Error("ReadVersion", "No correspondent tags to read version");
-      ;
       fErrorFlag = 1;
    }
 
@@ -2004,7 +2001,7 @@ R__ALWAYS_INLINE void TBufferXML::XmlReadFastArray(T *arr, Int_t n)
    if (n <= 0)
       return;
    TStreamerElement *elem = Stack(0)->fElem;
-   if ((elem != 0) && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) &&
+   if (elem && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) &&
        (elem->GetArrayLength() != n))
       fExpectedChain = kTRUE;
    if (fExpectedChain) {
