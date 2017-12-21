@@ -303,7 +303,7 @@ public:
 
    Bool_t IsStreamerInfo() const { return fIsStreamerInfo; }
 
-   Bool_t IsStreamerElement() const { return !fIsStreamerInfo && (fElem != nullptr); }
+   Bool_t IsStreamerElement() const { return !fIsStreamerInfo && fElem; }
 
    void PushValue(TString &v)
    {
@@ -398,7 +398,7 @@ TBufferJSON::TBufferJSON(TBuffer::EMode mode)
    // in this case locale will be changed and restored at the end of object conversion
 
    char *loc = setlocale(LC_NUMERIC, 0);
-   if ((loc != 0) && (strcmp(loc, "C") != 0)) {
+   if (loc && (strcmp(loc, "C") != 0)) {
       fNumericLocale = loc;
       setlocale(LC_NUMERIC, "C");
    }
@@ -599,7 +599,7 @@ Int_t TBufferJSON::ExportToFile(const char *filename, const TObject *obj, const 
          buflen = 512;
 
       char *buffer = (char *)malloc(buflen);
-      if (buffer == 0)
+      if (!buffer)
          return 0; // failure
 
       char *bufcur = buffer;
@@ -679,7 +679,7 @@ Int_t TBufferJSON::ExportToFile(const char *filename, const void *obj, const TCl
          buflen = 512;
 
       char *buffer = (char *)malloc(buflen);
-      if (buffer == 0)
+      if (!buffer)
          return 0; // failure
 
       char *bufcur = buffer;
@@ -1462,9 +1462,9 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
       if (clones)
          continue;
 
-      if (!subobj || !readClass)
+      if (!subobj || !readClass) {
          subobj = nullptr;
-      else if (readClass->GetBaseClassOffset(TObject::Class()) != 0) {
+      } else if (readClass->GetBaseClassOffset(TObject::Class()) != 0) {
          Error("JsonReadCollection", "Try to add object %s not derived from TObject", readClass->GetName());
          subobj = nullptr;
       }
@@ -1479,9 +1479,9 @@ void TBufferJSON::JsonReadCollection(TCollection *col, const TClass *)
 
          PopStack();
 
-         if (!subobj2 || !readClass)
+         if (!subobj2 || !readClass) {
             subobj2 = nullptr;
-         else if (readClass->GetBaseClassOffset(TObject::Class()) != 0) {
+         } else if (readClass->GetBaseClassOffset(TObject::Class()) != 0) {
             Error("JsonReadCollection", "Try to add object %s not derived from TObject", readClass->GetName());
             subobj2 = nullptr;
          }
