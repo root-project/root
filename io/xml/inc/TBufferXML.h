@@ -12,7 +12,7 @@
 #ifndef ROOT_TBufferXML
 #define ROOT_TBufferXML
 
-#include "TBuffer.h"
+#include "TBufferText.h"
 #include "TXMLSetup.h"
 #include "TXMLEngine.h"
 #include "TString.h"
@@ -31,7 +31,7 @@ class TMemberStreamer;
 class TXMLFile;
 class TXMLStackObj;
 
-class TBufferXML : public TBuffer, public TXMLSetup {
+class TBufferXML : public TBufferText, public TXMLSetup {
 
    friend class TKeyXML;
 
@@ -321,15 +321,6 @@ public:
    }
    virtual void SetBufferDisplacement() { Error("SetBufferDisplacement", "useless"); }
    virtual void SetBufferDisplacement(Int_t /*skipped*/) { Error("SetBufferDisplacement", "useless"); }
-
-   virtual TProcessID *GetLastProcessID(TRefTable * /*reftable*/) const
-   {
-      Error("GetLastProcessID", "useless");
-      return 0;
-   }
-   virtual UInt_t GetTRefExecId();
-   virtual TProcessID *ReadProcessID(UShort_t pidf);
-   virtual UShort_t WriteProcessID(TProcessID *pid);
 
    // Utilities for TStreamerInfo
    virtual void ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force);

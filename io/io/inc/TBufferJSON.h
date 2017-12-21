@@ -12,7 +12,7 @@
 #ifndef ROOT_TBufferJSON
 #define ROOT_TBufferJSON
 
-#include "TBuffer.h"
+#include "TBufferText.h"
 #include "TString.h"
 
 #include <map>
@@ -25,7 +25,7 @@ class TMemberStreamer;
 class TDataMember;
 class TJSONStackObj;
 
-class TBufferJSON : public TBuffer {
+class TBufferJSON : public TBufferText {
 
 public:
    TBufferJSON(TBuffer::EMode mode = TBuffer::kWrite);
@@ -326,27 +326,6 @@ public:
    }
    virtual void SetBufferDisplacement() { Error("SetBufferDisplacement", "useless"); }
    virtual void SetBufferDisplacement(Int_t /*skipped*/) { Error("SetBufferDisplacement", "useless"); }
-
-   virtual TProcessID *GetLastProcessID(TRefTable * /*reftable*/) const
-   {
-      Error("GetLastProcessID", "useless");
-      return 0;
-   }
-   virtual UInt_t GetTRefExecId()
-   {
-      Error("GetTRefExecId", "useless");
-      return 0;
-   }
-   virtual TProcessID *ReadProcessID(UShort_t /*pidf*/)
-   {
-      Error("ReadProcessID", "useless");
-      return 0;
-   }
-   virtual UShort_t WriteProcessID(TProcessID * /*pid*/)
-   {
-      // Error("WriteProcessID", "useless");
-      return 0;
-   }
 
    // Utilities for TStreamerInfo
    virtual void ForceWriteInfo(TVirtualStreamerInfo * /*info*/, Bool_t /*force*/)
