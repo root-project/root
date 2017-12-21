@@ -564,15 +564,17 @@ note that all actions are only executed for events that pass all preceding filte
 
 | **Lazy actions** | **Description** |
 |------------------|-----------------|
+| Aggregate | Execute a user-defined accumulation operation on the processed column values. |
 | Count | Return the number of events processed. |
 | Fill | Fill a user-defined object with the values of the specified branches, as if by calling `Obj.Fill(branch1, branch2, ...). |
 | Histo{1D,2D,3D} | Fill a {one,two,three}-dimensional histogram with the processed branch values. |
 | Max | Return the maximum of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
-| Mean | Return the mean of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
+| Mean | Return the mean of processed branch values.|
 | Min | Return the minimum of processed branch values. If the type of the column is inferred, the return type is `double`, the type of the column otherwise.|
 | Profile{1D,2D} | Fill a {one,two}-dimensional profile with the branch values that passed all filters. |
 | Reduce | Reduce (e.g. sum, merge) entries using the function (lambda, functor...) passed as argument. The function must have signature `T(T,T)` where `T` is the type of the branch. Return the final result of the reduction operation. An optional parameter allows initialization of the result object to non-default values. |
 | Take | Extract a column from the dataset as a collection of values. If the type of the column is a C-style array, the type stored in the return container is a `std::vector<T>` to guarantee the lifetime of the data involved. |
+| Sum | Return the sum of the values in the column. If the type of the column is inferred, the return type is `double`, the type of the column otherwise. |
 
 | **Instant actions** | **Description** |
 |---------------------|-----------------|
