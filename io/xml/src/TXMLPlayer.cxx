@@ -12,7 +12,7 @@
 //________________________________________________________________________
 //
 // Class for xml code generation
-// It should be used for generation of xml steramers, which could be used outside root
+// It should be used for generation of xml streamers, which could be used outside root
 // environment. This means, that with help of such streamers user can read and write
 // objects from/to xml file, which later can be accepted by ROOT.
 //
@@ -23,7 +23,7 @@
 //
 // 1. ROOT library with required classes should be created.
 //    In general, without such library non of user objects can be stored and
-//    retrived from any ROOT file
+//    retrieved from any ROOT file
 //
 // 2. Generate xml streamers by root script like:
 //
@@ -41,7 +41,7 @@
 //
 //  3. Copy "streamers.h", "streamers.cxx", "TXmlFile.h", "TXmlFile.cxx" files
 //     to user project and compile them. TXmlFile class implementation can be taken
-//     from http://www-linux.gsi.de/~linev/xmlfile.tar.gz
+//     from http://web-docs.gsi.de/~linev/xmlfile.tar.gz
 //
 // TXMLPlayer class generates one function per class, which called class streamer.
 // Name of such function for class TExample will be TExample_streamer.
@@ -63,13 +63,13 @@
 // If data member of class is private or protected, it can not be accessed via
 // member name. Two alternative way is supported. First, if for class member fValue
 // exists function GetValue(), it will be used to get value from the class, and if
-// exists SetValue(), it will be used to set apropriate data member. Names of setter
+// exists SetValue(), it will be used to set appropriate data member. Names of setter
 // and getter methods can be specified in comments filed like:
 //
 //     int  fValue;   // *OPTION={GetMethod="GetV";SetMethod="SetV"}
 //
 // If getter or setter methods does not available, address to data member will be
-// calculated as predefined offeset to object start address. In that case generated code
+// calculated as predefined offset to object start address. In that case generated code
 // should be used only on the same platform (OS + compiler), where it was generated.
 //
 // Generated streamers resolve inheritance tree for given class. This allows to have
@@ -93,7 +93,7 @@
 //        outfile.Close();
 //
 // Complete example for generating and using of external xml streamers can be taken from
-// http://www-linux.gsi.de/~linev/xmlreader.tar.gz
+// http://www-docs.gsi.de/~linev/xmlreader.tar.gz
 //
 // Any bug reports and requests for additional functionality are welcome.
 //
