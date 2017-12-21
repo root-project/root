@@ -2205,20 +2205,85 @@ void TBufferXML::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t /*nbits*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// redefined here to avoid warning message from gcc
+/// Read an array of 'n' objects from the I/O buffer.
+/// Stores the objects read starting at the address 'start'.
+/// The objects in the array are assume to be of class 'cl'.
 
-void TBufferXML::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *s, const TClass *onFileClass)
+void TBufferXML::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *streamer,
+                               const TClass *onFileClass)
 {
-   TBufferFile::ReadFastArray(start, cl, n, s, onFileClass);
+   if (streamer) {
+      streamer->SetOnFileClass(onFileClass);
+      (*streamer)(*this, start, 0);
+      return;
+   }
+
+   int objectSize = cl->Size();
+   char *obj = (char *)start;
+   char *end = obj + n * objectSize;
+
+   for (; obj < end; obj += objectSize)
+      ((TClass *)cl)->Streamer(obj, *this, onFileClass);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// redefined here to avoid warning message from gcc
+/// Read an array of 'n' objects from the I/O buffer.
+///
+/// The objects read are stored starting at the address '*start'
+/// The objects in the array are assumed to be of class 'cl' or a derived class.
+/// 'mode' indicates whether the data member is marked with '->'
 
-void TBufferXML::ReadFastArray(void **startp, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *s,
+void TBufferXML::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer,
                                const TClass *onFileClass)
 {
-   TBufferFile::ReadFastArray(startp, cl, n, isPreAlloc, s, onFileClass);
+   if (streamer) {
+      if (isPreAlloc) {
+         for (Int_t j = 0; j < n; j++) {
+            if (!start[j])
+               start[j] = cl->New();
+         }
+      }
+      streamer->SetOnFileClass(onFileClass);
+      (*streamer)(*this, (void *)start, 0);
+      return;
+   }
+
+   if (!isPreAlloc) {
+
+      for (Int_t j = 0; j < n; j++) {
+         // delete the object or collection
+         void *old = start[j];
+         start[j] = ReadObjectAny(cl);
+         if (old && old != start[j] && TStreamerInfo::CanDelete()
+             // There are some cases where the user may set up a pointer in the (default)
+             // constructor but not mark this pointer as transient.  Sometime the value
+             // of this pointer is the address of one of the object with just created
+             // and the following delete would result in the deletion (possibly of the
+             // top level object we are goint to return!).
+             // Eventhough this is a user error, we could prevent the crash by simply
+             // adding:
+             // && !CheckObject(start[j],cl)
+             // However this can increase the read time significantly (10% in the case
+             // of one TLine pointer in the test/Track and run ./Event 200 0 0 20 30000
+             //
+             // If ReadObjectAny returned the same value as we previous had, this means
+             // that when writing this object (start[j] had already been written and
+             // is indeed pointing to the same object as the object the user set up
+             // in the default constructor).
+             ) {
+            ((TClass *)cl)->Destructor(old, kFALSE); // call delete and desctructor
+         }
+      }
+
+   } else {
+      // case //-> in comment
+
+      for (Int_t j = 0; j < n; j++) {
+         if (!start[j])
+            start[j] = ((TClass *)cl)->New();
+         ((TClass *)cl)->Streamer(start[j], *this, onFileClass);
+      }
+   }
 }
 
 template <typename T>
@@ -2563,19 +2628,74 @@ void TBufferXML::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerEle
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Recall TBuffer function to avoid gcc warning message
+/// Write an array of object starting at the address 'start' and of length 'n'
+/// the objects in the array are assumed to be of class 'cl'
 
-void TBufferXML::WriteFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *s)
+void TBufferXML::WriteFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *streamer)
 {
-   TBufferFile::WriteFastArray(start, cl, n, s);
+   if (streamer) {
+      (*streamer)(*this, start, 0);
+      return;
+   }
+
+   char *obj = (char *)start;
+   if (!n)
+      n = 1;
+   int size = cl->Size();
+
+   for (Int_t j = 0; j < n; j++, obj += size) {
+      ((TClass *)cl)->Streamer(obj, *this);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Recall TBuffer function to avoid gcc warning message
+/// Write an array of object starting at the address '*start' and of length 'n'
+/// the objects in the array are of class 'cl'
+/// 'isPreAlloc' indicates whether the data member is marked with '->'
+/// Return:
+///   - 0: success
+///   - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
 
-Int_t TBufferXML::WriteFastArray(void **startp, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *s)
+Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
-   return TBufferFile::WriteFastArray(startp, cl, n, isPreAlloc, s);
+   // if isPreAlloc is true (data member has a ->) we can assume that the pointer
+   // is never 0.
+
+   if (streamer) {
+      (*streamer)(*this, (void *)start, 0);
+      return 0;
+   }
+
+   int strInfo = 0;
+
+   Int_t res = 0;
+
+   if (!isPreAlloc) {
+
+      for (Int_t j = 0; j < n; j++) {
+         // must write StreamerInfo if pointer is null
+         if (!strInfo && !start[j]) {
+            if (cl->Property() & kIsAbstract) {
+               // Do not try to generate the StreamerInfo for an abstract class
+            } else {
+               TStreamerInfo *info = (TStreamerInfo *)((TClass *)cl)->GetStreamerInfo();
+               ForceWriteInfo(info, kFALSE);
+            }
+         }
+         strInfo = 2003;
+         res |= WriteObjectAny(start[j], cl);
+      }
+
+   } else {
+      // case //-> in comment
+
+      for (Int_t j = 0; j < n; j++) {
+         if (!start[j])
+            start[j] = ((TClass *)cl)->New();
+         ((TClass *)cl)->Streamer(start[j], *this);
+      }
+   }
+   return res;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2749,11 +2869,29 @@ void TBufferXML::ReadCharP(Char_t *c)
 void TBufferXML::ReadTString(TString &s)
 {
    if (GetIOVersion() < 3) {
-      TBufferFile::ReadTString(s);
+      // original TBufferFile method can not be used, while used TString methods are private
+      // try to reimplement close to the original
+      Int_t nbig;
+      UChar_t nwh;
+      *this >> nwh;
+      if (nwh == 0) {
+         s.Resize(0);
+      } else {
+         if (nwh == 255)
+            *this >> nbig;
+         else
+            nbig = nwh;
+
+         char *data = new char[nbig];
+         data[nbig] = 0;
+         ReadFastArray(data, nbig);
+         s = data;
+         delete[] data;
+      }
    } else {
       BeforeIOoperation();
-      const char *buf;
-      if ((buf = XmlReadValue(xmlio::String)))
+      const char *buf = XmlReadValue(xmlio::String);
+      if (buf)
          s = buf;
    }
 }
@@ -2761,16 +2899,37 @@ void TBufferXML::ReadTString(TString &s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads a std::string
 
-void TBufferXML::ReadStdString(std::string *s)
+void TBufferXML::ReadStdString(std::string *obj)
 {
    if (GetIOVersion() < 3) {
-      TBufferFile::ReadStdString(s);
+      if (!obj) {
+         Error("ReadStdString", "The std::string address is nullptr but should not");
+         return;
+      }
+      Int_t nbig;
+      UChar_t nwh;
+      *this >> nwh;
+      if (nwh == 0) {
+         obj->clear();
+      } else {
+         if (obj->size()) {
+            // Insure that the underlying data storage is not shared
+            (*obj)[0] = '\0';
+         }
+         if (nwh == 255) {
+            *this >> nbig;
+            obj->resize(nbig, '\0');
+            ReadFastArray((char *)obj->data(), nbig);
+         } else {
+            obj->resize(nwh, '\0');
+            ReadFastArray((char *)obj->data(), nwh);
+         }
+      }
    } else {
       BeforeIOoperation();
-      const char *buf;
-      if ((buf = XmlReadValue(xmlio::String)))
-         if (s)
-            *s = buf;
+      const char *buf = XmlReadValue(xmlio::String);
+      if (buf && obj)
+         *obj = buf;
    }
 }
 
@@ -2779,7 +2938,16 @@ void TBufferXML::ReadStdString(std::string *s)
 
 void TBufferXML::ReadCharStar(char *&s)
 {
-   TBufferFile::ReadCharStar(s);
+   delete[] s;
+   s = nullptr;
+
+   Int_t nch;
+   *this >> nch;
+   if (nch > 0) {
+      s = new char[nch + 1];
+      ReadFastArray(s, nch);
+      s[nch] = 0;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2914,7 +3082,19 @@ void TBufferXML::WriteCharP(const Char_t *c)
 void TBufferXML::WriteTString(const TString &s)
 {
    if (GetIOVersion() < 3) {
-      TBufferFile::WriteTString(s);
+      // original TBufferFile method, keep for compatibility
+      Int_t nbig = s.Length();
+      UChar_t nwh;
+      if (nbig > 254) {
+         nwh = 255;
+         *this << nwh;
+         *this << nbig;
+      } else {
+         nwh = UChar_t(nbig);
+         *this << nwh;
+      }
+      const char *data = s.Data();
+      WriteFastArray(data, nbig);
    } else {
       BeforeIOoperation();
       XmlWriteValue(s.Data(), xmlio::String);
@@ -2922,18 +3102,31 @@ void TBufferXML::WriteTString(const TString &s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Writes a TString
+/// Writes a std::string
 
-void TBufferXML::WriteStdString(const std::string *s)
+void TBufferXML::WriteStdString(const std::string *obj)
 {
    if (GetIOVersion() < 3) {
-      TBufferFile::WriteStdString(s);
+      if (!obj) {
+         *this << (UChar_t)0;
+         WriteFastArray("", 0);
+         return;
+      }
+
+      UChar_t nwh;
+      Int_t nbig = obj->length();
+      if (nbig > 254) {
+         nwh = 255;
+         *this << nwh;
+         *this << nbig;
+      } else {
+         nwh = UChar_t(nbig);
+         *this << nwh;
+      }
+      WriteFastArray(obj->data(), nbig);
    } else {
       BeforeIOoperation();
-      if (s)
-         XmlWriteValue(s->c_str(), xmlio::String);
-      else
-         XmlWriteValue("", xmlio::String);
+      XmlWriteValue(obj ? obj->c_str() : "", xmlio::String);
    }
 }
 
@@ -2942,7 +3135,14 @@ void TBufferXML::WriteStdString(const std::string *s)
 
 void TBufferXML::WriteCharStar(char *s)
 {
-   TBufferFile::WriteCharStar(s);
+   Int_t nch = 0;
+   if (s) {
+      nch = strlen(s);
+      *this << nch;
+      WriteFastArray(s, nch);
+   } else {
+      *this << nch;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
