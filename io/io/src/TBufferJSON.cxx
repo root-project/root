@@ -4239,19 +4239,6 @@ Int_t TBufferJSON::ApplySequence(const TStreamerInfoActions::TActionSequence &se
    return 0;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Interface to TStreamerInfo::WriteBufferClones.
-
-Int_t TBufferJSON::WriteClones(TClonesArray *a, Int_t /*nobjects*/)
-{
-   Info("WriteClones", "Not yet tested");
-
-   if (a)
-      JsonWriteCollection(a, a->IsA());
-
-   return 0;
-}
-
 namespace {
 struct DynamicType {
    // Helper class to enable typeid on any address

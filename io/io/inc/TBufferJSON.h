@@ -236,8 +236,6 @@ public:
    using TBuffer::WriteStdString;
    virtual void WriteCharStar(char *s);
 
-   virtual Int_t WriteClones(TClonesArray *a, Int_t nobjects);
-
    virtual Int_t WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
    virtual Int_t WriteClassBuffer(const TClass *cl, void *pointer);
 
@@ -251,72 +249,9 @@ public:
 
    virtual Bool_t CheckObject(const void *ptr, const TClass *cl);
 
-   // abstract virtual methods from TBuffer, which should be redefined
-
-   virtual char *ReadString(char * /*s*/, Int_t /*max*/)
-   {
-      Error("ReadString", "useless");
-      return 0;
-   }
-   virtual void WriteString(const char * /*s*/) { Error("WriteString", "useless"); }
-
-   virtual Int_t GetVersionOwner() const
-   {
-      Error("GetVersionOwner", "useless");
-      return 0;
-   }
-   virtual Int_t GetMapCount() const
-   {
-      Error("GetMapCount", "useless");
-      return 0;
-   }
-   virtual void GetMappedObject(UInt_t /*tag*/, void *& /*ptr*/, TClass *& /*ClassPtr*/) const
-   {
-      Error("GetMappedObject", "useless");
-   }
-   virtual void MapObject(const TObject * /*obj*/, UInt_t /*offset*/ = 1) { Error("MapObject", "useless"); }
-   virtual void MapObject(const void * /*obj*/, const TClass * /*cl*/, UInt_t /*offset*/ = 1)
-   {
-      Error("MapObject", "useless");
-   }
-
-   virtual Version_t ReadVersionForMemberWise(const TClass * /*cl*/ = nullptr)
-   {
-      Error("ReadVersionForMemberWise", "useless");
-      return 0;
-   }
-   virtual UInt_t WriteVersionMemberWise(const TClass * /*cl*/, Bool_t /*useBcnt*/ = kFALSE)
-   {
-      Error("WriteVersionMemberWise", "useless");
-      return 0;
-   }
-
    virtual TVirtualStreamerInfo *GetInfo();
 
-   virtual TObject *ReadObject(const TClass * /*cl*/)
-   {
-      Error("ReadObject", "useless");
-      return 0;
-   }
-
-   // Utilities for TStreamerInfo
-   virtual void ForceWriteInfo(TVirtualStreamerInfo * /*info*/, Bool_t /*force*/)
-   {
-      Error("ForceWriteInfo", "useless");
-   }
-   virtual void ForceWriteInfoClones(TClonesArray * /*a*/) { Error("ForceWriteInfoClones", "useless"); }
-   virtual Int_t ReadClones(TClonesArray * /*a*/, Int_t /*nobjects*/, Version_t /*objvers*/)
-   {
-      Error("ReadClones", "useless");
-      return 0;
-   }
-
    // Utilities for TClass
-   virtual Int_t ReadClassEmulated(const TClass * /*cl*/, void * /*object*/, const TClass * /*onfile_class*/ = nullptr)
-   {
-      Error("ReadClassEmulated", "useless");
-      return 0;
-   }
    virtual Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, const TClass * /*onfile_class*/ = nullptr);
    virtual Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, Int_t /*version*/, UInt_t /*start*/,
                                  UInt_t /*count*/, const TClass * /*onfile_class*/ = nullptr);
