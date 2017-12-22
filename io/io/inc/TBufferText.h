@@ -24,6 +24,8 @@ protected:
 
 public:
    // virtual abstract TBuffer methods, which could be redefined here
+   // probably, one can move them to TBufferImpl class, which can be base
+   // for TBufferFile and TBufferText
 
    virtual TProcessID *GetLastProcessID(TRefTable *reftable) const;
    virtual UInt_t GetTRefExecId();
@@ -40,6 +42,11 @@ public:
    virtual void ForceWriteInfoClones(TClonesArray *a);
    virtual Int_t ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers);
    virtual Int_t WriteClones(TClonesArray *a, Int_t nobjects);
+
+   virtual void WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE);
+   using TBuffer::WriteObject;
+
+   virtual Int_t WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
 
    // virtual abstract TBuffer methods, which are not used in text streaming
 
@@ -118,6 +125,9 @@ public:
       Error("ReadClassEmulated", "not defined in text-based streamers");
       return 0;
    }
+protected:
+
+   virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) = 0;
 
    ClassDef(TBufferText, 0); // a TBuffer subclass for all text-based streamers
 };

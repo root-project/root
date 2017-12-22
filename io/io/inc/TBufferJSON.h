@@ -87,10 +87,6 @@ public:
    virtual void ClassEnd(const TClass *);
    virtual void ClassMember(const char *name, const char *typeName = nullptr, Int_t arrsize1 = -1, Int_t arrsize2 = -1);
 
-   virtual void WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE);
-
-   using TBuffer::WriteObject;
-
    virtual void ReadFloat16(Float_t *f, TStreamerElement *ele = nullptr);
    virtual void WriteFloat16(Float_t *f, TStreamerElement *ele = nullptr);
    virtual void ReadDouble32(Double_t *d, TStreamerElement *ele = nullptr);
@@ -236,7 +232,6 @@ public:
    using TBuffer::WriteStdString;
    virtual void WriteCharStar(char *s);
 
-   virtual Int_t WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
    virtual Int_t WriteClassBuffer(const TClass *cl, void *pointer);
 
    virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);

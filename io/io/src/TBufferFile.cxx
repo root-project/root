@@ -2662,7 +2662,7 @@ namespace {
 Int_t TBufferFile::WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse /* = kTRUE */)
 {
    if (!obj) {
-      WriteObjectClass(0, 0, kTRUE);
+      WriteObjectClass(nullptr, nullptr, kTRUE);
       return 1;
    }
 
