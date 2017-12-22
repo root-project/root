@@ -15,7 +15,8 @@ set_directory_properties(PROPERTIES ADDITIONAL_MAKE_CLEAN_FILES dict.cxx dict_rd
 
 add_test(NAME roottest-cling-dict-ROOT-8096-build
          COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                                  --target  ROOT-8096${fast} )
+                                  --target  ROOT-8096${fast}
+                                  -- ${always-make})
 #                                  --target  ${targetname_libgen}${fast})
 set_property(TEST roottest-cling-dict-ROOT-8096-build PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
 
