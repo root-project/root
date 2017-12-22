@@ -577,3 +577,11 @@ void TBufferText::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerEl
 {
    WriteFastArray(d, n);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Skip class version from I/O buffer.
+
+void TBufferText::SkipVersion(const TClass *cl)
+{
+   ReadVersion(nullptr, nullptr, cl);
+}

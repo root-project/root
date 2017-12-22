@@ -2205,37 +2205,6 @@ void TBufferJSON::WriteClass(const TClass *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// suppressed function of TBuffer
-
-Int_t TBufferJSON::CheckByteCount(UInt_t /*r_s */, UInt_t /*r_c*/, const TClass * /*cl*/)
-{
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// suppressed function of TBuffer
-
-Int_t TBufferJSON::CheckByteCount(UInt_t, UInt_t, const char *)
-{
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// suppressed function of TBuffer
-
-void TBufferJSON::SetByteCount(UInt_t, Bool_t)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Skip class version from I/O buffer.
-
-void TBufferJSON::SkipVersion(const TClass *cl)
-{
-   ReadVersion(nullptr, nullptr, cl);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// read version value from buffer
 
 Version_t TBufferJSON::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass *cl)
