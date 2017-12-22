@@ -133,31 +133,26 @@ endforeach()
 #---Move (copy) directories to binary tree------------------------------------------------------
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
 add_custom_command(OUTPUT ${stamp_file}
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/test ${CMAKE_BINARY_DIR}/test
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${CMAKE_BINARY_DIR}/LICENSE
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/README ${CMAKE_BINARY_DIR}/README
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
                    COMMENT "Copying directories such as etc, icons, fonts, etc. to build area")
 
 #---Copy the the tutorials to the build area, with dependency---------------------------------
-file(GLOB_RECURSE tutorial_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/*)
-set(tutorial_files_builddir)
-foreach(tutorial_file ${tutorial_files})
+file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/*)
+set(artifact_files_builddir)
+foreach(artifact_file ${artifact_files})
   # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
   # target below will interfere.
   if (NOT (tutorial_file STREQUAL "tutorials/hsimple.root"))
-    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${tutorial_file}
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${tutorial_file} ${CMAKE_BINARY_DIR}/${tutorial_file}
-      COMMENT "Copying ${CMAKE_SOURCE_DIR}/${tutorial_file}"
-      DEPENDS ${CMAKE_SOURCE_DIR}/${tutorial_file})
-    list(APPEND tutorial_files_builddir ${CMAKE_BINARY_DIR}/${tutorial_file})
+    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
+      COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
+      DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
+    list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
   endif()
 endforeach()
-add_custom_target(move_artifacts DEPENDS ${stamp_file} ${tutorial_files_builddir})
+add_custom_target(move_artifacts DEPENDS ${stamp_file} ${artifact_files_builddir})
 
 add_subdirectory (interpreter)
 # Add the compilation flags from LLVM to the flags we use to compile cling-based tools.
