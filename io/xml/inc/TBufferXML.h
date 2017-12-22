@@ -260,11 +260,6 @@ public:
 
    virtual Int_t WriteClassBuffer(const TClass *cl, void *pointer);
 
-   virtual void WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE);
-   virtual Int_t WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
-
-   using TBuffer::WriteObject;
-
    static void SetFloatFormat(const char *fmt = "%e");
    static const char *GetFloatFormat();
 
