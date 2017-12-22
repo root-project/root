@@ -1679,86 +1679,6 @@ R__ALWAYS_INLINE Int_t TBufferXML::XmlReadArray(T *&arr, bool is_static)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read a Float16_t from the buffer
-
-void TBufferXML::ReadFloat16(Float_t *f, TStreamerElement * /*ele*/)
-{
-   BeforeIOoperation();
-   XmlReadBasic(*f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer
-
-void TBufferXML::ReadDouble32(Double_t *d, TStreamerElement * /*ele*/)
-{
-   BeforeIOoperation();
-   XmlReadBasic(*d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the factor and minimun value have been specified
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferXML does not optimize space in this case.
-
-void TBufferXML::ReadWithFactor(Float_t *ptr, Double_t /* factor */, Double_t /* minvalue */)
-{
-   BeforeIOoperation();
-   XmlReadBasic(*ptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Float16_t from the buffer when the number of bits is specified (explicitly or not)
-/// see comments about Float16_t encoding at TBufferFile::WriteFloat16().
-/// Currently TBufferXML does not optimize space in this case.
-
-void TBufferXML::ReadWithNbits(Float_t *ptr, Int_t /* nbits */)
-{
-   BeforeIOoperation();
-   XmlReadBasic(*ptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the factor and minimum value have been specified
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferXML does not optimize space in this case.
-
-void TBufferXML::ReadWithFactor(Double_t *ptr, Double_t /* factor */, Double_t /* minvalue */)
-{
-   BeforeIOoperation();
-   XmlReadBasic(*ptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the number of bits is specified (explicitly or not)
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferXML does not optimize space in this case.
-
-void TBufferXML::ReadWithNbits(Double_t *ptr, Int_t /* nbits */)
-{
-   BeforeIOoperation();
-   XmlReadBasic(*ptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write a Float16_t to the buffer
-
-void TBufferXML::WriteFloat16(Float_t *f, TStreamerElement * /*ele*/)
-{
-   BeforeIOoperation();
-   XmlWriteBasic(*f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write a Double32_t to the buffer
-
-void TBufferXML::WriteDouble32(Double_t *d, TStreamerElement * /*ele*/)
-{
-   BeforeIOoperation();
-   XmlWriteBasic(*d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Read array of Bool_t from buffer
 
 Int_t TBufferXML::ReadArray(Bool_t *&b)
@@ -1863,22 +1783,6 @@ Int_t TBufferXML::ReadArray(Double_t *&d)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-Int_t TBufferXML::ReadArrayFloat16(Float_t *&f, TStreamerElement * /*ele*/)
-{
-   return XmlReadArray(f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-Int_t TBufferXML::ReadArrayDouble32(Double_t *&d, TStreamerElement * /*ele*/)
-{
-   return XmlReadArray(d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Read array of Bool_t from buffer
 
 Int_t TBufferXML::ReadStaticArray(Bool_t *b)
@@ -1978,22 +1882,6 @@ Int_t TBufferXML::ReadStaticArray(Float_t *f)
 /// Read array of Double_t from buffer
 
 Int_t TBufferXML::ReadStaticArray(Double_t *d)
-{
-   return XmlReadArray(d, true);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-Int_t TBufferXML::ReadStaticArrayFloat16(Float_t *f, TStreamerElement * /*ele*/)
-{
-   return XmlReadArray(f, true);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-Int_t TBufferXML::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele*/)
 {
    return XmlReadArray(d, true);
 }
@@ -2170,54 +2058,6 @@ void TBufferXML::ReadFastArray(Float_t *f, Int_t n)
 /// Read array of Double_t from buffer
 
 void TBufferXML::ReadFastArray(Double_t *d, Int_t n)
-{
-   XmlReadFastArray(d, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-void TBufferXML::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement * /*ele*/)
-{
-   XmlReadFastArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-void TBufferXML::ReadFastArrayWithFactor(Float_t *f, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
-{
-   XmlReadFastArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-void TBufferXML::ReadFastArrayWithNbits(Float_t *f, Int_t n, Int_t /*nbits*/)
-{
-   XmlReadFastArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-void TBufferXML::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement * /*ele*/)
-{
-   XmlReadFastArray(d, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-void TBufferXML::ReadFastArrayWithFactor(Double_t *d, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
-{
-   XmlReadFastArray(d, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-void TBufferXML::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t /*nbits*/)
 {
    XmlReadFastArray(d, n);
 }
@@ -2442,22 +2282,6 @@ void TBufferXML::WriteArray(const Double_t *d, Int_t n)
    XmlWriteArray(d, n);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Float16_t to buffer
-
-void TBufferXML::WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
-{
-   XmlWriteArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Double32_t to buffer
-
-void TBufferXML::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
-{
-   XmlWriteArray(d, n);
-}
-
 /////////////////////////////////////////////////////////////////////////////////
 /// Write array without size attribute
 /// Also treat situation, when instead of one single array
@@ -2625,22 +2449,6 @@ void TBufferXML::WriteFastArray(const Float_t *f, Int_t n)
 /// Write array of Double_t to buffer
 
 void TBufferXML::WriteFastArray(const Double_t *d, Int_t n)
-{
-   XmlWriteFastArray(d, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Float16_t to buffer
-
-void TBufferXML::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
-{
-   XmlWriteFastArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Double32_t to buffer
-
-void TBufferXML::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
 {
    XmlWriteFastArray(d, n);
 }
@@ -3567,7 +3375,7 @@ Int_t TBufferXML::ReadClassBuffer(const TClass *cl, void *pointer, Int_t version
    // The ondisk class has been specified so get foreign streamer info
    /////////////////////////////////////////////////////////////////////////////
 
-   TStreamerInfo *sinfo = 0;
+   TStreamerInfo *sinfo = nullptr;
    if (onFileClass) {
       sinfo = (TStreamerInfo *)cl->GetConversionStreamerInfo(onFileClass, version);
       if (!sinfo) {
@@ -3833,4 +3641,3 @@ Int_t TBufferXML::WriteClassBuffer(const TClass *cl, void *pointer)
              UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t));
    return 0;
 }
-
