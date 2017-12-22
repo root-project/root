@@ -73,14 +73,8 @@ public:
 
    // redefined virtual functions of TBuffer
 
-   virtual Int_t CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);    // SL
-   virtual Int_t CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname); // SL
-   virtual void SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);           // SL
-
-   virtual void SkipVersion(const TClass *cl = nullptr);
-   virtual Version_t ReadVersion(UInt_t *start = nullptr, UInt_t *bcnt = nullptr, const TClass *cl = nullptr); // SL
-   virtual Version_t ReadVersionNoCheckSum(UInt_t *, UInt_t *);
-   virtual UInt_t WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE); // SL
+   virtual Version_t ReadVersion(UInt_t *start = nullptr, UInt_t *bcnt = nullptr, const TClass *cl = nullptr);
+   virtual UInt_t WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
 
    virtual void *ReadObjectAny(const TClass *clCast);
    virtual void SkipObjectAny();
