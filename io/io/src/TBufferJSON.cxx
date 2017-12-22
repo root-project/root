@@ -70,7 +70,6 @@ persistent storage for object data - only for live applications.
 #include "TFile.h"
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
-#include "TStreamerInfoActions.h"
 #include "RVersion.h"
 #include "Riostream.h"
 #include "RZip.h"
@@ -3383,29 +3382,6 @@ Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_
 ////////////////////////////////////////////////////////////////////////////////
 /// stream object to/from buffer
 
-void TBufferJSON::StreamObject(void *obj, const std::type_info &typeinfo, const TClass * /* onFileClass */)
-{
-   StreamObject(obj, TClass::GetClass(typeinfo));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// stream object to/from buffer
-
-void TBufferJSON::StreamObject(void *obj, const char *className, const TClass * /* onFileClass */)
-{
-   StreamObject(obj, TClass::GetClass(className));
-}
-
-void TBufferJSON::StreamObject(TObject *obj)
-{
-   // stream object to/from buffer
-
-   StreamObject(obj, obj ? obj->IsA() : TObject::Class());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// stream object to/from buffer
-
 void TBufferJSON::StreamObject(void *obj, const TClass *cl, const TClass * /* onfileClass */)
 {
    if (gDebug > 3)
@@ -4118,113 +4094,6 @@ void TBufferJSON::SetDoubleFormat(const char *fmt)
 const char *TBufferJSON::GetDoubleFormat()
 {
    return fgDoubleFmt;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-/// The collection needs to be a split TClonesArray or a split vector of pointers.
-
-Int_t TBufferJSON::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *obj)
-{
-   TVirtualStreamerInfo *info = sequence.fStreamerInfo;
-   IncrementLevel(info);
-
-   if (gDebug) {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for JSON streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter).PrintDebug(*this, obj);
-         (*iter)(*this, obj);
-      }
-   } else {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for JSON streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter)(*this, obj);
-      }
-   }
-   DecrementLevel(info);
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-/// The collection needs to be a split TClonesArray or a split vector of pointers.
-
-Int_t TBufferJSON::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection,
-                                       void *end_collection)
-{
-   TVirtualStreamerInfo *info = sequence.fStreamerInfo;
-   IncrementLevel(info);
-
-   if (gDebug) {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for JSON streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter).PrintDebug(
-            *this, *(char **)start_collection); // Warning: This limits us to TClonesArray and vector of pointers.
-         (*iter)(*this, start_collection, end_collection);
-      }
-   } else {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for JSON streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter)(*this, start_collection, end_collection);
-      }
-   }
-   DecrementLevel(info);
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-
-Int_t TBufferJSON::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection,
-                                 void *end_collection)
-{
-   TVirtualStreamerInfo *info = sequence.fStreamerInfo;
-   IncrementLevel(info);
-
-   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
-   if (gDebug) {
-
-      // Get the address of the first item for the PrintDebug.
-      // (Performance is not essential here since we are going to print to
-      // the screen anyway).
-      void *arr0 = loopconfig->GetFirstAddress(start_collection, end_collection);
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for JSON streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter).PrintDebug(*this, arr0);
-         (*iter)(*this, start_collection, end_collection, loopconfig);
-      }
-   } else {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for JSON streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter)(*this, start_collection, end_collection, loopconfig);
-      }
-   }
-   DecrementLevel(info);
-   return 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
