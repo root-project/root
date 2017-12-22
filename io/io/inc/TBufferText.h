@@ -48,6 +48,19 @@ public:
 
    virtual Int_t WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
 
+   virtual void StreamObject(void *obj, const std::type_info &typeinfo, const TClass *onFileClass = nullptr);
+   virtual void StreamObject(void *obj, const char *className, const TClass *onFileClass = nullptr);
+   virtual void StreamObject(TObject *obj);
+   using TBuffer::StreamObject;
+
+   // virtual TBuffer methods, which are generic for all text-based streamers
+
+   virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
+   virtual Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection,
+                                     void *end_collection);
+   virtual Int_t
+   ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
+
    // virtual abstract TBuffer methods, which are not used in text streaming
 
    virtual void Reset() { Error("Reset", "useless"); }
@@ -125,8 +138,8 @@ public:
       Error("ReadClassEmulated", "not defined in text-based streamers");
       return 0;
    }
-protected:
 
+protected:
    virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) = 0;
 
    ClassDef(TBufferText, 0); // a TBuffer subclass for all text-based streamers

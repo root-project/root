@@ -195,10 +195,8 @@ public:
    virtual Int_t WriteFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE,
                                 TMemberStreamer *s = nullptr);
 
-   virtual void StreamObject(void *obj, const std::type_info &typeinfo, const TClass *onFileClass = nullptr);
-   virtual void StreamObject(void *obj, const char *className, const TClass *onFileClass = nullptr);
    virtual void StreamObject(void *obj, const TClass *cl, const TClass *onFileClass = nullptr);
-   virtual void StreamObject(TObject *obj);
+   using TBufferText::StreamObject;
 
    virtual void ReadBool(Bool_t &b);
    virtual void ReadChar(Char_t &c);
@@ -237,12 +235,6 @@ public:
    virtual void WriteStdString(const std::string *s);
    using TBuffer::WriteStdString;
    virtual void WriteCharStar(char *s);
-
-   virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
-   virtual Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection,
-                                     void *end_collection);
-   virtual Int_t
-   ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
 
    virtual Bool_t CheckObject(const TObject *obj);
 

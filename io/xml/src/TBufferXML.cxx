@@ -48,7 +48,6 @@ There are limitations for complex objects like TTree, which can not be converted
 #include "TFile.h"
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
-#include "TStreamerInfoActions.h"
 #include "RZip.h"
 
 #ifdef R__VISUAL_CPLUSPLUS
@@ -2727,29 +2726,6 @@ Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// steram object to/from buffer
-
-void TBufferXML::StreamObject(void *obj, const std::type_info &typeinfo, const TClass * /* onFileClass */)
-{
-   StreamObject(obj, TClass::GetClass(typeinfo));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// steram object to/from buffer
-
-void TBufferXML::StreamObject(void *obj, const char *className, const TClass * /* onFileClass */)
-{
-   StreamObject(obj, TClass::GetClass(className));
-}
-
-void TBufferXML::StreamObject(TObject *obj)
-{
-   // steram object to/from buffer
-
-   StreamObject(obj, obj ? obj->IsA() : TObject::Class());
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Stream object to/from buffer
 
 void TBufferXML::StreamObject(void *obj, const TClass *cl, const TClass * /* onfileClass */)
@@ -3528,119 +3504,6 @@ const char *TBufferXML::GetFloatFormat()
    // return current printf format for float/double members, default "%e"
 
    return fgFloatFmt.c_str();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-/// The collection needs to be a split TClonesArray or a split vector of pointers.
-
-Int_t TBufferXML::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *obj)
-{
-   TVirtualStreamerInfo *info = sequence.fStreamerInfo;
-   IncrementLevel(info);
-
-   if (gDebug) {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter).PrintDebug(*this, obj);
-         (*iter)(*this, obj);
-      }
-
-   } else {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter)(*this, obj);
-      }
-   }
-
-   DecrementLevel(info);
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-/// The collection needs to be a split TClonesArray or a split vector of pointers.
-
-Int_t TBufferXML::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection,
-                                      void *end_collection)
-{
-   TVirtualStreamerInfo *info = sequence.fStreamerInfo;
-   IncrementLevel(info);
-
-   if (gDebug) {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter).PrintDebug(
-            *this, *(char **)start_collection); // Warning: This limits us to TClonesArray and vector of pointers.
-         (*iter)(*this, start_collection, end_collection);
-      }
-
-   } else {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter)(*this, start_collection, end_collection);
-      }
-   }
-
-   DecrementLevel(info);
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-
-Int_t TBufferXML::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection,
-                                void *end_collection)
-{
-   TVirtualStreamerInfo *info = sequence.fStreamerInfo;
-   IncrementLevel(info);
-
-   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
-   if (gDebug) {
-
-      // Get the address of the first item for the PrintDebug.
-      // (Performance is not essential here since we are going to print to
-      // the screen anyway).
-      void *arr0 = loopconfig->GetFirstAddress(start_collection, end_collection);
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter).PrintDebug(*this, arr0);
-         (*iter)(*this, start_collection, end_collection, loopconfig);
-      }
-
-   } else {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter)(*this, start_collection, end_collection, loopconfig);
-      }
-   }
-
-   DecrementLevel(info);
-   return 0;
 }
 
 // abstract TBuffer methods, probably dedicated to have them in the TBufferText
