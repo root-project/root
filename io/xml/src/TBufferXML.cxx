@@ -1497,37 +1497,6 @@ void TBufferXML::WriteClass(const TClass *cl)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Suppressed function of TBuffer
-
-Int_t TBufferXML::CheckByteCount(UInt_t /*r_s */, UInt_t /*r_c*/, const TClass * /*cl*/)
-{
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Suppressed function of TBuffer
-
-Int_t TBufferXML::CheckByteCount(UInt_t, UInt_t, const char *)
-{
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Suppressed function of TBuffer
-
-void TBufferXML::SetByteCount(UInt_t, Bool_t)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Skip class version from I/O buffer.
-
-void TBufferXML::SkipVersion(const TClass *cl)
-{
-   ReadVersion(nullptr, nullptr, cl);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Read version value from buffer
 
 Version_t TBufferXML::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*cl*/)
@@ -1556,17 +1525,6 @@ Version_t TBufferXML::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*
       Info("ReadVersion", "Version = %d", res);
 
    return res;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read class version from I/O buffer, when the caller knows for sure that
-/// there is no checksum written/involved.
-
-Version_t TBufferXML::ReadVersionNoCheckSum(UInt_t *, UInt_t *)
-{
-   Info("ReadVersionNoCheckSum", "No idea if required");
-
-   return ReadVersion();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

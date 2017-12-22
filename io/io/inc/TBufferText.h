@@ -91,6 +91,12 @@ public:
 
    // virtual abstract TBuffer methods, which are not used in text streaming
 
+   virtual Int_t CheckByteCount(UInt_t /* startpos */, UInt_t /* bcnt */, const TClass * /* clss */) { return 0; }
+   virtual Int_t CheckByteCount(UInt_t /* startpos */, UInt_t /* bcnt */, const char * /* classname */) { return 0; }
+   virtual void SetByteCount(UInt_t /* cntpos */, Bool_t /* packInVersion */ = kFALSE) {}
+   virtual void SkipVersion(const TClass *cl = nullptr);
+   virtual Version_t ReadVersionNoCheckSum(UInt_t *, UInt_t *) { return 0; }
+
    virtual void Reset() { Error("Reset", "useless"); }
    virtual void InitMap() { Error("InitMap", "useless"); }
    virtual void ResetMap() { Error("ResetMap", "useless"); }
