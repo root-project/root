@@ -61,6 +61,34 @@ public:
    virtual Int_t
    ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
 
+   virtual void ReadFloat16(Float_t *f, TStreamerElement *ele = nullptr);
+   virtual void WriteFloat16(Float_t *f, TStreamerElement *ele = nullptr);
+   virtual void ReadDouble32(Double_t *d, TStreamerElement *ele = nullptr);
+   virtual void WriteDouble32(Double_t *d, TStreamerElement *ele = nullptr);
+   virtual void ReadWithFactor(Float_t *ptr, Double_t factor, Double_t minvalue);
+   virtual void ReadWithNbits(Float_t *ptr, Int_t nbits);
+   virtual void ReadWithFactor(Double_t *ptr, Double_t factor, Double_t minvalue);
+   virtual void ReadWithNbits(Double_t *ptr, Int_t nbits);
+
+   virtual Int_t ReadArrayFloat16(Float_t *&f, TStreamerElement *ele = nullptr);
+   virtual Int_t ReadArrayDouble32(Double_t *&d, TStreamerElement *ele = nullptr);
+
+   virtual Int_t ReadStaticArrayFloat16(Float_t *f, TStreamerElement *ele = nullptr);
+   virtual Int_t ReadStaticArrayDouble32(Double_t *d, TStreamerElement *ele = nullptr);
+
+   virtual void ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *ele = nullptr);
+   virtual void ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *ele = nullptr);
+   virtual void ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor, Double_t minvalue);
+   virtual void ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits);
+   virtual void ReadFastArrayWithFactor(Double_t *ptr, Int_t n, Double_t factor, Double_t minvalue);
+   virtual void ReadFastArrayWithNbits(Double_t *ptr, Int_t n, Int_t nbits);
+
+   virtual void WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement *ele = nullptr);
+   virtual void WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele = nullptr);
+
+   virtual void WriteFastArrayFloat16(const Float_t *d, Int_t n, TStreamerElement *ele = nullptr);
+   virtual void WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele = nullptr);
+
    // virtual abstract TBuffer methods, which are not used in text streaming
 
    virtual void Reset() { Error("Reset", "useless"); }

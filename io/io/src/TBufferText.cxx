@@ -34,7 +34,6 @@ actions list for both are the same.
 #include "TClonesArray.h"
 #include "TStreamerInfoActions.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
@@ -392,4 +391,189 @@ void TBufferText::StreamObject(TObject *obj)
    StreamObject(obj, obj ? obj->IsA() : TObject::Class());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// read a Float16_t from the buffer
 
+void TBufferText::ReadFloat16(Float_t *f, TStreamerElement * /*ele*/)
+{
+   ReadFloat(*f);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// read a Double32_t from the buffer
+
+void TBufferText::ReadDouble32(Double_t *d, TStreamerElement * /*ele*/)
+{
+   ReadDouble(*d);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Double32_t from the buffer when the factor and minimun value have
+/// been specified
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
+/// Currently TBufferText does not optimize space in this case.
+
+void TBufferText::ReadWithFactor(Float_t *f, Double_t /* factor */, Double_t /* minvalue */)
+{
+   ReadFloat(*f);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Float16_t from the buffer when the number of bits is specified
+/// (explicitly or not)
+/// see comments about Float16_t encoding at TBufferFile::WriteFloat16().
+/// Currently TBufferText does not optimize space in this case.
+
+void TBufferText::ReadWithNbits(Float_t *f, Int_t /* nbits */)
+{
+   ReadFloat(*f);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Double32_t from the buffer when the factor and minimun value have
+/// been specified
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
+/// Currently TBufferText does not optimize space in this case.
+
+void TBufferText::ReadWithFactor(Double_t *d, Double_t /* factor */, Double_t /* minvalue */)
+{
+   ReadDouble(*d);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read a Double32_t from the buffer when the number of bits is specified
+/// (explicitly or not)
+/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
+/// Currently TBufferText does not optimize space in this case.
+
+void TBufferText::ReadWithNbits(Double_t *d, Int_t /* nbits */)
+{
+   ReadDouble(*d);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// write a Float16_t to the buffer
+
+void TBufferText::WriteFloat16(Float_t *f, TStreamerElement * /*ele*/)
+{
+   WriteFloat(*f);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// write a Double32_t to the buffer
+
+void TBufferText::WriteDouble32(Double_t *d, TStreamerElement * /*ele*/)
+{
+   WriteDouble(*d);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of Float16_t from buffer
+
+Int_t TBufferText::ReadArrayFloat16(Float_t *&f, TStreamerElement * /*ele*/)
+{
+   return ReadArray(f);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of Double32_t from buffer
+
+Int_t TBufferText::ReadArrayDouble32(Double_t *&d, TStreamerElement * /*ele*/)
+{
+   return ReadArray(d);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of Float16_t from buffer
+
+Int_t TBufferText::ReadStaticArrayFloat16(Float_t *f, TStreamerElement * /*ele*/)
+{
+   return ReadStaticArray(f);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Read array of Double32_t from buffer
+
+Int_t TBufferText::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele*/)
+{
+   return ReadStaticArray(d);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// read array of Float16_t from buffer
+
+void TBufferText::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement * /*ele*/)
+{
+   ReadFastArray(f, n);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// read array of Float16_t from buffer
+
+void TBufferText::ReadFastArrayWithFactor(Float_t *f, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
+{
+   ReadFastArray(f, n);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// read array of Float16_t from buffer
+
+void TBufferText::ReadFastArrayWithNbits(Float_t *f, Int_t n, Int_t /*nbits*/)
+{
+   ReadFastArray(f, n);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// read array of Double32_t from buffer
+
+void TBufferText::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement * /*ele*/)
+{
+   ReadFastArray(d, n);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// read array of Double32_t from buffer
+
+void TBufferText::ReadFastArrayWithFactor(Double_t *d, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
+{
+   ReadFastArray(d, n);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// read array of Double32_t from buffer
+
+void TBufferText::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t /*nbits*/)
+{
+   ReadFastArray(d, n);
+}
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of Float16_t to buffer
+
+void TBufferText::WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
+{
+   WriteArray(f, n);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of Double32_t to buffer
+
+void TBufferText::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
+{
+   WriteArray(d, n);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of Float16_t to buffer
+
+void TBufferText::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
+{
+   WriteFastArray(f, n);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write array of Double32_t to buffer
+
+void TBufferText::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
+{
+   WriteFastArray(d, n);
+}

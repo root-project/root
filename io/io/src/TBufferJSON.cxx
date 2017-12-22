@@ -954,7 +954,6 @@ Bool_t TBufferJSON::CheckObject(const void *obj, const TClass *ptrClass)
    return fJsonrMap.find(temp) != fJsonrMap.end();
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// add new level to the structures stack
 
@@ -2306,24 +2305,6 @@ void TBufferJSON::JsonPushValue()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// write a Float16_t to the buffer
-
-void TBufferJSON::WriteFloat16(Float_t *f, TStreamerElement * /*ele*/)
-{
-   JsonPushValue();
-   JsonWriteBasic(*f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// write a Double32_t to the buffer
-
-void TBufferJSON::WriteDouble32(Double_t *d, TStreamerElement * /*ele*/)
-{
-   JsonPushValue();
-   JsonWriteBasic(*d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Read array of Bool_t from buffer
 
 Int_t TBufferJSON::ReadArray(Bool_t *&b)
@@ -2423,22 +2404,6 @@ Int_t TBufferJSON::ReadArray(Float_t *&f)
 /// Read array of Double_t from buffer
 
 Int_t TBufferJSON::ReadArray(Double_t *&d)
-{
-   return JsonReadArray(d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-Int_t TBufferJSON::ReadArrayFloat16(Float_t *&f, TStreamerElement * /*ele*/)
-{
-   return JsonReadArray(f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-Int_t TBufferJSON::ReadArrayDouble32(Double_t *&d, TStreamerElement * /*ele*/)
 {
    return JsonReadArray(d);
 }
@@ -2553,22 +2518,6 @@ Int_t TBufferJSON::ReadStaticArray(Float_t *f)
 /// Read array of Double_t from buffer
 
 Int_t TBufferJSON::ReadStaticArray(Double_t *d)
-{
-   return JsonReadArray(d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-Int_t TBufferJSON::ReadStaticArrayFloat16(Float_t *f, TStreamerElement * /*ele*/)
-{
-   return JsonReadArray(f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-Int_t TBufferJSON::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele*/)
 {
    return JsonReadArray(d);
 }
@@ -2744,54 +2693,6 @@ void TBufferJSON::ReadFastArray(Float_t *f, Int_t n)
 /// read array of Double_t from buffer
 
 void TBufferJSON::ReadFastArray(Double_t *d, Int_t n)
-{
-   JsonReadFastArray(d, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// read array of Float16_t from buffer
-
-void TBufferJSON::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement * /*ele*/)
-{
-   JsonReadFastArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// read array of Float16_t from buffer
-
-void TBufferJSON::ReadFastArrayWithFactor(Float_t *f, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
-{
-   JsonReadFastArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// read array of Float16_t from buffer
-
-void TBufferJSON::ReadFastArrayWithNbits(Float_t *f, Int_t n, Int_t /*nbits*/)
-{
-   JsonReadFastArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// read array of Double32_t from buffer
-
-void TBufferJSON::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement * /*ele*/)
-{
-   JsonReadFastArray(d, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// read array of Double32_t from buffer
-
-void TBufferJSON::ReadFastArrayWithFactor(Double_t *d, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
-{
-   JsonReadFastArray(d, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// read array of Double32_t from buffer
-
-void TBufferJSON::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t /*nbits*/)
 {
    JsonReadFastArray(d, n);
 }
@@ -3086,24 +2987,6 @@ void TBufferJSON::WriteArray(const Double_t *d, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write array of Float16_t to buffer
-
-void TBufferJSON::WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
-{
-   JsonPushValue();
-   JsonWriteArrayCompress(f, n, "Float32");
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Double32_t to buffer
-
-void TBufferJSON::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
-{
-   JsonPushValue();
-   JsonWriteArrayCompress(d, n, "Float64");
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Template method to write array of arbitrary dimensions
 /// Different methods can be used for store last array dimension -
 /// either JsonWriteArrayCompress<T>() or JsonWriteConstChar()
@@ -3251,22 +3134,6 @@ void TBufferJSON::WriteFastArray(const Float_t *f, Int_t n)
 /// Write array of Double_t to buffer
 
 void TBufferJSON::WriteFastArray(const Double_t *d, Int_t n)
-{
-   JsonWriteFastArray(d, n, "Float64", &TBufferJSON::JsonWriteArrayCompress<Double_t>);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Float16_t to buffer
-
-void TBufferJSON::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
-{
-   JsonWriteFastArray(f, n, "Float32", &TBufferJSON::JsonWriteArrayCompress<Float_t>);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Double32_t to buffer
-
-void TBufferJSON::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
 {
    JsonWriteFastArray(d, n, "Float64", &TBufferJSON::JsonWriteArrayCompress<Double_t>);
 }
@@ -3510,66 +3377,6 @@ void TBufferJSON::ReadFloat(Float_t &val)
 void TBufferJSON::ReadDouble(Double_t &val)
 {
    JsonReadBasic(val);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// read a Float16_t from the buffer
-
-void TBufferJSON::ReadFloat16(Float_t *f, TStreamerElement * /*ele*/)
-{
-   JsonReadBasic(*f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// read a Double32_t from the buffer
-
-void TBufferJSON::ReadDouble32(Double_t *d, TStreamerElement * /*ele*/)
-{
-   JsonReadBasic(*d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the factor and minimun value have
-/// been specified
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferJSON does not optimize space in this case.
-
-void TBufferJSON::ReadWithFactor(Float_t *f, Double_t /* factor */, Double_t /* minvalue */)
-{
-   JsonReadBasic(*f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Float16_t from the buffer when the number of bits is specified
-/// (explicitly or not)
-/// see comments about Float16_t encoding at TBufferFile::WriteFloat16().
-/// Currently TBufferJSON does not optimize space in this case.
-
-void TBufferJSON::ReadWithNbits(Float_t *f, Int_t /* nbits */)
-{
-   JsonReadBasic(*f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the factor and minimun value have
-/// been specified
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferJSON does not optimize space in this case.
-
-void TBufferJSON::ReadWithFactor(Double_t *d, Double_t /* factor */, Double_t /* minvalue */)
-{
-   JsonReadBasic(*d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the number of bits is specified
-/// (explicitly or not)
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferJSON does not optimize space in this case.
-
-void TBufferJSON::ReadWithNbits(Double_t *d, Int_t /* nbits */)
-{
-   JsonReadBasic(*d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
