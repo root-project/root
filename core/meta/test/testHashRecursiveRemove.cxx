@@ -145,12 +145,13 @@ public:
 };
 
 const char *gErrorOutput =
-   R"OUTPUT(Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
-Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SecondOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
-Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
-Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
-Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SecondInCorrectAbstract overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
-Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class WrongSetup overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
+   R"OUTPUT(Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor (seen while checking FirstOverload).
+Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SecondOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor (seen while checking SecondOverload).
+Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor (seen while checking SecondNoHash).
+Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor (seen while checking SecondAbstract).
+Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class FirstOverload overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor (seen while checking Third).
+Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SecondInCorrectAbstract overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor (seen while checking ThirdInCorrect).
+Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class WrongSetup overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor (seen while checking WrongSetup).
 )OUTPUT";
 
 void DeclareFailingClasses()
@@ -198,7 +199,7 @@ TEST(HashRecursiveRemove, RootClasses)
 {
    EXPECT_TRUE(TClass::GetClass("TObject")->HasConsistentHashMember());
    EXPECT_TRUE(TClass::GetClass("TNamed")->HasConsistentHashMember());
-   EXPECT_FALSE(TClass::GetClass("TH1")->HasConsistentHashMember());
+   EXPECT_TRUE(TClass::GetClass("TH1")->HasConsistentHashMember());
    EXPECT_TRUE(TClass::GetClass("TH1F")->HasConsistentHashMember());
 
    EXPECT_TRUE(TClass::GetClass("TEnvRec")->HasConsistentHashMember());
@@ -207,7 +208,7 @@ TEST(HashRecursiveRemove, RootClasses)
    EXPECT_TRUE(TClass::GetClass("TList")->HasConsistentHashMember());
    EXPECT_TRUE(TClass::GetClass("THashList")->HasConsistentHashMember());
    EXPECT_TRUE(TClass::GetClass("TClass")->HasConsistentHashMember());
-   EXPECT_FALSE(TClass::GetClass("TInterpreter")->HasConsistentHashMember());
+   EXPECT_TRUE(TClass::GetClass("TInterpreter")->HasConsistentHashMember());
    // EXPECT_TRUE(TClass::GetClass("TCling")->HasConsistentHashMember());
    EXPECT_TRUE(TClass::GetClass("TMethod")->HasConsistentHashMember());
    // EXPECT_TRUE(TClass::GetClass("ROOT::Internal::TCheckHashRecurveRemoveConsistency")->HasConsistentHashMember());
@@ -226,7 +227,7 @@ TEST(HashRecursiveRemove, FailingClasses)
    EXPECT_FALSE(TClass::GetClass("Third")->HasConsistentHashMember());
    EXPECT_TRUE(TClass::GetClass("FirstOverloadCorrect")->HasConsistentHashMember());
 
-   EXPECT_FALSE(TClass::GetClass("SecondCorrectAbstract")->HasConsistentHashMember());
+   EXPECT_TRUE(TClass::GetClass("SecondCorrectAbstract")->HasConsistentHashMember());
    EXPECT_FALSE(TClass::GetClass("SecondCorrectAbstractHash")->HasConsistentHashMember());
    EXPECT_TRUE(TClass::GetClass("ThirdCorrect")->HasConsistentHashMember());
    EXPECT_FALSE(TClass::GetClass("SecondInCorrectAbstract")->HasConsistentHashMember());
