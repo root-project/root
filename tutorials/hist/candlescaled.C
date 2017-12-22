@@ -13,7 +13,7 @@ void candlescaled()
 {
    TCanvas *c1 = new TCanvas("c1","TCandle Scaled",800,600);
    c1->Divide(2,2);
-   TRandom *rand = new TRandom();
+   TRandom *rng = new TRandom();
    TH2I *h1 = new TH2I("h1","GausXY",20,-5,5,100,-5,5);
    TH2I *h3 = new TH2I("h3","GausXY",100,-5,5,20,-5,5);
 
@@ -21,8 +21,8 @@ void candlescaled()
    float myRand2;
    
    for (int j = 0; j < 100000; j++) {
-      myRand1 = rand->Gaus(0,1);
-      myRand2 = rand->Gaus(0,1);
+      myRand1 = rng->Gaus(0,1);
+      myRand2 = rng->Gaus(0,1);
       h1->Fill(myRand1, myRand2);
       h3->Fill(myRand1, myRand2);
    }
