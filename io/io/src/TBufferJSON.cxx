@@ -955,18 +955,6 @@ Bool_t TBufferJSON::CheckObject(const void *obj, const TClass *ptrClass)
    return fJsonrMap.find(temp) != fJsonrMap.end();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Convert object into json structures.
-/// !!! Should be used only by TBufferJSON itself.
-/// Use ConvertToJSON() methods to convert object to json
-
-void TBufferJSON::WriteObject(const TObject *obj, Bool_t cacheReuse /* = kTRUE */)
-{
-   if (gDebug > 1)
-      Info("WriteObject", "Object %p", obj);
-
-   WriteObjectAny(obj, TObject::Class(), cacheReuse);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// add new level to the structures stack
@@ -4237,66 +4225,6 @@ Int_t TBufferJSON::ApplySequence(const TStreamerInfoActions::TActionSequence &se
    }
    DecrementLevel(info);
    return 0;
-}
-
-namespace {
-struct DynamicType {
-   // Helper class to enable typeid on any address
-   // Used in code similar to:
-   //    typeid( * (DynamicType*) void_ptr );
-   virtual ~DynamicType() {}
-};
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write object to I/O buffer.
-/// This function assumes that the value in 'obj' is the value stored in
-/// a pointer to a "ptrClass". The actual type of the object pointed to
-/// can be any class derived from "ptrClass".
-/// Return:
-///  - 0: failure
-///  - 1: success
-///  - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
-///
-/// If 'cacheReuse' is true (default) upon seeing an object address a second time,
-/// we record the offset where its was written the first time rather than streaming
-/// the object a second time.
-/// If 'cacheReuse' is false, we always stream the object.  This allows the (re)use
-/// of temporary object to store different data in the same buffer.
-
-Int_t TBufferJSON::WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse /* = kTRUE */)
-{
-   if (!obj) {
-      WriteObjectClass(0, 0, kTRUE);
-      return 1;
-   }
-
-   if (!ptrClass) {
-      Error("WriteObjectAny", "ptrClass argument may not be 0");
-      return 0;
-   }
-
-   TClass *clActual = ptrClass->GetActualClass(obj);
-
-   if (!clActual) {
-      // The ptrClass is a class with a virtual table and we have no
-      // TClass with the actual type_info in memory.
-
-      DynamicType *d_ptr = (DynamicType *)obj;
-      Warning("WriteObjectAny", "An object of type %s (from type_info) passed through a %s pointer was truncated (due "
-                                "a missing dictionary)!!!",
-              typeid(*d_ptr).name(), ptrClass->GetName());
-      WriteObjectClass(obj, ptrClass, cacheReuse);
-      return 2;
-   } else if (clActual && (clActual != ptrClass)) {
-      const char *temp = (const char *)obj;
-      temp -= clActual->GetBaseClassOffset(ptrClass);
-      WriteObjectClass(temp, clActual, cacheReuse);
-      return 1;
-   } else {
-      WriteObjectClass(obj, ptrClass, cacheReuse);
-      return 1;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
