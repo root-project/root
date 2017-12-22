@@ -138,7 +138,7 @@ add_custom_command(OUTPUT ${stamp_file}
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
                    COMMENT "Copying directories such as etc, icons, fonts, etc. to build area")
 
-#---Copy the the tutorials to the build area, with dependency---------------------------------
+#---Copy files to the build area, with dependency---------------------------------
 file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/*)
 set(artifact_files_builddir)
 foreach(artifact_file ${artifact_files})
@@ -408,7 +408,8 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
                          REGEX rootd.xinetd EXCLUDE
                          REGEX proofd.xinetd EXCLUDE
                          REGEX root.mimes EXCLUDE
-                         REGEX cmake EXCLUDE )
+                         REGEX cmake EXCLUDE
+                         REGEX /http EXCLUDE )
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})
