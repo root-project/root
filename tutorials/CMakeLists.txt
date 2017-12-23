@@ -365,6 +365,9 @@ if(ROOT_python_FOUND)
              histfactory/example.py # not a tutorial
              histfactory/makeQuickModel.py # not a tutorial
              eve/lineset.py         # requires GUI
+             sql/sqlcreatedb.py     # same as the C++ case
+             sql/sqlfilldb.py       # same as the C++ case
+             sql/sqlselect.py       # same as the C++ case
              )
   if(NOT ROOT_mathmore_FOUND)
     list(APPEND pyveto math/Legendre.py)
