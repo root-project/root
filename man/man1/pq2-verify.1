@@ -42,7 +42,7 @@ Verbose mode
 Alternative way to define the datasets to be analyzed
 .TP
 \fB-o\fR <\fIoptions\fR>
-Options for veriying datasets. These allow to control: the subset selection; the pre-processing actions;
+Options for verifying datasets. These allow to control: the subset selection; the pre-processing actions;
 and the processing action.
 .nf
 
@@ -67,7 +67,7 @@ and the processing action.
       V               notify the actions
 
 .fi
-Not all the combinations of the above options are allowed; an error is printed when an incosistency is found.
+Not all the combinations of the above options are allowed; an error is printed when an inconsistency is found.
 .TP
 \fB--redir\fR=<\fIredirector\fR
 URL to be used to relocate the files.
@@ -77,7 +77,7 @@ URL of the PROOF master or data server providing the information; for data serve
 Can also be specified via the environment variables PQ2PROOFURL or PQ2DSSRVURL (see ENVIRONMENT VARIABLES)."
 .TP
 \fB-t\fR <\fIdir\fR>, \fB--tmpdir\fR=<\fIdir\fR>
-Directory for temporary files; defualt is /tmp/<username>.
+Directory for temporary files; default is /tmp/<username>.
 .SH "RETURN"
 The pq2-verify script returns -1 if any error occurs (connection failed; dataset does not exists) and >=0 in
 case of success. A return code of 1 indicates that some of the files in the dataset are not yet online (staged);
