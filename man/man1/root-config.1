@@ -10,20 +10,22 @@ root-config \- ROOT utility for your Makefiles
 .B root-config
 .I "[options]"
 .SH "DESCRIPTION"
-Put lines like 
+\fIroot-config\fP is a tool that is used to configure to determine
+the compiler and linker flags that should be used to compile
+and link programs that use \fIROOT\fP.
 .RS 
 .nf 
 
-CFLAGS = $(shell root-config \-\-cflags)
-LIBS   = $(shell root-config \-\-libs)
-GLIBS  = $(shell root-config \-\-glibs)
+CPPFLAGS  += $(shell root-config \-\-cflags)
+LDLIBS    += $(shell root-config \-\-libs)
+LDFLAGS   += $(shell root-config \-\-ldflags)
 
 %Cint.cxx:Include.h LinkDef.h
         rootcint \-f $@ \-c $^ 
 
 .fi
 .RE
-in you Makefile.
+in you Makefile to use the built-in rules of gnu make. For GUIs, replace \fI\-\-libs\fR by \fI\-\-glibs\fR.
 .PP
 You may also find the \fIautomake\fR(1), \fIautoconf\fR(1), and
 \fIlibtool\fR(1) macro file \fI/usr/share/aclocal/root.m4\fR
@@ -174,11 +176,14 @@ Output a line suitable for linking a program agains the \fBROOT\fR
 libraries. No graphics libraries are output. 
 .TP
 .B \-\-glibs
-As above, but also output for the graphics libraries. 
+As above, but also output for the graphics (GUI) libraries. 
+.TP
+.B \-\-evelibs
+As above, but also output for the graphics libraries and Eve libraries.
 .TP
 .B \-\-cflags
-Output a line suitable for compiling a source file againd the
-\fBROOT\fR header (class declararion) files. 
+Output a line suitable for compiling a source file against the
+\fBROOT\fR header (class declararion) files.
 .TP
 .B \-\-new 
 Put the \fBlibNew.so\fR library in the library lists.  This option
@@ -201,8 +206,53 @@ Do not print auxiliary compiler flags in the output of
 \fB\-\-cflags\fR.
 .TP
 .B \-\-noldflags
-Do not print library path link option in output of \fB\-\-libs\fR and
+Do not print library path link option in output of \fB\-\-libs\fR, \fB\-\-evelibs\fR and
 \fB\-\-glibs\fR. 
+.TP
+.B \-\-ldflags
+Print additional linker flags (eg. \fB\-m64\fR)
+.TP
+.B \-\-arch
+Print the architecture (compiler/OS)
+.TP
+.B \-\-platform
+Print the platform (OS)
+.TP
+.B \-\-bindir
+Print the binary directory of the root installation (location of the root executable)
+.TP
+.B \-\-etcdir
+Print the configuration directory (place of system.rootrc, mime type, valgrind suppression files and .desktop files)
+.TP
+.B \-\-config
+Print arguments used for ./configure as used when building root. These cannot be used for ./configure if root was built with CMake.
+.TP
+.B \-\-git-revision
+Print the ROOT git revision number from which root was built.
+.TP
+.B \-\-has-<feature>
+Test if <feature> has been enabled in the build process.
+.TP
+.B \-\-features
+Print list of all supported features
+.TP
+.B \-\-ncpu
+Print number of available (hyperthreaded) cores
+.TP
+.B \-\-python-version
+Print the Python version used by ROOT
+.TP
+.B \-\-cc
+Print alternative C compiler specified when ROOT was built
+.TP
+.B \-\-cxx
+Print alternative C++ compiler specified when ROOT was built
+.TP
+.B \-\-f77
+Print alternative Fortran compiler specified when ROOT was built
+.TP
+.B \-\-ld
+Print alternative Linker specified when ROOT was built
 .SH "SEE ALSO"
 \fIroot\fR(1), \fIroot-cint\fR(1)
 .PP
