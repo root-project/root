@@ -28,7 +28,7 @@ There are two ways to generate and execute the tests:
 
        cmake $PATH_TO_ROOTTEST
 
-Tests can the be executed using the ctest command in the build directory:
+Tests can then be executed using the ctest command in the build directory:
 
     ctest -N                (list all tests)
     ctest -j4               (run all tests in parallel)
@@ -118,7 +118,7 @@ Options:
                         the overall test fails.
                         
     POSTCMD             Command to be executed after the macro or the executable.
-                        Only the return code is ckecked.
+                        Only the return code is checked.
                         
     OUTCNVCMD           Possibility to process the output before is given to the
                         diff utility to check it against the reference file.
