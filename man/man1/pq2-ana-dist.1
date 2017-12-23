@@ -18,7 +18,7 @@ program.
 is a script invoking the
 .B pq2
 ROOT application to analyse the file distribution of a dataset (or a set of datasets) over the file
-servers, eiher in terms of files or of file sizes. The output is a text file with the the file movements
+servers, either in terms of files or of file sizes. The output is a text file with the the file movements
 needed to make the file distribution even in the chosen metrics to be used, for example, as in input
 to \fIpq2-redistribute\fR(1). Optionally the internal objects can be saved so that they can be used as starting
 point for a subsequent run. An histogram and a plot can also be saved to visualize the file distribution.
@@ -86,9 +86,9 @@ URL of the PROOF master or data server providing the information; for data serve
 Can also be specified via the environment variables PQ2PROOFURL or PQ2DSSRVURL (see ENVIRONMENT VARIABLES)."
 .TP
 \fB-t\fR <\fIdir\fR>, \fB--tmpdir\fR=<\fIdir\fR>
-Directory for temporary files; defualt is /tmp/<username>.
+Directory for temporary files; default is /tmp/<username>.
 .SH FORMAT OF THE FILE WITH MOVE DIRECTIVES
-The out file constist of one line per file to be moved with the following format:
+The out file consists of one line per file to be moved with the following format:
 .nf
 
 file-name       source-server-URL       destination-server-URL
