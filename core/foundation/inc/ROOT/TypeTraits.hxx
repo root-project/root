@@ -154,9 +154,9 @@ template <typename... Args>
 using RemoveFirst_t = typename RemoveFirst<Args...>::type;
 
 /// Return first of possibly many template parameters.
-/// For non-template types, the result is the type itself.
+/// For non-template types, the result is void
 /// e.g. TakeFirstParameter<U<A,B>> is A
-///      TakeFirstParameter<T> is T
+///      TakeFirstParameter<T> is void
 template <typename T>
 struct TakeFirstParameter {
    using type = void;
