@@ -288,9 +288,6 @@ public:
 
    virtual TVirtualStreamerInfo *GetInfo();
 
-   static void SetFloatFormat(const char *fmt = "%e");
-   static const char *GetFloatFormat();
-
    // end of redefined virtual functions
 
    ClassDef(TBufferSQL2, 0); // a specialized TBuffer to convert data to SQL statements or read data from SQL tables

@@ -209,15 +209,7 @@ public:
 
    // end of redefined virtual functions
 
-   virtual void WriteBaseClass(void *start, TStreamerBase *elem);
    virtual void ReadBaseClass(void *start, TStreamerBase *elem);
-
-   static void SetFloatFormat(const char *fmt = "%e");
-   static const char *GetFloatFormat();
-   static void SetDoubleFormat(const char *fmt = "%.14e");
-   static const char *GetDoubleFormat();
-
-   static void CompactFloatString(char *buf, unsigned len);
 
 protected:
    // redefined protected virtual functions
@@ -307,9 +299,6 @@ protected:
    TString fSemicolon; ///<!  depending from compression level, " : " or ":"
    TString fArraySepar;    ///<!  depending from compression level, ", " or ","
    TString fNumericLocale; ///<!  stored value of setlocale(LC_NUMERIC), which should be recovered at the end
-
-   static const char *fgFloatFmt;  ///<!  printf argument for floats, either "%f" or "%e" or "%10f" and so on
-   static const char *fgDoubleFmt; ///<!  printf argument for doubles, either "%f" or "%e" or "%10f" and so on
 
    ClassDef(TBufferJSON, 1) // a specialized TBuffer to only write objects into JSON format
 };

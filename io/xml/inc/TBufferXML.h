@@ -213,11 +213,6 @@ public:
 
    virtual TVirtualStreamerInfo *GetInfo();
 
-   // end of redefined virtual functions
-
-   static void SetFloatFormat(const char *fmt = "%e");
-   static const char *GetFloatFormat();
-
 protected:
    TBufferXML();
 
@@ -346,9 +341,6 @@ protected:
    TClass *fExpectedBaseClass; ///<!   Pointer to class, which should be stored as parent of current
    Int_t fCompressLevel;       ///<!   Compression level and algorithm
    Int_t fIOVersion;           ///<!   Indicates format of ROOT xml file
-
-   static std::string
-      fgFloatFmt; ///<!   Printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
 
    ClassDef(TBufferXML, 0); // a specialized TBuffer to read/write to XML files
 };
