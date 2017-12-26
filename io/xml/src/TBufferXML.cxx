@@ -67,8 +67,7 @@ std::string TBufferXML::fgFloatFmt = "%e";
 
 TBufferXML::TBufferXML()
    : TBufferText(), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
-     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0),
-     fIOVersion(3)
+     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
 {
 }
 
@@ -78,8 +77,7 @@ TBufferXML::TBufferXML()
 
 TBufferXML::TBufferXML(TBuffer::EMode mode)
    : TBufferText(mode), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
-     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0),
-     fIOVersion(3)
+     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
 {
 }
 
@@ -90,8 +88,8 @@ TBufferXML::TBufferXML(TBuffer::EMode mode)
 
 TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
    : TBufferText(mode, file), TXMLSetup(*file), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr),
-     fIdArray(nullptr), fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(nullptr),
-     fCompressLevel(0), fIOVersion(3)
+     fIdArray(nullptr), fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0),
+     fIOVersion(3)
 {
    // this is for the case when StreamerInfo reads elements from
    // buffer as ReadFastArray. When it checks if size of buffer is
@@ -928,7 +926,6 @@ void TBufferXML::IncrementLevel(TVirtualStreamerInfo *info)
 void TBufferXML::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
 {
    fCanUseCompact = kFALSE;
-   fExpectedChain = kFALSE;
 
    if (sinfo)
       cl = sinfo->GetClass();
@@ -997,7 +994,6 @@ void TBufferXML::DecrementLevel(TVirtualStreamerInfo *info)
    CheckVersionBuf();
 
    fCanUseCompact = kFALSE;
-   fExpectedChain = kFALSE;
 
    if (gDebug > 2)
       Info("DecrementLevel", "Class: %s", (info ? info->GetClass()->GetName() : "custom"));
@@ -1040,7 +1036,6 @@ void TBufferXML::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
 {
    CheckVersionBuf();
 
-   fExpectedChain = kFALSE;
    fCanUseCompact = kFALSE;
    fExpectedBaseClass = nullptr;
 
@@ -1080,12 +1075,6 @@ void TBufferXML::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
       Info("SetStreamerElementNumber", "    Next element %s", elem->GetName());
 
    Bool_t isBasicType = (elem->GetType() > 0) && (elem->GetType() < 20);
-
-   // fExpectedChain = isBasicType && (comp_type - elem->GetType() == TStreamerInfo::kOffsetL);
-
-   if (fExpectedChain && (gDebug > 3)) {
-      Info("SetStreamerElementNumber", "    Expects chain for elem %s number %d", elem->GetName(), number);
-   }
 
    fCanUseCompact =
       isBasicType && ((elem->GetType() == comp_type) || (elem->GetType() == comp_type - TStreamerInfo::kConv) ||
@@ -1855,45 +1844,12 @@ R__ALWAYS_INLINE void TBufferXML::XmlReadFastArray(T *arr, Int_t n)
    BeforeIOoperation();
    if (n <= 0)
       return;
-   TStreamerElement *elem = Stack(0)->fElem;
-   //if (elem && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) &&
-   //    (elem->GetArrayLength() != n))
-   //   fExpectedChain = kTRUE;
-   if (fExpectedChain) {
-      fExpectedChain = kFALSE;
-      Int_t startnumber = Stack(0)->fElemNumber;
-      TStreamerInfo *info = Stack(1)->fInfo;
-      Int_t index = 0;
-      while (index < n) {
-         elem = (TStreamerElement *)info->GetElements()->At(startnumber++);
-         if (elem->GetType() < TStreamerInfo::kOffsetL) {
-            if (index > 0) {
-               PopStack();
-               ShiftStack("chainreader");
-               VerifyElemNode(elem);
-            }
-            fCanUseCompact = kTRUE;
-            XmlReadBasic(arr[index]);
-            index++;
-         } else {
-            if (!VerifyItemNode(xmlio::Array, "ReadFastArray"))
-               return;
-            PushStack(StackNode());
-            Int_t elemlen = elem->GetArrayLength();
-            XmlReadArrayContent((arr + index), elemlen);
-            PopStack();
-            ShiftStack("readfastarr");
-            index += elemlen;
-         }
-      }
-   } else {
-      if (!VerifyItemNode(xmlio::Array, "ReadFastArray"))
-         return;
-      PushStack(StackNode());
-      XmlReadArrayContent(arr, n);
-      PopStack();
-      ShiftStack("readfastarr");
-   }
+   if (!VerifyItemNode(xmlio::Array, "ReadFastArray"))
+      return;
+   PushStack(StackNode());
+   XmlReadArrayContent(arr, n);
+   PopStack();
+   ShiftStack("readfastarr");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2057,7 +2013,9 @@ void TBufferXML::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t i
 
    if ((GetIOVersion() < 4) && !isPreAlloc) {
       TStreamerElement *elem = Stack()->fElem;
-      if (elem && ((elem->GetType() == TStreamerInfo::kSTLp) || (elem->GetType() == TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL))) oldStyle = kTRUE;
+      if (elem && ((elem->GetType() == TStreamerInfo::kSTLp) ||
+                   (elem->GetType() == TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL)))
+         oldStyle = kTRUE;
    }
 
    if (streamer) {
@@ -2076,7 +2034,8 @@ void TBufferXML::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t i
 
       for (Int_t j = 0; j < n; j++) {
          if (oldStyle) {
-            if (!start[j]) start[j] = ((TClass *)cl)->New();
+            if (!start[j])
+               start[j] = ((TClass *)cl)->New();
             ((TClass *)cl)->Streamer(start[j], *this);
             continue;
          }
@@ -2264,40 +2223,10 @@ R__ALWAYS_INLINE void TBufferXML::XmlWriteFastArray(const T *arr, Int_t n)
    BeforeIOoperation();
    if (n <= 0)
       return;
-   TStreamerElement *elem = Stack()->fElem;
-   //if (elem && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) &&
-   //    (elem->GetArrayLength() != n))
-   //   fExpectedChain = kTRUE;
-   if (fExpectedChain) {
-      TStreamerInfo *info = Stack(1)->fInfo;
-      Int_t startnumber = Stack(0)->fElemNumber;
-      fExpectedChain = kFALSE;
-      Int_t index = 0;
-      while (index < n) {
-         elem = (TStreamerElement *)info->GetElements()->At(startnumber++);
-         if (elem->GetType() < TStreamerInfo::kOffsetL) {
-            if (index > 0) {
-               PopStack();
-               CreateElemNode(elem);
-            }
-            fCanUseCompact = kTRUE;
-            XmlWriteBasic(arr[index]);
-            index++;
-         } else {
-            XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);
-            Int_t elemlen = elem->GetArrayLength();
-            PushStack(arrnode);
-            XmlWriteArrayContent((arr + index), elemlen);
-            index += elemlen;
-            PopStack();
-         }
-      }
-   } else {
-      XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);
-      PushStack(arrnode);
-      XmlWriteArrayContent(arr, n);
-      PopStack();
-   }
+   XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);
+   PushStack(arrnode);
+   XmlWriteArrayContent(arr, n);
+   PopStack();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2315,7 +2244,7 @@ void TBufferXML::WriteFastArray(const Bool_t *b, Int_t n)
 
 void TBufferXML::WriteFastArray(const Char_t *c, Int_t n)
 {
-   Bool_t usedefault = (n == 0) || fExpectedChain;
+   Bool_t usedefault = (n == 0);
    const Char_t *buf = c;
    if (!usedefault)
       for (int i = 0; i < n; i++) {
@@ -2471,7 +2400,9 @@ Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t
 
    if ((GetIOVersion() < 4) && !isPreAlloc) {
       TStreamerElement *elem = Stack()->fElem;
-      if (elem && ((elem->GetType() == TStreamerInfo::kSTLp) || (elem->GetType() == TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL))) oldStyle = kTRUE;
+      if (elem && ((elem->GetType() == TStreamerInfo::kSTLp) ||
+                   (elem->GetType() == TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL)))
+         oldStyle = kTRUE;
    }
 
    if (streamer) {
@@ -2521,8 +2452,13 @@ void TBufferXML::StreamObject(void *obj, const TClass *cl, const TClass * /* onf
 {
    if (GetIOVersion() < 4) {
       TStreamerElement *elem = Stack()->fElem;
-      if (elem && (elem->GetType() == TStreamerInfo::kTObject)) { ((TObject*)obj)->TObject::Streamer(*this); return; } else
-      if (elem && (elem->GetType() == TStreamerInfo::kTNamed)) { ((TNamed*)obj)->TNamed::Streamer(*this); return; }
+      if (elem && (elem->GetType() == TStreamerInfo::kTObject)) {
+         ((TObject *)obj)->TObject::Streamer(*this);
+         return;
+      } else if (elem && (elem->GetType() == TStreamerInfo::kTNamed)) {
+         ((TNamed *)obj)->TNamed::Streamer(*this);
+         return;
+      }
    }
 
    BeforeIOoperation();

@@ -350,8 +350,7 @@ protected:
 
    Int_t fErrorFlag; //!
 
-   Bool_t fCanUseCompact; ///<!   Flag indicate that basic type (like Int_t) can be placed in the same tag
-   Bool_t fExpectedChain; ///<!   Flag to resolve situation when several elements of same basic type stored as FastArray
+   Bool_t fCanUseCompact;      ///<!   Flag indicate that basic type (like Int_t) can be placed in the same tag
    TClass *fExpectedBaseClass; ///<!   Pointer to class, which should be stored as parent of current
    Int_t fCompressLevel;       ///<!   Compression level and algorithm
    Int_t fIOVersion;           ///<!   Indicates format of ROOT xml file
