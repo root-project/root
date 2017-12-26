@@ -216,6 +216,9 @@ public:
 
    // end of redefined virtual functions
 
+   virtual void WriteBaseClass(void *start, TStreamerBase *elem);
+   virtual void ReadBaseClass(void *start, TStreamerBase *elem);
+
    static void SetFloatFormat(const char *fmt = "%e");
    static const char *GetFloatFormat();
    static void SetDoubleFormat(const char *fmt = "%.14e");

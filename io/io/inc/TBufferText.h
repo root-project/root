@@ -14,6 +14,8 @@
 
 #include "TBuffer.h"
 
+class TStreamerBase;
+
 class TBufferText : public TBuffer {
 
 protected:
@@ -172,6 +174,10 @@ public:
       Error("ReadClassEmulated", "not defined in text-based streamers");
       return 0;
    }
+
+   virtual void WriteBaseClass(void *start, TStreamerBase *elem);
+
+   virtual void ReadBaseClass(void *start, TStreamerBase *elem);
 
 protected:
    virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) = 0;

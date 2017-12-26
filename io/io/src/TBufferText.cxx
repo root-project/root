@@ -585,3 +585,14 @@ void TBufferText::SkipVersion(const TClass *cl)
 {
    ReadVersion(nullptr, nullptr, cl);
 }
+
+void TBufferText::WriteBaseClass(void *start, TStreamerBase *elem)
+{
+   elem->WriteBuffer(*this, (char *)start);
+}
+
+void TBufferText::ReadBaseClass(void *start, TStreamerBase *elem)
+{
+   elem->ReadBuffer(*this, (char *)start);
+}
+
