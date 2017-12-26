@@ -68,7 +68,7 @@ ClassImp(TBufferSQL2);
 TBufferSQL2::TBufferSQL2()
    : TBufferText(), fSQL(nullptr), fIOVersion(1), fStructure(0), fStk(0), fObjMap(nullptr), fReadBuffer(),
      fErrorFlag(0), fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
-     fCurrentData(0), fObjectsInfos(0), fFirstObjId(0), fLastObjId(0), fPoolsMap(0)
+     fCurrentData(0), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(0)
 {
 }
 
@@ -79,7 +79,7 @@ TBufferSQL2::TBufferSQL2()
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode)
    : TBufferText(mode), fSQL(nullptr), fIOVersion(1), fStructure(0), fStk(0), fObjMap(nullptr), fReadBuffer(),
      fErrorFlag(0), fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
-     fCurrentData(0), fObjectsInfos(0), fFirstObjId(0), fLastObjId(0), fPoolsMap(0)
+     fCurrentData(0), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(0)
 {
 }
 
@@ -91,7 +91,7 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode)
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile *file)
    : TBufferText(mode), fSQL(nullptr), fIOVersion(1), fStructure(0), fStk(0), fObjMap(nullptr), fReadBuffer(),
      fErrorFlag(0), fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
-     fCurrentData(0), fObjectsInfos(0), fFirstObjId(0), fLastObjId(0), fPoolsMap(0)
+     fCurrentData(0), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(0)
 {
    SetParent(file);
    fSQL = file;
@@ -157,9 +157,9 @@ TSQLStructure *TBufferSQL2::SqlWriteAny(const void *obj, const TClass *cl, Long6
 void *TBufferSQL2::SqlReadAny(Long64_t keyid, Long64_t objid, TClass **cl, void *obj)
 {
    if (cl)
-      *cl = 0;
-   if (fSQL == 0)
-      return 0;
+      *cl = nullptr;
+   if (!fSQL)
+      return nullptr;
 
    fCurrentData = 0;
    fErrorFlag = 0;
@@ -167,12 +167,11 @@ void *TBufferSQL2::SqlReadAny(Long64_t keyid, Long64_t objid, TClass **cl, void 
    fReadVersionBuffer = -1;
 
    fObjectsInfos = fSQL->SQLObjectsInfo(keyid);
-   //   fObjectsInfos = 0;
    fFirstObjId = objid;
    fLastObjId = objid;
-   if (fObjectsInfos != 0) {
+   if (fObjectsInfos) {
       TSQLObjectInfo *objinfo = (TSQLObjectInfo *)fObjectsInfos->Last();
-      if (objinfo != 0)
+      if (objinfo)
          fLastObjId = objinfo->GetObjId();
    }
 
@@ -185,10 +184,8 @@ void *TBufferSQL2::SqlReadAny(Long64_t keyid, Long64_t objid, TClass **cl, void 
 
 Bool_t TBufferSQL2::SqlObjectInfo(Long64_t objid, TString &clname, Version_t &version)
 {
-   if ((objid < 0) || (fObjectsInfos == 0))
+   if ((objid < 0) || !fObjectsInfos)
       return kFALSE;
-
-   //  if (fObjectsInfos==0) return fSQL->SQLObjectInfo(objid, clname, version);
 
    // suppose that objects info are sorted out
 
@@ -294,18 +291,18 @@ Int_t TBufferSQL2::SqlWriteObject(const void *obj, const TClass *cl, Bool_t cach
                                   Int_t streamer_index)
 {
    if (gDebug > 1)
-      std::cout << " SqlWriteObject " << obj << " : cl = " << (cl ? cl->GetName() : "null") << std::endl;
+      Info("SqlWriteObject", "Object: %p Class: %s", obj, (cl ? cl->GetName() : "null"));
 
    PushStack();
 
    Long64_t objid = -1;
 
-   if (cl == 0)
-      obj = 0;
+   if (!cl)
+      obj = nullptr;
 
-   if (obj == 0)
+   if (!obj) {
       objid = 0;
-   else if (fObjMap != 0) {
+   } else if (fObjMap != 0) {
       ULong_t hash = TString::Hash(&obj, sizeof(void *));
       Long_t value = fObjMap->GetValue(hash, (Long_t)obj);
       if (value > 0)
@@ -313,7 +310,7 @@ Int_t TBufferSQL2::SqlWriteObject(const void *obj, const TClass *cl, Bool_t cach
    }
 
    if (gDebug > 1)
-      std::cout << "    Find objectid = " << objid << std::endl;
+      Info("SqlWriteObject", "Find objectid %ld", (long)objid);
 
    if (objid >= 0) {
       Stack()->SetObjectPointer(objid);
@@ -339,7 +336,7 @@ Int_t TBufferSQL2::SqlWriteObject(const void *obj, const TClass *cl, Bool_t cach
       ((TClass *)cl)->Streamer((void *)obj, *this);
 
    if (gDebug > 1)
-      std::cout << "Done write of " << cl->GetName() << std::endl;
+      Info("SqlWriteObject", "Done write of %s", cl->GetName());
 
    PopStack();
 
@@ -353,7 +350,7 @@ void *TBufferSQL2::SqlReadObject(void *obj, TClass **cl, TMemberStreamer *stream
                                  const TClass *onFileClass)
 {
    if (cl)
-      *cl = 0;
+      *cl = nullptr;
 
    if (fErrorFlag > 0)
       return obj;
@@ -375,7 +372,7 @@ void *TBufferSQL2::SqlReadObject(void *obj, TClass **cl, TMemberStreamer *stream
 
    if (!fCurrentData->IsBlobData() || fCurrentData->VerifyDataType(sqlio::ObjectPtr, kFALSE)) {
       if (objid == 0) {
-         obj = 0;
+         obj = nullptr;
          findptr = kTRUE;
       } else {
          if (objid == -1) {
@@ -383,12 +380,12 @@ void *TBufferSQL2::SqlReadObject(void *obj, TClass **cl, TMemberStreamer *stream
          } else {
             if ((fObjMap != 0) && (objid >= fFirstObjId)) {
                void *obj1 = (void *)(Long_t)fObjMap->GetValue((Long_t)objid - fFirstObjId);
-               if (obj1 != 0) {
+               if (obj1) {
                   obj = obj1;
                   findptr = kTRUE;
                   TString clname;
                   Version_t version;
-                  if ((cl != 0) && SqlObjectInfo(objid, clname, version))
+                  if (cl && SqlObjectInfo(objid, clname, version))
                      *cl = TClass::GetClass(clname);
                }
             }
@@ -397,8 +394,7 @@ void *TBufferSQL2::SqlReadObject(void *obj, TClass **cl, TMemberStreamer *stream
    }
 
    if ((gDebug > 3) && findptr)
-      std::cout << "    Found pointer " << (obj ? obj : 0) << " class = " << ((cl && *cl) ? (*cl)->GetName() : "null")
-                << std::endl;
+      Info("SqlReadObject", "Found pointer %p cl %s", obj, ((cl && *cl) ? (*cl)->GetName() : "null"));
 
    if (findptr) {
       fCurrentData->ShiftToNextValue();
@@ -415,7 +411,7 @@ void *TBufferSQL2::SqlReadObject(void *obj, TClass **cl, TMemberStreamer *stream
    fCurrentData->ShiftToNextValue();
 
    if ((gDebug > 2) || (objid < 0))
-      std::cout << "Found object reference " << objid << std::endl;
+      Info("SqlReadObject", "Found object reference %ld", (long)objid);
 
    return SqlReadObjectDirect(obj, cl, objid, streamer, streamer_index, onFileClass);
 }
@@ -442,7 +438,7 @@ void *TBufferSQL2::SqlReadObjectDirect(void *obj, TClass **cl, Long64_t objid, T
    if (objClass == TDirectory::Class())
       objClass = TDirectoryFile::Class();
 
-   if ((objClass == 0) || (sqlinfo == 0)) {
+   if (!objClass || !sqlinfo) {
       Error("SqlReadObjectDirect", "Class %s is not known", clname.Data());
       return obj;
    }
@@ -499,7 +495,7 @@ void *TBufferSQL2::SqlReadObjectDirect(void *obj, TClass **cl, Long64_t objid, T
    PopStack();
 
    if (gDebug > 1)
-      std::cout << "Read object of class " << objClass->GetName() << " done" << std::endl << std::endl;
+      Info("SqlReadObjectDirect", "Read object of class %s done", objClass->GetName());
 
    if (cl != 0)
       *cl = objClass;
@@ -517,13 +513,13 @@ void *TBufferSQL2::SqlReadObjectDirect(void *obj, TClass **cl, Long64_t objid, T
 
 void TBufferSQL2::IncrementLevel(TVirtualStreamerInfo *info)
 {
-   if (info == 0)
+   if (!info)
       return;
 
    PushStack()->SetStreamerInfo((TStreamerInfo *)info);
 
    if (gDebug > 2)
-      std::cout << " IncrementLevel " << info->GetName() << std::endl;
+      Info("IncrementLevel", "Info: %s", info->GetName());
 
    WorkWithClass(info->GetName(), info->GetClassVersion());
 }
@@ -534,8 +530,7 @@ void TBufferSQL2::IncrementLevel(TVirtualStreamerInfo *info)
 
 void TBufferSQL2::DecrementLevel(TVirtualStreamerInfo *info)
 {
-   TSQLStructure *curr = Stack();
-   if (curr->GetElement())
+   if (Stack()->GetElement())
       PopStack(); // for element
    PopStack();    // for streamerinfo
 
@@ -543,7 +538,7 @@ void TBufferSQL2::DecrementLevel(TVirtualStreamerInfo *info)
    fCurrentData = Stack()->GetObjectData(kTRUE);
 
    if (gDebug > 2)
-      std::cout << " DecrementLevel " << info->GetClass()->GetName() << std::endl;
+      Info("DecrementLevel", "Info: %s", info->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -606,7 +601,7 @@ void TBufferSQL2::ClassBegin(const TClass *cl, Version_t classversion)
    PushStack()->SetCustomClass(cl, classversion);
 
    if (gDebug > 2)
-      Info("ClassBegin", "%s", cl->GetName());
+      Info("ClassBegin", "Class: %s", cl->GetName());
 
    WorkWithClass(cl->GetName(), classversion);
 }
@@ -617,8 +612,7 @@ void TBufferSQL2::ClassBegin(const TClass *cl, Version_t classversion)
 
 void TBufferSQL2::ClassEnd(const TClass *cl)
 {
-   TSQLStructure *curr = Stack();
-   if (curr->GetType() == TSQLStructure::kSqlCustomElement)
+   if (Stack()->GetType() == TSQLStructure::kSqlCustomElement)
       PopStack(); // for element
    PopStack();    // for streamerinfo
 
@@ -626,7 +620,7 @@ void TBufferSQL2::ClassEnd(const TClass *cl)
    fCurrentData = Stack()->GetObjectData(kTRUE);
 
    if (gDebug > 2)
-      Info("ClassEnd", "%s", cl->GetName());
+      Info("ClassEnd", "Class: %s", cl->GetName());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -875,13 +869,12 @@ Version_t TBufferSQL2::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass *)
       res = fReadVersionBuffer;
       fReadVersionBuffer = -1;
       if (gDebug > 3)
-         std::cout << "TBufferSQL2::ReadVersion from buffer = " << res << std::endl;
+         Info("ReadVersion", "from buffer = %d", (int)res);
    } else if ((fCurrentData != 0) && fCurrentData->IsBlobData() && fCurrentData->VerifyDataType(sqlio::Version)) {
       TString value = fCurrentData->GetValue();
       res = value.Atoi();
       if (gDebug > 3)
-         std::cout << "TBufferSQL2::ReadVersion from blob " << fCurrentData->GetBlobPrefixName() << " = " << res
-                   << std::endl;
+         Info("ReadVersion", "from blob %s = %d", fCurrentData->GetBlobPrefixName(), (int)res);
       fCurrentData->ShiftToNextValue();
    } else {
       Error("ReadVersion", "No correspondent tags to read version");
@@ -899,8 +892,7 @@ Version_t TBufferSQL2::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass *)
 UInt_t TBufferSQL2::WriteVersion(const TClass *cl, Bool_t /* useBcnt */)
 {
    if (gDebug > 2)
-      std::cout << "TBufferSQL2::WriteVersion " << (cl ? cl->GetName() : "null")
-                << "   ver = " << (cl ? cl->GetClassVersion() : 0) << std::endl;
+      Info("WriteVersion", "cl:%s ver:%d", (cl ? cl->GetName() : "null"), (int)(cl ? cl->GetClassVersion() : 0));
 
    if (cl)
       Stack()->AddVersion(cl);
@@ -931,8 +923,7 @@ void TBufferSQL2::SkipObjectAny()
 void TBufferSQL2::WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse)
 {
    if (gDebug > 2)
-      std::cout << "TBufferSQL2::WriteObject of class " << (actualClass ? actualClass->GetName() : " null")
-                << std::endl;
+      Info("WriteObjectClass", "class %s", (actualClass ? actualClass->GetName() : " null"));
    SqlWriteObject(actualObjStart, actualClass, cacheReuse);
 }
 
@@ -942,41 +933,40 @@ void TBufferSQL2::WriteObjectClass(const void *actualObjStart, const TClass *act
          SqlReadBasic(vname[indx++]);          \
    }
 
-#define SQLReadArrayCompress(vname, arrsize)                                                                  \
-   {                                                                                                          \
-      while (indx < arrsize) {                                                                                \
-         const char *name = fCurrentData->GetBlobPrefixName();                                                \
-         Int_t first, last, res;                                                                              \
-         if (strstr(name, sqlio::IndexSepar) == 0) {                                                          \
-            res = sscanf(name, "[%d", &first);                                                                \
-            last = first;                                                                                     \
-         } else                                                                                               \
-            res = sscanf(name, "[%d..%d", &first, &last);                                                     \
-         if (gDebug > 5)                                                                                      \
-            std::cout << name << " first = " << first << " last = " << last << " res = " << res << std::endl; \
-         if ((first != indx) || (last < first) || (last >= arrsize)) {                                        \
-            Error("SQLReadArrayCompress", "Error reading array content %s", name);                            \
-            fErrorFlag = 1;                                                                                   \
-            break;                                                                                            \
-         }                                                                                                    \
-         SqlReadBasic(vname[indx]);                                                                           \
-         indx++;                                                                                              \
-         while (indx <= last)                                                                                 \
-            vname[indx++] = vname[first];                                                                     \
-      }                                                                                                       \
+#define SQLReadArrayCompress(vname, arrsize)                                       \
+   {                                                                               \
+      while (indx < arrsize) {                                                     \
+         const char *name = fCurrentData->GetBlobPrefixName();                     \
+         Int_t first, last;                                                        \
+         if (strstr(name, sqlio::IndexSepar) == 0) {                               \
+            sscanf(name, "[%d", &first);                                           \
+            last = first;                                                          \
+         } else {                                                                  \
+            sscanf(name, "[%d..%d", &first, &last);                                \
+         }                                                                         \
+         if ((first != indx) || (last < first) || (last >= arrsize)) {             \
+            Error("SQLReadArrayCompress", "Error reading array content %s", name); \
+            fErrorFlag = 1;                                                        \
+            break;                                                                 \
+         }                                                                         \
+         SqlReadBasic(vname[indx]);                                                \
+         indx++;                                                                   \
+         while (indx <= last)                                                      \
+            vname[indx++] = vname[first];                                          \
+      }                                                                            \
    }
 
 // macro to read content of array with compression
 #define SQLReadArrayContent(vname, arrsize, withsize)                                                 \
    {                                                                                                  \
       if (gDebug > 3)                                                                                 \
-         std::cout << "SQLReadArrayContent  " << (arrsize) << std::endl;                              \
+         Info("SQLReadArrayContent", "size %d", (int)(arrsize));                                      \
       PushStack()->SetArray(withsize ? arrsize : -1);                                                 \
       Int_t indx = 0;                                                                                 \
       if (fCurrentData->IsBlobData())                                                                 \
          SQLReadArrayCompress(vname, arrsize) else SQLReadArrayUncompress(vname, arrsize) PopStack(); \
       if (gDebug > 3)                                                                                 \
-         std::cout << "SQLReadArrayContent done " << std::endl;                                       \
+         Info("SQLReadArrayContent", "done");                                                         \
    }
 
 // macro to read array, which include size attribute
@@ -1242,7 +1232,6 @@ void TBufferSQL2::ReadFastArray(Char_t *c, Int_t n)
          size = n;
       memcpy(c, buf, size);
    } else {
-      //     std::cout << "call standard macro TBufferSQL2_ReadFastArray" << std::endl;
       TBufferSQL2_ReadFastArray(c);
    }
 }
@@ -1849,11 +1838,11 @@ void TBufferSQL2::StreamObject(void *obj, const TClass *cl, const TClass *onFile
 void TBufferSQL2::StreamObjectExtra(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n,
                                     const TClass *onFileClass)
 {
-   if (streamer == 0)
+   if (!streamer)
       return;
 
    if (gDebug > 1)
-      std::cout << "Stream object of class = " << cl->GetName() << std::endl;
+      Info("StreamObjectExtra", "class = %s", cl->GetName());
    //   (*streamer)(*this, obj, n);
 
    if (IsReading())
@@ -2555,7 +2544,7 @@ const char *TBufferSQL2::SqlReadValue(const char *tname)
    if (fErrorFlag > 0)
       return 0;
 
-   if (fCurrentData == 0) {
+   if (!fCurrentData) {
       Error("SqlReadValue", "No object data to read from");
       fErrorFlag = 1;
       return 0;
@@ -2572,7 +2561,7 @@ const char *TBufferSQL2::SqlReadValue(const char *tname)
    fCurrentData->ShiftToNextValue();
 
    if (gDebug > 4)
-      std::cout << "   SqlReadValue " << tname << " = " << fReadBuffer << std::endl;
+      Info("SqlReadValue", "%s = %s", tname, fReadBuffer.Data());
 
    return fReadBuffer.Data();
 }
