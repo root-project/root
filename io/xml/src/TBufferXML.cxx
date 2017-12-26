@@ -2519,6 +2519,12 @@ Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t
 
 void TBufferXML::StreamObject(void *obj, const TClass *cl, const TClass * /* onfileClass */)
 {
+   if (GetIOVersion() < 4) {
+      TStreamerElement *elem = Stack()->fElem;
+      if (elem && (elem->GetType() == TStreamerInfo::kTObject)) { ((TObject*)obj)->TObject::Streamer(*this); return; } else
+      if (elem && (elem->GetType() == TStreamerInfo::kTNamed)) { ((TNamed*)obj)->TNamed::Streamer(*this); return; }
+   }
+
    BeforeIOoperation();
    if (gDebug > 1)
       Info("StreamObject", "Class: %s", (cl ? cl->GetName() : "none"));
