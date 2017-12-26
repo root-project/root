@@ -201,18 +201,11 @@ public:
    using TBuffer::WriteStdString;
    virtual void WriteCharStar(char *s);
 
-   virtual Int_t WriteClassBuffer(const TClass *cl, void *pointer);
-
    virtual Bool_t CheckObject(const TObject *obj);
 
    virtual Bool_t CheckObject(const void *ptr, const TClass *cl);
 
    virtual TVirtualStreamerInfo *GetInfo();
-
-   // Utilities for TClass
-   virtual Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, const TClass * /*onfile_class*/ = nullptr);
-   virtual Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, Int_t /*version*/, UInt_t /*start*/,
-                                 UInt_t /*count*/, const TClass * /*onfile_class*/ = nullptr);
 
    // end of redefined virtual functions
 
