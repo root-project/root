@@ -191,6 +191,8 @@ public:
    static const char *GetDoubleFormat();
 
    static void CompactFloatString(char *buf, unsigned len);
+   static const char *ConvertFloat(Float_t v, char *buf, unsigned len);
+   static const char *ConvertDouble(Double_t v, char *buf, unsigned len);
 
 protected:
    virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) = 0;
