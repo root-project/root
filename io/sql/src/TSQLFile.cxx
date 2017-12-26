@@ -272,7 +272,7 @@ const char *oracle_OtherTypes[13] = {
 /// default TSQLFile constructor
 
 TSQLFile::TSQLFile()
-   : TFile(), fSQL(0), fSQLClassInfos(0), fUseSuffixes(kTRUE), fSQLIOversion(1), fArrayLimit(21),
+   : TFile(), fSQL(0), fSQLClassInfos(0), fUseSuffixes(kTRUE), fSQLIOversion(2), fArrayLimit(21),
      fCanChangeConfig(kFALSE), fTablesType(), fUseTransactions(0), fUseIndexes(0), fModifyCounter(0), fQuerisCounter(0),
      fBasicTypes(0), fOtherTypes(0), fUserName(), fLogFile(0), fIdsTableExists(kFALSE), fStmtCounter(0)
 {
@@ -298,7 +298,7 @@ TSQLFile::TSQLFile()
 /// For a moment TSQLFile does not support TTree objects and subdirectories.
 
 TSQLFile::TSQLFile(const char *dbname, Option_t *option, const char *user, const char *pass)
-   : TFile(), fSQL(0), fSQLClassInfos(0), fUseSuffixes(kTRUE), fSQLIOversion(1), fArrayLimit(21),
+   : TFile(), fSQL(0), fSQLClassInfos(0), fUseSuffixes(kTRUE), fSQLIOversion(2), fArrayLimit(21),
      fCanChangeConfig(kFALSE), fTablesType(), fUseTransactions(0), fUseIndexes(0), fModifyCounter(0), fQuerisCounter(0),
      fBasicTypes(mysql_BasicTypes), fOtherTypes(mysql_OtherTypes), fUserName(user), fLogFile(0),
      fIdsTableExists(kFALSE), fStmtCounter(0)
