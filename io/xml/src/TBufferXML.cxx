@@ -1081,7 +1081,7 @@ void TBufferXML::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
 
    Bool_t isBasicType = (elem->GetType() > 0) && (elem->GetType() < 20);
 
-   fExpectedChain = isBasicType && (comp_type - elem->GetType() == TStreamerInfo::kOffsetL);
+   // fExpectedChain = isBasicType && (comp_type - elem->GetType() == TStreamerInfo::kOffsetL);
 
    if (fExpectedChain && (gDebug > 3)) {
       Info("SetStreamerElementNumber", "    Expects chain for elem %s number %d", elem->GetName(), number);
@@ -1856,9 +1856,9 @@ R__ALWAYS_INLINE void TBufferXML::XmlReadFastArray(T *arr, Int_t n)
    if (n <= 0)
       return;
    TStreamerElement *elem = Stack(0)->fElem;
-   if (elem && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) &&
-       (elem->GetArrayLength() != n))
-      fExpectedChain = kTRUE;
+   //if (elem && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) &&
+   //    (elem->GetArrayLength() != n))
+   //   fExpectedChain = kTRUE;
    if (fExpectedChain) {
       fExpectedChain = kFALSE;
       Int_t startnumber = Stack(0)->fElemNumber;
@@ -2052,6 +2052,14 @@ void TBufferXML::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberSt
 void TBufferXML::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer,
                                const TClass *onFileClass)
 {
+
+   Bool_t oldStyle = kFALSE; // flag used to reproduce old-style I/= actions for kSTLp
+
+   if ((GetIOVersion() < 4) && !isPreAlloc) {
+      TStreamerElement *elem = Stack()->fElem;
+      if (elem && ((elem->GetType() == TStreamerInfo::kSTLp) || (elem->GetType() == TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL))) oldStyle = kTRUE;
+   }
+
    if (streamer) {
       if (isPreAlloc) {
          for (Int_t j = 0; j < n; j++) {
@@ -2060,13 +2068,18 @@ void TBufferXML::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t i
          }
       }
       streamer->SetOnFileClass(onFileClass);
-      (*streamer)(*this, (void *)start, 0);
+      (*streamer)(*this, (void *)start, oldStyle ? n : 0);
       return;
    }
 
    if (!isPreAlloc) {
 
       for (Int_t j = 0; j < n; j++) {
+         if (oldStyle) {
+            if (!start[j]) start[j] = ((TClass *)cl)->New();
+            ((TClass *)cl)->Streamer(start[j], *this);
+            continue;
+         }
          // delete the object or collection
          void *old = start[j];
          start[j] = ReadObjectAny(cl);
@@ -2251,10 +2264,10 @@ R__ALWAYS_INLINE void TBufferXML::XmlWriteFastArray(const T *arr, Int_t n)
    BeforeIOoperation();
    if (n <= 0)
       return;
-   TStreamerElement *elem = Stack(0)->fElem;
-   if (elem && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) &&
-       (elem->GetArrayLength() != n))
-      fExpectedChain = kTRUE;
+   TStreamerElement *elem = Stack()->fElem;
+   //if (elem && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) &&
+   //    (elem->GetArrayLength() != n))
+   //   fExpectedChain = kTRUE;
    if (fExpectedChain) {
       TStreamerInfo *info = Stack(1)->fInfo;
       Int_t startnumber = Stack(0)->fElemNumber;
@@ -2454,8 +2467,15 @@ Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t
    // if isPreAlloc is true (data member has a ->) we can assume that the pointer
    // is never 0.
 
+   Bool_t oldStyle = kFALSE; // flag used to reproduce old-style I/O actions for kSTLp
+
+   if ((GetIOVersion() < 4) && !isPreAlloc) {
+      TStreamerElement *elem = Stack()->fElem;
+      if (elem && ((elem->GetType() == TStreamerInfo::kSTLp) || (elem->GetType() == TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL))) oldStyle = kTRUE;
+   }
+
    if (streamer) {
-      (*streamer)(*this, (void *)start, 0);
+      (*streamer)(*this, (void *)start, oldStyle ? n : 0);
       return 0;
    }
 
@@ -2467,7 +2487,7 @@ Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t
 
       for (Int_t j = 0; j < n; j++) {
          // must write StreamerInfo if pointer is null
-         if (!strInfo && !start[j]) {
+         if (!strInfo && !start[j] && !oldStyle) {
             if (cl->Property() & kIsAbstract) {
                // Do not try to generate the StreamerInfo for an abstract class
             } else {
@@ -2476,7 +2496,10 @@ Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t
             }
          }
          strInfo = 2003;
-         res |= WriteObjectAny(start[j], cl);
+         if (oldStyle)
+            ((TClass *)cl)->Streamer(start[j], *this);
+         else
+            res |= WriteObjectAny(start[j], cl);
       }
 
    } else {
@@ -3397,7 +3420,7 @@ Int_t TBufferXML::ReadClassBuffer(const TClass *cl, void *pointer, Int_t version
    }
 
    // Deserialize the object.
-   ApplySequence(*(sinfo->GetReadObjectWiseActions()), (char *)pointer);
+   ApplySequence(*(sinfo->GetReadTextActions()), (char *)pointer);
    if (sinfo->IsRecovered())
       count = 0;
 
@@ -3538,7 +3561,7 @@ Int_t TBufferXML::ReadClassBuffer(const TClass *cl, void *pointer, const TClass 
    }
 
    // deserialize the object
-   ApplySequence(*(sinfo->GetReadObjectWiseActions()), (char *)pointer);
+   ApplySequence(*(sinfo->GetReadTextActions()), (char *)pointer);
    if (sinfo->TStreamerInfo::IsRecovered())
       R__c = 0; // 'TStreamerInfo::' avoids going via a virtual function.
 
@@ -3589,7 +3612,7 @@ Int_t TBufferXML::WriteClassBuffer(const TClass *cl, void *pointer)
 
    // NOTE: In the future Philippe wants this to happen via a custom action
    TagStreamerInfo(sinfo);
-   ApplySequence(*(sinfo->GetWriteObjectWiseActions()), (char *)pointer);
+   ApplySequence(*(sinfo->GetWriteTextActions()), (char *)pointer);
 
    // write the byte count at the start of the buffer
    SetByteCount(R__c, kTRUE);
