@@ -1886,8 +1886,14 @@ Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_
 
 void TBufferSQL2::StreamObject(void *obj, const TClass *cl, const TClass *onFileClass)
 {
+   if (fIOVersion < 2) {
+      TStreamerElement *elem = Stack(0)->GetElement();
+      if (elem && (elem->GetType() == TStreamerInfo::kTObject)) { ((TObject*)obj)->TObject::Streamer(*this); return; } else
+      if (elem && (elem->GetType() == TStreamerInfo::kTNamed)) { ((TNamed*)obj)->TNamed::Streamer(*this); return; }
+   }
+
    if (gDebug > 1)
-      std::cout << " TBufferSQL2::StreamObject class = " << (cl ? cl->GetName() : "none") << std::endl;
+      Info("StreamObject","class  %s", (cl ? cl->GetName() : "none"));
    if (IsReading())
       SqlReadObject(obj, 0, nullptr, 0, onFileClass);
    else
