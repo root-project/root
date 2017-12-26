@@ -66,7 +66,7 @@ ClassImp(TBufferSQL2);
 /// Default constructor, should not be used
 
 TBufferSQL2::TBufferSQL2()
-   : TBufferFile(), fSQL(0), fStructure(0), fStk(0), fObjMap(0), fReadBuffer(), fErrorFlag(0), fExpectedChain(kFALSE),
+   : TBufferText(), fSQL(nullptr), fIOVersion(1), fStructure(0), fStk(0), fObjMap(nullptr), fReadBuffer(), fErrorFlag(0), fExpectedChain(kFALSE),
      fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE), fCurrentData(0),
      fObjectsInfos(0), fFirstObjId(0), fLastObjId(0), fPoolsMap(0)
 {
@@ -77,13 +77,10 @@ TBufferSQL2::TBufferSQL2()
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode)
-   : TBufferFile(mode), fSQL(0), fStructure(0), fStk(0), fObjMap(0), fReadBuffer(), fErrorFlag(0),
+   : TBufferText(mode), fSQL(nullptr), fIOVersion(1), fStructure(0), fStk(0), fObjMap(nullptr), fReadBuffer(), fErrorFlag(0),
      fExpectedChain(kFALSE), fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
      fCurrentData(0), fObjectsInfos(0), fFirstObjId(0), fLastObjId(0), fPoolsMap(0)
 {
-   SetParent(0);
-   SetBit(kCannotHandleMemberWiseStreaming);
-   SetBit(kTextBasedStreaming);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,20 +89,16 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode)
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile *file)
-   : TBufferFile(mode), fSQL(0), fStructure(0), fStk(0), fObjMap(0), fReadBuffer(), fErrorFlag(0),
+   : TBufferText(mode), fSQL(nullptr), fIOVersion(1), fStructure(0), fStk(0), fObjMap(nullptr), fReadBuffer(), fErrorFlag(0),
      fExpectedChain(kFALSE), fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
      fCurrentData(0), fObjectsInfos(0), fFirstObjId(0), fLastObjId(0), fPoolsMap(0)
 {
-   fBufSize = 1000000000;
-
-   // for TClonesArray recognize if this is special case
-   SetBit(kCannotHandleMemberWiseStreaming);
-   SetBit(kTextBasedStreaming);
-
    SetParent(file);
    fSQL = file;
-   if (file != 0)
+   if (file) {
       SetCompressionLevel(file->GetCompressionLevel());
+      fIOVersion = file->GetIOVersion();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,17 +109,15 @@ TBufferSQL2::~TBufferSQL2()
    if (fObjMap)
       delete fObjMap;
 
-   if (fStructure != 0) {
+   if (fStructure)
       delete fStructure;
-      fStructure = 0;
-   }
 
-   if (fObjectsInfos != 0) {
+   if (fObjectsInfos) {
       fObjectsInfos->Delete();
       delete fObjectsInfos;
    }
 
-   if (fPoolsMap != 0) {
+   if (fPoolsMap) {
       fPoolsMap->DeleteValues();
       delete fPoolsMap;
    }
@@ -573,9 +564,9 @@ void TBufferSQL2::SetStreamerElementNumber(TStreamerElement *elem, Int_t comp_ty
       return;
    }
 
-   Int_t elem_type = elem->GetType();
+   // Int_t elem_type = elem->GetType();
 
-   fExpectedChain = ((elem_type > 0) && (elem_type < 20)) && (comp_type - elem_type == TStreamerInfo::kOffsetL);
+   // fExpectedChain = ((elem_type > 0) && (elem_type < 20)) && (comp_type - elem_type == TStreamerInfo::kOffsetL);
 
    WorkWithElement(elem, comp_type);
 }
@@ -878,37 +869,6 @@ void TBufferSQL2::WriteClass(const TClass *)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Suppressed function of TBuffer
-
-Int_t TBufferSQL2::CheckByteCount(UInt_t /*r_s */, UInt_t /*r_c*/, const TClass * /*cl*/)
-{
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Suppressed function of TBuffer
-
-Int_t TBufferSQL2::CheckByteCount(UInt_t, UInt_t, const char *)
-{
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Suppressed function of TBuffer
-
-void TBufferSQL2::SetByteCount(UInt_t, Bool_t)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Skip class version from I/O buffer.
-
-void TBufferSQL2::SkipVersion(const TClass *cl)
-{
-   ReadVersion(0, 0, cl);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Read version value from buffer
 /// actually version is normally defined by table name
 /// and kept in intermediate variable fReadVersionBuffer
@@ -1042,77 +1002,6 @@ void TBufferSQL2::WriteObjectClass(const void *actualObjStart, const TClass *act
       return n;                             \
    }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Read Float16 value
-
-void TBufferSQL2::ReadFloat16(Float_t *f, TStreamerElement * /*ele*/)
-{
-   SqlReadBasic(*f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read Double32 value
-
-void TBufferSQL2::ReadDouble32(Double_t *d, TStreamerElement * /*ele*/)
-{
-   SqlReadBasic(*d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the factor and minimun value have been specified
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferXML does not optimize space in this case.
-
-void TBufferSQL2::ReadWithFactor(Float_t *ptr, Double_t /* factor */, Double_t /* minvalue */)
-{
-   SqlReadBasic(*ptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Float16_t from the buffer when the number of bits is specified (explicitly or not)
-/// see comments about Float16_t encoding at TBufferFile::WriteFloat16().
-/// Currently TBufferXML does not optimize space in this case.
-
-void TBufferSQL2::ReadWithNbits(Float_t *ptr, Int_t /* nbits */)
-{
-   SqlReadBasic(*ptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the factor and minimun value have been specified
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferXML does not optimize space in this case.
-
-void TBufferSQL2::ReadWithFactor(Double_t *ptr, Double_t /* factor */, Double_t /* minvalue */)
-{
-   SqlReadBasic(*ptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the number of bits is specified (explicitly or not)
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferXML does not optimize space in this case.
-
-void TBufferSQL2::ReadWithNbits(Double_t *ptr, Int_t /* nbits */)
-{
-   SqlReadBasic(*ptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write Float16 value
-
-void TBufferSQL2::WriteFloat16(Float_t *f, TStreamerElement * /*ele*/)
-{
-   SqlWriteBasic(*f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write Double32 value
-
-void TBufferSQL2::WriteDouble32(Double_t *d, TStreamerElement * /*ele*/)
-{
-   SqlWriteBasic(*d);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read array of Bool_t from buffer
@@ -1214,22 +1103,6 @@ Int_t TBufferSQL2::ReadArray(Float_t *&f)
 /// Read array of Double_t from buffer
 
 Int_t TBufferSQL2::ReadArray(Double_t *&d)
-{
-   TBufferSQL2_ReadArray(Double_t, d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-Int_t TBufferSQL2::ReadArrayFloat16(Float_t *&f, TStreamerElement * /*ele*/)
-{
-   TBufferSQL2_ReadArray(Float_t, f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-Int_t TBufferSQL2::ReadArrayDouble32(Double_t *&d, TStreamerElement * /*ele*/)
 {
    TBufferSQL2_ReadArray(Double_t, d);
 }
@@ -1350,22 +1223,6 @@ Int_t TBufferSQL2::ReadStaticArray(Double_t *d)
    TBufferSQL2_ReadStaticArray(d);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-Int_t TBufferSQL2::ReadStaticArrayFloat16(Float_t *f, TStreamerElement * /*ele*/)
-{
-   TBufferSQL2_ReadStaticArray(f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-Int_t TBufferSQL2::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele*/)
-{
-   TBufferSQL2_ReadStaticArray(d);
-}
-
 // macro to read content of array, which not include size of array
 // macro also treat situation, when instead of one single array chain of several elements should be produced
 #define TBufferSQL2_ReadFastArray(vname)                                                                               \
@@ -1373,7 +1230,7 @@ Int_t TBufferSQL2::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele
       if (n <= 0)                                                                                                      \
          return;                                                                                                       \
       TStreamerElement *elem = Stack(0)->GetElement();                                                                 \
-      if ((elem != 0) && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) && \
+      if (false && (elem != 0) && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) && \
           (elem->GetArrayLength() != n))                                                                               \
          fExpectedChain = kTRUE;                                                                                       \
       if (fExpectedChain) {                                                                                            \
@@ -1509,56 +1366,18 @@ void TBufferSQL2::ReadFastArray(Float_t *f, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Read array of n characters from the I/O buffer.
+/// Used only from TLeafC, dummy implementation here
+
+void TBufferSQL2::ReadFastArrayString(Char_t *c, Int_t n)
+{
+   TBufferSQL2_ReadFastArray(c);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Read array of Double_t from buffer
 
 void TBufferSQL2::ReadFastArray(Double_t *d, Int_t n)
-{
-   TBufferSQL2_ReadFastArray(d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-void TBufferSQL2::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement * /*ele*/)
-{
-   TBufferSQL2_ReadFastArray(f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-void TBufferSQL2::ReadFastArrayWithFactor(Float_t *f, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
-{
-   TBufferSQL2_ReadFastArray(f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-void TBufferSQL2::ReadFastArrayWithNbits(Float_t *f, Int_t n, Int_t /*nbits*/)
-{
-   TBufferSQL2_ReadFastArray(f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-void TBufferSQL2::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement * /*ele*/)
-{
-   TBufferSQL2_ReadFastArray(d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-void TBufferSQL2::ReadFastArrayWithFactor(Double_t *d, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
-{
-   TBufferSQL2_ReadFastArray(d);
-}
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-void TBufferSQL2::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t /*nbits*/)
 {
    TBufferSQL2_ReadFastArray(d);
 }
@@ -1576,7 +1395,7 @@ void TBufferSQL2::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberS
       Info("ReadFastArray", "(void *");
 
    if (streamer) {
-      StreamObject(start, streamer, cl, 0, onFileClass);
+      StreamObjectExtra(start, streamer, cl, 0, onFileClass);
       //      (*streamer)(*this,start,0);
       return;
    }
@@ -1610,7 +1429,7 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
                start[j] = ((TClass *)cl)->New();
          }
       }
-      StreamObject((void *)start, streamer, cl, 0, onFileClass);
+      StreamObjectExtra((void *)start, streamer, cl, 0, onFileClass);
       //      (*streamer)(*this,(void*)start,0);
       return;
    }
@@ -1796,22 +1615,6 @@ void TBufferSQL2::WriteArray(const Double_t *d, Int_t n)
    TBufferSQL2_WriteArray(d);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Float16_t to buffer
-
-void TBufferSQL2::WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
-{
-   TBufferSQL2_WriteArray(f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Double32_t to buffer
-
-void TBufferSQL2::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
-{
-   TBufferSQL2_WriteArray(d);
-}
-
 // write array without size attribute
 // macro also treat situation, when instead of one single array chain of several elements should be produced
 #define TBufferSQL2_WriteFastArray(vname)                                                                              \
@@ -1819,7 +1622,7 @@ void TBufferSQL2::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElemen
       if (n <= 0)                                                                                                      \
          return;                                                                                                       \
       TStreamerElement *elem = Stack(0)->GetElement();                                                                 \
-      if ((elem != 0) && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) && \
+      if (false && (elem != 0) && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) && \
           (elem->GetArrayLength() != n))                                                                               \
          fExpectedChain = kTRUE;                                                                                       \
       if (fExpectedChain) {                                                                                            \
@@ -1972,19 +1775,12 @@ void TBufferSQL2::WriteFastArray(const Double_t *d, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write array of Float16_t to buffer
+/// Write array of n characters into the I/O buffer.
+/// Used only by TLeafC, just dummy implementation here
 
-void TBufferSQL2::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
+void TBufferSQL2::WriteFastArrayString(const Char_t *c, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Double32_t to buffer
-
-void TBufferSQL2::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
-{
-   TBufferSQL2_WriteFastArray(d);
+   TBufferSQL2_WriteFastArray(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1996,7 +1792,7 @@ void TBufferSQL2::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerEl
 void TBufferSQL2::WriteFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *streamer)
 {
    if (streamer) {
-      StreamObject(start, streamer, cl, 0);
+      StreamObjectExtra(start, streamer, cl, 0);
       //      (*streamer)(*this, start, 0);
       return;
    }
@@ -2021,7 +1817,7 @@ void TBufferSQL2::WriteFastArray(void *start, const TClass *cl, Int_t n, TMember
 Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
    if (streamer) {
-      StreamObject((void *)start, streamer, cl, 0);
+      StreamObjectExtra((void *)start, streamer, cl, 0);
       //      (*streamer)(*this,(void*)start,0);
       return 0;
    }
@@ -2054,21 +1850,7 @@ Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_
    //   return TBuffer::WriteFastArray(startp, cl, n, isPreAlloc, s);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Stream object to/from buffer
 
-void TBufferSQL2::StreamObject(void *obj, const std::type_info &typeinfo, const TClass *onFileClass)
-{
-   StreamObject(obj, TClass::GetClass(typeinfo), onFileClass);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Stream object to/from buffer
-
-void TBufferSQL2::StreamObject(void *obj, const char *className, const TClass *onFileClass)
-{
-   StreamObject(obj, TClass::GetClass(className), onFileClass);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream object to/from buffer
@@ -2078,23 +1860,16 @@ void TBufferSQL2::StreamObject(void *obj, const TClass *cl, const TClass *onFile
    if (gDebug > 1)
       std::cout << " TBufferSQL2::StreamObject class = " << (cl ? cl->GetName() : "none") << std::endl;
    if (IsReading())
-      SqlReadObject(obj, 0, 0, 0, onFileClass);
+      SqlReadObject(obj, 0, nullptr, 0, onFileClass);
    else
       SqlWriteObject(obj, cl, kTRUE);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Stream object to/from buffer
-
-void TBufferSQL2::StreamObject(TObject *obj)
-{
-   StreamObject(obj, obj ? obj->IsA() : TObject::Class());
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Stream object to/from buffer
 
-void TBufferSQL2::StreamObject(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n,
+void TBufferSQL2::StreamObjectExtra(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n,
                                const TClass *onFileClass)
 {
    if (streamer == 0)
@@ -2235,7 +2010,29 @@ void TBufferSQL2::ReadCharP(Char_t *c)
 
 void TBufferSQL2::ReadTString(TString &s)
 {
-   TBufferFile::ReadTString(s);
+   if (fIOVersion < 2) {
+      // original TBufferFile method can not be used, while used TString methods are private
+      // try to reimplement close to the original
+      Int_t nbig;
+      UChar_t nwh;
+      *this >> nwh;
+      if (nwh == 0) {
+         s.Resize(0);
+      } else {
+         if (nwh == 255)
+            *this >> nbig;
+         else
+            nbig = nwh;
+
+         char *data = new char[nbig];
+         data[nbig] = 0;
+         ReadFastArray(data, nbig);
+         s = data;
+         delete[] data;
+      }
+   } else {
+      // TODO: new code - direct reading of string
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2243,23 +2040,85 @@ void TBufferSQL2::ReadTString(TString &s)
 
 void TBufferSQL2::WriteTString(const TString &s)
 {
-   TBufferFile::WriteTString(s);
+   if (fIOVersion < 2) {
+      // original TBufferFile method, keep for compatibility
+      Int_t nbig = s.Length();
+      UChar_t nwh;
+      if (nbig > 254) {
+         nwh = 255;
+         *this << nwh;
+         *this << nbig;
+      } else {
+         nwh = UChar_t(nbig);
+         *this << nwh;
+      }
+      const char *data = s.Data();
+      WriteFastArray(data, nbig);
+   } else {
+      // TODO: make writing of string directly
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read a std::string
 
-void TBufferSQL2::ReadStdString(std::string *s)
+void TBufferSQL2::ReadStdString(std::string *obj)
 {
-   TBufferFile::ReadStdString(s);
+   if (fIOVersion < 2) {
+      if (!obj) {
+         Error("ReadStdString", "The std::string address is nullptr but should not");
+         return;
+      }
+      Int_t nbig;
+      UChar_t nwh;
+      *this >> nwh;
+      if (nwh == 0) {
+         obj->clear();
+      } else {
+         if (obj->size()) {
+            // Insure that the underlying data storage is not shared
+            (*obj)[0] = '\0';
+         }
+         if (nwh == 255) {
+            *this >> nbig;
+            obj->resize(nbig, '\0');
+            ReadFastArray((char *)obj->data(), nbig);
+         } else {
+            obj->resize(nwh, '\0');
+            ReadFastArray((char *)obj->data(), nwh);
+         }
+      }
+   } else {
+      // TODO: direct reading of std string
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write a std::string
 
-void TBufferSQL2::WriteStdString(const std::string *s)
+void TBufferSQL2::WriteStdString(const std::string *obj)
 {
-   TBufferFile::WriteStdString(s);
+   if (fIOVersion < 2) {
+      if (!obj) {
+         *this << (UChar_t)0;
+         WriteFastArray("", 0);
+         return;
+      }
+
+      UChar_t nwh;
+      Int_t nbig = obj->length();
+      if (nbig > 254) {
+         nwh = 255;
+         *this << nwh;
+         *this << nbig;
+      } else {
+         nwh = UChar_t(nbig);
+         *this << nwh;
+      }
+      WriteFastArray(obj->data(), nbig);
+   } else {
+      // TODO: make writing of string directly
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2267,7 +2126,16 @@ void TBufferSQL2::WriteStdString(const std::string *s)
 
 void TBufferSQL2::ReadCharStar(char *&s)
 {
-   TBufferFile::ReadCharStar(s);
+   delete[] s;
+   s = nullptr;
+
+   Int_t nch;
+   *this >> nch;
+   if (nch > 0) {
+      s = new char[nch + 1];
+      ReadFastArray(s, nch);
+      s[nch] = 0;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2275,7 +2143,14 @@ void TBufferSQL2::ReadCharStar(char *&s)
 
 void TBufferSQL2::WriteCharStar(char *s)
 {
-   TBufferFile::WriteCharStar(s);
+   Int_t nch = 0;
+   if (s) {
+      nch = strlen(s);
+      *this << nch;
+      WriteFastArray(s, nch);
+   } else {
+      *this << nch;
+   }
 }
 
 // macro for right shift operator for basic types
@@ -2802,6 +2677,44 @@ const char *TBufferSQL2::GetFloatFormat()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Check if the specified object of the specified class is already in
+/// the buffer. Returns kTRUE if object already in the buffer,
+/// kFALSE otherwise (also if obj is 0 ).
+
+Bool_t TBufferSQL2::CheckObject(const TObject *obj)
+{
+   return CheckObject(obj, TObject::Class());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the specified object of the specified class is already in
+/// the buffer. Returns kTRUE if object already in the buffer,
+/// kFALSE otherwise (also if obj is 0 ).
+
+Bool_t TBufferSQL2::CheckObject(const void *obj, const TClass *ptrClass)
+{
+   if (!obj || !ptrClass || !fObjMap)
+      return kFALSE;
+
+   TClass *clActual = ptrClass->GetActualClass(obj);
+
+   const char *temp = (const char *)obj;
+
+   if (clActual && (ptrClass != clActual))
+      temp -= clActual->GetBaseClassOffset(ptrClass);
+
+   return fObjMap->GetValue(TString::Hash(&temp, sizeof(void *)), (Long_t)temp) != 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return current streamer info element
+
+TVirtualStreamerInfo *TBufferSQL2::GetInfo()
+{
+   return Stack()->GetStreamerInfo();
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
 /// The collection needs to be a split TClonesArray or a split vector of pointers.
 
@@ -2911,5 +2824,293 @@ Int_t TBufferSQL2::ApplySequence(const TStreamerInfoActions::TActionSequence &se
    }
 
    DecrementLevel(info);
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Deserialize information from a buffer into an object.
+///
+/// Note: This function is called by the xxx::Streamer() functions in
+/// rootcint-generated dictionaries.
+/// This function assumes that the class version and the byte count
+/// information have been read.
+///
+/// \param[in] version The version number of the class
+/// \param[in] start   The starting position in the buffer b
+/// \param[in] count   The number of bytes for this object in the buffer
+///
+
+Int_t TBufferSQL2::ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count,
+                                  const TClass *onFileClass)
+{
+
+   //---------------------------------------------------------------------------
+   // The ondisk class has been specified so get foreign streamer info
+   /////////////////////////////////////////////////////////////////////////////
+
+   TStreamerInfo *sinfo = nullptr;
+   if (onFileClass) {
+      sinfo = (TStreamerInfo *)cl->GetConversionStreamerInfo(onFileClass, version);
+      if (!sinfo) {
+         Error("ReadClassBuffer",
+               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
+               onFileClass->GetName(), version, cl->GetName(), Length());
+         CheckByteCount(start, count, onFileClass);
+         return 0;
+      }
+   }
+   //---------------------------------------------------------------------------
+   // Get local streamer info
+   /////////////////////////////////////////////////////////////////////////////
+   /// The StreamerInfo should exist at this point.
+
+   else {
+      R__LOCKGUARD(gInterpreterMutex);
+      auto infos = cl->GetStreamerInfos();
+      auto ninfos = infos->GetSize();
+      if (version < -1 || version >= ninfos) {
+         Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+               cl->GetName(), version, Length());
+         CheckByteCount(start, count, cl);
+         return 0;
+      }
+      sinfo = (TStreamerInfo *)infos->At(version);
+      if (!sinfo) {
+         // Unless the data is coming via a socket connection from with schema evolution
+         // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
+         // one for the current version, otherwise let's complain ...
+         // We could also get here if there old class version was '1' and the new class version is higher than 1
+         // AND the checksum is the same.
+         if (version == cl->GetClassVersion() || version == 1) {
+            const_cast<TClass *>(cl)->BuildRealData(pointer);
+            // This creation is alright since we just checked within the
+            // current 'locked' section.
+            sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
+            const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
+            if (gDebug > 0)
+               printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
+            sinfo->Build();
+         } else if (version == 0) {
+            // When the object was written the class was version zero, so
+            // there is no StreamerInfo to be found.
+            // Check that the buffer position corresponds to the byte count.
+            CheckByteCount(start, count, cl);
+            return 0;
+         } else {
+            Error("ReadClassBuffer",
+                  "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+                  version, cl->GetName(), Length());
+            CheckByteCount(start, count, cl);
+            return 0;
+         }
+      } else if (!sinfo->IsCompiled()) { // Note this read is protected by the above lock.
+         // Streamer info has not been compiled, but exists.
+         // Therefore it was read in from a file and we have to do schema evolution.
+         const_cast<TClass *>(cl)->BuildRealData(pointer);
+         sinfo->BuildOld();
+      }
+   }
+
+   // Deserialize the object.
+   ApplySequence(*(sinfo->GetReadTextActions()), (char *)pointer);
+   if (sinfo->IsRecovered())
+      count = 0;
+
+   // Check that the buffer position corresponds to the byte count.
+   CheckByteCount(start, count, cl);
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Deserialize information from a buffer into an object.
+///
+/// Note: This function is called by the xxx::Streamer()
+/// functions in rootcint-generated dictionaries.
+///
+
+Int_t TBufferSQL2::ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onFileClass)
+{
+   // Read the class version from the buffer.
+   UInt_t R__s = 0; // Start of object.
+   UInt_t R__c = 0; // Count of bytes.
+   Version_t version;
+
+   if (onFileClass)
+      version = ReadVersion(&R__s, &R__c, onFileClass);
+   else
+      version = ReadVersion(&R__s, &R__c, cl);
+
+   Bool_t v2file = kFALSE;
+   TFile *file = (TFile *)GetParent();
+   if (file && file->GetVersion() < 30000) {
+      version = -1; // This is old file
+      v2file = kTRUE;
+   }
+
+   //---------------------------------------------------------------------------
+   // The ondisk class has been specified so get foreign streamer info
+   /////////////////////////////////////////////////////////////////////////////
+
+   TStreamerInfo *sinfo = nullptr;
+   if (onFileClass) {
+      sinfo = (TStreamerInfo *)cl->GetConversionStreamerInfo(onFileClass, version);
+      if (!sinfo) {
+         Error("ReadClassBuffer",
+               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
+               onFileClass->GetName(), version, cl->GetName(), Length());
+         CheckByteCount(R__s, R__c, onFileClass);
+         return 0;
+      }
+   }
+   //---------------------------------------------------------------------------
+   // Get local streamer info
+   /////////////////////////////////////////////////////////////////////////////
+   /// The StreamerInfo should exist at this point.
+
+   else {
+      TStreamerInfo *guess = (TStreamerInfo *)cl->GetLastReadInfo();
+      if (guess && guess->GetClassVersion() == version) {
+         sinfo = guess;
+      } else {
+         // The last one is not the one we are looking for.
+         {
+            R__LOCKGUARD(gInterpreterMutex);
+
+            const TObjArray *infos = cl->GetStreamerInfos();
+            Int_t infocapacity = infos->Capacity();
+            if (infocapacity) {
+               if (version < -1 || version >= infocapacity) {
+                  Error("ReadClassBuffer",
+                        "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+                        cl->GetName(), version, Length());
+                  CheckByteCount(R__s, R__c, cl);
+                  return 0;
+               }
+               sinfo = (TStreamerInfo *)infos->UncheckedAt(version);
+               if (sinfo) {
+                  if (!sinfo->IsCompiled()) {
+                     // Streamer info has not been compiled, but exists.
+                     // Therefore it was read in from a file and we have to do schema evolution?
+                     R__LOCKGUARD(gInterpreterMutex);
+                     const_cast<TClass *>(cl)->BuildRealData(pointer);
+                     sinfo->BuildOld();
+                  }
+                  // If the compilation succeeded, remember this StreamerInfo.
+                  // const_cast okay because of the lock on gInterpreterMutex.
+                  if (sinfo->IsCompiled())
+                     const_cast<TClass *>(cl)->SetLastReadInfo(sinfo);
+               }
+            }
+         }
+
+         if (!sinfo) {
+            // Unless the data is coming via a socket connection from with schema evolution
+            // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
+            // one for the current version, otherwise let's complain ...
+            // We could also get here when reading a file prior to the introduction of StreamerInfo.
+            // We could also get here if there old class version was '1' and the new class version is higher than 1
+            // AND the checksum is the same.
+            if (v2file || version == cl->GetClassVersion() || version == 1) {
+               R__LOCKGUARD(gInterpreterMutex);
+
+               // We need to check if another thread did not get here first
+               // and did the StreamerInfo creation already.
+               auto infos = cl->GetStreamerInfos();
+               auto ninfos = infos->GetSize();
+               if (!(version < -1 || version >= ninfos)) {
+                  sinfo = (TStreamerInfo *)infos->At(version);
+               }
+               if (!sinfo) {
+                  const_cast<TClass *>(cl)->BuildRealData(pointer);
+                  sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
+                  sinfo->SetClassVersion(version);
+                  const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
+                  if (gDebug > 0)
+                     printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
+                  if (v2file) {
+                     sinfo->Build();             // Get the elements.
+                     sinfo->Clear("build");      // Undo compilation.
+                     sinfo->BuildEmulated(file); // Fix the types and redo compilation.
+                  } else {
+                     sinfo->Build();
+                  }
+               }
+            } else if (version == 0) {
+               // When the object was written the class was version zero, so
+               // there is no StreamerInfo to be found.
+               // Check that the buffer position corresponds to the byte count.
+               CheckByteCount(R__s, R__c, cl);
+               return 0;
+            } else {
+               Error("ReadClassBuffer",
+                     "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
+                     version, cl->GetName(), Length());
+               CheckByteCount(R__s, R__c, cl);
+               return 0;
+            }
+         }
+      }
+   }
+
+   // deserialize the object
+   ApplySequence(*(sinfo->GetReadTextActions()), (char *)pointer);
+   if (sinfo->TStreamerInfo::IsRecovered())
+      R__c = 0; // 'TStreamerInfo::' avoids going via a virtual function.
+
+   // Check that the buffer position corresponds to the byte count.
+   CheckByteCount(R__s, R__c, cl);
+
+   if (gDebug > 2)
+      printf(" ReadBuffer for class: %s has read %d bytes\n", cl->GetName(), R__c);
+
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Function called by the Streamer functions to serialize object at p
+/// to buffer b. The optional argument info may be specified to give an
+/// alternative StreamerInfo instead of using the default StreamerInfo
+/// automatically built from the class definition.
+/// For more information, see class TStreamerInfo.
+
+Int_t TBufferSQL2::WriteClassBuffer(const TClass *cl, void *pointer)
+{
+   // build the StreamerInfo if first time for the class
+   TStreamerInfo *sinfo = (TStreamerInfo *)const_cast<TClass *>(cl)->GetCurrentStreamerInfo();
+   if (!sinfo) {
+      // Have to be sure between the check and the taking of the lock if the current streamer has changed
+      R__LOCKGUARD(gInterpreterMutex);
+      sinfo = (TStreamerInfo *)const_cast<TClass *>(cl)->GetCurrentStreamerInfo();
+      if (!sinfo) {
+         const_cast<TClass *>(cl)->BuildRealData(pointer);
+         sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
+         const_cast<TClass *>(cl)->SetCurrentStreamerInfo(sinfo);
+         const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
+         if (gDebug > 0)
+            printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), cl->GetClassVersion());
+         sinfo->Build();
+      }
+   } else if (!sinfo->IsCompiled()) {
+      R__LOCKGUARD(gInterpreterMutex);
+      // Redo the test in case we have been victim of a data race on fIsCompiled.
+      if (!sinfo->IsCompiled()) {
+         const_cast<TClass *>(cl)->BuildRealData(pointer);
+         sinfo->BuildOld();
+      }
+   }
+
+   // write the class version number and reserve space for the byte count
+   UInt_t R__c = WriteVersion(cl, kTRUE);
+
+   // NOTE: In the future Philippe wants this to happen via a custom action
+   TagStreamerInfo(sinfo);
+   ApplySequence(*(sinfo->GetWriteTextActions()), (char *)pointer);
+
+   // write the byte count at the start of the buffer
+   SetByteCount(R__c, kTRUE);
+
+   if (gDebug > 2)
+      printf(" WriteBuffer for class: %s version %d has written %d bytes\n", cl->GetName(), cl->GetClassVersion(),
+             UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t));
    return 0;
 }
