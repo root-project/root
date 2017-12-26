@@ -112,6 +112,18 @@ protected:
    void StreamObjectExtra(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n = 0,
                           const TClass *onFileClass = nullptr);
 
+   template <typename T>
+   R__ALWAYS_INLINE void SqlReadArrayContent(T *arr, Int_t arrsize, Bool_t withsize);
+
+   template <typename T>
+   R__ALWAYS_INLINE Int_t SqlReadArray(T *&arr, Bool_t is_static = kFALSE);
+
+   template <typename T>
+   R__ALWAYS_INLINE void SqlReadFastArray(T *arr, Int_t arrsize);
+
+   template <typename T>
+   R__ALWAYS_INLINE void SqlWriteArray(T *arr, Int_t arrsize, Bool_t withsize = kFALSE);
+
 public:
    TBufferSQL2(TBuffer::EMode mode);
    TBufferSQL2(TBuffer::EMode mode, TSQLFile *file);
