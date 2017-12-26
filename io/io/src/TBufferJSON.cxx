@@ -2672,18 +2672,18 @@ void TBufferJSON::ReadFastArray(Double_t *d, Int_t n)
 /// The objects in the array are assume to be of class 'cl'.
 /// Copied code from TBufferFile
 
-void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *streamer,
-                                const TClass *onFileClass)
+void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer * /* streamer */,
+                                const TClass * /* onFileClass */)
 {
    if (gDebug > 1)
-      Info("ReadFastArray", "void* n:%d cl:%s streamer:%s", n, cl->GetName(), (streamer ? "on" : "off"));
+      Info("ReadFastArray", "void* n:%d cl:%s", n, cl->GetName());
 
-   if (streamer) {
-      Info("ReadFastArray", "(void*) Calling streamer - not handled correctly");
-      streamer->SetOnFileClass(onFileClass);
-      (*streamer)(*this, start, 0);
-      return;
-   }
+   //   if (streamer) {
+   //      Info("ReadFastArray", "(void*) Calling streamer - not handled correctly");
+   //      streamer->SetOnFileClass(onFileClass);
+   //      (*streamer)(*this, start, 0);
+   //      return;
+   //   }
 
    int objectSize = cl->Size();
    char *obj = (char *)start;
@@ -2712,24 +2712,24 @@ void TBufferJSON::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberS
 ////////////////////////////////////////////////////////////////////////////////
 /// redefined here to avoid warning message from gcc
 
-void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer,
-                                const TClass *onFileClass)
+void TBufferJSON::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc,
+                                TMemberStreamer * /* streamer */, const TClass * /* onFileClass */)
 {
    if (gDebug > 1)
       Info("ReadFastArray", "void** n:%d cl:%s prealloc:%s", n, cl->GetName(), (isPreAlloc ? "true" : "false"));
 
-   if (streamer) {
-      Info("ReadFastArray", "(void**) Calling streamer - not handled correctly");
-      if (isPreAlloc) {
-         for (Int_t j = 0; j < n; j++) {
-            if (!start[j])
-               start[j] = cl->New();
-         }
-      }
-      streamer->SetOnFileClass(onFileClass);
-      (*streamer)(*this, (void *)start, 0);
-      return;
-   }
+   //   if (streamer) {
+   //      Info("ReadFastArray", "(void**) Calling streamer - not handled correctly");
+   //      if (isPreAlloc) {
+   //         for (Int_t j = 0; j < n; j++) {
+   //            if (!start[j])
+   //               start[j] = cl->New();
+   //         }
+   //      }
+   //      streamer->SetOnFileClass(onFileClass);
+   //      (*streamer)(*this, (void *)start, 0);
+   //      return;
+   //   }
 
    TJSONStackObj *stack = Stack();
    nlohmann::json *topnode = stack->fNode, *subnode = topnode;
@@ -3110,16 +3110,16 @@ void TBufferJSON::WriteFastArray(const Double_t *d, Int_t n)
 ////////////////////////////////////////////////////////////////////////////////
 /// Recall TBuffer function to avoid gcc warning message
 
-void TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer *streamer)
+void TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n, TMemberStreamer * /* streamer */)
 {
    if (gDebug > 2)
-      Info("WriteFastArray", "void *start cl %s n %d streamer %p", cl ? cl->GetName() : "---", n, streamer);
+      Info("WriteFastArray", "void *start cl:%s n:%d", cl ? cl->GetName() : "---", n);
 
-   if (streamer) {
-      JsonDisablePostprocessing();
-      (*streamer)(*this, start, 0);
-      return;
-   }
+   //   if (streamer) {
+   //      JsonDisablePostprocessing();
+   //      (*streamer)(*this, start, 0);
+   //      return;
+   //   }
 
    if (n < 0) {
       // special handling of empty StreamLoop
@@ -3163,16 +3163,17 @@ void TBufferJSON::WriteFastArray(void *start, const TClass *cl, Int_t n, TMember
 ////////////////////////////////////////////////////////////////////////////////
 /// Recall TBuffer function to avoid gcc warning message
 
-Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer)
+Int_t TBufferJSON::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc,
+                                  TMemberStreamer * /* streamer */)
 {
    if (gDebug > 2)
-      Info("WriteFastArray", "void **startp cl %s n %d streamer %p", cl->GetName(), n, streamer);
+      Info("WriteFastArray", "void **startp cl:%s n:%d", cl->GetName(), n);
 
-   if (streamer) {
-      JsonDisablePostprocessing();
-      (*streamer)(*this, (void *)start, 0);
-      return 0;
-   }
+   //   if (streamer) {
+   //      JsonDisablePostprocessing();
+   //      (*streamer)(*this, (void *)start, 0);
+   //      return 0;
+   //   }
 
    if (n <= 0)
       return 0;
