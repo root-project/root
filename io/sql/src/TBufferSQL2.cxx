@@ -360,7 +360,7 @@ void *TBufferSQL2::SqlReadObject(void *obj, TClass **cl, TMemberStreamer *stream
    sscanf(refid, fgLong64Fmt, &objid);
 
    if (gDebug > 2)
-      Info("SqlReadObject", "Starting objid = %lld column=%s", objid, fCurrentData->GetLocatedField());
+      Info("SqlReadObject", "Starting objid: %ld column: %s", (long) objid, fCurrentData->GetLocatedField());
 
    if (!fCurrentData->IsBlobData() || fCurrentData->VerifyDataType(sqlio::ObjectPtr, kFALSE)) {
       if (objid == 0) {
@@ -2224,7 +2224,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(Long_t value)
 Bool_t TBufferSQL2::SqlWriteBasic(Long64_t value)
 {
    char buf[50];
-   snprintf(buf, sizeof(buf), "%lld", value);
+   snprintf(buf, sizeof(buf), fgLong64Fmt, value);
    return SqlWriteValue(buf, sqlio::Long64);
 }
 
@@ -2234,7 +2234,8 @@ Bool_t TBufferSQL2::SqlWriteBasic(Long64_t value)
 Bool_t TBufferSQL2::SqlWriteBasic(Float_t value)
 {
    char buf[200];
-   snprintf(buf, sizeof(buf), fgFloatFmt, value);
+   // snprintf(buf, sizeof(buf), fgFloatFmt, value);
+   ConvertFloat(value, buf, sizeof(buf));
    return SqlWriteValue(buf, sqlio::Float);
 }
 
@@ -2243,8 +2244,9 @@ Bool_t TBufferSQL2::SqlWriteBasic(Float_t value)
 
 Bool_t TBufferSQL2::SqlWriteBasic(Double_t value)
 {
-   char buf[128];
-   snprintf(buf, sizeof(buf), fgFloatFmt, value);
+   char buf[200];
+   // snprintf(buf, sizeof(buf), fgFloatFmt, value);
+   ConvertDouble(value, buf, sizeof(buf));
    return SqlWriteValue(buf, sqlio::Double);
 }
 

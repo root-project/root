@@ -630,7 +630,8 @@ Int_t TBufferText::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
                   sinfo->SetClassVersion(version);
                   const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
                   if (gDebug > 0)
-                     Info("ReadClassBuffer", "Creating StreamerInfo for class: %s, version: %d", cl->GetName(), version);
+                     Info("ReadClassBuffer", "Creating StreamerInfo for class: %s, version: %d", cl->GetName(),
+                          version);
                   if (v2file) {
                      sinfo->Build();             // Get the elements.
                      sinfo->Clear("build");      // Undo compilation.
@@ -665,7 +666,7 @@ Int_t TBufferText::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    CheckByteCount(R__s, R__c, cl);
 
    if (gDebug > 2)
-      Info("ReadClassBuffer","for class: %s has read %d bytes", cl->GetName(), R__c);
+      Info("ReadClassBuffer", "for class: %s has read %d bytes", cl->GetName(), R__c);
 
    return 0;
 }
@@ -1038,4 +1039,28 @@ const char *TBufferText::GetDoubleFormat()
    return fgDoubleFmt;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// convert float to string with configured format
 
+const char *TBufferText::ConvertFloat(Float_t value, char *buf, unsigned len)
+{
+   if ((value == std::nearbyint(value)) && (std::abs(value) < 1e15)) {
+      snprintf(buf, len, "%1.0f", value);
+   } else {
+      snprintf(buf, len, fgFloatFmt, value);
+      CompactFloatString(buf, len);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// convert float to string with configured format
+
+const char *TBufferText::ConvertDouble(Double_t value, char *buf, unsigned len)
+{
+   if ((value == std::nearbyint(value)) && (std::abs(value) < 1e25)) {
+      snprintf(buf, len, "%1.0f", value);
+   } else {
+      snprintf(buf, len, fgDoubleFmt, value);
+      CompactFloatString(buf, len);
+   }
+}
