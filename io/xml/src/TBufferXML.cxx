@@ -50,17 +50,7 @@ There are limitations for complex objects like TTree, which can not be converted
 #include "TStreamer.h"
 #include "RZip.h"
 
-#ifdef R__VISUAL_CPLUSPLUS
-#define FLong64 "%I64d"
-#define FULong64 "%I64u"
-#else
-#define FLong64 "%lld"
-#define FULong64 "%llu"
-#endif
-
 ClassImp(TBufferXML);
-
-std::string TBufferXML::fgFloatFmt = "%e";
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
@@ -2926,7 +2916,7 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(Long_t value)
 XMLNodePointer_t TBufferXML::XmlWriteBasic(Long64_t value)
 {
    char buf[50];
-   snprintf(buf, sizeof(buf), FLong64, value);
+   snprintf(buf, sizeof(buf), fgLong64Fmt, value);
    return XmlWriteValue(buf, xmlio::Long64);
 }
 
@@ -2936,7 +2926,7 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(Long64_t value)
 XMLNodePointer_t TBufferXML::XmlWriteBasic(Float_t value)
 {
    char buf[200];
-   snprintf(buf, sizeof(buf), fgFloatFmt.c_str(), value);
+   snprintf(buf, sizeof(buf), fgFloatFmt, value);
    return XmlWriteValue(buf, xmlio::Float);
 }
 
@@ -2946,7 +2936,7 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(Float_t value)
 XMLNodePointer_t TBufferXML::XmlWriteBasic(Double_t value)
 {
    char buf[1000];
-   snprintf(buf, sizeof(buf), fgFloatFmt.c_str(), value);
+   snprintf(buf, sizeof(buf), fgFloatFmt, value);
    return XmlWriteValue(buf, xmlio::Double);
 }
 
@@ -3004,7 +2994,7 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(ULong_t value)
 XMLNodePointer_t TBufferXML::XmlWriteBasic(ULong64_t value)
 {
    char buf[50];
-   snprintf(buf, sizeof(buf), FULong64, value);
+   snprintf(buf, sizeof(buf), fgULong64Fmt, value);
    return XmlWriteValue(buf, xmlio::ULong64);
 }
 
@@ -3084,7 +3074,7 @@ void TBufferXML::XmlReadBasic(Long64_t &value)
 {
    const char *res = XmlReadValue(xmlio::Long64);
    if (res)
-      sscanf(res, FLong64, &value);
+      sscanf(res, fgLong64Fmt, &value);
    else
       value = 0;
 }
@@ -3182,7 +3172,7 @@ void TBufferXML::XmlReadBasic(ULong64_t &value)
 {
    const char *res = XmlReadValue(xmlio::ULong64);
    if (res)
-      sscanf(res, FULong64, &value);
+      sscanf(res, fgULong64Fmt, &value);
    else
       value = 0;
 }
@@ -3218,23 +3208,6 @@ const char *TBufferXML::XmlReadValue(const char *name)
       ShiftStack("readvalue");
 
    return fValueBuf.Data();
-}
-
-void TBufferXML::SetFloatFormat(const char *fmt)
-{
-   // Set printf format for float/double members, default "%e"
-   // This method is not thread-safe as it changes a global state.
-
-   if (!fmt)
-      fgFloatFmt = "%e";
-   fgFloatFmt = fmt;
-}
-
-const char *TBufferXML::GetFloatFormat()
-{
-   // return current printf format for float/double members, default "%e"
-
-   return fgFloatFmt.c_str();
 }
 
 // abstract TBuffer methods, probably dedicated to have them in the TBufferText

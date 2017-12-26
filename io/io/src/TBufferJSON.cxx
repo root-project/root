@@ -77,20 +77,9 @@ persistent storage for object data - only for live applications.
 #include "TVirtualMutex.h"
 #include "TInterpreter.h"
 
-#ifdef R__VISUAL_CPLUSPLUS
-#define FLong64 "%I64d"
-#define FULong64 "%I64u"
-#else
-#define FLong64 "%lld"
-#define FULong64 "%llu"
-#endif
-
 #include "json.hpp"
 
 ClassImp(TBufferJSON);
-
-const char *TBufferJSON::fgFloatFmt = "%e";
-const char *TBufferJSON::fgDoubleFmt = "%.14e";
 
 enum { json_TArray = 100, json_TCollection = -130, json_TString = 110, json_stdstring = 120 };
 
@@ -3551,103 +3540,8 @@ void TBufferJSON::JsonWriteBasic(Long_t value)
 void TBufferJSON::JsonWriteBasic(Long64_t value)
 {
    char buf[50];
-   snprintf(buf, sizeof(buf), FLong64, value);
+   snprintf(buf, sizeof(buf), fgLong64Fmt, value);
    fValue.Append(buf);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// method compress float string, excluding exp and/or move float point
-///  - 1.000000e-01 -> 0.1
-///  - 3.750000e+00 -> 3.75
-///  - 3.750000e-03 -> 0.00375
-///  - 3.750000e-04 -> 3.75e-4
-///  - 1.100000e-10 -> 1.1e-10
-
-void TBufferJSON::CompactFloatString(char *sbuf, unsigned len)
-{
-   char *pnt = 0, *exp = 0, *lastdecimal = 0, *s = sbuf;
-   bool negative_exp = false;
-   int power = 0;
-   while (*s && --len) {
-      switch (*s) {
-      case '.': pnt = s; break;
-      case 'E':
-      case 'e': exp = s; break;
-      case '-':
-         if (exp)
-            negative_exp = true;
-         break;
-      case '+': break;
-      default: // should be digits from '0' to '9'
-         if ((*s < '0') || (*s > '9'))
-            return;
-         if (exp)
-            power = power * 10 + (*s - '0');
-         else if (pnt && *s != '0')
-            lastdecimal = s;
-         break;
-      }
-      ++s;
-   }
-   if (*s)
-      return; // if end-of-string was not found
-
-   if (!exp) {
-      // value without exponent like 123.4569000
-      if (pnt) {
-         if (lastdecimal)
-            *(lastdecimal + 1) = 0;
-         else
-            *pnt = 0;
-      }
-   } else if (power == 0) {
-      if (lastdecimal)
-         *(lastdecimal + 1) = 0;
-      else if (pnt)
-         *pnt = 0;
-   } else if (!negative_exp && pnt && exp && (exp - pnt > power)) {
-      // this is case of value 1.23000e+02
-      // we can move point and exclude exponent easily
-      for (int cnt = 0; cnt < power; ++cnt) {
-         char tmp = *pnt;
-         *pnt = *(pnt + 1);
-         *(++pnt) = tmp;
-      }
-      if (lastdecimal && (pnt < lastdecimal))
-         *(lastdecimal + 1) = 0;
-      else
-         *pnt = 0;
-   } else if (negative_exp && pnt && exp && (power < (s - exp))) {
-      // this is small negative exponent like 1.2300e-02
-      if (!lastdecimal)
-         lastdecimal = pnt;
-      *(lastdecimal + 1) = 0;
-      // copy most significant digit on the point place
-      *pnt = *(pnt - 1);
-
-      for (char *pos = lastdecimal + 1; pos >= pnt; --pos)
-         *(pos + power) = *pos;
-      *(pnt - 1) = '0';
-      *pnt = '.';
-      for (int cnt = 1; cnt < power; ++cnt)
-         *(pnt + cnt) = '0';
-   } else if (pnt && exp) {
-      // keep exponent, but non-significant zeros
-      if (lastdecimal)
-         pnt = lastdecimal + 1;
-      // copy exponent sign
-      *pnt++ = *exp++;
-      if (*exp == '+')
-         ++exp;
-      else if (*exp == '-')
-         *pnt++ = *exp++;
-      // exclude zeros in the begin of exponent
-      while (*exp == '0')
-         ++exp;
-      while (*exp)
-         *pnt++ = *exp++;
-      *pnt = 0;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3738,7 +3632,7 @@ void TBufferJSON::JsonWriteBasic(ULong_t value)
 void TBufferJSON::JsonWriteBasic(ULong64_t value)
 {
    char buf[50];
-   snprintf(buf, sizeof(buf), FULong64, value);
+   snprintf(buf, sizeof(buf), fgULong64Fmt, value);
    fValue.Append(buf);
 }
 
@@ -3784,48 +3678,7 @@ void TBufferJSON::JsonWriteConstChar(const char *value, Int_t len, const char * 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// set printf format for float/double members, default "%e"
-/// to change format only for doubles, use SetDoubleFormat
-
-void TBufferJSON::SetFloatFormat(const char *fmt)
-{
-   if (!fmt)
-      fmt = "%e";
-   fgFloatFmt = fmt;
-   fgDoubleFmt = fmt;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// return current printf format for float members, default "%e"
-
-const char *TBufferJSON::GetFloatFormat()
-{
-   return fgFloatFmt;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// set printf format for double members, default "%.14e"
-/// use it after SetFloatFormat, which also overwrites format for doubles
-
-void TBufferJSON::SetDoubleFormat(const char *fmt)
-{
-   if (!fmt)
-      fmt = "%.14e";
-   fgDoubleFmt = fmt;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// return current printf format for double members, default "%.14e"
-
-const char *TBufferJSON::GetDoubleFormat()
-{
-   return fgDoubleFmt;
-}
-
-void TBufferJSON::WriteBaseClass(void *start, TStreamerBase *elem)
-{
-   TBufferText::WriteBaseClass(start, elem);
-}
+/// Read data of base class.
 
 void TBufferJSON::ReadBaseClass(void *start, TStreamerBase *elem)
 {
