@@ -193,6 +193,7 @@ public:
    void SetUseIndexes(Int_t use_type = kIndexesBasic);
    Int_t GetUseIndexes() const { return fUseIndexes; }
    Int_t GetQuerisCounter() const { return fQuerisCounter; }
+   Int_t GetIOVersion() const { return fSQLIOversion; }
 
    TString MakeSelectQuery(TClass *cl);
    Bool_t StartTransaction();
