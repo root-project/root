@@ -294,12 +294,6 @@ public:
 
    virtual TVirtualStreamerInfo *GetInfo();
 
-   virtual Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, const TClass * /*onfile_class*/ = nullptr);
-   virtual Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, Int_t /*version*/, UInt_t /*start*/,
-                                 UInt_t /*count*/, const TClass * /*onfile_class*/ = nullptr);
-
-   virtual Int_t WriteClassBuffer(const TClass *cl, void *pointer);
-
    static void SetFloatFormat(const char *fmt = "%e");
    static const char *GetFloatFormat();
 
