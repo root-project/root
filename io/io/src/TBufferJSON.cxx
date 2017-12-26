@@ -3550,14 +3550,7 @@ void TBufferJSON::JsonWriteBasic(Long64_t value)
 void TBufferJSON::JsonWriteBasic(Float_t value)
 {
    char buf[200];
-   // this is just check if float value looks like integer and can be stored in more compact form
-   // default should be storage with fgFloatFmt, which will be optimized afterwards anyway
-   if ((value == std::nearbyint(value)) && (std::abs(value) < 1e15)) {
-      snprintf(buf, sizeof(buf), "%1.0f", value);
-   } else {
-      snprintf(buf, sizeof(buf), fgFloatFmt, value);
-      CompactFloatString(buf, sizeof(buf));
-   }
+   ConvertFloat(value, buf, sizeof(buf));
    fValue.Append(buf);
 }
 
@@ -3567,14 +3560,7 @@ void TBufferJSON::JsonWriteBasic(Float_t value)
 void TBufferJSON::JsonWriteBasic(Double_t value)
 {
    char buf[200];
-   // this is just check if float value looks like integer and can be stored in more compact form
-   // default should be storage with fgDoubleFmt, which will be optimized afterwards anyway
-   if ((value == std::nearbyint(value)) && (std::abs(value) < 1e25)) {
-      snprintf(buf, sizeof(buf), "%1.0f", value);
-   } else {
-      snprintf(buf, sizeof(buf), fgDoubleFmt, value);
-      CompactFloatString(buf, sizeof(buf));
-   }
+   ConvertDouble(value, buf, sizeof(buf));
    fValue.Append(buf);
 }
 
