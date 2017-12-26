@@ -927,66 +927,64 @@ void TBufferSQL2::WriteObjectClass(const void *actualObjStart, const TClass *act
    SqlWriteObject(actualObjStart, actualClass, cacheReuse);
 }
 
-#define SQLReadArrayUncompress(vname, arrsize) \
-   {                                           \
-      while (indx < arrsize)                   \
-         SqlReadBasic(vname[indx++]);          \
-   }
+////////////////////////////////////////////////////////////////////////////////
+/// Template method to read array content
 
-#define SQLReadArrayCompress(vname, arrsize)                                       \
-   {                                                                               \
-      while (indx < arrsize) {                                                     \
-         const char *name = fCurrentData->GetBlobPrefixName();                     \
-         Int_t first, last;                                                        \
-         if (strstr(name, sqlio::IndexSepar) == 0) {                               \
-            sscanf(name, "[%d", &first);                                           \
-            last = first;                                                          \
-         } else {                                                                  \
-            sscanf(name, "[%d..%d", &first, &last);                                \
-         }                                                                         \
-         if ((first != indx) || (last < first) || (last >= arrsize)) {             \
-            Error("SQLReadArrayCompress", "Error reading array content %s", name); \
-            fErrorFlag = 1;                                                        \
-            break;                                                                 \
-         }                                                                         \
-         SqlReadBasic(vname[indx]);                                                \
-         indx++;                                                                   \
-         while (indx <= last)                                                      \
-            vname[indx++] = vname[first];                                          \
-      }                                                                            \
+template <typename T>
+R__ALWAYS_INLINE void TBufferSQL2::SqlReadArrayContent(T *arr, Int_t arrsize, Bool_t withsize)
+{
+   if (gDebug > 3)
+      Info("SqlReadArrayContent", "size %d", (int)(arrsize));
+   PushStack()->SetArray(withsize ? arrsize : -1);
+   Int_t indx(0), first, last;
+   if (fCurrentData->IsBlobData()) {
+      while (indx < arrsize) {
+         const char *name = fCurrentData->GetBlobPrefixName();
+         if (strstr(name, sqlio::IndexSepar) == 0) {
+            sscanf(name, "[%d", &first);
+            last = first;
+         } else {
+            sscanf(name, "[%d..%d", &first, &last);
+         }
+         if ((first != indx) || (last < first) || (last >= arrsize)) {
+            Error("SqlReadArrayContent", "Error reading array content %s", name);
+            fErrorFlag = 1;
+            break;
+         }
+         SqlReadBasic(arr[indx++]);
+         while (indx <= last)
+            arr[indx++] = arr[first];
+      }
+   } else {
+      while (indx < arrsize)
+         SqlReadBasic(arr[indx++]);
    }
+   PopStack();
+   if (gDebug > 3)
+      Info("SqlReadArrayContent", "done");
+}
 
-// macro to read content of array with compression
-#define SQLReadArrayContent(vname, arrsize, withsize)                                                 \
-   {                                                                                                  \
-      if (gDebug > 3)                                                                                 \
-         Info("SQLReadArrayContent", "size %d", (int)(arrsize));                                      \
-      PushStack()->SetArray(withsize ? arrsize : -1);                                                 \
-      Int_t indx = 0;                                                                                 \
-      if (fCurrentData->IsBlobData())                                                                 \
-         SQLReadArrayCompress(vname, arrsize) else SQLReadArrayUncompress(vname, arrsize) PopStack(); \
-      if (gDebug > 3)                                                                                 \
-         Info("SQLReadArrayContent", "done");                                                         \
+template <typename T>
+R__ALWAYS_INLINE Int_t TBufferSQL2::SqlReadArray(T *&arr, Bool_t is_static)
+{
+   Int_t n = SqlReadArraySize();
+   if (n <= 0)
+      return 0;
+   if (!arr) {
+      if (is_static)
+         return 0;
+      arr = new T[n];
    }
-
-// macro to read array, which include size attribute
-#define TBufferSQL2_ReadArray(tname, vname) \
-   {                                        \
-      Int_t n = SqlReadArraySize();         \
-      if (n <= 0)                           \
-         return 0;                          \
-      if (!vname)                           \
-         vname = new tname[n];              \
-      SQLReadArrayContent(vname, n, kTRUE); \
-      return n;                             \
-   }
+   SqlReadArrayContent(arr, n, kTRUE);
+   return n;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read array of Bool_t from buffer
 
 Int_t TBufferSQL2::ReadArray(Bool_t *&b)
 {
-   TBufferSQL2_ReadArray(Bool_t, b);
+   return SqlReadArray(b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -994,7 +992,7 @@ Int_t TBufferSQL2::ReadArray(Bool_t *&b)
 
 Int_t TBufferSQL2::ReadArray(Char_t *&c)
 {
-   TBufferSQL2_ReadArray(Char_t, c);
+   return SqlReadArray(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1002,7 +1000,7 @@ Int_t TBufferSQL2::ReadArray(Char_t *&c)
 
 Int_t TBufferSQL2::ReadArray(UChar_t *&c)
 {
-   TBufferSQL2_ReadArray(UChar_t, c);
+   return SqlReadArray(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1010,7 +1008,7 @@ Int_t TBufferSQL2::ReadArray(UChar_t *&c)
 
 Int_t TBufferSQL2::ReadArray(Short_t *&h)
 {
-   TBufferSQL2_ReadArray(Short_t, h);
+   return SqlReadArray(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1018,7 +1016,7 @@ Int_t TBufferSQL2::ReadArray(Short_t *&h)
 
 Int_t TBufferSQL2::ReadArray(UShort_t *&h)
 {
-   TBufferSQL2_ReadArray(UShort_t, h);
+   return SqlReadArray(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1026,7 +1024,7 @@ Int_t TBufferSQL2::ReadArray(UShort_t *&h)
 
 Int_t TBufferSQL2::ReadArray(Int_t *&i)
 {
-   TBufferSQL2_ReadArray(Int_t, i);
+   return SqlReadArray(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1034,7 +1032,7 @@ Int_t TBufferSQL2::ReadArray(Int_t *&i)
 
 Int_t TBufferSQL2::ReadArray(UInt_t *&i)
 {
-   TBufferSQL2_ReadArray(UInt_t, i);
+   return SqlReadArray(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1042,7 +1040,7 @@ Int_t TBufferSQL2::ReadArray(UInt_t *&i)
 
 Int_t TBufferSQL2::ReadArray(Long_t *&l)
 {
-   TBufferSQL2_ReadArray(Long_t, l);
+   return SqlReadArray(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1050,7 +1048,7 @@ Int_t TBufferSQL2::ReadArray(Long_t *&l)
 
 Int_t TBufferSQL2::ReadArray(ULong_t *&l)
 {
-   TBufferSQL2_ReadArray(ULong_t, l);
+   return SqlReadArray(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1058,7 +1056,7 @@ Int_t TBufferSQL2::ReadArray(ULong_t *&l)
 
 Int_t TBufferSQL2::ReadArray(Long64_t *&l)
 {
-   TBufferSQL2_ReadArray(Long64_t, l);
+   return SqlReadArray(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1066,7 +1064,7 @@ Int_t TBufferSQL2::ReadArray(Long64_t *&l)
 
 Int_t TBufferSQL2::ReadArray(ULong64_t *&l)
 {
-   TBufferSQL2_ReadArray(ULong64_t, l);
+   return SqlReadArray(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1074,7 +1072,7 @@ Int_t TBufferSQL2::ReadArray(ULong64_t *&l)
 
 Int_t TBufferSQL2::ReadArray(Float_t *&f)
 {
-   TBufferSQL2_ReadArray(Float_t, f);
+   return SqlReadArray(f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1082,27 +1080,15 @@ Int_t TBufferSQL2::ReadArray(Float_t *&f)
 
 Int_t TBufferSQL2::ReadArray(Double_t *&d)
 {
-   TBufferSQL2_ReadArray(Double_t, d);
+   return SqlReadArray(d);
 }
-
-// macro to read static array, which include size attribute
-#define TBufferSQL2_ReadStaticArray(vname)  \
-   {                                        \
-      Int_t n = SqlReadArraySize();         \
-      if (n <= 0)                           \
-         return 0;                          \
-      if (!vname)                           \
-         return 0;                          \
-      SQLReadArrayContent(vname, n, kTRUE); \
-      return n;                             \
-   }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read array of Bool_t from buffer
 
 Int_t TBufferSQL2::ReadStaticArray(Bool_t *b)
 {
-   TBufferSQL2_ReadStaticArray(b);
+   return SqlReadArray(b, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1110,7 +1096,7 @@ Int_t TBufferSQL2::ReadStaticArray(Bool_t *b)
 
 Int_t TBufferSQL2::ReadStaticArray(Char_t *c)
 {
-   TBufferSQL2_ReadStaticArray(c);
+   return SqlReadArray(c, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1118,7 +1104,7 @@ Int_t TBufferSQL2::ReadStaticArray(Char_t *c)
 
 Int_t TBufferSQL2::ReadStaticArray(UChar_t *c)
 {
-   TBufferSQL2_ReadStaticArray(c);
+   return SqlReadArray(c, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1126,7 +1112,7 @@ Int_t TBufferSQL2::ReadStaticArray(UChar_t *c)
 
 Int_t TBufferSQL2::ReadStaticArray(Short_t *h)
 {
-   TBufferSQL2_ReadStaticArray(h);
+   return SqlReadArray(h, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1134,7 +1120,7 @@ Int_t TBufferSQL2::ReadStaticArray(Short_t *h)
 
 Int_t TBufferSQL2::ReadStaticArray(UShort_t *h)
 {
-   TBufferSQL2_ReadStaticArray(h);
+   return SqlReadArray(h, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1142,7 +1128,7 @@ Int_t TBufferSQL2::ReadStaticArray(UShort_t *h)
 
 Int_t TBufferSQL2::ReadStaticArray(Int_t *i)
 {
-   TBufferSQL2_ReadStaticArray(i);
+   return SqlReadArray(i, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1150,7 +1136,7 @@ Int_t TBufferSQL2::ReadStaticArray(Int_t *i)
 
 Int_t TBufferSQL2::ReadStaticArray(UInt_t *i)
 {
-   TBufferSQL2_ReadStaticArray(i);
+   return SqlReadArray(i, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1158,7 +1144,7 @@ Int_t TBufferSQL2::ReadStaticArray(UInt_t *i)
 
 Int_t TBufferSQL2::ReadStaticArray(Long_t *l)
 {
-   TBufferSQL2_ReadStaticArray(l);
+   return SqlReadArray(l, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1166,7 +1152,7 @@ Int_t TBufferSQL2::ReadStaticArray(Long_t *l)
 
 Int_t TBufferSQL2::ReadStaticArray(ULong_t *l)
 {
-   TBufferSQL2_ReadStaticArray(l);
+   return SqlReadArray(l, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1174,7 +1160,7 @@ Int_t TBufferSQL2::ReadStaticArray(ULong_t *l)
 
 Int_t TBufferSQL2::ReadStaticArray(Long64_t *l)
 {
-   TBufferSQL2_ReadStaticArray(l);
+   return SqlReadArray(l, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1182,7 +1168,7 @@ Int_t TBufferSQL2::ReadStaticArray(Long64_t *l)
 
 Int_t TBufferSQL2::ReadStaticArray(ULong64_t *l)
 {
-   TBufferSQL2_ReadStaticArray(l);
+   return SqlReadArray(l, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1190,7 +1176,7 @@ Int_t TBufferSQL2::ReadStaticArray(ULong64_t *l)
 
 Int_t TBufferSQL2::ReadStaticArray(Float_t *f)
 {
-   TBufferSQL2_ReadStaticArray(f);
+   return SqlReadArray(f, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1198,23 +1184,25 @@ Int_t TBufferSQL2::ReadStaticArray(Float_t *f)
 
 Int_t TBufferSQL2::ReadStaticArray(Double_t *d)
 {
-   TBufferSQL2_ReadStaticArray(d);
+   return SqlReadArray(d, kTRUE);
 }
 
-// macro to read content of array, which not include size of array
-// macro also treat situation, when instead of one single array chain of several elements should be produced
-#define TBufferSQL2_ReadFastArray(vname)     \
-   {                                         \
-      if (n <= 0)                            \
-         return;                             \
-      SQLReadArrayContent(vname, n, kFALSE); \
-   }
+////////////////////////////////////////////////////////////////////////////////
+/// Template method to read content of array, which not include size of array
+
+template <typename T>
+R__ALWAYS_INLINE void TBufferSQL2::SqlReadFastArray(T *arr, Int_t arrsize)
+{
+   if (arrsize > 0)
+      SqlReadArrayContent(arr, arrsize, kFALSE);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Read array of Bool_t from buffer
 
 void TBufferSQL2::ReadFastArray(Bool_t *b, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(b);
+   SqlReadFastArray(b, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1232,7 +1220,7 @@ void TBufferSQL2::ReadFastArray(Char_t *c, Int_t n)
          size = n;
       memcpy(c, buf, size);
    } else {
-      TBufferSQL2_ReadFastArray(c);
+      SqlReadFastArray(c, n);
    }
 }
 
@@ -1241,7 +1229,7 @@ void TBufferSQL2::ReadFastArray(Char_t *c, Int_t n)
 
 void TBufferSQL2::ReadFastArray(UChar_t *c, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(c);
+   SqlReadFastArray(c, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1249,7 +1237,7 @@ void TBufferSQL2::ReadFastArray(UChar_t *c, Int_t n)
 
 void TBufferSQL2::ReadFastArray(Short_t *h, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(h);
+   SqlReadFastArray(h, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1257,7 +1245,7 @@ void TBufferSQL2::ReadFastArray(Short_t *h, Int_t n)
 
 void TBufferSQL2::ReadFastArray(UShort_t *h, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(h);
+   SqlReadFastArray(h, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1265,7 +1253,7 @@ void TBufferSQL2::ReadFastArray(UShort_t *h, Int_t n)
 
 void TBufferSQL2::ReadFastArray(Int_t *i, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(i);
+   SqlReadFastArray(i, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1273,7 +1261,7 @@ void TBufferSQL2::ReadFastArray(Int_t *i, Int_t n)
 
 void TBufferSQL2::ReadFastArray(UInt_t *i, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(i);
+   SqlReadFastArray(i, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1281,7 +1269,7 @@ void TBufferSQL2::ReadFastArray(UInt_t *i, Int_t n)
 
 void TBufferSQL2::ReadFastArray(Long_t *l, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(l);
+   SqlReadFastArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1289,7 +1277,7 @@ void TBufferSQL2::ReadFastArray(Long_t *l, Int_t n)
 
 void TBufferSQL2::ReadFastArray(ULong_t *l, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(l);
+   SqlReadFastArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1297,7 +1285,7 @@ void TBufferSQL2::ReadFastArray(ULong_t *l, Int_t n)
 
 void TBufferSQL2::ReadFastArray(Long64_t *l, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(l);
+   SqlReadFastArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1305,7 +1293,7 @@ void TBufferSQL2::ReadFastArray(Long64_t *l, Int_t n)
 
 void TBufferSQL2::ReadFastArray(ULong64_t *l, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(l);
+   SqlReadFastArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1313,7 +1301,7 @@ void TBufferSQL2::ReadFastArray(ULong64_t *l, Int_t n)
 
 void TBufferSQL2::ReadFastArray(Float_t *f, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(f);
+   SqlReadFastArray(f, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1322,7 +1310,7 @@ void TBufferSQL2::ReadFastArray(Float_t *f, Int_t n)
 
 void TBufferSQL2::ReadFastArrayString(Char_t *c, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(c);
+   SqlReadFastArray(c, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1330,7 +1318,7 @@ void TBufferSQL2::ReadFastArrayString(Char_t *c, Int_t n)
 
 void TBufferSQL2::ReadFastArray(Double_t *d, Int_t n)
 {
-   TBufferSQL2_ReadFastArray(d);
+   SqlReadFastArray(d, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1440,52 +1428,36 @@ Int_t TBufferSQL2::SqlReadArraySize()
    return sz;
 }
 
-// macro to write content of noncompressed array, not used
-#define SQLWriteArrayNoncompress(vname, arrsize)     \
-   {                                                 \
-      for (Int_t indx = 0; indx < arrsize; indx++) { \
-         SqlWriteBasic(vname[indx]);                 \
-         Stack()->ChildArrayIndex(indx, 1);          \
-      }                                              \
+template <typename T>
+R__ALWAYS_INLINE void TBufferSQL2::SqlWriteArray(T *arr, Int_t arrsize, Bool_t withsize)
+{
+   if (!withsize && (arrsize <= 0))
+      return;
+   PushStack()->SetArray(withsize ? arrsize : -1);
+   Int_t indx = 0;
+   if (fCompressLevel > 0) {
+      while (indx < arrsize) {
+         Int_t curr = indx++;
+         while ((indx < arrsize) && (arr[indx] == arr[curr]))
+            indx++;
+         SqlWriteBasic(arr[curr]);
+         Stack()->ChildArrayIndex(curr, indx - curr);
+      }
+   } else {
+      for (; indx < arrsize; indx++) {
+         SqlWriteBasic(arr[indx]);
+         Stack()->ChildArrayIndex(indx, 1);
+      }
    }
-
-// macro to write content of compressed array
-#define SQLWriteArrayCompress(vname, arrsize)                     \
-   {                                                              \
-      Int_t indx = 0;                                             \
-      while (indx < arrsize) {                                    \
-         Int_t curr = indx;                                       \
-         indx++;                                                  \
-         while ((indx < arrsize) && (vname[indx] == vname[curr])) \
-            indx++;                                               \
-         SqlWriteBasic(vname[curr]);                              \
-         Stack()->ChildArrayIndex(curr, indx - curr);             \
-      }                                                           \
-   }
-
-#define SQLWriteArrayContent(vname, arrsize, withsize) \
-   {                                                   \
-      PushStack()->SetArray(withsize ? arrsize : -1);  \
-      if (fCompressLevel > 0) {                        \
-         SQLWriteArrayCompress(vname, arrsize)         \
-      } else {                                         \
-         SQLWriteArrayNoncompress(vname, arrsize)      \
-      }                                                \
-      PopStack();                                      \
-   }
-
-// macro to write array, which include size
-#define TBufferSQL2_WriteArray(vname)        \
-   {                                         \
-      SQLWriteArrayContent(vname, n, kTRUE); \
-   }
+   PopStack();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Bool_t to buffer
 
 void TBufferSQL2::WriteArray(const Bool_t *b, Int_t n)
 {
-   TBufferSQL2_WriteArray(b);
+   SqlWriteArray(b, n, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1493,7 +1465,7 @@ void TBufferSQL2::WriteArray(const Bool_t *b, Int_t n)
 
 void TBufferSQL2::WriteArray(const Char_t *c, Int_t n)
 {
-   TBufferSQL2_WriteArray(c);
+   SqlWriteArray(c, n, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1501,7 +1473,7 @@ void TBufferSQL2::WriteArray(const Char_t *c, Int_t n)
 
 void TBufferSQL2::WriteArray(const UChar_t *c, Int_t n)
 {
-   TBufferSQL2_WriteArray(c);
+   SqlWriteArray(c, n, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1509,7 +1481,7 @@ void TBufferSQL2::WriteArray(const UChar_t *c, Int_t n)
 
 void TBufferSQL2::WriteArray(const Short_t *h, Int_t n)
 {
-   TBufferSQL2_WriteArray(h);
+   SqlWriteArray(h, n, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1517,7 +1489,7 @@ void TBufferSQL2::WriteArray(const Short_t *h, Int_t n)
 
 void TBufferSQL2::WriteArray(const UShort_t *h, Int_t n)
 {
-   TBufferSQL2_WriteArray(h);
+   SqlWriteArray(h, n, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1525,7 +1497,7 @@ void TBufferSQL2::WriteArray(const UShort_t *h, Int_t n)
 
 void TBufferSQL2::WriteArray(const Int_t *i, Int_t n)
 {
-   TBufferSQL2_WriteArray(i);
+   SqlWriteArray(i, n, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1533,7 +1505,7 @@ void TBufferSQL2::WriteArray(const Int_t *i, Int_t n)
 
 void TBufferSQL2::WriteArray(const UInt_t *i, Int_t n)
 {
-   TBufferSQL2_WriteArray(i);
+   SqlWriteArray(i, n, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1541,7 +1513,7 @@ void TBufferSQL2::WriteArray(const UInt_t *i, Int_t n)
 
 void TBufferSQL2::WriteArray(const Long_t *l, Int_t n)
 {
-   TBufferSQL2_WriteArray(l);
+   SqlWriteArray(l, n, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1549,7 +1521,7 @@ void TBufferSQL2::WriteArray(const Long_t *l, Int_t n)
 
 void TBufferSQL2::WriteArray(const ULong_t *l, Int_t n)
 {
-   TBufferSQL2_WriteArray(l);
+   SqlWriteArray(l, n, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1557,7 +1529,7 @@ void TBufferSQL2::WriteArray(const ULong_t *l, Int_t n)
 
 void TBufferSQL2::WriteArray(const Long64_t *l, Int_t n)
 {
-   TBufferSQL2_WriteArray(l);
+   SqlWriteArray(l, n, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1565,7 +1537,7 @@ void TBufferSQL2::WriteArray(const Long64_t *l, Int_t n)
 
 void TBufferSQL2::WriteArray(const ULong64_t *l, Int_t n)
 {
-   TBufferSQL2_WriteArray(l);
+   SqlWriteArray(l, n, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1573,7 +1545,7 @@ void TBufferSQL2::WriteArray(const ULong64_t *l, Int_t n)
 
 void TBufferSQL2::WriteArray(const Float_t *f, Int_t n)
 {
-   TBufferSQL2_WriteArray(f);
+   SqlWriteArray(f, n, kTRUE);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1581,24 +1553,15 @@ void TBufferSQL2::WriteArray(const Float_t *f, Int_t n)
 
 void TBufferSQL2::WriteArray(const Double_t *d, Int_t n)
 {
-   TBufferSQL2_WriteArray(d);
+   SqlWriteArray(d, n, kTRUE);
 }
-
-// write array without size attribute
-// macro also treat situation, when instead of one single array chain of several elements should be produced
-#define TBufferSQL2_WriteFastArray(vname)     \
-   {                                          \
-      if (n <= 0)                             \
-         return;                              \
-      SQLWriteArrayContent(vname, n, kFALSE); \
-   }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write array of Bool_t to buffer
 
 void TBufferSQL2::WriteFastArray(const Bool_t *b, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(b);
+   SqlWriteArray(b, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1619,7 +1582,7 @@ void TBufferSQL2::WriteFastArray(const Char_t *c, Int_t n)
          }
 
    if (usedefault) {
-      TBufferSQL2_WriteFastArray(c);
+      SqlWriteArray(c, n);
    } else {
       Char_t *buf = new Char_t[n + 1];
       memcpy(buf, c, n);
@@ -1634,7 +1597,7 @@ void TBufferSQL2::WriteFastArray(const Char_t *c, Int_t n)
 
 void TBufferSQL2::WriteFastArray(const UChar_t *c, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(c);
+   SqlWriteArray(c, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1642,7 +1605,7 @@ void TBufferSQL2::WriteFastArray(const UChar_t *c, Int_t n)
 
 void TBufferSQL2::WriteFastArray(const Short_t *h, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(h);
+   SqlWriteArray(h, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1650,7 +1613,7 @@ void TBufferSQL2::WriteFastArray(const Short_t *h, Int_t n)
 
 void TBufferSQL2::WriteFastArray(const UShort_t *h, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(h);
+   SqlWriteArray(h, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1658,7 +1621,7 @@ void TBufferSQL2::WriteFastArray(const UShort_t *h, Int_t n)
 
 void TBufferSQL2::WriteFastArray(const Int_t *i, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(i);
+   SqlWriteArray(i, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1666,7 +1629,7 @@ void TBufferSQL2::WriteFastArray(const Int_t *i, Int_t n)
 
 void TBufferSQL2::WriteFastArray(const UInt_t *i, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(i);
+   SqlWriteArray(i, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1674,7 +1637,7 @@ void TBufferSQL2::WriteFastArray(const UInt_t *i, Int_t n)
 
 void TBufferSQL2::WriteFastArray(const Long_t *l, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(l);
+   SqlWriteArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1682,7 +1645,7 @@ void TBufferSQL2::WriteFastArray(const Long_t *l, Int_t n)
 
 void TBufferSQL2::WriteFastArray(const ULong_t *l, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(l);
+   SqlWriteArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1690,7 +1653,7 @@ void TBufferSQL2::WriteFastArray(const ULong_t *l, Int_t n)
 
 void TBufferSQL2::WriteFastArray(const Long64_t *l, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(l);
+   SqlWriteArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1698,7 +1661,7 @@ void TBufferSQL2::WriteFastArray(const Long64_t *l, Int_t n)
 
 void TBufferSQL2::WriteFastArray(const ULong64_t *l, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(l);
+   SqlWriteArray(l, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1706,7 +1669,7 @@ void TBufferSQL2::WriteFastArray(const ULong64_t *l, Int_t n)
 
 void TBufferSQL2::WriteFastArray(const Float_t *f, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(f);
+   SqlWriteArray(f, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1714,7 +1677,7 @@ void TBufferSQL2::WriteFastArray(const Float_t *f, Int_t n)
 
 void TBufferSQL2::WriteFastArray(const Double_t *d, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(d);
+   SqlWriteArray(d, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1723,7 +1686,7 @@ void TBufferSQL2::WriteFastArray(const Double_t *d, Int_t n)
 
 void TBufferSQL2::WriteFastArrayString(const Char_t *c, Int_t n)
 {
-   TBufferSQL2_WriteFastArray(c);
+   SqlWriteArray(c, n);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1747,8 +1710,6 @@ void TBufferSQL2::WriteFastArray(void *start, const TClass *cl, Int_t n, TMember
 
    for (Int_t j = 0; j < n; j++, obj += size)
       StreamObject(obj, cl);
-
-   //   TBuffer::WriteFastArray(start, cl, n, s);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1851,18 +1812,12 @@ void TBufferSQL2::StreamObjectExtra(void *obj, TMemberStreamer *streamer, const 
       SqlWriteObject(obj, cl, kTRUE, streamer, n);
 }
 
-// macro for right shift operator for basic type
-#define TBufferSQL2_operatorin(vname) \
-   {                                  \
-      SqlReadBasic(vname);            \
-   }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Reads Bool_t value from buffer
 
 void TBufferSQL2::ReadBool(Bool_t &b)
 {
-   TBufferSQL2_operatorin(b);
+   SqlReadBasic(b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1870,7 +1825,7 @@ void TBufferSQL2::ReadBool(Bool_t &b)
 
 void TBufferSQL2::ReadChar(Char_t &c)
 {
-   TBufferSQL2_operatorin(c);
+   SqlReadBasic(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1878,7 +1833,7 @@ void TBufferSQL2::ReadChar(Char_t &c)
 
 void TBufferSQL2::ReadUChar(UChar_t &c)
 {
-   TBufferSQL2_operatorin(c);
+   SqlReadBasic(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1886,7 +1841,7 @@ void TBufferSQL2::ReadUChar(UChar_t &c)
 
 void TBufferSQL2::ReadShort(Short_t &h)
 {
-   TBufferSQL2_operatorin(h);
+   SqlReadBasic(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1894,7 +1849,7 @@ void TBufferSQL2::ReadShort(Short_t &h)
 
 void TBufferSQL2::ReadUShort(UShort_t &h)
 {
-   TBufferSQL2_operatorin(h);
+   SqlReadBasic(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1902,7 +1857,7 @@ void TBufferSQL2::ReadUShort(UShort_t &h)
 
 void TBufferSQL2::ReadInt(Int_t &i)
 {
-   TBufferSQL2_operatorin(i);
+   SqlReadBasic(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1910,7 +1865,7 @@ void TBufferSQL2::ReadInt(Int_t &i)
 
 void TBufferSQL2::ReadUInt(UInt_t &i)
 {
-   TBufferSQL2_operatorin(i);
+   SqlReadBasic(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1918,7 +1873,7 @@ void TBufferSQL2::ReadUInt(UInt_t &i)
 
 void TBufferSQL2::ReadLong(Long_t &l)
 {
-   TBufferSQL2_operatorin(l);
+   SqlReadBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1926,7 +1881,7 @@ void TBufferSQL2::ReadLong(Long_t &l)
 
 void TBufferSQL2::ReadULong(ULong_t &l)
 {
-   TBufferSQL2_operatorin(l);
+   SqlReadBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1934,7 +1889,7 @@ void TBufferSQL2::ReadULong(ULong_t &l)
 
 void TBufferSQL2::ReadLong64(Long64_t &l)
 {
-   TBufferSQL2_operatorin(l);
+   SqlReadBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1942,7 +1897,7 @@ void TBufferSQL2::ReadLong64(Long64_t &l)
 
 void TBufferSQL2::ReadULong64(ULong64_t &l)
 {
-   TBufferSQL2_operatorin(l);
+   SqlReadBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1950,7 +1905,7 @@ void TBufferSQL2::ReadULong64(ULong64_t &l)
 
 void TBufferSQL2::ReadFloat(Float_t &f)
 {
-   TBufferSQL2_operatorin(f);
+   SqlReadBasic(f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1958,7 +1913,7 @@ void TBufferSQL2::ReadFloat(Float_t &f)
 
 void TBufferSQL2::ReadDouble(Double_t &d)
 {
-   TBufferSQL2_operatorin(d);
+   SqlReadBasic(d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2119,18 +2074,12 @@ void TBufferSQL2::WriteCharStar(char *s)
    }
 }
 
-// macro for right shift operator for basic types
-#define TBufferSQL2_operatorout(vname) \
-   {                                   \
-      SqlWriteBasic(vname);            \
-   }
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Writes Bool_t value to buffer
 
 void TBufferSQL2::WriteBool(Bool_t b)
 {
-   TBufferSQL2_operatorout(b);
+   SqlWriteBasic(b);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2138,7 +2087,7 @@ void TBufferSQL2::WriteBool(Bool_t b)
 
 void TBufferSQL2::WriteChar(Char_t c)
 {
-   TBufferSQL2_operatorout(c);
+   SqlWriteBasic(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2146,7 +2095,7 @@ void TBufferSQL2::WriteChar(Char_t c)
 
 void TBufferSQL2::WriteUChar(UChar_t c)
 {
-   TBufferSQL2_operatorout(c);
+   SqlWriteBasic(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2154,7 +2103,7 @@ void TBufferSQL2::WriteUChar(UChar_t c)
 
 void TBufferSQL2::WriteShort(Short_t h)
 {
-   TBufferSQL2_operatorout(h);
+   SqlWriteBasic(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2162,7 +2111,7 @@ void TBufferSQL2::WriteShort(Short_t h)
 
 void TBufferSQL2::WriteUShort(UShort_t h)
 {
-   TBufferSQL2_operatorout(h);
+   SqlWriteBasic(h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2170,7 +2119,7 @@ void TBufferSQL2::WriteUShort(UShort_t h)
 
 void TBufferSQL2::WriteInt(Int_t i)
 {
-   TBufferSQL2_operatorout(i);
+   SqlWriteBasic(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2178,7 +2127,7 @@ void TBufferSQL2::WriteInt(Int_t i)
 
 void TBufferSQL2::WriteUInt(UInt_t i)
 {
-   TBufferSQL2_operatorout(i);
+   SqlWriteBasic(i);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2186,7 +2135,7 @@ void TBufferSQL2::WriteUInt(UInt_t i)
 
 void TBufferSQL2::WriteLong(Long_t l)
 {
-   TBufferSQL2_operatorout(l);
+   SqlWriteBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2194,7 +2143,7 @@ void TBufferSQL2::WriteLong(Long_t l)
 
 void TBufferSQL2::WriteULong(ULong_t l)
 {
-   TBufferSQL2_operatorout(l);
+   SqlWriteBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2202,7 +2151,7 @@ void TBufferSQL2::WriteULong(ULong_t l)
 
 void TBufferSQL2::WriteLong64(Long64_t l)
 {
-   TBufferSQL2_operatorout(l);
+   SqlWriteBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2210,7 +2159,7 @@ void TBufferSQL2::WriteLong64(Long64_t l)
 
 void TBufferSQL2::WriteULong64(ULong64_t l)
 {
-   TBufferSQL2_operatorout(l);
+   SqlWriteBasic(l);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2218,7 +2167,7 @@ void TBufferSQL2::WriteULong64(ULong64_t l)
 
 void TBufferSQL2::WriteFloat(Float_t f)
 {
-   TBufferSQL2_operatorout(f);
+   SqlWriteBasic(f);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2226,7 +2175,7 @@ void TBufferSQL2::WriteFloat(Float_t f)
 
 void TBufferSQL2::WriteDouble(Double_t d)
 {
-   TBufferSQL2_operatorout(d);
+   SqlWriteBasic(d);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
