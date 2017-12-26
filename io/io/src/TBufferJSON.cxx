@@ -1687,11 +1687,13 @@ void TBufferJSON::JsonReadTObjectMembers(TObject *tobj, void *node)
 
 Int_t TBufferJSON::ReadClassBuffer(const TClass *cl, void *ptr, const TClass *)
 {
+   // TODO: should not be longer required
    if (cl == TObject::Class()) {
       // we misuse function to call custom reading node for TObject as baseclass
       JsonReadTObjectMembers((TObject *)ptr);
       return 0;
    }
+
 
    TStreamerInfo *sinfo = (TStreamerInfo *)cl->GetStreamerInfo();
 
@@ -3922,3 +3924,18 @@ Int_t TBufferJSON::WriteClassBuffer(const TClass *cl, void *pointer)
       Info("WriteClassBuffer", "class: %s version %d done", cl->GetName(), cl->GetClassVersion());
    return 0;
 }
+
+void TBufferJSON::WriteBaseClass(void *start, TStreamerBase *elem)
+{
+   TBufferText::WriteBaseClass(start, elem);
+}
+
+void TBufferJSON::ReadBaseClass(void *start, TStreamerBase *elem)
+{
+   if (elem->GetClassPointer() == TObject::Class()) {
+      JsonReadTObjectMembers((TObject *)start);
+   } else {
+      TBufferText::ReadBaseClass(start, elem);
+   }
+}
+

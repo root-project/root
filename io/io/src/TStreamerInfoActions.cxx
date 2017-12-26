@@ -18,6 +18,7 @@
 #include "TError.h"
 #include "TVirtualArray.h"
 #include "TBufferFile.h"
+#include "TBufferText.h"
 #include "TMemberStreamer.h"
 #include "TError.h"
 #include "TClassEdit.h"
@@ -243,6 +244,24 @@ namespace TStreamerInfoActions
       return 0;
    }
 
+   INLINE_TEMPLATE_ARGS Int_t WriteTextBaseClass(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      void *x = (void*)( ((char*)addr) + config->fOffset );
+      // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
+      ((TBufferText*)&buf)->WriteBaseClass(x, (TStreamerBase*) config->fCompInfo->fElem);
+      return 0;
+   }
+
+   INLINE_TEMPLATE_ARGS Int_t WriteTextStreamer(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      void *x = (void*)( ((char*)addr) + config->fOffset );
+      TMemberStreamer *pstreamer = config->fCompInfo->fStreamer;
+      UInt_t pos = buf.WriteVersion(config->fInfo->IsA(),kTRUE);
+      (*pstreamer)(buf, x, config->fCompInfo->fLength);
+      buf.SetByteCount(pos,kTRUE);
+      return 0;
+   }
+
    INLINE_TEMPLATE_ARGS Int_t ReadTextObject(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       void *x = (void*)( ((char*)addr) + config->fOffset );
@@ -254,6 +273,26 @@ namespace TStreamerInfoActions
    {
       void *x = (void*)( ((char*)addr) + config->fOffset );
       buf.StreamObject(x, TObject::Class(), TObject::Class());
+      return 0;
+   }
+
+   INLINE_TEMPLATE_ARGS Int_t ReadTextBaseClass(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      void *x = (void*)( ((char*)addr) + config->fOffset );
+      // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
+      ((TBufferText*)&buf)->ReadBaseClass(x, (TStreamerBase*) config->fCompInfo->fElem);
+      return 0;
+   }
+
+   INLINE_TEMPLATE_ARGS Int_t ReadTextStreamer(TBuffer &buf, void *addr, const TConfiguration *config)
+   {
+      void *x = (void*)( ((char*)addr) + config->fOffset );
+      TMemberStreamer *pstreamer = config->fCompInfo->fStreamer;
+
+      UInt_t start,count;
+      /* Version_t v = */ buf.ReadVersion(&start, &count, config->fCompInfo->fClass);
+      (*pstreamer)(buf, x, config->fCompInfo->fLength);
+      buf.CheckByteCount(start,count,  config->fCompInfo->fElem->GetFullName());
       return 0;
    }
 
@@ -316,9 +355,9 @@ namespace TStreamerInfoActions
       UInt_t pos = buf.WriteVersion(config->fInfo->IsA(),kTRUE);
       if (kIsTextT) {
          // use same method which is used in kSTL
-         buf.WriteFastArray((void **)((char *) addr + ioffset), cl, config->fCompInfo->fLength, kFALSE, 0);
+         buf.WriteFastArray((void **)((char *) addr + ioffset), cl, config->fCompInfo->fLength, kFALSE, pstreamer);
       } else
-      if (pstreamer == 0) {
+      if (pstreamer == nullptr) {
          //for (int k = 0; k < narr; ++k) {
             char **contp = (char**)((char *) addr + ioffset);
             for(int j=0; j<config->fCompInfo->fLength; ++j) {
@@ -408,7 +447,7 @@ namespace TStreamerInfoActions
 
       if (kIsTextT) {
          // use same method which is used in kSTL
-         buf.ReadFastArray((void **)((char *) addr + ioffset), cle, config->fCompInfo->fLength, kFALSE, nullptr);
+         buf.ReadFastArray((void **)((char *) addr + ioffset), cle, config->fCompInfo->fLength, kFALSE, pstreamer);
       } else
       if (pstreamer == nullptr) {
          // DOLOOP {
@@ -502,20 +541,20 @@ namespace TStreamerInfoActions
                      // -- We are a varying-length array of objects.
                      // Write the entire array of objects to the buffer.
                      // Note: Polymorphism is not allowed here.
-                     buf.WriteFastArray(pp[ndx], cl, vlen, 0);
+                     buf.WriteFastArray(pp[ndx], cl, vlen, nullptr);
                   }
                   else {
                      // -- We are a varying-length array of pointers to objects.
                      // Write the entire array of object pointers to the buffer.
                      // Note: The object pointers are allowed to be polymorphic.
-                     buf.WriteFastArray((void**) pp[ndx], cl, vlen, kFALSE, 0);
+                     buf.WriteFastArray((void **) pp[ndx], cl, vlen, kFALSE, nullptr);
                   } // isPtrPtr
                } // ndx
             } else // vlen
             if (kIsTextT) {
                // special handling for the text-based streamers
                for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx)
-                  buf.WriteFastArray((void *) 0, cl, -1, 0);
+                  buf.WriteFastArray((void *) nullptr, cl, -1, nullptr);
             }
          //} // k
       }
@@ -672,7 +711,7 @@ namespace TStreamerInfoActions
                if (!vlen) {
                   if (kIsTextT) {
                      // special handling for the text-based streamers - keep calling to shift array index
-                     buf.ReadFastArray((void *) 0, cl, -1, 0);
+                     buf.ReadFastArray((void *) nullptr, cl, -1, nullptr);
                   }
                   continue;
                }
@@ -701,11 +740,11 @@ namespace TStreamerInfoActions
                }
                if (!isPtrPtr) {
                   // -- We are a varying-length array of objects.
-                  buf.ReadFastArray(pp[ndx], cl, vlen, 0);
+                  buf.ReadFastArray(pp[ndx], cl, vlen, nullptr);
                }
                else {
                   // -- We are a varying-length array of object pointers.
-                  buf.ReadFastArray((void**) pp[ndx], cl, vlen, kFALSE, 0);
+                  buf.ReadFastArray((void**) pp[ndx], cl, vlen, kFALSE, nullptr);
                } // isPtrPtr
             } // ndx
          // } // k
@@ -3348,19 +3387,21 @@ void TStreamerInfo::AddReadTextAction(TStreamerInfoActions::TActionSequence *rea
 
    if (element->TestBit(TStreamerElement::kWrite)) return;
 
-   Bool_t generic = kFALSE;
+   Bool_t generic = kFALSE, isBase = kFALSE;
 
    switch (compinfo->fType) {
       case TStreamerInfo::kTObject:
          if (element->IsBase())
-            readSequence->AddAction( ReadTextTObjectBase, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+            isBase = kTRUE;
+            // readSequence->AddAction( ReadTextTObjectBase, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
          else
             readSequence->AddAction( ReadTextTObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
          break;
 
       case TStreamerInfo::kTNamed:
          if (element->IsBase())
-            generic = kTRUE; // for the base class one cannot call TClass::Streamer() as performed for the normal object
+            isBase = kTRUE;
+            // generic = kTRUE; // for the base class one cannot call TClass::Streamer() as performed for the normal object
          else
             readSequence->AddAction( ReadTextTNamed, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
          break;
@@ -3382,15 +3423,28 @@ void TStreamerInfo::AddReadTextAction(TStreamerInfoActions::TActionSequence *rea
           readSequence->AddAction( ReadStreamerLoop<true>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
           break;
 
+      case TStreamerInfo::kBase:
+         isBase = kTRUE;
+         break;
+
+      case TStreamerInfo::kStreamer:
+         readSequence->AddAction(ReadTextStreamer, new TGenericConfiguration(this, i, compinfo));
+         break;
+
       default:
          generic = kTRUE;
          break;
    }
 
-   if (generic)
-      readSequence->AddAction( GenericReadAction, new TGenericConfiguration(this,i,compinfo) );
+   if (isBase) {
+      if (compinfo->fStreamer) {
+         readSequence->AddAction(ReadTextStreamer, new TGenericConfiguration(this, i, compinfo));
+      } else {
+         readSequence->AddAction(ReadTextBaseClass, new TGenericConfiguration(this, i, compinfo));
+      }
+   } else if (generic)
+      readSequence->AddAction(GenericReadAction, new TGenericConfiguration(this, i, compinfo));
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add a read action for the given element.
@@ -3530,7 +3584,7 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
       return;
    }
 
-   Bool_t generic = kFALSE;
+   Bool_t generic = kFALSE, isBase = kFALSE;
 
    switch (compinfo->fType) {
       // write basic types
@@ -3550,14 +3604,14 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
 
       case TStreamerInfo::kTObject:
          if (element->IsBase())
-            generic = kTRUE;
+            isBase = kTRUE;
          else
             writeSequence->AddAction( WriteTextTObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
          break;
 
       case TStreamerInfo::kTNamed:
          if (element->IsBase())
-            generic = kTRUE;
+            isBase = kTRUE;
          else
             writeSequence->AddAction( WriteTextTNamed, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
          break;
@@ -3571,6 +3625,14 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
       case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
           writeSequence->AddAction( WriteStreamerLoop<true>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
           break;
+
+      case TStreamerInfo::kBase:
+         isBase = kTRUE;
+         break;
+
+      case TStreamerInfo::kStreamer:
+         writeSequence->AddAction( WriteTextStreamer, new TGenericConfiguration(this,i,compinfo) );
+         break;
 
 
       // case TStreamerInfo::kBits:    writeSequence->AddAction( WriteBasicType<BitsMarker>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
@@ -3643,8 +3705,17 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
          break;
    }
 
+   if (isBase) {
+      if (compinfo->fStreamer) {
+         writeSequence->AddAction( WriteTextStreamer, new TGenericConfiguration(this,i,compinfo) );
+      } else {
+         writeSequence->AddAction( WriteTextBaseClass, new TGenericConfiguration(this,i,compinfo) );
+      }
+
+   } else
+
    // use generic write action when special handling is not provided
-   if (generic)  writeSequence->AddAction( GenericWriteAction, new TGenericConfiguration(this,i,compinfo) );
+   if (generic) writeSequence->AddAction( GenericWriteAction, new TGenericConfiguration(this,i,compinfo) );
 
 #if defined(CDJ_NO_COMPILE)
    if (element->TestBit(TStreamerElement::kCache)) {
