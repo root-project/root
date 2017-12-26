@@ -185,8 +185,20 @@ public:
 
    virtual void ReadBaseClass(void *start, TStreamerBase *elem);
 
+   static void SetFloatFormat(const char *fmt = "%e");
+   static const char *GetFloatFormat();
+   static void SetDoubleFormat(const char *fmt = "%.14e");
+   static const char *GetDoubleFormat();
+
+   static void CompactFloatString(char *buf, unsigned len);
+
 protected:
    virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) = 0;
+
+   static const char *fgFloatFmt;  ///<!  printf argument for floats, either "%f" or "%e" or "%10f" and so on
+   static const char *fgDoubleFmt; ///<!  printf argument for doubles, either "%f" or "%e" or "%10f" and so on
+   static const char *fgLong64Fmt; ///<!  printf argument for Long64_t, normally "%lld"
+   static const char *fgULong64Fmt; ///<!  printf argument for ULong64_t, normally "%llu"
 
    ClassDef(TBufferText, 0); // a TBuffer subclass for all text-based streamers
 };

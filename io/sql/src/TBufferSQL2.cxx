@@ -52,14 +52,6 @@ few other, which can not be converted to SQL (yet).
 #include "TSQLFile.h"
 #include "TSQLClassInfo.h"
 
-#ifdef R__VISUAL_CPLUSPLUS
-#define FLong64 "%I64d"
-#define FULong64 "%I64u"
-#else
-#define FLong64 "%lld"
-#define FULong64 "%llu"
-#endif
-
 ClassImp(TBufferSQL2);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -365,7 +357,7 @@ void *TBufferSQL2::SqlReadObject(void *obj, TClass **cl, TMemberStreamer *stream
    }
 
    Long64_t objid = -1;
-   sscanf(refid, FLong64, &objid);
+   sscanf(refid, fgLong64Fmt, &objid);
 
    if (gDebug > 2)
       Info("SqlReadObject", "Starting objid = %lld column=%s", objid, fCurrentData->GetLocatedField());
@@ -2242,7 +2234,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(Long64_t value)
 Bool_t TBufferSQL2::SqlWriteBasic(Float_t value)
 {
    char buf[200];
-   snprintf(buf, sizeof(buf), TSQLServer::GetFloatFormat(), value);
+   snprintf(buf, sizeof(buf), fgFloatFmt, value);
    return SqlWriteValue(buf, sqlio::Float);
 }
 
@@ -2252,7 +2244,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(Float_t value)
 Bool_t TBufferSQL2::SqlWriteBasic(Double_t value)
 {
    char buf[128];
-   snprintf(buf, sizeof(buf), TSQLServer::GetFloatFormat(), value);
+   snprintf(buf, sizeof(buf), fgFloatFmt, value);
    return SqlWriteValue(buf, sqlio::Double);
 }
 
@@ -2310,7 +2302,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(ULong_t value)
 Bool_t TBufferSQL2::SqlWriteBasic(ULong64_t value)
 {
    char buf[50];
-   snprintf(buf, sizeof(buf), FULong64, value);
+   snprintf(buf, sizeof(buf), fgULong64Fmt, value);
    return SqlWriteValue(buf, sqlio::ULong64);
 }
 
@@ -2382,7 +2374,7 @@ void TBufferSQL2::SqlReadBasic(Long64_t &value)
 {
    const char *res = SqlReadValue(sqlio::Long64);
    if (res)
-      sscanf(res, FLong64, &value);
+      sscanf(res, fgLong64Fmt, &value);
    else
       value = 0;
 }
@@ -2480,7 +2472,7 @@ void TBufferSQL2::SqlReadBasic(ULong64_t &value)
 {
    const char *res = SqlReadValue(sqlio::ULong64);
    if (res)
-      sscanf(res, FULong64, &value);
+      sscanf(res, fgULong64Fmt, &value);
    else
       value = 0;
 }
@@ -2536,7 +2528,7 @@ const char *TBufferSQL2::SqlReadCharStarValue()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Push stack with structurual information about streamed object
+/// Push stack with structural information about streamed object
 
 TSQLStructure *TBufferSQL2::PushStack()
 {
@@ -2571,24 +2563,6 @@ TSQLStructure *TBufferSQL2::Stack(Int_t depth)
    while ((depth-- > 0) && (curr != 0))
       curr = curr->GetParent();
    return curr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// set printf format for float/double members, default "%e"
-/// changes global TSQLServer variable
-
-void TBufferSQL2::SetFloatFormat(const char *fmt)
-{
-   TSQLServer::SetFloatFormat(fmt);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// return current printf format for float/double members, default "%e"
-/// return format, hold by TSQLServer
-
-const char *TBufferSQL2::GetFloatFormat()
-{
-   return TSQLServer::GetFloatFormat();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
