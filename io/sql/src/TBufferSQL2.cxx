@@ -1422,6 +1422,13 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
    if (gDebug > 2)
       Info("ReadFastArray", "(void **  pre = %d  n = %d", isPreAlloc, n);
 
+   Bool_t oldStyle = kFALSE; // flag used to reproduce old-style I/O actions for kSTLp
+
+   if ((fIOVersion < 2) && !isPreAlloc) {
+      TStreamerElement *elem = Stack(0)->GetElement();
+      if (elem && ((elem->GetType() == TStreamerInfo::kSTLp) || (elem->GetType() == TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL))) oldStyle = kTRUE;
+   }
+
    if (streamer) {
       if (isPreAlloc) {
          for (Int_t j = 0; j < n; j++) {
@@ -1429,14 +1436,23 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
                start[j] = ((TClass *)cl)->New();
          }
       }
-      StreamObjectExtra((void *)start, streamer, cl, 0, onFileClass);
-      //      (*streamer)(*this,(void*)start,0);
+      if (oldStyle)
+         (*streamer)(*this,(void*)start,n);
+      else
+         StreamObjectExtra((void *)start, streamer, cl, 0, onFileClass);
       return;
    }
 
    if (!isPreAlloc) {
 
       for (Int_t j = 0; j < n; j++) {
+         if (oldStyle) {
+            if (!start[j])
+               start[j] = ((TClass *)cl)->New();
+            ((TClass *)cl)->Streamer(start[j], *this);
+            continue;
+         }
+
          // delete the object or collection
          if (start[j] && TStreamerInfo::CanDelete())
             ((TClass *)cl)->Destructor(start[j], kFALSE); // call delete and desctructor
@@ -1816,9 +1832,19 @@ void TBufferSQL2::WriteFastArray(void *start, const TClass *cl, Int_t n, TMember
 
 Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer)
 {
+
+   Bool_t oldStyle = kFALSE; // flag used to reproduce old-style I/O actions for kSTLp
+
+   if ((fIOVersion < 2) && !isPreAlloc) {
+      TStreamerElement *elem = Stack(0)->GetElement();
+      if (elem && ((elem->GetType() == TStreamerInfo::kSTLp) || (elem->GetType() == TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL))) oldStyle = kTRUE;
+   }
+
    if (streamer) {
-      StreamObjectExtra((void *)start, streamer, cl, 0);
-      //      (*streamer)(*this,(void*)start,0);
+      if (oldStyle)
+         (*streamer)(*this,(void*)start,n);
+      else
+         StreamObjectExtra((void *)start, streamer, cl, 0);
       return 0;
    }
 
@@ -1830,10 +1856,13 @@ Int_t TBufferSQL2::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_
 
       for (Int_t j = 0; j < n; j++) {
          // must write StreamerInfo if pointer is null
-         if (!strInfo && !start[j])
+         if (!strInfo && !start[j] && !oldStyle)
             ForceWriteInfo(((TClass *)cl)->GetStreamerInfo(), kFALSE);
          strInfo = 2003;
-         res |= WriteObjectAny(start[j], cl);
+         if (oldStyle)
+            ((TClass *)cl)->Streamer(start[j], *this);
+         else
+            res |= WriteObjectAny(start[j], cl);
       }
 
    } else {
