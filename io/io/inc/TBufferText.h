@@ -91,6 +91,12 @@ public:
    virtual void WriteFastArrayFloat16(const Float_t *d, Int_t n, TStreamerElement *ele = nullptr);
    virtual void WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele = nullptr);
 
+   // Utilities for TClass
+   virtual Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, const TClass * /*onfile_class*/ = nullptr);
+   virtual Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, Int_t /*version*/, UInt_t /*start*/,
+                                 UInt_t /*count*/, const TClass * /*onfile_class*/ = nullptr);
+   virtual Int_t WriteClassBuffer(const TClass *cl, void *pointer);
+
    // virtual abstract TBuffer methods, which are not used in text streaming
 
    virtual Int_t CheckByteCount(UInt_t /* startpos */, UInt_t /* bcnt */, const TClass * /* clss */) { return 0; }

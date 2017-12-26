@@ -1683,59 +1683,6 @@ void TBufferJSON::JsonReadTObjectMembers(TObject *tobj, void *node)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read data for specified class
-
-Int_t TBufferJSON::ReadClassBuffer(const TClass *cl, void *ptr, const TClass *)
-{
-   // TODO: should not be longer required
-   if (cl == TObject::Class()) {
-      // we misuse function to call custom reading node for TObject as baseclass
-      JsonReadTObjectMembers((TObject *)ptr);
-      return 0;
-   }
-
-
-   TStreamerInfo *sinfo = (TStreamerInfo *)cl->GetStreamerInfo();
-
-   if (gDebug > 1)
-      Info("ReadClassBuffer", "Deserialize object %s sinfo ver %d", cl->GetName(),
-           (sinfo ? sinfo->GetClassVersion() : -1111));
-
-   // deserialize the object, using read text actions
-   ApplySequence(*(sinfo->GetReadTextActions()), (char *)ptr);
-
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Deserialize information from a buffer into an object.
-///
-/// Note: This function is called by the xxx::Streamer() functions in
-/// rootcint-generated dictionaries.
-/// This function assumes that the class version and the byte count
-/// information have been read.
-///
-/// \param[in] version The version number of the class
-/// \param[in] start   The starting position in the buffer b
-/// \param[in] count   The number of bytes for this object in the buffer
-///
-
-Int_t TBufferJSON::ReadClassBuffer(const TClass *cl, void *ptr, Int_t /*version*/, UInt_t /*start*/, UInt_t /*count*/,
-                                   const TClass * /*onFileClass*/)
-{
-   TStreamerInfo *sinfo = (TStreamerInfo *)cl->GetStreamerInfo();
-
-   if (gDebug > 1)
-      Info("ReadClassBuffer", "Deserialize object %s sinfo ver %d", cl->GetName(),
-           (sinfo ? sinfo->GetClassVersion() : -1111));
-
-   // deserialize the object, using read text actions
-   ApplySequence(*(sinfo->GetReadTextActions()), (char *)ptr);
-
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Function is called from TStreamerInfo WriteBuffer and ReadBuffer functions
 /// and indent new level in json structure.
 /// This call indicates, that TStreamerInfo functions starts streaming
@@ -3875,56 +3822,6 @@ const char *TBufferJSON::GetDoubleFormat()
    return fgDoubleFmt;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Function called by the Streamer functions to serialize object at p
-/// to buffer b. The optional argument info may be specified to give an
-/// alternative StreamerInfo instead of using the default StreamerInfo
-/// automatically built from the class definition.
-/// For more information, see class TStreamerInfo.
-
-Int_t TBufferJSON::WriteClassBuffer(const TClass *cl, void *pointer)
-{
-
-   // build the StreamerInfo if first time for the class
-   TStreamerInfo *sinfo = (TStreamerInfo *)const_cast<TClass *>(cl)->GetCurrentStreamerInfo();
-   if (!sinfo) {
-      // Have to be sure between the check and the taking of the lock if the current streamer has changed
-      R__LOCKGUARD(gInterpreterMutex);
-      sinfo = (TStreamerInfo *)const_cast<TClass *>(cl)->GetCurrentStreamerInfo();
-      if (!sinfo) {
-         const_cast<TClass *>(cl)->BuildRealData(pointer);
-         sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
-         const_cast<TClass *>(cl)->SetCurrentStreamerInfo(sinfo);
-         const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
-         if (gDebug > 0)
-            Info("WriteClassBuffer", "Creating StreamerInfo for class: %s, version: %d", cl->GetName(),
-                 cl->GetClassVersion());
-         sinfo->Build();
-      }
-   } else if (!sinfo->IsCompiled()) {
-      R__LOCKGUARD(gInterpreterMutex);
-      // Redo the test in case we have been victim of a data race on fIsCompiled.
-      if (!sinfo->IsCompiled()) {
-         const_cast<TClass *>(cl)->BuildRealData(pointer);
-         sinfo->BuildOld();
-      }
-   }
-
-   // write the class version number and reserve space for the byte count
-   // UInt_t R__c = WriteVersion(cl, kTRUE);
-
-   // NOTE: In the future Philippe wants this to happen via a custom action
-   TagStreamerInfo(sinfo);
-   ApplySequence(*(sinfo->GetWriteTextActions()), (char *)pointer);
-
-   // write the byte count at the start of the buffer
-   // SetByteCount(R__c, kTRUE);
-
-   if (gDebug > 2)
-      Info("WriteClassBuffer", "class: %s version %d done", cl->GetName(), cl->GetClassVersion());
-   return 0;
-}
-
 void TBufferJSON::WriteBaseClass(void *start, TStreamerBase *elem)
 {
    TBufferText::WriteBaseClass(start, elem);
@@ -3938,4 +3835,3 @@ void TBufferJSON::ReadBaseClass(void *start, TStreamerBase *elem)
       TBufferText::ReadBaseClass(start, elem);
    }
 }
-
