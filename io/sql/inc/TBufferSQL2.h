@@ -31,15 +31,14 @@ class TBufferSQL2 : public TBufferText {
    friend class TSQLStructure;
 
 protected:
-   TSQLFile *fSQL;            ///<!   instance of TSQLFile
-   Int_t    fIOVersion;       ///<!   I/O version from TSQLFile
-   TSQLStructure *fStructure; ///<!   structures, created by object storing
-   TSQLStructure *fStk;       ///<!   pointer on current active structure (stack head)
-   TExMap *fObjMap;           ///<!   Map between stored objects and object id
-   TString fReadBuffer;       ///<!   Buffer for read value
-   Int_t fErrorFlag;          ///<!   Error id value
-   Bool_t fExpectedChain; ///<!   flag to resolve situation when several elements of same basic type stored as FastArray
-   Int_t fCompressLevel;  ///<!   compress level used to minimize size of data in database
+   TSQLFile *fSQL;               ///<!   instance of TSQLFile
+   Int_t fIOVersion;             ///<!   I/O version from TSQLFile
+   TSQLStructure *fStructure;    ///<!   structures, created by object storing
+   TSQLStructure *fStk;          ///<!   pointer on current active structure (stack head)
+   TExMap *fObjMap;              ///<!   Map between stored objects and object id
+   TString fReadBuffer;          ///<!   Buffer for read value
+   Int_t fErrorFlag;             ///<!   Error id value
+   Int_t fCompressLevel;         ///<!   compress level used to minimize size of data in database
    Int_t fReadVersionBuffer;     ///<!   buffer, used to by ReadVersion method
    Long64_t fObjIdCounter;       ///<!   counter of objects id
    Bool_t fIgnoreVerification;   ///<!   ignore verification of names
@@ -103,15 +102,15 @@ protected:
    const char *SqlReadValue(const char *tname);
    const char *SqlReadCharStarValue();
 
-   Int_t
-   SqlWriteObject(const void *obj, const TClass *objClass, Bool_t cacheReuse, TMemberStreamer *streamer = 0, Int_t streamer_index = 0);
+   Int_t SqlWriteObject(const void *obj, const TClass *objClass, Bool_t cacheReuse, TMemberStreamer *streamer = 0,
+                        Int_t streamer_index = 0);
    void *SqlReadObject(void *obj, TClass **cl = 0, TMemberStreamer *streamer = 0, Int_t streamer_index = 0,
                        const TClass *onFileClass = 0);
    void *SqlReadObjectDirect(void *obj, TClass **cl, Long64_t objid, TMemberStreamer *streamer = 0,
                              Int_t streamer_index = 0, const TClass *onFileClass = 0);
 
-   void
-   StreamObjectExtra(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n = 0, const TClass *onFileClass = nullptr);
+   void StreamObjectExtra(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n = 0,
+                          const TClass *onFileClass = nullptr);
 
 public:
    TBufferSQL2(TBuffer::EMode mode);
@@ -285,7 +284,7 @@ public:
 
    virtual Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, const TClass * /*onfile_class*/ = nullptr);
    virtual Int_t ReadClassBuffer(const TClass * /*cl*/, void * /*pointer*/, Int_t /*version*/, UInt_t /*start*/,
-                                    UInt_t /*count*/, const TClass * /*onfile_class*/ = nullptr);
+                                 UInt_t /*count*/, const TClass * /*onfile_class*/ = nullptr);
 
    virtual Int_t WriteClassBuffer(const TClass *cl, void *pointer);
 
