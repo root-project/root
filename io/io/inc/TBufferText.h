@@ -117,7 +117,7 @@ public:
    virtual void SkipVersion(const TClass *cl = nullptr);
    virtual Version_t ReadVersionNoCheckSum(UInt_t *, UInt_t *) { return 0; }
 
-   virtual void Reset() { Error("Reset", "useless"); }
+   virtual void Reset() { ResetMap(); }
    virtual void InitMap();
    virtual void ResetMap();
    virtual void SetReadParam(Int_t mapsize);
@@ -137,15 +137,11 @@ public:
    virtual char *ReadString(char * /*s*/, Int_t /*max*/)
    {
       Error("ReadString", "useless");
-      return 0;
+      return nullptr;
    }
    virtual void WriteString(const char * /*s*/) { Error("WriteString", "useless"); }
 
-   virtual Int_t GetVersionOwner() const
-   {
-      Error("GetVersionOwner", "useless");
-      return 0;
-   }
+   virtual Int_t GetVersionOwner() const;
    virtual Int_t GetMapCount() const { return fMapCount; }
    virtual void GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const;
    virtual void MapObject(const TObject *obj, UInt_t offset = 1);
@@ -168,7 +164,7 @@ public:
    virtual TObject *ReadObject(const TClass * /*cl*/)
    {
       Error("ReadObject", "not yet implemented for text-based streamers");
-      return 0;
+      return nullptr;
    }
 
    // Utilities for TClass
