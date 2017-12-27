@@ -549,7 +549,7 @@ Bool_t TBufferXML::ProcessPointer(const void *ptr, XMLNodePointer_t node)
    if (!ptr) {
       refvalue = xmlio::Null; // null
    } else {
-      XMLNodePointer_t refnode = (XMLNodePointer_t)(Long_t)fMap->GetValue(Void_Hash(ptr), (Long_t)ptr);
+      XMLNodePointer_t refnode = (XMLNodePointer_t)(Long_t)GetMapEntry(ptr);
       if (!refnode)
          return kFALSE;
 
