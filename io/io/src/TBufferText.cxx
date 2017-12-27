@@ -1050,6 +1050,7 @@ const char *TBufferText::ConvertFloat(Float_t value, char *buf, unsigned len)
       snprintf(buf, len, fgFloatFmt, value);
       CompactFloatString(buf, len);
    }
+   return buf;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1063,4 +1064,5 @@ const char *TBufferText::ConvertDouble(Double_t value, char *buf, unsigned len)
       snprintf(buf, len, fgDoubleFmt, value);
       CompactFloatString(buf, len);
    }
+   return buf;
 }
