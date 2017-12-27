@@ -1335,7 +1335,7 @@ Bool_t TBufferText::CheckObject(const void *obj, const TClass *ptrClass)
       idx = GetMapEntry(obj);
    }
 
-   return idx=0 ? kFALSE : kTRUE;
+   return idx == 0 ? kFALSE : kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -1347,4 +1347,16 @@ Long64_t TBufferText::GetMapEntry(const void *obj)
       return 0;
 
    return fMap->GetValue(Void_Hash(obj), (Long_t)obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the version number of the owner file.
+
+Int_t TBufferText::GetVersionOwner() const
+{
+   TFile *file = (TFile *)GetParent();
+   if (file)
+      return file->GetVersion();
+   else
+      return 0;
 }

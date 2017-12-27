@@ -124,8 +124,7 @@ protected:
    R__ALWAYS_INLINE void SqlWriteArray(T *arr, Int_t arrsize, Bool_t withsize = kFALSE);
 
 public:
-   TBufferSQL2(TBuffer::EMode mode);
-   TBufferSQL2(TBuffer::EMode mode, TSQLFile *file);
+   TBufferSQL2(TBuffer::EMode mode, TSQLFile *file = nullptr);
    virtual ~TBufferSQL2();
 
    void SetCompressionLevel(int level) { fCompressLevel = level; }

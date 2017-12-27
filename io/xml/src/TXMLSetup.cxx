@@ -240,8 +240,8 @@ const char *TXMLSetup::XmlClassNameSpaceRef(const TClass *cl)
 
 const char *TXMLSetup::XmlGetElementName(const TStreamerElement *el)
 {
-   if (el == 0)
-      return 0;
+   if (!el)
+      return nullptr;
    if (!el->InheritsFrom(TStreamerSTL::Class()))
       return el->GetName();
    if (strcmp(el->GetName(), el->GetClassPointer()->GetName()) != 0)
@@ -254,8 +254,8 @@ const char *TXMLSetup::XmlGetElementName(const TStreamerElement *el)
 
 const char *TXMLSetup::GetElItemName(TStreamerElement *el)
 {
-   if (el == 0)
-      return 0;
+   if (!el)
+      return nullptr;
    fStrBuf = el->GetName();
    fStrBuf += "_item";
    return fStrBuf.Data();

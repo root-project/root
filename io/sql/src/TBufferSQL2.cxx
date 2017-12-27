@@ -34,7 +34,6 @@ few other, which can not be converted to SQL (yet).
 #include "TMap.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "TProcessID.h"
 #include "TFile.h"
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
@@ -57,18 +56,7 @@ ClassImp(TBufferSQL2);
 
 TBufferSQL2::TBufferSQL2()
    : TBufferText(), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
-     fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE), fCurrentData(0),
-     fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Creates buffer object to serialize/deserialize data to/from sql.
-/// Mode should be either TBuffer::kRead or TBuffer::kWrite.
-
-TBufferSQL2::TBufferSQL2(TBuffer::EMode mode)
-   : TBufferText(mode), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
-     fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE), fCurrentData(0),
+     fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE), fCurrentData(nullptr),
      fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
 }
@@ -79,11 +67,10 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode)
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile *file)
-   : TBufferText(mode), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
-     fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE), fCurrentData(0),
+   : TBufferText(mode, file), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
+     fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE), fCurrentData(nullptr),
      fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
-   SetParent(file);
    fSQL = file;
    if (file) {
       SetCompressionLevel(file->GetCompressionLevel());
@@ -119,7 +106,7 @@ TSQLStructure *TBufferSQL2::SqlWriteAny(const void *obj, const TClass *cl, Long6
 {
    fErrorFlag = 0;
 
-   fStructure = 0;
+   fStructure = nullptr;
 
    fFirstObjId = objid;
    fObjIdCounter = objid;
@@ -127,7 +114,7 @@ TSQLStructure *TBufferSQL2::SqlWriteAny(const void *obj, const TClass *cl, Long6
    SqlWriteObject(obj, cl, kTRUE);
 
    if (gDebug > 3)
-      if (fStructure != 0) {
+      if (fStructure) {
          std::cout << "==== Printout of Sql structures ===== " << std::endl;
          fStructure->Print("*");
          std::cout << "=========== End printout ============ " << std::endl;
