@@ -35,7 +35,6 @@ protected:
    Int_t fIOVersion;             ///<!   I/O version from TSQLFile
    TSQLStructure *fStructure;    ///<!   structures, created by object storing
    TSQLStructure *fStk;          ///<!   pointer on current active structure (stack head)
-   TExMap *fObjMap;              ///<!   Map between stored objects and object id
    TString fReadBuffer;          ///<!   Buffer for read value
    Int_t fErrorFlag;             ///<!   Error id value
    Int_t fCompressLevel;         ///<!   compress level used to minimize size of data in database
@@ -139,7 +138,7 @@ public:
 
    TSQLStructure *SqlWriteAny(const void *obj, const TClass *cl, Long64_t objid);
 
-   void *SqlReadAny(Long64_t keyid, Long64_t objid, TClass **cl, void *obj = 0);
+   void *SqlReadAny(Long64_t keyid, Long64_t objid, TClass **cl, void *obj = nullptr);
 
    // suppress class writing/reading
 
@@ -148,8 +147,8 @@ public:
 
    // redefined virtual functions of TBuffer
 
-   virtual Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0); // SL
-   virtual UInt_t WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);                   // SL
+   virtual Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0);
+   virtual UInt_t WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
 
    virtual void *ReadObjectAny(const TClass *clCast);
    virtual void SkipObjectAny();
@@ -281,10 +280,6 @@ public:
    virtual void WriteStdString(const std::string *s);
    using TBuffer::WriteStdString;
    virtual void WriteCharStar(char *s);
-
-   virtual Bool_t CheckObject(const TObject *obj);
-
-   virtual Bool_t CheckObject(const void *ptr, const TClass *cl);
 
    virtual TVirtualStreamerInfo *GetInfo();
 

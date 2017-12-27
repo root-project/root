@@ -58,9 +58,9 @@ ClassImp(TBufferSQL2);
 /// Default constructor, should not be used
 
 TBufferSQL2::TBufferSQL2()
-   : TBufferText(), fSQL(nullptr), fIOVersion(1), fStructure(0), fStk(0), fObjMap(nullptr), fReadBuffer(),
-     fErrorFlag(0), fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
-     fCurrentData(0), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(0)
+   : TBufferText(), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
+     fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE), fCurrentData(0),
+     fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
 }
 
@@ -69,9 +69,9 @@ TBufferSQL2::TBufferSQL2()
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode)
-   : TBufferText(mode), fSQL(nullptr), fIOVersion(1), fStructure(0), fStk(0), fObjMap(nullptr), fReadBuffer(),
-     fErrorFlag(0), fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
-     fCurrentData(0), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(0)
+   : TBufferText(mode), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
+     fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE), fCurrentData(0),
+     fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
 }
 
@@ -81,9 +81,9 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode)
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile *file)
-   : TBufferText(mode), fSQL(nullptr), fIOVersion(1), fStructure(0), fStk(0), fObjMap(nullptr), fReadBuffer(),
-     fErrorFlag(0), fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE),
-     fCurrentData(0), fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(0)
+   : TBufferText(mode), fSQL(nullptr), fIOVersion(1), fStructure(nullptr), fStk(0), fReadBuffer(), fErrorFlag(0),
+     fCompressLevel(0), fReadVersionBuffer(-1), fObjIdCounter(1), fIgnoreVerification(kFALSE), fCurrentData(0),
+     fObjectsInfos(nullptr), fFirstObjId(0), fLastObjId(0), fPoolsMap(nullptr)
 {
    SetParent(file);
    fSQL = file;
@@ -98,9 +98,6 @@ TBufferSQL2::TBufferSQL2(TBuffer::EMode mode, TSQLFile *file)
 
 TBufferSQL2::~TBufferSQL2()
 {
-   if (fObjMap)
-      delete fObjMap;
-
    if (fStructure)
       delete fStructure;
 
@@ -183,25 +180,25 @@ Bool_t TBufferSQL2::SqlObjectInfo(Long64_t objid, TString &clname, Version_t &ve
 
    Long64_t shift = objid - fFirstObjId;
 
-   TSQLObjectInfo *info = 0;
+   TSQLObjectInfo *info = nullptr;
    if ((shift >= 0) && (shift <= fObjectsInfos->GetLast())) {
       info = (TSQLObjectInfo *)fObjectsInfos->At(shift);
       if (info->GetObjId() != objid)
-         info = 0;
+         info = nullptr;
    }
 
-   if (info == 0) {
+   if (!info) {
       // I hope, i will never get inside it
       Info("SqlObjectInfo", "Standard not works %lld", objid);
       for (Int_t n = 0; n <= fObjectsInfos->GetLast(); n++) {
          info = (TSQLObjectInfo *)fObjectsInfos->At(n);
          if (info->GetObjId() == objid)
             break;
-         info = 0;
+         info = nullptr;
       }
    }
 
-   if (info == 0)
+   if (!info)
       return kFALSE;
 
    clname = info->GetObjClassName();
@@ -294,8 +291,8 @@ Int_t TBufferSQL2::SqlWriteObject(const void *obj, const TClass *cl, Bool_t cach
 
    if (!obj) {
       objid = 0;
-   } else if (fObjMap) {
-      Long_t value = fObjMap->GetValue(Void_Hash(obj), (Long_t)obj);
+   } else {
+      Long_t value = fMap->GetValue(Void_Hash(obj), (Long_t)obj);
       if (value > 0)
          objid = fFirstObjId + value - 1;
    }
@@ -313,15 +310,10 @@ Int_t TBufferSQL2::SqlWriteObject(const void *obj, const TClass *cl, Bool_t cach
 
    Stack()->SetObjectRef(objid, cl);
 
-   if (cacheReuse) {
-      ULong_t hash = TString::Hash(&obj, sizeof(void *));
-      if (fObjMap == 0)
-         fObjMap = new TExMap();
-      if (fObjMap->GetValue(hash, (Long_t)obj) == 0)
-         fObjMap->Add(hash, (Long_t)obj, (Long_t)objid - fFirstObjId + 1);
-   }
+   if (cacheReuse)
+      MapObject(obj, cl, objid - fFirstObjId + 1);
 
-   if (streamer != 0)
+   if (streamer)
       (*streamer)(*this, (void *)obj, streamer_index);
    else
       ((TClass *)cl)->Streamer((void *)obj, *this);
@@ -359,27 +351,22 @@ void *TBufferSQL2::SqlReadObject(void *obj, TClass **cl, TMemberStreamer *stream
    sscanf(refid, fgLong64Fmt, &objid);
 
    if (gDebug > 2)
-      Info("SqlReadObject", "Starting objid: %ld column: %s", (long) objid, fCurrentData->GetLocatedField());
+      Info("SqlReadObject", "Starting objid: %ld column: %s", (long)objid, fCurrentData->GetLocatedField());
 
    if (!fCurrentData->IsBlobData() || fCurrentData->VerifyDataType(sqlio::ObjectPtr, kFALSE)) {
       if (objid == 0) {
          obj = nullptr;
          findptr = kTRUE;
-      } else {
-         if (objid == -1) {
-            findptr = kTRUE;
-         } else {
-            if ((fObjMap != 0) && (objid >= fFirstObjId)) {
-               void *obj1 = (void *)(Long_t)fObjMap->GetValue((Long_t)objid - fFirstObjId);
-               if (obj1) {
-                  obj = obj1;
-                  findptr = kTRUE;
-                  TString clname;
-                  Version_t version;
-                  if (cl && SqlObjectInfo(objid, clname, version))
-                     *cl = TClass::GetClass(clname);
-               }
-            }
+      } else if (objid == -1) {
+         findptr = kTRUE;
+      } else if (objid >= fFirstObjId) {
+         void *obj1 = nullptr;
+         TClass *cl1 = nullptr;
+         GetMappedObject(objid - fFirstObjId + 1, obj1, cl1);
+         if (obj1 && cl1) {
+            obj = obj1;
+            if (cl)
+               *cl = cl1;
          }
       }
    }
@@ -434,13 +421,10 @@ void *TBufferSQL2::SqlReadObjectDirect(void *obj, TClass **cl, Long64_t objid, T
       return obj;
    }
 
-   if (obj == 0)
+   if (!obj)
       obj = objClass->New();
 
-   if (fObjMap == 0)
-      fObjMap = new TExMap();
-
-   fObjMap->Add((Long_t)objid - fFirstObjId, (Long_t)obj);
+   MapObject(obj, objClass, objid - fFirstObjId + 1);
 
    PushStack()->SetObjectRef(objid, objClass);
 
@@ -464,7 +448,7 @@ void *TBufferSQL2::SqlReadObjectDirect(void *obj, TClass **cl, Long64_t objid, T
          fReadVersionBuffer = version;
    } else {
       TSQLObjectData *objdata = SqlObjectData(objid, sqlinfo);
-      if ((objdata == 0) || !objdata->PrepareForRawData()) {
+      if (!objdata || !objdata->PrepareForRawData()) {
          Error("SqlReadObjectDirect", "No found raw data for obj %lld in class %s version %d table", objid,
                clname.Data(), version);
          fErrorFlag = 1;
@@ -476,7 +460,7 @@ void *TBufferSQL2::SqlReadObjectDirect(void *obj, TClass **cl, Long64_t objid, T
       fCurrentData = objdata;
    }
 
-   if (streamer != 0) {
+   if (streamer) {
       streamer->SetOnFileClass(onFileClass);
       (*streamer)(*this, (void *)obj, streamer_index);
    } else {
@@ -488,7 +472,7 @@ void *TBufferSQL2::SqlReadObjectDirect(void *obj, TClass **cl, Long64_t objid, T
    if (gDebug > 1)
       Info("SqlReadObjectDirect", "Read object of class %s done", objClass->GetName());
 
-   if (cl != 0)
+   if (cl)
       *cl = objClass;
 
    fCurrentData = olddata;
@@ -2564,36 +2548,6 @@ TSQLStructure *TBufferSQL2::Stack(Int_t depth)
    while ((depth-- > 0) && (curr != 0))
       curr = curr->GetParent();
    return curr;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object of the specified class is already in
-/// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is 0 ).
-
-Bool_t TBufferSQL2::CheckObject(const TObject *obj)
-{
-   return CheckObject(obj, TObject::Class());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object of the specified class is already in
-/// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is 0 ).
-
-Bool_t TBufferSQL2::CheckObject(const void *obj, const TClass *ptrClass)
-{
-   if (!obj || !ptrClass || !fObjMap)
-      return kFALSE;
-
-   TClass *clActual = ptrClass->GetActualClass(obj);
-
-   const char *temp = (const char *)obj;
-
-   if (clActual && (ptrClass != clActual))
-      temp -= clActual->GetBaseClassOffset(ptrClass);
-
-   return fObjMap->GetValue(Void_Hash(temp), (Long_t)temp) != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
