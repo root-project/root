@@ -200,10 +200,6 @@ public:
    using TBuffer::WriteStdString;
    virtual void WriteCharStar(char *s);
 
-   virtual Bool_t CheckObject(const TObject *obj);
-
-   virtual Bool_t CheckObject(const void *ptr, const TClass *cl);
-
    virtual TVirtualStreamerInfo *GetInfo();
 
    // end of redefined virtual functions

@@ -187,6 +187,7 @@ void TKeyXML::StoreObject(const void *obj, const TClass *cl, Bool_t check_tobj)
    StoreKeyAttributes();
 
    TBufferXML buffer(TBuffer::kWrite, f);
+   buffer.InitMap();
    if (f->GetIOVersion() == 1)
       buffer.SetBit(TBuffer::kCannotHandleMemberWiseStreaming, kFALSE);
 
@@ -346,6 +347,7 @@ void *TKeyXML::XmlReadAny(void *obj, const TClass *expectedClass)
       return obj;
 
    TBufferXML buffer(TBuffer::kRead, f);
+   buffer.InitMap();
    if (f->GetIOVersion() == 1)
       buffer.SetBit(TBuffer::kCannotHandleMemberWiseStreaming, kFALSE);
 

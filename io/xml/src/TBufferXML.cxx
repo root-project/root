@@ -56,8 +56,8 @@ ClassImp(TBufferXML);
 /// Default constructor
 
 TBufferXML::TBufferXML()
-   : TBufferText(), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
-     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
+   : TBufferText(), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fErrorFlag(0), fCanUseCompact(kFALSE),
+     fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
 {
 }
 
@@ -66,8 +66,8 @@ TBufferXML::TBufferXML()
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferXML::TBufferXML(TBuffer::EMode mode)
-   : TBufferText(mode), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
-     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
+   : TBufferText(mode), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fErrorFlag(0), fCanUseCompact(kFALSE),
+     fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
 {
 }
 
@@ -77,9 +77,8 @@ TBufferXML::TBufferXML(TBuffer::EMode mode)
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
-   : TBufferText(mode, file), TXMLSetup(*file), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr),
-     fIdArray(nullptr), fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0),
-     fIOVersion(3)
+   : TBufferText(mode, file), TXMLSetup(*file), fXML(nullptr), fStack(), fVersionBuf(-111), fErrorFlag(0),
+     fCanUseCompact(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
 {
    // this is for the case when StreamerInfo reads elements from
    // buffer as ReadFastArray. When it checks if size of buffer is
@@ -98,10 +97,6 @@ TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
 
 TBufferXML::~TBufferXML()
 {
-   if (fObjMap)
-      delete fObjMap;
-   if (fIdArray)
-      delete fIdArray;
    fStack.Delete();
 }
 
@@ -148,6 +143,7 @@ TString TBufferXML::ConvertToXML(const void *obj, const TClass *cl, Bool_t Gener
 
    TBufferXML buf(TBuffer::kWrite);
    buf.SetXML(&xml);
+   buf.InitMap();
 
    buf.SetXmlLayout(GenericLayout ? TXMLSetup::kGeneralized : TXMLSetup::kSpecialized);
    buf.SetUseNamespaces(UseNamespaces);
@@ -197,6 +193,7 @@ void *TBufferXML::ConvertFromXMLAny(const char *str, TClass **cl, Bool_t Generic
    TBufferXML buf(TBuffer::kRead);
 
    buf.SetXML(&xml);
+   buf.InitMap();
 
    buf.SetXmlLayout(GenericLayout ? TXMLSetup::kGeneralized : TXMLSetup::kSpecialized);
    buf.SetUseNamespaces(UseNamespaces);
@@ -561,12 +558,7 @@ Bool_t TBufferXML::ProcessPointer(const void *ptr, XMLNodePointer_t node)
    if (!ptr) {
       refvalue = xmlio::Null; // null
    } else {
-      if (!fObjMap)
-         return kFALSE;
-
-      ULong_t hash = Void_Hash(ptr);
-
-      XMLNodePointer_t refnode = (XMLNodePointer_t)(Long_t)fObjMap->GetValue(hash, (Long_t)ptr);
+      XMLNodePointer_t refnode = (XMLNodePointer_t)(Long_t)fMap->GetValue(Void_Hash(ptr), (Long_t)ptr);
       if (!refnode)
          return kFALSE;
 
@@ -587,24 +579,6 @@ Bool_t TBufferXML::ProcessPointer(const void *ptr, XMLNodePointer_t node)
    }
 
    return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Register pair of object pointer and node, where this object is saved,
-/// in object map
-
-void TBufferXML::RegisterPointer(const void *ptr, XMLNodePointer_t node)
-{
-   if (!node || !ptr)
-      return;
-
-   ULong_t hash = Void_Hash(ptr);
-
-   if (!fObjMap)
-      fObjMap = new TExMap();
-
-   if (fObjMap->GetValue(hash, (Long_t)ptr) == 0)
-      fObjMap->Add(hash, (Long_t)ptr, (Long_t)node);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -629,16 +603,19 @@ Bool_t TBufferXML::ExtractPointer(XMLNodePointer_t node, void *&ptr, TClass *&cl
       return kTRUE;
    }
 
-   if (!fIdArray || !fObjMap)
+   if (strncmp(ptrid, xmlio::IdBase, strlen(xmlio::IdBase)) != 0) {
+      Error("ExtractPointer", "Pointer tag %s not started from %s", ptrid, xmlio::IdBase);
       return kFALSE;
-
-   TNamed *obj = static_cast<TNamed *>(fIdArray->FindObject(ptrid));
-   if (obj) {
-      ptr = (void *)(Long_t)fObjMap->GetValue((Long_t)fIdArray->IndexOf(obj));
-      cl = TClass::GetClass(obj->GetTitle());
-      return kTRUE;
    }
-   return kFALSE;
+
+   Int_t id = TString(ptrid + strlen(xmlio::IdBase)).Atoi();
+
+   GetMappedObject(id + 1, ptr, cl);
+
+   if (!ptr || !cl)
+      Error("ExtractPointer", "not found ptr %s result %p %s", ptrid, ptr, (cl ? cl->GetName() : "null"));
+
+   return ptr && cl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -654,20 +631,17 @@ void TBufferXML::ExtractReference(XMLNodePointer_t node, const void *ptr, const 
    if (!refid)
       return;
 
-   if (!fIdArray) {
-      fIdArray = new TObjArray;
-      fIdArray->SetOwner(kTRUE);
+   if (strncmp(refid, xmlio::IdBase, strlen(xmlio::IdBase)) != 0) {
+      Error("ExtractReference", "Reference tag %s not started from %s", refid, xmlio::IdBase);
+      return;
    }
-   TNamed *nid = new TNamed(refid, cl->GetName());
-   fIdArray->Add(nid);
 
-   if (!fObjMap)
-      fObjMap = new TExMap();
+   Int_t id = TString(refid + strlen(xmlio::IdBase)).Atoi();
 
-   fObjMap->Add((Long_t)fIdArray->IndexOf(nid), (Long_t)ptr);
+   MapObject(ptr, cl, id + 1);
 
    if (gDebug > 2)
-      Info("ExtractReference", "Find reference %s for object %p", refid, ptr);
+      Info("ExtractReference", "Find reference %s for object %p class %s", refid, ptr, (cl ? cl->GetName() : "null"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -813,6 +787,7 @@ XMLNodePointer_t TBufferXML::XmlWriteObject(const void *obj, const TClass *cl, B
 
    if (!cl)
       obj = nullptr;
+
    if (ProcessPointer(obj, objnode))
       return objnode;
 
@@ -821,7 +796,7 @@ XMLNodePointer_t TBufferXML::XmlWriteObject(const void *obj, const TClass *cl, B
    fXML->NewAttr(objnode, nullptr, xmlio::ObjClass, clname);
 
    if (cacheReuse)
-      RegisterPointer(obj, objnode);
+      fMap->Add(Void_Hash(obj), (Long_t)obj, (Long_t)objnode);
 
    PushStack(objnode);
 
@@ -3210,38 +3185,6 @@ const char *TBufferXML::XmlReadValue(const char *name)
       ShiftStack("readvalue");
 
    return fValueBuf.Data();
-}
-
-// abstract TBuffer methods, probably dedicated to have them in the TBufferText
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object of the specified class is already in
-/// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is nullptr).
-
-Bool_t TBufferXML::CheckObject(const TObject *obj)
-{
-   return CheckObject(obj, TObject::Class());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object of the specified class is already in
-/// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is nullptr).
-
-Bool_t TBufferXML::CheckObject(const void *obj, const TClass *ptrClass)
-{
-   if (!obj || !ptrClass || !fObjMap)
-      return kFALSE;
-
-   TClass *clActual = ptrClass->GetActualClass(obj);
-
-   const char *temp = (const char *)obj;
-
-   if (clActual && (ptrClass != clActual))
-      temp -= clActual->GetBaseClassOffset(ptrClass);
-
-   return fObjMap->GetValue(Void_Hash(temp), (Long_t)temp) != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
