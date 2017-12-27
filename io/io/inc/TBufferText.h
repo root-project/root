@@ -151,6 +151,9 @@ public:
    virtual void MapObject(const TObject *obj, UInt_t offset = 1);
    virtual void MapObject(const void *obj, const TClass *cl, UInt_t offset = 1);
 
+   virtual Bool_t CheckObject(const TObject *obj);
+   virtual Bool_t CheckObject(const void *ptr, const TClass *cl);
+
    virtual Version_t ReadVersionForMemberWise(const TClass * /*cl*/ = nullptr)
    {
       Error("ReadVersionForMemberWise", "not defined in text-based streamers");
@@ -196,7 +199,7 @@ public:
 protected:
    virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) = 0;
 
-   // method used in TBufferFile, keep here for full compability
+   // method used in TBufferFile, keep here for full compatibility
    virtual void CheckCount(UInt_t) {}
 
    ////////////////////////////////////////////////////////////////////////////////

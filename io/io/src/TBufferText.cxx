@@ -36,7 +36,6 @@ actions list for both are the same.
 #include "TStreamerInfoActions.h"
 #include "TError.h"
 
-
 ClassImp(TBufferText);
 
 const char *TBufferText::fgFloatFmt = "%e";
@@ -1293,11 +1292,48 @@ void TBufferText::MapObject(const void *obj, const TClass *cl, UInt_t offset)
 
 void TBufferText::GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const
 {
-   if (tag > (UInt_t)fMap->GetSize()) {
-      ptr = nullptr;
-      ClassPtr = nullptr;
+   // original code in TBufferFile is wrong, fMap->GetSize() is just number of entries, cannot be used for tag checks
+
+   //  if (tag > (UInt_t)fMap->GetSize()) {
+   //     ptr = nullptr;
+   //     ClassPtr = nullptr;
+   //   } else {
+   ptr = (void *)(Long_t)fMap->GetValue(tag);
+   ClassPtr = (TClass *)(Long_t)fClassMap->GetValue(tag);
+   //  }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the specified object of the specified class is already in
+/// the buffer. Returns kTRUE if object already in the buffer,
+/// kFALSE otherwise (also if obj is 0 ).
+
+Bool_t TBufferText::CheckObject(const TObject *obj)
+{
+   return CheckObject(obj, TObject::Class());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the specified object of the specified class is already in
+/// the buffer. Returns kTRUE if object already in the buffer,
+/// kFALSE otherwise (also if obj is 0 ).
+
+Bool_t TBufferText::CheckObject(const void *obj, const TClass *ptrClass)
+{
+   if (!obj || !fMap || !ptrClass)
+      return kFALSE;
+
+   TClass *clActual = ptrClass->GetActualClass(obj);
+
+   ULong_t idx;
+
+   if (clActual && (ptrClass != clActual)) {
+      const char *temp = (const char *)obj;
+      temp -= clActual->GetBaseClassOffset(ptrClass);
+      idx = (ULong_t)fMap->GetValue(Void_Hash(temp), (Long_t)temp);
    } else {
-      ptr = (void *)(Long_t)fMap->GetValue(tag);
-      ClassPtr = (TClass *)(Long_t)fClassMap->GetValue(tag);
+      idx = (ULong_t)fMap->GetValue(Void_Hash(obj), (Long_t)obj);
    }
+
+   return idx ? kTRUE : kFALSE;
 }

@@ -207,10 +207,6 @@ public:
    using TBuffer::WriteStdString;
    virtual void WriteCharStar(char *s);
 
-   virtual Bool_t CheckObject(const TObject *obj);
-
-   virtual Bool_t CheckObject(const void *ptr, const TClass *cl);
-
    virtual TVirtualStreamerInfo *GetInfo();
 
 protected:
@@ -257,7 +253,6 @@ protected:
    Bool_t VerifyStackAttr(const char *name, const char *value, const char *errinfo = nullptr);
 
    Bool_t ProcessPointer(const void *ptr, XMLNodePointer_t node);
-   void RegisterPointer(const void *ptr, XMLNodePointer_t node);
    Bool_t ExtractPointer(XMLNodePointer_t node, void *&ptr, TClass *&cl);
    void ExtractReference(XMLNodePointer_t node, const void *ptr, const TClass *cl);
 
@@ -324,19 +319,11 @@ protected:
    void BeforeIOoperation();
    void CheckVersionBuf();
 
-   TXMLEngine *fXML; //!
-
-   TObjArray fStack; //!
-
-   Version_t fVersionBuf; //!
-
-   TExMap *fObjMap;     //!
-   TObjArray *fIdArray; //!
-
-   TString fValueBuf; //!
-
-   Int_t fErrorFlag; //!
-
+   TXMLEngine *fXML;           ///<!  instance of TXMLEngine for working with XML structures
+   TObjArray fStack;           ///<!   Stack of processed objects
+   Version_t fVersionBuf;      ///<!   Current version buffer
+   TString fValueBuf;          ///<!   Current value buffer
+   Int_t fErrorFlag;           ///<!   Error flag
    Bool_t fCanUseCompact;      ///<!   Flag indicate that basic type (like Int_t) can be placed in the same tag
    TClass *fExpectedBaseClass; ///<!   Pointer to class, which should be stored as parent of current
    Int_t fCompressLevel;       ///<!   Compression level and algorithm

@@ -918,41 +918,6 @@ TString TBufferJSON::JsonWriteMember(const void *ptr, TDataMember *member, TClas
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object of the specified class is already in
-/// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is 0 ).
-
-Bool_t TBufferJSON::CheckObject(const TObject *obj)
-{
-   return CheckObject(obj, TObject::Class());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object of the specified class is already in
-/// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is 0 ).
-
-Bool_t TBufferJSON::CheckObject(const void *obj, const TClass *ptrClass)
-{
-   if (!obj || !fMap || !ptrClass)
-      return kFALSE;
-
-   TClass *clActual = ptrClass->GetActualClass(obj);
-
-   ULong_t idx;
-
-   if (clActual && (ptrClass != clActual)) {
-      const char *temp = (const char *)obj;
-      temp -= clActual->GetBaseClassOffset(ptrClass);
-      idx = (ULong_t)fMap->GetValue(Void_Hash(temp), (Long_t)temp);
-   } else {
-      idx = (ULong_t)fMap->GetValue(Void_Hash(obj), (Long_t)obj);
-   }
-
-   return idx ? kTRUE : kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// add new level to the structures stack
 
 TJSONStackObj *TBufferJSON::PushStack(Int_t inclevel, void *readnode)
