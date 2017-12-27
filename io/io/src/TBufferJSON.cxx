@@ -369,7 +369,7 @@ public:
 /// Creates buffer object to serialize data into json.
 
 TBufferJSON::TBufferJSON(TBuffer::EMode mode)
-   : TBufferText(mode), fOutBuffer(), fOutput(nullptr), fValue(), fReadMap(), fJsonrCnt(0), fStack(), fCompact(0),
+   : TBufferText(mode), fOutBuffer(), fOutput(nullptr), fValue(), fJsonrCnt(0), fStack(), fCompact(0),
      fSemicolon(" : "), fArraySepar(", "), fNumericLocale()
 {
    fOutBuffer.Capacity(10000);
@@ -755,6 +755,8 @@ void *TBufferJSON::ConvertFromJSONAny(const char *str, TClass **cl)
       return nullptr;
 
    TBufferJSON buf(TBuffer::kRead);
+
+   buf.InitMap();
 
    buf.PushStack(0, &docu);
 
@@ -1504,20 +1506,24 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
    if (json->is_object() && (json->size() == 1) && (json->find("$ref") != json->end())) {
       unsigned refid = json->at("$ref").get<unsigned>();
 
-      auto elem = fReadMap.find(refid);
-      if (elem == fReadMap.end()) {
+      void *ref_obj = nullptr;
+      TClass *ref_cl = nullptr;
+
+      GetMappedObject(refid + 1, ref_obj, ref_cl);
+
+      if (!ref_obj || !ref_cl) {
          Error("JsonReadObject", "Fail to find object for reference %u", refid);
          return nullptr;
       }
 
       if (readClass)
-         *readClass = elem->second.cl;
+         *readClass = ref_cl;
 
       if (gDebug > 2)
-         Info("JsonReadObject", "Extract object reference %u %p cl:%s expects:%s", refid, elem->second.obj,
-              elem->second.cl->GetName(), (objClass ? objClass->GetName() : "---"));
+         Info("JsonReadObject", "Extract object reference %u %p cl:%s expects:%s", refid, ref_obj, ref_cl->GetName(),
+              (objClass ? objClass->GetName() : "---"));
 
-      return elem->second.obj;
+      return ref_obj;
    }
 
    // special case of strings - they do not create JSON object, but just string
@@ -1605,15 +1611,15 @@ void *TBufferJSON::JsonReadObject(void *obj, const TClass *objClass, TClass **re
          special_kind = JsonSpecialClass(jsonClass);
 
       // add new element to the reading map
-      fReadMap[fJsonrCnt++] = ObjectEntry(obj, jsonClass);
+      MapObject(obj, jsonClass, ++fJsonrCnt);
    }
 
    // there are two ways to handle custom streamers
    // either prepare data before streamer and tweak basic function which are reading values like UInt32_t
-   // or try reimplement custom streamer here
+   // or try re-implement custom streamer here
 
    if ((jsonClass == TObject::Class()) || (jsonClass == TRef::Class())) {
-      // for TObject we reimplement custom streamer - it is much easier
+      // for TObject we re-implement custom streamer - it is much easier
 
       JsonReadTObjectMembers((TObject *)obj, json);
 
