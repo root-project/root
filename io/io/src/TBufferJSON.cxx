@@ -62,8 +62,6 @@ persistent storage for object data - only for live applications.
 #include "TRealData.h"
 #include "TDataMember.h"
 #include "TMap.h"
-#include "TExMap.h"
-#include "TMethodCall.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TProcessID.h"
@@ -1113,7 +1111,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    if (special_kind <= 0) {
       // add element name which should correspond to the object
       if (check_map) {
-         ULong_t refid = fMap->GetValue(Void_Hash(obj), (Long_t)obj);
+         Long64_t refid = GetMapEntry(obj);
          if (refid > 0) {
             // old-style refs, coded into string like "$ref12"
             // AppendOutput(Form("\"$ref:%u\"", iter->second));

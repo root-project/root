@@ -1325,15 +1325,26 @@ Bool_t TBufferText::CheckObject(const void *obj, const TClass *ptrClass)
 
    TClass *clActual = ptrClass->GetActualClass(obj);
 
-   ULong_t idx;
+   Long64_t idx;
 
    if (clActual && (ptrClass != clActual)) {
       const char *temp = (const char *)obj;
       temp -= clActual->GetBaseClassOffset(ptrClass);
-      idx = (ULong_t)fMap->GetValue(Void_Hash(temp), (Long_t)temp);
+      idx = GetMapEntry(temp);
    } else {
-      idx = (ULong_t)fMap->GetValue(Void_Hash(obj), (Long_t)obj);
+      idx = GetMapEntry(obj);
    }
 
-   return idx ? kTRUE : kFALSE;
+   return idx=0 ? kFALSE : kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////////
+/// Returns object map entry for specified object
+
+Long64_t TBufferText::GetMapEntry(const void *obj)
+{
+   if (!obj || !fMap)
+      return 0;
+
+   return fMap->GetValue(Void_Hash(obj), (Long_t)obj);
 }
