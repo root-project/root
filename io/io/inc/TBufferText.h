@@ -202,6 +202,8 @@ protected:
    // method used in TBufferFile, keep here for full compatibility
    virtual void CheckCount(UInt_t) {}
 
+   Long64_t GetMapEntry(const void *obj);
+
    ////////////////////////////////////////////////////////////////////////////////
    /// Return hash value for this object.
    static R__ALWAYS_INLINE ULong_t Void_Hash(const void *ptr) { return TString::Hash(&ptr, sizeof(void *)); }

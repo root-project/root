@@ -32,8 +32,6 @@ few other, which can not be converted to SQL (yet).
 #include "TClass.h"
 #include "TClassTable.h"
 #include "TMap.h"
-#include "TExMap.h"
-#include "TMethodCall.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
 #include "TProcessID.h"
@@ -292,7 +290,7 @@ Int_t TBufferSQL2::SqlWriteObject(const void *obj, const TClass *cl, Bool_t cach
    if (!obj) {
       objid = 0;
    } else {
-      Long_t value = fMap->GetValue(Void_Hash(obj), (Long_t)obj);
+      Long64_t value = GetMapEntry(obj);
       if (value > 0)
          objid = fFirstObjId + value - 1;
    }
