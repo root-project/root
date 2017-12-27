@@ -868,6 +868,8 @@ TObject *TSQLFile::ReadSpecialObject(Long64_t keyid, TObject *obj)
 
    TBufferSQL2 buffer(TBuffer::kRead, this);
 
+   buffer.InitMap();
+
    TClass *cl = 0;
 
    void *res = buffer.SqlReadAny(key->GetDBKeyId(), key->GetDBObjId(), &cl, obj);
@@ -2529,6 +2531,8 @@ Long64_t TSQLFile::StoreObjectInTables(Long64_t keyid, const void *obj, const TC
       objid++;
 
    TBufferSQL2 buffer(TBuffer::kWrite, this);
+
+   buffer.InitMap();
 
    TSQLStructure *s = buffer.SqlWriteAny(obj, cl, objid);
 
