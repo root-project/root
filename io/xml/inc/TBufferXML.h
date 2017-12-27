@@ -21,6 +21,7 @@
 #include "TClonesArray.h"
 
 #include <string>
+#include <deque>
 
 class TExMap;
 class TVirtualStreamerInfo;
@@ -242,7 +243,7 @@ protected:
    void ShiftStack(const char *info = nullptr);
 
    XMLNodePointer_t StackNode();
-   TXMLStackObj *Stack(Int_t depth = 0);
+   TXMLStackObj *Stack(UInt_t depth = 0) { return (depth < fStack.size()) ? (depth ? fStack[fStack.size() - depth - 1] : fStack.back()) : nullptr; }
 
    void WorkWithClass(TStreamerInfo *info, const TClass *cl = nullptr);
    void WorkWithElement(TStreamerElement *elem, Int_t comp_type);
@@ -319,15 +320,15 @@ protected:
    void BeforeIOoperation();
    void CheckVersionBuf();
 
-   TXMLEngine *fXML;           ///<!  instance of TXMLEngine for working with XML structures
-   TObjArray fStack;           ///<!   Stack of processed objects
-   Version_t fVersionBuf;      ///<!   Current version buffer
-   TString fValueBuf;          ///<!   Current value buffer
-   Int_t fErrorFlag;           ///<!   Error flag
-   Bool_t fCanUseCompact;      ///<!   Flag indicate that basic type (like Int_t) can be placed in the same tag
-   TClass *fExpectedBaseClass; ///<!   Pointer to class, which should be stored as parent of current
-   Int_t fCompressLevel;       ///<!   Compression level and algorithm
-   Int_t fIOVersion;           ///<!   Indicates format of ROOT xml file
+   TXMLEngine *fXML;                  ///<!  instance of TXMLEngine for working with XML structures
+   std::deque<TXMLStackObj *> fStack; ///<!   Stack of processed objects
+   Version_t fVersionBuf;             ///<!   Current version buffer
+   TString fValueBuf;                 ///<!   Current value buffer
+   Int_t fErrorFlag;                  ///<!   Error flag
+   Bool_t fCanUseCompact;             ///<!   Flag indicate that basic type (like Int_t) can be placed in the same tag
+   TClass *fExpectedBaseClass;        ///<!   Pointer to class, which should be stored as parent of current
+   Int_t fCompressLevel;              ///<!   Compression level and algorithm
+   Int_t fIOVersion;                  ///<!   Indicates format of ROOT xml file
 
    ClassDef(TBufferXML, 0); // a specialized TBuffer to read/write to XML files
 };
