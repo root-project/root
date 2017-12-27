@@ -564,7 +564,7 @@ Bool_t TBufferXML::ProcessPointer(const void *ptr, XMLNodePointer_t node)
       if (!fObjMap)
          return kFALSE;
 
-      ULong_t hash = TString::Hash(&ptr, sizeof(void *));
+      ULong_t hash = Void_Hash(ptr);
 
       XMLNodePointer_t refnode = (XMLNodePointer_t)(Long_t)fObjMap->GetValue(hash, (Long_t)ptr);
       if (!refnode)
@@ -598,7 +598,7 @@ void TBufferXML::RegisterPointer(const void *ptr, XMLNodePointer_t node)
    if (!node || !ptr)
       return;
 
-   ULong_t hash = TString::Hash(&ptr, sizeof(void *));
+   ULong_t hash = Void_Hash(ptr);
 
    if (!fObjMap)
       fObjMap = new TExMap();
@@ -3217,7 +3217,7 @@ const char *TBufferXML::XmlReadValue(const char *name)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if the specified object of the specified class is already in
 /// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is 0 ).
+/// kFALSE otherwise (also if obj is nullptr).
 
 Bool_t TBufferXML::CheckObject(const TObject *obj)
 {
@@ -3227,7 +3227,7 @@ Bool_t TBufferXML::CheckObject(const TObject *obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Check if the specified object of the specified class is already in
 /// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is 0 ).
+/// kFALSE otherwise (also if obj is nullptr).
 
 Bool_t TBufferXML::CheckObject(const void *obj, const TClass *ptrClass)
 {
@@ -3241,7 +3241,7 @@ Bool_t TBufferXML::CheckObject(const void *obj, const TClass *ptrClass)
    if (clActual && (ptrClass != clActual))
       temp -= clActual->GetBaseClassOffset(ptrClass);
 
-   return fObjMap->GetValue(TString::Hash(&temp, sizeof(void *)), (Long_t)temp) != 0;
+   return fObjMap->GetValue(Void_Hash(temp), (Long_t)temp) != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

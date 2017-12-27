@@ -294,9 +294,8 @@ Int_t TBufferSQL2::SqlWriteObject(const void *obj, const TClass *cl, Bool_t cach
 
    if (!obj) {
       objid = 0;
-   } else if (fObjMap != 0) {
-      ULong_t hash = TString::Hash(&obj, sizeof(void *));
-      Long_t value = fObjMap->GetValue(hash, (Long_t)obj);
+   } else if (fObjMap) {
+      Long_t value = fObjMap->GetValue(Void_Hash(obj), (Long_t)obj);
       if (value > 0)
          objid = fFirstObjId + value - 1;
    }
@@ -2594,7 +2593,7 @@ Bool_t TBufferSQL2::CheckObject(const void *obj, const TClass *ptrClass)
    if (clActual && (ptrClass != clActual))
       temp -= clActual->GetBaseClassOffset(ptrClass);
 
-   return fObjMap->GetValue(TString::Hash(&temp, sizeof(void *)), (Long_t)temp) != 0;
+   return fObjMap->GetValue(Void_Hash(temp), (Long_t)temp) != 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

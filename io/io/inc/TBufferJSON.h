@@ -294,7 +294,7 @@ protected:
    std::map<const void *, unsigned> fJsonrMap; ///<!  map of recorded objects, used in JsonR to restore references
    std::map<unsigned, ObjectEntry> fReadMap;   ///<! map of read objects, required to reconstruct references
    unsigned fJsonrCnt;                         ///<!  counter for all objects, used for referencing
-   std::deque<TJSONStackObj *> fStack;         ///<!  hierarchy of currently streamead element
+   std::deque<TJSONStackObj *> fStack;         ///<!  hierarchy of currently streamed element
    Int_t fCompact;     ///<!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
    TString fSemicolon; ///<!  depending from compression level, " : " or ":"
    TString fArraySepar;    ///<!  depending from compression level, ", " or ","
