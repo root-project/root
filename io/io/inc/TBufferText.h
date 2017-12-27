@@ -16,16 +16,27 @@
 #include "TString.h"
 
 class TStreamerBase;
+class TExMap;
 
 class TBufferText : public TBuffer {
 
 protected:
-   UShort_t fPidOffset;
+   UShort_t fPidOffset;    ///< value of current PID offset, not relevant for text-base streamers
+   Int_t fMapCount;        ///< Number of objects or classes in map
+   Int_t fMapSize;         ///< Default size of map
+   Int_t fDisplacement;    ///< Value to be added to the map offsets
+   TExMap *fMap;           ///< Map containing object,offset pairs for reading/writing
+   TExMap *fClassMap;      ///< Map containing object,class pairs for reading
+   static Int_t fgMapSize; ///< Default map size for all TBuffer objects
 
    TBufferText();
    TBufferText(TBuffer::EMode mode, TObject *parent = nullptr);
 
 public:
+   enum { kMapSize = 503 };
+
+   virtual ~TBufferText();
+
    // virtual abstract TBuffer methods, which could be redefined here
    // probably, one can move them to TBufferImpl class, which can be base
    // for TBufferFile and TBufferText
@@ -107,18 +118,14 @@ public:
    virtual Version_t ReadVersionNoCheckSum(UInt_t *, UInt_t *) { return 0; }
 
    virtual void Reset() { Error("Reset", "useless"); }
-   virtual void InitMap() { Error("InitMap", "useless"); }
-   virtual void ResetMap() { Error("ResetMap", "useless"); }
-   virtual void SetReadParam(Int_t /*mapsize*/) { Error("SetReadParam", "useless"); }
-   virtual void SetWriteParam(Int_t /*mapsize*/) { Error("SetWriteParam", "useless"); }
+   virtual void InitMap();
+   virtual void ResetMap();
+   virtual void SetReadParam(Int_t mapsize);
+   virtual void SetWriteParam(Int_t mapsize);
 
-   virtual Int_t GetBufferDisplacement() const
-   {
-      Error("GetBufferDisplacement", "useless");
-      return 0;
-   }
-   virtual void SetBufferDisplacement() { Error("SetBufferDisplacement", "useless"); }
-   virtual void SetBufferDisplacement(Int_t /*skipped*/) { Error("SetBufferDisplacement", "useless"); }
+   virtual Int_t GetBufferDisplacement() const { return fDisplacement; }
+   virtual void SetBufferDisplacement() { fDisplacement = 0; }
+   virtual void SetBufferDisplacement(Int_t skipped) { fDisplacement = skipped; }
 
    virtual Int_t ReadBuf(void * /*buf*/, Int_t /*max*/)
    {
@@ -139,24 +146,10 @@ public:
       Error("GetVersionOwner", "useless");
       return 0;
    }
-   virtual Int_t GetMapCount() const
-   {
-      Error("GetMapCount", "useless");
-      return 0;
-   }
-   virtual void GetMappedObject(UInt_t /*tag*/, void *& /*ptr*/, TClass *& /*ClassPtr*/) const
-   {
-      Error("GetMappedObject", "useless");
-   }
-   // for the moment object map is individually implemented in JSON/XML, not used in text streamers
-   virtual void MapObject(const TObject * /*obj*/, UInt_t /*offset*/ = 1)
-   {
-      Error("MapObject", "should not be used in text streaming");
-   }
-   virtual void MapObject(const void * /*obj*/, const TClass * /*cl*/, UInt_t /*offset*/ = 1)
-   {
-      Error("MapObject", "should not be used in text streaming");
-   }
+   virtual Int_t GetMapCount() const { return fMapCount; }
+   virtual void GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const;
+   virtual void MapObject(const TObject *obj, UInt_t offset = 1);
+   virtual void MapObject(const void *obj, const TClass *cl, UInt_t offset = 1);
 
    virtual Version_t ReadVersionForMemberWise(const TClass * /*cl*/ = nullptr)
    {
@@ -195,8 +188,16 @@ public:
    static const char *ConvertFloat(Float_t v, char *buf, unsigned len);
    static const char *ConvertDouble(Double_t v, char *buf, unsigned len);
 
+   static void SetGlobalReadParam(Int_t mapsize);
+   static void SetGlobalWriteParam(Int_t mapsize);
+   static Int_t GetGlobalReadParam();
+   static Int_t GetGlobalWriteParam();
+
 protected:
    virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) = 0;
+
+   // method used in TBufferFile, keep here for full compability
+   virtual void CheckCount(UInt_t) {}
 
    ////////////////////////////////////////////////////////////////////////////////
    /// Return hash value for this object.

@@ -369,8 +369,8 @@ public:
 /// Creates buffer object to serialize data into json.
 
 TBufferJSON::TBufferJSON(TBuffer::EMode mode)
-   : TBufferText(mode), fOutBuffer(), fOutput(nullptr), fValue(), fJsonrMap(), fReadMap(), fJsonrCnt(0), fStack(),
-     fCompact(0), fSemicolon(" : "), fArraySepar(", "), fNumericLocale()
+   : TBufferText(mode), fOutBuffer(), fOutput(nullptr), fValue(), fReadMap(), fJsonrCnt(0), fStack(), fCompact(0),
+     fSemicolon(" : "), fArraySepar(", "), fNumericLocale()
 {
    fOutBuffer.Capacity(10000);
    fValue.Capacity(1000);
@@ -512,6 +512,8 @@ TString TBufferJSON::ConvertToJSON(const void *obj, const TClass *cl, Int_t comp
    TBufferJSON buf;
 
    buf.SetCompact(compact);
+
+   buf.InitMap();
 
    buf.PushStack(0); // dummy stack entry to avoid extra checks in the beginning
 
@@ -930,17 +932,22 @@ Bool_t TBufferJSON::CheckObject(const TObject *obj)
 
 Bool_t TBufferJSON::CheckObject(const void *obj, const TClass *ptrClass)
 {
-   if (!obj || !ptrClass || (fJsonrMap.size() == 0))
+   if (!obj || !fMap || !ptrClass)
       return kFALSE;
 
    TClass *clActual = ptrClass->GetActualClass(obj);
 
-   const char *temp = (const char *)obj;
+   ULong_t idx;
 
-   if (clActual && (ptrClass != clActual))
+   if (clActual && (ptrClass != clActual)) {
+      const char *temp = (const char *)obj;
       temp -= clActual->GetBaseClassOffset(ptrClass);
+      idx = (ULong_t)fMap->GetValue(Void_Hash(temp), (Long_t)temp);
+   } else {
+      idx = (ULong_t)fMap->GetValue(Void_Hash(obj), (Long_t)obj);
+   }
 
-   return fJsonrMap.find(temp) != fJsonrMap.end();
+   return idx ? kTRUE : kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1139,15 +1146,15 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    if (special_kind <= 0) {
       // add element name which should correspond to the object
       if (check_map) {
-         std::map<const void *, unsigned>::const_iterator iter = fJsonrMap.find(obj);
-         if (iter != fJsonrMap.end()) {
+         ULong_t refid = fMap->GetValue(Void_Hash(obj), (Long_t)obj);
+         if (refid > 0) {
             // old-style refs, coded into string like "$ref12"
             // AppendOutput(Form("\"$ref:%u\"", iter->second));
             // new-style refs, coded into extra object {"$ref":12}, auto-detected by JSROOT 4.8 and higher
-            AppendOutput(Form("{\"$ref\":%u}", iter->second));
+            AppendOutput(Form("{\"$ref\":%u}", (unsigned)(refid - 1)));
             goto post_process;
          }
-         fJsonrMap[obj] = fJsonrCnt;
+         MapObject(obj, cl, fJsonrCnt + 1); // +1 used
       }
 
       fJsonrCnt++; // object counts is important in dereferencing part

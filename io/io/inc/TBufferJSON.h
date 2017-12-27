@@ -288,13 +288,12 @@ protected:
       ObjectEntry(void *_obj = nullptr, TClass *_cl = nullptr) : obj(_obj), cl(_cl) {}
    };
 
-   TString fOutBuffer;                         ///<!  main output buffer for json code
-   TString *fOutput;                           ///<!  current output buffer for json code
-   TString fValue;                             ///<!  buffer for current value
-   std::map<const void *, unsigned> fJsonrMap; ///<!  map of recorded objects, used in JsonR to restore references
-   std::map<unsigned, ObjectEntry> fReadMap;   ///<! map of read objects, required to reconstruct references
-   unsigned fJsonrCnt;                         ///<!  counter for all objects, used for referencing
-   std::deque<TJSONStackObj *> fStack;         ///<!  hierarchy of currently streamed element
+   TString fOutBuffer; ///<!  main output buffer for json code
+   TString *fOutput;   ///<!  current output buffer for json code
+   TString fValue;     ///<!  buffer for current value
+   std::map<unsigned, ObjectEntry> fReadMap; ///<! map of read objects, required to reconstruct references
+   unsigned fJsonrCnt;                       ///<!  counter for all objects, used for referencing
+   std::deque<TJSONStackObj *> fStack;       ///<!  hierarchy of currently streamed element
    Int_t fCompact;     ///<!  0 - no any compression, 1 - no spaces in the begin, 2 - no new lines, 3 - no spaces at all
    TString fSemicolon; ///<!  depending from compression level, " : " or ":"
    TString fArraySepar;    ///<!  depending from compression level, ", " or ","

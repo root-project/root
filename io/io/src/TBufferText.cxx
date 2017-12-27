@@ -32,7 +32,10 @@ actions list for both are the same.
 #include "TROOT.h"
 #include "TArrayC.h"
 #include "TClonesArray.h"
+#include "TExMap.h"
 #include "TStreamerInfoActions.h"
+#include "TError.h"
+
 
 ClassImp(TBufferText);
 
@@ -47,22 +50,38 @@ const char *TBufferText::fgLong64Fmt = "%lld";
 const char *TBufferText::fgULong64Fmt = "%llu";
 #endif
 
+Int_t TBufferText::fgMapSize = kMapSize;
+const UInt_t kNullTag = 0;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-TBufferText::TBufferText() : TBuffer(), fPidOffset(0)
+TBufferText::TBufferText()
+   : TBuffer(), fPidOffset(0), fMapCount(0), fMapSize(0), fDisplacement(0), fMap(nullptr), fClassMap(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor
 
-TBufferText::TBufferText(TBuffer::EMode mode, TObject *parent) : TBuffer(mode), fPidOffset(0)
+TBufferText::TBufferText(TBuffer::EMode mode, TObject *parent)
+   : TBuffer(mode), fPidOffset(0), fMapCount(0), fMapSize(0), fDisplacement(0), fMap(nullptr), fClassMap(nullptr)
 {
    fBufSize = 1000000000;
 
+   fMapSize = fgMapSize;
+
    SetParent(parent);
    SetBit(kCannotHandleMemberWiseStreaming);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
+TBufferText::~TBufferText()
+{
+   delete fMap;
+   delete fClassMap;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1065,4 +1084,220 @@ const char *TBufferText::ConvertDouble(Double_t value, char *buf, unsigned len)
       CompactFloatString(buf, len);
    }
    return buf;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the initial size of the map used to store object and class
+/// references during reading.
+///
+/// The default size is kMapSize.
+/// Increasing the default has the benefit that when reading many
+/// small objects the array does not need to be resized too often
+/// (the system is always dynamic, even with the default everything
+/// will work, only the initial resizing will cost some time).
+/// Per TBuffer object this option can be changed using SetReadParam().
+
+void TBufferText::SetGlobalReadParam(Int_t mapsize)
+{
+   fgMapSize = mapsize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the initial size of the map used to store object and class
+/// references during reading.
+///
+/// The default size is kMapSize.
+/// Increasing the default has the benefit that when reading many
+/// small objects the array does not need to be resized too often
+/// (the system is always dynamic, even with the default everything
+/// will work, only the initial resizing will cost some time).
+/// Per TBuffer object this option can be changed using SetReadParam().
+
+void TBufferText::SetGlobalWriteParam(Int_t mapsize)
+{
+   fgMapSize = mapsize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get default read map size.
+
+Int_t TBufferText::GetGlobalReadParam()
+{
+   return fgMapSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get default write map size.
+
+Int_t TBufferText::GetGlobalWriteParam()
+{
+   return fgMapSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Create the fMap container and initialize them
+/// with the null object.
+
+void TBufferText::InitMap()
+{
+   if (IsWriting()) {
+      if (!fMap) {
+         fMap = new TExMap(fMapSize);
+         // No need to keep track of the class in write mode
+         // fClassMap = new TExMap(fMapSize);
+         fMapCount = 0;
+      }
+   } else {
+      if (!fMap) {
+         fMap = new TExMap(fMapSize);
+         fMap->Add(0, kNullTag); // put kNullTag in slot 0
+         fMapCount = 1;
+      } else if (fMapCount == 0) {
+         fMap->Add(0, kNullTag); // put kNullTag in slot 0
+         fMapCount = 1;
+      }
+      if (!fClassMap) {
+         fClassMap = new TExMap(fMapSize);
+         fClassMap->Add(0, kNullTag); // put kNullTag in slot 0
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Delete existing fMap and reset map counter.
+
+void TBufferText::ResetMap()
+{
+   if (fMap)
+      fMap->Delete();
+   if (fClassMap)
+      fClassMap->Delete();
+   fMapCount = 0;
+   fDisplacement = 0;
+
+   // reset user bits
+   // ResetBit(kUser1);
+   // ResetBit(kUser2);
+   // ResetBit(kUser3);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the initial size of the map used to store object and class
+/// references during reading. The default size is TBufferFile::kMapSize.
+/// Increasing the default has the benefit that when reading many
+/// small objects the map does not need to be resized too often
+/// (the system is always dynamic, even with the default everything
+/// will work, only the initial resizing will cost some time).
+/// This method can only be called directly after the creation of
+/// the TBuffer, before any reading is done. Globally this option
+/// can be changed using SetGlobalReadParam().
+
+void TBufferText::SetReadParam(Int_t mapsize)
+{
+   R__ASSERT(IsReading());
+   R__ASSERT(fMap == 0);
+
+   fMapSize = mapsize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the initial size of the hashtable used to store object and class
+/// references during writing. The default size is TBufferFile::kMapSize.
+/// Increasing the default has the benefit that when writing many
+/// small objects the hashtable does not get too many collisions
+/// (the system is always dynamic, even with the default everything
+/// will work, only a large number of collisions will cost performance).
+/// For optimal performance hashsize should always be a prime.
+/// This method can only be called directly after the creation of
+/// the TBuffer, before any writing is done. Globally this option
+/// can be changed using SetGlobalWriteParam().
+
+void TBufferText::SetWriteParam(Int_t mapsize)
+{
+   R__ASSERT(IsWriting());
+   R__ASSERT(fMap == 0);
+
+   fMapSize = mapsize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add object to the fMap container.
+///
+/// If obj is not 0 add object to the map (in read mode also add 0 objects to
+/// the map). This method may only be called outside this class just before
+/// calling obj->Streamer() to prevent self reference of obj, in case obj
+/// contains (via via) a pointer to itself. In that case offset must be 1
+/// (default value for offset).
+
+void TBufferText::MapObject(const TObject *obj, UInt_t offset)
+{
+   if (IsWriting()) {
+      if (!fMap)
+         InitMap();
+
+      if (obj) {
+         CheckCount(offset);
+         ULong_t hash = Void_Hash(obj);
+         fMap->Add(hash, (Long_t)obj, offset);
+         // No need to keep track of the class in write mode
+         // fClassMap->Add(hash, (Long_t)obj, (Long_t)((TObject*)obj)->IsA());
+         fMapCount++;
+      }
+   } else {
+      if (!fMap || !fClassMap)
+         InitMap();
+
+      fMap->Add(offset, (Long_t)obj);
+      fClassMap->Add(offset, (obj && obj != (TObject *)-1) ? (Long_t)((TObject *)obj)->IsA() : 0);
+      fMapCount++;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add object to the fMap container.
+///
+/// If obj is not 0 add object to the map (in read mode also add 0 objects to
+/// the map). This method may only be called outside this class just before
+/// calling obj->Streamer() to prevent self reference of obj, in case obj
+/// contains (via via) a pointer to itself. In that case offset must be 1
+/// (default value for offset).
+
+void TBufferText::MapObject(const void *obj, const TClass *cl, UInt_t offset)
+{
+   if (IsWriting()) {
+      if (!fMap)
+         InitMap();
+
+      if (obj) {
+         CheckCount(offset);
+         ULong_t hash = Void_Hash(obj);
+         fMap->Add(hash, (Long_t)obj, offset);
+         // No need to keep track of the class in write mode
+         // fClassMap->Add(hash, (Long_t)obj, (Long_t)cl);
+         fMapCount++;
+      }
+   } else {
+      if (!fMap || !fClassMap)
+         InitMap();
+
+      fMap->Add(offset, (Long_t)obj);
+      fClassMap->Add(offset, (Long_t)cl);
+      fMapCount++;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the object stored in the buffer's object map at 'tag'
+/// Set ptr and ClassPtr respectively to the address of the object and
+/// a pointer to its TClass.
+
+void TBufferText::GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const
+{
+   if (tag > (UInt_t)fMap->GetSize()) {
+      ptr = nullptr;
+      ClassPtr = nullptr;
+   } else {
+      ptr = (void *)(Long_t)fMap->GetValue(tag);
+      ClassPtr = (TClass *)(Long_t)fClassMap->GetValue(tag);
+   }
 }
