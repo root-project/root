@@ -97,7 +97,8 @@ TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
 
 TBufferXML::~TBufferXML()
 {
-   fStack.Delete();
+   while (fStack.size() > 0)
+      PopStack();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -318,7 +319,7 @@ TXMLStackObj *TBufferXML::PushStack(XMLNodePointer_t current, Bool_t simple)
    }
 
    TXMLStackObj *stack = new TXMLStackObj(current);
-   fStack.Add(stack);
+   fStack.push_back(stack);
    return stack;
 }
 
@@ -327,21 +328,11 @@ TXMLStackObj *TBufferXML::PushStack(XMLNodePointer_t current, Bool_t simple)
 
 TXMLStackObj *TBufferXML::PopStack()
 {
-   TObject *last = fStack.Last();
-   if (last) {
-      fStack.Remove(last);
-      delete last;
-      fStack.Compress();
+   if (fStack.size() > 0) {
+      delete fStack.back();
+      fStack.pop_back();
    }
-   return static_cast<TXMLStackObj *>(fStack.Last());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return xml stack object of specified depth.
-
-TXMLStackObj *TBufferXML::Stack(Int_t depth)
-{
-   return (depth <= fStack.GetLast()) ? static_cast<TXMLStackObj *>(fStack.At(fStack.GetLast() - depth)) : nullptr;
+   return fStack.size() > 0 ? Stack() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -349,7 +340,7 @@ TXMLStackObj *TBufferXML::Stack(Int_t depth)
 
 XMLNodePointer_t TBufferXML::StackNode()
 {
-   TXMLStackObj *stack = static_cast<TXMLStackObj *>(fStack.Last());
+   TXMLStackObj *stack = Stack();
    return stack ? stack->fNode : nullptr;
 }
 
@@ -358,7 +349,7 @@ XMLNodePointer_t TBufferXML::StackNode()
 
 void TBufferXML::ShiftStack(const char *errinfo)
 {
-   TXMLStackObj *stack = static_cast<TXMLStackObj *>(fStack.Last());
+   TXMLStackObj *stack = Stack();
    if (stack) {
       fXML->ShiftToNext(stack->fNode);
       if (gDebug > 4)
@@ -1015,7 +1006,7 @@ void TBufferXML::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
       PopStack(); // go level back
       if (IsReading())
          ShiftStack("startelem"); // shift to next element, only for reading
-      stack = static_cast<TXMLStackObj *>(fStack.Last());
+      stack = Stack();
    }
 
    if (!stack) {
