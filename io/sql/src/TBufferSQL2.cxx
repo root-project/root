@@ -203,54 +203,54 @@ Bool_t TBufferSQL2::SqlObjectInfo(Long64_t objid, TString &clname, Version_t &ve
 
 TSQLObjectData *TBufferSQL2::SqlObjectData(Long64_t objid, TSQLClassInfo *sqlinfo)
 {
-   TSQLResult *classdata = 0;
-   TSQLRow *classrow = 0;
+   TSQLResult *classdata = nullptr;
+   TSQLRow *classrow = nullptr;
 
    if (sqlinfo->IsClassTableExist()) {
 
-      TSQLObjectDataPool *pool = 0;
+      TSQLObjectDataPool *pool = nullptr;
 
-      if (fPoolsMap != 0)
+      if (fPoolsMap)
          pool = (TSQLObjectDataPool *)fPoolsMap->GetValue(sqlinfo);
 
-      if ((pool == 0) && (fLastObjId >= fFirstObjId)) {
+      if (pool && (fLastObjId >= fFirstObjId)) {
          if (gDebug > 4)
             Info("SqlObjectData", "Before request to %s", sqlinfo->GetClassTableName());
          TSQLResult *alldata = fSQL->GetNormalClassDataAll(fFirstObjId, fLastObjId, sqlinfo);
          if (gDebug > 4)
             Info("SqlObjectData", "After request res = 0x%lx", (Long_t)alldata);
-         if (alldata == 0) {
+         if (!alldata) {
             Error("SqlObjectData", "Cannot get data from table %s", sqlinfo->GetClassTableName());
-            return 0;
+            return nullptr;
          }
 
-         if (fPoolsMap == 0)
+         if (!fPoolsMap)
             fPoolsMap = new TMap();
          pool = new TSQLObjectDataPool(sqlinfo, alldata);
          fPoolsMap->Add(sqlinfo, pool);
       }
 
-      if (pool == 0)
-         return 0;
+      if (!pool)
+         return nullptr;
 
       if (pool->GetSqlInfo() != sqlinfo) {
          Error("SqlObjectData", "Missmatch in pools map !!! CANNOT BE !!!");
-         return 0;
+         return nullptr;
       }
 
       classdata = pool->GetClassData();
 
       classrow = pool->GetObjectRow(objid);
-      if (classrow == 0) {
+      if (!classrow) {
          Error("SqlObjectData", "Can not find row for objid = %lld in table %s", objid, sqlinfo->GetClassTableName());
-         return 0;
+         return nullptr;
       }
    }
 
-   TSQLResult *blobdata = 0;
+   TSQLResult *blobdata = nullptr;
    TSQLStatement *blobstmt = fSQL->GetBlobClassDataStmt(objid, sqlinfo);
 
-   if (blobstmt == 0)
+   if (!blobstmt)
       blobdata = fSQL->GetBlobClassData(objid, sqlinfo);
 
    return new TSQLObjectData(sqlinfo, objid, classdata, classrow, blobdata, blobstmt);
@@ -609,7 +609,7 @@ void TBufferSQL2::ClassMember(const char *name, const char *typeName, Int_t arrs
 
    if (typ_id < 0) {
       TDataType *dt = gROOT->GetType(typeName);
-      if (dt != 0)
+      if (dt)
          if ((dt->GetType() > 0) && (dt->GetType() < 20))
             typ_id = dt->GetType();
    }
@@ -617,7 +617,7 @@ void TBufferSQL2::ClassMember(const char *name, const char *typeName, Int_t arrs
    if (typ_id < 0)
       if (strcmp(name, typeName) == 0) {
          TClass *cl = TClass::GetClass(tname.Data());
-         if (cl != 0)
+         if (cl)
             typ_id = TStreamerInfo::kBase;
       }
 
@@ -628,7 +628,7 @@ void TBufferSQL2::ClassMember(const char *name, const char *typeName, Int_t arrs
          isptr = kTRUE;
       }
       TClass *cl = TClass::GetClass(tname.Data());
-      if (cl == 0) {
+      if (!cl) {
          Error("ClassMember", "Invalid class specifier %s", typeName);
          fErrorFlag = 1;
          return;
@@ -643,47 +643,33 @@ void TBufferSQL2::ClassMember(const char *name, const char *typeName, Int_t arrs
          typ_id = TStreamerInfo::kTString;
    }
 
-   TStreamerElement *elem = 0;
+   TStreamerElement *elem = nullptr;
 
    if (typ_id == TStreamerInfo::kMissing) {
       elem = new TStreamerElement(name, "title", 0, typ_id, "raw:data");
-   } else
-
-      if (typ_id == TStreamerInfo::kBase) {
+   } else if (typ_id == TStreamerInfo::kBase) {
       TClass *cl = TClass::GetClass(tname.Data());
-      if (cl != 0) {
+      if (cl) {
          TStreamerBase *b = new TStreamerBase(tname.Data(), "title", 0);
          b->SetBaseVersion(cl->GetClassVersion());
          elem = b;
       }
-   } else
-
-      if ((typ_id > 0) && (typ_id < 20)) {
+   } else if ((typ_id > 0) && (typ_id < 20)) {
       elem = new TStreamerBasicType(name, "title", 0, typ_id, typeName);
-   } else
-
-      if ((typ_id == TStreamerInfo::kObject) || (typ_id == TStreamerInfo::kTObject) ||
-          (typ_id == TStreamerInfo::kTNamed)) {
+   } else if ((typ_id == TStreamerInfo::kObject) || (typ_id == TStreamerInfo::kTObject) ||
+              (typ_id == TStreamerInfo::kTNamed)) {
       elem = new TStreamerObject(name, "title", 0, tname.Data());
-   } else
-
-      if (typ_id == TStreamerInfo::kObjectp) {
+   } else if (typ_id == TStreamerInfo::kObjectp) {
       elem = new TStreamerObjectPointer(name, "title", 0, tname.Data());
-   } else
-
-      if (typ_id == TStreamerInfo::kAny) {
+   } else if (typ_id == TStreamerInfo::kAny) {
       elem = new TStreamerObjectAny(name, "title", 0, tname.Data());
-   } else
-
-      if (typ_id == TStreamerInfo::kAnyp) {
+   } else if (typ_id == TStreamerInfo::kAnyp) {
       elem = new TStreamerObjectAnyPointer(name, "title", 0, tname.Data());
-   } else
-
-      if (typ_id == TStreamerInfo::kTString) {
+   } else if (typ_id == TStreamerInfo::kTString) {
       elem = new TStreamerString(name, "title", 0);
    }
 
-   if (elem == 0) {
+   if (!elem) {
       Error("ClassMember", "Invalid combination name = %s type = %s", name, typeName);
       fErrorFlag = 1;
       return;
@@ -716,8 +702,7 @@ void TBufferSQL2::WorkWithClass(const char *classname, Version_t classversion)
       //      if ((fCurrentData!=0) && fCurrentData->VerifyDataType(sqlio::ObjectInst, kFALSE))
       //        if (!fCurrentData->IsBlobData()) Info("WorkWithClass","Big problem %s", fCurrentData->GetValue());
 
-      if ((fCurrentData != 0) && fCurrentData->IsBlobData() &&
-          fCurrentData->VerifyDataType(sqlio::ObjectInst, kFALSE)) {
+      if (fCurrentData && fCurrentData->IsBlobData() && fCurrentData->VerifyDataType(sqlio::ObjectInst, kFALSE)) {
          objid = atoi(fCurrentData->GetValue());
          fCurrentData->ShiftToNextValue();
          TString sobjid;
@@ -732,14 +717,14 @@ void TBufferSQL2::WorkWithClass(const char *classname, Version_t classversion)
       }
 
       TSQLClassInfo *sqlinfo = fSQL->FindSQLClassInfo(classname, classversion);
-      if (sqlinfo == 0) {
+      if (!sqlinfo) {
          Error("WorkWithClass", "Can not find table for class %s version %d", classname, classversion);
          fErrorFlag = 1;
          return;
       }
 
       TSQLObjectData *objdata = SqlObjectData(objid, sqlinfo);
-      if (objdata == 0) {
+      if (!objdata) {
          Error("WorkWithClass", "Request error for data of object %lld for class %s version %d", objid, classname,
                classversion);
          fErrorFlag = 1;
@@ -754,9 +739,9 @@ void TBufferSQL2::WorkWithClass(const char *classname, Version_t classversion)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This function is a part of SetStreamerElementNumber method.
-/// It is introduced for reading of data for specified data memeber of class.
+/// It is introduced for reading of data for specified data member of class.
 /// Used also in ReadFastArray methods to resolve problem of compressed data,
-/// when several data memebers of the same basic type streamed with single ...FastArray call
+/// when several data members of the same basic type streamed with single ...FastArray call
 
 void TBufferSQL2::WorkWithElement(TStreamerElement *elem, Int_t /* comp_type */)
 {
@@ -774,7 +759,7 @@ void TBufferSQL2::WorkWithElement(TStreamerElement *elem, Int_t /* comp_type */)
 
    if (IsReading()) {
 
-      if (fCurrentData == 0) {
+      if (!fCurrentData) {
          Error("WorkWithElement", "Object data is lost");
          fErrorFlag = 1;
          return;
@@ -801,7 +786,7 @@ void TBufferSQL2::WorkWithElement(TStreamerElement *elem, Int_t /* comp_type */)
 
 TClass *TBufferSQL2::ReadClass(const TClass *, UInt_t *)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -830,7 +815,7 @@ Version_t TBufferSQL2::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass *)
       fReadVersionBuffer = -1;
       if (gDebug > 3)
          Info("ReadVersion", "from buffer = %d", (int)res);
-   } else if ((fCurrentData != 0) && fCurrentData->IsBlobData() && fCurrentData->VerifyDataType(sqlio::Version)) {
+   } else if (fCurrentData && fCurrentData->IsBlobData() && fCurrentData->VerifyDataType(sqlio::Version)) {
       TString value = fCurrentData->GetValue();
       res = value.Atoi();
       if (gDebug > 3)
@@ -1173,7 +1158,7 @@ void TBufferSQL2::ReadFastArray(Char_t *c, Int_t n)
 {
    if ((n > 0) && fCurrentData->IsBlobData() && fCurrentData->VerifyDataType(sqlio::CharStar, kFALSE)) {
       const char *buf = SqlReadCharStarValue();
-      if ((buf == 0) || (n <= 0))
+      if (!buf || (n <= 0))
          return;
       Int_t size = strlen(buf);
       if (size < n)
@@ -1382,7 +1367,7 @@ void TBufferSQL2::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t 
 Int_t TBufferSQL2::SqlReadArraySize()
 {
    const char *value = SqlReadValue(sqlio::Array);
-   if ((value == 0) || (strlen(value) == 0))
+   if (!value || (strlen(value) == 0))
       return 0;
    Int_t sz = atoi(value);
    return sz;
@@ -2483,8 +2468,8 @@ const char *TBufferSQL2::SqlReadValue(const char *tname)
 const char *TBufferSQL2::SqlReadCharStarValue()
 {
    const char *res = SqlReadValue(sqlio::CharStar);
-   if ((res == 0) || (fSQL == 0))
-      return 0;
+   if (!res || !fSQL)
+      return nullptr;
 
    Long64_t objid = Stack()->DefineObjectId(kTRUE);
 
@@ -2503,7 +2488,7 @@ const char *TBufferSQL2::SqlReadCharStarValue()
 TSQLStructure *TBufferSQL2::PushStack()
 {
    TSQLStructure *res = new TSQLStructure;
-   if (fStk == 0) {
+   if (!fStk) {
       fStructure = res;
    } else {
       fStk->Add(res);
@@ -2518,8 +2503,8 @@ TSQLStructure *TBufferSQL2::PushStack()
 
 TSQLStructure *TBufferSQL2::PopStack()
 {
-   if (fStk == 0)
-      return 0;
+   if (!fStk)
+      return nullptr;
    fStk = fStk->GetParent();
    return fStk;
 }
@@ -2530,7 +2515,7 @@ TSQLStructure *TBufferSQL2::PopStack()
 TSQLStructure *TBufferSQL2::Stack(Int_t depth)
 {
    TSQLStructure *curr = fStk;
-   while ((depth-- > 0) && (curr != 0))
+   while ((depth-- > 0) && curr)
       curr = curr->GetParent();
    return curr;
 }
