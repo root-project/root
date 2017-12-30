@@ -2106,7 +2106,7 @@ void TBufferJSON::PerformPostProcessing(TJSONStackObj *stack, const TClass *obj_
 
 TClass *TBufferJSON::ReadClass(const TClass *, UInt_t *)
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
