@@ -31,3 +31,7 @@ if(r)
 endif()
 
 add_subdirectory(vecops)
+
+if(ipopt)
+  add_subdirectory(ipopt)
+endif()

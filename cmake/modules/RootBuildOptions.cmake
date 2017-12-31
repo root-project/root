@@ -126,6 +126,7 @@ ROOT_BUILD_OPTION(gviz OFF "Enable support for Graphviz (graph visualization sof
 ROOT_BUILD_OPTION(hdfs OFF "Enable support for Hadoop Distributed File System (HDFS)")
 ROOT_BUILD_OPTION(http ON "Enable suppport for HTTP server")
 ROOT_BUILD_OPTION(imt ON "Enable support for implicit multi-threading via Intel® Thread Bulding Blocks (TBB)")
+ROOT_BUILD_OPTION(ipopt ON "Interior Point OPTimizer (https://projects.coin-or.org/Ipopt)")
 ROOT_BUILD_OPTION(jemalloc OFF "Use jemalloc memory allocator")
 ROOT_BUILD_OPTION(krb5 OFF "Enable support for Kerberos")
 ROOT_BUILD_OPTION(ldap OFF "Enable support for LDAP (Lightweight Directory Access Protocol)")
