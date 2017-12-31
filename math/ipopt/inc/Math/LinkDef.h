@@ -1,8 +1,6 @@
 // @(#)root/mathmore:$Id$
 // Authors: Omar.Zapata@cern.ch  12/2017
 
-
-
 #ifdef __CINT__
 
 // #pragma extra_include "Math/IFunctionfwd.h";
@@ -20,6 +18,5 @@
 #pragma link C++ namespace ROOT::Math;
 
 #pragma link C++ class ROOT::Math::IpoptMinimizer1;
-
 
 #endif //__CINT__
