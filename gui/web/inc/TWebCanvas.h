@@ -37,6 +37,7 @@ class TPad;
 class TList;
 class TWebSnapshot;
 class TPadWebSnapshot;
+class THttpServer;
 
 class TWebCanvas : public TCanvasImp {
 
@@ -88,6 +89,9 @@ public:
    TWebCanvas();
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TWebCanvas();
+
+   TString CreateWebWindow(int limit = 0);
+   THttpServer *GetServer();
 
    virtual Int_t  InitWindow();
    virtual void   Close();

@@ -396,15 +396,16 @@ void TWebCanvas::Close()
    printf("Call TWebCanvas::Close\n");
 }
 
-void TWebCanvas::Show()
-{
-   const char *swhere = gSystem->Getenv("WEBGUI_WHERE"); // let configure place like with ROOT7
-   std::string where = swhere ? swhere : "";
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Create instance of TWebWindow to handle all kind of web connections
+/// Returns URL string which can be used to access canvas locally
 
+TString TWebCanvas::CreateWebWindow(int limit)
+{
    if (!fWindow) {
       fWindow = ROOT::Experimental::TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
 
-      fWindow->SetConnLimit(0); // allow any number of connections
+      fWindow->SetConnLimit(limit); // allow any number of connections
 
       fWindow->SetDefaultPage("file:$jsrootsys/files/canvas6.htm");
 
@@ -412,6 +413,30 @@ void TWebCanvas::Show()
 
       // fWindow->SetGeometry(500,300);
    }
+
+   std::string url = fWindow->GetUrl();
+
+   return TString(url.c_str());
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Returns THttpServer instance, serving requests to the canvas
+
+THttpServer *TWebCanvas::GetServer()
+{
+   if (!fWindow) return nullptr;
+
+   return fWindow->GetServer();
+}
+
+
+void TWebCanvas::Show()
+{
+   const char *swhere = gSystem->Getenv("WEBGUI_WHERE"); // let configure place like with ROOT7
+   std::string where = swhere ? swhere : "";
+
+   CreateWebWindow();
 
    fWindow->Show(where);
 }
