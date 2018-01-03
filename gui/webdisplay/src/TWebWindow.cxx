@@ -115,6 +115,23 @@ void ROOT::Experimental::TWebWindow::CreateWSHandler()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Return URL string to access web window
+/// If remote flag is specified, real HTTP server will be started automatically
+
+std::string ROOT::Experimental::TWebWindow::GetUrl(bool remote)
+{
+   return fMgr->GetUrl(*this, remote);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Return THttpServer instance serving requests to the window
+
+THttpServer *ROOT::Experimental::TWebWindow::GetServer()
+{
+   return fMgr->GetServer();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
 /// See ROOT::Experimental::TWebWindowsManager::Show() docu for more info
 

@@ -64,9 +64,7 @@ ROOT::Experimental::TWebWindowsManager::TWebWindowsManager() = default;
 /// window manager destructor
 /// Required here for correct usage of unique_ptr<THttpServer>
 
-ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
-{
-}
+ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager() {}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Creates http server, if required - with real http engine (civetweb)
@@ -157,6 +155,37 @@ void ROOT::Experimental::TWebWindowsManager::Unregister(ROOT::Experimental::TWeb
    //         break;
    //      }
    //   }
+}
+
+//////////////////////////////////////////////////////////////////////////
+/// Provide URL address to access specified window from inside or from remote
+
+std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::TWebWindow &win, bool remote)
+{
+   if (!fServer) {
+      R__ERROR_HERE("GetUrl") << "Server instance not exists";
+      return "";
+   }
+
+   std::string addr = "/web7gui/";
+
+   addr.append(((THttpWSHandler *)win.fWSHandler.get())->GetName());
+
+   if (win.IsBatchMode())
+      addr.append("/?batch_mode");
+   else
+      addr.append("/");
+
+   if (remote) {
+      if (!CreateHttpServer(true)) {
+         R__ERROR_HERE("GetUrl") << "Fail to start real HTTP server";
+         return "";
+      }
+
+      addr = fAddr + addr;
+   }
+
+   return addr;
 }
 
 //////////////////////////////////////////////////////////////////////////
