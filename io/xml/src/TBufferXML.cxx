@@ -2014,7 +2014,7 @@ void TBufferXML::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t i
              // that when writing this object (start[j] had already been written and
              // is indeed pointing to the same object as the object the user set up
              // in the default constructor).
-             ) {
+         ) {
             ((TClass *)cl)->Destructor(old, kFALSE); // call delete and desctructor
          }
       }
@@ -2881,9 +2881,8 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(Long_t value)
 
 XMLNodePointer_t TBufferXML::XmlWriteBasic(Long64_t value)
 {
-   char buf[50];
-   snprintf(buf, sizeof(buf), fgLong64Fmt, value);
-   return XmlWriteValue(buf, xmlio::Long64);
+   std::string buf = std::to_string(value);
+   return XmlWriteValue(buf.c_str(), xmlio::Long64);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2959,9 +2958,8 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(ULong_t value)
 
 XMLNodePointer_t TBufferXML::XmlWriteBasic(ULong64_t value)
 {
-   char buf[50];
-   snprintf(buf, sizeof(buf), fgULong64Fmt, value);
-   return XmlWriteValue(buf, xmlio::ULong64);
+   std::string buf = std::to_string(value);
+   return XmlWriteValue(buf.c_str(), xmlio::ULong64);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3040,7 +3038,7 @@ void TBufferXML::XmlReadBasic(Long64_t &value)
 {
    const char *res = XmlReadValue(xmlio::Long64);
    if (res)
-      sscanf(res, fgLong64Fmt, &value);
+      value = (Long64_t)std::stoll(res);
    else
       value = 0;
 }
@@ -3138,7 +3136,7 @@ void TBufferXML::XmlReadBasic(ULong64_t &value)
 {
    const char *res = XmlReadValue(xmlio::ULong64);
    if (res)
-      sscanf(res, fgULong64Fmt, &value);
+      value = (ULong64_t)std::stoull(res);
    else
       value = 0;
 }

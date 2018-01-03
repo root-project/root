@@ -41,14 +41,6 @@ ClassImp(TBufferText);
 const char *TBufferText::fgFloatFmt = "%e";
 const char *TBufferText::fgDoubleFmt = "%.14e";
 
-#ifdef R__VISUAL_CPLUSPLUS
-const char *TBufferText::fgLong64Fmt = "%I64d";
-const char *TBufferText::fgULong64Fmt = "%I64u";
-#else
-const char *TBufferText::fgLong64Fmt = "%lld";
-const char *TBufferText::fgULong64Fmt = "%llu";
-#endif
-
 Int_t TBufferText::fgMapSize = kMapSize;
 const UInt_t kNullTag = 0;
 
