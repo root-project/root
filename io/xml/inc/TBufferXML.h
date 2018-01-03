@@ -243,7 +243,10 @@ protected:
    void ShiftStack(const char *info = nullptr);
 
    XMLNodePointer_t StackNode();
-   TXMLStackObj *Stack(UInt_t depth = 0) { return (depth < fStack.size()) ? (depth ? fStack[fStack.size() - depth - 1] : fStack.back()) : nullptr; }
+   TXMLStackObj *Stack(UInt_t depth = 0)
+   {
+      return (depth < fStack.size()) ? (depth ? fStack[fStack.size() - depth - 1] : fStack.back()) : nullptr;
+   }
 
    void WorkWithClass(TStreamerInfo *info, const TClass *cl = nullptr);
    void WorkWithElement(TStreamerElement *elem, Int_t comp_type);

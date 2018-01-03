@@ -2014,7 +2014,7 @@ void TBufferXML::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t i
              // that when writing this object (start[j] had already been written and
              // is indeed pointing to the same object as the object the user set up
              // in the default constructor).
-         ) {
+             ) {
             ((TClass *)cl)->Destructor(old, kFALSE); // call delete and desctructor
          }
       }
