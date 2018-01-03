@@ -792,7 +792,9 @@ TClass *TBufferSQL2::ReadClass(const TClass *, UInt_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Suppressed function of TBuffer
 
-void TBufferSQL2::WriteClass(const TClass *) {}
+void TBufferSQL2::WriteClass(const TClass *)
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read version value from buffer
@@ -856,7 +858,9 @@ void *TBufferSQL2::ReadObjectAny(const TClass *)
 /// !!!!!! fix me, not yet implemented
 /// Should be just skip of current column later
 
-void TBufferSQL2::SkipObjectAny() {}
+void TBufferSQL2::SkipObjectAny()
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object to buffer. Only used from TBuffer

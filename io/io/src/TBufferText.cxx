@@ -268,9 +268,8 @@ Int_t TBufferText::WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_
       // TClass with the actual type_info in memory.
 
       DynamicType *d_ptr = (DynamicType *)obj;
-      Warning("WriteObjectAny",
-              "An object of type %s (from type_info) passed through a %s pointer was truncated (due "
-              "a missing dictionary)!!!",
+      Warning("WriteObjectAny", "An object of type %s (from type_info) passed through a %s pointer was truncated (due "
+                                "a missing dictionary)!!!",
               typeid(*d_ptr).name(), ptrClass->GetName());
       WriteObjectClass(obj, ptrClass, cacheReuse);
       return 2;
