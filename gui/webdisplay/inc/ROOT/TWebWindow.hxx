@@ -23,6 +23,7 @@
 
 class THttpCallArg;
 class THttpWSEngine;
+class THttpServer;
 
 namespace ROOT {
 namespace Experimental {
@@ -155,6 +156,12 @@ public:
       if (connid)
          Send("CLOSE", connid, 0);
    }
+
+   /// Return URL string to access window
+   std::string GetUrl(bool remote = false);
+
+   /// Return THttpServer instance serving requests to the window
+   THttpServer *GetServer();
 
    /// Show window in specified location
    bool Show(const std::string &where);
