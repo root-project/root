@@ -39,6 +39,7 @@ few other, which can not be converted to SQL (yet).
 #include "TStreamer.h"
 #include "Riostream.h"
 #include <stdlib.h>
+#include <string>
 #include "TStreamerInfoActions.h"
 
 #include "TSQLServer.h"
@@ -332,8 +333,7 @@ void *TBufferSQL2::SqlReadObject(void *obj, TClass **cl, TMemberStreamer *stream
       return obj;
    }
 
-   Long64_t objid = -1;
-   sscanf(refid, fgLong64Fmt, &objid);
+   Long64_t objid = (Long64_t)std::stoll(refid);
 
    if (gDebug > 2)
       Info("SqlReadObject", "Starting objid: %ld column: %s", (long)objid, fCurrentData->GetLocatedField());
@@ -792,9 +792,7 @@ TClass *TBufferSQL2::ReadClass(const TClass *, UInt_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Suppressed function of TBuffer
 
-void TBufferSQL2::WriteClass(const TClass *)
-{
-}
+void TBufferSQL2::WriteClass(const TClass *) {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Read version value from buffer
@@ -858,9 +856,7 @@ void *TBufferSQL2::ReadObjectAny(const TClass *)
 /// !!!!!! fix me, not yet implemented
 /// Should be just skip of current column later
 
-void TBufferSQL2::SkipObjectAny()
-{
-}
+void TBufferSQL2::SkipObjectAny() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object to buffer. Only used from TBuffer
@@ -2176,9 +2172,8 @@ Bool_t TBufferSQL2::SqlWriteBasic(Long_t value)
 
 Bool_t TBufferSQL2::SqlWriteBasic(Long64_t value)
 {
-   char buf[50];
-   snprintf(buf, sizeof(buf), fgLong64Fmt, value);
-   return SqlWriteValue(buf, sqlio::Long64);
+   std::string buf = std::to_string(value);
+   return SqlWriteValue(buf.c_str(), sqlio::Long64);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2254,9 +2249,8 @@ Bool_t TBufferSQL2::SqlWriteBasic(ULong_t value)
 
 Bool_t TBufferSQL2::SqlWriteBasic(ULong64_t value)
 {
-   char buf[50];
-   snprintf(buf, sizeof(buf), fgULong64Fmt, value);
-   return SqlWriteValue(buf, sqlio::ULong64);
+   std::string buf = std::to_string(value);
+   return SqlWriteValue(buf.c_str(), sqlio::ULong64);
 }
 
 //______________________________________________________________________________
@@ -2327,7 +2321,7 @@ void TBufferSQL2::SqlReadBasic(Long64_t &value)
 {
    const char *res = SqlReadValue(sqlio::Long64);
    if (res)
-      sscanf(res, fgLong64Fmt, &value);
+      value = (Long64_t)std::stoll(res);
    else
       value = 0;
 }
@@ -2425,7 +2419,7 @@ void TBufferSQL2::SqlReadBasic(ULong64_t &value)
 {
    const char *res = SqlReadValue(sqlio::ULong64);
    if (res)
-      sscanf(res, fgULong64Fmt, &value);
+      value = (ULong64_t)std::stoull(res);
    else
       value = 0;
 }
