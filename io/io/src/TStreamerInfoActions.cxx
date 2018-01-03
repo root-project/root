@@ -222,7 +222,7 @@ namespace TStreamerInfoActions
    template <typename T>
    INLINE_TEMPLATE_ARGS Int_t WriteBasicType(TBuffer &buf, void *addr, const TConfiguration *config)
    {
-      T *x = (T*)( ((char*)addr) + config->fOffset );
+      T *x = (T *)(((char *)addr) + config->fOffset);
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
       buf << *x;
       return 0;
@@ -230,7 +230,7 @@ namespace TStreamerInfoActions
 
    INLINE_TEMPLATE_ARGS Int_t WriteTextTNamed(TBuffer &buf, void *addr, const TConfiguration *config)
    {
-      void *x = (void*)( ((char*)addr) + config->fOffset );
+      void *x = (void *)(((char *)addr) + config->fOffset);
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
       buf.StreamObject(x, TNamed::Class(), TNamed::Class());
       return 0;
@@ -238,7 +238,7 @@ namespace TStreamerInfoActions
 
    INLINE_TEMPLATE_ARGS Int_t WriteTextTObject(TBuffer &buf, void *addr, const TConfiguration *config)
    {
-      void *x = (void*)( ((char*)addr) + config->fOffset );
+      void *x = (void *)(((char *)addr) + config->fOffset);
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
       buf.StreamObject(x, TObject::Class(), TObject::Class());
       return 0;
@@ -246,67 +246,67 @@ namespace TStreamerInfoActions
 
    INLINE_TEMPLATE_ARGS Int_t WriteTextBaseClass(TBuffer &buf, void *addr, const TConfiguration *config)
    {
-      void *x = (void*)( ((char*)addr) + config->fOffset );
+      void *x = (void *)(((char *)addr) + config->fOffset);
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
-      ((TBufferText*)&buf)->WriteBaseClass(x, (TStreamerBase*) config->fCompInfo->fElem);
+      ((TBufferText *)&buf)->WriteBaseClass(x, (TStreamerBase *)config->fCompInfo->fElem);
       return 0;
    }
 
    INLINE_TEMPLATE_ARGS Int_t WriteTextStreamer(TBuffer &buf, void *addr, const TConfiguration *config)
    {
-      void *x = (void*)( ((char*)addr) + config->fOffset );
+      void *x = (void *)(((char *)addr) + config->fOffset);
       TMemberStreamer *pstreamer = config->fCompInfo->fStreamer;
-      UInt_t pos = buf.WriteVersion(config->fInfo->IsA(),kTRUE);
+      UInt_t pos = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
       (*pstreamer)(buf, x, config->fCompInfo->fLength);
-      buf.SetByteCount(pos,kTRUE);
+      buf.SetByteCount(pos, kTRUE);
       return 0;
    }
 
    INLINE_TEMPLATE_ARGS Int_t ReadTextObject(TBuffer &buf, void *addr, const TConfiguration *config)
    {
-      void *x = (void*)( ((char*)addr) + config->fOffset );
+      void *x = (void *)(((char *)addr) + config->fOffset);
       buf.ReadFastArray(x, config->fCompInfo->fClass, config->fCompInfo->fLength, config->fCompInfo->fStreamer);
       return 0;
    }
 
    INLINE_TEMPLATE_ARGS Int_t ReadTextTObject(TBuffer &buf, void *addr, const TConfiguration *config)
    {
-      void *x = (void*)( ((char*)addr) + config->fOffset );
+      void *x = (void *)(((char *)addr) + config->fOffset);
       buf.StreamObject(x, TObject::Class(), TObject::Class());
       return 0;
    }
 
    INLINE_TEMPLATE_ARGS Int_t ReadTextBaseClass(TBuffer &buf, void *addr, const TConfiguration *config)
    {
-      void *x = (void*)( ((char*)addr) + config->fOffset );
+      void *x = (void *)(((char *)addr) + config->fOffset);
       // Idea: Implement buf.ReadBasic/Primitive to avoid the return value
-      ((TBufferText*)&buf)->ReadBaseClass(x, (TStreamerBase*) config->fCompInfo->fElem);
+      ((TBufferText *)&buf)->ReadBaseClass(x, (TStreamerBase *)config->fCompInfo->fElem);
       return 0;
    }
 
    INLINE_TEMPLATE_ARGS Int_t ReadTextStreamer(TBuffer &buf, void *addr, const TConfiguration *config)
    {
-      void *x = (void*)( ((char*)addr) + config->fOffset );
+      void *x = (void *)(((char *)addr) + config->fOffset);
       TMemberStreamer *pstreamer = config->fCompInfo->fStreamer;
 
-      UInt_t start,count;
+      UInt_t start, count;
       /* Version_t v = */ buf.ReadVersion(&start, &count, config->fCompInfo->fClass);
       (*pstreamer)(buf, x, config->fCompInfo->fLength);
-      buf.CheckByteCount(start,count,  config->fCompInfo->fElem->GetFullName());
+      buf.CheckByteCount(start, count, config->fCompInfo->fElem->GetFullName());
       return 0;
    }
 
    INLINE_TEMPLATE_ARGS Int_t ReadTextTObjectBase(TBuffer &buf, void *addr, const TConfiguration *config)
    {
       // action required to call custom code for TObject as base class
-      void *x = (void*)( ((char*)addr) + config->fOffset );
+      void *x = (void *)(((char *)addr) + config->fOffset);
       buf.ReadClassBuffer(TObject::Class(), x, TObject::Class());
       return 0;
    }
 
    INLINE_TEMPLATE_ARGS Int_t ReadTextTNamed(TBuffer &buf, void *addr, const TConfiguration *config)
    {
-      void *x = (void*)( ((char*)addr) + config->fOffset );
+      void *x = (void *)(((char *)addr) + config->fOffset);
       buf.StreamObject(x, TNamed::Class(), TNamed::Class());
       return 0;
    }
@@ -352,25 +352,24 @@ namespace TStreamerInfoActions
          buf.SetByteCount(pos,kTRUE);
          return 0;
       }
-      UInt_t pos = buf.WriteVersion(config->fInfo->IsA(),kTRUE);
+      UInt_t pos = buf.WriteVersion(config->fInfo->IsA(), kTRUE);
       if (kIsTextT) {
          // use same method which is used in kSTL
-         buf.WriteFastArray((void **)((char *) addr + ioffset), cl, config->fCompInfo->fLength, kFALSE, pstreamer);
-      } else
-      if (pstreamer == nullptr) {
-         //for (int k = 0; k < narr; ++k) {
-            char **contp = (char**)((char *) addr + ioffset);
-            for(int j=0; j<config->fCompInfo->fLength; ++j) {
-               char *cont = contp[j];
-               cl->Streamer( cont, buf );
-            }
+         buf.WriteFastArray((void **)((char *)addr + ioffset), cl, config->fCompInfo->fLength, kFALSE, pstreamer);
+      } else if (pstreamer == nullptr) {
+         // for (int k = 0; k < narr; ++k) {
+         char **contp = (char **)((char *)addr + ioffset);
+         for (int j = 0; j < config->fCompInfo->fLength; ++j) {
+            char *cont = contp[j];
+            cl->Streamer(cont, buf);
+         }
          // }
       } else {
-         //for (int k = 0; k < narr; ++k) {
-            (*pstreamer)(buf,(char *) addr + ioffset, config->fCompInfo->fLength);
+         // for (int k = 0; k < narr; ++k) {
+         (*pstreamer)(buf, (char *)addr + ioffset, config->fCompInfo->fLength);
          //}
       }
-      buf.SetByteCount(pos,kTRUE);
+      buf.SetByteCount(pos, kTRUE);
       return 0;
    }
 
@@ -447,28 +446,27 @@ namespace TStreamerInfoActions
 
       if (kIsTextT) {
          // use same method which is used in kSTL
-         buf.ReadFastArray((void **)((char *) addr + ioffset), cle, config->fCompInfo->fLength, kFALSE, pstreamer);
-      } else
-      if (pstreamer == nullptr) {
+         buf.ReadFastArray((void **)((char *)addr + ioffset), cle, config->fCompInfo->fLength, kFALSE, pstreamer);
+      } else if (pstreamer == nullptr) {
          // DOLOOP {
-            void **contp = (void**)((char *) addr + ioffset);
-            for(int j=0;j<config->fCompInfo->fLength;j++) {
-               void *cont = contp[j];
-               if (cont == nullptr) {
-                  // int R__n;
-                  // b >> R__n;
-                  // b.SetOffset(b.GetOffset()-4); // rewind to the start of the int
-                  // if (R__n) continue;
-                  contp[j] = cle->New();
-                  cont = contp[j];
-               }
-               cle->Streamer( cont, buf );
+         void **contp = (void **)((char *)addr + ioffset);
+         for (int j = 0; j < config->fCompInfo->fLength; j++) {
+            void *cont = contp[j];
+            if (cont == nullptr) {
+               // int R__n;
+               // b >> R__n;
+               // b.SetOffset(b.GetOffset()-4); // rewind to the start of the int
+               // if (R__n) continue;
+               contp[j] = cle->New();
+               cont = contp[j];
             }
-        // }
+            cle->Streamer(cont, buf);
+         }
+         // }
       } else {
-         (*pstreamer)(buf,(char *) addr + ioffset, config->fCompInfo->fLength);
+         (*pstreamer)(buf, (char *)addr + ioffset, config->fCompInfo->fLength);
       }
-      buf.CheckByteCount(start,count,aElement->GetFullName());
+      buf.CheckByteCount(start, count, aElement->GetFullName());
 
       return 0;
    }
@@ -542,12 +540,11 @@ namespace TStreamerInfoActions
                      // Write the entire array of objects to the buffer.
                      // Note: Polymorphism is not allowed here.
                      buf.WriteFastArray(pp[ndx], cl, vlen, nullptr);
-                  }
-                  else {
+                  } else {
                      // -- We are a varying-length array of pointers to objects.
                      // Write the entire array of object pointers to the buffer.
                      // Note: The object pointers are allowed to be polymorphic.
-                     buf.WriteFastArray((void **) pp[ndx], cl, vlen, kFALSE, nullptr);
+                     buf.WriteFastArray((void **)pp[ndx], cl, vlen, kFALSE, nullptr);
                   } // isPtrPtr
                } // ndx
             } else // vlen
@@ -711,7 +708,7 @@ namespace TStreamerInfoActions
                if (!vlen) {
                   if (kIsTextT) {
                      // special handling for the text-based streamers - keep calling to shift array index
-                     buf.ReadFastArray((void *) nullptr, cl, -1, nullptr);
+                     buf.ReadFastArray((void *)nullptr, cl, -1, nullptr);
                   }
                   continue;
                }
@@ -741,13 +738,12 @@ namespace TStreamerInfoActions
                if (!isPtrPtr) {
                   // -- We are a varying-length array of objects.
                   buf.ReadFastArray(pp[ndx], cl, vlen, nullptr);
-               }
-               else {
+               } else {
                   // -- We are a varying-length array of object pointers.
-                  buf.ReadFastArray((void**) pp[ndx], cl, vlen, kFALSE, nullptr);
+                  buf.ReadFastArray((void **)pp[ndx], cl, vlen, kFALSE, nullptr);
                } // isPtrPtr
-            } // ndx
-         // } // k
+            }    // ndx
+          // } // k
       }
       else {
          // -- Older versions do *not* allow polymorphic pointers.
@@ -3385,55 +3381,53 @@ void TStreamerInfo::AddReadTextAction(TStreamerInfoActions::TActionSequence *rea
 {
    TStreamerElement *element = compinfo->fElem;
 
-   if (element->TestBit(TStreamerElement::kWrite)) return;
+   if (element->TestBit(TStreamerElement::kWrite))
+      return;
 
    Bool_t generic = kFALSE, isBase = kFALSE;
 
    switch (compinfo->fType) {
-      case TStreamerInfo::kTObject:
-         if (element->IsBase())
-            isBase = kTRUE;
-            // readSequence->AddAction( ReadTextTObjectBase, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
-         else
-            readSequence->AddAction( ReadTextTObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
-         break;
-
-      case TStreamerInfo::kTNamed:
-         if (element->IsBase())
-            isBase = kTRUE;
-            // generic = kTRUE; // for the base class one cannot call TClass::Streamer() as performed for the normal object
-         else
-            readSequence->AddAction( ReadTextTNamed, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
-         break;
-
-      case TStreamerInfo::kObject:   // Class      derived from TObject
-      case TStreamerInfo::kAny:      // Class  NOT derived from TObject
-      case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:
-      case TStreamerInfo::kAny     + TStreamerInfo::kOffsetL:
-         readSequence->AddAction( ReadTextObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
-         break;
-
-      case TStreamerInfo::kSTLp:                // Pointer to container with no virtual table (stl) and no comment
-      case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:     // array of pointers to container with no virtual table (stl) and no comment
-         readSequence->AddAction( ReadSTLp<true>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
-         break;
-
-      case TStreamerInfo::kStreamLoop:
-      case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
-          readSequence->AddAction( ReadStreamerLoop<true>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
-          break;
-
-      case TStreamerInfo::kBase:
+   case TStreamerInfo::kTObject:
+      if (element->IsBase())
          isBase = kTRUE;
-         break;
+      // readSequence->AddAction( ReadTextTObjectBase, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
+      else
+         readSequence->AddAction(ReadTextTObject, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
 
-      case TStreamerInfo::kStreamer:
-         readSequence->AddAction(ReadTextStreamer, new TGenericConfiguration(this, i, compinfo));
-         break;
+   case TStreamerInfo::kTNamed:
+      if (element->IsBase())
+         isBase = kTRUE;
+      // generic = kTRUE; // for the base class one cannot call TClass::Streamer() as performed for the normal object
+      else
+         readSequence->AddAction(ReadTextTNamed, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
 
-      default:
-         generic = kTRUE;
-         break;
+   case TStreamerInfo::kObject: // Class      derived from TObject
+   case TStreamerInfo::kAny:    // Class  NOT derived from TObject
+   case TStreamerInfo::kOffsetL + TStreamerInfo::kObject:
+   case TStreamerInfo::kAny + TStreamerInfo::kOffsetL:
+      readSequence->AddAction(ReadTextObject, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+
+   case TStreamerInfo::kSTLp: // Pointer to container with no virtual table (stl) and no comment
+   case TStreamerInfo::kSTLp +
+      TStreamerInfo::kOffsetL: // array of pointers to container with no virtual table (stl) and no comment
+      readSequence->AddAction(ReadSTLp<true>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+
+   case TStreamerInfo::kStreamLoop:
+   case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
+      readSequence->AddAction(ReadStreamerLoop<true>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+
+   case TStreamerInfo::kBase: isBase = kTRUE; break;
+
+   case TStreamerInfo::kStreamer:
+      readSequence->AddAction(ReadTextStreamer, new TGenericConfiguration(this, i, compinfo));
+      break;
+
+   default: generic = kTRUE; break;
    }
 
    if (isBase) {
@@ -3579,7 +3573,7 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
       // Skip element cached for reading purposes.
       return;
    }
-   if (element->GetType() >= kArtificial &&  !element->TestBit(TStreamerElement::kWrite)) {
+   if (element->GetType() >= kArtificial && !element->TestBit(TStreamerElement::kWrite)) {
       // Skip artificial element used for reading purposes.
       return;
    }
@@ -3587,141 +3581,182 @@ void TStreamerInfo::AddWriteTextAction(TStreamerInfoActions::TActionSequence *wr
    Bool_t generic = kFALSE, isBase = kFALSE;
 
    switch (compinfo->fType) {
-      // write basic types
-      case TStreamerInfo::kBool:    writeSequence->AddAction( WriteBasicType<Bool_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-      case TStreamerInfo::kChar:    writeSequence->AddAction( WriteBasicType<Char_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-      case TStreamerInfo::kShort:   writeSequence->AddAction( WriteBasicType<Short_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );   break;
-      case TStreamerInfo::kInt:     writeSequence->AddAction( WriteBasicType<Int_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );     break;
-      case TStreamerInfo::kLong:    writeSequence->AddAction( WriteBasicType<Long_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-      case TStreamerInfo::kLong64:  writeSequence->AddAction( WriteBasicType<Long64_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );  break;
-      case TStreamerInfo::kFloat:   writeSequence->AddAction( WriteBasicType<Float_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );   break;
-      case TStreamerInfo::kDouble:  writeSequence->AddAction( WriteBasicType<Double_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );  break;
-      case TStreamerInfo::kUChar:   writeSequence->AddAction( WriteBasicType<UChar_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );   break;
-      case TStreamerInfo::kUShort:  writeSequence->AddAction( WriteBasicType<UShort_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );  break;
-      case TStreamerInfo::kUInt:    writeSequence->AddAction( WriteBasicType<UInt_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-      case TStreamerInfo::kULong:   writeSequence->AddAction( WriteBasicType<ULong_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );   break;
-      case TStreamerInfo::kULong64: writeSequence->AddAction( WriteBasicType<ULong64_t>, new TConfiguration(this,i,compinfo,compinfo->fOffset) ); break;
+   // write basic types
+   case TStreamerInfo::kBool:
+      writeSequence->AddAction(WriteBasicType<Bool_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+   case TStreamerInfo::kChar:
+      writeSequence->AddAction(WriteBasicType<Char_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+   case TStreamerInfo::kShort:
+      writeSequence->AddAction(WriteBasicType<Short_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+   case TStreamerInfo::kInt:
+      writeSequence->AddAction(WriteBasicType<Int_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+   case TStreamerInfo::kLong:
+      writeSequence->AddAction(WriteBasicType<Long_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+   case TStreamerInfo::kLong64:
+      writeSequence->AddAction(WriteBasicType<Long64_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+   case TStreamerInfo::kFloat:
+      writeSequence->AddAction(WriteBasicType<Float_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+   case TStreamerInfo::kDouble:
+      writeSequence->AddAction(WriteBasicType<Double_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+   case TStreamerInfo::kUChar:
+      writeSequence->AddAction(WriteBasicType<UChar_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+   case TStreamerInfo::kUShort:
+      writeSequence->AddAction(WriteBasicType<UShort_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+   case TStreamerInfo::kUInt:
+      writeSequence->AddAction(WriteBasicType<UInt_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+   case TStreamerInfo::kULong:
+      writeSequence->AddAction(WriteBasicType<ULong_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+   case TStreamerInfo::kULong64:
+      writeSequence->AddAction(WriteBasicType<ULong64_t>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
 
-      case TStreamerInfo::kTObject:
-         if (element->IsBase())
-            isBase = kTRUE;
-         else
-            writeSequence->AddAction( WriteTextTObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
-         break;
-
-      case TStreamerInfo::kTNamed:
-         if (element->IsBase())
-            isBase = kTRUE;
-         else
-            writeSequence->AddAction( WriteTextTNamed, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
-         break;
-
-      case TStreamerInfo::kSTLp:                // Pointer to container with no virtual table (stl) and no comment
-      case TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL:     // array of pointers to container with no virtual table (stl) and no comment
-         writeSequence->AddAction( WriteSTLp<true>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
-         break;
-
-      case TStreamerInfo::kStreamLoop:
-      case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
-          writeSequence->AddAction( WriteStreamerLoop<true>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
-          break;
-
-      case TStreamerInfo::kBase:
+   case TStreamerInfo::kTObject:
+      if (element->IsBase())
          isBase = kTRUE;
-         break;
+      else
+         writeSequence->AddAction(WriteTextTObject, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
 
-      case TStreamerInfo::kStreamer:
-         writeSequence->AddAction( WriteTextStreamer, new TGenericConfiguration(this,i,compinfo) );
-         break;
+   case TStreamerInfo::kTNamed:
+      if (element->IsBase())
+         isBase = kTRUE;
+      else
+         writeSequence->AddAction(WriteTextTNamed, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
 
+   case TStreamerInfo::kSTLp: // Pointer to container with no virtual table (stl) and no comment
+   case TStreamerInfo::kSTLp +
+      TStreamerInfo::kOffsetL: // array of pointers to container with no virtual table (stl) and no comment
+      writeSequence->AddAction(WriteSTLp<true>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
 
-      // case TStreamerInfo::kBits:    writeSequence->AddAction( WriteBasicType<BitsMarker>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-     /*case TStreamerInfo::kFloat16: {
-         if (element->GetFactor() != 0) {
-            writeSequence->AddAction( WriteBasicType_WithFactor<float>, new TConfWithFactor(this,i,compinfo,compinfo->fOffset,element->GetFactor(),element->GetXmin()) );
+   case TStreamerInfo::kStreamLoop:
+   case TStreamerInfo::kOffsetL + TStreamerInfo::kStreamLoop:
+      writeSequence->AddAction(WriteStreamerLoop<true>, new TConfiguration(this, i, compinfo, compinfo->fOffset));
+      break;
+
+   case TStreamerInfo::kBase: isBase = kTRUE; break;
+
+   case TStreamerInfo::kStreamer:
+      writeSequence->AddAction(WriteTextStreamer, new TGenericConfiguration(this, i, compinfo));
+      break;
+
+   // case TStreamerInfo::kBits:    writeSequence->AddAction( WriteBasicType<BitsMarker>, new
+   // TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
+   /*case TStreamerInfo::kFloat16: {
+       if (element->GetFactor() != 0) {
+          writeSequence->AddAction( WriteBasicType_WithFactor<float>, new
+    TConfWithFactor(this,i,compinfo,compinfo->fOffset,element->GetFactor(),element->GetXmin()) );
+       } else {
+          Int_t nbits = (Int_t)element->GetXmin();
+          if (!nbits) nbits = 12;
+          writeSequence->AddAction( WriteBasicType_NoFactor<float>, new
+    TConfNoFactor(this,i,compinfo,compinfo->fOffset,nbits) );
+       }
+       break;
+    } */
+   /*case TStreamerInfo::kDouble32: {
+      if (element->GetFactor() != 0) {
+         writeSequence->AddAction( WriteBasicType_WithFactor<double>, new
+   TConfWithFactor(this,i,compinfo,compinfo->fOffset,element->GetFactor(),element->GetXmin()) );
+      } else {
+         Int_t nbits = (Int_t)element->GetXmin();
+         if (!nbits) {
+            writeSequence->AddAction( ConvertBasicType<float,double>, new
+   TConfiguration(this,i,compinfo,compinfo->fOffset) );
          } else {
-            Int_t nbits = (Int_t)element->GetXmin();
-            if (!nbits) nbits = 12;
-            writeSequence->AddAction( WriteBasicType_NoFactor<float>, new TConfNoFactor(this,i,compinfo,compinfo->fOffset,nbits) );
+            writeSequence->AddAction( WriteBasicType_NoFactor<double>, new
+   TConfNoFactor(this,i,compinfo,compinfo->fOffset,nbits) );
          }
-         break;
-      } */
-     /*case TStreamerInfo::kDouble32: {
-        if (element->GetFactor() != 0) {
-           writeSequence->AddAction( WriteBasicType_WithFactor<double>, new TConfWithFactor(this,i,compinfo,compinfo->fOffset,element->GetFactor(),element->GetXmin()) );
-        } else {
-           Int_t nbits = (Int_t)element->GetXmin();
-           if (!nbits) {
-              writeSequence->AddAction( ConvertBasicType<float,double>, new TConfiguration(this,i,compinfo,compinfo->fOffset) );
-           } else {
-              writeSequence->AddAction( WriteBasicType_NoFactor<double>, new TConfNoFactor(this,i,compinfo,compinfo->fOffset,nbits) );
-           }
-        }
-        break;
-     } */
-     //case TStreamerInfo::kTNamed:  writeSequence->AddAction( WriteTNamed, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-        // Idea: We should calculate the CanIgnoreTObjectStreamer here and avoid calling the
-        // Streamer alltogether.
-     //case TStreamerInfo::kTObject: writeSequence->AddAction( WriteTObject, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-     //case TStreamerInfo::kTString: writeSequence->AddAction( WriteTString, new TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
-     /*case TStreamerInfo::kSTL: {
-        TClass *newClass = element->GetNewClass();
-        TClass *oldClass = element->GetClassPointer();
-        Bool_t isSTLbase = element->IsBase() && element->IsA()!=TStreamerBase::Class();
+      }
+      break;
+   } */
+   // case TStreamerInfo::kTNamed:  writeSequence->AddAction( WriteTNamed, new
+   // TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
+   // Idea: We should calculate the CanIgnoreTObjectStreamer here and avoid calling the
+   // Streamer alltogether.
+   // case TStreamerInfo::kTObject: writeSequence->AddAction( WriteTObject, new
+   // TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
+   // case TStreamerInfo::kTString: writeSequence->AddAction( WriteTString, new
+   // TConfiguration(this,i,compinfo,compinfo->fOffset) );    break;
+   /*case TStreamerInfo::kSTL: {
+      TClass *newClass = element->GetNewClass();
+      TClass *oldClass = element->GetClassPointer();
+      Bool_t isSTLbase = element->IsBase() && element->IsA()!=TStreamerBase::Class();
 
-        if (element->GetArrayLength() <= 1) {
-           if (newClass && newClass != oldClass) {
-              if (element->GetStreamer()) {
-                 writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseChangedClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-              } else {
-                 writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseChangedClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,newClass,element->GetTypeName(),isSTLbase));
-              }
-           } else {
-              if (element->GetStreamer()) {
-                 writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseSameClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-              } else {
-                 writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseSameClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,element->GetTypeName(),isSTLbase));
-              }
-           }
-        } else {
-           if (newClass && newClass != oldClass) {
-              if (element->GetStreamer()) {
-                 writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseChangedClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-              } else {
-                 writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseChangedClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,newClass,element->GetTypeName(),isSTLbase));
-              }
-           } else {
-              if (element->GetStreamer()) {
-                 writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseSameClass,WriteSTLObjectWiseStreamer>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
-              } else {
-                 writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseSameClass,WriteSTLObjectWiseFastArray>, new TConfigSTL(this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,element->GetTypeName(),isSTLbase));
-              }
-           }
-        }
-        break;
-     } */
-      default:
-         generic = kTRUE;
-         break;
+      if (element->GetArrayLength() <= 1) {
+         if (newClass && newClass != oldClass) {
+            if (element->GetStreamer()) {
+               writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseChangedClass,WriteSTLObjectWiseStreamer>, new
+   TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+            } else {
+               writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseChangedClass,WriteSTLObjectWiseFastArray>, new
+   TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,newClass,element->GetTypeName(),isSTLbase));
+            }
+         } else {
+            if (element->GetStreamer()) {
+               writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseSameClass,WriteSTLObjectWiseStreamer>, new
+   TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+            } else {
+               writeSequence->AddAction(WriteSTL<WriteSTLMemberWiseSameClass,WriteSTLObjectWiseFastArray>, new
+   TConfigSTL(this,i,compinfo,compinfo->fOffset,1,oldClass,element->GetTypeName(),isSTLbase));
+            }
+         }
+      } else {
+         if (newClass && newClass != oldClass) {
+            if (element->GetStreamer()) {
+               writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseChangedClass,WriteSTLObjectWiseStreamer>, new
+   TConfigSTL(this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,newClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+            } else {
+               writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseChangedClass,WriteSTLObjectWiseFastArray>, new
+   TConfigSTL(this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,newClass,element->GetTypeName(),isSTLbase));
+            }
+         } else {
+            if (element->GetStreamer()) {
+               writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseSameClass,WriteSTLObjectWiseStreamer>, new
+   TConfigSTL(this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,element->GetStreamer(),element->GetTypeName(),isSTLbase));
+            } else {
+               writeSequence->AddAction(WriteSTL<WriteArraySTLMemberWiseSameClass,WriteSTLObjectWiseFastArray>, new
+   TConfigSTL(this,i,compinfo,compinfo->fOffset,element->GetArrayLength(),oldClass,element->GetTypeName(),isSTLbase));
+            }
+         }
+      }
+      break;
+   } */
+   default: generic = kTRUE; break;
    }
 
    if (isBase) {
       if (compinfo->fStreamer) {
-         writeSequence->AddAction( WriteTextStreamer, new TGenericConfiguration(this,i,compinfo) );
+         writeSequence->AddAction(WriteTextStreamer, new TGenericConfiguration(this, i, compinfo));
       } else {
-         writeSequence->AddAction( WriteTextBaseClass, new TGenericConfiguration(this,i,compinfo) );
+         writeSequence->AddAction(WriteTextBaseClass, new TGenericConfiguration(this, i, compinfo));
       }
 
    } else
 
-   // use generic write action when special handling is not provided
-   if (generic) writeSequence->AddAction( GenericWriteAction, new TGenericConfiguration(this,i,compinfo) );
+      // use generic write action when special handling is not provided
+      if (generic)
+      writeSequence->AddAction(GenericWriteAction, new TGenericConfiguration(this, i, compinfo));
 
 #if defined(CDJ_NO_COMPILE)
    if (element->TestBit(TStreamerElement::kCache)) {
-      TConfiguredAction action( writeSequence->fActions.back() );  // Action is moved, we must pop it next.
+      TConfiguredAction action(writeSequence->fActions.back()); // Action is moved, we must pop it next.
       writeSequence->fActions.pop_back();
-      writeSequence->AddAction( UseCache, new TConfigurationUseCache(this,action,element->TestBit(TStreamerElement::kRepeat)) );
+      writeSequence->AddAction(UseCache,
+                               new TConfigurationUseCache(this, action, element->TestBit(TStreamerElement::kRepeat)));
    }
 #endif
 }

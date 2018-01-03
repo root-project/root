@@ -2112,7 +2112,9 @@ TClass *TBufferJSON::ReadClass(const TClass *, UInt_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// suppressed function of TBuffer
 
-void TBufferJSON::WriteClass(const TClass *) {}
+void TBufferJSON::WriteClass(const TClass *)
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// read version value from buffer
@@ -2159,7 +2161,9 @@ void *TBufferJSON::ReadObjectAny(const TClass *expectedClass)
 ////////////////////////////////////////////////////////////////////////////////
 /// Skip any kind of object from buffer
 
-void TBufferJSON::SkipObjectAny() {}
+void TBufferJSON::SkipObjectAny()
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object to buffer. Only used from TBuffer
