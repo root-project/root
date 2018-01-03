@@ -46,6 +46,9 @@ private:
    /// Release all references to specified window, called from TWebWindow destructor
    void Unregister(TWebWindow &win);
 
+   /// Provide URL address to access specified window from inside or from remote
+   std::string GetUrl(TWebWindow &win, bool remote = false);
+
    /// Show window in specified location, invoked from TWebWindow::Show
    bool Show(TWebWindow &win, const std::string &where);
 
@@ -55,6 +58,9 @@ public:
 
    /// Destructor
    ~TWebWindowsManager();
+
+   /// Returns THttpServer instance
+   THttpServer *GetServer() const { return fServer.get(); }
 
    /// Returns central instance, which used by standard ROOT widgets like Canvas or FitPanel
    static std::shared_ptr<TWebWindowsManager> &Instance();
