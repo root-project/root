@@ -551,9 +551,9 @@ namespace TStreamerInfoActions
             if (kIsTextT) {
                // special handling for the text-based streamers
                for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx)
-                  buf.WriteFastArray((void *) nullptr, cl, -1, nullptr);
+                  buf.WriteFastArray((void *)nullptr, cl, -1, nullptr);
             }
-         //} // k
+            //} // k
       }
       else {
          // -- Older versions do *not* allow polymorphic pointers to objects.
@@ -658,26 +658,28 @@ namespace TStreamerInfoActions
          // -- Newer versions allow polymorphic pointers.
          // Loop over the entries in the clones array or the STL container.
          // for (Int_t k = 0; k < narr; ++k) {
-            // Get the counter for the varying length array.
-            Int_t vlen = *((Int_t*) ((char*) addr /*entry pointer*/ + eoffset /*entry offset*/ + config->fCompInfo->fMethod /*counter offset*/));
-            //Int_t realLen;
-            //b >> realLen;
-            //if (realLen != vlen) {
-            //   fprintf(stderr, "read vlen: %d  realLen: %s\n", vlen, realLen);
-            //}
-            // Get a pointer to the array of pointers.
-            char** pp = (char**) ((char*) addr /*entry pointer*/ + ioffset /*object offset*/);
-            // Loop over each element of the array of pointers to varying-length arrays.
-            // if (!pp) {
-            //   continue;
-            // }
+         // Get the counter for the varying length array.
+         Int_t vlen = *((Int_t *)((char *)addr /*entry pointer*/ + eoffset /*entry offset*/ +
+                                  config->fCompInfo->fMethod /*counter offset*/));
+         // Int_t realLen;
+         // b >> realLen;
+         // if (realLen != vlen) {
+         //   fprintf(stderr, "read vlen: %d  realLen: %s\n", vlen, realLen);
+         //}
+         // Get a pointer to the array of pointers.
+         char **pp = (char **)((char *)addr /*entry pointer*/ + ioffset /*object offset*/);
+         // Loop over each element of the array of pointers to varying-length arrays.
+         // if (!pp) {
+         //   continue;
+         // }
 
-          if (pp) // SL: place it here instead of continue, which is related to for(k) loop
+         if (pp) // SL: place it here instead of continue, which is related to for(k) loop
             for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx) {
-               //if (!pp[ndx]) {
-                  // -- We do not have a pointer to a varying-length array.
-                  //Error("ReadBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(), aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
-                  //continue;
+               // if (!pp[ndx]) {
+               // -- We do not have a pointer to a varying-length array.
+               // Error("ReadBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(),
+               // aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
+               // continue;
                //}
                // Delete any memory at pp[ndx].
                if (!isPtrPtr) {
@@ -695,8 +697,8 @@ namespace TStreamerInfoActions
                   // For now we will just leak memory, just as we
                   // have always done in the past.  Fix this.
                   //
-                  //char** r = (char**) pp[ndx];
-                  //if (r) {
+                  // char** r = (char**) pp[ndx];
+                  // if (r) {
                   //   for (Int_t v = 0; v < vlen; ++v) {
                   //      cl->Destructor(r[v]);
                   //      r[v] = 0;
@@ -718,7 +720,7 @@ namespace TStreamerInfoActions
                   // -- We are a varying-length array of objects.
                   // Note: Polymorphism is not allowed here.
                   // Allocate a new array of objects to read into.
-                  pp[ndx] = (char*) cl->NewArray(vlen);
+                  pp[ndx] = (char *)cl->NewArray(vlen);
                   if (!pp[ndx]) {
                      Error("ReadBuffer", "Memory allocation failed!\n");
                      continue;
@@ -727,13 +729,14 @@ namespace TStreamerInfoActions
                   // -- We are a varying-length array of pointers to objects.
                   // Note: The object pointers are allowed to be polymorphic.
                   // Allocate a new array of pointers to objects to read into.
-                  pp[ndx] = (char*) new char*[vlen];
+                  pp[ndx] = (char *)new char *[vlen];
                   if (!pp[ndx]) {
                      Error("ReadBuffer", "Memory allocation failed!\n");
                      continue;
                   }
                   // And set each pointer to null.
-                  memset(pp[ndx], 0, vlen * sizeof(char*)); // This is the right size we really have a char**: pp[ndx] = (char*) new char*[vlen];
+                  memset(pp[ndx], 0, vlen * sizeof(char *)); // This is the right size we really have a char**: pp[ndx]
+                                                             // = (char*) new char*[vlen];
                }
                if (!isPtrPtr) {
                   // -- We are a varying-length array of objects.
@@ -743,33 +746,34 @@ namespace TStreamerInfoActions
                   buf.ReadFastArray((void **)pp[ndx], cl, vlen, kFALSE, nullptr);
                } // isPtrPtr
             }    // ndx
-          // } // k
-      }
-      else {
+                 // } // k
+      } else {
          // -- Older versions do *not* allow polymorphic pointers.
          // Loop over the entries in the clones array or the STL container.
-         //for (Int_t k = 0; k < narr; ++k) {
-            // Get the counter for the varying length array.
-            Int_t vlen = *((Int_t*) ((char *) addr /*entry pointer*/ + eoffset /*entry offset*/ + config->fCompInfo->fMethod /*counter offset*/));
-            //Int_t realLen;
-            //b >> realLen;
-            //if (realLen != vlen) {
-            //   fprintf(stderr, "read vlen: %d  realLen: %s\n", vlen, realLen);
-            //}
-            // Get a pointer to the array of pointers.
-            char** pp = (char**) ((char *) addr /*entry pointer*/ + ioffset /*object offset*/);
-            //if (!pp) {
-            //   continue;
-            //}
+         // for (Int_t k = 0; k < narr; ++k) {
+         // Get the counter for the varying length array.
+         Int_t vlen = *((Int_t *)((char *)addr /*entry pointer*/ + eoffset /*entry offset*/ +
+                                  config->fCompInfo->fMethod /*counter offset*/));
+         // Int_t realLen;
+         // b >> realLen;
+         // if (realLen != vlen) {
+         //   fprintf(stderr, "read vlen: %d  realLen: %s\n", vlen, realLen);
+         //}
+         // Get a pointer to the array of pointers.
+         char **pp = (char **)((char *)addr /*entry pointer*/ + ioffset /*object offset*/);
+         // if (!pp) {
+         //   continue;
+         //}
 
          if (pp) // SL: place it here instead of continue, which is related to for(k) loop
 
             // Loop over each element of the array of pointers to varying-length arrays.
             for (Int_t ndx = 0; ndx < config->fCompInfo->fLength; ++ndx) {
-               //if (!pp[ndx]) {
-                  // -- We do not have a pointer to a varying-length array.
-                  //Error("ReadBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(), aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
-                  //continue;
+               // if (!pp[ndx]) {
+               // -- We do not have a pointer to a varying-length array.
+               // Error("ReadBuffer", "The pointer to element %s::%s type %d (%s) is null\n", thisVar->GetName(),
+               // aElement->GetFullName(), compinfo[i]->fType, aElement->GetTypeName());
+               // continue;
                //}
                // Delete any memory at pp[ndx].
                if (!isPtrPtr) {
@@ -787,8 +791,8 @@ namespace TStreamerInfoActions
                   // For now we will just leak memory, just as we
                   // have always done in the past.  Fix this.
                   //
-                  //char** r = (char**) pp[ndx];
-                  //if (r) {
+                  // char** r = (char**) pp[ndx];
+                  // if (r) {
                   //   for (Int_t v = 0; v < vlen; ++v) {
                   //      cl->Destructor(r[v]);
                   //      r[v] = 0;
@@ -806,7 +810,7 @@ namespace TStreamerInfoActions
                   // -- We are a varying-length array of objects.
                   // Note: Polymorphism is not allowed here.
                   // Allocate a new array of objects to read into.
-                  pp[ndx] = (char*) cl->NewArray(vlen);
+                  pp[ndx] = (char *)cl->NewArray(vlen);
                   if (!pp[ndx]) {
                      Error("ReadBuffer", "Memory allocation failed!\n");
                      continue;
@@ -815,13 +819,14 @@ namespace TStreamerInfoActions
                   // -- We are a varying-length array of pointers to objects.
                   // Note: The object pointers are allowed to be polymorphic.
                   // Allocate a new array of pointers to objects to read into.
-                  pp[ndx] = (char*) new char*[vlen];
+                  pp[ndx] = (char *)new char *[vlen];
                   if (!pp[ndx]) {
                      Error("ReadBuffer", "Memory allocation failed!\n");
                      continue;
                   }
                   // And set each pointer to null.
-                  memset(pp[ndx], 0, vlen * sizeof(char*)); // This is the right size we really have a char**: pp[ndx] = (char*) new char*[vlen];
+                  memset(pp[ndx], 0, vlen * sizeof(char *)); // This is the right size we really have a char**: pp[ndx]
+                                                             // = (char*) new char*[vlen];
                }
                if (!isPtrPtr) {
                   // -- We are a varying-length array of objects.
@@ -830,31 +835,29 @@ namespace TStreamerInfoActions
                      // Read the object from the buffer.
                      cl->Streamer(pp[ndx] + (v * cl->Size()), buf);
                   } // v
-               }
-               else {
+               } else {
                   // -- We are a varying-length array of object pointers.
                   // Get a pointer to the object pointer array.
-                  char** r = (char**) pp[ndx];
+                  char **r = (char **)pp[ndx];
                   // Loop over the elements of the varying length array.
                   for (Int_t v = 0; v < vlen; ++v) {
                      // Allocate an object to read into.
-                     r[v] = (char*) cl->New();
+                     r[v] = (char *)cl->New();
                      if (!r[v]) {
                         // Do not print a second error message here.
-                        //Error("ReadBuffer", "Memory allocation failed!\n");
+                        // Error("ReadBuffer", "Memory allocation failed!\n");
                         continue;
                      }
                      // Read the object from the buffer.
                      cl->Streamer(r[v], buf);
                   } // v
-               } // isPtrPtr
-            } // ndx
+               }    // isPtrPtr
+            }       // ndx
          // } // k
       } // fileVersion
       buf.CheckByteCount(start, count, config->fCompInfo->fElem->GetFullName());
       return 0;
    }
-
 
    class TConfWithFactor : public TConfiguration {
       // Configuration object for the Float16/Double32 where a factor has been specified.
