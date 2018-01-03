@@ -184,8 +184,8 @@ public:
    static const char *GetDoubleFormat();
 
    static void CompactFloatString(char *buf, unsigned len);
-   static const char *ConvertFloat(Float_t v, char *buf, unsigned len);
-   static const char *ConvertDouble(Double_t v, char *buf, unsigned len);
+   static const char *ConvertFloat(Float_t v, char *buf, unsigned len, Bool_t not_optimize = kFALSE);
+   static const char *ConvertDouble(Double_t v, char *buf, unsigned len, Bool_t not_optimize = kFALSE);
 
    static void SetGlobalReadParam(Int_t mapsize);
    static void SetGlobalWriteParam(Int_t mapsize);

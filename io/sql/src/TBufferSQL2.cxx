@@ -2187,8 +2187,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(Long64_t value)
 Bool_t TBufferSQL2::SqlWriteBasic(Float_t value)
 {
    char buf[200];
-   // snprintf(buf, sizeof(buf), fgFloatFmt, value);
-   ConvertFloat(value, buf, sizeof(buf));
+   ConvertFloat(value, buf, sizeof(buf), kTRUE);
    return SqlWriteValue(buf, sqlio::Float);
 }
 
@@ -2198,8 +2197,7 @@ Bool_t TBufferSQL2::SqlWriteBasic(Float_t value)
 Bool_t TBufferSQL2::SqlWriteBasic(Double_t value)
 {
    char buf[200];
-   // snprintf(buf, sizeof(buf), fgFloatFmt, value);
-   ConvertDouble(value, buf, sizeof(buf));
+   ConvertDouble(value, buf, sizeof(buf), kTRUE);
    return SqlWriteValue(buf, sqlio::Double);
 }
 
