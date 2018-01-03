@@ -239,7 +239,7 @@ struct DynamicType {
    //    typeid( * (DynamicType*) void_ptr );
    virtual ~DynamicType() {}
 };
-}
+} // namespace
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object to I/O buffer.
@@ -276,8 +276,9 @@ Int_t TBufferText::WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_
       // TClass with the actual type_info in memory.
 
       DynamicType *d_ptr = (DynamicType *)obj;
-      Warning("WriteObjectAny", "An object of type %s (from type_info) passed through a %s pointer was truncated (due "
-                                "a missing dictionary)!!!",
+      Warning("WriteObjectAny",
+              "An object of type %s (from type_info) passed through a %s pointer was truncated (due "
+              "a missing dictionary)!!!",
               typeid(*d_ptr).name(), ptrClass->GetName());
       WriteObjectClass(obj, ptrClass, cacheReuse);
       return 2;
@@ -1060,9 +1061,11 @@ const char *TBufferText::GetDoubleFormat()
 ////////////////////////////////////////////////////////////////////////////////
 /// convert float to string with configured format
 
-const char *TBufferText::ConvertFloat(Float_t value, char *buf, unsigned len)
+const char *TBufferText::ConvertFloat(Float_t value, char *buf, unsigned len, Bool_t not_optimize)
 {
-   if ((value == std::nearbyint(value)) && (std::abs(value) < 1e15)) {
+   if (not_optimize) {
+      snprintf(buf, len, fgFloatFmt, value);
+   } else if ((value == std::nearbyint(value)) && (std::abs(value) < 1e15)) {
       snprintf(buf, len, "%1.0f", value);
    } else {
       snprintf(buf, len, fgFloatFmt, value);
@@ -1074,9 +1077,11 @@ const char *TBufferText::ConvertFloat(Float_t value, char *buf, unsigned len)
 ////////////////////////////////////////////////////////////////////////////////
 /// convert float to string with configured format
 
-const char *TBufferText::ConvertDouble(Double_t value, char *buf, unsigned len)
+const char *TBufferText::ConvertDouble(Double_t value, char *buf, unsigned len, Bool_t not_optimize)
 {
-   if ((value == std::nearbyint(value)) && (std::abs(value) < 1e25)) {
+   if (not_optimize) {
+      snprintf(buf, len, fgFloatFmt, value);
+   } else if ((value == std::nearbyint(value)) && (std::abs(value) < 1e25)) {
       snprintf(buf, len, "%1.0f", value);
    } else {
       snprintf(buf, len, fgDoubleFmt, value);

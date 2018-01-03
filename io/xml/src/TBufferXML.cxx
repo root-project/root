@@ -2892,8 +2892,7 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(Long64_t value)
 XMLNodePointer_t TBufferXML::XmlWriteBasic(Float_t value)
 {
    char buf[200];
-   snprintf(buf, sizeof(buf), fgFloatFmt, value);
-   // ConvertFloat(value, buf, sizeof(buf));
+   ConvertFloat(value, buf, sizeof(buf), kTRUE);
    return XmlWriteValue(buf, xmlio::Float);
 }
 
@@ -2903,8 +2902,7 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(Float_t value)
 XMLNodePointer_t TBufferXML::XmlWriteBasic(Double_t value)
 {
    char buf[1000];
-   snprintf(buf, sizeof(buf), fgFloatFmt, value);
-   // ConvertDouble(value, buf, sizeof(buf));
+   ConvertDouble(value, buf, sizeof(buf), kTRUE);
    return XmlWriteValue(buf, xmlio::Double);
 }
 
