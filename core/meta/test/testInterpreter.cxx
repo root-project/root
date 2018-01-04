@@ -6,6 +6,6 @@
 
 TEST(TInterpreter, ErrnoValue)
 {
-	gInterpreter->ProcessLine("errno");
-	EXPECT_EQ(0, TSystem::GetErrno());
+   gInterpreter->ProcessLine("errno");
+   EXPECT_EQ(0, TSystem::GetErrno());
 }
