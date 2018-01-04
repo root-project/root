@@ -2,7 +2,7 @@
 // Author: Omar.Zapata@cern.ch Thu Dec 28 2:15:00 2017
 
 /*************************************************************************
- * Copyright (C) 2017, Omar Andres Zapata Mesa                           *
+ * Copyright (C) 2017-2018, Omar Zapata                                  *
  * All rights reserved.                                                  *
  *                                                                       *
  * For the licensing terms see $ROOTSYS/LICENSE.                         *
@@ -25,7 +25,6 @@
 #include <string>
 
 #define HAVE_CSTDDEF
-#include <cstddef>
 #include <coin/IpTNLP.hpp>
 #include <coin/IpSmartPtr.hpp>
 #undef HAVE_CSTDDEF
@@ -52,19 +51,25 @@ using Ipopt::Number;
 using Ipopt::Index;
 using Ipopt::SolverReturn;
 using Ipopt::IpoptData;
-using Ipopt::IpoptData;
 using Ipopt::IpoptCalculatedQuantities;
 
-class IpoptMinimizer : public ROOT::Math::BasicMinimizer {
+class IpoptMinimizer : public BasicMinimizer {
+private:
+   Ipopt::SmartPtr<Ipopt::IpoptApplication> fIpotApp;
+
 protected:
    class InternalTNLP : public Ipopt::TNLP {
-      InternalTNLP();
+      friend class IpoptMinimizer;
+      IpoptMinimizer *fMinimizer;
+      UInt_t fNNZerosJacobian;
+      UInt_t fNNZerosHessian;
+
+   public:
+      InternalTNLP(IpoptMinimizer *minimizer);
 
       /** default destructor */
       virtual ~InternalTNLP();
 
-      /**@name Overloaded from TNLP */
-      /** Method to return some info about the nlp */
       virtual bool get_nlp_info(Index &n, Index &m, Index &nnz_jac_g, Index &nnz_h_lag, IndexStyleEnum &index_style);
 
       /** Method to return the bounds for my problem */
@@ -104,7 +109,7 @@ protected:
                                      Number obj_value, const IpoptData *ip_data, IpoptCalculatedQuantities *ip_cq);
 
    private:
-      /**@name Methods to block default compiler methods.
+      /** @name Methods to block default compiler methods.
        * The compiler automatically generates the following three methods.
        *  Since the default compiler implementation is generally not what
        *  you want (for all but the most simple classes), we usually
@@ -124,10 +129,6 @@ public:
    */
    IpoptMinimizer();
    /**
-      Constructor with a string giving name of algorithm
-    */
-
-   /**
       Destructor
    */
    virtual ~IpoptMinimizer();
@@ -138,36 +139,41 @@ private:
    /**
       Copy constructor
    */
-   IpoptMinimizer(const IpoptMinimizer &) : BasicMinimizer() {}
+   //    IpoptMinimizer(const IpoptMinimizer &min) : BasicMinimizer(min) {}
 
    /**
       Assignment operator
    */
    IpoptMinimizer &operator=(const IpoptMinimizer &rhs)
    {
-      if (this == &rhs)
+      if (this == &rhs) {
          return *this; // time saving self-test
+      }
       return *this;
    }
 
 public:
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGenFunction &func);
+   virtual void SetFunction(const ROOT::Math::IMultiGenFunction &func) { BasicMinimizer::SetFunction(func); }
 
    /// set the function to minimize
    virtual void SetFunction(const ROOT::Math::IMultiGradFunction &func) { BasicMinimizer::SetFunction(func); }
 
    /// method to perform the minimization
-   virtual bool Minimize();
+   //        virtual bool Minimize();
+
+   void SetNNZerosJacobian(UInt_t nzeros);
+
+   void SetNNZerosHessian(UInt_t nzeros);
 
    /// return expected distance reached from the minimum
    virtual double Edm() const { return 0; } // not impl. }
 
    /// return pointer to gradient values at the minimum
-   virtual const double *MinGradient() const;
+   //     virtual const double *MinGradient() const;
 
    /// number of function calls to reach the minimum
-   virtual unsigned int NCalls() const;
+   //     virtual unsigned int NCalls() const;
 
    /// minimizer provides error and error matrix
    virtual bool ProvidesError() const { return false; }
@@ -180,9 +186,13 @@ public:
        The ordering of the variables is the same as in errors
    */
    virtual double CovMatrix(unsigned int, unsigned int) const { return 0; }
+protected:
+   InternalTNLP fInternalTNLP;
+
+   ClassDef(IpoptMinimizer, 0) //
 };
 
-} // end namespace Fit
+} // end namespace Math
 
 } // end namespace ROOT
 
