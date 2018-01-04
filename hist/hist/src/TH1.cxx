@@ -6544,10 +6544,10 @@ void TH1::Rebuild(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this histogram: contents, errors, etc.
 /// \param[in] option
-///   - "ICE" is specified, resets only Integral, Contents and Errors.
-///   - "ICES" is specified, resets only Integral, Contents , Errors and Statistics
+///   - if "ICE" is specified, resets only Integral, Contents and Errors.
+///   - if "ICES" is specified, resets only Integral, Contents, Errors and Statistics
 ///     This option is used
-///   - "M"   is specified, resets also Minimum and Maximum
+///   - if "M" is specified, resets also Minimum and Maximum
 
 void TH1::Reset(Option_t *option)
 {
