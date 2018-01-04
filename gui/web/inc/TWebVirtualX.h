@@ -23,9 +23,13 @@ protected:
    Int_t             fWindowId; ///<! currently selected window id
    UInt_t            fCw, fCh;  ///<! selected dimensions for the web canvas
 
-   Bool_t     IsWeb(Int_t id) const { return id == 777111777; }
+   Bool_t     IsWeb(Int_t id) const { return id == WebId; }
 
 public:
+
+   // fictional ID, used to identify web-managed windows from normal VirtualX windows
+   enum { WebId = 777111777 };
+
    TWebVirtualX();
    TWebVirtualX(const char *name, const char *title, TVirtualX *vx);
    virtual ~TWebVirtualX();

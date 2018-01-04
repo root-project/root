@@ -18,7 +18,7 @@
 #include "TROOT.h"
 #include "TMath.h"
 #include "TPad.h"
-#include "TVirtualX.h"
+#include "TWebVirtualX.h"
 #include "TWebCanvas.h"
 
 
@@ -140,7 +140,7 @@ void TWebPadPainter::StoreOperation(const char* opt, TObject* obj, Int_t attrmas
 Int_t TWebPadPainter::CreateDrawable(UInt_t /* w */, UInt_t /* h */)
 {
    // return gVirtualX->OpenPixmap(Int_t(w), Int_t(h));
-   return 777111777; // one should return positive value to overcome problem
+   return TWebVirtualX::WebId; // one should return positive value to overcome problem
 }
 
 

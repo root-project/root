@@ -62,7 +62,7 @@ Int_t TWebCanvas::InitWindow()
    if (vx) vx->SetWebCanvasSize(Canvas()->GetWw(), Canvas()->GetWh());
 
    // at this place canvas is not yet register to the list of canvases - we cannot start browser
-   return 777111777; // magic number, should be catch by TWebVirtualX
+   return TWebVirtualX::WebId; // magic number, should be catch by TWebVirtualX
 }
 
 TVirtualPadPainter* TWebCanvas::CreatePadPainter()
