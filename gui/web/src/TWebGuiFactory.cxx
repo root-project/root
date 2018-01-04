@@ -43,9 +43,10 @@ TWebGuiFactory::TWebGuiFactory() :
 
    fGuiProxy = new TRootGuiFactory();
 
-   TWebVirtualX *vx = new TWebVirtualX("webx", "redirection to native X", gVirtualX);
-
-   gVirtualX = vx;
+   if (!gVirtualX || gVirtualX->IsA() != TWebVirtualX::Class()) {
+      TWebVirtualX *vx = new TWebVirtualX("webx", "redirection to native X", gVirtualX);
+      gVirtualX = vx;
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -61,7 +62,6 @@ TWebGuiFactory::~TWebGuiFactory()
 
 TApplicationImp *TWebGuiFactory::CreateApplicationImp(const char *classname, int *argc, char **argv)
 {
-
    return fGuiProxy ? fGuiProxy->CreateApplicationImp(classname, argc, argv) : 0;
 }
 
