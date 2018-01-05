@@ -16,6 +16,10 @@
 #include "rootwebview.h"
 #include "rootwebpage.h"
 
+#include <QMimeData>
+#include <QDragEnterEvent>
+#include <QDropEvent>
+
 RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height) :
    QWebEngineView(parent),
    fWidth(width),
@@ -30,6 +34,8 @@ RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height) :
    // connect(this, &QWebEngineView::javaScriptConsoleMessage, this, &RootWebView::doConsole);
 
    connect(page(), &QWebEnginePage::windowCloseRequested, this, &RootWebView::onWindowCloseRequested);
+
+   setAcceptDrops(true);
 }
 
 RootWebView::~RootWebView()
@@ -41,6 +47,20 @@ QSize RootWebView::sizeHint() const
    if (fWidth && fHeight) return QSize(fWidth, fHeight);
    return QWebEngineView::sizeHint();
 }
+
+void RootWebView::dragEnterEvent( QDragEnterEvent *e )
+{
+   if (e->mimeData()->hasText())
+      e->acceptProposedAction();
+}
+
+
+void RootWebView::dropEvent(QDropEvent* event)
+{
+   printf("RootWebView drop event\n");
+   emit drop(event);
+}
+
 
 
 void RootWebView::closeEvent(QCloseEvent *)
