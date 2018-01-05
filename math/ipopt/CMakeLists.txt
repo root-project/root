@@ -13,7 +13,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Ipopt
                               HEADERS ${headers}
                               LINKDEF ${linkdefs}
                               LIBRARIES ${IPOPT_LIBRARIES}
-                              DEPENDENCIES MathCore )
+                              DEPENDENCIES MathCore MathMore)
 
 #ROOT_ADD_TEST_SUBDIRECTORY(test)
 

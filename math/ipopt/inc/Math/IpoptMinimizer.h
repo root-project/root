@@ -63,6 +63,8 @@ protected:
       IpoptMinimizer *fMinimizer;
       UInt_t fNNZerosJacobian;
       UInt_t fNNZerosHessian;
+      Number nlp_lower_bound_inf;
+      Number nlp_upper_bound_inf;
 
    public:
       InternalTNLP(IpoptMinimizer *minimizer);
@@ -154,13 +156,13 @@ private:
 
 public:
    /// set the function to minimize
-   virtual void SetFunction(const ROOT::Math::IMultiGenFunction &func) { BasicMinimizer::SetFunction(func); }
+   virtual void SetFunction(const ROOT::Math::IMultiGenFunction &func);
 
    /// set the function to minimize
    virtual void SetFunction(const ROOT::Math::IMultiGradFunction &func) { BasicMinimizer::SetFunction(func); }
 
    /// method to perform the minimization
-   //        virtual bool Minimize();
+   virtual bool Minimize();
 
    void SetNNZerosJacobian(UInt_t nzeros);
 
@@ -187,8 +189,7 @@ public:
    */
    virtual double CovMatrix(unsigned int, unsigned int) const { return 0; }
 protected:
-   InternalTNLP fInternalTNLP;
-
+   Ipopt::SmartPtr<InternalTNLP> fInternalTNLP;
    ClassDef(IpoptMinimizer, 0) //
 };
 
