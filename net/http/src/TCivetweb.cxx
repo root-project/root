@@ -40,7 +40,7 @@ public:
 
    virtual ~TCivetwebWSEngine() {}
 
-   virtual UInt_t GetId() const { return TString::Hash((void *)fWSconn, sizeof(void *)); }
+   virtual UInt_t GetId() const { return TString::Hash((void *)&fWSconn, sizeof(void *)); }
 
    virtual void ClearHandle() { fWSconn = nullptr; }
 
@@ -69,7 +69,7 @@ int websocket_connect_handler(const struct mg_connection *conn, void *)
    THttpCallArg arg;
    arg.SetPathAndFileName(request_info->local_uri); // path and file name
    arg.SetQuery(request_info->query_string);        // query arguments
-   arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
+   arg.SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg.SetMethod("WS_CONNECT");
 
    Bool_t execres = serv->ExecuteHttp(&arg);
@@ -95,7 +95,7 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    arg.SetQuery(request_info->query_string);        // query arguments
    arg.SetMethod("WS_READY");
 
-   arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
+   arg.SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg.SetWSHandle(new TCivetwebWSEngine("websocket", "title", conn));
 
    serv->ExecuteHttp(&arg);
@@ -125,7 +125,7 @@ int websocket_data_handler(struct mg_connection *conn, int, char *data, size_t l
    THttpCallArg arg;
    arg.SetPathAndFileName(request_info->local_uri); // path and file name
    arg.SetQuery(request_info->query_string);        // query arguments
-   arg.SetWSId(TString::Hash((void *)conn, sizeof(void *)));
+   arg.SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg.SetMethod("WS_DATA");
 
    arg.SetPostData(data, len, kTRUE); // make copy of original data
@@ -151,7 +151,7 @@ void websocket_close_handler(const struct mg_connection *conn, void *)
    THttpCallArg *arg = new THttpCallArg;
    arg->SetPathAndFileName(request_info->local_uri); // path and file name
    arg->SetQuery(request_info->query_string);        // query arguments
-   arg->SetWSId(TString::Hash((void *)conn, sizeof(void *)));
+   arg->SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
    arg->SetMethod("WS_CLOSE");
 
    serv->SubmitHttp(arg, kFALSE, kTRUE); // delegate ownership to server
