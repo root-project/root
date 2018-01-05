@@ -344,6 +344,18 @@ std::string ROOT::Experimental::TWebWindow::RelativeAddr(std::shared_ptr<TWebWin
 }
 
 ///////////////////////////////////////////////////////////////////////////////////
+/// returns connection for specified connection number
+/// Total number of connections can be retrieved with NumConnections() method
+
+unsigned ROOT::Experimental::TWebWindow::GetConnectionId(unsigned num) const
+{
+   for (auto iter = fConn.begin(); iter != fConn.end(); ++iter) {
+      if (num-- == 0) return iter->fConnId;
+   }
+   return 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
 /// returns true if sending via specified connection can be performed
 /// if direct==true, checks if direct sending (without queuing) is possible
 /// if connid==0, all existing connections are checked
