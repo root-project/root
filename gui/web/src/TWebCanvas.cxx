@@ -314,17 +314,11 @@ TString TWebCanvas::CreateSnapshot(TPad* pad, TPadWebSnapshot *master, TList *pr
       dlst->Clear("nodelete");
    }
 
-   // TBufferJSON::ExportToFile("canvas_empty.json", pad);
-
-   //gDebug = 4;
-
-   // Info("CreateSnapshot","In canvas primitives are %d", pad->GetListOfPrimitives()->GetSize());
-
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
-   // gDebug = 0;
 
    // TODO: this is only for debugging, remove it later
-   TBufferJSON::ExportToFile("snapshot.json", curr);
+   // static int filecnt = 0;
+   // TBufferJSON::ExportToFile(Form("snapshot_%d.json", (filecnt++) % 10), curr);
 
    delete curr; // destroy created snapshot
 
