@@ -414,7 +414,7 @@ TString TWebCanvas::CreateWebWindow(int limit)
       // fWindow->SetGeometry(500,300);
    }
 
-   std::string url = fWindow->GetUrl();
+   std::string url = fWindow->GetUrl(false);
 
    return TString(url.c_str());
 }
