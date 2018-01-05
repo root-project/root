@@ -144,6 +144,9 @@ public:
    /// Returns current number of active clients connections
    unsigned NumConnections() const { return fConn.size(); }
 
+   // Return connection id for given connection
+   unsigned GetConnectionId(unsigned num = 0) const;
+
    /// Closes all connection to clients
    /// Normally leads to closing of all correspondent browser windows
    /// Some browsers (like firefox) do not allow by default to close window
@@ -158,7 +161,7 @@ public:
    }
 
    /// Return URL string to access window
-   std::string GetUrl(bool remote = false);
+   std::string GetUrl(bool remote = true);
 
    /// Return THttpServer instance serving requests to the window
    THttpServer *GetServer();
