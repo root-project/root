@@ -112,6 +112,7 @@ clang/LLVM technology.
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/Process.h"
 
 #include <algorithm>
 #include <iostream>
@@ -1203,6 +1204,17 @@ TCling::TCling(const char *name, const char *title)
 
       clingArgsStorage.push_back("-Wno-undefined-inline");
       clingArgsStorage.push_back("-fsigned-char");
+   }
+
+   // Process externally passed arguments if present.
+   llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv("EXTRA_CLING_ARGS");
+   if (EnvOpt.hasValue()) {
+      StringRef Env(*EnvOpt);
+      while (!Env.empty()) {
+         StringRef Arg;
+         std::tie(Arg, Env) = Env.split(' ');
+         clingArgsStorage.push_back(Arg.str());
+      }
    }
 
    std::vector<const char*> interpArgs;
