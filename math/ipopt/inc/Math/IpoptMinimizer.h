@@ -44,9 +44,38 @@ enum EIpoptMinimizerSolver { kMa27, kMa57, kMa77, kMa86, kMa97, kPardiso, kWsmp,
 //_____________________________________________________________________________________
 /**
  * \class IpoptMinimizer
-   IpoptMinimizer class.
-   Implementation for Ipopt (Interior Point OPTimizer) is a software package for large-scale ​nonlinear optimization.
-   It is designed to find (local) solutions of mathematical optimization problems.
+ * IpoptMinimizer class.
+ * Implementation for Ipopt (Interior Point OPTimizer) is a software package for large-scale ​nonlinear optimization.
+ * It is designed to find (local) solutions of mathematical optimization problems.
+ *
+ * The following information is required by IPOPT:
+ *    - Problem dimensions
+ *      -# number of variables
+ *      -# number of constraints
+ *    - Problem bounds
+ *      -# variable bounds
+ *      -# constraint bounds
+ *    - Initial starting point
+ *      -# Initial values for the primal \f$ x\f$ variables
+ *      -# Initial values for the multipliers (only required for a warm start option)
+ *    - Problem Structure
+ *      -# number of nonzeros in the Jacobian of the constraints
+ *      -# number of nonzeros in the Hessian of the Lagrangian function
+ *      -# sparsity structure of the Jacobian of the constraints
+ *      -# sparsity structure of the Hessian of the Lagrangian function
+ *    - Evaluation of Problem Functions
+ *      -# Information evaluated using a given point ( \f$ x,\lambda, \sigma_f\f$ coming from IPOPT)
+ *      -# Objective function, \f$ f(x)\f$
+ *      -# Gradient of the objective  \f$ \nabla f(x)\f$
+ *      -# Constraint function values, \f$ g(x)\f$
+ *      -# Jacobian of the constraints,  \f$ \nabla g(x)^T\f$
+ *      -# Hessian of the Lagrangian function,  \f$ \sigma_f \nabla^2 f(x) + \sum_{i=1}^m\lambda_i\nabla^2 g_i(x)\f$
+ *
+ * (this is not required if a quasi-Newton options is chosen to approximate the second derivatives)
+ * The problem dimensions and bounds are straightforward and come solely from the problem definition. The initial
+ starting point is used by the algorithm when it begins iterating to solve the problem. If IPOPT has difficulty
+ converging, or if it converges to a locally infeasible point, adjusting the starting point may help. Depending on the
+ starting point, IPOPT may also converge to different local solutions.
 
    See <A HREF="https://projects.coin-or.org/Ipopt">Ipopt doc</A>
    from more info on the Ipopt minimization algorithms.
@@ -67,6 +96,7 @@ protected:
    /**
    * \class InternalTNLP
    * Internal class to create a TNLP object, required for Ipopt minimization
+   * in c++, every method is overloaded to pass the information to Ipopt solvers.
    * @ingroup MultiMin
    */
    class InternalTNLP : public Ipopt::TNLP {
@@ -245,6 +275,34 @@ protected:
        */
       virtual bool eval_jac_g(Index n, const Number *x, bool new_x, Index m, Index nele_jac, Index *iRow, Index *jCol,
                               Number *values);
+      /**
+       * Return either the sparsity structure of the Hessian of the Lagrangian, or the values of the Hessian of the
+       * Lagrangian <a href="https://www.coin-or.org/Ipopt/documentation/node22.html#eq:IpoptLAG">(9)</a> for the given
+       * values for \f$ x\f$, \f$ \sigma_f\f$, and \f$ \lambda\f$.
+       * \param n (in), the number of variables in the problem (dimension of \f$ x\f$).
+       * \param x (in), the values for the primal variables, \f$ x\f$, at which the Hessian is to be evaluated.
+       * \param new_x (in), false if any evaluation method was previously called with the same values in x, true
+       * otherwise.
+       * \param obj_factor (in), factor in front of the objective term in the Hessian, \f$ \sigma_f\f$.
+       * \param m (in), the number of constraints in the problem (dimension of \f$ g(x)\f$).
+       * \param lambda (in), the values for the constraint multipliers,  \f$ \lambda\f$, at which the Hessian is to be
+       * evaluated.
+       * \param new_lambda (in), false if any evaluation method was previously called with the same values in lambda,
+       * true otherwise.
+       * \param nele_hess (in), the number of nonzero elements in the Hessian (dimension of iRow, jCol, and values).
+       * \param iRow (out), the row indices of entries in the Hessian.
+       * \param jCol (out), the column indices of entries in the Hessian.
+       * \param values (out), the values of the entries in the Hessian.
+       *
+       * The Hessian matrix that IPOPT uses is defined in <a
+       * href="https://www.coin-or.org/Ipopt/documentation/node22.html#eq:IpoptLAG">(9)</a>. See Appendix A for a
+       * discussion of the sparse symmetric matrix format used in this method.
+       *
+       * If the iRow and jCol arguments are not NULL, then IPOPT wants you to fill in the sparsity structure of the
+       * Hessian (the row and column indices for the lower or upper triangular part only). In this case, the x, lambda,
+       * and values arrays will be NULL.
+       * \return true if everything is right, false in other case.
+       */
       virtual bool eval_h(Index n, const Number *x, bool new_x, Number obj_factor, Index m, const Number *lambda,
                           bool new_lambda, Index nele_hess, Index *iRow, Index *jCol, Number *values);
       /**
@@ -284,6 +342,7 @@ protected:
       * \param ip_cq are provided for expert users.
       * This method gives you the return status of the algorithm (SolverReturn), and the values of the variables, the
       * objective and constraint function values when the algorithm exited.
+      * \return true if everything is right, false in other case.
       */
       virtual void finalize_solution(SolverReturn status, Index n, const Number *x, const Number *z_L,
                                      const Number *z_U, Index m, const Number *g, const Number *lambda,

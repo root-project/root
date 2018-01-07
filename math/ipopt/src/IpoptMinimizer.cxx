@@ -184,6 +184,9 @@ void IpoptMinimizer::IpoptMinimizer::InternalTNLP::finalize_solution(SolverRetur
    for (Index i = 0; i < m; i++) {
       std::cout << "g(" << i << ") = " << g[i] << std::endl;
    }
+   fMinimizer->SetFinalValues(x);
+
+   fMinimizer->SetMinValue(obj_value);
 }
 
 void IpoptMinimizer::SetFunction(const ROOT::Math::IMultiGenFunction &func)
@@ -227,8 +230,6 @@ bool IpoptMinimizer::Minimize()
       std::cout << std::endl << std::endl << "*** Error during initialization!" << std::endl;
       return (int)status;
    }
-
-   fIpotApp->Options()->SetStringValue("hessian_approximation", "limited-memory");
 
    status = fIpotApp->OptimizeTNLP(fInternalTNLP);
 
