@@ -218,6 +218,9 @@ public:
   static TemplateArgumentList *CreateCopy(ASTContext &Context,
                                           ArrayRef<TemplateArgument> Args);
 
+  /// \brief Create hash for the given arguments.
+  static unsigned ComputeODRHash(ArrayRef<TemplateArgument> Args);
+
   /// \brief Construct a new, temporary template argument list on the stack.
   ///
   /// The template argument list does not own the template arguments
@@ -735,6 +738,26 @@ class RedeclarableTemplateDecl : public TemplateDecl,
     return getMostRecentDecl();
   }
 
+  struct LazySpecializationInfo {
+    uint32_t DeclID = ~0U;
+    unsigned ODRHash = ~0U;
+    bool IsPartial = false;
+    LazySpecializationInfo(uint32_t ID, unsigned Hash = ~0U,
+                           bool Partial = false)
+      : DeclID(ID), ODRHash(Hash), IsPartial(Partial) { }
+    LazySpecializationInfo() { }
+    bool operator<(const LazySpecializationInfo &Other) const {
+      return DeclID < Other.DeclID;
+    }
+    bool operator==(const LazySpecializationInfo &Other) const {
+      assert((DeclID != Other.DeclID || ODRHash == Other.ODRHash) &&
+             "Hashes differ!");
+      assert((DeclID != Other.DeclID || IsPartial == Other.IsPartial) &&
+             "Both must be the same kinds!");
+      return DeclID == Other.DeclID;
+    }
+  };
+
 protected:
   template <typename EntryType> struct SpecEntryTraits {
     typedef EntryType DeclType;
@@ -773,7 +796,12 @@ protected:
     return SpecIterator<EntryType>(isEnd ? Specs.end() : Specs.begin());
   }
 
-  void loadLazySpecializationsImpl() const;
+  void loadLazySpecializationsImpl(bool OnlyPartial = false) const;
+
+  ///\returns true if any lazy specialization was loaded.
+  bool loadLazySpecializationsImpl(llvm::ArrayRef<TemplateArgument> Args) const;
+
+  Decl *loadLazySpecializationImpl(LazySpecializationInfo &LazySpecInfo) const;
 
   template <class EntryType> typename SpecEntryTraits<EntryType>::DeclType*
   findSpecializationImpl(llvm::FoldingSetVector<EntryType> &Specs,
@@ -799,7 +827,7 @@ protected:
     ///
     /// The first value in the array is the number of specializations/partial
     /// specializations that follow.
-    uint32_t *LazySpecializations = nullptr;
+    LazySpecializationInfo *LazySpecializations = nullptr;
   };
 
   /// \brief Pointer to the common data shared by all declarations of this
@@ -2083,7 +2111,7 @@ protected:
 
 public:
   /// \brief Load any lazily-loaded specializations from the external source.
-  void LoadLazySpecializations() const;
+  void LoadLazySpecializations(bool OnlyPartial = false) const;
 
   /// \brief Get the underlying class declarations of the template.
   CXXRecordDecl *getTemplatedDecl() const {
@@ -2884,7 +2912,7 @@ protected:
 
 public:
   /// \brief Load any lazily-loaded specializations from the external source.
-  void LoadLazySpecializations() const;
+  void LoadLazySpecializations(bool OnlyPartial = false) const;
 
   /// \brief Get the underlying variable declarations of the template.
   VarDecl *getTemplatedDecl() const {

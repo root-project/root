@@ -40,6 +40,8 @@ namespace clang {
     const DeclID ThisDeclID;
     const SourceLocation ThisDeclLoc;
     typedef ASTReader::RecordData RecordData;
+    using LazySpecializationInfo
+      = RedeclarableTemplateDecl::LazySpecializationInfo;
     TypeID TypeIDForTypeDecl;
     unsigned AnonymousDeclNumber;
     GlobalDeclID NamedDeclForTagDecl;
@@ -85,9 +87,16 @@ namespace clang {
       return Record.readString();
     }
 
-    void ReadDeclIDList(SmallVectorImpl<DeclID> &IDs) {
+    LazySpecializationInfo ReadLazySpecializationInfo() {
+      DeclID ID = ReadDeclID();
+      unsigned Hash = Record.readInt();
+      bool IsPartial = Record.readInt();
+      return LazySpecializationInfo(ID, Hash, IsPartial);
+    }
+
+    void ReadDeclIDList(SmallVectorImpl<LazySpecializationInfo> &IDs) {
       for (unsigned I = 0, Size = Record.readInt(); I != Size; ++I)
-        IDs.push_back(ReadDeclID());
+        IDs.push_back(ReadLazySpecializationInfo());
     }
 
     Decl *ReadDecl() {
@@ -221,7 +230,7 @@ namespace clang {
 
     template <typename T> static
     void AddLazySpecializations(T *D,
-                                SmallVectorImpl<serialization::DeclID>& IDs) {
+                                SmallVectorImpl<LazySpecializationInfo>& IDs) {
       if (IDs.empty())
         return;
 
@@ -231,12 +240,11 @@ namespace clang {
       auto *&LazySpecializations = D->getCommonPtr()->LazySpecializations;
 
       if (auto &Old = LazySpecializations) {
-        IDs.insert(IDs.end(), Old + 1, Old + 1 + Old[0]);
+        IDs.insert(IDs.end(), Old + 1, Old + 1 + Old[0].DeclID);
         std::sort(IDs.begin(), IDs.end());
         IDs.erase(std::unique(IDs.begin(), IDs.end()), IDs.end());
       }
-
-      auto *Result = new (C) serialization::DeclID[1 + IDs.size()];
+      auto *Result = new (C) LazySpecializationInfo[1 + IDs.size()];
       *Result = IDs.size();
       std::copy(IDs.begin(), IDs.end(), Result + 1);
 
@@ -271,7 +279,7 @@ namespace clang {
     void ReadFunctionDefinition(FunctionDecl *FD);
     void Visit(Decl *D);
 
-    void UpdateDecl(Decl *D, llvm::SmallVectorImpl<serialization::DeclID>&);
+    void UpdateDecl(Decl *D, llvm::SmallVectorImpl<LazySpecializationInfo>&);
 
     static void setNextObjCCategory(ObjCCategoryDecl *Cat,
                                     ObjCCategoryDecl *Next) {
@@ -2009,7 +2017,7 @@ void ASTDeclReader::VisitClassTemplateDecl(ClassTemplateDecl *D) {
   if (ThisDeclID == Redecl.getFirstID()) {
     // This ClassTemplateDecl owns a CommonPtr; read it to keep track of all of
     // the specializations.
-    SmallVector<serialization::DeclID, 32> SpecIDs;
+    SmallVector<LazySpecializationInfo, 32> SpecIDs;
     ReadDeclIDList(SpecIDs);
     ASTDeclReader::AddLazySpecializations(D, SpecIDs);
   }
@@ -2036,7 +2044,7 @@ void ASTDeclReader::VisitVarTemplateDecl(VarTemplateDecl *D) {
   if (ThisDeclID == Redecl.getFirstID()) {
     // This VarTemplateDecl owns a CommonPtr; read it to keep track of all of
     // the specializations.
-    SmallVector<serialization::DeclID, 32> SpecIDs;
+    SmallVector<LazySpecializationInfo, 32> SpecIDs;
     ReadDeclIDList(SpecIDs);
     ASTDeclReader::AddLazySpecializations(D, SpecIDs);
   }
@@ -2142,7 +2150,7 @@ void ASTDeclReader::VisitFunctionTemplateDecl(FunctionTemplateDecl *D) {
 
   if (ThisDeclID == Redecl.getFirstID()) {
     // This FunctionTemplateDecl owns a CommonPtr; read it.
-    SmallVector<serialization::DeclID, 32> SpecIDs;
+    SmallVector<LazySpecializationInfo, 32> SpecIDs;
     ReadDeclIDList(SpecIDs);
     ASTDeclReader::AddLazySpecializations(D, SpecIDs);
   }
@@ -3691,7 +3699,9 @@ void ASTReader::loadDeclUpdateRecords(PendingUpdateRecord &Record) {
   ProcessingUpdatesRAIIObj ProcessingUpdates(*this);
   DeclUpdateOffsetsMap::iterator UpdI = DeclUpdateOffsets.find(ID);
 
-  llvm::SmallVector<serialization::DeclID, 8> PendingLazySpecializationIDs;
+  using LazySpecializationInfo
+    = RedeclarableTemplateDecl::LazySpecializationInfo;
+  llvm::SmallVector<LazySpecializationInfo, 8> PendingLazySpecializationIDs;
 
   if (UpdI != DeclUpdateOffsets.end()) {
     auto UpdateOffsets = std::move(UpdI->second);
@@ -3937,7 +3947,7 @@ static void forAllLaterRedecls(DeclT *D, Fn F) {
 }
 
 void ASTDeclReader::UpdateDecl(Decl *D,
-   llvm::SmallVectorImpl<serialization::DeclID> &PendingLazySpecializationIDs) {
+        SmallVectorImpl<LazySpecializationInfo> &PendingLazySpecializationIDs) {
   while (Record.getIdx() < Record.size()) {
     switch ((DeclUpdateKind)Record.readInt()) {
     case UPD_CXX_ADDED_IMPLICIT_MEMBER: {
@@ -3954,7 +3964,7 @@ void ASTDeclReader::UpdateDecl(Decl *D,
 
     case UPD_CXX_ADDED_TEMPLATE_SPECIALIZATION:
       // It will be added to the template's lazy specialization set.
-      PendingLazySpecializationIDs.push_back(ReadDeclID());
+      PendingLazySpecializationIDs.push_back(ReadLazySpecializationInfo());
       break;
 
     case UPD_CXX_ADDED_ANONYMOUS_NAMESPACE: {
