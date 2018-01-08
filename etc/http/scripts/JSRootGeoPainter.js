@@ -2180,7 +2180,7 @@
       if (!hit || !hit.fN || (hit.fN < 0)) return false;
 
       var hit_size = 8*hit.fMarkerSize,
-          size = hit.fN-1,
+          size = hit.fN,
           projv = this.options.projectPos,
           projx = (this.options.project === "x"),
           projy = (this.options.project === "y"),
@@ -2850,13 +2850,7 @@
          if (!force_draw)
            this.TestAxisVisibility(null, this._toplevel);
       } else {
-
          this.drawSimpleAxis();
-
-         //var axis = JSROOT.Create("TNamed");
-         //axis._typename = "TAxis3D";
-         //axis._main = this;
-         //JSROOT.draw(this.divid, axis); // it will include drawing of
       }
    }
 
@@ -3324,7 +3318,7 @@
 
    JSROOT.GEO.createList = function(parent, lst, name, title) {
 
-      if ((lst==null) || !('arr' in lst) || (lst.arr.length==0)) return;
+      if (!lst || !('arr' in lst) || (lst.arr.length==0)) return;
 
       var item = {
           _name: name,

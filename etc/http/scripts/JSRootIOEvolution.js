@@ -858,7 +858,7 @@
       } else {
          var file = this;
          JSROOT.NewHttpRequest(this.fURL, "head", function(res) {
-            if (res==null)
+            if (!res)
                return JSROOT.CallBack(newfile_callback, null);
 
             var accept_ranges = res.getResponseHeader("Accept-Ranges");
@@ -1090,7 +1090,7 @@
    TFile.prototype.GetDir = function(dirname, cycle) {
       // check first that directory with such name exists
 
-      if ((cycle==null) && (typeof dirname == 'string')) {
+      if ((cycle === undefined) && (typeof dirname == 'string')) {
          var pos = dirname.lastIndexOf(';');
          if (pos>0) { cycle = dirname.substr(pos+1); dirname = dirname.substr(0,pos); }
       }
