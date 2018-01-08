@@ -21,7 +21,7 @@ void LoadXS()
     e*=fact;
   }
 
-  c1 = new TCanvas("c1","Lead Cross section",200,10,700,500);
+  auto c1 = new TCanvas("c1","Lead Cross section",200,10,700,500);
 
   c1->SetFillColor(42);
   c1->SetGridx();
