@@ -141,7 +141,11 @@ Bool_t THttpWSHandler::HandleWS(THttpCallArg *arg)
 
    if (engine && engine->PreviewData(arg)) return kTRUE;
 
-   return ProcessWS(arg);
+   Bool_t res = ProcessWS(arg);
+
+   if (engine) engine->PostProcess(arg);
+
+   return res;
 }
 
 void THttpWSHandler::CloseWS(UInt_t wsid)
