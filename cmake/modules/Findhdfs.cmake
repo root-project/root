@@ -7,7 +7,7 @@
 #  HDFS_LIBRARIES
 
 find_path(HDFS_INCLUDE_DIR NAMES hdfs.h  HINTS ${HDFS_DIR}/include $ENV{HDFS_DIR}/include /usr/include/hadoop)
-find_library(HDFS_LIBRARY NAMES hdfs HINTS ${HDFS_DIR}/lib/native $ENV{HDFS_DIR}/lib/native)
+find_library(HDFS_LIBRARY NAMES hdfs PATH_SUFFIXES native HINTS ${HDFS_DIR}/lib $ENV{HDFS_DIR}/lib)
 
 set(HDFS_INCLUDE_DIRS ${HDFS_INCLUDE_DIR})
 set(HDFS_LIBRARIES ${HDFS_LIBRARY})
