@@ -22,7 +22,7 @@ NdbMTDir::~NdbMTDir( )
 
 /* -------- LoadENDF -------- */
 Bool_t
-NdbMTDir::LoadENDF( char *filename )
+NdbMTDir::LoadENDF( const char *filename )
 {
    Bool_t      error;
 

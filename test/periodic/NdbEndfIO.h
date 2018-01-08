@@ -54,7 +54,7 @@ public:
    virtual ~NdbEndfIO()
       { if (f) fclose(f); }
 
-   NdbEndfIO( char *filename, Int_t mode);
+   NdbEndfIO( const char *filename, Int_t mode);
 
      NdbEndfIO( NdbEndfIO *endf ) {
         f   = endf->f;

@@ -9,7 +9,7 @@ char   NdbEndfIO::_str[100];      // define static _str var
 ClassImp(NdbEndfIO);
 
 /* ============ NdbEndfIO ============== */
-NdbEndfIO::NdbEndfIO( char *filename, Int_t mode )
+NdbEndfIO::NdbEndfIO( const char *filename, Int_t mode )
 {
    f = fopen(filename,mode==TENDF_READ?"r":"w");
    matStart = 0;

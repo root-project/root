@@ -8,7 +8,7 @@ ClassImp(NdbMTReactionXS);
 
 /* -------- LoadENDF -------- */
 Bool_t
-NdbMTReactionXS::LoadENDF( char *filename )
+NdbMTReactionXS::LoadENDF( const char *filename )
 {
    NdbEndfIO   endf(filename,TENDF_READ);
    Bool_t      error;

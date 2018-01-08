@@ -334,3 +334,8 @@ endif()
 if(TARGET g2root)
   ROOT_ADD_TEST(test-g2root COMMAND g2root)
 endif()
+
+#--periodic----------------------------------------------------------------------------------------
+ROOT_ADD_TEST(test-periodic-build COMMAND ${CMAKE_CTEST_COMMAND} 
+                                  --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build 
+                                  --build-generator ${CMAKE_GENERATOR})
