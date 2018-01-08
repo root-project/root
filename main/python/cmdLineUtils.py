@@ -659,6 +659,8 @@ def copyRootObjectRecursive(sourceFile,sourcePathSplit,destFile,destPathSplit,re
             else:
                 if setName != "":
                     obj.SetName(setName)
+                else:
+                    obj.SetName(objectName)
                 changeDirectory(destFile,destPathSplit)
                 obj.Write()
             obj.Delete()
