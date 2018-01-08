@@ -71,6 +71,8 @@ public:
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+const char *gLongPollNope = "<<nope>>";
+
 class TLongPollEngine : public THttpWSEngine {
 protected:
    THttpCallArg *fPoll;         ///!< polling request, which can be used for the next sending
@@ -119,16 +121,18 @@ public:
       }
    }
 
+   //////////////////////////////////////////////////////////////////////////////
    /// Preview data for given socket
    /// function called in the user code before processing correspondent websocket data
    /// returns kTRUE when user should ignore such http request - it is for internal use
+
    virtual Bool_t PreviewData(THttpCallArg *arg) override
    {
       if (!strstr(arg->GetQuery(), "&dummy")) {
          // this is normal request, deliver and process it as any other
          // put dummy content, it can be overwritten in the future
          arg->SetContentType("text/plain");
-         arg->SetContent("<<nope>>");
+         arg->SetContent(gLongPollNope);
          return kFALSE;
       }
 
@@ -141,7 +145,7 @@ public:
          Info("PreviewData", "Get dummy request when previous not completed");
          // if there are pending request, reply it immediately
          fPoll->SetContentType("text/plain");
-         fPoll->SetContent("<<nope>>"); // normally should never happen
+         fPoll->SetContent(gLongPollNope); // normally should never happen
          fPoll->NotifyCondition();
          fPoll = nullptr;
       }
@@ -157,6 +161,20 @@ public:
 
       // if arguments has "&dummy" string, user should not process it
       return kTRUE;
+   }
+
+   //////////////////////////////////////////////////////////////////////////////
+   /// Normally requests from client does not replied directly
+   /// Therefore one can use it to send data with it
+
+   virtual void PostProcess(THttpCallArg *arg)
+   {
+      if ((fBuf.size() > 0) && arg->IsContentType("text/plain") &&
+          (arg->GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
+          (strcmp((const char *)arg->GetContent(), gLongPollNope) == 0)) {
+         arg->SetContent(fBuf.front().c_str());
+         fBuf.pop_front();
+      }
    }
 };
 

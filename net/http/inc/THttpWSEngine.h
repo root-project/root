@@ -34,6 +34,8 @@ public:
 
    virtual Bool_t PreviewData(THttpCallArg *) { return kFALSE; }
 
+   virtual void PostProcess(THttpCallArg *) {}
+
    ClassDef(THttpWSEngine, 0) // abstract class for working with WebSockets-like protocol
 };
 
