@@ -34,7 +34,7 @@
           tcolor = this.get_color(text.fTextColor),
           use_frame = false,
           fact = 1., textsize = text.fTextSize || 0.05,
-          main = this.main_painter();
+          main = this.frame_painter();
 
       if (text.TestBit(JSROOT.BIT(14))) {
          // NDC coordinates
@@ -511,9 +511,10 @@
    }
 
    TF1Painter.prototype.CreateBins = function(ignore_zoom) {
-      var main = this.main_painter(), gxmin = 0, gxmax = 0, tf1 = this.GetObject();
+      var main = this.frame_painter(),
+          gxmin = 0, gxmax = 0, tf1 = this.GetObject();
 
-      if ((main!==null) && !ignore_zoom)  {
+      if (main && !ignore_zoom)  {
          if (main.zoom_xmin !== main.zoom_xmax) {
             gxmin = main.zoom_xmin;
             gxmax = main.zoom_xmax;
@@ -550,7 +551,7 @@
          if (gxmax < xmax) xmax = gxmax;
       }
 
-      if ((main!==null) && main.logx && (xmin>0) && (xmax>0)) {
+      if (main && main.logx && (xmin>0) && (xmax>0)) {
          logx = true;
          xmin = Math.log(xmin);
          xmax = Math.log(xmax);
@@ -662,8 +663,8 @@
       var name = this.GetTipName();
       if (name.length > 0) res.lines.push(name);
 
-      var pmain = this.main_painter();
-      if (pmain!==null)
+      var pmain = this.frame_painter();
+      if (pmain)
          res.lines.push("x = " + pmain.AxisAsText("x",bin.x) + " y = " + pmain.AxisAsText("y",bin.y));
 
       return res;
@@ -671,8 +672,11 @@
 
    TF1Painter.prototype.Redraw = function() {
 
-      var w = this.frame_width(), h = this.frame_height(),
-          tf1 = this.GetObject(), pmain = this.main_painter(),
+      var w = this.frame_width(),
+          h = this.frame_height(),
+          tf1 = this.GetObject(),
+          fp = this.frame_painter(),
+          pmain = this.main_painter(),
           name = this.GetTipName("\n");
 
       this.CreateG(true);
@@ -691,15 +695,15 @@
       // first calculate graphical coordinates
       for(var n=0; n<this.bins.length; ++n) {
          var bin = this.bins[n];
-         bin.grx = pmain.grx(bin.x);
-         bin.gry = pmain.gry(bin.y);
+         bin.grx = fp.grx(bin.x);
+         bin.gry = fp.gry(bin.y);
       }
 
       if (this.bins.length > 2) {
 
          var h0 = h;  // use maximal frame height for filling
          if ((pmain.hmin!==undefined) && (pmain.hmin>=0)) {
-            h0 = Math.round(pmain.gry(0));
+            h0 = Math.round(fp.gry(0));
             if ((h0 > h) || (h0 < 0)) h0 = h;
          }
 
@@ -796,22 +800,23 @@
 
       var graph = this.GetObject(),
           d = new JSROOT.DrawOptions(opt),
-          res = { Line:0, Curve:0, Rect:0, Mark:0, Bar:0, OutRange: 0,  EF:0, Fill:0,
-                  Errors: 0, MainError: 1, Ends: 1, Axis: "", original: opt };
-
-      if (this.has_errors) res.Errors = 1;
+          res = { Line: 0, Curve: 0, Rect: 0, Mark: 0, Bar: 0, OutRange: 0,  EF:0, Fill: 0, NoOpt: 0,
+                  MainError: 1, Ends: 1, Axis: "", original: opt };
 
       res._pfc = d.check("PFC");
       res._plc = d.check("PLC");
       res._pmc = d.check("PMC");
 
+      if (d.check('NOOPT')) res.NoOpt = 1;
       if (d.check('L')) res.Line = 1;
       if (d.check('F')) res.Fill = 1;
       if (d.check('IA')) res.Axis = "A"; else
       if (d.check('A')) res.Axis = "AXIS";
       if (d.check('X+')) res.Axis += "X+";
       if (d.check('Y+')) res.Axis += "Y+";
-      if (d.check('C')) { res.Curve = 1; if (!res.Fill) res.Line = 1; }
+      if (d.check('RX')) res.Axis += "RX";
+      if (d.check('RY')) res.Axis += "RY";
+      if (d.check('C')) res.Curve = res.Line = 1;
       if (d.check('*')) res.Mark = 103;
       if (d.check('P0')) res.Mark = 104;
       if (d.check('P')) res.Mark = 1;
@@ -823,14 +828,18 @@
       if (d.check('>')) { res.Errors = 1; res.Ends = 4; }
       if (d.check('0')) { res.Mark = 1; res.Errors = 1; res.OutRange = 1; }
       if (d.check('1')) { if (res.Bar == 1) res.Bar = 2; }
-      if (d.check('2')) { res.Rect = 1; res.Line = 0; res.Errors = 0; }
-      if (d.check('3')) { res.EF = 1; res.Line = 0; res.Errors = 0; }
-      if (d.check('4')) { res.EF = 2; res.Line = 0; res.Errors = 0; }
-      if (d.check('5')) { res.Rect = 2; res.Line = 0; res.Errors = 0; }
+      if (d.check('2')) { res.Rect = 1; res.Errors = 0; }
+      if (d.check('3')) { res.EF = 1; res.Errors = 0;  }
+      if (d.check('4')) { res.EF = 2; res.Errors = 0; }
+      if (d.check('5')) { res.Rect = 2; res.Errors = 0; }
       if (d.check('X')) res.Errors = 0;
+      // if (d.check('E')) res.Errors = 1; // E option only defined for TGraphPolar
+
+      if (res.Errors === undefined)
+         res.Errors = this.has_errors ? 1 : 0;
 
       // special case - one could use svg:path to draw many pixels (
-      if ((res.Mark==1) && (graph.fMarkerStyle==1)) res.Mark = 101;
+      if ((res.Mark == 1) && (graph.fMarkerStyle==1)) res.Mark = 101;
 
       // if no drawing option is selected and if opt=='' nothing is done.
       if (res.Line + res.Fill + res.Mark + res.Bar + res.EF + res.Rect + res.Errors == 0) {
@@ -848,6 +857,8 @@
          // graph is first object in list of primitives
          var pad = this.root_pad();
          if (!pad || !pad.fPrimitives || (pad.fPrimitives.arr[0] === graph)) res.Axis = "AXIS";
+      } else if (res.Axis.indexOf("A")<0) {
+         res.Axis = "AXIS," + res.Axis;
       }
 
       return res;
@@ -870,12 +881,12 @@
          var bin = { x: gr.fX[p], y: gr.fY[p], indx: p };
          switch(kind) {
             case 1:
-              bin.exlow = bin.exhigh = gr.fEX[p];
-              bin.eylow = bin.eyhigh = gr.fEY[p];
-              break;
+               bin.exlow = bin.exhigh = gr.fEX[p];
+               bin.eylow = bin.eyhigh = gr.fEY[p];
+               break;
             case 2:
                bin.exlow  = gr.fEXlow[p];
-               bin.exhigh  = gr.fEXhigh[p];
+               bin.exhigh = gr.fEXhigh[p];
                bin.eylow  = gr.fEYlow[p];
                bin.eyhigh = gr.fEYhigh[p];
                break;
@@ -934,24 +945,31 @@
       return histo;
    }
 
-   TGraphPainter.prototype.OptimizeBins = function(filter_func) {
+   /** Returns true if graph drawing can be optimize */
+   TGraphPainter.prototype.CanOptimize = function() {
+      return JSROOT.gStyle.OptimizeDraw > 0 && !this.options.NoOpt;
+   }
+
+   /** Returns optimized bins - if optimization enabled */
+   TGraphPainter.prototype.OptimizeBins = function(maxpnt, filter_func) {
       if ((this.bins.length < 30) && !filter_func) return this.bins;
 
       var selbins = null;
       if (typeof filter_func == 'function') {
          for (var n = 0; n < this.bins.length; ++n) {
             if (filter_func(this.bins[n],n)) {
-               if (selbins==null)
-                  selbins = (n==0) ? [] : this.bins.slice(0, n);
+               if (!selbins) selbins = (n==0) ? [] : this.bins.slice(0, n);
             } else {
-               if (selbins != null) selbins.push(this.bins[n]);
+               if (selbins) selbins.push(this.bins[n]);
             }
          }
       }
-      if (selbins == null) selbins = this.bins;
+      if (!selbins) selbins = this.bins;
 
-      if ((selbins.length < 5000) || (JSROOT.gStyle.OptimizeDraw == 0)) return selbins;
-      var step = Math.floor(selbins.length / 5000);
+      if (!maxpnt) maxpnt = 500000;
+
+      if ((selbins.length < maxpnt) || !this.CanOptimize()) return selbins;
+      var step = Math.floor(selbins.length / maxpnt);
       if (step < 2) step = 2;
       var optbins = [];
       for (var n = 0; n < selbins.length; n+=step)
@@ -961,7 +979,7 @@
    }
 
    TGraphPainter.prototype.TooltipText = function(d) {
-      var pmain = this.main_painter(), lines = [];
+      var pmain = this.frame_painter(), lines = [];
 
       lines.push(this.GetTipName());
 
@@ -979,7 +997,7 @@
    }
 
    TGraphPainter.prototype.get_main = function() {
-      var pmain = this.main_painter();
+      var pmain = this.frame_painter();
 
       if (pmain && pmain.grx && pmain.gry) return pmain;
 
@@ -1057,7 +1075,7 @@
 
       if (this.options.EF) {
 
-         drawbins = this.OptimizeBins();
+         drawbins = this.OptimizeBins((this.options.EF > 1) ? 5000 : 0);
 
          // build lower part
          for (var n=0;n<drawbins.length;++n) {
@@ -1066,7 +1084,7 @@
             bin.gry = pmain.gry(bin.y - bin.eylow);
          }
 
-         var path1 = JSROOT.Painter.BuildSvgPath(this.options.EF > 1 ? "bezier" : "line", drawbins),
+         var path1 = JSROOT.Painter.BuildSvgPath((this.options.EF > 1) ? "bezier" : "line", drawbins),
              bins2 = [];
 
          for (var n=drawbins.length-1;n>=0;--n) {
@@ -1076,7 +1094,7 @@
          }
 
          // build upper part (in reverse direction)
-         var path2 = JSROOT.Painter.BuildSvgPath(this.options.EF > 1 ? "Lbezier" : "Lline", bins2);
+         var path2 = JSROOT.Painter.BuildSvgPath((this.options.EF > 1) ? "Lbezier" : "Lline", bins2);
 
          this.draw_g.append("svg:path")
                     .attr("d", path1.path + path2.path + "Z")
@@ -1092,10 +1110,10 @@
 
          if (this.options.Fill == 1) {
             close_symbol = "Z"; // always close area if we want to fill it
-            excl_width=0;
+            excl_width = 0;
          }
 
-         if (drawbins===null) drawbins = this.OptimizeBins();
+         if (!drawbins) drawbins = this.OptimizeBins(this.options.Curve ? 5000 : 0);
 
          for (var n=0;n<drawbins.length;++n) {
             var bin = drawbins[n];
@@ -1150,7 +1168,7 @@
 
       if (this.options.Errors || this.options.Rect || this.options.Bar) {
 
-         drawbins = this.OptimizeBins(function(pnt,i) {
+         drawbins = this.OptimizeBins(5000, function(pnt,i) {
 
             var grx = pmain.grx(pnt.x);
 
@@ -1290,8 +1308,7 @@
 
       if (this.options.Mark) {
          // for tooltips use markers only if nodes where not created
-         var step = Math.max(1, Math.round(this.bins.length / 50000)),
-             path = "", n, pnt, grx, gry;
+         var path = "", pnt, grx, gry;
 
          if (!this.markeratt)
             this.markeratt = new JSROOT.TAttMarkerHandler(graph, this.options.Mark - 100);
@@ -1302,14 +1319,20 @@
 
          this.markeratt.reset_pos();
 
-         for (n=0;n<this.bins.length;n+=step) {
-            pnt = this.bins[n];
+         // let produce SVG at maximum 1MB
+         var maxnummarker = 1000000 / (this.markeratt.MarkerLength() + 7), step = 1;
+
+         if (!drawbins) drawbins = this.OptimizeBins(maxnummarker); else
+            if (this.CanOptimize() && (drawbins.length > 1.5*maxnummarker))
+               step = Math.min(2, Math.round(drawbins.length/maxnummarker));
+
+         for (var n=0;n<drawbins.length;n+=step) {
+            pnt = drawbins[n];
             grx = pmain.grx(pnt.x);
-            if ((grx > -this.marker_size) && (grx < w+this.marker_size)) {
+            if ((grx > -this.marker_size) && (grx < w + this.marker_size)) {
                gry = pmain.gry(pnt.y);
-               if ((gry >-this.marker_size) && (gry < h+this.marker_size)) {
+               if ((gry > -this.marker_size) && (gry < h + this.marker_size))
                   path += this.markeratt.create(grx, gry);
-               }
             }
          }
 
@@ -1334,7 +1357,7 @@
 
       var width = this.frame_width(),
           height = this.frame_height(),
-          pmain = this.main_painter(),
+          pmain = this.frame_painter(),
           painter = this,
           findbin = null, best_dist2 = 1e10, best = null;
 
@@ -1442,7 +1465,7 @@
           bestindx = -1,
           bestbin = null,
           bestdist = 1e10,
-          pmain = this.main_painter(),
+          pmain = this.frame_painter(),
           dist, grx, gry, n, bin;
 
       for (n=0;n<this.bins.length;++n) {
@@ -1542,9 +1565,9 @@
 
       var islines = (this.draw_kind=="lines"),
           ismark = (this.draw_kind=="mark"),
-          pmain = this.main_painter();
-
-      var res = { name: this.GetObject().fName, title: this.GetObject().fTitle,
+          pmain = this.frame_painter(),
+          gr = this.GetObject(),
+          res = { name: gr.fName, title: gr.fTitle,
                   x: best.bin ? pmain.grx(best.bin.x) : best.linex,
                   y: best.bin ? pmain.gry(best.bin.y) : best.liney,
                   color1: this.lineatt.color,
@@ -1582,7 +1605,7 @@
       if (this.fillatt && this.fillatt.used) res.color2 = this.fillatt.color;
 
       if (!islines) {
-         res.color1 = this.get_color(this.GetObject().fMarkerColor);
+         res.color1 = this.get_color(gr.fMarkerColor);
          if (!res.color2) res.color2 = res.color1;
       }
 
@@ -1643,9 +1666,9 @@
    }
 
    TGraphPainter.prototype.movePntHandler = function(first_time) {
-      var pos = d3.mouse(this.svg_frame().node());
+      var pos = d3.mouse(this.svg_frame().node()),
+          main = this.frame_painter();
 
-      var main = this.main_painter();
       if (!main || !this.interactive_bin) return;
 
       this.interactive_bin.x = main.RevertX(pos[0] + this.interactive_delta_x);
@@ -1673,11 +1696,11 @@
       d3.select(window).on("mousemove.graphPnt", this.movePntHandler.bind(this))
                        .on("mouseup.graphPnt", this.endPntHandler.bind(this), true);
 
-      var pos = d3.mouse(this.svg_frame().node());
-      var main = this.main_painter();
+      var pos = d3.mouse(this.svg_frame().node()),
+          main = this.frame_painter();
 
-      this.interactive_delta_x = main ? main.x(this.interactive_bin.x)-pos[0] : 0;
-      this.interactive_delta_y = main ? main.y(this.interactive_bin.y)-pos[1] : 0;
+      this.interactive_delta_x = main ? main.x(this.interactive_bin.x) - pos[0] : 0;
+      this.interactive_delta_y = main ? main.y(this.interactive_bin.y) - pos[1] : 0;
    }
 
    TGraphPainter.prototype.FillContextMenu = function(menu) {
@@ -1702,7 +1725,7 @@
          var hint = this.ExtractTooltip(pnt);
 
          if (method.fName == 'InsertPoint') {
-            var main = this.main_painter(),
+            var main = this.frame_painter(),
                 userx = main && main.RevertX ? main.RevertX(pnt.x) : 0,
                 usery = main && main.RevertY ? main.RevertY(pnt.y) : 0;
             canp.ShowMessage('InsertPoint(' + userx.toFixed(3) + ',' + usery.toFixed(3) + ') not yet implemented');
@@ -1760,8 +1783,8 @@
 
       if (funcname !== "ToggleZoom") return false;
 
-      var main = this.main_painter();
-      if (main === null) return false;
+      var main = this.frame_painter();
+      if (!main) return false;
 
       if ((this.xmin===this.xmax) && (this.ymin = this.ymax)) return false;
 
@@ -2510,7 +2533,7 @@
 
       var cleanup = false,
           spline = this.GetObject(),
-          main = this.main_painter(),
+          main = this.frame_painter(),
           xx, yy, knot = null, indx = 0;
 
       if ((pnt === null) || !spline || !main) {
@@ -2588,7 +2611,7 @@
       var w = this.frame_width(),
           h = this.frame_height(),
           spline = this.GetObject(),
-          pmain = this.main_painter(),
+          pmain = this.frame_painter(),
           name = this.GetTipName("\n");
 
       this.CreateG(true);

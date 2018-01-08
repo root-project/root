@@ -96,10 +96,6 @@
    }
 
    THistPainter.prototype.Cleanup = function() {
-      if (this.keys_handler) {
-         window.removeEventListener( 'keydown', this.keys_handler, false );
-         this.keys_handler = null;
-      }
 
       // clear all 3D buffers
       if (typeof this.Create3DScene === 'function')
@@ -283,11 +279,6 @@
    THistPainter.prototype.ToggleStat = function(arg) {
    }
 
-   THistPainter.prototype.IsAxisZoomed = function(axis) {
-      var obj = this.frame_painter();
-      return obj['zoom_'+axis+'min'] !== obj['zoom_'+axis+'max'];
-   }
-
    THistPainter.prototype.GetSelectIndex = function(axis, size, add) {
       // be aware - here indexes starts from 0
       var indx = 0,
@@ -298,11 +289,11 @@
           max = main ? main['zoom_' + axis + 'max'] : 0;
 
       if ((min !== max) && taxis) {
-         if (size == "left") {
+         if (size == "left")
             indx = taxis.FindBin(min, add || 0);
-         } else {
+         else
             indx = taxis.FindBin(max, (add || 0) + 0.5);
-         }
+         if (indx<0) indx = 0; else if (indx>nbins) indx = nbins;
       } else {
          indx = (size == "left") ? 0 : nbins;
       }
@@ -323,6 +314,7 @@
    }
 
    THistPainter.prototype.ButtonClick = function(funcname) {
+      // TODO: move to frame painter
       switch(funcname) {
          case "ToggleZoom":
             if ((this.zoom_xmin !== this.zoom_xmax) || (this.zoom_ymin !== this.zoom_ymax) || (this.zoom_zmin !== this.zoom_zmax)) {
@@ -334,9 +326,9 @@
                return true;
             }
             break;
-         case "ToggleLogX": this.ToggleLog("x"); break;
-         case "ToggleLogY": this.ToggleLog("y"); break;
-         case "ToggleLogZ": this.ToggleLog("z"); break;
+         case "ToggleLogX": this.frame_painter().ToggleLog("x"); break;
+         case "ToggleLogY": this.frame_painter().ToggleLog("y"); break;
+         case "ToggleLogZ": this.frame_painter().ToggleLog("z"); break;
          case "ToggleStatBox": this.ToggleStat(); return true; break;
       }
       return false;
@@ -344,7 +336,7 @@
 
    THistPainter.prototype.FillToolbar = function() {
       var pp = this.pad_painter(true);
-      if (pp===null) return;
+      if (!pp) return;
 
       pp.AddButton(JSROOT.ToolbarIcons.auto_zoom, 'Toggle between unzoom and autozoom-in', 'ToggleZoom', "Ctrl *");
       pp.AddButton(JSROOT.ToolbarIcons.arrow_right, "Toggle log x", "ToggleLogX", "PageDown");
@@ -498,25 +490,29 @@
          if (menu.size() > 0)
             menu.add("separator");
 
-         var main = this.frame_painter();
+         var main = this.main_painter() || this,
+             fp = this.frame_painter(),
+             axis_painter = fp;
 
          menu.addchk(main.tooltip_allowed, 'Show tooltips', function() {
             main.tooltip_allowed = !main.tooltip_allowed;
          });
 
-         menu.addchk(main.enable_highlight, 'Highlight bins', function() {
-            main.enable_highlight = !main.enable_highlight;
-            if (!main.enable_highlight && main.BinHighlight3D && main.mode3d) main.BinHighlight3D(null);
+         menu.addchk(axis_painter.enable_highlight, 'Highlight bins', function() {
+            axis_painter.enable_highlight = !axis_painter.enable_highlight;
+            if (!axis_painter.enable_highlight && main.BinHighlight3D && main.mode3d) main.BinHighlight3D(null);
          });
 
-         menu.addchk(main.options.FrontBox, 'Front box', function() {
-            main.options.FrontBox = !main.options.FrontBox;
-            if (main.Render3D) main.Render3D();
-         });
-         menu.addchk(main.options.BackBox, 'Back box', function() {
-            main.options.BackBox = !main.options.BackBox;
-            if (main.Render3D) main.Render3D();
-         });
+         if (fp && fp.Render3D) {
+            menu.addchk(fp.FrontBox, 'Front box', function() {
+               fp.FrontBox = !fp.FrontBox;
+               fp.Render3D();
+            });
+            menu.addchk(fp.BackBox, 'Back box', function() {
+               fp.BackBox = !fp.BackBox;
+               fp.Render3D();
+            });
+         }
 
          if (this.draw_content) {
             menu.addchk(!this.options.Zero, 'Suppress zeros', function() {
@@ -847,6 +843,7 @@
           right = this.GetSelectIndex("x", "right"),
           stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx = 0, w = 0, xmax = null, wmax = null,
+          fp = this.frame_painter(),
           res = { name: "histo", meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax:0, wmax:0 };
 
       for (i = left; i < right; ++i) {
@@ -870,7 +867,7 @@
       }
 
       // when no range selection done, use original statistic from histogram
-      if (!this.IsAxisZoomed("x") && histo.fTsumw) {
+      if (!fp.IsAxisZoomed("x") && histo.fTsumw) {
          stat_sumw = histo.fTsumw;
          stat_sumwx = histo.fTsumwx;
          stat_sumwx2 = histo.fTsumwx2;
@@ -1299,10 +1296,9 @@
       }
 
       var close_path = "";
-
       if (!this.fillatt.empty()) {
-         var h0 = (height+3);
-         if ((this.hmin>=0) && (pmain.gry(0) < height)) h0 = Math.round(pmain.gry(0));
+         var h0 = height + 3, gry0 = Math.round(pmain.gry(0));
+         if (gry0 <= 0) h0 = -3; else if (gry0 < height) h0 = gry0;
          close_path = "L"+currx+","+h0 + "L"+startx+","+h0 + "Z";
          if (res.length>0) res += close_path;
       }
@@ -1525,15 +1521,16 @@
          show_rect = (pnt.nproc === 1) && (right-left < width);
 
          if (show_rect) {
-            // for mouse events mouse pointer should be under the curve
-            if ((pnt.y < gry1) && !pnt.touch) findbin = null;
-
             gry2 = height;
 
-            if ((this.fillatt.color !== 'none') && (this.hmin>=0)) {
+            if (!this.fillatt.empty()) {
                gry2 = Math.round(pmain.gry(0));
-               if ((gry2 > height) || (gry2 <= gry1)) gry2 = height;
+               if (gry2 < 0) gry2 = 0; else if (gry2 > height) gry2 = height;
+               if (gry2 < gry1) { var d = gry1; gry1 = gry2; gry2 = d; }
             }
+
+            // for mouse events pointer should be between y1 and y2
+            if (((pnt.y < gry1) || (pnt.y > gry2)) && !pnt.touch) findbin = null;
          }
       }
 
@@ -1661,7 +1658,7 @@
       }
 
       if ((right - left < dist) && (left < right))
-         this.Zoom(xaxis.GetBinCoord(left), xaxis.GetBinCoord(right));
+         this.frame_painter().Zoom(xaxis.GetBinCoord(left), xaxis.GetBinCoord(right));
    }
 
    TH1Painter.prototype.CanZoomIn = function(axis,min,max) {
@@ -1956,7 +1953,7 @@
          isany = true;
       }
 
-      if (isany) this.Zoom(xmin, xmax, ymin, ymax);
+      if (isany) this.frame_painter().Zoom(xmin, xmax, ymin, ymax);
    }
 
    TH2Painter.prototype.ScanContent = function(when_axis_changed) {
@@ -2018,6 +2015,7 @@
           stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumx2 = 0, stat_sumy2 = 0, stat_sumxy = 0,
           xside, yside, xx, yy, zz,
+          fp = this.frame_painter(),
           res = { name: "histo", entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0,0,0,0,0,0,0,0,0], xmax: 0, ymax:0, wmax: null };
 
       if (this.IsTH2Poly()) {
@@ -2110,7 +2108,7 @@
          }
       }
 
-      if (!this.IsAxisZoomed("x") && !this.IsAxisZoomed("y") && (histo.fTsumw > 0)) {
+      if (!fp.IsAxisZoomed("x") && !fp.IsAxisZoomed("y") && (histo.fTsumw > 0)) {
          stat_sum0 = histo.fTsumw;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
@@ -3010,6 +3008,8 @@
           colindx, cmd1, cmd2, i, j, binz, cw, ch, factor = 1.,
           scale = this.options.ScatCoef * ((this.gmaxbin) > 2000 ? 2000. / this.gmaxbin : 1.);
 
+      JSROOT.seed(handle.sumz);
+
       if (scale*handle.sumz < 1e5) {
          // one can use direct drawing of scatter plot without any patterns
 
@@ -3030,8 +3030,8 @@
 
                for (k=0;k<npix;++k)
                   path += this.markeratt.create(
-                            Math.round(handle.grx[i] + cw * Math.random()),
-                            Math.round(handle.gry[j+1] + ch * Math.random()));
+                            Math.round(handle.grx[i] + cw * JSROOT.random()),
+                            Math.round(handle.gry[j+1] + ch * JSROOT.random()));
             }
          }
 
@@ -3110,8 +3110,8 @@
               arrx[0] = arry[0] = 0.5;
            } else {
               for (var n=0;n<npix;++n) {
-                 arrx[n] = Math.random();
-                 arry[n] = Math.random();
+                 arrx[n] = JSROOT.random();
+                 arry[n] = JSROOT.random();
               }
            }
 

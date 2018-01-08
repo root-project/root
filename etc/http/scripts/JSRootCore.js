@@ -28,6 +28,7 @@
             'JSRootIOEvolution'    : dir+'JSRootIOEvolution'+ext,
             'JSRootTree'           : dir+'JSRootTree'+ext,
             'JSRootPainter'        : dir+'JSRootPainter'+ext,
+            'JSRootPainter.v6'     : dir+'JSRootPainter.v6'+ext,
             'JSRootPainter.hist'   : dir+'JSRootPainter.hist'+ext,
             'JSRootPainter.hist3d' : dir+'JSRootPainter.hist3d'+ext,
             'JSRootPainter.more'   : dir+'JSRootPainter.more'+ext,
@@ -98,7 +99,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 2/11/2017";
+   JSROOT.version = "dev 8/01/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -109,7 +110,7 @@
    JSROOT.id_counter = 0;
    JSROOT.BatchMode = false; // when true, disables all kind of interactive features
 
-   // JSROOT.use_full_libs = true;
+//   JSROOT.use_full_libs = true;
 
    JSROOT.touches = false;
    JSROOT.browser = { isOpera: false, isFirefox: true, isSafari: false, isChrome: false, isIE: false, isWin: false };
@@ -157,6 +158,7 @@
          ToolBar : 'popup',  // show additional tool buttons on the canvas, false - disabled, true - enabled, 'popup' - only toggle button
          CanEnlarge : true,  // if drawing inside particular div can be enlarged on full window
          CanAdjustFrame : false,  // if frame position can be adjusted to let show axis or colz labels
+         ApproxTextSize : false,  // calculation of text size consumes time and can be skipped to improve performance (but with side effects on text adjustments)
          OptimizeDraw : 1, // drawing optimization: 0 - disabled, 1 - only for large (>5000 1d bins, >50 2d bins) histograms, 2 - always
          AutoStat : true,
          FrameNDC : { fX1NDC: 0.07, fY1NDC: 0.12, fX2NDC: 0.95, fY2NDC: 0.88 },
@@ -170,6 +172,10 @@
          GeoCompressComp : true, // if one should compress faces after creation of composite shape,
          IgnoreUrlOptions : false, // if true, ignore all kind of URL options in the browser URL
          HierarchyLimit : 250,   // how many items shown on one level of hierarchy
+
+         // XValuesFormat : "6.4g",   // custom format for all X values
+         // YValuesFormat : "6.4g",   // custom format for all Y values
+         // ZValuesFormat : "6.4g",   // custom format for all Z values
 
          // these are TStyle attributes, which can be changed via URL 'style' parameter
 
@@ -252,6 +258,26 @@
       if (this.nodeis) throw new Error(msg);
       if (typeof alert === 'function') alert(msg);
       else JSROOT.console('ALERT: ' + msg);
+   }
+
+   // Takes any value
+   JSROOT.seed = function(i) {
+      i = Math.abs(i);
+      if (i > 1e8) i = Math.abs(1e8 * Math.sin(i)); else
+      if (i < 1) i*=1e8;
+      this.m_w = Math.round(i);
+      this.m_z = 987654321;
+   }
+
+   // Returns number between 0 (inclusive) and 1.0 (exclusive),
+   // just like Math.random().
+   JSROOT.random = function() {
+      if (this.m_z===undefined) return Math.random();
+      this.m_z = (36969 * (this.m_z & 65535) + (this.m_z >> 16)) & 0xffffffff;
+      this.m_w = (18000 * (this.m_w & 65535) + (this.m_w >> 16)) & 0xffffffff;
+      var result = ((this.m_z << 16) + this.m_w) & 0xffffffff;
+      result /= 4294967296;
+      return result + 0.5;
    }
 
    /// Should be used to reintroduce objects references, produced by TBufferJSON
@@ -475,9 +501,9 @@
    /** @memberOf JSROOT
     * Method should be used to parse JSON code, produced with TBufferJSON */
    JSROOT.parse = function(arg) {
-      if ((arg==null) || (arg=="")) return null;
+      if (!arg) return null;
       var obj = JSON.parse(arg);
-      if (obj!=null) obj = this.JSONR_unref(obj);
+      if (obj) obj = this.JSONR_unref(obj);
       return obj;
    }
 
@@ -490,6 +516,58 @@
          for (var i=0;i<arr.length;++i)
             arr[i] = this.JSONR_unref(arr[i]);
       return arr;
+   }
+
+   /** @memberOf JSROOT
+    * Method converts JavaScript object into ROOT-like JSON.
+    * Produced JSON can be used in JSROOT.parse() again */
+   JSROOT.toJSON = function(obj) {
+      if (!obj || typeof obj !== 'object') return "";
+
+      var map = []; // map of stored objects
+
+      function copy_value(value) {
+         if (typeof value === "function") return undefined;
+
+         if ((value===undefined) || (value===null) || (typeof value !== 'object')) return value;
+
+         var proto = Object.prototype.toString.apply(value);
+
+         // typed array need to be converted into normal array, otherwise looks strange
+         if ((proto.indexOf('[object ') == 0) && (proto.indexOf('Array]') == proto.length-6)) {
+            var arr = new Array(value.length)
+            for (var i = 0; i < value.length; ++i)
+               arr[i] = copy_value(value[i]);
+            return arr;
+         }
+
+         // this is how reference is code
+         var refid = map.indexOf(value);
+         if (refid >= 0) return { $ref: refid };
+
+         var ks = Object.keys(value), len = ks.length, tgt = {};
+
+         if ((len == 3) && (ks[0]==='$pair') && (ks[1]==='first') && (ks[2]==='second')) {
+            // special handling of pair objects which does not included into objects map
+            tgt.$pair = value.$pair;
+            tgt.first = copy_value(value.first);
+            tgt.second = copy_value(value.second);
+            return tgt;
+         }
+
+         map.push(value);
+
+         for (var k = 0; k < len; ++k) {
+            var name = ks[k];
+            tgt[name] = copy_value(value[name]);
+         }
+
+         return tgt;
+      }
+
+      var tgt = copy_value(obj);
+
+      return JSON.stringify(tgt);
    }
 
    /** @memberOf JSROOT */
@@ -955,7 +1033,8 @@
             modules.push('JSRootTree');
          }
 
-      if ((kind.indexOf('2d;')>=0) || (kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0) || (kind.indexOf("openui5;")>=0)) {
+      if ((kind.indexOf('2d;')>=0) || (kind.indexOf('v6;')>=0) || (kind.indexOf('v7;')>=0) ||
+          (kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0) || (kind.indexOf("openui5;")>=0)) {
          if (jsroot._test_d3_ === undefined) {
             if ((typeof d3 == 'object') && d3.version && (d3.version[0]==="4"))  {
                jsroot.console('Reuse existing d3.js ' + d3.version + ", expected 4.4.4", debugout);
@@ -979,6 +1058,10 @@
             mainfiles += '$$$scripts/JSRootPainter' + ext + ".js;";
             extrafiles += '$$$style/JSRootPainter' + ext + '.css;';
          }
+         if ((jsroot.sources.indexOf("v6") < 0) && (kind.indexOf('v7;') < 0)) {
+            mainfiles += '$$$scripts/JSRootPainter.v6' + ext + ".js;";
+            modules.push('JSRootPainter.v6');
+         }
       }
 
       if ((kind.indexOf('savepng;')>=0) && (jsroot.sources.indexOf("savepng")<0)) {
@@ -991,6 +1074,11 @@
       if (((kind.indexOf('hist;')>=0) || (kind.indexOf('hist3d;')>=0)) && (jsroot.sources.indexOf("hist")<0)) {
          mainfiles += '$$$scripts/JSRootPainter.hist' + ext + ".js;";
          modules.push('JSRootPainter.hist');
+      }
+
+      if ((kind.indexOf('v6;')>=0) && (jsroot.sources.indexOf("v6")<0)) {
+         mainfiles += '$$$scripts/JSRootPainter.v6' + ext + ".js;";
+         modules.push('JSRootPainter.v6');
       }
 
       if ((kind.indexOf('v7;')>=0) && (jsroot.sources.indexOf("v7")<0)) {
@@ -1960,6 +2048,7 @@
       return sg;
    }
 
+   // Provide log10, which is used in many places
    JSROOT.log10 = function(n) {
       return Math.log(n) / Math.log(10);
    }
@@ -1967,6 +2056,14 @@
    // dummy function, will be redefined when JSRootPainter is loaded
    JSROOT.progress = function(msg, tmout) {
       if ((msg !== undefined) && (typeof msg=="string")) JSROOT.console(msg);
+   }
+
+   /// connect to the TWebWindow instance
+   JSROOT.ConnectWebWindow = function(arg) {
+      if (typeof arg == 'function') arg = { callback: arg };
+      JSROOT.AssertPrerequisites("2d;" + (arg && arg.prereq ? arg.prereq : ""), function() {
+         JSROOT.ConnectWebWindow(arg);
+      }, (arg ? arg.prereq_logdiv : undefined));
    }
 
    JSROOT.Initialize = function() {
