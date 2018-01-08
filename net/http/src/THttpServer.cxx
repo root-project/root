@@ -30,6 +30,7 @@
 #include "TRootSniffer.h"
 #include "TRootSnifferStore.h"
 
+#include <list>
 #include <string>
 #include <cstdlib>
 #include <stdlib.h>
@@ -72,8 +73,8 @@ public:
 
 class TLongPollEngine : public THttpWSEngine {
 protected:
-   THttpCallArg *fPoll; ///!< polling request, which can be used for the next sending
-   TString fBuf;        ///!< single entry to keep data which is not yet send to the client
+   THttpCallArg *fPoll;         ///!< polling request, which can be used for the next sending
+   std::list<std::string> fBuf; ///!< entries submitted to client
 
 public:
    /// constructor
@@ -111,10 +112,10 @@ public:
          fPoll->SetContent(buf);
          fPoll->NotifyCondition();
          fPoll = nullptr;
-      } else if (fBuf.Length() == 0) {
-         fBuf = buf;
       } else {
-         Error("TLongPollEngine::SendCharStar", "Too many send operations, use TList object instead");
+         fBuf.push_back(std::string(buf));
+         if (fBuf.size() > 100)
+            Error("TLongPollEngine::SendCharStar", "Too many send operations %d, check algorithms", (int)fBuf.size());
       }
    }
 
@@ -123,10 +124,13 @@ public:
    /// returns kTRUE when user should ignore such http request - it is for internal use
    virtual Bool_t PreviewData(THttpCallArg *arg) override
    {
-
-      // this is normal request, deliver and process it as any other
-      if (!strstr(arg->GetQuery(), "&dummy"))
+      if (!strstr(arg->GetQuery(), "&dummy")) {
+         // this is normal request, deliver and process it as any other
+         // put dummy content, it can be overwritten in the future
+         arg->SetContentType("text/plain");
+         arg->SetContent("<<nope>>");
          return kFALSE;
+      }
 
       if (arg == fPoll) {
          Error("PreviewData", "NEVER SHOULD HAPPEN");
@@ -142,10 +146,10 @@ public:
          fPoll = nullptr;
       }
 
-      if (fBuf.Length() > 0) {
+      if (fBuf.size() > 0) {
          arg->SetContentType("text/plain");
-         arg->SetContent(fBuf.Data());
-         fBuf = "";
+         arg->SetContent(fBuf.front().c_str());
+         fBuf.pop_front();
       } else {
          arg->SetPostponed();
          fPoll = arg;
