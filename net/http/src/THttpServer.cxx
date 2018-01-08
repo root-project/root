@@ -26,11 +26,11 @@
 
 #include "THttpEngine.h"
 #include "THttpWSEngine.h"
+#include "THttpLongPollEngine.h"
 #include "THttpWSHandler.h"
 #include "TRootSniffer.h"
 #include "TRootSnifferStore.h"
 
-#include <list>
 #include <string>
 #include <cstdlib>
 #include <stdlib.h>
@@ -61,124 +61,6 @@ public:
 };
 
 //////////////////////////////////////////////////////////////////////////////////////////////////
-
-//////////////////////////////////////////////////////////////////////////
-//                                                                      //
-// TLongPollEngine                                                      //
-//                                                                      //
-// Emulation of websocket with long poll requests                       //
-// Allows to send data from server to client without explicit request   //
-//                                                                      //
-//////////////////////////////////////////////////////////////////////////
-
-const char *gLongPollNope = "<<nope>>";
-
-class TLongPollEngine : public THttpWSEngine {
-protected:
-   THttpCallArg *fPoll;         ///!< polling request, which can be used for the next sending
-   std::list<std::string> fBuf; ///!< entries submitted to client
-
-public:
-   /// constructor
-   TLongPollEngine(const char *name, const char *title) : THttpWSEngine(name, title), fPoll(nullptr), fBuf() {}
-
-   /// returns ID of the engine, created from this pointer
-   virtual UInt_t GetId() const override
-   {
-      const void *ptr = (const void *)this;
-      return TString::Hash((void *)&ptr, sizeof(void *));
-   }
-
-   /// clear request, waiting for next portion of data
-   virtual void ClearHandle() override
-   {
-      if (fPoll) {
-         fPoll->Set404();
-         fPoll->NotifyCondition();
-         fPoll = nullptr;
-      }
-   }
-
-   /// Send binary data via connection - not supported
-   virtual void Send(const void * /*buf*/, int /*len*/) override
-   {
-      Error("TLongPollEngine::Send", "Should never be called, only text is supported");
-   }
-
-   /// Send const char data
-   /// Either do it immediately or keep in internal buffer
-   virtual void SendCharStar(const char *buf) override
-   {
-      if (fPoll) {
-         fPoll->SetContentType("text/plain");
-         fPoll->SetContent(buf);
-         fPoll->NotifyCondition();
-         fPoll = nullptr;
-      } else {
-         fBuf.push_back(std::string(buf));
-         if (fBuf.size() > 100)
-            Error("TLongPollEngine::SendCharStar", "Too many send operations %d, check algorithms", (int)fBuf.size());
-      }
-   }
-
-   //////////////////////////////////////////////////////////////////////////////
-   /// Preview data for given socket
-   /// function called in the user code before processing correspondent websocket data
-   /// returns kTRUE when user should ignore such http request - it is for internal use
-
-   virtual Bool_t PreviewData(THttpCallArg *arg) override
-   {
-      if (!strstr(arg->GetQuery(), "&dummy")) {
-         // this is normal request, deliver and process it as any other
-         // put dummy content, it can be overwritten in the future
-         arg->SetContentType("text/plain");
-         arg->SetContent(gLongPollNope);
-         return kFALSE;
-      }
-
-      if (arg == fPoll) {
-         Error("PreviewData", "NEVER SHOULD HAPPEN");
-         exit(12);
-      }
-
-      if (fPoll) {
-         Info("PreviewData", "Get dummy request when previous not completed");
-         // if there are pending request, reply it immediately
-         fPoll->SetContentType("text/plain");
-         fPoll->SetContent(gLongPollNope); // normally should never happen
-         fPoll->NotifyCondition();
-         fPoll = nullptr;
-      }
-
-      if (fBuf.size() > 0) {
-         arg->SetContentType("text/plain");
-         arg->SetContent(fBuf.front().c_str());
-         fBuf.pop_front();
-      } else {
-         arg->SetPostponed();
-         fPoll = arg;
-      }
-
-      // if arguments has "&dummy" string, user should not process it
-      return kTRUE;
-   }
-
-   //////////////////////////////////////////////////////////////////////////////
-   /// Normally requests from client does not replied directly
-   /// Therefore one can use it to send data with it
-
-   virtual void PostProcess(THttpCallArg *arg)
-   {
-      if ((fBuf.size() > 0) && arg->IsContentType("text/plain") &&
-          (arg->GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
-          (strcmp((const char *)arg->GetContent(), gLongPollNope) == 0)) {
-         arg->SetContent(fBuf.front().c_str());
-         fBuf.pop_front();
-      }
-   }
-};
-
-// =======================================================
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -946,7 +828,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          // if accepted, reply with connection id, which must be used in the following communications
          arg->SetMethod("WS_CONNECT");
 
-         TLongPollEngine *handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
+         THttpLongPollEngine *handle = new THttpLongPollEngine("longpoll", arg->fPathName.Data());
          arg->SetWSId(handle->GetId());
 
          if (handler->HandleWS(arg)) {
