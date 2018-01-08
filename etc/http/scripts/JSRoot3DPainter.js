@@ -428,7 +428,7 @@
          evnt.stopPropagation();
          evnt.stopImmediatePropagation();
 
-         if (control.painter && (control.painter.AnalyzeMouseWheelEvent!==undefined)) {
+         if (control.painter && (typeof control.painter.AnalyzeMouseWheelEvent == 'function')) {
             var kind = intersect.object.zoom,
                 position = intersect.point[kind],
                 item = { name: kind, ignore: false };
@@ -670,13 +670,13 @@
 
    function drawPolyLine3D() {
       var line = this.GetObject(),
-          main = this.main_painter();
+          main = this.frame_painter();
 
       if (!main || !main.mode3d || !main.toplevel || !line) return;
 
-      var fN, fP, fOption;
+      var fN, fP, fOption, pnts = [];
 
-      if (line._blob && line._blob.length==4) {
+      if (line._blob && (line._blob.length==4)) {
          // workaround for custom streamer for JSON, should be resolved
          fN = line._blob[1];
          fP = line._blob[2];
@@ -686,8 +686,6 @@
          fP = line.fP;
          fOption = line.fOption;
       }
-
-      var pnts = [];
 
       for (var n=3;n<3*fN;n+=3)
          pnts.push(main.grx(fP[n-3]), main.gry(fP[n-2]), main.grz(fP[n-1]),
