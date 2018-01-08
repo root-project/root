@@ -5792,6 +5792,11 @@ Int_t TCling::AutoParse(const char *cls)
 
    Int_t nHheadersParsed = AutoParseImplRecurse(cls,/*topLevel=*/ true);
 
+   // Reset the errno value in presence of a "simple" ENOENT. This kind of error occours often
+   // because of the way in which we look for headers.
+   // This is done to fix ROOT-8127.
+   if (ENOENT == TSystem::GetErrno()) TSystem::ResetErrno();
+
    if (nHheadersParsed != 0) {
       while (!fClassesToUpdate.empty()) {
          TClass *oldcl = fClassesToUpdate.back().first;
