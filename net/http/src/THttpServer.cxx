@@ -924,18 +924,19 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          // if accepted, reply with connection id, which must be used in the following communications
          arg->SetMethod("WS_CONNECT");
 
-         if (handler && handler->HandleWS(arg)) {
+         TLongPollEngine *handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
+         arg->SetWSId(handle->GetId());
+
+         if (handler->HandleWS(arg)) {
             arg->SetMethod("WS_READY");
-
-            TLongPollEngine *handle = new TLongPollEngine("longpoll", arg->fPathName.Data());
-
-            arg->SetWSId(handle->GetId());
             arg->SetWSHandle(handle);
 
             if (handler->HandleWS(arg)) {
                arg->SetContent(TString::Format("%u", arg->GetWSId()));
                arg->SetContentType("text/plain");
             }
+         } else {
+            delete handle; // connection is rejected and engine can be deleted
          }
          if (!arg->IsContentType("text/plain"))
             arg->Set404();
