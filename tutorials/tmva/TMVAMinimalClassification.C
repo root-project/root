@@ -40,7 +40,7 @@
 //    seed    Seed for random number generator. Use `seed=0` for random
 //            seed.
 // Returns a TTree ready to be used as input to TMVA.
-// 
+//
 TTree *genTree(Int_t nPoints, Double_t offset, Double_t scale, UInt_t seed = 100)
 {
    TRandom rng(seed);
