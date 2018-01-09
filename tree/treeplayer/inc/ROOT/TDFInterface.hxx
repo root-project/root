@@ -1624,6 +1624,15 @@ private:
          }
       }
 
+      if (selectedColumns.empty()) {
+         std::string text;
+         if (columnNameRegexp.empty()) {
+            text = "There is no column available to match.";
+         } else {
+            text = "Regex \"" + columnNameRegexp + "\" did not match any column.";
+         }
+         throw std::runtime_error(text);
+      }
       return selectedColumns;
    }
 
