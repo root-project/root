@@ -20,12 +20,14 @@
 
 class THttpServer;
 class THttpWSEngine;
+class THttpWSHandler;
 
 class THttpCallArg : public TObject {
+   friend class THttpServer;
+   friend class THttpWSEngine;
+   friend class THttpWSHandler;
 
 protected:
-   friend class THttpServer;
-
    TString fTopName;  ///<! top item name
    TString fMethod;   ///<! request method like GET or POST
    TString fPathName; ///<! item path
@@ -36,8 +38,7 @@ protected:
    void *fPostData;        ///<! binary data received with post request
    Long_t fPostDataLength; ///<! length of binary data
 
-   THttpWSEngine *fWSHandle; ///<!  web-socket engine, which helps to run it
-   UInt_t fWSId;             ///<! websocket identifier, used in web-socket related operations
+   UInt_t fWSId; ///<! websocket identifier, used in web-socket related operations
 
    std::condition_variable fCond; ///<! condition used to wait for processing
 
@@ -57,6 +58,12 @@ protected:
    TString AccessHeader(TString &buf, const char *name, const char *value = 0, Bool_t doing_set = kFALSE);
 
    TString CountHeader(const TString &buf, Int_t number = -1111) const;
+
+private:
+   THttpWSEngine *fWSEngine; ///<!  web-socket engine, which helps to run it
+
+   void SetWSEngine(THttpWSEngine *);
+   THttpWSEngine *TakeWSEngine();
 
 public:
    THttpCallArg();
@@ -85,10 +92,6 @@ public:
    void SetQuery(const char *q) { fQuery = q; }
 
    void SetPostData(void *data, Long_t length, Bool_t make_copy = kFALSE);
-
-   void SetWSHandle(THttpWSEngine *handle);
-
-   THttpWSEngine *TakeWSHandle();
 
    /** set web-socket id */
    void SetWSId(UInt_t id) { fWSId = id; }

@@ -93,8 +93,10 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    arg.SetQuery(request_info->query_string);        // query arguments
    arg.SetMethod("WS_READY");
 
+
    arg.SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
-   arg.SetWSHandle(new TCivetwebWSEngine(conn));
+   auto ws = new TCivetwebWSEngine(conn);
+   ws->AttachTo(arg);
 
    serv->ExecuteHttp(&arg);
 }

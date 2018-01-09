@@ -157,7 +157,7 @@ public:
       if (message == "connect") {
          TCefWSEngine *ws = new TCefWSEngine(callback);
          arg->SetMethod("WS_CONNECT");
-         arg->SetWSHandle(ws);
+         ws->AttachTo(*arg);
          arg->SetWSId(ws->GetId());
          printf("Create CEF WS engine with id %u\n", ws->GetId());
       } else {
