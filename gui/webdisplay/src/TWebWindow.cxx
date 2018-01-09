@@ -333,7 +333,7 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
 std::string ROOT::Experimental::TWebWindow::RelativeAddr(std::shared_ptr<TWebWindow> &win)
 {
    if (fMgr != win->fMgr) {
-      R__ERROR_HERE("RelativeAddr") << "Same web window manager should be used";
+      R__ERROR_HERE("WebDisplay") << "Same web window manager should be used";
       return "";
    }
 
