@@ -16,7 +16,7 @@
 ///
 /// - Project   : TMVA - a ROOT-integrated toolkit for multivariate data analysis
 /// - Package   : TMVA
-/// - Root Macro: MinimalClassification.C
+/// - Root Macro: TMVAMinimalClassification.C
 ///
 /// \macro_output
 /// \macro_code
@@ -29,16 +29,18 @@
 #include "TString.h"
 #include "TTree.h"
 
-/**
- * Function to generate 2-D gaussian data points and fill these in a ROOT TTree.
- *
- * \param  nPoints Number of points to generate.
- * \param  offset  Mean of the generated numbers
- * \param  scale   Standard deviation of the generated numbers.
- * \param  seed    Seed for random number generator. Use `seed=0` for random
- *                 seed.
- * \return         TTree ready for use in TMVA.
- */
+//
+// Helper function to generate 2-D gaussian data points and fill to a ROOT
+// TTree.
+//
+// Arguments:
+//    nPoints Number of points to generate.
+//    offset  Mean of the generated numbers
+//    scale   Standard deviation of the generated numbers.
+//    seed    Seed for random number generator. Use `seed=0` for random
+//            seed.
+// Returns a TTree ready to be used as input to TMVA.
+// 
 TTree *genTree(Int_t nPoints, Double_t offset, Double_t scale, UInt_t seed = 100)
 {
    TRandom rng(seed);
@@ -55,17 +57,20 @@ TTree *genTree(Int_t nPoints, Double_t offset, Double_t scale, UInt_t seed = 100
       data->Fill();
    }
 
+   // Important: Disconnects the tree from the memory locations of x and y.
    data->ResetBranchAddresses();
    return data;
 }
 
-/**
- * Minimal setup for perfroming binary classification in TMVA.
- *
- * Modify the setup to you liking and run with
- * `root -l MinimalClassification.C`.
- */
-void MinimalClassification()
+//
+// Minimal setup for perfroming binary classification in TMVA.
+//
+// Modify the setup to your liking and run with
+//    `root -l -b -q TMVAMinimalClassification.C`.
+// This will generate an output file "out.root" that can be viewed with
+//    `root -l -e 'TMVA::TMVAGui("out.root")'`.
+//
+void TMVAMinimalClassification()
 {
    TString outputFilename = "out.root";
    TFile *outFile = new TFile(outputFilename, "RECREATE");
