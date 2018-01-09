@@ -64,7 +64,9 @@ ROOT::Experimental::TWebWindowsManager::TWebWindowsManager() = default;
 /// window manager destructor
 /// Required here for correct usage of unique_ptr<THttpServer>
 
-ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager() {}
+ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
+{
+}
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Creates http server, if required - with real http engine (civetweb)
