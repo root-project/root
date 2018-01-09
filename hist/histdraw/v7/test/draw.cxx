@@ -3,11 +3,17 @@
 #include "ROOT/TCanvas.hxx"
 #include "ROOT/TColor.hxx"
 
-using namespace ROOT::Experimental;
+class FixtureBase: public ::testing::Test {
+protected:
+   virtual void SetUp();
+};
+
+struct DrawTest: public FixtureBase {};
 
 // Test drawing of histograms.
-TEST(DrawTest, OneD)
+TEST_F(DrawTest, OneD)
 {
+   using namespace ROOT::Experimental;
    TAxisConfig xaxis{10, 0., 1.};
    auto h = std::make_shared<TH1D>(xaxis);
    TCanvas canv;
@@ -15,21 +21,23 @@ TEST(DrawTest, OneD)
    EXPECT_EQ(canv.GetPrimitives().size(), 1u);
 }
 
-TEST(DrawTest, TwoD)
+TEST_F(DrawTest, TwoD)
 {
+   using namespace ROOT::Experimental;
    TAxisConfig xaxis{10, 0., 1.};
    TAxisConfig yaxis{{0., 1., 10., 100.}};
    auto h = std::make_shared<TH2I>(xaxis, yaxis);
    TCanvas canv;
    canv.Draw(h);
-   // No THist copt c'tor:
+   // No THist copy c'tor:
    // canv.Draw(TH2F(xaxis, yaxis));
    canv.Draw(std::make_unique<TH2C>(xaxis, yaxis));
    EXPECT_EQ(canv.GetPrimitives().size(), 2u);
 }
 
-TEST(DrawTest, ThreeD)
+TEST_F(DrawTest, ThreeD)
 {
+   using namespace ROOT::Experimental;
    TAxisConfig xaxis{{0., 1.}};
    TAxisConfig yaxis{10, 0., 1.};
    TAxisConfig zaxis{{0., 1., 10., 100.}};
@@ -39,9 +47,13 @@ TEST(DrawTest, ThreeD)
    EXPECT_EQ(canv.GetPrimitives().size(), 1u);
 }
 
+
+struct DrawOptTest: public FixtureBase {};
+
 // Drawing options:
-TEST(DrawOptTest, OneD)
+TEST_F(DrawOptTest, OneD)
 {
+   using namespace ROOT::Experimental;
    TAxisConfig xaxis{10, 0., 1.};
    auto h = std::make_shared<TH1D>(xaxis);
    TCanvas canv;
@@ -50,3 +62,11 @@ TEST(DrawOptTest, OneD)
    TColor shouldBeRed = Opts.GetLineColor();
    EXPECT_EQ(shouldBeRed, TColor::kRed);
 }
+
+
+
+#include "TROOT.h" // for gROOT->SetBatch()
+
+void FixtureBase::SetUp() {
+   gROOT->SetBatch();
+};
