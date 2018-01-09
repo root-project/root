@@ -675,7 +675,7 @@ void TMultiGraph::FitPanel()
       gROOT->MakeDefCanvas();
 
    if (!gPad) {
-      Error("FitPanel", "Unable to create a default canvas");
+      Error("TMultiGraph::FitPanel()", "Unable to create a default canvas");
       return;
    }
 
@@ -683,10 +683,10 @@ void TMultiGraph::FitPanel()
    TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TFitEditor");
    if (handler && handler->LoadPlugin() != -1) {
       if (handler->ExecPlugin(2, gPad, this) == 0)
-         Error("FitPanel", "Unable to crate the FitPanel");
+         Error("TMultiGraph::FitPanel", "Unable to crate the FitPanel");
    }
    else
-         Error("FitPanel", "Unable to find the FitPanel plug-in");
+         Error("TMultiGraph::FitPanel()", "Unable to find the FitPanel plug-in");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -284,12 +284,12 @@ TGraph::TGraph(const TH1 *h)
    : TNamed("Graph", "Graph"), TAttLine(), TAttFill(0, 1000), TAttMarker()
 {
    if (!h) {
-      Error("TGraph", "Pointer to histogram is null");
+      Error("TGraph::TGraph()", "Pointer to histogram is null");
       fNpoints = 0;
       return;
    }
    if (h->GetDimension() != 1) {
-      Error("TGraph", "Histogram must be 1-D; h %s is %d-D", h->GetName(), h->GetDimension());
+      Error("TGraph::TGraph()", "Histogram must be 1-D; h %s is %d-D", h->GetName(), h->GetDimension());
       fNpoints = 0;
    } else {
       fNpoints = ((TH1*)h)->GetXaxis()->GetNbins();
@@ -327,7 +327,7 @@ TGraph::TGraph(const TF1 *f, Option_t *option)
 {
    char coption = ' ';
    if (!f) {
-      Error("TGraph", "Pointer to function is null");
+      Error("TGraph::TGraph()", "Pointer to function is null");
       fNpoints = 0;
    } else {
       fNpoints   = f->GetNpx();
@@ -391,7 +391,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
    std::ifstream infile(fname.Data());
    if (!infile.good()) {
       MakeZombie();
-      Error("TGraph", "Cannot open file: %s, TGraph is Zombie", filename);
+      Error("TGraph::TGraph()", "Cannot open file: %s, TGraph is Zombie", filename);
       fNpoints = 0;
       return;
    } else {
@@ -425,12 +425,12 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
       format_.ReplaceAll("%*", "0") ;
       format_.ReplaceAll("%", "1") ;
       if (!format_.IsDigit()) {
-         Error("TGraph", "Incorrect input format! Allowed formats are {\"%%lg\",\"%%*lg\" or \"%%*s\"}");
+         Error("TGraph::TGraph()", "Incorrect input format! Allowed formats are {\"%%lg\",\"%%*lg\" or \"%%*s\"}");
          return;
       }
       Int_t ntokens = format_.Length() ;
       if (ntokens < 2) {
-         Error("TGraph", "Incorrect input format! Only %d tag(s) in format whereas 2 \"%%lg\" tags are expected!", ntokens);
+         Error("TGraph::TGraph()", "Incorrect input format! Only %d tag(s) in format whereas 2 \"%%lg\" tags are expected!", ntokens);
          return;
       }
       Int_t ntokensToBeSaved = 0 ;
@@ -442,7 +442,7 @@ TGraph::TGraph(const char *filename, const char *format, Option_t *option)
          }
       }
       if (ntokens >= 2 && ntokensToBeSaved != 2) { //first condition not to repeat the previous error message
-         Error("TGraph", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 2 and only 2 are expected!", ntokensToBeSaved);
+         Error("TGraph::TGraph()", "Incorrect input format! There are %d \"%%lg\" tag(s) in format whereas 2 and only 2 are expected!", ntokensToBeSaved);
          delete [] isTokenToBeSaved ;
          return;
       }
@@ -591,7 +591,7 @@ void TGraph::Browse(TBrowser *b)
 Double_t TGraph::Chisquare(TF1 *func, Option_t * option) const
 {
    if (!func) {
-      Error("Chisquare","Function pointer is Null - return -1");
+      Error("TGraph::Chisquare()","Function pointer is Null - return -1");
       return -1;
    }
 
@@ -1312,7 +1312,7 @@ void TGraph::FitPanel()
       gROOT->MakeDefCanvas();
 
    if (!gPad) {
-      Error("FitPanel", "Unable to create a default canvas");
+      Error("TGraph::FitPanel()", "Unable to create a default canvas");
       return;
    }
 
@@ -1320,9 +1320,9 @@ void TGraph::FitPanel()
    TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TFitEditor");
    if (handler && handler->LoadPlugin() != -1) {
       if (handler->ExecPlugin(2, gPad, this) == 0)
-         Error("FitPanel", "Unable to crate the FitPanel");
+         Error("TGraph::FitPanel()", "Unable to crate the FitPanel");
    } else
-      Error("FitPanel", "Unable to find the FitPanel plug-in");
+      Error("TGraph::FitPanel()", "Unable to find the FitPanel plug-in");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1736,12 +1736,12 @@ Int_t TGraph::InsertPoint()
 void TGraph::InsertPointBefore(Int_t ipoint, Double_t x, Double_t y)
 {
    if (ipoint <= 0) {
-      Error("TGraph", "Inserted point index should be > 0");
+      Error("TGraph::InsertPointBefore()", "Inserted point index should be > 0");
       return;
    }
 
    if (ipoint > fNpoints-1) {
-      Error("TGraph", "Inserted point index should be <= %d", fNpoints-1);
+      Error("TGraph::InsertPointBefore()", "Inserted point index should be <= %d", fNpoints-1);
       return;
    }
 
@@ -2414,7 +2414,7 @@ Int_t TGraph::Merge(TCollection* li)
    while (TObject* o = next()) {
       TGraph *g = dynamic_cast<TGraph*>(o);
       if (!g) {
-         Error("Merge",
+         Error("TGraph::Merge()",
                "Cannot merge - an object which doesn't inherit from TGraph found in the list");
          return -1;
       }

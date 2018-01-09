@@ -639,7 +639,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,Double_t xlow,Double_t x
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
 {
    Build();
-   if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
+   if (nbins <= 0) {Warning("TH1::TH1()","nbins is <=0 - set to nbins = 1"); nbins = 1; }
    fXaxis.Set(nbins,xlow,xup);
    fNcells = fXaxis.GetNbins()+2;
 }
@@ -661,7 +661,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Float_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
 {
    Build();
-   if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
+   if (nbins <= 0) {Warning("TH1::TH1()","nbins is <=0 - set to nbins = 1"); nbins = 1; }
    if (xbins) fXaxis.Set(nbins,xbins);
    else       fXaxis.Set(nbins,0,1);
    fNcells = fXaxis.GetNbins()+2;
@@ -683,7 +683,7 @@ TH1::TH1(const char *name,const char *title,Int_t nbins,const Double_t *xbins)
     :TNamed(name,title), TAttLine(), TAttFill(), TAttMarker()
 {
    Build();
-   if (nbins <= 0) {Warning("TH1","nbins is <=0 - set to nbins = 1"); nbins = 1; }
+   if (nbins <= 0) {Warning("TH1::TH1()","nbins is <=0 - set to nbins = 1"); nbins = 1; }
    if (xbins) fXaxis.Set(nbins,xbins);
    else       fXaxis.Set(nbins,0,1);
    fNcells = fXaxis.GetNbins()+2;
@@ -775,7 +775,7 @@ void TH1::Build()
 Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
 {
    if (!f1) {
-      Error("Add","Attempt to add a non-existing function");
+      Error("TH1::Add()","Attempt to add a non-existing function");
       return kFALSE;
    }
 
@@ -860,7 +860,7 @@ Bool_t TH1::Add(TF1 *f1, Double_t c1, Option_t *option)
 Bool_t TH1::Add(const TH1 *h1, Double_t c1)
 {
    if (!h1) {
-      Error("Add","Attempt to add a non-existing histogram");
+      Error("TH1::Add()","Attempt to add a non-existing histogram");
       return kFALSE;
    }
 
@@ -873,27 +873,27 @@ Bool_t TH1::Add(const TH1 *h1, Double_t c1)
       useMerge = kFALSE;
    } catch(DifferentNumberOfBins&) {
       if (useMerge)
-         Info("Add","Attempt to add histograms with different number of bins - trying to use TH1::Merge");
+         Info("TH1::Add()","Attempt to add histograms with different number of bins - trying to use TH1::Merge");
       else {
-         Error("Add","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());
+         Error("TH1::Add()","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());
          return kFALSE;
       }
    } catch(DifferentAxisLimits&) {
       if (useMerge)
-         Info("Add","Attempt to add histograms with different axis limits - trying to use TH1::Merge");
+         Info("TH1::Add()","Attempt to add histograms with different axis limits - trying to use TH1::Merge");
       else
-         Warning("Add","Attempt to add histograms with different axis limits");
+         Warning("TH1::Add()","Attempt to add histograms with different axis limits");
    } catch(DifferentBinLimits&) {
       if (useMerge)
-         Info("Add","Attempt to add histograms with different bin limits - trying to use TH1::Merge");
+         Info("TH1::Add()","Attempt to add histograms with different bin limits - trying to use TH1::Merge");
       else
-         Warning("Add","Attempt to add histograms with different bin limits");
+         Warning("TH1::Add()","Attempt to add histograms with different bin limits");
    } catch(DifferentLabels&) {
       // in case of different labels -
       if (useMerge)
-         Info("Add","Attempt to add histograms with different labels - trying to use TH1::Merge");
+         Info("TH1::Add()","Attempt to add histograms with different labels - trying to use TH1::Merge");
       else
-         Info("Warning","Attempt to add histograms with different labels");
+	 Warning("TH1::Add()","Attempt to add histograms with different labels");
    }
 
    if (useMerge) {
@@ -1022,7 +1022,7 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
 {
 
    if (!h1 || !h2) {
-      Error("Add","Attempt to add a non-existing histogram");
+      Error("TH1::Add()","Attempt to add a non-existing histogram");
       return kFALSE;
    }
 
@@ -1041,27 +1041,27 @@ Bool_t TH1::Add(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2)
          useMerge = kFALSE;
       } catch(DifferentNumberOfBins&) {
          if (useMerge)
-            Info("Add","Attempt to add histograms with different number of bins - trying to use TH1::Merge");
+            Info("TH1::Add()","Attempt to add histograms with different number of bins - trying to use TH1::Merge");
          else {
-            Error("Add","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());
+            Error("TH1::Add()","Attempt to add histograms with different number of bins : nbins h1 = %d , nbins h2 =  %d",GetNbinsX(), h1->GetNbinsX());
             return kFALSE;
          }
       } catch(DifferentAxisLimits&) {
          if (useMerge)
-            Info("Add","Attempt to add histograms with different axis limits - trying to use TH1::Merge");
+            Info("TH1::Add()","Attempt to add histograms with different axis limits - trying to use TH1::Merge");
          else
-            Warning("Add","Attempt to add histograms with different axis limits");
+            Warning("TH1::Add()","Attempt to add histograms with different axis limits");
       } catch(DifferentBinLimits&) {
          if (useMerge)
-            Info("Add","Attempt to add histograms with different bin limits - trying to use TH1::Merge");
+            Info("TH1::Add()","Attempt to add histograms with different bin limits - trying to use TH1::Merge");
          else
-            Warning("Add","Attempt to add histograms with different bin limits");
+            Warning("TH1::Add()","Attempt to add histograms with different bin limits");
       } catch(DifferentLabels&) {
          // in case of different labels -
          if (useMerge)
-            Info("Add","Attempt to add histograms with different labels - trying to use TH1::Merge");
+            Info("TH1::Add()","Attempt to add histograms with different labels - trying to use TH1::Merge");
          else
-            Info("Warning","Attempt to add histograms with different labels");
+	    Warning("TH1::Add()","Attempt to add histograms with different labels");
       }
 
       if (useMerge) {
@@ -1384,7 +1384,7 @@ Int_t TH1::BufferEmpty(Int_t action)
          Int_t rc = -1;
          if (TestBit(TH1::kAutoBinPTwo)) {
             if ((rc = AutoP2FindLimits(xmin, xmax)) < 0)
-               Warning("BufferEmpty",
+               Warning("TH1::BufferEmpty()",
                        "incosistency found by power-of-2 autobin algorithm: fallback to standard method");
          }
          if (rc < 0)
@@ -1541,19 +1541,19 @@ bool TH1::CheckEqualAxes(const TAxis *a1, const TAxis *a2 )
 {
    if (a1->GetNbins() != a2->GetNbins() ) {
       //throw DifferentNumberOfBins();
-      ::Info("CheckEqualAxes","Axes have different number of bins : nbin1 = %d nbin2 = %d",a1->GetNbins(),a2->GetNbins() );
+      ::Info("TH1::CheckEqualAxes()","Axes have different number of bins : nbin1 = %d nbin2 = %d",a1->GetNbins(),a2->GetNbins() );
       return false;
    }
    try {
       CheckAxisLimits(a1,a2);
    } catch (DifferentAxisLimits&) {
-      ::Info("CheckEqualAxes","Axes have different limits");
+      ::Info("TH1::CheckEqualAxes()","Axes have different limits");
       return false;
    }
    try {
       CheckBinLimits(a1,a2);
    } catch (DifferentBinLimits&) {
-      ::Info("CheckEqualAxes","Axes have different bin limits");
+      ::Info("TH1::CheckEqualAxes()","Axes have different bin limits");
       return false;
    }
 
@@ -1561,7 +1561,7 @@ bool TH1::CheckEqualAxes(const TAxis *a1, const TAxis *a2 )
    try {
       CheckBinLabels(a1,a2);
    } catch (DifferentLabels&) {
-      ::Info("CheckEqualAxes","Axes have different labels");
+      ::Info("TH1::CheckEqualAxes()","Axes have different labels");
       return false;
    }
 
@@ -1592,13 +1592,13 @@ bool TH1::CheckConsistentSubAxes(const TAxis *a1, Int_t firstBin1, Int_t lastBin
    }
 
    if (nbins1 != nbins2 ) {
-      ::Info("CheckConsistentSubAxes","Axes have different number of bins");
+      ::Info("TH1::CheckConsistentSubAxes()","Axes have different number of bins");
       return false;
    }
 
    if ( ! TMath::AreEqualRel(xmin1,xmin2,1.E-12) ||
         ! TMath::AreEqualRel(xmax1,xmax2,1.E-12) ) {
-      ::Info("CheckConsistentSubAxes","Axes have different limits");
+      ::Info("TH1::CheckConsistentSubAxes()","Axes have different limits");
       return false;
    }
 
@@ -2033,19 +2033,19 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
    //check dimensions
    if (this->GetDimension() != h2->GetDimension() ){
-      Error("Chi2TestX","Histograms have different dimensions.");
+      Error("TH1::Chi2TestX()","Histograms have different dimensions.");
       return 0.0;
    }
 
    //check number of channels
    if (nbinx1 != nbinx2) {
-      Error("Chi2TestX","different number of x channels");
+      Error("TH1::Chi2TestX()","different number of x channels");
    }
    if (nbiny1 != nbiny2) {
-      Error("Chi2TestX","different number of y channels");
+      Error("TH1::Chi2TestX()","different number of y channels");
    }
    if (nbinz1 != nbinz2) {
-      Error("Chi2TestX","different number of z channels");
+      Error("TH1::Chi2TestX()","different number of z channels");
    }
 
    //check for ranges
@@ -2088,7 +2088,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    Bool_t scaledHistogram  = opt.Contains("NORM");
 
    if (scaledHistogram && !comparisonUU) {
-      Info("Chi2TestX", "NORM option should be used together with UU option. It is ignored");
+      Info("TH1::Chi2TestX()","NORM option should be used together with UU option. It is ignored");
    }
 
    // look at histo global bin content and effective entries
@@ -2112,12 +2112,12 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    // check unweighted histogram
    if (comparisonUW) {
       if (TMath::Abs(sumBinContent1 - effEntries1) >= 1) {
-         Warning("Chi2TestX","First histogram is not unweighted and option UW has been requested");
+         Warning("TH1::Chi2TestX()","First histogram is not unweighted and option UW has been requested");
       }
    }
    if ( (!scaledHistogram && comparisonUU)   ) {
       if ( ( TMath::Abs(sumBinContent1 - effEntries1) >= 1) || (TMath::Abs(sumBinContent2 - effEntries2) >= 1) ) {
-         Warning("Chi2TestX","Both histograms are not unweighted and option UU has been requested");
+         Warning("TH1::Chi2TestX()","Both histograms are not unweighted and option UU has been requested");
       }
    }
 
@@ -2150,7 +2150,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
          }
       }
       if (sumw1 <= 0.0 || sumw2 <= 0.0) {
-         Error("Chi2TestX", "Cannot use option NORM when one histogram has all zero errors");
+         Error("TH1::Chi2TestX()","Cannot use option NORM when one histogram has all zero errors");
          return 0.0;
       }
 
@@ -2172,12 +2172,12 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
    }
    //checks that the histograms are not empty
    if (sum1 == 0.0 || sum2 == 0.0) {
-      Error("Chi2TestX","one histogram is empty");
+      Error("TH1::Chi2TestX()","one histogram is empty");
       return 0.0;
    }
 
    if ( comparisonWW  && ( sumw1 <= 0.0 && sumw2 <= 0.0 ) ){
-      Error("Chi2TestX","Hist1 and Hist2 have both all zero errors\n");
+      Error("TH1::Chi2TestX()","Hist1 and Hist2 have both all zero errors\n");
       return 0.0;
    }
 
@@ -2235,11 +2235,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       // flag error only when of the two histogram is zero
       if (m) {
          igood += 1;
-         Info("Chi2TestX","There is a bin in h1 with less than 1 event.\n");
+         Info("TH1::Chi2TestX()","There is a bin in h1 with less than 1 event.\n");
       }
       if (n) {
          igood += 2;
-         Info("Chi2TestX","There is a bin in h2 with less than 1 event.\n");
+         Info("TH1::Chi2TestX()","There is a bin in h2 with less than 1 event.\n");
       }
 
       Double_t prob = TMath::Prob(chi2,ndf);
@@ -2277,7 +2277,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
                   else {
                      // return error because infinite discrepancy here:
                      // bin1 != 0 and bin2 =0 in a histogram with all errors zero
-                     Error("Chi2TestX","Hist2 has in bin (%d,%d,%d) zero content and zero errors\n", i, j, k);
+                     Error("TH1::Chi2TestX()","Hist2 has in bin (%d,%d,%d) zero content and zero errors\n", i, j, k);
                      chi2 = 0; return 0;
                   }
                }
@@ -2344,11 +2344,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
       if (m) {
          igood += 1;
-         Info("Chi2TestX","There is a bin in h1 with less than 1 event.\n");
+         Info("TH1::Chi2TestX()","There is a bin in h1 with less than 1 event.\n");
       }
       if (n) {
          igood += 2;
-         Info("Chi2TestX","There is a bin in h2 with less than 10 effective events.\n");
+         Info("TH1::Chi2TestX()","There is a bin in h2 with less than 10 effective events.\n");
       }
 
       Double_t prob = TMath::Prob(chi2, ndf);
@@ -2377,7 +2377,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 
                 if (e1sq == 0 && e2sq == 0) {
                    // cannot treat case of booth histogram have zero zero errors
-                  Error("Chi2TestX","h1 and h2 both have bin %d,%d,%d with all zero errors\n", i,j,k);
+                  Error("TH1::Chi2TestX()","h1 and h2 both have bin %d,%d,%d with all zero errors\n", i,j,k);
                   chi2 = 0; return 0;
                }
 
@@ -2409,11 +2409,11 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
       }
       if (m) {
          igood += 1;
-         Info("Chi2TestX","There is a bin in h1 with less than 10 effective events.\n");
+         Info("TH1::Chi2TestX()","There is a bin in h1 with less than 10 effective events.\n");
       }
       if (n) {
          igood += 2;
-         Info("Chi2TestX","There is a bin in h2 with less than 10 effective events.\n");
+         Info("TH1::Chi2TestX()","There is a bin in h2 with less than 10 effective events.\n");
       }
       Double_t prob = TMath::Prob(chi2, ndf);
       return prob;
@@ -2430,7 +2430,7 @@ Double_t TH1::Chi2TestX(const TH1* h2,  Double_t &chi2, Int_t &ndf, Int_t &igood
 Double_t TH1::Chisquare(TF1 * func, Option_t *option) const
 {
    if (!func) {
-      Error("Chisquare","Function pointer is Null - return -1");
+      Error("TH1::Chisquare()","Function pointer is Null - return -1");
       return -1;
    }
 
@@ -2487,7 +2487,7 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
             ++ibin;
             Double_t y = RetrieveBinContent(GetBin(binx, biny, binz));
             if (onlyPositive && y < 0) {
-                 Error("ComputeIntegral","Bin content is negative - return a NaN value");
+                 Error("TH1::ComputeIntegral()","Bin content is negative - return a NaN value");
                  fIntegral[nbins] = TMath::QuietNaN();
                  break;
              }
@@ -2498,7 +2498,7 @@ Double_t TH1::ComputeIntegral(Bool_t onlyPositive)
 
    //   - Normalize integral to 1
    if (fIntegral[nbins] == 0 ) {
-      Error("ComputeIntegral", "Integral = zero"); return 0;
+      Error("TH1::ComputeIntegral()","Integral = zero"); return 0;
    }
    for (Int_t bin=1; bin <= nbins; ++bin)  fIntegral[bin] /= fIntegral[nbins];
    fIntegral[nbins+1] = fEntries;
@@ -2720,7 +2720,7 @@ Int_t TH1::DistancetoPrimitive(Int_t px, Int_t py)
 Bool_t TH1::Divide(TF1 *f1, Double_t c1)
 {
    if (!f1) {
-      Error("Add","Attempt to divide by a non-existing function");
+      Error("TH1::Divide()","Attempt to divide by a non-existing function");
       return kFALSE;
    }
 
@@ -2788,7 +2788,7 @@ Bool_t TH1::Divide(TF1 *f1, Double_t c1)
 Bool_t TH1::Divide(const TH1 *h1)
 {
    if (!h1) {
-      Error("Divide", "Input histogram passed does not exist (NULL).");
+      Error("TH1::Divide()","Input histogram passed does not exist (NULL).");
       return kFALSE;
    }
 
@@ -2798,14 +2798,14 @@ Bool_t TH1::Divide(const TH1 *h1)
    try {
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
-      Error("Divide","Cannot divide histograms with different number of bins");
+      Error("TH1::Divide()","Cannot divide histograms with different number of bins");
       return kFALSE;
    } catch(DifferentAxisLimits&) {
-      Warning("Divide","Dividing histograms with different axis limits");
+      Warning("TH1::Divide()","Dividing histograms with different axis limits");
    } catch(DifferentBinLimits&) {
-      Warning("Divide","Dividing histograms with different bin limits");
+      Warning("TH1::Divide()","Dividing histograms with different bin limits");
    } catch(DifferentLabels&) {
-      Warning("Divide","Dividing histograms with different labels");
+      Warning("TH1::Divide()","Dividing histograms with different labels");
    }
 
    //    Create Sumw2 if h1 has Sumw2 set
@@ -2860,7 +2860,7 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
    Bool_t binomial = kFALSE;
    if (opt.Contains("b")) binomial = kTRUE;
    if (!h1 || !h2) {
-      Error("Divide", "At least one of the input histograms passed does not exist (NULL).");
+      Error("TH1::Divide()","At least one of the input histograms passed does not exist (NULL).");
       return kFALSE;
    }
 
@@ -2871,19 +2871,19 @@ Bool_t TH1::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Optio
       CheckConsistency(h1,h2);
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
-      Error("Divide","Cannot divide histograms with different number of bins");
+      Error("TH1::Divide()","Cannot divide histograms with different number of bins");
       return kFALSE;
    } catch(DifferentAxisLimits&) {
-      Warning("Divide","Dividing histograms with different axis limits");
+      Warning("TH1::Divide()","Dividing histograms with different axis limits");
    } catch(DifferentBinLimits&) {
-      Warning("Divide","Dividing histograms with different bin limits");
+      Warning("TH1::Divide()","Dividing histograms with different bin limits");
    }  catch(DifferentLabels&) {
-      Warning("Divide","Dividing histograms with different labels");
+      Warning("TH1::Divide()","Dividing histograms with different labels");
    }
 
 
    if (!c2) {
-      Error("Divide","Coefficient of dividing histogram cannot be zero");
+      Error("TH1::Divide()","Coefficient of dividing histogram cannot be zero");
       return kFALSE;
    }
 
@@ -3043,7 +3043,7 @@ TH1 *TH1::DrawNormalized(Option_t *option, Double_t norm) const
 {
    Double_t sum = GetSumOfWeights();
    if (sum == 0) {
-      Error("DrawNormalized","Sum of weights is null. Cannot normalize histogram: %s",GetName());
+      Error("TH1::DrawNormalized()","Sum of weights is null. Cannot normalize histogram: %s",GetName());
       return 0;
    }
    Bool_t addStatus = TH1::AddDirectoryStatus();
@@ -3415,7 +3415,7 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
    Double_t r1, x;
    //   - Search for fname in the list of ROOT defined functions
    TF1 *f1 = (TF1*)gROOT->GetFunction(fname);
-   if (!f1) { Error("FillRandom", "Unknown function: %s",fname); return; }
+   if (!f1) { Error("TH1::FillRandom()","Unknown function: %s",fname); return; }
 
    //   - Allocate temporary space to store the integral and compute integral
 
@@ -3425,7 +3425,7 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
    if (fXaxis.GetXmax() <= fXaxis.GetXmin()) {
       Double_t xmin,xmax;
       f1->GetRange(xmin,xmax);
-      Info("FillRandom","Using function axis and range [%g,%g]",xmin, xmax);
+      Info("TH1::FillRandom()","Using function axis and range [%g,%g]",xmin, xmax);
       xAxis = f1->GetHistogram()->GetXaxis();
    }
 
@@ -3443,7 +3443,7 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
    //   - Normalize integral to 1
    if (integral[nbinsx] == 0 ) {
       delete [] integral;
-      Error("FillRandom", "Integral = zero"); return;
+      Error("TH1::FillRandom()","Integral = zero"); return;
    }
    for (bin=1;bin<=nbinsx;bin++)  integral[bin] /= integral[nbinsx];
 
@@ -3478,12 +3478,12 @@ void TH1::FillRandom(const char *fname, Int_t ntimes)
 
 void TH1::FillRandom(TH1 *h, Int_t ntimes)
 {
-   if (!h) { Error("FillRandom", "Null histogram"); return; }
+   if (!h) { Error("TH1::FillRandom()","Null histogram"); return; }
    if (fDimension != h->GetDimension()) {
-      Error("FillRandom", "Histograms with different dimensions"); return;
+      Error("TH1::FillRandom()","Histograms with different dimensions"); return;
    }
    if (std::isnan(h->ComputeIntegral(true))) {
-      Error("FillRandom", "Histograms contains negative bins, does not represent probabilities");
+      Error("TH1::FillRandom()","Histograms contains negative bins, does not represent probabilities");
       return;
    }
 
@@ -3624,7 +3624,7 @@ Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis) const
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 
    if (axis != 1) {
-      Warning("FindFirstBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
+      Warning("TH1::FindFirstBinAbove()","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
    }
    Int_t nbins = fXaxis.GetNbins();
@@ -3643,7 +3643,7 @@ Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis) const
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 
    if (axis != 1) {
-      Warning("FindLastBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
+      Warning("TH1::FindLastBinAbove()","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
    }
    Int_t nbins = fXaxis.GetNbins();
@@ -4040,7 +4040,7 @@ void TH1::FitPanel()
       gROOT->MakeDefCanvas();
 
    if (!gPad) {
-      Error("FitPanel", "Unable to create a default canvas");
+      Error("TH1::FitPanel()","Unable to create a default canvas");
       return;
    }
 
@@ -4049,10 +4049,10 @@ void TH1::FitPanel()
    TPluginHandler *handler = gROOT->GetPluginManager()->FindHandler("TFitEditor");
    if (handler && handler->LoadPlugin() != -1) {
       if (handler->ExecPlugin(2, gPad, this) == 0)
-         Error("FitPanel", "Unable to create the FitPanel");
+         Error("TH1::FitPanel()","Unable to create the FitPanel");
    }
    else
-         Error("FitPanel", "Unable to find the FitPanel plug-in");
+         Error("TH1::FitPanel()","Unable to find the FitPanel plug-in");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -4313,7 +4313,7 @@ TVirtualHistPainter *TH1::GetPainter(Option_t *option)
 Int_t TH1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
 {
    if (GetDimension() > 1) {
-      Error("GetQuantiles","Only available for 1-d histograms");
+      Error("TH1::GetQuantiles()","Only available for 1-d histograms");
       return 0;
    }
 
@@ -4710,7 +4710,7 @@ void TH1::GetBinXYZ(Int_t binglobal, Int_t &binx, Int_t &biny, Int_t &binz) cons
 Double_t TH1::GetRandom() const
 {
    if (fDimension > 1) {
-      Error("GetRandom","Function only valid for 1-d histograms");
+      Error("TH1::GetRandom()","Function only valid for 1-d histograms");
       return 0;
    }
    Int_t nbinsx = GetNbinsX();
@@ -4787,7 +4787,7 @@ Double_t TH1::GetBinWithContent(Double_t c, Int_t &binx, Int_t firstx, Int_t las
 {
    if (fDimension > 1) {
       binx = 0;
-      Error("GetBinWithContent","function is only valid for 1-D histograms");
+      Error("TH1::GetBinWithContent()","function is only valid for 1-D histograms");
       return 0;
    }
 
@@ -4844,7 +4844,7 @@ Double_t TH1::Interpolate(Double_t x)
 
 Double_t TH1::Interpolate(Double_t, Double_t)
 {
-   Error("Interpolate","This function must be called with 1 argument for a TH1");
+   Error("TH1::Interpolate()","This function must be called with 1 argument for a TH1");
    return 0;
 }
 
@@ -4853,7 +4853,7 @@ Double_t TH1::Interpolate(Double_t, Double_t)
 
 Double_t TH1::Interpolate(Double_t, Double_t, Double_t)
 {
-   Error("Interpolate","This function must be called with 1 argument for a TH1");
+   Error("TH1::Interpolate()","This function must be called with 1 argument for a TH1");
    return 0;
 }
 
@@ -4884,7 +4884,7 @@ Bool_t TH1::IsBinOverflow(Int_t bin, Int_t iaxis) const
    if (iaxis == 3)
       return binz >= GetNbinsZ() + 1;
 
-   Error("IsBinOverflow","Invalid axis value");
+   Error("TH1::IsBinOverflow()","Invalid axis value");
    return kFALSE;
 }
 
@@ -4914,7 +4914,7 @@ Bool_t TH1::IsBinUnderflow(Int_t bin, Int_t iaxis) const
    if (iaxis == 3)
       return (binz <= 0);
 
-   Error("IsBinUnderflow","Invalid axis value");
+   Error("TH1::IsBinUnderflow()","Invalid axis value");
    return kFALSE;
 }
 
@@ -4931,7 +4931,7 @@ void TH1::LabelsDeflate(Option_t *ax)
    if (iaxis == 2) axis = GetYaxis();
    if (iaxis == 3) axis = GetZaxis();
    if (!axis) {
-      Error("LabelsDeflate","Invalid axis option %s",ax);
+      Error("TH1::LabelsDeflate()","Invalid axis option %s",ax);
       return;
    }
    if (!axis->GetLabels()) return;
@@ -5064,7 +5064,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
    if (!axis) return;
    THashList *labels = axis->GetLabels();
    if (!labels) {
-      Warning("LabelsOption","Cannot sort. No labels");
+      Warning("TH1::LabelsOption()","Cannot sort. No labels");
       return;
    }
    TString opt = option;
@@ -5099,7 +5099,7 @@ void TH1::LabelsOption(Option_t *option, Option_t *ax)
    if (opt.Contains("<")) sort = 2;
    if (sort < 0) return;
    if (sort > 0 && GetDimension() > 2) {
-      Error("LabelsOption","Sorting by value not implemented for 3-D histograms");
+      Error("TH1::LabelsOption()","Sorting by value not implemented for 3-D histograms");
       return;
    }
 
@@ -5486,7 +5486,7 @@ Long64_t TH1::Merge(TCollection *li)
 Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
 {
    if (!f1) {
-      Error("Add","Attempt to multiply by a non-existing function");
+      Error("TH1::Multiply()","Attempt to multiply by a non-existing function");
       return kFALSE;
    }
 
@@ -5548,7 +5548,7 @@ Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
 Bool_t TH1::Multiply(const TH1 *h1)
 {
    if (!h1) {
-      Error("Multiply","Attempt to multiply by a non-existing histogram");
+      Error("TH1::Multiply()","Attempt to multiply by a non-existing histogram");
       return kFALSE;
    }
 
@@ -5558,14 +5558,14 @@ Bool_t TH1::Multiply(const TH1 *h1)
    try {
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
-      Error("Multiply","Attempt to multiply histograms with different number of bins");
+      Error("TH1::Multiply()","Attempt to multiply histograms with different number of bins");
       return kFALSE;
    } catch(DifferentAxisLimits&) {
-      Warning("Multiply","Attempt to multiply histograms with different axis limits");
+      Warning("TH1::Multiply()","Attempt to multiply histograms with different axis limits");
    } catch(DifferentBinLimits&) {
-      Warning("Multiply","Attempt to multiply histograms with different bin limits");
+      Warning("TH1::Multiply()","Attempt to multiply histograms with different bin limits");
    } catch(DifferentLabels&) {
-      Warning("Multiply","Attempt to multiply histograms with different labels");
+      Warning("TH1::Multiply()","Attempt to multiply histograms with different labels");
    }
 
    //    Create Sumw2 if h1 has Sumw2 set
@@ -5610,7 +5610,7 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
    //   Bool_t binomial = kFALSE;
    //   if (opt.Contains("b")) binomial = kTRUE;
    if (!h1 || !h2) {
-      Error("Multiply","Attempt to multiply by a non-existing histogram");
+      Error("TH1::Multiply()","Attempt to multiply by a non-existing histogram");
       return kFALSE;
    }
 
@@ -5621,14 +5621,14 @@ Bool_t TH1::Multiply(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2, Opt
       CheckConsistency(h1,h2);
       CheckConsistency(this,h1);
    } catch(DifferentNumberOfBins&) {
-      Error("Multiply","Attempt to multiply histograms with different number of bins");
+      Error("TH1::Multiply()","Attempt to multiply histograms with different number of bins");
       return kFALSE;
    } catch(DifferentAxisLimits&) {
-      Warning("Multiply","Attempt to multiply histograms with different axis limits");
+      Warning("TH1::Multiply()","Attempt to multiply histograms with different axis limits");
    } catch(DifferentBinLimits&) {
-      Warning("Multiply","Attempt to multiply histograms with different bin limits");
+      Warning("TH1::Multiply()","Attempt to multiply histograms with different bin limits");
    } catch(DifferentLabels&) {
-      Warning("Multiply","Attempt to multiply histograms with different labels");
+      Warning("TH1::Multiply()","Attempt to multiply histograms with different labels");
    }
 
    //    Create Sumw2 if h1 or h2 have Sumw2 set
@@ -5731,16 +5731,16 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    Double_t xmin  = fXaxis.GetXmin();
    Double_t xmax  = fXaxis.GetXmax();
    if ((ngroup <= 0) || (ngroup > nbins)) {
-      Error("Rebin", "Illegal value of ngroup=%d",ngroup);
+      Error("TH1::Rebin()","Illegal value of ngroup=%d",ngroup);
       return 0;
    }
 
    if (fDimension > 1 || InheritsFrom(TProfile::Class())) {
-      Error("Rebin", "Operation valid on 1-D histograms only");
+      Error("TH1::Rebin()","Operation valid on 1-D histograms only");
       return 0;
    }
    if (!newname && xbins) {
-      Error("Rebin","if xbins is specified, newname must be given");
+      Error("TH1::Rebin()","if xbins is specified, newname must be given");
       return 0;
    }
 
@@ -5748,7 +5748,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    if (!xbins) {
       Int_t nbg = nbins/ngroup;
       if (nbg*ngroup != nbins) {
-         Warning("Rebin", "ngroup=%d is not an exact divider of nbins=%d.",ngroup,nbins);
+         Warning("TH1::Rebin()","ngroup=%d is not an exact divider of nbins=%d.",ngroup,nbins);
       }
    }
    else {
@@ -5773,9 +5773,9 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
    // rebin will not include underflow/overflow if new axis range is larger than old axis range
    if (xbins) {
       if (xbins[0] < fXaxis.GetXmin() && oldBins[0] != 0 )
-         Warning("Rebin","underflow entries will not be used when rebinning");
+         Warning("TH1::Rebin()","underflow entries will not be used when rebinning");
       if (xbins[newbins] > fXaxis.GetXmax() && oldBins[nbins+1] != 0 )
-         Warning("Rebin","overflow entries will not be used when rebinning");
+         Warning("TH1::Rebin()","overflow entries will not be used when rebinning");
    }
 
 
@@ -5854,7 +5854,7 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
                                        hnew->GetXaxis()->GetBinLowEdge(bin),
                                        TMath::Max(1.E-8 * fXaxis.GetBinWidth(oldbin), 1.E-16 )) )
       {
-         Warning("Rebin","Bin edge %d of rebinned histogram does not much any bin edges of the old histogram. Result can be inconsistent",bin);
+         Warning("TH1::Rebin()","Bin edge %d of rebinned histogram does not much any bin edges of the old histogram. Result can be inconsistent",bin);
       }
       for (i=0;i<ngroup;i++) {
          if( (oldbin+i > nbins) ||
@@ -5946,7 +5946,7 @@ Bool_t TH1::FindNewAxisLimits(const TAxis* axis, const Double_t point, Double_t&
    }
    newMin = xmin;
    newMax = xmax;
-   //   Info("FindNewAxisLimits", "OldAxis: (%lf, %lf), new: (%lf, %lf), point: %lf",
+   //   Info("TH1::FindNewAxisLimits()","OldAxis: (%lf, %lf), new: (%lf, %lf), point: %lf",
    //      axis->GetXmin(), axis->GetXmax(), xmin, xmax, point);
 
    return kTRUE;
@@ -6021,7 +6021,7 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
       if (content == 0) continue;
       if (IsBinUnderflow(bin,iaxis) || IsBinOverflow(bin,iaxis) ) {
          if (firstw) {
-            Warning("ExtendAxis","Histogram %s has underflow or overflow in the axis that is extendable"
+            Warning("TH1::ExtendAxis()","Histogram %s has underflow or overflow in the axis that is extendable"
                     " their content will be lost",GetName() );
             firstw= kFALSE;
          }
@@ -6210,7 +6210,7 @@ void TH1::SetTitle(const char *title)
 void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
 {
    if (nn < 3 ) {
-      ::Error("SmoothArray","Need at least 3 points for smoothing: n = %d",nn);
+      ::Error("TH1::SmoothArray()","Need at least 3 points for smoothing: n = %d",nn);
       return;
    }
 
@@ -6328,12 +6328,12 @@ void  TH1::SmoothArray(Int_t nn, Double_t *xx, Int_t ntimes)
 void  TH1::Smooth(Int_t ntimes, Option_t *option)
 {
    if (fDimension != 1) {
-      Error("Smooth","Smooth only supported for 1-d histograms");
+      Error("TH1::Smooth()","Smooth only supported for 1-d histograms");
       return;
    }
    Int_t nbins = fXaxis.GetNbins();
    if (nbins < 3) {
-      Error("Smooth","Smooth only supported for histograms with >= 3 bins. Nbins = %d",nbins);
+      Error("TH1::Smooth()","Smooth only supported for histograms with >= 3 bins. Nbins = %d",nbins);
       return;
    }
 
@@ -7057,7 +7057,7 @@ Double_t TH1::GetSkewness(Int_t axis) const
       return ( neff > 0 ? TMath::Sqrt(6./neff ) : 0. );
    }
    else {
-      Error("GetSkewness", "illegal value of parameter");
+      Error("TH1::GetSkewness()","illegal value of parameter");
       return 0;
    }
 }
@@ -7126,7 +7126,7 @@ Double_t TH1::GetKurtosis(Int_t axis) const
       return ( neff > 0 ? TMath::Sqrt(24./neff ) : 0. );
    }
    else {
-      Error("GetKurtosis", "illegal value of parameter");
+      Error("TH1::GetKurtosis()","illegal value of parameter");
       return 0;
    }
 }
@@ -7401,7 +7401,7 @@ Double_t TH1::AndersonDarlingTest(const TH1 *h2, Option_t *option) const
 Double_t TH1::AndersonDarlingTest(const TH1 *h2, Double_t & advalue) const
 {
    if (GetDimension() != 1 || h2->GetDimension() != 1) {
-      Error("AndersonDarlingTest","Histograms must be 1-D");
+      Error("TH1::AndersonDarlingTest()","Histograms must be 1-D");
       return -1;
    }
 
@@ -7509,13 +7509,13 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
    // Check consistency of dimensions
    if (h1->GetDimension() != 1 || h2->GetDimension() != 1) {
-      Error("KolmogorovTest","Histograms must be 1-D\n");
+      Error("TH1::KolmogorovTest()","Histograms must be 1-D\n");
       return 0;
    }
 
    // Check consistency in number of channels
    if (ncx1 != ncx2) {
-      Error("KolmogorovTest","Histograms have different number of bins, %d and %d\n",ncx1,ncx2);
+      Error("TH1::KolmogorovTest()","Histograms have different number of bins, %d and %d\n",ncx1,ncx2);
       return 0;
    }
 
@@ -7525,7 +7525,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
    // Check consistency in bin edges
    for(Int_t i = 1; i <= axis1->GetNbins() + 1; ++i) {
       if(!TMath::AreEqualRel(axis1->GetBinLowEdge(i), axis2->GetBinLowEdge(i), 1.E-15)) {
-         Error("KolmogorovTest","Histograms are not consistent: they have different bin edges");
+         Error("TH1::KolmogorovTest()","Histograms are not consistent: they have different bin edges");
          return 0;
       }
    }
@@ -7549,11 +7549,11 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
       w2   += ew2*ew2;
    }
    if (sum1 == 0) {
-      Error("KolmogorovTest","Histogram1 %s integral is zero\n",h1->GetName());
+      Error("TH1::KolmogorovTest()","Histogram1 %s integral is zero\n",h1->GetName());
       return 0;
    }
    if (sum2 == 0) {
-      Error("KolmogorovTest","Histogram2 %s integral is zero\n",h2->GetName());
+      Error("TH1::KolmogorovTest()","Histogram2 %s integral is zero\n",h2->GetName());
       return 0;
    }
 
@@ -7572,7 +7572,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
       afunc2 = kTRUE;    // use later for calculating z
 
    if (afunc2 && afunc1) {
-      Error("KolmogorovTest","Errors are zero for both histograms\n");
+      Error("TH1::KolmogorovTest()","Errors are zero for both histograms\n");
       return 0;
    }
 
@@ -7624,7 +7624,7 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
 
       if (h1_cpy->GetMinimum() < 0.0) {
          // With negative bins we can't draw random samples in a meaningful way.
-         Warning("KolmogorovTest", "Detected bins with negative weights, these have been ignored and output might be "
+         Warning("TH1::KolmogorovTest()","Detected bins with negative weights, these have been ignored and output might be "
                                    "skewed. Reduce number of bins for histogram?");
          while (h1_cpy->GetMinimum() < 0.0) {
             Int_t idx = h1_cpy->GetMinimumBin();
@@ -7656,8 +7656,8 @@ Double_t TH1::KolmogorovTest(const TH1 *h2, Option_t *option) const
          printf(" Kolmo Prob     = %f with %d pseudo-experiments\n",prb3,nEXPT);
    }
    // This numerical error condition should never occur:
-   if (TMath::Abs(rsum1-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h1=%s\n",h1->GetName());
-   if (TMath::Abs(rsum2-1) > 0.002) Warning("KolmogorovTest","Numerical problems with h2=%s\n",h2->GetName());
+   if (TMath::Abs(rsum1-1) > 0.002) Warning("TH1::KolmogorovTest()","Numerical problems with h1=%s\n",h1->GetName());
+   if (TMath::Abs(rsum2-1) > 0.002) Warning("TH1::KolmogorovTest()","Numerical problems with h2=%s\n",h2->GetName());
 
    if(opt.Contains("M"))      return dfmax;
    else if(opt.Contains("X")) return prb3;
@@ -8031,7 +8031,7 @@ void TH1::GetMinimumAndMaximum(Double_t& min, Double_t& max) const
 void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
 {
    if (GetDimension() != 1) {
-      Error("SetBins","Operation only valid for 1-d histograms");
+      Error("TH1::SetBins()","Operation only valid for 1-d histograms");
       return;
    }
    fXaxis.SetRange(0,0);
@@ -8058,7 +8058,7 @@ void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax)
 void TH1::SetBins(Int_t nx, const Double_t *xBins)
 {
    if (GetDimension() != 1) {
-      Error("SetBins","Operation only valid for 1-d histograms");
+      Error("TH1::SetBins()","Operation only valid for 1-d histograms");
       return;
    }
    fXaxis.SetRange(0,0);
@@ -8084,7 +8084,7 @@ void TH1::SetBins(Int_t nx, const Double_t *xBins)
 void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax)
 {
    if (GetDimension() != 2) {
-      Error("SetBins","Operation only valid for 2-D histograms");
+      Error("TH1::SetBins()","Operation only valid for 2-D histograms");
       return;
    }
    fXaxis.SetRange(0,0);
@@ -8112,7 +8112,7 @@ void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymi
 void TH1::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins)
 {
    if (GetDimension() != 2) {
-      Error("SetBins","Operation only valid for 2-D histograms");
+      Error("TH1::SetBins()","Operation only valid for 2-D histograms");
       return;
    }
    fXaxis.SetRange(0,0);
@@ -8139,7 +8139,7 @@ void TH1::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBi
 void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymin, Double_t ymax, Int_t nz, Double_t zmin, Double_t zmax)
 {
    if (GetDimension() != 3) {
-      Error("SetBins","Operation only valid for 3-D histograms");
+      Error("TH1::SetBins()","Operation only valid for 3-D histograms");
       return;
    }
    fXaxis.SetRange(0,0);
@@ -8169,7 +8169,7 @@ void TH1::SetBins(Int_t nx, Double_t xmin, Double_t xmax, Int_t ny, Double_t ymi
 void TH1::SetBins(Int_t nx, const Double_t *xBins, Int_t ny, const Double_t *yBins, Int_t nz, const Double_t *zBins)
 {
    if (GetDimension() != 3) {
-      Error("SetBins","Operation only valid for 3-D histograms");
+      Error("SetBins()","Operation only valid for 3-D histograms");
       return;
    }
    fXaxis.SetRange(0,0);
@@ -8290,7 +8290,7 @@ void TH1::Sumw2(Bool_t flag)
 
    if (fSumw2.fN == fNcells) {
       if (!fgDefaultSumw2 )
-         Warning("Sumw2","Sum of squares of weights structure already created");
+         Warning("TH1::Sumw2()","Sum of squares of weights structure already created");
       return;
    }
 
@@ -8355,7 +8355,7 @@ Double_t TH1::GetBinErrorLow(Int_t bin) const
    Double_t c = RetrieveBinContent(bin);
    Int_t n = int(c);
    if (n < 0) {
-      Warning("GetBinErrorLow","Histogram has negative bin content-force usage to normal errors");
+      Warning("TH1::GetBinErrorLow()","Histogram has negative bin content-force usage to normal errors");
       ((TH1*)this)->fBinStatErrOpt = kNormal;
       return GetBinError(bin);
    }
@@ -8385,7 +8385,7 @@ Double_t TH1::GetBinErrorUp(Int_t bin) const
    Double_t c = RetrieveBinContent(bin);
    Int_t n = int(c);
    if (n < 0) {
-      Warning("GetBinErrorUp","Histogram has negative bin content-force usage to normal errors");
+      Warning("TH1::GetBinErrorUp()","Histogram has negative bin content-force usage to normal errors");
       ((TH1*)this)->fBinStatErrOpt = kNormal;
       return GetBinError(bin);
    }
@@ -8404,7 +8404,7 @@ Double_t TH1::GetBinErrorUp(Int_t bin) const
 Double_t TH1::GetBinCenter(Int_t bin) const
 {
    if (fDimension == 1) return  fXaxis.GetBinCenter(bin);
-   Error("GetBinCenter","Invalid method for a %d-d histogram - return a NaN",fDimension);
+   Error("TH1::GetBinCenter()","Invalid method for a %d-d histogram - return a NaN",fDimension);
    return TMath::QuietNaN();
 }
 
@@ -8415,7 +8415,7 @@ Double_t TH1::GetBinCenter(Int_t bin) const
 Double_t TH1::GetBinLowEdge(Int_t bin) const
 {
    if (fDimension == 1) return  fXaxis.GetBinLowEdge(bin);
-   Error("GetBinLowEdge","Invalid method for a %d-d histogram - return a NaN",fDimension);
+   Error("TH1::GetBinLowEdge()","Invalid method for a %d-d histogram - return a NaN",fDimension);
    return TMath::QuietNaN();
 }
 
@@ -8426,7 +8426,7 @@ Double_t TH1::GetBinLowEdge(Int_t bin) const
 Double_t TH1::GetBinWidth(Int_t bin) const
 {
    if (fDimension == 1) return  fXaxis.GetBinWidth(bin);
-   Error("GetBinWidth","Invalid method for a %d-d histogram - return a NaN",fDimension);
+   Error("TH1::GetBinWidth()","Invalid method for a %d-d histogram - return a NaN",fDimension);
    return TMath::QuietNaN();
 }
 
@@ -8440,7 +8440,7 @@ void TH1::GetCenter(Double_t *center) const
       fXaxis.GetCenter(center);
       return;
    }
-   Error("GetCenter","Invalid method for a %d-d histogram ",fDimension);
+   Error("TH1::GetCenter()","Invalid method for a %d-d histogram ",fDimension);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8453,7 +8453,7 @@ void TH1::GetLowEdge(Double_t *edge) const
       fXaxis.GetLowEdge(edge);
       return;
    }
-   Error("GetLowEdge","Invalid method for a %d-d histogram ",fDimension);
+   Error("TH1::GetLowEdge()","Invalid method for a %d-d histogram ",fDimension);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8582,12 +8582,12 @@ Int_t TH1::ShowPeaks(Double_t sigma, Option_t *option, Double_t threshold)
 TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
 {
    if (!fft ||  !fft->GetN() ) {
-      ::Error("TransformHisto","Invalid FFT transform class");
+      ::Error("TH1::TransformHisto()","Invalid FFT transform class");
       return 0;
    }
 
    if (fft->GetNdim()>2){
-      ::Error("TransformHisto","Only 1d and 2D transform are supported");
+      ::Error("TH1::TransformHisto()","Only 1d and 2D transform are supported");
       return 0;
    }
    Int_t binx,biny;
@@ -8638,7 +8638,7 @@ TH1* TH1::TransformHisto(TVirtualFFT *fft, TH1* h_output,  Option_t *option)
             }
          }
       } else {
-         ::Error("TransformHisto","No complex numbers in the output");
+         ::Error("TH1::TransformHisto()","No complex numbers in the output");
          return 0;
       }
    }
