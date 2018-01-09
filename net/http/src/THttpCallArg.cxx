@@ -13,7 +13,7 @@
 
 #include <string.h>
 #include "RZip.h"
-#include "TNamed.h"
+#include "THttpWSEngine.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -31,7 +31,7 @@ ClassImp(THttpCallArg);
 
 THttpCallArg::THttpCallArg()
    : TObject(), fTopName(), fMethod(), fPathName(), fFileName(), fUserName(), fQuery(), fPostData(0),
-     fPostDataLength(0), fWSHandle(0), fWSId(0), fContentType(), fRequestHeader(), fHeader(), fContent(), fZipping(0),
+     fPostDataLength(0), fWSHandle(nullptr), fWSId(0), fContentType(), fRequestHeader(), fHeader(), fContent(), fZipping(0),
      fBinData(0), fBinDataLength(0), fNotifyFlag(kFALSE)
 {
 }
@@ -43,17 +43,17 @@ THttpCallArg::~THttpCallArg()
 {
    if (fPostData) {
       free(fPostData);
-      fPostData = 0;
+      fPostData = nullptr;
    }
 
    if (fWSHandle) {
       delete fWSHandle;
-      fWSHandle = 0;
+      fWSHandle = nullptr;
    }
 
    if (fBinData) {
       free(fBinData);
-      fBinData = 0;
+      fBinData = nullptr;
    }
 }
 
@@ -147,7 +147,7 @@ void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
 {
    if (fPostData) {
       free(fPostData);
-      fPostData = 0;
+      fPostData = nullptr;
       fPostDataLength = 0;
    }
 
@@ -160,7 +160,7 @@ void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
       data = newdata;
    }
 
-   if (data != 0)
+   if (data)
       *(((char *)data) + length) = 0;
 
    fPostData = data;
@@ -170,7 +170,7 @@ void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
 ////////////////////////////////////////////////////////////////////////////////
 /// assign websocket handle with HTTP call
 
-void THttpCallArg::SetWSHandle(TNamed *handle)
+void THttpCallArg::SetWSHandle(THttpWSEngine *handle)
 {
    if (fWSHandle)
       delete fWSHandle;
@@ -181,10 +181,10 @@ void THttpCallArg::SetWSHandle(TNamed *handle)
 /// takeout websocket handle with HTTP call
 /// can be done only once
 
-TNamed *THttpCallArg::TakeWSHandle()
+THttpWSEngine *THttpCallArg::TakeWSHandle()
 {
-   TNamed *res = fWSHandle;
-   fWSHandle = 0;
+   THttpWSEngine *res = fWSHandle;
+   fWSHandle = nullptr;
    return res;
 }
 

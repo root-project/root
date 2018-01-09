@@ -33,12 +33,10 @@ protected:
    struct mg_connection *fWSconn;
 
 public:
-   TCivetwebWSEngine(const char *name, const char *title, struct mg_connection *conn)
-      : THttpWSEngine(name, title), fWSconn(conn)
+   TCivetwebWSEngine(struct mg_connection *conn)
+      : THttpWSEngine(), fWSconn(conn)
    {
    }
-
-   virtual ~TCivetwebWSEngine() {}
 
    virtual UInt_t GetId() const { return TString::Hash((void *)&fWSconn, sizeof(void *)); }
 
@@ -96,7 +94,7 @@ void websocket_ready_handler(struct mg_connection *conn, void *)
    arg.SetMethod("WS_READY");
 
    arg.SetWSId(TString::Hash((void *)&conn, sizeof(void *)));
-   arg.SetWSHandle(new TCivetwebWSEngine("websocket", "title", conn));
+   arg.SetWSHandle(new TCivetwebWSEngine(conn));
 
    serv->ExecuteHttp(&arg);
 }

@@ -828,7 +828,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
          // if accepted, reply with connection id, which must be used in the following communications
          arg->SetMethod("WS_CONNECT");
 
-         THttpLongPollEngine *handle = new THttpLongPollEngine("longpoll", arg->fPathName.Data());
+         THttpLongPollEngine *handle = new THttpLongPollEngine();
          arg->SetWSId(handle->GetId());
 
          if (handler->HandleWS(arg)) {

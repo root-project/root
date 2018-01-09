@@ -75,6 +75,12 @@ The following people have contributed to this new version:
 
 ## Networking Libraries
 
+Changes in websockets handling in THttpServer. 
+   - New THttpWSHandler class should be used to work with websockets. 
+     It includes all necessary methods to handle multiple connections correctly.
+     See in tutorials/http/ws.C how it can be used.  
+   - Interface of THttpWSEngine class was changed, all its instances handled internally in THttpWSHandler.
+
 ## GUI Libraries
 
 ## Montecarlo Libraries
