@@ -19,7 +19,7 @@
 #include <condition_variable>
 
 class THttpServer;
-class TNamed;
+class THttpWSEngine;
 
 class THttpCallArg : public TObject {
 
@@ -36,8 +36,8 @@ protected:
    void *fPostData;        ///<! binary data received with post request
    Long_t fPostDataLength; ///<! length of binary data
 
-   TNamed *fWSHandle; ///<!  web-socket handle, derived from TNamed class
-   UInt_t fWSId;      ///<! websocket identifier, used in web-socket related operations
+   THttpWSEngine *fWSHandle; ///<!  web-socket engine, which helps to run it
+   UInt_t fWSId;             ///<! websocket identifier, used in web-socket related operations
 
    std::condition_variable fCond; ///<! condition used to wait for processing
 
@@ -86,9 +86,9 @@ public:
 
    void SetPostData(void *data, Long_t length, Bool_t make_copy = kFALSE);
 
-   void SetWSHandle(TNamed *handle);
+   void SetWSHandle(THttpWSEngine *handle);
 
-   TNamed *TakeWSHandle();
+   THttpWSEngine *TakeWSHandle();
 
    /** set web-socket id */
    void SetWSId(UInt_t id) { fWSId = id; }
@@ -127,7 +127,7 @@ public:
    Long_t GetPostDataLength() const { return fPostDataLength; }
 
    /** returns post data as TString */
-   TString GetPostDataAsString() const { return TString((const char *) GetPostData(), GetPostDataLength()); }
+   TString GetPostDataAsString() const { return TString((const char *)GetPostData(), GetPostDataLength()); }
 
    /** returns path name from request URL */
    const char *GetPathName() const { return fPathName.Data(); }

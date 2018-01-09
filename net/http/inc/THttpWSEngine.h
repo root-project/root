@@ -12,17 +12,17 @@
 #ifndef ROOT_THttpWSEngine
 #define ROOT_THttpWSEngine
 
-#include "TNamed.h"
+#include "Rtypes.h"
 
 class THttpCallArg;
 
-class THttpWSEngine : public TNamed {
+class THttpWSEngine {
 
 protected:
-   THttpWSEngine(const char *name, const char *title);
+   THttpWSEngine() = default;
 
 public:
-   virtual ~THttpWSEngine();
+   virtual ~THttpWSEngine() {}
 
    virtual UInt_t GetId() const = 0;
 
@@ -32,9 +32,9 @@ public:
 
    virtual void SendCharStar(const char *str);
 
-   virtual Bool_t PreviewData(THttpCallArg *) { return kFALSE; }
+   virtual Bool_t PreviewData(THttpCallArg &);
 
-   virtual void PostProcess(THttpCallArg *) {}
+   virtual void PostProcess(THttpCallArg &);
 
    ClassDef(THttpWSEngine, 0) // abstract class for working with WebSockets-like protocol
 };

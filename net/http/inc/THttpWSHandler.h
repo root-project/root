@@ -14,7 +14,7 @@
 
 #include "TNamed.h"
 
-#include "TList.h"
+#include <vector>
 
 class THttpCallArg;
 class THttpWSEngine;
@@ -30,9 +30,11 @@ private:
 
    Bool_t HandleWS(THttpCallArg *arg);
 
+   void RemoveEngine(THttpWSEngine *engine);
+
 protected:
 
-   TList    fEngines;         ///<!  list of of engines in use, cleaned automatically at the end
+   std::vector<THttpWSEngine *> fEngines;         ///<!  list of active WS engines (connections)
 
    THttpWSHandler(const char *name, const char *title);
 
@@ -48,6 +50,11 @@ public:
 
    /// Return kTRUE if websocket with given ID exists
    Bool_t HasWS(UInt_t wsid) const { return FindEngine(wsid) != 0; }
+
+   /// Returns current number of websocket connections
+   Int_t GetNumWS() const { return fEngines.size(); }
+
+   UInt_t GetWS(Int_t num = 0) const;
 
    void CloseWS(UInt_t wsid);
 

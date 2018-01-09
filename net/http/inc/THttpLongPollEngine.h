@@ -23,7 +23,7 @@ protected:
    std::list<std::string> fBuf;      ///!< entries submitted to client
    static const char *gLongPollNope; ///!< default reply on the longpoll request
 public:
-   THttpLongPollEngine(const char *name, const char *title) : THttpWSEngine(name, title), fPoll(nullptr), fBuf() {}
+   THttpLongPollEngine() : THttpWSEngine(), fPoll(nullptr), fBuf() {}
 
    virtual UInt_t GetId() const;
 
@@ -33,9 +33,9 @@ public:
 
    virtual void SendCharStar(const char *buf);
 
-   virtual Bool_t PreviewData(THttpCallArg *arg);
+   virtual Bool_t PreviewData(THttpCallArg &arg);
 
-   virtual void PostProcess(THttpCallArg *arg);
+   virtual void PostProcess(THttpCallArg &arg);
 
    ClassDef(THttpLongPollEngine, 0);
 };

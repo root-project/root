@@ -79,17 +79,17 @@ void THttpLongPollEngine::SendCharStar(const char *buf)
 /// function called in the user code before processing correspondent websocket data
 /// returns kTRUE when user should ignore such http request - it is for internal use
 
-Bool_t THttpLongPollEngine::PreviewData(THttpCallArg *arg)
+Bool_t THttpLongPollEngine::PreviewData(THttpCallArg &arg)
 {
-   if (!strstr(arg->GetQuery(), "&dummy")) {
+   if (!strstr(arg.GetQuery(), "&dummy")) {
       // this is normal request, deliver and process it as any other
       // put dummy content, it can be overwritten in the future
-      arg->SetContentType("text/plain");
-      arg->SetContent(gLongPollNope);
+      arg.SetContentType("text/plain");
+      arg.SetContent(gLongPollNope);
       return kFALSE;
    }
 
-   if (arg == fPoll) {
+   if (&arg == fPoll) {
       Error("PreviewData", "NEVER SHOULD HAPPEN");
       gSystem->Exit(12);
    }
@@ -104,12 +104,12 @@ Bool_t THttpLongPollEngine::PreviewData(THttpCallArg *arg)
    }
 
    if (fBuf.size() > 0) {
-      arg->SetContentType("text/plain");
-      arg->SetContent(fBuf.front().c_str());
+      arg.SetContentType("text/plain");
+      arg.SetContent(fBuf.front().c_str());
       fBuf.pop_front();
    } else {
-      arg->SetPostponed();
-      fPoll = arg;
+      arg.SetPostponed();
+      fPoll = &arg;
    }
 
    // if arguments has "&dummy" string, user should not process it
@@ -120,12 +120,12 @@ Bool_t THttpLongPollEngine::PreviewData(THttpCallArg *arg)
 /// Normally requests from client does not replied directly
 /// Therefore one can use it to send data with it
 
-void THttpLongPollEngine::PostProcess(THttpCallArg *arg)
+void THttpLongPollEngine::PostProcess(THttpCallArg &arg)
 {
-   if ((fBuf.size() > 0) && arg->IsContentType("text/plain") &&
-       (arg->GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
-       (strcmp((const char *)arg->GetContent(), gLongPollNope) == 0)) {
-      arg->SetContent(fBuf.front().c_str());
+   if ((fBuf.size() > 0) && arg.IsContentType("text/plain") &&
+       (arg.GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
+       (strcmp((const char *)arg.GetContent(), gLongPollNope) == 0)) {
+      arg.SetContent(fBuf.front().c_str());
       fBuf.pop_front();
    }
 }

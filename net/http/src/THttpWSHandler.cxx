@@ -14,7 +14,6 @@
 #include "THttpWSEngine.h"
 #include "THttpCallArg.h"
 
-
 /////////////////////////////////////////////////////////////////////////
 ///
 /// THttpWSHandler
@@ -65,62 +64,94 @@ ClassImp(THttpWSHandler);
 ////////////////////////////////////////////////////////////////////////////////
 /// normal constructor
 
-THttpWSHandler::THttpWSHandler(const char *name, const char *title) :
-   TNamed(name, title), fEngines()
+THttpWSHandler::THttpWSHandler(const char *name, const char *title) : TNamed(name, title), fEngines()
 {
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// destructor
+/// Delete all websockets handles
 
 THttpWSHandler::~THttpWSHandler()
 {
-   TIter iter(&fEngines);
-   THttpWSEngine *engine = 0;
-
-   while ((engine = (THttpWSEngine *)iter()) != 0)
+   for (auto iter = fEngines.begin(); iter != fEngines.end(); iter++) {
+      THttpWSEngine *engine = *iter;
       engine->ClearHandle();
-
-   fEngines.Delete();
-}
-
-
-THttpWSEngine *THttpWSHandler::FindEngine(UInt_t id) const
-{
-   TIter iter(&fEngines);
-   THttpWSEngine *engine = 0;
-
-   while ((engine = (THttpWSEngine *)iter()) != 0) {
-      if (engine->GetId() == id) return engine;
+      delete engine;
    }
 
-   return 0;
+   fEngines.clear();
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return websocket id with given sequential number
+/// Number of websockets return with GetNumWS() method
+
+UInt_t THttpWSHandler::GetWS(Int_t num) const
+{
+   auto iter = fEngines.begin() + num;
+   return (*iter)->GetId();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find websocket connection handle with given id
+
+THttpWSEngine *THttpWSHandler::FindEngine(UInt_t wsid) const
+{
+   for (auto iter = fEngines.begin(); iter != fEngines.end(); iter++)
+      if ((*iter)->GetId() == wsid)
+         return *iter;
+
+   return nullptr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Remove and destroy WS connection
+
+void THttpWSHandler::RemoveEngine(THttpWSEngine *engine)
+{
+   for (auto iter = fEngines.begin(); iter != fEngines.end(); iter++)
+      if (*iter == engine) {
+         fEngines.erase(iter);
+         break;
+      }
+
+   delete engine;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Process request to websocket
+/// Different kind of requests coded into THttpCallArg::Method
+///  "WS_CONNECT" - connection request
+///  "WS_READY" - connection ready
+///  "WS_CLOSE" - connection closed
+/// All other are normal data, which are delivered to users
 
 Bool_t THttpWSHandler::HandleWS(THttpCallArg *arg)
 {
-   if (!arg->GetWSId()) return ProcessWS(arg);
-
-   THttpWSEngine* engine = FindEngine(arg->GetWSId());
-
-   if (arg->IsMethod("WS_CONNECT")) {
-      // accept all requests, in future one could limit number of connections
+   if (!arg->GetWSId())
       return ProcessWS(arg);
-   }
+
+   // normally here one accept or reject connection requests
+   if (arg->IsMethod("WS_CONNECT"))
+      return ProcessWS(arg);
+
+   THttpWSEngine *engine = FindEngine(arg->GetWSId());
 
    if (arg->IsMethod("WS_READY")) {
 
       if (engine) {
-         Error("HandleWS","WS engine with similar id exists %u\n", arg->GetWSId());
-         fEngines.Remove(engine);
-         delete engine;
+         Error("HandleWS", "WS engine with similar id exists %u\n", arg->GetWSId());
+         RemoveEngine(engine);
       }
 
-      THttpWSEngine *wshandle = dynamic_cast<THttpWSEngine *>(arg->TakeWSHandle());
+      engine = arg->TakeWSHandle();
 
-      fEngines.Add(wshandle);
+      fEngines.push_back(engine);
 
       if (!ProcessWS(arg)) {
          // if connection refused, remove engine again
-         fEngines.Remove(wshandle);
-         delete wshandle;
+         RemoveEngine(engine);
          return kFALSE;
       }
 
@@ -132,42 +163,52 @@ Bool_t THttpWSHandler::HandleWS(THttpCallArg *arg)
 
       if (engine) {
          engine->ClearHandle();
-         fEngines.Remove(engine);
-         delete engine;
+         RemoveEngine(engine);
       }
 
       return ProcessWS(arg);
    }
 
-   if (engine && engine->PreviewData(arg)) return kTRUE;
+   if (engine && engine->PreviewData(*arg))
+      return kTRUE;
 
    Bool_t res = ProcessWS(arg);
 
-   if (engine) engine->PostProcess(arg);
+   if (engine)
+      engine->PostProcess(*arg);
 
    return res;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Close connection with given websocket id
+
 void THttpWSHandler::CloseWS(UInt_t wsid)
 {
-   THttpWSEngine* engine = FindEngine(wsid);
+   THttpWSEngine *engine = FindEngine(wsid);
 
-   if (engine) {
-      fEngines.Remove(engine);
-      delete engine;
-   }
+   if (engine)
+      RemoveEngine(engine);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Send binary data via given websocket id
 
 void THttpWSHandler::SendWS(UInt_t wsid, const void *buf, int len)
 {
-   THttpWSEngine* engine = FindEngine(wsid);
+   THttpWSEngine *engine = FindEngine(wsid);
 
-   if (engine) engine->Send(buf, len);
+   if (engine)
+      engine->Send(buf, len);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Send string via given websocket id
 
 void THttpWSHandler::SendCharStarWS(UInt_t wsid, const char *str)
 {
-   THttpWSEngine* engine = FindEngine(wsid);
+   THttpWSEngine *engine = FindEngine(wsid);
 
-   if (engine) engine->SendCharStar(str);
+   if (engine)
+      engine->SendCharStar(str);
 }
