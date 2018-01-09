@@ -17,7 +17,7 @@
 #define ROOT7_TWebWindow
 
 #include <memory>
-#include <list>
+#include <vector>
 #include <string>
 #include <functional>
 
@@ -49,15 +49,13 @@ class TWebWindow {
 
 private:
    struct WebConn {
-      unsigned fWSId{0};   ///<! websocket id
-      unsigned fConnId{0}; ///<! connection id (unique inside the window)
-      int fReady{0};       ///<! 0 - not ready, 1..9 - interim, 10 - done
-      int fRecvCount{0};   ///<! number of received packets, should return back with next sending
-      int fSendCredits{0}; ///<! how many send operation can be performed without confirmation from other side
-      int fClientCredits{
-         0}; ///<! last received information about credits on client side, helps to resubmit credits back to client
-      std::list<std::string>
-         fQueue; ///<! small output queue for data which should be send via the connection (including channel)
+      unsigned fWSId{0};     ///<! websocket id
+      unsigned fConnId{0};   ///<! connection id (unique inside the window)
+      int fReady{0};         ///<! 0 - not ready, 1..9 - interim, 10 - done
+      int fRecvCount{0};     ///<! number of received packets, should return back with next sending
+      int fSendCredits{0};   ///<! how many send operation can be performed without confirmation from other side
+      int fClientCredits{0}; ///<! number of credits received from client
+      std::vector<std::string> fQueue;   ///<! output queue (already includes channel)
       WebWindowDataCallback_t fCallBack; ///<! additional data callback for extra channels
       WebConn() = default;
    };
@@ -70,7 +68,7 @@ private:
    std::unique_ptr<TWebWindowWSHandler> fWSHandler; ///<!  specialize websocket handler for all incoming connections
    bool fShown{false};                              ///<!  true when window was shown at least once
    unsigned fConnCnt{0};                            ///<!  counter of new connections to assign ids
-   std::list<WebConn> fConn;                        ///<!  list of all accepted connections
+   std::vector<WebConn> fConn;                      ///<!  list of all accepted connections
    unsigned fConnLimit{1};                          ///<!  number of allowed active connections
    static const unsigned fMaxQueueLength{10};       ///<!  maximal number of queue entries
    WebWindowDataCallback_t fDataCallback;           ///<!  main callback when data over channel 1 is arrived
@@ -135,9 +133,9 @@ public:
    void SetConnLimit(unsigned lmt = 0) { fConnLimit = lmt; }
 
    /// Returns current number of active clients connections
-   unsigned NumConnections() const { return fConn.size(); }
+   int NumConnections() const { return fConn.size(); }
 
-   unsigned GetConnectionId(unsigned num = 0) const;
+   unsigned GetConnectionId(int num = 0) const;
 
    void CloseConnections();
 
