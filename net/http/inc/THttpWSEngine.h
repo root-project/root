@@ -24,6 +24,8 @@ protected:
 public:
    virtual ~THttpWSEngine() {}
 
+   void AttachTo(THttpCallArg &);
+
    virtual UInt_t GetId() const = 0;
 
    virtual void ClearHandle() = 0;

@@ -11,6 +11,8 @@
 
 #include "THttpWSEngine.h"
 
+#include "THttpCallArg.h"
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // THttpWSEngine                                                        //
@@ -19,6 +21,15 @@
 // THttpServer and THttpWSHandler. Normally should not be used directly //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Attach WSEngine to THttpCallArg to transport to the WSHandler
+
+void THttpWSEngine::AttachTo(THttpCallArg &arg)
+{
+   arg.SetWSEngine(this);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Envelope for sending string via the websocket

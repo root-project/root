@@ -145,7 +145,7 @@ Bool_t THttpWSHandler::HandleWS(THttpCallArg *arg)
          RemoveEngine(engine);
       }
 
-      engine = arg->TakeWSHandle();
+      engine = arg->TakeWSEngine();
 
       fEngines.push_back(engine);
 
