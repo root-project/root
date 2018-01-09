@@ -152,7 +152,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
       return kTRUE;
 
    // try to identify connection for given WS request
-   WebConn *conn = 0;
+   WebConn *conn = nullptr;
    auto iter = fConn.begin();
    while (iter != fConn.end()) {
       if (iter->fWSId == arg.GetWSId()) {
@@ -354,6 +354,27 @@ unsigned ROOT::Experimental::TWebWindow::GetConnectionId(unsigned num) const
    }
    return 0;
 }
+
+///////////////////////////////////////////////////////////////////////////////////
+/// Closes all connection to clients
+/// Normally leads to closing of all correspondent browser windows
+/// Some browsers (like firefox) do not allow by default to close window
+
+void ROOT::Experimental::TWebWindow::CloseConnections()
+{
+   Send("CLOSE", 0, 0);
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+/// Close specified connection
+/// Connection id usually appears in the correspondent call-backs
+
+void ROOT::Experimental::TWebWindow::CloseConnection(unsigned connid)
+{
+   if (connid)
+      Send("CLOSE", connid, 0);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns true if sending via specified connection can be performed

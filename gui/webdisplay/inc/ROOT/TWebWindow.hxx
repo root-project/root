@@ -83,23 +83,17 @@ private:
    /// Set window id, used by TWebWindowsManager
    void SetId(unsigned id) { fId = id; }
 
-   /// Creates websocket handler, used by TWebWindowsManager
    void CreateWSHandler();
 
-   /// Processing of websockets call-backs, invoked from TWebWindowWSHandler
    bool ProcessWS(THttpCallArg &arg);
 
-   /// Sends data via specified connection (internal use only)
    void SendDataViaConnection(WebConn &conn, int chid, const std::string &data);
 
-   /// Checks if new data can be send (internal use only)
    void CheckDataToSend(bool only_once = false);
 
 public:
-   /// default constructor
    TWebWindow();
 
-   /// destructor
    ~TWebWindow();
 
    /// Method returns true if window should run in batch mode - without creating GUI elements
@@ -119,7 +113,6 @@ public:
    /// One also can use configure JSROOT location like "file:$jsrootsys/files/canvas.htm"
    void SetDefaultPage(const std::string &page) { fDefaultPage = page; }
 
-   /// Configure window to show some of existing JSROOT panels
    void SetPanelName(const std::string &name);
 
    /// Set window geometry. Will be applied if supported by used web display (like CEF or Chromium)
@@ -144,44 +137,26 @@ public:
    /// Returns current number of active clients connections
    unsigned NumConnections() const { return fConn.size(); }
 
-   // Return connection id for given connection
    unsigned GetConnectionId(unsigned num = 0) const;
 
-   /// Closes all connection to clients
-   /// Normally leads to closing of all correspondent browser windows
-   /// Some browsers (like firefox) do not allow by default to close window
-   void CloseConnections() { Send("CLOSE", 0, 0); }
+   void CloseConnections();
 
-   /// Close specified connection
-   /// Connection id usually appears in the correspondent call-backs
-   void CloseConnection(unsigned connid)
-   {
-      if (connid)
-         Send("CLOSE", connid, 0);
-   }
+   void CloseConnection(unsigned connid);
 
-   /// Return URL string to access window
    std::string GetUrl(bool remote = true);
 
-   /// Return THttpServer instance serving requests to the window
    THttpServer *GetServer();
 
-   /// Show window in specified location
    bool Show(const std::string &where);
 
-   /// Returns true if sending via specified connection can be performed
    bool CanSend(unsigned connid, bool direct = true) const;
 
-   /// Sends data via specified connection
    void Send(const std::string &data, unsigned connid = 0, unsigned chid = 1);
 
-   /// Returns relative URL address for the specified window
    std::string RelativeAddr(std::shared_ptr<TWebWindow> &win);
 
-   /// Set call-back function for data, received from the clients via websocket
    void SetDataCallBack(WebWindowDataCallback_t func);
 
-   /// Waits until provided check function or lambdas returns non-zero value
    int WaitFor(WebWindowWaitFunc_t check, double tm);
 };
 
