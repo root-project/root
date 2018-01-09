@@ -100,6 +100,21 @@ protected:
 const std::vector<std::string> TDFSnapshotArrays::kFileNames = {"test_snapshotarray1.root", "test_snapshotarray2.root"};
 
 /********* SINGLE THREAD TESTS ***********/
+
+// Test for ROOT-9122
+TEST_F(TDFSnapshot, Snapshot_nocolumnmatch)
+{
+   TDataFrame d(1);
+   int ret(1);
+   try {
+      testing::internal::CaptureStderr();
+      d.Snapshot("t", "f.root", "x");
+   } catch (const std::runtime_error &e) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret);
+}
+
 void test_snapshot_update(TInterface<TLoopManager> &tdf)
 {
    // test snapshotting two trees to the same file with two snapshots and the "UPDATE" option
