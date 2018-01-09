@@ -833,7 +833,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
          if (handler->HandleWS(arg)) {
             arg->SetMethod("WS_READY");
-            arg->SetWSHandle(handle);
+            handle->AttachTo(*arg);
 
             if (handler->HandleWS(arg)) {
                arg->SetContent(TString::Format("%u", arg->GetWSId()));
@@ -880,7 +880,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
       if (!handler || !handler->HandleWS(arg))
          arg->Set404();
-      if (!arg->Is404() && (arg->fMethod == "WS_CONNECT") && arg->fWSHandle) {
+      if (!arg->Is404() && (arg->fMethod == "WS_CONNECT") && arg->fWSEngine) {
          arg->SetMethod("WS_READY");
          if (handler->HandleWS(arg)) {
             arg->SetContent(TString::Format("%u", arg->GetWSId()));
