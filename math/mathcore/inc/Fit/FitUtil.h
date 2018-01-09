@@ -481,8 +481,9 @@ namespace FitUtil {
          nPoints = n;
 
          // Last SIMD vector of elements (if padding needed)
-         vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
-                               res + mapFunction(data.Size() / vecSize));
+         if (data.Size() % vecSize != 0) 
+            vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
+                                  res + mapFunction(data.Size() / vecSize));
 
          return vecCore::ReduceAdd(res);
       }
@@ -879,8 +880,9 @@ namespace FitUtil {
          }
 
          // Last padded SIMD vector of elements
-         vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
-                               res + mapFunction(data.Size() / vecSize));
+         if (data.Size() % vecSize != 0) 
+            vecCore::MaskedAssign(res, vecCore::Int2Mask<T>(data.Size() % vecSize),
+                                  res + mapFunction(data.Size() / vecSize));
 
          return vecCore::ReduceAdd(res);
       }
