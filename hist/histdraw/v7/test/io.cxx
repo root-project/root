@@ -8,7 +8,9 @@
 
 using namespace ROOT::Experimental;
 
-TApplication theApp("iotest", 0, 0);
+int myArgc = 2;
+const char* myArgv[] = {"app", "-b", nullptr};
+TApplication theApp("iotest", &myArgc, const_cast<char**>(myArgv));
 
 // Test drawing of histograms.
 TEST(IOTest, OneD)
