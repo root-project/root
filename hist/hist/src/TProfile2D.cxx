@@ -602,10 +602,10 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z)
    fBinEntries.fArray[bin] += 1;
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += 1;
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    ++fTsumw;
    ++fTsumw2;
@@ -640,7 +640,7 @@ Int_t TProfile2D::Fill(Double_t x, const char *namey, Double_t z)
    fBinEntries.fArray[bin] += 1;
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += 1;
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    Double_t y = fYaxis.GetBinCenter(biny);
@@ -714,7 +714,7 @@ Int_t TProfile2D::Fill(const char *namex, Double_t y, Double_t z)
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += 1;
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    Double_t x = fYaxis.GetBinCenter(binx);
    ++fTsumw;
@@ -754,10 +754,10 @@ Int_t TProfile2D::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += u*u;
    fBinEntries.fArray[bin] += u;
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    fTsumw   += u;
    fTsumw2  += u*u;
@@ -877,7 +877,7 @@ void TProfile2D::GetStats(Double_t *stats) const
       Int_t firstBinY = fYaxis.GetFirst();
       Int_t lastBinY  = fYaxis.GetLast();
       // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
-      if (fgStatOverflows) {
+      if (GetStatOverflowsBehaviour()) {
          if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
             if (firstBinX == 1) firstBinX = 0;
             if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;

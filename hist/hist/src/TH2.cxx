@@ -324,10 +324,10 @@ Int_t TH2::Fill(Double_t x,Double_t y)
    AddBinContent(bin);
    if (fSumw2.fN) ++fSumw2.fArray[bin];
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    ++fTsumw;
    ++fTsumw2;
@@ -369,10 +369,10 @@ Int_t TH2::Fill(Double_t x, Double_t y, Double_t w)
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    Double_t z= w;
    fTsumw   += z;
@@ -456,7 +456,7 @@ Int_t TH2::Fill(const char *namex, Double_t y, Double_t w)
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    Double_t x = fXaxis.GetBinCenter(binx);
    Double_t z= w; //(w > 0 ? w : -w);
@@ -498,7 +498,7 @@ Int_t TH2::Fill(Double_t x, const char *namey, Double_t w)
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    Double_t y = fYaxis.GetBinCenter(biny);
@@ -563,10 +563,10 @@ void TH2::FillN(Int_t ntimes, const Double_t *x, const Double_t *y, const Double
       if (fSumw2.fN) fSumw2.fArray[bin] += ww*ww;
       AddBinContent(bin,ww);
       if (binx == 0 || binx > fXaxis.GetNbins()) {
-         if (!fgStatOverflows) continue;
+         if (!GetStatOverflowsBehaviour()) continue;
       }
       if (biny == 0 || biny > fYaxis.GetNbins()) {
-         if (!fgStatOverflows) continue;
+         if (!GetStatOverflowsBehaviour()) continue;
       }
       Double_t z= ww; //(ww > 0 ? ww : -ww);
       fTsumw   += z;
@@ -1152,7 +1152,7 @@ void TH2::GetStats(Double_t *stats) const
       Int_t firstBinY = fYaxis.GetFirst();
       Int_t lastBinY  = fYaxis.GetLast();
       // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
-      if (fgStatOverflows) {
+      if (GetStatOverflowsBehaviour()) {
         if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
             if (firstBinX == 1) firstBinX = 0;
             if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
@@ -2219,8 +2219,8 @@ TH1D *TH2::DoProjection(bool onX, const char *name, Int_t firstbin, Int_t lastbi
 
    // check if we can re-use the original statistics from  the previous histogram
    bool reuseStats = false;
-   if ( ( fgStatOverflows == false && firstbin == 1 && lastbin == inNbin     ) ||
-        ( fgStatOverflows == true  && firstbin == 0 && lastbin == inNbin + 1 ) )
+   if ( ( GetStatOverflowsBehaviour() == false && firstbin == 1 && lastbin == inNbin     ) ||
+        ( GetStatOverflowsBehaviour() == true  && firstbin == 0 && lastbin == inNbin + 1 ) )
       reuseStats = true;
    else {
       // also if total content match we can re-use
