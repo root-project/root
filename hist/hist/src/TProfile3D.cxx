@@ -604,13 +604,13 @@ Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t)
    fBinEntries.fArray[bin] += 1;
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += 1;
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
 //printf("x=%g, y=%g, z=%g, t=%g, binx=%d, biny=%d, binz=%d, bin=%d\n",x,y,z,t,binx,biny,binz,bin);
    ++fTsumw;
@@ -655,13 +655,13 @@ Int_t TProfile3D::Fill(Double_t x, Double_t y, Double_t z, Double_t t, Double_t 
    if (fBinSumw2.fN)  fBinSumw2.fArray[bin] += u*u;
    fBinEntries.fArray[bin] += u;
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    fTsumw   += u;
    fTsumw2  += u*u;
