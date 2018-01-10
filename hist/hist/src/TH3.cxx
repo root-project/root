@@ -310,14 +310,14 @@ Int_t TH3::Fill(Double_t x, Double_t y, Double_t z)
    if (fSumw2.fN) ++fSumw2.fArray[bin];
    AddBinContent(bin);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
 
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    ++fTsumw;
    ++fTsumw2;
@@ -359,13 +359,13 @@ Int_t TH3::Fill(Double_t x, Double_t y, Double_t z, Double_t w)
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    fTsumw   += w;
    fTsumw2  += w*w;
@@ -448,7 +448,7 @@ Int_t TH3::Fill(const char *namex, Double_t y, const char *namez, Double_t w)
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
    Double_t x = fXaxis.GetBinCenter(binx);
@@ -493,7 +493,7 @@ Int_t TH3::Fill(const char *namex, const char *namey, Double_t z, Double_t w)
    if (binx == 0 || binx > fXaxis.GetNbins()) return -1;
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    Double_t x = fXaxis.GetBinCenter(binx);
    Double_t y = fYaxis.GetBinCenter(biny);
@@ -535,7 +535,7 @@ Int_t TH3::Fill(Double_t x, const char *namey, const char *namez, Double_t w)
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
@@ -579,11 +579,11 @@ Int_t TH3::Fill(Double_t x, const char *namey, Double_t z, Double_t w)
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) return -1;
    if (binz == 0 || binz > fZaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    Double_t y = fYaxis.GetBinCenter(biny);
    Double_t v = w;
@@ -624,10 +624,10 @@ Int_t TH3::Fill(Double_t x, Double_t y, const char *namez, Double_t w)
    if (fSumw2.fN) fSumw2.fArray[bin] += w*w;
    AddBinContent(bin,w);
    if (binx == 0 || binx > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (biny == 0 || biny > fYaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    if (binz == 0 || binz > fZaxis.GetNbins()) return -1;
    Double_t z = fZaxis.GetBinCenter(binz);
@@ -1182,7 +1182,7 @@ void TH3::GetStats(Double_t *stats) const
       Int_t firstBinZ = fZaxis.GetFirst();
       Int_t lastBinZ  = fZaxis.GetLast();
       // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
-      if (fgStatOverflows) {
+      if (GetStatOverflowsBehaviour()) {
          if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
             if (firstBinX == 1) firstBinX = 0;
             if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
