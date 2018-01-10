@@ -68,9 +68,9 @@ void THttpLongPollEngine::SendCharStar(const char *buf)
       fPoll->NotifyCondition();
       fPoll = nullptr;
    } else {
-      fBuf.push_back(std::string(buf));
-      if (fBuf.size() > 100)
-         Error("SendCharStar", "Too many send operations %d, check algorithms", (int)fBuf.size());
+      fQueue.push_back(buf);
+      if (fQueue.size() > 100)
+         Error("SendCharStar", "Too many send operations %d, check algorithms", (int)fQueue.size());
    }
 }
 
@@ -103,10 +103,10 @@ Bool_t THttpLongPollEngine::PreviewData(THttpCallArg &arg)
       fPoll = nullptr;
    }
 
-   if (fBuf.size() > 0) {
+   if (fQueue.size() > 0) {
       arg.SetContentType("text/plain");
-      arg.SetContent(fBuf.front().c_str());
-      fBuf.pop_front();
+      arg.SetContent(fQueue.front().c_str());
+      fQueue.erase(fQueue.begin());
    } else {
       arg.SetPostponed();
       fPoll = &arg;
@@ -122,10 +122,10 @@ Bool_t THttpLongPollEngine::PreviewData(THttpCallArg &arg)
 
 void THttpLongPollEngine::PostProcess(THttpCallArg &arg)
 {
-   if ((fBuf.size() > 0) && arg.IsContentType("text/plain") &&
+   if ((fQueue.size() > 0) && arg.IsContentType("text/plain") &&
        (arg.GetContentLength() == (Long_t)strlen(gLongPollNope)) &&
        (strcmp((const char *)arg.GetContent(), gLongPollNope) == 0)) {
-      arg.SetContent(fBuf.front().c_str());
-      fBuf.pop_front();
+      arg.SetContent(fQueue.front().c_str());
+      fQueue.erase(fQueue.begin());
    }
 }
