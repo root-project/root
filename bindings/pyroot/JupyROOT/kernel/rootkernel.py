@@ -37,8 +37,11 @@ def Debug(msg):
      print('Kernel main: %r' % msg, file=sys.__stderr__)
 
 class ROOTKernel(MetaKernel):
+    # These two regexes are considered by the parser of the metakernel 
+    # there is no need to create one explicitly
     identifier_regex = r'(?:\w(?:\w|\.|->|::|\d)*)'
     func_call_regex = r'(?:\w(?:(?:\w|\.|->|::|\d))*)\([^\)\()]*\Z'
+
     implementation = 'ROOT'
     implementation_version = '1.0'
     language = 'c++'
@@ -58,8 +61,6 @@ class ROOTKernel(MetaKernel):
         self.Declarer  = GetDeclarer()#required for %%cpp -d magic
         self.ACLiC     = invokeAclic
         self.magicloader = MagicLoader(self)
-        self.parser = Parser(self.identifier_regex, self.func_call_regex,
-                             self.magic_prefixes, self.help_suffix)
         self.completer = CppCompleter()
         self.completer.activate()
 
