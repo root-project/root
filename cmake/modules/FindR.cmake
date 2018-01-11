@@ -38,6 +38,7 @@ foreach(_cpt ${R_FIND_COMPONENTS})
   execute_process(COMMAND echo "cat(find.package('${_cpt}'))"
                   COMMAND ${R_EXECUTABLE} --vanilla --slave
                   RESULT_VARIABLE _rc
+                  ERROR_QUIET
                   OUTPUT_VARIABLE _cpt_path
                   OUTPUT_STRIP_TRAILING_WHITESPACE)
   if(NOT _rc)

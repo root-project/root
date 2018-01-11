@@ -173,8 +173,6 @@ else()
   endif()
 endif()
 
-endif()
-
 #---These ones are disabled !!! ------------------------------------
 set(extra_veto
   htmlex.C
