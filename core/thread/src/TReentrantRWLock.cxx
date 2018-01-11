@@ -289,21 +289,25 @@ void TReentrantRWLock<MutexT, RecurseCountsT>::Restore(std::unique_ptr<TVirtualM
       return;
    }
 
+   // At a restore point, this thread should not be holding any part
+   // of the lock (if it does the following code will forget about it)
+   assert( *(pState->fReadersCountLoc) == 0);
+   // assert( auto local = fRecurseCounts.GetLocal() && fRecurseCounts.IsNotCurrentWriter(local) )
+
+   const auto readerCount = pState->fReadersCount;
+
    if (pState->fIsWriter) {
       WriteLock();
       // Now that we go the lock, fix up the recursion count.
       std::unique_lock<MutexT> lock(fMutex);
       fRecurseCounts.fWriteRecurse = pState->fWriteRecurse;
-      *(pState->fReadersCountLoc) = pState->fReadersCount;
-      fReaders +=  pState->fReadersCount;
-   } else {
+      *(pState->fReadersCountLoc) = readerCount;
+      fReaders +=  readerCount;
+   } else if (readerCount) {
       ReadLock();
-      // Now that we go the read lock, fix up the local recursion count.
-      assert( pState->fReadersCount  >= 1 );
-      auto readerCount = pState->fReadersCount;
+      // Now that we got the read lock, fix up the local recursion count.
 
-      std::unique_lock<MutexT> lock(fMutex);
-      *(pState->fReadersCountLoc) = pState->fReadersCount;
+      *(pState->fReadersCountLoc) = readerCount;
       fReaders += readerCount - 1;
    }
 
