@@ -173,8 +173,6 @@ else()
   endif()
 endif()
 
-endif()
-
 if(ROOT_root7_FOUND)
   set(root7_veto dataframe/tdf013_InspectAnalysis.C)
 endif()
