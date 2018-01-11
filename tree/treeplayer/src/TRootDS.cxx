@@ -72,16 +72,7 @@ bool TRootDS::HasColumn(std::string_view colName) const
 
 void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
 {
-   if (fChains[slot]) {
-      fChains[slot]->GetEntry(firstEntry);
-      return;
-   }
-
-   {
-      R__LOCKGUARD(gROOTMutex);
-      fChains[slot].reset(new TChain(fTreeName.c_str()));
-   }
-   auto chain = fChains[slot].get();
+   auto chain = new TChain(fTreeName.c_str());
    chain->ResetBit(kMustCleanup);
    chain->Add(fFileNameGlob.c_str());
    chain->GetEntry(firstEntry);
@@ -101,6 +92,12 @@ void TRootDS::InitSlot(unsigned int slot, ULong64_t firstEntry)
          chain->SetBranchAddress(colName, addr);
       }
    }
+   fChains[slot].reset(chain);
+}
+
+void TRootDS::FinaliseSlot(unsigned int slot)
+{
+   fChains[slot].reset(nullptr);
 }
 
 std::vector<std::pair<ULong64_t, ULong64_t>> TRootDS::GetEntryRanges()
