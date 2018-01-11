@@ -2720,7 +2720,7 @@ Int_t TH1::DistancetoPrimitive(Int_t px, Int_t py)
 Bool_t TH1::Divide(TF1 *f1, Double_t c1)
 {
    if (!f1) {
-      Error("Add","Attempt to divide by a non-existing function");
+      Error("Divide","Attempt to divide by a non-existing function");
       return kFALSE;
    }
 
@@ -5486,7 +5486,7 @@ Long64_t TH1::Merge(TCollection *li)
 Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
 {
    if (!f1) {
-      Error("Add","Attempt to multiply by a non-existing function");
+      Error("Multiply","Attempt to multiply by a non-existing function");
       return kFALSE;
    }
 
