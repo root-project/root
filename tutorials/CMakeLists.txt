@@ -168,6 +168,11 @@ else()
     get_filename_component(pythia8dir "${PYTHIA8_INCLUDE_DIR}" DIRECTORY)
     list(APPEND ROOT_environ PYTHIA8=${pythia8dir})
   endif()
+  if("$ENV{PYTHIA8DATA}" STREQUAL "" AND PYTHIA8_DATA)
+    list(APPEND ROOT_environ PYTHIA8DATA=${PYTHIA8_DATA})
+  endif()
+endif()
+
 endif()
 
 #---These ones are disabled !!! ------------------------------------
