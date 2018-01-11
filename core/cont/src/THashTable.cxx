@@ -25,6 +25,7 @@ use THashList instead.
 #include "TObjectTable.h"
 #include "TList.h"
 #include "TError.h"
+#include "TROOT.h"
 
 ClassImp(THashTable);
 
@@ -307,6 +308,45 @@ TObject **THashTable::GetObjectRef(const TObject *obj) const
 TIterator *THashTable::MakeIterator(Bool_t dir) const
 {
    return new THashTableIter(this, dir);
+}
+
+////////////////////////////////////////////////////////////////////////////
+/// Print the collection header and its elements.
+///
+/// If recurse is non-zero, descend into printing of
+/// collection-entries with recurse - 1.
+/// This means, if recurse is negative, the recursion is infinite.
+///
+/// If option contains "details", Print will show the content of
+/// each of the hash-slots.
+///
+/// Option is passed recursively.
+
+void THashTable::Print(Option_t *option, Int_t recurse) const
+{
+   if (strstr(option,"details")==nullptr) {
+      TCollection::Print(option,recurse);
+      return;
+   }
+
+   PrintCollectionHeader(option);
+
+   if (recurse != 0)
+   {
+      TROOT::IncreaseDirLevel();
+      for (Int_t cursor = 0; cursor < Capacity();
+           cursor++) {
+         printf("Slot #%d:\n",cursor);
+         if (fCont[cursor])
+            fCont[cursor]->Print();
+         else {
+            TROOT::IndentLevel();
+            printf("empty\n");
+         }
+
+      }
+      TROOT::DecreaseDirLevel();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

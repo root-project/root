@@ -71,6 +71,8 @@ public:
    Int_t         GetRehashLevel() const { return fRehashLevel; }
    Int_t         GetSize() const { return fEntries; }
    TIterator    *MakeIterator(Bool_t dir = kIterForward) const;
+   void          Print(Option_t *option, Int_t recurse) const;
+   using TCollection::Print;
    void          Rehash(Int_t newCapacity, Bool_t checkObjValidity = kTRUE);
    TObject      *Remove(TObject *obj);
    TObject      *RemoveSlow(TObject *obj);
