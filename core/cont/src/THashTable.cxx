@@ -357,12 +357,26 @@ void THashTable::Rehash(Int_t newCapacity, Bool_t checkObjValidity)
    TIter next(this);
    TObject *obj;
 
+   auto initialSize = GetEntries();
+
    if (checkObjValidity && TObject::GetObjectStat() && gObjectTable) {
       while ((obj = next()))
          if (gObjectTable->PtrIsValid(obj)) ht->Add(obj);
    } else {
       while ((obj = next()))
          ht->Add(obj);
+   }
+
+   if (initialSize != GetEntries()) {
+      // Somehow in the process of copy the pointer from one hash to
+      // other we ended up inducing the addition of more element to
+      // the table.  Most likely those elements have not been copied ....
+      // i.e. Adding *during* the Rehashing is illegal and fatal.
+
+      Fatal("Rehash",
+            "During the rehash of %p one or more element was added or removed. The initalize size was %d and now it is %d",
+            this, initialSize, GetEntries());
+
    }
 
    Clear("nodelete");
