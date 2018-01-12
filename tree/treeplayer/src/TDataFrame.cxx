@@ -271,6 +271,8 @@ on this [below](#callgraphs)).
 
 You can read more about defining new columns [here](#custom-columns).
 
+\image html TDF_Graph.png "A graph composed of two branches, one starting with a filter and one with a define. The end point of a branch is always an action."
+
 ### Running on a range of entries
 It is sometimes necessary to limit the processing of the dataset to a range of entries. For this reason, the TDataFrame
 offers the concept of ranges as a node of the TDataFrame chain of transformations; this means that filters, columns and
