@@ -29,6 +29,8 @@
 #endif
 
 #include <list>
+#include <vector>
+#include <string>
 
 #include <ROOT/TWebWindow.hxx>
 
@@ -38,6 +40,17 @@ class TList;
 class TWebSnapshot;
 class TPadWebSnapshot;
 class THttpServer;
+
+
+/// Class used to transport ranges from JSROOT canvas
+class TWebPadRange {
+public:
+   std::string snapid;  ///< id of pad
+   Double_t px1{0}, py1{0}, px2{0}, py2{0};  ///< pad range
+   Double_t ux1{0}, uy1{0}, ux2{0}, uy2{0};  ///< pad axis range
+   TWebPadRange() = default;
+};
+
 
 class TWebCanvas : public TCanvasImp {
 
@@ -72,7 +85,6 @@ protected:
    TWebSnapshot *CreateObjectSnapshot(TObject *obj, const char *opt);
 
    TObject* FindPrimitive(const char *id, TPad *pad = 0);
-   Bool_t DecodePadRanges(TPad *pad, const char *arg);
    Bool_t DecodeAllRanges(const char *arg);
 
    Bool_t IsAnyPadModified(TPad *pad);

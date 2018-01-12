@@ -28,5 +28,7 @@
 #pragma link C++ class std::vector<TWebMenuArgument>+;
 #pragma link C++ class TWebArgsMenuItem+;
 #pragma link C++ class TWebMenuItems+;
+#pragma link C++ class TWebPadRange+;
+#pragma link C++ class std::vector<TWebPadRange>+;
 
 #endif

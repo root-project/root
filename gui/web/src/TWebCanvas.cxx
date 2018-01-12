@@ -451,56 +451,39 @@ void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
    CheckDataToSend();
 }
 
-
-Bool_t TWebCanvas::DecodePadRanges(TPad *pad, const char *arg)
-{
-   if (!pad || !arg || !*arg) return kFALSE;
-
-   Double_t ux1,ux2,uy1,uy2,px1,px2,py1,py2;
-   Int_t cnt = sscanf(arg, "%lf:%lf:%lf:%lf:%lf:%lf:%lf:%lf",&ux1,&ux2,&uy1,&uy2,&px1,&px2,&py1,&py2);
-   if (cnt!=8) return kFALSE;
-
-   Double_t ux1_,ux2_,uy1_,uy2_,px1_,px2_,py1_,py2_;
-
-   pad->GetRange(px1_,py1_,px2_,py2_);
-   pad->GetRangeAxis(ux1_,uy1_,ux2_,uy2_);
-
-   if ((ux1==ux1_) && (ux2==ux2_) && (uy1==uy1_) && (uy2==uy2_) && (px1==px1_) && (px2==px2_) && (py1==py1_) && (py2==py2_)) {
-      //Info("DecodePadRanges","Ranges not changed");
-      return kFALSE;
-   }
-
-   pad->Range(px1,py1,px2,py2);
-   pad->RangeAxis(ux1,uy1,ux2,uy2);
-
-   if (gDebug > 0)
-      Info("DecodePadRanges", "Apply new ranges %s for pad %s", arg, pad->GetName());
-
-   // without special objects no need for explicit update of the canvas
-   if (!fHasSpecials) return kFALSE;
-
-   pad->Modified(kTRUE);
-   return kTRUE;
-}
-
 Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
 {
    if (!arg || !*arg) return kFALSE;
    //Bool_t isany = kFALSE;
 
-   const char *curr = arg, *pos = 0;
+   std::vector<TWebPadRange> *arr = nullptr;
 
-   while ((pos = strstr(curr, "id=")) != 0) {
-      curr = pos + 3;
-      const char *next = strstr(curr,":");
-      if (!next) break;
+   TBufferJSON::FromJSON(arr, arg);
 
-      TString sid(curr, next-curr);
-      TPad *pad = dynamic_cast<TPad *>(FindPrimitive(sid.Data()));
+   if (!arr) return kFALSE;
 
-      curr = next+1;
-      DecodePadRanges(pad, curr);
+   for (unsigned n=0; n<arr->size(); ++n) {
+      TWebPadRange &r = arr->at(n);
+      TPad *pad = dynamic_cast<TPad *>(FindPrimitive(r.snapid.c_str()));
+      if (!pad) continue;
+
+      Double_t ux1_,ux2_,uy1_,uy2_,px1_,px2_,py1_,py2_;
+
+      pad->GetRange(px1_,py1_,px2_,py2_);
+      pad->GetRangeAxis(ux1_,uy1_,ux2_,uy2_);
+
+      if ((r.ux1==ux1_) && (r.ux2==ux2_) && (r.uy1==uy1_) && (r.uy2==uy2_) &&
+          (r.px1==px1_) && (r.px2==px2_) && (r.py1==py1_) && (r.py2==py2_))
+         continue; // no changes
+
+      pad->Range(r.px1, r.py1, r.px2, r.py2);
+      pad->RangeAxis(r.ux1, r.uy1, r.ux2, r.uy2);
+
+      // without special objects no need for explicit update of the canvas
+      if (fHasSpecials) pad->Modified(kTRUE);
    }
+
+   delete arr;
 
    return kTRUE;
 }
@@ -523,12 +506,13 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
    // try to identify connection for given WS request
    WebConn* conn(nullptr);
+   bool is_first = true;
    WebConnList::iterator iter = fWebConn.begin();
    while (iter != fWebConn.end()) {
       if (iter->fConnId == connid) {
          conn = &(*iter); break;
       }
-      ++iter;
+      ++iter; is_first = false;
    }
 
    if (!conn) {
@@ -551,8 +535,9 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       } else {
          conn->fDrawVersion = TString(cdata, separ-cdata).Atoll();
          cdata = separ+1;
-         if (gDebug>1) Info("ProcessData", "RANGES %s", cdata);
-         if (connid==0) DecodeAllRanges(cdata); // only first connection get ranges
+         if ((gDebug>1) && is_first)
+            Info("ProcessData", "RANGES %s", cdata);
+         if (is_first) DecodeAllRanges(cdata); // only first connection can set ranges
       }
       CheckDataToSend();
    } else if (strncmp(cdata,"GETMENU:",8)==0) {
