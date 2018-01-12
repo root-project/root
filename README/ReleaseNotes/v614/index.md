@@ -67,6 +67,9 @@ The following people have contributed to this new version:
      `SAME` with other drawing options.
    - `TGraph::Draw("AB")` was malfunctioning when using `TAxis::SetRangeUser`.
       It was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-9144).
+   - The errors end-caps size in `TLegend` follows the value set by `gStyle->SetEndErrorSize()`.
+     For instance setting it to 0 allows to remove the end-caps both on the graph and the legend.
+     It was requested [here](https://sft.its.cern.ch/jira/browse/ROOT-9184)
 
 ## 3D Graphics Libraries
   - When a LEGO plot was drawn with Theta=90, the X and Y axis were misplaced.
