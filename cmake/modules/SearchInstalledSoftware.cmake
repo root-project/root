@@ -988,7 +988,10 @@ if(cling)
                           ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include)
     set(LLVM_LIBRARIES clangDriver clangFrontend)
   else()
-    find_package(LLVM REQUIRED)  # should define the same variables LLVM_XXXX
+# Temporarily comment out the following line (see https://root-forum.cern.ch/t/build-root6-without-builtin-llvm/18950/2)
+# and replace it by an instructive error message
+#    find_package(LLVM REQUIRED)  # should define the same variables LLVM_XXXX
+     message(FATAL_ERROR "Due to ROOT-specific patches not yet in upstream LLVM, builtin_llvm=on is currently required to build ROOT")
   endif()
 
   set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
