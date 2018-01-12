@@ -929,31 +929,32 @@ void TLegend::PaintPrimitives()
                   entry->TAttLine::Copy(entryline2);
                   entryline2.Paint();
                }
+               Double_t barw = boxw*0.1*gStyle->GetEndErrorSize();
                if (endcaps == 1) {
-                  TLine entrytop1(xsym-boxw*0.15, ysym + yspace*0.30, xsym+boxw*0.15, ysym + yspace*0.30);
+                  TLine entrytop1(xsym-barw, ysym + yspace*0.30, xsym+barw, ysym + yspace*0.30);
                   entrytop1.SetBit(TLine::kLineNDC);
                   entry->TAttLine::Copy(entrytop1);
                   entrytop1.Paint();
-                  TLine entrytop2(xsym-boxw*0.15, ysym - yspace*0.30, xsym+boxw*0.15, ysym - yspace*0.30);
+                  TLine entrytop2(xsym-barw, ysym - yspace*0.30, xsym+barw, ysym - yspace*0.30);
                   entrytop2.SetBit(TLine::kLineNDC);
                   entry->TAttLine::Copy(entrytop2);
                   entrytop2.Paint();
                } else if (endcaps == 2) {
-                  Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t xe1[3] = {xsym-barw, xsym ,xsym+barw};
                   Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
                   TPolyLine ple1(3,xe1,ye1);
                   ple1.SetBit(TLine::kLineNDC);
                   entry->TAttLine::Copy(ple1);
                   ple1.Paint();
-                  Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t xe2[3] = {xsym-barw, xsym ,xsym+barw};
                   Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
                   TPolyLine ple2(3,xe2,ye2);
                   ple2.SetBit(TLine::kLineNDC);
                   entry->TAttLine::Copy(ple2);
                } else if (endcaps == 3) {
-                  Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t xe1[3] = {xsym-barw, xsym ,xsym+barw};
                   Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
-                  Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+                  Double_t xe2[3] = {xsym-barw, xsym ,xsym+barw};
                   Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
                   for (Int_t i=0;i<3;i++) {
                      xe1[i] = gPad->GetX1() + xe1[i]*(gPad->GetX2()-gPad->GetX1());
@@ -997,32 +998,33 @@ void TLegend::PaintPrimitives()
             entry->TAttLine::Copy(entryline2);
             entryline2.Paint();
          }
+         Double_t barw = boxw*0.1*gStyle->GetEndErrorSize();
          if (endcaps == 1) {
-            TLine entrytop1(xsym-boxw*0.15, ysym + yspace*0.30, xsym+boxw*0.15, ysym + yspace*0.30);
+            TLine entrytop1(xsym-barw, ysym + yspace*0.30, xsym+barw, ysym + yspace*0.30);
             entrytop1.SetBit(TLine::kLineNDC);
             entry->TAttLine::Copy(entrytop1);
             entrytop1.Paint();
-            TLine entrytop2(xsym-boxw*0.15, ysym - yspace*0.30, xsym+boxw*0.15, ysym - yspace*0.30);
+            TLine entrytop2(xsym-barw, ysym - yspace*0.30, xsym+barw, ysym - yspace*0.30);
             entrytop2.SetBit(TLine::kLineNDC);
             entry->TAttLine::Copy(entrytop2);
             entrytop2.Paint();
          } else if (endcaps == 2) {
-            Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t xe1[3] = {xsym-barw, xsym ,xsym+barw};
             Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
             TPolyLine ple1(3,xe1,ye1);
             ple1.SetBit(TLine::kLineNDC);
             entry->TAttLine::Copy(ple1);
             ple1.Paint();
-            Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t xe2[3] = {xsym-barw, xsym ,xsym+barw};
             Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
             TPolyLine ple2(3,xe2,ye2);
             ple2.SetBit(TLine::kLineNDC);
             entry->TAttLine::Copy(ple2);
             ple2.Paint();
          } else if (endcaps == 3) {
-            Double_t xe1[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t xe1[3] = {xsym-barw, xsym ,xsym+barw};
             Double_t ye1[3] = {ysym+yspace*0.20, ysym + yspace*0.30 ,ysym+yspace*0.20};
-            Double_t xe2[3] = {xsym-boxw*0.15, xsym ,xsym+boxw*0.15};
+            Double_t xe2[3] = {xsym-barw, xsym ,xsym+barw};
             Double_t ye2[3] = {ysym-yspace*0.20, ysym - yspace*0.30 ,ysym-yspace*0.20};
             for (Int_t i=0;i<3;i++) {
                xe1[i] = gPad->GetX1() + xe1[i]*(gPad->GetX2()-gPad->GetX1());
