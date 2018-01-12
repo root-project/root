@@ -106,6 +106,7 @@ protected:
    Bool_t       RecvStreamerInfos(TMessage *mess);
    void         SendProcessIDs(const TMessage &mess);
    Bool_t       RecvProcessIDs(TMessage *mess);
+   void         MarkBrokenConnection();
 
 private:
    TSocket&      operator=(const TSocket &);  // not implemented
