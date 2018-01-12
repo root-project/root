@@ -287,7 +287,13 @@ public:
 
    // Type conversion
    operator const char*() const { return GetPointer(); }
+#if __cplusplus >= 201700L
+   explicit operator std::string() const { return std::string(GetPointer(),Length()); }
+   explicit operator ROOT::Internal::TStringView() const { return ROOT::Internal::TStringView(GetPointer(),Length()); }
    operator std::string_view() const { return std::string_view(GetPointer(),Length()); }
+#else
+   operator ROOT::Internal::TStringView() const { return ROOT::Internal::TStringView(GetPointer(),Length()); }
+#endif
 
    // Assignment
    TString    &operator=(char s);                // Replace string
@@ -421,6 +427,7 @@ public:
    void         ToUpper();                              // Change self to upper-case
    TObjArray   *Tokenize(const TString &delim) const;
    Bool_t       Tokenize(TString &tok, Ssiz_t &from, const char *delim = " ") const;
+   std::string_view View() const { return std::string_view(GetPointer(),Length()); }
 
    // Static member functions
    static UInt_t  Hash(const void *txt, Int_t ntxt);    // Calculates hash index from any char string.
@@ -452,6 +459,12 @@ template <>
 #endif
 TBuffer  &operator>>(TBuffer &buf,       TString *&sp);
 TBuffer  &operator<<(TBuffer &buf, const TString * sp);
+
+// Conversion operator (per se).
+inline std::string& operator+=(std::string &left, const TString &right)
+{
+   return left.append(right.Data());
+}
 
 TString ToLower(const TString &s);    // Return lower-case version of argument
 TString ToUpper(const TString &s);    // Return upper-case version of argument

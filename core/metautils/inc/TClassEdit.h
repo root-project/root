@@ -163,6 +163,7 @@ namespace TClassEdit {
    bool        IsSTLBitset(const char *type);
    ROOT::ESTLType UnderlyingIsSTLCont(std::string_view type);
    ROOT::ESTLType IsSTLCont (std::string_view type);
+   inline ROOT::ESTLType IsSTLCont (ROOT::Internal::TStringView type) { return IsSTLCont(std::string_view(type)); }
    int         IsSTLCont (const char *type,int testAlloc);
    bool        IsStdClass(const char *type);
    bool        IsVectorBool(const char *name);

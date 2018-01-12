@@ -47,7 +47,7 @@ namespace std {
 #ifndef R__HAS_STOD_STRING_VIEW
    inline double stod(std::string_view str, size_t *pos)
    {
-      return std::stod(str.to_string(),pos);
+      return std::stod(std::string(str.data(), str.size()),pos);
    }
 #endif
 
@@ -55,4 +55,17 @@ namespace std {
 
 #endif // ifdef else R__HAS_STD_STRING_VIEW
 
+namespace ROOT {
+namespace Internal {
+    class TStringView {
+       const char *fData{nullptr};
+       size_t      fLength{0};
+
+    public:
+       explicit TStringView(const char *cstr, size_t len) : fData(cstr), fLength(len) {}
+
+       operator std::string_view() const { return std::string_view(fData,fLength); }
+    };
+} // namespace Internal
+} // namespace ROOT
 #endif // RStringView_H
