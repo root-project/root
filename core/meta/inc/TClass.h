@@ -65,7 +65,7 @@ namespace ROOT {
       class TCollectionProxyInfo;
    }
    namespace Internal {
-      class TCheckHashRecurveRemoveConsistency;
+      class TCheckHashRecursiveRemoveConsistency;
    }
 }
 
@@ -78,7 +78,7 @@ friend class TCling;
 friend void ROOT::ResetClassVersion(TClass*, const char*, Short_t);
 friend class ROOT::TGenericClassInfo;
 friend class TProtoClass;
-friend class ROOT::Internal::TCheckHashRecurveRemoveConsistency;
+friend class ROOT::Internal::TCheckHashRecursiveRemoveConsistency;
 
 public:
    // TClass status bits
