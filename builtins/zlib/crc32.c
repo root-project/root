@@ -21,10 +21,12 @@
   DYNAMIC_CRC_TABLE and MAKECRCH can be #defined to write out crc32.h.
  */
 
-#ifdef __aarch64__
+#if(defined __aarch64__ &&  defined __ARM_ACLE)
 
 #include <arm_neon.h>
-#include <arm_acle.h>
+#if (__ARM_ACLE >= 200)
+# include <arm_acle.h>
+#endif
 #include <stdint.h>
 #include <stddef.h>
 
@@ -268,6 +270,8 @@ local unsigned long crc32_generic(crc, buf, len)
     return crc ^ 0xffffffffUL;
 }
 
+#ifdef __x86_64__
+
 /* Function stolen from linux kernel 3.14. It computes the CRC over the given
  * buffer with initial CRC value <crc32>. The buffer is <len> byte in length,
  * and must be 16-byte aligned.
@@ -316,28 +320,29 @@ uLong crc32_pclmul(crc, buf, len)
 #undef PCLMUL_ALIGN_MASK
 }
 
-uLong crc32_default(crc, buf, len)
+void *resolve_crc32(void)
+{
+	unsigned int eax, ebx, ecx, edx;
+	if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx))
+		return crc32_generic;
+	/* We need SSE4.2 and PCLMUL ISA support */
+	if (!((ecx & bit_SSE4_2) && (ecx & bit_PCLMUL)))
+		return crc32_generic;
+	return crc32_pclmul;
+}
+
+/* This function needs to be resolved at load time */
+uLong crc32(unsigned long, const unsigned char FAR *, unsigned)
+__attribute__ ((ifunc ("resolve_crc32")));
+#else
+uLong crc32(crc, buf, len)
     uLong crc;
     const Bytef *buf;
     uInt len;
 {
     return crc32_generic(crc, buf, len);
 }
-
-/* This function needs to be resolved at load time */
-uLong crc32(unsigned long, const unsigned char FAR *, unsigned) 
-__attribute__ ((ifunc ("resolve_crc32")));
-
-void *resolve_crc32(void)
-{
-	unsigned int eax, ebx, ecx, edx;
-	if (!__get_cpuid (1, &eax, &ebx, &ecx, &edx))
-		return crc32_default;
-	/* We need SSE4.2 and PCLMUL ISA support */
-	if (!((ecx & bit_SSE4_2) && (ecx & bit_PCLMUL)))
-		return crc32_default;
-	return crc32_pclmul;
-}
+#endif
 
 #ifdef BYFOUR
 
