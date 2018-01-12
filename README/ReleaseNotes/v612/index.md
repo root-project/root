@@ -629,4 +629,9 @@ be removed; please migrate to the CMake-based build system.
 
 ## HEAD of the v6-12-00-patches branch
 
-These changes will be part of the future 6.12/04
+These changes will be part of the future 6.12/06
+
+### Core Libraries
+
+* Remove issue leading to TClass of unexpected type being 'Unloaded'.
+* Reduce drastically the number of obj alloc in TCheckHashRecurveRemoveConsistency.
