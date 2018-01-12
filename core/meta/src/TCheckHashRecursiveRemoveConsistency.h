@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TCheckHashRecurveRemoveConsistency
-#define ROOT_TCheckHashRecurveRemoveConsistency
+#ifndef ROOT_TCheckHashRecursiveRemoveConsistency
+#define ROOT_TCheckHashRecursiveRemoveConsistency
 
 #include "TBaseClass.h"
 #include "TClass.h"
@@ -24,7 +24,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TCheckHashRecurveRemoveConsistency                                   //
+// TCheckHashRecursiveRemoveConsistency                                 //
 //                                                                      //
 // Utility class to discover whether a class that overload              //
 // TObject::Hash also (as required) calls RecursiveRemove in its        //
@@ -35,7 +35,7 @@
 namespace ROOT {
 namespace Internal {
 
-class TCheckHashRecurveRemoveConsistency : public TObject {
+class TCheckHashRecursiveRemoveConsistency : public TObject {
 public:
    struct Value {
       ULong_t  fRecordedHash;
@@ -48,7 +48,7 @@ public:
 public:
    // Default constructors.  Adds object to the list of
    // cleanups.
-   TCheckHashRecurveRemoveConsistency()
+   TCheckHashRecursiveRemoveConsistency()
    {
       SetBit(kMustCleanup);
       gROOT->GetListOfCleanups()->Add(this);
@@ -58,7 +58,7 @@ public:
    // Hash so it can rely on the base class to call
    // RecursiveRemove (and hence remove this from the list
    // of cleanups).
-   ~TCheckHashRecurveRemoveConsistency() = default;
+   ~TCheckHashRecursiveRemoveConsistency() = default;
 
    void Add(TObject *obj)
    {
@@ -195,7 +195,7 @@ public:
 
          // Because ClassDefInline does not yet support class template on all platforms,
          // we have no ClassDef and thus can not get a good message from TObject::Error.
-         constexpr const char *funcName = "ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove";
+         constexpr const char *funcName = "ROOT::Internal::TCheckHashRecursiveRemoveConsistency::CheckRecursiveRemove";
          if (failing) {
             ::Error(funcName,
                     "The class %s overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor (seen while checking %s).",
@@ -213,14 +213,14 @@ public:
 
    static bool Check(TClass &classRef)
    {
-      TCheckHashRecurveRemoveConsistency checker;
+      TCheckHashRecursiveRemoveConsistency checker;
       return checker.VerifyRecursiveRemove(classRef);
    }
 
-   ClassDefInline(TCheckHashRecurveRemoveConsistency, 0);
+   ClassDefInline(TCheckHashRecursiveRemoveConsistency, 0);
 };
 
 } // namespace Internal
 } // namespace ROOT
 
-#endif // ROOT__TCheckHashRecurveRemoveConsistency
+#endif // ROOT__TCheckHashRecursiveRemoveConsistency
