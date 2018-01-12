@@ -11,6 +11,9 @@ OBJ: TViewPubDataMembers	TViewPubDataMembers	 : 0
  OBJ: TDataMember	kYaxis	 : 0
  OBJ: TDataMember	kZaxis	 : 0
  OBJ: TDataMember	kAllAxes	 : 0
+ OBJ: TDataMember	kIgnore	 :0
+ OBJ: TDataMember	kConsider	 :0
+ OBJ: TDataMember	kNeutral	 :0
  OBJ: TDataMember	kNoStats	 : 0
  OBJ: TDataMember	kUserContour	 : 0
  OBJ: TDataMember	kLogX	 : 0
