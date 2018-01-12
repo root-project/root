@@ -43,6 +43,10 @@ ROOTTEST_ADD_TEST(execMTInit
                   MACRO execMTInit.C
                   ERRREF execMTInit.eref)
 
+ROOTTEST_ADD_TEST(execTClassRehash
+                  MACRO execTClassRehash.C
+                  ERRREF execTClassRehash.eref)
+
 ROOTTEST_ADD_TEST(execTmpltD
                   MACRO execTmpltD.cxx+
                   OUTREF execTmpltD.ref)
