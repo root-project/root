@@ -1380,6 +1380,8 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
             xlow  = x[i-1] - dbar;
             xhigh = x[i-1] + dbar;
             yhigh = y[i-1];
+            if (xlow  < uxmin && xhigh < uxmin) continue;
+            if (xhigh > uxmax && xlow  > uxmax) continue;
             if (xlow  < uxmin) xlow = uxmin;
             if (xhigh > uxmax) xhigh = uxmax;
             if (!optionOne) ylow = TMath::Max((Double_t)0,gPad->GetUymin());

@@ -65,6 +65,8 @@ The following people have contributed to this new version:
    - Auto-coloring for TH1::DrawCopy (drawing options PFC, PLC and PMC) is implemented.
    - Improve the option management in `TF1::Draw` to allow to combine the option
      `SAME` with other drawing options.
+   - `TGraph::Draw("AB")` was malfunctioning when using `TAxis::SetRangeUser`.
+      It was reported [here](https://sft.its.cern.ch/jira/browse/ROOT-9144).
 
 ## 3D Graphics Libraries
   - When a LEGO plot was drawn with Theta=90, the X and Y axis were misplaced.
