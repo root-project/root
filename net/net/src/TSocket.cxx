@@ -103,7 +103,6 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
                                         tcpwindowsize);
 
       if (fSocket != -1) {
-         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfSockets()->Add(this);
       }
    } else
@@ -151,7 +150,6 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
    if (fSocket == -1)
       fAddress.fPort = -1;
    else {
-      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -194,7 +192,6 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
       if (fSocket != -1) {
-         R__LOCKGUARD(gROOTMutex);
          gROOT->GetListOfSockets()->Add(this);
       }
    } else
@@ -246,7 +243,6 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    if (fSocket == -1) {
       fAddress.fPort = -1;
    } else {
-      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -282,7 +278,6 @@ TSocket::TSocket(const char *sockpath) : TNamed(sockpath, "")
 
    fSocket = gSystem->OpenConnection(sockpath, -1, -1);
    if (fSocket > 0) {
-      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -311,7 +306,6 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    if (desc >= 0) {
       fSocket  = desc;
       fAddress = gSystem->GetPeerName(fSocket);
-      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    } else
       fSocket = -1;
@@ -346,7 +340,6 @@ TSocket::TSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
 
    if (desc >= 0) {
       fSocket  = desc;
-      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    } else
       fSocket = -1;
@@ -374,7 +367,6 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
    ResetBit(TSocket::kBrokenConn);
 
    if (fSocket != -1) {
-      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -407,7 +399,6 @@ void TSocket::Close(Option_t *option)
       if (IsValid()) { // Filter out -2 case (disconnected but not removed from list)
          gSystem->CloseConnection(fSocket, force);
       }
-      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Remove(this);
    }
    fSocket = -1;
