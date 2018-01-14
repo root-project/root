@@ -84,7 +84,7 @@ public:
 inline Float_t THashTable::AverageCollisions() const
 {
    if (fUsedSlots)
-      return ((Float_t)fEntries)/fUsedSlots;
+      return ((Float_t)fEntries)/((Float_t)fUsedSlots);
    else
       return 0.0;
 }
