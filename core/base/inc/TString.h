@@ -132,13 +132,25 @@ friend TString operator+(const TString &s1, const TString &s2);
 friend TString operator+(const TString &s,  const char *cs);
 friend TString operator+(const char *cs, const TString &s);
 friend TString operator+(const TString &s, char c);
+friend TString operator+(const TString &s, Short_t i);
+friend TString operator+(const TString &s, UShort_t i);
+friend TString operator+(const TString &s, Int_t i);
+friend TString operator+(const TString &s, UInt_t i);
 friend TString operator+(const TString &s, Long_t i);
 friend TString operator+(const TString &s, ULong_t i);
+friend TString operator+(const TString &s, Float_t i);
+friend TString operator+(const TString &s, Double_t i);
 friend TString operator+(const TString &s, Long64_t i);
 friend TString operator+(const TString &s, ULong64_t i);
 friend TString operator+(char c, const TString &s);
+friend TString operator+(Short_t i, const TString &s);
+friend TString operator+(UShort_t i, const TString &s);
+friend TString operator+(Int_t i, const TString &s);
+friend TString operator+(UInt_t i, const TString &s);
 friend TString operator+(Long_t i, const TString &s);
 friend TString operator+(ULong_t i, const TString &s);
+friend TString operator+(Float_t i, const TString &s);
+friend TString operator+(Double_t i, const TString &s);
 friend TString operator+(Long64_t i, const TString &s);
 friend TString operator+(ULong64_t i, const TString &s);
 friend Bool_t  operator==(const TString &s1, const TString &s2);
@@ -436,7 +448,7 @@ public:
 #endif
    ;
 
-   ClassDef(TString,2)  //Basic string class
+   ClassDef(TString,3)  //Basic string class
 };
 
 // Related global functions
