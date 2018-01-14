@@ -14,21 +14,21 @@ std::atomic<bool> gWaitToStart{true};
 
 class UserClass {};
 
-void init(size_t i) {
+void init(int i) {
 
    while(gWaitToStart) {}
 
    TClass *cl = TClass::GetClass("UserClass");
 
    if ( !cl )
-      Fatal("execMTInit","Thread %lu could not find the TClass for UserClass\n",i);
+      Fatal("execMTInit","Thread %d could not find the TClass for UserClass\n",i);
    if ( cl->GetState() != TClass::kInterpreted )
-      Fatal("execMTInit","Thread %lu has the wrong State for UserClass: %d\n",i, cl->GetState());
+      Fatal("execMTInit","Thread %d has the wrong State for UserClass: %d\n",i, cl->GetState());
    fgPtr[i] = cl;
 }
 
 
-int execMTInit(size_t nthreads = 4)
+int execMTInit(int nthreads = 4)
 {
    //gSystem->Load("libHist");
    ROOT::EnableThreadSafety();
@@ -38,7 +38,7 @@ int execMTInit(size_t nthreads = 4)
    //auto hint = ROOT::gCoreMutex->ReadLock();
    auto hint = ROOT::gCoreMutex->WriteLock();
 
-   for(size_t i = 0; i < nthreads; ++i)
+   for(int i = 0; i < nthreads; ++i)
    {
       threads.emplace_back(std::thread([i]() {
          init(i);
@@ -64,11 +64,12 @@ int execMTInit(size_t nthreads = 4)
    if ( cl->GetState() != TClass::kInterpreted )
       Fatal("execMTInit","Final check has the wrong State for UserClass: %d\n",cl->GetState());
 
-   for(size_t i = 0; i < nthreads; ++i)
+   for(int i = 0; i < nthreads; ++i)
    {
       if (fgPtr[i] != cl)
-         Fatal("execMTInit","Final check has a different address for UserClass than thread %lu\n",i);
+         Fatal("execMTInit","Final check has a different address for UserClass than thread %d\n",i);
    }
 
    return 0;
 }
+
