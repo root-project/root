@@ -138,16 +138,33 @@ static const config configuration_table[10] = {
 /* rank Z_BLOCK between Z_NO_FLUSH and Z_PARTIAL_FLUSH */
 #define RANK(f) (((f) << 1) - ((f) > 4 ? 9 : 0))
 
-#if(defined __aarch64__ &&  defined __ARM_ACLE)
+static uint32_t hash_func_default(deflate_state *s, uint32_t h, void* str) {
+    return ((h << s->hash_shift) ^ (*(uint32_t*)str)) & s->hash_mask;
+}
 
+#if defined (__aarch64__)
 #include <arm_neon.h>
-#if (__ARM_ACLE >= 200)
-# include <arm_acle.h>
+
+#pragma GCC push_options
+#if __ARM_ARCH >= 8
+#pragma GCC target ("arch=armv8-a+crc")
 #endif
 
-static uint32_t hash_func(deflate_state *s, void* str) {
+#if defined (__ARM_FEATURE_CRC32)
+#include <arm_acle.h>
+
+static uint32_t hash_func(deflate_state *s, uint32_t UNUSED(h), void* str) {
     return __crc32cw(0, *(uint32_t*)str) & s->hash_mask;
 }
+
+#include <arm_neon.h>
+#include <arm_acle.h>
+
+static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) {
+    return __crc32cw(0, *(uint32_t*)str) & s->hash_mask;
+}
+
+#endif // __ARM_FEATURE_CRC32
 
 #elif defined __x86_64__
 
@@ -1648,6 +1665,146 @@ void *resolve_fill_window(void)
 }
 
 static void fill_window(deflate_state *) __attribute__ ((ifunc ("resolve_fill_window")));
+
+#elif defined (__aarch64__)
+
+static void fill_window_neon(s)
+    deflate_state *s;
+{
+    register uint32_t n;
+    uint32_t more;    /* Amount of free space at the end of the window. */
+    uint32_t wsize = s->w_size;
+
+    Assert(s->lookahead < MIN_LOOKAHEAD, "already enough lookahead");
+
+    do {
+        more = (unsigned)(s->window_size -(uint64_t)s->lookahead -(ulg)s->strstart);
+
+        /* Deal with !@#$% 64K limit: */
+        if (sizeof(int) <= 2) {
+            if (more == 0 && s->strstart == 0 && s->lookahead == 0) {
+                more = wsize;
+
+            } else if (more == (unsigned)(-1)) {
+                /* Very unlikely, but possible on 16 bit machine if
+                 * strstart == 0 && lookahead == 1 (input done a byte at time)
+                 */
+                more--;
+            }
+        }
+
+        /* If the window is almost full and there is insufficient lookahead,
+         * move the upper half to the lower one to make room in the upper half.
+         */
+
+        if (s->strstart >= wsize+MAX_DIST(s)) {
+
+            unsigned int i;
+            zmemcpy(s->window, s->window+wsize, (unsigned)wsize);
+            s->match_start -= wsize;
+            s->strstart    -= wsize;
+            s->block_start -= (int64_t) wsize;
+            n = s->hash_size;
+            uint16x8_t  W;
+            uint16_t   *q ;
+            W = vmovq_n_u16(wsize);
+            q = (uint16_t*)s->head;
+
+            for(i = 0; i < n/8; ++i) {
+                vst1q_u16(q, vqsubq_u16(vld1q_u16(q), W));
+                q+=8;
+            }
+
+            n = wsize;
+            q = (uint16_t*)s->prev;
+
+            for(i = 0; i < n/8; ++i) {
+                vst1q_u16(q, vqsubq_u16(vld1q_u16(q), W));
+                q+=8;
+            }
+            more += wsize;
+        }
+        if (s->strm->avail_in == 0) break;
+
+        /* If there was no sliding:
+         *    strstart <= WSIZE+MAX_DIST-1 && lookahead <= MIN_LOOKAHEAD - 1 &&
+         *    more == window_size - lookahead - strstart
+         * => more >= window_size - (MIN_LOOKAHEAD-1 + WSIZE + MAX_DIST-1)
+         * => more >= window_size - 2*WSIZE + 2
+         * In the BIG_MEM or MMAP case (not yet supported),
+         *   window_size == input_size + MIN_LOOKAHEAD  &&
+         *   strstart + s->lookahead <= input_size => more >= MIN_LOOKAHEAD.
+         * Otherwise, window_size == 2*WSIZE so more >= 2.
+         * If there was sliding, more >= WSIZE. So in all cases, more >= 2.
+         */
+        Assert(more >= 2, "more < 2");
+
+        n = read_buf(s->strm, s->window + s->strstart + s->lookahead, more);
+        s->lookahead += n;
+
+        /* Initialize the hash value now that we have some input: */
+        if (s->lookahead + s->insert >= ACTUAL_MIN_MATCH) {
+            uint32_t str = s->strstart - s->insert;
+            uint32_t ins_h = s->window[str];
+            while (s->insert) {
+                ins_h = hash_func(s, ins_h, &s->window[str]);
+                s->prev[str & s->w_mask] = s->head[ins_h];
+                s->head[ins_h] = (Pos)str;
+                str++;
+                s->insert--;
+                if (s->lookahead + s->insert < ACTUAL_MIN_MATCH)
+                    break;
+            }
+            s->ins_h = ins_h;
+        }
+        /* If the whole input has less than ACTUAL_MIN_MATCH bytes, ins_h is garbage,
+         * but this is not important since only literal bytes will be emitted.
+         */
+
+    } while (s->lookahead < MIN_LOOKAHEAD && s->strm->avail_in != 0);
+
+    /* If the WIN_INIT bytes after the end of the current data have never been
+     * written, then zero those bytes in order to avoid memory check reports of
+     * the use of uninitialized (or uninitialised as Julian writes) bytes by
+     * the longest match routines.  Update the high water mark for the next
+     * time through here.  WIN_INIT is set to MAX_MATCH since the longest match
+     * routines allow scanning to strstart + MAX_MATCH, ignoring lookahead.
+     */
+    if (s->high_water < s->window_size) {
+        uint64_t curr = s->strstart + (ulg)(s->lookahead);
+        uint64_t init;
+
+        if (s->high_water < curr) {
+            /* Previous high water mark below current data -- zero WIN_INIT
+             * bytes or up to end of window, whichever is less.
+             */
+            init = s->window_size - curr;
+            if (init > WIN_INIT)
+                init = WIN_INIT;
+            zmemzero(s->window + curr, (unsigned)init);
+            s->high_water = curr + init;
+        }
+        else if (s->high_water < (uint64_t)curr + WIN_INIT) {
+            /* High water mark at or above current data, but below current data
+             * plus WIN_INIT -- zero out to current data plus WIN_INIT, or up
+             * to end of window, whichever is less.
+             */
+            init = (uint64_t)curr + WIN_INIT - s->high_water;
+            if (init > s->window_size - s->high_water)
+                init = s->window_size - s->high_water;
+            zmemzero(s->window + s->high_water, (unsigned)init);
+            s->high_water += init;
+        }
+    }
+
+    Assert((uint64_t)s->strstart <= s->window_size - MIN_LOOKAHEAD,
+           "not enough room for search");
+}
+
+void fill_window(deflate_state *s){
+    return fill_window_neon(s);
+}
+
 #else
 void fill_window(deflate_state *s){
     return fill_window_default(s);
