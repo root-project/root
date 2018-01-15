@@ -1512,20 +1512,30 @@ TString operator+(const TString &s, ULong_t i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add float to string.
 
-TString operator+(const TString &s, Float_t i)
+TString operator+(const TString &s, Float_t f)
 {
    char si[32];
-   snprintf(si, sizeof(si), "%f", i);
+   snprintf(si, sizeof(si), "%.17g", f);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add double to string.
 
-TString operator+(const TString &s, Double_t i)
+TString operator+(const TString &s, Double_t f)
 {
    char si[32];
-   snprintf(si, sizeof(si), "%lf", i);
+   snprintf(si, sizeof(si), "%.17g", f);
+   return TString(s.Data(), s.Length(), si, strlen(si));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add long double to string.
+
+TString operator+(const TString &s, LongDouble_t f)
+{
+   char si[32];
+   snprintf(si, sizeof(si), "%.17g", f);
    return TString(s.Data(), s.Length(), si, strlen(si));
 }
 
@@ -1620,20 +1630,30 @@ TString operator+(ULong_t i, const TString &s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add string to float.
 
-TString operator+(Float_t i, const TString &s)
+TString operator+(Float_t f, const TString &s)
 {
    char si[32];
-   snprintf(si, sizeof(si), "%.17g", i);
+   snprintf(si, sizeof(si), "%.17g", f);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add string to double.
 
-TString operator+(Double_t i, const TString &s)
+TString operator+(Double_t f, const TString &s)
 {
    char si[32];
-   snprintf(si, sizeof(si), "%.17g", i);
+   snprintf(si, sizeof(si), "%.17g", f);
+   return TString(si, strlen(si), s.Data(), s.Length());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Add string to long double.
+
+TString operator+(LongDouble_t f, const TString &s)
+{
+   char si[32];
+   snprintf(si, sizeof(si), "%.17g", f);
    return TString(si, strlen(si), s.Data(), s.Length());
 }
 

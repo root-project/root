@@ -138,8 +138,9 @@ friend TString operator+(const TString &s, Int_t i);
 friend TString operator+(const TString &s, UInt_t i);
 friend TString operator+(const TString &s, Long_t i);
 friend TString operator+(const TString &s, ULong_t i);
-friend TString operator+(const TString &s, Float_t i);
-friend TString operator+(const TString &s, Double_t i);
+friend TString operator+(const TString &s, Float_t f);
+friend TString operator+(const TString &s, Double_t f);
+friend TString operator+(const TString &s, LongDouble_t f);
 friend TString operator+(const TString &s, Long64_t i);
 friend TString operator+(const TString &s, ULong64_t i);
 friend TString operator+(char c, const TString &s);
@@ -149,8 +150,9 @@ friend TString operator+(Int_t i, const TString &s);
 friend TString operator+(UInt_t i, const TString &s);
 friend TString operator+(Long_t i, const TString &s);
 friend TString operator+(ULong_t i, const TString &s);
-friend TString operator+(Float_t i, const TString &s);
-friend TString operator+(Double_t i, const TString &s);
+friend TString operator+(Float_t f, const TString &s);
+friend TString operator+(Double_t f, const TString &s);
+friend TString operator+(LongDouble_t f, const TString &s);
 friend TString operator+(Long64_t i, const TString &s);
 friend TString operator+(ULong64_t i, const TString &s);
 friend Bool_t  operator==(const TString &s1, const TString &s2);
@@ -313,6 +315,7 @@ public:
    TString    &operator+=(ULong_t i);
    TString    &operator+=(Float_t f);
    TString    &operator+=(Double_t f);
+   TString    &operator+=(LongDouble_t f);
    TString    &operator+=(Long64_t i);
    TString    &operator+=(ULong64_t i);
 
@@ -541,7 +544,7 @@ inline TString &TString::operator+=(Int_t i)
 inline TString &TString::operator+=(UInt_t i)
 { return operator+=((ULong_t) i); }
 
-inline TString &TString::operator+=(Double_t f)
+inline TString &TString::operator+=(LongDouble_t f)
 {
    char s[32];
    // coverity[secure_coding] Buffer is large enough: width specified in format
@@ -550,7 +553,10 @@ inline TString &TString::operator+=(Double_t f)
 }
 
 inline TString &TString::operator+=(Float_t f)
-{ return operator+=((Double_t) f); }
+{ return operator+=((LongDouble_t) f); }
+
+inline TString &TString::operator+=(Double_t f)
+{ return operator+=((LongDouble_t) f); }
 
 inline TString &TString::operator+=(Long64_t l)
 {
