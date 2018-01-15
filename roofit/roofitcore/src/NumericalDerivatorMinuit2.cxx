@@ -472,54 +472,21 @@ namespace RooFit {
     // set an initial gradient using some given steps
     // (used in the first iteration)
 
-//    std::cout << "########### NumericalDerivatorMinuit2::SetInitialGradient()" <<std::endl;
-
     double eps2 = precision.Eps2();
-
-//    Bool_t oldFixed = parameters[index].IsFixed();
-//    Double_t oldVar = parameters[index].Value();
-//    Double_t oldVerr = parameters[index].StepSize();
-//    Double_t oldVlo = parameters[index].LowerLimit();
-//    Double_t oldVhi = parameters[index].UpperLimit();
 
     ROOT::Minuit2::MnAlgebraicVector grad_vec(fFunction->NDim()),
                                      gr2_vec(fFunction->NDim()),
                                      gstep_vec(fFunction->NDim());
-//    ROOT::Minuit2::MnAlgebraicVector grad_vec_internal(fG_internal.Grad()),
-//        gr2_vec_internal(fG_internal.G2()),
-//        gstep_vec_internal(fG_internal.Gstep());
 
     unsigned ix = 0;
     for (auto parameter = parameters.begin(); parameter != parameters.end(); ++parameter, ++ix) {
-//  for (unsigned int i = 0; i < fN; ++i)  {
-      //   //double eps2 = TMath::Sqrt(fEpsilon);
-      //   //double gsmin = 8.*eps2*(fabs(x[i])) + eps2;
-      // double dirin = s[i];
-      // double g2 = 2.0 /(dirin*dirin);
-      // double gstep = 0.1*dirin;
-      // double grd = g2*dirin;
-
-      // fGrd[i] = grd;
-      // fG2[i] = g2;
-      // fGstep[i] = gstep;
-
-//    unsigned int exOfIn = Trafo().ExtOfInt(i);
-//    auto parameter = Trafo().Parameter(exOfIn);
-      // this should just be the parameter in the RooFit space ("external" in
-      // Minuit terms, since we're calculating the "external" gradient here)
-      // We get it from the loop.
-
-//    double var = par.Vec()(i);
       // I'm guessing par.Vec()(i) should give the value of variable i...
 //    double var = parameter->Value();
 
       // Judging by the ParameterSettings.h constructor argument name "err",
       // I'm guessing what MINUIT calls "Error" is stepsize on the ROOT side.
-//    double werr = parameter->Error();
       double werr = parameter->StepSize();
 
-
-//    double sav = Int2ext(*parameter, var);
       // Actually, sav in Minuit2 is the external parameter value, so that is
       // what we called var before and var is unnecessary here.
       double sav = parameter->Value();
@@ -527,41 +494,24 @@ namespace RooFit {
       // However, we do need var below, so let's calculate it using Ext2int:
       double var = Ext2int(*parameter, sav);
 
-      // Int2Ext is not necessary, we're doing everything externally here
       double sav2 = sav + werr;
-//    double sav2 = var + werr;
-
-//    if(parameter->HasLimits()) {  // this if statement in MINUIT is superfluous
       if(parameter->HasUpperLimit() && sav2 > parameter->UpperLimit()) {
         sav2 = parameter->UpperLimit();
       }
 
       double var2 = Ext2int(*parameter, sav2);
-      // Ext2int is not necessary, we're doing everything externally here
       double vplu = var2 - var;
-//    double vplu = sav2 - var;
-
       sav2 = sav - werr;
-//    sav2 = var - werr;
-
-//    if(parameter->HasLimits()) {  // this if statement in MINUIT is superfluous
       if(parameter->HasLowerLimit() && sav2 < parameter->LowerLimit()) {
         sav2 = parameter->LowerLimit();
       }
 
       var2 = Ext2int(*parameter, sav2);
-      // Ext2int is not necessary, we're doing everything externally here
       double vmin = var2 - var;
-//    double vmin = sav2 - var;
-
       double gsmin = 8. * eps2 * (fabs(var) + eps2);
       // protect against very small step sizes which can cause dirin to zero and then nan values in grd
       double dirin = std::max(0.5*(fabs(vplu) + fabs(vmin)),  gsmin );
-
-//    double g2 = 2.0*fFcn.ErrorDef()/(dirin*dirin);
-      // ErrorDef is the same as Up, which we already have in here
       double g2 = 2.0*Up/(dirin*dirin);
-
       double gstep = std::max(gsmin, 0.1*dirin);
       double grd = g2*dirin;
 
@@ -569,31 +519,18 @@ namespace RooFit {
         if(gstep > 0.5) gstep = 0.5;
       }
 
-//      grad_vec(ix) = grd / DInt2Ext(*parameter, var);
-//      gr2_vec(ix) = g2 / D2Int2Ext(*parameter, var);
-//      gstep_vec(ix) = gstep / GStepInt2Ext(*parameter, var);
-
-//      grad_vec_internal(ix) = grd;
-//      gr2_vec_internal(ix) = g2;
-//      gstep_vec_internal(ix) = gstep;
-
       grad_vec(ix) = grd;
       gr2_vec(ix) = g2;
       gstep_vec(ix) = gstep;
 
-//      std::cout << "INTERNAL: fGrd[" << ix <<"] = " << grd << "\t";
+//      std::cout << "fGrd[" << ix <<"] = " << grd << "\t";
 //      std::cout << "fG2[" << ix <<"] = " << g2 << "\t";
 //      std::cout << "fGstep[" << ix <<"] = " << gstep << std::endl;
-//      std::cout << "EXTERNAL: fGrd[" << ix <<"] = " << grad_vec(ix) << "\t";
-//      std::cout << "fG2[" << ix <<"] = " << gr2_vec(ix) << "\t";
-//      std::cout << "fGstep[" << ix <<"] = " << gstep_vec(ix) << std::endl;
 
     }
 
     fG = ROOT::Minuit2::FunctionGradient(grad_vec, gr2_vec, gstep_vec);
-//    fG_internal = ROOT::Minuit2::FunctionGradient(grad_vec_internal, gr2_vec_internal, gstep_vec_internal);
   }
-
 
 } // namespace RooFit
 
