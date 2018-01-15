@@ -41,7 +41,6 @@ as a TString, construct a TString from it, eg:
 #include <list>
 #include <algorithm>
 
-#include "snprintf.h"
 #include "Varargs.h"
 #include "TString.h"
 #include "TBuffer.h"
@@ -1450,117 +1449,40 @@ TString operator+(const TString &s, char c)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add integer to string.
+/// Add signed integer to string.
 
-TString operator+(const TString &s, Short_t i)
+template <class T, class = typename std::is_signed<T>::type>
+friend TString operator+(const TString &s, T i)
 {
-    char si[32];
-    snprintf(si, sizeof(si), "%ld", i);
-    return TString(s.Data(), s.Length(), si, strlen(si));
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%lld", static_cast<Long64_t>(i));
+    return TString(s.Data(), s.Length(), buffer, strlen(buffer));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add integer to string.
+/// Add unsigned integer to string.
 
-TString operator+(const TString &s, UShort_t i)
+template <class T, class = typename std::is_unsigned<T>::type>
+friend TString operator+(const TString &s, T u)
 {
-    char si[32];
-    snprintf(si, sizeof(si), "%lu", i);
-    return TString(s.Data(), s.Length(), si, strlen(si));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add integer to string.
-
-TString operator+(const TString &s, Int_t i)
-{
-    char si[32];
-    snprintf(si, sizeof(si), "%ld", i);
-    return TString(s.Data(), s.Length(), si, strlen(si));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add integer to string.
-
-TString operator+(const TString &s, UInt_t i)
-{
-    char si[32];
-    snprintf(si, sizeof(si), "%lu", i);
-    return TString(s.Data(), s.Length(), si, strlen(si));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add integer to string.
-
-TString operator+(const TString &s, Long_t i)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%ld", i);
-   return TString(s.Data(), s.Length(), si, strlen(si));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add integer to string.
-
-TString operator+(const TString &s, ULong_t i)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%lu", i);
-   return TString(s.Data(), s.Length(), si, strlen(si));
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%llu", static_cast<ULong64_t>(u));
+    return TString(s.Data(), s.Length(), buffer, strlen(buffer));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add float to string.
 
-TString operator+(const TString &s, Float_t f)
+template <class T, class = typename std::is_floating_point<T>::type>
+friend TString operator+(const TString &s, T f)
 {
-   char si[32];
-   snprintf(si, sizeof(si), "%.17g", f);
-   return TString(s.Data(), s.Length(), si, strlen(si));
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%.17Lg", static_cast<LongDouble_t>(f));
+    return TString(s.Data(), s.Length(), buffer, strlen(buffer));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add double to string.
-
-TString operator+(const TString &s, Double_t f)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%.17g", f);
-   return TString(s.Data(), s.Length(), si, strlen(si));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add long double to string.
-
-TString operator+(const TString &s, LongDouble_t f)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%.17g", f);
-   return TString(s.Data(), s.Length(), si, strlen(si));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add integer to string.
-
-TString operator+(const TString &s, Long64_t i)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%lld", i);
-   return TString(s.Data(), s.Length(), si, strlen(si));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add integer to string.
-
-TString operator+(const TString &s, ULong64_t i)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%llu", i);
-   return TString(s.Data(), s.Length(), si, strlen(si));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
+/// Add string to char.
 
 TString operator+(char c, const TString &s)
 {
@@ -1568,113 +1490,36 @@ TString operator+(char c, const TString &s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
+/// Add string to signed integer.
 
-TString operator+(Short_t i, const TString &s)
+template <class T, class = typename std::is_signed<T>::type>
+friend TString operator+(T i, const TString &s)
 {
-   char si[32];
-   snprintf(si, sizeof(si), "%ld", i);
-   return TString(si, strlen(si), s.Data(), s.Length());
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%lld", static_cast<Long64_t>(i));
+    return TString(s.Data(), s.Length(), buffer, strlen(buffer));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
+/// Add string to unsigned integer.
 
-TString operator+(UShort_t i, const TString &s)
+template <class T, class = typename std::is_unsigned<T>::type>
+friend TString operator+(T u, const TString &s)
 {
-   char si[32];
-   snprintf(si, sizeof(si), "%lu", i);
-   return TString(si, strlen(si), s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
-
-TString operator+(Int_t i, const TString &s)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%ld", i);
-   return TString(si, strlen(si), s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
-
-TString operator+(UInt_t i, const TString &s)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%lu", i);
-   return TString(si, strlen(si), s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
-
-TString operator+(Long_t i, const TString &s)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%ld", i);
-   return TString(si, strlen(si), s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
-
-TString operator+(ULong_t i, const TString &s)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%lu", i);
-   return TString(si, strlen(si), s.Data(), s.Length());
+    char buffer[32];
+    snprintf(buffer, sizeof(buffer), "%llu", static_cast<ULong64_t>(u));
+    return TString(s.Data(), s.Length(), buffer, strlen(buffer));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add string to float.
 
-TString operator+(Float_t f, const TString &s)
+template <class T, class = typename std::is_floating_point<T>::type>
+friend TString operator+(T f, const TString &s)
 {
-   char si[32];
-   snprintf(si, sizeof(si), "%.17g", f);
-   return TString(si, strlen(si), s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to double.
-
-TString operator+(Double_t f, const TString &s)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%.17g", f);
-   return TString(si, strlen(si), s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to long double.
-
-TString operator+(LongDouble_t f, const TString &s)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%.17g", f);
-   return TString(si, strlen(si), s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
-
-TString operator+(Long64_t i, const TString &s)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%lld", i);
-   return TString(si, strlen(si), s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add string to integer.
-
-TString operator+(ULong64_t i, const TString &s)
-{
-   char si[32];
-   snprintf(si, sizeof(si), "%llu", i);
-   return TString(si, strlen(si), s.Data(), s.Length());
+   char buffer[32];
+   snprintf(buffer, sizeof(buffer), "%.17Lg", static_cast<LongDouble_t>(f));
+   return TString(s.Data(), s.Length(), buffer, strlen(buffer));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

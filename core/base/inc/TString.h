@@ -31,6 +31,7 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string>
+#include <type_traits>
 
 class TRegexp;
 class TPRegexp;
@@ -132,29 +133,19 @@ friend TString operator+(const TString &s1, const TString &s2);
 friend TString operator+(const TString &s,  const char *cs);
 friend TString operator+(const char *cs, const TString &s);
 friend TString operator+(const TString &s, char c);
-friend TString operator+(const TString &s, Short_t i);
-friend TString operator+(const TString &s, UShort_t i);
-friend TString operator+(const TString &s, Int_t i);
-friend TString operator+(const TString &s, UInt_t i);
-friend TString operator+(const TString &s, Long_t i);
-friend TString operator+(const TString &s, ULong_t i);
-friend TString operator+(const TString &s, Float_t f);
-friend TString operator+(const TString &s, Double_t f);
-friend TString operator+(const TString &s, LongDouble_t f);
-friend TString operator+(const TString &s, Long64_t i);
-friend TString operator+(const TString &s, ULong64_t i);
+template<class T, class = typename std::is_signed<T>::type>
+friend TString operator+(const TString &s, T i);
+template<class T, class = typename std::is_unsigned<T>::type>
+friend TString operator+(const TString &s, T u);
+template<class T, class = typename std::is_floating_point<T>::type>
+friend TString operator+(const TString &s, T f);
 friend TString operator+(char c, const TString &s);
-friend TString operator+(Short_t i, const TString &s);
-friend TString operator+(UShort_t i, const TString &s);
-friend TString operator+(Int_t i, const TString &s);
-friend TString operator+(UInt_t i, const TString &s);
-friend TString operator+(Long_t i, const TString &s);
-friend TString operator+(ULong_t i, const TString &s);
-friend TString operator+(Float_t f, const TString &s);
-friend TString operator+(Double_t f, const TString &s);
-friend TString operator+(LongDouble_t f, const TString &s);
-friend TString operator+(Long64_t i, const TString &s);
-friend TString operator+(ULong64_t i, const TString &s);
+template<class T, class = typename std::is_signed<T>::type>
+friend TString operator+(T i, const TString &s);
+template<class T, class = typename std::is_unsigned<T>::type>
+friend TString operator+(T u, const TString &s);
+template<class T, class = typename std::is_floating_point<T>::type>
+friend TString operator+(T f, const TString &s);
 friend Bool_t  operator==(const TString &s1, const TString &s2);
 friend Bool_t  operator==(const TString &s1, const char *s2);
 
@@ -307,17 +298,12 @@ public:
    TString    &operator+=(const char *s);        // Append string
    TString    &operator+=(const TString &s);
    TString    &operator+=(char c);
-   TString    &operator+=(Short_t i);
-   TString    &operator+=(UShort_t i);
-   TString    &operator+=(Int_t i);
-   TString    &operator+=(UInt_t i);
-   TString    &operator+=(Long_t i);
-   TString    &operator+=(ULong_t i);
-   TString    &operator+=(Float_t f);
-   TString    &operator+=(Double_t f);
-   TString    &operator+=(LongDouble_t f);
-   TString    &operator+=(Long64_t i);
-   TString    &operator+=(ULong64_t i);
+   template<class T, class = typename std::is_signed<T>::type>
+   TString    &operator+=(T i);
+   template<class T, class = typename std::is_unsigned<T>::type>
+   TString    &operator+=(T u);
+   template<class T, class = typename std::is_floating_point<T>::type>
+   TString    &operator+=(T f);
 
    // Indexing operators
    char         &operator[](Ssiz_t i);         // Indexing with bounds checking
@@ -451,7 +437,7 @@ public:
 #endif
    ;
 
-   ClassDef(TString,3)  //Basic string class
+   ClassDef(TString,2)  //Basic string class
 };
 
 // Related global functions
@@ -526,52 +512,28 @@ inline TString &TString::operator+=(const TString &s)
 inline TString &TString::operator+=(char c)
 { return Append(c); }
 
-inline TString &TString::operator+=(Long_t i)
-{ char s[32]; sprintf(s, "%ld", i); return operator+=(s); }
-
-inline TString &TString::operator+=(ULong_t i)
-{ char s[32]; sprintf(s, "%lu", i); return operator+=(s); }
-
-inline TString &TString::operator+=(Short_t i)
-{ return operator+=((Long_t) i); }
-
-inline TString &TString::operator+=(UShort_t i)
-{ return operator+=((ULong_t) i); }
-
-inline TString &TString::operator+=(Int_t i)
-{ return operator+=((Long_t) i); }
-
-inline TString &TString::operator+=(UInt_t i)
-{ return operator+=((ULong_t) i); }
-
-inline TString &TString::operator+=(LongDouble_t f)
+template<class T, class = typename std::is_signed<T>::type>
+inline TString &TString::operator+=(T i)
 {
-   char s[32];
-   // coverity[secure_coding] Buffer is large enough: width specified in format
-   sprintf(s, "%.17g", f);
-   return operator+=(s);
+   char buffer[32];
+   snprintf(buffer, sizeof(buffer), "%lld", static_cast<Long64_t>(i));
+   return operator+=(buffer);
 }
 
-inline TString &TString::operator+=(Float_t f)
-{ return operator+=((LongDouble_t) f); }
-
-inline TString &TString::operator+=(Double_t f)
-{ return operator+=((LongDouble_t) f); }
-
-inline TString &TString::operator+=(Long64_t l)
+template<class T, class = typename std::is_unsigned<T>::type>
+inline TString &TString::operator+=(T u)
 {
-   char s[32];
-   // coverity[secure_coding] Buffer is large enough (2^64 = 20 digits).
-   sprintf(s, "%lld", l);
-   return operator+=(s);
+   char buffer[32];
+   snprintf(buffer, sizeof(buffer), "%llu", static_cast<ULong64_t>(u));
+   return operator+=(buffer);
 }
 
-inline TString &TString::operator+=(ULong64_t ul)
+template<class T, class = typename std::is_unsigned<T>::type>
+inline TString &TString::operator+=(T f)
 {
-   char s[32];
-   // coverity[secure_coding] Buffer is large enough (2^64 = 20 digits).
-   sprintf(s, "%llu", ul);
-   return operator+=(s);
+   char buffer[32];
+   snprintf(buffer, sizeof(buffer), "%.17Lg", static_cast<LongDouble_t>(f));
+   return operator+=(buffer);
 }
 
 inline Bool_t TString::BeginsWith(const char *s, ECaseCompare cmp) const
