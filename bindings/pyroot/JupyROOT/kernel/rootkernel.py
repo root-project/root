@@ -16,7 +16,7 @@ from __future__ import print_function
 import sys
 
 try:
-    from metakernel import MetaKernel, Parser
+    from metakernel import MetaKernel
     from metakernel.display import HTML
 except ImportError:
     raise Exception("Error: package metakernel not found.(install it running 'pip install metakernel')")
