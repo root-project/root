@@ -19,8 +19,12 @@
 
 #include "gtest/gtest.h"
 
+#include <RooMsgService.h>
+#include <RooGlobalFunc.h> // RooFit::ERROR
 
 TEST(GradMinimizer, Gaussian1D) {
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+
   for (int i = 0; i < 10; ++i) {
     // produce the same random stuff every time
     gRandom->SetSeed(1);
@@ -96,6 +100,9 @@ TEST(GradMinimizer, Gaussian1D) {
 
 TEST(GradMinimizer, GaussianND) {
   // test RooGradMinimizer class with simple N-dimensional pdf
+
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+
   int n = 5;
   int N_events = 1000;
   // produce the same random stuff every time
@@ -288,6 +295,9 @@ TEST(GradMinimizer, GaussianND) {
 
 TEST(GradMinimizerReverse, GaussianND) {
   // test RooGradMinimizer class with simple N-dimensional pdf
+
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+
   int n = 5;
   int N_events = 1000;
   // produce the same random stuff every time
@@ -484,6 +494,9 @@ TEST(GradMinimizerReverse, GaussianND) {
 TEST(GradMinimizer, BranchingPDF) {
   // test RooGradMinimizer class with an N-dimensional pdf that forms a tree of
   // pdfs, where one subpdf is the parameter of a higher level pdf
+
+  RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
+
   int N_events = 1000;
   // produce the same random stuff every time
   gRandom->SetSeed(1);
