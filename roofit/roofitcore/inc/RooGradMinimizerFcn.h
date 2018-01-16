@@ -41,7 +41,7 @@ class RooGradMinimizerFcn : public ROOT::Math::IMultiGradFunction {
 public:
 
   RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer *context,
-                      bool verbose = false);
+                      bool always_exactly_mimic_minuit2 = true, bool verbose = false);
 
   RooGradMinimizerFcn(const RooGradMinimizerFcn &other);
 
@@ -147,6 +147,12 @@ private:
   bool hasGStepSize() const override;
   double DoSecondDerivative(const double *x, unsigned int icoord) const override;
   double DoStepSize(const double *x, unsigned int icoord) const override;
+
+private:
+  bool _always_exactly_mimic_minuit2; //! only used for initializing the derivator
+public:
+  bool always_exactly_mimic_minuit2() const;
+  bool set_always_exactly_mimic_minuit2(bool flag = true) const;
 
 };
 #endif

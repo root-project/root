@@ -104,6 +104,12 @@ namespace RooFit {
     ROOT::Minuit2::SqrtUpParameterTransformation fUpperLimTrafo;
     ROOT::Minuit2::SqrtLowParameterTransformation fLowerLimTrafo;
 
+  private:
+    mutable bool _always_exactly_mimic_minuit2 = true;
+  public:
+    bool always_exactly_mimic_minuit2() const;
+    void set_always_exactly_mimic_minuit2(bool flag = true) const;
+
   };
 
 } // namespace RooFit

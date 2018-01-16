@@ -494,6 +494,11 @@ namespace RooFit {
       // However, we do need var below, so let's calculate it using Ext2int:
       double var = Ext2int(*parameter, sav);
 
+      if (_always_exactly_mimic_minuit2) {
+        // this transformation can lose a few bits, but Minuit2 does it too
+        sav = Int2ext(*parameter, var);
+      }
+
       double sav2 = sav + werr;
       if(parameter->HasUpperLimit() && sav2 > parameter->UpperLimit()) {
         sav2 = parameter->UpperLimit();
@@ -531,6 +536,14 @@ namespace RooFit {
 
     fG = ROOT::Minuit2::FunctionGradient(grad_vec, gr2_vec, gstep_vec);
   }
+
+  bool NumericalDerivatorMinuit2::always_exactly_mimic_minuit2() const {
+    return _always_exactly_mimic_minuit2;
+  };
+
+  void NumericalDerivatorMinuit2::set_always_exactly_mimic_minuit2(bool flag) const {
+    _always_exactly_mimic_minuit2 = flag;
+  };
 
 } // namespace RooFit
 

@@ -51,14 +51,15 @@
 using namespace std;
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* context,
-			   bool verbose) :
+                                         bool always_exactly_mimic_minuit2, bool verbose) :
   _funct(funct), _context(context),
   // Reset the *largest* negative log-likelihood value we have seen so far
   _maxFCN(-1e30), _numBadNLL(0),  
   _printEvalErrors(10), _doEvalErrorWall(kTRUE),
   _nDim(0), _logfile(0),
   _verbose(verbose),
-  _grad(0), _grad_initialized(false)
+  _grad(0), _grad_initialized(false),
+  _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
 { 
 
   _evalCounter = 0 ;
@@ -119,7 +120,8 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(const RooGradMinimizerFcn& other) : ROO
   _floatParamVec(other._floatParamVec),
   _gradf(other._gradf),
   _grad(other._grad),
-  _grad_params(other._grad_params), _grad_initialized(other._grad_initialized)
+  _grad_params(other._grad_params), _grad_initialized(other._grad_initialized),
+  _always_exactly_mimic_minuit2(other._always_exactly_mimic_minuit2)
 {  
   _floatParamList = new RooArgList(*other._floatParamList) ;
   _constParamList = new RooArgList(*other._constParamList) ;
@@ -707,6 +709,24 @@ double RooGradMinimizerFcn::DoStepSize(const double *x, unsigned int icoord) con
 bool RooGradMinimizerFcn::returnsInMinuit2ParameterSpace() const {
   return true;
 }
+
+bool RooGradMinimizerFcn::always_exactly_mimic_minuit2() const {
+  if (!_grad_initialized) {
+    return _always_exactly_mimic_minuit2;
+  } else {
+    return _gradf.always_exactly_mimic_minuit2();
+  }
+};
+
+bool RooGradMinimizerFcn::set_always_exactly_mimic_minuit2(bool flag) const {
+  if (!_grad_initialized) {
+    return false;
+  } else {
+    _gradf.set_always_exactly_mimic_minuit2(flag);
+    return true;
+  }
+};
+
 
 #endif
 

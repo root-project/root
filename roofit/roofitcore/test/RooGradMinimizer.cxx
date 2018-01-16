@@ -24,7 +24,7 @@
 
 TEST(GradMinimizer, Gaussian1D) {
   for (int i = 0; i < 10; ++i) {
-    std::cout << std::endl << "run " << i << std::endl;
+//    std::cout << std::endl << "run " << i << std::endl;
     // produce the same random stuff every time
     gRandom->SetSeed(1);
 
@@ -58,7 +58,7 @@ TEST(GradMinimizer, Gaussian1D) {
 
     // --------
 
-  std::cout << "starting nominal calculation" << std::endl;
+//  std::cout << "starting nominal calculation" << std::endl;
 
     RooMinimizer m0(*nll);
     m0.setMinimizerType("Minuit2");
@@ -70,7 +70,7 @@ TEST(GradMinimizer, Gaussian1D) {
     m0.migrad();
     wtimer.stop();
 
-  std::cout << "  -- nominal calculation wall clock time:        " << wtimer.timing_s() << "s" << std::endl;
+//  std::cout << "  -- nominal calculation wall clock time:        " << wtimer.timing_s() << "s" << std::endl;
 
     RooFitResult *m0result = m0.lastMinuitFit();
     double minNll0 = m0result->minNll();
@@ -78,12 +78,12 @@ TEST(GradMinimizer, Gaussian1D) {
     double mu0 = mu->getVal();
     double muerr0 = mu->getError();
 
-  std::cout << " ======== resetting initial values ======== " << std::endl;
+//  std::cout << " ======== resetting initial values ======== " << std::endl;
     values = *savedValues;
 
 //    std::cout << std::hexfloat << "mu: " << mu->getVal() << std::endl; EGP
 
-  std::cout << "starting GradMinimizer" << std::endl;
+//  std::cout << "starting GradMinimizer" << std::endl;
 
     RooGradMinimizer m1(*nll);
     m1.setMinimizerType("Minuit2");
@@ -95,7 +95,7 @@ TEST(GradMinimizer, Gaussian1D) {
     m1.migrad();
     wtimer.stop();
 
-  std::cout << "  -- GradMinimizer calculation wall clock time:  " << wtimer.timing_s() << "s" << std::endl;
+//  std::cout << "  -- GradMinimizer calculation wall clock time:  " << wtimer.timing_s() << "s" << std::endl;
 
     RooFitResult *m1result = m1.lastMinuitFit();
     double minNll1 = m1result->minNll();
@@ -124,6 +124,270 @@ TEST(GradMinimizer, Gaussian1D) {
 
 
 TEST(GradMinimizer, GaussianND) {
+  // test RooGradMinimizer class with simple N-dimensional pdf
+  int n = 5;
+  int N_events = 1000;
+  // produce the same random stuff every time
+  gRandom->SetSeed(1);
+
+  RooWorkspace w("w", kFALSE);
+
+  RooArgSet obs_set;
+
+  // create gaussian parameters
+  float mean[n], sigma[n];
+  for (int ix = 0; ix < n; ++ix) {
+    mean[ix] = gRandom->Gaus(0, 2);
+    sigma[ix] = 0.1 + abs(gRandom->Gaus(0, 2));
+  }
+
+  // create gaussians and also the observables and parameters they depend on
+  for (int ix = 0; ix < n; ++ix) {
+    std::ostringstream os;
+    os << "Gaussian::g" << ix
+       << "(x" << ix << "[-10,10],"
+       << "m" << ix << "[" << mean[ix] << ",-10,10],"
+       << "s" << ix << "[" << sigma[ix] << ",0.1,10])";
+    w.factory(os.str().c_str());
+  }
+
+  // create uniform background signals on each observable
+  for (int ix = 0; ix < n; ++ix) {
+    {
+      std::ostringstream os;
+      os << "Uniform::u" << ix << "(x" << ix << ")";
+      w.factory(os.str().c_str());
+    }
+
+    // gather the observables in a list for data generation below
+    {
+      std::ostringstream os;
+      os << "x" << ix;
+      obs_set.add(*w.arg(os.str().c_str()));
+    }
+  }
+
+  RooArgSet pdf_set = w.allPdfs();
+
+  // create event counts for all pdfs
+  RooArgSet count_set;
+
+  // ... for the gaussians
+  for (int ix = 0; ix < n; ++ix) {
+    std::stringstream os, os2;
+    os << "Nsig" << ix;
+    os2 << "#signal events comp " << ix;
+    RooRealVar a(os.str().c_str(), os2.str().c_str(), N_events/10, 0., 10*N_events);
+    w.import(a);
+    // gather in count_set
+    count_set.add(*w.arg(os.str().c_str()));
+  }
+  // ... and for the uniform background components
+  for (int ix = 0; ix < n; ++ix) {
+    std::stringstream os, os2;
+    os << "Nbkg" << ix;
+    os2 << "#background events comp " << ix;
+    RooRealVar a(os.str().c_str(), os2.str().c_str(), N_events/10, 0., 10*N_events);
+    w.import(a);
+    // gather in count_set
+    count_set.add(*w.arg(os.str().c_str()));
+  }
+
+  RooAddPdf sum("sum", "gaussians+uniforms", pdf_set, count_set);
+
+  // --- Generate a toyMC sample from composite PDF ---
+  RooDataSet *data = sum.generate(obs_set, N_events);
+
+  auto nll = sum.createNLL(*data);
+
+  // set values randomly so that they actually need to do some fitting
+  for (int ix = 0; ix < n; ++ix) {
+    {
+      std::ostringstream os;
+      os << "m" << ix;
+      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(gRandom->Gaus(0, 2));
+    }
+    {
+      std::ostringstream os;
+      os << "s" << ix;
+      dynamic_cast<RooRealVar *>(w.arg(os.str().c_str()))->setVal(0.1 + abs(gRandom->Gaus(0, 2)));
+    }
+  }
+
+  // gather all values of parameters, pdfs and nll here for easy
+  // saving and restoring
+//  RooArgSet some_values = RooArgSet(obs_set, pdf_set, "some_values");
+//  RooArgSet all_values = RooArgSet(some_values, count_set, "all_values");
+  RooArgSet all_values = RooArgSet(pdf_set, count_set, "all_values");
+  all_values.add(*nll);
+  all_values.add(sum);
+  for (int ix = 0; ix < n; ++ix) {
+    {
+      std::ostringstream os;
+      os << "m" << ix;
+      all_values.add(*w.arg(os.str().c_str()));
+    }
+    {
+      std::ostringstream os;
+      os << "s" << ix;
+      all_values.add(*w.arg(os.str().c_str()));
+    }
+  }
+
+  // save initial values for the start of all minimizations
+  RooArgSet* savedValues = dynamic_cast<RooArgSet*>(all_values.snapshot());
+  if (savedValues == nullptr) {
+    throw std::runtime_error("params->snapshot() cannot be casted to RooArgSet!");
+  }
+
+  // --------
+
+  RooWallTimer wtimer;
+
+  // --------
+
+//  std::cout << "running nominal calculation" << std::endl;
+
+  RooFIter all_vals_it = all_values.fwdIterator();
+//  while (RooAbsArg * val = all_vals_it.next()) {
+//    auto RAR = dynamic_cast<RooAbsReal *>(val);
+//    std::cout << RAR->GetName() << " =\t" << RAR->getVal();
+//    auto RRV = dynamic_cast<RooRealVar *>(val);
+//    if (RRV != nullptr) {
+//      std::cout << "\t +/- " << RRV->getError();
+//    }
+//    std::cout << std::endl;
+//  }
+
+  RooMinimizer m0(*nll);
+  m0.setMinimizerType("Minuit2");
+
+  m0.setStrategy(0);
+  // m0.setVerbose();
+  m0.setPrintLevel(-1);
+
+  wtimer.start();
+  m0.migrad();
+  wtimer.stop();
+
+//  std::cout << "  -- nominal calculation wall clock time:        " << wtimer.timing_s() << "s" << std::endl;
+
+  RooFitResult *m0result = m0.lastMinuitFit();
+  double minNll0 = m0result->minNll();
+  double edm0 = m0result->edm();
+  double mean0[n];
+  double std0[n];
+  for (int ix = 0; ix < n; ++ix) {
+    {
+      std::ostringstream os;
+      os << "m" << ix;
+      mean0[ix] = dynamic_cast<RooRealVar*>(w.arg(os.str().c_str()))->getVal();
+    }
+    {
+      std::ostringstream os;
+      os << "s" << ix;
+      std0[ix] = dynamic_cast<RooRealVar*>(w.arg(os.str().c_str()))->getVal();
+    }
+  }
+
+//  std::cout << " ====================================== " << std::endl;
+
+  all_vals_it = all_values.fwdIterator();
+//  while (RooAbsArg * val = all_vals_it.next()) {
+//    auto RAR = dynamic_cast<RooAbsReal *>(val);
+//    std::cout << RAR->GetName() << " =\t" << RAR->getVal();
+//    auto RRV = dynamic_cast<RooRealVar *>(val);
+//    if (RRV != nullptr) {
+//      std::cout << "\t +/- " << RRV->getError();
+//    }
+//    std::cout << std::endl;
+//  }
+//  std::cout << " ====================================== " << std::endl;
+  // --------
+
+//  std::cout << " ======== reset initial values ======== " << std::endl;
+  all_values = *savedValues;
+
+  // --------
+//  std::cout << " ====================================== " << std::endl;
+
+
+//  std::cout << "running GradMinimizer" << std::endl;
+
+  all_vals_it = all_values.fwdIterator();
+//  while (RooAbsArg * val = all_vals_it.next()) {
+//    auto RAR = dynamic_cast<RooAbsReal *>(val);
+//    std::cout << RAR->GetName() << " =\t" << RAR->getVal();
+//    auto RRV = dynamic_cast<RooRealVar *>(val);
+//    if (RRV != nullptr) {
+//      std::cout << "\t +/- " << RRV->getError();
+//    }
+//    std::cout << std::endl;
+//  }
+
+  RooGradMinimizer m1(*nll);
+
+  m1.setStrategy(0);
+  m1.setPrintLevel(-1);
+
+  wtimer.start();
+  m1.migrad();
+  wtimer.stop();
+
+//  std::cout << "  -- GradMinimizer calculation wall clock time:  " << wtimer.timing_s() << "s" << std::endl;
+
+  RooFitResult *m1result = m1.lastMinuitFit();
+  double minNll1 = m1result->minNll();
+  double edm1 = m1result->edm();
+  double mean1[n];
+  double std1[n];
+  for (int ix = 0; ix < n; ++ix) {
+    {
+      std::ostringstream os;
+      os << "m" << ix;
+      mean1[ix] = dynamic_cast<RooRealVar*>(w.arg(os.str().c_str()))->getVal();
+    }
+    {
+      std::ostringstream os;
+      os << "s" << ix;
+      std1[ix] = dynamic_cast<RooRealVar*>(w.arg(os.str().c_str()))->getVal();
+    }
+  }
+
+//  std::cout << " ====================================== " << std::endl;
+
+  all_vals_it = all_values.fwdIterator();
+//  while (RooAbsArg * val = all_vals_it.next()) {
+//    auto RAR = dynamic_cast<RooAbsReal *>(val);
+//    std::cout << RAR->GetName() << " =\t" << RAR->getVal();
+//    auto RRV = dynamic_cast<RooRealVar *>(val);
+//    if (RRV != nullptr) {
+//      std::cout << "\t +/- " << RRV->getError();
+//    }
+//    std::cout << std::endl;
+//  }
+
+//  std::cout << std::hexfloat;
+//  std::cout << "minNll0: " << minNll0 << std::endl;
+//  std::cout << "minNll1: " << minNll1 << std::endl;
+//  std::cout << "edm0: " << edm0 << std::endl;
+//  std::cout << "edm1: " << edm1 << std::endl;
+
+  EXPECT_EQ(minNll0, minNll1);
+  EXPECT_EQ(edm0, edm1);//, 1e-4);
+
+  for (int ix = 0; ix < n; ++ix) {
+//    std::cout << "mean0[" << ix <<  "]: " << mean0[ix] << std::endl;
+//    std::cout << "mean1[" << ix <<  "]: " << mean1[ix] << std::endl;
+//    std::cout << "std0[" << ix <<  "]: " << std0[ix] << std::endl;
+//    std::cout << "std1[" << ix <<  "]: " << std1[ix] << std::endl;
+    EXPECT_EQ(mean0[ix], mean1[ix]);
+    EXPECT_EQ(std0[ix], std1[ix]);
+  }
+}
+
+
+TEST(GradMinimizerReverse, GaussianND) {
   // test RooGradMinimizer class with simple N-dimensional pdf
   int n = 5;
   int N_events = 1000;
@@ -245,20 +509,29 @@ TEST(GradMinimizer, GaussianND) {
 
   // --------
 
-  std::cout << "running nominal calculation" << std::endl;
+//  std::cout << "running RooGradMinimizer" << std::endl;
 
-  RooMinimizer m0(*nll);
+  RooFIter all_vals_it = all_values.fwdIterator();
+//  while (RooAbsArg * val = all_vals_it.next()) {
+//    std::cout << dynamic_cast<RooAbsReal *>(val)->getVal() << std::endl;
+//    auto RRV = dynamic_cast<RooRealVar *>(val);
+//    if (RRV != nullptr) {
+//      std::cout << RRV->getError() << std::endl;
+//    }
+//  }
+
+  RooGradMinimizer m0(*nll);
   m0.setMinimizerType("Minuit2");
 
   m0.setStrategy(0);
   // m0.setVerbose();
-  m0.setPrintLevel(0);
+  m0.setPrintLevel(-1);
 
   wtimer.start();
   m0.migrad();
   wtimer.stop();
 
-  std::cout << "  -- nominal calculation wall clock time:        " << wtimer.timing_s() << "s" << std::endl;
+//  std::cout << "  -- GradMinimizer calculation wall clock time:        " << wtimer.timing_s() << "s" << std::endl;
 
   RooFitResult *m0result = m0.lastMinuitFit();
   double minNll0 = m0result->minNll();
@@ -278,29 +551,48 @@ TEST(GradMinimizer, GaussianND) {
     }
   }
 
+//  std::cout << " ====================================== " << std::endl;
 
-  std::cout << " ====================================== " << std::endl;
+  all_vals_it = all_values.fwdIterator();
+//  while (RooAbsArg * val = all_vals_it.next()) {
+//    std::cout << dynamic_cast<RooAbsReal *>(val)->getVal() << std::endl;
+//    auto RRV = dynamic_cast<RooRealVar *>(val);
+//    if (RRV != nullptr) {
+//      std::cout << RRV->getError() << std::endl;
+//    }
+//  }
+//  std::cout << " ====================================== " << std::endl;
   // --------
 
-  std::cout << " ======== reset initial values ======== " << std::endl;
+//  std::cout << " ======== reset initial values ======== " << std::endl;
   all_values = *savedValues;
 
   // --------
-  std::cout << " ====================================== " << std::endl;
+//  std::cout << " ====================================== " << std::endl;
 
 
-  std::cout << "running GradMinimizer" << std::endl;
+//  std::cout << "running nominal minimizer" << std::endl;
 
-  RooGradMinimizer m1(*nll);
+  all_vals_it = all_values.fwdIterator();
+//  while (RooAbsArg * val = all_vals_it.next()) {
+//    std::cout << dynamic_cast<RooAbsReal *>(val)->getVal() << std::endl;
+//    auto RRV = dynamic_cast<RooRealVar *>(val);
+//    if (RRV != nullptr) {
+//      std::cout << RRV->getError() << std::endl;
+//    }
+//  }
+
+  RooMinimizer m1(*nll);
+  m1.setMinimizerType("Minuit2");
 
   m1.setStrategy(0);
-  m1.setPrintLevel(0);
+  m1.setPrintLevel(-1);
 
   wtimer.start();
   m1.migrad();
   wtimer.stop();
 
-  std::cout << "  -- GradMinimizer calculation wall clock time:  " << wtimer.timing_s() << "s" << std::endl;
+//  std::cout << "  -- nominal calculation wall clock time:  " << wtimer.timing_s() << "s" << std::endl;
 
   RooFitResult *m1result = m1.lastMinuitFit();
   double minNll1 = m1result->minNll();
@@ -320,24 +612,36 @@ TEST(GradMinimizer, GaussianND) {
     }
   }
 
-  std::cout << std::hexfloat;
-  std::cout << "minNll0: " << minNll0 << std::endl;
-  std::cout << "minNll1: " << minNll1 << std::endl;
-  std::cout << "edm0: " << edm0 << std::endl;
-  std::cout << "edm1: " << edm1 << std::endl;
+//  std::cout << " ====================================== " << std::endl;
+
+  all_vals_it = all_values.fwdIterator();
+//  while (RooAbsArg * val = all_vals_it.next()) {
+//    std::cout << dynamic_cast<RooAbsReal *>(val)->getVal() << std::endl;
+//    auto RRV = dynamic_cast<RooRealVar *>(val);
+//    if (RRV != nullptr) {
+//      std::cout << RRV->getError() << std::endl;
+//    }
+//  }
+
+//  std::cout << std::hexfloat;
+//  std::cout << "minNll0: " << minNll0 << std::endl;
+//  std::cout << "minNll1: " << minNll1 << std::endl;
+//  std::cout << "edm0: " << edm0 << std::endl;
+//  std::cout << "edm1: " << edm1 << std::endl;
 
   EXPECT_EQ(minNll0, minNll1);
   EXPECT_EQ(edm0, edm1);//, 1e-4);
 
   for (int ix = 0; ix < n; ++ix) {
-    std::cout << "mean0[" << ix <<  "]: " << mean0[ix] << std::endl;
-    std::cout << "mean1[" << ix <<  "]: " << mean1[ix] << std::endl;
-    std::cout << "std0[" << ix <<  "]: " << std0[ix] << std::endl;
-    std::cout << "std1[" << ix <<  "]: " << std1[ix] << std::endl;
+//    std::cout << "mean0[" << ix <<  "]: " << mean0[ix] << std::endl;
+//    std::cout << "mean1[" << ix <<  "]: " << mean1[ix] << std::endl;
+//    std::cout << "std0[" << ix <<  "]: " << std0[ix] << std::endl;
+//    std::cout << "std1[" << ix <<  "]: " << std1[ix] << std::endl;
     EXPECT_EQ(mean0[ix], mean1[ix]);
     EXPECT_EQ(std0[ix], std1[ix]);
   }
 }
+
 
 
 TEST(GradMinimizer, BranchingPDF) {
@@ -422,19 +726,19 @@ TEST(GradMinimizer, BranchingPDF) {
 
   // --------
 
-  std::cout << "running nominal calculation" << std::endl;
+//  std::cout << "running nominal calculation" << std::endl;
 
   RooMinimizer m0(*nll);
   m0.setMinimizerType("Minuit2");
 
   m0.setStrategy(0);
-  m0.setPrintLevel(0);
+  m0.setPrintLevel(-1);
 
   wtimer.start();
   m0.migrad();
   wtimer.stop();
 
-  std::cout << "  -- nominal calculation wall clock time:        " << wtimer.timing_s() << "s" << std::endl;
+//  std::cout << "  -- nominal calculation wall clock time:        " << wtimer.timing_s() << "s" << std::endl;
 
   RooFitResult *m0result = m0.lastMinuitFit();
   double minNll0 = m0result->minNll();
@@ -450,28 +754,28 @@ TEST(GradMinimizer, BranchingPDF) {
   double s0__0 = dynamic_cast<RooRealVar *>(w.arg("s0"))->getVal();
 
 
-  std::cout << " ====================================== " << std::endl;
+//  std::cout << " ====================================== " << std::endl;
   // --------
 
-  std::cout << " ======== reset initial values ======== " << std::endl;
+//  std::cout << " ======== reset initial values ======== " << std::endl;
   all_values = *savedValues;
 
   // --------
-  std::cout << " ====================================== " << std::endl;
+//  std::cout << " ====================================== " << std::endl;
 
 
-  std::cout << "running GradMinimizer" << std::endl;
+//  std::cout << "running GradMinimizer" << std::endl;
 
   RooGradMinimizer m1(*nll);
 
   m1.setStrategy(0);
-  m1.setPrintLevel(0);
+  m1.setPrintLevel(-1);
 
   wtimer.start();
   m1.migrad();
   wtimer.stop();
 
-  std::cout << "  -- GradMinimizer calculation wall clock time:  " << wtimer.timing_s() << "s" << std::endl;
+//  std::cout << "  -- GradMinimizer calculation wall clock time:  " << wtimer.timing_s() << "s" << std::endl;
 
   RooFitResult *m1result = m1.lastMinuitFit();
   double minNll1 = m1result->minNll();
