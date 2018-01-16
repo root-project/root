@@ -54,7 +54,7 @@
         },
         link: {
             colors:{
-                default: "#ccc",
+                "default": "#CCC",
                 focus: "#033A00"
             },
             width: "4px",
@@ -235,7 +235,7 @@
         linkSelector.transition().duration(style.aduration)
             .attr("d", d3path)
             .style("fill", "none")
-            .style("stroke", style.link.colors.default)
+            .style("stroke", style.link.colors["default"])
             .style("stroke-width", style.link.width)
             .attr("id", function(d){return "link"+d.target.id;});
 
@@ -251,7 +251,7 @@
     var path = function(node, i, clear){
         svg.selectAll("path.link").filter(function(d){return d.target.id==node.id;})
             .style("stroke-width", (clear) ? style.link.width : style.link.focus_width)
-            .style("stroke", (clear) ? style.link.colors.default : style.link.colors.focus);
+            .style("stroke", (clear) ? style.link.colors["default"] : style.link.colors.focus);
 
         svg.selectAll("g.nodes rect").filter(function(d){return d.id==node.id;})
             .style("stroke-width", style.node.swidth)
