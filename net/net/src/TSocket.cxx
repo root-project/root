@@ -102,11 +102,11 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
       fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
                                         tcpwindowsize);
 
-      if (fSocket != -1) {
+      if (fSocket != kInvalid) {
          gROOT->GetListOfSockets()->Add(this);
       }
    } else
-      fSocket = -1;
+      fSocket = kInvalid;
 
 }
 
@@ -147,7 +147,7 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
 
    fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
                                      tcpwindowsize);
-   if (fSocket == -1)
+   if (fSocket == kInvalid)
       fAddress.fPort = -1;
    else {
       gROOT->GetListOfSockets()->Add(this);
@@ -191,11 +191,11 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
-      if (fSocket != -1) {
+      if (fSocket != kInvalid) {
          gROOT->GetListOfSockets()->Add(this);
       }
    } else
-      fSocket = -1;
+      fSocket = kInvalid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -240,8 +240,8 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    ResetBit(TSocket::kBrokenConn);
 
    fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
-   if (fSocket == -1) {
-      fAddress.fPort = -1;
+   if (fSocket == kInvalid) {
+      fAddress.fPort = kInvalid;
    } else {
       gROOT->GetListOfSockets()->Add(this);
    }
@@ -308,7 +308,7 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
       fAddress = gSystem->GetPeerName(fSocket);
       gROOT->GetListOfSockets()->Add(this);
    } else
-      fSocket = -1;
+      fSocket = kInvalid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -342,7 +342,7 @@ TSocket::TSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
       fSocket  = desc;
       gROOT->GetListOfSockets()->Add(this);
    } else
-      fSocket = -1;
+      fSocket = kInvalid;
 }
 
 
@@ -366,7 +366,7 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
    fLastUsageMtx   = 0;
    ResetBit(TSocket::kBrokenConn);
 
-   if (fSocket != -1) {
+   if (fSocket != kInvalid) {
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -376,9 +376,9 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
 void TSocket::MarkBrokenConnection()
 {
    SetBit(TSocket::kBrokenConn);
-   if (fSocket > -1) {
+   if (IsValid()) {
       gSystem->CloseConnection(fSocket, kFALSE);
-      fSocket = -2;
+      fSocket = kInvalidStillInList;
    }
 
    SafeDelete(fUUIDs);
@@ -395,13 +395,13 @@ void TSocket::Close(Option_t *option)
 {
    Bool_t force = option ? (!strcmp(option, "force") ? kTRUE : kFALSE) : kFALSE;
 
-   if (fSocket != -1) {
-      if (IsValid()) { // Filter out -2 case (disconnected but not removed from list)
+   if (fSocket != kInvalid) {
+      if (IsValid()) { // Filter out kInvalidStillInList case (disconnected but not removed from list)
          gSystem->CloseConnection(fSocket, force);
       }
       gROOT->GetListOfSockets()->Remove(this);
    }
-   fSocket = -1;
+   fSocket = kInvalid;
 
    SafeDelete(fUUIDs);
    SafeDelete(fLastUsageMtx);
