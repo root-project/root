@@ -89,7 +89,7 @@ using namespace std;
 using namespace RooFit;
 
 ClassImp(RooRealMPFE);
-  ;
+;
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -99,22 +99,22 @@ ClassImp(RooRealMPFE);
 
 RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, Int_t inSetNum, Int_t inNumSets,
                          Bool_t calcInline) :
-  RooAbsReal(name,title),
-  _state(Initialize),
-  _arg("arg","arg",this,arg),
-  _vars("vars","vars",this),
-  _calcInProgress(kFALSE),
-  _useTaskSpec(kTRUE),
-  _verboseClient(kFALSE),
-  _verboseServer(kFALSE),
-  _inlineMode(calcInline),
-  _remoteEvalErrorLoggingState(RooAbsReal::PrintErrors),
-  _pipe(0),
-  _updateMaster(0),
-  _retrieveDispatched(kFALSE),
-  _evalCarry(0.),
-  _setNum(inSetNum),
-  _numSets(inNumSets)
+    RooAbsReal(name,title),
+    _state(Initialize),
+    _arg("arg","arg",this,arg),
+    _vars("vars","vars",this),
+    _calcInProgress(kFALSE),
+    _useTaskSpec(kTRUE),
+    _verboseClient(kFALSE),
+    _verboseServer(kFALSE),
+    _inlineMode(calcInline),
+    _remoteEvalErrorLoggingState(RooAbsReal::PrintErrors),
+    _pipe(0),
+    _updateMaster(0),
+    _retrieveDispatched(kFALSE),
+    _evalCarry(0.),
+    _setNum(inSetNum),
+    _numSets(inNumSets)
 {
 #ifdef _WIN32
   _inlineMode = kTRUE;
@@ -131,23 +131,23 @@ RooRealMPFE::RooRealMPFE(const char *name, const char *title, RooAbsReal& arg, I
 /// this instance will create its own server processes
 
 RooRealMPFE::RooRealMPFE(const RooRealMPFE& other, const char* name) :
-  RooAbsReal(other, name),
-  _state(Initialize),
-  _arg("arg",this,other._arg),
-  _vars("vars",this,other._vars),
-  _calcInProgress(kFALSE),
-  _useTaskSpec(kTRUE),
-  _verboseClient(other._verboseClient),
-  _verboseServer(other._verboseServer),
-  _inlineMode(other._inlineMode),
-  _forceCalc(other._forceCalc),
-  _remoteEvalErrorLoggingState(other._remoteEvalErrorLoggingState),
-  _pipe(0),
-  _updateMaster(0),
-  _retrieveDispatched(kFALSE),
-  _evalCarry(other._evalCarry),
-  _setNum(other._setNum),
-  _numSets(other._numSets)
+    RooAbsReal(other, name),
+    _state(Initialize),
+    _arg("arg",this,other._arg),
+    _vars("vars",this,other._vars),
+    _calcInProgress(kFALSE),
+    _useTaskSpec(kTRUE),
+    _verboseClient(other._verboseClient),
+    _verboseServer(other._verboseServer),
+    _inlineMode(other._inlineMode),
+    _forceCalc(other._forceCalc),
+    _remoteEvalErrorLoggingState(other._remoteEvalErrorLoggingState),
+    _pipe(0),
+    _updateMaster(0),
+    _retrieveDispatched(kFALSE),
+    _evalCarry(other._evalCarry),
+    _setNum(other._setNum),
+    _numSets(other._numSets)
 
 {
   initVars() ;
@@ -238,7 +238,7 @@ void RooRealMPFE::initialize()
 
     // Kill server at end of service
     if (_verboseServer) ccoutD(Minimization) << "RooRealMPFE::initialize(" <<
-	GetName() << ") server process terminating" << endl ;
+                                             GetName() << ") server process terminating" << endl ;
 
     delete _arg.absArg();
     delete _pipe;
@@ -253,8 +253,8 @@ void RooRealMPFE::initialize()
 
     // Client process - fork successul
     if (_verboseClient) ccoutD(Minimization) << "RooRealMPFE::initialize(" <<
-	GetName() << ") successfully forked server process " <<
-	    _pipe->pidOtherEnd() << endl ;
+                                             GetName() << ") successfully forked server process " <<
+                                             _pipe->pidOtherEnd() << endl ;
     _state = Client ;
     _calcInProgress = kFALSE ;
   }
@@ -564,7 +564,7 @@ void RooRealMPFE::serverLoop() {
             objidstr = oss2.str();
           }
           std::map<const RooAbsArg *, pair<string, list < EvalError> > > ::const_iterator
-          iter = evalErrorIter();
+              iter = evalErrorIter();
           const RooAbsArg *ptr = 0;
           for (int i = 0; i < numEvalErrorItems(); ++i) {
             list<EvalError>::const_iterator iter2 = iter->second.second.begin();
@@ -648,9 +648,9 @@ void RooRealMPFE::serverLoop() {
         int cpu;
         *_pipe >> cpu;
 
-        #if defined(__APPLE__)
+#if defined(__APPLE__)
         std::cout << "WARNING: CPU affinity cannot be set on macOS, continuing..." << std::endl;
-        #elif defined(_WIN32)
+#elif defined(_WIN32)
         std::cout << "WARNING: CPU affinity setting not implemented on Windows, continuing..." << std::endl;
         #else
         cpu_set_t mask;
@@ -665,7 +665,7 @@ void RooRealMPFE::serverLoop() {
         } else {
           std::cout << "CPU affinity set to cpu " << cpu << " in server process " << getpid() << std::endl;
         }
-        #endif
+#endif
 
         break;
       }
@@ -673,10 +673,10 @@ void RooRealMPFE::serverLoop() {
       case TaskSpec: {
 
         RooTaskSpec::Task taskspecification;
-	//	cout << *_pipe << endl;
+        //	cout << *_pipe << endl;
         //RooTaskSpec taskspecification;
-	*_pipe >> taskspecification;
-	std::cout << "EEEEEE TaskSpec'd "<< taskspecification.name <<endl;
+        *_pipe >> taskspecification;
+        std::cout << "EEEEEE TaskSpec'd "<< taskspecification.name <<endl;
         break;
       }
 
@@ -844,40 +844,40 @@ void RooRealMPFE::calculate() const
       //Bool_t valChanged = !(*var==*saveVar) ;
       Bool_t valChanged,constChanged  ;
       if (!_updateMaster) {
-	valChanged = !var->isIdentical(*saveVar,kTRUE) ;
-	constChanged = (var->isConstant() != saveVar->isConstant()) ;
-	_valueChanged[i] = valChanged ;
-	_constChanged[i] = constChanged ;
+        valChanged = !var->isIdentical(*saveVar,kTRUE) ;
+        constChanged = (var->isConstant() != saveVar->isConstant()) ;
+        _valueChanged[i] = valChanged ;
+        _constChanged[i] = constChanged ;
       } else {
-	valChanged = _updateMaster->_valueChanged[i] ;
-	constChanged = _updateMaster->_constChanged[i] ;
+        valChanged = _updateMaster->_valueChanged[i] ;
+        constChanged = _updateMaster->_constChanged[i] ;
       }
 
       if ( valChanged || constChanged || _forceCalc) {
-	//cout << "RooRealMPFE::calculate(" << GetName() << " variable " << var->GetName() << " changed " << endl ;
-	if (_verboseClient) cout << "RooRealMPFE::calculate(" << GetName()
-				 << ") variable " << _vars.at(i)->GetName() << " changed" << endl ;
-	if (constChanged) {
-	  ((RooRealVar*)saveVar)->setConstant(var->isConstant()) ;
-	}
-	saveVar->copyCache(var) ;
+        //cout << "RooRealMPFE::calculate(" << GetName() << " variable " << var->GetName() << " changed " << endl ;
+        if (_verboseClient) cout << "RooRealMPFE::calculate(" << GetName()
+                                 << ") variable " << _vars.at(i)->GetName() << " changed" << endl ;
+        if (constChanged) {
+          ((RooRealVar*)saveVar)->setConstant(var->isConstant()) ;
+        }
+        saveVar->copyCache(var) ;
 
-	// send message to server
-	if (dynamic_cast<RooAbsReal*>(var)) {
-	  int msg = SendReal ;
-	  Double_t val = ((RooAbsReal*)var)->getVal() ;
-	  Bool_t isC = var->isConstant() ;
-	  *_pipe << msg << i << val << isC;
+        // send message to server
+        if (dynamic_cast<RooAbsReal*>(var)) {
+          int msg = SendReal ;
+          Double_t val = ((RooAbsReal*)var)->getVal() ;
+          Bool_t isC = var->isConstant() ;
+          *_pipe << msg << i << val << isC;
 
-	  if (_verboseServer) cout << "RooRealMPFE::calculate(" << GetName()
-				   << ") IPC toServer> SendReal [" << i << "]=" << val << (isC?" (Constant)":"") <<  endl ;
-	} else if (dynamic_cast<RooAbsCategory*>(var)) {
-	  int msg = SendCat ;
-	  UInt_t idx = ((RooAbsCategory*)var)->getIndex() ;
-	  *_pipe << msg << i << idx;
-	  if (_verboseServer) cout << "RooRealMPFE::calculate(" << GetName()
-				   << ") IPC toServer> SendCat [" << i << "]=" << idx << endl ;
-	}
+          if (_verboseServer) cout << "RooRealMPFE::calculate(" << GetName()
+                                   << ") IPC toServer> SendReal [" << i << "]=" << val << (isC?" (Constant)":"") <<  endl ;
+        } else if (dynamic_cast<RooAbsCategory*>(var)) {
+          int msg = SendCat ;
+          UInt_t idx = ((RooAbsCategory*)var)->getIndex() ;
+          *_pipe << msg << i << idx;
+          if (_verboseServer) cout << "RooRealMPFE::calculate(" << GetName()
+                                   << ") IPC toServer> SendCat [" << i << "]=" << idx << endl ;
+        }
       }
       i++ ;
     }
@@ -885,7 +885,7 @@ void RooRealMPFE::calculate() const
     int msg = hideOffset() ? Calculate : CalculateNoOffset;
     *_pipe << msg;
     if (_verboseServer) cout << "RooRealMPFE::calculate(" << GetName()
-			     << ") IPC toServer> Calculate " << endl ;
+                             << ") IPC toServer> Calculate " << endl ;
 
     // Clear dirty state and mark that calculation request was dispatched
     clearValueDirty() ;
@@ -895,7 +895,7 @@ void RooRealMPFE::calculate() const
     msg = Retrieve ;
     *_pipe << msg << BidirMMapPipe::flush;
     if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName()
-			     << ") IPC toServer> Retrieve " << endl ;
+                             << ") IPC toServer> Retrieve " << endl ;
     _retrieveDispatched = kTRUE ;
 
     // end timing
@@ -906,7 +906,7 @@ void RooRealMPFE::calculate() const
 
   } else if (_state!=Inline) {
     cout << "RooRealMPFE::calculate(" << GetName()
-	 << ") ERROR not in Client or Inline mode" << endl ;
+         << ") ERROR not in Client or Inline mode" << endl ;
   }
 
 
@@ -994,7 +994,7 @@ Double_t RooRealMPFE::evaluate() const
       *_pipe << static_cast<int>(msg);
       needflush = true;
       if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName()
-			       << ") IPC toServer> Retrieve " << endl ;
+                               << ") IPC toServer> Retrieve " << endl ;
     }
     if (needflush) *_pipe << BidirMMapPipe::flush;
     _retrieveDispatched = kFALSE ;
@@ -1025,26 +1025,26 @@ Double_t RooRealMPFE::evaluate() const
 
     if (msg!=ReturnValue) {
       cout << "RooRealMPFE::evaluate(" << GetName()
-	   << ") ERROR: unexpected message from server process: " << msg << endl ;
+           << ") ERROR: unexpected message from server process: " << msg << endl ;
       return 0 ;
     }
     if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName()
-			     << ") IPC fromServer> ReturnValue " << value << endl ;
+                             << ") IPC fromServer> ReturnValue " << value << endl ;
 
     if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName()
-			     << ") IPC fromServer> NumErrors " << numError << endl ;
+                             << ") IPC fromServer> NumErrors " << numError << endl ;
     if (numError) {
       // Retrieve remote errors and feed into local error queue
       char *msgbuf1 = 0, *msgbuf2 = 0, *msgbuf3 = 0;
       RooAbsArg *ptr = 0;
       while (true) {
-	*_pipe >> ptr;
-	if (!ptr) break;
-	*_pipe >> msgbuf1 >> msgbuf2 >> msgbuf3;
-	if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName()
-	  << ") IPC fromServer> retrieving error log Arg " << ptr << " Msg " << msgbuf1 << endl ;
+        *_pipe >> ptr;
+        if (!ptr) break;
+        *_pipe >> msgbuf1 >> msgbuf2 >> msgbuf3;
+        if (_verboseServer) cout << "RooRealMPFE::evaluate(" << GetName()
+                                 << ") IPC fromServer> retrieving error log Arg " << ptr << " Msg " << msgbuf1 << endl ;
 
-	logEvalError(reinterpret_cast<RooAbsReal*>(ptr),msgbuf3,msgbuf1,msgbuf2) ;
+        logEvalError(reinterpret_cast<RooAbsReal*>(ptr),msgbuf3,msgbuf1,msgbuf2) ;
       }
       std::free(msgbuf1);
       std::free(msgbuf2);
@@ -1102,21 +1102,21 @@ void RooRealMPFE::standby()
     if (_pipe->good()) {
       // Terminate server process ;
       if (_verboseServer) cout << "RooRealMPFE::standby(" << GetName()
-	<< ") IPC toServer> Terminate " << endl;
+                               << ") IPC toServer> Terminate " << endl;
       int msg = Terminate;
       *_pipe << msg << BidirMMapPipe::flush;
       // read handshake
       msg = 0;
       *_pipe >> msg;
       if (Terminate != msg || 0 != _pipe->close()) {
-	std::cerr << "In " << __func__ << "(" << __FILE__ ", " << __LINE__ <<
-	  "): Server shutdown failed." << std::endl;
+        std::cerr << "In " << __func__ << "(" << __FILE__ ", " << __LINE__ <<
+                  "): Server shutdown failed." << std::endl;
       }
     } else {
       if (_verboseServer) {
-	std::cerr << "In " << __func__ << "(" << __FILE__ ", " <<
-	  __LINE__ << "): Pipe has already shut down, not sending "
-	  "Terminate to server." << std::endl;
+        std::cerr << "In " << __func__ << "(" << __FILE__ ", " <<
+                  __LINE__ << "): Pipe has already shut down, not sending "
+                      "Terminate to server." << std::endl;
       }
     }
     // Close pipes
@@ -1144,7 +1144,7 @@ void RooRealMPFE::constOptimizeTestStatistic(ConstOpCode opcode, Bool_t doAlsoTr
     int op = opcode;
     *_pipe << msg << op << doAlsoTracking;
     if (_verboseServer) cout << "RooRealMPFE::constOptimize(" << GetName()
-			     << ") IPC toServer> ConstOpt " << opcode << endl ;
+                             << ") IPC toServer> ConstOpt " << opcode << endl ;
 
     initVars() ;
   }
@@ -1168,7 +1168,7 @@ void RooRealMPFE::setVerbose(Bool_t clientFlag, Bool_t serverFlag)
     int msg = Verbose ;
     *_pipe << msg << serverFlag;
     if (_verboseServer) cout << "RooRealMPFE::setVerbose(" << GetName()
-			     << ") IPC toServer> Verbose " << (serverFlag?1:0) << endl ;
+                             << ") IPC toServer> Verbose " << (serverFlag?1:0) << endl ;
   }
 #endif // _WIN32
   _verboseClient = clientFlag ; _verboseServer = serverFlag ;
@@ -1186,7 +1186,7 @@ void RooRealMPFE::applyNLLWeightSquared(Bool_t flag)
     int msg = ApplyNLLW2 ;
     *_pipe << msg << flag;
     if (_verboseServer) cout << "RooRealMPFE::applyNLLWeightSquared(" << GetName()
-			     << ") IPC toServer> ApplyNLLW2 " << (flag?1:0) << endl ;
+                             << ") IPC toServer> ApplyNLLW2 " << (flag?1:0) << endl ;
   }
 #endif // _WIN32
   doApplyNLLW2(flag) ;
@@ -1215,7 +1215,7 @@ void RooRealMPFE::enableOffsetting(Bool_t flag)
     int msg = EnableOffset ;
     *_pipe << msg << flag;
     if (_verboseServer) cout << "RooRealMPFE::enableOffsetting(" << GetName()
-			     << ") IPC toServer> EnableOffset " << (flag?1:0) << endl ;
+                             << ") IPC toServer> EnableOffset " << (flag?1:0) << endl ;
   }
 #endif // _WIN32
   ((RooAbsReal&)_arg.arg()).enableOffsetting(flag) ;
