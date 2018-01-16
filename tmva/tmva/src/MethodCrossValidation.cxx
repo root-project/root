@@ -8,9 +8,8 @@
  *                                                                                *
  * Description:                                                                   *
  *                                                                                *
- * Authors (alphabetical):                                                        *
- *                                                                                *
- * Copyright (c) 2005-2011:                                                       *
+ * Copyright (c) 2017:                                                            *
+ *      CERN, Switzerland                                                         *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -87,28 +86,20 @@ void TMVA::MethodCrossValidation::DeclareCompatibilityOptions() {
 
 void TMVA::MethodCrossValidation::ProcessOptions()
 {
-   Log() << kINFO << "ProcessOptions -- fNumFolds: " << fNumFolds << Endl;
-   Log() << kINFO << "ProcessOptions -- fEncapsulatedMethodName: " << fEncapsulatedMethodName << Endl;
-   Log() << kINFO << "ProcessOptions -- fEncapsulatedMethodTypeName: " << fEncapsulatedMethodTypeName << Endl;
-   // TODO: Validate fNumFolds
-   // TODO: Validate fEncapsulatedMethodName
-   // TODO: Validate fEncapsulatedMethodTypeName
+   Log() << kDEBUG << "ProcessOptions -- fNumFolds: " << fNumFolds << Endl;
+   Log() << kDEBUG << "ProcessOptions -- fEncapsulatedMethodName: " << fEncapsulatedMethodName << Endl;
+   Log() << kDEBUG << "ProcessOptions -- fEncapsulatedMethodTypeName: " << fEncapsulatedMethodTypeName << Endl;
 
-   fSplitExpr = std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(DataInfo(), fSplitExprString));
+   fSplitExpr =
+      std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(DataInfo(), fSplitExprString));
 
-   // TODO: To private method. DRY.
    for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
-      TString foldStr = Form( "Fold%i", iFold+1 );
-
-      TString fileDir = GetWeightFileDir();
-      TString weightfile  = fileDir + "/" + fJobName + "_" + fEncapsulatedMethodName + "_" + foldStr + ".weights.xml";
+      TString weightfile = GetWeightFileNameForFold(iFold);
 
       Log() << kINFO << "Reading weightfile: " << weightfile << Endl;
-
-      fEncapsulatedMethods.push_back(InstantiateMethodFromXML(fEncapsulatedMethodTypeName, weightfile));
+      MethodBase *fold_method = InstantiateMethodFromXML(fEncapsulatedMethodTypeName, weightfile);
+      fEncapsulatedMethods.push_back(fold_method);
    }
-
-   // TODO: Verify that a method was instantiated
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -125,6 +116,24 @@ void TMVA::MethodCrossValidation::Init( void )
 
 void TMVA::MethodCrossValidation::Reset( void )
 {
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Returns filename of weight file for a given fold.
+/// \param[in] iFold Ordinal of the fold. Range: 0 to NumFolds exclusive.
+///
+TString TMVA::MethodCrossValidation::GetWeightFileNameForFold(UInt_t iFold) const
+{
+   if (iFold >= fNumFolds) {
+      Log() << kFATAL << iFold << " out of range. "
+            << "Should be < " << fNumFolds << "." << Endl;
+   }
+
+   TString foldStr = Form("fold%i", iFold + 1);
+   TString fileDir = gSystem->DirName(GetWeightFileName());
+   TString weightfile = fileDir + "/" + fJobName + "_" + fEncapsulatedMethodName + "_" + foldStr + ".weights.xml";
+
+   return weightfile;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,29 +160,21 @@ void TMVA::MethodCrossValidation::Train()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-///
-   
+/// \brief Reads in a weight file an instantiates the corresponding method
+/// \param[in] methodTypeName Canonical name of the method type. E.g. `"BDT"`
+///                           for Boosted Decision Trees.
+/// \param[in] weightfile File to read method parameters from
 TMVA::MethodBase * TMVA::MethodCrossValidation::InstantiateMethodFromXML(TString methodTypeName, TString weightfile) const
 {
-       // recreate
       TMVA::MethodBase * m = dynamic_cast<MethodBase*>( ClassifierFactory::Instance()
                                       .Create(std::string(methodTypeName), DataInfo(), weightfile)
                                     );
 
-      
-      // TODO: We need to get a datasetmanager in here somehow       
-      // if( m->GetMethodType() == Types::kCategory ){
-      //   MethodCategory *methCat = (dynamic_cast<MethodCategory*>(m));
-      //   if( !methCat ) {
-      //      Log() << kFATAL << "Method with type kCategory cannot be casted to MethodCategory." << Endl;
-      //   } else {
-      //      methCat->fDataSetManager = DataInfo().GetDataSetManager();
-      //   }
-      // }
+      if (m->GetMethodType() == Types::kCategory) {
+         Log() << kFATAL << "MethodCategory not supported for the moment." << Endl;
+      }
 
-      // TODO: Should fFileDir not contain the correct value already?
-      TString fileDir= DataInfo().GetName();
-      fileDir += "/" + gConfig().GetIONames().fWeightFileDir;
+      TString fileDir = TString(DataInfo().GetName()) + "/" + gConfig().GetIONames().fWeightFileDir;
       m->SetWeightFileDir(fileDir);
       // m->SetModelPersistence(fModelPersistence);
       // m->SetSilentFile(IsSilentFile());
@@ -192,7 +193,6 @@ void TMVA::MethodCrossValidation::AddWeightsXMLTo( void* parent ) const
 {  
    void* wght = gTools().AddChild(parent, "Weights");
 
-   //TODO: Options in optionstring are handled auto. Just add these there.
    gTools().AddAttr( wght, "JobName", fJobName );
    gTools().AddAttr( wght, "SplitExpr", fSplitExprString );
    gTools().AddAttr( wght, "NumFolds", fNumFolds );
@@ -200,19 +200,15 @@ void TMVA::MethodCrossValidation::AddWeightsXMLTo( void* parent ) const
    gTools().AddAttr( wght, "EncapsulatedMethodTypeName", fEncapsulatedMethodTypeName );
    gTools().AddAttr( wght, "OutputEnsembling", fOutputEnsembling );
 
-
    for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
-      TString foldStr     = Form("fold%i", iFold+1);
-      TString fileDir= DataInfo().GetName();
-      fileDir += "/" + gConfig().GetIONames().fWeightFileDir;
-      TString weightfile  = fileDir + "/" + fEncapsulatedMethodName + "_" + foldStr + ".weights.xml";
+      TString weightfile = GetWeightFileNameForFold(iFold);
 
       // TODO: Add a swithch in options for using either split files or only one.
       // TODO: This would store the method inside MethodCrossValidation
       //       Another option is to store the folds as separate files.
-      // //Retrieve encap. method for fold n
+      // // Retrieve encap. method for fold n
       // MethodBase * method = InstantiateMethodFromXML(fEncapsulatedMethodTypeName, weightfile);
-
+      //
       // // Serialise encapsulated method for fold n
       // void* foldNode = gTools().AddChild(parent, foldStr);
       // method->WriteStateToXML(foldNode);
@@ -232,22 +228,16 @@ void TMVA::MethodCrossValidation::ReadWeightsFromXML(void* parent)
    gTools().ReadAttr( parent, "EncapsulatedMethodTypeName", fEncapsulatedMethodTypeName );
    gTools().ReadAttr( parent, "OutputEnsembling", fOutputEnsembling );
 
+   // Read in methods for all folds
    for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold){
-      TString foldStr = Form( "Fold%i", iFold+1 );
-      // void* foldNode = gTools().GetChild(parent, foldStr);
-      // if (foldNode == nullptr) {
-      //    Log() << kFATAL << "Malformed data. Expected tag \"" << foldStr << "\" to exist." << Endl;
-      //    return;
-      // }
+      TString weightfile = GetWeightFileNameForFold(iFold);
 
-      TString fileDir = gSystem->DirName(GetWeightFileName());
-      TString weightfile  = fileDir + "/" + fJobName + "_" + fEncapsulatedMethodName + "_" + foldStr + ".weights.xml";
-
-      Log() << kDEBUG << "Reading weightfile: " << weightfile << std::endl;
-
-      fEncapsulatedMethods.push_back(InstantiateMethodFromXML(fEncapsulatedMethodTypeName, weightfile));
+      Log() << kINFO << "Reading weightfile: " << weightfile << Endl;
+      MethodBase *fold_method = InstantiateMethodFromXML(fEncapsulatedMethodTypeName, weightfile);
+      fEncapsulatedMethods.push_back(fold_method);
    }
 
+   // SplitExpr
    fSplitExpr = std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(DataInfo(), fSplitExprString));
 }
 

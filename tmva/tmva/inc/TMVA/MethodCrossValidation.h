@@ -9,9 +9,8 @@
  *                                                                                *
  * Description:                                                                   *
  *                                                                                *
- * Authors (alphabetical):                                                        *
- *                                                                                *
- * Copyright (c) 2005-2011:                                                       *
+ * Copyright (c) 2017:                                                            *
+ *      CERN, Switzerland                                                         *
  *                                                                                *
  * Redistribution and use in source and binary forms, with or without             *
  * modification, are permitted according to the terms listed in LICENSE           *
@@ -101,6 +100,7 @@ namespace TMVA {
       void DeclareCompatibilityOptions();
 
    private:
+      TString GetWeightFileNameForFold(UInt_t iFold) const;
       MethodBase * InstantiateMethodFromXML(TString methodTypeName, TString weightfile) const;
 
    public:
