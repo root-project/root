@@ -12,7 +12,5 @@ if(root7)
          DICTIONARY_OPTIONS "-writeEmptyRootPCM"
          DEPENDENCIES Gpad Hist)
 
-    if(testing)
-        add_subdirectory(v7/test)
-    endif()
+    ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 endif()
