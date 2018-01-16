@@ -506,7 +506,10 @@
     };
 
 
-    NeuralNetwork.drawDeepNetwork = function (divid, netobj, oldStructure=false) {
+    NeuralNetwork.drawDeepNetwork = function (divid, netobj, oldStructure) {
+        if (oldStructure===undefined) {
+            oldStructure = false;
+        }
         var div = d3.select("#"+divid);
         canvas = {
             width:  Number(div.property("style")["width"].replace("px","")),
