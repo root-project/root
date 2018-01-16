@@ -21,7 +21,4 @@ set_target_properties(Foundation_Stage1 PROPERTIES COMPILE_FLAGS "${COMPILE_FLAG
 
 ROOT_INSTALL_HEADERS()
 
-if(testing)
-  add_subdirectory(test)
-endif()
-
+ROOT_ADD_TEST_SUBDIRECTORY(test)

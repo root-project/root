@@ -15,10 +15,8 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Hist
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               DEPENDENCIES Matrix MathCore RIO)
 
-if(testing)
-  add_subdirectory(test)
+ROOT_ADD_TEST_SUBDIRECTORY(test)
 
 if(root7)
-    add_subdirectory(v7/test)
-  endif()
+    ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 endif()

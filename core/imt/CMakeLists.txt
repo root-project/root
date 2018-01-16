@@ -21,6 +21,6 @@ ROOT_LINKER_LIBRARY(Imt ${sources}
 
 ROOT_INSTALL_HEADERS(${installoptions})
 
-if(imt AND testing)
-    add_subdirectory(test)
+if(imt)
+    ROOT_ADD_TEST_SUBDIRECTORY(test)
 endif()

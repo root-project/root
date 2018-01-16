@@ -14,8 +14,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               DEPENDENCIES Graf Hist)
 
-if(testing)
-    if(root7)
-        add_subdirectory(v7/test)
-    endif()
+if(root7)
+    ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 endif()

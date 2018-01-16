@@ -36,6 +36,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Thread
                               LIBRARIES ${CMAKE_THREAD_LIBS_INIT}
                               INSTALL_OPTIONS ${installoptions})
 
-if(testing)
-    add_subdirectory(test)
-endif()
+ROOT_ADD_TEST_SUBDIRECTORY(test)
