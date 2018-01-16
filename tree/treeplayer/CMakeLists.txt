@@ -45,6 +45,4 @@ if(APPLE)
   endif()
 endif()
 
-if(testing)
-  add_subdirectory(test)
-endif()
+ROOT_ADD_TEST_SUBDIRECTORY(test)

@@ -1304,7 +1304,6 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
-  set_property(TARGET ${test_suite} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
 
   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
