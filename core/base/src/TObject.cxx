@@ -426,7 +426,7 @@ Bool_t TObject::HandleTimer(TTimer *)
 /// will have to be done without call Hash (and hence be linear rather than
 /// logarithmic complexity).  You will also see warnings like
 /// ~~~
-/// Error in <ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove>: The class SomeName overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
+/// Error in <ROOT::Internal::TCheckHashRecursiveRemoveConsistency::CheckRecursiveRemove>: The class SomeName overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.
 /// ~~~
 ///
 

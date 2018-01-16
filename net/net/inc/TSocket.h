@@ -71,6 +71,10 @@ public:
    enum EServiceType { kSOCKD, kROOTD, kPROOFD };
 
 protected:
+   enum ESocketErrors {
+     kInvalid = -1,
+     kInvalidStillInList = -2
+   };
    TInetAddress  fAddress;        // remote internet address and port #
    UInt_t        fBytesRecv;      // total bytes received over this socket
    UInt_t        fBytesSent;      // total bytes sent using this socket
@@ -106,6 +110,7 @@ protected:
    Bool_t       RecvStreamerInfos(TMessage *mess);
    void         SendProcessIDs(const TMessage &mess);
    Bool_t       RecvProcessIDs(TMessage *mess);
+   void         MarkBrokenConnection();
 
 private:
    TSocket&      operator=(const TSocket &);  // not implemented
