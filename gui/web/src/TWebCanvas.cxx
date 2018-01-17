@@ -467,6 +467,15 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
       TPad *pad = dynamic_cast<TPad *>(FindPrimitive(r.snapid.c_str()));
       if (!pad) continue;
 
+      if (n==0) {
+         TCanvas *can = dynamic_cast<TCanvas *>(pad);
+         if (can) {
+            can->SetBit(TCanvas::kShowEventStatus, r.bits & TCanvas::kShowEventStatus);
+            can->SetBit(TCanvas::kShowEditor, r.bits & TCanvas::kShowEditor);
+            can->SetBit(TCanvas::kShowToolTips, r.bits & TCanvas::kShowToolTips);
+         }
+      }
+
       Double_t ux1_,ux2_,uy1_,uy2_,px1_,px2_,py1_,py2_;
 
       pad->GetRange(px1_,py1_,px2_,py2_);

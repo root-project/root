@@ -48,6 +48,7 @@ public:
    std::string snapid;  ///< id of pad
    Double_t px1{0}, py1{0}, px2{0}, py2{0};  ///< pad range
    Double_t ux1{0}, uy1{0}, ux2{0}, uy2{0};  ///< pad axis range
+   unsigned bits{0};    ///< canvas status bits like tool editor
    TWebPadRange() = default;
 };
 
