@@ -392,14 +392,18 @@ void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
    fResults[iMethod].fSigs.push_back(smethod->GetSignificance());
    fResults[iMethod].fSeps.push_back(smethod->GetSeparation());
 
-   Double_t err;
-   fResults[iMethod].fEff01s.push_back(smethod->GetEfficiency("Efficiency:0.01", Types::kTesting, err));
-   fResults[iMethod].fEff10s.push_back(smethod->GetEfficiency("Efficiency:0.10", Types::kTesting, err));
-   fResults[iMethod].fEff30s.push_back(smethod->GetEfficiency("Efficiency:0.30", Types::kTesting, err));
-   fResults[iMethod].fEffAreas.push_back(smethod->GetEfficiency("", Types::kTesting, err));
-   fResults[iMethod].fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.01"));
-   fResults[iMethod].fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.10"));
-   fResults[iMethod].fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.30"));
+   if (fAnalysisType == Types::kClassification) {
+      Double_t err;
+      fResults[iMethod].fEff01s.push_back(smethod->GetEfficiency("Efficiency:0.01", Types::kTesting, err));
+      fResults[iMethod].fEff10s.push_back(smethod->GetEfficiency("Efficiency:0.10", Types::kTesting, err));
+      fResults[iMethod].fEff30s.push_back(smethod->GetEfficiency("Efficiency:0.30", Types::kTesting, err));
+      fResults[iMethod].fEffAreas.push_back(smethod->GetEfficiency("", Types::kTesting, err));
+      fResults[iMethod].fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.01"));
+      fResults[iMethod].fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.10"));
+      fResults[iMethod].fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.30"));
+   } else if (fAnalysisType == Types::kMulticlass) {
+      // Nothing here for now
+   }
 
    // Per-fold file output
    if (fFoldFileOutput) {
@@ -411,6 +415,7 @@ void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
       smethod->Data()->DeleteResults(foldTitle, Types::kTraining, smethod->GetAnalysisType());
       smethod->Data()->DeleteResults(foldTitle, Types::kTesting, smethod->GetAnalysisType());
    }
+
    fFoldFactory->DeleteAllMethods();
    fFoldFactory->fMethodsMap.clear();
 }
