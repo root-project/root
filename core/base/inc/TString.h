@@ -54,18 +54,16 @@ Bool_t  operator==(const TSubString &s1, const char *s2);
 
 template<class T>
 struct is_signed_numeral : std::integral_constant<bool,
-   std::is_integral<T>::value && std::is_signed<T>::value && !std::is_same<T,Char_t>::value
+   std::is_integral<T>::value && std::is_signed<T>::value
 > {};
 
 template<class T>
 struct is_unsigned_numeral : std::integral_constant<bool,
-   std::is_integral<T>::value && !std::is_signed<T>::value && !std::is_same<T,Char_t>::value
+   std::is_integral<T>::value && !std::is_signed<T>::value
 > {};
 
 template<class T>
-struct is_float_numeral : std::integral_constant<bool,
-   std::is_floating_point<T>::value
-> {};
+using is_float_numeral = std::is_floating_point<T>;
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -143,13 +141,13 @@ friend TString operator+(char c, const TString &s);
 
 template<class T>
 friend typename std::enable_if<is_signed_numeral<T>::value,TString>::type
-operator+(const TString &s, T i);
+operator+(TString s, T i);
 template<class T>
 friend typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
-operator+(const TString &s, T u);
+operator+(TString s, T u);
 template<class T>
 friend typename std::enable_if<is_float_numeral<T>::value,TString>::type
-operator+(const TString &s, T f);
+operator+(TString s, T f);
 template<class T>
 friend typename std::enable_if<is_signed_numeral<T>::value,TString>::type
 operator+(T i, const TString &s);
@@ -509,6 +507,51 @@ extern int strncasecmp(const char *str1, const char *str2, Ssiz_t n);
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
+template<class T>
+inline typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+operator+(TString s, T i)
+{ return s += i; }
+
+template<class T>
+inline typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+operator+(TString s, T u)
+{ return s += u; }
+
+template<class T>
+inline typename std::enable_if<is_float_numeral<T>::value,TString>::type
+operator+(TString s, T f)
+{ return s += f; }
+
+template<class T>
+inline typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+operator+(T i, const TString &s)
+{
+    char buffer[32];
+    // coverity[secure_coding] Buffer is large enough (2^64 = 20 digits).
+    snprintf(buffer, sizeof(buffer), "%lld", static_cast<Long64_t>(i));
+    return TString(buffer, strlen(buffer), s.Data(), s.Length());
+}
+
+template<class T>
+inline typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+operator+(T u, const TString &s)
+{
+    char buffer[32];
+    // coverity[secure_coding] Buffer is large enough (2^64 = 20 digits).
+    snprintf(buffer, sizeof(buffer), "%llu", static_cast<ULong64_t>(u));
+    return TString(buffer, strlen(buffer), s.Data(), s.Length());
+}
+
+template<class T>
+inline typename std::enable_if<is_float_numeral<T>::value,TString>::type
+operator+(T f, const TString &s)
+{
+    char buffer[32];
+    // coverity[secure_coding] Buffer is large enough: width specified in format
+    snprintf(buffer, sizeof(buffer), "%.17Lg", static_cast<LongDouble_t>(f));
+    return TString(buffer, strlen(buffer), s.Data(), s.Length());
+}
+
 inline TString &TString::Append(const char *cs)
 { return Replace(Length(), 0, cs, cs ? strlen(cs) : 0); }
 
@@ -535,6 +578,7 @@ inline typename std::enable_if<is_signed_numeral<T>::value,TString>::type
 &TString::operator+=(T i)
 {
    char buffer[32];
+   // coverity[secure_coding] Buffer is large enough (2^64 = 20 digits).
    snprintf(buffer, sizeof(buffer), "%lld", static_cast<Long64_t>(i));
    return operator+=(buffer);
 }
@@ -544,6 +588,7 @@ inline typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
 &TString::operator+=(T u)
 {
    char buffer[32];
+   // coverity[secure_coding] Buffer is large enough (2^64 = 20 digits).
    snprintf(buffer, sizeof(buffer), "%llu", static_cast<ULong64_t>(u));
    return operator+=(buffer);
 }
@@ -553,6 +598,7 @@ inline typename std::enable_if<is_float_numeral<T>::value,TString>::type
 &TString::operator+=(T f)
 {
    char buffer[32];
+   // coverity[secure_coding] Buffer is large enough: width specified in format
    snprintf(buffer, sizeof(buffer), "%.17Lg", static_cast<LongDouble_t>(f));
    return operator+=(buffer);
 }
