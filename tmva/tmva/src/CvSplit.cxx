@@ -19,6 +19,7 @@
 #include <TString.h>
 #include <TFormula.h>
 
+#include <numeric>
 #include <stdexcept>
 
 ClassImp(TMVA::CvSplit);
@@ -373,6 +374,20 @@ void TMVA::CvSplitCrossValidation::MakeKFoldDataSet(DataSetInfo &dsi)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \brief Set training and test set vectors of dataset described by `dsi`.
+/// \param[in] dsi DataSetInfo for data set to be split
+/// \param[in] foldNumber Ordinal of fold to prepare
+/// \param[in] tt The set used to prepare fold. If equal to `Types::kTraining`
+///               splitting will be based off the original train set. If instead
+///               equal to `Types::kTesting` the test set will be used.
+///               The original training/test set is the set as defined by
+///               `DataLoader::PrepareTrainingAndTestSet`.
+///
+/// Sets the training and test set vectors of the DataSet described by `dsi` as
+/// defined by the split. If `tt` is eqal to `Types::kTraining` the split will
+/// be based off of the original training set.
+///
+/// Note: Requires `MakeKFoldDataSet` to have been called first.
 ///
 
 void TMVA::CvSplitCrossValidation::PrepareFoldDataSet(DataSetInfo &dsi, UInt_t foldNumber, Types::ETreeType tt)
@@ -383,73 +398,50 @@ void TMVA::CvSplitCrossValidation::PrepareFoldDataSet(DataSetInfo &dsi, UInt_t f
       return;
    }
 
-   UInt_t numFolds = fTrainEvents.size();
+   auto prepareDataSetInternal = [this, &dsi, foldNumber](std::vector<std::vector<Event *>> vec) {
+      UInt_t numFolds = fTrainEvents.size();
 
-   UInt_t nTrain = 0;
-   UInt_t nTest = 0;
+      // Events in training set (excludes current fold)
+      UInt_t nTotal = std::accumulate(vec.begin(), vec.end(), 0,
+                                      [&](UInt_t sum, std::vector<TMVA::Event *> v) { return sum + v.size(); });
 
-   // Count num events in train set (for reservation)
-   for (UInt_t i = 0; i < numFolds; ++i) {
-      if (i == foldNumber) {
-         continue;
+      UInt_t nTrain = nTotal - vec.at(foldNumber).size();
+      UInt_t nTest = vec.at(foldNumber).size();
+
+      std::vector<Event *> tempTrain;
+      std::vector<Event *> tempTest;
+
+      tempTrain.reserve(nTrain);
+      tempTest.reserve(nTest);
+
+      // Insert data into training set
+      for (UInt_t i = 0; i < numFolds; ++i) {
+         if (i == foldNumber) {
+            continue;
+         }
+
+         tempTrain.insert(tempTrain.end(), vec.at(i).begin(), vec.at(i).end());
       }
 
-      if (tt == Types::kTraining) {
-         nTrain += fTrainEvents.at(i).size();
-      } else if (tt == Types::kValidation) {
-         nTrain += fValidEvents.at(i).size();
-      } else if (tt == Types::kTesting) {
-         nTrain += fTestEvents.at(i).size();
-      }
-   }
+      // Insert data into test set
+      tempTest.insert(tempTest.end(), vec.at(foldNumber).begin(), vec.at(foldNumber).end());
 
-   // Count num events in train set
+      Log() << kDEBUG << "Fold prepared, num events in training set: " << tempTrain.size() << Endl;
+      Log() << kDEBUG << "Fold prepared, num events in test     set: " << tempTest.size() << Endl;
+
+      // Assign the vectors of the events to rebuild the dataset
+      dsi.GetDataSet()->SetEventCollection(&tempTrain, Types::kTraining, false);
+      dsi.GetDataSet()->SetEventCollection(&tempTest, Types::kTesting, false);
+   };
+
    if (tt == Types::kTraining) {
-      nTest = fTrainEvents.at(foldNumber).size();
-   } else if (tt == Types::kValidation) {
-      nTest = fValidEvents.at(foldNumber).size();
+      prepareDataSetInternal(fTrainEvents);
    } else if (tt == Types::kTesting) {
-      nTest = fTestEvents.at(foldNumber).size();
+      prepareDataSetInternal(fTestEvents);
+   } else {
+      Log() << kFATAL << "PrepareFoldDataSet can only work with training and testing data sets." << std::endl;
+      return;
    }
-
-   // Create vectors for fold train / test data
-   std::vector<TMVA::Event *> tempTrain;
-   std::vector<TMVA::Event *> tempTest;
-
-   // Reserve memory before filling vectors
-   tempTrain.reserve(nTrain);
-   tempTest.reserve(nTest);
-
-   // Insert data into train set
-   for (UInt_t i = 0; i < numFolds; ++i) {
-      if (i == foldNumber) {
-         continue;
-      }
-
-      if (tt == Types::kTraining) {
-         tempTrain.insert(tempTrain.end(), fTrainEvents.at(i).begin(), fTrainEvents.at(i).end());
-      } else if (tt == Types::kValidation) {
-         tempTrain.insert(tempTrain.end(), fValidEvents.at(i).begin(), fValidEvents.at(i).end());
-      } else if (tt == Types::kTesting) {
-         tempTrain.insert(tempTrain.end(), fTestEvents.at(i).begin(), fTestEvents.at(i).end());
-      }
-   }
-
-   // Insert data into test set
-   if (tt == Types::kTraining) {
-      tempTest.insert(tempTest.end(), fTrainEvents.at(foldNumber).begin(), fTrainEvents.at(foldNumber).end());
-   } else if (tt == Types::kValidation) {
-      tempTest.insert(tempTest.end(), fValidEvents.at(foldNumber).begin(), fValidEvents.at(foldNumber).end());
-   } else if (tt == Types::kTesting) {
-      tempTest.insert(tempTest.end(), fTestEvents.at(foldNumber).begin(), fTestEvents.at(foldNumber).end());
-   }
-
-   Log() << kINFO << "Fold prepared, num events in training set: " << tempTrain.size() << Endl;
-   Log() << kINFO << "Fold prepared, num events in test     set: " << tempTest.size() << Endl;
-
-   // Assign the vectors of the events to rebuild the dataset
-   dsi.GetDataSet()->SetEventCollection(&tempTrain, Types::kTraining, false);
-   dsi.GetDataSet()->SetEventCollection(&tempTest, Types::kTesting, false);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
