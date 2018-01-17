@@ -14,10 +14,6 @@ ClassImp(TMVA::CvSplit);
 ClassImp(TMVA::CvSplitBootstrappedStratified);
 ClassImp(TMVA::CvSplitCrossValidation);
 
-
-
-
-
 /* =============================================================================
       TMVA::CvSplit
 ============================================================================= */
@@ -25,13 +21,7 @@ ClassImp(TMVA::CvSplitCrossValidation);
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-TMVA::CvSplit::CvSplit (UInt_t numFolds)
-: fNumFolds(numFolds), fMakeFoldDataSet(kFALSE)
-{}
-
-
-
-
+TMVA::CvSplit::CvSplit(UInt_t numFolds) : fNumFolds(numFolds), fMakeFoldDataSet(kFALSE) {}
 
 /* =============================================================================
       TMVA::CvSplitBootstrappedStratified
@@ -40,21 +30,22 @@ TMVA::CvSplit::CvSplit (UInt_t numFolds)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-TMVA::CvSplitBootstrappedStratified::CvSplitBootstrappedStratified (UInt_t numFolds, UInt_t seed, Bool_t validationSet)
-: CvSplit(numFolds), fSeed(seed), fValidationSet(validationSet)
-{}
+TMVA::CvSplitBootstrappedStratified::CvSplitBootstrappedStratified(UInt_t numFolds, UInt_t seed, Bool_t validationSet)
+   : CvSplit(numFolds), fSeed(seed), fValidationSet(validationSet)
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void TMVA::CvSplitBootstrappedStratified::MakeKFoldDataSet (DataSetInfo & dsi)
+void TMVA::CvSplitBootstrappedStratified::MakeKFoldDataSet(DataSetInfo &dsi)
 {
    // Remove validation set?
    // Take DataSetSplit s as arg + numFolds
    // std::vector<EventCollection> folds = s.Split();
 
    // No need to do it again if the sets have already been split.
-   if(fMakeFoldDataSet){
+   if (fMakeFoldDataSet) {
       Log() << kINFO << "Splitting in k-folds has been already done" << Endl;
       return;
    }
@@ -62,42 +53,46 @@ void TMVA::CvSplitBootstrappedStratified::MakeKFoldDataSet (DataSetInfo & dsi)
    fMakeFoldDataSet = kTRUE;
 
    // Get the original event vectors for testing and training from the dataset.
-   const std::vector<TMVA::Event*> TrainingData = dsi.GetDataSet()->GetEventCollection(Types::kTraining);
-   const std::vector<TMVA::Event*> TestingData = dsi.GetDataSet()->GetEventCollection(Types::kTesting);
+   const std::vector<TMVA::Event *> TrainingData = dsi.GetDataSet()->GetEventCollection(Types::kTraining);
+   const std::vector<TMVA::Event *> TestingData = dsi.GetDataSet()->GetEventCollection(Types::kTesting);
 
-   std::vector<TMVA::Event*> TrainSigData;
-   std::vector<TMVA::Event*> TrainBkgData;
-   std::vector<TMVA::Event*> TestSigData;
-   std::vector<TMVA::Event*> TestBkgData;
+   std::vector<TMVA::Event *> TrainSigData;
+   std::vector<TMVA::Event *> TrainBkgData;
+   std::vector<TMVA::Event *> TestSigData;
+   std::vector<TMVA::Event *> TestBkgData;
 
    // Split the testing and training sets into signal and background classes.
-   for(UInt_t i=0; i<TrainingData.size(); ++i){
-      if( strncmp( dsi.GetClassInfo( TrainingData.at(i)->GetClass() )->GetName(), "Signal", 6) == 0){ TrainSigData.push_back(TrainingData.at(i)); }
-      else if( strncmp( dsi.GetClassInfo( TrainingData.at(i)->GetClass() )->GetName(), "Background", 10) == 0){ TrainBkgData.push_back(TrainingData.at(i)); }
-      else{
-         Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << dsi.GetClassInfo( TrainingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
+   for (UInt_t i = 0; i < TrainingData.size(); ++i) {
+      if (strncmp(dsi.GetClassInfo(TrainingData.at(i)->GetClass())->GetName(), "Signal", 6) == 0) {
+         TrainSigData.push_back(TrainingData.at(i));
+      } else if (strncmp(dsi.GetClassInfo(TrainingData.at(i)->GetClass())->GetName(), "Background", 10) == 0) {
+         TrainBkgData.push_back(TrainingData.at(i));
+      } else {
+         Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, "
+               << dsi.GetClassInfo(TrainingData.at(i)->GetClass())->GetName() << " is not a recognised class" << Endl;
       }
    }
 
-   for(UInt_t i=0; i<TestingData.size(); ++i){
-      if( strncmp( dsi.GetClassInfo( TestingData.at(i)->GetClass() )->GetName(), "Signal", 6) == 0){ TestSigData.push_back(TestingData.at(i)); }
-      else if( strncmp( dsi.GetClassInfo( TestingData.at(i)->GetClass() )->GetName(), "Background", 10) == 0){ TestBkgData.push_back(TestingData.at(i)); }
-      else{
-         Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << dsi.GetClassInfo( TestingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
+   for (UInt_t i = 0; i < TestingData.size(); ++i) {
+      if (strncmp(dsi.GetClassInfo(TestingData.at(i)->GetClass())->GetName(), "Signal", 6) == 0) {
+         TestSigData.push_back(TestingData.at(i));
+      } else if (strncmp(dsi.GetClassInfo(TestingData.at(i)->GetClass())->GetName(), "Background", 10) == 0) {
+         TestBkgData.push_back(TestingData.at(i));
+      } else {
+         Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, "
+               << dsi.GetClassInfo(TestingData.at(i)->GetClass())->GetName() << " is not a recognised class" << Endl;
       }
    }
-
 
    // Split the sets into the number of folds.
-   if(fValidationSet){
-      std::vector<std::vector<TMVA::Event*>> tempSigEvents = SplitSets(TrainSigData, 2);
-      std::vector<std::vector<TMVA::Event*>> tempBkgEvents = SplitSets(TrainBkgData, 2);
+   if (fValidationSet) {
+      std::vector<std::vector<TMVA::Event *>> tempSigEvents = SplitSets(TrainSigData, 2);
+      std::vector<std::vector<TMVA::Event *>> tempBkgEvents = SplitSets(TrainBkgData, 2);
       fTrainSigEvents = SplitSets(tempSigEvents.at(0), fNumFolds);
       fTrainBkgEvents = SplitSets(tempBkgEvents.at(0), fNumFolds);
       fValidSigEvents = SplitSets(tempSigEvents.at(1), fNumFolds);
       fValidBkgEvents = SplitSets(tempBkgEvents.at(1), fNumFolds);
-   }
-   else{
+   } else {
       fTrainSigEvents = SplitSets(TrainSigData, fNumFolds);
       fTrainBkgEvents = SplitSets(TrainBkgData, fNumFolds);
    }
@@ -109,7 +104,7 @@ void TMVA::CvSplitBootstrappedStratified::MakeKFoldDataSet (DataSetInfo & dsi)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void TMVA::CvSplitBootstrappedStratified::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t foldNumber, Types::ETreeType tt)
+void TMVA::CvSplitBootstrappedStratified::PrepareFoldDataSet(DataSetInfo &dsi, UInt_t foldNumber, Types::ETreeType tt)
 {
    if (foldNumber >= fNumFolds) {
       Log() << kFATAL << "DataSet prepared for \"" << fNumFolds << "\" folds, requested fold \"" << foldNumber
@@ -119,40 +114,35 @@ void TMVA::CvSplitBootstrappedStratified::PrepareFoldDataSet (DataSetInfo & dsi,
 
    UInt_t numFolds = fTrainSigEvents.size();
 
-   std::vector<TMVA::Event*>* tempTrain = new std::vector<TMVA::Event*>;
-   std::vector<TMVA::Event*>* tempTest = new std::vector<TMVA::Event*>;
+   std::vector<TMVA::Event *> *tempTrain = new std::vector<TMVA::Event *>;
+   std::vector<TMVA::Event *> *tempTest = new std::vector<TMVA::Event *>;
 
    UInt_t nTrain = 0;
    UInt_t nTest = 0;
 
    // Get the number of events so the memory can be reserved.
-   for(UInt_t i=0; i<numFolds; ++i){
-      if(tt == Types::kTraining){
-         if(i!=foldNumber){
+   for (UInt_t i = 0; i < numFolds; ++i) {
+      if (tt == Types::kTraining) {
+         if (i != foldNumber) {
             nTrain += fTrainSigEvents.at(i).size();
             nTrain += fTrainBkgEvents.at(i).size();
-         }
-         else{
+         } else {
             nTest += fTrainSigEvents.at(i).size();
             nTest += fTrainSigEvents.at(i).size();
          }
-      }
-      else if(tt == Types::kValidation){
-         if(i!=foldNumber){
+      } else if (tt == Types::kValidation) {
+         if (i != foldNumber) {
             nTrain += fValidSigEvents.at(i).size();
             nTrain += fValidBkgEvents.at(i).size();
-         }
-         else{
+         } else {
             nTest += fValidSigEvents.at(i).size();
             nTest += fValidSigEvents.at(i).size();
          }
-      }
-      else if(tt == Types::kTesting){
-         if(i!=foldNumber){
+      } else if (tt == Types::kTesting) {
+         if (i != foldNumber) {
             nTrain += fTestSigEvents.at(i).size();
             nTrain += fTestBkgEvents.at(i).size();
-         }
-         else{
+         } else {
             nTest += fTestSigEvents.at(i).size();
             nTest += fTestSigEvents.at(i).size();
          }
@@ -164,33 +154,28 @@ void TMVA::CvSplitBootstrappedStratified::PrepareFoldDataSet (DataSetInfo & dsi,
    tempTest->reserve(nTest);
 
    // Fill vectors with correct folds for testing and training.
-   for(UInt_t j=0; j<numFolds; ++j){
-      if(tt == Types::kTraining){
-         if(j!=foldNumber){
+   for (UInt_t j = 0; j < numFolds; ++j) {
+      if (tt == Types::kTraining) {
+         if (j != foldNumber) {
             tempTrain->insert(tempTrain->end(), fTrainSigEvents.at(j).begin(), fTrainSigEvents.at(j).end());
             tempTrain->insert(tempTrain->end(), fTrainBkgEvents.at(j).begin(), fTrainBkgEvents.at(j).end());
-         }
-         else{
+         } else {
             tempTest->insert(tempTest->end(), fTrainSigEvents.at(j).begin(), fTrainSigEvents.at(j).end());
             tempTest->insert(tempTest->end(), fTrainBkgEvents.at(j).begin(), fTrainBkgEvents.at(j).end());
          }
-      }
-      else if(tt == Types::kValidation){
-         if(j!=foldNumber){
+      } else if (tt == Types::kValidation) {
+         if (j != foldNumber) {
             tempTrain->insert(tempTrain->end(), fValidSigEvents.at(j).begin(), fValidSigEvents.at(j).end());
             tempTrain->insert(tempTrain->end(), fValidBkgEvents.at(j).begin(), fValidBkgEvents.at(j).end());
-         }
-         else{
+         } else {
             tempTest->insert(tempTest->end(), fValidSigEvents.at(j).begin(), fValidSigEvents.at(j).end());
             tempTest->insert(tempTest->end(), fValidBkgEvents.at(j).begin(), fValidBkgEvents.at(j).end());
          }
-      }
-      else if(tt == Types::kTesting){
-         if(j!=foldNumber){
+      } else if (tt == Types::kTesting) {
+         if (j != foldNumber) {
             tempTrain->insert(tempTrain->end(), fTestSigEvents.at(j).begin(), fTestSigEvents.at(j).end());
             tempTrain->insert(tempTrain->end(), fTestBkgEvents.at(j).begin(), fTestBkgEvents.at(j).end());
-         }
-         else{
+         } else {
             tempTest->insert(tempTest->end(), fTestSigEvents.at(j).begin(), fTestSigEvents.at(j).end());
             tempTest->insert(tempTest->end(), fTestBkgEvents.at(j).begin(), fTestBkgEvents.at(j).end());
          }
@@ -198,17 +183,17 @@ void TMVA::CvSplitBootstrappedStratified::PrepareFoldDataSet (DataSetInfo & dsi,
    }
 
    // Assign the vectors of the events to rebuild the dataset
-   dsi.GetDataSet()->SetEventCollection(tempTrain,Types::kTraining,false);
-   dsi.GetDataSet()->SetEventCollection(tempTest,Types::kTesting,false);
+   dsi.GetDataSet()->SetEventCollection(tempTrain, Types::kTraining, false);
+   dsi.GetDataSet()->SetEventCollection(tempTest, Types::kTesting, false);
    delete tempTest;
    delete tempTrain;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Inverse of MakeKFoldsDataSet
-/// 
+///
 
-void TMVA::CvSplitBootstrappedStratified::RecombineKFoldDataSet (DataSetInfo &, Types::ETreeType)
+void TMVA::CvSplitBootstrappedStratified::RecombineKFoldDataSet(DataSetInfo &, Types::ETreeType)
 {
    Log() << kFATAL << "Recombination not implemented for CvSplitBootstrappedStratified" << Endl;
    return;
@@ -216,33 +201,32 @@ void TMVA::CvSplitBootstrappedStratified::RecombineKFoldDataSet (DataSetInfo &, 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Splits the input vector in to equally sized randomly sampled folds.
-/// 
+///
 
-std::vector<std::vector<TMVA::Event*>>
-TMVA::CvSplitBootstrappedStratified::SplitSets (std::vector<TMVA::Event*>& oldSet, UInt_t numFolds)
+std::vector<std::vector<TMVA::Event *>>
+TMVA::CvSplitBootstrappedStratified::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds)
 {
    ULong64_t nEntries = oldSet.size();
-   ULong64_t foldSize = nEntries/numFolds;
+   ULong64_t foldSize = nEntries / numFolds;
 
-   std::vector<std::vector<TMVA::Event*>> tempSets;
+   std::vector<std::vector<TMVA::Event *>> tempSets;
    tempSets.resize(numFolds);
 
    TRandom3 r(fSeed);
 
    ULong64_t inSet = 0;
 
-   for(ULong64_t i=0; i<nEntries; i++){
+   for (ULong64_t i = 0; i < nEntries; i++) {
       bool inTree = false;
-      if(inSet == foldSize*numFolds){
+      if (inSet == foldSize * numFolds) {
          break;
-      }
-      else{
-         while(!inTree){
+      } else {
+         while (!inTree) {
             int s = r.Integer(numFolds);
-            if(tempSets.at(s).size()<foldSize){
+            if (tempSets.at(s).size() < foldSize) {
                tempSets.at(s).push_back(oldSet.at(i));
                inSet++;
-               inTree=true;
+               inTree = true;
             }
          }
       }
@@ -251,10 +235,6 @@ TMVA::CvSplitBootstrappedStratified::SplitSets (std::vector<TMVA::Event*>& oldSe
    return tempSets;
 }
 
-
-
-
-
 /* =============================================================================
       TMVA::CvSplitCrossValidationExpr
 ============================================================================= */
@@ -262,10 +242,8 @@ TMVA::CvSplitBootstrappedStratified::SplitSets (std::vector<TMVA::Event*>& oldSe
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-TMVA::CvSplitCrossValidationExpr::CvSplitCrossValidationExpr (DataSetInfo & dsi, TString expr)
-   : fDsi(dsi),
-     fIdxFormulaParNumFolds(std::numeric_limits<UInt_t>::max()),
-     fSplitFormula("", expr),
+TMVA::CvSplitCrossValidationExpr::CvSplitCrossValidationExpr(DataSetInfo &dsi, TString expr)
+   : fDsi(dsi), fIdxFormulaParNumFolds(std::numeric_limits<UInt_t>::max()), fSplitFormula("", expr),
      fParValues(fSplitFormula.GetNpar())
 {
    if (not fSplitFormula.IsValid()) {
@@ -274,14 +252,14 @@ TMVA::CvSplitCrossValidationExpr::CvSplitCrossValidationExpr (DataSetInfo & dsi,
 
    for (Int_t iFormulaPar = 0; iFormulaPar < fSplitFormula.GetNpar(); ++iFormulaPar) {
       TString name = fSplitFormula.GetParName(iFormulaPar);
-      
+
       // std::cout << "Found variable with name \"" << name << "\"." << std::endl;
 
       if (name == "NumFolds" or name == "numFolds") {
          // std::cout << "NumFolds|numFolds is a reserved variable! Adding to context." << std::endl;
          fIdxFormulaParNumFolds = iFormulaPar;
       } else {
-         fFormulaParIdxToDsiSpecIdx.push_back( std::make_pair(iFormulaPar, GetSpectatorIndexForName(fDsi, name)) );
+         fFormulaParIdxToDsiSpecIdx.push_back(std::make_pair(iFormulaPar, GetSpectatorIndexForName(fDsi, name)));
       }
    }
 }
@@ -289,11 +267,11 @@ TMVA::CvSplitCrossValidationExpr::CvSplitCrossValidationExpr (DataSetInfo & dsi,
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-UInt_t TMVA::CvSplitCrossValidationExpr::Eval(UInt_t numFolds, const Event * ev)
+UInt_t TMVA::CvSplitCrossValidationExpr::Eval(UInt_t numFolds, const Event *ev)
 {
-   for (auto & p : fFormulaParIdxToDsiSpecIdx) {
+   for (auto &p : fFormulaParIdxToDsiSpecIdx) {
       auto iFormulaPar = p.first;
-      auto iSpectator  = p.second;
+      auto iSpectator = p.second;
 
       fParValues.at(iFormulaPar) = ev->GetSpectator(iSpectator);
    }
@@ -304,8 +282,9 @@ UInt_t TMVA::CvSplitCrossValidationExpr::Eval(UInt_t numFolds, const Event * ev)
 
    Double_t iFold = fSplitFormula.EvalPar(nullptr, &fParValues[0]);
 
-   if ( fabs(iFold - (double)((UInt_t)iFold)) > 1e-5) {
-      throw std::runtime_error("Output of splitExpr should be a non-negative integer between 0 and numFolds-1 inclusive.");
+   if (fabs(iFold - (double)((UInt_t)iFold)) > 1e-5) {
+      throw std::runtime_error(
+         "Output of splitExpr should be a non-negative integer between 0 and numFolds-1 inclusive.");
    }
 
    return iFold;
@@ -322,7 +301,7 @@ Bool_t TMVA::CvSplitCrossValidationExpr::Validate(TString expr)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-UInt_t TMVA::CvSplitCrossValidationExpr::GetSpectatorIndexForName (DataSetInfo & dsi, TString name)
+UInt_t TMVA::CvSplitCrossValidationExpr::GetSpectatorIndexForName(DataSetInfo &dsi, TString name)
 {
    std::vector<VariableInfo> spectatorInfos = dsi.GetSpectatorInfos();
 
@@ -340,10 +319,6 @@ UInt_t TMVA::CvSplitCrossValidationExpr::GetSpectatorIndexForName (DataSetInfo &
    throw std::runtime_error("Spectator \"" + std::string(name.Data()) + "\" not found.");
 }
 
-
-
-
-
 /* =============================================================================
       TMVA::CvSplitCrossValidation
 ============================================================================= */
@@ -351,8 +326,8 @@ UInt_t TMVA::CvSplitCrossValidationExpr::GetSpectatorIndexForName (DataSetInfo &
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-TMVA::CvSplitCrossValidation::CvSplitCrossValidation (UInt_t numFolds, TString splitExpr)
-: CvSplit(numFolds), fSplitExprString(splitExpr)
+TMVA::CvSplitCrossValidation::CvSplitCrossValidation(UInt_t numFolds, TString splitExpr)
+   : CvSplit(numFolds), fSplitExprString(splitExpr)
 {
    if (not CvSplitCrossValidationExpr::Validate(fSplitExprString)) {
       Log() << kFATAL << "Split expression \"" << fSplitExprString << "\" is not a valid TFormula." << Endl;
@@ -362,11 +337,11 @@ TMVA::CvSplitCrossValidation::CvSplitCrossValidation (UInt_t numFolds, TString s
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void TMVA::CvSplitCrossValidation::MakeKFoldDataSet (DataSetInfo & dsi)
+void TMVA::CvSplitCrossValidation::MakeKFoldDataSet(DataSetInfo &dsi)
 {
    // Validate spectator
    // fSpectatorIdx = GetSpectatorIndexForName(dsi, fSpectatorName);
-   
+
    fSplitExpr = std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(dsi, fSplitExprString));
 
    // No need to do it again if the sets have already been split.
@@ -379,7 +354,7 @@ void TMVA::CvSplitCrossValidation::MakeKFoldDataSet (DataSetInfo & dsi)
 
    // Get the original event vectors for testing and training from the dataset.
    std::vector<Event *> trainData = dsi.GetDataSet()->GetEventCollection(Types::kTraining);
-   std::vector<Event *> testData  = dsi.GetDataSet()->GetEventCollection(Types::kTesting);
+   std::vector<Event *> testData = dsi.GetDataSet()->GetEventCollection(Types::kTesting);
 
    // Split the sets into the number of folds.
    fTrainEvents = SplitSets(trainData, fNumFolds);
@@ -389,7 +364,7 @@ void TMVA::CvSplitCrossValidation::MakeKFoldDataSet (DataSetInfo & dsi)
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void TMVA::CvSplitCrossValidation::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t foldNumber, Types::ETreeType tt)
+void TMVA::CvSplitCrossValidation::PrepareFoldDataSet(DataSetInfo &dsi, UInt_t foldNumber, Types::ETreeType tt)
 {
    if (foldNumber >= fNumFolds) {
       Log() << kFATAL << "DataSet prepared for \"" << fNumFolds << "\" folds, requested fold \"" << foldNumber
@@ -403,7 +378,7 @@ void TMVA::CvSplitCrossValidation::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t
    UInt_t nTest = 0;
 
    // Count num events in train set (for reservation)
-   for (UInt_t i=0; i<numFolds; ++i) {
+   for (UInt_t i = 0; i < numFolds; ++i) {
       if (i == foldNumber) {
          continue;
       }
@@ -425,22 +400,22 @@ void TMVA::CvSplitCrossValidation::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t
    } else if (tt == Types::kTesting) {
       nTest = fTestEvents.at(foldNumber).size();
    }
-   
+
    // Create vectors for fold train / test data
-   std::vector<TMVA::Event*> tempTrain;
-   std::vector<TMVA::Event*> tempTest;
-   
+   std::vector<TMVA::Event *> tempTrain;
+   std::vector<TMVA::Event *> tempTest;
+
    // Reserve memory before filling vectors
    tempTrain.reserve(nTrain);
    tempTest.reserve(nTest);
 
    // Insert data into train set
-   for(UInt_t i = 0; i<numFolds; ++i){
+   for (UInt_t i = 0; i < numFolds; ++i) {
       if (i == foldNumber) {
          continue;
       }
 
-      if(tt == Types::kTraining){
+      if (tt == Types::kTraining) {
          tempTrain.insert(tempTrain.end(), fTrainEvents.at(i).begin(), fTrainEvents.at(i).end());
       } else if (tt == Types::kValidation) {
          tempTrain.insert(tempTrain.end(), fValidEvents.at(i).begin(), fValidEvents.at(i).end());
@@ -450,7 +425,7 @@ void TMVA::CvSplitCrossValidation::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t
    }
 
    // Insert data into test set
-   if(tt == Types::kTraining){
+   if (tt == Types::kTraining) {
       tempTest.insert(tempTest.end(), fTrainEvents.at(foldNumber).begin(), fTrainEvents.at(foldNumber).end());
    } else if (tt == Types::kValidation) {
       tempTest.insert(tempTest.end(), fValidEvents.at(foldNumber).begin(), fValidEvents.at(foldNumber).end());
@@ -469,10 +444,11 @@ void TMVA::CvSplitCrossValidation::PrepareFoldDataSet (DataSetInfo & dsi, UInt_t
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void TMVA::CvSplitCrossValidation::RecombineKFoldDataSet (DataSetInfo & dsi, Types::ETreeType tt)
+void TMVA::CvSplitCrossValidation::RecombineKFoldDataSet(DataSetInfo &dsi, Types::ETreeType tt)
 {
    if (tt != Types::kTraining) {
-      Log() << kFATAL << "Only kTraining is supported for CvSplitCrossValidation::RecombineKFoldDataSet currently." << std::endl;
+      Log() << kFATAL << "Only kTraining is supported for CvSplitCrossValidation::RecombineKFoldDataSet currently."
+            << std::endl;
    }
 
    std::vector<Event *> *tempVec = new std::vector<Event *>;
@@ -490,8 +466,8 @@ void TMVA::CvSplitCrossValidation::RecombineKFoldDataSet (DataSetInfo & dsi, Typ
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-std::vector<std::vector<TMVA::Event*>>
-TMVA::CvSplitCrossValidation::SplitSets (std::vector<TMVA::Event*>& oldSet, UInt_t numFolds)
+std::vector<std::vector<TMVA::Event *>>
+TMVA::CvSplitCrossValidation::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds)
 {
    ULong64_t nEntries = oldSet.size();
    ULong64_t foldSize = nEntries / numFolds;

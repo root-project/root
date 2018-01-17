@@ -46,61 +46,61 @@
 
 namespace TMVA {
 
-   class CvSplitCrossValidation;
+class CvSplitCrossValidation;
 
-   using EventCollection_t = std::vector<Event *>;
-   using EventTypes_t      = std::vector<Bool_t>;
-   using EventOutputs_t    = std::vector<Float_t>;
-   using EventOutputsMulticlass_t = std::vector< std::vector<Float_t> >;
+using EventCollection_t = std::vector<Event *>;
+using EventTypes_t = std::vector<Bool_t>;
+using EventOutputs_t = std::vector<Float_t>;
+using EventOutputsMulticlass_t = std::vector<std::vector<Float_t>>;
 
-   // Used internally to keep per-fold aggregate statistics
-   // such as ROC curves, ROC integrals and efficiencies.
-   class CrossValidationResult {
-      friend class CrossValidation;
+// Used internally to keep per-fold aggregate statistics
+// such as ROC curves, ROC integrals and efficiencies.
+class CrossValidationResult {
+   friend class CrossValidation;
 
-   private:
-      std::map<UInt_t,Float_t> fROCs;
-      std::shared_ptr<TMultiGraph> fROCCurves;
+private:
+   std::map<UInt_t, Float_t> fROCs;
+   std::shared_ptr<TMultiGraph> fROCCurves;
 
-      std::vector<Double_t> fSigs;
-      std::vector<Double_t> fSeps;
-      std::vector<Double_t> fEff01s;
-      std::vector<Double_t> fEff10s;
-      std::vector<Double_t> fEff30s;
-      std::vector<Double_t> fEffAreas;
-      std::vector<Double_t> fTrainEff01s;
-      std::vector<Double_t> fTrainEff10s;
-      std::vector<Double_t> fTrainEff30s;
+   std::vector<Double_t> fSigs;
+   std::vector<Double_t> fSeps;
+   std::vector<Double_t> fEff01s;
+   std::vector<Double_t> fEff10s;
+   std::vector<Double_t> fEff30s;
+   std::vector<Double_t> fEffAreas;
+   std::vector<Double_t> fTrainEff01s;
+   std::vector<Double_t> fTrainEff10s;
+   std::vector<Double_t> fTrainEff30s;
 
-   public:
-      CrossValidationResult();
-      CrossValidationResult(const CrossValidationResult &);
-      ~CrossValidationResult(){fROCCurves=nullptr;}
+public:
+   CrossValidationResult();
+   CrossValidationResult(const CrossValidationResult &);
+   ~CrossValidationResult() { fROCCurves = nullptr; }
 
-      std::map<UInt_t,Float_t> GetROCValues(){return fROCs;}
-      Float_t GetROCAverage() const;
-      Float_t GetROCStandardDeviation() const;
-      TMultiGraph *GetROCCurves(Bool_t fLegend=kTRUE);
-      void Print() const ;
+   std::map<UInt_t, Float_t> GetROCValues() { return fROCs; }
+   Float_t GetROCAverage() const;
+   Float_t GetROCStandardDeviation() const;
+   TMultiGraph *GetROCCurves(Bool_t fLegend = kTRUE);
+   void Print() const;
 
-      TCanvas* Draw(const TString name="CrossValidation") const;
+   TCanvas *Draw(const TString name = "CrossValidation") const;
 
-      std::vector<Double_t> GetSigValues() {return fSigs;}
-      std::vector<Double_t> GetSepValues() {return fSeps;}
-      std::vector<Double_t> GetEff01Values() {return fEff01s;}
-      std::vector<Double_t> GetEff10Values() {return fEff10s;}
-      std::vector<Double_t> GetEff30Values() {return fEff30s;}
-      std::vector<Double_t> GetEffAreaValues() {return fEffAreas;}
-      std::vector<Double_t> GetTrainEff01Values() {return fTrainEff01s;}
-      std::vector<Double_t> GetTrainEff10Values() {return fTrainEff10s;}
-      std::vector<Double_t> GetTrainEff30Values() {return fTrainEff30s;}
+   std::vector<Double_t> GetSigValues() { return fSigs; }
+   std::vector<Double_t> GetSepValues() { return fSeps; }
+   std::vector<Double_t> GetEff01Values() { return fEff01s; }
+   std::vector<Double_t> GetEff10Values() { return fEff10s; }
+   std::vector<Double_t> GetEff30Values() { return fEff30s; }
+   std::vector<Double_t> GetEffAreaValues() { return fEffAreas; }
+   std::vector<Double_t> GetTrainEff01Values() { return fTrainEff01s; }
+   std::vector<Double_t> GetTrainEff10Values() { return fTrainEff10s; }
+   std::vector<Double_t> GetTrainEff30Values() { return fTrainEff30s; }
    };
 
    class CrossValidation : public Envelope {
 
    public:
       explicit CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TString options);
-      explicit CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TFile * outputFile, TString options);
+      explicit CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TFile *outputFile, TString options);
       ~CrossValidation();
 
       void InitOptions();
@@ -110,9 +110,9 @@ namespace TMVA {
       void SetSplitExpr(TString splitExpr);
 
       UInt_t GetNumFolds() {return fNumFolds;}
-      TString GetSplitExpr() {return fSplitExprString;}
+      TString GetSplitExpr() { return fSplitExprString; }
 
-      Factory & GetFactory() {return *fFactory;}
+      Factory &GetFactory() { return *fFactory; }
 
       const std::vector<CrossValidationResult> &GetResults() const;
 
@@ -127,13 +127,13 @@ namespace TMVA {
       Bool_t fCorrelations;
       TString fCvFactoryOptions;
       Bool_t fDrawProgressBar;
-      Bool_t fFoldFileOutput;  //! If true: generate output file for each fold
-      Bool_t fFoldStatus; //! If true: dataset is prepared
+      Bool_t fFoldFileOutput; //! If true: generate output file for each fold
+      Bool_t fFoldStatus;     //! If true: dataset is prepared
       TString fJobName;
       UInt_t fNumFolds; //! Number of folds to prepare
       TString fOutputFactoryOptions;
       TString fOutputEnsembling; //! How to combine output of individual folds
-      TFile * fOutputFile;
+      TFile *fOutputFile;
       Bool_t fSilent;
       TString fSplitExprString;
       std::vector<CrossValidationResult> fResults; //!

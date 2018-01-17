@@ -2,7 +2,7 @@
 /// - Project   : TMVA - a Root-integrated toolkit for multivariate data analysis
 /// - Package   : TMVA
 /// - Exectuable: TMVACrossValidation
-/// 
+///
 ///
 /// Performs a verification that the cross evaluation splitting was performed as
 /// intended. If the input data has ids (EventNumbers)
@@ -44,15 +44,15 @@
 #include <algorithm>
 #include <vector>
 
-using id_vec_t      = std::vector<UInt_t>;
-using data_t        = std::tuple<id_vec_t, TTree *>;
+using id_vec_t = std::vector<UInt_t>;
+using data_t = std::tuple<id_vec_t, TTree *>;
 using fold_id_vec_t = std::vector<std::shared_ptr<id_vec_t>>;
 
 namespace TMVA {
 
 /*
  * Creates data for use by the test. Returns a tuple of a TTree and an id
- * vector. The TTree can be used by a dataloader to create a DataSet. The id 
+ * vector. The TTree can be used by a dataloader to create a DataSet. The id
  * vector can be used to verify that the splitting was done correctly.
  *
  * \param nPoints Number of data points to generate
@@ -65,8 +65,8 @@ data_t createData(Int_t nPoints, UInt_t start)
    UInt_t id = start;
    Double_t x = 0.;
 
-   TTree * data = new TTree();
-   data->Branch("x" , &x, "x/D");
+   TTree *data = new TTree();
+   data->Branch("x", &x, "x/D");
    data->Branch("id", &id, "id/I");
 
    for (Int_t n = 0; n < nPoints; ++n) {
@@ -91,15 +91,15 @@ fold_id_vec_t getCurrentFoldExternal(id_vec_t ids, UInt_t numFolds, UInt_t iFold
 
    // Generate the individual folds
    fold_id_vec_t fold_vec;
-   for (size_t i = 0; i<numFolds; ++i) {
+   for (size_t i = 0; i < numFolds; ++i) {
       fold_vec.push_back(std::shared_ptr<id_vec_t>(new id_vec_t()));
    }
 
-   for (auto & val : ids) {
-      fold_vec[ val % numFolds ]->push_back(val);
+   for (auto &val : ids) {
+      fold_vec[val % numFolds]->push_back(val);
    }
 
-   for (auto & vec : fold_vec) {
+   for (auto &vec : fold_vec) {
       std::sort(vec->begin(), vec->end());
    }
 
@@ -113,7 +113,7 @@ fold_id_vec_t getCurrentFoldExternal(id_vec_t ids, UInt_t numFolds, UInt_t iFold
 
    // Combine folds into a a training and test set
    fold_id_vec_t combined_vec;
-   for (size_t i = 0; i<2; ++i) {
+   for (size_t i = 0; i < 2; ++i) {
       combined_vec.push_back(std::shared_ptr<id_vec_t>(new id_vec_t()));
    }
 
@@ -127,7 +127,7 @@ fold_id_vec_t getCurrentFoldExternal(id_vec_t ids, UInt_t numFolds, UInt_t iFold
       }
    }
 
-   for (auto & vec : combined_vec) {
+   for (auto &vec : combined_vec) {
       std::sort(vec->begin(), vec->end());
    }
 
@@ -147,23 +147,23 @@ fold_id_vec_t getCurrentFoldExternal(id_vec_t ids, UInt_t numFolds, UInt_t iFold
    return combined_vec;
 }
 
-fold_id_vec_t getCurrentFold(DataSet * ds)
+fold_id_vec_t getCurrentFold(DataSet *ds)
 {
    std::cout << "Entering getCurrentFold" << std::endl;
 
    fold_id_vec_t fold_vec;
-   for (size_t i = 0; i<2; ++i) {
+   for (size_t i = 0; i < 2; ++i) {
       fold_vec.push_back(std::shared_ptr<id_vec_t>(new id_vec_t()));
    }
 
-   for (auto & ev : ds->GetEventCollection(Types::kTraining)) {
+   for (auto &ev : ds->GetEventCollection(Types::kTraining)) {
       fold_vec[0]->push_back(ev->GetSpectators().at(0));
    }
-   for (auto & ev : ds->GetEventCollection(Types::kTesting)) {
+   for (auto &ev : ds->GetEventCollection(Types::kTesting)) {
       fold_vec[1]->push_back(ev->GetSpectators().at(0));
    }
 
-   for (auto & vec : fold_vec) {
+   for (auto &vec : fold_vec) {
       std::sort(vec->begin(), vec->end());
    }
 
@@ -183,16 +183,15 @@ fold_id_vec_t getCurrentFold(DataSet * ds)
    return fold_vec;
 }
 
-
-void verifySplitExternal( DataSet * ds, id_vec_t ids, UInt_t numFolds, UInt_t iFold )
+void verifySplitExternal(DataSet *ds, id_vec_t ids, UInt_t numFolds, UInt_t iFold)
 {
    fold_id_vec_t fold_vec_ext = getCurrentFoldExternal(ids, numFolds, iFold);
-   fold_id_vec_t fold_vec     = getCurrentFold(ds);
+   fold_id_vec_t fold_vec = getCurrentFold(ds);
 
    auto training_ext = fold_vec_ext[0];
-   auto training     = fold_vec[0];
-   auto test_ext     = fold_vec_ext[1];
-   auto test         = fold_vec[1];
+   auto training = fold_vec[0];
+   auto test_ext = fold_vec_ext[1];
+   auto test = fold_vec[1];
 
    EXPECT_EQ(training_ext->size(), training->size());
    EXPECT_EQ(test_ext->size(), test->size());
@@ -217,9 +216,9 @@ void verifySplitExternal( DataSet * ds, id_vec_t ids, UInt_t numFolds, UInt_t iF
  * Checks wether a fold has been prepared successfully. Only does the split on the
  * training set, (d->PrepareFoldDataSet(iFold, Types::kTraining);)
  */
-bool testFold(DataLoader * d, id_vec_t ids, CvSplit & split, UInt_t iFold)
+bool testFold(DataLoader *d, id_vec_t ids, CvSplit &split, UInt_t iFold)
 {
-   DataSet * ds = d->GetDataSetInfo().GetDataSet();
+   DataSet *ds = d->GetDataSetInfo().GetDataSet();
    d->PrepareFoldDataSet(split, iFold, Types::kTraining);
 
    verifySplitExternal(ds, ids, split.GetNumFolds(), iFold);
@@ -236,7 +235,7 @@ TEST(CrossValidationSplitting, TrainingSetSplitOnSpectator)
    const UInt_t NUM_FOLDS = 3;
    const UInt_t nPointsSig = 11;
    const UInt_t nPointsBkg = 10;
-   
+
    // Create DataSet
    TMVA::MsgLogger::InhibitOutput();
    data_t data_class0 = TMVA::createData(nPointsSig, 0);
@@ -246,19 +245,20 @@ TEST(CrossValidationSplitting, TrainingSetSplitOnSpectator)
    ids.insert(ids.end(), std::get<0>(data_class0).begin(), std::get<0>(data_class0).end());
    ids.insert(ids.end(), std::get<0>(data_class1).begin(), std::get<0>(data_class1).end());
 
-   TMVA::DataLoader * d = new TMVA::DataLoader("dataset");
-   
-   d->AddSignalTree    ( std::get<1>(data_class0) );
-   d->AddBackgroundTree( std::get<1>(data_class1) );
+   TMVA::DataLoader *d = new TMVA::DataLoader("dataset");
 
-   d->AddVariable(  "x" , 'D' );
-   d->AddSpectator( "id", "id", "" );
-   d->PrepareTrainingAndTestTree("", Form("SplitMode=Block:nTrain_Signal=%i:nTrain_Background=%i:!V", nPointsSig, nPointsBkg));
-   
+   d->AddSignalTree(std::get<1>(data_class0));
+   d->AddBackgroundTree(std::get<1>(data_class1));
+
+   d->AddVariable("x", 'D');
+   d->AddSpectator("id", "id", "");
+   d->PrepareTrainingAndTestTree(
+      "", Form("SplitMode=Block:nTrain_Signal=%i:nTrain_Background=%i:!V", nPointsSig, nPointsBkg));
+
    d->GetDataSetInfo().GetDataSet(); // Force creation of dataset.
    TMVA::MsgLogger::EnableOutput();
 
-   TMVA::CvSplitCrossValidation split {NUM_FOLDS, "int([id]) % int([numFolds])"};
+   TMVA::CvSplitCrossValidation split{NUM_FOLDS, "int([id]) % int([numFolds])"};
    d->MakeKFoldDataSet(split);
 
    // Actual test

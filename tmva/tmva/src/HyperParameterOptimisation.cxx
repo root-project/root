@@ -89,9 +89,9 @@ TMVA::HyperParameterOptimisation::~HyperParameterOptimisation()
 //_______________________________________________________________________
 void TMVA::HyperParameterOptimisation::SetNumFolds(UInt_t i)
 {
-    fNumFolds = i;
-    // fDataLoader->MakeKFoldDataSet(fNumFolds);
-    fFoldStatus = kFALSE;
+   fNumFolds = i;
+   // fDataLoader->MakeKFoldDataSet(fNumFolds);
+   fFoldStatus = kFALSE;
 }
 
 //_______________________________________________________________________
@@ -102,11 +102,10 @@ void TMVA::HyperParameterOptimisation::Evaluate()
       TString methodTitle = meth.GetValue<TString>("MethodTitle");
       TString methodOptions = meth.GetValue<TString>("MethodOptions");
 
-      CvSplitBootstrappedStratified split {fNumFolds, 0};
-      if(!fFoldStatus)
-      {
-        fDataLoader->MakeKFoldDataSet(split);
-        fFoldStatus=kTRUE;
+      CvSplitBootstrappedStratified split{fNumFolds, 0};
+      if (!fFoldStatus) {
+         fDataLoader->MakeKFoldDataSet(split);
+         fFoldStatus = kTRUE;
       }
       fResults.fMethodName = methodName;
 

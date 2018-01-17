@@ -120,12 +120,12 @@ int TMVACrossEvaluation()
    TTree *bkgTree = genTree(1000, -1.0, 1.0, 101);
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName( "TMVA.root" );
+   TString outfileName("TMVA.root");
    TFile *outputFile = TFile::Open(outfileName, "RECREATE");
 
    // DataLoader definitions; We declare variables in the tree so that TMVA can
    // find them. For more information see TMVAClassification tutorial.
-   TMVA::DataLoader * dataloader = new TMVA::DataLoader("dataset");
+   TMVA::DataLoader *dataloader = new TMVA::DataLoader("dataset");
 
    // Data variables
    dataloader->AddVariable("x", 'F');
@@ -141,11 +141,12 @@ int TMVACrossEvaluation()
    // Bypasses the normal splitting mechanism. Unfortunately we must set the
    // number of events in the training and test sets to 1, otherwise the non-CV
    // part of TMVA is unhappy.
-   dataloader->PrepareTrainingAndTestTree( "", "", "nTest_Signal=1"
-                                                   ":nTest_Background=1"
-                                                   ":SplitMode=Random"
-                                                   ":NormMode=NumEvents"
-                                                   ":!V");
+   dataloader->PrepareTrainingAndTestTree("", "",
+                                          "nTest_Signal=1"
+                                          ":nTest_Background=1"
+                                          ":SplitMode=Random"
+                                          ":NormMode=NumEvents"
+                                          ":!V");
 
    // --------------------------------------------------------------------------
 
@@ -228,7 +229,7 @@ int TMVACrossEvaluation()
 // This is used if the macro is compiled. If run through ROOT with
 // `root -l -b -q MACRO.C` or similar it is unused.
 //
-int main( int argc, char** argv )
+int main(int argc, char **argv)
 {
    TMVACrossEvaluation();
 }

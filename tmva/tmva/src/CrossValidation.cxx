@@ -141,9 +141,10 @@ See CVSplit documentation?
 */
 
 ////////////////////////////////////////////////////////////////////////////////
-///    
+///
 
-TMVA::CrossValidation::CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TFile * outputFile, TString options)
+TMVA::CrossValidation::CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TFile *outputFile,
+                                       TString options)
    : TMVA::Envelope(jobName, dataloader, nullptr, options),
      fAnalysisType(Types::kMaxAnalysisType),
      fAnalysisTypeStr("auto"),
@@ -177,13 +178,13 @@ TMVA::CrossValidation::CrossValidation(TString jobName, TMVA::DataLoader *datalo
 
 TMVA::CrossValidation::CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TString options)
    : CrossValidation(jobName, dataloader, nullptr, options)
-{}
+{
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-TMVA::CrossValidation::~CrossValidation()
-{}
+TMVA::CrossValidation::~CrossValidation() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 ///
@@ -191,33 +192,42 @@ TMVA::CrossValidation::~CrossValidation()
 void TMVA::CrossValidation::InitOptions()
 {
    // Forwarding of Factory options
-   DeclareOptionRef( fSilent,   "Silent", "Batch mode: boolean silent flag inhibiting any output from TMVA after the creation of the factory class object (default: False)" );
-   DeclareOptionRef( fVerbose, "V", "Verbose flag" );
-   DeclareOptionRef( fVerboseLevel=TString("Info"), "VerboseLevel", "VerboseLevel (Debug/Verbose/Info)" );
+   DeclareOptionRef(fSilent, "Silent",
+                    "Batch mode: boolean silent flag inhibiting any output from TMVA after the creation of the factory "
+                    "class object (default: False)");
+   DeclareOptionRef(fVerbose, "V", "Verbose flag");
+   DeclareOptionRef(fVerboseLevel = TString("Info"), "VerboseLevel", "VerboseLevel (Debug/Verbose/Info)");
    AddPreDefVal(TString("Debug"));
    AddPreDefVal(TString("Verbose"));
    AddPreDefVal(TString("Info"));
-   
-   DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
+
+   DeclareOptionRef(fTransformations, "Transformations",
+                    "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for "
+                    "identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation "
+                    "transformations");
 
    DeclareOptionRef(fDrawProgressBar, "DrawProgressBar", "Boolean to show draw progress bar");
    DeclareOptionRef(fCorrelations, "Correlations", "Boolean to show correlation in output");
    DeclareOptionRef(fROC, "ROC", "Boolean to show ROC in output");
 
    TString analysisType("Auto");
-   DeclareOptionRef( fAnalysisTypeStr, "AnalysisType", "Set the analysis type (Classification, Regression, Multiclass, Auto) (default: Auto)" );
+   DeclareOptionRef(fAnalysisTypeStr, "AnalysisType",
+                    "Set the analysis type (Classification, Regression, Multiclass, Auto) (default: Auto)");
    AddPreDefVal(TString("Classification"));
    AddPreDefVal(TString("Regression"));
    AddPreDefVal(TString("Multiclass"));
    AddPreDefVal(TString("Auto"));
 
    // Options specific to CE
-   DeclareOptionRef( fSplitExprString, "SplitExpr", "The expression used to assign events to folds" );
-   DeclareOptionRef( fNumFolds, "NumFolds", "Number of folds to generate" );
+   DeclareOptionRef(fSplitExprString, "SplitExpr", "The expression used to assign events to folds");
+   DeclareOptionRef(fNumFolds, "NumFolds", "Number of folds to generate");
 
-   DeclareOptionRef( fFoldFileOutput, "FoldFileOutput", "If given a TMVA output file will be generated for each fold. Filename will be the same as specifed for the combined output with a _foldX suffix. (default: false)" );
+   DeclareOptionRef(fFoldFileOutput, "FoldFileOutput",
+                    "If given a TMVA output file will be generated for each fold. Filename will be the same as "
+                    "specifed for the combined output with a _foldX suffix. (default: false)");
 
-   DeclareOptionRef( fOutputEnsembling = TString("None"), "OutputEnsembling", "Combines output from contained methods. If None, no combination is performed. (default None)");
+   DeclareOptionRef(fOutputEnsembling = TString("None"), "OutputEnsembling",
+                    "Combines output from contained methods. If None, no combination is performed. (default None)");
    AddPreDefVal(TString("None"));
    AddPreDefVal(TString("Avg"));
 }
@@ -231,10 +241,14 @@ void TMVA::CrossValidation::ParseOptions()
 
    // Factory options
    fAnalysisTypeStr.ToLower();
-   if     ( fAnalysisTypeStr == "classification" ) fAnalysisType = Types::kClassification;
-   else if( fAnalysisTypeStr == "regression" )     fAnalysisType = Types::kRegression;
-   else if( fAnalysisTypeStr == "multiclass" )     fAnalysisType = Types::kMulticlass;
-   else if( fAnalysisTypeStr == "auto" )           fAnalysisType = Types::kNoAnalysisType;
+   if (fAnalysisTypeStr == "classification")
+      fAnalysisType = Types::kClassification;
+   else if (fAnalysisTypeStr == "regression")
+      fAnalysisType = Types::kRegression;
+   else if (fAnalysisTypeStr == "multiclass")
+      fAnalysisType = Types::kMulticlass;
+   else if (fAnalysisTypeStr == "auto")
+      fAnalysisType = Types::kNoAnalysisType;
 
    if (fVerbose) {
       fCvFactoryOptions += "V:";
@@ -289,20 +303,18 @@ void TMVA::CrossValidation::ParseOptions()
 
    // Initialisations
 
-   fFoldFactory = std::unique_ptr<TMVA::Factory>(
-      new TMVA::Factory(fJobName, fCvFactoryOptions));
+   fFoldFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fCvFactoryOptions));
 
    // The fOutputFactory should always have !ModelPersitence set since we use a custom code path for this.
    //    In this case we create a special method (MethodCrossValidation) that can only be used by
    //    CrossValidation and the Reader.
    if (fOutputFile == nullptr) {
-      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName,  fOutputFactoryOptions));
+      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fOutputFactoryOptions));
    } else {
-      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fOutputFile,  fOutputFactoryOptions));
+      fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fOutputFile, fOutputFactoryOptions));
    }
 
    fSplit = std::unique_ptr<CvSplitCrossValidation>(new CvSplitCrossValidation(fNumFolds, fSplitExprString));
-   
 }
 
 //_______________________________________________________________________
@@ -312,7 +324,7 @@ void TMVA::CrossValidation::SetNumFolds(UInt_t i)
       fNumFolds = i;
       fSplit = std::unique_ptr<CvSplitCrossValidation>(new CvSplitCrossValidation(fNumFolds, fSplitExprString));
       fDataLoader->MakeKFoldDataSet(*fSplit.get());
-      fFoldStatus=kTRUE;
+      fFoldStatus = kTRUE;
    }
 }
 
@@ -325,7 +337,7 @@ void TMVA::CrossValidation::SetSplitExpr(TString splitExpr)
       fSplitExprString = splitExpr;
       fSplit = std::unique_ptr<CvSplitCrossValidation>(new CvSplitCrossValidation(fNumFolds, fSplitExprString));
       fDataLoader->MakeKFoldDataSet(*fSplit.get());
-      fFoldStatus=kTRUE;
+      fFoldStatus = kTRUE;
    }
 }
 
@@ -341,8 +353,8 @@ void TMVA::CrossValidation::SetSplitExpr(TString splitExpr)
 
 void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
 {
-   TString methodName    = fMethods[iMethod].GetValue<TString>("MethodName");
-   TString methodTitle   = fMethods[iMethod].GetValue<TString>("MethodTitle");
+   TString methodName = fMethods[iMethod].GetValue<TString>("MethodName");
+   TString methodTitle = fMethods[iMethod].GetValue<TString>("MethodTitle");
    TString methodOptions = fMethods[iMethod].GetValue<TString>("MethodOptions");
 
    Log() << kDEBUG << "Fold (" << methodTitle << "): " << iFold << Endl;
@@ -350,22 +362,20 @@ void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
    // Get specific fold of dataset and setup method
    TString foldTitle = methodTitle;
    foldTitle += "_fold";
-   foldTitle += iFold+1;
+   foldTitle += iFold + 1;
 
    // Only used if fFoldOutputFile == true
-   TFile * foldOutputFile = nullptr;
+   TFile *foldOutputFile = nullptr;
 
    if (fFoldFileOutput and fOutputFile != nullptr) {
       TString path = std::string("") + gSystem->DirName(fOutputFile->GetName()) + "/" + foldTitle + ".root";
       std::cout << "PATH: " << path << std::endl;
-      foldOutputFile = TFile::Open( path, "RECREATE" );
-      fFoldFactory = std::unique_ptr<TMVA::Factory>(
-         new TMVA::Factory(fJobName, foldOutputFile, fCvFactoryOptions)
-      );
+      foldOutputFile = TFile::Open(path, "RECREATE");
+      fFoldFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, foldOutputFile, fCvFactoryOptions));
    }
 
    fDataLoader->PrepareFoldDataSet(*fSplit.get(), iFold, TMVA::Types::kTraining);
-   MethodBase* smethod = fFoldFactory->BookMethod(fDataLoader.get(), methodName, foldTitle, methodOptions);
+   MethodBase *smethod = fFoldFactory->BookMethod(fDataLoader.get(), methodName, foldTitle, methodOptions);
 
    // Train method (train method and eval train set)
    Event::SetIsTraining(kTRUE);
@@ -378,8 +388,8 @@ void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
    // Results for aggregation (ROC integral, efficiencies etc.)
    fResults[iMethod].fROCs[iFold] = fFoldFactory->GetROCIntegral(fDataLoader->GetName(), foldTitle);
 
-   TGraph* gr = fFoldFactory->GetROCCurve(fDataLoader->GetName(), foldTitle, true);
-   gr->SetLineColor(iFold+1);
+   TGraph *gr = fFoldFactory->GetROCCurve(fDataLoader->GetName(), foldTitle, true);
+   gr->SetLineColor(iFold + 1);
    gr->SetLineWidth(2);
    gr->SetTitle(foldTitle.Data());
    fResults[iMethod].fROCCurves->Add(gr);
@@ -388,10 +398,10 @@ void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
    fResults[iMethod].fSeps.push_back(smethod->GetSeparation());
 
    Double_t err;
-   fResults[iMethod].fEff01s.push_back(smethod->GetEfficiency("Efficiency:0.01",Types::kTesting, err));
-   fResults[iMethod].fEff10s.push_back(smethod->GetEfficiency("Efficiency:0.10",Types::kTesting,err));
-   fResults[iMethod].fEff30s.push_back(smethod->GetEfficiency("Efficiency:0.30",Types::kTesting,err));
-   fResults[iMethod].fEffAreas.push_back(smethod->GetEfficiency(""             ,Types::kTesting,err));
+   fResults[iMethod].fEff01s.push_back(smethod->GetEfficiency("Efficiency:0.01", Types::kTesting, err));
+   fResults[iMethod].fEff10s.push_back(smethod->GetEfficiency("Efficiency:0.10", Types::kTesting, err));
+   fResults[iMethod].fEff30s.push_back(smethod->GetEfficiency("Efficiency:0.30", Types::kTesting, err));
+   fResults[iMethod].fEffAreas.push_back(smethod->GetEfficiency("", Types::kTesting, err));
    fResults[iMethod].fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.01"));
    fResults[iMethod].fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.10"));
    fResults[iMethod].fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.30"));
@@ -403,7 +413,7 @@ void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
 
    // Clean-up for this fold
    {
-      smethod->Data()->DeleteResults(foldTitle, Types::kTraining, smethod->GetAnalysisType());   
+      smethod->Data()->DeleteResults(foldTitle, Types::kTraining, smethod->GetAnalysisType());
    }
    if (fFoldFileOutput) {
       smethod->Data()->DeleteResults(foldTitle, Types::kTesting, smethod->GetAnalysisType());
@@ -421,39 +431,37 @@ void TMVA::CrossValidation::Evaluate()
 {
    fResults.resize(fMethods.size());
    for (UInt_t iMethod = 0; iMethod < fMethods.size(); iMethod++) {
-      TString methodTypeName  = fMethods[iMethod].GetValue<TString>("MethodName");
-      TString methodTitle     = fMethods[iMethod].GetValue<TString>("MethodTitle");
-      if(methodTypeName == "") Log() << kFATAL << "No method booked for cross-validation" << Endl;
+      TString methodTypeName = fMethods[iMethod].GetValue<TString>("MethodName");
+      TString methodTitle = fMethods[iMethod].GetValue<TString>("MethodTitle");
+      if (methodTypeName == "")
+         Log() << kFATAL << "No method booked for cross-validation" << Endl;
 
       TMVA::MsgLogger::EnableOutput();
       Log() << kINFO << "Evaluate method: " << methodTitle << Endl;
 
       // Generate K folds on given dataset
-      if(!fFoldStatus){
-          fDataLoader->MakeKFoldDataSet(*fSplit.get());
-          fFoldStatus=kTRUE;
+      if (!fFoldStatus) {
+         fDataLoader->MakeKFoldDataSet(*fSplit.get());
+         fFoldStatus = kTRUE;
       }
 
       // Process K folds
-      for(UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
+      for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
          ProcessFold(iFold, iMethod);
       }
 
       // Serialise the cross evaluated method
 
-      TString options = Form("SplitExpr=%s:NumFolds=%i"
-                             ":EncapsulatedMethodName=%s"
-                             ":EncapsulatedMethodTypeName=%s"
-                             ":OutputEnsembling=%s",
-                             fSplitExprString.Data(),
-                             fNumFolds,
-                             methodTitle.Data(),
-                             methodTypeName.Data(),
-                             fOutputEnsembling.Data());
+      TString options =
+         Form("SplitExpr=%s:NumFolds=%i"
+              ":EncapsulatedMethodName=%s"
+              ":EncapsulatedMethodTypeName=%s"
+              ":OutputEnsembling=%s",
+              fSplitExprString.Data(), fNumFolds, methodTitle.Data(), methodTypeName.Data(), fOutputEnsembling.Data());
       fFactory->BookMethod(fDataLoader.get(), Types::kCrossValidation, methodTitle, options);
-      
+
       // Evaluation
-      fDataLoader->RecombineKFoldDataSet( *fSplit.get() );
+      fDataLoader->RecombineKFoldDataSet(*fSplit.get());
 
       fFactory->TrainAllMethods();
       fFactory->TestAllMethods();

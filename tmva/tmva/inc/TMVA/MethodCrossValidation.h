@@ -37,101 +37,98 @@
 
 namespace TMVA {
 
-   class Ranking;
+class Ranking;
 
-   // Looks for serialised methods of the form methodTitle + "_fold" + iFold;
-   class MethodCrossValidation : public MethodBase {
+// Looks for serialised methods of the form methodTitle + "_fold" + iFold;
+class MethodCrossValidation : public MethodBase {
 
-   public:
-      // constructor for training and reading
-      MethodCrossValidation( const TString&     jobName,
-                             const TString&     methodTitle,
-                                   DataSetInfo& theData,
-                             const TString&     theOption = "");
+public:
+   // constructor for training and reading
+   MethodCrossValidation(const TString &jobName, const TString &methodTitle, DataSetInfo &theData,
+                         const TString &theOption = "");
 
-      // constructor for calculating BDT-MVA using previously generatad decision trees
-      MethodCrossValidation(       DataSetInfo& theData,
-                             const TString&     theWeightFile);
+   // constructor for calculating BDT-MVA using previously generatad decision trees
+   MethodCrossValidation(DataSetInfo &theData, const TString &theWeightFile);
 
-      virtual ~MethodCrossValidation( void );
+   virtual ~MethodCrossValidation(void);
 
-      // optimize tuning parameters
-      // virtual std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString fitType="FitGA");
-      // virtual void SetTuneParameters(std::map<TString,Double_t> tuneParameters);
+   // optimize tuning parameters
+   // virtual std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString
+   // fitType="FitGA"); virtual void SetTuneParameters(std::map<TString,Double_t> tuneParameters);
 
-      // training method
-      void Train( void );
+   // training method
+   void Train(void);
 
-      // revoke training
-      void Reset( void );
+   // revoke training
+   void Reset(void);
 
-      using MethodBase::ReadWeightsFromStream;
+   using MethodBase::ReadWeightsFromStream;
 
-      // write weights to file
-      void AddWeightsXMLTo( void* parent ) const;
+   // write weights to file
+   void AddWeightsXMLTo(void *parent) const;
 
-      // read weights from file
-      void ReadWeightsFromStream( std::istream& istr );
-      void ReadWeightsFromXML(void* parent);
+   // read weights from file
+   void ReadWeightsFromStream(std::istream &istr);
+   void ReadWeightsFromXML(void *parent);
 
-      // write method specific histos to target file
-      void WriteMonitoringHistosToFile( void ) const;
+   // write method specific histos to target file
+   void WriteMonitoringHistosToFile(void) const;
 
-      // calculate the MVA value
-      Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0);
-      const std::vector<Float_t>& GetMulticlassValues();
-      const std::vector<Float_t>& GetRegressionValues();
+   // calculate the MVA value
+   Double_t GetMvaValue(Double_t *err = 0, Double_t *errUpper = 0);
+   const std::vector<Float_t> &GetMulticlassValues();
+   const std::vector<Float_t> &GetRegressionValues();
 
-      // the option handling methods
-      void DeclareOptions();
-      void ProcessOptions();
+   // the option handling methods
+   void DeclareOptions();
+   void ProcessOptions();
 
-      // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
-      void MakeClassSpecific( std::ostream&, const TString& ) const;
-      void MakeClassSpecificHeader( std::ostream&, const TString& ) const;
+   // make ROOT-independent C++ class for classifier response (classifier-specific implementation)
+   void MakeClassSpecific(std::ostream &, const TString &) const;
+   void MakeClassSpecificHeader(std::ostream &, const TString &) const;
 
-      void GetHelpMessage() const;
+   void GetHelpMessage() const;
 
-      const Ranking * CreateRanking();
-      Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
+   const Ranking *CreateRanking();
+   Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets);
 
-   protected:
-      void Init( void );
-      void DeclareCompatibilityOptions();
+protected:
+   void Init(void);
+   void DeclareCompatibilityOptions();
 
-   private:
-      TString GetWeightFileNameForFold(UInt_t iFold) const;
-      MethodBase * InstantiateMethodFromXML(TString methodTypeName, TString weightfile) const;
+private:
+   TString GetWeightFileNameForFold(UInt_t iFold) const;
+   MethodBase *InstantiateMethodFromXML(TString methodTypeName, TString weightfile) const;
 
-   public:
-      // TODO: Only public until proper getter and setters are implemented
-      // TODO: Add setter both for EMVA and String Typename directly.
-      TString fEncapsulatedMethodName;
-      TString fEncapsulatedMethodTypeName;
-      UInt_t  fNumFolds;
-      TString fOutputEnsembling;
-      
-      TString fSplitExprString;
-      std::unique_ptr<CvSplitCrossValidationExpr> fSplitExpr;
+public:
+   // TODO: Only public until proper getter and setters are implemented
+   // TODO: Add setter both for EMVA and String Typename directly.
+   TString fEncapsulatedMethodName;
+   TString fEncapsulatedMethodTypeName;
+   UInt_t fNumFolds;
+   TString fOutputEnsembling;
 
-   private:
-      // MethodBase::fFileDir gives path to weightfiles
+   TString fSplitExprString;
+   std::unique_ptr<CvSplitCrossValidationExpr> fSplitExpr;
 
-      std::vector<Float_t> fMulticlassValues;
+private:
+   // MethodBase::fFileDir gives path to weightfiles
 
-      std::vector<MethodBase *> fEncapsulatedMethods;
+   std::vector<Float_t> fMulticlassValues;
 
-      // Temporary holder of data while GetMulticlassValues and GetRegressionValues
-      // are not implemented.
-      std::vector<Float_t> fNotImplementedRetValVec;
+   std::vector<MethodBase *> fEncapsulatedMethods;
 
-      // debugging flags
-      static const Int_t fgDebugLevel;     // debug level determining some printout/control plots etc.
+   // Temporary holder of data while GetMulticlassValues and GetRegressionValues
+   // are not implemented.
+   std::vector<Float_t> fNotImplementedRetValVec;
 
-      // for backward compatibility
+   // debugging flags
+   static const Int_t fgDebugLevel; // debug level determining some printout/control plots etc.
 
-      ClassDef(MethodCrossValidation, 0);
-   };
+   // for backward compatibility
+
+   ClassDef(MethodCrossValidation, 0);
+};
 
 } // namespace TMVA
 

@@ -1071,19 +1071,19 @@ void TMVA::MethodBase::TestMulticlass()
 {
    ResultsMulticlass* resMulticlass = dynamic_cast<ResultsMulticlass*>(Data()->GetResults(GetMethodName(), Types::kTesting, Types::kMulticlass));
    if (!resMulticlass) Log() << kFATAL<<Form("Dataset[%s] : ",DataInfo().GetName())<< "unable to create pointer in TestMulticlass, exiting."<<Endl;
-   
+
    // GA evaluation of best cut for sig eff * sig pur. Slow, disabled for now.
-   // Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Determine optimal multiclass cuts for test data..." << Endl;
-   // for (UInt_t icls = 0; icls<DataInfo().GetNClasses(); ++icls) {
+   // Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Determine optimal multiclass cuts for test
+   // data..." << Endl; for (UInt_t icls = 0; icls<DataInfo().GetNClasses(); ++icls) {
    //    resMulticlass->GetBestMultiClassCuts(icls);
    // }
 
    // Create histograms for use in TMVA GUI
    TString histNamePrefix(GetTestvarName());
-   resMulticlass->CreateMulticlassHistos( histNamePrefix + "_Test", fNbinsMVAoutput, fNbinsH );
+   resMulticlass->CreateMulticlassHistos(histNamePrefix + "_Test", fNbinsMVAoutput, fNbinsH);
    resMulticlass->CreateMulticlassPerformanceHistos(histNamePrefix);
 
-   resMulticlass->CreateMulticlassHistos( histNamePrefix + "_Train", fNbinsMVAoutput, fNbinsH );
+   resMulticlass->CreateMulticlassHistos(histNamePrefix + "_Train", fNbinsMVAoutput, fNbinsH);
    resMulticlass->CreateMulticlassPerformanceHistos(histNamePrefix);
 }
 
