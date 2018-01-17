@@ -820,6 +820,7 @@ void TMVA::MethodBase::AddMulticlassOutput(Types::ETreeType type)
 
    TString histNamePrefix(GetTestvarName());
    histNamePrefix += (type==Types::kTraining?"_Train":"_Test");
+
    resMulticlass->CreateMulticlassHistos( histNamePrefix, fNbinsMVAoutput, fNbinsH );
    resMulticlass->CreateMulticlassPerformanceHistos(histNamePrefix);
 }
@@ -1080,11 +1081,14 @@ void TMVA::MethodBase::TestMulticlass()
 
    // Create histograms for use in TMVA GUI
    TString histNamePrefix(GetTestvarName());
-   resMulticlass->CreateMulticlassHistos(histNamePrefix + "_Test", fNbinsMVAoutput, fNbinsH);
-   resMulticlass->CreateMulticlassPerformanceHistos(histNamePrefix);
+   TString histNamePrefixTest{histNamePrefix + "_Test"};
+   TString histNamePrefixTrain{histNamePrefix + "_Train"};
 
-   resMulticlass->CreateMulticlassHistos(histNamePrefix + "_Train", fNbinsMVAoutput, fNbinsH);
-   resMulticlass->CreateMulticlassPerformanceHistos(histNamePrefix);
+   resMulticlass->CreateMulticlassHistos(histNamePrefixTest, fNbinsMVAoutput, fNbinsH);
+   resMulticlass->CreateMulticlassPerformanceHistos(histNamePrefixTest);
+
+   resMulticlass->CreateMulticlassHistos(histNamePrefixTrain, fNbinsMVAoutput, fNbinsH);
+   resMulticlass->CreateMulticlassPerformanceHistos(histNamePrefixTrain);
 }
 
 
