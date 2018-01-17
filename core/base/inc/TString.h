@@ -45,21 +45,27 @@ TString operator+(const TString &s1, const TString &s2);
 TString operator+(const TString &s,  const char *cs);
 TString operator+(const char *cs, const TString &s);
 TString operator+(const TString &s, char c);
-TString operator+(const TString &s, Long_t i);
-TString operator+(const TString &s, ULong_t i);
-TString operator+(const TString &s, Long64_t i);
-TString operator+(const TString &s, ULong64_t i);
 TString operator+(char c, const TString &s);
-TString operator+(Long_t i, const TString &s);
-TString operator+(ULong_t i, const TString &s);
-TString operator+(Long64_t i, const TString &s);
-TString operator+(ULong64_t i, const TString &s);
 Bool_t  operator==(const TString &s1, const TString &s2);
 Bool_t  operator==(const TString &s1, const char *s2);
 Bool_t  operator==(const TSubString &s1, const TSubString &s2);
 Bool_t  operator==(const TSubString &s1, const TString &s2);
 Bool_t  operator==(const TSubString &s1, const char *s2);
 
+template<class T>
+struct is_signed_numeral : std::integral_constant<bool,
+   std::is_integral<T>::value && std::is_signed<T>::value && !std::is_same<T,Char_t>::value
+> {};
+
+template<class T>
+struct is_unsigned_numeral : std::integral_constant<bool,
+   std::is_integral<T>::value && !std::is_signed<T>::value && !std::is_same<T,Char_t>::value
+> {};
+
+template<class T>
+struct is_float_numeral : std::integral_constant<bool,
+   std::is_floating_point<T>::value
+> {};
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -133,19 +139,27 @@ friend TString operator+(const TString &s1, const TString &s2);
 friend TString operator+(const TString &s,  const char *cs);
 friend TString operator+(const char *cs, const TString &s);
 friend TString operator+(const TString &s, char c);
-template<class T, class = typename std::is_signed<T>::type>
-friend TString operator+(const TString &s, T i);
-template<class T, class = typename std::is_unsigned<T>::type>
-friend TString operator+(const TString &s, T u);
-template<class T, class = typename std::is_floating_point<T>::type>
-friend TString operator+(const TString &s, T f);
 friend TString operator+(char c, const TString &s);
-template<class T, class = typename std::is_signed<T>::type>
-friend TString operator+(T i, const TString &s);
-template<class T, class = typename std::is_unsigned<T>::type>
-friend TString operator+(T u, const TString &s);
-template<class T, class = typename std::is_floating_point<T>::type>
-friend TString operator+(T f, const TString &s);
+
+template<class T>
+friend typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+operator+(const TString &s, T i);
+template<class T>
+friend typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+operator+(const TString &s, T u);
+template<class T>
+friend typename std::enable_if<is_float_numeral<T>::value,TString>::type
+operator+(const TString &s, T f);
+template<class T>
+friend typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+operator+(T i, const TString &s);
+template<class T>
+friend typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+operator+(T u, const TString &s);
+template<class T>
+friend typename std::enable_if<is_float_numeral<T>::value,TString>::type
+operator+(T f, const TString &s);
+
 friend Bool_t  operator==(const TString &s1, const TString &s2);
 friend Bool_t  operator==(const TString &s1, const char *s2);
 
@@ -298,12 +312,16 @@ public:
    TString    &operator+=(const char *s);        // Append string
    TString    &operator+=(const TString &s);
    TString    &operator+=(char c);
-   template<class T, class = typename std::is_signed<T>::type>
-   TString    &operator+=(T i);
-   template<class T, class = typename std::is_unsigned<T>::type>
-   TString    &operator+=(T u);
-   template<class T, class = typename std::is_floating_point<T>::type>
-   TString    &operator+=(T f);
+
+   template<class T>
+   typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+              &operator+=(T i);
+   template<class T>
+   typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+              &operator+=(T u);
+   template<class T>
+   typename std::enable_if<is_float_numeral<T>::value,TString>::type
+              &operator+=(T f);
 
    // Indexing operators
    char         &operator[](Ssiz_t i);         // Indexing with bounds checking
@@ -512,24 +530,27 @@ inline TString &TString::operator+=(const TString &s)
 inline TString &TString::operator+=(char c)
 { return Append(c); }
 
-template<class T, class = typename std::is_signed<T>::type>
-inline TString &TString::operator+=(T i)
+template<class T>
+inline typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+&TString::operator+=(T i)
 {
    char buffer[32];
    snprintf(buffer, sizeof(buffer), "%lld", static_cast<Long64_t>(i));
    return operator+=(buffer);
 }
 
-template<class T, class = typename std::is_unsigned<T>::type>
-inline TString &TString::operator+=(T u)
+template<class T>
+inline typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+&TString::operator+=(T u)
 {
    char buffer[32];
    snprintf(buffer, sizeof(buffer), "%llu", static_cast<ULong64_t>(u));
    return operator+=(buffer);
 }
 
-template<class T, class = typename std::is_unsigned<T>::type>
-inline TString &TString::operator+=(T f)
+template<class T>
+inline typename std::enable_if<is_float_numeral<T>::value,TString>::type
+&TString::operator+=(T f)
 {
    char buffer[32];
    snprintf(buffer, sizeof(buffer), "%.17Lg", static_cast<LongDouble_t>(f));

@@ -1449,10 +1449,19 @@ TString operator+(const TString &s, char c)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Add string to char.
+
+TString operator+(char c, const TString &s)
+{
+   return TString(&c, 1, s.Data(), s.Length());
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Add signed integer to string.
 
-template <class T, class = typename std::is_signed<T>::type>
-friend TString operator+(const TString &s, T i)
+template<class T>
+typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+operator+(const TString &s, T i)
 {
     char buffer[32];
     snprintf(buffer, sizeof(buffer), "%lld", static_cast<Long64_t>(i));
@@ -1462,8 +1471,9 @@ friend TString operator+(const TString &s, T i)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add unsigned integer to string.
 
-template <class T, class = typename std::is_unsigned<T>::type>
-friend TString operator+(const TString &s, T u)
+template<class T>
+typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+operator+(const TString &s, T u)
 {
     char buffer[32];
     snprintf(buffer, sizeof(buffer), "%llu", static_cast<ULong64_t>(u));
@@ -1473,8 +1483,9 @@ friend TString operator+(const TString &s, T u)
 ////////////////////////////////////////////////////////////////////////////////
 /// Add float to string.
 
-template <class T, class = typename std::is_floating_point<T>::type>
-friend TString operator+(const TString &s, T f)
+template<class T>
+typename std::enable_if<is_float_numeral<T>::value,TString>::type
+operator+(const TString &s, T f)
 {
     char buffer[32];
     snprintf(buffer, sizeof(buffer), "%.17Lg", static_cast<LongDouble_t>(f));
@@ -1482,44 +1493,39 @@ friend TString operator+(const TString &s, T f)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add string to char.
-
-TString operator+(char c, const TString &s)
-{
-   return TString(&c, 1, s.Data(), s.Length());
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Add string to signed integer.
 
-template <class T, class = typename std::is_signed<T>::type>
-friend TString operator+(T i, const TString &s)
+template<class T>
+typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+operator+(T i, const TString &s)
 {
     char buffer[32];
     snprintf(buffer, sizeof(buffer), "%lld", static_cast<Long64_t>(i));
-    return TString(s.Data(), s.Length(), buffer, strlen(buffer));
+    return TString(buffer, strlen(buffer), s.Data(), s.Length());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add string to unsigned integer.
 
-template <class T, class = typename std::is_unsigned<T>::type>
-friend TString operator+(T u, const TString &s)
+template<class T>
+typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+operator+(T u, const TString &s)
 {
     char buffer[32];
     snprintf(buffer, sizeof(buffer), "%llu", static_cast<ULong64_t>(u));
-    return TString(s.Data(), s.Length(), buffer, strlen(buffer));
+    return TString(buffer, strlen(buffer), s.Data(), s.Length());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add string to float.
 
-template <class T, class = typename std::is_floating_point<T>::type>
-friend TString operator+(T f, const TString &s)
+template<class T>
+typename std::enable_if<is_float_numeral<T>::value,TString>::type
+operator+(T f, const TString &s)
 {
    char buffer[32];
    snprintf(buffer, sizeof(buffer), "%.17Lg", static_cast<LongDouble_t>(f));
-   return TString(s.Data(), s.Length(), buffer, strlen(buffer));
+   return TString(buffer, strlen(buffer), s.Data(), s.Length());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
