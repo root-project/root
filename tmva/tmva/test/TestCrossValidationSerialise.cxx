@@ -252,8 +252,19 @@ void TestCeSerialise(TMVA::Types::EMVA methodType, TString methodName, TString m
 }
 
 void TestCrossValidationSerialise() {
-   TestCeSerialise(TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=10");
-   TestCeSerialise(TMVA::Types::kDNN, "DNN", "!H:!V:TrainingStrategy=LearningRate=1e-1,BatchSize=5,ConvergenceSteps=1");
+   {
+      TString bdtOptions = "!H:!V:NTrees=10";
+      TestCeSerialise(TMVA::Types::kBDT, "BDT", bdtOptions);
+   }
+
+#if (defined DNNCPU || defined DNNCUDA)
+   {
+      TString dnnTrainStrat = "TrainingStrategy=LearningRate=1e-1,"
+                              "BatchSize=5,ConvergenceSteps=1";
+      TString dnnOptions = "!H:!V:" + dnnTrainStrat;
+      TestCeSerialise(TMVA::Types::kDNN, "DNN", dnnOptions);
+   }
+#endif
 }
 
 int main()
