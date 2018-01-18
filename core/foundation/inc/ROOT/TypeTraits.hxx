@@ -127,6 +127,26 @@ struct IsContainer<std::array_view<T>> {
    static constexpr bool value = true;
 };
 
+/// Checks for signed integers types that are not characters
+template<class T>
+struct IsSignedNumeral : std::integral_constant<bool,
+   std::is_integral<T>::value &&
+   std::is_signed<T>::value &&
+   !std::is_same<T, char>::value
+> {};
+
+/// Checks for unsigned integer types that are not characters
+template<class T>
+struct IsUnsignedNumeral : std::integral_constant<bool,
+   std::is_integral<T>::value &&
+   !std::is_signed<T>::value &&
+   !std::is_same<T, char>::value
+> {};
+
+/// Checks for floating point types (that are not characters)
+template<class T>
+using IsFloatNumeral = std::is_floating_point<T>;
+
 /// Extract types from the signature of a callable object.
 /// The `CallableTraits` struct contains three type aliases:
 ///   - arg_types: a `TypeList` of all types in the signature, decayed through std::decay

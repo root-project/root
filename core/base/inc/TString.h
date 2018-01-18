@@ -26,12 +26,12 @@
 #include "TMathBase.h"
 
 #include "RStringView.h"
+#include "ROOT/TypeTraits.hxx"
 
 #include <iosfwd>
 #include <stdarg.h>
 #include <stdio.h>
 #include <string>
-#include <type_traits>
 
 class TRegexp;
 class TPRegexp;
@@ -51,7 +51,7 @@ Bool_t  operator==(const TString &s1, const char *s2);
 Bool_t  operator==(const TSubString &s1, const TSubString &s2);
 Bool_t  operator==(const TSubString &s1, const TString &s2);
 Bool_t  operator==(const TSubString &s1, const char *s2);
-
+/*
 template<class T>
 struct is_signed_numeral : std::integral_constant<bool,
    std::is_integral<T>::value && std::is_signed<T>::value
@@ -64,6 +64,7 @@ struct is_unsigned_numeral : std::integral_constant<bool,
 
 template<class T>
 using is_float_numeral = std::is_floating_point<T>;
+*/
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -140,22 +141,22 @@ friend TString operator+(const TString &s, char c);
 friend TString operator+(char c, const TString &s);
 
 template<class T>
-friend typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+friend typename std::enable_if<ROOT::TypeTraits::IsSignedNumeral<T>::value,TString>::type
 operator+(TString s, T i);
 template<class T>
-friend typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+friend typename std::enable_if<ROOT::TypeTraits::IsUnsignedNumeral<T>::value,TString>::type
 operator+(TString s, T u);
 template<class T>
-friend typename std::enable_if<is_float_numeral<T>::value,TString>::type
+friend typename std::enable_if<ROOT::TypeTraits::IsFloatNumeral<T>::value,TString>::type
 operator+(TString s, T f);
 template<class T>
-friend typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+friend typename std::enable_if<ROOT::TypeTraits::IsSignedNumeral<T>::value,TString>::type
 operator+(T i, const TString &s);
 template<class T>
-friend typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+friend typename std::enable_if<ROOT::TypeTraits::IsUnsignedNumeral<T>::value,TString>::type
 operator+(T u, const TString &s);
 template<class T>
-friend typename std::enable_if<is_float_numeral<T>::value,TString>::type
+friend typename std::enable_if<ROOT::TypeTraits::IsFloatNumeral<T>::value,TString>::type
 operator+(T f, const TString &s);
 
 friend Bool_t  operator==(const TString &s1, const TString &s2);
@@ -312,13 +313,13 @@ public:
    TString    &operator+=(char c);
 
    template<class T>
-   typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+   typename std::enable_if<ROOT::TypeTraits::IsSignedNumeral<T>::value,TString>::type
               &operator+=(T i);
    template<class T>
-   typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+   typename std::enable_if<ROOT::TypeTraits::IsUnsignedNumeral<T>::value,TString>::type
               &operator+=(T u);
    template<class T>
-   typename std::enable_if<is_float_numeral<T>::value,TString>::type
+   typename std::enable_if<ROOT::TypeTraits::IsFloatNumeral<T>::value,TString>::type
               &operator+=(T f);
 
    // Indexing operators
@@ -508,22 +509,22 @@ extern int strncasecmp(const char *str1, const char *str2, Ssiz_t n);
 //////////////////////////////////////////////////////////////////////////
 
 template<class T>
-inline typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+inline typename std::enable_if<ROOT::TypeTraits::IsSignedNumeral<T>::value,TString>::type
 operator+(TString s, T i)
 { return s += i; }
 
 template<class T>
-inline typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+inline typename std::enable_if<ROOT::TypeTraits::IsUnsignedNumeral<T>::value,TString>::type
 operator+(TString s, T u)
 { return s += u; }
 
 template<class T>
-inline typename std::enable_if<is_float_numeral<T>::value,TString>::type
+inline typename std::enable_if<ROOT::TypeTraits::IsFloatNumeral<T>::value,TString>::type
 operator+(TString s, T f)
 { return s += f; }
 
 template<class T>
-inline typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+inline typename std::enable_if<ROOT::TypeTraits::IsSignedNumeral<T>::value,TString>::type
 operator+(T i, const TString &s)
 {
     char buffer[32];
@@ -533,7 +534,7 @@ operator+(T i, const TString &s)
 }
 
 template<class T>
-inline typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+inline typename std::enable_if<ROOT::TypeTraits::IsUnsignedNumeral<T>::value,TString>::type
 operator+(T u, const TString &s)
 {
     char buffer[32];
@@ -543,7 +544,7 @@ operator+(T u, const TString &s)
 }
 
 template<class T>
-inline typename std::enable_if<is_float_numeral<T>::value,TString>::type
+inline typename std::enable_if<ROOT::TypeTraits::IsFloatNumeral<T>::value,TString>::type
 operator+(T f, const TString &s)
 {
     char buffer[32];
@@ -574,7 +575,7 @@ inline TString &TString::operator+=(char c)
 { return Append(c); }
 
 template<class T>
-inline typename std::enable_if<is_signed_numeral<T>::value,TString>::type
+inline typename std::enable_if<ROOT::TypeTraits::IsSignedNumeral<T>::value,TString>::type
 &TString::operator+=(T i)
 {
    char buffer[32];
@@ -584,7 +585,7 @@ inline typename std::enable_if<is_signed_numeral<T>::value,TString>::type
 }
 
 template<class T>
-inline typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
+inline typename std::enable_if<ROOT::TypeTraits::IsUnsignedNumeral<T>::value,TString>::type
 &TString::operator+=(T u)
 {
    char buffer[32];
@@ -594,7 +595,7 @@ inline typename std::enable_if<is_unsigned_numeral<T>::value,TString>::type
 }
 
 template<class T>
-inline typename std::enable_if<is_float_numeral<T>::value,TString>::type
+inline typename std::enable_if<ROOT::TypeTraits::IsFloatNumeral<T>::value,TString>::type
 &TString::operator+=(T f)
 {
    char buffer[32];
