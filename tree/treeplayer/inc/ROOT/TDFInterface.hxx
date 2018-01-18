@@ -671,7 +671,7 @@ public:
                                      std::string_view columnNameRegexp = "",
                                      const TSnapshotOptions &options = TSnapshotOptions())
    {
-      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp);
+      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Snapshot");
       return Snapshot(treename, filename, selectedColumns, options);
    }
    // clang-format on
@@ -744,7 +744,7 @@ public:
    /// is empty, all columns are selected.
    TInterface<TLoopManager> Cache(std::string_view columnNameRegexp = "")
    {
-      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp);
+      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Cache");
       return Cache(selectedColumns);
    }
 
@@ -1555,7 +1555,7 @@ public:
    ///
    /// An aggregator callable takes two values, an aggregator variable and a column value. The aggregator variable is
    /// initialized to aggIdentity or default-constructed if aggIdentity is omitted.
-   /// This action calls the aggregator callable for each processed entry, passing in the aggregator variable and 
+   /// This action calls the aggregator callable for each processed entry, passing in the aggregator variable and
    /// the value of the column columnName.
    /// If the signature is `U(U,T)` the aggregator variable is then copy-assigned the result of the execution of the callable.
    /// Otherwise the signature of aggregator must be `void(U&,T)`.
@@ -1637,7 +1637,7 @@ private:
       fValidCustomColumns.emplace_back(slotColName);
    }
 
-   ColumnNames_t ConvertRegexToColumns(std::string_view columnNameRegexp)
+   ColumnNames_t ConvertRegexToColumns(std::string_view columnNameRegexp, std::string_view callerName)
    {
       const auto theRegexSize = columnNameRegexp.size();
       std::string theRegex(columnNameRegexp);
@@ -1684,11 +1684,11 @@ private:
       }
 
       if (selectedColumns.empty()) {
-         std::string text;
+         std::string text(callerName);
          if (columnNameRegexp.empty()) {
-            text = "There is no column available to match.";
+            text = ": there is no column available to match.";
          } else {
-            text = "Regex \"" + columnNameRegexp + "\" did not match any column.";
+            text = ": regex \"" + columnNameRegexp + "\" did not match any column.";
          }
          throw std::runtime_error(text);
       }
