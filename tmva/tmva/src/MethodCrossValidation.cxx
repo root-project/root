@@ -272,6 +272,10 @@ const std::vector<Float_t> &TMVA::MethodCrossValidation::GetMulticlassValues()
 
    } else if (fOutputEnsembling == "Avg") {
 
+      for (auto &e : fMulticlassValues) {
+         e = 0;
+      }
+
       for (auto &m : fEncapsulatedMethods) {
          auto methodValues = m->GetMulticlassValues();
          for (size_t i = 0; i < methodValues.size(); ++i) {
