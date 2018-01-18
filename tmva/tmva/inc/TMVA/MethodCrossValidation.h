@@ -107,12 +107,9 @@ private:
    // MethodBase::fFileDir gives path to weightfiles
 
    std::vector<Float_t> fMulticlassValues;
+   std::vector<Float_t> fRegressionValues;
 
    std::vector<MethodBase *> fEncapsulatedMethods;
-
-   // Temporary holder of data while GetMulticlassValues and GetRegressionValues
-   // are not implemented.
-   std::vector<Float_t> fNotImplementedRetValVec;
 
    // debugging flags
    static const Int_t fgDebugLevel; // debug level determining some printout/control plots etc.
