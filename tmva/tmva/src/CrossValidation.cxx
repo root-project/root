@@ -162,10 +162,6 @@ TMVA::CrossValidation::CrossValidation(TString jobName, TMVA::DataLoader *datalo
    InitOptions();
    ParseOptions();
    CheckForUnusedOptions();
-
-   if (fAnalysisType != Types::kClassification and fAnalysisType != Types::kMulticlass) {
-      Log() << kFATAL << "Only binary and multiclass classification supported so far." << Endl;
-   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -381,28 +377,30 @@ void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
    fFoldFactory->EvaluateAllMethods();
 
    // Results for aggregation (ROC integral, efficiencies etc.)
-   fResults[iMethod].fROCs[iFold] = fFoldFactory->GetROCIntegral(fDataLoader->GetName(), foldTitle);
+   if (fAnalysisType == Types::kClassification or fAnalysisType == Types::kMulticlass) {
+      fResults[iMethod].fROCs[iFold] = fFoldFactory->GetROCIntegral(fDataLoader->GetName(), foldTitle);
 
-   TGraph *gr = fFoldFactory->GetROCCurve(fDataLoader->GetName(), foldTitle, true);
-   gr->SetLineColor(iFold + 1);
-   gr->SetLineWidth(2);
-   gr->SetTitle(foldTitle.Data());
-   fResults[iMethod].fROCCurves->Add(gr);
+      TGraph *gr = fFoldFactory->GetROCCurve(fDataLoader->GetName(), foldTitle, true);
+      gr->SetLineColor(iFold + 1);
+      gr->SetLineWidth(2);
+      gr->SetTitle(foldTitle.Data());
+      fResults[iMethod].fROCCurves->Add(gr);
 
-   fResults[iMethod].fSigs.push_back(smethod->GetSignificance());
-   fResults[iMethod].fSeps.push_back(smethod->GetSeparation());
+      fResults[iMethod].fSigs.push_back(smethod->GetSignificance());
+      fResults[iMethod].fSeps.push_back(smethod->GetSeparation());
 
-   if (fAnalysisType == Types::kClassification) {
-      Double_t err;
-      fResults[iMethod].fEff01s.push_back(smethod->GetEfficiency("Efficiency:0.01", Types::kTesting, err));
-      fResults[iMethod].fEff10s.push_back(smethod->GetEfficiency("Efficiency:0.10", Types::kTesting, err));
-      fResults[iMethod].fEff30s.push_back(smethod->GetEfficiency("Efficiency:0.30", Types::kTesting, err));
-      fResults[iMethod].fEffAreas.push_back(smethod->GetEfficiency("", Types::kTesting, err));
-      fResults[iMethod].fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.01"));
-      fResults[iMethod].fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.10"));
-      fResults[iMethod].fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.30"));
-   } else if (fAnalysisType == Types::kMulticlass) {
-      // Nothing here for now
+      if (fAnalysisType == Types::kClassification) {
+         Double_t err;
+         fResults[iMethod].fEff01s.push_back(smethod->GetEfficiency("Efficiency:0.01", Types::kTesting, err));
+         fResults[iMethod].fEff10s.push_back(smethod->GetEfficiency("Efficiency:0.10", Types::kTesting, err));
+         fResults[iMethod].fEff30s.push_back(smethod->GetEfficiency("Efficiency:0.30", Types::kTesting, err));
+         fResults[iMethod].fEffAreas.push_back(smethod->GetEfficiency("", Types::kTesting, err));
+         fResults[iMethod].fTrainEff01s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.01"));
+         fResults[iMethod].fTrainEff10s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.10"));
+         fResults[iMethod].fTrainEff30s.push_back(smethod->GetTrainingEfficiency("Efficiency:0.30"));
+      } else if (fAnalysisType == Types::kMulticlass) {
+         // Nothing here for now
+      }
    }
 
    // Per-fold file output

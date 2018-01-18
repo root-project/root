@@ -98,6 +98,7 @@ void TMVA::MethodCrossValidation::ProcessOptions()
 void TMVA::MethodCrossValidation::Init(void)
 {
    fMulticlassValues = std::vector<Float_t>(DataInfo().GetNClasses());
+   fRegressionValues = std::vector<Float_t>(DataInfo().GetNTargets());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -295,8 +296,36 @@ const std::vector<Float_t> &TMVA::MethodCrossValidation::GetMulticlassValues()
 
 const std::vector<Float_t> &TMVA::MethodCrossValidation::GetRegressionValues()
 {
-   Log() << kFATAL << "Regression not implemented for CrossValidation" << Endl;
-   return fNotImplementedRetValVec;
+   const Event *ev = GetEvent();
+
+   if (fOutputEnsembling == "None") {
+
+      UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
+      return fEncapsulatedMethods.at(iFold)->GetRegressionValues();
+
+   } else if (fOutputEnsembling == "Avg") {
+
+      for (auto &e : fRegressionValues) {
+         e = 0;
+      }
+
+      for (auto &m : fEncapsulatedMethods) {
+         auto methodValues = m->GetRegressionValues();
+         for (size_t i = 0; i < methodValues.size(); ++i) {
+            fRegressionValues[i] += methodValues[i];
+         }
+      }
+
+      for (auto &e : fRegressionValues) {
+         e /= fEncapsulatedMethods.size();
+      }
+
+      return fRegressionValues;
+
+   } else {
+      Log() << kFATAL << "Ensembling type " << fOutputEnsembling << " unknown" << Endl;
+      return fRegressionValues; // Cannot happen
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
