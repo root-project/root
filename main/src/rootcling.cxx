@@ -12,7 +12,7 @@
 #include "rootclingIO.h"
 #include "rootcling_impl.h"
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "TSystem.h"
 
 extern "C" {

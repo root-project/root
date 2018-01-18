@@ -70,7 +70,7 @@
            Toby Burnett implemented the possibility to use indirect files.
  */
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "ROOT/TIOFeatures.hxx"
 #include <string>
 #include "TFile.h"

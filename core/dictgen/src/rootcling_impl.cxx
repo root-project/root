@@ -167,7 +167,7 @@ const char *rootClingHelp =
 #include "rootcling_impl.h"
 
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #include <iostream>
 #include <iomanip>

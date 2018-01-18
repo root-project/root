@@ -20,7 +20,7 @@
 
 #include "TClingUtils.h"
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #include "cling/Interpreter/CIFactory.h"
 #include "clang/Basic/SourceManager.h"

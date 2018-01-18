@@ -15,7 +15,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include <string>
 #include "TBuffer.h"
 

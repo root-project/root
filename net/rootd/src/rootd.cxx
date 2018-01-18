@@ -209,7 +209,7 @@
 // 17 -> 18: fix problems with '//' in admin paths; partial logging in castor mode
 
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #include <ctype.h>
 #include <fcntl.h>
