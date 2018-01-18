@@ -333,7 +333,7 @@ End_Macro
 ~~~
 */
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "TTree.h"
 
 #include "ROOT/TIOFeatures.hxx"

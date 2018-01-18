@@ -24,7 +24,7 @@ date/time of data taking events and the like. If absolute time is
 required, use TTimeStamp.
 */
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #include <time.h>
 

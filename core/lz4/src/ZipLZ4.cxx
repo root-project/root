@@ -16,7 +16,7 @@
 #include <cstdint>
 #include <cstring>
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 // Pulled from liblz4; upstream library explicitly exposes the symbol but the default build
 // excludes the header.

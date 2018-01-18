@@ -38,7 +38,7 @@
 #include <sys/wait.h>
 #endif
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #ifndef NOFILE
 #   define NOFILE 0

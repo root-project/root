@@ -61,7 +61,7 @@
 #include "Rtypes.h"
 #endif
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #include "RConfigure.h"
 
