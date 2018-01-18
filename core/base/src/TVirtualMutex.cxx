@@ -42,6 +42,3 @@ ClassImp(TLockGuard);
 // concept gGlobalMutex must be used in TStorage to prevent
 // lockup of the system (see TMutex::Factory)
 TVirtualMutex *gGlobalMutex = 0;
-
-// Pin that vtable.
-TVirtualMutex::State::~State() = default;
