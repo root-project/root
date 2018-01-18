@@ -385,7 +385,7 @@ void stress3()
    Long64_t last = f.GetEND();
    Float_t comp = f.GetCompressionFactor();
    Bool_t OK = kTRUE;
-   constexpr Long64_t lastgood  = 51651;
+   constexpr Long64_t lastgood  = 51251;
    constexpr Long64_t tolerance = 150;
    if (last <lastgood-tolerance || last > lastgood+tolerance || comp <1.8 || comp > 2.4) OK = kFALSE;
    if (OK) printf("OK\n");
