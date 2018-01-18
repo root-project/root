@@ -427,21 +427,24 @@ void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
 
 void TMVA::CrossValidation::Evaluate()
 {
+   // Generate K folds on given dataset
+   if (!fFoldStatus) {
+      fDataLoader->MakeKFoldDataSet(*fSplit.get());
+      fFoldStatus = kTRUE;
+   }
+
    fResults.resize(fMethods.size());
    for (UInt_t iMethod = 0; iMethod < fMethods.size(); iMethod++) {
+
       TString methodTypeName = fMethods[iMethod].GetValue<TString>("MethodName");
       TString methodTitle = fMethods[iMethod].GetValue<TString>("MethodTitle");
-      if (methodTypeName == "")
+
+      if (methodTypeName == "") {
          Log() << kFATAL << "No method booked for cross-validation" << Endl;
+      }
 
       TMVA::MsgLogger::EnableOutput();
       Log() << kINFO << "Evaluate method: " << methodTitle << Endl;
-
-      // Generate K folds on given dataset
-      if (!fFoldStatus) {
-         fDataLoader->MakeKFoldDataSet(*fSplit.get());
-         fFoldStatus = kTRUE;
-      }
 
       // Process K folds
       for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
@@ -449,22 +452,22 @@ void TMVA::CrossValidation::Evaluate()
       }
 
       // Serialise the cross evaluated method
-
       TString options =
          Form("SplitExpr=%s:NumFolds=%i"
               ":EncapsulatedMethodName=%s"
               ":EncapsulatedMethodTypeName=%s"
               ":OutputEnsembling=%s",
               fSplitExprString.Data(), fNumFolds, methodTitle.Data(), methodTypeName.Data(), fOutputEnsembling.Data());
+
       fFactory->BookMethod(fDataLoader.get(), Types::kCrossValidation, methodTitle, options);
-
-      // Evaluation
-      fDataLoader->RecombineKFoldDataSet(*fSplit.get());
-
-      fFactory->TrainAllMethods();
-      fFactory->TestAllMethods();
-      fFactory->EvaluateAllMethods();
    }
+
+   // Evaluation
+   fDataLoader->RecombineKFoldDataSet(*fSplit.get());
+
+   fFactory->TrainAllMethods();
+   fFactory->TestAllMethods();
+   fFactory->EvaluateAllMethods();
 
    Log() << kINFO << "Evaluation done." << Endl;
 }
