@@ -53,6 +53,9 @@ public:
 class TWebPadRange {
 public:
    std::string snapid;                        ///< id of pad
+   int logx{0}, logy{0}, logz{0};             ///< pad log properties
+   int gridx{0}, gridy{0};                    ///< pad grid properties
+   int tickx{0}, ticky{0};                    ///< pad ticks properties
    Double_t px1{0}, py1{0}, px2{0}, py2{0};   ///< pad range
    Double_t ux1{0}, uy1{0}, ux2{0}, uy2{0};   ///< pad axis range
    unsigned bits{0};                          ///< canvas status bits like tool editor
@@ -79,6 +82,7 @@ protected:
 
    Bool_t fHasSpecials;   ///<! has special objects which may require pad ranges
    Long64_t fCanvVersion; ///<! actual canvas version, changed with every new Modified() call
+   Bool_t fWaitNewConnection; ///<! when true, Update() will wait for a new connection
 
    virtual void Lock() {}
    virtual void Unlock() {}

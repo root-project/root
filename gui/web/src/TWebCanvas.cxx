@@ -35,12 +35,12 @@
 
 ClassImp(TWebCanvas);
 
-TWebCanvas::TWebCanvas() : TCanvasImp(), fWebConn(), fHasSpecials(kFALSE), fCanvVersion(1)
+TWebCanvas::TWebCanvas() : TCanvasImp(), fWebConn(), fHasSpecials(kFALSE), fCanvVersion(1), fWaitNewConnection(kFALSE)
 {
 }
 
 TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
-   : TCanvasImp(c, name, x, y, width, height), fWebConn(), fHasSpecials(kFALSE), fCanvVersion(1)
+   : TCanvasImp(c, name, x, y, width, height), fWebConn(), fHasSpecials(kFALSE), fCanvVersion(1), fWaitNewConnection(kFALSE)
 {
 }
 
@@ -454,6 +454,8 @@ void TWebCanvas::Show()
 
    CreateWebWindow();
 
+   fWaitNewConnection = kTRUE;
+
    fWindow->Show(where);
 }
 
@@ -501,6 +503,12 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
             can->SetBit(TCanvas::kShowToolTips, r.bits & TCanvas::kShowToolTips);
          }
       }
+
+      pad->SetTicks(r.tickx, r.ticky);
+      pad->SetGrid(r.gridx, r.gridy);
+      pad->SetLogx(r.logx);
+      pad->SetLogy(r.logy);
+      pad->SetLogz(r.logz);
 
       for (unsigned k = 0; k < r.primitives.size(); ++k) {
          TObjLink *lnk = nullptr;
@@ -552,6 +560,8 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
       CheckDataToSend();
 
+      fWaitNewConnection = kFALSE; // established, can be reset
+
       return;
    }
 
@@ -576,10 +586,16 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    const char *cdata = arg.c_str();
 
    if (arg == "CONN_CLOSED") {
+      printf("Connection closed\n");
       fWebConn.erase(iter);
-   } else if (strncmp(cdata, "READY", 5) == 0) {
-      CheckDataToSend();
-   } else if (strncmp(cdata, "RREADY:", 7) == 0) {
+   } else if (arg == "KEEPALIVE") {
+      // do nothing
+   } else if (arg == "QUIT") {
+      // use window manager to correctly terminate http server
+      ROOT::Experimental::TWebWindowsManager::Instance()->Terminate();
+   } else if (strncmp(cdata, "READY6:", 7) == 0) {
+      // this is reply on drawing of ROOT6 snapshot
+      // it confirmas when drawing of specific canvas version is completed
       cdata += 7;
 
       const char *separ = strchr(cdata, ':');
@@ -594,6 +610,9 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             DecodeAllRanges(cdata); // only first connection can set ranges
       }
       CheckDataToSend();
+   } else if (strncmp(cdata, "RANGES6:", 8) == 0) {
+      if (is_first)
+         DecodeAllRanges(cdata + 8); // only first connection can set ranges
    } else if (strncmp(cdata, "GETMENU:", 8) == 0) {
       conn->fGetMenu = cdata + 8;
       CheckDataToSend();
@@ -653,9 +672,6 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
 
          CheckDataToSend(); // check if data should be send
       }
-   } else if (strncmp(cdata, "QUIT", 4) == 0) {
-      // use window manager to correctly terminate http server
-      ROOT::Experimental::TWebWindowsManager::Instance()->Terminate();
    } else if (strncmp(cdata, "RELOAD", 6) == 0) {
       conn->fDrawVersion = 0;
       CheckDataToSend();
@@ -676,7 +692,6 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          Info("ProcessWS", "SVG file %s has been created", filename.Data());
       }
       CheckDataToSend();
-   } else if (arg == "KEEPALIVE") {
    } else {
       Error("ProcessWS", "GET unknown request %d %30s", (int)arg.length(), cdata);
    }
@@ -746,10 +761,11 @@ Bool_t TWebCanvas::WaitWhenCanvasPainted(Long64_t ver)
       Info("WaitWhenCanvasPainted", "version %ld", (long)ver);
 
    while (cnt++ < 1000) {
+
       if (fWebConn.size() > 0)
          had_connection = true;
 
-      if ((fWebConn.size() == 0) && (had_connection || (cnt > 800))) {
+      if ((fWebConn.size() == 0) && (had_connection || (cnt > 800) || !fWaitNewConnection)) {
          if (gDebug > 2)
             Info("WaitWhenCanvasPainted", "no connections - abort");
          return kFALSE; // wait ~1 min if no new connection established
