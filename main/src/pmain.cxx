@@ -30,7 +30,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "RConfigure.h"
 #ifdef R__AFS
 #include "TAFS.h"

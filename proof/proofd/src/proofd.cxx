@@ -155,7 +155,7 @@
 // 14: add env setup message
 
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #include <ctype.h>
 #include <fcntl.h>
