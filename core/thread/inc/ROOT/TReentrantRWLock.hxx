@@ -175,9 +175,6 @@ public:
    TVirtualRWMutex::Hint_t *WriteLock();
    void WriteUnLock(TVirtualRWMutex::Hint_t *);
 
-   std::unique_ptr<TVirtualMutex::State> Reset();
-   void Restore(std::unique_ptr<TVirtualMutex::State>&&);
-
    };
 } // end of namespace ROOT
 
