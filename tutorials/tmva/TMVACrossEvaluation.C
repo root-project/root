@@ -183,6 +183,10 @@ int TMVACrossEvaluation()
                  "!H:!V:NTrees=100:MinNodeSize=2.5%:BoostType=Grad:"
                  "Shrinkage=0.10:nCuts=20:MaxDepth=2");
 
+   ce.BookMethod(TMVA::Types::kFisher, "Fisher",
+                 "H:!V:Fisher:VarTransform=None:CreateMVAPdfs:"
+                 "PDFInterpolMVAPdf=Spline2:NbinsMVAPdf=50:NsmoothMVAPdf=10");
+
    // --------------------------------------------------------------------------
 
    //
@@ -201,6 +205,11 @@ int TMVACrossEvaluation()
    auto bdtg_result = ce.GetResults()[0];
    std::cout << "==> BDTG ROC: avg (std): " << bdtg_result.GetROCAverage() << " ("
              << bdtg_result.GetROCStandardDeviation() << ")"
+             << "" << std::endl;
+
+   auto fisher_result = ce.GetResults()[1];
+   std::cout << "==> Fisher ROC: avg (std): " << fisher_result.GetROCAverage() << " ("
+             << fisher_result.GetROCStandardDeviation() << ")"
              << "" << std::endl;
 
    // --------------------------------------------------------------------------
