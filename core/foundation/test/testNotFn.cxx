@@ -1,3 +1,5 @@
+#if __cplusplus < 201703L && !defined(_MSC_VER)
+
 #include "ROOT/RNotFn.hxx"
 
 #include "gtest/gtest.h"
@@ -26,3 +28,4 @@ TEST(NotFn, Simple)
 
 }
 
+#endif
