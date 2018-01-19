@@ -151,6 +151,7 @@ ROOT_BUILD_OPTION(rpath OFF "Set run-time library load path on executables and s
 ROOT_BUILD_OPTION(ruby OFF "Ruby ROOT bindings, requires ruby >= 1.8")
 ROOT_BUILD_OPTION(runtime_cxxmodules OFF "Enable runtime support for C++ modules.")
 ROOT_BUILD_OPTION(sapdb OFF "MaxDB/SapDB support, requires libsqlod and libsqlrte")
+ROOT_BUILD_OPTION(simdzlib OFF "SIMD version of zlib, requires builtin_zlib")
 ROOT_BUILD_OPTION(shadowpw OFF "Shadow password support")
 ROOT_BUILD_OPTION(shared ON "Use shared 3rd party libraries if possible")
 ROOT_BUILD_OPTION(soversion OFF "Set version number in sonames (recommended)")

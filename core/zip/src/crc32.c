@@ -1,5 +1,5 @@
 /* crc32.c -- compute the CRC-32 of a data stream
- * Copyright (C) 1995-2006, 2010, 2011, 2012 Mark Adler
+ * Copyright (C) 1995-2006, 2010, 2011, 2012, 2016 Mark Adler
  * For conditions of distribution and use, see copyright notice in zlib.h
  *
  * Thanks to Rodney Brown <rbrown64@csc.com.au> for his contribution of faster
@@ -29,6 +29,14 @@
 #endif /* MAKECRCH */
 
 #include "zutil.h"      /* for STDC and FAR definitions */
+
+#ifdef __x86_64__
+#include "cpuid.h"
+#endif
+
+// For function can_sse41()
+#include <stdbool.h>
+
 
 #define local static
 
@@ -201,7 +209,7 @@ const z_crc_t FAR * ZEXPORT get_crc_table()
 #define DO8 DO1; DO1; DO1; DO1; DO1; DO1; DO1; DO1
 
 /* ========================================================================= */
-unsigned long ZEXPORT crc32(crc, buf, len)
+local unsigned long crc32_generic(crc, buf, len)
     unsigned long crc;
     const unsigned char FAR *buf;
     uInt len;
@@ -235,7 +243,100 @@ unsigned long ZEXPORT crc32(crc, buf, len)
     return crc ^ 0xffffffffUL;
 }
 
+#ifdef ZLIB_ENABLE_SIMD
+/* Function stolen from linux kernel 3.14. It computes the CRC over the given
+ * buffer with initial CRC value <crc32>. The buffer is <len> byte in length,
+ * and must be 16-byte aligned.
+ */
+extern uint crc32_pclmul_le_16(unsigned char const *buffer,
+                               size_t len, uInt crc32);
+
+uLong crc32_pclmul(uLong, const Bytef *, uInt) __attribute__ ((__target__ ("sse4.2,pclmul")));
+
+/* We need SSE4.2 and PCLMUL ISA support */
+static inline bool can_sse41(void)
+{
+    unsigned int eax, ebx, ecx, edx;
+    __get_cpuid (1, &eax, &ebx, &ecx, &edx);
+    // Clang and GCC has different names for SSE (bit_SSE42 vs bit_SSE4_2)
+    // The same for bit_PCLMUL, using raw value here...
+    return (ecx & 0x00100000) && (ecx & 0x00000002);
+}
+
+uLong crc32__(unsigned long crc, const unsigned char FAR *buf, unsigned len);
+
+void *resolve_crc32(void)
+{
+    typeof(crc32__) *func = can_sse41() ? crc32_pclmul : crc32_generic;
+    return func;
+}
+
+
+uLong crc32_pclmul(crc, buf, len)
+    uLong crc;
+    const Bytef *buf;
+    uInt len;
+{
+#define PCLMUL_MIN_LEN 64
+#define PCLMUL_ALIGN 16
+#define PCLMUL_ALIGN_MASK 15
+
+    if (len < PCLMUL_MIN_LEN + PCLMUL_ALIGN  - 1)
+      return crc32_generic(crc, buf, len);
+
+    /* Handle the leading patial chunk */
+    uInt misalign = PCLMUL_ALIGN_MASK & ((unsigned long)buf);
+    uInt sz = (PCLMUL_ALIGN - misalign) % PCLMUL_ALIGN;
+    if (sz) {
+      crc = crc32_generic(crc, buf, sz);
+      buf += sz;
+      len -= sz;
+    }
+
+    /* Go over 16-byte chunks */
+    crc = crc32_pclmul_le_16(buf, (len & ~PCLMUL_ALIGN_MASK),
+                             crc ^ 0xffffffffUL);
+    crc = crc ^ 0xffffffffUL;
+
+    /* Handle the trailing partial chunk */
+    sz = len & PCLMUL_ALIGN_MASK;
+    if (sz) {
+      crc = crc32_generic(crc, buf + len - sz, sz);
+    }
+
+    return crc;
+
+#undef PCLMUL_MIN_LEN
+#undef PCLMUL_ALIGN
+#undef PCLMUL_ALIGN_MASK
+}
+
+/* This function needs to be resolved at load time */
+uLong crc32(unsigned long, const unsigned char FAR *, unsigned)
+__attribute__ ((ifunc ("resolve_crc32")));
+#else
+uLong crc32(crc, buf, len)
+    uLong crc;
+    const Bytef *buf;
+    uInt len;
+{
+    return crc32_generic(crc, buf, len);
+}
+#endif
+
 #ifdef BYFOUR
+
+/*
+   This BYFOUR code accesses the passed unsigned char * buffer with a 32-bit
+   integer pointer type. This violates the strict aliasing rule, where a
+   compiler can assume, for optimization purposes, that two pointers to
+   fundamentally different types won't ever point to the same memory. This can
+   manifest as a problem only if one of the pointers is written to. This code
+   only reads from those pointers. So long as this code remains isolated in
+   this compilation unit, there won't be a problem. For this reason, this code
+   should not be copied and pasted into a compilation unit in which other code
+   writes to the buffer that is passed to these routines.
+ */
 
 /* ========================================================================= */
 #define DOLIT4 c ^= *buf4++; \
@@ -287,7 +388,7 @@ local unsigned long crc32_little(crc, buf, len)
 local unsigned long crc32_big(crc, buf, len)
     unsigned long crc;
     const unsigned char FAR *buf;
-    unsigned len;
+     unsigned len;
 {
     register z_crc_t c;
     register const z_crc_t FAR *buf4;
@@ -300,7 +401,6 @@ local unsigned long crc32_big(crc, buf, len)
     }
 
     buf4 = (const z_crc_t FAR *)(const void FAR *)buf;
-    buf4--;
     while (len >= 32) {
         DOBIG32;
         len -= 32;
@@ -309,7 +409,6 @@ local unsigned long crc32_big(crc, buf, len)
         DOBIG4;
         len -= 4;
     }
-    buf4++;
     buf = (const unsigned char FAR *)buf4;
 
     if (len) do {
