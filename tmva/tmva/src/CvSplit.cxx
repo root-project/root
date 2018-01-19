@@ -336,12 +336,17 @@ UInt_t TMVA::CvSplitCrossValidationExpr::GetSpectatorIndexForName(DataSetInfo &d
 ============================================================================= */
 
 ////////////////////////////////////////////////////////////////////////////////
-///
+/// \brief
+/// \param numFolds[in] Number of folds to split data into
+/// \param splitExpr[in] Expression used to split data into folds. If `""` a
+///                      random assignment will be done. Otherwise the
+///                      expression is fed into a TFormula and evaluated per
+///                      event. The resulting value is the the fold assignment.
 
-TMVA::CvSplitCrossValidation::CvSplitCrossValidation(UInt_t numFolds, TString splitExpr)
-   : CvSplit(numFolds), fSplitExprString(splitExpr)
+TMVA::CvSplitCrossValidation::CvSplitCrossValidation(UInt_t numFolds, TString splitExpr, UInt_t seed)
+   : CvSplit(numFolds), fSeed(seed), fSplitExprString(splitExpr)
 {
-   if (not CvSplitCrossValidationExpr::Validate(fSplitExprString)) {
+   if (not CvSplitCrossValidationExpr::Validate(fSplitExprString) and (splitExpr != TString(""))) {
       Log() << kFATAL << "Split expression \"" << fSplitExprString << "\" is not a valid TFormula." << Endl;
    }
 }
@@ -354,7 +359,9 @@ void TMVA::CvSplitCrossValidation::MakeKFoldDataSet(DataSetInfo &dsi)
    // Validate spectator
    // fSpectatorIdx = GetSpectatorIndexForName(dsi, fSpectatorName);
 
-   fSplitExpr = std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(dsi, fSplitExprString));
+   if (fSplitExprString != TString("")) {
+      fSplitExpr = std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(dsi, fSplitExprString));
+   }
 
    // No need to do it again if the sets have already been split.
    if (fMakeFoldDataSet) {
@@ -467,13 +474,45 @@ void TMVA::CvSplitCrossValidation::RecombineKFoldDataSet(DataSetInfo &dsi, Types
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// \brief Generates a vector of fold assignments
+/// \param nEntires[in] Number of events in range
+/// \param numFolds[in] Number of folds to split data into
+/// \param seed[in] Random seed
+///
+/// Randomly assigns events to `numFolds` folds. Each fold will hold at most
+/// `nEntries / numFolds + 1` events.
+///
+
+std::vector<UInt_t>
+TMVA::CvSplitCrossValidation::GetEventIndexToFoldMapping(UInt_t nEntries, UInt_t numFolds, UInt_t seed)
+{
+   // Generate assignment of the pattern `0, 1, 2, 0, 1, 2, 0, 1 ...` for
+   // `numFolds = 3`.
+   std::vector<UInt_t> fOrigToFoldMapping;
+   fOrigToFoldMapping.reserve(nEntries);
+   for (UInt_t iEvent = 0; iEvent < nEntries; ++iEvent) {
+      fOrigToFoldMapping.push_back(iEvent % numFolds);
+   }
+
+   // Shuffle assignment
+   TRandom3 rng(seed);
+   auto rand = [&rng](UInt_t a) { return rng.Integer(a); };
+   std::random_shuffle(fOrigToFoldMapping.begin(), fOrigToFoldMapping.end(), rand);
+
+   return fOrigToFoldMapping;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// \brief Split sets for into k-folds
+/// \param oldSet[in] Original, unsplit, events
+/// \param numFolds[in] Number of folds to split data into
 ///
 
 std::vector<std::vector<TMVA::Event *>>
 TMVA::CvSplitCrossValidation::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds)
 {
-   ULong64_t nEntries = oldSet.size();
-   ULong64_t foldSize = nEntries / numFolds;
+   const ULong64_t nEntries = oldSet.size();
+   const ULong64_t foldSize = nEntries / numFolds;
 
    std::vector<std::vector<Event *>> tempSets;
    tempSets.reserve(fNumFolds);
@@ -482,16 +521,30 @@ TMVA::CvSplitCrossValidation::SplitSets(std::vector<TMVA::Event *> &oldSet, UInt
       tempSets.at(iFold).reserve(foldSize);
    }
 
-   for (ULong64_t i = 0; i < nEntries; i++) {
-      TMVA::Event *ev = oldSet[i];
-      // auto val = ev->GetSpectator(fSpectatorIdx);
-      // tempSets.at((UInt_t)val % (UInt_t)numFolds).push_back(ev);
+   if (fSplitExpr == nullptr or fSplitExprString == "") {
+      // Random split
+      std::vector<UInt_t> fOrigToFoldMapping = GetEventIndexToFoldMapping(nEntries, numFolds, fSeed);
 
-      UInt_t iFold = fSplitExpr->Eval(numFolds, ev);
+      for (UInt_t iEvent = 0; iEvent < nEntries; ++iEvent) {
+         UInt_t iFold = fOrigToFoldMapping[iEvent];
+         TMVA::Event *ev = oldSet[iEvent];
+         tempSets.at(iFold).push_back(ev);
 
-      // std::cout << "Eval: \"" << iFold << "\"" << std::endl;
-      // std::cout << "EvalRaw: \"" << fSplitFormula.EvalPar(nullptr, par_values) << "\"" << std::endl;
-      tempSets.at((UInt_t)iFold).push_back(ev);
+         fEventToFoldMapping[ev] = iFold;
+      }
+   } else {
+      // Deterministic split
+      for (ULong64_t i = 0; i < nEntries; i++) {
+         TMVA::Event *ev = oldSet[i];
+         // auto val = ev->GetSpectator(fSpectatorIdx);
+         // tempSets.at((UInt_t)val % (UInt_t)numFolds).push_back(ev);
+
+         UInt_t iFold = fSplitExpr->Eval(numFolds, ev);
+
+         // std::cout << "Eval: \"" << iFold << "\"" << std::endl;
+         // std::cout << "EvalRaw: \"" << fSplitFormula.EvalPar(nullptr, par_values) << "\"" << std::endl;
+         tempSets.at((UInt_t)iFold).push_back(ev);
+      }
    }
 
    return tempSets;

@@ -32,14 +32,14 @@ ClassImp(TMVA::MethodCrossValidation);
 
 TMVA::MethodCrossValidation::MethodCrossValidation(const TString &jobName, const TString &methodTitle,
                                                    DataSetInfo &theData, const TString &theOption)
-   : TMVA::MethodBase(jobName, Types::kCrossValidation, methodTitle, theData, theOption)
+   : TMVA::MethodBase(jobName, Types::kCrossValidation, methodTitle, theData, theOption), fSplitExpr(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 TMVA::MethodCrossValidation::MethodCrossValidation(DataSetInfo &theData, const TString &theWeightFile)
-   : TMVA::MethodBase(Types::kCrossValidation, theData, theWeightFile)
+   : TMVA::MethodBase(Types::kCrossValidation, theData, theWeightFile), fSplitExpr(nullptr)
 {
 }
 
@@ -80,8 +80,10 @@ void TMVA::MethodCrossValidation::ProcessOptions()
    Log() << kDEBUG << "ProcessOptions -- fEncapsulatedMethodName: " << fEncapsulatedMethodName << Endl;
    Log() << kDEBUG << "ProcessOptions -- fEncapsulatedMethodTypeName: " << fEncapsulatedMethodTypeName << Endl;
 
-   fSplitExpr =
-      std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(DataInfo(), fSplitExprString));
+   if (fSplitExprString != TString("")) {
+      fSplitExpr =
+         std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(DataInfo(), fSplitExprString));
+   }
 
    for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
       TString weightfile = GetWeightFileNameForFold(iFold);
@@ -223,8 +225,10 @@ void TMVA::MethodCrossValidation::ReadWeightsFromXML(void *parent)
    }
 
    // SplitExpr
-   fSplitExpr =
-      std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(DataInfo(), fSplitExprString));
+   if (fSplitExprString != TString("")) {
+      fSplitExpr =
+         std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(DataInfo(), fSplitExprString));
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -244,8 +248,15 @@ Double_t TMVA::MethodCrossValidation::GetMvaValue(Double_t *err, Double_t *errUp
    const Event *ev = GetEvent();
 
    if (fOutputEnsembling == "None") {
-      UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
-      return fEncapsulatedMethods.at(iFold)->GetMvaValue(err, errUpper);
+      if (fSplitExpr != nullptr) {
+         // K-folds with a deterministic split
+         UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
+         return fEncapsulatedMethods.at(iFold)->GetMvaValue(err, errUpper);
+      } else {
+         // K-folds with a random split was used
+         UInt_t iFold = fEventToFoldMapping.at(Data()->GetEvent());
+         return fEncapsulatedMethods.at(iFold)->GetMvaValue(err, errUpper);
+      }
    } else if (fOutputEnsembling == "Avg") {
       Double_t val = 0.0;
       for (auto &m : fEncapsulatedMethods) {
@@ -266,10 +277,15 @@ const std::vector<Float_t> &TMVA::MethodCrossValidation::GetMulticlassValues()
    const Event *ev = GetEvent();
 
    if (fOutputEnsembling == "None") {
-
-      UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
-      return fEncapsulatedMethods.at(iFold)->GetMulticlassValues();
-
+      if (fSplitExpr != nullptr) {
+         // K-folds with a deterministic split
+         UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
+         return fEncapsulatedMethods.at(iFold)->GetMulticlassValues();
+      } else {
+         // K-folds with a random split was used
+         UInt_t iFold = fEventToFoldMapping.at(Data()->GetEvent());
+         return fEncapsulatedMethods.at(iFold)->GetMulticlassValues();
+      }
    } else if (fOutputEnsembling == "Avg") {
 
       for (auto &e : fMulticlassValues) {
@@ -303,10 +319,15 @@ const std::vector<Float_t> &TMVA::MethodCrossValidation::GetRegressionValues()
    const Event *ev = GetEvent();
 
    if (fOutputEnsembling == "None") {
-
-      UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
-      return fEncapsulatedMethods.at(iFold)->GetRegressionValues();
-
+      if (fSplitExpr != nullptr) {
+         // K-folds with a deterministic split
+         UInt_t iFold = fSplitExpr->Eval(fNumFolds, ev);
+         return fEncapsulatedMethods.at(iFold)->GetRegressionValues();
+      } else {
+         // K-folds with a random split was used
+         UInt_t iFold = fEventToFoldMapping.at(Data()->GetEvent());
+         return fEncapsulatedMethods.at(iFold)->GetRegressionValues();
+      }
    } else if (fOutputEnsembling == "Avg") {
 
       for (auto &e : fRegressionValues) {
