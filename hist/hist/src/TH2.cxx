@@ -691,25 +691,38 @@ void TH2::FillRandom(TH1 *h, Int_t ntimes)
 ////////////////////////////////////////////////////////////////////////////////
 /// Find first bin with content > threshold for axis (1=x, 2=y, 3=z)
 /// if no bins with content > threshold is found the function returns -1.
+/// The search will occur between the specified first and last bin. Specifying
+/// the value of the last bin to search to less than zero will search until the
+/// last defined bin.
 
-Int_t TH2::FindFirstBinAbove(Double_t threshold, Int_t axis) const
+Int_t TH2::FindFirstBinAbove(Double_t threshold, Int_t axis, Int_t firstBin, Int_t lastBin) const
 {
    if (axis < 1 || axis > 2) {
       Warning("FindFirstBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
    }
-   Int_t nbinsx = fXaxis.GetNbins();
-   Int_t nbinsy = fYaxis.GetNbins();
-   Int_t binx, biny;
+   if (firstBin < 1) {
+      firstBin = 1;
+   }
+
    if (axis == 1) {
-      for (binx=1;binx<=nbinsx;binx++) {
-         for (biny=1;biny<=nbinsy;biny++) {
+      Int_t nbinsy = fYaxis.GetNbins();
+      if (lastBin < 0 || lastBin > fXaxis.GetNbins()) {
+         lastBin = fXaxis.GetNbins();
+      }
+      for (Int_t binx = firstBin; binx <= lastBin; binx++) {
+         for (Int_t biny = 1; biny <= nbinsy; biny++) {
             if (GetBinContent(binx,biny) > threshold) return binx;
          }
       }
-   } else {
-      for (biny=1;biny<=nbinsy;biny++) {
-         for (binx=1;binx<=nbinsx;binx++) {
+   }
+   else if (axis == 2) {
+      Int_t nbinsx = fXaxis.GetNbins();
+      if (lastBin < 0 || lastBin > fYaxis.GetNbins()) {
+         lastBin = fYaxis.GetNbins();
+      }
+      for (Int_t biny = firstBin; biny <= lastBin; biny++) {
+         for (Int_t binx = 1; binx <= nbinsx; binx++) {
             if (GetBinContent(binx,biny) > threshold) return biny;
          }
       }
@@ -721,32 +734,44 @@ Int_t TH2::FindFirstBinAbove(Double_t threshold, Int_t axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Find last bin with content > threshold for axis (1=x, 2=y, 3=z)
 /// if no bins with content > threshold is found the function returns -1.
+/// The search will occur between the specified first and last bin. Specifying
+/// the value of the last bin to search to less than zero will search until the
+/// last defined bin.
 
-Int_t TH2::FindLastBinAbove(Double_t threshold, Int_t axis) const
+Int_t TH2::FindLastBinAbove(Double_t threshold, Int_t axis, Int_t firstBin, Int_t lastBin) const
 {
    if (axis < 1 || axis > 2) {
       Warning("FindLastBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
    }
-   Int_t nbinsx = fXaxis.GetNbins();
-   Int_t nbinsy = fYaxis.GetNbins();
-   Int_t binx, biny;
+   if (firstBin < 1) {
+      firstBin = 1;
+   }
+
    if (axis == 1) {
-      for (binx=nbinsx;binx>=1;binx--) {
-         for (biny=1;biny<=nbinsy;biny++) {
+      Int_t nbinsy = fYaxis.GetNbins();
+      if (lastBin < 0 || lastBin > fXaxis.GetNbins()) {
+         lastBin = fXaxis.GetNbins();
+      }
+      for (Int_t binx = lastBin; binx >= firstBin; binx--) {
+         for (Int_t biny = 1; biny <= nbinsy; biny++) {
             if (GetBinContent(binx,biny) > threshold) return binx;
          }
       }
-   } else {
-      for (biny=nbinsy;biny>=1;biny--) {
-         for (binx=1;binx<=nbinsx;binx++) {
+   }
+   else if (axis == 2) {
+      Int_t nbinsx = fXaxis.GetNbins();
+      if (lastBin < 0 || lastBin > fYaxis.GetNbins()) {
+         lastBin = fYaxis.GetNbins();
+      }
+      for (Int_t biny = lastBin; biny >= firstBin; biny--) {
+         for (Int_t binx = 1; binx <= nbinsx; binx++) {
             if (GetBinContent(binx,biny) > threshold) return biny;
          }
       }
    }
    return -1;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 

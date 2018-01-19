@@ -3636,8 +3636,11 @@ Int_t TH1::FindFixBin(Double_t x, Double_t y, Double_t z) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Find first bin with content > threshold for axis (1=x, 2=y, 3=z)
 /// if no bins with content > threshold is found the function returns -1.
+/// The search will occur between the specified first and last bin. Specifying
+/// the value of the last bin to search to less than zero will search until the
+/// last defined bin.
 
-Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis) const
+Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis, Int_t firstBin, Int_t lastBin) const
 {
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 
@@ -3645,8 +3648,13 @@ Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis) const
       Warning("FindFirstBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
    }
-   Int_t nbins = fXaxis.GetNbins();
-   for (Int_t bin=1;bin<=nbins;bin++) {
+   if (lastBin < 0 || lastBin > fXaxis.GetNbins()) {
+      lastBin = fXaxis.GetNbins();
+   }
+   if (firstBin < 1) {
+      firstBin = 1;
+   }
+   for (Int_t bin = firstBin; bin <= lastBin; bin++) {
       if (RetrieveBinContent(bin) > threshold) return bin;
    }
    return -1;
@@ -3655,8 +3663,11 @@ Int_t TH1::FindFirstBinAbove(Double_t threshold, Int_t axis) const
 ////////////////////////////////////////////////////////////////////////////////
 /// Find last bin with content > threshold for axis (1=x, 2=y, 3=z)
 /// if no bins with content > threshold is found the function returns -1.
+/// The search will occur between the specified first and last bin. Specifying
+/// the value of the last bin to search to less than zero will search until the
+/// last defined bin.
 
-Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis) const
+Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis, Int_t firstBin, Int_t lastBin) const
 {
    if (fBuffer) ((TH1*)this)->BufferEmpty();
 
@@ -3664,8 +3675,13 @@ Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis) const
       Warning("FindLastBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
    }
-   Int_t nbins = fXaxis.GetNbins();
-   for (Int_t bin=nbins;bin>=1;bin--) {
+   if (lastBin < 0 || lastBin > fXaxis.GetNbins()) {
+      lastBin = fXaxis.GetNbins();
+   }
+   if (firstBin < 1) {
+      firstBin = 1;
+   }
+   for (Int_t bin = lastBin; bin >= firstBin; bin--) {
       if (RetrieveBinContent(bin) > threshold) return bin;
    }
    return -1;
