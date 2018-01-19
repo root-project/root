@@ -238,7 +238,7 @@ if (builtin_zstd)
   set(ZSTD_URL https://github.com/facebook/zstd/archive/v1.3.2.tar.gz)
   set(ZSTD_SHA256 ac5054a3c64e6510bc1ae890d05e3d271cc33ceebc9d06ac9f08105766d2798a)
   set(ZSTD_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}zstd${CMAKE_STATIC_LIBRARY_SUFFIX})
-  set(ZSTD_C_FLAGS -fPIC -Wno-unused-variable -O3)
+  set(ZSTD_C_FLAGS "-fPIC -Wno-unused-variable -O3")
   ExternalProject_Add(
     ZSTD
     URL ${ZSTD_URL}
