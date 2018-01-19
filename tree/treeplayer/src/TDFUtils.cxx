@@ -41,6 +41,7 @@ TIgnoreErrorLevelRAII::~TIgnoreErrorLevelRAII()
 std::string
 ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch, TDataSource *ds)
 {
+   // if this is a TDataSource column, we just ask the type name to the data-source
    if (ds && ds->HasColumn(colName)) {
       return ds->GetTypeName(colName);
    }
@@ -48,53 +49,38 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
    TBranch *branch = nullptr;
    if (tree)
       branch = tree->GetBranch(colName.c_str());
-   if (!branch && !tmpBranch) {
-      throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
-   }
    if (branch) {
       // this must be a real TTree branch
       static const TClassRef tbranchelRef("TBranchElement");
       if (branch->InheritsFrom(tbranchelRef)) {
+         // this branch is not a fundamental type, we can ask for the class name
          return static_cast<TBranchElement *>(branch)->GetClassName();
-      } else { // Try the fundamental type
-         std::string_view title(branch->GetTitle());
-         char typeCode = title.back();
-         std::string type;
-         if (typeCode == 'B')
-            type = "char";
-         else if (typeCode == 'b')
-            type = "unsigned char";
-         else if (typeCode == 'I')
-            type = "int";
-         else if (typeCode == 'i')
-            type = "unsigned int";
-         else if (typeCode == 'S')
-            type = "short";
-         else if (typeCode == 's')
-            type = "unsigned short";
-         else if (typeCode == 'D')
-            type = "double";
-         else if (typeCode == 'F')
-            type = "float";
-         else if (typeCode == 'n')
-            type = "Float_t";
-         else if (typeCode == 'L')
-            type = "Long64_t";
-         else if (typeCode == 'l')
-            type = "ULong64_t";
-         else if (typeCode == 'O')
-            type = "bool";
-         if (type.empty())
-            throw std::runtime_error("could not deduce type of branch " + std::string(title));
-         if (title.size() > 3 && title[title.size() - 3] == ']') {
-            // title has the form "varname[size]/X", i.e. it refers to an array (doesn't matter if size is fixed or not)
-            // TDataFrame reads it as a TArrayBranch
-            return "ROOT::Experimental::TDF::TArrayBranch<" + type + ">";
+      } else {
+         // this branch must be a fundamental type or array thereof
+         const auto listOfLeaves = branch->GetListOfLeaves();
+         const auto nLeaves = listOfLeaves->GetEntries();
+         if (nLeaves != 1)
+            throw std::runtime_error("TTree branch " + colName + " has " + std::to_string(nLeaves) +
+                                     " leaves. Only one leaf per branch is supported.");
+         TLeaf *l = static_cast<TLeaf *>(listOfLeaves->UncheckedAt(0));
+         const std::string branchType = l->GetTypeName();
+         if (branchType.empty()) {
+            throw std::runtime_error("could not deduce type of branch " + std::string(colName));
+         } else if (l->GetLeafCount() != nullptr && l->GetLenStatic() == 1) {
+            // this is a variable-sized array
+            return "ROOT::Experimental::TDF::TArrayBranch<" + branchType + ">";
+         } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() > 1) {
+            // this is a fixed-sized array (we do not differentiate between variable- and fixed-sized arrays)
+            return "ROOT::Experimental::TDF::TArrayBranch<" + branchType + ">";
+         } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() == 1) {
+            // this branch contains a single fundamental type
+            return l->GetTypeName();
          } else {
-            return type;
+            // we do not know how to deal with this branch
+            throw std::runtime_error("TTree branch " + colName + " has both a leaf count and a static length. This is not supported.");
          }
       }
-   } else {
+   } else if (tmpBranch) {
       // this must be a temporary branch
       const auto &type_id = tmpBranch->GetTypeId();
       if (auto c = TClass::GetClass(type_id)) {
@@ -133,8 +119,9 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
          msg += ".";
          throw std::runtime_error(msg);
       }
+   } else {
+      throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
    }
-   // we never reach here
 }
 
 const char *ToConstCharPtr(const char *s)
