@@ -24,6 +24,7 @@ class TString;
 
 namespace TMVA {
 
+class CrossValidation;
 class DataSetInfo;
 class Event;
 
@@ -116,8 +117,11 @@ private:
 ============================================================================= */
 
 class CvSplitCrossValidation : public CvSplit {
+
+   friend CrossValidation;
+
 public:
-   CvSplitCrossValidation(UInt_t numFolds, TString spectatorName);
+   CvSplitCrossValidation(UInt_t numFolds, TString splitExpr, UInt_t seed = 100);
    ~CvSplitCrossValidation() override {}
 
    void MakeKFoldDataSet(DataSetInfo &dsi) override;
@@ -126,14 +130,21 @@ public:
 
 private:
    std::vector<std::vector<Event *>> SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds) override;
+   std::vector<UInt_t> GetEventIndexToFoldMapping(UInt_t nEntries, UInt_t numFolds, UInt_t seed = 100);
 
 private:
+   UInt_t fSeed;
    TString fSplitExprString; //! Expression used to split data into folds. Should output values between 0 and numFolds.
    std::unique_ptr<CvSplitCrossValidationExpr> fSplitExpr;
 
    std::vector<std::vector<TMVA::Event *>> fTrainEvents;
    std::vector<std::vector<TMVA::Event *>> fValidEvents;
    std::vector<std::vector<TMVA::Event *>> fTestEvents;
+
+   // Used for CrossValidation with random splits (not using the
+   // CVSplitCrossValisationExpr functionality) to communicate Event to fold
+   // mapping.
+   std::map<const TMVA::Event *, UInt_t> fEventToFoldMapping;
 
 private:
    ClassDefOverride(CvSplitCrossValidation, 0);

@@ -29,10 +29,13 @@
 
 namespace TMVA {
 
+class CrossValidation;
 class Ranking;
 
 // Looks for serialised methods of the form methodTitle + "_fold" + iFold;
 class MethodCrossValidation : public MethodBase {
+
+   friend CrossValidation;
 
 public:
    // constructor for training and reading
@@ -92,9 +95,7 @@ private:
    TString GetWeightFileNameForFold(UInt_t iFold) const;
    MethodBase *InstantiateMethodFromXML(TString methodTypeName, TString weightfile) const;
 
-public:
-   // TODO: Only public until proper getter and setters are implemented
-   // TODO: Add setter both for EMVA and String Typename directly.
+private:
    TString fEncapsulatedMethodName;
    TString fEncapsulatedMethodTypeName;
    UInt_t fNumFolds;
@@ -103,19 +104,17 @@ public:
    TString fSplitExprString;
    std::unique_ptr<CvSplitCrossValidationExpr> fSplitExpr;
 
-private:
-   // MethodBase::fFileDir gives path to weightfiles
-
    std::vector<Float_t> fMulticlassValues;
    std::vector<Float_t> fRegressionValues;
 
    std::vector<MethodBase *> fEncapsulatedMethods;
 
-   // debugging flags
-   static const Int_t fgDebugLevel; // debug level determining some printout/control plots etc.
+   // Used for CrossValidation with random splits (not using the
+   // CVSplitCrossValisationExpr functionality) to communicate Event to fold
+   // mapping.
+   std::map<const TMVA::Event *, UInt_t> fEventToFoldMapping;
 
    // for backward compatibility
-
    ClassDef(MethodCrossValidation, 0);
 };
 

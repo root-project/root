@@ -296,7 +296,7 @@ void TMVA::CrossValidation::ParseOptions()
 
    fFoldFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fCvFactoryOptions));
 
-   // The fOutputFactory should always have !ModelPersitence set since we use a custom code path for this.
+   // The fOutputFactory should always have !ModelPersistence set since we use a custom code path for this.
    //    In this case we create a special method (MethodCrossValidation) that can only be used by
    //    CrossValidation and the Reader.
    if (fOutputFile == nullptr) {
@@ -458,13 +458,35 @@ void TMVA::CrossValidation::Evaluate()
               fSplitExprString.Data(), fNumFolds, methodTitle.Data(), methodTypeName.Data(), fOutputEnsembling.Data());
 
       fFactory->BookMethod(fDataLoader.get(), Types::kCrossValidation, methodTitle, options);
+
+      // Feed EventToFold mapping used when random fold assignments are used
+      // (when splitExpr="").
+      IMethod *method_interface = fFactory->GetMethod(fDataLoader.get()->GetName(), methodTitle);
+      MethodCrossValidation *method = dynamic_cast<MethodCrossValidation *>(method_interface);
+
+      method->fEventToFoldMapping = fSplit.get()->fEventToFoldMapping;
    }
 
-   // Evaluation
+   // Recombination of data (making sure there is data in training and testing trees).
    fDataLoader->RecombineKFoldDataSet(*fSplit.get());
 
-   fFactory->TrainAllMethods();
+   // "Eval" on training set
+   for (UInt_t iMethod = 0; iMethod < fMethods.size(); iMethod++) {
+      TString methodTypeName = fMethods[iMethod].GetValue<TString>("MethodName");
+      TString methodTitle = fMethods[iMethod].GetValue<TString>("MethodTitle");
+
+      IMethod *method_interface = fFactory->GetMethod(fDataLoader.get()->GetName(), methodTitle);
+      MethodCrossValidation *method = dynamic_cast<MethodCrossValidation *>(method_interface);
+
+      Event::SetIsTraining(kTRUE);
+      method->TrainMethod();
+      Event::SetIsTraining(kFALSE);
+   }
+
+   // Eval on Testing set
    fFactory->TestAllMethods();
+
+   // Calc statistics
    fFactory->EvaluateAllMethods();
 
    Log() << kINFO << "Evaluation done." << Endl;
