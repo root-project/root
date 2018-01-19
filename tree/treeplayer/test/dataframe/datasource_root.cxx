@@ -47,7 +47,7 @@ TEST(TRootDS, ColTypeNames)
    EXPECT_STREQ("i", colNames[0].c_str());
    EXPECT_STREQ("g", colNames[1].c_str());
 
-   EXPECT_STREQ("int", tds.GetTypeName("i").c_str());
+   EXPECT_STREQ("Int_t", tds.GetTypeName("i").c_str());
    EXPECT_STREQ("TGraph", tds.GetTypeName("g").c_str());
 }
 
