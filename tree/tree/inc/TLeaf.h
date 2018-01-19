@@ -18,8 +18,25 @@
 // TLeaf                                                                //
 //                                                                      //
 // A TTree object is a list of TBranch.                                 //
-// A TBranch object is a list of TLeaf.                                 //
-// A TLeaf describes the branch data types.                             //
+// A TBranch object is a list of TLeaf.  In most cases, the TBranch     //
+// will have one TLeaf.                                                 //
+// A TLeaf describes the branch data types and holds the data.          //
+//                                                                      //
+// A few notes about the data held by the leaf.  It can contain:        //
+//   1 a single object or primitive (e.g., one float),                  //
+//   2 a fixed-number of objects (e.g., each entry has two floats).     //
+//     The number of elements per entry is saved in `fLen`.             //
+//   3 a dynamic number of primitives.  The number of objects in each   //
+//     entry is saved in the `fLeafCount` branch.                       //
+//                                                                      //
+// Note options (2) and (3) can combined - if fLeafCount says an entry  //
+// has 3 elements and fLen is 2, then there will be 6 objects in that   //
+// entry.                                                               //
+//                                                                      //
+// Additionally, `fNdata` is transient and generated on read to         //
+// determine the necessary size of a buffer to hold event data;         //
+// depending on the call-site, it may be sized larger than the number   //
+// of elements                                                          //
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
@@ -37,8 +54,8 @@ private:
 
 protected:
 
-   Int_t       fNdata;           ///<! Number of elements in fAddress data buffer
-   Int_t       fLen;             ///<  Number of fixed length elements
+   Int_t       fNdata;           ///<! Number of elements in fAddress data buffer.
+   Int_t       fLen;             ///<  Number of fixed length elements in the leaf's data.
    Int_t       fLenType;         ///<  Number of bytes for this data type
    Int_t       fOffset;          ///<  Offset in ClonesArray object (if one)
    Bool_t      fIsRange;         ///<  (=kTRUE if leaf has a range, kFALSE otherwise)
