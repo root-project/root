@@ -76,8 +76,6 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
             type = "double";
          else if (typeCode == 'F')
             type = "float";
-         else if (typeCode == 'n')
-            type = "Float_t";
          else if (typeCode == 'L')
             type = "Long64_t";
          else if (typeCode == 'l')
