@@ -100,19 +100,19 @@ TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
    t.Branch("arrint", &a, "a[2]/I");
    t.Branch("vararrint", &a, "a[i]/I");
 
-   std::map<const char *, const char *> nameTypes = {{"char", "char"},
-                                                     {"uchar", "unsigned char"},
-                                                     {"i", "int"},
-                                                     {"uint", "unsigned int"},
-                                                     {"short", "short"},
-                                                     {"ushort", "unsigned short"},
-                                                     {"double", "double"},
-                                                     {"float", "float"},
+   std::map<const char *, const char *> nameTypes = {{"char", "Char_t"},
+                                                     {"uchar", "UChar_t"},
+                                                     {"i", "Int_t"},
+                                                     {"uint", "UInt_t"},
+                                                     {"short", "Short_t"},
+                                                     {"ushort", "UShort_t"},
+                                                     {"double", "Double_t"},
+                                                     {"float", "Float_t"},
                                                      {"Long64_t", "Long64_t"},
                                                      {"ULong64_t", "ULong64_t"},
-                                                     {"bool", "bool"},
-                                                     {"arrint", "ROOT::Experimental::TDF::TArrayBranch<int>"},
-                                                     {"vararrint", "ROOT::Experimental::TDF::TArrayBranch<int>"}};
+                                                     {"bool", "Bool_t"},
+                                                     {"arrint", "ROOT::Experimental::TDF::TArrayBranch<Int_t>"},
+                                                     {"vararrint", "ROOT::Experimental::TDF::TArrayBranch<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
       auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, &t, nullptr);
