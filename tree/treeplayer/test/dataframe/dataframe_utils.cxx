@@ -120,6 +120,33 @@ TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
    }
 }
 
+TEST(TDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
+{
+   int i;
+   float f;
+   int a[2];
+
+   TTree t("t", "t");
+   auto b = t.Branch("float", &f);
+   b->SetTitle("custom title");
+   b = t.Branch("i", &i);
+   b->SetTitle("custom title");
+   b = t.Branch("arrint", &a, "a[2]/I");
+   b->SetTitle("custom title");
+   b = t.Branch("vararrint", &a, "a[i]/I");
+   b->SetTitle("custom title");
+
+   std::map<const char *, const char *> nameTypes = {{"float", "Float_t"},
+                                                     {"i", "Int_t"},
+                                                     {"arrint", "ROOT::Experimental::TDF::TArrayBranch<Int_t>"},
+                                                     {"vararrint", "ROOT::Experimental::TDF::TArrayBranch<Int_t>"}};
+
+   for (auto &nameType : nameTypes) {
+      auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, &t, nullptr);
+      EXPECT_STREQ(nameType.second, typeName.c_str());
+   }
+}
+
 TEST(TDataFrameUtils, ToConstCharPtr)
 {
    const char *s_content("mystring");
