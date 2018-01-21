@@ -299,7 +299,7 @@ struct TTakeRealTypes {
       typename std::conditional<isAB && TDFInternal::IsDeque_t<NewC1_t>::value, std::deque<VTColl_t>, NewC1_t>::type;
    using RealColl_t = NewC2_t;
 };
-template<typename T, typename C>
+template <typename T, typename C>
 using ColType_t = typename TTakeRealTypes<T, C>::RealColl_t;
 } // namespace TDF
 } // namespace Detail
