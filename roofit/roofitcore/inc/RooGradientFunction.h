@@ -1,11 +1,9 @@
 /*****************************************************************************
  * Project: RooFit                                                           *
- * Package: RooFitCore                                                       * 
+ * Package: RooFitCore                                                       *
  * @(#)root/roofitcore:$Id$
  * Authors:                                                                  *
- *   AL, Alfio Lazzaro,   INFN Milan,        alfio.lazzaro@mi.infn.it        *
  *   PB, Patrick Bos,     NL eScience Center, p.bos@esciencecenter.nl        *
- *   VC, Vince Croft,     DIANA / NYU,        vincent.croft@cern.ch          *
  *                                                                           *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
@@ -13,19 +11,19 @@
  * listed in LICENSE (http://roofit.sourceforge.net/license.txt)             *
  *****************************************************************************/
 
-#ifndef __ROOFIT_NORooGradMinimizer
+#ifndef ROO_GRADIENT_FUNCTION
+#define ROO_GRADIENT_FUNCTION
 
-#ifndef ROO_GRAD_MINIMIZER_FCN
-#define ROO_GRAD_MINIMIZER_FCN
 
-#include "Math/IFunction.h"
+#include "Math/IFunction.h" // ROOT::Math::IMultiGradFunction
 #include "Fit/ParameterSettings.h"
 #include "Fit/FitResult.h"
 #include "NumericalDerivatorMinuit2.h"
 
 #include "TMatrixDSym.h"
 
-#include "RooAbsReal.h"
+//#include "RooAbsReal.h"
+class RooAbsReal;
 #include "RooArgList.h"
 
 #include <iostream>
@@ -33,19 +31,18 @@
 
 #include "Minuit2/FunctionGradient.h"
 
-class RooGradMinimizer;
-
-
-class RooGradMinimizerFcn : public ROOT::Math::IMultiGradFunction {
+class RooGradientFunction : public ROOT::Math::IMultiGradFunction {
 
 public:
 
-  RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer *context,
-                      bool always_exactly_mimic_minuit2 = true, bool verbose = false);
+  enum class GradientCalculatorMode {ExactlyMinuit2, AlmostMinuit2};
 
-  RooGradMinimizerFcn(const RooGradMinimizerFcn &other);
+  RooGradientFunction(RooAbsReal *funct,
+                      GradientCalculatorMode grad_mode = ExactlyMinuit2);
 
-  virtual ~RooGradMinimizerFcn();
+  RooGradientFunction(const RooGradientFunction &other);
+
+  virtual ~RooGradientFunction();
 
   ROOT::Math::IMultiGradFunction *Clone() const override;
 
@@ -152,7 +149,7 @@ private:
   bool _always_exactly_mimic_minuit2; //! only used for initializing the derivator
 public:
   bool always_exactly_mimic_minuit2() const;
+  bool set_always_exactly_mimic_minuit2(bool flag = true) const;
 
 };
-#endif
-#endif
+#endif //ROO_GRADIENT_FUNCTION

@@ -41,7 +41,7 @@ namespace RooFit {
     NumericalDerivatorMinuit2();
     NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other);
     NumericalDerivatorMinuit2& operator=(const NumericalDerivatorMinuit2 &other);
-    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level);//, double precision);
+    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2 = true);
     //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter);
     //   NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy);
     virtual ~NumericalDerivatorMinuit2();
@@ -81,21 +81,10 @@ namespace RooFit {
     // these are mutable because SetInitialGradient must be const because it's called
     // from InitGradient which is const because DoDerivative must be const because the
     // ROOT::Math::IMultiGradFunction interface requires this
-//    mutable std::vector <double> fGrd;
-//    mutable std::vector <double> fG2;
-//    mutable std::vector <double> fGstep;
     mutable ROOT::Minuit2::FunctionGradient fG;
-//    mutable ROOT::Minuit2::FunctionGradient fG_internal;
-
     // same story for SetParameterHasLimits
     mutable std::vector <bool> _parameter_has_limits;
 
-
-    // MODIFIED: Minuit2 determines machine precision itself in MnMachinePrecision.cxx, but
-    //           mathcore isn't linked with minuit, so easier to pass in the correct eps from RooFit.
-    //           This means precision is the caller's responsibility, beware!
-//  double eps;
-//  double eps2;
     // MODIFIED: Minuit2 determines machine precision in a slightly different way than
     // std::numeric_limits<double>::epsilon()). We go with the Minuit2 one.
     ROOT::Minuit2::MnMachinePrecision precision;
@@ -105,11 +94,9 @@ namespace RooFit {
     ROOT::Minuit2::SqrtLowParameterTransformation fLowerLimTrafo;
 
   private:
-    mutable bool _always_exactly_mimic_minuit2 = true;
+    bool _always_exactly_mimic_minuit2;
   public:
     bool always_exactly_mimic_minuit2() const;
-    void set_always_exactly_mimic_minuit2(bool flag = true) const;
-
   };
 
 } // namespace RooFit

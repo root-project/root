@@ -631,17 +631,14 @@ void RooGradMinimizerFcn::InitGradient() const {
     throw std::runtime_error("In RooGradMinimizerFcn::RooGradMinimizerFcn: minimizer is null! Must initialize minimizer in the fitter before initializing the gradient function.");
   }
 
-//  std::cout << "RooGradMinimizerFcn using strategy " << minimizer->Strategy() << std::endl;
   ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(minimizer->Strategy()));
-//  ROOT::Minuit2::MnMachinePrecision precision {};
   RooFit::NumericalDerivatorMinuit2 derivator(*this,
-                                                  strategy.GradientStepTolerance(),
-                                                  strategy.GradientTolerance(),
-                                                  strategy.GradientNCycles(),
-                                                  minimizer->ErrorDef());//,
-//                                                  precision.Eps());
+                                              strategy.GradientStepTolerance(),
+                                              strategy.GradientTolerance(),
+                                              strategy.GradientNCycles(),
+                                              minimizer->ErrorDef(),
+                                              _always_exactly_mimic_minuit2);
   _gradf = derivator;
-//  _grad.resize(_nDim);
   _grad_params.resize(_nDim);
 
   SynchronizeGradient(fitter->Config().ParamsSettings());
@@ -651,16 +648,11 @@ void RooGradMinimizerFcn::InitGradient() const {
 
 
 void RooGradMinimizerFcn::run_derivator(const double *x) const {
-  for (int i = 0; i < _nDim; ++i) {
-//    std::cout << "x[" << i << "] = " << x[i] << std::endl;
-  }
   if (!_grad_initialized) {
     InitGradient();
   }
   // check whether the derivative was already calculated for this set of parameters
-  if (std::equal(_grad_params.begin(), _grad_params.end(), x)) {
-//    std::cout << "gradient already calculated for these parameters, use cached value" << std::endl;
-  } else {
+  if (!std::equal(_grad_params.begin(), _grad_params.end(), x)) {
     // if not, set the _grad_params to the current input parameters
     std::vector<double> new_grad_params(x, x + _nDim);
     _grad_params = new_grad_params;
@@ -717,16 +709,6 @@ bool RooGradMinimizerFcn::always_exactly_mimic_minuit2() const {
     return _gradf.always_exactly_mimic_minuit2();
   }
 };
-
-bool RooGradMinimizerFcn::set_always_exactly_mimic_minuit2(bool flag) const {
-  if (!_grad_initialized) {
-    return false;
-  } else {
-    _gradf.set_always_exactly_mimic_minuit2(flag);
-    return true;
-  }
-};
-
 
 #endif
 
