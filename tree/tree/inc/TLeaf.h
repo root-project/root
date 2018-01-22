@@ -69,9 +69,16 @@ public:
    virtual void     FillBasket(TBuffer &b);
    virtual Int_t   *GenerateOffsetArray(Int_t base, Int_t events) { return GenerateOffsetArrayBase(base, events); }
    TBranch         *GetBranch() const { return fBranch; }
+   ///  If this leaf stores a variable-sized array or a multi-dimensional array whose last dimension has variable size,
+   ///  return a pointer to the TLeaf that stores such size. Return a nullptr otherwise.
    virtual TLeaf   *GetLeafCount() const { return fLeafCount; }
    virtual TLeaf   *GetLeafCounter(Int_t &countval) const;
    virtual Int_t    GetLen() const;
+   /// Return the fixed length of this leaf.
+   /// If the leaf stores a fixed-length array, this is the size of the array.
+   /// If the leaf stores a non-array or a variable-sized array, this method returns 1.
+   /// If the leaf stores an array with 2 or more dimensions, this method returns the total number of elements in the
+   /// dimensions with static length: for example for float[3][2][] it would return 6.
    virtual Int_t    GetLenStatic() const { return fLen; }
    virtual Int_t    GetLenType() const { return fLenType; }
    virtual Int_t    GetMaximum() const { return 0; }
