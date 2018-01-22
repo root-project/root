@@ -316,7 +316,7 @@ kSienna=99,           kSolar=100,       kSouthWest=101,
 kStarryNight=102,     kSunset=103,      kTemperatureMap=104,
 kThermometer=105,     kValentine=106,   kVisibleSpectrum=107,
 kWaterMelon=108,      kCool=109,        kCopper=110,
-kGistEarth=111,       kViridis=112
+kGistEarth=111,       kViridis=112,     kCividis=113
 ~~~
 
 <table border=0>
@@ -896,6 +896,15 @@ Begin_Macro("width=300")
    TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
    f2->SetContour(99); gStyle->SetPalette(kViridis);
    f2->Draw("surf2Z"); f2->SetTitle("kViridis");
+}
+End_Macro
+</td><td>
+Begin_Macro("width=300")
+{
+   c  = new TCanvas("c","c",0,0,600,600);
+   TF2 *f2 = new TF2("f2","0.1+(1-(x-2)*(x-2))*(1-(y-2)*(y-2))",0.999,3.002,0.999,3.002);
+   f2->SetContour(99); gStyle->SetPalette(kCividis);
+   f2->Draw("surf2Z"); f2->SetTitle("kCividis");
 }
 End_Macro
 </td></tr>
@@ -2345,6 +2354,7 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
 /// if ncolors = 110 and colors=0, a Copper palette is used.
 /// if ncolors = 111 and colors=0, a Gist Earth palette is used.
 /// if ncolors = 112 and colors=0, a Viridis palette is used.
+/// if ncolors = 112 and colors=0, a Cividis palette is used.
 /// ~~~
 /// These palettes can also be accessed by names:
 /// ~~~ {.cpp}
@@ -2368,7 +2378,7 @@ Int_t TColor::CreateGradientColorTable(UInt_t Number, Double_t* Stops,
 /// kStarryNight=102,     kSunset=103,      kTemperatureMap=104,
 /// kThermometer=105,     kValentine=106,   kVisibleSpectrum=107,
 /// kWaterMelon=108,      kCool=109,        kCopper=110,
-/// kGistEarth=111        kViridis=112
+/// kGistEarth=111        kViridis=112,     kCividis=113
 /// ~~~
 /// For example:
 /// ~~~ {.cpp}
@@ -3064,6 +3074,16 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
             Double_t green[9] = {  9./255., 24./255.,  55./255.,  87./255., 118./255., 150./255., 180./255., 200./255., 222./255.};
             Double_t blue[9]  = { 30./255., 96./255., 112./255., 114./255., 112./255., 101./255.,  72./255.,  35./255.,   0./255.};
             Idx = TColor::CreateGradientColorTable(9, stops, red, green, blue, 255, alpha);
+         }
+         break;
+
+      // Cividis
+      case 113:
+         {
+            Double_t red[9]   = {  0./255.,   5./255.,  65./255.,  97./255., 124./255., 156./255., 189./255., 224./255., 255./255.};
+            Double_t green[9] = { 32./255.,  54./255.,  77./255., 100./255., 123./255., 148./255., 175./255., 203./255., 234./255.};
+            Double_t blue[9]  = { 77./255., 110./255., 107./255., 111./255., 120./255., 119./255., 111./255.,  94./255.,  70./255.};
+            Idx = TColor::CreateGradientColorTable(18, stops, red, green, blue, 255, alpha);
          }
          break;
 
