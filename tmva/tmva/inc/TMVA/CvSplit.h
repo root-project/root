@@ -38,60 +38,31 @@ public:
    virtual ~CvSplit() {}
 
    virtual void MakeKFoldDataSet(DataSetInfo &dsi) = 0;
-   virtual void PrepareFoldDataSet(DataSetInfo &dsi, UInt_t foldNumber, Types::ETreeType tt) = 0;
-   virtual void RecombineKFoldDataSet(DataSetInfo &dsi, Types::ETreeType tt = Types::kTraining) = 0;
+   virtual void PrepareFoldDataSet(DataSetInfo &dsi, UInt_t foldNumber, Types::ETreeType tt);
+   virtual void RecombineKFoldDataSet(DataSetInfo &dsi, Types::ETreeType tt = Types::kTraining);
 
    UInt_t GetNumFolds() { return fNumFolds; }
    Bool_t NeedsRebuild() { return fMakeFoldDataSet; }
 
 protected:
-   virtual std::vector<std::vector<Event *>> SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds) = 0;
-
    UInt_t fNumFolds;
    Bool_t fMakeFoldDataSet;
+
+   std::vector<std::vector<TMVA::Event *>> fTrainEvents;
+   std::vector<std::vector<TMVA::Event *>> fTestEvents;
 
 protected:
    ClassDef(CvSplit, 0);
 };
 
 /* =============================================================================
-      TMVA::CvSplitBootstrappedStratified
+      TMVA::CvSplitKFoldsExpr
 ============================================================================= */
 
-class CvSplitBootstrappedStratified : public CvSplit {
+class CvSplitKFoldsExpr {
 public:
-   CvSplitBootstrappedStratified(UInt_t numFolds, UInt_t seed = 0, Bool_t validationSet = kFALSE);
-   ~CvSplitBootstrappedStratified() override {}
-
-   void MakeKFoldDataSet(DataSetInfo &dsi) override;
-   void PrepareFoldDataSet(DataSetInfo &dsi, UInt_t foldNumber, Types::ETreeType tt) override;
-   void RecombineKFoldDataSet(DataSetInfo &dsi, Types::ETreeType tt = Types::kTraining) override;
-
-private:
-   std::vector<std::vector<Event *>> SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds) override;
-
-   UInt_t fSeed;
-   Bool_t fValidationSet;
-
-   std::vector<std::vector<TMVA::Event *>> fTrainSigEvents;
-   std::vector<std::vector<TMVA::Event *>> fTrainBkgEvents;
-   std::vector<std::vector<TMVA::Event *>> fValidSigEvents;
-   std::vector<std::vector<TMVA::Event *>> fValidBkgEvents;
-   std::vector<std::vector<TMVA::Event *>> fTestSigEvents;
-   std::vector<std::vector<TMVA::Event *>> fTestBkgEvents;
-
-private:
-   ClassDefOverride(CvSplitBootstrappedStratified, 0);
-};
-
-/* =============================================================================
-      TMVA::CvSplitCrossValidationExpr
-============================================================================= */
-
-class CvSplitCrossValidationExpr {
-public:
-   CvSplitCrossValidationExpr(DataSetInfo &dsi, TString expr);
-   ~CvSplitCrossValidationExpr() {}
+   CvSplitKFoldsExpr(DataSetInfo &dsi, TString expr);
+   ~CvSplitKFoldsExpr() {}
 
    UInt_t Eval(UInt_t numFolds, const Event *ev);
 
@@ -113,41 +84,35 @@ private:
 };
 
 /* =============================================================================
-      TMVA::CvSplitCrossValidation
+      TMVA::CvSplitKFolds
 ============================================================================= */
 
-class CvSplitCrossValidation : public CvSplit {
+class CvSplitKFolds : public CvSplit {
 
    friend CrossValidation;
 
 public:
-   CvSplitCrossValidation(UInt_t numFolds, TString splitExpr, UInt_t seed = 100);
-   ~CvSplitCrossValidation() override {}
+   CvSplitKFolds(UInt_t numFolds, TString splitExpr = "", Bool_t stratified = kTRUE, UInt_t seed = 100);
+   ~CvSplitKFolds() override {}
 
    void MakeKFoldDataSet(DataSetInfo &dsi) override;
-   void PrepareFoldDataSet(DataSetInfo &dsi, UInt_t foldNumber, Types::ETreeType tt) override;
-   void RecombineKFoldDataSet(DataSetInfo &dsi, Types::ETreeType tt = Types::kTraining) override;
 
 private:
-   std::vector<std::vector<Event *>> SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds) override;
+   std::vector<std::vector<Event *>> SplitSets(std::vector<TMVA::Event *> &oldSet, UInt_t numFolds);
    std::vector<UInt_t> GetEventIndexToFoldMapping(UInt_t nEntries, UInt_t numFolds, UInt_t seed = 100);
 
 private:
    UInt_t fSeed;
    TString fSplitExprString; //! Expression used to split data into folds. Should output values between 0 and numFolds.
-   std::unique_ptr<CvSplitCrossValidationExpr> fSplitExpr;
-
-   std::vector<std::vector<TMVA::Event *>> fTrainEvents;
-   std::vector<std::vector<TMVA::Event *>> fValidEvents;
-   std::vector<std::vector<TMVA::Event *>> fTestEvents;
+   std::unique_ptr<CvSplitKFoldsExpr> fSplitExpr;
+   Bool_t fStratified; // If true, use stratified split. (Balance class presence in each fold).
 
    // Used for CrossValidation with random splits (not using the
-   // CVSplitCrossValisationExpr functionality) to communicate Event to fold
-   // mapping.
+   // CVSplitKFoldsExpr functionality) to communicate Event to fold mapping.
    std::map<const TMVA::Event *, UInt_t> fEventToFoldMapping;
 
 private:
-   ClassDefOverride(CvSplitCrossValidation, 0);
+   ClassDefOverride(CvSplitKFolds, 0);
 };
 
 } // end namespace TMVA

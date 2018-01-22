@@ -18,8 +18,7 @@
 #pragma link C++ class TMVA::VariableImportance+;
 #pragma link C++ class TMVA::CrossValidation+;
 #pragma link C++ class TMVA::CvSplit+;
-#pragma link C++ class TMVA::CvSplitBootstrappedStratified+;
-#pragma link C++ class TMVA::CvSplitCrossValidation+;
+#pragma link C++ class TMVA::CvSplitKFolds + ;
 #pragma link C++ class TMVA::HyperParameterOptimisation+;
 
 #pragma link C++ class TMVA::Experimental::Classification + ;

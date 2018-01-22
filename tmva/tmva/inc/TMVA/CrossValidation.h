@@ -40,7 +40,7 @@
 
 namespace TMVA {
 
-class CvSplitCrossValidation;
+class CvSplitKFolds;
 
 using EventCollection_t = std::vector<Event *>;
 using EventTypes_t = std::vector<Bool_t>;
@@ -138,7 +138,7 @@ public:
 
       std::unique_ptr<Factory> fFoldFactory;
       std::unique_ptr<Factory> fFactory;
-      std::unique_ptr<CvSplitCrossValidation> fSplit;
+      std::unique_ptr<CvSplitKFolds> fSplit;
 
       ClassDef(CrossValidation, 0);
    };

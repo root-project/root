@@ -81,7 +81,7 @@ data_t createData(Int_t nPoints, UInt_t start)
 }
 
 /**
- * Performs the same split as CvSplitCrossValidation
+ * Performs the same split as CvSplitKFolds
  *
  * @param ids
  */
@@ -258,7 +258,7 @@ TEST(CrossValidationSplitting, TrainingSetSplitOnSpectator)
    d->GetDataSetInfo().GetDataSet(); // Force creation of dataset.
    TMVA::MsgLogger::EnableOutput();
 
-   TMVA::CvSplitCrossValidation split{NUM_FOLDS, "int([id]) % int([numFolds])"};
+   TMVA::CvSplitKFolds split{NUM_FOLDS, "int([id])%int([numFolds])", kFALSE, 0};
    d->MakeKFoldDataSet(split);
 
    // Actual test
