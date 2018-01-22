@@ -64,10 +64,10 @@ TEST(TDataFrameUtils, DeduceAllPODsFromTmpColumns)
                   bool v(0);
                   return v;
                });
-   auto c = tdf.Snapshot<char, unsigned char, int, unsigned int, short, unsigned short, double, float, Long64_t,
-                         ULong64_t, bool>("t", "dataframe_interfaceAndUtils_1.root",
-                                          {"char_tmp", "uchar_tmp", "int_tmp", "uint_tmp", "short_tmp", "ushort_tmp",
-                                           "double_tmp", "float_tmp", "Long64_t_tmp", "ULong64_t_tmp", "bool_tmp"});
+   auto c = d.Snapshot<char, unsigned char, int, unsigned int, short, unsigned short, double, float, Long64_t,
+                       ULong64_t, bool>("t", "dataframe_interfaceAndUtils_1.root",
+                                        {"char_tmp", "uchar_tmp", "int_tmp", "uint_tmp", "short_tmp", "ushort_tmp",
+                                         "double_tmp", "float_tmp", "Long64_t_tmp", "ULong64_t_tmp", "bool_tmp"});
 }
 
 TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
@@ -127,7 +127,6 @@ TEST(TDataFrameUtils, ToConstCharPtr)
    EXPECT_STREQ(s_content, ROOT::Internal::TDF::ToConstCharPtr(s_content));
    EXPECT_STREQ(s_content, ROOT::Internal::TDF::ToConstCharPtr(s));
 }
-
 
 TEST(TDataFrameUtils, CheckNonExistingCustomColumnNullTree)
 {
