@@ -1,27 +1,13 @@
 // @(#)root/tmva $Id$
 // Author: Kim Albertsson
 
-/**********************************************************************************
- * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
- * Package: TMVA                                                                  *
- * Class  : CvSplit                                                               *
- * Web    : http://root.cern.ch                                                   *
- *                                                                                *
- * Description:                                                                   *
- *                                                                                *
- * Authors (alphabetical):                                                        *
- *      Kim Albertsson <kim.albertsson@cern.ch> - CERN/LTU                        *
- *      Sergei Gleyzer <sergei.gleyzer@cern.ch> - CERN, Switzerland               *
- *      Lorenzo Moneta <Lorenzo.Moneta@cern.ch> - CERN, Switzerland               *
- *                                                                                *
- * Copyright (c) 2005-2017:                                                       *
- *      CERN, Switzerland                                                         *
- *      ITM/UdeA, Colombia                                                        *
- *                                                                                *
- * Redistribution and use in source and binary forms, with or without             *
- * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
- **********************************************************************************/
+/*************************************************************************
+ * Copyright (C) 2018, Rene Brun and Fons Rademakers.                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TMVA_CvSplit
 #define ROOT_TMVA_CvSplit

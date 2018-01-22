@@ -1,19 +1,13 @@
 // @(#)root/tmva $Id$
-// Author: Omar Zapata, Thomas James Stevenson and Pourya Vakilipourtakalou
-// Modified: Kim Albertsson 2017
+// Author: Omar Zapata, Thomas James Stevenson, Pourya Vakilipourtakalou, Kim Albertsson
 
-/**********************************************************************************
- * Project: TMVA - a Root-integrated toolkit for multivariate data analysis       *
- * Package: TMVA                                                                  *
- * Class  : Factory                                                               *
- *                                                                                *
- * Copyright (c) 2016-2018:                                                       *
- *      CERN, Switzerland                                                         *
- *                                                                                *
- * Redistribution and use in source and binary forms, with or without             *
- * modification, are permitted according to the terms listed in LICENSE           *
- * (http://tmva.sourceforge.net/LICENSE)                                          *
- **********************************************************************************/
+/*************************************************************************
+ * Copyright (C) 2018, Rene Brun and Fons Rademakers.                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #ifndef ROOT_TMVA_CROSS_EVALUATION
 #define ROOT_TMVA_CROSS_EVALUATION
