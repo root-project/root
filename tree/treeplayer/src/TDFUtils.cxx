@@ -173,7 +173,9 @@ unsigned int GetNSlots()
    return nSlots;
 }
 
-void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNames, std::set<TTree *> &analysedTrees)
+// The set here is used as a registry, the real list, which keeps the order, is
+// the one in the vector
+void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::set<TTree *> &analysedTrees)
 {
 
    if (!analysedTrees.insert(&t).second) {
@@ -183,7 +185,10 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNames, std::set<TTree 
    auto branches = t.GetListOfBranches();
    if (branches) {
       for (auto branchObj : *branches) {
-         bNames.insert(branchObj->GetName());
+         auto name = branchObj->GetName();
+         if(bNamesReg.insert(name).second) {
+            bNames.emplace_back(name);
+         }
       }
    }
 
@@ -194,7 +199,7 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNames, std::set<TTree 
 
    for (auto friendTreeObj : *friendTrees) {
       auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
-      GetBranchNamesImpl(*friendTree, bNames, analysedTrees);
+      GetBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees);
    }
 }
 
@@ -203,11 +208,9 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNames, std::set<TTree 
 ColumnNames_t GetBranchNames(TTree &t)
 {
    std::set<std::string> bNamesSet;
-   std::set<TTree *> analysedTrees;
-   GetBranchNamesImpl(t, bNamesSet, analysedTrees);
    ColumnNames_t bNames;
-   for (auto &bName : bNamesSet)
-      bNames.emplace_back(bName);
+   std::set<TTree *> analysedTrees;
+   GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
    return bNames;
 }
 
