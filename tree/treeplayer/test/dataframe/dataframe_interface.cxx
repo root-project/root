@@ -138,6 +138,19 @@ TEST(TDataFrameInterface, GetColumnNamesFromTree)
    EXPECT_EQ(2U, names.size());
 }
 
+TEST(TDataFrameInterface, GetColumnNamesFromOrdering)
+{
+   TTree t("t", "t");
+   int a, b;
+   t.Branch("zzz", &a);
+   t.Branch("aaa", &b);
+   TDataFrame tdf(t);
+   auto names = tdf.GetColumnNames();
+   EXPECT_STREQ("zzz", names[0].c_str());
+   EXPECT_STREQ("aaa", names[1].c_str());
+   EXPECT_EQ(2U, names.size());
+}
+
 TEST(TDataFrameInterface, GetColumnNamesFromSource)
 {
    std::unique_ptr<TDataSource> tds(new TTrivialDS(1));
