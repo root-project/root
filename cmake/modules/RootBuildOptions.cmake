@@ -187,13 +187,13 @@ if (runtime_cxxmodules)
 endif(runtime_cxxmodules)
 
 #--- Compression algorithms in ROOT-------------------------------------------------------------
-set(compression_default "zlib" CACHE STRING "Default compression algorithm (zlib (default), lz4, or lzma)")
+set(compression_default "zlib" CACHE STRING "Default compression algorithm (zlib (default), lz4, zstd or lzma)")
 string(TOLOWER "${compression_default}" compression_default)
-if("${compression_default}" MATCHES "zlib|lz4|lzma")
+if("${compression_default}" MATCHES "zlib|lz4|lzma|zstd")
   message(STATUS "ROOT default compression algorithm: ${compression_default}")
 else()
   message(FATAL_ERROR "Unsupported compression algorithm: ${compression_default}\n"
-    "Known values are zlib, lzma, lz4 (case-insensitive).")
+    "Known values are zlib, lzma, lz4, zstd (case-insensitive).")
 endif()
 
 #--- Minor chnages in defaults due to platform--------------------------------------------------
