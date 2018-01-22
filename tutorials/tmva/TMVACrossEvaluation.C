@@ -77,13 +77,13 @@
 TTree *genTree(Int_t nPoints, Double_t offset, Double_t scale, UInt_t seed = 100)
 {
    TRandom3 rng(seed);
-   Double_t x = 0;
-   Double_t y = 0;
+   Float_t x = 0;
+   Float_t y = 0;
    UInt_t eventID = 0;
 
    TTree *data = new TTree();
-   data->Branch("x", &x, "x/D");
-   data->Branch("y", &y, "y/D");
+   data->Branch("x", &x, "x/F");
+   data->Branch("y", &y, "y/F");
    data->Branch("eventID", &eventID, "eventID/I");
 
    for (Int_t n = 0; n < nPoints; ++n) {
