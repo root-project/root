@@ -561,6 +561,33 @@ struct AddRefIfNotArrayBranch<TArrayBranch<T>> {
 template <typename T>
 using AddRefIfNotArrayBranch_t = typename AddRefIfNotArrayBranch<T>::type;
 
+/// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
+template <typename T>
+void SetBranchesHelper(TTree & /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
+                       const std::string &name, T *address)
+{
+   outputTree.Branch(name.c_str(), address);
+}
+
+/// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
+/// This overload is called for columns of type `TArrayBranch<T>`. For TDF, these represent c-style arrays in ROOT
+/// files, so we are sure that there are input trees to which we can ask the correct branch title
+template <typename T>
+void SetBranchesHelper(TTree &inputTree, TTree &outputTree, const std::string &validName, const std::string &name,
+                       TArrayBranch<T> *ab)
+{
+   auto *const inputBranch = inputTree.GetBranch(validName.c_str());
+   auto *const leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
+   const auto bname = leaf->GetName();
+   const auto counterStr =
+      leaf->GetLeafCount() ? std::string(leaf->GetLeafCount()->GetName()) : std::to_string(leaf->GetLenStatic());
+   const auto btype = leaf->GetTypeName();
+   const auto rootbtype = TypeName2ROOTTypeName(btype);
+   const auto leaflist = std::string(bname) + "[" + counterStr + "]/" + rootbtype;
+   auto *const outputBranch = outputTree.Branch(name.c_str(), ab->GetData(), leaflist.c_str());
+   outputBranch->SetTitle(inputBranch->GetTitle());
+}
+
 /// Helper object for a single-thread Snapshot action
 template <typename... BranchTypes>
 class SnapshotHelper {
@@ -617,23 +644,10 @@ public:
    void SetBranches(AddRefIfNotArrayBranch_t<BranchTypes>... values, StaticSeq<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
-      int expander[] = {(SetBranchesHelper(fValidBranchNames[S], fBranchNames[S], &values), 0)..., 0};
+      int expander[] = {
+         (SetBranchesHelper(*fInputTree, *fOutputTree, fValidBranchNames[S], fBranchNames[S], &values), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
       fIsFirstEvent = false;
-   }
-
-   template <typename T>
-   void SetBranchesHelper(const std::string &, const std::string &name, T *address)
-   {
-      fOutputTree->Branch(name.c_str(), address);
-   }
-
-   // This overload is called for columns of type `TArrayBranch<T>`. For TDF, these represent c-style arrays in ROOT
-   // files, so we are sure that there are input trees to which we can ask the correct branch title
-   template <typename T>
-   void SetBranchesHelper(const std::string &validName, const std::string &name, TArrayBranch<T> *ab)
-   {
-      fOutputTree->Branch(name.c_str(), ab->GetData(), fInputTree->GetBranch(validName.c_str())->GetTitle());
    }
 
    void Finalize() { fOutputTree->Write(); }
@@ -717,23 +731,11 @@ public:
    void SetBranches(unsigned int slot, AddRefIfNotArrayBranch_t<BranchTypes>... values, StaticSeq<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
-      int expander[] = {(SetBranchesHelper(*fOutputTrees[slot], *fInputTrees[slot], fBranchNames[S], &values), 0)...,
-                        0};
+      int expander[] = {
+         (SetBranchesHelper(*fInputTrees[slot], *fOutputTrees[slot], fValidBranchNames[S], fBranchNames[S], &values),
+          0)...,
+         0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
-   }
-
-   template <typename T>
-   void SetBranchesHelper(TTree &t, TTree &, const std::string &name, T *address)
-   {
-      t.Branch(name.c_str(), address);
-   }
-
-   // This overload is called for columns of type `TArrayBranch<T>`. For TDF, these represent c-style arrays in ROOT
-   // files, so we are sure that there are input trees to which we can ask the correct branch title
-   template <typename T>
-   void SetBranchesHelper(TTree &outputTree, TTree &inputTree, const std::string &name, TArrayBranch<T> *ab)
-   {
-      outputTree.Branch(name.c_str(), ab->GetData(), inputTree.GetBranch(name.c_str())->GetTitle());
    }
 
    void Finalize()
