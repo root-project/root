@@ -444,7 +444,7 @@ t.AddFriend(t,"myFriend");
 in order to access a certain column `col` of the tree ft, it will be necessary to alias it before. To continue the example:
 ~~~{.cpp}
 TDataFrame d(t);
-d.Alias("myFriend.MyCol", "myFriend_MyCol");
+d.Alias("myFriend_MyCol", "myFriend.MyCol");
 auto f = d.Filter("myFriend_MyCol == 42");
 ~~~
 
