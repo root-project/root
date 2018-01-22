@@ -179,7 +179,8 @@ Int_t *TLeaf::GenerateOffsetArrayBase(Int_t base, Int_t events) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return a pointer to the counter of this leaf.
+/// Return a pointer to the counter of this leaf (if any) or store the number of elements that the leaf contains in
+/// countval.
 ///
 /// - If leaf name has the form var[nelem], where nelem is alphanumeric, then
 ///     if nelem is a leaf name, return countval = 1 and the pointer to
@@ -304,7 +305,7 @@ TLeaf* TLeaf::GetLeafCounter(Int_t& countval) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the number of effective elements of this leaf.
+/// Return the number of effective elements of this leaf, for the current entry.
 
 Int_t TLeaf::GetLen() const
 {
