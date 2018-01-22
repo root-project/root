@@ -1174,7 +1174,7 @@ Int_t TBasket::WriteBuffer()
             nout = engine->StreamFull(objbuf, bufmax);
             if (nout < 0) nout = 0;
          } else {
-            R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, static_cast<ROOT::ECompressionAlgorithm>(cxAlgorithm));
+            R__zipMultipleAlgorithm(cxlevel, &bufmax, objbuf, &bufmax, bufcur, &nout, cxAlgorithm);
          }
 #ifdef R__USE_IMT
          sentry.lock();
