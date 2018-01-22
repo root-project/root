@@ -46,7 +46,11 @@ endif
 CLINGLIB     := $(LPATH)/libCling.$(SOEXT)
 CLINGMAP     := $(CLINGLIB:.$(SOEXT)=.rootmap)
 
-$(CLINGLIB):    $(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO)
+# The dependency on $(ROOTCLING1EXE) was added to prevent $(CLINGLIB) and
+# $(ROOTCLING1EXE) from being linked in parallel.
+# This avoids doing two memory consuming operations in parallel.
+$(CLINGLIB):    $(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO) \
+		$(ROOTCLING1EXE)
 		@$(MAKELIB) $(PLATFORM) $(LD) "$(LDFLAGS) $(LIBCLINGLDFLAGS)" \
 		   "$(SOFLAGS)" libCling.$(SOEXT) $@ \
 		   "$(CLINGUTILSO) $(DICTGENO) $(METACLINGO) $(CLINGO) \
