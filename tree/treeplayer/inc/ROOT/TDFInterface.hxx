@@ -1827,9 +1827,13 @@ private:
                                          const ColumnNames_t &columnList, const TSnapshotOptions &options)
    {
       TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
+
       auto df = GetDataFrameChecked();
+      auto validCols =
+         TDFInternal::GetValidatedColumnNames(*df, columnList.size(), columnList, fValidCustomColumns, fDataSource);
+
       if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(columnList, *df, TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>(),
+         TDFInternal::DefineDataSourceColumns(validCols, *df, TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>(),
                                               TTraits::TypeList<BranchTypes...>(), *fDataSource);
 
       const std::string fullTreename(treename);
@@ -1847,15 +1851,15 @@ private:
          // single-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelper<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
-         actionPtr.reset(
-            new Action_t(Helper_t(filename, dirname, treename, columnList, options), columnList, *fProxiedPtr));
+         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, validCols, columnList, options), validCols,
+                                      *fProxiedPtr));
       } else {
          // multi-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-         actionPtr.reset(
-            new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filename, dirname, treename, columnList, options),
-                         columnList, *fProxiedPtr));
+         actionPtr.reset(new Action_t(
+            Helper_t(fProxiedPtr->GetNSlots(), filename, dirname, treename, validCols, columnList, options), validCols,
+            *fProxiedPtr));
       }
       df->Book(std::move(actionPtr));
       df->Run();
@@ -1864,7 +1868,7 @@ private:
       ::TDirectory::TContext ctxt;
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
-      TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, columnList));
+      TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, validCols));
       auto chain = std::make_shared<TChain>(fullTreename.c_str());
       chain->Add(std::string(filename).c_str());
       snapshotTDF.fProxiedPtr->SetTree(chain);
