@@ -305,7 +305,7 @@ void TMVA::CrossValidation::ParseOptions()
       fFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, fOutputFile, fOutputFactoryOptions));
    }
 
-   fSplit = std::unique_ptr<CvSplitCrossValidation>(new CvSplitCrossValidation(fNumFolds, fSplitExprString));
+   fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString));
 }
 
 //_______________________________________________________________________
@@ -313,7 +313,7 @@ void TMVA::CrossValidation::SetNumFolds(UInt_t i)
 {
    if (i != fNumFolds) {
       fNumFolds = i;
-      fSplit = std::unique_ptr<CvSplitCrossValidation>(new CvSplitCrossValidation(fNumFolds, fSplitExprString));
+      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString));
       fDataLoader->MakeKFoldDataSet(*fSplit.get());
       fFoldStatus = kTRUE;
    }
@@ -326,7 +326,7 @@ void TMVA::CrossValidation::SetSplitExpr(TString splitExpr)
 {
    if (splitExpr != fSplitExprString) {
       fSplitExprString = splitExpr;
-      fSplit = std::unique_ptr<CvSplitCrossValidation>(new CvSplitCrossValidation(fNumFolds, fSplitExprString));
+      fSplit = std::unique_ptr<CvSplitKFolds>(new CvSplitKFolds(fNumFolds, fSplitExprString));
       fDataLoader->MakeKFoldDataSet(*fSplit.get());
       fFoldStatus = kTRUE;
    }
