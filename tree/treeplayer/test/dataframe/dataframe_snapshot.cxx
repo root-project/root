@@ -101,6 +101,23 @@ const std::vector<std::string> TDFSnapshotArrays::kFileNames = {"test_snapshotar
 
 /********* SINGLE THREAD TESTS ***********/
 
+// Test for ROOT-9210
+TEST_F(TDFSnapshot, Snapshot_aliases)
+{
+   std::string alias0("myalias0");
+   auto tdfa = tdf.Alias(alias0, "ans");
+   testing::internal::CaptureStderr();
+   auto snap = tdfa.Snapshot<int>("mytree", "Snapshot_aliases.root", {alias0});
+   std::string err = testing::internal::GetCapturedStderr();
+   EXPECT_TRUE(err.empty()) << err;
+   EXPECT_STREQ(snap.GetColumnNames()[0].c_str(), alias0.c_str());
+
+   auto takenCol = snap.Alias("a", alias0).Take<int>("a");
+   for (auto i : takenCol) {
+      EXPECT_EQ(42, i);
+   }
+}
+
 // Test for ROOT-9122
 TEST_F(TDFSnapshot, Snapshot_nocolumnmatch)
 {
