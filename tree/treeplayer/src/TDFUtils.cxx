@@ -124,6 +124,35 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
    }
 }
 
+/// Convert type name (e.g. "Float_t") to ROOT type code (e.g. 'F') -- see TBranch documentation.
+/// Return a space ' ' in case no match was found.
+char TypeName2ROOTTypeName(const std::string &b)
+{
+   if (b == "Char_t")
+      return 'B';
+   if (b == "UChar_t")
+      return 'b';
+   if (b == "Short_t")
+      return 'S';
+   if (b == "UShort_t")
+      return 's';
+   if (b == "Int_t")
+      return 'I';
+   if (b == "UInt_t")
+      return 'i';
+   if (b == "Float_t")
+      return 'F';
+   if (b == "Double_t")
+      return 'D';
+   if (b == "Long64_t")
+      return 'L';
+   if (b == "ULong64_t")
+      return 'l';
+   if (b == "Bool_t")
+      return 'O';
+   return ' ';
+}
+
 const char *ToConstCharPtr(const char *s)
 {
    return s;
