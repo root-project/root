@@ -102,7 +102,7 @@ void TMVA::HyperParameterOptimisation::Evaluate()
       TString methodTitle = meth.GetValue<TString>("MethodTitle");
       TString methodOptions = meth.GetValue<TString>("MethodOptions");
 
-      CvSplitBootstrappedStratified split{fNumFolds, 0};
+      CvSplitKFolds split{fNumFolds, "", kFALSE, 0};
       if (!fFoldStatus) {
          fDataLoader->MakeKFoldDataSet(split);
          fFoldStatus = kTRUE;

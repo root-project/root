@@ -102,7 +102,7 @@ private:
    TString fOutputEnsembling;
 
    TString fSplitExprString;
-   std::unique_ptr<CvSplitCrossValidationExpr> fSplitExpr;
+   std::unique_ptr<CvSplitKFoldsExpr> fSplitExpr;
 
    std::vector<Float_t> fMulticlassValues;
    std::vector<Float_t> fRegressionValues;

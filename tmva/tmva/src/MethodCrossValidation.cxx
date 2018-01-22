@@ -81,8 +81,7 @@ void TMVA::MethodCrossValidation::ProcessOptions()
    Log() << kDEBUG << "ProcessOptions -- fEncapsulatedMethodTypeName: " << fEncapsulatedMethodTypeName << Endl;
 
    if (fSplitExprString != TString("")) {
-      fSplitExpr =
-         std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(DataInfo(), fSplitExprString));
+      fSplitExpr = std::unique_ptr<CvSplitKFoldsExpr>(new CvSplitKFoldsExpr(DataInfo(), fSplitExprString));
    }
 
    for (UInt_t iFold = 0; iFold < fNumFolds; ++iFold) {
@@ -226,8 +225,7 @@ void TMVA::MethodCrossValidation::ReadWeightsFromXML(void *parent)
 
    // SplitExpr
    if (fSplitExprString != TString("")) {
-      fSplitExpr =
-         std::unique_ptr<CvSplitCrossValidationExpr>(new CvSplitCrossValidationExpr(DataInfo(), fSplitExprString));
+      fSplitExpr = std::unique_ptr<CvSplitKFoldsExpr>(new CvSplitKFoldsExpr(DataInfo(), fSplitExprString));
    }
 }
 
