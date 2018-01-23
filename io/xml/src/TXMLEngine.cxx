@@ -376,9 +376,11 @@ public:
       return -1;
    }
 
-#define GoodStartSymbol(symb)                                                                \
-   (((symb >= 'a') && (symb <= 'z')) || ((symb >= 'A') && (symb <= 'Z')) || (symb == '_') || \
-    ((symb >= 0xc0) && (symb <= 0xd6)) || ((symb >= 0xd8) && (symb <= 0xf6)) || (symb > 0xf8))
+   inline Bool_t GoodStartSymbol(unsigned char symb)
+   {
+      return (((symb >= 'a') && (symb <= 'z')) || ((symb >= 'A') && (symb <= 'Z')) || (symb == '_') ||
+              ((symb >= 0xc0) && (symb <= 0xd6)) || ((symb >= 0xd8) && (symb <= 0xf6)) || (symb > 0xf8));
+   }
 
    Int_t LocateIdentifier()
    {
