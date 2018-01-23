@@ -47,7 +47,8 @@ set(headers4 RooConstraintSum.h RooRecursiveFraction.h RooDataWeightedAverage.h
              RooTimer.h
              RooJsonListFile.h
              RooGradMinimizerFcn.h RooGradMinimizer.h
-             NumericalDerivatorMinuit2.h)
+             NumericalDerivatorMinuit2.h
+             RooGradientFunction.h)
 
 #ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
 #                              HEADERS ${headers1} ${headers2} ${headers3} ${headers4}
