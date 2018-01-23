@@ -1694,7 +1694,7 @@ XMLNodePointer_t TXMLEngine::ReadNode(XMLNodePointer_t xmlparent, TXMLInputStrea
          resvalue = -1;
          return node;
       }
-      if (!inp->SkipSpaces()) {
+      if (!inp->SkipSpaces() && !inp->EndOfStream()) {
          resvalue = -1;
          return node;
       }
