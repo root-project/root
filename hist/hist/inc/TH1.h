@@ -333,7 +333,7 @@ public:
    virtual void     LabelsInflate(Option_t *axis="X");
    virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");
    virtual Long64_t Merge(TCollection *list);
-   virtual Bool_t   Multiply(TF1 *h1, Double_t c1=1);
+   virtual Bool_t   Multiply(TF1 *f1, Double_t c1=1);
    virtual Bool_t   Multiply(const TH1 *h1);
    virtual Bool_t   Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
    virtual void     Paint(Option_t *option="");
