@@ -98,8 +98,7 @@ void RooGradMinimizer::cleanup()
 /// for HESSE and MINOS error analysis is taken from the defaultErrorLevel()
 /// value of the input function.
 
-RooGradMinimizer::RooGradMinimizer(RooAbsReal& function)
-{
+RooGradMinimizer::RooGradMinimizer(RooAbsReal& function, bool always_exactly_mimic_minuit2) {
   RooSentinel::activate() ;
 
   // Store function reference
@@ -110,7 +109,7 @@ RooGradMinimizer::RooGradMinimizer(RooAbsReal& function)
   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
   setEps(1.0); // default tolerance
 
-  _fcn = new RooGradMinimizerFcn(_func,this,_verbose);
+  _fcn = new RooGradMinimizerFcn(_func, this, always_exactly_mimic_minuit2, _verbose);
 
   // default max number of calls
   _theFitter->Config().MinimizerOptions().SetMaxIterations(500*_fcn->NDim());

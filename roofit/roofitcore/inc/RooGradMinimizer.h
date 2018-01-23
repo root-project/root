@@ -40,7 +40,7 @@ class RooGradMinimizerFcn;
 class RooGradMinimizer : public TObject {
 public:
 
-  RooGradMinimizer(RooAbsReal& function) ;
+  RooGradMinimizer(RooAbsReal& function, bool always_exactly_mimic_minuit2 = true) ;
   virtual ~RooGradMinimizer() ;
 
   enum Strategy { Speed=0, Balance=1, Robustness=2 } ;
