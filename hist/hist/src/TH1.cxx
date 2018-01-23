@@ -5475,8 +5475,11 @@ Long64_t TH1::Merge(TCollection *li)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Performs the operation: this = this*c1*f1
-/// if errors are defined (see TH1::Sumw2), errors are also recalculated.
+/// Performs the operation:
+///
+/// `this = this*c1*f1`
+///
+/// If errors are defined (see TH1::Sumw2), errors are also recalculated.
 ///
 /// Only bins inside the function range are recomputed.
 /// IMPORTANT NOTE: If you intend to use the errors of this histogram later
