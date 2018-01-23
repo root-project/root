@@ -9,7 +9,7 @@ TObject store/read/store MATCHED len1:70 len2:70
 }
 
  ====== TH1I representation ===== 
-TH1I store/read/store MATCHED len1:2933 len2:2933
+TH1I store/read/store MATCHED len1:2957 len2:2957
 {
   "_typename" : "TH1I",
   "fUniqueID" : 0,
