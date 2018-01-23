@@ -59,9 +59,8 @@ RooGradientFunction::RooGradientFunction(RooAbsReal *funct,
     _maxFCN(-1e30), _numBadNLL(0),
     _printEvalErrors(10), _doEvalErrorWall(kTRUE),
     _nDim(0), _logfile(0),
-    _verbose(verbose),
     _grad(0), _grad_initialized(false),
-    _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
+    _grad_mode(grad_mode)
 {
 
   _evalCounter = 0 ;
@@ -118,12 +117,11 @@ RooGradientFunction::RooGradientFunction(const RooGradientFunction& other) : ROO
                                                                              _doEvalErrorWall(other._doEvalErrorWall),
                                                                              _nDim(other._nDim),
                                                                              _logfile(other._logfile),
-                                                                             _verbose(other._verbose),
                                                                              _floatParamVec(other._floatParamVec),
                                                                              _gradf(other._gradf),
                                                                              _grad(other._grad),
                                                                              _grad_params(other._grad_params), _grad_initialized(other._grad_initialized),
-                                                                             _always_exactly_mimic_minuit2(other._always_exactly_mimic_minuit2)
+                                                                             _grad_mode(grad_mode)
 {
   _floatParamList = new RooArgList(*other._floatParamList) ;
   _constParamList = new RooArgList(*other._constParamList) ;
@@ -148,7 +146,7 @@ ROOT::Math::IMultiGradFunction* RooGradientFunction::Clone() const
 
 
 Bool_t RooGradientFunction::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& parameters,
-                                        Bool_t optConst, Bool_t verbose)
+                                        Bool_t optConst)
 {
 
   // Internal function to synchronize TMinimizer with current
@@ -178,22 +176,11 @@ Bool_t RooGradientFunction::Synchronize(std::vector<ROOT::Fit::ParameterSettings
       _initConstParamList->remove(*oldpar) ;
       constStatChange=kTRUE ;
       _nDim++ ;
-
-      if (verbose) {
-        oocoutI(_context,Minimization) << "RooGradientFunction::synchronize: parameter "
-                                       << par->GetName() << " is now floating." << endl ;
-      }
     }
 
     // Test if value changed
     if (par->getVal()!= oldpar->getVal()) {
       constValChange=kTRUE ;
-      if (verbose) {
-        oocoutI(_context,Minimization) << "RooGradientFunction::synchronize: value of constant parameter "
-                                       << par->GetName()
-                                       << " changed from " << oldpar->getVal() << " to "
-                                       << par->getVal() << endl ;
-      }
     }
 
   }
@@ -253,10 +240,8 @@ Bool_t RooGradientFunction::Synchronize(std::vector<ROOT::Fit::ParameterSettings
         } else {
           pstep=1 ;
         }
-        if(verbose) {
-          oocoutW(_context,Minimization) << "RooGradientFunction::synchronize: WARNING: no initial error estimate available for "
-                                         << par->GetName() << ": using " << pstep << endl;
-        }
+        oocoutW(_context,Minimization) << "RooGradientFunction::synchronize: WARNING: no initial error estimate available for "
+                                       << par->GetName() << ": using " << pstep << endl;
       }
     } else {
       pmin = par->getVal() ;
@@ -297,18 +282,9 @@ Bool_t RooGradientFunction::Synchronize(std::vector<ROOT::Fit::ParameterSettings
       // Parameter changes floating -> constant : update only value if necessary
       if (oldVar!=par->getVal()) {
         parameters[index].SetValue(par->getVal());
-        if (verbose) {
-          oocoutI(_context,Minimization) << "RooGradientFunction::synchronize: value of parameter "
-                                         << par->GetName() << " changed from " << oldVar
-                                         << " to " << par->getVal() << endl ;
-        }
       }
       parameters[index].Fix();
       constStatChange=kTRUE ;
-      if (verbose) {
-        oocoutI(_context,Minimization) << "RooGradientFunction::synchronize: parameter "
-                                       << par->GetName() << " is now fixed." << endl ;
-      }
 
     } else if (par->isConstant() && oldFixed) {
 
@@ -316,12 +292,6 @@ Bool_t RooGradientFunction::Synchronize(std::vector<ROOT::Fit::ParameterSettings
       if (oldVar!=par->getVal()) {
         parameters[index].SetValue(par->getVal());
         constValChange=kTRUE ;
-
-        if (verbose) {
-          oocoutI(_context,Minimization) << "RooGradientFunction::synchronize: value of fixed parameter "
-                                         << par->GetName() << " changed from " << oldVar
-                                         << " to " << par->getVal() << endl ;
-        }
       }
 
     } else {
@@ -329,11 +299,6 @@ Bool_t RooGradientFunction::Synchronize(std::vector<ROOT::Fit::ParameterSettings
       if (!par->isConstant() && oldFixed) {
         parameters[index].Release();
         constStatChange=kTRUE ;
-
-        if (verbose) {
-          oocoutI(_context,Minimization) << "RooGradientFunction::synchronize: parameter "
-                                         << par->GetName() << " is now floating." << endl ;
-        }
       }
 
       // Parameter changes constant -> floating : update all if necessary
@@ -521,8 +486,6 @@ Bool_t RooGradientFunction::SetPdfParamVal(const Int_t &index, const Double_t &v
   RooRealVar* par = (RooRealVar*)_floatParamVec[index] ;
 
   if (par->getVal()!=value) {
-    if (_verbose) cout << par->GetName() << "=" << value << ", " ;
-
     par->setVal(value);
     return kTRUE;
   }
@@ -609,11 +572,6 @@ double RooGradientFunction::DoEval(const double *x) const
   // Optional logging
   if (_logfile)
     (*_logfile) << setprecision(15) << fvalue << setprecision(4) << endl;
-  if (_verbose) {
-    cout << "\nprevFCN" << (_funct->isOffsetting()?"-offset":"") << " = " << setprecision(10)
-         << fvalue << setprecision(4) << "  " ;
-    cout.flush() ;
-  }
 
   _evalCounter++ ;
 //  std::cout << "func eval #" << _evalCounter << ", value: " << fvalue << std::endl;
@@ -685,11 +643,6 @@ double RooGradientFunction::DoDerivative(const double *x, unsigned int icoord) c
 }
 
 
-void RooGradientFunction::SetVerbose(Bool_t flag) {
-  _verbose = flag;
-}
-
-
 bool RooGradientFunction::hasG2ndDerivative() const {
   return true;
 }
@@ -709,22 +662,14 @@ double RooGradientFunction::DoStepSize(const double *x, unsigned int icoord) con
 }
 
 bool RooGradientFunction::returnsInMinuit2ParameterSpace() const {
-  return true;
+  switch (_grad_mode) {
+    case GradientCalculatorMode::AlmostMinuit2:
+    case GradientCalculatorMode::ExactlyMinuit2: {
+      return true;
+    }
+  }
 }
 
-bool RooGradientFunction::always_exactly_mimic_minuit2() const {
-  if (!_grad_initialized) {
-    return _always_exactly_mimic_minuit2;
-  } else {
-    return _gradf.always_exactly_mimic_minuit2();
-  }
-};
-
-bool RooGradientFunction::set_always_exactly_mimic_minuit2(bool flag) const {
-  if (!_grad_initialized) {
-    return false;
-  } else {
-    _gradf.set_always_exactly_mimic_minuit2(flag);
-    return true;
-  }
+RooGradientFunction::GradientCalculatorMode RooGradientFunction::grad_mode() const {
+  return _grad_mode;
 };

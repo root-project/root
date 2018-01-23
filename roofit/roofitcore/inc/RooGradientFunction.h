@@ -37,12 +37,12 @@ public:
 
   enum class GradientCalculatorMode {ExactlyMinuit2, AlmostMinuit2};
 
-  RooGradientFunction(RooAbsReal *funct,
-                      GradientCalculatorMode grad_mode = ExactlyMinuit2);
+  explicit RooGradientFunction(RooAbsReal *funct,
+                               GradientCalculatorMode grad_mode = GradientCalculatorMode::ExactlyMinuit2);
 
   RooGradientFunction(const RooGradientFunction &other);
 
-  virtual ~RooGradientFunction();
+  ~RooGradientFunction() override;
 
   ROOT::Math::IMultiGradFunction *Clone() const override;
 
@@ -64,14 +64,12 @@ public:
 
   std::ofstream *GetLogFile() { return _logfile; }
 
-  void SetVerbose(Bool_t flag = kTRUE);
-
   Double_t &GetMaxFCN() { return _maxFCN; }
 
   Int_t GetNumInvalidNLL() { return _numBadNLL; }
 
   Bool_t Synchronize(std::vector<ROOT::Fit::ParameterSettings> &parameters,
-                     Bool_t optConst, Bool_t verbose);
+                     Bool_t optConst);
 
   void BackProp(const ROOT::Fit::FitResult &results);
 
@@ -122,7 +120,6 @@ private:
 
   int _nDim;
   std::ofstream *_logfile;
-  bool _verbose;
 
   RooArgList *_floatParamList;
   std::vector<RooAbsArg *> _floatParamVec;
@@ -146,10 +143,9 @@ private:
   double DoStepSize(const double *x, unsigned int icoord) const override;
 
 private:
-  bool _always_exactly_mimic_minuit2; //! only used for initializing the derivator
+  GradientCalculatorMode _grad_mode; //! only used for initializing the derivator
 public:
-  bool always_exactly_mimic_minuit2() const;
-  bool set_always_exactly_mimic_minuit2(bool flag = true) const;
+  GradientCalculatorMode grad_mode() const;
 
 };
 #endif //ROO_GRADIENT_FUNCTION
