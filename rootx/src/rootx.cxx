@@ -9,7 +9,7 @@
 // This program is called "root" in the $ROOTSYS/bin directory and the  //
 // real ROOT executable is now called "root.exe" (formerly "root").     //
 // Rootx puts up a splash screen giving some info about the current     //
-// version of ROOT and, more importanly, it sets up the required        //
+// version of ROOT and, more importantly, it sets up the required       //
 // LD_LIBRARY_PATH, SHLIB_PATH and LIBPATH environment variables        //
 // (depending on the platform).                                         //
 //                                                                      //
