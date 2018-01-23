@@ -1329,7 +1329,7 @@ function(ROOT_ADD_PYUNITTESTS name)
       PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
+                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
                 ENVIRONMENT ${ROOT_ENV})
 endfunction()
 
@@ -1345,7 +1345,7 @@ function(ROOT_ADD_PYUNITTEST name file)
   get_filename_component(file_name ${file} NAME)
   get_filename_component(file_dir ${file} DIRECTORY)
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
                 ENVIRONMENT ${ROOT_ENV})
 endfunction()
 
