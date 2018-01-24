@@ -46,6 +46,27 @@ Color_t TH1::GetAxisColor( Option_t *axis) const
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Return the histogram bar offset along X or Y axis.
+
+Float_t  TH1::GetBarOffset( Option_t *axis) const
+{
+   Int_t ax = AxisChoice(axis);
+   if (ax == 1) return Float_t(Float_t(fBarOffset%100)/99.);
+   if (ax == 2) return Float_t(Float_t(fBarOffset/100)/99.);
+   return 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the histogram bar width along X or Y axis.
+
+Float_t TH1::GetBarWidth( Option_t *axis) const
+{
+   Int_t ax = AxisChoice(axis);
+   if (ax == 1) return Float_t(Float_t(fBarWidth%100)/99.);
+   if (ax == 2) return Float_t(Float_t(fBarWidth/100)/99.);
+   return 0;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the "axis" label color.
@@ -216,6 +237,39 @@ void TH1::SetAxisRange(Axis_t xmin, Axis_t xmax, Option_t *axis)
    theAxis->SetRange(bin1, bin2);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Set the histogram bar offset along X and Y axis.
+
+void TH1::SetBarOffset(Float_t offset, Option_t *axis)
+{
+   TString opt = axis;
+   opt.ToLower();
+
+   Short_t barox = (Short_t)(fBarOffset%100) ;
+   Short_t baroy = (Short_t)(fBarOffset/100);
+
+   if (opt.Contains("x")) barox = 99.*offset;
+   if (opt.Contains("y")) baroy = 99.*offset;
+
+   fBarOffset = baroy*100 + barox;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set the histogram bar width along X and Y axis.
+
+void TH1::SetBarWidth(Float_t width, Option_t *axis)
+{
+   TString opt = axis;
+   opt.ToLower();
+
+   Short_t barwx = (Short_t)(fBarWidth%100) ;
+   Short_t barwy = (Short_t)(fBarWidth/100);
+
+   if (opt.Contains("x")) barwx = 99.*width;
+   if (opt.Contains("y")) barwy = 99.*width;
+
+   fBarWidth = barwy*100 + barwx;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set axis labels color.
