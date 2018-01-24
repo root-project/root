@@ -278,10 +278,12 @@ public:
       }
    }
 
+   /// This overload is used to return scalar quantities (i.e. types that are not read into a TArrayBranch)
    template <typename U = T,
              typename std::enable_if<std::is_same<typename TColumnValue<U>::ProxyParam_t, U>::value, int>::type = 0>
    T &Get(Long64_t entry);
 
+   /// This overload is used to return arrays (i.e. types that are read into a TArrayBranch)
    template <typename U = T, typename std::enable_if<!std::is_same<ProxyParam_t, U>::value, int>::type = 0>
    TArrayBranch<ProxyParam_t> Get(Long64_t)
    {
