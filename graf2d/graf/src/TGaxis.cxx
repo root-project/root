@@ -2095,7 +2095,10 @@ L200:
       } else {
         ylabel = xlside*1.3*charheight*toffset;
       }
-      if (y1 == y0) ylabel = xlside*1.6*charheight*toffset;
+      if (y1 == y0) {
+         if (toffset == 0.) toffset = gStyle->GetTitleOffset("X");
+         ylabel = xlside*1.6*charheight*toffset;
+      }
       Double_t axispos;
       if (TestBit(TAxis::kCenterTitle)) axispos = 0.5*axis_length;
       else                              axispos = axis_length;
