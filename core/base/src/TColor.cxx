@@ -2429,7 +2429,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
    // High quality palettes (255 levels)
    if (colors == 0 && ncolors>50) {
 
-      if (!fgPalettesList.fN) fgPalettesList.Set(62);        // Right now 62 high quality palettes
+      if (!fgPalettesList.fN) fgPalettesList.Set(63);        // Right now 63 high quality palettes
       Int_t Idx = (Int_t)fgPalettesList.fArray[ncolors-51];  // High quality palettes indices start at 51
 
       // This high quality palette has already been created. Reuse it.
