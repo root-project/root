@@ -9,7 +9,7 @@
 ///
 /// - Project   : TMVA - a ROOT-integrated toolkit for multivariate data analysis
 /// - Package   : TMVA
-/// - Root Macro: TMVACrossEvaluationApplication
+/// - Root Macro: TMVACrossValidationApplication
 ///
 /// \macro_output
 /// \macro_code
@@ -61,7 +61,7 @@ TTree *fillTree(TTree * tree, Int_t nPoints, Double_t offset, Double_t scale, UI
    return tree;
 }
 
-int TMVACrossEvaluationApplication()
+int TMVACrossValidationApplication()
 {
    // This loads the library
    TMVA::Tools::Instance();
@@ -140,5 +140,5 @@ int TMVACrossEvaluationApplication()
 //
 int main(int argc, char **argv)
 {
-   TMVACrossEvaluationApplication();
+   TMVACrossValidationApplication();
 }
