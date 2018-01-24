@@ -3083,7 +3083,7 @@ void TColor::SetPalette(Int_t ncolors, Int_t *colors, Float_t alpha)
             Double_t red[9]   = {  0./255.,   5./255.,  65./255.,  97./255., 124./255., 156./255., 189./255., 224./255., 255./255.};
             Double_t green[9] = { 32./255.,  54./255.,  77./255., 100./255., 123./255., 148./255., 175./255., 203./255., 234./255.};
             Double_t blue[9]  = { 77./255., 110./255., 107./255., 111./255., 120./255., 119./255., 111./255.,  94./255.,  70./255.};
-            Idx = TColor::CreateGradientColorTable(18, stops, red, green, blue, 255, alpha);
+            Idx = TColor::CreateGradientColorTable(9, stops, red, green, blue, 255, alpha);
          }
          break;
 
