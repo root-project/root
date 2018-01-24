@@ -95,7 +95,7 @@ if(NOT gnuinstall)
                  PATTERN "data" EXCLUDE)
 endif()
 
-ROOT_ADD_TEST_SUBDIRECTORY(test)
+ROOT_ADD_TEST_SUBDIRECTORY(test/crossvalidation)
 ROOT_ADD_TEST_SUBDIRECTORY(test/DNN)
 ROOT_ADD_TEST_SUBDIRECTORY(test/Method)
 ROOT_ADD_TEST_SUBDIRECTORY(test/ROC)
