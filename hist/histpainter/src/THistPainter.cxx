@@ -10236,10 +10236,6 @@ LZMIN:
    Hparam.zmin = zmin;
    Hparam.zmax = zmax;
 
-   //     Set bar offset and width
-   Hparam.baroffset = fH->GetBarOffset();
-   Hparam.barwidth  = fH->GetBarWidth();
-
    return 1;
 }
 
