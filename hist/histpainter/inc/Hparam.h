@@ -38,6 +38,10 @@ typedef struct Hparam_t {
    Double_t  zmax;          ///< maximum value along Z
    Double_t  factor;        ///< multiplication factor (normalization)
    Double_t  allchan;       ///< integrated sum of contents
+   Double_t  xbaroffset;    ///< x offset of bin for bars or legos [0,1]
+   Double_t  xbarwidth;     ///< x width of bin for bars and legos [0,1]
+   Double_t  ybaroffset;    ///< y offset of bin for bars or legos [0,1]
+   Double_t  ybarwidth;     ///< y width of bin for bars and legos [0,1]
    Int_t     xfirst;        ///< first bin number along X
    Int_t     xlast;         ///< last bin number along X
    Int_t     yfirst;        ///< first bin number along Y
