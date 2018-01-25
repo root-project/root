@@ -60,12 +60,12 @@ Float_t  TH1::GetBarOffset( Option_t *axis) const
 
    Int_t ax = AxisChoice(axis);
    if (ax == 1) {
-      if (fBarOffset <= 2000 ) return Float_t(0.001*Float_t(fBarOffset-1000));
-      if (fBarOffset <= 3000 ) return 0.;
+      if (fBarOffset <= 3000 ) return Float_t(0.001*Float_t(fBarOffset-2000));
+      if (fBarOffset <= 5000 ) return 0.;
    }
    if (ax == 2) {
-      if (fBarOffset <= 2000 ) return 0.;
-      if (fBarOffset <= 3000 ) return Float_t(0.001*Float_t(fBarOffset-2000));
+      if (fBarOffset <= 3000 ) return 0.;
+      if (fBarOffset <= 5000 ) return Float_t(0.001*Float_t(fBarOffset-4000));
    }
 
    return 0.;
@@ -85,12 +85,12 @@ Float_t TH1::GetBarWidth( Option_t *axis) const
 
    Int_t ax = AxisChoice(axis);
    if (ax == 1) {
-      if (fBarWidth <= 2000 ) return Float_t(0.001*Float_t(fBarWidth-1000));
-      if (fBarWidth <= 3000 ) return 1.;
+      if (fBarWidth <= 3000 ) return Float_t(0.001*Float_t(fBarWidth-2000));
+      if (fBarWidth <= 5000 ) return 1.;
    }
    if (ax == 2) {
-      if (fBarWidth <= 2000 ) return 1.;
-      if (fBarWidth <= 3000 ) return Float_t(0.001*Float_t(fBarWidth-2000));
+      if (fBarWidth <= 3000 ) return 1.;
+      if (fBarWidth <= 5000 ) return Float_t(0.001*Float_t(fBarWidth-4000));
    }
 
    return 1.;
@@ -273,9 +273,16 @@ void TH1::SetAxisRange(Axis_t xmin, Axis_t xmax, Option_t *axis)
 ///  - if axis="xy" `offset` is set along X and Y axis
 ///  - if axis="x"  `offset` is set along the X axis and 0. along the Y axis
 ///  - if axis="y"  `offset` is set along the Y axis and 0. along the X axis
+///
+/// `offset` must be in the range [0.,1.]
 
 void TH1::SetBarOffset(Float_t offset, Option_t *axis)
 {
+   if (offset < 0. || offset > 1.) {
+      Error("SetBarOffset", "offset must be in the range [0.,1.]");
+      return;
+   }
+
    TString opt = axis;
    opt.ToLower();
 
@@ -287,11 +294,11 @@ void TH1::SetBarOffset(Float_t offset, Option_t *axis)
       return;
    }
    if (barox) {
-      fBarOffset = Short_t(1000*offset) + 1000;
+      fBarOffset = Short_t(1000*offset) + 2000;
       return;
    }
    if (baroy) {
-      fBarOffset = Short_t(1000*offset) + 2000;
+      fBarOffset = Short_t(1000*offset) + 4000;
       return;
    }
 
@@ -309,6 +316,11 @@ void TH1::SetBarOffset(Float_t offset, Option_t *axis)
 
 void TH1::SetBarWidth(Float_t width, Option_t *axis)
 {
+   if (width < 0. || width > 1.) {
+      Error("SetBarOffset", "width must be in the range [0.,1.]");
+      return;
+   }
+
    TString opt = axis;
    opt.ToLower();
 
@@ -320,11 +332,11 @@ void TH1::SetBarWidth(Float_t width, Option_t *axis)
       return;
    }
    if (barwx) {
-      fBarWidth = Short_t(1000*width) + 1000;
+      fBarWidth = Short_t(1000*width) + 2000;
       return;
    }
    if (barwy) {
-      fBarWidth = Short_t(1000*width) + 2000;
+      fBarWidth = Short_t(1000*width) + 4000;
       return;
    }
 
