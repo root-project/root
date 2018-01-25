@@ -37,32 +37,26 @@
 
 namespace RooFit {
 
-  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2() :
-      fFunction(0),
-      fStepTolerance(0.5),
-      fGradTolerance(0.1),
-      fNCycles(2),
-      Up(1),
-      fVal(0),
-      fN(0),
-      fG(0),
-      _always_exactly_mimic_minuit2(true)
+  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, bool always_exactly_mimic_minuit2) :
+      fFunction(&f),
+      fG(f.NDim()),
+      fN(f.NDim()),
+      _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
   {}
 
 
-  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2)://, double precision):
+  NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2):
       fFunction(&f),
       fStepTolerance(step_tolerance),
       fGradTolerance(grad_tolerance),
       fNCycles(ncycles),
       Up(error_level),
-      fVal(0),
-      fN(f.NDim()),
       fG(f.NDim()),
+      fN(f.NDim()),
       _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
   {
     //number of dimensions, will look at vector size
-    _parameter_has_limits.resize(fN);
+    _parameter_has_limits.resize(f.NDim());
   }
 
 // copy constructor
@@ -73,7 +67,6 @@ namespace RooFit {
       fNCycles(other.fNCycles),
       Up(other.Up),
       fVal(other.fVal),
-      fN(other.fN),
       fG(other.fG),
       _parameter_has_limits(other._parameter_has_limits),
       precision(other.precision),
@@ -89,7 +82,6 @@ namespace RooFit {
       fGradTolerance = other.fGradTolerance;
       fNCycles = other.fNCycles;
       fVal = other.fVal;
-      fN = other.fN;
       Up = other.Up;
       precision = other.precision;
       _always_exactly_mimic_minuit2 = other._always_exactly_mimic_minuit2;
@@ -131,23 +123,20 @@ namespace RooFit {
     // TODO Auto-generated destructor stub
   }
 
-  ROOT::Minuit2::FunctionGradient NumericalDerivatorMinuit2::Differentiate(const double* cx, const std::vector<ROOT::Fit::ParameterSettings>& parameters) {
+  ROOT::Minuit2::FunctionGradient NumericalDerivatorMinuit2::Differentiate(const double* cx,
+                                                                           const std::vector<ROOT::Fit::ParameterSettings>& parameters) {
     assert(fFunction != 0);
+    assert(fFunction->NDim() == fN);
     std::vector<double> vx(fFunction->NDim()), vx_external(fFunction->NDim());
-    assert (vx.size() > 0);
 
     std::copy (cx, cx+fFunction->NDim(), vx.data());
-    std::copy (cx, cx+fFunction->NDim(), vx_external.data());
 
     // convert to Minuit external parameters
-    for (int i = 0; i < int(fN); i++) {
+    for (unsigned i = 0; i < fFunction->NDim(); i++) {
       vx_external[i] = Int2ext(parameters[i], vx[i]);
     }
 
-    double step_tolerance = fStepTolerance;
-    double grad_tolerance = fGradTolerance;
-    const ROOT::Math::IBaseFunctionMultiDim &f = *fFunction;
-    fVal = f(vx_external.data()); //value of function at given points
+    fVal = (*fFunction)(vx_external.data());  // value of function at given points
 
     ROOT::Minuit2::MnAlgebraicVector grad_vec(fG.Grad()),
                                      gr2_vec(fG.G2()),
@@ -160,19 +149,15 @@ namespace RooFit {
     // _theFitter->GetMinimizer()->ErrorDef() in the initialization call.
     // const double Up = 1;
 
-    double eps = precision.Eps();
-    double eps2 = precision.Eps2();
-
     // MODIFIED: two redundant double casts removed, for dfmin and for epspri
-    double dfmin = 8. * eps2 * (std::abs(fVal) + Up);
-    double vrysml = 8.*eps*eps;
-    unsigned int ncycle = fNCycles;
+    double dfmin = 8. * precision.Eps2() * (std::abs(fVal) + Up);
+    double vrysml = 8. * precision.Eps() * precision.Eps();
 
     for (int i = 0; i < int(fN); i++) {
       double xtf = vx[i];
-      double epspri = eps2 + std::abs(grad_vec(i) * eps2);
+      double epspri = precision.Eps2() + std::abs(grad_vec(i) * precision.Eps2());
       double step_old = 0.;
-      for (unsigned int j = 0; j < ncycle; ++ j) {
+      for (unsigned int j = 0; j < fNCycles; ++ j) {
         double optstp = std::sqrt(dfmin/(std::abs(gr2_vec(i))+epspri));
         double step = std::max(optstp, std::abs(0.1*gstep_vec(i)));
 
@@ -188,19 +173,19 @@ namespace RooFit {
         double stpmax = 10.*std::abs(gstep_vec(i));
         if (step > stpmax) step = stpmax;
 
-        double stpmin = std::max(vrysml, 8.*std::abs(eps2*vx[i]));
+        double stpmin = std::max(vrysml, 8.*std::abs(precision.Eps2() * vx[i]));
         if (step < stpmin) step = stpmin;
-        if (std::abs((step-step_old)/step) < step_tolerance) {
+        if (std::abs((step-step_old)/step) < fStepTolerance) {
           break;
         }
         gstep_vec(i) = step;
         step_old = step;
         vx[i] = xtf + step;
         vx_external[i] = Int2ext(parameters[i], vx[i]);
-        double fs1 = f(vx_external.data());
+        double fs1 = (*fFunction)(vx_external.data());
         vx[i] = xtf - step;
         vx_external[i] = Int2ext(parameters[i], vx[i]);
-        double fs2 = f(vx_external.data());
+        double fs2 = (*fFunction)(vx_external.data());
         vx[i] = xtf;
         vx_external[i] = Int2ext(parameters[i], vx[i]);
 
@@ -212,7 +197,7 @@ namespace RooFit {
         // MODIFIED:
         // The condition below had a closing parenthesis differently than
         // Minuit. Fixed in this version.
-        if (std::abs(fGrd_old - grad_vec(i))/(std::abs(grad_vec(i)) + dfmin/step) < grad_tolerance) {
+        if (std::abs(fGrd_old - grad_vec(i))/(std::abs(grad_vec(i)) + dfmin/step) < fGradTolerance) {
           break;
         }
       }
@@ -327,6 +312,9 @@ namespace RooFit {
   void NumericalDerivatorMinuit2::SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const {
     // set an initial gradient using some given steps
     // (used in the first iteration)
+
+    assert(fFunction != 0);
+    assert(fFunction->NDim() == fN);
 
     double eps2 = precision.Eps2();
 

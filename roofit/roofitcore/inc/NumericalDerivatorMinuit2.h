@@ -38,7 +38,7 @@ namespace RooFit {
   class NumericalDerivatorMinuit2 {
   public:
 
-    NumericalDerivatorMinuit2();
+    NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, bool always_exactly_mimic_minuit2);
     NumericalDerivatorMinuit2(const NumericalDerivatorMinuit2 &other);
     NumericalDerivatorMinuit2& operator=(const NumericalDerivatorMinuit2 &other);
     NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, double step_tolerance, double grad_tolerance, unsigned int ncycles, double error_level, bool always_exactly_mimic_minuit2 = true);
@@ -69,19 +69,29 @@ namespace RooFit {
 
   private:
 
+    // CAUTION: we only use fFunction to check whether the same function is used on every call.
+    // We do not use it directly as a callable function, as this would require us to:
+    // 1. either pass it at construction time, which would introduce a circular dependency from
+    //    classes that use this class as a derivative implementation, like RooGradMinimizerFcn
+    //    and RooGradientFunction,
+    // 2. or let the user initialize it manually before use, which is error prone, as the user
+    //    may forget to do so and at some future point new functions may omit to check for it.
+    // Our current implementation still requires the user to manually set the fFunction before
+    // use (otherwise the asserts in Differentiate and SetInitialGradient will fail), but
     const ROOT::Math::IBaseFunctionMultiDim* fFunction;
 
-    double fStepTolerance;
-    double fGradTolerance;
-    unsigned int fNCycles;
-    double Up;
-    double fVal;
+    double fStepTolerance = 0.5;
+    double fGradTolerance = 0.1;
+    unsigned int fNCycles = 2;
+    double Up = 1;
+    double fVal = 0;
     unsigned int fN;
 
     // these are mutable because SetInitialGradient must be const because it's called
     // from InitGradient which is const because DoDerivative must be const because the
     // ROOT::Math::IMultiGradFunction interface requires this
     mutable ROOT::Minuit2::FunctionGradient fG;
+    mutable bool _fG_size_initialized;
     // same story for SetParameterHasLimits
     mutable std::vector <bool> _parameter_has_limits;
 

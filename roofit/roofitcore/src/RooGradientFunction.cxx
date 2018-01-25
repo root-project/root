@@ -50,21 +50,18 @@
 
 #include <algorithm> // std::equal
 
-using namespace std;
 
-RooGradientFunction::RooGradientFunction(RooAbsReal *funct,
-                                         GradientCalculatorMode grad_mode) :
-    _funct(funct),
-    // Reset the *largest* negative log-likelihood value we have seen so far
-    _maxFCN(-1e30), _numBadNLL(0),
-    _printEvalErrors(10), _doEvalErrorWall(kTRUE),
-    _nDim(0), _logfile(0),
-    _grad(0), _grad_initialized(false),
-    _grad_mode(grad_mode)
-{
+RooGradientFunction::RooGradientFunction(RooAbsReal *funct, GradientCalculatorMode grad_mode) :
+    _function(funct), _grad_mode(grad_mode),
+    _grad(0), _grad_initialized(false) {}
 
-  _evalCounter = 0 ;
+RooGradientFunction::RooGradientFunction(const RooGradientFunction& other) :
+    ROOT::Math::IMultiGradFunction(other),
+    _function(other._function), _grad_mode(other._grad_mode),
+    _grad(other._grad), _grad_initialized(other._grad_initialized) {}
 
+
+RooGradientFunction::Function::Function(RooAbsReal *funct) : _funct(funct) {
   // Examine parameter list
   RooArgSet* paramSet = _funct->getParameters(RooArgSet());
   RooArgList paramList(*paramSet);
@@ -87,9 +84,9 @@ RooGradientFunction::RooGradientFunction(RooAbsReal *funct,
   RooAbsArg* arg;
   while ((arg=(RooAbsArg*)pIter->Next())) {
     if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
-      oocoutW(_context,Minimization) << "RooGradientFunction::RooGradientFunction: removing parameter "
-                                     << arg->GetName()
-                                     << " from list because it is not of type RooRealVar" << endl;
+      coutW(Evaluation) << "RooGradientFunction::RooGradientFunction: removing parameter "
+                        << arg->GetName()
+                        << " from list because it is not of type RooRealVar" << std::endl;
       _floatParamList->remove(*arg);
     }
   }
@@ -97,41 +94,33 @@ RooGradientFunction::RooGradientFunction(RooAbsReal *funct,
 
   _nDim = _floatParamList->getSize();
 
-  updateFloatVec() ;
+  updateFloatVec();
 
   // Save snapshot of initial lists
-  _initFloatParamList = (RooArgList*) _floatParamList->snapshot(kFALSE) ;
-  _initConstParamList = (RooArgList*) _constParamList->snapshot(kFALSE) ;
-
+  _initFloatParamList = (RooArgList*) _floatParamList->snapshot(kFALSE);
+  _initConstParamList = (RooArgList*) _constParamList->snapshot(kFALSE);
 }
 
 
-
-RooGradientFunction::RooGradientFunction(const RooGradientFunction& other) : ROOT::Math::IMultiGradFunction(other),
-                                                                             _evalCounter(other._evalCounter),
-                                                                             _funct(other._funct),
-                                                                             _context(other._context),
-                                                                             _maxFCN(other._maxFCN),
-                                                                             _numBadNLL(other._numBadNLL),
-                                                                             _printEvalErrors(other._printEvalErrors),
-                                                                             _doEvalErrorWall(other._doEvalErrorWall),
-                                                                             _nDim(other._nDim),
-                                                                             _logfile(other._logfile),
-                                                                             _floatParamVec(other._floatParamVec),
-                                                                             _gradf(other._gradf),
-                                                                             _grad(other._grad),
-                                                                             _grad_params(other._grad_params), _grad_initialized(other._grad_initialized),
-                                                                             _grad_mode(grad_mode)
+RooGradientFunction::Function::Function(const RooGradientFunction::Function& other) :
+    ROOT::Math::IMultiGenFunction(other),
+    _evalCounter(other._evalCounter),
+    _funct(other._funct),
+    _maxFCN(other._maxFCN),
+    _numBadNLL(other._numBadNLL),
+    _printEvalErrors(other._printEvalErrors),
+    _doEvalErrorWall(other._doEvalErrorWall),
+    _nDim(other._nDim),
+    _floatParamVec(other._floatParamVec),
 {
-  _floatParamList = new RooArgList(*other._floatParamList) ;
-  _constParamList = new RooArgList(*other._constParamList) ;
-  _initFloatParamList = (RooArgList*) other._initFloatParamList->snapshot(kFALSE) ;
-  _initConstParamList = (RooArgList*) other._initConstParamList->snapshot(kFALSE) ;
+  _floatParamList = new RooArgList(*other._floatParamList);
+  _constParamList = new RooArgList(*other._constParamList);
+  _initFloatParamList = (RooArgList*) other._initFloatParamList->snapshot(kFALSE);
+  _initConstParamList = (RooArgList*) other._initConstParamList->snapshot(kFALSE);
 }
 
 
-RooGradientFunction::~RooGradientFunction()
-{
+RooGradientFunction::Function::~Function() {
   delete _floatParamList;
   delete _initFloatParamList;
   delete _constParamList;
@@ -139,77 +128,72 @@ RooGradientFunction::~RooGradientFunction()
 }
 
 
-ROOT::Math::IMultiGradFunction* RooGradientFunction::Clone() const
-{
-  return new RooGradientFunction(*this) ;
+ROOT::Math::IMultiGradFunction* RooGradientFunction::Clone() const {
+  return new RooGradientFunction(*this);
 }
 
 
-Bool_t RooGradientFunction::Synchronize(std::vector<ROOT::Fit::ParameterSettings>& parameters,
-                                        Bool_t optConst)
-{
+Bool_t RooGradientFunction::synchronize_parameter_settings(Bool_t optConst) {
+  // Update parameter_settings with current information in RooAbsReal function parameters
 
-  // Internal function to synchronize TMinimizer with current
-  // information in RooAbsReal function parameters
+  Bool_t constValChange(kFALSE);
+  Bool_t constStatChange(kFALSE);
 
-  Bool_t constValChange(kFALSE) ;
-  Bool_t constStatChange(kFALSE) ;
-
-  Int_t index(0) ;
+  Int_t index(0);
 
   // Handle eventual migrations from constParamList -> floatParamList
   for(index= 0; index < _constParamList->getSize() ; index++) {
 
-    RooRealVar *par= dynamic_cast<RooRealVar*>(_constParamList->at(index)) ;
-    if (!par) continue ;
+    RooRealVar *par= dynamic_cast<RooRealVar*>(_constParamList->at(index));
+    if (!par) continue;
 
-    RooRealVar *oldpar= dynamic_cast<RooRealVar*>(_initConstParamList->at(index)) ;
-    if (!oldpar) continue ;
+    RooRealVar *oldpar= dynamic_cast<RooRealVar*>(_initConstParamList->at(index));
+    if (!oldpar) continue;
 
     // Test if constness changed
     if (!par->isConstant()) {
 
       // Remove from constList, add to floatList
-      _constParamList->remove(*par) ;
-      _floatParamList->add(*par) ;
-      _initFloatParamList->addClone(*oldpar) ;
-      _initConstParamList->remove(*oldpar) ;
-      constStatChange=kTRUE ;
-      _nDim++ ;
+      _constParamList->remove(*par);
+      _floatParamList->add(*par);
+      _initFloatParamList->addClone(*oldpar);
+      _initConstParamList->remove(*oldpar);
+      constStatChange=kTRUE;
+      _nDim++;
     }
 
     // Test if value changed
     if (par->getVal()!= oldpar->getVal()) {
-      constValChange=kTRUE ;
+      constValChange=kTRUE;
     }
 
   }
 
   // Update reference list
-  *_initConstParamList = *_constParamList ;
+  *_initConstParamList = *_constParamList;
 
   // Synchronize MINUIT with function state
   // Handle floatParamList
   for(index= 0; index < _floatParamList->getSize(); index++) {
-    RooRealVar *par= dynamic_cast<RooRealVar*>(_floatParamList->at(index)) ;
+    RooRealVar *par= dynamic_cast<RooRealVar*>(_floatParamList->at(index));
 
-    if (!par) continue ;
+    if (!par) continue;
 
-    Double_t pstep(0) ;
-    Double_t pmin(0) ;
-    Double_t pmax(0) ;
+    Double_t pstep(0);
+    Double_t pmin(0);
+    Double_t pmax(0);
 
     if(!par->isConstant()) {
 
       // Verify that floating parameter is indeed of type RooRealVar
       if (!par->IsA()->InheritsFrom(RooRealVar::Class())) {
-        oocoutW(_context,Minimization) << "RooGradientFunction::fit: Error, non-constant parameter "
+        coutW(Evaluation) << "RooGradientFunction::fit: Error, non-constant parameter "
                                        << par->GetName()
-                                       << " is not of type RooRealVar, skipping" << endl ;
+                                       << " is not of type RooRealVar, skipping" << std::endl;
         _floatParamList->remove(*par);
         index--;
         _nDim--;
-        continue ;
+        continue;
       }
 
       // Set the limits, if not infinite
@@ -227,9 +211,9 @@ Bool_t RooGradientFunction::Synchronize(std::vector<ROOT::Fit::ParameterSettings
 
           // Trim default choice of error if within 2 sigma of limit
           if (pmax - par->getVal() < 2*pstep) {
-            pstep = (pmax - par->getVal())/2 ;
+            pstep = (pmax - par->getVal())/2;
           } else if (par->getVal() - pmin < 2*pstep) {
-            pstep = (par->getVal() - pmin )/2 ;
+            pstep = (par->getVal() - pmin )/2;
           }
 
           // If trimming results in zero error, restore default
@@ -238,101 +222,79 @@ Bool_t RooGradientFunction::Synchronize(std::vector<ROOT::Fit::ParameterSettings
           }
 
         } else {
-          pstep=1 ;
+          pstep=1;
         }
-        oocoutW(_context,Minimization) << "RooGradientFunction::synchronize: WARNING: no initial error estimate available for "
-                                       << par->GetName() << ": using " << pstep << endl;
+        coutW(Evaluation) << "RooGradientFunction::synchronize: WARNING: no initial error estimate available for "
+                                       << par->GetName() << ": using " << pstep << std::endl;
       }
     } else {
-      pmin = par->getVal() ;
-      pmax = par->getVal() ;
+      pmin = par->getVal();
+      pmax = par->getVal();
     }
 
     // new parameter
-    if (index>=Int_t(parameters.size())) {
+    if (index>=Int_t(parameter_settings.size())) {
 
       if (par->hasMin() && par->hasMax()) {
-        parameters.push_back(ROOT::Fit::ParameterSettings(par->GetName(),
+        parameter_settings.push_back(ROOT::Fit::ParameterSettings(par->GetName(),
                                                           par->getVal(),
                                                           pstep,
                                                           pmin,pmax));
       }
       else {
-        parameters.push_back(ROOT::Fit::ParameterSettings(par->GetName(),
+        parameter_settings.push_back(ROOT::Fit::ParameterSettings(par->GetName(),
                                                           par->getVal(),
                                                           pstep));
         if (par->hasMin() )
-          parameters.back().SetLowerLimit(pmin);
+          parameter_settings.back().SetLowerLimit(pmin);
         else if (par->hasMax() )
-          parameters.back().SetUpperLimit(pmax);
+          parameter_settings.back().SetUpperLimit(pmax);
       }
 
       continue;
 
     }
 
-    Bool_t oldFixed = parameters[index].IsFixed();
-    Double_t oldVar = parameters[index].Value();
-    Double_t oldVerr = parameters[index].StepSize();
-    Double_t oldVlo = parameters[index].LowerLimit();
-    Double_t oldVhi = parameters[index].UpperLimit();
+    Bool_t oldFixed = parameter_settings[index].IsFixed();
+    Double_t oldVar = parameter_settings[index].Value();
+    Double_t oldVerr = parameter_settings[index].StepSize();
+    Double_t oldVlo = parameter_settings[index].LowerLimit();
+    Double_t oldVhi = parameter_settings[index].UpperLimit();
 
     if (par->isConstant() && !oldFixed) {
 
       // Parameter changes floating -> constant : update only value if necessary
       if (oldVar!=par->getVal()) {
-        parameters[index].SetValue(par->getVal());
+        parameter_settings[index].SetValue(par->getVal());
       }
-      parameters[index].Fix();
-      constStatChange=kTRUE ;
+      parameter_settings[index].Fix();
+      constStatChange=kTRUE;
 
     } else if (par->isConstant() && oldFixed) {
 
       // Parameter changes constant -> constant : update only value if necessary
       if (oldVar!=par->getVal()) {
-        parameters[index].SetValue(par->getVal());
-        constValChange=kTRUE ;
+        parameter_settings[index].SetValue(par->getVal());
+        constValChange=kTRUE;
       }
 
     } else {
       // Parameter changes constant -> floating
       if (!par->isConstant() && oldFixed) {
-        parameters[index].Release();
-        constStatChange=kTRUE ;
+        parameter_settings[index].Release();
+        constStatChange=kTRUE;
       }
 
       // Parameter changes constant -> floating : update all if necessary
       if (oldVar!=par->getVal() || oldVlo!=pmin || oldVhi != pmax || oldVerr!=pstep) {
-        parameters[index].SetValue(par->getVal());
-        parameters[index].SetStepSize(pstep);
+        parameter_settings[index].SetValue(par->getVal());
+        parameter_settings[index].SetStepSize(pstep);
         if (par->hasMin() && par->hasMax() )
-          parameters[index].SetLimits(pmin,pmax);
+          parameter_settings[index].SetLimits(pmin,pmax);
         else if (par->hasMin() )
-          parameters[index].SetLowerLimit(pmin);
+          parameter_settings[index].SetLowerLimit(pmin);
         else if (par->hasMax() )
-          parameters[index].SetUpperLimit(pmax);
-      }
-
-      // Inform user about changes in verbose mode
-      if (verbose) {
-        // if ierr<0, par was moved from the const list and a message was already printed
-
-        if (oldVar!=par->getVal()) {
-          oocoutI(_context,Minimization) << "RooGradientFunction::synchronize: value of parameter "
-                                         << par->GetName() << " changed from " << oldVar << " to "
-                                         << par->getVal() << endl ;
-        }
-        if (oldVlo!=pmin || oldVhi!=pmax) {
-          oocoutI(_context,Minimization) << "RooGradientFunction::synchronize: limits of parameter "
-                                         << par->GetName() << " changed from [" << oldVlo << "," << oldVhi
-                                         << "] to [" << pmin << "," << pmax << "]" << endl ;
-        }
-
-        // If oldVerr=0, then parameter was previously fixed
-        if (oldVerr!=pstep && oldVerr!=0) {
-          oocoutI(_context,Minimization) << "RooGradientFunction::synchronize: error/step size of parameter "
-                                         << par->GetName() << " changed from " << oldVerr << " to " << pstep << endl ;
-        }
+          parameter_settings[index].SetUpperLimit(pmax);
       }
     }
   }
@@ -340,36 +302,35 @@ Bool_t RooGradientFunction::Synchronize(std::vector<ROOT::Fit::ParameterSettings
   if (optConst) {
     if (constStatChange) {
 
-      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
+      RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
 
-      oocoutI(_context,Minimization) << "RooGradientFunction::synchronize: set of constant parameters changed, rerunning const optimizer" << endl ;
-      _funct->constOptimizeTestStatistic(RooAbsArg::ConfigChange) ;
+      coutI(Evaluation) << "RooGradientFunction::synchronize: set of constant parameters changed, rerunning const optimizer" << std::endl;
+      _funct->constOptimizeTestStatistic(RooAbsArg::ConfigChange);
     } else if (constValChange) {
-      oocoutI(_context,Minimization) << "RooGradientFunction::synchronize: constant parameter values changed, rerunning const optimizer" << endl ;
-      _funct->constOptimizeTestStatistic(RooAbsArg::ValueChange) ;
+      coutI(Evaluation) << "RooGradientFunction::synchronize: constant parameter values changed, rerunning const optimizer" << std::endl;
+      _funct->constOptimizeTestStatistic(RooAbsArg::ValueChange);
     }
 
-    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors) ;
+    RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
 
   }
 
-  updateFloatVec() ;
+  updateFloatVec();
 
   // If the gradient is initialized, synchronize it as well. If not, it will be
   // synchronized from InitGradient when DoDerivative is called the first time.
   if (_grad_initialized) {
-    SynchronizeGradient(parameters);
+    synchronize_gradient_parameter_settings();
   }
 
-  return 0 ;
+  return 0;
 
 }
 
 
-void RooGradientFunction::SynchronizeGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const {
-//  _gradf.updateParameters(parameters);
-  _gradf.SetInitialGradient(parameters);
-  _gradf.SetParameterHasLimits(parameters);
+void RooGradientFunction::synchronize_gradient_parameter_settings() const {
+  _gradf.SetInitialGradient(parameter_settings);
+  _gradf.SetParameterHasLimits(parameter_settings);
 }
 
 
@@ -377,13 +338,13 @@ Double_t RooGradientFunction::GetPdfParamVal(Int_t index)
 {
   // Access PDF parameter value by ordinal index (needed by MINUIT)
 
-  return ((RooRealVar*)_floatParamList->at(index))->getVal() ;
+  return ((RooRealVar*)_floatParamList->at(index))->getVal();
 }
 
 Double_t RooGradientFunction::GetPdfParamErr(Int_t index)
 {
   // Access PDF parameter error by ordinal index (needed by MINUIT)
-  return ((RooRealVar*)_floatParamList->at(index))->getError() ;
+  return ((RooRealVar*)_floatParamList->at(index))->getError();
 }
 
 
@@ -391,7 +352,7 @@ void RooGradientFunction::SetPdfParamErr(Int_t index, Double_t value)
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
 
-  ((RooRealVar*)_floatParamList->at(index))->setError(value) ;
+  ((RooRealVar*)_floatParamList->at(index))->setError(value);
 }
 
 
@@ -400,7 +361,7 @@ void RooGradientFunction::ClearPdfParamAsymErr(Int_t index)
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
 
-  ((RooRealVar*)_floatParamList->at(index))->removeAsymError() ;
+  ((RooRealVar*)_floatParamList->at(index))->removeAsymError();
 }
 
 
@@ -408,7 +369,7 @@ void RooGradientFunction::SetPdfParamErr(Int_t index, Double_t loVal, Double_t h
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
 
-  ((RooRealVar*)_floatParamList->at(index))->setAsymError(loVal,hiVal) ;
+  ((RooRealVar*)_floatParamList->at(index))->setAsymError(loVal,hiVal);
 }
 
 
@@ -432,33 +393,9 @@ void RooGradientFunction::BackProp(const ROOT::Fit::FitResult &results)
       SetPdfParamErr(index, eminus,eplus);
     } else {
       // Clear the asymmetric error
-      ClearPdfParamAsymErr(index) ;
+      ClearPdfParamAsymErr(index);
     }
   }
-
-}
-
-Bool_t RooGradientFunction::SetLogFile(const char* inLogfile)
-{
-  // Change the file name for logging of a RooGradMinimizer of all MINUIT steppings
-  // through the parameter space. If inLogfile is null, the current log file
-  // is closed and logging is stopped.
-
-  if (_logfile) {
-    oocoutI(_context,Minimization) << "RooGradientFunction::setLogFile: closing previous log file" << endl ;
-    _logfile->close() ;
-    delete _logfile ;
-    _logfile = 0 ;
-  }
-  _logfile = new ofstream(inLogfile) ;
-  if (!_logfile->good()) {
-    oocoutI(_context,Minimization) << "RooGradientFunction::setLogFile: cannot open file " << inLogfile << endl ;
-    _logfile->close() ;
-    delete _logfile ;
-    _logfile= 0;
-  }
-
-  return kFALSE ;
 
 }
 
@@ -472,9 +409,9 @@ void RooGradientFunction::ApplyCovarianceMatrix(TMatrixDSym& V)
   for (Int_t i=0 ; i<_nDim ; i++) {
     // Skip fixed parameters
     if (_floatParamList->at(i)->isConstant()) {
-      continue ;
+      continue;
     }
-    SetPdfParamErr(i, sqrt(V(i,i))) ;
+    SetPdfParamErr(i, sqrt(V(i,i)));
   }
 
 }
@@ -483,7 +420,7 @@ void RooGradientFunction::ApplyCovarianceMatrix(TMatrixDSym& V)
 Bool_t RooGradientFunction::SetPdfParamVal(const Int_t &index, const Double_t &value) const
 {
   //RooRealVar* par = (RooRealVar*)_floatParamList->at(index);
-  RooRealVar* par = (RooRealVar*)_floatParamVec[index] ;
+  RooRealVar* par = (RooRealVar*)_floatParamVec[index];
 
   if (par->getVal()!=value) {
     par->setVal(value);
@@ -499,13 +436,13 @@ Bool_t RooGradientFunction::SetPdfParamVal(const Int_t &index, const Double_t &v
 
 void RooGradientFunction::updateFloatVec()
 {
-  _floatParamVec.clear() ;
-  RooFIter iter = _floatParamList->fwdIterator() ;
-  RooAbsArg* arg ;
-  _floatParamVec = std::vector<RooAbsArg*>(_floatParamList->getSize()) ;
-  Int_t i(0) ;
+  _floatParamVec.clear();
+  RooFIter iter = _floatParamList->fwdIterator();
+  RooAbsArg* arg;
+  _floatParamVec = std::vector<RooAbsArg*>(_floatParamList->getSize());
+  Int_t i(0);
   while((arg=iter.next())) {
-    _floatParamVec[i++] = arg ;
+    _floatParamVec[i++] = arg;
   }
 }
 
@@ -517,15 +454,14 @@ double RooGradientFunction::DoEval(const double *x) const
 
   // Set the parameter values for this iteration
   for (int index = 0; index < _nDim; index++) {
-    if (_logfile) (*_logfile) << x[index] << " " ;
     // also check whether the function was already evaluated for this set of parameters
     parameters_changed |= SetPdfParamVal(index,x[index]);
   }
 
   // Calculate the function for these parameters
-  RooAbsReal::setHideOffset(kFALSE) ;
+  RooAbsReal::setHideOffset(kFALSE);
   double fvalue = _funct->getVal();
-  RooAbsReal::setHideOffset(kTRUE) ;
+  RooAbsReal::setHideOffset(kTRUE);
 
   if (!parameters_changed) {
     return fvalue;
@@ -536,45 +472,40 @@ double RooGradientFunction::DoEval(const double *x) const
     if (_printEvalErrors>=0) {
 
       if (_doEvalErrorWall) {
-        oocoutW(_context,Minimization) << "RooGradientFunction: Minimized function has error status." << endl
+        coutW(Evaluation) << "RooGradientFunction: Minimized function has error status." << std::endl
                                        << "Returning maximum FCN so far (" << _maxFCN
-                                       << ") to force MIGRAD to back out of this region. Error log follows" << endl ;
+                                       << ") to force MIGRAD to back out of this region. Error log follows" << std::endl;
       } else {
-        oocoutW(_context,Minimization) << "RooGradientFunction: Minimized function has error status but is ignored" << endl ;
+        coutW(Evaluation) << "RooGradientFunction: Minimized function has error status but is ignored" << std::endl;
       }
 
-      TIterator* iter = _floatParamList->createIterator() ;
-      RooRealVar* var ;
-      Bool_t first(kTRUE) ;
-      ooccoutW(_context,Minimization) << "Parameter values: " ;
+      TIterator* iter = _floatParamList->createIterator();
+      RooRealVar* var;
+      Bool_t first(kTRUE);
+      ccoutW(Evaluation) << "Parameter values: ";
       while((var=(RooRealVar*)iter->Next())) {
-        if (first) { first = kFALSE ; } else ooccoutW(_context,Minimization) << ", " ;
-        ooccoutW(_context,Minimization) << var->GetName() << "=" << var->getVal() ;
+        if (first) { first = kFALSE ; } else ccoutW(Evaluation) << ", ";
+        ccoutW(Evaluation) << var->GetName() << "=" << var->getVal();
       }
-      delete iter ;
-      ooccoutW(_context,Minimization) << endl ;
+      delete iter;
+      ccoutW(Evaluation) << std::endl;
 
-      RooAbsReal::printEvalErrors(ooccoutW(_context,Minimization),_printEvalErrors) ;
-      ooccoutW(_context,Minimization) << endl ;
+      RooAbsReal::printEvalErrors(ccoutW(Evaluation),_printEvalErrors);
+      ccoutW(Evaluation) << std::endl;
     }
 
     if (_doEvalErrorWall) {
-      fvalue = _maxFCN+1 ;
+      fvalue = _maxFCN+1;
     }
 
-    RooAbsPdf::clearEvalError() ;
-    RooAbsReal::clearEvalErrorLog() ;
-    _numBadNLL++ ;
+    RooAbsPdf::clearEvalError();
+    RooAbsReal::clearEvalErrorLog();
+    _numBadNLL++;
   } else if (fvalue>_maxFCN) {
-    _maxFCN = fvalue ;
+    _maxFCN = fvalue;
   }
 
-  // Optional logging
-  if (_logfile)
-    (*_logfile) << setprecision(15) << fvalue << setprecision(4) << endl;
-
-  _evalCounter++ ;
-//  std::cout << "func eval #" << _evalCounter << ", value: " << fvalue << std::endl;
+  _evalCounter++;
   return fvalue;
 }
 
@@ -583,28 +514,18 @@ double RooGradientFunction::DoEval(const double *x) const
 void RooGradientFunction::InitGradient() const {
   // Create derivator
   ROOT::Fit::Fitter *fitter = _context->fitter();
-  if (!fitter) {
-    throw std::runtime_error("In RooGradientFunction::RooGradientFunction: fitter is null!");
-  }
   ROOT::Math::Minimizer *minimizer = fitter->GetMinimizer();
-  if (!minimizer) {
-    throw std::runtime_error("In RooGradientFunction::RooGradientFunction: minimizer is null! Must initialize minimizer in the fitter before initializing the gradient function.");
-  }
-
-//  std::cout << "RooGradientFunction using strategy " << minimizer->Strategy() << std::endl;
   ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(minimizer->Strategy()));
-//  ROOT::Minuit2::MnMachinePrecision precision {};
   RooFit::NumericalDerivatorMinuit2 derivator(*this,
                                               strategy.GradientStepTolerance(),
                                               strategy.GradientTolerance(),
                                               strategy.GradientNCycles(),
-                                              minimizer->ErrorDef());//,
-//                                                  precision.Eps());
+                                              minimizer->ErrorDef());
   _gradf = derivator;
-//  _grad.resize(_nDim);
   _grad_params.resize(_nDim);
 
-  SynchronizeGradient(fitter->Config().ParamsSettings());
+  synchronize_gradient_parameter_settings(fitter->Config().ParamsSettings());
+  // TODO: CHECK: zijn de parameter settings hier al wel up to date?!
 
   _grad_initialized = true;
 }
@@ -628,12 +549,11 @@ void RooGradientFunction::run_derivator(const double *x) const {
     // Set the parameter values for this iteration
     // TODO: this is already done in DoEval as well; find efficient way to do only once
     for (int index = 0; index < _nDim; index++) {
-      if (_logfile) (*_logfile) << x[index] << " " ;
       SetPdfParamVal(index,x[index]);
     }
 
     // Calculate the function for these parameters
-    _grad = _gradf(x, _context->fitter()->Config().ParamsSettings());
+    _grad = _gradf(x, parameter_settings);
   }
 }
 
