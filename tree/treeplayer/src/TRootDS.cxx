@@ -13,8 +13,19 @@ namespace ROOT {
 namespace Experimental {
 namespace TDF {
 
-std::vector<void *> TRootDS::GetColumnReadersImpl(std::string_view name, const std::type_info &)
+std::vector<void *> TRootDS::GetColumnReadersImpl(std::string_view name, const std::type_info &id)
 {
+   const auto colTypeName = GetTypeName(name);
+   const auto &colTypeId = ROOT::Internal::TDF::TypeName2TypeID(colTypeName);
+   if (id != colTypeId) {
+      std::string err = "The type of column \"";
+      err += name;
+      err += "\" is ";
+      err += colTypeName;
+      err += " but a different one has been selected.";
+      throw std::runtime_error(err);
+   }
+
    const auto index =
       std::distance(fListOfBranches.begin(), std::find(fListOfBranches.begin(), fListOfBranches.end(), name));
    std::vector<void *> ret(fNSlots);
