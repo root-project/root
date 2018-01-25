@@ -137,6 +137,13 @@ private: // Data Members
    typedef std::unordered_map<std::string, TObject*> SpecialObjectMap_t;
    std::map<SpecialObjectLookupCtx_t, SpecialObjectMap_t> fSpecialObjectMaps;
 
+   // Interpreter-related functions will push the "entry" lock state to *this.
+   // Recursive calls will do that, too - but we must only forget about the lock
+   // state once this recursion count went to 0.
+   Int_t fInterpMutexStateRecurseCount = 0;
+   // State of gCoreMutex when the first interpreter-related function was invoked.
+   std::unique_ptr<ROOT::TVirtualRWMutex::State> fInitialMutexState;
+
    DeclId_t GetDeclId(const llvm::GlobalValue *gv) const;
 
    Bool_t fHeaderParsingOnDemand;
@@ -273,6 +280,12 @@ public: // Public Interface
       fLockProcessLine = lock;
    }
    const char* TypeName(const char* typeDesc);
+
+   void     SnapshotMutexState(ROOT::TVirtualRWMutex* mtx);
+   void     ForgetMutexState();
+
+   void     ApplyToInterpreterMutex(void* delta);
+   void    *RewindInterpreterMutex();
 
    static void  UpdateClassInfo(char* name, Long_t tagnum);
    static void  UpdateClassInfoWork(const char* name);
