@@ -89,6 +89,21 @@ TEST(TRootTDS, ColumnReaders)
    }
 }
 
+TEST(TRootTDS, ColumnReadersWrongType)
+{
+   TRootDS tds(treeName, fileGlob);
+   const auto nSlots = 3U;
+   tds.SetNSlots(nSlots);
+   int res = 1;
+   try {
+      auto vals = tds.GetColumnReaders<char *>("i");
+   } catch (const std::runtime_error &e) {
+      EXPECT_STREQ("The type of column \"i\" is Int_t but a different one has been selected.", e.what());
+      res = 0;
+   }
+   EXPECT_EQ(0, res);
+}
+
 #ifndef NDEBUG
 
 TEST(TRootTDS, SetNSlotsTwice)
