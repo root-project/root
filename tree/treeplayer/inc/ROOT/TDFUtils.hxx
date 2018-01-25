@@ -145,6 +145,10 @@ struct TNeedJitting<TInferType> {
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
 
+const std::type_info &TypeName2TypeID(const std::string &name);
+
+std::string TypeID2TypeName(const std::type_info &id);
+
 std::string
 ColumnName2ColumnTypeName(const std::string &colName, TTree *, TCustomColumnBase *, TDataSource * = nullptr);
 
