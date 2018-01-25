@@ -84,6 +84,22 @@ TEST(TCsvDS, ColumnReaders)
    }
 }
 
+TEST(TCsvDS, ColumnReadersWrongType)
+{
+   TCsvDS tds(fileName0);
+   const auto nSlots = 3U;
+   tds.SetNSlots(nSlots);
+   int res = 1;
+   try {
+      auto vals = tds.GetColumnReaders<float>("Age");
+   } catch (const std::runtime_error &e) {
+      EXPECT_STREQ("The type selected for column \"Age\" does not correspond to column type, which is Long64_t",
+                   e.what());
+      res = 0;
+   }
+   EXPECT_EQ(0, res);
+}
+
 TEST(TCsvDS, ColumnReadersString)
 {
    TCsvDS tds(fileName0);

@@ -58,6 +58,21 @@ TEST(TTrivialDS, ColumnReaders)
    }
 }
 
+TEST(TTrivialDS, ColumnReadersWrongType)
+{
+   TTrivialDS tds(32);
+   const auto nSlots = 4U;
+   tds.SetNSlots(nSlots);
+   int res = 1;
+   try {
+      auto vals = tds.GetColumnReaders<float>("col0");
+   } catch (const std::runtime_error &e) {
+      EXPECT_STREQ("The type specified for the column col0 is not ULong64_t.", e.what());
+      res = 0;
+   }
+   EXPECT_EQ(0, res);
+}
+
 #ifndef NDEBUG
 TEST(TTrivialDS, SetNSlotsTwice)
 {
