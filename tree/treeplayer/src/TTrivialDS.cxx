@@ -7,8 +7,12 @@ namespace ROOT {
 namespace Experimental {
 namespace TDF {
 
-std::vector<void *> TTrivialDS::GetColumnReadersImpl(std::string_view, const std::type_info &)
+std::vector<void *> TTrivialDS::GetColumnReadersImpl(std::string_view, const std::type_info &ti)
 {
+   // We know we have only one column and that it's holding ULong64_t's
+   if (ti != typeid(ULong64_t)) {
+      throw std::runtime_error("The type specified for the column \"col0\" is not ULong64_t.");
+   }
    std::vector<void *> ret;
    for (auto i : ROOT::TSeqU(fNSlots)) {
       fCounterAddr[i] = &fCounter[i];
