@@ -68,7 +68,7 @@ public:
    Int_t UnLock() override { WriteUnLock(nullptr); return 1; }
    Int_t CleanUp() override { WriteUnLock(nullptr); return 1; }
 
-   virtual std::unique_ptr<State> GetState() const = 0;
+   virtual std::unique_ptr<State> GetStateBefore() = 0;
    virtual std::unique_ptr<StateDelta> Rewind(const State& earlierState) = 0;
    virtual void Apply(std::unique_ptr<StateDelta> &&delta) = 0;
 

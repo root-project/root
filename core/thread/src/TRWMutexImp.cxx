@@ -70,10 +70,14 @@ TVirtualRWMutex *TRWMutexImp<MutexT, RecurseCountsT>::Factory(Bool_t /*recursive
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Restore the mutex state to the state represented by `state`. This function
-/// must only be called while the mutex is locked. Returns the DeltaState
-/// between now and the rewind point, such that the difference can be re-applied
-/// using `Apply()`.
+/// Restore the mutex state to `state`. This function must only be called while
+/// the mutex is locked. Returns the DeltaState between now and the resulting
+/// state (i.e. lock count before state), such that the difference can be
+/// re-applied using `Apply()`.
+/// In pseudo-code:
+///     delta = current_lock_count - earlierState.lock_count;
+///     current_lock_count -= delta;
+///     return delta;
 
 template <typename MutexT, typename RecurseCountsT>
 std::unique_ptr<TVirtualRWMutex::StateDelta>
@@ -83,8 +87,9 @@ TRWMutexImp<MutexT, RecurseCountsT>::Rewind(const TVirtualRWMutex::State &earlie
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Apply the mutex state delta. This function must only be called while the
-/// mutex is locked.
+/// Apply the mutex state delta.
+/// In pseudo-code:
+///     current_lock_count += delta;
 
 template <typename MutexT, typename RecurseCountsT>
 void TRWMutexImp<MutexT, RecurseCountsT>::Apply(std::unique_ptr<TVirtualRWMutex::StateDelta> &&delta)
@@ -93,14 +98,14 @@ void TRWMutexImp<MutexT, RecurseCountsT>::Apply(std::unique_ptr<TVirtualRWMutex:
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Get the mutex state. This function must only be called while the mutex is
-/// locked.
+/// Get the mutex state *before* the current lock was taken. This function must
+/// only be called while the mutex is locked.
 
 template <typename MutexT, typename RecurseCountsT>
 std::unique_ptr<TVirtualRWMutex::State>
-TRWMutexImp<MutexT, RecurseCountsT>::GetState() const
+TRWMutexImp<MutexT, RecurseCountsT>::GetStateBefore()
 {
-   return fMutexImp.GetState();
+   return fMutexImp.GetStateBefore();
 }
 
 template class TRWMutexImp<TMutex>;

@@ -37,7 +37,7 @@ struct UniqueLockRecurseCount {
 
    using local_t = LocalCounts*;
 
-   local_t GetLocal() {
+   local_t GetLocal(){
       TTHREAD_TLS_DECL(LocalCounts, gLocal);
       return &gLocal;
    }
@@ -66,6 +66,7 @@ struct UniqueLockRecurseCount {
       local->fReadersCount = newvalue;
    }
 
+   bool IsCurrentWriter(local_t &local) { return local->fIsWriter; }
    bool IsNotCurrentWriter(local_t &local) { return !local->fIsWriter; }
 
    void SetIsWriter(local_t &local)
@@ -94,7 +95,7 @@ struct RecurseCounts {
 
    using local_t = std::thread::id;
 
-   local_t GetLocal() { return std::this_thread::get_id(); }
+   local_t GetLocal() const { return std::this_thread::get_id(); }
 
    Hint_t *IncrementReadCount(local_t &local) {
       auto &count = fReadersCount[local];
@@ -126,7 +127,8 @@ struct RecurseCounts {
       fReadersCount[local] = newvalue;
    }
 
-   bool IsNotCurrentWriter(local_t &local) { return fWriterThread != local; }
+   bool IsCurrentWriter(local_t &local) const { return fWriterThread == local; }
+   bool IsNotCurrentWriter(local_t &local) const { return fWriterThread != local; }
 
    void SetIsWriter(local_t &local)
    {

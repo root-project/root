@@ -29,7 +29,7 @@ public:
    void WriteUnLock(Hint_t *) override;
 
    TVirtualRWMutex *Factory(Bool_t /*recursive*/ = kFALSE) override;
-   std::unique_ptr<State> GetState() const override;
+   std::unique_ptr<State> GetStateBefore() override;
    std::unique_ptr<StateDelta> Rewind(const State &earlierState) override;
    void Apply(std::unique_ptr<StateDelta> &&delta) override;
 
