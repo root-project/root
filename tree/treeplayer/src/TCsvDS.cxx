@@ -133,8 +133,19 @@ void TCsvDS::GenerateHeaders(size_t size)
    }
 }
 
-std::vector<void *> TCsvDS::GetColumnReadersImpl(std::string_view colName, const std::type_info &)
+std::vector<void *> TCsvDS::GetColumnReadersImpl(std::string_view colName, const std::type_info &ti)
 {
+   const auto colTypeName = GetTypeName(colName);
+
+   if ((colTypeName == "double" && typeid(double) != ti) || (colTypeName == "Long64_t" && typeid(Long64_t) != ti) ||
+       (colTypeName == "std::string" && typeid(std::string) != ti) || (colTypeName == "bool" && typeid(bool) != ti)) {
+      std::string err = "The type selected for column \"";
+      err += colName;
+      err += "\" does not correspond to column type, which is ";
+      err += colTypeName;
+      throw std::runtime_error(err);
+   }
+
    const auto &colNames = GetColumnNames();
    const auto index = std::distance(colNames.begin(), std::find(colNames.begin(), colNames.end(), colName));
    std::vector<void *> ret(fNSlots);

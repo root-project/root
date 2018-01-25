@@ -36,6 +36,84 @@ TIgnoreErrorLevelRAII::~TIgnoreErrorLevelRAII()
    gErrorIgnoreLevel = fCurIgnoreErrorLevel;
 }
 
+const std::type_info &TypeName2TypeID(const std::string &name)
+{
+   if (auto c = TClass::GetClass(name.c_str())) {
+      return *c->GetTypeInfo();
+   } else if (name == "char" || name == "Char_t")
+      return typeid(char);
+   else if (name == "unsigned char" || name == "UChar_t")
+      return typeid(unsigned char);
+   else if (name == "int" || name == "Int_t")
+      return typeid(int);
+   else if (name == "unsigned int" || name == "UInt_t")
+      return typeid(unsigned int);
+   else if (name == "short" || name == "Short_t")
+      return typeid(short);
+   else if (name == "unsigned short" || name == "UShort_t")
+      return typeid(unsigned short);
+   else if (name == "long" || name == "Long_t")
+      return typeid(long);
+   else if (name == "unsigned long" || name == "ULong_t")
+      return typeid(unsigned long);
+   else if (name == "double" || name == "Double_t")
+      return typeid(double);
+   else if (name == "float" || name == "Float_t")
+      return typeid(float);
+   else if (name == "Long64_t")
+      return typeid(Long64_t);
+   else if (name == "ULong64_t")
+      return typeid(ULong64_t);
+   else if (name == "bool" || name == "Bool_t")
+      return typeid(bool);
+   else {
+      std::string msg("Cannot extract type_info of type ");
+      msg += name.c_str();
+      msg += ".";
+      throw std::runtime_error(msg);
+   }
+}
+
+std::string TypeID2TypeName(const std::type_info &id)
+{
+   if (auto c = TClass::GetClass(id)) {
+      return c->GetName();
+   } else if (type_id == typeid(char))
+      return "char";
+   else if (type_id == typeid(unsigned char))
+      return "unsigned char";
+   else if (type_id == typeid(int))
+      return "int";
+   else if (type_id == typeid(unsigned int))
+      return "unsigned int";
+   else if (type_id == typeid(short))
+      return "short";
+   else if (type_id == typeid(unsigned short))
+      return "unsigned short";
+   else if (type_id == typeid(long))
+      return "long";
+   else if (type_id == typeid(unsigned long))
+      return "unsigned long";
+   else if (type_id == typeid(double))
+      return "double";
+   else if (type_id == typeid(float))
+      return "float";
+   else if (type_id == typeid(Long64_t))
+      return "Long64_t";
+   else if (type_id == typeid(ULong64_t))
+      return "ULong64_t";
+   else if (type_id == typeid(bool))
+      return "bool";
+   else {
+      std::string msg("Cannot deduce type of temporary column ");
+      msg += colName.c_str();
+      msg += ". The typename is ";
+      msg += tmpBranch->GetTypeId().name();
+      msg += ".";
+      throw std::runtime_error(msg);
+   }
+}
+
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define. Returns an empty string if type name deduction fails.
 std::string
@@ -77,48 +155,13 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
             return l->GetTypeName();
          } else {
             // we do not know how to deal with this branch
-            throw std::runtime_error("TTree branch " + colName + " has both a leaf count and a static length. This is not supported.");
+            throw std::runtime_error("TTree branch " + colName +
+                                     " has both a leaf count and a static length. This is not supported.");
          }
       }
    } else if (tmpBranch) {
       // this must be a temporary branch
-      const auto &type_id = tmpBranch->GetTypeId();
-      if (auto c = TClass::GetClass(type_id)) {
-         return c->GetName();
-      } else if (type_id == typeid(char))
-         return "char";
-      else if (type_id == typeid(unsigned char))
-         return "unsigned char";
-      else if (type_id == typeid(int))
-         return "int";
-      else if (type_id == typeid(unsigned int))
-         return "unsigned int";
-      else if (type_id == typeid(short))
-         return "short";
-      else if (type_id == typeid(unsigned short))
-         return "unsigned short";
-      else if (type_id == typeid(long))
-         return "long";
-      else if (type_id == typeid(unsigned long))
-         return "unsigned long";
-      else if (type_id == typeid(double))
-         return "double";
-      else if (type_id == typeid(float))
-         return "float";
-      else if (type_id == typeid(Long64_t))
-         return "Long64_t";
-      else if (type_id == typeid(ULong64_t))
-         return "ULong64_t";
-      else if (type_id == typeid(bool))
-         return "bool";
-      else {
-         std::string msg("Cannot deduce type of temporary column ");
-         msg += colName.c_str();
-         msg += ". The typename is ";
-         msg += tmpBranch->GetTypeId().name();
-         msg += ".";
-         throw std::runtime_error(msg);
-      }
+      return TypeID2TypeName(tmpBranch->GetTypeId());
    } else {
       throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
    }
@@ -175,7 +218,8 @@ unsigned int GetNSlots()
 
 // The set here is used as a registry, the real list, which keeps the order, is
 // the one in the vector
-void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames, std::set<TTree *> &analysedTrees)
+void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
+                        std::set<TTree *> &analysedTrees)
 {
 
    if (!analysedTrees.insert(&t).second) {
@@ -186,7 +230,7 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_
    if (branches) {
       for (auto branchObj : *branches) {
          auto name = branchObj->GetName();
-         if(bNamesReg.insert(name).second) {
+         if (bNamesReg.insert(name).second) {
             bNames.emplace_back(name);
          }
       }
