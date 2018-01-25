@@ -145,6 +145,10 @@ struct TNeedJitting<TInferType> {
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
 
+const std::type_info &TypeName2TypeID(const std::string &name);
+
+std::string TypeID2TypeName(const std::type_info &id);
+
 std::string
 ColumnName2ColumnTypeName(const std::string &colName, TTree *, TCustomColumnBase *, TDataSource * = nullptr);
 
@@ -213,8 +217,7 @@ void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const Column
 /// Check preconditions for TInterface::Aggregate:
 /// - the aggregator callable must have signature `U(U,T)` or `void(U&,T)`.
 /// - the merge callable must have signature `U(U,U)` or `void(std::vector<U>&)`
-template <typename R, typename Merge, typename U, typename T,
-          typename decayedU = typename std::decay<U>::type,
+template <typename R, typename Merge, typename U, typename T, typename decayedU = typename std::decay<U>::type,
           typename mergeArgsNoDecay_t = typename CallableTraits<Merge>::arg_types_nodecay,
           typename mergeArgs_t = typename CallableTraits<Merge>::arg_types,
           typename mergeRet_t = typename CallableTraits<Merge>::ret_type>
