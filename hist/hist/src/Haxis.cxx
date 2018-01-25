@@ -48,24 +48,52 @@ Color_t TH1::GetAxisColor( Option_t *axis) const
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the histogram bar offset along X or Y axis.
+///
+/// axis specifies which axis ("x","y"), default = "x"
+///
+///  - if axis="x"  The bar offset along the X axis is returned
+///  - if axis="y"  The bar offset along the Y axis is returned
 
 Float_t  TH1::GetBarOffset( Option_t *axis) const
 {
+   if (fBarOffset <= 1000) return Float_t(0.001*Float_t(fBarOffset));
+
    Int_t ax = AxisChoice(axis);
-   if (ax == 1) return Float_t(Float_t(fBarOffset%100)/99.);
-   if (ax == 2) return Float_t(Float_t(fBarOffset/100)/99.);
-   return 0;
+   if (ax == 1) {
+      if (fBarOffset <= 2000 ) return Float_t(0.001*Float_t(fBarOffset-1000));
+      if (fBarOffset <= 3000 ) return 0.;
+   }
+   if (ax == 2) {
+      if (fBarOffset <= 2000 ) return 0.;
+      if (fBarOffset <= 3000 ) return Float_t(0.001*Float_t(fBarOffset-2000));
+   }
+
+   return 0.;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the histogram bar width along X or Y axis.
+///
+/// axis specifies which axis ("x","y"), default = "x"
+///
+///  - if axis="x"  The bar width along the X axis is returned
+///  - if axis="y"  The bar width along the Y axis is returned
 
 Float_t TH1::GetBarWidth( Option_t *axis) const
 {
+   if (fBarWidth <= 1000) return Float_t(0.001*Float_t(fBarWidth));
+
    Int_t ax = AxisChoice(axis);
-   if (ax == 1) return Float_t(Float_t(fBarWidth%100)/99.);
-   if (ax == 2) return Float_t(Float_t(fBarWidth/100)/99.);
-   return 0;
+   if (ax == 1) {
+      if (fBarWidth <= 2000 ) return Float_t(0.001*Float_t(fBarWidth-1000));
+      if (fBarWidth <= 3000 ) return 1.;
+   }
+   if (ax == 2) {
+      if (fBarWidth <= 2000 ) return 1.;
+      if (fBarWidth <= 3000 ) return Float_t(0.001*Float_t(fBarWidth-2000));
+   }
+
+   return 1.;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -239,36 +267,68 @@ void TH1::SetAxisRange(Axis_t xmin, Axis_t xmax, Option_t *axis)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the histogram bar offset along X and Y axis.
+///
+/// axis specifies which axis ("x","y"), default = "xy"
+///
+///  - if axis="xy" `offset` is set along X and Y axis
+///  - if axis="x"  `offset` is set along the X axis and 0. along the Y axis
+///  - if axis="y"  `offset` is set along the Y axis and 0. along the X axis
 
 void TH1::SetBarOffset(Float_t offset, Option_t *axis)
 {
    TString opt = axis;
    opt.ToLower();
 
-   Short_t barox = (Short_t)(fBarOffset%100) ;
-   Short_t baroy = (Short_t)(fBarOffset/100);
+   Bool_t barox = kFALSE; if (opt.Contains("x")) barox = kTRUE;
+   Bool_t baroy = kFALSE; if (opt.Contains("y")) baroy = kTRUE;
 
-   if (opt.Contains("x")) barox = 99.*offset;
-   if (opt.Contains("y")) baroy = 99.*offset;
+   if (barox && baroy) {
+      fBarOffset = Short_t(1000*offset);
+      return;
+   }
+   if (barox) {
+      fBarOffset = Short_t(1000*offset) + 1000;
+      return;
+   }
+   if (baroy) {
+      fBarOffset = Short_t(1000*offset) + 2000;
+      return;
+   }
 
-   fBarOffset = baroy*100 + barox;
+   Warning("SetBarOffset","Invalid option");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the histogram bar width along X and Y axis.
+///
+/// axis specifies which axis ("x","y"), default = "xy"
+///
+///  - if axis="xy" `width` is set along X and Y axis
+///  - if axis="x"  `width` is set along the X axis and 1. along the Y axis
+///  - if axis="y"  `width` is set along the Y axis and 1. along the X axis
 
 void TH1::SetBarWidth(Float_t width, Option_t *axis)
 {
    TString opt = axis;
    opt.ToLower();
 
-   Short_t barwx = (Short_t)(fBarWidth%100) ;
-   Short_t barwy = (Short_t)(fBarWidth/100);
+   Bool_t barwx = kFALSE; if (opt.Contains("x")) barwx = kTRUE;
+   Bool_t barwy = kFALSE; if (opt.Contains("y")) barwy = kTRUE;
 
-   if (opt.Contains("x")) barwx = 99.*width;
-   if (opt.Contains("y")) barwy = 99.*width;
+   if (barwx && barwy) {
+      fBarWidth = Short_t(1000*width);
+      return;
+   }
+   if (barwx) {
+      fBarWidth = Short_t(1000*width) + 1000;
+      return;
+   }
+   if (barwy) {
+      fBarWidth = Short_t(1000*width) + 2000;
+      return;
+   }
 
-   fBarWidth = barwy*100 + barwx;
+   Warning("SetBarWidth","Invalid option");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
