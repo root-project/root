@@ -28,7 +28,7 @@
 int BitSize(int n)
 /* return smallest bitfield size n will fit in */
 {
-    register  int i;
+     int i;
 
     for (i = 1; i <= 8; i++)
 	if ((1 << i) >= n)
@@ -172,7 +172,7 @@ ColorMapObject *UnionColorMap(
 
     if (RoundUpTo != ColorUnion->ColorCount)
     {
-	register GifColorType	*Map = ColorUnion->Colors;
+	GifColorType	*Map = ColorUnion->Colors;
 
 	/*
 	 * Zero out slots up to next power of 2.
@@ -199,8 +199,8 @@ void ApplyTranslation(SavedImage *Image, GifPixelType Translation[])
  * Apply a given color translation to the raster bits of an image
  */
 {
-    register int i;
-    register int RasterSize = Image->ImageDesc.Height * Image->ImageDesc.Width;
+    int i;
+    int RasterSize = Image->ImageDesc.Height * Image->ImageDesc.Width;
 
     for (i = 0; i < RasterSize; i++)
 	Image->RasterBits[i] = Translation[(int)(Image->RasterBits[i])];

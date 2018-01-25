@@ -46,7 +46,7 @@
 ASScanline*
 prepare_scanline( unsigned int width, unsigned int shift, ASScanline *reusable_memory, Bool BGR_mode  )
 {
-	register ASScanline *sl = reusable_memory ;
+	ASScanline *sl = reusable_memory ;
 	size_t aligned_width;
 	void *ptr;
 

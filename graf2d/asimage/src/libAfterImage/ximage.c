@@ -135,7 +135,7 @@ PRINT_BACKGROUND_OP_TIME;
 #endif
 			}else if( xim->depth == 8 )
 			{
-			    register int x = width;
+			    int x = width;
 			    while(--x >= 0 )
 	    		        xim_buf.blue[x] = (CARD32)(xim_line[x]);
 	    		    asimage_add_line (im, IC_RED,   xim_buf.red, i);
@@ -143,7 +143,7 @@ PRINT_BACKGROUND_OP_TIME;
 			    asimage_add_line (im, IC_BLUE,  xim_buf.red, i);
 			}else if( xim->depth == 1 )
 			{
-			    register int x = width;
+			    int x = width;
 			    while(--x >= 0 )
 			    {
 #ifndef X_DISPLAY_MISSING
@@ -169,7 +169,7 @@ PRINT_BACKGROUND_OP_TIME;
 
 		for (i = 0; i < height; i++)
 		{
-			register int x = width;
+			int x = width;
 			if( alpha_xim->depth == 8 )
 			{
 				while(--x >= 0 ) dst[x] = (CARD32)(xim_line[x]);
@@ -203,9 +203,9 @@ ximage2asimage (ASVisual *asv, XImage * xim, unsigned int compression)
 }
 
 static inline int
-xim_set_component( register CARD32 *src, register CARD32 value, int offset, int len )
+xim_set_component( CARD32 *src, CARD32 value, int offset, int len )
 {
-	register int i ;
+	int i ;
 	for( i = offset ; i < len ; ++i )
 		src[i] = value;
 	return len-offset;

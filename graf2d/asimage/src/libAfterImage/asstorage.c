@@ -131,9 +131,9 @@ rlediff_compress_bitmap32( CARD8 *buffer,  CARD8* data, int size, CARD32 bitmap_
 
 
 static void
-compute_diff8( register ASStorageDiff *diff, register CARD8 *data, int size ) 
+compute_diff8( ASStorageDiff *diff, CARD8 *data, int size ) 
 {
-	register int i = 0;	
+	int i = 0;	
 	diff[0] = data[0] ;
 /*	fprintf( stderr, "%d(%4.4X) ", diff[0], diff[0] ); */
 	while( ++i < size ) 
@@ -145,10 +145,10 @@ compute_diff8( register ASStorageDiff *diff, register CARD8 *data, int size )
 }	   
 
 static void
-compute_diff32( register ASStorageDiff *diff, CARD8 *data, int size ) 
+compute_diff32( ASStorageDiff *diff, CARD8 *data, int size ) 
 {
-	register int i = 0;	
-	register CARD32 *data32 = (CARD32*)data ;
+	int i = 0;	
+	CARD32 *data32 = (CARD32*)data ;
 	diff[0] = data32[0] ;
 /*	fprintf( stderr, "\n0:%d(%4.4X) ", diff[0], diff[0] ); */
 	while( ++i < size ) 
@@ -160,90 +160,90 @@ compute_diff32( register ASStorageDiff *diff, CARD8 *data, int size )
 }	   
 
 static void
-compute_diff32_8bitshift( register ASStorageDiff *diff, CARD8 *data, int size ) 
+compute_diff32_8bitshift( ASStorageDiff *diff, CARD8 *data, int size ) 
 {
-	register int i = 0;	
-	register CARD32 *data32 = (CARD32*)data ;
-	register ASStorageDiff dp = data32[0]>>8;
+	int i = 0;	
+	CARD32 *data32 = (CARD32*)data ;
+	ASStorageDiff dp = data32[0]>>8;
 	diff[0] = dp ;
 	while( ++i < size ) 
 	{
-		register ASStorageDiff d = data32[i]>>8;
+		ASStorageDiff d = data32[i]>>8;
 		diff[i] = d - dp ;
 		dp = d;
 	}
 }	   
 
 static void
-compute_diff32_16bitshift( register ASStorageDiff *diff, CARD8 *data, int size ) 
+compute_diff32_16bitshift( ASStorageDiff *diff, CARD8 *data, int size ) 
 {
-	register int i = 0;	
-	register CARD32 *data32 = (CARD32*)data ;
-	register ASStorageDiff dp = data32[0]>>16;
+	int i = 0;	
+	CARD32 *data32 = (CARD32*)data ;
+	ASStorageDiff dp = data32[0]>>16;
 	diff[0] = dp ;
 	while( ++i < size ) 
 	{
-		register ASStorageDiff d = data32[i]>>16;
+		ASStorageDiff d = data32[i]>>16;
 		diff[i] = d - dp ;
 		dp = d;
 	}
 }	   
 
 static void
-compute_diff32_masked( register ASStorageDiff *diff, CARD8 *data, int size ) 
+compute_diff32_masked( ASStorageDiff *diff, CARD8 *data, int size ) 
 {
-	register int i = 0;	
-	register CARD32 *data32 = (CARD32*)data ;
-	register ASStorageDiff dp = data32[0]&0x0ff;
+	int i = 0;	
+	CARD32 *data32 = (CARD32*)data ;
+	ASStorageDiff dp = data32[0]&0x0ff;
 	diff[0] = dp ;
 	while( ++i < size ) 
 	{
-		register ASStorageDiff d = data32[i]&0x0ff;
+		ASStorageDiff d = data32[i]&0x0ff;
 		diff[i] = d - dp ;
 		dp = d;
 	}
 }	   
 
 static void
-compute_diff32_8bitshift_masked( register ASStorageDiff *diff, CARD8 *data, int size ) 
+compute_diff32_8bitshift_masked( ASStorageDiff *diff, CARD8 *data, int size ) 
 {
-	register int i = 0;	
-	register CARD32 *data32 = (CARD32*)data ;
-	register ASStorageDiff dp = (data32[0]>>8)&0x0ff;
+	int i = 0;	
+	CARD32 *data32 = (CARD32*)data ;
+	ASStorageDiff dp = (data32[0]>>8)&0x0ff;
 	diff[0] = dp ;
 	while( ++i < size ) 
 	{
-		register ASStorageDiff d = (data32[i]>>8)&0x0ff;
+		ASStorageDiff d = (data32[i]>>8)&0x0ff;
 		diff[i] = d - dp ;
 		dp = d;
 	}
 }	   
 
 static void
-compute_diff32_16bitshift_masked( register ASStorageDiff *diff, CARD8 *data, int size ) 
+compute_diff32_16bitshift_masked( ASStorageDiff *diff, CARD8 *data, int size ) 
 {
-	register int i = 0;	
-	register CARD32 *data32 = (CARD32*)data ;
-	register ASStorageDiff dp = (data32[0]>>16)&0x0ff;
+	int i = 0;	
+	CARD32 *data32 = (CARD32*)data ;
+	ASStorageDiff dp = (data32[0]>>16)&0x0ff;
 	diff[0] = dp ;
 	while( ++i < size ) 
 	{
-		register ASStorageDiff d = (data32[i]>>16)&0x0ff;
+		ASStorageDiff d = (data32[i]>>16)&0x0ff;
 		diff[i] = d - dp ;
 		dp = d;
 	}
 }	   
 
 static void
-compute_diff32_24bitshift_masked( register ASStorageDiff *diff, CARD8 *data, int size ) 
+compute_diff32_24bitshift_masked( ASStorageDiff *diff, CARD8 *data, int size ) 
 {
-	register int i = 0;	
-	register CARD32 *data32 = (CARD32*)data ;
-	register ASStorageDiff dp = (data32[0]>>24)&0x0ff;
+	int i = 0;	
+	CARD32 *data32 = (CARD32*)data ;
+	ASStorageDiff dp = (data32[0]>>24)&0x0ff;
 	diff[0] = dp ;
 	while( ++i < size ) 
 	{
-		register ASStorageDiff d = (data32[i]>>24)&0x0ff;
+		ASStorageDiff d = (data32[i]>>24)&0x0ff;
 		diff[i] = d - dp ;
 		dp = d;
 	}
@@ -1145,8 +1145,8 @@ defragment_storage_block( ASStorageBlock *block )
 		if( used != brk	)
 		{/* can't use memcpy as regions may overlap */
 			int size = (ASStorageSlot_FULL_SIZE(used))/4;
-			register CARD32 *from = (CARD32*)used ;
-			register CARD32 *to = (CARD32*)brk ;
+			CARD32 *from = (CARD32*)used ;
+			CARD32 *to = (CARD32*)brk ;
 			for( i = 0 ; i < size ; ++i ) 
 				to[i] = from[i];
 		}	
@@ -1296,8 +1296,8 @@ split_storage_slot( ASStorageBlock *block, ASStorageSlot *slot, int to_size )
 		new_slot->index = ++(block->last_used) ;
 	}else
 	{
-		register int i, max_i = block->slots_count ;
-		register ASStorageSlot **slots = block->slots ;
+		int i, max_i = block->slots_count ;
+		ASStorageSlot **slots = block->slots ;
 		LOCAL_DEBUG_OUT( "max_i = %d", max_i );
 		
 		for( i = 0 ; i < max_i ; ++i ) 
@@ -1587,7 +1587,7 @@ typedef void (*data_cpy_func_type)(ASStorageDstBuffer *, void *, size_t);
 
 static void card8_card8_cpy( ASStorageDstBuffer *dst, void *src, size_t size)
 {
-	register CARD8 *dst8 = (CARD8*)dst->buffer ;
+	CARD8 *dst8 = (CARD8*)dst->buffer ;
 	dst8 += dst->offset ;
 	memcpy( dst8, src, size );
 }	 
@@ -1595,9 +1595,9 @@ static void card8_card8_cpy( ASStorageDstBuffer *dst, void *src, size_t size)
 
 static void card8_card32_cpy( ASStorageDstBuffer *dst, void *src, size_t size)
 {
-	register CARD32 *dst32 = (CARD32*)dst->buffer + dst->offset ;
-	register CARD8  *src8  = (CARD8*)src ;
-	register int i;
+	CARD32 *dst32 = (CARD32*)dst->buffer + dst->offset ;
+	CARD8  *src8  = (CARD8*)src ;
+	int i;
 	for( i = 0 ;  i < (int)size ; ++i ) 
 		dst32[i] = src8[i] ;
 }	 
@@ -2229,7 +2229,7 @@ make_storage_test_data( ASStorageTest *test, int min_size, int max_size, ASFlagT
 int 
 test_data_integrity( CARD8 *a, CARD8* b, int size, ASFlagType flags ) 
 {
-	register int i ;
+	int i ;
 	CARD32 *b32 = (CARD32*)b;
 	CARD32 threshold32 = AS_STORAGE_DEFAULT_BMAP_THRESHOLD ;
 	CARD32 threshold8 = AS_STORAGE_DEFAULT_BMAP_THRESHOLD ;

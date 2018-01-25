@@ -67,7 +67,7 @@
 /***********************************************************************************/
 static inline ASMappedColor *new_mapped_color( CARD32 red, CARD32 green, CARD32 blue, CARD32 indexed )
 {
-	register ASMappedColor *pnew = malloc( sizeof( ASMappedColor ));
+	ASMappedColor *pnew = malloc( sizeof( ASMappedColor ));
 	if( pnew != NULL )
 	{
 		pnew->red   = INDEX_UNSHIFT_RED  (red) ;
@@ -104,14 +104,14 @@ add_index_color( ASSortedColorHash *index, CARD32 indexed, unsigned int slot, CA
 	}
 	while( *pnext )
 	{
-		register ASMappedColor *pelem = *pnext ;/* to avoid double redirection */
+		ASMappedColor *pelem = *pnext ;/* to avoid double redirection */
 		if( pelem->indexed == indexed )
 		{
 			++(pelem->count);
 			return ;
 		}else if( pelem->indexed > indexed )
 		{
-			register ASMappedColor *pnew = new_mapped_color( red, green, blue, indexed );
+			ASMappedColor *pnew = new_mapped_color( red, green, blue, indexed );
 			if( pnew )
 			{
 				++(index->count_unique);
@@ -159,7 +159,7 @@ check_colorindex_counts( ASSortedColorHash *index )
 
 	for( i = 0 ; i < index->buckets_num ; i++ )
 	{
-		register ASMappedColor *pelem = index->buckets[i].head ;
+		ASMappedColor *pelem = index->buckets[i].head ;
 		int row_count = 0 ;
 		while( pelem != NULL )
 		{
@@ -186,8 +186,8 @@ fix_colorindex_shortcuts( ASSortedColorHash *index )
 
 	for( i = 0 ; i < index->buckets_num ; i++ )
 	{
-		register ASMappedColor **pelem = &(index->buckets[i].head) ;
-		register ASMappedColor **tail = &(index->buckets[i].tail) ;
+		ASMappedColor **pelem = &(index->buckets[i].head) ;
+		ASMappedColor **tail = &(index->buckets[i].tail) ;
 		while( *pelem != NULL )
 		{
 			if( (*pelem)->cmap_idx < 0 )
@@ -229,7 +229,7 @@ fix_colorindex_shortcuts( ASSortedColorHash *index )
 
 
 static inline void
-add_colormap_item( register ASColormapEntry *pentry, ASMappedColor *pelem, int cmap_idx )
+add_colormap_item( ASColormapEntry *pentry, ASMappedColor *pelem, int cmap_idx )
 {
 	pentry->red   = pelem->red ;
 	pentry->green = pelem->green ;
@@ -247,7 +247,7 @@ add_colormap_items( ASSortedColorHash *index, unsigned int start, unsigned int s
 	{
 		for( i = start ; i < stop ; i++ )
 		{
-			register ASMappedColor *pelem = index->buckets[i].head ;
+			ASMappedColor *pelem = index->buckets[i].head ;
 			while ( pelem != NULL )
 			{
 				add_colormap_item( &(entries[cmap_idx]), pelem, base++ );
@@ -267,7 +267,7 @@ add_colormap_items( ASSortedColorHash *index, unsigned int start, unsigned int s
 
 		for( i = start ; i <= stop ; i++ )
 		{
-			register ASMappedColor *pelem = index->buckets[i].head ;
+			ASMappedColor *pelem = index->buckets[i].head ;
 			while ( pelem != NULL /*&& cmap_idx < quota*/ )
 			{
 				if( pelem->cmap_idx < 0 )
@@ -414,7 +414,7 @@ colormap_asimage( ASImage *im, ASColormap *cmap, unsigned int max_colors, unsign
 
 	int *dst ;
 	unsigned int y ;
-	register int x ;
+	int x ;
 
 	if( im == NULL || cmap == NULL || im->width == 0 )
 		return NULL;

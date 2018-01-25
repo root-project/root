@@ -340,9 +340,9 @@ get_xpm_char( ASXpmFile *xpm_file )
 	{
 		if( xpm_file->bytes_in > AS_XPM_BUFFER_UNDO )
 		{
-			register char* src = &(xpm_file->buffer[xpm_file->bytes_in-AS_XPM_BUFFER_UNDO]);
-			register char* dst = &(xpm_file->buffer[0]);
-			register int i;
+			char* src = &(xpm_file->buffer[xpm_file->bytes_in-AS_XPM_BUFFER_UNDO]);
+			char* dst = &(xpm_file->buffer[0]);
+			int i;
 			for( i = 0 ; i < AS_XPM_BUFFER_UNDO ; i++ )
 				dst[i] = src[i];
 /*			xpm_file->bytes_in = AS_XPM_BUFFER_UNDO+fread( &(xpm_file->buffer[AS_XPM_BUFFER_UNDO]), 1, AS_XPM_BUFFER_SIZE, xpm_file->fp );*/
@@ -400,7 +400,7 @@ seek_next_xpm_string( ASXpmFile *xpm_file )
 {
 	while( xpm_file->parse_state == XPM_InImage )
 	{
-		register char c;
+		char c;
 		c = get_xpm_char(xpm_file);
 		if( c == '/')
 			skip_xpm_comments( xpm_file );
@@ -415,7 +415,7 @@ seek_next_xpm_image( ASXpmFile *xpm_file )
 {
 	while( xpm_file->parse_state == XPM_InFile )
 	{
-		register char c;
+		char c;
 		c = get_xpm_char(xpm_file);
 		if( c == '/')
 			skip_xpm_comments( xpm_file );
@@ -455,7 +455,7 @@ read_next_xpm_string( ASXpmFile *xpm_file )
 static Bool
 parse_xpm_cmap_entry( ASXpmFile *xpm_file, char **colornames )
 {
-	register char *ptr ;
+	char *ptr ;
 	int key ;
 	Bool success = False ;
 
@@ -522,7 +522,7 @@ close_xpm_file( ASXpmFile **xpm_file )
 				free( (*xpm_file)->cmap );
 			if( (*xpm_file)->cmap2 )
 			{
-				register int i ;
+				int i ;
 				for( i = 0 ; i < 256 ; i++ )
 					if( (*xpm_file)->cmap2[i] )
 						free( (*xpm_file)->cmap2[i] );
@@ -697,7 +697,7 @@ get_xpm_string( ASXpmFile *xpm_file )
 Bool
 parse_xpm_header( ASXpmFile *xpm_file )
 {
-	register char *ptr ;
+	char *ptr ;
 	if( xpm_file == NULL || xpm_file->str_buf == NULL )
 		return False;
 
@@ -739,7 +739,7 @@ static ARGB32
 lookup_xpm_color( char **colornames, ASHashTable *xpm_color_names )
 {
     ARGB32 color = 0;
-	register int key = 5 ;
+	int key = 5 ;
 	do
 	{
 		if( colornames[key] )
@@ -878,7 +878,7 @@ convert_xpm_scanline( ASXpmFile *xpm_file, unsigned int line )
 {
 	CARD32 *r = xpm_file->scl.red, *g = xpm_file->scl.green,
 		   *b = xpm_file->scl.blue,*a = (xpm_file->do_alpha)?xpm_file->scl.alpha:NULL ;
-	register int k = xpm_file->width ;
+	int k = xpm_file->width ;
 	ARGB32 *cmap = xpm_file->cmap ;
 #ifdef HAVE_LIBXPM
 	unsigned int *data = xpm_file->xpmImage.data+k*line ;
@@ -893,7 +893,7 @@ convert_xpm_scanline( ASXpmFile *xpm_file, unsigned int line )
 		while( --k >= 0 )
 			if( data[k] < xpm_file->cmap_size )
 			{
-				register CARD32 c = cmap[data[k]] ;
+				CARD32 c = cmap[data[k]] ;
 				r[k] = ARGB32_RED8(c);
 				g[k] = ARGB32_GREEN8(c);
 				b[k] = ARGB32_BLUE8(c);
@@ -908,7 +908,7 @@ convert_xpm_scanline( ASXpmFile *xpm_file, unsigned int line )
 			ARGB32 *slot = cmap2[data[k<<1]] ;
 			if( slot != NULL )
 			{
-				register CARD32 c = slot[data[(k<<1)+1]] ;
+				CARD32 c = slot[data[(k<<1)+1]] ;
 				r[k] = ARGB32_RED8(c);
 				g[k] = ARGB32_GREEN8(c);
 				b[k] = ARGB32_BLUE8(c);
@@ -924,7 +924,7 @@ convert_xpm_scanline( ASXpmFile *xpm_file, unsigned int line )
 		data += (k-1)*xpm_file->bpp ;
 		while( --k >= 0 )
 		{
-			register int i = xpm_file->bpp;
+			int i = xpm_file->bpp;
             ASHashData hdata = {0} ;
             CARD32 c = 0;
 			while( --i >= 0 )
@@ -964,7 +964,7 @@ build_xpm_charmap( ASColormap *cmap, Bool has_alpha, ASXpmCharmap *reusable_memo
 	ptr = xpm_cmap->char_code = safemalloc(xpm_cmap->count*(xpm_cmap->cpp+1)) ;
 	for( i = 0 ; i < (int)xpm_cmap->count ; i++ )
 	{
-		register int k = xpm_cmap->cpp ;
+		int k = xpm_cmap->cpp ;
 		rem = i ;
 		ptr[k] = '\0' ;
 		while( --k >= 0 )

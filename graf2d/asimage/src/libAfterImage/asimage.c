@@ -126,7 +126,7 @@ asimage_init (ASImage * im, Bool free_resources)
 	{
 		if (free_resources)
 		{
-			register int i ;
+			int i ;
 			for( i = im->height*4-1 ; i>= 0 ; --i )
 				if( im->red[i] != 0 )
 					forget_data( NULL, im->red[i] );
@@ -723,7 +723,7 @@ flip_gradient( ASGradient *orig, int flip )
 	grad->type = type ;
 	if( inverse_points )
     {
-        register int i = 0, k = npoints;
+        int i = 0, k = npoints;
         while( --k >= 0 )
         {
             grad->color[i] = orig->color[k] ;
@@ -732,7 +732,7 @@ flip_gradient( ASGradient *orig, int flip )
         }
     }else
 	{
-        register int i = npoints ;
+        int i = npoints ;
         while( --i >= 0 )
         {
             grad->color[i] = orig->color[i] ;
@@ -745,7 +745,7 @@ flip_gradient( ASGradient *orig, int flip )
 /* ******************** ASImageLayer ****************************/
 
 void
-init_image_layers( register ASImageLayer *l, int count )
+init_image_layers( ASImageLayer *l, int count )
 {
 	memset( l, 0x00, sizeof(ASImageLayer)*count );
 	while( --count >= 0 )
@@ -769,11 +769,11 @@ create_image_layers( int count )
 }
 
 void
-destroy_image_layers( register ASImageLayer *l, int count, Bool reusable )
+destroy_image_layers( ASImageLayer *l, int count, Bool reusable )
 {
 	if( l )
 	{
-		register int i = count;
+		int i = count;
 		while( --i >= 0 )
 		{
 			if( l[i].im )
@@ -814,7 +814,7 @@ asimage_add_line_mono (ASImage * im, ColorPart color, CARD8 value, unsigned int 
 }
 
 size_t
-asimage_add_line (ASImage * im, ColorPart color, register CARD32 * data, unsigned int y)
+asimage_add_line (ASImage * im, ColorPart color, CARD32 * data, unsigned int y)
 {
    int colint = (int) color;
 	if (AS_ASSERT(im) || colint <0 || color >= IC_NUM_CHANNELS )
@@ -828,7 +828,7 @@ asimage_add_line (ASImage * im, ColorPart color, register CARD32 * data, unsigne
 }
 
 size_t
-asimage_add_line_bgra (ASImage * im, register CARD32 * data, unsigned int y)
+asimage_add_line_bgra (ASImage * im, CARD32 * data, unsigned int y)
 {
 	if (AS_ASSERT(im) )
 		return 0;
@@ -873,7 +873,7 @@ void print_asimage( ASImage *im, int flags, char * func, int line )
 {
 	if( im )
 	{
-		register unsigned int k ;
+		unsigned int k ;
 		int total_mem = 0 ;
 		fprintf( stderr, "%s:%d> printing ASImage %p.\n", func, line, im);
 		for( k = 0 ; k < im->height ; k++ )
@@ -889,13 +889,13 @@ void print_asimage( ASImage *im, int flags, char * func, int line )
 		fprintf( stderr, "%s:%d> Attempted to print NULL ASImage.\n", func, line);
 }
 
-void print_component( register CARD32 *data, int nonsense, int len );
+void print_component( CARD32 *data, int nonsense, int len );
 
 int
 asimage_decode_line (ASImage * im, ColorPart color, CARD32 * to_buf, unsigned int y, unsigned int skip, unsigned int out_width)
 {
 	ASStorageID id = im->channels[color][y];
-	register int i = 0;
+	int i = 0;
 	/* that thing below is supposedly highly optimized : */
 LOCAL_DEBUG_CALLER_OUT( "im->width = %d, color = %d, y = %d, skip = %d, out_width = %d", im->width, color, y, skip, out_width );
 
@@ -923,9 +923,9 @@ move_asimage_channel( ASImage *dst, int channel_dst, ASImage *src, int channel_s
 	if( !AS_ASSERT(dst) && !AS_ASSERT(src) && channel_src >= 0 && channel_src < IC_NUM_CHANNELS &&
 		channel_dst >= 0 && channel_dst < IC_NUM_CHANNELS )
 	{
-		register int i = MIN(dst->height, src->height);
-		register ASStorageID *dst_rows = dst->channels[channel_dst] ;
-		register ASStorageID *src_rows = src->channels[channel_src] ;
+		int i = MIN(dst->height, src->height);
+		ASStorageID *dst_rows = dst->channels[channel_dst] ;
+		ASStorageID *src_rows = src->channels[channel_src] ;
 		while( --i >= 0 )
 		{
 			if( dst_rows[i] )
@@ -943,9 +943,9 @@ copy_asimage_channel( ASImage *dst, int channel_dst, ASImage *src, int channel_s
 	if( !AS_ASSERT(dst) && !AS_ASSERT(src) && channel_src >= 0 && channel_src < IC_NUM_CHANNELS &&
 		channel_dst >= 0 && channel_dst < IC_NUM_CHANNELS )
 	{
-		register int i = MIN(dst->height, src->height);
-		register ASStorageID *dst_rows = dst->channels[channel_dst] ;
-		register ASStorageID *src_rows = src->channels[channel_src] ;
+		int i = MIN(dst->height, src->height);
+		ASStorageID *dst_rows = dst->channels[channel_dst] ;
+		ASStorageID *src_rows = src->channels[channel_src] ;
 		LOCAL_DEBUG_OUT( "src = %p, dst = %p, dst->width = %d, src->width = %d", src, dst, dst->width, src->width );
 		while( --i >= 0 )
 		{
@@ -974,9 +974,9 @@ copy_asimage_lines( ASImage *dst, unsigned int offset_dst,
 		for( chan = 0 ; chan < IC_NUM_CHANNELS ; ++chan )
 			if( get_flags( filter, 0x01<<chan ) )
 			{
-				register int i = -1;
-				register ASStorageID *dst_rows = &(dst->channels[chan][offset_dst]) ;
-				register ASStorageID *src_rows = &(src->channels[chan][offset_src]) ;
+				int i = -1;
+				ASStorageID *dst_rows = &(dst->channels[chan][offset_dst]) ;
+				ASStorageID *src_rows = &(src->channels[chan][offset_src]) ;
 LOCAL_DEBUG_OUT( "copying %d lines of channel %d...", nlines, chan );
 				while( ++i < (int)nlines )
 				{
@@ -998,7 +998,7 @@ LOCAL_DEBUG_OUT( "copying %d lines of channel %d...", nlines, chan );
 Bool
 asimage_compare_line (ASImage *im, ColorPart color, CARD32 *to_buf, CARD32 *tmp, unsigned int y, Bool verbose)
 {
-	register unsigned int i;
+	unsigned int i;
 	asimage_decode_line( im, color, tmp, y, 0, im->width );
 	for( i = 0 ; i < im->width ; i++ )
 		if( tmp[i] != to_buf[i] )
@@ -1019,8 +1019,8 @@ get_asimage_chanmask( ASImage *im)
 	if( !AS_ASSERT(im) )
 		for( color = 0; color < IC_NUM_CHANNELS ; color++ )
 		{
-			register ASStorageID *chan = im->channels[color];
-			register int y, height = im->height ;
+			ASStorageID *chan = im->channels[color];
+			int y, height = im->height ;
 			for( y = 0 ; y < height ; y++ )
 				if( chan[y] )
 				{
@@ -1085,7 +1085,7 @@ check_asimage_alpha (ASVisual *asv, ASImage *im )
 /* Vector -> ASImage functions :                                                  */
 /* ********************************************************************************/
 Bool
-set_asimage_vector( ASImage *im, register double *vector )
+set_asimage_vector( ASImage *im, double *vector )
 {
 	if( vector == NULL || im == NULL )
 		return False;
@@ -1094,8 +1094,8 @@ set_asimage_vector( ASImage *im, register double *vector )
 		im->alt.vector = safemalloc( im->width*im->height*sizeof(double));
 
 	{
-		register double *dst = im->alt.vector ;
-		register int i = im->width*im->height;
+		double *dst = im->alt.vector ;
+		int i = im->width*im->height;
 		while( --i >= 0 )
 			dst[i] = vector[i] ;
 	}
@@ -1187,9 +1187,9 @@ clone_asimage( ASImage *src, ASFlagType filter )
 		for( chan = 0 ; chan < IC_NUM_CHANNELS;  chan++ )
 			if( get_flags( filter, 0x01<<chan) )
 			{
-				register int i = dst->height;
-				register ASStorageID *dst_rows = dst->channels[chan] ;
-				register ASStorageID *src_rows = src->channels[chan] ;
+				int i = dst->height;
+				ASStorageID *dst_rows = dst->channels[chan] ;
+				ASStorageID *src_rows = src->channels[chan] ;
 				while( --i >= 0 )
 					dst_rows[i] = dup_data( NULL, src_rows[i] );
 			}
@@ -1451,9 +1451,9 @@ get_asimage_channel_rects( ASImage *src, int channel, unsigned int threshold, un
 
 /***********************************************************************************/
 void
-raw2scanline( register CARD8 *row, ASScanline *buf, CARD8 *gamma_table, unsigned int width, Bool grayscale, Bool do_alpha )
+raw2scanline( CARD8 *row, ASScanline *buf, CARD8 *gamma_table, unsigned int width, Bool grayscale, Bool do_alpha )
 {
-	register int x = width;
+	int x = width;
 
 	if( grayscale )
 		row += do_alpha? width<<1 : width ;

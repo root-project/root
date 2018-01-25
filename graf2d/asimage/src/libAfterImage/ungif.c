@@ -266,7 +266,7 @@ write_gif_saved_images( GifFileType *gif, SavedImage *images, unsigned int count
 
 	for( i = 0 ; i < count && status == GIF_OK; ++i )
 	{
-		register SavedImage	*sp = &images[i];
+		SavedImage	*sp = &images[i];
 		int		SavedHeight = sp->ImageDesc.Height;
 		int		SavedWidth = sp->ImageDesc.Width;
 		ExtensionBlock	*ep;

@@ -86,7 +86,7 @@ typedef struct {		/* Bitreading working state within an MCU */
   /* We need a copy, rather than munging the original, in case of suspension */
   const JOCTET * next_input_byte; /* => next byte to read from source */
   size_t bytes_in_buffer;	/* # of bytes remaining in source buffer */
-  /* Bit input buffer --- note these values are kept in register variables,
+  /* Bit input buffer --- note these values are kept in variables,
    * not in this struct, inside the inner loops.
    */
   bit_buf_type get_buffer;	/* current bit-extraction buffer */
@@ -97,8 +97,8 @@ typedef struct {		/* Bitreading working state within an MCU */
 
 /* Macros to declare and load/save bitread local variables. */
 #define BITREAD_STATE_VARS  \
-	register bit_buf_type get_buffer;  \
-	register int bits_left;  \
+	bit_buf_type get_buffer;  \
+	int bits_left;  \
 	bitread_working_state br_state
 
 #define BITREAD_LOAD_STATE(cinfop,permstate)  \
@@ -166,7 +166,7 @@ typedef struct {		/* Bitreading working state within an MCU */
  */
 
 #define HUFF_DECODE(result,state,htbl,failaction,slowlabel) \
-{ register int nb, look; \
+{ int nb, look; \
   if (bits_left < HUFF_LOOKAHEAD) { \
     if (! jpeg_fill_bit_buffer(&state,get_buffer,bits_left, 0)) {failaction;} \
     get_buffer = state.get_buffer; bits_left = state.bits_left; \
@@ -463,13 +463,13 @@ jpeg_make_d_derived_tbl (j_decompress_ptr cinfo, boolean isDC, int tblno,
 
 LOCAL(boolean)
 jpeg_fill_bit_buffer (bitread_working_state * state,
-		      register bit_buf_type get_buffer, register int bits_left,
+		      bit_buf_type get_buffer, int bits_left,
 		      int nbits)
 /* Load up the bit buffer to a depth of at least nbits */
 {
   /* Copy heavily used state fields into locals (hopefully registers) */
-  register const JOCTET * next_input_byte = state->next_input_byte;
-  register size_t bytes_in_buffer = state->bytes_in_buffer;
+  const JOCTET * next_input_byte = state->next_input_byte;
+  size_t bytes_in_buffer = state->bytes_in_buffer;
   j_decompress_ptr cinfo = state->cinfo;
 
   /* Attempt to load at least MIN_GET_BITS bits into get_buffer. */
@@ -478,7 +478,7 @@ jpeg_fill_bit_buffer (bitread_working_state * state,
 
   if (cinfo->unread_marker == 0) {	/* cannot advance past a marker */
     while (bits_left < MIN_GET_BITS) {
-      register int c;
+      int c;
 
       /* Attempt to read a byte */
       if (bytes_in_buffer == 0) {
@@ -590,11 +590,11 @@ static const int bmask[16] =	/* bmask[n] is mask for n rightmost bits */
 
 LOCAL(int)
 jpeg_huff_decode (bitread_working_state * state,
-		  register bit_buf_type get_buffer, register int bits_left,
+		  bit_buf_type get_buffer, int bits_left,
 		  d_derived_tbl * htbl, int min_bits)
 {
-  register int l = min_bits;
-  register INT32 code;
+  int l = min_bits;
+  INT32 code;
 
   /* HUFF_DECODE has determined that the code is at least min_bits */
   /* bits long, so fetch that many bits in one swoop. */
@@ -696,7 +696,7 @@ decode_mcu_DC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 {   
   huff_entropy_ptr entropy = (huff_entropy_ptr) cinfo->entropy;
   int Al = cinfo->Al;
-  register int s, r;
+  int s, r;
   int blkn, ci;
   JBLOCKROW block;
   BITREAD_STATE_VARS;
@@ -766,7 +766,7 @@ METHODDEF(boolean)
 decode_mcu_AC_first (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 {   
   huff_entropy_ptr entropy = (huff_entropy_ptr) cinfo->entropy;
-  register int s, k, r;
+  int s, k, r;
   unsigned int EOBRUN;
   int Se, Al;
   const int * natural_order;
@@ -904,7 +904,7 @@ METHODDEF(boolean)
 decode_mcu_AC_refine (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
 {   
   huff_entropy_ptr entropy = (huff_entropy_ptr) cinfo->entropy;
-  register int s, k, r;
+  int s, k, r;
   unsigned int EOBRUN;
   int Se, p1, m1;
   const int * natural_order;
@@ -1088,7 +1088,7 @@ decode_mcu_sub (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
       JBLOCKROW block = MCU_data[blkn];
       d_derived_tbl * htbl;
-      register int s, k, r;
+      int s, k, r;
       int coef_limit, ci;
 
       /* Decode a single block's worth of coefficients */
@@ -1212,7 +1212,7 @@ decode_mcu (j_decompress_ptr cinfo, JBLOCKROW *MCU_data)
     for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
       JBLOCKROW block = MCU_data[blkn];
       d_derived_tbl * htbl;
-      register int s, k, r;
+      int s, k, r;
       int coef_limit, ci;
 
       /* Decode a single block's worth of coefficients */

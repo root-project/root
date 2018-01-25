@@ -192,9 +192,9 @@ int_upsample (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 {
   my_upsample_ptr upsample = (my_upsample_ptr) cinfo->upsample;
   JSAMPARRAY output_data = *output_data_ptr;
-  register JSAMPROW inptr, outptr;
-  register JSAMPLE invalue;
-  register int h;
+  JSAMPROW inptr, outptr;
+  JSAMPLE invalue;
+  int h;
   JSAMPROW outend;
   int h_expand, v_expand;
   int inrow, outrow;
@@ -235,8 +235,8 @@ h2v1_upsample (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	       JSAMPARRAY input_data, JSAMPARRAY * output_data_ptr)
 {
   JSAMPARRAY output_data = *output_data_ptr;
-  register JSAMPROW inptr, outptr;
-  register JSAMPLE invalue;
+  JSAMPROW inptr, outptr;
+  JSAMPLE invalue;
   JSAMPROW outend;
   int outrow;
 
@@ -263,8 +263,8 @@ h2v2_upsample (j_decompress_ptr cinfo, jpeg_component_info * compptr,
 	       JSAMPARRAY input_data, JSAMPARRAY * output_data_ptr)
 {
   JSAMPARRAY output_data = *output_data_ptr;
-  register JSAMPROW inptr, outptr;
-  register JSAMPLE invalue;
+  JSAMPROW inptr, outptr;
+  JSAMPLE invalue;
   JSAMPROW outend;
   int inrow, outrow;
 

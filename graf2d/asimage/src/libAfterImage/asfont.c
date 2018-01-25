@@ -170,7 +170,7 @@ open_freetype_font_int( ASFontManager *fontman, const char *font_string, int fac
 		if( (realfilename = find_file( font_string, fontman->font_path, R_OK )) == NULL )
 		{/* we might have face index specifier at the end of the filename */
 			char *tmp = mystrdup( font_string );
-			register int i = 0;
+			int i = 0;
 			while(tmp[i] != '\0' ) ++i ;
 			while( --i >= 0 )
 				if( !isdigit( tmp[i] ) )
@@ -368,7 +368,7 @@ release_font( ASFont *font )
 }
 
 static inline void
-free_glyph_data( register ASGlyph *asg )
+free_glyph_data( ASGlyph *asg )
 {
     if( asg->pixmap )
         free( asg->pixmap );
@@ -390,7 +390,7 @@ destroy_glyph_range( ASGlyphRange **pgr )
         if( gr->glyphs )
 		{
             int max_i = ((int)gr->max_char-(int)gr->min_char)+1 ;
-            register int i = -1 ;
+            int i = -1 ;
 /*fprintf( stderr, " max_char = %d, min_char = %d, i = %d", gr->max_char, gr->min_char, max_i);*/
             while( ++i < max_i )
             {
@@ -464,8 +464,8 @@ compress_glyph_pixmap( unsigned char *src, unsigned char *buffer,
 					   int src_step )
 {
 	unsigned char *pixmap ;
-	register unsigned char *dst = buffer ;
-	register int k = 0, i = 0 ;
+	unsigned char *dst = buffer ;
+	int k = 0, i = 0 ;
 	int count = -1;
 	unsigned char last = src[0];
 /* new way: if its FF we encode it as 01rrrrrr where rrrrrr is repitition count
@@ -520,8 +520,8 @@ void
 antialias_glyph( unsigned char *buffer, unsigned int width, unsigned int height )
 {
 	unsigned char *row1, *row2 ;
-	register unsigned char *row ;
-	register int x;
+	unsigned char *row ;
+	int x;
 	int y;
 
 	row1 = &(buffer[0]);
@@ -651,7 +651,7 @@ scale_down_glyph_width( unsigned char *buffer, int from_width, int to_width, int
 {
     int smaller = to_width;
     int bigger  = from_width;
-	register int i = 0, k = 0, l;
+	int i = 0, k = 0, l;
 	/*fprintf( stderr, "scaling glyph down from %d to %d\n", from_width, to_width );*/
     /* LOCAL_DEBUG_OUT( "smaller %d, bigger %d, eps %d", smaller, bigger, eps ); */
     /* now using Bresengham algoritm to fiill the scales :
@@ -755,7 +755,7 @@ load_X11_glyph_range( Display *dpy, ASFont *font, XFontStruct *xfs, size_t char_
 		XCharStruct *chars = &(xfs->per_char[char_offset+r->min_char-min_char]);
         int len = ((int)r->max_char-(int)r->min_char)+1;
 		unsigned char char_base = r->min_char&0x00FF;
-		register int i ;
+		int i ;
 		Pixmap p;
 		XImage *xim;
 		unsigned int total_width = 0 ;
@@ -803,7 +803,7 @@ LOCAL_DEBUG_OUT( "loading glyph range of %lu-%lu", r->min_char, r->max_char );
 		pen_x = 0 ;
 		for( i = 0 ; i < len ; i++ )
 		{
-			register int x, y ;
+			int x, y ;
 			int width = r->glyphs[i].width;
 			unsigned char *row = &(buffer[0]);
 
@@ -1006,7 +1006,7 @@ load_X11_glyphs( Display *dpy, ASFont *font, XFontStruct *xfs )
 static void
 load_glyph_freetype( ASFont *font, ASGlyph *asg, int glyph, UNICODE_CHAR uc )
 {
-	register FT_Face face ;
+	FT_Face face ;
 	static CARD8 *glyph_compress_buf = NULL, *glyph_scaling_buf = NULL ;
 	static int glyph_compress_buf_size = 0, glyph_scaling_buf_size = 0;
 
@@ -1037,7 +1037,7 @@ load_glyph_freetype( ASFont *font, ASGlyph *asg, int glyph, UNICODE_CHAR uc )
 	if( face->glyph->bitmap.buffer )
 	{
 		FT_Bitmap 	*bmap = &(face->glyph->bitmap) ;
-		register CARD8 *src = bmap->buffer ;
+		CARD8 *src = bmap->buffer ;
 		int src_step ;
 /* 		int hpad = (face->glyph->bitmap_left<0)? -face->glyph->bitmap_left: face->glyph->bitmap_left ;
 */
@@ -1088,7 +1088,7 @@ load_glyph_freetype( ASFont *font, ASGlyph *asg, int glyph, UNICODE_CHAR uc )
 			}	
 			if( (int)asg->width + asg->lead > (int)font->space_size )
 			{	
-				register CARD8 *buf ;
+				CARD8 *buf ;
 				int i ;
 				asg->width = (int)font->space_size - asg->lead ;
 				if( glyph_scaling_buf_size  < bmap->width*bmap->rows*2 )
@@ -1143,7 +1143,7 @@ split_freetype_glyph_range( unsigned long min_char, unsigned long max_char, FT_F
 LOCAL_DEBUG_CALLER_OUT( "min_char = %lu, max_char = %lu, face = %p", min_char, max_char, face );
 	while( min_char <= max_char )
 	{
-		register unsigned long i = min_char;
+		unsigned long i = min_char;
 		while( i <= max_char && FT_Get_Char_Index( face, CHAR2UNICODE(i)) == 0 ) i++ ;
 		if( i <= max_char )
 		{
@@ -1191,7 +1191,7 @@ load_freetype_locale_glyph( ASFont *font, UNICODE_CHAR uc )
 static void
 load_freetype_locale_glyphs( unsigned long min_char, unsigned long max_char, ASFont *font )
 {
-	register unsigned long i = min_char ;
+	unsigned long i = min_char ;
 LOCAL_DEBUG_CALLER_OUT( "min_char = %lu, max_char = %lu, font = %p", min_char, max_char, font );
 	if( font->locale_glyphs == NULL )
 		font->locale_glyphs = create_ashash( 0, NULL, NULL, asglyph_destroy );
@@ -1270,7 +1270,7 @@ load_freetype_glyphs( ASFont *font )
 
 static inline ASGlyph *get_unicode_glyph( const UNICODE_CHAR uc, ASFont *font )
 {
-	register ASGlyphRange *r;
+	ASGlyphRange *r;
 	ASGlyph *asg = NULL ;
 	ASHashData hdata = {0} ;
 	for( r = font->codemap ; r != NULL ; r = r->above )
@@ -1529,18 +1529,18 @@ free_glyph_map( ASGlyphMap *map, Bool reusable )
 static int
 get_text_length (ASCharType char_type, const char *text)
 {
-	register int count = 0;
+	int count = 0;
 	if( char_type == ASCT_Char )
 	{
-		register char *ptr = (char*)text ;
+		char *ptr = (char*)text ;
 		while( ptr[count] != 0 )++count;
 	}else if( char_type == ASCT_UTF8 )
 	{
-		register char *ptr = (char*)text ;
+		char *ptr = (char*)text ;
 		while( *ptr != 0 ){	++count; ptr += UTF8_CHAR_SIZE(*ptr); }
 	}else if( char_type == ASCT_Unicode )
 	{
-		register UNICODE_CHAR *uc_ptr = (UNICODE_CHAR*)text ;
+		UNICODE_CHAR *uc_ptr = (UNICODE_CHAR*)text ;
 		while( uc_ptr[count] != 0 )	++count;
 	}
 	return count;
@@ -1561,12 +1561,12 @@ get_text_glyph_list (const char *text, ASFont *font, ASCharType char_type, int l
 	glyphs = safecalloc( length+1, sizeof(ASGlyph*));
 	if (char_type == ASCT_Char)
 	{
-		register char *ptr = (char*)text;
+		char *ptr = (char*)text;
 		for (i = 0 ; i < length ; ++i)
 			glyphs[i] = get_character_glyph (ptr[i], font);
 	}else if (char_type == ASCT_UTF8)
 	{
-		register char *ptr = (char*)text;
+		char *ptr = (char*)text;
 		for (i = 0 ; i < length ; ++i)
 		{
 			glyphs[i] = get_utf8_glyph (ptr, font);
@@ -1574,7 +1574,7 @@ get_text_glyph_list (const char *text, ASFont *font, ASCharType char_type, int l
 		}		
 	}else if( char_type == ASCT_Unicode )
 	{
-		register UNICODE_CHAR *uc_ptr = (UNICODE_CHAR*)text ;
+		UNICODE_CHAR *uc_ptr = (UNICODE_CHAR*)text ;
 		for (i = 0 ; i < length ; ++i)
 			glyphs[i] = get_unicode_glyph (uc_ptr[i], font);
 	}
@@ -1780,11 +1780,11 @@ render_asglyph( CARD8 **scanlines, CARD8 *row,
 {
 	int count = -1 ;
 	int max_y = y + height ;
-	register CARD32 data = 0;
+	CARD32 data = 0;
 	while( y < max_y )
 	{
-		register CARD8 *dst = scanlines[y]+start_x;
-		register int x = -1;
+		CARD8 *dst = scanlines[y]+start_x;
+		int x = -1;
 		while( ++x < width )
 		{
 /*fprintf( stderr, "data = %X, count = %d, x = %d, y = %d\n", data, count, x, y );*/
@@ -1820,11 +1820,11 @@ render_asglyph_over( CARD8 **scanlines, CARD8 *row,
 	int count = -1 ;
 	int max_y = y + height ;
 	CARD32 anti_data = 0;
-	register CARD32 data = 0;
+	CARD32 data = 0;
 	while( y < max_y )
 	{
-		register CARD8 *dst = scanlines[y]+start_x;
-		register int x = -1;
+		CARD8 *dst = scanlines[y]+start_x;
+		int x = -1;
 		while( ++x < width )
 		{
 /*fprintf( stderr, "data = %X, count = %d, x = %d, y = %d\n", data, count, x, y );*/
