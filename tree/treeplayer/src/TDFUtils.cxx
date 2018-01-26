@@ -36,6 +36,10 @@ TIgnoreErrorLevelRAII::~TIgnoreErrorLevelRAII()
    gErrorIgnoreLevel = fCurIgnoreErrorLevel;
 }
 
+/// Return the type_info associated to a name. If the association fails, an
+/// exception is thrown.
+/// References and pointers are not supported since those cannot be stored in
+/// columns.
 const std::type_info &TypeName2TypeID(const std::string &name)
 {
    if (auto c = TClass::GetClass(name.c_str())) {
@@ -60,9 +64,9 @@ const std::type_info &TypeName2TypeID(const std::string &name)
       return typeid(double);
    else if (name == "float" || name == "Float_t")
       return typeid(float);
-   else if (name == "Long64_t")
+   else if (name == "long long" || name == "long long int" || name == "Long64_t")
       return typeid(Long64_t);
-   else if (name == "ULong64_t")
+   else if (name == "unsigned long long" || name == "unsigned long long int" || name == "ULong64_t")
       return typeid(ULong64_t);
    else if (name == "bool" || name == "Bool_t")
       return typeid(bool);
@@ -74,6 +78,10 @@ const std::type_info &TypeName2TypeID(const std::string &name)
    }
 }
 
+/// Returns the name of a type starting from its type_info
+/// An empty string is returned in case of failure
+/// References and pointers are not supported since those cannot be stored in
+/// columns.
 std::string TypeID2TypeName(const std::type_info &id)
 {
    if (auto c = TClass::GetClass(id)) {
