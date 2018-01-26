@@ -150,7 +150,17 @@ std::vector<void *> TCsvDS::GetColumnReadersImpl(std::string_view colName, const
    const auto index = std::distance(colNames.begin(), std::find(colNames.begin(), colNames.end(), colName));
    std::vector<void *> ret(fNSlots);
    for (auto slot : ROOT::TSeqU(fNSlots)) {
-      ret[slot] = (void *)&fColAddresses[index][slot];
+      auto &val = fColAddresses[index][slot];
+      if (ti == typeid(double)) {
+         val = &fDoubleEvtValues[index][slot];
+      } else if (ti == typeid(Long64_t)) {
+         val = &fLong64EvtValues[index][slot];
+      } else if (ti == typeid(std::string)) {
+         val = &fStringEvtValues[index][slot];
+      } else {
+         val = &fBoolEvtValues[index][slot];
+      }
+      ret[slot] = &val;
    }
    return ret;
 }
@@ -181,6 +191,7 @@ void TCsvDS::InferType(const std::string &col, unsigned int idxCol)
    // TODO: Date
 
    fColTypes[fHeaders[idxCol]] = type;
+   fColTypesList.push_back(type);
 }
 
 std::vector<std::string> TCsvDS::ParseColumns(const std::string &line)
@@ -313,11 +324,19 @@ bool TCsvDS::HasColumn(std::string_view colName) const
 
 void TCsvDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
-   auto nColumns = fHeaders.size();
-
-   for (auto i : ROOT::TSeqU(nColumns)) {
-      // Update the address of every column of the slot to point to the record
-      fColAddresses[i][slot] = fRecords[entry][i];
+   int colIndex = 0;
+   for (auto &&colType : fColTypesList) {
+      auto dataPtr = fRecords[entry][colIndex];
+      if (colType == "double") {
+         fDoubleEvtValues[colIndex][slot] = *static_cast<double *>(dataPtr);
+      } else if (colType == "Long64_t") {
+         fLong64EvtValues[colIndex][slot] = *static_cast<Long64_t *>(dataPtr);
+      } else if (colType == "std::string") {
+         fStringEvtValues[colIndex][slot] = *static_cast<std::string *>(dataPtr);
+      } else {
+         fBoolEvtValues[colIndex][slot] = *static_cast<bool *>(dataPtr);
+      }
+      colIndex++;
    }
 }
 
@@ -330,6 +349,12 @@ void TCsvDS::SetNSlots(unsigned int nSlots)
    const auto nColumns = fHeaders.size();
    // Initialise the entire set of addresses
    fColAddresses.resize(nColumns, std::vector<void *>(fNSlots, nullptr));
+
+   // Initialize the per event data holders
+   fDoubleEvtValues.resize(nColumns, std::vector<double>(fNSlots));
+   fLong64EvtValues.resize(nColumns, std::vector<Long64_t>(fNSlots));
+   fStringEvtValues.resize(nColumns, std::vector<std::string>(fNSlots));
+   fBoolEvtValues.resize(nColumns, std::deque<bool>(fNSlots));
 }
 
 void TCsvDS::Initialise()

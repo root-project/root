@@ -4,6 +4,8 @@
 #include "ROOT/TDataFrame.hxx"
 #include "ROOT/TDataSource.hxx"
 
+#include <deque>
+#include <list>
 #include <map>
 #include <vector>
 
@@ -23,9 +25,16 @@ private:
    char fDelimiter;
    std::vector<std::string> fHeaders;
    std::map<std::string, std::string> fColTypes;
+   std::list<std::string> fColTypesList;
    std::vector<std::vector<void *>> fColAddresses; // fColAddresses[column][slot]
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges;
    std::vector<Record> fRecords; // fRecords[entry][column]
+   std::vector<std::vector<double>> fDoubleEvtValues ; // one per column per slot
+   std::vector<std::vector<Long64_t>> fLong64EvtValues ; // one per column per slot
+   std::vector<std::vector<std::string>> fStringEvtValues ; // one per column per slot
+   // This must be a deque to avoid the specialisation vector<bool>. This would not
+   // work given that the pointer to the boolean in that case cannot be taken
+   std::vector<std::deque<bool>> fBoolEvtValues ; // one per column per slot
 
    static TRegexp intRegex, doubleRegex1, doubleRegex2, trueRegex, falseRegex;
 
