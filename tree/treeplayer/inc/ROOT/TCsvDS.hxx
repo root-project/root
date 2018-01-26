@@ -19,22 +19,25 @@ class TCsvDS final : public ROOT::Experimental::TDF::TDataSource {
 
 private:
    using Record = std::vector<void *>;
+   // Possible values are d, b, l, s. This is possible only because we treat double, bool, Long64_t and string
+   using ColType_t = char;
+   static const std::map<ColType_t, std::string> fgColTypeMap;
 
    unsigned int fNSlots = 0U;
    std::string fFileName;
    char fDelimiter;
    std::vector<std::string> fHeaders;
-   std::map<std::string, std::string> fColTypes;
-   std::list<std::string> fColTypesList;
+   std::map<std::string, ColType_t> fColTypes;
+   std::list<ColType_t> fColTypesList;
    std::vector<std::vector<void *>> fColAddresses; // fColAddresses[column][slot]
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges;
-   std::vector<Record> fRecords; // fRecords[entry][column]
-   std::vector<std::vector<double>> fDoubleEvtValues ; // one per column per slot
-   std::vector<std::vector<Long64_t>> fLong64EvtValues ; // one per column per slot
-   std::vector<std::vector<std::string>> fStringEvtValues ; // one per column per slot
+   std::vector<Record> fRecords;                           // fRecords[entry][column]
+   std::vector<std::vector<double>> fDoubleEvtValues;      // one per column per slot
+   std::vector<std::vector<Long64_t>> fLong64EvtValues;    // one per column per slot
+   std::vector<std::vector<std::string>> fStringEvtValues; // one per column per slot
    // This must be a deque to avoid the specialisation vector<bool>. This would not
    // work given that the pointer to the boolean in that case cannot be taken
-   std::vector<std::deque<bool>> fBoolEvtValues ; // one per column per slot
+   std::vector<std::deque<bool>> fBoolEvtValues; // one per column per slot
 
    static TRegexp intRegex, doubleRegex1, doubleRegex2, trueRegex, falseRegex;
 
@@ -46,6 +49,7 @@ private:
    void InferType(const std::string &, unsigned int);
    std::vector<std::string> ParseColumns(const std::string &);
    size_t ParseValue(const std::string &, std::vector<std::string> &, size_t);
+   ColType_t GetType(std::string_view colName) const;
 
 public:
    TCsvDS(std::string_view fileName, bool readHeaders = true, char delimiter = ',');
