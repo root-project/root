@@ -6,6 +6,7 @@
 
 #include <map>
 #include <vector>
+
 #include <TRegexp.h>
 
 namespace ROOT {
@@ -15,7 +16,7 @@ namespace TDF {
 class TCsvDS final : public ROOT::Experimental::TDF::TDataSource {
 
 private:
-   typedef std::vector<void *> Record;
+   using Record = std::vector<void *>;
 
    unsigned int fNSlots = 0U;
    std::string fFileName;
