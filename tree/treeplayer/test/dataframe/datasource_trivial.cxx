@@ -67,7 +67,7 @@ TEST(TTrivialDS, ColumnReadersWrongType)
    try {
       auto vals = tds.GetColumnReaders<float>("col0");
    } catch (const std::runtime_error &e) {
-      EXPECT_STREQ("The type specified for the column col0 is not ULong64_t.", e.what());
+      EXPECT_STREQ("The type specified for the column \"col0\" is not ULong64_t.", e.what());
       res = 0;
    }
    EXPECT_EQ(0, res);
