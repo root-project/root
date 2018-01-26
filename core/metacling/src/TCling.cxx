@@ -8447,32 +8447,31 @@ const char* TCling::TypedefInfo_Title(TypedefInfo_t* tinfo) const
    return TClinginfo->Title();
 }
 
-Int_t fInterpMutexStateRecurseCount = 0;
-   // State of gCoreMutex when the first interpreter-related function was invoked.
-   std::unique_ptr<TVirtualRWMutex::State> fInitialMutexState;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void TCling::SnapshotMutexState(ROOT::TVirtualRWMutex* mtx)
 {
-   if (!fInitialMutexState) {
-      if (fInterpMutexStateRecurseCount) {
-         Error("SnapshotMutexState", "fInterpMutexStateRecurseCount != even though fInitialMutexState unset!");
+   if (!fInitialMutex.back()) {
+      if (fInitialMutex.back().fRecurseCount) {
+         Error("SnapshotMutexState", "fRecurseCount != 0 even though initial mutex state is unset!");
       }
-      fInitialMutexState = mtx->GetState();
+      fInitialMutex.back().fState = mtx->GetStateBefore();
    }
-   ++fInterpMutexStateRecurseCount;
+   // We will "forget" this lock once we backed out of all interpreter frames.
+   // Here we are entering one, so ++.
+   ++fInitialMutex.back().fRecurseCount;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void TCling::ForgetMutexState()
 {
-   if (fInterpMutexStateRecurseCount == 0) {
-      Error("ForgetMutexState", "fInterpMutexStateRecurseCount already 0!");
+   if (fInitialMutex.back().fRecurseCount == 0) {
+      Error("ForgetMutexState", "mutex state's recurse count already 0!");
    }
-   else if (--fInterpMutexStateRecurseCount) {
-      fInitialMutexState.reset();
+   else if (--fInitialMutex.back().fRecurseCount == 0) {
+      // We have returned from all interpreter frames. Reset the initial lock state.
+      fInitialMutex.back().fState.reset();
    }
 }
 
@@ -8481,11 +8480,14 @@ void TCling::ForgetMutexState()
 
 void TCling::ApplyToInterpreterMutex(void *delta)
 {
-   if (gInterpreterMutex && delta) {
-      auto typedDelta = static_cast<TVirtualRWMutex::StateDelta *>(delta);
-      std::unique_ptr<TVirtualRWMutex::StateDelta> uniqueP{typedDelta};
-      gCoreMutex->Apply(std::move(uniqueP));
+   if (gInterpreterMutex) {
+      if (delta) {
+         auto typedDelta = static_cast<TVirtualRWMutex::StateDelta *>(delta);
+         std::unique_ptr<TVirtualRWMutex::StateDelta> uniqueP{typedDelta};
+         gCoreMutex->Apply(std::move(uniqueP));
+      }
    }
+   fInitialMutex.pop_back();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -8494,9 +8496,13 @@ void TCling::ApplyToInterpreterMutex(void *delta)
 
 void *TCling::RewindInterpreterMutex()
 {
-   if (fInitialMutexState) {
-      std::unique_ptr<TVirtualRWMutex::StateDelta> uniqueP = gCoreMutex->Rewind(*fInitialMutexState);
+   if (fInitialMutex.back()) {
+      std::unique_ptr<TVirtualRWMutex::StateDelta> uniqueP = gCoreMutex->Rewind(*fInitialMutex.back().fState);
+      // Need to start a new recurse count.
+      fInitialMutex.emplace_back();
       return uniqueP.release();
    }
+   // Need to start a new recurse count.
+   fInitialMutex.emplace_back();
    return nullptr;
 }
