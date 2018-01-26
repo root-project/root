@@ -1,5 +1,13 @@
 // @(#)root/tmva $Id$
-// Author: Omar Zapata
+// Author: Omar Zapata, Kim Albertsson
+
+/*************************************************************************
+ * Copyright (C) 2018, Rene Brun and Fons Rademakers.                    *
+ * All rights reserved.                                                  *
+ *                                                                       *
+ * For the licensing terms see $ROOTSYS/LICENSE.                         *
+ * For the list of contributors see $ROOTSYS/README/CREDITS.             *
+ *************************************************************************/
 
 #include <TMVA/Envelope.h>
 
@@ -119,8 +127,10 @@ DataLoader *Envelope::GetDataLoader(){    return fDataLoader.get();}
 Method to set the pointer to TMVA::DataLoader object.
 \param dalaloader pointer to TMVA::DataLoader object.
 */
-void Envelope::SetDataLoader(DataLoader *dalaloader){
-        fDataLoader=std::shared_ptr<DataLoader>(dalaloader) ;
+
+void Envelope::SetDataLoader(DataLoader *dataloader)
+{
+   fDataLoader = std::shared_ptr<DataLoader>(dataloader);
 }
 
 //_______________________________________________________________________
