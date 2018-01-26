@@ -100,6 +100,17 @@ TEST(TCsvDS, ColumnReadersWrongType)
    EXPECT_EQ(0, res);
 }
 
+TEST(TCsvDS, Snapshot)
+{
+   auto tdf = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName0);
+   auto snap = tdf.Snapshot<Long64_t>("data","csv2root.root", {"Age"});
+   auto ages = *snap.Take<Long64_t>("Age");
+   std::vector<Long64_t> agesRef {60LL, 50LL, 40LL, 30LL, 1LL, -1LL};
+   for (auto i : ROOT::TSeqI(agesRef.size())) {
+      EXPECT_EQ(ages[i], agesRef[i]);
+   }
+}
+
 TEST(TCsvDS, ColumnReadersString)
 {
    TCsvDS tds(fileName0);
