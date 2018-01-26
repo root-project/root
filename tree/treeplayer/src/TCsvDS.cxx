@@ -92,6 +92,9 @@ TRegexp TCsvDS::doubleRegex2("^[-+]?[0-9]*\\.[0-9]+$");
 TRegexp TCsvDS::trueRegex("^true$");
 TRegexp TCsvDS::falseRegex("^false$");
 
+const std::map<TCsvDS::ColType_t, std::string>
+   TCsvDS::fgColTypeMap({{'b', "bool"}, {'d', "double"}, {'l', "Long64_t"}, {'s', "std::string"}});
+
 void TCsvDS::FillHeaders(const std::string &line)
 {
    auto columns = ParseColumns(line);
@@ -108,19 +111,28 @@ void TCsvDS::FillRecord(const std::string &line, Record &record)
    auto columns = ParseColumns(line);
 
    for (auto &col : columns) {
-      auto &colType = fColTypes[fHeaders[i]];
+      auto colType = fColTypes[fHeaders[i]];
 
-      if (colType == "Long64_t") {
-         record.emplace_back(new Long64_t(std::stoll(col)));
-      } else if (colType == "double") {
+      switch (colType) {
+      case 'd': {
          record.emplace_back(new double(std::stod(col)));
-      } else if (colType == "bool") {
-         bool *b = new bool();
+         break;
+      }
+      case 'l': {
+         record.emplace_back(new Long64_t(std::stoll(col)));
+         break;
+      }
+      case 'b': {
+         auto b = new bool();
          record.emplace_back(b);
          std::istringstream is(col);
          is >> std::boolalpha >> *b;
-      } else {
+         break;
+      }
+      case 's': {
          record.emplace_back(new std::string(col));
+         break;
+      }
       }
       ++i;
    }
@@ -135,14 +147,14 @@ void TCsvDS::GenerateHeaders(size_t size)
 
 std::vector<void *> TCsvDS::GetColumnReadersImpl(std::string_view colName, const std::type_info &ti)
 {
-   const auto colTypeName = GetTypeName(colName);
+   const auto colType = GetType(colName);
 
-   if ((colTypeName == "double" && typeid(double) != ti) || (colTypeName == "Long64_t" && typeid(Long64_t) != ti) ||
-       (colTypeName == "std::string" && typeid(std::string) != ti) || (colTypeName == "bool" && typeid(bool) != ti)) {
+   if ((colType == 'd' && typeid(double) != ti) || (colType == 'l' && typeid(Long64_t) != ti) ||
+       (colType == 's' && typeid(std::string) != ti) || (colType == 'b' && typeid(bool) != ti)) {
       std::string err = "The type selected for column \"";
       err += colName;
       err += "\" does not correspond to column type, which is ";
-      err += colTypeName;
+      err += fgColTypeMap.at(colType);
       throw std::runtime_error(err);
    }
 
@@ -176,17 +188,17 @@ void TCsvDS::InferColTypes(std::vector<std::string> &columns)
 
 void TCsvDS::InferType(const std::string &col, unsigned int idxCol)
 {
-   std::string type;
+   ColType_t type;
    int dummy;
 
    if (intRegex.Index(col, &dummy) != -1) {
-      type = "Long64_t";
+      type = 'l'; // Long64_t
    } else if (doubleRegex1.Index(col, &dummy) != -1 || doubleRegex2.Index(col, &dummy) != -1) {
-      type = "double";
+      type = 'd'; // double
    } else if (trueRegex.Index(col, &dummy) != -1 || falseRegex.Index(col, &dummy) != -1) {
-      type = "bool";
-   } else { // everything else is a string
-      type = "std::string";
+      type = 'b'; // bool
+   } else {       // everything else is a string
+      type = 's'; // std::string
    }
    // TODO: Date
 
@@ -280,16 +292,24 @@ TCsvDS::~TCsvDS()
    for (auto &record : fRecords) {
       for (size_t i = 0; i < record.size(); ++i) {
          void *p = record[i];
-         auto &colType = fColTypes[fHeaders[i]];
-
-         if (colType == "Long64_t") {
-            delete static_cast<Long64_t *>(p);
-         } else if (colType == "double") {
+         const auto colType = fColTypes[fHeaders[i]];
+         switch (colType) {
+         case 'd': {
             delete static_cast<double *>(p);
-         } else if (colType == "bool") {
+            break;
+         }
+         case 'l': {
+            delete static_cast<Long64_t *>(p);
+            break;
+         }
+         case 'b': {
             delete static_cast<bool *>(p);
-         } else {
+            break;
+         }
+         case 's': {
             delete static_cast<std::string *>(p);
+            break;
+         }
          }
       }
    }
@@ -306,7 +326,7 @@ std::vector<std::pair<ULong64_t, ULong64_t>> TCsvDS::GetEntryRanges()
    return entryRanges;
 }
 
-std::string TCsvDS::GetTypeName(std::string_view colName) const
+TCsvDS::ColType_t TCsvDS::GetType(std::string_view colName) const
 {
    if (!HasColumn(colName)) {
       std::string msg = "The dataset does not have column ";
@@ -317,6 +337,11 @@ std::string TCsvDS::GetTypeName(std::string_view colName) const
    return fColTypes.at(colName.data());
 }
 
+std::string TCsvDS::GetTypeName(std::string_view colName) const
+{
+   return fgColTypeMap.at(GetType(colName));
+}
+
 bool TCsvDS::HasColumn(std::string_view colName) const
 {
    return fHeaders.end() != std::find(fHeaders.begin(), fHeaders.end(), colName);
@@ -325,16 +350,25 @@ bool TCsvDS::HasColumn(std::string_view colName) const
 void TCsvDS::SetEntry(unsigned int slot, ULong64_t entry)
 {
    int colIndex = 0;
-   for (auto &&colType : fColTypesList) {
+   for (auto &colType : fColTypesList) {
       auto dataPtr = fRecords[entry][colIndex];
-      if (colType == "double") {
+      switch (colType) {
+      case 'd': {
          fDoubleEvtValues[colIndex][slot] = *static_cast<double *>(dataPtr);
-      } else if (colType == "Long64_t") {
+         break;
+      }
+      case 'l': {
          fLong64EvtValues[colIndex][slot] = *static_cast<Long64_t *>(dataPtr);
-      } else if (colType == "std::string") {
-         fStringEvtValues[colIndex][slot] = *static_cast<std::string *>(dataPtr);
-      } else {
+         break;
+      }
+      case 'b': {
          fBoolEvtValues[colIndex][slot] = *static_cast<bool *>(dataPtr);
+         break;
+      }
+      case 's': {
+         fStringEvtValues[colIndex][slot] = *static_cast<std::string *>(dataPtr);
+         break;
+      }
       }
       colIndex++;
    }
