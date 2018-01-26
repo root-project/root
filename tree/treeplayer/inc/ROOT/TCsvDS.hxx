@@ -28,7 +28,7 @@ private:
    std::vector<Record> fRecords; // fRecords[entry][column]
 
    static TRegexp intRegex, doubleRegex1, doubleRegex2, trueRegex, falseRegex;
-   
+
    void FillHeaders(const std::string &);
    void FillRecord(const std::string &, Record &);
    void GenerateHeaders(size_t);
