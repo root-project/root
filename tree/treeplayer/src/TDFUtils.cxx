@@ -78,40 +78,35 @@ std::string TypeID2TypeName(const std::type_info &id)
 {
    if (auto c = TClass::GetClass(id)) {
       return c->GetName();
-   } else if (type_id == typeid(char))
+   } else if (id == typeid(char))
       return "char";
-   else if (type_id == typeid(unsigned char))
+   else if (id == typeid(unsigned char))
       return "unsigned char";
-   else if (type_id == typeid(int))
+   else if (id == typeid(int))
       return "int";
-   else if (type_id == typeid(unsigned int))
+   else if (id == typeid(unsigned int))
       return "unsigned int";
-   else if (type_id == typeid(short))
+   else if (id == typeid(short))
       return "short";
-   else if (type_id == typeid(unsigned short))
+   else if (id == typeid(unsigned short))
       return "unsigned short";
-   else if (type_id == typeid(long))
+   else if (id == typeid(long))
       return "long";
-   else if (type_id == typeid(unsigned long))
+   else if (id == typeid(unsigned long))
       return "unsigned long";
-   else if (type_id == typeid(double))
+   else if (id == typeid(double))
       return "double";
-   else if (type_id == typeid(float))
+   else if (id == typeid(float))
       return "float";
-   else if (type_id == typeid(Long64_t))
+   else if (id == typeid(Long64_t))
       return "Long64_t";
-   else if (type_id == typeid(ULong64_t))
+   else if (id == typeid(ULong64_t))
       return "ULong64_t";
-   else if (type_id == typeid(bool))
+   else if (id == typeid(bool))
       return "bool";
-   else {
-      std::string msg("Cannot deduce type of temporary column ");
-      msg += colName.c_str();
-      msg += ". The typename is ";
-      msg += tmpBranch->GetTypeId().name();
-      msg += ".";
-      throw std::runtime_error(msg);
-   }
+   else
+      return "";
+
 }
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
@@ -161,7 +156,17 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
       }
    } else if (tmpBranch) {
       // this must be a temporary branch
-      return TypeID2TypeName(tmpBranch->GetTypeId());
+      auto &id = tmpBranch->GetTypeId();
+      auto typeName = TypeID2TypeName(id);
+      if (typeName.empty()) {
+         std::string msg("Cannot deduce type of temporary column ");
+         msg += colName;
+         msg += ". The typename is ";
+         msg += id.name();
+         msg += ".";
+         throw std::runtime_error(msg);
+      }
+      return typeName;
    } else {
       throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
    }
