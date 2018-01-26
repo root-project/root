@@ -69,8 +69,6 @@
 //_____________________________batch only_____________________
 #ifndef __CINT__
 
-constexpr bool kIs32bits = sizeof(long) == 4;
-
 #include <stdlib.h>
 #include <TROOT.h>
 #include <TSystem.h>
