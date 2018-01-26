@@ -167,7 +167,12 @@ private:
    // std::thread::id fWriterThread; ///<! Holder of the write lock
    // ReaderColl_t fReadersCount;    ///<! Set of reader thread ids
 
+   void AssertReadCountLocIsFromCurrentThread(const size_t* presumedLocalReadersCount);
+
 public:
+   using State = TVirtualRWMutex::State;
+   using StateDelta = TVirtualRWMutex::StateDelta;
+
    ////////////////////////////////////////////////////////////////////////
    /// Regular constructor.
    TReentrantRWLock() : fReaders(0), fReaderReservation(0), fWriterReservation(0), fWriter(false) {}
@@ -177,6 +182,9 @@ public:
    TVirtualRWMutex::Hint_t *WriteLock();
    void WriteUnLock(TVirtualRWMutex::Hint_t *);
 
+   std::unique_ptr<State> GetStateBefore();
+   std::unique_ptr<StateDelta> Rewind(const State &earlierState);
+   void Apply(std::unique_ptr<StateDelta> &&delta);
    };
 } // end of namespace ROOT
 
