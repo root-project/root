@@ -9,6 +9,22 @@ set(LLVM_BUILD_TOOLS OFF CACHE BOOL "")
 set(LLVM_TOOL_LLVM_AR_BUILD OFF CACHE BOOL "")
 set(CLANG_TOOL_CLANG_OFFLOAD_BUNDLER_BUILD OFF CACHE BOOL "")
 set(LLVM_FORCE_USE_OLD_TOOLCHAIN ON CACHE BOOL "")
+
+# FIXME: We cannot use etcdir or prefix from RootConfiguration.cmake because it
+# is included very late.
+if(gnuinstall)
+  set(prefix ${CMAKE_INSTALL_PREFIX})
+else()
+  set(prefix ${ROOTSYS})
+endif()
+if(IS_ABSOLUTE ${CMAKE_INSTALL_SYSCONFDIR})
+  set(etcdir ${CMAKE_INSTALL_SYSCONFDIR})
+else()
+  set(etcdir ${prefix}/${CMAKE_INSTALL_SYSCONFDIR})
+endif()
+set(CLING_PLUGIN_INSTALL_PREFIX "${etcdir}/cling/plugins/" CACHE STRING "" FORCE)
+set(LLVM_DIR "${CMAKE_BINARY_DIR}/interpreter/llvm/src")
+set(CLING_BUILD_PLUGINS ON)
 set(LLVM_EXTERNAL_CLING_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/cling" CACHE STRING "")
 set(LLVM_EXTERNAL_PROJECTS "cling" CACHE STRING "")
 # We only use llvm/clang through TCling which is (with the help of core/meta) already taking a lock
