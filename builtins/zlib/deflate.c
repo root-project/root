@@ -165,7 +165,7 @@ static uint32_t hash_func(deflate_state *s, uint32_t UNUSED(h), void* str) {
     return __crc32cw(0, *(uint32_t*)str) & s->hash_mask;
 }
 
-#else // No __ARM_FEATURE_CRC32 (ARMv8 without crc32 support)
+#else // ARMv8 without crc32 support
 
 static uint32_t hash_func(deflate_state *s, uint32_t h, void* str) {
     return hash_func_default(s, h, str);
@@ -1488,7 +1488,7 @@ static void fill_window_default(s)
            "not enough room for search");
 }
 
-#if(defined __x86_64__)
+#if defined (__x86_64__) && defined (__linux__)
 
 /* ===========================================================================
  * Fill the window when the lookahead becomes insufficient.
@@ -1793,6 +1793,7 @@ void fill_window(deflate_state *s){
 void fill_window(deflate_state *s){
     return fill_window_default(s);
 }
+
 #endif
 
 /* ===========================================================================
