@@ -87,8 +87,8 @@ protected:
     TAxis         fXaxis;           ///< X axis descriptor
     TAxis         fYaxis;           ///< Y axis descriptor
     TAxis         fZaxis;           ///< Z axis descriptor
-    Short_t       fBarOffset;       ///< Offset for bar charts or legos
-    Short_t       fBarWidth;        ///< Width for bar charts or legos
+    Short_t       fBarOffset;       ///< (1000*offset) for bar charts or legos
+    Short_t       fBarWidth;        ///< (1000*width) for bar charts or legos
     Double_t      fEntries;         ///< Number of entries
     Double_t      fTsumw;           ///< Total Sum of weights
     Double_t      fTsumw2;          ///< Total Sum of squares of weights
@@ -247,8 +247,8 @@ public:
    virtual Float_t  GetTitleOffset(Option_t *axis="X") const;
    virtual Float_t  GetTitleSize(Option_t *axis="X") const;
    virtual Float_t  GetTickLength(Option_t *axis="X") const;
-   virtual Float_t  GetBarOffset(Option_t *axis="X") const;
-   virtual Float_t  GetBarWidth(Option_t *axis="X") const;
+   virtual Float_t  GetBarOffset() const {return Float_t(0.001*Float_t(fBarOffset));}
+   virtual Float_t  GetBarWidth() const  {return Float_t(0.001*Float_t(fBarWidth));}
    virtual Int_t    GetContour(Double_t *levels=0);
    virtual Double_t GetContourLevel(Int_t level) const;
    virtual Double_t GetContourLevelPad(Int_t level) const;
@@ -349,8 +349,8 @@ public:
    virtual void     Scale(Double_t c1=1, Option_t *option="");
    virtual void     SetAxisColor(Color_t color=1, Option_t *axis="X");
    virtual void     SetAxisRange(Double_t xmin, Double_t xmax, Option_t *axis="X");
-   virtual void     SetBarOffset(Float_t offset=0.25, Option_t *axis="XY");
-   virtual void     SetBarWidth(Float_t width=0.5,  Option_t *axis="XY");
+   virtual void     SetBarOffset(Float_t offset=0.25) {fBarOffset = Short_t(1000*offset);}
+   virtual void     SetBarWidth(Float_t width=0.5) {fBarWidth = Short_t(1000*width);}
    virtual void     SetBinContent(Int_t bin, Double_t content);
    virtual void     SetBinContent(Int_t bin, Int_t, Double_t content) { SetBinContent(bin, content); }
    virtual void     SetBinContent(Int_t bin, Int_t, Int_t, Double_t content) { SetBinContent(bin, content); }
