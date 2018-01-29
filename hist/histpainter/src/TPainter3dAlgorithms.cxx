@@ -2107,10 +2107,10 @@ void TPainter3dAlgorithms::LegoFunction(Int_t ia, Int_t ib, Int_t &nv, Double_t 
    //             and compute the LOG if necessary
    Double_t xwid = gCurrentHist->GetXaxis()->GetBinWidth(ixt);
    Double_t ywid = gCurrentHist->GetYaxis()->GetBinWidth(iyt);
-   ab[3] = gCurrentHist->GetXaxis()->GetBinLowEdge(ixt) + xwid*Hparam.xbaroffset;
-   ab[4] = gCurrentHist->GetYaxis()->GetBinLowEdge(iyt) + ywid*Hparam.ybaroffset;
-   ab[5] = ab[3] + xwid*Hparam.xbarwidth;
-   ab[8] = ab[4] + ywid*Hparam.ybarwidth;
+   ab[3] = gCurrentHist->GetXaxis()->GetBinLowEdge(ixt) + xwid*gCurrentHist->GetBarOffset("X");
+   ab[4] = gCurrentHist->GetYaxis()->GetBinLowEdge(iyt) + ywid*gCurrentHist->GetBarOffset("Y");
+   ab[5] = ab[3] + xwid*gCurrentHist->GetBarWidth("X");
+   ab[8] = ab[4] + ywid*gCurrentHist->GetBarWidth("Y");
 
    if (Hoption.Logx) {
       if (ab[3] > 0) ab[3]  = TMath::Log10(ab[3]);
