@@ -1,7 +1,9 @@
 // @(#)root/tmva/pymva $Id$
 // Author: Stefan Wunsch, 2016
 
-#include <Python.h>
+extern "C" {
+   #include <Python.h>
+}
 #include "TMVA/MethodPyKeras.h"
 
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
