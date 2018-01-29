@@ -32,12 +32,14 @@ The following people have contributed to this new version:
  Fons Rademakers, CERN/SFT,\
  Enric Tejedor Saavedra, CERN/SFT,\
  Peter van Gemmeren, ANL,\
- Vassil Vassilev, Fermilab/CMS,\
+ Vassil Vassilev, Princeton/CMS,\
  Wouter Verkerke, NIKHEF/Atlas, RooFit
 
 ## Removed interfaces
 
 ## Core Libraries
+   - Optimize away redundant deserialization of template specializations. This reduces the memory footprint for hsimple
+     by around 22% while improving the runtime performance for various cases by around 15%.
 
 ## I/O Libraries
    - Implement reading of objects data from JSON
