@@ -2,7 +2,7 @@
 include(ExternalProject)
 include(FindPackageHandleStandardArgs)
 
-set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
+set(lcgpackages https://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
