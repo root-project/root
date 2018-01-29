@@ -17,7 +17,7 @@
 #define ROOT7_TObjectDrawable
 
 #include <ROOT/TDrawable.hxx>
-#include "RStringView.h"
+#include <ROOT/string_view.hxx>
 #include <memory>
 
 class TObject;

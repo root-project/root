@@ -15,7 +15,7 @@
 #include <memory> // shared_ptr, unique_ptr for IsSmartOrDumbPtr
 #include <type_traits>
 #include <vector> // for IsContainer
-#include "ROOT/RArrayView.hxx" // for IsContainer
+#include "ROOT/span.hxx" // for IsContainer
 
 namespace ROOT {
 
@@ -123,7 +123,7 @@ struct IsContainer {
 };
 
 template<typename T>
-struct IsContainer<std::array_view<T>> {
+struct IsContainer<std::span<T>> {
    static constexpr bool value = true;
 };
 

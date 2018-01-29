@@ -17,7 +17,7 @@
 #define RWrap_libcpp_string_view_h
 
 #ifndef RStringView_H
-#error "Do not use RWrap_libcpp_string_view.h directly. #include \"RStringView.h\" instead."
+#error "Do not use RWrap_libcpp_string_view.h directly. #include \"ROOT/string_view.hxx\" instead."
 #endif // RStringView_H
 
 // In case we are connected with a libc++ which defines those, we need

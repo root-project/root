@@ -16,7 +16,7 @@
 #ifndef ROOT7_THistConcurrentFill
 #define ROOT7_THistConcurrentFill
 
-#include "ROOT/RArrayView.hxx"
+#include "ROOT/span.hxx"
 #include "ROOT/THistBufferedFill.hxx"
 
 #include <mutex>
@@ -47,13 +47,13 @@ public:
    using Internal::THistBufferedFillBase<THistConcurrentFiller<HIST, SIZE>, HIST, SIZE>::Fill;
 
    /// Thread-specific HIST::FillN().
-   void FillN(const std::array_view<CoordArray_t> xN, const std::array_view<Weight_t> weightN)
+   void FillN(const std::span<CoordArray_t> xN, const std::span<Weight_t> weightN)
    {
       fManager.FillN(xN, weightN);
    }
 
    /// Thread-specific HIST::FillN().
-   void FillN(const std::array_view<CoordArray_t> xN) { fManager.FillN(xN); }
+   void FillN(const std::span<CoordArray_t> xN) { fManager.FillN(xN); }
 
    /// The buffer is full, flush it out.
    void Flush() { fManager.FillN(this->GetCoords(), this->GetWeights()); }
@@ -94,14 +94,14 @@ public:
    THistConcurrentFiller<HIST, SIZE> MakeFiller() { return THistConcurrentFiller<HIST, SIZE>{*this}; }
 
    /// Thread-specific HIST::FillN().
-   void FillN(const std::array_view<CoordArray_t> xN, const std::array_view<Weight_t> weightN)
+   void FillN(const std::span<CoordArray_t> xN, const std::span<Weight_t> weightN)
    {
       std::lock_guard<std::mutex> lockGuard(fFillMutex);
       fHist.FillN(xN, weightN);
    }
 
    /// Thread-specific HIST::FillN().
-   void FillN(const std::array_view<CoordArray_t> xN)
+   void FillN(const std::span<CoordArray_t> xN)
    {
       std::lock_guard<std::mutex> lockGuard(fFillMutex);
       fHist.FillN(xN);

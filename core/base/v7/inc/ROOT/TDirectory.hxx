@@ -24,7 +24,7 @@
 #include <type_traits>
 #include <unordered_map>
 #include <string>
-#include <RStringView.h>
+#include <ROOT/string_view.hxx>
 
 namespace ROOT {
 namespace Experimental {

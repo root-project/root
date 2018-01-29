@@ -19,7 +19,7 @@
 #include <array>
 #include <memory>
 #include <sstream>
-#include "RStringView.h"
+#include <ROOT/string_view.hxx>
 #include <vector>
 
 namespace ROOT {

@@ -1,7 +1,8 @@
-/// \file ROOT/RArrayView.h
-/// \ingroup Base StdExt
+/// \file ROOT/RTupleApply.h
+/// \ingroup Base StdExt ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2015-09-06
+/// \warning This is part of the ROOT 7 prototype! It will change without notice. It might trigger earthquakes. Feedback is welcome!
 
 /*************************************************************************
  * Copyright (C) 1995-2015, Rene Brun and Fons Rademakers.               *
@@ -11,26 +12,16 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_RArrayView
-#define ROOT_RArrayView
+#ifndef ROOT7_RTupleApply
+#define ROOT7_RTupleApply
 
 #include "RConfigure.h"
 
-#ifdef R__HAS_STD_ARRAY_VIEW
-
-#include <array_view>
-
-#elif defined(R__HAS_STD_EXPERIMENTAL_ARRAY_VIEW)
-
-#include <experimental/array_view>
-namespace std {
-  using template<class T> array_view = experimental::array_view<T>;
-
-  // TODO: using make_view() overloads
-}
-
+#ifdef R__HAS_STD_APPLY
+# include <tuple>
 #else
-# include "ROOT/rhysd_array_view.hxx"
+# include "ROOT/impl_tuple_apply.hxx"
 #endif
+
 
 #endif

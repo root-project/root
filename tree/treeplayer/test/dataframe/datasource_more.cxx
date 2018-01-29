@@ -1,5 +1,5 @@
 #include <ROOT/TDataFrame.hxx>
-#include <ROOT/RMakeUnique.hxx>
+#include <ROOT/memory.hxx>
 
 #include "TNonCopiableDS.hxx"
 #include "TStreamingDS.hxx"

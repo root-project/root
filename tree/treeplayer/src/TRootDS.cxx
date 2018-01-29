@@ -4,7 +4,7 @@
 #include <TClass.h>
 #include <TROOT.h>         // For the gROOTMutex
 #include <TVirtualMutex.h> // For the R__LOCKGUARD
-#include <ROOT/RMakeUnique.hxx>
+#include <ROOT/memory.hxx>
 
 #include <algorithm>
 #include <vector>

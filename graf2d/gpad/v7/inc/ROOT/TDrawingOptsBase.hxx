@@ -20,7 +20,7 @@
 #include <ROOT/TDrawingAttrs.hxx>
 #include <ROOT/TStyle.hxx>
 
-#include <RStringView.h>
+#include <ROOT/string_view.hxx>
 
 #include <map>
 #include <string>

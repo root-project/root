@@ -16,7 +16,7 @@
 #ifndef ROOT7_TPalette
 #define ROOT7_TPalette
 
-#include <RStringView.h>
+#include <ROOT/string_view.hxx>
 #include <ROOT/TColor.hxx>
 
 #include <utility>

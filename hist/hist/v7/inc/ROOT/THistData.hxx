@@ -18,7 +18,7 @@
 
 #include <cmath>
 #include <vector>
-#include "ROOT/RArrayView.hxx"
+#include "ROOT/span.hxx"
 #include "ROOT/THistUtils.hxx"
 
 namespace ROOT {

@@ -12,7 +12,7 @@
 #include <set>
 // for shared_ptr
 #include <memory>
-#include "RStringView.h"
+#include <ROOT/string_view.hxx>
 #include <algorithm>
 
 namespace {
