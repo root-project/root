@@ -320,7 +320,7 @@ TReentrantRWLock<MutexT, RecurseCountsT>::Rewind(const State &earlierState) {
    }
    // else earlierState and *this are identical!
 
-   return pStateDelta;
+   return std::unique_ptr<TVirtualRWMutex::StateDelta>(std::move(pStateDelta));
 }
 
 //////////////////////////////////////////////////////////////////////////
