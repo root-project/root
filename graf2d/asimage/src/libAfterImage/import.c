@@ -187,7 +187,7 @@ char *locate_image_file_in_path( const char *file, ASImageImportParams *iparams 
 {
 	int 		  filename_len ;
 	char 		 *realfilename = NULL, *tmp = NULL ;
-	register int i;
+	int i;
 	ASImageImportParams dummy_iparams = {0};
 
 	if( iparams == NULL )
@@ -875,7 +875,7 @@ load_asimage_list_entry_data( ASImageListEntry *entry, size_t max_bytes )
 	if( entry->type == ASIT_Unknown ) 
 	{
 		int i = entry->buffer->size ; 
-		register char *ptr = entry->buffer->data ;
+		char *ptr = entry->buffer->data ;
 		while ( --i >= 0 )	
 			if( !isprint(ptr[i]) && ptr[i] != '\n'&& ptr[i] != '\r'&& ptr[i] != '\t' )	
 				break;
@@ -913,7 +913,7 @@ locate_image_file( const char *file, char **paths )
 			realfilename = NULL ;
 			if( paths != NULL )
 			{	/* now lets try and find the file in any of the optional paths :*/
-				register int i = 0;
+				int i = 0;
 				do
 				{
 					if( i > 0 ) 
@@ -1203,11 +1203,11 @@ xpm2ASImage( const char * path, ASImageImportParams *params )
 /***********************************************************************************/
 
 static inline void
-apply_gamma( register CARD8* raw, register CARD8 *gamma_table, unsigned int width )
+apply_gamma( CARD8* raw, CARD8 *gamma_table, unsigned int width )
 {
 	if( gamma_table )
 	{	
-		register unsigned int i ;
+		unsigned int i ;
 		for( i = 0 ; i < width ; ++i )
 			raw[i] = gamma_table[raw[i]] ;
 	}
@@ -1411,7 +1411,7 @@ png2ASImage_int( void *data, png_rw_ptr read_fn, ASImageImportParams *params )
 					if( do_alpha )
 					{
 						int has_zero = False, has_nozero = False ;
-						register unsigned int i;
+						unsigned int i;
 						for ( i = 0 ; i < buf.width ; ++i)
 						{
 							if( buf.alpha[i] != 0x00FF )
@@ -1557,7 +1557,7 @@ jpeg2ASImage( const char * path, ASImageImportParams *params )
 	ASScanline    buf;
 	int y;
 	START_TIME(started);
- /*	register int i ;*/
+ /*	int i ;*/
 
 	/* we want to open the input file before doing anything else,
 	 * so that the setjmp() error recovery below can assume the file is open.
@@ -1822,7 +1822,7 @@ ppm2ASImage( const char * path, ASImageImportParams *params )
 			{
 				if( buffer[0] != '#' )
 				{
-					register int i = 0;
+					int i = 0;
 					if( width > 0 )
 					{
 						colors = atoi(&(buffer[i]));
@@ -2275,7 +2275,7 @@ LOCAL_DEBUG_OUT( "strip size = %d, bytes_in = %d, bytes_per_row = %d", bc[strip_
 				TIFFReadRGBAStrip(tif, first_row, (void*)data);
 				do
 				{
-					register CARD32 *row = data ;
+					CARD32 *row = data ;
 					int y = first_row + rows_per_strip ;
 					if( y > height ) 
 						y = height ;
@@ -2425,7 +2425,7 @@ svg2ASImage( const char * path, ASImageImportParams *params )
 		gdk_pixbuf_get_bits_per_sample(pixbuf) == 8 ) 
 	{
 	   	int width, height;
-		register CARD8 *row = gdk_pixbuf_get_pixels(pixbuf);
+		CARD8 *row = gdk_pixbuf_get_pixels(pixbuf);
 		int y;
 		CARD8 		 *r = NULL, *g = NULL, *b = NULL, *a = NULL ;
 		int old_storage_block_size;

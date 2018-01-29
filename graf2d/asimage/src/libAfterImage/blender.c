@@ -54,7 +54,7 @@ rgb2value( CARD32 red, CARD32 green, CARD32 blue )
 CARD32
 rgb2saturation( CARD32 red, CARD32 green, CARD32 blue )
 {
-	register int max_val, min_val ;
+	int max_val, min_val ;
 	if( red > green )
 	{
 		max_val = MAX(red,blue);
@@ -331,7 +331,7 @@ merge_scanlines_func_desc std_merge_scanlines_func_list[] =
 merge_scanlines_func
 blend_scanlines_name2func( const char *name )
 {
-	register int i = 0;
+	int i = 0;
 
 	if( name == NULL )
 		return NULL ;
@@ -362,9 +362,9 @@ list_scanline_merging(FILE* stream, const char *format)
 }
 
 #define BLEND_SCANLINES_HEADER \
-	register int i = -1, max_i = bottom->width ; \
-	register CARD32 *ta = top->alpha, *tr = top->red, *tg = top->green, *tb = top->blue; \
-	register CARD32 *ba = bottom->alpha, *br = bottom->red, *bg = bottom->green, *bb = bottom->blue; \
+	int i = -1, max_i = bottom->width ; \
+	CARD32 *ta = top->alpha, *tr = top->red, *tg = top->green, *tb = top->blue; \
+	CARD32 *ba = bottom->alpha, *br = bottom->red, *bg = bottom->green, *bb = bottom->blue; \
 	if( offset < 0 ){ \
 		offset = -offset ; \
 		ta += offset ;	tr += offset ;	tg += offset ;	tb += offset ; \

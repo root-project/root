@@ -111,10 +111,10 @@ ASVisual __transform_fake_asv = {0};
 #define AVERAGE_COLORN(T,N)					(((T)<<QUANT_ERR_BITS)/N)
 
 static inline void
-enlarge_component12( register CARD32 *src, register CARD32 *dst, int *scales, int len )
+enlarge_component12( CARD32 *src, CARD32 *dst, int *scales, int len )
 {/* expected len >= 2  */
-	register int i = 0, k = 0;
-	register int c1 = src[0], c4;
+	int i = 0, k = 0;
+	int c1 = src[0], c4;
 	--len; --len ;
 	while( i < len )
 	{
@@ -123,7 +123,7 @@ enlarge_component12( register CARD32 *src, register CARD32 *dst, int *scales, in
 		dst[k] = INTERPOLATE_COLOR1(src[i]) ;
 		if( scales[i] == 2 )
 		{
-			register int c2 = src[i], c3 = src[i+1] ;
+			int c2 = src[i], c3 = src[i+1] ;
 			c3 = INTERPOLATE_COLOR2(c1,c2,c3,c4);
 			dst[++k] = (c3&0xFF000000 )?0:c3;
 		}
@@ -137,7 +137,7 @@ enlarge_component12( register CARD32 *src, register CARD32 *dst, int *scales, in
 		dst[k] = INTERPOLATE_COLOR1(src[i]);
 	else
 	{
-		register int c2 = src[i], c3 = src[i+1] ;
+		int c2 = src[i], c3 = src[i+1] ;
 		c2 = INTERPOLATE_COLOR2(c1,c2,c3,c3);
 		dst[k] = (c2&0xFF000000 )?0:c2;
 	}
@@ -145,10 +145,10 @@ enlarge_component12( register CARD32 *src, register CARD32 *dst, int *scales, in
 }
 
 static inline void
-enlarge_component23( register CARD32 *src, register CARD32 *dst, int *scales, int len )
+enlarge_component23( CARD32 *src, CARD32 *dst, int *scales, int len )
 {/* expected len >= 2  */
-	register int i = 0, k = 0;
-	register int c1 = src[0], c4 = src[1];
+	int i = 0, k = 0;
+	int c1 = src[0], c4 = src[1];
 	if( scales[0] == 1 )
 	{/* special processing for first element - it can be 1 - others can only be 2 or 3 */
 		dst[k] = INTERPOLATE_COLOR1(src[0]) ;
@@ -158,7 +158,7 @@ enlarge_component23( register CARD32 *src, register CARD32 *dst, int *scales, in
 	--len; --len ;
 	while( i < len )
 	{
-		register int c2 = src[i], c3 = src[i+1] ;
+		int c2 = src[i], c3 = src[i+1] ;
 		c4 = src[i+2];
 		dst[k] = INTERPOLATE_COLOR1(c2) ;
 		if( scales[i] == 2 )
@@ -179,7 +179,7 @@ enlarge_component23( register CARD32 *src, register CARD32 *dst, int *scales, in
 	}
 	/* to avoid one more if() in loop we moved tail part out of the loop : */
 	{
-		register int c2 = src[i], c3 = src[i+1] ;
+		int c2 = src[i], c3 = src[i+1] ;
 		dst[k] = INTERPOLATE_COLOR1(c2) ;
 		if( scales[i] == 2 )
 		{
@@ -206,12 +206,12 @@ enlarge_component23( register CARD32 *src, register CARD32 *dst, int *scales, in
  * visible artifacts on smooth gradient-like images
  */
 static inline void
-enlarge_component( register CARD32 *src, register CARD32 *dst, int *scales, int len )
+enlarge_component( CARD32 *src, CARD32 *dst, int *scales, int len )
 {/* we skip all checks as it is static function and we want to optimize it
   * as much as possible */
 	int i = 0;
 	int c1 = src[0];
-	register int T ;
+	int T ;
 	--len ;
 	if( len < 1 )
 	{
@@ -222,8 +222,8 @@ enlarge_component( register CARD32 *src, register CARD32 *dst, int *scales, int 
 	}
 	do
 	{
-		register short S = scales[i];
-		register int step = INTERPOLATION_TOTAL_STEP(src[i],src[i+1]);
+		short S = scales[i];
+		int step = INTERPOLATION_TOTAL_STEP(src[i],src[i+1]);
 
 		if( i+1 == len )
 			T = INTERPOLATION_TOTAL_START(c1,src[i],src[i+1],src[i+1],S);
@@ -233,7 +233,7 @@ enlarge_component( register CARD32 *src, register CARD32 *dst, int *scales, int 
 /*		LOCAL_DEBUG_OUT( "pixel %d, S = %d, step = %d", i, S, step );*/
 		if( step )
 		{
-			register int n = 0 ;
+			int n = 0 ;
 			do
 			{
 				dst[n] = (T&0x7F000000)?0:INTERPOLATE_N_COLOR(T,S);
@@ -243,7 +243,7 @@ enlarge_component( register CARD32 *src, register CARD32 *dst, int *scales, int 
 			dst += n ;
 		}else
 		{
-			register CARD32 c = (T&0x7F000000)?0:INTERPOLATE_N_COLOR(T,S);
+			CARD32 c = (T&0x7F000000)?0:INTERPOLATE_N_COLOR(T,S);
 			while(--S >= 0){	dst[S] = c;	}
 			dst += scales[i] ;
 		}
@@ -254,13 +254,13 @@ enlarge_component( register CARD32 *src, register CARD32 *dst, int *scales, int 
 }
 
 static inline void
-enlarge_component_dumb( register CARD32 *src, register CARD32 *dst, int *scales, int len )
+enlarge_component_dumb( CARD32 *src, CARD32 *dst, int *scales, int len )
 {/* we skip all checks as it is static function and we want to optimize it
   * as much as possible */
 	int i = 0, k = 0;
 	do
 	{
-		register CARD32 c = INTERPOLATE_COLOR1(src[i]);
+		CARD32 c = INTERPOLATE_COLOR1(src[i]);
 		int max_k = k+scales[i];
 		do
 		{
@@ -271,14 +271,14 @@ enlarge_component_dumb( register CARD32 *src, register CARD32 *dst, int *scales,
 
 /* this will shrink array based on count of items in src per one dst item with averaging */
 static inline void
-shrink_component( register CARD32 *src, register CARD32 *dst, int *scales, int len )
+shrink_component( CARD32 *src, CARD32 *dst, int *scales, int len )
 {/* we skip all checks as it is static function and we want to optimize it
   * as much as possible */
-	register int i = -1, k = -1;
+	int i = -1, k = -1;
 	while( ++k < len )
 	{
-		register int reps = scales[k] ;
-		register int c1 = src[++i];
+		int reps = scales[k] ;
+		int c1 = src[++i];
 /*LOCAL_DEBUG_OUT( "pixel = %d, scale[k] = %d", k, reps );*/
 		if( reps == 1 )
 			dst[k] = AVERAGE_COLOR1(c1);
@@ -295,25 +295,25 @@ shrink_component( register CARD32 *src, register CARD32 *dst, int *scales, int l
 				c1 += src[i];
 			}
 			{
-				register short S = scales[k];
+				short S = scales[k];
 				dst[k] = AVERAGE_COLORN(c1,S);
 			}
 		}
 	}
 }
 static inline void
-shrink_component11( register CARD32 *src, register CARD32 *dst, int *scales, int len )
+shrink_component11( CARD32 *src, CARD32 *dst, int *scales, int len )
 {
-	register int i ;
+	int i ;
 	for( i = 0 ; i < len ; ++i )
 		dst[i] = AVERAGE_COLOR1(src[i]);
 }
 
 
 static inline void
-reverse_component( register CARD32 *src, register CARD32 *dst, int *unused, int len )
+reverse_component( CARD32 *src, CARD32 *dst, int *unused, int len )
 {
-	register int i = 0;
+	int i = 0;
 	src += len-1 ;
 	do
 	{
@@ -358,7 +358,7 @@ add_component( CARD32 *src, CARD32 *incr, int *scales, int len )
 #endif
 #endif
 	{
-		register int c1, c2;
+		int c1, c2;
 		int i = 0;
 		do{
 			c1 = (int)src[i] + (int)incr[i] ;
@@ -372,30 +372,30 @@ add_component( CARD32 *src, CARD32 *incr, int *scales, int len )
 
 #ifdef NEED_RBITSHIFT_FUNCS
 static inline void
-rbitshift_component( register CARD32 *src, register CARD32 *dst, int shift, int len )
+rbitshift_component( CARD32 *src, CARD32 *dst, int shift, int len )
 {
-	register int i ;
+	int i ;
 	for( i = 0 ; i < len ; ++i )
 		dst[i] = src[i]>>shift;
 }
 #endif
 
 static inline void
-start_component_interpolation( CARD32 *c1, CARD32 *c2, CARD32 *c3, CARD32 *c4, register CARD32 *T, register CARD32 *step, int S, int len)
+start_component_interpolation( CARD32 *c1, CARD32 *c2, CARD32 *c3, CARD32 *c4, CARD32 *T, CARD32 *step, int S, int len)
 {
-	register int i;
+	int i;
 	for( i = 0 ; i < len ; i++ )
 	{
-		register int rc2 = c2[i], rc3 = c3[i] ;
+		int rc2 = c2[i], rc3 = c3[i] ;
 		T[i] = INTERPOLATION_TOTAL_START(c1[i],rc2,rc3,c4[i],S)/(S<<1);
 		step[i] = INTERPOLATION_TOTAL_STEP(rc2,rc3)/(S<<1);
 	}
 }
 
 static inline void
-component_interpolation_hardcoded( CARD32 *c1, CARD32 *c2, CARD32 *c3, CARD32 *c4, register CARD32 *T, CARD32 *unused, CARD16 kind, int len)
+component_interpolation_hardcoded( CARD32 *c1, CARD32 *c2, CARD32 *c3, CARD32 *c4, CARD32 *T, CARD32 *unused, CARD16 kind, int len)
 {
-	register int i;
+	int i;
 	if( kind == 1 )
 	{
 		for( i = 0 ; i < len ; i++ )
@@ -405,8 +405,8 @@ component_interpolation_hardcoded( CARD32 *c1, CARD32 *c2, CARD32 *c3, CARD32 *c
 			   and even better then more complicated one : */
 			T[i] = (c2[i]+c3[i])>>1 ;
 #else
-    		register int minus = c1[i]+c4[i] ;
-			register int plus  = (c2[i]<<1)+c2[i]+(c3[i]<<1)+c3[i];
+    		int minus = c1[i]+c4[i] ;
+			int plus  = (c2[i]<<1)+c2[i]+(c3[i]<<1)+c3[i];
 
 			T[i] = ( (plus>>1) < minus )?(c2[i]+c3[i])>>1 :
 								   		 (plus-minus)>>2;
@@ -416,47 +416,47 @@ component_interpolation_hardcoded( CARD32 *c1, CARD32 *c2, CARD32 *c3, CARD32 *c
 	{
 		for( i = 0 ; i < len ; i++ )
 		{
-    		register int rc1 = c1[i], rc2 = c2[i], rc3 = c3[i] ;
+    		int rc1 = c1[i], rc2 = c2[i], rc3 = c3[i] ;
 			T[i] = INTERPOLATE_A_COLOR3_V(rc1,rc2,rc3,c4[i]);
 		}
 	}else
 		for( i = 0 ; i < len ; i++ )
 		{
-    		register int rc1 = c1[i], rc2 = c2[i], rc3 = c3[i] ;
+    		int rc1 = c1[i], rc2 = c2[i], rc3 = c3[i] ;
 			T[i] = INTERPOLATE_B_COLOR3_V(rc1,rc2,rc3,c4[i]);
 		}
 }
 
 #ifdef NEED_RBITSHIFT_FUNCS
 static inline void
-divide_component_mod( register CARD32 *data, CARD16 ratio, int len )
+divide_component_mod( CARD32 *data, CARD16 ratio, int len )
 {
-	register int i ;
+	int i ;
 	for( i = 0 ; i < len ; ++i )
 		data[i] /= ratio;
 }
 
 static inline void
-rbitshift_component_mod( register CARD32 *data, int bits, int len )
+rbitshift_component_mod( CARD32 *data, int bits, int len )
 {
-	register int i ;
+	int i ;
 	for( i = 0 ; i < len ; ++i )
 		data[i] = data[i]>>bits;
 }
 #endif
 void
-print_component( register CARD32 *data, int nonsense, int len )
+print_component( CARD32 *data, int nonsense, int len )
 {
-	register int i ;
+	int i ;
 	for( i = 0 ; i < len ; ++i )
 		fprintf( stderr, " %8.8lX", (long)data[i] );
 	fprintf( stderr, "\n");
 }
 
 static inline void
-tint_component_mod( register CARD32 *data, CARD16 ratio, int len )
+tint_component_mod( CARD32 *data, CARD16 ratio, int len )
 {
-	register int i ;
+	int i ;
 	if( ratio == 255 )
 		for( i = 0 ; i < len ; ++i )
 			data[i] = data[i]<<8;
@@ -472,9 +472,9 @@ tint_component_mod( register CARD32 *data, CARD16 ratio, int len )
 }
 
 static inline void
-make_component_gradient16( register CARD32 *data, CARD16 from, CARD16 to, CARD8 seed, int len )
+make_component_gradient16( CARD32 *data, CARD16 from, CARD16 to, CARD8 seed, int len )
 {
-	register int i ;
+	int i ;
 	long incr = (((long)to<<8)-((long)from<<8))/len ;
 
 	if( incr == 0 )
@@ -497,7 +497,7 @@ make_component_gradient16( register CARD32 *data, CARD16 from, CARD16 to, CARD8 
 static inline void
 copytintpad_scanline( ASScanline *src, ASScanline *dst, int offset, ARGB32 tint )
 {
-	register int i ;
+	int i ;
 	CARD32 chan_tint[4], chan_fill[4] ;
 	int color ;
 	int copy_width = src->width, dst_offset = 0, src_offset = 0;
@@ -521,13 +521,13 @@ copytintpad_scanline( ASScanline *src, ASScanline *dst, int offset, ARGB32 tint 
 	dst->flags = src->flags ;
 	for( color = 0 ; color < IC_NUM_CHANNELS ; ++color )
 	{
-		register CARD32 *psrc = src->channels[color]+src_offset;
-		register CARD32 *pdst = dst->channels[color];
+		CARD32 *psrc = src->channels[color]+src_offset;
+		CARD32 *pdst = dst->channels[color];
 		int ratio = chan_tint[color];
 /*	fprintf( stderr, "channel %d, tint is %d(%X), src_width = %d, src_offset = %d, dst_width = %d, dst_offset = %d psrc = %p, pdst = %p\n", color, ratio, ratio, src->width, src_offset, dst->width, dst_offset, psrc, pdst );
 */
 		{
-/*			register CARD32 fill = chan_fill[color]; */
+/*			CARD32 fill = chan_fill[color]; */
 			for( i = 0 ; i < dst_offset ; ++i )
 				pdst[i] = 0;
 			pdst += dst_offset ;
@@ -555,7 +555,7 @@ copytintpad_scanline( ASScanline *src, ASScanline *dst, int offset, ARGB32 tint 
 			set_flags( dst->flags, (0x01<<color));
 		}
 		{
-/*			register CARD32 fill = chan_fill[color]; */
+/*			CARD32 fill = chan_fill[color]; */
 			for( ; i < (int)dst->width-dst_offset ; ++i )
 				pdst[i] = 0;
 /*				print_component(pdst, 0, dst->width ); */
@@ -588,7 +588,7 @@ make_gradient_scanline( ASScanline *scl, ASGradient *grad, ASFlagType filter, AR
 
 		for( i = 0  ; i <= max_i ; i++ )
 		{
-			register int k ;
+			int k ;
 			int new_idx = -1 ;
 			/* now lets find the next point  : */
 			for( k = 0 ; k <= max_i ; ++k )
@@ -601,8 +601,8 @@ make_gradient_scanline( ASScanline *scl, ASGradient *grad, ASFlagType filter, AR
 						new_idx = k ;
 					else
 					{
-						register int d1 = new_idx-last_idx ;
-						register int d2 = k - last_idx ;
+						int d1 = new_idx-last_idx ;
+						int d2 = k - last_idx ;
 						if( d1*d1 > d2*d2 )
 							new_idx = k ;
 					}
@@ -666,7 +666,7 @@ make_scales( int from_size, int to_size, int tail )
 	int *scales ;
     int smaller = MIN(from_size,to_size);
     int bigger  = MAX(from_size,to_size);
-	register int i = 0, k = 0;
+	int i = 0, k = 0;
 	int eps;
     LOCAL_DEBUG_OUT( "from %d to %d tail %d", from_size, to_size, tail );
 	scales = safecalloc( smaller+tail, sizeof(int));
@@ -922,7 +922,7 @@ scale_asimage( ASVisual *asv, ASImage *src, int to_width, int to_height,
 	scales_v = make_scales( src->height, to_height, ( quality == ASIMAGE_QUALITY_POOR  || src->height <= 3)?0:1 );
 #if defined(LOCAL_DEBUG) && !defined(NO_DEBUG_OUTPUT)
 	{
-	  register int i ;
+	  int i ;
 	  for( i = 0 ; i < MIN(src->width, to_width) ; i++ )
 		fprintf( stderr, " %d", scales_h[i] );
 	  fprintf( stderr, "\n" );
@@ -1002,7 +1002,7 @@ scale_asimage2( ASVisual *asv, ASImage *src,
 	scales_v = make_scales( clip_height, to_height, ( quality == ASIMAGE_QUALITY_POOR  || clip_height <= 3)?0:1 );
 #if defined(LOCAL_DEBUG) && !defined(NO_DEBUG_OUTPUT)
 	{
-	  register int i ;
+	  int i ;
 	  for( i = 0 ; i < MIN(clip_width, to_width) ; i++ )
 		fprintf( stderr, " %d", scales_h[i] );
 	  fprintf( stderr, "\n" );
@@ -1216,7 +1216,7 @@ LOCAL_DEBUG_OUT( "min_y = %d, max_y = %d", min_y, max_y );
 				if( imdecs[i] && pcurr->dst_y <= y &&
 					pcurr->dst_y+(int)pcurr->clip_height+(int)imdecs[i]->bevel_v_addon > y )
 				{
-					register ASScanline *b = &(imdecs[i]->buffer);
+					ASScanline *b = &(imdecs[i]->buffer);
 					CARD32 tint = pcurr->tint ;
 					imdecs[i]->decode_image_scanline( imdecs[i] );
 					if( tint != 0 )
@@ -1307,11 +1307,11 @@ LOCAL_DEBUG_CALLER_OUT( "width = %d, height = %d, filetr = 0x%lX, dither_count =
 					LOCAL_DEBUG_OUT( "back_color = %8.8lX", result.back_color);
 				}else
 				{
-					register CARD32  *dst = result.channels[color] ;
+					CARD32  *dst = result.channels[color] ;
 					for( line = 0 ; line  < dither_lines_num ; line++ )
 					{
-						register int x ;
-						register CARD32 d = chan_data[line] ;
+						int x ;
+						CARD32 d = chan_data[line] ;
 						for( x = line ; x < width ; x+=dither_lines_num )
 						{
 							dst[x] = d ;
@@ -1332,7 +1332,7 @@ make_gradient_diag_width( ASImageOutput *imout, ASScanline *dither_lines, int di
 	/* using bresengham algorithm again to trigger horizontal shift : */
 	short smaller = imout->im->height;
 	short bigger  = imout->im->width;
-	register int i = 0;
+	int i = 0;
 	int eps;
 LOCAL_DEBUG_CALLER_OUT( "width = %d, height = %d, filetr = 0x%lX, dither_count = %d, dither width = %d\n", bigger, smaller, filter, dither_lines_num, dither_lines[0].width );
 
@@ -1362,7 +1362,7 @@ make_gradient_diag_height( ASImageOutput *imout, ASScanline *dither_lines, int d
 	/* using bresengham algorithm again to trigger horizontal shift : */
 	unsigned short smaller = width;
 	unsigned short bigger  = height;
-	register int i = 0, k =0;
+	int i = 0, k =0;
 	int eps;
 	ASScanline result;
 	int *offsets ;
@@ -1442,7 +1442,7 @@ get_best_grad_back_color( ASGradient *grad )
 	{
 		CARD8 best = 0;
 		unsigned int best_size = 0;
-		register int i = grad->npoints;
+		int i = grad->npoints;
 		while( --i > 0 )
 		{ /* very crude algorithm, detecting biggest spans of the same color :*/
 			CARD8 c = ARGB32_CHAN8(grad->color[i], chan );
@@ -1809,10 +1809,10 @@ LOCAL_DEBUG_OUT( "copiing %d lines", clip_height );
 				result.flags = imdec->buffer.flags ;
 				for( chan = 0 ; chan < IC_NUM_CHANNELS ; ++chan )
 				{
-	   				register CARD32 *chan_data = result.channels[chan] ;
-	   				register CARD32 *src_chan_data = imdec->buffer.channels[chan]+((dst_x<0)? -dst_x : 0) ;
+	   				CARD32 *chan_data = result.channels[chan] ;
+	   				CARD32 *src_chan_data = imdec->buffer.channels[chan]+((dst_x<0)? -dst_x : 0) ;
 					CARD32 chan_val = ARGB32_CHAN8(color, chan);
-					register int k = -1;
+					int k = -1;
 					for( k = 0 ; k < start_x ; ++k )
 						chan_data[k] = chan_val ;
 					chan_data += k ;
@@ -1893,7 +1893,7 @@ Bool fill_asimage( ASVisual *asv, ASImage *im,
 			CARD32 	*b = imdec->buffer.blue + x  ;
 			for( i = 0 ; i < height ; i++ )
 			{
-				register int k ;
+				int k ;
 				imdec->decode_image_scanline( imdec );
 				for( k = 0 ; k < width ; ++k )
 				{
@@ -1924,7 +1924,7 @@ colorize_asimage_vector( ASVisual *asv, ASImage *im,
 	ASImageOutput  *imout = NULL ;
 	ASScanline buf ;
 	int x, y, curr_point, last_point ;
-    register double *vector ;
+    double *vector ;
 	double *points ;
 	double *multipliers[IC_NUM_CHANNELS] ;
 	START_TIME(started);
@@ -1975,7 +1975,7 @@ colorize_asimage_vector( ASVisual *asv, ASImage *im,
 	{
 		for( x = 0 ; x < (int)im->width ;)
 		{
-			register int i = IC_NUM_CHANNELS ;
+			int i = IC_NUM_CHANNELS ;
 			double d ;
 
 			if( points[curr_point] > vector[x] )
@@ -2070,7 +2070,7 @@ gauss_component(CARD32 *src, CARD32 *dst, int radius, double* gauss, int len)
 {
 	int x, j, r = radius - 1;
 	for (x = 0 ; x < len ; x++) {
-		register double v = 0.0;
+		double v = 0.0;
 		for (j = x - r ; j <= 0 ; j++) v += src[0] * gauss[x - j];
 		for ( ; j < x ; j++) v += src[j] * gauss[x - j];
 		v += src[x] * gauss[0];
@@ -2205,10 +2205,10 @@ gauss_component_int2(CARD32 *s1, CARD32 *d1, CARD32 *s2, CARD32 *d2, int radius,
 	GAUSS_COEFF_TYPE g0 = gauss[0];
 	for( x = 0 ; x < radius ; ++x )
 	{
-		register CARD32 *xs1 = &s1[x];
-		register CARD32 *xs2 = &s2[x];
-		register CARD32 v1 = s1[x]*g0;
-		register CARD32 v2 = s2[x]*g0;
+		CARD32 *xs1 = &s1[x];
+		CARD32 *xs2 = &s2[x];
+		CARD32 v1 = s1[x]*g0;
+		CARD32 v2 = s2[x]*g0;
 		for( j = 1 ; j <= x ; ++j )
 			MIDDLE_STRETCH_GAUSS;
 		for( ; j < radius ; ++j ) 
@@ -2229,10 +2229,10 @@ gauss_component_int2(CARD32 *s1, CARD32 *d1, CARD32 *s2, CARD32 *d2, int radius,
 	}	
 	while( x <= len-radius )
 	{
-		register CARD32 *xs1 = &s1[x];
-		register CARD32 *xs2 = &s2[x];
-		register CARD32 v1 = s1[x]*g0;
-		register CARD32 v2 = s2[x]*g0;
+		CARD32 *xs1 = &s1[x];
+		CARD32 *xs2 = &s2[x];
+		CARD32 v1 = s1[x]*g0;
+		CARD32 v2 = s2[x]*g0;
 		for( j = 1 ; j < radius ; ++j ) 
 			MIDDLE_STRETCH_GAUSS;
 		d1[x] = v1 ;
@@ -2241,10 +2241,10 @@ gauss_component_int2(CARD32 *s1, CARD32 *d1, CARD32 *s2, CARD32 *d2, int radius,
 	}
 	while( --tail > 0 )/*x < len*/
 	{
-		register CARD32 *xs1 = &s1[x];
-		register CARD32 *xs2 = &s2[x];
-		register CARD32 v1 = xs1[0]*g0;
-		register CARD32 v2 = xs2[0]*g0;
+		CARD32 *xs1 = &s1[x];
+		CARD32 *xs2 = &s2[x];
+		CARD32 v1 = xs1[0]*g0;
+		CARD32 v2 = xs2[0]*g0;
 		for( j = 1 ; j < tail ; ++j ) 
 			MIDDLE_STRETCH_GAUSS;
 		for( ; j <radius ; ++j )
@@ -2456,7 +2456,7 @@ ASImage* blur_asimage_gauss(ASVisual* asv, ASImage* src, double dhorz, double dv
 		        		copy_component( lines[y]->channels[chan], res_chan, 0, width);
 					else
 					{	
-						register ASScanline **ysrc = &lines[y];
+						ASScanline **ysrc = &lines[y];
 						int j = 0;
 						GAUSS_COEFF_TYPE g = vert_gauss[0];
 						CARD32 *src_chan1 = ysrc[0]->channels[chan];
@@ -2498,7 +2498,7 @@ ASImage* blur_asimage_gauss(ASVisual* asv, ASImage* src, double dhorz, double dv
 		        		copy_component( lines[y]->channels[chan], res_chan, 0, result.width);
 					else
 					{	
-						register ASScanline **ysrc = &lines[y];
+						ASScanline **ysrc = &lines[y];
 /* surprisingly, having x loops inside y loop yields 30% to 80% better performance */
 						int j = 0;
 						CARD32 *src_chan1 = ysrc[0]->channels[chan];
@@ -2572,7 +2572,7 @@ ASImage* blur_asimage_gauss(ASVisual* asv, ASImage* src, double dhorz, double dv
 		        		copy_component( lines[y]->channels[chan], res_chan, 0, result.width);
 					else
 					{	
-						register ASScanline **ysrc = &lines[y];
+						ASScanline **ysrc = &lines[y];
 						int j = 0;
 						GAUSS_COEFF_TYPE g ;
 						CARD32 *src_chan1 = ysrc[0]->channels[chan];
@@ -2854,7 +2854,7 @@ LOCAL_DEBUG_OUT("adjusting actually...%s", "");
 		}
 		for( y = 0 ; y < max_y ; y++  )
 		{
-			register int x = imdec->buffer.width;
+			int x = imdec->buffer.width;
 			CARD32 *r = imdec->buffer.red;
 			CARD32 *g = imdec->buffer.green;
 			CARD32 *b = imdec->buffer.blue ;

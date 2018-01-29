@@ -148,7 +148,7 @@ apply_tool_2D( ASDrawContext *ctx, int curr_x, int curr_y, CARD32 ratio )
 					if( dst[x] < src[x] ) 
 						dst[x] = src[x] ;
 					/*
-					register CARD32 t = (CARD32)dst[x] + (CARD32)src[x] ;
+					CARD32 t = (CARD32)dst[x] + (CARD32)src[x] ;
 					dst[x] = t > 255? 255 : t ;
 			 		*/
 				}
@@ -1059,8 +1059,8 @@ apply_asdraw_context( ASImage *im, ASDrawContext *ctx, ASFlagType filter )
 		if( get_flags( filter, 0x01<<chan) )
 		{
 			int y;
-			register ASStorageID *rows = im->channels[chan] ;
-			register CARD32 *canvas_row = ctx->canvas ; 
+			ASStorageID *rows = im->channels[chan] ;
+			CARD32 *canvas_row = ctx->canvas ; 
 			for( y = 0 ; y < height ; ++y )
 			{	
 #if defined(LOCAL_DEBUG) && !defined(NO_DEBUG_OUTPUT)

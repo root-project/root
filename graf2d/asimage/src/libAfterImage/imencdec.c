@@ -201,7 +201,7 @@ asimage_erase_line( ASImage * im, ColorPart color, unsigned int y )
 
 /* for consistency sake : */
 void
-copy_component( register CARD32 *src, register CARD32 *dst, int *unused, int len )
+copy_component( CARD32 *src, CARD32 *dst, int *unused, int len )
 {
 #if 1
 #ifdef CARD64
@@ -211,7 +211,7 @@ copy_component( register CARD32 *src, register CARD32 *dst, int *unused, int len
 	double *dsrc = (double*)src;
 	double *ddst = (double*)dst;
 #endif
-	register int i = 0;
+	int i = 0;
 
 	len += len&0x01;
 	len = len>>1 ;
@@ -220,7 +220,7 @@ copy_component( register CARD32 *src, register CARD32 *dst, int *unused, int len
 		ddst[i] = dsrc[i];
 	}while(++i < len );
 #else
-	register int i = 0;
+	int i = 0;
 
 	len += len&0x01;
 	do
@@ -231,9 +231,9 @@ copy_component( register CARD32 *src, register CARD32 *dst, int *unused, int len
 }
 
 static inline int
-set_component( register CARD32 *src, register CARD32 value, int offset, int len )
+set_component( CARD32 *src, CARD32 value, int offset, int len )
 {
-	register int i ;
+	int i ;
 	for( i = offset ; i < len ; ++i )
 		src[i] = value;
 	return len-offset;
@@ -242,9 +242,9 @@ set_component( register CARD32 *src, register CARD32 value, int offset, int len 
 
 
 static inline void
-divide_component( register CARD32 *src, register CARD32 *dst, CARD16 ratio, int len )
+divide_component( CARD32 *src, CARD32 *dst, CARD16 ratio, int len )
 {
-	register int i = 0;
+	int i = 0;
 	len += len&0x00000001;                     /* we are 8byte aligned/padded anyways */
 	if( ratio == 2 )
 	{
@@ -284,8 +284,8 @@ divide_component( register CARD32 *src, register CARD32 *dst, CARD16 ratio, int 
 	}else
 	{
 		do{
-			register int c1 = src[i];
-			register int c2 = src[i+1];
+			int c1 = src[i];
+			int c2 = src[i+1];
 			dst[i] = c1/ratio;
 			dst[i+1] = c2/ratio;
 			i+=2;
@@ -503,7 +503,7 @@ ASImageOutput *
 start_image_output( ASVisual *asv, ASImage *im, ASAltImFormats format,
                     int shift, int quality )
 {
-	register ASImageOutput *imout= NULL;
+	ASImageOutput *imout= NULL;
    int formati = (int) format;
 
 	if( im != NULL )
@@ -603,7 +603,7 @@ stop_image_output( ASImageOutput **pimout )
 {
 	if( pimout )
 	{
-		register ASImageOutput *imout = *pimout;
+		ASImageOutput *imout = *pimout;
 		if( imout )
 		{
 			if( imout->used )
@@ -618,12 +618,12 @@ stop_image_output( ASImageOutput **pimout )
 
 /* diffusingly combine src onto self and dst, and rightbitshift src by quantization shift */
 static inline void
-best_output_filter( register CARD32 *line1, register CARD32 *line2, int unused, int len )
+best_output_filter( CARD32 *line1, CARD32 *line2, int unused, int len )
 {/* we carry half of the quantization error onto the surrounding pixels : */
  /*        X    7/16 */
  /* 3/16  5/16  1/16 */
-	register int i ;
-	register CARD32 errp = 0, err = 0, c;
+	int i ;
+	CARD32 errp = 0, err = 0, c;
 	c = line1[0];
 	if( (c&0xFFFF0000)!= 0 )
 		c = ( c&0x7F000000 )?0:0x0000FFFF;
@@ -646,12 +646,12 @@ best_output_filter( register CARD32 *line1, register CARD32 *line2, int unused, 
 }
 
 static inline void
-fine_output_filter( register CARD32 *src, register CARD32 *dst, short ratio, int len )
+fine_output_filter( CARD32 *src, CARD32 *dst, short ratio, int len )
 {/* we carry half of the quantization error onto the following pixel and store it in dst: */
-	register int i = 0;
+	int i = 0;
 	if( ratio <= 1 )
 	{
-		register int c = src[0];
+		int c = src[0];
   	    do
 		{
 			if( (c&0xFFFF0000)!= 0 )
@@ -663,7 +663,7 @@ fine_output_filter( register CARD32 *src, register CARD32 *dst, short ratio, int
 		}while(1);
 	}else if( ratio == 2 )
 	{
-		register CARD32 c = src[0];
+		CARD32 c = src[0];
   	    do
 		{
 			c = c>>1 ;
@@ -676,7 +676,7 @@ fine_output_filter( register CARD32 *src, register CARD32 *dst, short ratio, int
 		}while( 1 );
 	}else
 	{
-		register CARD32 c = src[0];
+		CARD32 c = src[0];
   	    do
 		{
 			c = c/ratio ;
@@ -691,14 +691,14 @@ fine_output_filter( register CARD32 *src, register CARD32 *dst, short ratio, int
 }
 
 static inline void
-fast_output_filter( register CARD32 *src, register CARD32 *dst, short ratio, int len )
+fast_output_filter( CARD32 *src, CARD32 *dst, short ratio, int len )
 {/*  no error diffusion whatsoever: */
-	register int i = 0;
+	int i = 0;
 	if( ratio <= 1 )
 	{
 		for( ; i < len ; ++i )
 		{
-			register CARD32 c = src[i];
+			CARD32 c = src[i];
 			if( (c&0xFFFF0000) != 0 )
 				dst[i] = ( c&0x7F000000 )?0:0x000000FF;
 			else
@@ -708,7 +708,7 @@ fast_output_filter( register CARD32 *src, register CARD32 *dst, short ratio, int
 	{
 		for( ; i < len ; ++i )
 		{
-			register CARD32 c = src[i]>>1;
+			CARD32 c = src[i]>>1;
 			if( (c&0xFFFF0000) != 0 )
 				dst[i] = ( c&0x7F000000 )?0:0x000000FF;
 			else
@@ -718,7 +718,7 @@ fast_output_filter( register CARD32 *src, register CARD32 *dst, short ratio, int
 	{
 		for( ; i < len ; ++i )
 		{
-			register CARD32 c = src[i]/ratio;
+			CARD32 c = src[i]/ratio;
 			if( (c&0xFFFF0000) != 0 )
 				dst[i] = ( c&0x7F000000 )?0:0x000000FF;
 			else
@@ -728,10 +728,10 @@ fast_output_filter( register CARD32 *src, register CARD32 *dst, short ratio, int
 }
 
 static inline void
-fine_output_filter_mod( register CARD32 *data, int unused, int len )
+fine_output_filter_mod( CARD32 *data, int unused, int len )
 {/* we carry half of the quantization error onto the following pixel : */
-	register int i ;
-	register CARD32 err = 0, c;
+	int i ;
+	CARD32 err = 0, c;
 	for( i = 0 ; i < len ; ++i )
 	{
 		c = data[i];
@@ -755,14 +755,14 @@ decode_asscanline_native( ASImageDecoder *imdec, unsigned int skip, int y )
 	for( i = 0 ; i < IC_NUM_CHANNELS ; i++ )
 		if( get_flags(imdec->filter, 0x01<<i) )
 		{
-			register CARD32 *chan = scl->channels[i]+skip;
+			CARD32 *chan = scl->channels[i]+skip;
 			if( imdec->im )
 				count = fetch_data32( NULL, imdec->im->channels[i][y], chan, imdec->offset_x, width, 0, NULL);
 			else
 				count = 0 ;
 			if( scl->shift )
 			{
-				register int k  = 0;
+				int k  = 0;
 				for(; k < count ; k++ )
 					chan[k] = chan[k]<<8;
 			}
@@ -850,7 +850,7 @@ decode_asscanline_ximage( ASImageDecoder *imdec, unsigned int skip, int y )
 		{
 #ifndef X_DISPLAY_MISSING
 			CARD32 *dst = xim_scl->alpha ;
-			register int x = MIN((int)xim_scl->width,xim->width);
+			int x = MIN((int)xim_scl->width,xim->width);
 			if( xim->depth == 8 )
 			{
 				CARD8  *src = (CARD8*)xim->data+xim->bytes_per_line*y ;
@@ -864,9 +864,9 @@ decode_asscanline_ximage( ASImageDecoder *imdec, unsigned int skip, int y )
 		for( i = 0 ; i < IC_NUM_CHANNELS ; i++ )
 			if( get_flags(filter, 0x01<<i) )
 			{
-				register CARD32 *src = xim_scl->channels[i]+offset_x ;
-				register CARD32 *dst = scl->channels[i]+skip;
-				register int k  = 0;
+				CARD32 *src = xim_scl->channels[i]+offset_x ;
+				CARD32 *dst = scl->channels[i]+skip;
+				int k  = 0;
 				count = xim_width-offset_x ;
 				if( count > width )
 					count = width ;
@@ -902,7 +902,7 @@ decode_asscanline_ximage( ASImageDecoder *imdec, unsigned int skip, int y )
 		{
 #ifndef X_DISPLAY_MISSING
 			CARD32 *dst = scl->alpha+skip ;
-			register int x = MIN(width,xim_width);
+			int x = MIN(width,xim_width);
 			if( xim->depth == 8 )
 			{
 				CARD8  *src = (CARD8*)xim->data+xim->bytes_per_line*y ;
@@ -918,10 +918,10 @@ decode_asscanline_ximage( ASImageDecoder *imdec, unsigned int skip, int y )
 		for( i = 0 ; i < IC_NUM_CHANNELS ; i++ )
 			if( get_flags(filter, 0x01<<i) )
 			{
-				register CARD32 *chan = scl->channels[i]+skip;
+				CARD32 *chan = scl->channels[i]+skip;
 				if( scl->shift )
 				{
-					register int k  = 0;
+					int k  = 0;
 					for(; k < count ; k++ )
 						chan[k] = chan[k]<<8;
 				}
@@ -953,7 +953,7 @@ decode_image_scanline_normal( ASImageDecoder *imdec )
 }
 
 static inline void
-draw_solid_bevel_line( register ASScanline *scl, int alt_left, int hi_end, int lo_start, int alt_right,
+draw_solid_bevel_line( ASScanline *scl, int alt_left, int hi_end, int lo_start, int alt_right,
 					   ARGB32 bevel_color, ARGB32 shade_color, ARGB32 hi_corner, ARGB32 lo_corner )
 {
 	int channel ;
@@ -985,7 +985,7 @@ draw_fading_bevel_sides( ASImageDecoder *imdec,
 					     int left_margin, int left_delta,
 					     int right_delta, int right_margin )
 {
-	register ASScanline *scl = &(imdec->buffer);
+	ASScanline *scl = &(imdec->buffer);
 	ASImageBevel *bevel = imdec->bevel ;
 	CARD32 ha_bevel = ARGB32_ALPHA8(bevel->hi_color);
 	CARD32 ha_shade = ARGB32_ALPHA8(bevel->lo_color);
@@ -997,8 +997,8 @@ draw_fading_bevel_sides( ASImageDecoder *imdec,
 		if( get_flags(scl->flags, (0x01<<channel)) )
 		{
 			CARD32 chan_col = ARGB32_CHAN8(bevel->hi_color,channel)<<scl->shift ;
-			register CARD32 ca = hda_bevel*(left_delta+1) ;
-			register int i = MIN((int)scl->width, imdec->bevel_left+(int)bevel->left_inline-left_delta);
+			CARD32 ca = hda_bevel*(left_delta+1) ;
+			int i = MIN((int)scl->width, imdec->bevel_left+(int)bevel->left_inline-left_delta);
 			CARD32 *chan_img_start = scl->channels[channel] ;
 
 			while( --i >= left_margin )
@@ -1022,7 +1022,7 @@ draw_transp_bevel_sides( ASImageDecoder *imdec,
 					     int left_margin, int left_delta,
 					     int right_delta, int right_margin )
 {
-	register ASScanline *scl = &(imdec->buffer);
+	ASScanline *scl = &(imdec->buffer);
 	ASImageBevel *bevel = imdec->bevel ;
 	CARD32 ha_bevel = ARGB32_ALPHA8(bevel->hi_color)>>1;
 	CARD32 ha_shade = ARGB32_ALPHA8(bevel->lo_color)>>1;
@@ -1032,8 +1032,8 @@ draw_transp_bevel_sides( ASImageDecoder *imdec,
 		if( get_flags(scl->flags, (0x01<<channel)) )
 		{
 			CARD32 chan_col = (ARGB32_CHAN8(bevel->hi_color,channel)<<scl->shift)*ha_bevel ;
-			register CARD32 ca = 255-ha_bevel ;
-			register int i = imdec->bevel_left+(int)bevel->left_inline-left_delta;
+			CARD32 ca = 255-ha_bevel ;
+			int i = imdec->bevel_left+(int)bevel->left_inline-left_delta;
 			CARD32 *chan_img_start = scl->channels[channel] ;
 
 			while( --i >= left_margin )
@@ -1054,7 +1054,7 @@ draw_transp_bevel_line ( ASImageDecoder *imdec,
 						 CARD32 ca,
 						 ARGB32 left_color, ARGB32 color, ARGB32 right_color )
 {
-	register ASScanline *scl = &(imdec->buffer);
+	ASScanline *scl = &(imdec->buffer);
 	ASImageBevel *bevel = imdec->bevel ;
 	int start_point = imdec->bevel_left+(int)bevel->left_inline-left_delta;
 	int end_point   = imdec->bevel_right + right_delta - (int)bevel->right_inline;
@@ -1067,7 +1067,7 @@ draw_transp_bevel_line ( ASImageDecoder *imdec,
 			{
 				CARD32 chan_col = (ARGB32_CHAN8(color,channel)<<scl->shift)*(ca>>8) ;
 				CARD32 *chan_img_start = scl->channels[channel] ;
-				register int i ;
+				int i ;
 				int end_i;
 
 				if( start_point < 0 )
@@ -1095,9 +1095,9 @@ draw_transp_bevel_line ( ASImageDecoder *imdec,
 void
 decode_image_scanline_beveled( ASImageDecoder *imdec )
 {
-	register ASScanline *scl = &(imdec->buffer);
+	ASScanline *scl = &(imdec->buffer);
 	int 	 			 y_out = imdec->next_line- (int)imdec->offset_y;
-	register ASImageBevel *bevel = imdec->bevel ;
+	ASImageBevel *bevel = imdec->bevel ;
 	ARGB32 bevel_color = bevel->hi_color, shade_color = bevel->lo_color;
 	int offset_shade = 0;
 
@@ -1114,7 +1114,7 @@ decode_image_scanline_beveled( ASImageDecoder *imdec )
 	{
 		if( bevel->top_outline > 0 )
 		{
-			register int line = y_out - (imdec->bevel_top - (int)bevel->top_outline);
+			int line = y_out - (imdec->bevel_top - (int)bevel->top_outline);
 			int alt_left  = (line*bevel->left_outline/bevel->top_outline)+1 ;
 			int alt_right = (line*bevel->right_outline/bevel->top_outline)+1 ;
 
@@ -1135,7 +1135,7 @@ decode_image_scanline_beveled( ASImageDecoder *imdec )
 	{
 		if( bevel->bottom_outline > 0 )
 		{
-			register int line = bevel->bottom_outline - (y_out - imdec->bevel_bottom);
+			int line = bevel->bottom_outline - (y_out - imdec->bevel_bottom);
 			int alt_left  = (line*bevel->left_outline/bevel->bottom_outline)+1 ;
 			int alt_right = (line*bevel->right_outline/bevel->bottom_outline)+1 ;
 
@@ -1173,7 +1173,7 @@ decode_image_scanline_beveled( ASImageDecoder *imdec )
 			{
 				if( y_out < imdec->bevel_top+(int)bevel->top_inline)
 				{
-					register int line = y_out - imdec->bevel_top;
+					int line = y_out - imdec->bevel_top;
 					int left_delta  = bevel->left_inline-((line*bevel->left_inline/bevel->top_inline)) ;
 					int right_delta = bevel->right_inline-((line*bevel->right_inline/bevel->top_inline)-1) ;
 
@@ -1185,7 +1185,7 @@ decode_image_scanline_beveled( ASImageDecoder *imdec )
 
 				}else if( y_out >= imdec->bevel_bottom - bevel->bottom_inline)
 				{
-					register int line = y_out - (imdec->bevel_bottom - bevel->bottom_inline);
+					int line = y_out - (imdec->bevel_bottom - bevel->bottom_inline);
 					int left_delta  = (line*bevel->left_inline/bevel->bottom_inline)+1 ;
 					int right_delta = (line*bevel->right_inline/bevel->bottom_inline)-1 ;
 
@@ -1209,7 +1209,7 @@ decode_image_scanline_beveled( ASImageDecoder *imdec )
  
 				if( y_out < imdec->bevel_top+bevel->top_inline)
 				{
-					register int line = y_out - imdec->bevel_top;
+					int line = y_out - imdec->bevel_top;
 					int left_delta  = bevel->left_inline-((line*bevel->left_inline/bevel->top_inline)) ;
 					int right_delta = bevel->right_inline-((line*bevel->right_inline/bevel->top_inline)-1) ;
 	    			CARD32 hda_bevel = (ARGB32_ALPHA8(bevel_color)<<8)/(bevel->left_inline+1) ;
@@ -1226,7 +1226,7 @@ decode_image_scanline_beveled( ASImageDecoder *imdec )
 
 				}else if( y_out >= imdec->bevel_bottom - bevel->bottom_inline)
 				{
-					register int line = y_out - (imdec->bevel_bottom - bevel->bottom_inline);
+					int line = y_out - (imdec->bevel_bottom - bevel->bottom_inline);
 					int left_delta  = (line*bevel->left_inline/bevel->bottom_inline)+1 ;
 					int right_delta = (line*bevel->right_inline/bevel->bottom_inline)-1 ;
 	    			CARD32 hda_shade = (ARGB32_ALPHA8(shade_color)<<8)/(bevel->right_inline+1) ;
@@ -1252,7 +1252,7 @@ decode_image_scanline_beveled( ASImageDecoder *imdec )
 inline static void
 tile_ximage_line( XImage *xim, unsigned int line, int step, int range )
 {
-	register int i ;
+	int i ;
 	int xim_step = step*xim->bytes_per_line ;
 	char *src_line = xim->data+xim->bytes_per_line*line ;
 	char *dst_line = src_line+xim_step ;
@@ -1269,13 +1269,13 @@ encode_image_scanline_mask_xim( ASImageOutput *imout, ASScanline *to_store )
 {
 #ifndef X_DISPLAY_MISSING
 	ASImage *im = imout->im ;
-	register XImage *xim = im->alt.mask_ximage ;
+	XImage *xim = im->alt.mask_ximage ;
 	if( imout->next_line < xim->height && imout->next_line >= 0 )
 	{
 		if( get_flags(to_store->flags, SCL_DO_ALPHA) )
 		{
 			CARD32 *a = to_store->alpha ;
-			register int x = MIN((unsigned int)(xim->width), to_store->width);
+			int x = MIN((unsigned int)(xim->width), to_store->width);
 			if( xim->depth == 8 )
 			{
 				CARD8 *dst = (CARD8*)xim->data+xim->bytes_per_line*imout->next_line ;
@@ -1301,7 +1301,7 @@ void
 encode_image_scanline_xim( ASImageOutput *imout, ASScanline *to_store )
 {
 #ifndef X_DISPLAY_MISSING
-	register XImage *xim = imout->im->alt.ximage ;
+	XImage *xim = imout->im->alt.ximage ;
 	if( imout->next_line < xim->height && imout->next_line >= 0 )
 	{
 		unsigned char *dst = (unsigned char*)xim->data+imout->next_line*xim->bytes_per_line ;
@@ -1369,7 +1369,7 @@ LOCAL_DEBUG_CALLER_OUT( "imout->next_line = %d, imout->im->height = %d", imout->
 		if( imout->tiling_step > 0 )
 		{
 			int bytes_count ;
-			register int i, color ;
+			int i, color ;
 			int line = imout->next_line ;
 			int range = (imout->tiling_range ? imout->tiling_range:imout->im->height);
 			int max_i = MIN((int)imout->im->height,line+range), min_i = MAX(0,line-range) ;
@@ -1396,7 +1396,7 @@ LOCAL_DEBUG_CALLER_OUT( "imout->next_line = %d, imout->im->height = %d", imout->
 			}
 		}else
 		{
-			register int color ;
+			int color ;
 			for( color = 0 ; color < IC_NUM_CHANNELS ; color++ )
 			{
 				if( get_flags(to_store->flags,0x01<<color))
@@ -1421,7 +1421,7 @@ LOCAL_DEBUG_CALLER_OUT( "imout->next_line = %d, imout->im->height = %d", imout->
 inline static void
 tile_argb32_line( ARGB32 *data, unsigned int line, int step, unsigned int width, unsigned int height, int range )
 {
-	register int i ;
+	int i ;
 	ARGB32 *src_line = data+line*width ;
 	ARGB32 *dst_line = src_line+step*width ;
 	int max_i = MIN((int)height,(int)line+range), min_i = MAX(0,(int)line-range) ;
@@ -1436,14 +1436,14 @@ tile_argb32_line( ARGB32 *data, unsigned int line, int step, unsigned int width,
 void
 encode_image_scanline_argb32( ASImageOutput *imout, ASScanline *to_store )
 {
-	register ARGB32 *data = imout->im->alt.argb32 ;
+	ARGB32 *data = imout->im->alt.argb32 ;
 	if( imout->next_line < (int)imout->im->height && imout->next_line >= 0 )
 	{
-		register int x = imout->im->width;
-		register CARD32 *alpha = to_store->alpha ;
-		register CARD32 *red = to_store->red ;
-		register CARD32 *green = to_store->green ;
-		register CARD32 *blue = to_store->blue ;
+		int x = imout->im->width;
+		CARD32 *alpha = to_store->alpha ;
+		CARD32 *red = to_store->red ;
+		CARD32 *green = to_store->green ;
+		CARD32 *blue = to_store->blue ;
 		if( !get_flags(to_store->flags, SCL_DO_RED) )
 			set_component( red, ARGB32_RED8(to_store->back_color), 0, to_store->width );
 		if( !get_flags(to_store->flags, SCL_DO_GREEN) )

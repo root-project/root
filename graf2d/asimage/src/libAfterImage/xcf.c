@@ -146,7 +146,7 @@ read_xcf_image( FILE *fp )
 		{
 			if( prop->id == XCF_PROP_COLORMAP )
 			{
-				register int i ;
+				int i ;
 				CARD32 n = *((CARD32*)(prop->data)) ;
 				n = as_ntohl(n);
 				xcf_im->num_cols = n ;
@@ -182,7 +182,7 @@ read_xcf_image( FILE *fp )
 void
 print_xcf_properties( char* prompt, XcfProperty *prop )
 {
-	register int i = 0 ;
+	int i = 0 ;
 	while( prop )
 	{
 		fprintf( stderr, "%s.properties[%d] = %p\n", prompt, i, prop );
@@ -190,7 +190,7 @@ print_xcf_properties( char* prompt, XcfProperty *prop )
 		fprintf( stderr, "%s.properties[%d].size = %ld\n", prompt, i, (long)prop->len );
 		if( prop->len > 0 )
 		{
-			register unsigned int k ;
+			unsigned int k ;
 			fprintf( stderr, "%s.properties[%d].data = ", prompt, i );
 			for( k = 0 ; k < prop->len ; k++ )
 				fprintf( stderr, "%2.2X ", prop->data[k] );
@@ -235,7 +235,7 @@ print_xcf_hierarchy( char* prompt, XcfHierarchy *h )
 void
 print_xcf_channels( char* prompt, XcfChannel *head, Bool mask )
 {
-	register int i = 0 ;
+	int i = 0 ;
 	char p[256] ;
 	while( head )
 	{
@@ -263,7 +263,7 @@ print_xcf_channels( char* prompt, XcfChannel *head, Bool mask )
 void
 print_xcf_layers( char* prompt, XcfLayer *head )
 {
-	register int i = 0 ;
+	int i = 0 ;
 	char p[256] ;
 	while( head )
 	{
@@ -328,7 +328,7 @@ free_xcf_hierarchy( XcfHierarchy *hierarchy )
 {
 	if( hierarchy )
 	{
-		register XcfLevel *level = hierarchy->levels;
+		XcfLevel *level = hierarchy->levels;
 		while( level )
 		{
 			XcfLevel *next = level->next ;
@@ -723,7 +723,7 @@ read_xcf_tiles_rle( XcfImage *xcf_im, FILE *fp, XcfTile *head )
 static inline void
 store_colors( CARD8 *data, ASScanline *curr_buf, int bpp, int comp, int offset_x, int width )
 {
-	register int i ;
+	int i ;
 	CARD32   *out = NULL;
 	if( comp+1 < bpp || bpp == 3 )
 	{
@@ -780,7 +780,7 @@ decode_xcf_tile_rle( FILE *fp, XcfTile *tile, int bpp,
 		while ( y < height )
 		{
 			int len = *tile_buf ;
-			register int i ;
+			int i ;
 			++tile_buf;
 			--bytes_in;
 			if( len >= 128 )
@@ -845,7 +845,7 @@ Bool
 fix_xcf_image_line( ASScanline *buf, int bpp, unsigned int width, CARD8 *cmap,
 					CARD8 opacity, ARGB32 color )
 {
-	register unsigned int i ;
+	unsigned int i ;
 	Bool do_alpha = False ;
 	if( bpp == 1 )
 	{

@@ -87,7 +87,7 @@ asim_set_application_name (char *argv0)
 	char *temp = &(argv0[0]);
 	do
 	{	/* Save our program name - for error messages */
-		register int i = 1 ;                   /* we don't use standard strrchr since there
+		int i = 1 ;                   /* we don't use standard strrchr since there
 												* seems to be some weirdness in
 												* CYGWIN implementation of it. */
 		asim_ApplicationName =  temp ;
@@ -214,7 +214,7 @@ asim_put_file_home (const char *path_with_home)
 	static char   default_home[3] = "./";
 	static int    home_len = 0;
 	char         *str = NULL, *ptr;
-	register int  i;
+	int  i;
 	if (path_with_home == NULL)
 		return NULL;
 	/* home dir ? */
@@ -304,10 +304,10 @@ char         *
 asim_find_file (const char *file, const char *pathlist, int type)
 {
 	char 		  *path;
-	register int   len;
+	int   len;
 	int            max_path = 0;
-	register char *ptr;
-	register int   i;
+	char *ptr;
+	int   i;
 	Bool local = False ;
 
 	if (file == NULL)
@@ -364,7 +364,7 @@ asim_find_file (const char *file, const char *pathlist, int type)
 			i-- ;
 		if( i > 0 )
 		{
-			register char *try_path = path+max_path-i;
+			char *try_path = path+max_path-i;
 			strncpy( try_path, ptr, i );
 			if (access(try_path, type) == 0)
 			{
@@ -383,7 +383,7 @@ static char         *
 find_envvar (char *var_start, int *end_pos)
 {
 	char          backup, *name_start = var_start;
-	register int  i;
+	int  i;
 	char         *var = NULL;
 
 	if (var_start[0] == '{')
@@ -511,7 +511,7 @@ int
 asim_mystrcasecmp (const char *s1, const char *s2)
 {
 	int          c1, c2;
-	register int i = 0 ;
+	int i = 0 ;
 
 	if (s1 == NULL || s2 == NULL)
 		return (s1 == s2) ? 0 : ((s1==NULL)?1:-1);
@@ -536,8 +536,8 @@ asim_mystrcasecmp (const char *s1, const char *s2)
 int
 asim_mystrncasecmp (const char *s1, const char *s2, size_t n)
 {
-	register int  c1, c2;
-	register int i = 0 ;
+	int  c1, c2;
+	int i = 0 ;
 
 	if (s1 == NULL || s2 == NULL)
 		return (s1 == s2) ? 0 : ((s1==NULL)?1:-1);
@@ -588,7 +588,7 @@ const char *asim_parse_argb_color( const char *color, CARD32 *pargb )
 		{
 			CARD32 argb = 0 ;
 			int len = 0 ;
-			register const char *ptr = color+1 ;
+			const char *ptr = color+1 ;
 			while( isxdigit((int)ptr[len]) ) len++;
 			if( len >= 3)
 			{
@@ -634,7 +634,7 @@ const char *asim_parse_argb_color( const char *color, CARD32 *pargb )
 			/* does not really matter here what screen to use : */
 			Display *dpy = get_default_asvisual()->dpy;
 #ifdef X_DISPLAY_MISSING
-			register const char *ptr = &(color[0]);
+			const char *ptr = &(color[0]);
             if(!FindColor(color, pargb))
                 return color;
     		while( !isspace((int)*ptr) && *ptr != '\0' ) ptr++;
@@ -644,7 +644,7 @@ const char *asim_parse_argb_color( const char *color, CARD32 *pargb )
 				return color ;
 			else
 			{
-				register const char *ptr = &(color[0]);
+				const char *ptr = &(color[0]);
 #ifndef X_DISPLAY_MISSING
 				XColor xcol, xcol_scr ;
 /* XXX Not sure if Scr.asv->colormap is always defined here.  If not,
@@ -801,7 +801,7 @@ asim_create_ashash (ASHashKey size,
 static void
 destroy_ashash_bucket (ASHashBucket * bucket, void (*item_destroy_func) (ASHashableValue, void *))
 {
-	register ASHashItem *item, *next;
+	ASHashItem *item, *next;
 
 	for (item = *bucket; item != NULL; item = next)
 	{
@@ -819,7 +819,7 @@ asim_destroy_ashash (ASHashTable ** hash)
 LOCAL_DEBUG_CALLER_OUT( " hash = %p, *hash = %p", hash, *hash  );
 	if (*hash)
 	{
-		register int  i;
+		int  i;
 
 		for (i = (*hash)->size - 1; i >= 0; i--)
 			if ((*hash)->buckets[i])
@@ -839,7 +839,7 @@ add_item_to_bucket (ASHashBucket * bucket, ASHashItem * item, long (*compare_fun
 	/* first check if we already have this item */
 	for (tmp = bucket; *tmp != NULL; tmp = &((*tmp)->next))
 	{
-		register long res = compare_func ((*tmp)->value, item->value);
+		long res = compare_func ((*tmp)->value, item->value);
 
 		if (res == 0)
 			return ((*tmp)->data == item->data) ? ASH_ItemExistsSame : ASH_ItemExistsDiffer;
@@ -895,8 +895,8 @@ static ASHashItem **
 find_item_in_bucket (ASHashBucket * bucket,
 					 ASHashableValue value, long (*compare_func) (ASHashableValue, ASHashableValue))
 {
-	register ASHashItem **tmp;
-	register long res;
+	ASHashItem **tmp;
+	long res;
 
 	/* first check if we already have this item */
 	for (tmp = bucket; *tmp != NULL; tmp = &((*tmp)->next))
@@ -993,7 +993,7 @@ ASHashKey asim_pointer_hash_value (ASHashableValue value, ASHashKey hash_size)
         void *ptr;
         ASHashKey key[2];
     } mix;
-    register  ASHashKey key;
+     ASHashKey key;
 
     mix.ptr = (void*)value;
     key = mix.key[0]^mix.key[1] ;
@@ -1007,9 +1007,9 @@ ASHashKey
 asim_string_hash_value (ASHashableValue value, ASHashKey hash_size)
 {
 	ASHashKey     hash_key = 0;
-	register int  i = 0;
+	int  i = 0;
 	char         *string = (char*)value;
-	register char c;
+	char c;
 
 	do
 	{
@@ -1025,9 +1025,9 @@ asim_string_hash_value (ASHashableValue value, ASHashKey hash_size)
 long
 asim_string_compare (ASHashableValue value1, ASHashableValue value2)
 {
-	register char *str1 = (char*)value1;
-	register char *str2 = (char*)value2;
-	register int   i = 0 ;
+	char *str1 = (char*)value1;
+	char *str2 = (char*)value2;
+	int   i = 0 ;
 
 	if (str1 == str2)
 		return 0;
@@ -1056,9 +1056,9 @@ ASHashKey
 asim_casestring_hash_value (ASHashableValue value, ASHashKey hash_size)
 {
 	ASHashKey     hash_key = 0;
-	register int  i = 0;
+	int  i = 0;
 	char         *string = (char*)value;
-	register int c;
+	int c;
 
 	do
 	{
@@ -1077,9 +1077,9 @@ asim_casestring_hash_value (ASHashableValue value, ASHashKey hash_size)
 long
 asim_casestring_compare (ASHashableValue value1, ASHashableValue value2)
 {
-	register char *str1 = (char*)value1;
-	register char *str2 = (char*)value2;
-	register int   i = 0;
+	char *str1 = (char*)value1;
+	char *str2 = (char*)value2;
+	int   i = 0;
 
 	if (str1 == str2)
 		return 0;
@@ -1196,7 +1196,7 @@ asim_start_ticker (unsigned int size)
 	_as_ticker_last_tick = times (&t);		   /* in system ticks */
 	if (_as_ticker_tick_time == 0)
 	{
-		register clock_t delta = _as_ticker_last_tick;
+		clock_t delta = _as_ticker_last_tick;
 		/* calibrating clock - how many ms per cpu tick ? */
 		sleep_a_little (100);
 		_as_ticker_last_tick = times (&t);
@@ -1219,9 +1219,9 @@ asim_wait_tick ()
 {
 #ifndef _WIN32
 	struct tms    t;
-	register clock_t curr = (times (&t) - _as_ticker_last_tick) * _as_ticker_tick_time;
+	clock_t curr = (times (&t) - _as_ticker_last_tick) * _as_ticker_tick_time;
 #else
-	register int curr = (time(NULL) - _as_ticker_last_tick) * _as_ticker_tick_time;
+	int curr = (time(NULL) - _as_ticker_last_tick) * _as_ticker_tick_time;
 #endif
 
 	if (curr < _as_ticker_tick_size)
@@ -1671,7 +1671,7 @@ int asim_xml_parse(const char* str, xml_elem_t* current, ASHashTable *vocabulary
 
 char *asim_interpret_ctrl_codes( char *text )
 {
-	register char *ptr = text ;
+	char *ptr = text ;
 	int len, curr = 0 ;
 	if( ptr == NULL )  return NULL ;	
 
@@ -1694,7 +1694,7 @@ char *asim_interpret_ctrl_codes( char *text )
 			}	 
 			if( subst ) 
 			{
-				register int i = curr ; 
+				int i = curr ; 
 				ptr[i] = subst ;
 				while( ++i < len ) 
 					ptr[i] = ptr[i+1] ; 
@@ -1821,7 +1821,7 @@ add_xml_buffer_close_tag( ASXmlBuffer *xb, xml_elem_t *tag )
 int 
 asim_spool_xml_tag( ASXmlBuffer *xb, char *tmp, int len )
 {
-	register int i = 0 ; 
+	int i = 0 ; 
 	
 	if( !xb->verbatim && !xb->quoted && 
 		(xb->state != ASXML_Start || xb->level == 0 )) 

@@ -960,7 +960,7 @@ parse_charset_name( const char *name )
 	while( set < SUPPORTED_CHARSETS_NUM )
 	{
 		char **aliases =&(_as_charset_names[set][0]) ;
-		register int i = 0 ;
+		int i = 0 ;
 		char c;
 		while( (c = aliases[i][0]) != '\0' )
 		{

@@ -197,9 +197,9 @@ open_writable_image_file( const char *path )
 }
 
 void
-scanline2raw( register CARD8 *row, ASScanline *buf, CARD8 *gamma_table, unsigned int width, Bool grayscale, Bool do_alpha )
+scanline2raw( CARD8 *row, ASScanline *buf, CARD8 *gamma_table, unsigned int width, Bool grayscale, Bool do_alpha )
 {
-	register int x = width;
+	int x = width;
 
 	if( grayscale )
 		row += do_alpha? width<<1 : width ;
@@ -280,7 +280,7 @@ ASImage2xpm ( ASImage *im, const char *path, ASImageExportParams *params )
 	START_TIME(started);
 	static const ASXpmExportParams defaultsXPM = { ASIT_Xpm, EXPORT_ALPHA, 4, 127, 512 };
 	ASImageExportParams defaults;
-	register char *ptr ;
+	char *ptr ;
 
 	LOCAL_DEBUG_CALLER_OUT ("(\"%s\")", path);
 
@@ -322,8 +322,8 @@ LOCAL_DEBUG_OUT("writing file%s","");
 		fputc( '"', outfile );
 		for( x = 0; x < im->width ; x++ )
 		{
-			register int idx = (row_pointer[x] >= 0)? row_pointer[x] : transp_idx ;
-			register char *ptr = &(xpm_cmap.char_code[idx*(xpm_cmap.cpp+1)]) ;
+			int idx = (row_pointer[x] >= 0)? row_pointer[x] : transp_idx ;
+			char *ptr = &(xpm_cmap.char_code[idx*(xpm_cmap.cpp+1)]) ;
 LOCAL_DEBUG_OUT( "(%d,%d)->%d (row_pointer %d )", x, y, idx, row_pointer[x] );
             if( idx > (int)cmap.count )
                 show_error("bad XPM color index :(%d,%d) -> %d, %d: %s", x, y, idx, row_pointer[x], ptr );
@@ -362,7 +362,7 @@ ASImage2xpmRawBuff ( ASImage *im, CARD8 **buffer, int *size, ASImageExportParams
 	START_TIME(started);
 	static const ASXpmExportParams defaultsXPM = { ASIT_Xpm, EXPORT_ALPHA, 4, 127, 512 };
         ASImageExportParams defaults;
-	register char *ptr ;
+	char *ptr ;
    char *curr;
 
    if( params == NULL ) {
@@ -430,8 +430,8 @@ LOCAL_DEBUG_OUT("building charmap%s","");
 
 		for( x = 0; x < im->width ; x++ )
 		{
-			register int idx = (row_pointer[x] >= 0)? row_pointer[x] : transp_idx ;
-			register char *ptr = &(xpm_cmap.char_code[idx*(xpm_cmap.cpp+1)]) ;
+			int idx = (row_pointer[x] >= 0)? row_pointer[x] : transp_idx ;
+			char *ptr = &(xpm_cmap.char_code[idx*(xpm_cmap.cpp+1)]) ;
          int len = strlen(ptr);
 
             if( idx > (int)cmap.count )
@@ -478,7 +478,7 @@ ASImage2xpm ( ASImage *im, const char *path,  ASImageExportParams *params )
 /***********************************************************************************/
 #ifdef HAVE_PNG		/* PNG PNG PNG PNG PNG PNG PNG PNG PNG PNG PNG PNG PNG PNG PNG PNG */
 static Bool
-ASImage2png_int ( ASImage *im, void *data, png_rw_ptr write_fn, png_flush_ptr flush_fn, register ASImageExportParams *params )
+ASImage2png_int ( ASImage *im, void *data, png_rw_ptr write_fn, png_flush_ptr flush_fn, ASImageExportParams *params )
 {
 	png_structp png_ptr  = NULL;
 	png_infop   info_ptr = NULL;
@@ -579,7 +579,7 @@ ASImage2png_int ( ASImage *im, void *data, png_rw_ptr write_fn, png_flush_ptr fl
 		row_pointer = safemalloc( im->width*(has_alpha?2:1));
 		for ( y = 0 ; y < (int)im->height ; y++ )
 		{
-			register int i = im->width;
+			int i = im->width;
 			CARD8   *ptr = (CARD8*)row_pointer;
 
 			imdec->decode_image_scanline( imdec );
@@ -601,7 +601,7 @@ ASImage2png_int ( ASImage *im, void *data, png_rw_ptr write_fn, png_flush_ptr fl
 		row_pointer = safecalloc( im->width * (has_alpha?4:3), 1 );
 		for (y = 0; y < (int)im->height; y++)
 		{
-			register int i = im->width;
+			int i = im->width;
 			CARD8   *ptr = (CARD8*)(row_pointer+(i-1)*(has_alpha?4:3)) ;
 			imdec->decode_image_scanline( imdec );
 			if( has_alpha )
@@ -640,7 +640,7 @@ ASImage2png_int ( ASImage *im, void *data, png_rw_ptr write_fn, png_flush_ptr fl
 }
 
 Bool
-ASImage2png ( ASImage *im, const char *path, register ASImageExportParams *params )
+ASImage2png ( ASImage *im, const char *path, ASImageExportParams *params )
 {
 	FILE *outfile;
 	Bool res ;
@@ -832,7 +832,7 @@ ASImage2jpeg( ASImage *im, const char *path,  ASImageExportParams *params )
 		row_pointer[0] = safemalloc( im->width );
 		for (y = 0; y < (int)im->height; y++)
 		{
-			register int i = im->width;
+			int i = im->width;
 			CARD8   *ptr = (CARD8*)row_pointer[0];
 			imdec->decode_image_scanline( imdec );
 			while( --i >= 0 ) /* normalized graylevel computing :  */
@@ -844,7 +844,7 @@ ASImage2jpeg( ASImage *im, const char *path,  ASImageExportParams *params )
 		row_pointer[0] = safemalloc( im->width * 3 );
 		for (y = 0; y < (int)im->height; y++)
 		{
-			register int i = (int)im->width;
+			int i = (int)im->width;
 			CARD8   *ptr = (CARD8*)(row_pointer[0]+(i-1)*3) ;
 LOCAL_DEBUG_OUT( "decoding  row %d", y );
 			imdec->decode_image_scanline( imdec );
@@ -1180,8 +1180,8 @@ Bool ASImage2gif( ASImage *im, const char *path,  ASImageExportParams *params )
 		/* it appears to be much faster to write image out in line by line fashion */
 		for( y = 0 ; y < (int)im->height ; y++ )
 		{
-			register int x = im->width ;
-			register int *src = mapped_im + x*y;
+			int x = im->width ;
+			int *src = mapped_im + x*y;
 	  	    while( --x >= 0 )
 	  			row_pointer[x] = src[x] ;
 #if (GIFLIB_MAJOR>=5)
@@ -1325,7 +1325,7 @@ ASImage2tiff( ASImage *im, const char *path, ASImageExportParams *params)
 
 	for (row = 0; row < im->height; ++row)
 	{
-		register int i = im->width, k = (im->width-1)*nsamples ;
+		int i = im->width, k = (im->width-1)*nsamples ;
 		imdec->decode_image_scanline( imdec );
 
 		if( has_alpha )

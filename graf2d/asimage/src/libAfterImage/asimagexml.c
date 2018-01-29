@@ -231,7 +231,7 @@ compose_asimage_xml_from_doc(ASVisual *asv, ASImageManager *imman, ASFontManager
 
 		if( !local_dir_included )
 		{
-			register int i = 0;
+			int i = 0;
 			char **paths = my_imman->search_path ;
 			while( i < MAX_SEARCH_PATHS && paths[i] != NULL ) ++i;
 			if( i < MAX_SEARCH_PATHS ) 
@@ -2138,7 +2138,7 @@ handle_asxml_tag_tile( ASImageXMLState *state, xml_elem_t* doc, xml_elem_t* parm
 	}
 	if( complement_str )
 	{
-		register char *ptr = complement_str ;
+		char *ptr = complement_str ;
 		CARD32 a = ARGB32_ALPHA8(tint),
 				r = ARGB32_RED8(tint),
 				g = ARGB32_GREEN8(tint),

@@ -155,7 +155,7 @@ LOCAL_DEBUG_CALLER_OUT( "src = %p, offset_x = %d, offset_y = %d, to_width = %d, 
 
 	for( y = 0 ; y < max_y ; y++  )
 	{
-		register int x = to_width;
+		int x = to_width;
 		imdec->decode_image_scanline( imdec );
 		/* convert to DIB bits : */
 		curr -= pad ;
