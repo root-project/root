@@ -46,8 +46,8 @@ It is called by a pull down menu item of TASImage.
 #   include <win32/config.h>
 #   include <win32/afterbase.h>
 #endif
-#   include <afterimage.h>
 extern "C" {
+#   include <afterimage.h>
 #   include <bmp.h>
 }
 
