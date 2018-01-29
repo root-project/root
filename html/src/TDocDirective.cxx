@@ -309,7 +309,7 @@ void TDocMacroDirective::SubProcess(const TString& what, const TString& out) {
 
 #ifdef R__BEPAEPSTLICHERALSDERPAPST
    // ensure objRet is not e.g. the TGMainFrame of a new TCanvas: require padSave == gPad
-   if (objRet != gPad && padSave == gPad)
+   if (objRet != gPad && padSave == gPad) {
       delete objRet;
    }
 #endif
