@@ -43,10 +43,11 @@ be changed using the method `SetFillColor` and retrieved using the
 method `GetFillColor`.
 The following table shows the first 50 default colors.
 
-Begin_Macro
+Begin_Macro("width=500")
 {
-   TCanvas *c = new TCanvas("c","Fill Area colors",0,0,500,200);
+   TCanvas *c = new TCanvas("c","Fill Area colors",0,0,1500,600);
    c->DrawColorTable();
+   return c;
 }
 End_Macro
 
@@ -87,9 +88,11 @@ in your code instead of hardcoded color numbers, eg:
    myLine.SetLineColor(kMagenta+2);
 ~~~
 
-Begin_Macro
+Begin_Macro("width=400")
 {
    TColorWheel *w = new TColorWheel();
+   cw = new TCanvas("cw","cw",0,0,1200,1200);
+   w->SetCanvas(cw);
    w->Draw();
 }
 End_Macro
@@ -159,8 +162,8 @@ customized using:
   -  `gStyle->SetHatchesSpacing()` to define the spacing between hatches.
   -  `gStyle->SetHatchesLineWidth()` to define the hatches line width.
 
-Begin_Macro
-fillpatterns.C
+Begin_Macro ("width=500")
+fillpatterns.C(1500,2100)
 End_Macro
 */
 

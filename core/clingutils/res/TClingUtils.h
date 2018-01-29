@@ -460,7 +460,8 @@ ROOT::ESTLType IsSTLContainer(const clang::FieldDecl &m);
 int IsSTLContainer(const clang::CXXBaseSpecifier &base);
 
 void foreachHeaderInModule(const clang::Module &module,
-                           const std::function<void(const clang::Module::Header &)> &closure);
+                           const std::function<void(const clang::Module::Header &)> &closure,
+                           bool includeDirectlyUsedModules = true);
 
 //______________________________________________________________________________
 const char *ShortTypeName(const char *typeDesc);
@@ -537,12 +538,6 @@ llvm::StringRef GetFileName(const clang::Decl& decl,
 //______________________________________________________________________________
 // Return the dictionary file name for a module
 std::string GetModuleFileName(const char* moduleName);
-
-//______________________________________________________________________________
-// Declare a virtual module.map to clang. Returns Module on success.
-clang::Module* declareModuleMap(clang::CompilerInstance* CI,
-                                 const char* moduleFileName,
-                                 const char* headers[]);
 
 //______________________________________________________________________________
 // Return (in the argument 'output') a mangled version of the C++ symbol/type (pass as 'input')

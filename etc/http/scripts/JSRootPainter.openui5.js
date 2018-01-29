@@ -168,8 +168,6 @@
 
             if (typeof arg == 'function') { func = arg; arg = name;  }
 
-            // if ((arg==null) || (typeof arg != 'string')) arg = name;
-
             if (name.indexOf("chk:")==0) { name = name.substr(4); checked = true; } else
             if (name.indexOf("unk:")==0) { name = name.substr(4); checked = false; }
 

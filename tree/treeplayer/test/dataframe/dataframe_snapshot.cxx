@@ -57,6 +57,7 @@ protected:
 };
 #endif
 
+// fixture that provides fixed and variable sized arrays as TDF columns
 class TDFSnapshotArrays : public ::testing::Test {
 protected:
    const static unsigned int kNEvents = 10u;
@@ -100,6 +101,38 @@ protected:
 const std::vector<std::string> TDFSnapshotArrays::kFileNames = {"test_snapshotarray1.root", "test_snapshotarray2.root"};
 
 /********* SINGLE THREAD TESTS ***********/
+
+// Test for ROOT-9210
+TEST_F(TDFSnapshot, Snapshot_aliases)
+{
+   std::string alias0("myalias0");
+   auto tdfa = tdf.Alias(alias0, "ans");
+   testing::internal::CaptureStderr();
+   auto snap = tdfa.Snapshot<int>("mytree", "Snapshot_aliases.root", {alias0});
+   std::string err = testing::internal::GetCapturedStderr();
+   EXPECT_TRUE(err.empty()) << err;
+   EXPECT_STREQ(snap.GetColumnNames()[0].c_str(), alias0.c_str());
+
+   auto takenCol = snap.Alias("a", alias0).Take<int>("a");
+   for (auto i : takenCol) {
+      EXPECT_EQ(42, i);
+   }
+}
+
+// Test for ROOT-9122
+TEST_F(TDFSnapshot, Snapshot_nocolumnmatch)
+{
+   TDataFrame d(1);
+   int ret(1);
+   try {
+      testing::internal::CaptureStderr();
+      d.Snapshot("t", "f.root", "x");
+   } catch (const std::runtime_error &e) {
+      ret = 0;
+   }
+   EXPECT_EQ(0, ret);
+}
+
 void test_snapshot_update(TInterface<TLoopManager> &tdf)
 {
    // test snapshotting two trees to the same file with two snapshots and the "UPDATE" option
@@ -227,6 +260,80 @@ TEST_F(TDFSnapshotArrays, SingleThreadJitted)
    checkSnapshotArrayFile(dj, kNEvents);
 }
 
+void WriteColsWithCustomTitles(const std::string &tname, const std::string &fname)
+{
+   int i;
+   float f;
+   int a[2];
+   TFile file(fname.c_str(), "RECREATE");
+   TTree t(tname.c_str(), tname.c_str());
+   auto b = t.Branch("float", &f);
+   b->SetTitle("custom title");
+   b = t.Branch("i", &i);
+   b->SetTitle("custom title");
+   b = t.Branch("arrint", &a, "arrint[2]/I");
+   b->SetTitle("custom title");
+   b = t.Branch("vararrint", &a, "vararrint[i]/I");
+   b->SetTitle("custom title");
+
+   i = 1;
+   a[0] = 42;
+   a[1] = 84;
+   f = 4.2;
+   t.Fill();
+
+   i = 2;
+   f = 8.4;
+   t.Fill();
+
+   t.Write();
+}
+
+void CheckColsWithCustomTitles(unsigned long long int entry, int i, const TDF::TArrayBranch<int> &arrint,
+                               const TDF::TArrayBranch<int> &vararrint, float f)
+{
+   if (entry == 0) {
+      EXPECT_EQ(i, 1);
+      EXPECT_EQ(arrint.size(), 2u);
+      EXPECT_EQ(arrint[0], 42);
+      EXPECT_EQ(arrint[1], 84);
+      EXPECT_EQ(vararrint.size(), 1u);
+      EXPECT_EQ(vararrint[0], 42);
+      EXPECT_FLOAT_EQ(f, 4.2f);
+   } else if (entry == 1) {
+      EXPECT_EQ(i, 2);
+      EXPECT_EQ(arrint.size(), 2u);
+      EXPECT_EQ(arrint[0], 42);
+      EXPECT_EQ(arrint[1], 84);
+      EXPECT_EQ(vararrint.size(), 2u);
+      EXPECT_EQ(vararrint[0], 42);
+      EXPECT_EQ(vararrint[1], 84);
+      EXPECT_FLOAT_EQ(f, 8.4f);
+   } else
+      throw std::runtime_error("tree has more entries than expected");
+}
+
+TEST(TDFSnapshotMore, ColsWithCustomTitles)
+{
+   const auto fname = "colswithcustomtitles.root";
+   const auto tname = "t";
+
+   // write test tree
+   WriteColsWithCustomTitles(tname, fname);
+
+   // read and write test tree with TDF
+   TDataFrame d(tname, fname);
+   const std::string prefix = "snapshotted_";
+   auto res_tdf = d.Snapshot(tname, prefix + fname);
+
+   // check correct results have been written out
+   res_tdf.Foreach(CheckColsWithCustomTitles, {"tdfentry_", "i", "arrint", "vararrint", "float"});
+
+   // clean-up
+   gSystem->Unlink(fname);
+   gSystem->Unlink((prefix + fname).c_str());
+}
+
 /********* MULTI THREAD TESTS ***********/
 #ifdef R__USE_IMT
 TEST_F(TDFSnapshotMT, Snapshot_update)
@@ -309,6 +416,29 @@ TEST_F(TDFSnapshotArrays, MultiThreadJitted)
 
    checkSnapshotArrayFileMT(dj, kNEvents);
 
+   ROOT::DisableImplicitMT();
+}
+
+TEST(TDFSnapshotMore, ColsWithCustomTitlesMT)
+{
+   const auto fname = "colswithcustomtitlesmt.root";
+   const auto tname = "t";
+
+   // write test tree
+   WriteColsWithCustomTitles(tname, fname);
+
+   // read and write test tree with TDF (in parallel)
+   ROOT::EnableImplicitMT(4);
+   TDataFrame d(tname, fname);
+   const std::string prefix = "snapshotted_";
+   auto res_tdf = d.Snapshot(tname, prefix + fname);
+
+   // check correct results have been written out
+   res_tdf.Foreach(CheckColsWithCustomTitles, {"tdfentry_", "i", "arrint", "vararrint", "float"});
+
+   // clean-up
+   gSystem->Unlink(fname);
+   gSystem->Unlink((prefix + fname).c_str());
    ROOT::DisableImplicitMT();
 }
 #endif

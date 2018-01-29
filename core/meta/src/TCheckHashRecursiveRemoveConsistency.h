@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TCheckHashRecurveRemoveConsistency
-#define ROOT_TCheckHashRecurveRemoveConsistency
+#ifndef ROOT_TCheckHashRecursiveRemoveConsistency
+#define ROOT_TCheckHashRecursiveRemoveConsistency
 
 #include "TBaseClass.h"
 #include "TClass.h"
@@ -25,7 +25,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
-// TCheckHashRecurveRemoveConsistency                                   //
+// TCheckHashRecursiveRemoveConsistency                                 //
 //                                                                      //
 // Utility class to discover whether a class that overload              //
 // TObject::Hash also (as required) calls RecursiveRemove in its        //
@@ -36,7 +36,7 @@
 namespace ROOT {
 namespace Internal {
 
-class TCheckHashRecurveRemoveConsistency : public TObject {
+class TCheckHashRecursiveRemoveConsistency : public TObject {
 public:
    struct Value {
       ULong_t  fRecordedHash;
@@ -50,7 +50,7 @@ public:
 public:
    // Default constructors.  Adds object to the list of
    // cleanups.
-   TCheckHashRecurveRemoveConsistency()
+   TCheckHashRecursiveRemoveConsistency()
    {
       SetBit(kMustCleanup);
       gROOT->GetListOfCleanups()->Add(this);
@@ -60,7 +60,7 @@ public:
    // Hash so it can rely on the base class to call
    // RecursiveRemove (and hence remove this from the list
    // of cleanups).
-   ~TCheckHashRecurveRemoveConsistency() = default;
+   ~TCheckHashRecursiveRemoveConsistency() = default;
 
    void Add(TObject *obj)
    {
@@ -106,10 +106,16 @@ public:
       }
    }
 
-   bool CheckRecursiveRemove(TClass &classRef)
+   enum EResult {
+      kInconsistent,
+      kInconclusive,
+      kConsistent
+   };
+
+   EResult CheckRecursiveRemove(TClass &classRef)
    {
       if (!classRef.HasDefaultConstructor() || classRef.Property() & kIsAbstract)
-         return false; // okay that's probably a false negative ...
+         return kInconclusive; // okay that's probably a false negative ...
 
       auto size = fCont.size();
       TObject *obj = (TObject *)classRef.DynamicCast(TObject::Class(), classRef.New(TClass::kDummyNew));
@@ -122,16 +128,16 @@ public:
          //   " or one of its base classes override TObject::Hash but does not call TROOT::CallRecursiveRemoveIfNeeded
          //   in its destructor.\n";
          SlowRemove(obj);
-         return false;
+         return kInconsistent;
       } else {
-         return true;
+         return kConsistent;
       }
    }
 
    TClass *FindMissingRecursiveRemove(TClass &classRef)
    {
 
-      if (classRef.HasLocalHashMember() && !CheckRecursiveRemove(classRef)) {
+      if (classRef.HasLocalHashMember() && CheckRecursiveRemove(classRef) != kConsistent) {
          return &classRef;
       }
 
@@ -153,6 +159,38 @@ public:
          return true;
    }
 
+   EResult HasConsistentHashMember(TClass &classRef)
+   {
+      // Use except if the class is non-default/abstract and HasLocalHashMember.
+      if (classRef.fRuntimeProperties) {
+         // We already did this testing for this class.
+         return classRef.HasConsistentHashMember() ? kConsistent : kInconsistent;
+      }
+
+      if (classRef.HasLocalHashMember())
+         return CheckRecursiveRemove(classRef);
+
+      EResult baseResult = kConsistent;
+      for (auto base : ROOT::Detail::TRangeStaticCast<TBaseClass>(classRef.GetListOfBases())) {
+         TClass *baseCl = base->GetClassPointer();
+
+         if (baseCl->HasLocalHashMember() &&
+            (!baseCl->HasDefaultConstructor() || baseCl->Property() & kIsAbstract))
+         {
+            // We won't be able to check the base class, we need to (try) to check
+            // this class even-though it does not have a local HashMember.
+            return CheckRecursiveRemove(classRef);
+         }
+         auto baseConsistency = HasConsistentHashMember(*baseCl);
+         if (baseConsistency == kInconsistent) {
+            baseResult = kInconsistent;
+         } else if (baseConsistency == kInconclusive) {
+            return CheckRecursiveRemove(classRef);
+         }
+      }
+      return baseResult;
+   }
+
    bool VerifyRecursiveRemove(TClass &classRef)
    {
       // If the class does not inherit from TObject, the setup is always 'correct'
@@ -160,21 +198,22 @@ public:
       if (!classRef.IsTObject())
          return true;
 
-      if (!classRef.HasDefaultConstructor() || classRef.Property() & kIsAbstract)
+      if (classRef.HasLocalHashMember() &&
+          (!classRef.HasDefaultConstructor() || classRef.Property() & kIsAbstract))
          // We won't be able to check, so assume the worst but don't issue any
          // error message.
          return false;
 
-      if (!CheckRecursiveRemove(classRef)) {
+      if (HasConsistentHashMember(classRef) != kConsistent) {
          TClass *failing = FindMissingRecursiveRemove(classRef);
 
          // Because ClassDefInline does not yet support class template on all platforms,
          // we have no ClassDef and thus can not get a good message from TObject::Error.
-         constexpr const char *funcName = "ROOT::Internal::TCheckHashRecurveRemoveConsistency::CheckRecursiveRemove";
+         constexpr const char *funcName = "ROOT::Internal::TCheckHashRecursiveRemoveConsistency::CheckRecursiveRemove";
          if (failing) {
             ::Error(funcName,
-                    "The class %s overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor.",
-                    failing->GetName());
+                    "The class %s overrides TObject::Hash but does not call TROOT::RecursiveRemove in its destructor (seen while checking %s).",
+                    failing->GetName(),classRef.GetName());
          } else {
             ::Error(funcName, "The class %s "
                               "or one of its base classes override TObject::Hash but does not call "
@@ -188,14 +227,14 @@ public:
 
    static bool Check(TClass &classRef)
    {
-      TCheckHashRecurveRemoveConsistency checker;
+      TCheckHashRecursiveRemoveConsistency checker;
       return checker.VerifyRecursiveRemove(classRef);
    }
 
-   ClassDefInline(TCheckHashRecurveRemoveConsistency, 0);
+   ClassDefInline(TCheckHashRecursiveRemoveConsistency, 0);
 };
 
 } // namespace Internal
 } // namespace ROOT
 
-#endif // ROOT__TCheckHashRecurveRemoveConsistency
+#endif // ROOT__TCheckHashRecursiveRemoveConsistency

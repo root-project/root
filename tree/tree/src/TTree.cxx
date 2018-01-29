@@ -4453,8 +4453,9 @@ Int_t TTree::Fill()
       fBranchRef->Clear();
 
 #ifdef R__USE_IMT
+   const auto useIMT = ROOT::IsImplicitMTEnabled() && fIMTEnabled;
    ROOT::Internal::TBranchIMTHelper imtHelper;
-   if (fIMTEnabled) {
+   if (useIMT) {
       fIMTFlush = true;
       fIMTZipBytes.store(0);
       fIMTTotBytes.store(0);
@@ -4471,7 +4472,7 @@ Int_t TTree::Fill()
 #ifndef R__USE_IMT
       nwrite = branch->FillImpl(nullptr);
 #else
-      nwrite = branch->FillImpl(fIMTEnabled ? &imtHelper : nullptr);
+      nwrite = branch->FillImpl(useIMT ? &imtHelper : nullptr);
 #endif
       if (nwrite < 0) {
          if (nerror < 2) {
@@ -4952,7 +4953,8 @@ Int_t TTree::FlushBaskets() const
    Int_t nb = lb->GetEntriesFast();
 
 #ifdef R__USE_IMT
-   if (fIMTEnabled) {
+   const auto useIMT = ROOT::IsImplicitMTEnabled() && fIMTEnabled;
+   if (useIMT) {
       if (fSortedBranches.empty()) { const_cast<TTree*>(this)->InitializeBranchLists(false); }
 
       BoolRAIIToggle sentry(fIMTFlush);
@@ -4961,7 +4963,7 @@ Int_t TTree::FlushBaskets() const
       std::atomic<Int_t> nerrpar(0);
       std::atomic<Int_t> nbpar(0);
       std::atomic<Int_t> pos(0);
-         
+
       auto mapFunction  = [&]() {
         // The branch to process is obtained when the task starts to run.
         // This way, since branches are sorted, we make sure that branches
@@ -5429,8 +5431,13 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
    };
 
 #ifdef R__USE_IMT
-   if (ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
-      if (fSortedBranches.empty()) InitializeBranchLists(true);
+   // At most one parallel read with a single branch
+   unsigned int nSortedBranches(2);
+   if (nSortedBranches > 1 && ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
+      if (fSortedBranches.empty()) {
+        InitializeBranchLists(true);
+        nSortedBranches = fSortedBranches.size();
+      }
 
       // Count branches are processed first and sequentially
       for (auto branch : fSeqBranches) {

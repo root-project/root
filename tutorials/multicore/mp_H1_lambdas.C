@@ -18,7 +18,7 @@ auto checkH1 = [](TList *out) {
    }
 
    // Check the 'hdmd' histo
-   TH1F *hdmd = dynamic_cast<TH1F *>(out->FindObject("hdmd"));
+   auto hdmd = dynamic_cast<TH1F *>(out->FindObject("hdmd"));
    if (!hdmd) {
       std::cout << "checkH1 >>> Test failure: 'hdmd' histo not found\n";
       return -1;
@@ -35,7 +35,7 @@ auto checkH1 = [](TList *out) {
       return -1;
    }
 
-   TH2F *h2 = dynamic_cast<TH2F *>(out->FindObject("h2"));
+   auto h2 = dynamic_cast<TH2F *>(out->FindObject("h2"));
    if (!h2) {
       std::cout << "checkH1 >>> Test failure: 'h2' histo not found\n";
       return -1;
@@ -95,7 +95,7 @@ auto doFit = [](TList *out, const char *lfn = 0) -> Int_t {
       return res;
    };
 
-   TF1 *f5 = new TF1("f5", fdm5, 0.139, 0.17, 5);
+   auto f5 = new TF1("f5", fdm5, 0.139, 0.17, 5);
    f5->SetParameters(1000000, .25, 2000, .1454, .001);
    hdmd->Fit("f5", "lr");
 
@@ -114,7 +114,7 @@ auto doFit = [](TList *out, const char *lfn = 0) -> Int_t {
    // create the canvas for tau d0
    gStyle->SetOptFit(0);
    gStyle->SetOptStat(1100);
-   TCanvas *c2 = new TCanvas("c2", "tauD0", 100, 100, 800, 600);
+   auto c2 = new TCanvas("c2", "tauD0", 100, 100, 800, 600);
    c2->SetGrid();
    c2->SetBottomMargin(0.15);
 
@@ -126,18 +126,18 @@ auto doFit = [](TList *out, const char *lfn = 0) -> Int_t {
       delete gROOT->GetFunction("f2");
 
    auto fdm2 = [](Double_t *xx, Double_t *par) -> Double_t {
-      const Double_t dxbin = (0.17 - 0.13) / 40; // Bin-width
-      const Double_t sigma = 0.0012;
-      Double_t x = xx[0];
+      const auto dxbin = (0.17 - 0.13) / 40; // Bin-width
+      const auto sigma = 0.0012;
+      auto x = xx[0];
       if (x <= 0.13957)
          return 0;
-      Double_t xp3 = (x - 0.1454) * (x - 0.1454);
-      Double_t res = dxbin * (par[0] * TMath::Power(x - 0.13957, 0.25) +
-                              par[1] / 2.5066 / sigma * TMath::Exp(-xp3 / 2 / sigma / sigma));
+      auto xp3 = (x - 0.1454) * (x - 0.1454);
+      auto res = dxbin * (par[0] * TMath::Power(x - 0.13957, 0.25) +
+                          par[1] / 2.5066 / sigma * TMath::Exp(-xp3 / 2 / sigma / sigma));
       return res;
    };
 
-   TF1 *f2 = new TF1("f2", fdm2, 0.139, 0.17, 2);
+   auto f2 = new TF1("f2", fdm2, 0.139, 0.17, 2);
    f2->SetParameters(10000, 10);
 
    // Restrict to three bins in this example
@@ -157,17 +157,17 @@ auto doFit = [](TList *out, const char *lfn = 0) -> Int_t {
       }
    }
 
-   TH1D *h2_1 = (TH1D *)gDirectory->Get("h2_1");
+   auto h2_1 = (TH1D *)gDirectory->Get("h2_1");
    h2_1->GetXaxis()->SetTitle("#tau[ps]");
    h2_1->SetMarkerStyle(21);
    h2_1->Draw();
    c2->Update();
-   TLine *line = new TLine(0, 0, 0, c2->GetUymax());
+   auto line = new TLine(0, 0, 0, c2->GetUymax());
    line->Draw();
 
    // Have the number of entries on the first histogram (to cross check when running
    // with entry lists)
-   TPaveStats *psdmd = (TPaveStats *)hdmd->GetListOfFunctions()->FindObject("stats");
+   auto psdmd = (TPaveStats *)hdmd->GetListOfFunctions()->FindObject("stats");
    psdmd->SetOptStat(1110);
    c1->Modified();
 

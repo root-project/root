@@ -300,7 +300,8 @@ namespace Math {
    }
 
    void GoFTest::LogSample() {
-      transform(fSamples[0].begin(), fSamples[0].end(), fSamples[0].begin(), std::ptr_fun<Double_t, Double_t>(TMath::Log));
+      transform(fSamples[0].begin(), fSamples[0].end(), fSamples[0].begin(),
+                std::function<Double_t(Double_t)>(TMath::Log));
       SetParameters();
    }
 
@@ -669,7 +670,8 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       for (std::vector<Double_t>::iterator data = z.begin(); data != endUnique; ++data) {
          UInt_t n = std::count(fCombinedSamples.begin(), fCombinedSamples.end(), *data);
          h.push_back(n);
-         H.push_back(std::count_if(fCombinedSamples.begin(), fCombinedSamples.end(), bind2nd(std::less<Double_t>(), *data)) + n / 2.);
+         H.push_back(std::count_if(fCombinedSamples.begin(), fCombinedSamples.end(),
+                     std::bind(std::less<Double_t>(), std::placeholders::_1, *data)) + n / 2.);
       }
       std::cout << "time for H";
       w.Print();
@@ -678,7 +680,8 @@ void GoFTest::AndersonDarling2SamplesTest(Double_t& pvalue, Double_t& testStat) 
       for (UInt_t i = 0; i < nSamples; ++i) {
          for (std::vector<Double_t>::iterator data = z.begin(); data != endUnique; ++data) {
             UInt_t n = std::count(fSamples[i].begin(), fSamples[i].end(), *data);
-            F[i].push_back(std::count_if(fSamples[i].begin(), fSamples[i].end(), bind2nd(std::less<Double_t>(), *data)) + n / 2.);
+            F[i].push_back(std::count_if(fSamples[i].begin(), fSamples[i].end(),
+                           std::bind(std::less<Double_t>(), std::placeholders::_1, *data)) + n / 2.);
          }
       }
       std::cout << "time for F";

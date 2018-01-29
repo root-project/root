@@ -264,9 +264,15 @@ struct TMinReturnType<T, true> {
    using type = TTraits::TakeFirstParameter_t<T>;
 };
 
+} // namespace TDF
+} // namespace Internal
+
+namespace Detail {
+namespace TDF {
+
 /// The aliased type is `double` if `T == TInferType`, `U` if `T == container<U>`, `T` otherwise.
 template <typename T>
-using MinReturnType_t = typename TMinReturnType<T>::type;
+using MinReturnType_t = typename TDFInternal::TMinReturnType<T>::type;
 
 template <typename T>
 using MaxReturnType_t = MinReturnType_t<T>;
@@ -274,14 +280,8 @@ using MaxReturnType_t = MinReturnType_t<T>;
 template <typename T>
 using SumReturnType_t = MinReturnType_t<T>;
 
-} // namespace TDF
-} // namespace Internal
-
-namespace Detail {
-namespace TDF {
-
 template <typename T, typename COLL = std::vector<T>>
-struct TakeRealTypes {
+struct TTakeRealTypes {
    // We cannot put in the output collection C arrays: the ownership is not defined.
    // We therefore proceed to check if T is an TArrayBranch
    // If yes, we check what type is the output collection and we rebuild it.
@@ -299,7 +299,8 @@ struct TakeRealTypes {
       typename std::conditional<isAB && TDFInternal::IsDeque_t<NewC1_t>::value, std::deque<VTColl_t>, NewC1_t>::type;
    using RealColl_t = NewC2_t;
 };
-
+template <typename T, typename C>
+using ColType_t = typename TTakeRealTypes<T, C>::RealColl_t;
 } // namespace TDF
 } // namespace Detail
 
@@ -670,7 +671,7 @@ public:
                                      std::string_view columnNameRegexp = "",
                                      const TSnapshotOptions &options = TSnapshotOptions())
    {
-      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp);
+      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Snapshot");
       return Snapshot(treename, filename, selectedColumns, options);
    }
    // clang-format on
@@ -743,7 +744,7 @@ public:
    /// is empty, all columns are selected.
    TInterface<TLoopManager> Cache(std::string_view columnNameRegexp = "")
    {
-      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp);
+      auto selectedColumns = ConvertRegexToColumns(columnNameRegexp, "Cache");
       return Cache(selectedColumns);
    }
 
@@ -843,13 +844,20 @@ public:
    /// requirements of a *processing function* besides having signature `T(T,T)`
    /// where `T` is the type of column columnName.
    ///
+   /// The returned reduced value of each thread (e.g. the initial value of a sum) is initialized to a
+   /// default-constructed T object. This is commonly expected to be the neutral/identity element for the specific
+   /// reduction operation `f` (e.g. 0 for a sum, 1 for a product). If a default-constructed T does not satisfy this
+   /// requirement, users should explicitly specify an initialization value for T by calling the appropriate `Reduce`
+   /// overload.
+   ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
    TResultProxy<T> Reduce(F f, std::string_view columnName = "")
    {
-      static_assert(std::is_default_constructible<T>::value,
-                    "reduce object cannot be default-constructed. Please provide an initialisation value (initValue)");
+      static_assert(
+         std::is_default_constructible<T>::value,
+         "reduce object cannot be default-constructed. Please provide an initialisation value (redIdentity)");
       return Reduce(std::move(f), columnName, T());
    }
 
@@ -859,43 +867,13 @@ public:
    /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
    /// \param[in] f A callable with signature `T(T,T)`
    /// \param[in] columnName The column to be reduced. If omitted, the first default column is used instead.
-   /// \param[in] initValue The reduced object is initialised to this value rather than being default-constructed.
+   /// \param[in] redIdentity The reduced object of each thread is initialised to this value.
    ///
    /// See the description of the first Reduce overload for more information.
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   TResultProxy<T> Reduce(F f, std::string_view columnName, const T &initValue)
+   TResultProxy<T> Reduce(F f, std::string_view columnName, const T &redIdentity)
    {
-      using arg_types = typename TTraits::CallableTraits<F>::arg_types;
-      TDFInternal::CheckReduce(f, arg_types());
-      auto loopManager = GetDataFrameChecked();
-      const auto columns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
-      constexpr auto nColumns = arg_types::list_size;
-      const auto validColumnNames =
-         TDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
-      if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
-                                              arg_types(), *fDataSource);
-      auto redObjPtr = std::make_shared<T>(initValue);
-      using Helper_t = TDFInternal::ReduceHelper<F, T>;
-      using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
-      auto action = std::make_shared<Action_t>(Helper_t(std::move(f), redObjPtr, fProxiedPtr->GetNSlots()),
-                                               validColumnNames, *fProxiedPtr);
-      loopManager->Book(action);
-      return MakeResultProxy(redObjPtr, loopManager, action.get());
-   }
-
-   ////////////////////////////////////////////////////////////////////////////
-   /// \brief Execute a user-defined reduce operation on the values of the first default column.
-   /// \tparam F The type of the reduce callable. Automatically deduced.
-   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
-   /// \param[in] f A callable with signature `T(T,T)`
-   /// \param[in] initValue The reduced object is initialised to this value rather than being default-constructed
-   ///
-   /// See the description of the first Reduce overload for more information.
-   template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
-   TResultProxy<T> Reduce(F f, const T &initValue)
-   {
-      return Reduce(std::move(f), "", initValue);
+      return Aggregate(f, f, columnName, redIdentity);
    }
 
    ////////////////////////////////////////////////////////////////////////////
@@ -922,13 +900,13 @@ public:
    /// \tparam COLL The type of collection used to store the values.
    /// \param[in] column The name of the column to collect the values of.
    ///
-   /// If the type of the column is TArrayBranch<T>, i.e. in the ROOT dataset this is
-   /// a C-style array, the type stored in the return container is a std::vector<T> to
+   /// If the type of the column is `TArrayBranch<T>`, i.e. in the ROOT dataset this is
+   /// a C-style array, the type stored in the return container is a `std::vector<T>` to
    /// guarantee the lifetime of the data involved.
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T, typename COLL = std::vector<T>>
-   TResultProxy<typename TDFDetail::TakeRealTypes<T, COLL>::RealColl_t> Take(std::string_view column = "")
+   TResultProxy<typename TDFDetail::ColType_t<T, COLL>> Take(std::string_view column = "")
    {
       auto loopManager = GetDataFrameChecked();
       const auto columns = column.empty() ? ColumnNames_t() : ColumnNames_t({std::string(column)});
@@ -938,8 +916,8 @@ public:
          TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<1>(),
                                               TTraits::TypeList<T>(), *fDataSource);
 
-      using RealT_t = typename TDFDetail::TakeRealTypes<T, COLL>::RealT_t;
-      using RealColl_t = typename TDFDetail::TakeRealTypes<T, COLL>::RealColl_t;
+      using RealT_t = typename TDFDetail::TTakeRealTypes<T, COLL>::RealT_t;
+      using RealColl_t = typename TDFDetail::TTakeRealTypes<T, COLL>::RealColl_t;
 
       using Helper_t = TDFInternal::TakeHelper<RealT_t, T, RealColl_t>;
       using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
@@ -956,7 +934,7 @@ public:
    /// \param[in] model The returned histogram will be constructed using this as a model.
    /// \param[in] vName The name of the column that will fill the histogram.
    ///
-   /// Columns can be of a container type (e.g. std::vector<double>), in which case the histogram
+   /// Columns can be of a container type (e.g. `std::vector<double>`), in which case the histogram
    /// is filled with each one of the elements of the container. In case multiple columns of container type
    /// are provided (e.g. values and weights) they must have the same length for each one of the events (but
    /// possibly different lengths between events).
@@ -1432,14 +1410,15 @@ public:
    ///
    /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
+   /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<TDFInternal::MinReturnType_t<T>> Min(std::string_view columnName = "")
+   TResultProxy<TDFDetail::MinReturnType_t<T>> Min(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
-      using RetType_t = TDFInternal::MinReturnType_t<T>;
+      using RetType_t = TDFDetail::MinReturnType_t<T>;
       auto minV = std::make_shared<RetType_t>(std::numeric_limits<RetType_t>::max());
       return CreateAction<TDFInternal::ActionTypes::Min, T>(userColumns, minV);
    }
@@ -1451,14 +1430,15 @@ public:
    ///
    /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
+   /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<TDFInternal::MaxReturnType_t<T>> Max(std::string_view columnName = "")
+   TResultProxy<TDFDetail::MaxReturnType_t<T>> Max(std::string_view columnName = "")
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
-      using RetType_t = TDFInternal::MaxReturnType_t<T>;
+      using RetType_t = TDFDetail::MaxReturnType_t<T>;
       auto maxV = std::make_shared<RetType_t>(std::numeric_limits<RetType_t>::lowest());
       return CreateAction<TDFInternal::ActionTypes::Max, T>(userColumns, maxV);
    }
@@ -1490,16 +1470,17 @@ public:
    ///
    /// If T is not specified, TDataFrame will infer it from the data and just-in-time compile the correct
    /// template specialization of this method.
+   /// If the type of the column is inferred, the return type is `double`, the type of the column otherwise.
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
    template <typename T = TDFDetail::TInferType>
-   TResultProxy<TDFInternal::SumReturnType_t<T>>
+   TResultProxy<TDFDetail::SumReturnType_t<T>>
    Sum(std::string_view columnName = "",
-       const TDFInternal::SumReturnType_t<T> &initValue = TDFInternal::SumReturnType_t<T>{})
+       const TDFDetail::SumReturnType_t<T> &initValue = TDFDetail::SumReturnType_t<T>{})
    {
       const auto userColumns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
-      auto sumV = std::make_shared<TDFInternal::SumReturnType_t<T>>(initValue);
+      auto sumV = std::make_shared<TDFDetail::SumReturnType_t<T>>(initValue);
       return CreateAction<TDFInternal::ActionTypes::Sum, T>(userColumns, sumV);
    }
    // clang-format on
@@ -1561,6 +1542,80 @@ public:
       return allColumns;
    }
 
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
+   /// \tparam F The type of the aggregator callable. Automatically deduced.
+   /// \tparam U The type of the aggregator variable. Must be default-constructible, copy-constructible and copy-assignable. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
+   /// \param[in] aggregator A callable with signature `U(U,T)` or `void(U&,T)`, where T is the type of the column, U is the type of the aggregator variable
+   /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
+   /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
+   /// \param[in] aggIdentity The aggregator variable of each thread is initialised to this value (or is default-constructed if the parameter is omitted)
+   ///
+   /// An aggregator callable takes two values, an aggregator variable and a column value. The aggregator variable is
+   /// initialized to aggIdentity or default-constructed if aggIdentity is omitted.
+   /// This action calls the aggregator callable for each processed entry, passing in the aggregator variable and
+   /// the value of the column columnName.
+   /// If the signature is `U(U,T)` the aggregator variable is then copy-assigned the result of the execution of the callable.
+   /// Otherwise the signature of aggregator must be `void(U&,T)`.
+   ///
+   /// The merger callable is used to merge the partial accumulation results of each processing thread. It is only called in multi-thread executions.
+   /// If its signature is `U(U,U)` the aggregator variables of each thread are merged two by two.
+   /// If its signature is `void(std::vector<U>& a)` it is assumed that it merges all aggregators in a[0].
+   ///
+   /// This action is *lazy*: upon invocation of this method the calculation is booked but not executed. See TResultProxy documentation.
+   // clang-format on
+   template <typename AccFun, typename MergeFun, typename R = typename TTraits::CallableTraits<AccFun>::ret_type,
+             typename ArgTypes = typename TTraits::CallableTraits<AccFun>::arg_types,
+             typename ArgTypesNoDecay = typename TTraits::CallableTraits<AccFun>::arg_types_nodecay,
+             typename U = TTraits::TakeFirstParameter_t<ArgTypes>,
+             typename T = TTraits::TakeFirstParameter_t<TTraits::RemoveFirstParameter_t<ArgTypes>>>
+   TResultProxy<U> Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName, const U &aggIdentity)
+   {
+      TDFInternal::CheckAggregate<R, MergeFun>(ArgTypesNoDecay());
+      auto loopManager = GetDataFrameChecked();
+      const auto columns = columnName.empty() ? ColumnNames_t() : ColumnNames_t({std::string(columnName)});
+      constexpr auto nColumns = ArgTypes::list_size;
+      const auto validColumnNames =
+         TDFInternal::GetValidatedColumnNames(*loopManager, 1, columns, fValidCustomColumns, fDataSource);
+      if (fDataSource)
+         TDFInternal::DefineDataSourceColumns(validColumnNames, *loopManager, TDFInternal::GenStaticSeq_t<nColumns>(),
+                                              ArgTypes(), *fDataSource);
+      auto accObjPtr = std::make_shared<U>(aggIdentity);
+      using Helper_t = TDFInternal::AggregateHelper<AccFun, MergeFun, R, T, U>;
+      using Action_t = typename TDFInternal::TAction<Helper_t, Proxied>;
+      auto action = std::make_shared<Action_t>(
+         Helper_t(std::move(aggregator), std::move(merger), accObjPtr, fProxiedPtr->GetNSlots()), validColumnNames,
+         *fProxiedPtr);
+      loopManager->Book(action);
+      return MakeResultProxy(accObjPtr, loopManager, action.get());
+   }
+
+   // clang-format off
+   ////////////////////////////////////////////////////////////////////////////
+   /// \brief Execute a user-defined accumulation operation on the processed column values in each processing slot
+   /// \tparam F The type of the aggregator callable. Automatically deduced.
+   /// \tparam U The type of the aggregator variable. Must be default-constructible, copy-constructible and copy-assignable. Automatically deduced.
+   /// \tparam T The type of the column to apply the reduction to. Automatically deduced.
+   /// \param[in] aggregator A callable with signature `U(U,T)` or `void(U,T)`, where T is the type of the column, U is the type of the aggregator variable
+   /// \param[in] merger A callable with signature `U(U,U)` or `void(std::vector<U>&)` used to merge the results of the accumulations of each thread
+   /// \param[in] columnName The column to be aggregated. If omitted, the first default column is used instead.
+   ///
+   /// See previous Aggregate overload for more information.
+   // clang-format on
+   template <typename AccFun, typename MergeFun, typename R = typename TTraits::CallableTraits<AccFun>::ret_type,
+             typename ArgTypes = typename TTraits::CallableTraits<AccFun>::arg_types,
+             typename U = TTraits::TakeFirstParameter_t<ArgTypes>,
+             typename T = TTraits::TakeFirstParameter_t<TTraits::RemoveFirstParameter_t<ArgTypes>>>
+   TResultProxy<U> Aggregate(AccFun aggregator, MergeFun merger, std::string_view columnName = "")
+   {
+      static_assert(
+         std::is_default_constructible<U>::value,
+         "aggregated object cannot be default-constructed. Please provide an initialisation value (aggIdentity)");
+      return Aggregate(std::move(aggregator), std::move(merger), columnName, U());
+   }
+
 private:
    void AddDefaultColumns()
    {
@@ -1582,7 +1637,7 @@ private:
       fValidCustomColumns.emplace_back(slotColName);
    }
 
-   ColumnNames_t ConvertRegexToColumns(std::string_view columnNameRegexp)
+   ColumnNames_t ConvertRegexToColumns(std::string_view columnNameRegexp, std::string_view callerName)
    {
       const auto theRegexSize = columnNameRegexp.size();
       std::string theRegex(columnNameRegexp);
@@ -1628,6 +1683,15 @@ private:
          }
       }
 
+      if (selectedColumns.empty()) {
+         std::string text(callerName);
+         if (columnNameRegexp.empty()) {
+            text = ": there is no column available to match.";
+         } else {
+            text = ": regex \"" + columnNameRegexp + "\" did not match any column.";
+         }
+         throw std::runtime_error(text);
+      }
       return selectedColumns;
    }
 
@@ -1763,9 +1827,13 @@ private:
                                          const ColumnNames_t &columnList, const TSnapshotOptions &options)
    {
       TDFInternal::CheckSnapshot(sizeof...(BranchTypes), columnList.size());
+
       auto df = GetDataFrameChecked();
+      auto validCols =
+         TDFInternal::GetValidatedColumnNames(*df, columnList.size(), columnList, fValidCustomColumns, fDataSource);
+
       if (fDataSource)
-         TDFInternal::DefineDataSourceColumns(columnList, *df, TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>(),
+         TDFInternal::DefineDataSourceColumns(validCols, *df, TDFInternal::GenStaticSeq_t<sizeof...(BranchTypes)>(),
                                               TTraits::TypeList<BranchTypes...>(), *fDataSource);
 
       const std::string fullTreename(treename);
@@ -1783,15 +1851,15 @@ private:
          // single-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelper<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied, TTraits::TypeList<BranchTypes...>>;
-         actionPtr.reset(
-            new Action_t(Helper_t(filename, dirname, treename, columnList, options), columnList, *fProxiedPtr));
+         actionPtr.reset(new Action_t(Helper_t(filename, dirname, treename, validCols, columnList, options), validCols,
+                                      *fProxiedPtr));
       } else {
          // multi-thread snapshot
          using Helper_t = TDFInternal::SnapshotHelperMT<BranchTypes...>;
          using Action_t = TDFInternal::TAction<Helper_t, Proxied>;
-         actionPtr.reset(
-            new Action_t(Helper_t(fProxiedPtr->GetNSlots(), filename, dirname, treename, columnList, options),
-                         columnList, *fProxiedPtr));
+         actionPtr.reset(new Action_t(
+            Helper_t(fProxiedPtr->GetNSlots(), filename, dirname, treename, validCols, columnList, options), validCols,
+            *fProxiedPtr));
       }
       df->Book(std::move(actionPtr));
       df->Run();
@@ -1800,7 +1868,7 @@ private:
       ::TDirectory::TContext ctxt;
       // Now we mimic a constructor for the TDataFrame. We cannot invoke it here
       // since this would introduce a cyclic headers dependency.
-      TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, columnList));
+      TInterface<TLoopManager> snapshotTDF(std::make_shared<TLoopManager>(nullptr, validCols));
       auto chain = std::make_shared<TChain>(fullTreename.c_str());
       chain->Add(std::string(filename).c_str());
       snapshotTDF.fProxiedPtr->SetTree(chain);
@@ -1827,7 +1895,7 @@ private:
          TDFInternal::DefineDataSourceColumns(columnList, *lm, s, TTraits::TypeList<BranchTypes...>(), *fDataSource);
       }
       std::tuple<
-         TDFInternal::CacheColumnHolder<typename TDFDetail::TakeRealTypes<BranchTypes>::RealColl_t::value_type>...>
+         TDFInternal::CacheColumnHolder<typename TDFDetail::TTakeRealTypes<BranchTypes>::RealColl_t::value_type>...>
          colHolders;
 
       // TODO: really fix the type of the Take....

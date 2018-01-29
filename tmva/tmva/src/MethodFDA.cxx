@@ -596,9 +596,6 @@ void TMVA::MethodFDA::CalculateMulticlassValues( const TMVA::Event*& evt, std::v
       values.push_back( value );
       sum += value;
    }
-
-   //    // normalize to sum of value (commented out, .. have to think of how to treat negative classifier values)
-   //    std::transform( fMulticlassReturnVal.begin(), fMulticlassReturnVal.end(), fMulticlassReturnVal.begin(), bind2nd( std::divides<float>(), sum) );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

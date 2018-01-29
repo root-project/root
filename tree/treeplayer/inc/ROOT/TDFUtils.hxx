@@ -145,8 +145,14 @@ struct TNeedJitting<TInferType> {
 using TVBPtr_t = std::shared_ptr<TTreeReaderValueBase>;
 using TVBVec_t = std::vector<TVBPtr_t>;
 
+const std::type_info &TypeName2TypeID(const std::string &name);
+
+std::string TypeID2TypeName(const std::type_info &id);
+
 std::string
 ColumnName2ColumnTypeName(const std::string &colName, TTree *, TCustomColumnBase *, TDataSource * = nullptr);
+
+char TypeName2ROOTTypeName(const std::string &b);
 
 const char *ToConstCharPtr(const char *s);
 const char *ToConstCharPtr(const std::string &s);
@@ -208,23 +214,31 @@ void CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const Column
                        const ColumnNames_t &dataSourceColumns);
 
 ///////////////////////////////////////////////////////////////////////////////
-/// Check that the callable passed to TInterface::Reduce:
-/// - takes exactly two arguments of the same type
-/// - has a return value of the same type as the arguments
-template <typename F, typename T>
-void CheckReduce(F &, TypeList<T, T>)
+/// Check preconditions for TInterface::Aggregate:
+/// - the aggregator callable must have signature `U(U,T)` or `void(U&,T)`.
+/// - the merge callable must have signature `U(U,U)` or `void(std::vector<U>&)`
+template <typename R, typename Merge, typename U, typename T, typename decayedU = typename std::decay<U>::type,
+          typename mergeArgsNoDecay_t = typename CallableTraits<Merge>::arg_types_nodecay,
+          typename mergeArgs_t = typename CallableTraits<Merge>::arg_types,
+          typename mergeRet_t = typename CallableTraits<Merge>::ret_type>
+void CheckAggregate(TypeList<U, T>)
 {
-   using ret_type = typename CallableTraits<F>::ret_type;
-   static_assert(std::is_same<ret_type, T>::value, "reduce function must have return type equal to argument type");
-   return;
+   constexpr bool isAggregatorOk =
+      (std::is_same<R, decayedU>::value) || (std::is_same<R, void>::value && std::is_lvalue_reference<U>::value);
+   static_assert(isAggregatorOk, "aggregator function must have signature `U(U,T)` or `void(U&,T)`");
+   constexpr bool isMergeOk =
+      (std::is_same<TypeList<decayedU, decayedU>, mergeArgs_t>::value && std::is_same<decayedU, mergeRet_t>::value) ||
+      (std::is_same<TypeList<std::vector<decayedU> &>, mergeArgsNoDecay_t>::value &&
+       std::is_same<void, mergeRet_t>::value);
+   static_assert(isMergeOk, "merge function must have signature `U(U,U)` or `void(std::vector<U>&)`");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-/// This overload of CheckReduce is called if T is not a TypeList<T,T>
-template <typename F, typename T>
-void CheckReduce(F &, T)
+/// This overload of CheckAggregate is called when the aggregator takes more than two arguments
+template <typename R, typename T>
+void CheckAggregate(T)
 {
-   static_assert(sizeof(F) == 0, "reduce function must take exactly two arguments of the same type");
+   static_assert(sizeof(T) == 0, "aggregator function must take exactly two arguments");
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -238,28 +252,20 @@ const ColumnNames_t SelectColumns(unsigned int nArgs, const ColumnNames_t &bl, c
 ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols,
                                  const ColumnNames_t &dataSourceColumns);
 
+// clang-format off
 namespace ActionTypes {
-struct Histo1D {
-};
-struct Histo2D {
-};
-struct Histo3D {
-};
-struct Profile1D {
-};
-struct Profile2D {
-};
-struct Min {
-};
-struct Max {
-};
-struct Sum {
-};
-struct Mean {
-};
-struct Fill {
-};
+struct Histo1D {};
+struct Histo2D {};
+struct Histo3D {};
+struct Profile1D {};
+struct Profile2D {};
+struct Min {};
+struct Max {};
+struct Sum {};
+struct Mean {};
+struct Fill {};
 }
+// clang-format on
 
 /// Check whether a histogram type is a classic or v7 histogram.
 template <typename T>

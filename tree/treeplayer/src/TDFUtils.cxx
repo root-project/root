@@ -36,11 +36,93 @@ TIgnoreErrorLevelRAII::~TIgnoreErrorLevelRAII()
    gErrorIgnoreLevel = fCurIgnoreErrorLevel;
 }
 
+/// Return the type_info associated to a name. If the association fails, an
+/// exception is thrown.
+/// References and pointers are not supported since those cannot be stored in
+/// columns.
+const std::type_info &TypeName2TypeID(const std::string &name)
+{
+   if (auto c = TClass::GetClass(name.c_str())) {
+      return *c->GetTypeInfo();
+   } else if (name == "char" || name == "Char_t")
+      return typeid(char);
+   else if (name == "unsigned char" || name == "UChar_t")
+      return typeid(unsigned char);
+   else if (name == "int" || name == "Int_t")
+      return typeid(int);
+   else if (name == "unsigned int" || name == "UInt_t")
+      return typeid(unsigned int);
+   else if (name == "short" || name == "Short_t")
+      return typeid(short);
+   else if (name == "unsigned short" || name == "UShort_t")
+      return typeid(unsigned short);
+   else if (name == "long" || name == "Long_t")
+      return typeid(long);
+   else if (name == "unsigned long" || name == "ULong_t")
+      return typeid(unsigned long);
+   else if (name == "double" || name == "Double_t")
+      return typeid(double);
+   else if (name == "float" || name == "Float_t")
+      return typeid(float);
+   else if (name == "long long" || name == "long long int" || name == "Long64_t")
+      return typeid(Long64_t);
+   else if (name == "unsigned long long" || name == "unsigned long long int" || name == "ULong64_t")
+      return typeid(ULong64_t);
+   else if (name == "bool" || name == "Bool_t")
+      return typeid(bool);
+   else {
+      std::string msg("Cannot extract type_info of type ");
+      msg += name.c_str();
+      msg += ".";
+      throw std::runtime_error(msg);
+   }
+}
+
+/// Returns the name of a type starting from its type_info
+/// An empty string is returned in case of failure
+/// References and pointers are not supported since those cannot be stored in
+/// columns.
+std::string TypeID2TypeName(const std::type_info &id)
+{
+   if (auto c = TClass::GetClass(id)) {
+      return c->GetName();
+   } else if (id == typeid(char))
+      return "char";
+   else if (id == typeid(unsigned char))
+      return "unsigned char";
+   else if (id == typeid(int))
+      return "int";
+   else if (id == typeid(unsigned int))
+      return "unsigned int";
+   else if (id == typeid(short))
+      return "short";
+   else if (id == typeid(unsigned short))
+      return "unsigned short";
+   else if (id == typeid(long))
+      return "long";
+   else if (id == typeid(unsigned long))
+      return "unsigned long";
+   else if (id == typeid(double))
+      return "double";
+   else if (id == typeid(float))
+      return "float";
+   else if (id == typeid(Long64_t))
+      return "Long64_t";
+   else if (id == typeid(ULong64_t))
+      return "ULong64_t";
+   else if (id == typeid(bool))
+      return "bool";
+   else
+      return "";
+
+}
+
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define. Returns an empty string if type name deduction fails.
 std::string
 ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch, TDataSource *ds)
 {
+   // if this is a TDataSource column, we just ask the type name to the data-source
    if (ds && ds->HasColumn(colName)) {
       return ds->GetTypeName(colName);
    }
@@ -48,91 +130,83 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
    TBranch *branch = nullptr;
    if (tree)
       branch = tree->GetBranch(colName.c_str());
-   if (!branch && !tmpBranch) {
-      throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
-   }
    if (branch) {
       // this must be a real TTree branch
       static const TClassRef tbranchelRef("TBranchElement");
       if (branch->InheritsFrom(tbranchelRef)) {
+         // this branch is not a fundamental type, we can ask for the class name
          return static_cast<TBranchElement *>(branch)->GetClassName();
-      } else { // Try the fundamental type
-         std::string_view title(branch->GetTitle());
-         char typeCode = title.back();
-         std::string type;
-         if (typeCode == 'B')
-            type = "char";
-         else if (typeCode == 'b')
-            type = "unsigned char";
-         else if (typeCode == 'I')
-            type = "int";
-         else if (typeCode == 'i')
-            type = "unsigned int";
-         else if (typeCode == 'S')
-            type = "short";
-         else if (typeCode == 's')
-            type = "unsigned short";
-         else if (typeCode == 'D')
-            type = "double";
-         else if (typeCode == 'F')
-            type = "float";
-         else if (typeCode == 'n')
-            type = "Float_t";
-         else if (typeCode == 'L')
-            type = "Long64_t";
-         else if (typeCode == 'l')
-            type = "ULong64_t";
-         else if (typeCode == 'O')
-            type = "bool";
-         if (title[title.size() - 3] == ']') {
-            // title has the form "varname[size]/X", i.e. it refers to an array (doesn't matter if size is fixed or not)
-            // TDataFrame reads it as a TArrayBranch
-            return "ROOT::Experimental::TDF::TArrayBranch<" + type + ">";
+      } else {
+         // this branch must be a fundamental type or array thereof
+         const auto listOfLeaves = branch->GetListOfLeaves();
+         const auto nLeaves = listOfLeaves->GetEntries();
+         if (nLeaves != 1)
+            throw std::runtime_error("TTree branch " + colName + " has " + std::to_string(nLeaves) +
+                                     " leaves. Only one leaf per branch is supported.");
+         TLeaf *l = static_cast<TLeaf *>(listOfLeaves->UncheckedAt(0));
+         const std::string branchType = l->GetTypeName();
+         if (branchType.empty()) {
+            throw std::runtime_error("could not deduce type of branch " + std::string(colName));
+         } else if (l->GetLeafCount() != nullptr && l->GetLenStatic() == 1) {
+            // this is a variable-sized array
+            return "ROOT::Experimental::TDF::TArrayBranch<" + branchType + ">";
+         } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() > 1) {
+            // this is a fixed-sized array (we do not differentiate between variable- and fixed-sized arrays)
+            return "ROOT::Experimental::TDF::TArrayBranch<" + branchType + ">";
+         } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() == 1) {
+            // this branch contains a single fundamental type
+            return l->GetTypeName();
          } else {
-            return type;
+            // we do not know how to deal with this branch
+            throw std::runtime_error("TTree branch " + colName +
+                                     " has both a leaf count and a static length. This is not supported.");
          }
       }
-   } else {
+   } else if (tmpBranch) {
       // this must be a temporary branch
-      const auto &type_id = tmpBranch->GetTypeId();
-      if (auto c = TClass::GetClass(type_id)) {
-         return c->GetName();
-      } else if (type_id == typeid(char))
-         return "char";
-      else if (type_id == typeid(unsigned char))
-         return "unsigned char";
-      else if (type_id == typeid(int))
-         return "int";
-      else if (type_id == typeid(unsigned int))
-         return "unsigned int";
-      else if (type_id == typeid(short))
-         return "short";
-      else if (type_id == typeid(unsigned short))
-         return "unsigned short";
-      else if (type_id == typeid(long))
-         return "long";
-      else if (type_id == typeid(unsigned long))
-         return "unsigned long";
-      else if (type_id == typeid(double))
-         return "double";
-      else if (type_id == typeid(float))
-         return "float";
-      else if (type_id == typeid(Long64_t))
-         return "Long64_t";
-      else if (type_id == typeid(ULong64_t))
-         return "ULong64_t";
-      else if (type_id == typeid(bool))
-         return "bool";
-      else {
+      auto &id = tmpBranch->GetTypeId();
+      auto typeName = TypeID2TypeName(id);
+      if (typeName.empty()) {
          std::string msg("Cannot deduce type of temporary column ");
-         msg += colName.c_str();
+         msg += colName;
          msg += ". The typename is ";
-         msg += tmpBranch->GetTypeId().name();
+         msg += id.name();
          msg += ".";
          throw std::runtime_error(msg);
       }
+      return typeName;
+   } else {
+      throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
    }
-   // we never reach here
+}
+
+/// Convert type name (e.g. "Float_t") to ROOT type code (e.g. 'F') -- see TBranch documentation.
+/// Return a space ' ' in case no match was found.
+char TypeName2ROOTTypeName(const std::string &b)
+{
+   if (b == "Char_t")
+      return 'B';
+   if (b == "UChar_t")
+      return 'b';
+   if (b == "Short_t")
+      return 'S';
+   if (b == "UShort_t")
+      return 's';
+   if (b == "Int_t")
+      return 'I';
+   if (b == "UInt_t")
+      return 'i';
+   if (b == "Float_t")
+      return 'F';
+   if (b == "Double_t")
+      return 'D';
+   if (b == "Long64_t")
+      return 'L';
+   if (b == "ULong64_t")
+      return 'l';
+   if (b == "Bool_t")
+      return 'O';
+   return ' ';
 }
 
 const char *ToConstCharPtr(const char *s)
@@ -155,7 +229,10 @@ unsigned int GetNSlots()
    return nSlots;
 }
 
-void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNames, std::set<TTree *> &analysedTrees)
+// The set here is used as a registry, the real list, which keeps the order, is
+// the one in the vector
+void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
+                        std::set<TTree *> &analysedTrees)
 {
 
    if (!analysedTrees.insert(&t).second) {
@@ -165,7 +242,10 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNames, std::set<TTree 
    auto branches = t.GetListOfBranches();
    if (branches) {
       for (auto branchObj : *branches) {
-         bNames.insert(branchObj->GetName());
+         auto name = branchObj->GetName();
+         if (bNamesReg.insert(name).second) {
+            bNames.emplace_back(name);
+         }
       }
    }
 
@@ -176,7 +256,7 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNames, std::set<TTree 
 
    for (auto friendTreeObj : *friendTrees) {
       auto friendTree = ((TFriendElement *)friendTreeObj)->GetTree();
-      GetBranchNamesImpl(*friendTree, bNames, analysedTrees);
+      GetBranchNamesImpl(*friendTree, bNamesReg, bNames, analysedTrees);
    }
 }
 
@@ -185,11 +265,9 @@ void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNames, std::set<TTree 
 ColumnNames_t GetBranchNames(TTree &t)
 {
    std::set<std::string> bNamesSet;
-   std::set<TTree *> analysedTrees;
-   GetBranchNamesImpl(t, bNamesSet, analysedTrees);
    ColumnNames_t bNames;
-   for (auto &bName : bNamesSet)
-      bNames.emplace_back(bName);
+   std::set<TTree *> analysedTrees;
+   GetBranchNamesImpl(t, bNamesSet, bNames, analysedTrees);
    return bNames;
 }
 

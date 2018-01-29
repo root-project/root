@@ -133,31 +133,26 @@ endforeach()
 #---Move (copy) directories to binary tree------------------------------------------------------
 set(stamp_file ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/move_artifacts.stamp)
 add_custom_command(OUTPUT ${stamp_file}
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/etc ${CMAKE_BINARY_DIR}/etc
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/test ${CMAKE_BINARY_DIR}/test
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/icons ${CMAKE_BINARY_DIR}/icons
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/fonts ${CMAKE_BINARY_DIR}/fonts
-                   COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/macros ${CMAKE_BINARY_DIR}/macros
                    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/LICENSE ${CMAKE_BINARY_DIR}/LICENSE
                    COMMAND ${CMAKE_COMMAND} -E copy_directory ${CMAKE_SOURCE_DIR}/README ${CMAKE_BINARY_DIR}/README
                    COMMAND ${CMAKE_COMMAND} -E touch ${stamp_file}
                    COMMENT "Copying directories such as etc, icons, fonts, etc. to build area")
 
-#---Copy the the tutorials to the build area, with dependency---------------------------------
-file(GLOB_RECURSE tutorial_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/*)
-set(tutorial_files_builddir)
-foreach(tutorial_file ${tutorial_files})
+#---Copy files to the build area, with dependency---------------------------------
+file(GLOB_RECURSE artifact_files RELATIVE ${CMAKE_SOURCE_DIR} tutorials/* etc/* test/* icons/* fonts/* macros/*)
+set(artifact_files_builddir)
+foreach(artifact_file ${artifact_files})
   # Filter out hsimple.root; someone might have created it in the src dir, and the hsimple.root
   # target below will interfere.
   if (NOT (tutorial_file STREQUAL "tutorials/hsimple.root"))
-    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${tutorial_file}
-      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${tutorial_file} ${CMAKE_BINARY_DIR}/${tutorial_file}
-      COMMENT "Copying ${CMAKE_SOURCE_DIR}/${tutorial_file}"
-      DEPENDS ${CMAKE_SOURCE_DIR}/${tutorial_file})
-    list(APPEND tutorial_files_builddir ${CMAKE_BINARY_DIR}/${tutorial_file})
+    add_custom_command(OUTPUT ${CMAKE_BINARY_DIR}/${artifact_file}
+      COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_SOURCE_DIR}/${artifact_file} ${CMAKE_BINARY_DIR}/${artifact_file}
+      COMMENT "Copying ${CMAKE_SOURCE_DIR}/${artifact_file}"
+      DEPENDS ${CMAKE_SOURCE_DIR}/${artifact_file})
+    list(APPEND artifact_files_builddir ${CMAKE_BINARY_DIR}/${artifact_file})
   endif()
 endforeach()
-add_custom_target(move_artifacts DEPENDS ${stamp_file} ${tutorial_files_builddir})
+add_custom_target(move_artifacts DEPENDS ${stamp_file} ${artifact_files_builddir})
 
 add_subdirectory (interpreter)
 # Add the compilation flags from LLVM to the flags we use to compile cling-based tools.
@@ -413,7 +408,8 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
                          REGEX rootd.xinetd EXCLUDE
                          REGEX proofd.xinetd EXCLUDE
                          REGEX root.mimes EXCLUDE
-                         REGEX cmake EXCLUDE )
+                         REGEX cmake EXCLUDE
+                         REGEX /http EXCLUDE )
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})
@@ -436,19 +432,24 @@ if(testing)
     #---Is the roottest source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
       set(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../roottest)
-      get_filename_component(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/../roottest ABSOLUTE)
+    else()
+      # Need to break into two steps in case the source dir is a symlink
+      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
+      set(roottestdir ${_source_dir}/../roottest)
     endif()
-    if(roottestdir)
+
+    if(IS_DIRECTORY ${roottestdir})
       file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
       add_subdirectory(${roottestdir} roottest)
     else()
       message("-- Could not find roottest directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} http://root.cern.ch/git/roottest.git
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
+                      http://github.com/root-project/roottest.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(roottest)
     endif()
   endif()
+
   if(rootbench)
     find_package(Git REQUIRED)
     execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
@@ -457,15 +458,19 @@ if(testing)
     #---Is the rootbench source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
       set(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
-    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../rootbench)
-      get_filename_component(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/../rootbench ABSOLUTE)
+    else()
+      # Need to break into two steps in case the source dir is a symlink
+      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
+      set(rootbenchdir ${_source_dir}/../rootbench)
     endif()
-    if(rootbenchdir)
+
+    if(IS_DIRECTORY ${rootbenchdir})
       file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/rootbench)
       add_subdirectory(${rootbenchdir} rootbench)
     else()
       message("-- Could not find rootbench directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} https://github.com/root-project/rootbench.git
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
+                      https://github.com/root-project/rootbench.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(rootbench)
     endif()

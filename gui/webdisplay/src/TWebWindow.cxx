@@ -115,6 +115,23 @@ void ROOT::Experimental::TWebWindow::CreateWSHandler()
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+/// Return URL string to access web window
+/// If remote flag is specified, real HTTP server will be started automatically
+
+std::string ROOT::Experimental::TWebWindow::GetUrl(bool remote)
+{
+   return fMgr->GetUrl(*this, remote);
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Return THttpServer instance serving requests to the window
+
+THttpServer *ROOT::Experimental::TWebWindow::GetServer()
+{
+   return fMgr->GetServer();
+}
+
+//////////////////////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
 /// See ROOT::Experimental::TWebWindowsManager::Show() docu for more info
 
@@ -135,7 +152,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
       return kTRUE;
 
    // try to identify connection for given WS request
-   WebConn *conn = 0;
+   WebConn *conn = nullptr;
    auto iter = fConn.begin();
    while (iter != fConn.end()) {
       if (iter->fWSId == arg.GetWSId()) {
@@ -181,7 +198,7 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
 
    assert(arg.IsMethod("WS_DATA") && "WS_DATA request expected!");
 
-   assert(conn != 0 && "Get websocket data without valid connection - ignore!!!");
+   assert(conn && "Get websocket data without valid connection - ignore!!!");
 
    if (arg.GetPostDataLength() <= 0)
       return true;
@@ -190,18 +207,18 @@ bool ROOT::Experimental::TWebWindow::ProcessWS(THttpCallArg &arg)
    // this is task for the implemented windows
 
    const char *buf = (const char *)arg.GetPostData();
-   char *str_end = 0;
+   char *str_end = nullptr;
 
    printf("Get portion of data %d %.30s\n", (int)arg.GetPostDataLength(), buf);
 
    unsigned long ackn_oper = std::strtoul(buf, &str_end, 10);
-   assert(str_end != 0 && *str_end == ':' && "missing number of acknowledged operations");
+   assert(str_end && *str_end == ':' && "missing number of acknowledged operations");
 
    unsigned long can_send = std::strtoul(str_end + 1, &str_end, 10);
-   assert(str_end != 0 && *str_end == ':' && "missing can_send counter");
+   assert(str_end && *str_end == ':' && "missing can_send counter");
 
    unsigned long nchannel = std::strtoul(str_end + 1, &str_end, 10);
-   assert(str_end != 0 && *str_end == ':' && "missing channel number");
+   assert(str_end && *str_end == ':' && "missing channel number");
 
    unsigned processed_len = (str_end + 1 - buf);
 
@@ -295,7 +312,7 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
 
          if (iter->fQueue.size() > 0) {
             SendDataViaConnection(*iter, -1, iter->fQueue.front());
-            iter->fQueue.pop_front();
+            iter->fQueue.erase(iter->fQueue.begin());
             isany = true;
          } else if ((iter->fClientCredits < 3) && (iter->fRecvCount > 1)) {
             // give more credits to the client
@@ -316,7 +333,7 @@ void ROOT::Experimental::TWebWindow::CheckDataToSend(bool only_once)
 std::string ROOT::Experimental::TWebWindow::RelativeAddr(std::shared_ptr<TWebWindow> &win)
 {
    if (fMgr != win->fMgr) {
-      R__ERROR_HERE("RelativeAddr") << "Same web window manager should be used";
+      R__ERROR_HERE("WebDisplay") << "Same web window manager should be used";
       return "";
    }
 
@@ -325,6 +342,37 @@ std::string ROOT::Experimental::TWebWindow::RelativeAddr(std::shared_ptr<TWebWin
    res.append("/");
    return res;
 }
+
+///////////////////////////////////////////////////////////////////////////////////
+/// returns connection for specified connection number
+/// Total number of connections can be retrieved with NumConnections() method
+
+unsigned ROOT::Experimental::TWebWindow::GetConnectionId(int num) const
+{
+   auto iter = fConn.begin() + num;
+   return iter->fConnId;
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+/// Closes all connection to clients
+/// Normally leads to closing of all correspondent browser windows
+/// Some browsers (like firefox) do not allow by default to close window
+
+void ROOT::Experimental::TWebWindow::CloseConnections()
+{
+   Send("CLOSE", 0, 0);
+}
+
+///////////////////////////////////////////////////////////////////////////////////
+/// Close specified connection
+/// Connection id usually appears in the correspondent call-backs
+
+void ROOT::Experimental::TWebWindow::CloseConnection(unsigned connid)
+{
+   if (connid)
+      Send("CLOSE", connid, 0);
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////////
 /// returns true if sending via specified connection can be performed

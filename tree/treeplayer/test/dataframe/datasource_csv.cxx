@@ -84,6 +84,33 @@ TEST(TCsvDS, ColumnReaders)
    }
 }
 
+TEST(TCsvDS, ColumnReadersWrongType)
+{
+   TCsvDS tds(fileName0);
+   const auto nSlots = 3U;
+   tds.SetNSlots(nSlots);
+   int res = 1;
+   try {
+      auto vals = tds.GetColumnReaders<float>("Age");
+   } catch (const std::runtime_error &e) {
+      EXPECT_STREQ("The type selected for column \"Age\" does not correspond to column type, which is Long64_t",
+                   e.what());
+      res = 0;
+   }
+   EXPECT_EQ(0, res);
+}
+
+TEST(TCsvDS, Snapshot)
+{
+   auto tdf = ROOT::Experimental::TDF::MakeCsvDataFrame(fileName0);
+   auto snap = tdf.Snapshot<Long64_t>("data","csv2root.root", {"Age"});
+   auto ages = *snap.Take<Long64_t>("Age");
+   std::vector<Long64_t> agesRef {60LL, 50LL, 40LL, 30LL, 1LL, -1LL};
+   for (auto i : ROOT::TSeqI(agesRef.size())) {
+      EXPECT_EQ(ages[i], agesRef[i]);
+   }
+}
+
 TEST(TCsvDS, ColumnReadersString)
 {
    TCsvDS tds(fileName0);

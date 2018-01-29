@@ -278,10 +278,12 @@ public:
       }
    }
 
+   /// This overload is used to return scalar quantities (i.e. types that are not read into a TArrayBranch)
    template <typename U = T,
              typename std::enable_if<std::is_same<typename TColumnValue<U>::ProxyParam_t, U>::value, int>::type = 0>
    T &Get(Long64_t entry);
 
+   /// This overload is used to return arrays (i.e. types that are read into a TArrayBranch)
    template <typename U = T, typename std::enable_if<!std::is_same<ProxyParam_t, U>::value, int>::type = 0>
    TArrayBranch<ProxyParam_t> Get(Long64_t)
    {
@@ -448,6 +450,7 @@ protected:
    unsigned int fNStopsReceived{0}; ///< number of times that a children node signaled to stop processing entries.
    const unsigned int fNSlots;      ///< number of thread slots used by this node, inherited from parent node.
    const bool fIsDataSourceColumn; ///< does the custom column refer to a data-source column? (or a user-define column?)
+   std::vector<Long64_t> fLastCheckedEntry;
 
 public:
    TCustomColumnBase(TLoopManager *df, std::string_view name, const unsigned int nSlots, const bool isDSColumn);
@@ -463,6 +466,7 @@ public:
    virtual void ClearValueReaders(unsigned int slot) = 0;
    unsigned int GetNSlots() const { return fNSlots; }
    bool IsDataSourceColumn() const { return fIsDataSourceColumn; }
+   void InitNode();
 };
 
 namespace TCCHelperTypes {
@@ -496,7 +500,6 @@ class TCustomColumn final : public TCustomColumnBase {
    F fExpression;
    const ColumnNames_t fBranches;
    ValuesPerSlot_t fLastResults;
-   std::vector<Long64_t> fLastCheckedEntry = {-1};
 
    std::vector<TDFInternal::TDFValueTuple_t<BranchTypes_t>> fValues;
 
@@ -504,7 +507,7 @@ public:
    TCustomColumn(std::string_view name, F &&expression, const ColumnNames_t &bl, TLoopManager *lm,
                  bool isDSColumn = false)
       : TCustomColumnBase(lm, name, lm->GetNSlots(), isDSColumn), fExpression(std::move(expression)), fBranches(bl),
-        fLastResults(fNSlots), fLastCheckedEntry(fNSlots, -1), fValues(fNSlots)
+        fLastResults(fNSlots), fValues(fNSlots)
    {
    }
 
@@ -570,7 +573,7 @@ class TFilterBase {
 protected:
    TLoopManager *fImplPtr; ///< A raw pointer to the TLoopManager at the root of this functional graph. It is only
                            /// guaranteed to contain a valid address during an event loop.
-   std::vector<Long64_t> fLastCheckedEntry = {-1};
+   std::vector<Long64_t> fLastCheckedEntry;
    std::vector<int> fLastResult = {true}; // std::vector<bool> cannot be used in a MT context safely
    std::vector<ULong64_t> fAccepted = {0};
    std::vector<ULong64_t> fRejected = {0};
@@ -608,6 +611,7 @@ public:
       std::fill(fRejected.begin(), fRejected.end(), 0);
    }
    virtual void ClearValueReaders(unsigned int slot) = 0;
+   void InitNode();
 };
 
 template <typename FilterF, typename PrevDataFrame>

@@ -20,15 +20,17 @@ int imt001_parBranchProcessing()
    ROOT::EnableImplicitMT(nthreads);
 
    // Open the file containing the tree
-   TFile *file = TFile::Open("http://root.cern.ch/files/h1/dstarmb.root");
+   auto file = TFile::Open("http://root.cern.ch/files/h1/dstarmb.root");
 
    // Get the tree
    TTree *tree = nullptr;
    file->GetObject<TTree>("h42", tree);
 
+   const auto nEntries = tree->GetEntries();
+
    // Read the branches in parallel.
    // Note that the interface does not change, the parallelisation is internal
-   for (Long64_t i = 0; i < tree->GetEntries(); ++i) {
+   for (auto i : ROOT::TSeqUL(nEntries)) {
       tree->GetEntry(i); // parallel read
    }
 
@@ -36,7 +38,7 @@ int imt001_parBranchProcessing()
    tree->SetImplicitMT(false);
 
    // If now GetEntry is invoked on the tree, the reading is sequential
-   for (Long64_t i = 0; i < tree->GetEntries(); ++i) {
+   for (auto i : ROOT::TSeqUL(nEntries)) {
       tree->GetEntry(i); // sequential read
    }
 
@@ -49,7 +51,7 @@ int imt001_parBranchProcessing()
 
    // This is still sequential: the global flag is disabled, even if the
    // flag for this particular tree is enabled
-   for (Long64_t i = 0; i < tree->GetEntries(); ++i) {
+   for (auto i : ROOT::TSeqUL(nEntries)) {
       tree->GetEntry(i); // sequential read
    }
 

@@ -4,7 +4,7 @@
 #ifndef ROOT_TBufferSQL2
 #define ROOT_TBufferSQL2
 
-#include "TBufferFile.h"
+#include "TBufferText.h"
 
 #include "TString.h"
 
@@ -26,19 +26,18 @@ class TSQLStructure;
 class TSQLObjectData;
 class TSQLClassInfo;
 
-class TBufferSQL2 : public TBufferFile {
+class TBufferSQL2 : public TBufferText {
 
    friend class TSQLStructure;
 
 protected:
-   TSQLFile *fSQL;            ///<!   instance of TSQLFile
-   TSQLStructure *fStructure; ///<!   structures, created by object storing
-   TSQLStructure *fStk;       ///<!   pointer on current active structure (stack head)
-   TExMap *fObjMap;           ///<!   Map between stored objects and object id
-   TString fReadBuffer;       ///<!   Buffer for read value
-   Int_t fErrorFlag;          ///<!   Error id value
-   Bool_t fExpectedChain; ///<!   flag to resolve situation when several elements of same basic type stored as FastArray
-   Int_t fCompressLevel;  ///<!   compress level used to minimize size of data in database
+   TSQLFile *fSQL;               ///<!   instance of TSQLFile
+   Int_t fIOVersion;             ///<!   I/O version from TSQLFile
+   TSQLStructure *fStructure;    ///<!   structures, created by object storing
+   TSQLStructure *fStk;          ///<!   pointer on current active structure (stack head)
+   TString fReadBuffer;          ///<!   Buffer for read value
+   Int_t fErrorFlag;             ///<!   Error id value
+   Int_t fCompressLevel;         ///<!   compress level used to minimize size of data in database
    Int_t fReadVersionBuffer;     ///<!   buffer, used to by ReadVersion method
    Long64_t fObjIdCounter;       ///<!   counter of objects id
    Bool_t fIgnoreVerification;   ///<!   ignore verification of names
@@ -102,17 +101,30 @@ protected:
    const char *SqlReadValue(const char *tname);
    const char *SqlReadCharStarValue();
 
-   Int_t
-   SqlWriteObject(const void *obj, const TClass *objClass, Bool_t cacheReuse, TMemberStreamer *streamer = 0, Int_t streamer_index = 0);
+   Int_t SqlWriteObject(const void *obj, const TClass *objClass, Bool_t cacheReuse, TMemberStreamer *streamer = 0,
+                        Int_t streamer_index = 0);
    void *SqlReadObject(void *obj, TClass **cl = 0, TMemberStreamer *streamer = 0, Int_t streamer_index = 0,
                        const TClass *onFileClass = 0);
    void *SqlReadObjectDirect(void *obj, TClass **cl, Long64_t objid, TMemberStreamer *streamer = 0,
                              Int_t streamer_index = 0, const TClass *onFileClass = 0);
 
+   void StreamObjectExtra(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n = 0,
+                          const TClass *onFileClass = nullptr);
+
+   template <typename T>
+   R__ALWAYS_INLINE void SqlReadArrayContent(T *arr, Int_t arrsize, Bool_t withsize);
+
+   template <typename T>
+   R__ALWAYS_INLINE Int_t SqlReadArray(T *&arr, Bool_t is_static = kFALSE);
+
+   template <typename T>
+   R__ALWAYS_INLINE void SqlReadFastArray(T *arr, Int_t arrsize);
+
+   template <typename T>
+   R__ALWAYS_INLINE void SqlWriteArray(T *arr, Int_t arrsize, Bool_t withsize = kFALSE);
 
 public:
-   TBufferSQL2(TBuffer::EMode mode);
-   TBufferSQL2(TBuffer::EMode mode, TSQLFile *file);
+   TBufferSQL2(TBuffer::EMode mode, TSQLFile *file = nullptr);
    virtual ~TBufferSQL2();
 
    void SetCompressionLevel(int level) { fCompressLevel = level; }
@@ -125,7 +137,7 @@ public:
 
    TSQLStructure *SqlWriteAny(const void *obj, const TClass *cl, Long64_t objid);
 
-   void *SqlReadAny(Long64_t keyid, Long64_t objid, TClass **cl, void *obj = 0);
+   void *SqlReadAny(Long64_t keyid, Long64_t objid, TClass **cl, void *obj = nullptr);
 
    // suppress class writing/reading
 
@@ -134,13 +146,8 @@ public:
 
    // redefined virtual functions of TBuffer
 
-   virtual Int_t CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);    // SL
-   virtual Int_t CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname); // SL
-   virtual void SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);           // SL
-
-   virtual void SkipVersion(const TClass *cl = 0);
-   virtual Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0); // SL
-   virtual UInt_t WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);                   // SL
+   virtual Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0);
+   virtual UInt_t WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
 
    virtual void *ReadObjectAny(const TClass *clCast);
    virtual void SkipObjectAny();
@@ -152,15 +159,6 @@ public:
    virtual void ClassBegin(const TClass *, Version_t = -1);
    virtual void ClassEnd(const TClass *);
    virtual void ClassMember(const char *name, const char *typeName = 0, Int_t arrsize1 = -1, Int_t arrsize2 = -1);
-
-   virtual void ReadFloat16(Float_t *f, TStreamerElement *ele = 0);
-   virtual void WriteFloat16(Float_t *f, TStreamerElement *ele = 0);
-   virtual void ReadDouble32(Double_t *d, TStreamerElement *ele = 0);
-   virtual void WriteDouble32(Double_t *d, TStreamerElement *ele = 0);
-   virtual void ReadWithFactor(Float_t *ptr, Double_t factor, Double_t minvalue);
-   virtual void ReadWithNbits(Float_t *ptr, Int_t nbits);
-   virtual void ReadWithFactor(Double_t *ptr, Double_t factor, Double_t minvalue);
-   virtual void ReadWithNbits(Double_t *ptr, Int_t nbits);
 
    virtual Int_t ReadArray(Bool_t *&b);
    virtual Int_t ReadArray(Char_t *&c);
@@ -175,8 +173,6 @@ public:
    virtual Int_t ReadArray(ULong64_t *&l);
    virtual Int_t ReadArray(Float_t *&f);
    virtual Int_t ReadArray(Double_t *&d);
-   virtual Int_t ReadArrayFloat16(Float_t *&f, TStreamerElement *ele = 0);
-   virtual Int_t ReadArrayDouble32(Double_t *&d, TStreamerElement *ele = 0);
 
    virtual Int_t ReadStaticArray(Bool_t *b);
    virtual Int_t ReadStaticArray(Char_t *c);
@@ -191,8 +187,6 @@ public:
    virtual Int_t ReadStaticArray(ULong64_t *l);
    virtual Int_t ReadStaticArray(Float_t *f);
    virtual Int_t ReadStaticArray(Double_t *d);
-   virtual Int_t ReadStaticArrayFloat16(Float_t *f, TStreamerElement *ele = 0);
-   virtual Int_t ReadStaticArrayDouble32(Double_t *d, TStreamerElement *ele = 0);
 
    virtual void ReadFastArray(Bool_t *b, Int_t n);
    virtual void ReadFastArray(Char_t *c, Int_t n);
@@ -207,12 +201,11 @@ public:
    virtual void ReadFastArray(ULong64_t *l, Int_t n);
    virtual void ReadFastArray(Float_t *f, Int_t n);
    virtual void ReadFastArray(Double_t *d, Int_t n);
-   virtual void ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *ele = 0);
-   virtual void ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *ele = 0);
-   virtual void ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor, Double_t minvalue);
-   virtual void ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits);
-   virtual void ReadFastArrayWithFactor(Double_t *ptr, Int_t n, Double_t factor, Double_t minvalue);
-   virtual void ReadFastArrayWithNbits(Double_t *ptr, Int_t n, Int_t nbits);
+   virtual void ReadFastArrayString(Char_t *c, Int_t n);
+   virtual void
+   ReadFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = 0, const TClass *onFileClass = 0);
+   virtual void ReadFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE,
+                              TMemberStreamer *s = 0, const TClass *onFileClass = 0);
 
    virtual void WriteArray(const Bool_t *b, Int_t n);
    virtual void WriteArray(const Char_t *c, Int_t n);
@@ -227,12 +220,6 @@ public:
    virtual void WriteArray(const ULong64_t *l, Int_t n);
    virtual void WriteArray(const Float_t *f, Int_t n);
    virtual void WriteArray(const Double_t *d, Int_t n);
-   virtual void WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement *ele = 0);
-   virtual void WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele = 0);
-   virtual void
-   ReadFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = 0, const TClass *onFileClass = 0);
-   virtual void ReadFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE,
-                              TMemberStreamer *s = 0, const TClass *onFileClass = 0);
 
    virtual void WriteFastArray(const Bool_t *b, Int_t n);
    virtual void WriteFastArray(const Char_t *c, Int_t n);
@@ -247,18 +234,13 @@ public:
    virtual void WriteFastArray(const ULong64_t *l, Int_t n);
    virtual void WriteFastArray(const Float_t *f, Int_t n);
    virtual void WriteFastArray(const Double_t *d, Int_t n);
-   virtual void WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElement *ele = 0);
-   virtual void WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele = 0);
+   virtual void WriteFastArrayString(const Char_t *c, Int_t n);
    virtual void WriteFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = 0);
    virtual Int_t
    WriteFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE, TMemberStreamer *s = 0);
 
-   virtual void StreamObject(void *obj, const std::type_info &typeinfo, const TClass *onFileClass = 0);
-   virtual void StreamObject(void *obj, const char *className, const TClass *onFileClass = 0);
-   virtual void StreamObject(void *obj, const TClass *cl, const TClass *onFileClass = 0);
-   virtual void StreamObject(TObject *obj);
-   virtual void
-   StreamObject(void *obj, TMemberStreamer *streamer, const TClass *cl, Int_t n = 0, const TClass *onFileClass = 0);
+   virtual void StreamObject(void *obj, const TClass *cl, const TClass *onFileClass = nullptr);
+   using TBufferText::StreamObject;
 
    virtual void ReadBool(Bool_t &b);
    virtual void ReadChar(Char_t &c);
@@ -298,14 +280,7 @@ public:
    using TBuffer::WriteStdString;
    virtual void WriteCharStar(char *s);
 
-   virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
-   virtual Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection,
-                                     void *end_collection);
-   virtual Int_t
-   ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
-
-   static void SetFloatFormat(const char *fmt = "%e");
-   static const char *GetFloatFormat();
+   virtual TVirtualStreamerInfo *GetInfo();
 
    // end of redefined virtual functions
 

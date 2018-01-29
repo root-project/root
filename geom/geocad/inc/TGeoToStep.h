@@ -14,6 +14,9 @@
 
 #include "TObject.h"
 
+#include <map>
+#include <string>
+
 class TGeoManager;
 class TOCCToStep;
 
@@ -28,7 +31,10 @@ public:
    TGeoToStep();
    TGeoToStep(TGeoManager *geom);
    ~TGeoToStep();
-   void *CreateGeometry();
+
+   void CreateGeometry(const char* fname = "geometry.stp", int max_level = -1);
+   void CreatePartialGeometry(const char* part_name, int max_level = -1,  const char* fname = "geometry.stp");
+   void CreatePartialGeometry(std::map<std::string,int> part_name_levels,  const char* fname = "geometry.stp");
 
    ClassDef(TGeoToStep,0)
 };

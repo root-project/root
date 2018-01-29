@@ -43,6 +43,7 @@ Class that contains all the data information
 #include <algorithm>
 #include <functional>
 #include <numeric>
+#include <random>
 
 #include "TMVA/DataSetFactory.h"
 
@@ -984,7 +985,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
                                  const TString& normMode,
                                  UInt_t splitSeed)
 {
-   TMVA::RandomGenerator rndm( splitSeed );
+   TMVA::RandomGenerator rndm(splitSeed);
 
    // ==== splitting of undefined events to kTraining and kTesting
 
@@ -998,9 +999,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
                   << unspecifiedEvents.size()
                   << " events of class " << cls
                   << " which are not yet associated to testing or training" << Endl;
-            std::random_shuffle( unspecifiedEvents.begin(),
-                                 unspecifiedEvents.end(),
-                                 rndm );
+            std::shuffle(unspecifiedEvents.begin(), unspecifiedEvents.end(), rndm);
          }
       }
    }
@@ -1225,7 +1224,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             // make indices
             std::generate( indicesTraining.begin(), indicesTraining.end(), TMVA::Increment<UInt_t>(0) );
             // shuffle indices
-            std::random_shuffle( indicesTraining.begin(), indicesTraining.end(), rndm );
+            std::shuffle(indicesTraining.begin(), indicesTraining.end(), rndm);
             // erase indices of not needed events
             indicesTraining.erase( indicesTraining.begin()+sizeTraining-UInt_t(requestedTraining), indicesTraining.end() );
             // delete all events with the given indices
@@ -1243,7 +1242,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             // make indices
             std::generate( indicesTesting.begin(), indicesTesting.end(), TMVA::Increment<UInt_t>(0) );
             // shuffle indices
-            std::random_shuffle( indicesTesting.begin(), indicesTesting.end(), rndm );
+            std::shuffle(indicesTesting.begin(), indicesTesting.end(), rndm);
             // erase indices of not needed events
             indicesTesting.erase( indicesTesting.begin()+sizeTesting-UInt_t(requestedTesting), indicesTesting.end() );
             // delete all events with the given indices
@@ -1348,30 +1347,12 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             }
          }
       }
-
-      // debugging output: classnumbers of all events in training and testing vectors
-      //       std::cout << std::endl;
-      //       std::cout << "TRAINING VECTOR" << std::endl;
-      //       std::transform( trainingEventVector->begin(), trainingEventVector->end(), ostream_iterator<Int_t>(std::cout, "|"), std::mem_fun(&TMVA::Event::GetClass) );
-
-      //       std::cout << std::endl;
-      //       std::cout << "TESTING VECTOR" << std::endl;
-      //       std::transform( testingEventVector->begin(), testingEventVector->end(), ostream_iterator<Int_t>(std::cout, "|"), std::mem_fun(&TMVA::Event::GetClass) );
-      //       std::cout << std::endl;
-
    }else{
       for( UInt_t cls = 0; cls < dsi.GetNClasses(); ++cls ){
          trainingEventVector->insert( trainingEventVector->end(), tmpEventVector[Types::kTraining].at(cls).begin(), tmpEventVector[Types::kTraining].at(cls).end() );
          testingEventVector->insert ( testingEventVector->end(),  tmpEventVector[Types::kTesting].at(cls).begin(),  tmpEventVector[Types::kTesting].at(cls).end()  );
       }
    }
-
-   //    std::cout << "trainingEventVector " << trainingEventVector->size() << std::endl;
-   //    std::cout << "testingEventVector  " << testingEventVector->size() << std::endl;
-
-   //    std::transform( trainingEventVector->begin(), trainingEventVector->end(), ostream_iterator<Int_t>(std::cout, "> \n"), std::mem_fun(&TMVA::Event::GetNVariables) );
-   //    std::transform( testingEventVector->begin(), testingEventVector->end(), ostream_iterator<Int_t>(std::cout, "> \n"), std::mem_fun(&TMVA::Event::GetNVariables) );
-
    // delete the tmpEventVector (but not the events therein)
    tmpEventVector[Types::kTraining].clear();
    tmpEventVector[Types::kTesting].clear();
@@ -1381,8 +1362,8 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
    if (mixMode == "RANDOM") {
       Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "shuffling events"<<Endl;
 
-      std::random_shuffle( trainingEventVector->begin(), trainingEventVector->end(), rndm );
-      std::random_shuffle( testingEventVector->begin(),  testingEventVector->end(),  rndm  );
+      std::shuffle(trainingEventVector->begin(), trainingEventVector->end(), rndm);
+      std::shuffle(testingEventVector->begin(),  testingEventVector->end(),  rndm);
    }
 
    Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName())<< "trainingEventVector " << trainingEventVector->size() << Endl;
@@ -1462,22 +1443,17 @@ TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
       //     compose_binary creates a BinaryFunction of ...
       //         std::plus<Double_t>() knows how to sum up two doubles
       //         null<Double_t>() leaves the first argument (the running sum) unchanged and returns it
-      //         std::mem_fun knows how to call a member function (type and member-function given as argument) and return the result
       //
       // all together sums up all the event-weights of the events in the vector and returns it
-      trainingSumWeightsPerClass.at(cls) = std::accumulate( tmpEventVector[Types::kTraining].at(cls).begin(),
-                                                            tmpEventVector[Types::kTraining].at(cls).end(),
-                                                            Double_t(0),
-                                                            compose_binary( std::plus<Double_t>(),
-                                                                            null<Double_t>(),
-                                                                            std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
+      trainingSumWeightsPerClass.at(cls) =
+         std::accumulate(tmpEventVector[Types::kTraining].at(cls).begin(),
+                         tmpEventVector[Types::kTraining].at(cls).end(),
+                         Double_t(0), [](Double_t w, const TMVA::Event *E) { return w + E->GetOriginalWeight(); });
 
-      testingSumWeightsPerClass.at(cls)  = std::accumulate( tmpEventVector[Types::kTesting].at(cls).begin(),
-                                                            tmpEventVector[Types::kTesting].at(cls).end(),
-                                                            Double_t(0),
-                                                            compose_binary( std::plus<Double_t>(),
-                                                                            null<Double_t>(),
-                                                                            std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
+      testingSumWeightsPerClass.at(cls) =
+         std::accumulate(tmpEventVector[Types::kTesting].at(cls).begin(),
+                         tmpEventVector[Types::kTesting].at(cls).end(),
+                         Double_t(0), [](Double_t w, const TMVA::Event *E) { return w + E->GetOriginalWeight(); });
 
       if ( cls == dsi.GetSignalClassIndex()){
          trainingSumSignalWeights += trainingSumWeightsPerClass.at(cls);
@@ -1588,21 +1564,15 @@ TMVA::DataSetFactory::RenormEvents( TMVA::DataSetInfo& dsi,
    testingSumBackgrWeights  = 0; // Backgr. includes all classes that are not signal
 
    for( UInt_t cls = 0, clsEnd = dsi.GetNClasses(); cls < clsEnd; ++cls ){
+      trainingSumWeightsPerClass.at(cls) =
+         std::accumulate(tmpEventVector[Types::kTraining].at(cls).begin(),
+                         tmpEventVector[Types::kTraining].at(cls).end(),
+                         Double_t(0), [](Double_t w, const TMVA::Event *E) { return w + E->GetOriginalWeight(); });
 
-      trainingSumWeightsPerClass.at(cls) = (std::accumulate( tmpEventVector[Types::kTraining].at(cls).begin(),  // accumulate --> start at begin
-                                                             tmpEventVector[Types::kTraining].at(cls).end(),    //    until end()
-                                                             Double_t(0),                                       // values are of type double
-                                                             compose_binary( std::plus<Double_t>(),             // define addition for doubles
-                                                                             null<Double_t>(),                  // take the argument, don't do anything and return it
-                                                                             std::mem_fun(&TMVA::Event::GetOriginalWeight) ) )); // take the value from GetOriginalWeight
-
-      testingSumWeightsPerClass.at(cls)  = std::accumulate( tmpEventVector[Types::kTesting].at(cls).begin(),
-                                                            tmpEventVector[Types::kTesting].at(cls).end(),
-                                                            Double_t(0),
-                                                            compose_binary( std::plus<Double_t>(),
-                                                                            null<Double_t>(),
-                                                                            std::mem_fun(&TMVA::Event::GetOriginalWeight) ) );
-
+      testingSumWeightsPerClass.at(cls) =
+         std::accumulate(tmpEventVector[Types::kTesting].at(cls).begin(),
+                         tmpEventVector[Types::kTesting].at(cls).end(),
+                         Double_t(0), [](Double_t w, const TMVA::Event *E) { return w + E->GetOriginalWeight(); });
 
       if ( cls == dsi.GetSignalClassIndex()){
          trainingSumSignalWeights += trainingSumWeightsPerClass.at(cls);

@@ -239,6 +239,9 @@ std::vector<Double_t> TMVA::ResultsMulticlass::GetBestMultiClassCuts(UInt_t targ
 
 void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
 {
+
+   Log() << kINFO << "Creating multiclass performance histograms..." << Endl;
+
    DataSet *ds = GetDataSet();
    ds->SetCurrentType(GetTreeType());
    const DataSetInfo *dsi = GetDataSetInfo();
@@ -251,6 +254,16 @@ void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
    // 1-vs-rest ROC curves
    //
    for (size_t iClass = 0; iClass < numClasses; ++iClass) {
+
+      TString className = dsi->GetClassInfo(iClass)->GetName();
+      TString name = Form("%s_rejBvsS_%s", prefix.Data(), className.Data());
+      TString title = Form("%s_%s", prefix.Data(), className.Data());
+
+      // Histograms are already generated, skip.
+      if ( DoesExist(name) ) {
+         return;
+      }
+
       // Format data
       std::vector<Float_t> mvaRes;
       std::vector<Bool_t> mvaResTypes;
@@ -278,9 +291,6 @@ void TMVA::ResultsMulticlass::CreateMulticlassPerformanceHistos(TString prefix)
       delete roc;
 
       // Style ROC Curve
-      TString className = dsi->GetClassInfo(iClass)->GetName();
-      TString name = Form("%s_rejBvsS_%s", prefix.Data(), className.Data());
-      TString title = Form("%s_%s", prefix.Data(), className.Data());
       rocGraph->SetName(name);
       rocGraph->SetTitle(title);
 
@@ -358,6 +368,12 @@ void  TMVA::ResultsMulticlass::CreateMulticlassHistos( TString prefix, Int_t nbi
          TString name(Form("%s_%s_prob_for_%s",prefix.Data(),
                            dsi->GetClassInfo( jCls )->GetName(),
                            dsi->GetClassInfo( iCls )->GetName()));
+         
+         // Histograms are already generated, skip.
+         if ( DoesExist(name) ) {
+            return;
+         }
+
          histos.at(iCls).push_back(new TH1F(name,name,nbins,xmin,xmax));
       }
    }

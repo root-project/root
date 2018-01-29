@@ -573,6 +573,8 @@ TF1::TF1(const char *name, const char *formula, Double_t xmin, Double_t xmax, EA
       fParMin.resize(fNpar);
       fParMax.resize(fNpar);
    }
+   // do we want really to have this un-documented feature where we accept cases where dim > 1
+   // by setting xmin >= xmax ??
    if (fNdim > 1 && xmin < xmax) {
       Error("TF1", "function: %s/%s has dimension %d instead of 1", name, formula, fNdim);
       MakeZombie();
@@ -1930,6 +1932,11 @@ Int_t TF1::GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum)
    for (i = 0; i < nprobSum; i++) {
       const Double_t r = probSum[i];
       Int_t bin  = TMath::Max(TMath::BinarySearch(npx + 1, integral.GetArray(), r), (Long64_t)0);
+      // in case the prob is 1
+      if (bin == npx) {
+         q[i] = xMax;
+         continue;
+      }
       // LM use a tolerance 1.E-12 (integral precision)
       while (bin < npx - 1 && TMath::AreEqualRel(integral[bin + 1], r, 1E-12)) {
          if (TMath::AreEqualRel(integral[bin + 2], r, 1E-12)) bin++;
@@ -2751,7 +2758,8 @@ Bool_t TF1::IsValid() const
    if (fMethodCall) return fMethodCall->IsValid();
    // function built on compiled functors are always valid by definition
    // (checked at compiled time)
-   if (fFunctor && fSave.empty()) return kFALSE;
+   // invalid is a TF1 where the functor is null pointer and has not been saved
+   if (!fFunctor && fSave.empty()) return kFALSE;
    return kTRUE;
 }
 

@@ -114,14 +114,14 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsManager::CreateWindow(bool batch_mode)
 {
    if (!CreateHttpServer()) {
-      R__ERROR_HERE("CreateWindow") << "Cannot create http server";
+      R__ERROR_HERE("WebDisplay") << "Cannot create http server when creating window";
       return nullptr;
    }
 
    std::shared_ptr<ROOT::Experimental::TWebWindow> win = std::make_shared<ROOT::Experimental::TWebWindow>();
 
    if (!win) {
-      R__ERROR_HERE("CreateWindow") << "Fail to create TWebWindow instance";
+      R__ERROR_HERE("WebDisplay") << "Fail to create TWebWindow instance";
       return nullptr;
    }
 
@@ -160,6 +160,37 @@ void ROOT::Experimental::TWebWindowsManager::Unregister(ROOT::Experimental::TWeb
 }
 
 //////////////////////////////////////////////////////////////////////////
+/// Provide URL address to access specified window from inside or from remote
+
+std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::TWebWindow &win, bool remote)
+{
+   if (!fServer) {
+      R__ERROR_HERE("WebDisplay") << "Server instance not exists when requesting window URL";
+      return "";
+   }
+
+   std::string addr = "/web7gui/";
+
+   addr.append(((THttpWSHandler *)win.fWSHandler.get())->GetName());
+
+   if (win.IsBatchMode())
+      addr.append("/?batch_mode");
+   else
+      addr.append("/");
+
+   if (remote) {
+      if (!CreateHttpServer(true)) {
+         R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server when requesting URL";
+         return "";
+      }
+
+      addr = fAddr + addr;
+   }
+
+   return addr;
+}
+
+//////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
 /// Parameter "where" specifies that kind of window display should be used. Possible values:
 ///
@@ -181,7 +212,7 @@ void ROOT::Experimental::TWebWindowsManager::Unregister(ROOT::Experimental::TWeb
 bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow &win, const std::string &_where)
 {
    if (!fServer) {
-      R__ERROR_HERE("Show") << "Server instance not exists";
+      R__ERROR_HERE("WebDisplay") << "Server instance not exists to show window";
       return false;
    }
 
@@ -203,14 +234,14 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    if (batch_mode) {
       if (!is_cef && !is_chrome) {
-         R__ERROR_HERE("Show") << "To use batch mode 'cef' or 'chromium' should be configured as output";
+         R__ERROR_HERE("WebDisplay") << "To use batch mode 'cef' or 'chromium' should be configured as output";
          return false;
       }
       if (is_cef) {
          const char *displ = gSystem->Getenv("DISPLAY");
          if (!displ || (*displ == 0)) {
-            R__ERROR_HERE("Show") << "For a time been in batch mode DISPLAY variable should be set. See "
-                                     "gui/webdisplay/Readme.md for more info";
+            R__ERROR_HERE("WebDisplay") << "For a time been in batch mode DISPLAY variable should be set. See "
+                                           "gui/webdisplay/Readme.md for more info";
             return false;
          }
       }
@@ -245,7 +276,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    }
 
    if (!CreateHttpServer(true)) {
-      R__ERROR_HERE("Show") << "Fail to start real HTTP server";
+      R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server";
       return false;
    }
 

@@ -64,19 +64,20 @@ namespace TMVA {
 
    // =============== functors =======================
 
-
    class RandomGenerator {
    public:
-      RandomGenerator( UInt_t seed ){
-         fRandom.SetSeed( seed );
-      }
-      UInt_t operator() ( UInt_t n ) {
-         return fRandom.Integer(n);
-      }
+      using result_type = UInt_t;
+
+      RandomGenerator(UInt_t seed) { fRandom.SetSeed(seed); }
+
+      UInt_t operator()(UInt_t n = kMaxUInt) { return fRandom.Integer(n); }
+
+      static constexpr UInt_t min() { return 0; }
+      static constexpr UInt_t max() { return kMaxUInt; }
+
    private:
       TRandom3 fRandom; // random generator
    };
-
 
    // delete-functor (to be used in e.g. for_each algorithm)
    template<class T>

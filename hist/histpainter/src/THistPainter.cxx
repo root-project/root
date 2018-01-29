@@ -1117,9 +1117,9 @@ For the most part, the COL2 and COLZ2 options are a drop in replacement to the C
 and COLZ options. There is one major difference and that concerns the treatment of
 bins with zero content. The COL2 and COLZ2 options color these bins the color of zero.
 
-COL2 option renders the histogram as a bitmap. Therefore it cannot be saved in vector 
+COL2 option renders the histogram as a bitmap. Therefore it cannot be saved in vector
 graphics file format like PostScript or PDF (an empty image will be generated). It can
-be saved only in bitmap files like PNG fro instance.
+be saved only in bitmap files like PNG format for instance.
 
 
 ### <a name="HP140"></a> The CANDLE and VIOLIN options

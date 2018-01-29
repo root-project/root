@@ -218,6 +218,9 @@ public:
   static TemplateArgumentList *CreateCopy(ASTContext &Context,
                                           ArrayRef<TemplateArgument> Args);
 
+  /// \brief Create hash for the given arguments.
+  static unsigned ComputeODRHash(ArrayRef<TemplateArgument> Args);
+
   /// \brief Construct a new, temporary template argument list on the stack.
   ///
   /// The template argument list does not own the template arguments
@@ -735,6 +738,26 @@ class RedeclarableTemplateDecl : public TemplateDecl,
     return getMostRecentDecl();
   }
 
+  struct LazySpecializationInfo {
+    uint32_t DeclID = ~0U;
+    unsigned ODRHash = ~0U;
+    bool IsPartial = false;
+    LazySpecializationInfo(uint32_t ID, unsigned Hash = ~0U,
+                           bool Partial = false)
+      : DeclID(ID), ODRHash(Hash), IsPartial(Partial) { }
+    LazySpecializationInfo() { }
+    bool operator<(const LazySpecializationInfo &Other) const {
+      return DeclID < Other.DeclID;
+    }
+    bool operator==(const LazySpecializationInfo &Other) const {
+      assert((DeclID != Other.DeclID || ODRHash == Other.ODRHash) &&
+             "Hashes differ!");
+      assert((DeclID != Other.DeclID || IsPartial == Other.IsPartial) &&
+             "Both must be the same kinds!");
+      return DeclID == Other.DeclID;
+    }
+  };
+
 protected:
   template <typename EntryType> struct SpecEntryTraits {
     typedef EntryType DeclType;
@@ -773,6 +796,13 @@ protected:
     return SpecIterator<EntryType>(isEnd ? Specs.end() : Specs.begin());
   }
 
+  void loadLazySpecializationsImpl(bool OnlyPartial = false) const;
+
+  ///\returns true if any lazy specialization was loaded.
+  bool loadLazySpecializationsImpl(llvm::ArrayRef<TemplateArgument> Args) const;
+
+  Decl *loadLazySpecializationImpl(LazySpecializationInfo &LazySpecInfo) const;
+
   template <class EntryType> typename SpecEntryTraits<EntryType>::DeclType*
   findSpecializationImpl(llvm::FoldingSetVector<EntryType> &Specs,
                          ArrayRef<TemplateArgument> Args, void *&InsertPos);
@@ -791,6 +821,13 @@ protected:
     /// was explicitly specialized.
     llvm::PointerIntPair<RedeclarableTemplateDecl*, 1, bool>
       InstantiatedFromMember;
+
+    /// \brief If non-null, points to an array of specializations (including
+    /// partial specializations) known only by their external declaration IDs.
+    ///
+    /// The first value in the array is the number of specializations/partial
+    /// specializations that follow.
+    LazySpecializationInfo *LazySpecializations = nullptr;
   };
 
   /// \brief Pointer to the common data shared by all declarations of this
@@ -941,7 +978,7 @@ protected:
   /// \brief Data that is common to all of the declarations of a given
   /// function template.
   struct Common : CommonBase {
-    Common() : InjectedArgs(), LazySpecializations() { }
+    Common() : InjectedArgs() { }
 
     /// \brief The function template specializations for this function
     /// template, including explicit specializations and instantiations.
@@ -955,13 +992,6 @@ protected:
     /// template, and is allocated lazily, since most function templates do not
     /// require the use of this information.
     TemplateArgument *InjectedArgs;
-
-    /// \brief If non-null, points to an array of specializations known only
-    /// by their external declaration IDs.
-    ///
-    /// The first value in the array is the number of of specializations
-    /// that follow.
-    uint32_t *LazySpecializations;
   };
 
   FunctionTemplateDecl(ASTContext &C, DeclContext *DC, SourceLocation L,
@@ -2038,7 +2068,7 @@ protected:
   /// \brief Data that is common to all of the declarations of a given
   /// class template.
   struct Common : CommonBase {
-    Common() : LazySpecializations() { }
+    Common() { }
 
     /// \brief The class template specializations for this class
     /// template, including explicit specializations and instantiations.
@@ -2051,13 +2081,6 @@ protected:
 
     /// \brief The injected-class-name type for this class template.
     QualType InjectedClassNameType;
-
-    /// \brief If non-null, points to an array of specializations (including
-    /// partial specializations) known only by their external declaration IDs.
-    ///
-    /// The first value in the array is the number of of specializations/
-    /// partial specializations that follow.
-    uint32_t *LazySpecializations;
   };
 
   /// \brief Retrieve the set of specializations of this class template.
@@ -2088,7 +2111,7 @@ protected:
 
 public:
   /// \brief Load any lazily-loaded specializations from the external source.
-  void LoadLazySpecializations() const;
+  void LoadLazySpecializations(bool OnlyPartial = false) const;
 
   /// \brief Get the underlying class declarations of the template.
   CXXRecordDecl *getTemplatedDecl() const {
@@ -2855,7 +2878,7 @@ protected:
   /// \brief Data that is common to all of the declarations of a given
   /// variable template.
   struct Common : CommonBase {
-    Common() : LazySpecializations() {}
+    Common() {}
 
     /// \brief The variable template specializations for this variable
     /// template, including explicit specializations and instantiations.
@@ -2865,13 +2888,6 @@ protected:
     /// template.
     llvm::FoldingSetVector<VarTemplatePartialSpecializationDecl>
     PartialSpecializations;
-
-    /// \brief If non-null, points to an array of specializations (including
-    /// partial specializations) known ownly by their external declaration IDs.
-    ///
-    /// The first value in the array is the number of of specializations/
-    /// partial specializations that follow.
-    uint32_t *LazySpecializations;
   };
 
   /// \brief Retrieve the set of specializations of this variable template.
@@ -2896,7 +2912,7 @@ protected:
 
 public:
   /// \brief Load any lazily-loaded specializations from the external source.
-  void LoadLazySpecializations() const;
+  void LoadLazySpecializations(bool OnlyPartial = false) const;
 
   /// \brief Get the underlying variable declarations of the template.
   VarDecl *getTemplatedDecl() const {

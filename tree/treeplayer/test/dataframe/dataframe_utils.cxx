@@ -64,10 +64,10 @@ TEST(TDataFrameUtils, DeduceAllPODsFromTmpColumns)
                   bool v(0);
                   return v;
                });
-   auto c = tdf.Snapshot<char, unsigned char, int, unsigned int, short, unsigned short, double, float, Long64_t,
-                         ULong64_t, bool>("t", "dataframe_interfaceAndUtils_1.root",
-                                          {"char_tmp", "uchar_tmp", "int_tmp", "uint_tmp", "short_tmp", "ushort_tmp",
-                                           "double_tmp", "float_tmp", "Long64_t_tmp", "ULong64_t_tmp", "bool_tmp"});
+   auto c = d.Snapshot<char, unsigned char, int, unsigned int, short, unsigned short, double, float, Long64_t,
+                       ULong64_t, bool>("t", "dataframe_interfaceAndUtils_1.root",
+                                        {"char_tmp", "uchar_tmp", "int_tmp", "uint_tmp", "short_tmp", "ushort_tmp",
+                                         "double_tmp", "float_tmp", "Long64_t_tmp", "ULong64_t_tmp", "bool_tmp"});
 }
 
 TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
@@ -100,19 +100,46 @@ TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
    t.Branch("arrint", &a, "a[2]/I");
    t.Branch("vararrint", &a, "a[i]/I");
 
-   std::map<const char *, const char *> nameTypes = {{"char", "char"},
-                                                     {"uchar", "unsigned char"},
-                                                     {"i", "int"},
-                                                     {"uint", "unsigned int"},
-                                                     {"short", "short"},
-                                                     {"ushort", "unsigned short"},
-                                                     {"double", "double"},
-                                                     {"float", "float"},
+   std::map<const char *, const char *> nameTypes = {{"char", "Char_t"},
+                                                     {"uchar", "UChar_t"},
+                                                     {"i", "Int_t"},
+                                                     {"uint", "UInt_t"},
+                                                     {"short", "Short_t"},
+                                                     {"ushort", "UShort_t"},
+                                                     {"double", "Double_t"},
+                                                     {"float", "Float_t"},
                                                      {"Long64_t", "Long64_t"},
                                                      {"ULong64_t", "ULong64_t"},
-                                                     {"bool", "bool"},
-                                                     {"arrint", "ROOT::Experimental::TDF::TArrayBranch<int>"},
-                                                     {"vararrint", "ROOT::Experimental::TDF::TArrayBranch<int>"}};
+                                                     {"bool", "Bool_t"},
+                                                     {"arrint", "ROOT::Experimental::TDF::TArrayBranch<Int_t>"},
+                                                     {"vararrint", "ROOT::Experimental::TDF::TArrayBranch<Int_t>"}};
+
+   for (auto &nameType : nameTypes) {
+      auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, &t, nullptr);
+      EXPECT_STREQ(nameType.second, typeName.c_str());
+   }
+}
+
+TEST(TDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
+{
+   int i;
+   float f;
+   int a[2];
+
+   TTree t("t", "t");
+   auto b = t.Branch("float", &f);
+   b->SetTitle("custom title");
+   b = t.Branch("i", &i);
+   b->SetTitle("custom title");
+   b = t.Branch("arrint", &a, "a[2]/I");
+   b->SetTitle("custom title");
+   b = t.Branch("vararrint", &a, "a[i]/I");
+   b->SetTitle("custom title");
+
+   std::map<const char *, const char *> nameTypes = {{"float", "Float_t"},
+                                                     {"i", "Int_t"},
+                                                     {"arrint", "ROOT::Experimental::TDF::TArrayBranch<Int_t>"},
+                                                     {"vararrint", "ROOT::Experimental::TDF::TArrayBranch<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
       auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, &t, nullptr);
@@ -127,7 +154,6 @@ TEST(TDataFrameUtils, ToConstCharPtr)
    EXPECT_STREQ(s_content, ROOT::Internal::TDF::ToConstCharPtr(s_content));
    EXPECT_STREQ(s_content, ROOT::Internal::TDF::ToConstCharPtr(s));
 }
-
 
 TEST(TDataFrameUtils, CheckNonExistingCustomColumnNullTree)
 {

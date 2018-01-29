@@ -177,6 +177,8 @@ public:
    virtual Int_t      GetEntries() const { return GetSize(); }
    virtual const char *GetName() const;
    virtual TObject  **GetObjectRef(const TObject *obj) const = 0;
+   /// Return the *capacity* of the collection, i.e. the current total amount of space that has been allocated so far.
+   /// Same as `Capacity`. Use `GetEntries` to get the number of elements currently in the collection.
    virtual Int_t      GetSize() const { return fSize; }
    virtual Int_t      GrowBy(Int_t delta) const;
    ULong_t            Hash() const { return fName.Hash(); }

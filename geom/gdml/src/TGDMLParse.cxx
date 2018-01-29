@@ -796,7 +796,16 @@ XMLNodePointer_t TGDMLParse::IsoProcess(TXMLEngine* gdml, XMLNodePointer_t node,
    Int_t n2 = (Int_t)Value(n);
    Double_t atom2 = Value(atom);
 
-   TGeoIsotope* iso = new TGeoIsotope(NameShort(name), z2 , n2, atom2);
+   TGeoManager*  mgr = gGeoManager;
+   TString       iso_name = NameShort(name);
+   TGeoElementTable* tab  = mgr->GetElementTable();
+   TGeoIsotope*      iso  = tab->FindIsotope(iso_name);
+   if ( !iso )  {
+      iso = new TGeoIsotope(iso_name, z2 , n2, atom2);
+   }
+   else if ( gDebug >= 2 ) {
+      Info("TGDMLParse","Re-use existing isotope: %s",iso->GetName());
+   }
    fisomap[name.Data()] = iso;
 
    return node;
@@ -817,6 +826,8 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
   TString atom = "0";
   TString tempattr;
   Int_t   ncompo = 0;
+  TGeoManager*      mgr  = gGeoManager;
+  TGeoElementTable* tab  = mgr->GetElementTable();
   typedef FracMap::iterator fractions;
   FracMap fracmap;
 
@@ -869,11 +880,20 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
        child = gdml->GetNext(child);
     } // loop on children
       // Create TGeoElement - note: Object(name, title) corresponds to Element(formula, name)
-     TGeoElement *ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
-     for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
-        if (fisomap.find(f->first) != fisomap.end()) {
-           ele->AddIsotope((TGeoIsotope*)fisomap[f->first], f->second);
+    TGeoElement* ele  = tab->FindElement(NameShort(name));
+    // We cannot use elements with Z = 0, so we expect a user definition
+    if (ele && ele->Z() == 0)
+       ele = nullptr;
+    if ( !ele )   {
+        ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
+        for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
+           if (fisomap.find(f->first) != fisomap.end()) {
+              ele->AddIsotope((TGeoIsotope*)fisomap[f->first], f->second);
+           }
         }
+     }
+     else if ( gDebug >= 2 ) {
+        Info("TGDMLParse","Re-use existing element: %s",ele->GetName());
      }
      felemap[name.Data()] = ele;
      return child;
@@ -925,11 +945,20 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
          child = gdml->GetNext(child);
       } // loop on children
         // Create TGeoElement - note: Object(name, title) corresponds to Element(formula, name)
-      TGeoElement *ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
-      for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
-         if (fisomap.find(f->first) != fisomap.end()) {
-            ele->AddIsotope((TGeoIsotope*)fisomap[f->first], f->second);
+      TGeoElement* ele  = tab->FindElement(NameShort(name));
+      // We cannot use elements with Z = 0, so we expect a user definition
+      if (ele && ele->Z() == 0)
+         ele = nullptr;
+      if ( !ele )   {
+         ele = new TGeoElement(NameShort(name), NameShort(name), ncompo);
+         for (fractions f = fracmap.begin(); f != fracmap.end(); ++f) {
+            if (fisomap.find(f->first) != fisomap.end()) {
+               ele->AddIsotope((TGeoIsotope*)fisomap[f->first], f->second);
+            }
          }
+      }
+      else if ( gDebug >= 2 ) {
+         Info("TGDMLParse","Re-use existing element: %s",ele->GetName());
       }
       felemap[name.Data()] = ele;
       return child;
@@ -977,11 +1006,18 @@ XMLNodePointer_t TGDMLParse::EleProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 
    Int_t z2 = (Int_t)Value(z);
    Double_t atom2 = Value(atom);
+   TGeoElement* ele  = tab->FindElement(formula);
+   // We cannot use elements with Z = 0, so we expect a user definition
+   if (ele && ele->Z() == 0)
+      ele = nullptr;
 
-   TGeoElement* ele = new TGeoElement(formula, NameShort(name), z2 , atom2);
-
+   if ( !ele )   {
+     ele = new TGeoElement(formula, NameShort(name), z2 , atom2);
+   }
+   else if ( gDebug >= 2 )  {
+      Info("TGDMLParse","Re-use existing element: %s",ele->GetName());
+   }
    felemap[name.Data()] = ele;
-
    return node;
 
 }
@@ -1003,7 +1039,10 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 //  typedef FracMap::iterator i;
   FracMap fracmap;
 
-  static int medid = 0;
+  TGeoManager* mgr = gGeoManager;
+  TGeoElementTable* tab_ele = mgr->GetElementTable();
+  // We have to assume the media are monotonic increasing starting with 1
+  static int medid = mgr->GetListOfMedia()->GetSize()+1;
   XMLNodePointer_t child = gdml->GetChild(node);
   TString tempattr = "";
   Int_t ncompo = 0, mixflag = 2;
@@ -1066,12 +1105,28 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
     if (tmpname == "vacuum") {
       valZ = 0;
     }
-    mat = new TGeoMaterial(NameShort(name), a, valZ, d);
+    TString mat_name = NameShort(name);
+    mat = mgr->GetMaterial(mat_name);
+    if ( !mat )  {
+      mat = new TGeoMaterial(mat_name, a, valZ, d);
+    }
+    else  {
+      Info("TGDMLParse","Re-use existing material: %s",mat->GetName());
+    }
     mixflag = 0;
     //Note: Object(name, title) corresponds to Element(formula, name)
-    TGeoElement* mat_ele = new TGeoElement(NameShort(name), NameShort(name), atoi(tempconst), a);
-    felemap[name.Data()] = mat_ele;
+    TGeoElement* mat_ele = tab_ele->FindElement(mat_name);
+    // We cannot use elements with Z = 0, so we expect a user definition
+    if (mat_ele && mat_ele->Z() == 0)
+       mat_ele = nullptr;
 
+    if ( !mat_ele )  {
+      mat_ele = new TGeoElement(mat_name, mat_name, atoi(tempconst), a);
+    }
+    else if ( gDebug >= 2 )  {
+       Info("TGDMLParse","Re-use existing material-element: %s",mat_ele->GetName());
+    }
+    felemap[name.Data()] = mat_ele;
   }
 
   else if (z == 0) {
@@ -1150,8 +1205,20 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
         name = TString::Format("%s_%s", name.Data(), fCurrentFile);
      }
      //mix = new TGeoMixture(NameShort(name), 0 /*ncompo*/, density);
-     mix = new TGeoMixture(NameShort(name), ncompo, density);
      mixflag = 1;
+     TString mat_name = NameShort(name);
+     mat = mgr->GetMaterial(mat_name);
+     if ( !mat )  {
+       mix = new TGeoMixture(mat_name, ncompo, density);
+     }
+     else if ( mat->IsMixture() ) {
+       mix = (TGeoMixture*)mat;
+       if ( gDebug >= 2 )
+          Info("TGDMLParse","Re-use existing material-mixture: %s",mix->GetName());
+     }
+     else  {
+       Error("TGDMLParse","WARNING! Inconsistent material definitions between GDML and TGeoManager");
+     }
      Int_t natoms;
      Double_t weight;
 
@@ -1187,16 +1254,19 @@ XMLNodePointer_t TGDMLParse::MatProcess(TXMLEngine* gdml, XMLNodePointer_t node,
 
    medid = medid + 1;
 
-   TGeoMedium* med = 0;
-
-   if (mixflag == 1) {
-      fmixmap[name.Data()] = mix;
-      med = new TGeoMedium(NameShort(name), medid, mix);
-   } else if (mixflag == 0) {
-      fmatmap[name.Data()] = mat;
-      med = new TGeoMedium(NameShort(name), medid, mat);
+   TGeoMedium* med = mgr->GetMedium(NameShort(name));
+   if ( !med )   {
+     if (mixflag == 1) {
+       fmixmap[name.Data()] = mix;
+       med = new TGeoMedium(NameShort(name), medid, mix);
+     } else if (mixflag == 0) {
+       fmatmap[name.Data()] = mat;
+       med = new TGeoMedium(NameShort(name), medid, mat);
+     }
    }
-
+   else if ( gDebug >= 2 ) {
+      Info("TGDMLParse","Re-use existing medium: %s",med->GetName());
+   }
    fmedmap[name.Data()] = med;
 
    return child;

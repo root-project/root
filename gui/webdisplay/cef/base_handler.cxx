@@ -11,6 +11,7 @@
 #include "base_handler.h"
 
 #include "TString.h"
+#include "TError.h"
 #include "THttpServer.h"
 #include "THttpWSEngine.h"
 #include "THttpCallArg.h"
@@ -45,8 +46,8 @@ protected:
    CefRefPtr<CefMessageRouterBrowserSide::Callback> fCallback;
 
 public:
-   TCefWSEngine(const char *name, const char *title, CefRefPtr<CefMessageRouterBrowserSide::Callback> callback)
-      : THttpWSEngine(name, title), fCallback(callback)
+   TCefWSEngine(CefRefPtr<CefMessageRouterBrowserSide::Callback> callback)
+      : THttpWSEngine(), fCallback(callback)
    {
    }
 
@@ -66,7 +67,7 @@ public:
 
    virtual void Send(const void * /*buf*/, int /*len*/)
    {
-      Error("Send", "Should never be called, only text is supported");
+      ::Error("TCefWSEngine::Send", "Should never be called, only text is supported");
    }
 
    virtual void SendCharStar(const char *buf)
@@ -76,7 +77,7 @@ public:
          fCallback->Success(buf); // send next message to JS
    }
 
-   virtual Bool_t PreviewData(THttpCallArg *arg)
+   virtual Bool_t PreviewData(THttpCallArg &)
    {
       // function called in the user code before processing correspondent websocket data
       // returns kTRUE when user should ignore such http request - it is for internal use
@@ -154,9 +155,9 @@ public:
       arg->SetFileName("root.ws_emulation");
 
       if (message == "connect") {
-         TCefWSEngine *ws = new TCefWSEngine("name", "title", callback);
+         TCefWSEngine *ws = new TCefWSEngine(callback);
          arg->SetMethod("WS_CONNECT");
-         arg->SetWSHandle(ws);
+         ws->AttachTo(*arg);
          arg->SetWSId(ws->GetId());
          printf("Create CEF WS engine with id %u\n", ws->GetId());
       } else {

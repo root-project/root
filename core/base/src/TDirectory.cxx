@@ -128,16 +128,28 @@ TDirectory::~TDirectory()
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
+///
+/// Reset the current directory to its previous state.
 
 TDirectory::TContext::~TContext()
 {
-   // Destructor.   Reset the current directory to its
-   // previous state.
+   fActiveDestructor = true;
    if (fDirectory) {
-      fDirectory->UnregisterContext(this);
-      fDirectory->cd();
-   } else
+      // UnregisterContext must not be virtual to allow
+      // this to work even with fDirectory set to nullptr.
+      (*fDirectory).UnregisterContext(this);
+      // While we were waiting for the lock, the TDirectory
+      // may have been deleted by another thread, so
+      // we need to recheck the value of fDirectory.
+      if (fDirectory)
+         (*fDirectory).cd();
+      else
+         CdNull();
+   } else {
       CdNull();
+   }
+   fActiveDestructor = false;
+   while(fDirectoryWait);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -239,12 +251,31 @@ void TDirectory::Build(TFile* /*motherFile*/, TDirectory* motherDir)
 
 void TDirectory::CleanTargets()
 {
+   std::vector<TContext*> extraWait;
+
    {
       ROOT::Internal::TSpinLockGuard slg(fSpinLock);
+
       while (fContext) {
-         fContext->fDirectory = 0;
-         fContext = fContext->fNext;
+         const auto next = fContext->fNext;
+         const auto ctxt = fContext;
+         ctxt->fDirectoryWait = true;
+
+         ctxt->fDirectory = nullptr;
+
+         if (ctxt->fActiveDestructor) {
+            extraWait.push_back(fContext);
+         } else {
+            ctxt->fDirectoryWait = false;
+         }
+         fContext = next;
       }
+   }
+   for(auto &&context : extraWait) {
+      // Wait until the TContext is done spinning
+      // over the lock.
+      while(context->fActiveDestructor);
+      context->fDirectoryWait = false;
    }
 
    if (gDirectory == this) {
@@ -1276,7 +1307,12 @@ Int_t TDirectory::WriteTObject(const TObject *obj, const char *name, Option_t * 
 /// UnRegister a TContext pointing to this TDirectory object
 
 void TDirectory::UnregisterContext(TContext *ctxt) {
+
    ROOT::Internal::TSpinLockGuard slg(fSpinLock);
+
+   // Another thread already unregistered the TContext.
+   if (ctxt->fDirectory == nullptr)
+      return;
 
    if (ctxt==fContext) {
       fContext = ctxt->fNext;

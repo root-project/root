@@ -40,7 +40,10 @@ public:
      */
    class TContext  {
    private:
-      TDirectory *fDirectory;   //! Pointer to the previous current directory.
+      std::atomic<TDirectory*> fDirectory; //! Pointer to the previous current directory.
+      std::atomic<bool> fActiveDestructor;  //! Set to true during the destructor execution
+      std::atomic<bool> fDirectoryWait;     //! Set to true if a TDirectory might still access this object.
+
       TContext   *fPrevious;    //! Pointer to the next TContext in the implied list of context pointing to fPrevious.
       TContext   *fNext;        //! Pointer to the next TContext in the implied list of context pointing to fPrevious.
       TContext(TContext&);
@@ -48,26 +51,30 @@ public:
       void CdNull();
       friend class TDirectory;
    public:
-      TContext(TDirectory* previous, TDirectory* newCurrent)
-         : fDirectory(previous),fPrevious(0),fNext(0)
+      TContext(TDirectory *previous, TDirectory *newCurrent)
+         : fDirectory(previous), fActiveDestructor(false), fDirectoryWait(false), fPrevious(0), fNext(0)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
-         if ( fDirectory ) fDirectory->RegisterContext(this);
+         if ( fDirectory ) (*fDirectory).RegisterContext(this);
          if ( newCurrent ) newCurrent->cd();
          else CdNull();
       }
-      TContext() : fDirectory(TDirectory::CurrentDirectory()),fPrevious(0),fNext(0)
+      TContext()
+         : fDirectory(TDirectory::CurrentDirectory()), fActiveDestructor(false), fDirectoryWait(false), fPrevious(0),
+           fNext(0)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
-         if ( fDirectory ) fDirectory->RegisterContext(this);
+         if ( fDirectory ) (*fDirectory).RegisterContext(this);
       }
-      TContext(TDirectory* newCurrent) : fDirectory(TDirectory::CurrentDirectory()),fPrevious(0),fNext(0)
+      TContext(TDirectory *newCurrent)
+         : fDirectory(TDirectory::CurrentDirectory()), fActiveDestructor(false), fDirectoryWait(false), fPrevious(0),
+           fNext(0)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
-         if ( fDirectory ) fDirectory->RegisterContext(this);
+         if ( fDirectory ) (*fDirectory).RegisterContext(this);
          if ( newCurrent ) newCurrent->cd();
          else CdNull();
       }
@@ -82,6 +89,7 @@ protected:
    TString       fPathBuffer;      //!Buffer for GetPath() function
    TContext     *fContext;         //!Pointer to a list of TContext object pointing to this TDirectory
 
+   std::atomic<size_t> fContextPeg;   //!Counter delaying the TDirectory destructor from finishing.
    mutable std::atomic_flag fSpinLock; //! MSVC doesn't support = ATOMIC_FLAG_INIT;
 
    static Bool_t fgAddDirectory;   //!flag to add histograms, graphs,etc to the directory

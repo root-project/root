@@ -12,13 +12,16 @@
 #ifndef ROOT_TBufferXML
 #define ROOT_TBufferXML
 
-#include "TBufferFile.h"
+#include "TBufferText.h"
 #include "TXMLSetup.h"
 #include "TXMLEngine.h"
 #include "TString.h"
 #include "TObjArray.h"
+#include "TArrayC.h"
+#include "TClonesArray.h"
 
 #include <string>
+#include <deque>
 
 class TExMap;
 class TVirtualStreamerInfo;
@@ -29,7 +32,7 @@ class TMemberStreamer;
 class TXMLFile;
 class TXMLStackObj;
 
-class TBufferXML : public TBufferFile, public TXMLSetup {
+class TBufferXML : public TBufferText, public TXMLSetup {
 
    friend class TKeyXML;
 
@@ -42,27 +45,37 @@ public:
    static TString
    ConvertToXML(const void *obj, const TClass *cl, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
 
+   template <class T>
+   static TString ToXML(const T *obj, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE)
+   {
+      return ConvertToXML(obj, TBuffer::GetClass(typeid(T)), GenericLayout, UseNamespaces);
+   }
+
    static TObject *ConvertFromXML(const char *str, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
-   static void *
-   ConvertFromXMLAny(const char *str, TClass **cl = 0, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE);
+   static void *ConvertFromXMLAny(const char *str, TClass **cl = nullptr, Bool_t GenericLayout = kFALSE,
+                                  Bool_t UseNamespaces = kFALSE);
+
+   template <class T>
+   static Bool_t FromXML(T *&obj, const char *xml, Bool_t GenericLayout = kFALSE, Bool_t UseNamespaces = kFALSE)
+   {
+      if (obj)
+         return kFALSE;
+      obj = (T *)ConvertFromXMLChecked(xml, TBuffer::GetClass(typeid(T)), GenericLayout, UseNamespaces);
+      return obj != nullptr;
+   }
 
    Int_t GetIOVersion() const { return fIOVersion; }
    void SetIOVersion(Int_t v) { fIOVersion = v; }
 
    // suppress class writing/reading
 
-   virtual TClass *ReadClass(const TClass *cl = 0, UInt_t *objTag = 0);
+   virtual TClass *ReadClass(const TClass *cl = nullptr, UInt_t *objTag = nullptr);
    virtual void WriteClass(const TClass *cl);
 
    // redefined virtual functions of TBuffer
 
-   virtual Int_t CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);    // SL
-   virtual Int_t CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname); // SL
-   virtual void SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);           // SL
-
-   virtual void SkipVersion(const TClass *cl = 0);
-   virtual Version_t ReadVersion(UInt_t *start = 0, UInt_t *bcnt = 0, const TClass *cl = 0); // SL
-   virtual UInt_t WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);                   // SL
+   virtual Version_t ReadVersion(UInt_t *start = nullptr, UInt_t *bcnt = nullptr, const TClass *cl = nullptr);
+   virtual UInt_t WriteVersion(const TClass *cl, Bool_t useBcnt = kFALSE);
 
    virtual void *ReadObjectAny(const TClass *clCast);
    virtual void SkipObjectAny();
@@ -73,16 +86,7 @@ public:
 
    virtual void ClassBegin(const TClass *, Version_t = -1);
    virtual void ClassEnd(const TClass *);
-   virtual void ClassMember(const char *name, const char *typeName = 0, Int_t arrsize1 = -1, Int_t arrsize2 = -1);
-
-   virtual void ReadFloat16(Float_t *f, TStreamerElement *ele = 0);
-   virtual void WriteFloat16(Float_t *f, TStreamerElement *ele = 0);
-   virtual void ReadDouble32(Double_t *d, TStreamerElement *ele = 0);
-   virtual void WriteDouble32(Double_t *d, TStreamerElement *ele = 0);
-   virtual void ReadWithFactor(Float_t *ptr, Double_t factor, Double_t minvalue);
-   virtual void ReadWithNbits(Float_t *ptr, Int_t nbits);
-   virtual void ReadWithFactor(Double_t *ptr, Double_t factor, Double_t minvalue);
-   virtual void ReadWithNbits(Double_t *ptr, Int_t nbits);
+   virtual void ClassMember(const char *name, const char *typeName = nullptr, Int_t arrsize1 = -1, Int_t arrsize2 = -1);
 
    virtual Int_t ReadArray(Bool_t *&b);
    virtual Int_t ReadArray(Char_t *&c);
@@ -97,8 +101,6 @@ public:
    virtual Int_t ReadArray(ULong64_t *&l);
    virtual Int_t ReadArray(Float_t *&f);
    virtual Int_t ReadArray(Double_t *&d);
-   virtual Int_t ReadArrayFloat16(Float_t *&f, TStreamerElement *ele = 0);
-   virtual Int_t ReadArrayDouble32(Double_t *&d, TStreamerElement *ele = 0);
 
    virtual Int_t ReadStaticArray(Bool_t *b);
    virtual Int_t ReadStaticArray(Char_t *c);
@@ -113,8 +115,6 @@ public:
    virtual Int_t ReadStaticArray(ULong64_t *l);
    virtual Int_t ReadStaticArray(Float_t *f);
    virtual Int_t ReadStaticArray(Double_t *d);
-   virtual Int_t ReadStaticArrayFloat16(Float_t *f, TStreamerElement *ele = 0);
-   virtual Int_t ReadStaticArrayDouble32(Double_t *d, TStreamerElement *ele = 0);
 
    virtual void ReadFastArray(Bool_t *b, Int_t n);
    virtual void ReadFastArray(Char_t *c, Int_t n);
@@ -129,12 +129,11 @@ public:
    virtual void ReadFastArray(ULong64_t *l, Int_t n);
    virtual void ReadFastArray(Float_t *f, Int_t n);
    virtual void ReadFastArray(Double_t *d, Int_t n);
-   virtual void ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement *ele = 0);
-   virtual void ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement *ele = 0);
-   virtual void ReadFastArrayWithFactor(Float_t *ptr, Int_t n, Double_t factor, Double_t minvalue);
-   virtual void ReadFastArrayWithNbits(Float_t *ptr, Int_t n, Int_t nbits);
-   virtual void ReadFastArrayWithFactor(Double_t *ptr, Int_t n, Double_t factor, Double_t minvalue);
-   virtual void ReadFastArrayWithNbits(Double_t *ptr, Int_t n, Int_t nbits);
+   virtual void ReadFastArrayString(Char_t *c, Int_t n);
+   virtual void ReadFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = nullptr,
+                              const TClass *onFileClass = nullptr);
+   virtual void ReadFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE,
+                              TMemberStreamer *s = nullptr, const TClass *onFileClass = nullptr);
 
    virtual void WriteArray(const Bool_t *b, Int_t n);
    virtual void WriteArray(const Char_t *c, Int_t n);
@@ -149,12 +148,6 @@ public:
    virtual void WriteArray(const ULong64_t *l, Int_t n);
    virtual void WriteArray(const Float_t *f, Int_t n);
    virtual void WriteArray(const Double_t *d, Int_t n);
-   virtual void WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement *ele = 0);
-   virtual void WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele = 0);
-   virtual void
-   ReadFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = 0, const TClass *onFileClass = 0);
-   virtual void ReadFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE,
-                              TMemberStreamer *s = 0, const TClass *onFileClass = 0);
 
    virtual void WriteFastArray(const Bool_t *b, Int_t n);
    virtual void WriteFastArray(const Char_t *c, Int_t n);
@@ -169,16 +162,13 @@ public:
    virtual void WriteFastArray(const ULong64_t *l, Int_t n);
    virtual void WriteFastArray(const Float_t *f, Int_t n);
    virtual void WriteFastArray(const Double_t *d, Int_t n);
-   virtual void WriteFastArrayFloat16(const Float_t *d, Int_t n, TStreamerElement *ele = 0);
-   virtual void WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement *ele = 0);
-   virtual void WriteFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = 0);
-   virtual Int_t
-   WriteFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE, TMemberStreamer *s = 0);
+   virtual void WriteFastArrayString(const Char_t *c, Int_t n);
+   virtual void WriteFastArray(void *start, const TClass *cl, Int_t n = 1, TMemberStreamer *s = nullptr);
+   virtual Int_t WriteFastArray(void **startp, const TClass *cl, Int_t n = 1, Bool_t isPreAlloc = kFALSE,
+                                TMemberStreamer *s = nullptr);
 
-   virtual void StreamObject(void *obj, const std::type_info &typeinfo, const TClass *onFileClass = 0);
-   virtual void StreamObject(void *obj, const char *className, const TClass *onFileClass = 0);
-   virtual void StreamObject(void *obj, const TClass *cl, const TClass *onFileClass = 0);
-   virtual void StreamObject(TObject *obj);
+   virtual void StreamObject(void *obj, const TClass *cl, const TClass *onFileClass = nullptr);
+   using TBufferText::StreamObject;
 
    virtual void ReadBool(Bool_t &b);
    virtual void ReadChar(Char_t &c);
@@ -218,16 +208,7 @@ public:
    using TBuffer::WriteStdString;
    virtual void WriteCharStar(char *s);
 
-   virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
-   virtual Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection,
-                                     void *end_collection);
-   virtual Int_t
-   ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
-
-   // end of redefined virtual functions
-
-   static void SetFloatFormat(const char *fmt = "%e");
-   static const char *GetFloatFormat();
+   virtual TVirtualStreamerInfo *GetInfo();
 
 protected:
    TBufferXML();
@@ -237,6 +218,9 @@ protected:
    virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse);
 
    // end redefined protected virtual functions
+
+   static void *ConvertFromXMLChecked(const char *xml, const TClass *expectedClass, Bool_t GenericLayout = kFALSE,
+                                      Bool_t UseNamespaces = kFALSE);
 
    TXMLFile *XmlFile();
 
@@ -256,26 +240,28 @@ protected:
 
    TXMLStackObj *PushStack(XMLNodePointer_t current, Bool_t simple = kFALSE);
    TXMLStackObj *PopStack();
-   void ShiftStack(const char *info = 0);
+   void ShiftStack(const char *info = nullptr);
 
    XMLNodePointer_t StackNode();
-   TXMLStackObj *Stack(Int_t depth = 0);
+   TXMLStackObj *Stack(UInt_t depth = 0)
+   {
+      return (depth < fStack.size()) ? (depth ? fStack[fStack.size() - depth - 1] : fStack.back()) : nullptr;
+   }
 
-   void WorkWithClass(TStreamerInfo *info, const TClass *cl = 0);
+   void WorkWithClass(TStreamerInfo *info, const TClass *cl = nullptr);
    void WorkWithElement(TStreamerElement *elem, Int_t comp_type);
-   Bool_t VerifyNode(XMLNodePointer_t node, const char *name, const char *errinfo = 0);
-   Bool_t VerifyStackNode(const char *name, const char *errinfo = 0);
+   Bool_t VerifyNode(XMLNodePointer_t node, const char *name, const char *errinfo = nullptr);
+   Bool_t VerifyStackNode(const char *name, const char *errinfo = nullptr);
 
-   Bool_t VerifyAttr(XMLNodePointer_t node, const char *name, const char *value, const char *errinfo = 0);
-   Bool_t VerifyStackAttr(const char *name, const char *value, const char *errinfo = 0);
+   Bool_t VerifyAttr(XMLNodePointer_t node, const char *name, const char *value, const char *errinfo = nullptr);
+   Bool_t VerifyStackAttr(const char *name, const char *value, const char *errinfo = nullptr);
 
    Bool_t ProcessPointer(const void *ptr, XMLNodePointer_t node);
-   void RegisterPointer(const void *ptr, XMLNodePointer_t node);
    Bool_t ExtractPointer(XMLNodePointer_t node, void *&ptr, TClass *&cl);
    void ExtractReference(XMLNodePointer_t node, const void *ptr, const TClass *cl);
 
    XMLNodePointer_t CreateItemNode(const char *name);
-   Bool_t VerifyItemNode(const char *name, const char *errinfo = 0);
+   Bool_t VerifyItemNode(const char *name, const char *errinfo = nullptr);
 
    void CreateElemNode(const TStreamerElement *elem);
    Bool_t VerifyElemNode(const TStreamerElement *elem);
@@ -313,33 +299,39 @@ protected:
    void XmlReadBasic(ULong64_t &value);
    const char *XmlReadValue(const char *name);
 
+   template <typename T>
+   R__ALWAYS_INLINE void XmlReadArrayContent(T *arr, Int_t arrsize);
+
+   template <typename T>
+   R__ALWAYS_INLINE Int_t XmlReadArray(T *&arr, bool is_static = false);
+
+   template <typename T>
+   R__ALWAYS_INLINE void XmlReadFastArray(T *arr, Int_t n);
+
+   template <typename T>
+   R__ALWAYS_INLINE void XmlWriteArrayContent(const T *arr, Int_t arrsize);
+
+   template <typename T>
+   R__ALWAYS_INLINE void XmlWriteArray(const T *arr, Int_t arrsize);
+
+   template <typename T>
+   R__ALWAYS_INLINE void XmlWriteFastArray(const T *arr, Int_t n);
+
    XMLNodePointer_t XmlWriteObject(const void *obj, const TClass *objClass, Bool_t cacheReuse);
-   void *XmlReadObject(void *obj, TClass **cl = 0);
+   void *XmlReadObject(void *obj, TClass **cl = nullptr);
 
    void BeforeIOoperation();
    void CheckVersionBuf();
 
-   TXMLEngine *fXML; //!
-
-   TObjArray fStack; //!
-
-   Version_t fVersionBuf; //!
-
-   TExMap *fObjMap;     //!
-   TObjArray *fIdArray; //!
-
-   TString fValueBuf; //!
-
-   Int_t fErrorFlag; //!
-
-   Bool_t fCanUseCompact; ///<!   Flag indicate that basic type (like Int_t) can be placed in the same tag
-   Bool_t fExpectedChain; ///<!   Flag to resolve situation when several elements of same basic type stored as FastArray
-   TClass *fExpectedBaseClass; ///<!   Pointer to class, which should be stored as parent of current
-   Int_t fCompressLevel;       ///<!   Compression level and algorithm
-   Int_t fIOVersion;           ///<!   Indicates format of ROOT xml file
-
-   static std::string
-      fgFloatFmt; ///<!   Printf argument for floats and doubles, either "%f" or "%e" or "%10f" and so on
+   TXMLEngine *fXML;                  ///<!  instance of TXMLEngine for working with XML structures
+   std::deque<TXMLStackObj *> fStack; ///<!   Stack of processed objects
+   Version_t fVersionBuf;             ///<!   Current version buffer
+   TString fValueBuf;                 ///<!   Current value buffer
+   Int_t fErrorFlag;                  ///<!   Error flag
+   Bool_t fCanUseCompact;             ///<!   Flag indicate that basic type (like Int_t) can be placed in the same tag
+   TClass *fExpectedBaseClass;        ///<!   Pointer to class, which should be stored as parent of current
+   Int_t fCompressLevel;              ///<!   Compression level and algorithm
+   Int_t fIOVersion;                  ///<!   Indicates format of ROOT xml file
 
    ClassDef(TBufferXML, 0); // a specialized TBuffer to read/write to XML files
 };

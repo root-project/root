@@ -562,6 +562,7 @@ TH1::TH1(): TNamed(), TAttLine(), TAttFill(), TAttMarker()
    fBufferSize    = 0;
    fBuffer        = 0;
    fBinStatErrOpt = kNormal;
+   fStatOverflows = EStatOverflows::kNeutral;
    fXaxis.SetName("xaxis");
    fYaxis.SetName("yaxis");
    fZaxis.SetName("zaxis");
@@ -731,6 +732,7 @@ void TH1::Build()
    fBufferSize    = 0;
    fBuffer        = 0;
    fBinStatErrOpt = kNormal;
+   fStatOverflows = EStatOverflows::kNeutral;
    fXaxis.SetName("xaxis");
    fYaxis.SetName("yaxis");
    fZaxis.SetName("zaxis");
@@ -2720,7 +2722,7 @@ Int_t TH1::DistancetoPrimitive(Int_t px, Int_t py)
 Bool_t TH1::Divide(TF1 *f1, Double_t c1)
 {
    if (!f1) {
-      Error("Add","Attempt to divide by a non-existing function");
+      Error("Divide","Attempt to divide by a non-existing function");
       return kFALSE;
    }
 
@@ -3018,6 +3020,8 @@ TH1 *TH1::DrawCopy(Option_t *option, const char * name_postfix) const
    TH1 *newth1 = (TH1 *)Clone(newName);
    newth1->SetDirectory(0);
    newth1->SetBit(kCanDelete);
+   if (gPad) gPad->IncrementPaletteColor(1, opt);
+
    newth1->AppendPad(option);
    return newth1;
 }
@@ -3248,7 +3252,7 @@ Int_t TH1::Fill(Double_t x)
    AddBinContent(bin);
    if (fSumw2.fN) ++fSumw2.fArray[bin];
    if (bin == 0 || bin > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    ++fTsumw;
    ++fTsumw2;
@@ -3282,7 +3286,7 @@ Int_t TH1::Fill(Double_t x, Double_t w)
    if (fSumw2.fN)  fSumw2.fArray[bin] += w*w;
    AddBinContent(bin, w);
    if (bin == 0 || bin > fXaxis.GetNbins()) {
-      if (!fgStatOverflows) return -1;
+      if (!GetStatOverflowsBehaviour()) return -1;
    }
    Double_t z= w;
    fTsumw   += z;
@@ -3382,7 +3386,7 @@ void TH1::DoFillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stri
       if (fSumw2.fN) fSumw2.fArray[bin] += ww*ww;
       AddBinContent(bin, ww);
       if (bin == 0 || bin > nbins) {
-         if (!fgStatOverflows) continue;
+         if (!GetStatOverflowsBehaviour()) continue;
       }
       Double_t z= ww;
       fTsumw   += z;
@@ -5471,8 +5475,11 @@ Long64_t TH1::Merge(TCollection *li)
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Performs the operation: this = this*c1*f1
-/// if errors are defined (see TH1::Sumw2), errors are also recalculated.
+/// Performs the operation:
+///
+/// `this = this*c1*f1`
+///
+/// If errors are defined (see TH1::Sumw2), errors are also recalculated.
 ///
 /// Only bins inside the function range are recomputed.
 /// IMPORTANT NOTE: If you intend to use the errors of this histogram later
@@ -5484,7 +5491,7 @@ Long64_t TH1::Merge(TCollection *li)
 Bool_t TH1::Multiply(TF1 *f1, Double_t c1)
 {
    if (!f1) {
-      Error("Add","Attempt to multiply by a non-existing function");
+      Error("Multiply","Attempt to multiply by a non-existing function");
       return kFALSE;
    }
 
@@ -5713,7 +5720,8 @@ void TH1::Paint(Option_t *option)
 /// in the middle of a bin in the original histogram, all entries in
 /// the split bin in the original histogram will be transfered to the
 /// lower of the two possible bins in the new histogram. This is
-/// probably not what you want.
+/// probably not what you want. A warning message is emitted in this
+/// case
 ///
 /// examples: if h1 is an existing TH1F histogram with 100 bins
 ///
@@ -5845,6 +5853,14 @@ TH1 *TH1::Rebin(Int_t ngroup, const char*newname, const Double_t *xbins)
       binError   = 0;
       Int_t imax = ngroup;
       Double_t xbinmax = hnew->GetXaxis()->GetBinUpEdge(bin);
+      // check bin edges for the cases when we provide an array of bins
+      // be careful in case bins can have zero width
+      if (xbins && !TMath::AreEqualAbs(fXaxis.GetBinLowEdge(oldbin),
+                                       hnew->GetXaxis()->GetBinLowEdge(bin),
+                                       TMath::Max(1.E-8 * fXaxis.GetBinWidth(oldbin), 1.E-16 )) )
+      {
+         Warning("Rebin","Bin edge %d of rebinned histogram does not much any bin edges of the old histogram. Result can be inconsistent",bin);
+      }
       for (i=0;i<ngroup;i++) {
          if( (oldbin+i > nbins) ||
              ( hnew != this && (fXaxis.GetBinCenter(oldbin+i) > xbinmax)) ) {
@@ -6030,7 +6046,7 @@ void TH1::ExtendAxis(Double_t x, TAxis *axis)
 
 void TH1::RecursiveRemove(TObject *obj)
 {
-   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+   // Rely on TROOT::RecursiveRemove to take the readlock.
 
    if (fFunctions) {
       if (!fFunctions->TestBit(kInvalidObject)) fFunctions->RecursiveRemove(obj);
@@ -6533,10 +6549,10 @@ void TH1::Rebuild(Option_t *)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset this histogram: contents, errors, etc.
 /// \param[in] option
-///   - "ICE" is specified, resets only Integral, Contents and Errors.
-///   - "ICES" is specified, resets only Integral, Contents , Errors and Statistics
+///   - if "ICE" is specified, resets only Integral, Contents and Errors.
+///   - if "ICES" is specified, resets only Integral, Contents, Errors and Statistics
 ///     This option is used
-///   - "M"   is specified, resets also Minimum and Maximum
+///   - if "M" is specified, resets also Minimum and Maximum
 
 void TH1::Reset(Option_t *option)
 {
@@ -7006,7 +7022,7 @@ Double_t TH1::GetSkewness(Int_t axis) const
       Int_t firstBinZ = fZaxis.GetFirst();
       Int_t lastBinZ  = fZaxis.GetLast();
       // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
-      if (fgStatOverflows) {
+      if (GetStatOverflowsBehaviour()) {
         if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
             if (firstBinX == 1) firstBinX = 0;
             if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
@@ -7075,7 +7091,7 @@ Double_t TH1::GetKurtosis(Int_t axis) const
       Int_t firstBinZ = fZaxis.GetFirst();
       Int_t lastBinZ  = fZaxis.GetLast();
       // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
-      if (fgStatOverflows) {
+      if (GetStatOverflowsBehaviour()) {
         if ( !fXaxis.TestBit(TAxis::kAxisRange) ) {
             if (firstBinX == 1) firstBinX = 0;
             if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
@@ -7165,7 +7181,7 @@ void TH1::GetStats(Double_t *stats) const
       Int_t firstBinX = fXaxis.GetFirst();
       Int_t lastBinX  = fXaxis.GetLast();
       // include underflow/overflow if TH1::StatOverflows(kTRUE) in case no range is set on the axis
-      if (fgStatOverflows && !fXaxis.TestBit(TAxis::kAxisRange)) {
+      if (GetStatOverflowsBehaviour() && !fXaxis.TestBit(TAxis::kAxisRange)) {
          if (firstBinX == 1) firstBinX = 0;
          if (lastBinX ==  fXaxis.GetNbins() ) lastBinX += 1;
       }

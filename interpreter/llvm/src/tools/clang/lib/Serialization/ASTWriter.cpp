@@ -2312,12 +2312,13 @@ void ASTWriter::WriteSourceManagerBlock(SourceManager &SourceMgr,
 
     // Emit the needed file names.
     llvm::DenseMap<int, int> FilenameMap;
+    FilenameMap[-1] = -1; // For unspecified filenames.
     for (const auto &L : LineTable) {
       if (L.first.ID < 0)
         continue;
       for (auto &LE : L.second) {
         if (FilenameMap.insert(std::make_pair(LE.FilenameID,
-                                              FilenameMap.size())).second)
+                                              FilenameMap.size() - 1)).second)
           AddPath(LineTable.getFilename(LE.FilenameID), Record);
       }
     }
@@ -5032,12 +5033,29 @@ void ASTWriter::WriteDeclUpdatesBlocks(RecordDataImpl &OffsetsRecord) {
 
       switch (Kind) {
       case UPD_CXX_ADDED_IMPLICIT_MEMBER:
-      case UPD_CXX_ADDED_TEMPLATE_SPECIALIZATION:
       case UPD_CXX_ADDED_ANONYMOUS_NAMESPACE:
         assert(Update.getDecl() && "no decl to add?");
         Record.push_back(GetDeclRef(Update.getDecl()));
         break;
-
+      case UPD_CXX_ADDED_TEMPLATE_SPECIALIZATION: {
+        const Decl *Spec = Update.getDecl();
+        assert(Spec && "no decl to add?");
+        Record.push_back(GetDeclRef(Spec));
+        ArrayRef<TemplateArgument> Args;
+        if (auto *CTSD = dyn_cast<ClassTemplateSpecializationDecl>(Spec))
+          Args = CTSD->getTemplateArgs().asArray();
+        else if (auto *VTSD = dyn_cast<VarTemplateSpecializationDecl>(Spec))
+          Args = VTSD->getTemplateArgs().asArray();
+        else if (auto *FD = dyn_cast<FunctionDecl>(Spec))
+          Args = FD->getTemplateSpecializationArgs()->asArray();
+        assert(Args.size());
+        Record.push_back(TemplateArgumentList::ComputeODRHash(Args));
+        bool IsPartialSpecialization
+          = isa<ClassTemplatePartialSpecializationDecl>(Spec) ||
+          isa<VarTemplatePartialSpecializationDecl>(Spec);
+        Record.push_back(IsPartialSpecialization);
+        break;
+      }
       case UPD_CXX_ADDED_FUNCTION_DEFINITION:
         break;
 

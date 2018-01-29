@@ -120,6 +120,7 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
 : Configurable          ( theOption ),
    fTransformations      ( "I" ),
    fVerbose              ( kFALSE ),
+   fVerboseLevel         ( kINFO ),
    fCorrelations         ( kFALSE ),
    fROC                  ( kTRUE ),
    fSilentFile           ( kFALSE ),
@@ -151,6 +152,10 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    Bool_t drawProgressBar = kTRUE;
 #endif
    DeclareOptionRef( fVerbose, "V", "Verbose flag" );
+   DeclareOptionRef( fVerboseLevel=TString("Info"), "VerboseLevel", "VerboseLevel (Debug/Verbose/Info)" );
+   AddPreDefVal(TString("Debug"));
+   AddPreDefVal(TString("Verbose"));
+   AddPreDefVal(TString("Info"));
    DeclareOptionRef( color,    "Color", "Flag for coloured screen output (default: True, if in batch mode: False)" );
    DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
    DeclareOptionRef( fCorrelations, "Correlations", "boolean to show correlation in output" );
@@ -173,7 +178,10 @@ TMVA::Factory::Factory( TString jobName, TFile* theTargetFile, TString theOption
    ParseOptions();
    CheckForUnusedOptions();
 
-   if (Verbose()) Log().SetMinType( kVERBOSE );
+   if (Verbose()) fLogger->SetMinType( kVERBOSE );
+   if (fVerboseLevel.CompareTo("Debug")   ==0) fLogger->SetMinType( kDEBUG );
+   if (fVerboseLevel.CompareTo("Verbose") ==0) fLogger->SetMinType( kVERBOSE );
+   if (fVerboseLevel.CompareTo("Info")    ==0) fLogger->SetMinType( kINFO );
 
    // global settings
    gConfig().SetUseColor( color );
@@ -228,6 +236,10 @@ TMVA::Factory::Factory( TString jobName, TString theOption )
    Bool_t drawProgressBar = kTRUE;
 #endif
    DeclareOptionRef( fVerbose, "V", "Verbose flag" );
+   DeclareOptionRef( fVerboseLevel=TString("Info"), "VerboseLevel", "VerboseLevel (Debug/Verbose/Info)" );
+   AddPreDefVal(TString("Debug"));
+   AddPreDefVal(TString("Verbose"));
+   AddPreDefVal(TString("Info"));
    DeclareOptionRef( color,    "Color", "Flag for coloured screen output (default: True, if in batch mode: False)" );
    DeclareOptionRef( fTransformations, "Transformations", "List of transformations to test; formatting example: \"Transformations=I;D;P;U;G,D\", for identity, decorrelation, PCA, Uniform and Gaussianisation followed by decorrelation transformations" );
    DeclareOptionRef( fCorrelations, "Correlations", "boolean to show correlation in output" );
@@ -250,7 +262,10 @@ TMVA::Factory::Factory( TString jobName, TString theOption )
    ParseOptions();
    CheckForUnusedOptions();
 
-   if (Verbose()) Log().SetMinType( kVERBOSE );
+   if (Verbose()) fLogger->SetMinType( kVERBOSE );
+   if (fVerboseLevel.CompareTo("Debug")   ==0) fLogger->SetMinType( kDEBUG );
+   if (fVerboseLevel.CompareTo("Verbose") ==0) fLogger->SetMinType( kVERBOSE );
+   if (fVerboseLevel.CompareTo("Info")    ==0) fLogger->SetMinType( kINFO );
 
    // global settings
    gConfig().SetUseColor( color );
@@ -475,6 +490,69 @@ TMVA::MethodBase* TMVA::Factory::BookMethod( TMVA::DataLoader *loader, TString t
 TMVA::MethodBase* TMVA::Factory::BookMethod(TMVA::DataLoader *loader, Types::EMVA theMethod, TString methodTitle, TString theOption )
 {
    return BookMethod(loader, Types::Instance().GetMethodName( theMethod ), methodTitle, theOption );
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Adds an already constructed method to be managed by this factory.
+/// 
+/// \note Private.
+/// \note Know what you are doing when using this method. The method that you
+/// are loading could be trained already. 
+/// 
+
+TMVA::MethodBase* TMVA::Factory::BookMethodWeightfile(DataLoader *loader, TMVA::Types::EMVA methodType, const TString &weightfile)
+{
+   TString datasetname = loader->GetName();
+   std::string methodTypeName = std::string(Types::Instance().GetMethodName(methodType));
+   DataSetInfo &dsi = loader->DefaultDataSetInfo();
+   
+   IMethod *im = ClassifierFactory::Instance().Create(methodTypeName, dsi, weightfile );
+   MethodBase *method = (dynamic_cast<MethodBase*>(im));
+
+   if (method == nullptr) return nullptr;
+
+   if( method->GetMethodType() == Types::kCategory ){
+      Log() << kERROR << "Cannot handle category methods for now." << Endl;
+   }
+
+   TString fFileDir;
+   if(fModelPersistence) {
+      fFileDir=loader->GetName();
+      fFileDir+="/"+gConfig().GetIONames().fWeightFileDir;
+   }
+
+   if(fModelPersistence) method->SetWeightFileDir(fFileDir);
+   method->SetModelPersistence(fModelPersistence);
+   method->SetAnalysisType( fAnalysisType );
+   method->SetupMethod();
+   method->SetFile(fgTargetFile);
+   method->SetSilentFile(IsSilentFile());
+
+   method->DeclareCompatibilityOptions();
+
+   // read weight file
+   method->ReadStateFromFile();
+
+   //method->CheckSetup();
+
+   TString methodTitle = method->GetName();
+   if (HasMethod(datasetname, methodTitle) != 0) {
+    Log() << kFATAL << "Booking failed since method with title <"
+     << methodTitle <<"> already exists "<< "in with DataSet Name <"<< loader->GetName()<<">  "
+     << Endl;
+   }
+
+   Log() << kINFO << "Booked classifier \"" << method->GetMethodName()
+         << "\" of type: \"" << method->GetMethodTypeName() << "\"" << Endl;
+
+   if(fMethodsMap.count(datasetname) == 0) {
+      MVector *mvector = new MVector;
+      fMethodsMap[datasetname] = mvector;
+   }
+
+   fMethodsMap[datasetname]->push_back( method );
+
+   return method;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1146,6 +1224,9 @@ void TMVA::Factory::TrainAllMethods()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Evaluates all booked methods on the testing data and adds the output to the
+/// Results in the corresponiding DataSet.
+///
 
 void TMVA::Factory::TestAllMethods()
 {
@@ -1379,6 +1460,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
         // Find approximate optimal working point w.r.t. signalEfficiency * signalPurity.
         // theMethod->TestMulticlass(); // This is where the actual GA calc is done
         // multiclass_testEff.push_back(theMethod->GetMulticlassEfficiency(multiclass_testPur));
+
+        theMethod->TestMulticlass();
 
         // Confusion matrix at three background efficiency levels
         multiclass_trainConfusionEffB01.push_back(theMethod->GetMulticlassConfusionMatrix(0.01, Types::kTraining));

@@ -21,6 +21,8 @@
 
 #include "TMVA/DNN/DataLoader.h"
 
+#include <random>
+
 namespace TMVA {
 namespace DNN {
 
@@ -112,7 +114,7 @@ TBatch<TReference<AReal>> TDataLoader<AData, TReference<AReal>>::GetBatch()
 template <typename AData, typename AReal>
 void TDataLoader<AData, TReference<AReal>>::Shuffle()
 {
-   std::random_shuffle(fSampleIndices.begin(), fSampleIndices.end());
+   std::shuffle(fSampleIndices.begin(), fSampleIndices.end(), std::default_random_engine{});
 }
 
 } // namespace DNN

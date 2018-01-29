@@ -140,6 +140,71 @@ ClassImp(TFormula);
     This class is not anymore the base class for the function classes `TF1`, but it has now
     a data member of TF1 which can be accessed via `TF1::GetFormula`.
 
+    ### An expanded note on variables and parameters
+
+    In a TFormula, a variable is a defined by a name `x`, `y`, `z` or `t` or an
+    index like `x[0]`, `x[1]`, `x[2]`; that is `x[N]` where N is an integer.
+
+    ```
+    TFormula("", "x[0] * x[1] + 10")
+    ```
+
+    Parameters are similar and can take any name. It is specified using brackets
+    e.g. `[expected_mass]` or `[0]`.
+
+    ```
+    TFormula("", "exp([expected_mass])-1")
+    ```
+
+    Variables and parameters can be combined in the same TFormula. Here we consider
+    a very simple case where we have an exponential decay after some time t and a
+    number of events with timestamps for which we want to evaluate this function.
+
+    ```
+    TFormula tf ("", "[0]*exp(-[1]*t)");
+    tf.SetParameter(0, 1);
+    tf.SetParameter(1, 0.5);
+
+    for (auto & event : events) {
+       tf.Eval(event.t);
+    }
+    ```
+
+    The distinction between variables and parameters arose from the TFormula's
+    application in fitting. There parameters are fitted to the data provided
+    through variables. In other applications this distinction can go away.
+
+    Parameter values can be provided dynamically using `TFormula::EvalPar`
+    instead of `TFormula::Eval`. In this way parameters can be used identically
+    to variables. See below for an example that uses only parameters to model a
+    function.
+
+    ```
+    Int_t params[2] = {1, 2}; // {vel_x, vel_y}
+    TFormula tf ("", "[vel_x]/sqrt(([vel_x + vel_y])**2)");
+
+    tf.EvalPar(nullptr, params);
+    ```
+
+    ### A note on operators
+
+    All operators of C/C++ are allowed in a TFormula with a few caveats.
+
+    The operators `|`, `&`, `%` can be used but will raise an error if used in
+    conjunction with a variable or a parameter. Variables and parameters are treated
+    as doubles internally for which these operators are not defined.
+    This means the following command will run successfully
+       ```root -l -q -e TFormula("", "x+(10%3)").Eval(0)```
+    but not
+       ```root -l -q -e TFormula("", "x%10").Eval(0)```.
+
+    The operator `^` is defined to mean exponentiation instead of the C/C++
+    interpretaion xor. `**` is added, also meaning exponentiation.
+
+    The operators `++` and `@` are added, and are shorthand for the a linear
+    function. That means the expression `x@2` will be expanded to
+    ```[n]*x + [n+1]*2``` where n is the first previously unused parameter number.
+
     \class TFormulaFunction
     Helper class for TFormula
 
@@ -161,7 +226,7 @@ static std::unordered_map<std::string,  void *> gClingFunctions = std::unordered
 Bool_t TFormula::IsOperator(const char c)
 {
    // operator ":" must be handled separately
-   char ops[] = { '+','^', '-','/','*','<','>','|','&','!','=','?'};
+   char ops[] = {'+','^','-','/','*','<','>','|','&','!','=','?','%'};
    Int_t opsLen = sizeof(ops)/sizeof(char);
    for(Int_t i = 0; i < opsLen; ++i)
       if(ops[i] == c)
@@ -962,6 +1027,7 @@ void TFormula::HandleParametrizedFunctions(TString &formula)
    functionsNumbers["crystalball"] = 500;
 
    // replace old names xygaus -> gaus[x,y]
+   formula.ReplaceAll("xyzgaus","gaus[x,y,z]");
    formula.ReplaceAll("xygaus","gaus[x,y]");
    formula.ReplaceAll("xgaus","gaus[x]");
    formula.ReplaceAll("ygaus","gaus[y]");
@@ -2298,6 +2364,9 @@ void TFormula::FillParametrizedFunctions(map<pair<TString, Int_t>, pair<TString,
       make_pair(make_pair("landau", 2),
                 make_pair("[0]*TMath::Landau({V0},[1],[2],false)*TMath::Landau({V1},[3],[4],false)", "")));
    functions.insert(make_pair(make_pair("expo", 2), make_pair("exp([0]+[1]*{V0})", "exp([0]+[1]*{V0}+[2]*{V1})")));
+   // 3-dimensional function
+   functions.insert(
+      make_pair(make_pair("gaus", 3), make_pair("[0]*exp(-0.5*(({V0}-[1])/[2])^2 - 0.5*(({V1}-[3])/[4])^2 - 0.5*(({V2}-[5])/[6])^2)", "")));
    // gaussian with correlations
    functions.insert(
       make_pair(make_pair("bigaus", 2), make_pair("[0]*ROOT::Math::bigaussian_pdf({V0},{V1},[2],[4],[5],[1],[3])",
@@ -2323,6 +2392,16 @@ void TFormula::SetPredefinedParamNames() {
       SetParName(2,"SigmaX");
       SetParName(3,"MeanY");
       SetParName(4,"SigmaY");
+      return;
+   }
+   if (fNumber == 120) {
+      SetParName(0,"Constant");
+      SetParName(1,"MeanX");
+      SetParName(2,"SigmaX");
+      SetParName(3,"MeanY");
+      SetParName(4,"SigmaY");
+      SetParName(5,"MeanZ");
+      SetParName(6,"SigmaZ");
       return;
    }
    if (fNumber == 112) {  // bigaus

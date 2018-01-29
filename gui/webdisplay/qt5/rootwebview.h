@@ -26,8 +26,15 @@ protected:
 
    virtual void closeEvent(QCloseEvent *);
 
+   virtual void dropEvent(QDropEvent* event);
+   virtual void dragEnterEvent( QDragEnterEvent *e );
+
 public slots:
    void onWindowCloseRequested();
+
+signals:
+
+   void drop(QDropEvent* event);
 
 public:
    RootWebView(QWidget *parent = 0, unsigned width = 0, unsigned height = 0);

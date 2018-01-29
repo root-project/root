@@ -2268,21 +2268,10 @@ static bool IncludeHeaders(const std::vector<std::string> &headers, cling::Inter
 static bool ModuleContainsHeaders(TModuleGenerator &modGen, clang::Module *module,
                                   std::vector<std::string> &missingHeaders)
 {
-   // Make a list of modules and submodules that we can check for headers.
-   // We use a SetVector to prevent an infinite loop in unlikely case the
-   // modules somehow are messed up and don't form a tree...
-   llvm::SetVector<clang::Module *> modules;
-   modules.insert(module);
-   for (size_t i = 0; i < modules.size(); ++i) {
-      clang::Module *M = modules[i];
-      for (clang::Module *subModule : M->submodules()) modules.insert(subModule);
-   }
    // Now we collect all header files from the previously collected modules.
    std::set<std::string> moduleHeaders;
-   for (clang::Module *module : modules) {
-      ROOT::TMetaUtils::foreachHeaderInModule(
-         *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.insert(h.NameAsWritten); });
-   }
+   ROOT::TMetaUtils::foreachHeaderInModule(
+      *module, [&moduleHeaders](const clang::Module::Header &h) { moduleHeaders.insert(h.NameAsWritten); });
 
    // Go through the list of headers that are required by the ModuleGenerator
    // and check for each header if it's in one of the modules we loaded.
@@ -4069,6 +4058,7 @@ int RootClingMain(int argc,
    bool writeEmptyRootPCM = false;
    bool selSyntaxOnly = false;
    bool noIncludePaths = false;
+   bool cxxmodule = getenv("ROOT_MODULES") != nullptr;
 
    // Collect the diagnostic pragmas linked to the usage of -W
    // Workaround for ROOT-5656
@@ -4089,6 +4079,12 @@ int RootClingMain(int argc,
             // name for the rootmap file
             rootmapFileName = argv[ic + 1];
             ic += 2;
+            continue;
+         }
+
+         if (strcmp("-cxxmodule", argv[ic]) == 0) {
+            cxxmodule = true;
+            ic += 1;
             continue;
          }
 
@@ -4269,7 +4265,7 @@ int RootClingMain(int argc,
       sharedLibraryPathName = dictpathname;
    }
 
-   if (!isPCH && getenv("ROOT_MODULES")) {
+   if (!isPCH && cxxmodule) {
       // We just pass -fmodules, the CIFactory will do the rest and configure
       // clang correctly once it sees this flag.
       clingArgsInterpreter.push_back("-fmodules");
@@ -4945,7 +4941,7 @@ int RootClingMain(int argc,
          // Write the module/PCH depending on what mode we are on
          if (modGen.IsPCH()) {
             if (!GenerateAllDict(modGen, CI, currentDirectory)) return 1;
-         } else if (getenv("ROOT_MODULES")) {
+         } else if (cxxmodule) {
             if (!GenerateModule(modGen, resourceDir, interp, linkdefFilename, moduleName.str()))
                return 1;
          }

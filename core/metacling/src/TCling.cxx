@@ -112,6 +112,7 @@ clang/LLVM technology.
 #include "llvm/Support/DynamicLibrary.h"
 #include "llvm/Support/raw_ostream.h"
 #include "llvm/Support/Path.h"
+#include "llvm/Support/Process.h"
 
 #include <algorithm>
 #include <iostream>
@@ -1205,6 +1206,17 @@ TCling::TCling(const char *name, const char *title)
       clingArgsStorage.push_back("-fsigned-char");
    }
 
+   // Process externally passed arguments if present.
+   llvm::Optional<std::string> EnvOpt = llvm::sys::Process::GetEnv("EXTRA_CLING_ARGS");
+   if (EnvOpt.hasValue()) {
+      StringRef Env(*EnvOpt);
+      while (!Env.empty()) {
+         StringRef Arg;
+         std::tie(Arg, Env) = Env.split(' ');
+         clingArgsStorage.push_back(Arg.str());
+      }
+   }
+
    std::vector<const char*> interpArgs;
    for (std::vector<std::string>::const_iterator iArg = clingArgsStorage.begin(),
            eArg = clingArgsStorage.end(); iArg != eArg; ++iArg)
@@ -1286,7 +1298,7 @@ TCling::TCling(const char *name, const char *title)
       fInterpreter->declare("#include \"Rtypes.h\"\n"
                             + gClassDefInterpMacro + "\n"
                             + gInterpreterClassDef + "\n"
-                            + "#undef ClassImp\n"
+                            "#undef ClassImp\n"
                             "#define ClassImp(X);\n"
                             "#include <string>\n"
                             "using namespace std;\n"
@@ -1594,11 +1606,6 @@ bool TCling::LoadPCM(TString pcmFileName,
          ::Info("TCling::LoadPCM", "Loading clang PCM %s", pcmFileName.Data());
 
    }
-   // Note: Declaring the relationship between the module (pcm) and the header
-   // probably does not yet make sense since the pcm is 'only' a root file.
-   // We also have to review if we still need to do this with the delay loading.
-   // clang::CompilerInstance* CI = fInterpreter->getCI();
-   // ROOT::TMetaUtils::declareModuleMap(CI, pcmFileName, headers);
    return kTRUE;
 }
 
@@ -1673,7 +1680,8 @@ void TCling::RegisterModule(const char* modulename,
                             void (*triggerFunc)(),
                             const FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
                             const char** classesHeaders,
-                            Bool_t lateRegistration /*=false*/)
+                            Bool_t lateRegistration /*=false*/,
+                            Bool_t hasCxxModule /*=false*/)
 {
    const bool fromRootCling = IsFromRootCling();
    // We need the dictionary initialization but we don't want to inject the
@@ -1913,7 +1921,7 @@ void TCling::RegisterModule(const char* modulename,
    clang::Sema &TheSema = fInterpreter->getSema();
 
    bool ModuleWasSuccessfullyLoaded = false;
-   if (TheSema.getLangOpts().Modules) {
+   if (hasCxxModule) {
       std::string ModuleName = llvm::StringRef(modulename).substr(3).str();
       ModuleWasSuccessfullyLoaded = LoadModule(ModuleName, *fInterpreter);
       if (!ModuleWasSuccessfullyLoaded) {

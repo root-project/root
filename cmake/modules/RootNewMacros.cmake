@@ -367,23 +367,22 @@ function(ROOT_GENERATE_DICTIONARY dictionary)
   endif()
 
   if(runtime_cxxmodules AND ARG_MODULE)
-    # FIXME: Once modules work better, we should use some other value like "1"
-    # to disable the module-build remarks from clang.
-    set(runtime_cxxmodules_env "ROOT_MODULES=DEBUG")
+    set(newargs -cxxmodule ${newargs})
   endif()
+
   #---what rootcling command to use--------------------------
   if(ARG_STAGE1)
-    set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" "${runtime_cxxmodules_env}" $<TARGET_FILE:rootcling_stage1>)
+    set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:rootcling_stage1>)
     set(pcm_name)
   else()
     if(CMAKE_PROJECT_NAME STREQUAL ROOT)
       set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${CMAKE_BINARY_DIR}/lib:$ENV{LD_LIBRARY_PATH}"
-                  "ROOTIGNOREPREFIX=1" "${runtime_cxxmodules_env}" $<TARGET_FILE:rootcling> -rootbuild)
+                  "ROOTIGNOREPREFIX=1" $<TARGET_FILE:rootcling> -rootbuild)
       set(ROOTCINTDEP rootcling)
     elseif(TARGET ROOT::rootcling)
-      set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${ROOT_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH}" "${runtime_cxxmodules_env}" $<TARGET_FILE:ROOT::rootcling>)
+      set(command ${CMAKE_COMMAND} -E env "LD_LIBRARY_PATH=${ROOT_LIBRARY_DIR}:$ENV{LD_LIBRARY_PATH}" $<TARGET_FILE:ROOT::rootcling>)
     else()
-      set(command ${CMAKE_COMMAND} -E env "${runtime_cxxmodules_env}" rootcling)
+      set(command ${CMAKE_COMMAND} -E rootcling)
     endif()
   endif()
 
@@ -470,7 +469,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     endif()
   endif(APPLE)
 
-  set(excluded_headers RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
+  set(excluded_headers RConfig.h RVersion.h RtypesImp.h
                         Rtypes.h RtypesCore.h TClassEdit.h
                         TIsAProxy.h TVirtualIsAProxy.h
                         DllImport.h TGenericClassInfo.h
@@ -485,6 +484,16 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   set (excluded_headers "${excluded_headers}")
 
   set(modulemap_entry "module \"${library}\" {")
+
+  # Add a `use` directive to Core/Thread to signal that they use some
+  # split out submodules and we pass the rootcling integrity check.
+  if ("${library}" STREQUAL Core)
+    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Types\n")
+    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Core_Config_C\n")
+  elseif ("${library}" STREQUAL Thread)
+    set (modulemap_entry "${modulemap_entry}\n  use ThreadLocalStorage\n")
+  endif()
+
   # For modules GCocoa and GQuartz we need objc context.
   if (${library} MATCHES "(GCocoa|GQuartz)")
     set (modulemap_entry "${modulemap_entry}\n  requires objc\n")
@@ -881,10 +890,11 @@ endfunction()
 #                                 LINKDEF LinkDef.h LinkDef2.h : linkdef files, default value is "LinkDef.h"
 #                                 DICTIONARY_OPTIONS option    : options passed to rootcling
 #                                 INSTALL_OPTIONS option       : options passed to install headers
+#                                 NO_MODULE                    : don't generate a C++ module for this package
 #                                )
 #---------------------------------------------------------------------------------------------------
 function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
-  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY)
+  set(options NO_INSTALL_HEADERS STAGE1 NO_HEADERS NO_SOURCES OBJECT_LIBRARY NO_MODULE)
   set(oneValueArgs)
   set(multiValueArgs DEPENDENCIES HEADERS SOURCES BUILTINS LIBRARIES DICTIONARY_OPTIONS LINKDEF INSTALL_OPTIONS)
   CMAKE_PARSE_ARGUMENTS(ARG "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
@@ -917,8 +927,15 @@ function(ROOT_STANDARD_LIBRARY_PACKAGE libname)
     set(STAGE1_FLAG "STAGE1")
   endif()
 
+  # Don't pass the MODULE arg to ROOT_GENERATE_DICTIONARY when
+  # NO_MODULE is set.
+  set(MODULE_GEN_ARG MODULE ${libname})
+  if(ARG_NO_MODULE)
+    set(MODULE_GEN_ARG)
+  endif()
+
   ROOT_GENERATE_DICTIONARY(G__${libname} ${ARG_HEADERS}
-                          MODULE ${libname}
+                          ${MODULE_GEN_ARG}
                           ${STAGE1_FLAG}
                           LINKDEF ${ARG_LINKDEF}
                           OPTIONS ${ARG_DICTIONARY_OPTIONS}
@@ -1287,7 +1304,6 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
-  set_property(TARGET ${test_suite} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
 
   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
@@ -1313,7 +1329,7 @@ function(ROOT_ADD_PYUNITTESTS name)
       PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
+                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
                 ENVIRONMENT ${ROOT_ENV})
 endfunction()
 
@@ -1329,7 +1345,7 @@ function(ROOT_ADD_PYUNITTEST name file)
   get_filename_component(file_name ${file} NAME)
   get_filename_component(file_dir ${file} DIRECTORY)
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
                 ENVIRONMENT ${ROOT_ENV})
 endfunction()
 

@@ -13,7 +13,7 @@
 
 #include <string.h>
 #include "RZip.h"
-#include "TNamed.h"
+#include "THttpWSEngine.h"
 
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
@@ -30,9 +30,9 @@ ClassImp(THttpCallArg);
 /// constructor
 
 THttpCallArg::THttpCallArg()
-   : TObject(), fTopName(), fMethod(), fPathName(), fFileName(), fUserName(), fQuery(), fPostData(0),
-     fPostDataLength(0), fWSHandle(0), fWSId(0), fContentType(), fRequestHeader(), fHeader(), fContent(), fZipping(0),
-     fBinData(0), fBinDataLength(0), fNotifyFlag(kFALSE)
+   : TObject(), fTopName(), fMethod(), fPathName(), fFileName(), fUserName(), fQuery(), fPostData(nullptr),
+     fPostDataLength(0), fWSId(0), fContentType(), fRequestHeader(), fHeader(), fContent(), fZipping(0),
+     fBinData(nullptr), fBinDataLength(0), fNotifyFlag(kFALSE), fWSEngine(nullptr)
 {
 }
 
@@ -43,17 +43,17 @@ THttpCallArg::~THttpCallArg()
 {
    if (fPostData) {
       free(fPostData);
-      fPostData = 0;
+      fPostData = nullptr;
    }
 
-   if (fWSHandle) {
-      delete fWSHandle;
-      fWSHandle = 0;
+   if (fWSEngine) {
+      delete fWSEngine;
+      fWSEngine = nullptr;
    }
 
    if (fBinData) {
       free(fBinData);
-      fBinData = 0;
+      fBinData = nullptr;
    }
 }
 
@@ -89,9 +89,11 @@ TString THttpCallArg::AccessHeader(TString &buf, const char *name, const char *v
       }
 
       curr += strlen(name);
-      while ((curr < next) && (buf[curr] != ':')) curr++;
+      while ((curr < next) && (buf[curr] != ':'))
+         curr++;
       curr++;
-      while ((curr < next) && (buf[curr] == ' ')) curr++;
+      while ((curr < next) && (buf[curr] == ' '))
+         curr++;
 
       if (value == 0)
          return buf(curr, next - curr);
@@ -123,7 +125,8 @@ TString THttpCallArg::CountHeader(const TString &buf, Int_t number) const
       if (cnt == number) {
          // we should extract name of header
          Int_t separ = curr + 1;
-         while ((separ < next) && (buf[separ] != ':')) separ++;
+         while ((separ < next) && (buf[separ] != ':'))
+            separ++;
          return buf(curr, separ - curr);
       }
 
@@ -147,7 +150,7 @@ void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
 {
    if (fPostData) {
       free(fPostData);
-      fPostData = 0;
+      fPostData = nullptr;
       fPostDataLength = 0;
    }
 
@@ -160,7 +163,7 @@ void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
       data = newdata;
    }
 
-   if (data != 0)
+   if (data)
       *(((char *)data) + length) = 0;
 
    fPostData = data;
@@ -170,21 +173,21 @@ void THttpCallArg::SetPostData(void *data, Long_t length, Bool_t make_copy)
 ////////////////////////////////////////////////////////////////////////////////
 /// assign websocket handle with HTTP call
 
-void THttpCallArg::SetWSHandle(TNamed *handle)
+void THttpCallArg::SetWSEngine(THttpWSEngine *engine)
 {
-   if (fWSHandle)
-      delete fWSHandle;
-   fWSHandle = handle;
+   if (fWSEngine)
+      delete fWSEngine;
+   fWSEngine = engine;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// takeout websocket handle with HTTP call
 /// can be done only once
 
-TNamed *THttpCallArg::TakeWSHandle()
+THttpWSEngine *THttpCallArg::TakeWSEngine()
 {
-   TNamed *res = fWSHandle;
-   fWSHandle = 0;
+   THttpWSEngine *res = fWSEngine;
+   fWSEngine = nullptr;
    return res;
 }
 
@@ -220,7 +223,8 @@ void THttpCallArg::SetPathAndFileName(const char *fullpath)
    if (rslash == 0) {
       fFileName = fullpath;
    } else {
-      while ((fullpath != rslash) && (*fullpath == '/')) fullpath++;
+      while ((fullpath != rslash) && (*fullpath == '/'))
+         fullpath++;
       fPathName.Append(fullpath, rslash - fullpath);
       if (fPathName == "/")
          fPathName.Clear();
