@@ -314,7 +314,7 @@ TReentrantRWLock<MutexT, RecurseCountsT>::Rewind(const State &earlierState) {
    if (pStateDelta->fDeltaReadersCount != 0) {
       // Claim a recurse-state +1 to be able to call Unlock() below.
       *typedState.fReadersCountLoc = typedState.fReadersCount + 1;
-      fReaders += typedState.fReadersCount + 1;
+      fReaders = typedState.fReadersCount + 1;
       // Release this thread's reader lock(s)
       ReadUnLock(hint);
    }
