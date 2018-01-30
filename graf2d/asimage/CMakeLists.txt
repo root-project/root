@@ -8,7 +8,7 @@ if(cocoa)  # Not needed to locate PNG, JPG, TIFF libraries
 endif()
 
 #---Build ASImage/ASImageGui libraries---------------------------------------
-include_directories(${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} ${X11_INCLUDE_DIR})
+include_directories(SYSTEM ${FREETYPE_INCLUDE_DIRS} ${AFTERIMAGE_INCLUDE_DIR} ${X11_INCLUDE_DIR})
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ASImage
                               NO_INSTALL_HEADERS
