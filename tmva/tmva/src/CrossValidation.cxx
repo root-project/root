@@ -409,8 +409,6 @@ void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
    // Clean-up for this fold
    {
       smethod->Data()->DeleteResults(foldTitle, Types::kTraining, smethod->GetAnalysisType());
-   }
-   if (fFoldFileOutput) {
       smethod->Data()->DeleteResults(foldTitle, Types::kTesting, smethod->GetAnalysisType());
    }
    fFoldFactory->DeleteAllMethods();
