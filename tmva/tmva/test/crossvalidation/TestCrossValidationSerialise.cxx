@@ -60,39 +60,39 @@ private:
    Float_t fevNum;
    Float_t fMvaEval;
 
-   std::vector<Double_t> fEvaluationResults;
-   std::vector<Double_t> fApplicationResults;
+   std::vector<Float_t> fEvaluationResults;
+   std::vector<Float_t> fApplicationResults;
 };
 
 // =============================================================================
 // === DATAGEN ===
 // =============================================================================
 
-std::pair<Double_t, Double_t>
+std::pair<Float_t, Float_t>
 generateCirclePoint(Float_t r, Float_t rsig, Float_t phimin, Float_t phimax, Float_t phisig, TRandom &rng)
 {
-   Double_t phi = rng.Rndm() * (phimax - phimin) + phimin;
+   Float_t phi = rng.Rndm() * (phimax - phimin) + phimin;
    phi += rng.Gaus() * phisig;
 
    r += rng.Gaus() * rsig;
 
-   Double_t x = r * cos(TMath::DegToRad() * phi);
-   Double_t y = r * sin(TMath::DegToRad() * phi);
+   Float_t x = r * cos(TMath::DegToRad() * phi);
+   Float_t y = r * sin(TMath::DegToRad() * phi);
 
-   return std::pair<Double_t, Double_t>(x, y);
+   return std::pair<Float_t, Float_t>(x, y);
 }
 
-TTree *createCircTree(Int_t nPoints, Double_t radius, Double_t rsig, TString name, UInt_t seed = 100)
+TTree *createCircTree(Int_t nPoints, Float_t radius, Float_t rsig, TString name, UInt_t seed = 100)
 {
    TRandom rng(seed);
-   std::pair<Double_t, Double_t> p;
+   std::pair<Float_t, Float_t> p;
    static UInt_t id = 0;
-   Double_t x = 0;
-   Double_t y = 0;
+   Float_t x = 0;
+   Float_t y = 0;
 
    TTree *data = new TTree(name, name);
-   data->Branch("x", &x, "x/D");
-   data->Branch("y", &y, "y/D");
+   data->Branch("x", &x, "x/F");
+   data->Branch("y", &y, "y/F");
    data->Branch("EventNumber", &id, "EventNumber/I");
 
    for (Int_t n = 0; n < nPoints; ++n) {
@@ -123,12 +123,14 @@ void TestContex::setUpCe(TString jobname, TMVA::Types::EMVA methodType, TString 
    // Dataloader managed by CrossValidation
    TMVA::DataLoader *dataloader = new TMVA::DataLoader("dataset");
 
-   dataloader->AddVariable("x", 'D');
-   dataloader->AddVariable("y", 'D');
+   dataloader->AddVariable("x", 'F');
+   dataloader->AddVariable("y", 'F');
    dataloader->AddSpectator("EventNumber", "EventNumber", "");
 
    dataloader->AddSignalTree(fTreeClass0);
    dataloader->AddBackgroundTree(fTreeClass1);
+
+   dataloader->PrepareTrainingAndTestTree("", "", "nTest_Signal=0:nTest_Background=0)");
 
    fOutputFile = new TFile(fOutputFileName, "RECREATE");
    fCrossEvaluate = new TMVA::CrossValidation(
@@ -177,6 +179,7 @@ void TestContex::runApplicationPhase(TString methodName)
 {
    fOutputFile = new TFile(fOutputFileName);
    TTree *tree = (TTree *)fOutputFile->Get("dataset/TestTree");
+   tree->ResetBranchAddresses();
    tree->SetBranchAddress("x", &fX);
    tree->SetBranchAddress("y", &fY);
    tree->SetBranchAddress("EventNumber", &fevNum);
@@ -186,7 +189,7 @@ void TestContex::runApplicationPhase(TString methodName)
    for (Long64_t ievt = 0; ievt < tree->GetEntries(); ievt++) {
       tree->GetEntry(ievt);
 
-      Double_t val = fReader->EvaluateMVA(methodName);
+      Float_t val = fReader->EvaluateMVA(methodName);
       fApplicationResults.push_back(val);
 
       fEvaluationResults.push_back(fMvaEval);
