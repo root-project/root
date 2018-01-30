@@ -39,8 +39,8 @@ public:
       }
    }
 
-   void setUpCe(TString jobname, TMVA::Types::EMVA methodType, TString methodName, TString methodOptions);
-   void runCe();
+   void setUpCrossValidation(TString jobname, TMVA::Types::EMVA methodType, TString methodName, TString methodOptions);
+   void runCrossValidation();
    void setUpApplicationPhase(TString jobname, TString methodName);
    void runApplicationPhase(TString methodName);
    void verifyApplicationPhase();
@@ -115,8 +115,9 @@ TTree *createCircTree(Int_t nPoints, Float_t radius, Float_t rsig, TString name,
 // === RUNNING CROSS EVALUATION ===
 // =============================================================================
 
-void TestContex::setUpCe(TString jobname, TMVA::Types::EMVA methodType, TString methodName, TString methodOptions)
+void TestContex::setUpCrossValidation(TString jobname, TMVA::Types::EMVA methodType, TString methodName, TString methodOptions)
 {
+   std::cout << "Setting cross validation up" << std::endl;
    fTreeClass0 = createCircTree(500, 3.0, 0.20, "Signal", 100);
    fTreeClass1 = createCircTree(500, 3.5, 0.20, "Background", 101);
 
@@ -135,13 +136,15 @@ void TestContex::setUpCe(TString jobname, TMVA::Types::EMVA methodType, TString 
    fOutputFile = new TFile(fOutputFileName, "RECREATE");
    fCrossEvaluate = new TMVA::CrossValidation(
       jobname, dataloader, fOutputFile,
-      "!V:!ROC:!FoldFileOutput:AnalysisType=Classification:SplitExpr=int([EventNumber])%int([NumFolds])");
+      "!V:Silent:!ROC:!FoldFileOutput:AnalysisType=Classification:SplitExpr=int([EventNumber])%int([NumFolds])");
 
    fCrossEvaluate->BookMethod(methodType, methodName, methodOptions);
+   std::cout << "Done setting cross validation up" << std::endl;
 }
 
-void TestContex::runCe()
+void TestContex::runCrossValidation()
 {
+   std::cout << "Running cross validation" << std::endl;
    fCrossEvaluate->Evaluate();
    fOutputFile->Flush();
    fOutputFile->Close();
@@ -154,6 +157,7 @@ void TestContex::runCe()
    fTreeClass0 = nullptr;
    delete fTreeClass1;
    fTreeClass1 = nullptr;
+   std::cout << "Done running crossvalidation" << std::endl;
 }
 
 // === END CROSS EVALUATION ===
@@ -165,7 +169,8 @@ void TestContex::runCe()
 
 void TestContex::setUpApplicationPhase(TString jobname, TString methodName)
 {
-   fReader = new TMVA::Reader("!Color:!Silent:!V");
+   std::cout << "Setting application phase up" << std::endl;
+   fReader = new TMVA::Reader("!Color:Silent:!V");
 
    fReader->AddVariable("x", &fX);
    fReader->AddVariable("y", &fY);
@@ -173,10 +178,12 @@ void TestContex::setUpApplicationPhase(TString jobname, TString methodName)
 
    TString weightfile = TString("dataset/weights/") + jobname + "_" + methodName + TString(".weights.xml");
    fReader->BookMVA(methodName, weightfile);
+   std::cout << "Done setting application phase up" << std::endl;
 }
 
 void TestContex::runApplicationPhase(TString methodName)
 {
+   std::cout << "Running application phase" << std::endl;
    fOutputFile = new TFile(fOutputFileName);
    TTree *tree = (TTree *)fOutputFile->Get("dataset/TestTree");
    tree->ResetBranchAddresses();
@@ -197,10 +204,12 @@ void TestContex::runApplicationPhase(TString methodName)
 
    tree->ResetBranchAddresses();
    delete tree;
+   std::cout << "Done running application phase" << std::endl;
 }
 
 void TestContex::verifyApplicationPhase()
 {
+   std::cout << "Running verification phase" << std::endl;
    if (fEvaluationResults.size() != fApplicationResults.size()) {
       throw std::runtime_error("Size not equal!");
    }
@@ -213,19 +222,20 @@ void TestContex::verifyApplicationPhase()
          throw std::runtime_error("Output not equal!");
       }
    }
+   std::cout << "Done verification phase" << std::endl;
 }
 
 // =============================================================================
 // === END APPLICATION PHASE ===
 // =============================================================================
 
-void TestCeSerialise(TMVA::Types::EMVA methodType, TString methodName, TString methodOptions)
+void TestCvSerialise(TMVA::Types::EMVA methodType, TString methodName, TString methodOptions)
 {
-   TString jobname = "test_ce_serialise";
+   TString jobname = "test_cv_serialise";
 
    TestContex *tc = new TestContex();
-   tc->setUpCe(jobname, methodType, methodName, methodOptions);
-   tc->runCe(); // serialises CE method if modelPersitance
+   tc->setUpCrossValidation(jobname, methodType, methodName, methodOptions);
+   tc->runCrossValidation(); // serialises cv method if modelPersitance
    tc->setUpApplicationPhase(jobname, methodName);
    tc->runApplicationPhase(methodName);
    tc->verifyApplicationPhase();
@@ -236,15 +246,15 @@ void TestCrossValidationSerialise()
 {
    {
       TString bdtOptions = "!H:!V:NTrees=10";
-      TestCeSerialise(TMVA::Types::kBDT, "BDT", bdtOptions);
+      TestCvSerialise(TMVA::Types::kBDT, "BDT", bdtOptions);
    }
 
-#if (defined DNNCPU || defined DNNCUDA)
+#if (defined DNNCPU)
    {
       TString dnnTrainStrat = "TrainingStrategy=LearningRate=1e-1,"
                               "BatchSize=5,ConvergenceSteps=1";
       TString dnnOptions = "!H:!V:" + dnnTrainStrat;
-      TestCeSerialise(TMVA::Types::kDNN, "DNN", dnnOptions);
+      TestCvSerialise(TMVA::Types::kDNN, "DNN", dnnOptions);
    }
 #endif
 }
