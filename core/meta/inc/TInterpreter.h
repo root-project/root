@@ -41,6 +41,22 @@ class TListOfEnums;
 
 R__EXTERN TVirtualMutex *gInterpreterMutex;
 
+#if defined (_REENTRANT) || defined (WIN32)
+# define R__LOCKGUARD_CLING(mutex)  ROOT::Internal::InterpreterMutexRegistrationRAII _R__UNIQUE_(R__guard)(mutex); { }
+#else
+# define R__LOCKGUARD_CLING(mutex)  (void)mutex; { }
+#endif
+
+namespace ROOT {
+namespace Internal {
+struct InterpreterMutexRegistrationRAII {
+   TLockGuard fLockGuard;
+   InterpreterMutexRegistrationRAII(TVirtualMutex* mutex);
+   ~InterpreterMutexRegistrationRAII();
+};
+}
+}
+
 class TInterpreter : public TNamed {
 
 protected:
@@ -512,27 +528,16 @@ R__EXTERN TInterpreter* (*gPtr2Interpreter)();
 R__EXTERN TInterpreter* gCling;
 #endif
 
-namespace ROOT {
-namespace Internal {
-struct InterpreterMutexRegistrationRAII {
-   TLockGuard fLockGuard;
-   InterpreterMutexRegistrationRAII(TVirtualMutex* mutex): fLockGuard(mutex)
-   {
-      if (gCoreMutex)
-         ::gCling->SnapshotMutexState(gCoreMutex);
-   }
-   ~InterpreterMutexRegistrationRAII() {
-      if (gCoreMutex)
-         ::gCling->ForgetMutexState();
-   }
-};
+inline ROOT::Internal::InterpreterMutexRegistrationRAII::InterpreterMutexRegistrationRAII(TVirtualMutex* mutex):
+   fLockGuard(mutex)
+{
+   if (gCoreMutex)
+      ::gCling->SnapshotMutexState(gCoreMutex);
 }
+inline ROOT::Internal::InterpreterMutexRegistrationRAII::~InterpreterMutexRegistrationRAII()
+{
+   if (gCoreMutex)
+      ::gCling->ForgetMutexState();
 }
-
-#if defined (_REENTRANT) || defined (WIN32)
-# define R__LOCKGUARD_CLING(mutex)  ROOT::Internal::InterpreterMutexRegistrationRAII _R__UNIQUE_(R__guard)(mutex); { }
-#else
-# define R__LOCKGUARD_CLING(mutex)  (void)mutex; { }
-#endif
 
 #endif
