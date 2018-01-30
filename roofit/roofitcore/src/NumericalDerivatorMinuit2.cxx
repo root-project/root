@@ -377,6 +377,19 @@ namespace RooFit {
     return _always_exactly_mimic_minuit2;
   };
 
+  void NumericalDerivatorMinuit2::set_step_tolerance(double step_tolerance) {
+    fStepTolerance = step_tolerance;
+  }
+  void NumericalDerivatorMinuit2::set_grad_tolerance(double grad_tolerance) {
+    fGradTolerance = grad_tolerance;
+  }
+  void NumericalDerivatorMinuit2::set_ncycles(unsigned int ncycles) {
+    fNCycles = ncycles;
+  }
+  void NumericalDerivatorMinuit2::set_error_level(double error_level) {
+    Up = error_level;
+  }
+
 } // namespace RooFit
 
 

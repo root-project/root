@@ -67,6 +67,11 @@ namespace RooFit {
     void SetInitialGradient(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
     void SetParameterHasLimits(std::vector<ROOT::Fit::ParameterSettings>& parameters) const;
 
+    void set_step_tolerance(double step_tolerance);
+    void set_grad_tolerance(double grad_tolerance);
+    void set_ncycles(unsigned int ncycles);
+    void set_error_level(double error_level);
+
   private:
 
     // CAUTION: we only use fFunction to check whether the same function is used on every call.

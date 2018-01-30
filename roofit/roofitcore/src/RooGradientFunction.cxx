@@ -4,7 +4,8 @@
  * @(#)root/roofitcore:$Id$
  * Authors:                                                                  *
  *   PB, Patrick Bos,     NL eScience Center, p.bos@esciencecenter.nl        *
- *                                                                           *
+ *   VC, Vince Croft,     DIANA / NYU,        vincent.croft@cern.ch          *
+ *   AL, Alfio Lazzaro,   INFN Milan,         alfio.lazzaro@mi.infn.it       *
  *                                                                           *
  * Redistribution and use in source and binary forms,                        *
  * with or without modification, are permitted according to the terms        *
@@ -52,13 +53,21 @@
 
 
 RooGradientFunction::RooGradientFunction(RooAbsReal *funct, GradientCalculatorMode grad_mode) :
-    _function(funct), _grad_mode(grad_mode),
-    _grad(0), _grad_initialized(false) {}
+    _function(funct),
+    _gradf(_function, grad_mode == GradientCalculatorMode::ExactlyMinuit2),
+    _grad(_function.NDim()),
+    _grad_params(_function.NDim()),
+    parameter_settings(_function.NDim()) {
+  synchronize_parameter_settings();
+}
 
 RooGradientFunction::RooGradientFunction(const RooGradientFunction& other) :
     ROOT::Math::IMultiGradFunction(other),
-    _function(other._function), _grad_mode(other._grad_mode),
-    _grad(other._grad), _grad_initialized(other._grad_initialized) {}
+    _function(other._function),
+    _gradf(other._gradf),
+    _grad(other._grad),
+    _grad_params(other._grad_params),
+    parameter_settings(other.parameter_settings) {}
 
 
 RooGradientFunction::Function::Function(RooAbsReal *funct) : _funct(funct) {
@@ -128,6 +137,9 @@ RooGradientFunction::Function::~Function() {
 }
 
 
+ROOT::Math::IMultiGenFunction* RooGradientFunction::Function::Clone() const {
+  return new RooGradientFunction::Function(*this);
+}
 ROOT::Math::IMultiGradFunction* RooGradientFunction::Clone() const {
   return new RooGradientFunction(*this);
 }
@@ -142,24 +154,24 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(Bool_t optConst) {
   Int_t index(0);
 
   // Handle eventual migrations from constParamList -> floatParamList
-  for(index= 0; index < _constParamList->getSize() ; index++) {
+  for(index= 0; index < _function._constParamList->getSize() ; index++) {
 
-    RooRealVar *par= dynamic_cast<RooRealVar*>(_constParamList->at(index));
+    RooRealVar *par= dynamic_cast<RooRealVar*>(_function._constParamList->at(index));
     if (!par) continue;
 
-    RooRealVar *oldpar= dynamic_cast<RooRealVar*>(_initConstParamList->at(index));
+    RooRealVar *oldpar= dynamic_cast<RooRealVar*>(_function._initConstParamList->at(index));
     if (!oldpar) continue;
 
     // Test if constness changed
     if (!par->isConstant()) {
 
       // Remove from constList, add to floatList
-      _constParamList->remove(*par);
-      _floatParamList->add(*par);
-      _initFloatParamList->addClone(*oldpar);
-      _initConstParamList->remove(*oldpar);
+      _function._constParamList->remove(*par);
+      _function._floatParamList->add(*par);
+      _function._initFloatParamList->addClone(*oldpar);
+      _function._initConstParamList->remove(*oldpar);
       constStatChange=kTRUE;
-      _nDim++;
+      _function._nDim++;
     }
 
     // Test if value changed
@@ -170,12 +182,12 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(Bool_t optConst) {
   }
 
   // Update reference list
-  *_initConstParamList = *_constParamList;
+  *_function._initConstParamList = *_function._constParamList;
 
   // Synchronize MINUIT with function state
   // Handle floatParamList
-  for(index= 0; index < _floatParamList->getSize(); index++) {
-    RooRealVar *par= dynamic_cast<RooRealVar*>(_floatParamList->at(index));
+  for(index= 0; index < _function._floatParamList->getSize(); index++) {
+    RooRealVar *par= dynamic_cast<RooRealVar*>(_function._floatParamList->at(index));
 
     if (!par) continue;
 
@@ -190,9 +202,9 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(Bool_t optConst) {
         coutW(Evaluation) << "RooGradientFunction::fit: Error, non-constant parameter "
                                        << par->GetName()
                                        << " is not of type RooRealVar, skipping" << std::endl;
-        _floatParamList->remove(*par);
+        _function._floatParamList->remove(*par);
         index--;
-        _nDim--;
+        _function._nDim--;
         continue;
       }
 
@@ -305,26 +317,20 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(Bool_t optConst) {
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
 
       coutI(Evaluation) << "RooGradientFunction::synchronize: set of constant parameters changed, rerunning const optimizer" << std::endl;
-      _funct->constOptimizeTestStatistic(RooAbsArg::ConfigChange);
+      _function._funct->constOptimizeTestStatistic(RooAbsArg::ConfigChange);
     } else if (constValChange) {
       coutI(Evaluation) << "RooGradientFunction::synchronize: constant parameter values changed, rerunning const optimizer" << std::endl;
-      _funct->constOptimizeTestStatistic(RooAbsArg::ValueChange);
+      _function._funct->constOptimizeTestStatistic(RooAbsArg::ValueChange);
     }
 
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::PrintErrors);
-
   }
 
-  updateFloatVec();
+  _function.updateFloatVec();
 
-  // If the gradient is initialized, synchronize it as well. If not, it will be
-  // synchronized from InitGradient when DoDerivative is called the first time.
-  if (_grad_initialized) {
-    synchronize_gradient_parameter_settings();
-  }
+  synchronize_gradient_parameter_settings();
 
   return 0;
-
 }
 
 
@@ -338,13 +344,13 @@ Double_t RooGradientFunction::GetPdfParamVal(Int_t index)
 {
   // Access PDF parameter value by ordinal index (needed by MINUIT)
 
-  return ((RooRealVar*)_floatParamList->at(index))->getVal();
+  return ((RooRealVar*)_function._floatParamList->at(index))->getVal();
 }
 
 Double_t RooGradientFunction::GetPdfParamErr(Int_t index)
 {
   // Access PDF parameter error by ordinal index (needed by MINUIT)
-  return ((RooRealVar*)_floatParamList->at(index))->getError();
+  return ((RooRealVar*)_function._floatParamList->at(index))->getError();
 }
 
 
@@ -352,7 +358,7 @@ void RooGradientFunction::SetPdfParamErr(Int_t index, Double_t value)
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
 
-  ((RooRealVar*)_floatParamList->at(index))->setError(value);
+  ((RooRealVar*)_function._floatParamList->at(index))->setError(value);
 }
 
 
@@ -361,7 +367,7 @@ void RooGradientFunction::ClearPdfParamAsymErr(Int_t index)
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
 
-  ((RooRealVar*)_floatParamList->at(index))->removeAsymError();
+  ((RooRealVar*)_function._floatParamList->at(index))->removeAsymError();
 }
 
 
@@ -369,7 +375,7 @@ void RooGradientFunction::SetPdfParamErr(Int_t index, Double_t loVal, Double_t h
 {
   // Modify PDF parameter error by ordinal index (needed by MINUIT)
 
-  ((RooRealVar*)_floatParamList->at(index))->setAsymError(loVal,hiVal);
+  ((RooRealVar*)_function._floatParamList->at(index))->setAsymError(loVal,hiVal);
 }
 
 
@@ -377,7 +383,7 @@ void RooGradientFunction::BackProp(const ROOT::Fit::FitResult &results)
 {
   // Transfer MINUIT fit results back into RooFit objects
 
-  for (Int_t index= 0; index < _nDim; index++) {
+  for (Int_t index= 0; index < NDim(); index++) {
     Double_t value = results.Value(index);
     SetPdfParamVal(index, value);
 
@@ -406,9 +412,9 @@ void RooGradientFunction::ApplyCovarianceMatrix(TMatrixDSym& V)
   // to all RRV parameter representations and give this matrix instead of the
   // HESSE matrix at the next save() call
 
-  for (Int_t i=0 ; i<_nDim ; i++) {
+  for (Int_t i=0 ; i < NDim() ; i++) {
     // Skip fixed parameters
-    if (_floatParamList->at(i)->isConstant()) {
+    if (_function._floatParamList->at(i)->isConstant()) {
       continue;
     }
     SetPdfParamErr(i, sqrt(V(i,i)));
@@ -420,7 +426,7 @@ void RooGradientFunction::ApplyCovarianceMatrix(TMatrixDSym& V)
 Bool_t RooGradientFunction::SetPdfParamVal(const Int_t &index, const Double_t &value) const
 {
   //RooRealVar* par = (RooRealVar*)_floatParamList->at(index);
-  RooRealVar* par = (RooRealVar*)_floatParamVec[index];
+  RooRealVar* par = (RooRealVar*)_function._floatParamVec[index];
 
   if (par->getVal()!=value) {
     par->setVal(value);
@@ -434,7 +440,7 @@ Bool_t RooGradientFunction::SetPdfParamVal(const Int_t &index, const Double_t &v
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void RooGradientFunction::updateFloatVec()
+void RooGradientFunction::Function::updateFloatVec()
 {
   _floatParamVec.clear();
   RooFIter iter = _floatParamList->fwdIterator();
@@ -447,13 +453,16 @@ void RooGradientFunction::updateFloatVec()
 }
 
 
+double RooGradientFunction::DoEval(const double *x) const {
+  return _function(x);
+}
 
-double RooGradientFunction::DoEval(const double *x) const
+double RooGradientFunction::Function::DoEval(const double *x) const
 {
   Bool_t parameters_changed = kFALSE;
 
   // Set the parameter values for this iteration
-  for (int index = 0; index < _nDim; index++) {
+  for (int index = 0; index < NDim(); index++) {
     // also check whether the function was already evaluated for this set of parameters
     parameters_changed |= SetPdfParamVal(index,x[index]);
   }
@@ -509,46 +518,19 @@ double RooGradientFunction::DoEval(const double *x) const
   return fvalue;
 }
 
-// it's not actually const, it mutates mutables, but it has to be defined
-// const because it's called from DoDerivative, which insists on constness
-void RooGradientFunction::InitGradient() const {
-  // Create derivator
-  ROOT::Fit::Fitter *fitter = _context->fitter();
-  ROOT::Math::Minimizer *minimizer = fitter->GetMinimizer();
-  ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(minimizer->Strategy()));
-  RooFit::NumericalDerivatorMinuit2 derivator(*this,
-                                              strategy.GradientStepTolerance(),
-                                              strategy.GradientTolerance(),
-                                              strategy.GradientNCycles(),
-                                              minimizer->ErrorDef());
-  _gradf = derivator;
-  _grad_params.resize(_nDim);
-
-  synchronize_gradient_parameter_settings(fitter->Config().ParamsSettings());
-  // TODO: CHECK: zijn de parameter settings hier al wel up to date?!
-
-  _grad_initialized = true;
-}
-
 
 void RooGradientFunction::run_derivator(const double *x) const {
-  for (int i = 0; i < _nDim; ++i) {
-//    std::cout << "x[" << i << "] = " << x[i] << std::endl;
-  }
-  if (!_grad_initialized) {
-    InitGradient();
-  }
   // check whether the derivative was already calculated for this set of parameters
   if (std::equal(_grad_params.begin(), _grad_params.end(), x)) {
 //    std::cout << "gradient already calculated for these parameters, use cached value" << std::endl;
   } else {
     // if not, set the _grad_params to the current input parameters
-    std::vector<double> new_grad_params(x, x + _nDim);
+    std::vector<double> new_grad_params(x, x + NDim());
     _grad_params = new_grad_params;
 
     // Set the parameter values for this iteration
     // TODO: this is already done in DoEval as well; find efficient way to do only once
-    for (int index = 0; index < _nDim; index++) {
+    for (int index = 0; index < NDim(); index++) {
       SetPdfParamVal(index,x[index]);
     }
 
@@ -582,14 +564,5 @@ double RooGradientFunction::DoStepSize(const double *x, unsigned int icoord) con
 }
 
 bool RooGradientFunction::returnsInMinuit2ParameterSpace() const {
-  switch (_grad_mode) {
-    case GradientCalculatorMode::AlmostMinuit2:
-    case GradientCalculatorMode::ExactlyMinuit2: {
-      return true;
-    }
-  }
+  return true;
 }
-
-RooGradientFunction::GradientCalculatorMode RooGradientFunction::grad_mode() const {
-  return _grad_mode;
-};
