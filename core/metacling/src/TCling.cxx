@@ -8443,6 +8443,8 @@ void TCling::SnapshotMutexState(ROOT::TVirtualRWMutex* mtx)
 
 void TCling::ForgetMutexState()
 {
+   if (!fInitialMutex.back())
+      return;
    if (fInitialMutex.back().fRecurseCount == 0) {
       Error("ForgetMutexState", "mutex state's recurse count already 0!");
    }
