@@ -19,32 +19,27 @@
 find_program(ROOT_CONFIG_EXECUTABLE root-config
   HINTS $ENV{ROOTSYS}/bin)
 
-execute_process(
-    COMMAND ${ROOT_CONFIG_EXECUTABLE} --prefix
-    OUTPUT_VARIABLE ROOTSYS
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
+# On some architectures, e.g. osX 10.13.2, invoking root-config
+# multiple times with different options is extremely time consuming
+# (around a second per invokation), so we execute it only once
+# and split the results in cmake.
+execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} --cr --prefix --version --incdir --etc-dir --libdir --bindir --incdir --cflags --ldflags --features
+  OUTPUT_VARIABLE ROOT_CONFIG_OUTPUT_STRING)
+string(STRIP ${ROOT_CONFIG_OUTPUT_STRING} ROOT_CONFIG_OUTPUT_STRING)
 
-execute_process(
-    COMMAND ${ROOT_CONFIG_EXECUTABLE} --version
-    OUTPUT_VARIABLE ROOT_VERSION
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
+# Yes, this is the way to turn strings into lists in cmake.
+string(REPLACE "\n" ";" ROOT_CONFIG_OUTPUT ${ROOT_CONFIG_OUTPUT_STRING})
+list(GET ROOT_CONFIG_OUTPUT 0 ROOTSYS)
+list(GET ROOT_CONFIG_OUTPUT 1 ROOT_VERSION)
+list(GET ROOT_CONFIG_OUTPUT 2 ROOT_INCLUDE_DIR)
+list(GET ROOT_CONFIG_OUTPUT 3 ROOT_ETC_DIR)
+list(GET ROOT_CONFIG_OUTPUT 4 ROOT_LIBRARY_DIR)
+list(GET ROOT_CONFIG_OUTPUT 5 __cflags)
+list(GET ROOT_CONFIG_OUTPUT 6 __ldflags)
+list(GET ROOT_CONFIG_OUTPUT 7 _root_options)
 
-execute_process(
-    COMMAND ${ROOT_CONFIG_EXECUTABLE} --incdir
-    OUTPUT_VARIABLE ROOT_INCLUDE_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
 set(ROOT_INCLUDE_DIRS ${ROOT_INCLUDE_DIR})
-
-execute_process(
-    COMMAND ${ROOT_CONFIG_EXECUTABLE} --etcdir
-    OUTPUT_VARIABLE ROOT_ETC_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
 set(ROOT_ETC_DIRS ${ROOT_ETC_DIR})
-
-execute_process(
-    COMMAND ${ROOT_CONFIG_EXECUTABLE} --libdir
-    OUTPUT_VARIABLE ROOT_LIBRARY_DIR
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
 set(ROOT_LIBRARY_DIRS ${ROOT_LIBRARY_DIR})
 
 set(rootlibs Core RIO Net Hist Graf Graf3d Gpad Tree Rint Postscript Matrix Physics MathCore Thread MultiProc)
@@ -63,26 +58,15 @@ if(ROOT_LIBRARIES)
   list(REMOVE_DUPLICATES ROOT_LIBRARIES)
 endif()
 
-execute_process(
-    COMMAND ${ROOT_CONFIG_EXECUTABLE} --cflags
-    OUTPUT_VARIABLE __cflags
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
 string(REGEX MATCHALL "-(D|U)[^ ]*" ROOT_DEFINITIONS "${__cflags}")
 string(REGEX REPLACE "(^|[ ]*)-I[^ ]*" "" ROOT_CXX_FLAGS "${__cflags}")
 string(REGEX REPLACE "(^|[ ]*)-I[^ ]*" "" ROOT_C_FLAGS "${__cflags}")
 
-execute_process(
-    COMMAND ${ROOT_CONFIG_EXECUTABLE} --ldflags
-    OUTPUT_VARIABLE __ldflags
-    OUTPUT_STRIP_TRAILING_WHITESPACE)
 set(ROOT_EXE_LINKER_FLAGS "${__ldflags}")
 
 set(ROOT_USE_FILE ${CMAKE_CURRENT_LIST_DIR}/RootUseFile.cmake)
 
-execute_process(
-  COMMAND ${ROOT_CONFIG_EXECUTABLE} --features
-  OUTPUT_VARIABLE _root_options
-  OUTPUT_STRIP_TRAILING_WHITESPACE)
+string(STRIP ${_root_options} _root_options)
 separate_arguments(_root_options)
 foreach(_opt ${_root_options})
   set(ROOT_${_opt}_FOUND TRUE)
