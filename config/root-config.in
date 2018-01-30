@@ -462,6 +462,7 @@ if test $# -eq 0; then
    exit 1
 fi
 
+sep=" "
 out=""
 
 while test $# -gt 0; do
@@ -473,24 +474,24 @@ while test $# -gt 0; do
   case $1 in
     --arch)
       ### Output the arcitecture (compiler/OS combination)
-      out="$out $arch"
+      out="$out$sep$arch"
       ;;
     --platform)
       ### Output the platform (OS)
-      out="$out $platform"
+      out="$out$sep$platform"
       ;;
     --has-*)
       ### Check for feature
       f=`echo $1 | sed 's/--has-//'`
       for c in $features ; do
          if test "x$c" = "x$f" ; then
-            out="$out yes"
+            out="$out${sep}yes"
             break
          fi
          c=""
       done
       if test "x$c" = "x" ; then
-         out="$out no"
+         out="$out${sep}no"
       fi
       ;;
     --prefix=*)
@@ -509,7 +510,7 @@ while test $# -gt 0; do
       ;;
     --prefix)
       ### Output the prefix
-      out="$out $prefix"
+      out="$out${sep}$prefix"
       ;;
     --exec-prefix=*)
       ### Set the exec-prefix
@@ -524,7 +525,7 @@ while test $# -gt 0; do
       ;;
     --exec-prefix)
       ### Output the exec-prefix
-      out="$out $prefix"
+      out="$out${sep}$prefix"
       ;;
     --nonew)
       ### Don't use the libNew library
@@ -546,7 +547,7 @@ while test $# -gt 0; do
     --version)
       ### Output the version number.  If RVersion.h can not be found, give up.
       if test -r ${incdir}/RVersion.h; then
-         out="$out `sed -n 's,.*ROOT_RELEASE *\"\(.*\)\".*,\1,p' < ${incdir}/RVersion.h`"
+         out="$out${sep}`sed -n 's,.*ROOT_RELEASE *\"\(.*\)\".*,\1,p' < ${incdir}/RVersion.h`"
       else
          echo "cannot read ${incdir}/RVersion.h"
          exit 1
@@ -555,14 +556,14 @@ while test $# -gt 0; do
     --git-revision)
       ### Output the git revision number.  If RGitCommit.h can not be found, give up.
       if test -r ${incdir}/RGitCommit.h; then
-         out="$out `sed -n 's,.*ROOT_GIT_COMMIT *\"\(.*\)\".*,\1,p' < ${incdir}/RGitCommit.h`"
+         out="$out${sep}`sed -n 's,.*ROOT_GIT_COMMIT *\"\(.*\)\".*,\1,p' < ${incdir}/RGitCommit.h`"
       else
          echo "cannot read ${incdir}/RGitCommit.h"
          exit 1
       fi
       ;;
     --python-version)
-      out="$out @pythonvers@"
+      out="$out${sep}@pythonvers@"
       ;;
     --cflags)
       ### Output the compiler flags
@@ -576,18 +577,18 @@ while test $# -gt 0; do
          fi
       fi
       if test "x$noauxcflags" = "xyes" ; then
-         out="$out $includes"
+         out="$out${sep}$includes"
       else
-         out="$out ${auxcflags} $includes"
+         out="$out${sep}${auxcflags} $includes"
       fi
       ;;
    --auxcflags)
       ### Output auxiliary compiler flags
-      out="$out $auxcflags"
+      out="$out${sep}$auxcflags"
       ;;
     --ldflags)
       ### Output linker flags
-      out="$out $auxldflags"
+      out="$out${sep}$auxldflags"
       ;;
     --libs)
       ### Output regular ROOT libraries.  If the user said --glibs --libs,
@@ -615,13 +616,13 @@ while test $# -gt 0; do
          done
       else
          if test "x$noldflags" = "xno" ; then
-            out="$out -L${libdir}"
+            out="$out${sep}-L${libdir}"
          fi
       fi
       if test "x$noauxlibs" = "xyes" ; then
-         out="$out $forcelibs $libs"
+         out="$out${sep}$forcelibs $libs"
       else
-         out="$out $forcelibs $libs ${auxlibs}"
+         out="$out${sep}$forcelibs $libs ${auxlibs}"
       fi
       ;;
     --glibs)
@@ -660,16 +661,16 @@ while test $# -gt 0; do
          done
       else
         if test "x$noldflags" = "xno" ; then
-           out="$out -L${libdir}"
+           out="$out${sep}-L${libdir}"
         fi
       fi
       if test "x$glibsonly" = "xyes" ; then
-         out="$out $forceglibs $glibs"
+         out="$out${sep}$forceglibs $glibs"
       else
          if test "x$noauxlibs" = "xyes" ; then
-            out="$out $forcelibs $forceglibs $glibs"
+            out="$out${sep}$forcelibs $forceglibs $glibs"
          else
-            out="$out $forcelibs $forceglibs $glibs ${auxlibs}"
+            out="$out${sep}$forcelibs $forceglibs $glibs ${auxlibs}"
          fi
       fi
       ;;
@@ -714,52 +715,56 @@ while test $# -gt 0; do
          done
       else
         if test "x$noldflags" = "xno" ; then
-           out="$out -L${libdir}"
+           out="$out${sep}-L${libdir}"
         fi
       fi
       if test "x$evelibsonly" = "xyes" ; then
-         out="$out $forceevelibs $evelibs"
+         out="$out${sep}$forceevelibs $evelibs"
       elif test "x$eveandglibsonly" = "xyes" ; then
-         out="$out $forceglibs $forceevelibs $evelibs"
+         out="$out${sep}$forceglibs $forceevelibs $evelibs"
       else
          if test "x$noauxlibs" = "xyes" ; then
-            out="$out $forcelibs $forceglibs $forceevelibs $evelibs"
+            out="$out${sep}$forcelibs $forceglibs $forceevelibs $evelibs"
          else
-            out="$out $forcelibs $forceglibs $forceevelibs $evelibs ${auxlibs}"
+            out="$out${sep}$forcelibs $forceglibs $forceevelibs $evelibs ${auxlibs}"
          fi
       fi
       ;;
     --auxlibs)
       ### output the auxiliary libraries
-      out="$out $auxlibs"
+      out="$out${sep}$auxlibs"
       ;;
     --bindir)
       ### output the executable directory
-      out="$out $bindir"
+      out="$out${sep}$bindir"
       ;;
     --libdir)
       ### output the library directory
-      out="$out $libdir"
+      out="$out${sep}$libdir"
       ;;
     --incdir)
       ### output the header directory
-      out="$out $incdir"
+      out="$out${sep}$incdir"
       ;;
     --etcdir)
       ### output the etc directory
-      out="$out $etcdir"
+      out="$out${sep}$etcdir"
       ;;
     --srcdir)
       ### output the src directory
-      out="$out $srcdir"
+      out="$out${sep}$srcdir"
       ;;
     --config)
       ### output the configure arguments
-      out="$out $configargs"
+      out="$out${sep}$configargs"
       ;;
     --features)
       ### output all supported features
-      out="$out$features"  # no space, features starts with space
+      if [ "X$sep" = "X " ]; then
+        out="$out$features"  # no space, features starts with space
+      else
+        out="$out$sep$features" # we add a cr to split it from the rest. Stripping of extra spaces will be done in FindRoot.cmake
+      fi
       ;;
     --ncpu)
       ### number of available cores
@@ -782,23 +787,27 @@ while test $# -gt 0; do
       *)
          ;;
       esac
-      out="$out $ncpu"
+      out="$out${sep}$ncpu"
       ;;
     --cc)
       ### output used C compiler
-      out="$out $altcc"
+      out="$out${sep}$altcc"
       ;;
     --cxx)
       ### output used C++ compiler
-      out="$out $altcxx"
+      out="$out${sep}$altcxx"
       ;;
     --f77)
       ### output used Fortran compiler
-      out="$out $altf77"
+      out="$out${sep}$altf77"
       ;;
     --ld)
       ### output used Linker
-      out="$out $altld"
+      out="$out${sep}$altld"
+      ;;
+    --cr)
+      ### Use new line rather than space to separate different output
+      sep=""
       ;;
     --help)
       ### Print a help message
