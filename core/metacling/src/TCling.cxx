@@ -8482,6 +8482,7 @@ void TCling::ForgetMutexState()
 
 void TCling::ApplyToInterpreterMutex(void *delta)
 {
+   R__ASSERT(!fInitialMutex.empty() && "Inconsistent state of fInitialMutex!");
    if (gInterpreterMutex) {
       if (delta) {
          auto typedDelta = static_cast<TVirtualRWMutex::StateDelta *>(delta);
