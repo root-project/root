@@ -33,30 +33,12 @@ if(NOT builtin_zlib)
   if(NOT ZLIB_FOUND)
     message(STATUS "Zlib not found. Switching on builtin_zlib option")
     set(builtin_zlib ON CACHE BOOL "" FORCE)
-   endif()
+  endif()
 endif()
+
 if(builtin_zlib)
-  message(STATUS "Building zlib included in ROOT itself")
-  set(zlib_sources
-    ${CMAKE_SOURCE_DIR}/core/zip/src/adler32.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/compress.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/crc32.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/deflate.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/gzclose.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/gzlib.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/gzread.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/gzwrite.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/infback.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/inffast.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/inflate.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/inftrees.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/trees.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/uncompr.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/zutil.c)
-  add_library(ZLIB STATIC ${zlib_sources})
-  set_target_properties(ZLIB PROPERTIES COMPILE_FLAGS "-fPIC -I${CMAKE_SOURCE_DIR}/core/zip/inc")
-  set(ZLIB_LIBRARY " " CACHE PATH "" FORCE)
-  set(ZLIB_LIBRARIES ZLIB)
+  list(APPEND builtins ZLIB)
+  add_subdirectory(builtins/zlib)
 endif()
 
 #---Check for Unuran ------------------------------------------------------------------
