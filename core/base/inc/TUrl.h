@@ -57,7 +57,7 @@ private:
 
 public:
    TUrl() : fUrl(), fProtocol(), fUser(), fPasswd(), fHost(), fFile(),
-            fAnchor(), fOptions(), fFileOA(), fHostFQ(), fPort(-1), fOptionsMap(0) { }
+            fAnchor(), fOptions(), fFileOA(), fHostFQ(), fPort(-1), fOptionsMap(nullptr) { }
    TUrl(const char *url, Bool_t defaultIsFile = kFALSE);
    TUrl(const TUrl &url);
    TUrl &operator=(const TUrl &rhs);

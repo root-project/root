@@ -55,7 +55,7 @@ public:
    virtual void     GetTextExtent(UInt_t &w, UInt_t &h, const char *text) const;
    virtual void     GetTextExtent(UInt_t &w, UInt_t &h, const wchar_t *text) const;
    virtual void     GetTextAdvance(UInt_t &a, const char *text, const Bool_t kern=kTRUE) const;
-   const void *     GetWcsTitle(void) const;
+   const void *     GetWcsTitle() const;
    Double_t         GetY() const  { return fY; }
 
    virtual void     ls(Option_t *option="") const;

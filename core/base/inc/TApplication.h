@@ -84,7 +84,7 @@ protected:
 
    TApplication();
 
-   virtual Long_t     ProcessRemote(const char *line, Int_t *error = 0);
+   virtual Long_t     ProcessRemote(const char *line, Int_t *error = nullptr);
    virtual void       Help(const char *line);
    virtual void       LoadGraphicsLibs();
    virtual void       MakeBatch();
@@ -98,7 +98,7 @@ protected:
 
 public:
    TApplication(const char *appClassName, Int_t *argc, char **argv,
-                void *options = 0, Int_t numOptions = 0);
+                void *options = nullptr, Int_t numOptions = 0);
    virtual ~TApplication();
 
    void            InitializeGraphics();
@@ -110,8 +110,8 @@ public:
    virtual void    HandleIdleTimer();   //*SIGNAL*
    virtual Bool_t  HandleTermInput() { return kFALSE; }
    virtual void    Init() { fAppImp->Init(); }
-   virtual Long_t  ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = 0);
-   virtual Long_t  ProcessFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
+   virtual Long_t  ProcessLine(const char *line, Bool_t sync = kFALSE, Int_t *error = nullptr);
+   virtual Long_t  ProcessFile(const char *file, Int_t *error = nullptr, Bool_t keep = kFALSE);
    virtual void    Run(Bool_t retrn = kFALSE);
    virtual void    SetIdleTimer(UInt_t idleTimeInSec, const char *command);
    virtual void    RemoveIdleTimer();
@@ -154,7 +154,7 @@ public:
    virtual void    ReturnPressed(char *text );        //*SIGNAL*
    virtual Int_t   TabCompletionHook(char *buf, int *pLoc, std::ostream& out);
 
-   static Long_t   ExecuteFile(const char *file, Int_t *error = 0, Bool_t keep = kFALSE);
+   static Long_t   ExecuteFile(const char *file, Int_t *error = nullptr, Bool_t keep = kFALSE);
    static TList   *GetApplications();
    static void     CreateApplication();
    static void     NeedGraphicsLibs();

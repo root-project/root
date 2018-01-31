@@ -76,8 +76,8 @@ TMVA::RuleFit::RuleFit(const MethodBase *rfbase)
 TMVA::RuleFit::RuleFit()
    : fNTreeSample(0)
    , fNEveEffTrain(0)
-   , fMethodRuleFit(0)
-   , fMethodBase(0)
+   , fMethodRuleFit(nullptr)
+   , fMethodBase(nullptr)
    , fVisHistsUseImp(kTRUE)
    , fLogger(new MsgLogger("RuleFit"))
 {
@@ -175,7 +175,7 @@ void TMVA::RuleFit::Copy( const RuleFit& other )
 
 Double_t TMVA::RuleFit::CalcWeightSum( const std::vector<const Event *> *events, UInt_t neve )
 {
-   if (events==0) return 0.0;
+   if (events==nullptr) return 0.0;
    if (neve==0) neve=events->size();
    //
    Double_t sumw=0;
@@ -200,8 +200,8 @@ void TMVA::RuleFit::SetMsgType( EMsgType t )
 
 void TMVA::RuleFit::BuildTree( DecisionTree *dt )
 {
-   if (dt==0) return;
-   if (fMethodRuleFit==0) {
+   if (dt==nullptr) return;
+   if (fMethodRuleFit==nullptr) {
       Log() << kFATAL << "RuleFit::BuildTree() - Attempting to build a tree NOT from a MethodRuleFit" << Endl;
    }
    std::vector<const Event *> evevec;
@@ -221,7 +221,7 @@ void TMVA::RuleFit::BuildTree( DecisionTree *dt )
 
 void TMVA::RuleFit::MakeForest()
 {
-   if (fMethodRuleFit==0) {
+   if (fMethodRuleFit==nullptr) {
       Log() << kFATAL << "RuleFit::BuildTree() - Attempting to build a tree NOT from a MethodRuleFit" << Endl;
    }
    Log() << kDEBUG << "Creating a forest with " << fMethodRuleFit->GetNTrees() << " decision trees" << Endl;
@@ -269,10 +269,10 @@ void TMVA::RuleFit::MakeForest()
          BuildTree(dt); // reads fNTreeSample events from fTrainingEventsRndm
          if (dt->GetNNodes()<3) {
             delete dt;
-            dt=0;
+            dt=nullptr;
          }
          ntries++;
-         tryAgain = ((dt==0) && (ntries<ntriesMax));
+         tryAgain = ((dt==nullptr) && (ntries<ntriesMax));
       }
       if (dt) {
          fForest.push_back(dt);
@@ -439,7 +439,7 @@ Double_t TMVA::RuleFit::EvalEvent( const Event& e )
 
 void TMVA::RuleFit::SetTrainingEvents( const std::vector<const Event *>& el )
 {
-   if (fMethodRuleFit==0) Log() << kFATAL << "RuleFit::SetTrainingEvents - MethodRuleFit not initialized" << Endl;
+   if (fMethodRuleFit==nullptr) Log() << kFATAL << "RuleFit::SetTrainingEvents - MethodRuleFit not initialized" << Endl;
    UInt_t neve = el.size();
    if (neve==0) Log() << kWARNING << "An empty sample of training events was given" << Endl;
 
@@ -532,8 +532,8 @@ void TMVA::RuleFit::NormVisHists(std::vector<TH2F *> & hlist)
 
 void TMVA::RuleFit::FillCut(TH2F* h2, const Rule *rule, Int_t vind)
 {
-   if (rule==0) return;
-   if (h2==0) return;
+   if (rule==nullptr) return;
+   if (h2==nullptr) return;
    //
    Double_t rmin,  rmax;
    Bool_t   dormin,dormax;
@@ -583,7 +583,7 @@ void TMVA::RuleFit::FillCut(TH2F* h2, const Rule *rule, Int_t vind)
 
 void TMVA::RuleFit::FillLin(TH2F* h2,Int_t vind)
 {
-   if (h2==0) return;
+   if (h2==nullptr) return;
    if (!fRuleEnsemble.DoLinear()) return;
    //
    Int_t firstbin = 1;
@@ -607,8 +607,8 @@ void TMVA::RuleFit::FillLin(TH2F* h2,Int_t vind)
 
 void TMVA::RuleFit::FillCorr(TH2F* h2,const Rule *rule,Int_t vx, Int_t vy)
 {
-   if (rule==0) return;
-   if (h2==0) return;
+   if (rule==nullptr) return;
+   if (h2==nullptr) return;
    Double_t val;
    if (fVisHistsUseImp) {
       val = rule->GetImportance();
@@ -714,7 +714,7 @@ void TMVA::RuleFit::FillVisHistCut(const Rule* rule, std::vector<TH2F *> & hlist
 
 void TMVA::RuleFit::FillVisHistCorr(const Rule * rule, std::vector<TH2F *> & hlist)
 {
-   if (rule==0) return;
+   if (rule==nullptr) return;
    Double_t ruleimp  = rule->GetImportance();
    if (!(ruleimp>0)) return;
    if (ruleimp<fRuleEnsemble.GetImportanceCut()) return;
@@ -785,13 +785,13 @@ void TMVA::RuleFit::MakeVisHists()
    const TString corrDirName = "CorrelationPlots";
 
    TDirectory* rootDir   = fMethodBase->GetFile();
-   TDirectory* varDir    = 0;
-   TDirectory* corrDir   = 0;
+   TDirectory* varDir    = nullptr;
+   TDirectory* corrDir   = nullptr;
 
    TDirectory* methodDir = fMethodBase->BaseDir();
    TString varDirName;
    //
-   Bool_t done=(rootDir==0);
+   Bool_t done=(rootDir==nullptr);
    Int_t type=0;
    if (done) {
       Log() << kWARNING << "No basedir - BUG??" << Endl;
@@ -800,19 +800,19 @@ void TMVA::RuleFit::MakeVisHists()
    while (!done) {
       varDir = (TDirectory*)rootDir->Get( directories[type] );
       type++;
-      done = ((varDir!=0) || (type>4));
+      done = ((varDir!=nullptr) || (type>4));
    }
-   if (varDir==0) {
+   if (varDir==nullptr) {
       Log() << kWARNING << "No input variable directory found - BUG?" << Endl;
       return;
    }
    corrDir = (TDirectory*)varDir->Get( corrDirName );
-   if (corrDir==0) {
+   if (corrDir==nullptr) {
       Log() << kWARNING << "No correlation directory found" << Endl;
       Log() << kWARNING << "Check for other warnings related to correlation histograms" << Endl;
       return;
    }
-   if (methodDir==0) {
+   if (methodDir==nullptr) {
       Log() << kWARNING << "No rulefit method directory found - BUG?" << Endl;
       return;
    }
@@ -822,7 +822,7 @@ void TMVA::RuleFit::MakeVisHists()
    //
    // get correlation plot directory
    corrDir = (TDirectory *)varDir->Get(corrDirName);
-   if (corrDir==0) {
+   if (corrDir==nullptr) {
       Log() << kWARNING << "No correlation directory found : " << corrDirName << Endl;
       return;
    }
@@ -913,7 +913,7 @@ void TMVA::RuleFit::MakeVisHists()
       FillVisHistCut(rule, h1Vector);
    }
    // fill linear terms and normalise hists
-   FillVisHistCut(0, h1Vector);
+   FillVisHistCut(nullptr, h1Vector);
    NormVisHists(h1Vector);
 
    //
@@ -937,7 +937,7 @@ void TMVA::RuleFit::MakeVisHists()
 void TMVA::RuleFit::MakeDebugHists()
 {
    TDirectory* methodDir = fMethodBase->BaseDir();
-   if (methodDir==0) {
+   if (methodDir==nullptr) {
       Log() << kWARNING << "<MakeDebugHists> No rulefit method directory found - bug?" << Endl;
       return;
    }

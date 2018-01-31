@@ -166,7 +166,7 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
                             DataSetInfo& theData,
                             const TString& theOption ) :
    TMVA::MethodBase( jobName, Types::kBDT, methodTitle, theData, theOption)
-   , fTrainSample(0)
+   , fTrainSample(nullptr)
    , fNTrees(0)
    , fSigToBkgFraction(0)
    , fAdaBoostBeta(0)
@@ -211,8 +211,8 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
    , fSkipNormalization(kFALSE)
    , fHistoricBool(kFALSE)
 {
-   fMonitorNtuple = NULL;
-   fSepType = NULL;
+   fMonitorNtuple = nullptr;
+   fSepType = nullptr;
    fRegressionLossFunctionBDTG = nullptr;
 }
 
@@ -221,7 +221,7 @@ TMVA::MethodBDT::MethodBDT( const TString& jobName,
 TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
                             const TString& theWeightFile)
    : TMVA::MethodBase( Types::kBDT, theData, theWeightFile)
-   , fTrainSample(0)
+   , fTrainSample(nullptr)
    , fNTrees(0)
    , fSigToBkgFraction(0)
    , fAdaBoostBeta(0)
@@ -266,8 +266,8 @@ TMVA::MethodBDT::MethodBDT( DataSetInfo& theData,
    , fSkipNormalization(kFALSE)
    , fHistoricBool(kFALSE)
 {
-   fMonitorNtuple = NULL;
-   fSepType = NULL;
+   fMonitorNtuple = nullptr;
+   fSepType = nullptr;
    fRegressionLossFunctionBDTG = nullptr;
    // constructor for calculating BDT-MVA using previously generated decision trees
    // the result of the previous training (the decision trees) are read in via the
@@ -476,7 +476,7 @@ void TMVA::MethodBDT::ProcessOptions()
    else if (fSepTypeS == "giniindexwithlaplace")   fSepType = new GiniIndexWithLaplace();
    else if (fSepTypeS == "crossentropy")           fSepType = new CrossEntropy();
    else if (fSepTypeS == "sdivsqrtsplusb")         fSepType = new SdivSqrtSplusB();
-   else if (fSepTypeS == "regressionvariance")     fSepType = NULL;
+   else if (fSepTypeS == "regressionvariance")     fSepType = nullptr;
    else {
       Log() << kINFO << GetOptions() << Endl;
       Log() << kFATAL << "<ProcessOptions> unknown Separation Index option " << fSepTypeS << " called" << Endl;
@@ -576,9 +576,9 @@ void TMVA::MethodBDT::ProcessOptions()
          fUseYesNoLeaf = kFALSE;
       }
 
-      if (fSepType != NULL){
+      if (fSepType != nullptr){
          Log() << kWARNING << "Regression Trees do not work with Separation type other than <RegressionVariance> --> I will use it instead" << Endl;
-         fSepType = NULL;
+         fSepType = nullptr;
       }
       if (fUseFisherCuts){
          Log() << kWARNING << "Sorry, UseFisherCuts is not available for regression analysis, I will ignore it!" << Endl;
@@ -731,7 +731,7 @@ void TMVA::MethodBDT::Reset( void )
    fForest.clear();
 
    fBoostWeights.clear();
-   if (fMonitorNtuple) { fMonitorNtuple->Delete(); fMonitorNtuple=NULL; }
+   if (fMonitorNtuple) { fMonitorNtuple->Delete(); fMonitorNtuple=nullptr; }
    fVariableImportance.clear();
    fResiduals.clear();
    fLossFunctionEventInfo.clear();
@@ -1338,7 +1338,7 @@ void TMVA::MethodBDT::Train()
          fForest.back()->SetPruneMethod(fPruneMethod); // set the pruning method for the tree
          fForest.back()->SetPruneStrength(fPruneStrength); // set the strength parameter
 
-         std::vector<const Event*> * validationSample = NULL;
+         std::vector<const Event*> * validationSample = nullptr;
          if(fAutomatic) validationSample = &fValidationSample;
 
          Double_t bw = this->Boost(*fTrainSample, fForest.back());
@@ -1551,7 +1551,7 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
    // Should get rid of this line. It's just for debugging.
    //std::sort(eventSample.begin(), eventSample.end(), [](const TMVA::Event* a, const TMVA::Event* b){
    //                                     return (a->GetTarget(0) < b->GetTarget(0)); });
-   fSepType=NULL; //set fSepType to NULL (regression trees are used for both classification an regression)
+   fSepType=nullptr; //set fSepType to NULL (regression trees are used for both classification an regression)
    if(DoRegression()){
       for (std::vector<const TMVA::Event*>::const_iterator e=eventSample.begin(); e!=eventSample.end();++e) {
          fLossFunctionEventInfo[*e]= TMVA::LossFunctionEventInfo((*e)->GetTarget(0), 0, (*e)->GetWeight());
@@ -2385,7 +2385,7 @@ Double_t TMVA::MethodBDT::PrivateGetMvaValue(const TMVA::Event* ev, Double_t* er
 const std::vector<Float_t>& TMVA::MethodBDT::GetMulticlassValues()
 {
    const TMVA::Event *e = GetEvent();
-   if (fMulticlassReturnVal == NULL) fMulticlassReturnVal = new std::vector<Float_t>();
+   if (fMulticlassReturnVal == nullptr) fMulticlassReturnVal = new std::vector<Float_t>();
    fMulticlassReturnVal->clear();
 
    UInt_t nClasses = DataInfo().GetNClasses();
@@ -2421,7 +2421,7 @@ const std::vector<Float_t>& TMVA::MethodBDT::GetMulticlassValues()
 const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
 {
 
-   if (fRegressionReturnVal == NULL) fRegressionReturnVal = new std::vector<Float_t>();
+   if (fRegressionReturnVal == nullptr) fRegressionReturnVal = new std::vector<Float_t>();
    fRegressionReturnVal->clear();
 
    const Event * ev = GetEvent();
@@ -2822,19 +2822,19 @@ void TMVA::MethodBDT::MakeClassSpecificHeader(  std::ostream& fout, const TStrin
 
 void TMVA::MethodBDT::MakeClassInstantiateNode( DecisionTreeNode *n, std::ostream& fout, const TString& className ) const
 {
-   if (n == NULL) {
+   if (n == nullptr) {
       Log() << kFATAL << "MakeClassInstantiateNode: started with undefined node" <<Endl;
       return ;
    }
    fout << "NN("<<std::endl;
-   if (n->GetLeft() != NULL){
+   if (n->GetLeft() != nullptr){
       this->MakeClassInstantiateNode( (DecisionTreeNode*)n->GetLeft() , fout, className);
    }
    else {
       fout << "0";
    }
    fout << ", " <<std::endl;
-   if (n->GetRight() != NULL){
+   if (n->GetRight() != nullptr){
       this->MakeClassInstantiateNode( (DecisionTreeNode*)n->GetRight(), fout, className );
    }
    else {

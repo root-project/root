@@ -97,7 +97,7 @@ public:
    virtual void       Copy(TObject &axis) const;
    virtual void       Delete(Option_t * /*option*/ ="") { }
    virtual Int_t      DistancetoPrimitive(Int_t px, Int_t py);
-   virtual TObject   *DrawClone(Option_t * /*option*/ ="") const {return 0;}
+   virtual TObject   *DrawClone(Option_t * /*option*/ ="") const {return nullptr;}
    virtual void       ExecuteEvent(Int_t event, Int_t px, Int_t py);
    virtual Int_t      FindBin(Double_t x);
    virtual Int_t      FindBin(Double_t x) const { return FindFixBin(x); }

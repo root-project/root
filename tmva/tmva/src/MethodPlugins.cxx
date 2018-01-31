@@ -63,8 +63,8 @@ namespace
    TMVA::IMethod* CreateMethodPlugins(const TString& jobName, const TString& methodTitle, TMVA::DataSetInfo& theData, const TString& theOption)
    {
       //std::cout << "CreateMethodPlugins is called with options : '" << jobName << "', '" << methodTitle<< "', " << theOption<< "'" << std::endl;
-      TPluginManager *pluginManager(0);
-      TPluginHandler *pluginHandler(0);
+      TPluginManager *pluginManager(nullptr);
+      TPluginHandler *pluginHandler(nullptr);
       pluginManager = gROOT->GetPluginManager();
       //An empty methodTitle is a Problem for the PluginHandler, so we need to fiddle it out of the weightsfilename
       TString myMethodTitle;
@@ -80,7 +80,7 @@ namespace
       if(!pluginHandler)
          {
             std::cerr <<  "Couldn't find plugin handler for TMVA@@MethodBase and " << methodTitle << std::endl;
-            return 0;
+            return nullptr;
          }
       //std::cout << "pluginHandler found myMethodTitle=" << myMethodTitle<<std::endl;
       if (pluginHandler->LoadPlugin() == 0) {
@@ -94,7 +94,7 @@ namespace
          }
       }
       //std::cout << "plugin done" << std::endl;
-      return 0; // end of function should never be reached. This is here to silence the compiler
+      return nullptr; // end of function should never be reached. This is here to silence the compiler
    }
 
    struct registration {

@@ -114,7 +114,7 @@ public:
 
       TString signal = CompressName(signal_name);
 
-      TVirtualQConnection *connection = 0;
+      TVirtualQConnection *connection = nullptr;
 
       // execute class signals
       TList *sigList;
@@ -178,15 +178,15 @@ public:
                   void *receiver,
                   const char *slot);
 
-   Bool_t Disconnect(const char *signal = 0,
-                     void *receiver = 0,
-                     const char *slot = 0);
+   Bool_t Disconnect(const char *signal = nullptr,
+                     void *receiver = nullptr,
+                     const char *slot = nullptr);
 
    virtual void   HighPriority(const char *signal_name,
-                               const char *slot_name = 0);
+                               const char *slot_name = nullptr);
 
    virtual void   LowPriority(const char *signal_name,
-                              const char *slot_name = 0);
+                              const char *slot_name = nullptr);
 
    virtual Bool_t HasConnection(const char *signal_name) const;
    virtual Int_t  NumberOfSignals() const;
@@ -214,14 +214,14 @@ public:
                           const char *slot);
 
    static Bool_t  Disconnect(TQObject *sender,
-                             const char *signal = 0,
-                             void *receiver = 0,
-                             const char *slot = 0);
+                             const char *signal = nullptr,
+                             void *receiver = nullptr,
+                             const char *slot = nullptr);
 
    static Bool_t  Disconnect(const char *class_name,
                              const char *signal,
-                             void *receiver = 0,
-                             const char *slot = 0);
+                             void *receiver = nullptr,
+                             const char *slot = nullptr);
 
    static Bool_t  AreAllSignalsBlocked();
    static Bool_t  BlockAllSignals(Bool_t b);
@@ -244,7 +244,7 @@ private:
    TQObjSender& operator=(const TQObjSender&); // not implemented
 
 public:
-   TQObjSender() : TQObject(), fSender(0), fSenderClass() { }
+   TQObjSender() : TQObject(), fSender(nullptr), fSenderClass() { }
    virtual ~TQObjSender() { Disconnect(); }
 
    virtual void SetSender(void *sender) { fSender = sender; }

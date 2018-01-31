@@ -107,8 +107,8 @@ ClassImp(TMVA::MethodPDERS);
    fFcnCall(0),
    fVRangeMode(kAdaptive),
    fKernelEstimator(kBox),
-   fDelta(0),
-   fShift(0),
+   fDelta(nullptr),
+   fShift(nullptr),
    fScaleS(0),
    fScaleB(0),
    fDeltaFrac(0),
@@ -126,8 +126,8 @@ ClassImp(TMVA::MethodPDERS);
    fPrinted(0),
    fNormTree(0)
 {
-      fHelpVolume = NULL;
-      fBinaryTree = NULL;
+      fHelpVolume = nullptr;
+      fBinaryTree = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,8 +139,8 @@ TMVA::MethodPDERS::MethodPDERS( DataSetInfo& theData,
    fFcnCall(0),
    fVRangeMode(kAdaptive),
    fKernelEstimator(kBox),
-   fDelta(0),
-   fShift(0),
+   fDelta(nullptr),
+   fShift(nullptr),
    fScaleS(0),
    fScaleB(0),
    fDeltaFrac(0),
@@ -158,8 +158,8 @@ TMVA::MethodPDERS::MethodPDERS( DataSetInfo& theData,
    fPrinted(0),
    fNormTree(0)
 {
-      fHelpVolume = NULL;
-      fBinaryTree = NULL;
+      fHelpVolume = nullptr;
+      fBinaryTree = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -177,7 +177,7 @@ Bool_t TMVA::MethodPDERS::HasAnalysisType( Types::EAnalysisType type, UInt_t num
 
 void TMVA::MethodPDERS::Init( void )
 {
-   fBinaryTree = NULL;
+   fBinaryTree = nullptr;
 
    UpdateThis();
 
@@ -212,7 +212,7 @@ TMVA::MethodPDERS::~MethodPDERS( void )
    if (fDelta) delete fDelta;
    if (fShift) delete fShift;
 
-   if (NULL != fBinaryTree) delete fBinaryTree;
+   if (nullptr != fBinaryTree) delete fBinaryTree;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -391,7 +391,7 @@ Double_t TMVA::MethodPDERS::GetMvaValue( Double_t* err, Double_t* errUpper )
 
 const std::vector< Float_t >& TMVA::MethodPDERS::GetRegressionValues()
 {
-   if (fRegressionReturnVal == 0) fRegressionReturnVal = new std::vector<Float_t>;
+   if (fRegressionReturnVal == nullptr) fRegressionReturnVal = new std::vector<Float_t>;
    fRegressionReturnVal->clear();
    // init the size of a volume element using a defined fraction of the
    // volume containing the entire events
@@ -456,7 +456,7 @@ void TMVA::MethodPDERS::CalcAverages()
 
 void TMVA::MethodPDERS::CreateBinarySearchTree( Types::ETreeType type )
 {
-   if (NULL != fBinaryTree) delete fBinaryTree;
+   if (nullptr != fBinaryTree) delete fBinaryTree;
    fBinaryTree = new BinarySearchTree();
    if (fNormTree) {
       fBinaryTree->SetNormalize( kTRUE );
@@ -619,7 +619,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
 
          fBinaryTree->SearchVolume( volume, &events );
 
-         fHelpVolume = NULL;
+         fHelpVolume = nullptr;
       }
       // -----------------------------------------------------------------------
       else {
@@ -1112,7 +1112,7 @@ void TMVA::MethodPDERS::AddWeightsXMLTo( void* parent ) const
 
 void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
 {
-   if (NULL != fBinaryTree) delete fBinaryTree;
+   if (nullptr != fBinaryTree) delete fBinaryTree;
    void* treenode = gTools().GetChild(wghtnode);
    fBinaryTree = TMVA::BinarySearchTree::CreateFromXML(treenode);
    if(!fBinaryTree)
@@ -1139,7 +1139,7 @@ void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
 
 void TMVA::MethodPDERS::ReadWeightsFromStream( std::istream& istr)
 {
-   if (NULL != fBinaryTree) delete fBinaryTree;
+   if (nullptr != fBinaryTree) delete fBinaryTree;
 
    fBinaryTree = new BinarySearchTree();
 

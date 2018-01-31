@@ -71,7 +71,7 @@ TMVA::DataSet::DataSet(const DataSetInfo& dsi)
    fBlockBelongToTraining.push_back(kTRUE);
 
    // sampling
-   fSamplingRandom = 0;
+   fSamplingRandom = nullptr;
 
    Int_t treeNum = 2;
    fSampling.resize( treeNum );
@@ -103,7 +103,7 @@ TMVA::DataSet::DataSet()
     fBlockBelongToTraining.push_back(kTRUE);
 
     // sampling
-    fSamplingRandom = 0;
+    fSamplingRandom = nullptr;
 
     Int_t treeNum = 2;
     fSampling.resize( treeNum );
@@ -136,7 +136,7 @@ TMVA::DataSet::~DataSet()
    }
 
    // delete sampling
-   if (fSamplingRandom != 0 ) delete fSamplingRandom;
+   if (fSamplingRandom != nullptr ) delete fSamplingRandom;
 
 
    // need also to delete fEventCollections[2] and [3], not sure if they are used
@@ -173,7 +173,7 @@ Long64_t TMVA::DataSet::GetNClassEvents( Int_t type, UInt_t classNumber )
    catch (std::out_of_range excpt) {
       ClassInfo* ci = fdsi->GetClassInfo( classNumber );
       Log() << kFATAL << Form("Dataset[%s] : ",fdsi->GetName()) << "No " << (type==0?"training":(type==1?"testing":"_unknown_type_"))
-            << " events for class " << (ci==NULL?"_no_name_known_":ci->GetName()) << " (index # "<<classNumber<<")"
+            << " events for class " << (ci==nullptr?"_no_name_known_":ci->GetName()) << " (index # "<<classNumber<<")"
             << " available. Check if all class names are spelled correctly and if events are"
             << " passing the selection cuts." << Endl;
    }
@@ -281,7 +281,7 @@ TMVA::Results* TMVA::DataSet::GetResults( const TString & resultsName,
 
    // nothing found
 
-   Results * newresults = 0;
+   Results * newresults = nullptr;
    switch(analysistype) {
    case Types::kClassification:
       newresults = new ResultsClassification(fdsi,resultsName);
@@ -297,7 +297,7 @@ TMVA::Results* TMVA::DataSet::GetResults( const TString & resultsName,
       break;
    case Types::kMaxAnalysisType:
       //Log() << kINFO << " GetResults("<<info<<") can't create new one." << Endl;
-      return 0;
+      return nullptr;
       break;
    }
 
@@ -430,7 +430,7 @@ Long64_t TMVA::DataSet::GetNEvtBkgdTrain()
 void TMVA::DataSet::InitSampling( Float_t fraction, Float_t weight, UInt_t seed  )
 {
    // add a random generator if not yet present
-   if (fSamplingRandom == 0 ) fSamplingRandom = new TRandom3( seed );
+   if (fSamplingRandom == nullptr ) fSamplingRandom = new TRandom3( seed );
 
    // first, clear the lists
    std::vector< std::pair< Float_t, Long64_t >* > evtList;
@@ -482,7 +482,7 @@ void TMVA::DataSet::CreateSampling() const
 
    if (!fSampling.at(treeIdx) ) return;
 
-   if (fSamplingRandom == 0 )
+   if (fSamplingRandom == nullptr )
       Log() << kFATAL<< Form("Dataset[%s] : ",fdsi->GetName())
             << "no random generator present for creating a random/importance sampling (initialized?)" << Endl;
 
@@ -583,7 +583,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
 
    // the dataset does not hold the tree, this function returns a new tree every time it is called
 
-   if (type!=Types::kTraining && type!=Types::kTesting) return 0;
+   if (type!=Types::kTraining && type!=Types::kTesting) return nullptr;
 
    Types::ETreeType savedType = GetCurrentType();
 

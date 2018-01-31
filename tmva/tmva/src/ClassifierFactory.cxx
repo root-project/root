@@ -39,7 +39,7 @@ class TString;
 ///
 /// Initialize static singleton pointer
 ///
-TMVA::ClassifierFactory* TMVA::ClassifierFactory::fgInstance = 0;
+TMVA::ClassifierFactory* TMVA::ClassifierFactory::fgInstance = nullptr;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// access to the ClassifierFactory singleton
@@ -57,7 +57,7 @@ TMVA::ClassifierFactory& TMVA::ClassifierFactory::Instance()
 
 void TMVA::ClassifierFactory::DestroyInstance()
 {
-   if (fgInstance!=0) delete fgInstance;
+   if (fgInstance!=nullptr) delete fgInstance;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

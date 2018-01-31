@@ -91,7 +91,7 @@ ClassImp(TMVA::MethodRuleFit);
    , fRFNendnodes(0)
    , fNTrees(0)
    , fTreeEveFrac(0)
-   , fSepType(0)
+   , fSepType(nullptr)
    , fMinFracNEve(0)
    , fMaxFracNEve(0)
    , fNCuts(0)
@@ -112,7 +112,7 @@ ClassImp(TMVA::MethodRuleFit);
    , fRuleMinDist(0)
    , fLinQuantile(0)
 {
-      fMonitorNtuple = NULL;
+      fMonitorNtuple = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,7 +139,7 @@ TMVA::MethodRuleFit::MethodRuleFit( DataSetInfo& theData,
    , fRFNendnodes(0)
    , fNTrees(0)
    , fTreeEveFrac(0)
-   , fSepType(0)
+   , fSepType(nullptr)
    , fMinFracNEve(0)
    , fMaxFracNEve(0)
    , fNCuts(0)
@@ -160,7 +160,7 @@ TMVA::MethodRuleFit::MethodRuleFit( DataSetInfo& theData,
    , fRuleMinDist(0)
    , fLinQuantile(0)
 {
-      fMonitorNtuple = NULL;
+      fMonitorNtuple = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

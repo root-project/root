@@ -49,22 +49,22 @@ TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB) :
    fMaxIter(100),
    fAbsTol(0.0),
    fStatus(kTRUE),
-   fmvaS(0),
-   fmvaB(0),
-   fmvaSpdf(0),
-   fmvaBpdf(0),
-   fSplS(0),
-   fSplB(0),
-   fSplmvaCumS(0),
-   fSplmvaCumB(0),
-   fSpleffBvsS(0),
+   fmvaS(nullptr),
+   fmvaB(nullptr),
+   fmvaSpdf(nullptr),
+   fmvaBpdf(nullptr),
+   fSplS(nullptr),
+   fSplB(nullptr),
+   fSplmvaCumS(nullptr),
+   fSplmvaCumB(nullptr),
+   fSpleffBvsS(nullptr),
    fnStot(0),
    fnBtot(0),
-   fSignificance(0),
-   fPurity(0),
-   effBvsS(0),
-   rejBvsS(0),
-   inveffBvsS(0),
+   fSignificance(nullptr),
+   fPurity(nullptr),
+   effBvsS(nullptr),
+   rejBvsS(nullptr),
+   inveffBvsS(nullptr),
    fLogger ( new TMVA::MsgLogger("ROCCalc") )
 {
    fUseSplines = kTRUE;
@@ -93,7 +93,7 @@ TMVA::ROCCalc::ROCCalc(TH1* mvaS, TH1* mvaB) :
    //the I will divide it by 10 anyway doing some tests ROC integral is the same
    fmvaSpdf = mvaS->RebinX(mvaS->GetNbinsX()/10,"MVA Signal PDF");
    fmvaBpdf = mvaB->RebinX(mvaB->GetNbinsX()/10,"MVA Backgr PDF");
-   if(fmvaSpdf==0||fmvaBpdf==0)
+   if(fmvaSpdf==nullptr||fmvaBpdf==nullptr)
       {
          Log() << kERROR << "Cannot Rebin Histograms mvaS and mvaB, ROC values will be calculated without Rebin histograms."<<Endl;
          fStatus=kFALSE;
@@ -138,21 +138,21 @@ void TMVA::ROCCalc::ApplySignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* any 
    Int_t LineColor__B = c_BackgroundLine;
    Int_t LineWidth__B = 2;
 
-   if (sig != NULL) {
+   if (sig != nullptr) {
       sig->SetLineColor( LineColor__S );
       sig->SetLineWidth( LineWidth__S );
       sig->SetFillStyle( FillStyle__S );
       sig->SetFillColor( FillColor__S );
    }
 
-   if (bkg != NULL) {
+   if (bkg != nullptr) {
       bkg->SetLineColor( LineColor__B );
       bkg->SetLineWidth( LineWidth__B );
       bkg->SetFillStyle( FillStyle__B );
       bkg->SetFillColor( FillColor__B );
    }
 
-   if (any != NULL) {
+   if (any != nullptr) {
       any->SetLineColor( LineColor__S );
       any->SetLineWidth( LineWidth__S );
       any->SetFillStyle( FillStyle__S );
@@ -165,11 +165,11 @@ void TMVA::ROCCalc::ApplySignalAndBackgroundStyle( TH1* sig, TH1* bkg, TH1* any 
 
 TMVA::ROCCalc::~ROCCalc() {
    // delete Splines and all histograms that were created only for internal use
-   if (fSplS)            { delete fSplS; fSplS = 0; }
-   if (fSplB)            { delete fSplB; fSplB = 0; }
-   if (fSpleffBvsS)      { delete fSpleffBvsS; fSpleffBvsS = 0; }
-   if (fSplmvaCumS)      { delete fSplmvaCumS; fSplmvaCumS = 0; }
-   if (fSplmvaCumB)      { delete fSplmvaCumB; fSplmvaCumB = 0; }
+   if (fSplS)            { delete fSplS; fSplS = nullptr; }
+   if (fSplB)            { delete fSplB; fSplB = nullptr; }
+   if (fSpleffBvsS)      { delete fSpleffBvsS; fSpleffBvsS = nullptr; }
+   if (fSplmvaCumS)      { delete fSplmvaCumS; fSplmvaCumS = nullptr; }
+   if (fSplmvaCumB)      { delete fSplmvaCumB; fSplmvaCumB = nullptr; }
    if (fmvaScumul)       { delete fmvaScumul; }
    if (fmvaBcumul)       { delete fmvaBcumul; }
    if (effBvsS)          { delete effBvsS; }
@@ -200,17 +200,17 @@ TH1D* TMVA::ROCCalc::GetROC(){
    //   fmvaBcumul->Draw("histsame");
 
    // background efficiency versus signal efficiency
-   if(effBvsS==0) effBvsS = new TH1D("effBvsS", "ROC-Curve", fNbins, 0, 1 );
+   if(effBvsS==nullptr) effBvsS = new TH1D("effBvsS", "ROC-Curve", fNbins, 0, 1 );
    effBvsS->SetXTitle( "Signal eff" );
    effBvsS->SetYTitle( "Backgr eff" );
 
    // background rejection (=1-eff.) versus signal efficiency
-   if(rejBvsS==0) rejBvsS = new TH1D( "rejBvsS", "ROC-Curve", fNbins, 0, 1 );
+   if(rejBvsS==nullptr) rejBvsS = new TH1D( "rejBvsS", "ROC-Curve", fNbins, 0, 1 );
    rejBvsS->SetXTitle( "Signal eff" );
    rejBvsS->SetYTitle( "Backgr rejection (1-eff)" );
 
    // inverse background eff (1/eff.) versus signal efficiency
-   if(inveffBvsS ==0) inveffBvsS = new TH1D("invBeffvsSeff", "ROC-Curve" , fNbins, 0, 1 );
+   if(inveffBvsS ==nullptr) inveffBvsS = new TH1D("invBeffvsSeff", "ROC-Curve" , fNbins, 0, 1 );
    inveffBvsS->SetXTitle( "Signal eff" );
    inveffBvsS->SetYTitle( "Inverse backgr. eff (1/eff)" );
 
@@ -274,7 +274,7 @@ TH1D* TMVA::ROCCalc::GetROC(){
 Double_t TMVA::ROCCalc::GetROCIntegral(){
    Double_t effS = 0, effB = 0;
    Int_t    nbins = 1000;
-   if (fSpleffBvsS == 0) this->GetROC(); // that will make the ROC calculation if not done yet
+   if (fSpleffBvsS == nullptr) this->GetROC(); // that will make the ROC calculation if not done yet
 
    // compute area of rej-vs-eff plot
    Double_t integral = 0;
@@ -299,7 +299,7 @@ Double_t TMVA::ROCCalc::GetEffSForEffBof(Double_t effBref, Double_t &effSerr){
    // find precise efficiency value
    Double_t effS=0., effB, effSOld=1., effBOld=0.;
    Int_t    nbins = 1000;
-   if (fSpleffBvsS == 0) this->GetROC(); // that will make the ROC calculation if not done yet
+   if (fSpleffBvsS == nullptr) this->GetROC(); // that will make the ROC calculation if not done yet
 
    Float_t step=1./nbins;  // stepsize in efficiency binning
    for (Int_t bini=1; bini<=nbins; bini++) {

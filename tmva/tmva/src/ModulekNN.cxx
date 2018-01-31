@@ -172,7 +172,7 @@ std::ostream& TMVA::kNN::operator<<(std::ostream& os, const TMVA::kNN::Event& ev
 
 TMVA::kNN::ModulekNN::ModulekNN()
    :fDimn(0),
-    fTree(0),
+    fTree(nullptr),
     fLogger( new MsgLogger("ModulekNN") )
 {
 }
@@ -183,7 +183,7 @@ TMVA::kNN::ModulekNN::ModulekNN()
 TMVA::kNN::ModulekNN::~ModulekNN()
 {
    if (fTree) {
-      delete fTree; fTree = 0;
+      delete fTree; fTree = nullptr;
    }
    delete fLogger;
 }
@@ -197,7 +197,7 @@ void TMVA::kNN::ModulekNN::Clear()
 
    if (fTree) {
       delete fTree;
-      fTree = 0;
+      fTree = nullptr;
    }
 
    fVarScale.clear();
@@ -450,26 +450,26 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
 {
    if (fVar.empty() || fDimn != fVar.size()) {
       Log() << kWARNING << "<Optimize> Cannot build a tree" << Endl;
-      return 0;
+      return nullptr;
    }
 
    const UInt_t size = (fVar.begin()->second).size();
    if (size < 1) {
       Log() << kWARNING << "<Optimize> Cannot build a tree without events" << Endl;
-      return 0;
+      return nullptr;
    }
 
    VarMap::const_iterator it = fVar.begin();
    for (; it != fVar.end(); ++it) {
       if ((it->second).size() != size) {
          Log() << kWARNING << "<Optimize> # of variables doesn't match between dimensions" << Endl;
-         return 0;
+         return nullptr;
       }
    }
 
    if (double(fDimn*size) < TMath::Power(2.0, double(odepth))) {
       Log() << kWARNING << "<Optimize> Optimization depth exceeds number of events" << Endl;
-      return 0;
+      return nullptr;
    }
 
    Log() << kHEADER << "Optimizing tree for " << fDimn << " variables with " << size << " values" << Endl;
@@ -479,12 +479,12 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
    it = fVar.find(0);
    if (it == fVar.end() || (it->second).size() < 2) {
       Log() << kWARNING << "<Optimize> Missing 0 variable" << Endl;
-      return 0;
+      return nullptr;
    }
 
    const Event pevent(VarVec(fDimn, (it->second)[size/2]), -1.0, -1);
 
-   Node<Event> *tree = new Node<Event>(0, pevent, 0);
+   Node<Event> *tree = new Node<Event>(nullptr, pevent, 0);
 
    pvec.push_back(tree);
 
@@ -494,13 +494,13 @@ TMVA::kNN::Node<TMVA::kNN::Event>* TMVA::kNN::ModulekNN::Optimize(const UInt_t o
       VarMap::const_iterator vit = fVar.find(mod);
       if (vit == fVar.end()) {
          Log() << kFATAL << "Missing " << mod << " variable" << Endl;
-         return 0;
+         return nullptr;
       }
       const std::vector<Double_t> &dvec = vit->second;
 
       if (dvec.size() < 2) {
          Log() << kFATAL << "Missing " << mod << " variable" << Endl;
-         return 0;
+         return nullptr;
       }
 
       UInt_t ichild = 1;

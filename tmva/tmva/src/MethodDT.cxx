@@ -131,8 +131,8 @@ ClassImp(TMVA::MethodDT);
                              DataSetInfo& theData,
                              const TString& theOption) :
    TMVA::MethodBase( jobName, Types::kDT, methodTitle, theData, theOption)
-   , fTree(0)
-   , fSepType(0)
+   , fTree(nullptr)
+   , fSepType(nullptr)
    , fMinNodeEvents(0)
    , fMinNodeSize(0)
    , fNCuts(0)
@@ -157,8 +157,8 @@ ClassImp(TMVA::MethodDT);
 TMVA::MethodDT::MethodDT( DataSetInfo& dsi,
                           const TString& theWeightFile) :
    TMVA::MethodBase( Types::kDT, dsi, theWeightFile)
-   , fTree(0)
-   , fSepType(0)
+   , fTree(nullptr)
+   , fSepType(nullptr)
    , fMinNodeEvents(0)
    , fMinNodeSize(0)
    , fNCuts(0)
@@ -567,5 +567,5 @@ void TMVA::MethodDT::GetHelpMessage() const
 
 const TMVA::Ranking* TMVA::MethodDT::CreateRanking()
 {
-   return 0;
+   return nullptr;
 }

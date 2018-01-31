@@ -166,8 +166,8 @@ public:
    virtual void       Clear(Option_t *option="") = 0;
    virtual TObject   *Clone(const char *newname="") const;
    Int_t              Compare(const TObject *obj) const;
-   Bool_t             Contains(const char *name) const { return FindObject(name) != 0; }
-   Bool_t             Contains(const TObject *obj) const { return FindObject(obj) != 0; }
+   Bool_t             Contains(const char *name) const { return FindObject(name) != nullptr; }
+   Bool_t             Contains(const TObject *obj) const { return FindObject(obj) != nullptr; }
    virtual void       Delete(Option_t *option="") = 0;
    virtual void       Draw(Option_t *option="");
    virtual void       Dump() const ;
@@ -204,8 +204,8 @@ public:
    void               SetName(const char *name) { fName = name; }
    virtual void       SetOwner(Bool_t enable = kTRUE);
    virtual bool       UseRWLock();
-   virtual Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
-   virtual Int_t      Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
+   virtual Int_t      Write(const char *name=nullptr, Int_t option=0, Int_t bufsize=0);
+   virtual Int_t      Write(const char *name=nullptr, Int_t option=0, Int_t bufsize=0) const;
 
    R__ALWAYS_INLINE Bool_t IsUsingRWLock() const { return TestBit(TCollection::kUseRWLock); }
 
@@ -240,7 +240,7 @@ protected:
 
 public:
    TIter(const TCollection *col, Bool_t dir = kIterForward)
-         : fIterator(col ? col->MakeIterator(dir) : 0) { }
+         : fIterator(col ? col->MakeIterator(dir) : nullptr) { }
    TIter(TIterator *it) : fIterator(it) { }
    TIter(const TIter &iter);
    TIter &operator=(const TIter &rhs);

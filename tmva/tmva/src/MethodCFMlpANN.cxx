@@ -134,12 +134,12 @@ TMVA::MethodCFMlpANN::MethodCFMlpANN( const TString& jobName,
                                       DataSetInfo& theData,
                                       const TString& theOption  ) :
    TMVA::MethodBase( jobName, Types::kCFMlpANN, methodTitle, theData, theOption),
-   fData(0),
-   fClass(0),
+   fData(nullptr),
+   fClass(nullptr),
    fNlayers(0),
    fNcycles(0),
-   fNodes(0),
-   fYNN(0),
+   fNodes(nullptr),
+   fYNN(nullptr),
    MethodCFMlpANN_nsel(0)
 {
    MethodCFMlpANN_Utils::SetLogger(&Log());
@@ -151,12 +151,12 @@ TMVA::MethodCFMlpANN::MethodCFMlpANN( const TString& jobName,
 TMVA::MethodCFMlpANN::MethodCFMlpANN( DataSetInfo& theData,
                                       const TString& theWeightFile):
    TMVA::MethodBase( Types::kCFMlpANN, theData, theWeightFile),
-   fData(0),
-   fClass(0),
+   fData(nullptr),
+   fClass(nullptr),
    fNlayers(0),
    fNcycles(0),
-   fNodes(0),
-   fYNN(0),
+   fNodes(nullptr),
+   fYNN(nullptr),
    MethodCFMlpANN_nsel(0)
 {
 }
@@ -274,10 +274,10 @@ TMVA::MethodCFMlpANN::~MethodCFMlpANN( void )
    delete fClass;
    delete[] fNodes;
 
-   if (fYNN!=0) {
+   if (fYNN!=nullptr) {
       for (Int_t i=0; i<fNlayers; i++) delete[] fYNN[i];
       delete[] fYNN;
-      fYNN=0;
+      fYNN=nullptr;
    }
 }
 
@@ -296,10 +296,10 @@ void TMVA::MethodCFMlpANN::Train( void )
 
    for (Int_t i=0; i<nlayers; i++) nodes[i] = fNodes[i]; // full copy of class member
 
-   if (fYNN != 0) {
+   if (fYNN != nullptr) {
       for (Int_t i=0; i<fNlayers; i++) delete[] fYNN[i];
       delete[] fYNN;
-      fYNN = 0;
+      fYNN = nullptr;
    }
    fYNN = new Double_t*[nlayers];
    for (Int_t layer=0; layer<nlayers; layer++)
@@ -439,10 +439,10 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromStream( std::istream & istr )
    // read number of layers (sum of: input + output + hidden)
    istr >> fParam_1.layerm;
 
-   if (fYNN != 0) {
+   if (fYNN != nullptr) {
       for (Int_t i=0; i<fNlayers; i++) delete[] fYNN[i];
       delete[] fYNN;
-      fYNN = 0;
+      fYNN = nullptr;
    }
    fYNN = new Double_t*[fParam_1.layerm];
    for (Int_t layer=0; layer<fParam_1.layerm; layer++) {
@@ -515,7 +515,7 @@ Int_t TMVA::MethodCFMlpANN::DataInterface( Double_t* /*tout2*/, Double_t*  /*tin
 
 
    // sanity checks
-   if (0 == xpg) {
+   if (nullptr == xpg) {
       Log() << kFATAL << "ERROR in MethodCFMlpANN_DataInterface zero pointer xpg" << Endl;
    }
    if (*nvar != (Int_t)this->GetNvar()) {
@@ -557,7 +557,7 @@ void TMVA::MethodCFMlpANN::AddWeightsXMLTo( void* parent ) const
    for (Int_t layer=1; layer<fParam_1.layerm; layer++) {
       void* layernode = gTools().AddChild(wght, "Layer"+gTools().StringFromInt(layer));
       gTools().AddAttr(layernode,"NNeurons",fNeur_1.neuron[layer]);
-      void* neuronnode=NULL;
+      void* neuronnode=nullptr;
       for (Int_t neuron=0; neuron<fNeur_1.neuron[layer]; neuron++) {
          neuronnode = gTools().AddChild(layernode,"Neuron"+gTools().StringFromInt(neuron));
          stringstream weights;
@@ -588,10 +588,10 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromXML( void* wghtnode )
    stringstream content(minmaxcontent);
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++)
       content >> fVarn_1.xmin[ivar] >> fVarn_1.xmax[ivar];
-   if (fYNN != 0) {
+   if (fYNN != nullptr) {
       for (Int_t i=0; i<fNlayers; i++) delete[] fYNN[i];
       delete[] fYNN;
-      fYNN = 0;
+      fYNN = nullptr;
    }
    fYNN = new Double_t*[fParam_1.layerm];
    void *layernode=gTools().GetNextChild(minmaxnode);
@@ -605,7 +605,7 @@ void TMVA::MethodCFMlpANN::ReadWeightsFromXML( void* wghtnode )
    }
    for (Int_t layer=1; layer<fParam_1.layerm; layer++) {
       layernode=gTools().GetNextChild(layernode);
-      void* neuronnode=NULL;
+      void* neuronnode=nullptr;
       neuronnode = gTools().GetChild(layernode);
       for (Int_t neuron=0; neuron<fNeur_1.neuron[layer]; neuron++) {
          const char* neuronweights = gTools().GetContent(neuronnode);

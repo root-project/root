@@ -61,11 +61,11 @@ TMVA::KDEKernel::KDEKernel( EKernelIter kiter, const TH1 *hist, Float_t lower_ed
    fLowerEdge (lower_edge ),
    fUpperEdge (upper_edge),
    fFineFactor ( FineFactor ),
-   fKernel_integ ( 0 ),
+   fKernel_integ ( nullptr ),
    fKDEborder ( kborder ),
    fLogger( new MsgLogger("KDEKernel") )
 {
-   if (hist == NULL) {
+   if (hist == nullptr) {
       Log() << kFATAL << "Called without valid histogram pointer (hist)!" << Endl;
    }
 
@@ -83,10 +83,10 @@ TMVA::KDEKernel::KDEKernel( EKernelIter kiter, const TH1 *hist, Float_t lower_ed
 
 TMVA::KDEKernel::~KDEKernel()
 {
-   if (fHist           != NULL) delete fHist;
-   if (fFirstIterHist  != NULL) delete fFirstIterHist;
-   if (fSigmaHist      != NULL) delete fSigmaHist;
-   if (fKernel_integ   != NULL) delete fKernel_integ;
+   if (fHist           != nullptr) delete fHist;
+   if (fFirstIterHist  != nullptr) delete fFirstIterHist;
+   if (fSigmaHist      != nullptr) delete fSigmaHist;
+   if (fKernel_integ   != nullptr) delete fKernel_integ;
    delete fLogger;
 }
 
@@ -214,7 +214,7 @@ void TMVA::KDEKernel::SetKernelType( EKernelType ktype )
       }
    }
 
-   if (fKernel_integ ==0 ) {
+   if (fKernel_integ ==nullptr ) {
       Log() << kFATAL << "KDE kernel not correctly initialized!" << Endl;
    }
 }

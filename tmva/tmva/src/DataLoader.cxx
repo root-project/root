@@ -86,7 +86,7 @@ ClassImp(TMVA::DataLoader);
 
 TMVA::DataLoader::DataLoader( TString thedlName)
 : Configurable( ),
-   fDataSetManager       ( NULL ), //DSMTEST
+   fDataSetManager       ( nullptr ), //DSMTEST
    fDataInputHandler     ( new DataInputHandler ),
    fTransformations      ( "I" ),
    fVerbose              ( kFALSE ),
@@ -134,7 +134,7 @@ TMVA::DataSetInfo& TMVA::DataLoader::AddDataSet( const TString& dsiName )
 {
    DataSetInfo* dsi = fDataSetManager->GetDataSetInfo(dsiName); // DSMTEST
 
-   if (dsi!=0) return *dsi;
+   if (dsi!=nullptr) return *dsi;
 
    return fDataSetManager->AddDataSetInfo(*(new DataSetInfo(dsiName))); // DSMTEST
 }
@@ -201,7 +201,7 @@ TMVA::DataLoader* TMVA::DataLoader::VarTransform(TString trafoDefinition)
 TTree* TMVA::DataLoader::CreateEventAssignTrees( const TString& name )
 {
    TTree * assignTree = new TTree( name, name );
-   assignTree->SetDirectory(0);
+   assignTree->SetDirectory(nullptr);
    assignTree->Branch( "type",   &fATreeType,   "ATreeType/I" );
    assignTree->Branch( "weight", &fATreeWeight, "ATreeWeight/F" );
 
@@ -293,11 +293,11 @@ void TMVA::DataLoader::AddEvent( const TString& className, Types::ETreeType tt,
 
 
    if (clIndex>=fTrainAssignTree.size()) {
-      fTrainAssignTree.resize(clIndex+1, 0);
-      fTestAssignTree.resize(clIndex+1, 0);
+      fTrainAssignTree.resize(clIndex+1, nullptr);
+      fTestAssignTree.resize(clIndex+1, nullptr);
    }
 
-   if (fTrainAssignTree[clIndex]==0) { // does not exist yet
+   if (fTrainAssignTree[clIndex]==nullptr) { // does not exist yet
       fTrainAssignTree[clIndex] = CreateEventAssignTrees( Form("TrainAssignTree_%s", className.Data()) );
       fTestAssignTree[clIndex]  = CreateEventAssignTrees( Form("TestAssignTree_%s",  className.Data()) );
    }
@@ -316,7 +316,7 @@ void TMVA::DataLoader::AddEvent( const TString& className, Types::ETreeType tt,
 
 Bool_t TMVA::DataLoader::UserAssignEvents(UInt_t clIndex)
 {
-   return fTrainAssignTree[clIndex]!=0;
+   return fTrainAssignTree[clIndex]!=nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

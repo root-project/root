@@ -48,7 +48,7 @@ Bool_t TMVA::Event::fgIgnoreNegWeightsInTraining = kFALSE;
 
 TMVA::Event::Event()
    : fValues(),
-     fValuesDynamic(0),
+     fValuesDynamic(nullptr),
      fTargets(),
      fSpectators(),
      fVariableArrangement(0),
@@ -69,7 +69,7 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
                     Double_t weight,
                     Double_t boostweight )
    : fValues(ev),
-     fValuesDynamic(0),
+     fValuesDynamic(nullptr),
      fTargets(tg),
      fSpectators(0),
      fVariableArrangement(0),
@@ -91,7 +91,7 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
                     Double_t weight,
                     Double_t boostweight )
    : fValues(ev),
-     fValuesDynamic(0),
+     fValuesDynamic(nullptr),
      fTargets(tg),
      fSpectators(vi),
      fVariableArrangement(0),
@@ -111,7 +111,7 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
                     Double_t weight,
                     Double_t boostweight )
    : fValues(ev),
-     fValuesDynamic(0),
+     fValuesDynamic(nullptr),
      fTargets(0),
      fSpectators(0),
      fVariableArrangement(0),
@@ -128,7 +128,7 @@ TMVA::Event::Event( const std::vector<Float_t>& ev,
 
 TMVA::Event::Event( const std::vector<Float_t*>*& evdyn, UInt_t nvar )
    : fValues(nvar),
-     fValuesDynamic(0),
+     fValuesDynamic(nullptr),
      fTargets(0),
      fSpectators(evdyn->size()-nvar),
      fVariableArrangement(0),
@@ -175,7 +175,7 @@ TMVA::Event::Event( const Event& event )
       }
 
       fDynamic=kFALSE;
-      fValuesDynamic=NULL;
+      fValuesDynamic=nullptr;
 }
 }
 
@@ -224,7 +224,7 @@ void TMVA::Event::CopyVarValues( const Event& other )
       }
    }
    fDynamic     = kFALSE;
-   fValuesDynamic = NULL;
+   fValuesDynamic = nullptr;
 
    fClass       = other.fClass;
    fWeight      = other.fWeight;

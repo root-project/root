@@ -56,8 +56,8 @@ TMVA::TActivationRadial::TActivationRadial()
 
 TMVA::TActivationRadial::~TActivationRadial()
 {
-   if (fEqn != NULL) delete fEqn;
-   if (fEqnDerivative != NULL) delete fEqnDerivative;
+   if (fEqn != nullptr) delete fEqn;
+   if (fEqnDerivative != nullptr) delete fEqnDerivative;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -65,7 +65,7 @@ TMVA::TActivationRadial::~TActivationRadial()
 
 Double_t TMVA::TActivationRadial::Eval(Double_t arg)
 {
-   if (fEqn == NULL) return UNINITIALIZED;
+   if (fEqn == nullptr) return UNINITIALIZED;
    return fEqn->Eval(arg);
 }
 
@@ -74,7 +74,7 @@ Double_t TMVA::TActivationRadial::Eval(Double_t arg)
 
 Double_t TMVA::TActivationRadial::EvalDerivative(Double_t arg)
 {
-   if (fEqnDerivative == NULL) return UNINITIALIZED;
+   if (fEqnDerivative == nullptr) return UNINITIALIZED;
    return fEqnDerivative->Eval(arg);
 }
 
@@ -85,12 +85,12 @@ TString TMVA::TActivationRadial::GetExpression()
 {
    TString expr = "";
 
-   if (fEqn == NULL) expr += "<null>";
+   if (fEqn == nullptr) expr += "<null>";
    else              expr += fEqn->GetExpFormula();
 
    expr += "\t\t";
 
-   if (fEqnDerivative == NULL) expr += "<null>";
+   if (fEqnDerivative == nullptr) expr += "<null>";
    else                        expr += fEqnDerivative->GetExpFormula();
 
    return expr;

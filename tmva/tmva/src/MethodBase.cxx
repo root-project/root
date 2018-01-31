@@ -246,12 +246,12 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
                               const TString& theOption) :
    IMethod(),
    Configurable               ( theOption ),
-   fTmpEvent                  ( 0 ),
-   fRanking                   ( 0 ),
-   fInputVars                 ( 0 ),
+   fTmpEvent                  ( nullptr ),
+   fRanking                   ( nullptr ),
+   fInputVars                 ( nullptr ),
    fAnalysisType              ( Types::kNoAnalysisType ),
-   fRegressionReturnVal       ( 0 ),
-   fMulticlassReturnVal       ( 0 ),
+   fRegressionReturnVal       ( nullptr ),
+   fMulticlassReturnVal       ( nullptr ),
    fDataSetInfo               ( dsi ),
    fSignalReferenceCut        ( 0.5 ),
    fSignalReferenceCutOrientation( 1. ),
@@ -263,24 +263,24 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fTMVATrainingVersion       ( TMVA_VERSION_CODE ),
    fROOTTrainingVersion       ( ROOT_VERSION_CODE ),
    fConstructedFromWeightFile ( kFALSE ),
-   fBaseDir                   ( 0 ),
-   fMethodBaseDir             ( 0 ),
-   fFile                      ( 0 ),
+   fBaseDir                   ( nullptr ),
+   fMethodBaseDir             ( nullptr ),
+   fFile                      ( nullptr ),
    fSilentFile                (kFALSE),
    fModelPersistence          (kTRUE),
    fWeightFile                ( "" ),
-   fEffS                      ( 0 ),
-   fDefaultPDF                ( 0 ),
-   fMVAPdfS                   ( 0 ),
-   fMVAPdfB                   ( 0 ),
-   fSplS                      ( 0 ),
-   fSplB                      ( 0 ),
-   fSpleffBvsS                ( 0 ),
-   fSplTrainS                 ( 0 ),
-   fSplTrainB                 ( 0 ),
-   fSplTrainEffBvsS           ( 0 ),
+   fEffS                      ( nullptr ),
+   fDefaultPDF                ( nullptr ),
+   fMVAPdfS                   ( nullptr ),
+   fMVAPdfB                   ( nullptr ),
+   fSplS                      ( nullptr ),
+   fSplB                      ( nullptr ),
+   fSpleffBvsS                ( nullptr ),
+   fSplTrainS                 ( nullptr ),
+   fSplTrainB                 ( nullptr ),
+   fSplTrainEffBvsS           ( nullptr ),
    fVarTransformString        ( "None" ),
-   fTransformationPointer     ( 0 ),
+   fTransformationPointer     ( nullptr ),
    fTransformation            ( dsi, methodTitle ),
    fVerbose                   ( kFALSE ),
    fVerbosityLevelString      ( "Default" ),
@@ -289,10 +289,10 @@ TMVA::MethodBase::MethodBase( const TString& jobName,
    fIgnoreNegWeightsInTraining( kFALSE ),
    fSignalClass               ( 0 ),
    fBackgroundClass           ( 0 ),
-   fSplRefS                   ( 0 ),
-   fSplRefB                   ( 0 ),
-   fSplTrainRefS              ( 0 ),
-   fSplTrainRefB              ( 0 ),
+   fSplRefS                   ( nullptr ),
+   fSplRefB                   ( nullptr ),
+   fSplTrainRefS              ( nullptr ),
+   fSplTrainRefB              ( nullptr ),
    fSetupCompleted            (kFALSE)
 {
    SetTestvarName();
@@ -310,12 +310,12 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
                               const TString& weightFile ) :
    IMethod(),
    Configurable(""),
-   fTmpEvent                  ( 0 ),
-   fRanking                   ( 0 ),
-   fInputVars                 ( 0 ),
+   fTmpEvent                  ( nullptr ),
+   fRanking                   ( nullptr ),
+   fInputVars                 ( nullptr ),
    fAnalysisType              ( Types::kNoAnalysisType ),
-   fRegressionReturnVal       ( 0 ),
-   fMulticlassReturnVal       ( 0 ),
+   fRegressionReturnVal       ( nullptr ),
+   fMulticlassReturnVal       ( nullptr ),
    fDataSetInfo               ( dsi ),
    fSignalReferenceCut        ( 0.5 ),
    fVariableTransformType     ( Types::kSignal ),
@@ -326,24 +326,24 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
    fTMVATrainingVersion       ( 0 ),
    fROOTTrainingVersion       ( 0 ),
    fConstructedFromWeightFile ( kTRUE ),
-   fBaseDir                   ( 0 ),
-   fMethodBaseDir             ( 0 ),
-   fFile                      ( 0 ),
+   fBaseDir                   ( nullptr ),
+   fMethodBaseDir             ( nullptr ),
+   fFile                      ( nullptr ),
    fSilentFile                (kFALSE),
    fModelPersistence          (kTRUE),
    fWeightFile                ( weightFile ),
-   fEffS                      ( 0 ),
-   fDefaultPDF                ( 0 ),
-   fMVAPdfS                   ( 0 ),
-   fMVAPdfB                   ( 0 ),
-   fSplS                      ( 0 ),
-   fSplB                      ( 0 ),
-   fSpleffBvsS                ( 0 ),
-   fSplTrainS                 ( 0 ),
-   fSplTrainB                 ( 0 ),
-   fSplTrainEffBvsS           ( 0 ),
+   fEffS                      ( nullptr ),
+   fDefaultPDF                ( nullptr ),
+   fMVAPdfS                   ( nullptr ),
+   fMVAPdfB                   ( nullptr ),
+   fSplS                      ( nullptr ),
+   fSplB                      ( nullptr ),
+   fSpleffBvsS                ( nullptr ),
+   fSplTrainS                 ( nullptr ),
+   fSplTrainB                 ( nullptr ),
+   fSplTrainEffBvsS           ( nullptr ),
    fVarTransformString        ( "None" ),
-   fTransformationPointer     ( 0 ),
+   fTransformationPointer     ( nullptr ),
    fTransformation            ( dsi, "" ),
    fVerbose                   ( kFALSE ),
    fVerbosityLevelString      ( "Default" ),
@@ -352,10 +352,10 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
    fIgnoreNegWeightsInTraining( kFALSE ),
    fSignalClass               ( 0 ),
    fBackgroundClass           ( 0 ),
-   fSplRefS                   ( 0 ),
-   fSplRefB                   ( 0 ),
-   fSplTrainRefS              ( 0 ),
-   fSplTrainRefB              ( 0 ),
+   fSplRefS                   ( nullptr ),
+   fSplRefB                   ( nullptr ),
+   fSplTrainRefS              ( nullptr ),
+   fSplTrainRefB              ( nullptr ),
    fSetupCompleted            (kFALSE)
 {
    fLogger->SetSource(GetName());
@@ -372,23 +372,23 @@ TMVA::MethodBase::~MethodBase( void )
    if (!fSetupCompleted) Log() << kFATAL <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Calling destructor of method which got never setup" << Endl;
 
    // destructor
-   if (fInputVars != 0)  { fInputVars->clear(); delete fInputVars; }
-   if (fRanking   != 0)  delete fRanking;
+   if (fInputVars != nullptr)  { fInputVars->clear(); delete fInputVars; }
+   if (fRanking   != nullptr)  delete fRanking;
 
    // PDFs
-   if (fDefaultPDF!= 0)  { delete fDefaultPDF; fDefaultPDF = 0; }
-   if (fMVAPdfS   != 0)  { delete fMVAPdfS; fMVAPdfS = 0; }
-   if (fMVAPdfB   != 0)  { delete fMVAPdfB; fMVAPdfB = 0; }
+   if (fDefaultPDF!= nullptr)  { delete fDefaultPDF; fDefaultPDF = nullptr; }
+   if (fMVAPdfS   != nullptr)  { delete fMVAPdfS; fMVAPdfS = nullptr; }
+   if (fMVAPdfB   != nullptr)  { delete fMVAPdfB; fMVAPdfB = nullptr; }
 
    // Splines
-   if (fSplS)            { delete fSplS; fSplS = 0; }
-   if (fSplB)            { delete fSplB; fSplB = 0; }
-   if (fSpleffBvsS)      { delete fSpleffBvsS; fSpleffBvsS = 0; }
-   if (fSplRefS)         { delete fSplRefS; fSplRefS = 0; }
-   if (fSplRefB)         { delete fSplRefB; fSplRefB = 0; }
-   if (fSplTrainRefS)    { delete fSplTrainRefS; fSplTrainRefS = 0; }
-   if (fSplTrainRefB)    { delete fSplTrainRefB; fSplTrainRefB = 0; }
-   if (fSplTrainEffBvsS) { delete fSplTrainEffBvsS; fSplTrainEffBvsS = 0; }
+   if (fSplS)            { delete fSplS; fSplS = nullptr; }
+   if (fSplB)            { delete fSplB; fSplB = nullptr; }
+   if (fSpleffBvsS)      { delete fSpleffBvsS; fSpleffBvsS = nullptr; }
+   if (fSplRefS)         { delete fSplRefS; fSplRefS = nullptr; }
+   if (fSplRefB)         { delete fSplRefB; fSplRefB = nullptr; }
+   if (fSplTrainRefS)    { delete fSplTrainRefS; fSplTrainRefS = nullptr; }
+   if (fSplTrainRefB)    { delete fSplTrainRefB; fSplTrainRefB = nullptr; }
+   if (fSplTrainEffBvsS) { delete fSplTrainEffBvsS; fSplTrainEffBvsS = nullptr; }
 
    for (Int_t i = 0; i < 2; i++ ) {
       if (fEventCollections.at(i)) {
@@ -397,7 +397,7 @@ TMVA::MethodBase::~MethodBase( void )
             delete (*it);
          }
          delete fEventCollections.at(i);
-         fEventCollections.at(i) = 0;
+         fEventCollections.at(i) = nullptr;
       }
    }
 
@@ -451,9 +451,9 @@ void TMVA::MethodBase::InitBase()
    fNbinsMVAoutput     = gConfig().fVariablePlotting.fNbinsMVAoutput;
    fNbinsH             = NBIN_HIST_HIGH;
 
-   fSplTrainS          = 0;
-   fSplTrainB          = 0;
-   fSplTrainEffBvsS    = 0;
+   fSplTrainS          = nullptr;
+   fSplTrainB          = nullptr;
+   fSplTrainEffBvsS    = nullptr;
    fMeanS              = -1;
    fMeanB              = -1;
    fRmsS               = -1;
@@ -461,31 +461,31 @@ void TMVA::MethodBase::InitBase()
    fXmin               = DBL_MAX;
    fXmax               = -DBL_MAX;
    fTxtWeightsOnly     = kTRUE;
-   fSplRefS            = 0;
-   fSplRefB            = 0;
+   fSplRefS            = nullptr;
+   fSplRefB            = nullptr;
 
    fTrainTime          = -1.;
    fTestTime           = -1.;
 
-   fRanking            = 0;
+   fRanking            = nullptr;
 
    // temporary until the move to DataSet is complete
    fInputVars = new std::vector<TString>;
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       fInputVars->push_back(DataInfo().GetVariableInfo(ivar).GetLabel());
    }
-   fRegressionReturnVal = 0;
-   fMulticlassReturnVal = 0;
+   fRegressionReturnVal = nullptr;
+   fMulticlassReturnVal = nullptr;
 
    fEventCollections.resize( 2 );
-   fEventCollections.at(0) = 0;
-   fEventCollections.at(1) = 0;
+   fEventCollections.at(0) = nullptr;
+   fEventCollections.at(1) = nullptr;
 
    // retrieve signal and background class index
-   if (DataInfo().GetClassInfo("Signal") != 0) {
+   if (DataInfo().GetClassInfo("Signal") != nullptr) {
       fSignalClass = DataInfo().GetClassInfo("Signal")->GetNumber();
    }
-   if (DataInfo().GetClassInfo("Background") != 0) {
+   if (DataInfo().GetClassInfo("Background") != nullptr) {
       fBackgroundClass = DataInfo().GetClassInfo("Background")->GetNumber();
    }
 
@@ -571,9 +571,9 @@ void TMVA::MethodBase::ProcessBaseOptions()
                                                Log() );
 
    if (!HasMVAPdfs()) {
-      if (fDefaultPDF!= 0) { delete fDefaultPDF; fDefaultPDF = 0; }
-      if (fMVAPdfS   != 0) { delete fMVAPdfS; fMVAPdfS = 0; }
-      if (fMVAPdfB   != 0) { delete fMVAPdfB; fMVAPdfB = 0; }
+      if (fDefaultPDF!= nullptr) { delete fDefaultPDF; fDefaultPDF = nullptr; }
+      if (fMVAPdfS   != nullptr) { delete fMVAPdfS; fMVAPdfS = nullptr; }
+      if (fMVAPdfB   != nullptr) { delete fMVAPdfB; fMVAPdfB = nullptr; }
    }
 
    if (fVerbose) { // overwrites other settings
@@ -837,7 +837,7 @@ void TMVA::MethodBase::NoErrorCalc(Double_t* const err, Double_t* const errUpper
 Double_t TMVA::MethodBase::GetMvaValue( const Event* const ev, Double_t* err, Double_t* errUpper ) {
    fTmpEvent = ev;
    Double_t val = GetMvaValue(err, errUpper);
-   fTmpEvent = 0;
+   fTmpEvent = nullptr;
    return val;
 }
 
@@ -1110,7 +1110,7 @@ void TMVA::MethodBase::TestClassification()
       ( Data()->GetResults(GetMethodName(),Types::kTesting, Types::kClassification) );
 
    // sanity checks: tree must exist, and theVar must be in tree
-   if (0==mvaRes && !(GetMethodTypeName().Contains("Cuts"))) {
+   if (nullptr==mvaRes && !(GetMethodTypeName().Contains("Cuts"))) {
       Log()<<Form("Dataset[%s] : ",DataInfo().GetName()) << "mvaRes " << mvaRes << " GetMethodTypeName " << GetMethodTypeName()
            << " contains " << !(GetMethodTypeName().Contains("Cuts")) << Endl;
       Log() << kFATAL<<Form("Dataset[%s] : ",DataInfo().GetName()) << "<TestInit> Test variable " << GetTestvarName()
@@ -1151,10 +1151,10 @@ void TMVA::MethodBase::TestClassification()
    mva_s->Sumw2();
    mva_b->Sumw2();
 
-   TH1* proba_s = 0;
-   TH1* proba_b = 0;
-   TH1* rarity_s = 0;
-   TH1* rarity_b = 0;
+   TH1* proba_s = nullptr;
+   TH1* proba_b = nullptr;
+   TH1* rarity_s = nullptr;
+   TH1* rarity_b = nullptr;
    if (HasMVAPdfs()) {
       // P(MVA) plots used for graphics representation
       proba_s = new TH1D( TestvarName + "_Proba_S", TestvarName + "_Proba_S", fNbinsMVAoutput, 0.0, 1.0 );
@@ -1234,8 +1234,8 @@ void TMVA::MethodBase::TestClassification()
    gTools().NormHist( mva_eff_b  );
 
    // create PDFs from histograms, using default splines, and no additional smoothing
-   if (fSplS) { delete fSplS; fSplS = 0; }
-   if (fSplB) { delete fSplB; fSplB = 0; }
+   if (fSplS) { delete fSplS; fSplS = nullptr; }
+   if (fSplB) { delete fSplB; fSplB = nullptr; }
    fSplS = new PDF( TString(GetName()) + " PDF Sig", mva_s, PDF::kSpline2 );
    fSplB = new PDF( TString(GetName()) + " PDF Bkg", mva_b, PDF::kSpline2 );
 }
@@ -1392,7 +1392,7 @@ void TMVA::MethodBase::WriteStateToFile() const
     << "Creating xml weight file: "
          << gTools().Color("lightblue") << xmlfname << gTools().Color("reset") << Endl;
    void* doc      = gTools().xmlengine().NewDoc();
-   void* rootnode = gTools().AddChild(0,"MethodSetup", "", true);
+   void* rootnode = gTools().AddChild(nullptr,"MethodSetup", "", true);
    gTools().xmlengine().DocSetRootElement(doc,rootnode);
    gTools().AddAttr(rootnode,"Method", GetMethodTypeName() + "::" + GetMethodName());
    WriteStateToXML(rootnode);
@@ -1479,7 +1479,7 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
 
    TString nodeName("");
    void* ch = gTools().GetChild(methodNode);
-   while (ch!=0) {
+   while (ch!=nullptr) {
       nodeName = TString( gTools().GetName(ch) );
 
       if (nodeName=="GeneralInfo") {
@@ -1541,8 +1541,8 @@ void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
       }
       else if (nodeName=="MVAPdfs") {
          TString pdfname;
-         if (fMVAPdfS) { delete fMVAPdfS; fMVAPdfS=0; }
-         if (fMVAPdfB) { delete fMVAPdfB; fMVAPdfB=0; }
+         if (fMVAPdfS) { delete fMVAPdfS; fMVAPdfS=nullptr; }
+         if (fMVAPdfB) { delete fMVAPdfB; fMVAPdfB=nullptr; }
          void* pdfnode = gTools().GetChild(ch);
          if (pdfnode) {
             gTools().ReadAttr(pdfnode, "Name", pdfname);
@@ -1627,7 +1627,7 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
          GetTransformationHandler().AddTransformation( new VariableNormalizeTransform(DataInfo()), -1 );
       norm->BuildTransformationFromVarInfo( DataInfo().GetVariableInfos() );
    }
-   VariableTransformBase *varTrafo(0), *varTrafo2(0);
+   VariableTransformBase *varTrafo(nullptr), *varTrafo2(nullptr);
    if ( fVarTransformString == "None") {
       if (fUseDecorr)
          varTrafo = GetTransformationHandler().AddTransformation( new VariableDecorrTransform(DataInfo()), -1 );
@@ -1665,8 +1665,8 @@ void TMVA::MethodBase::ReadStateFromStream( std::istream& fin )
       // Now read the MVA PDFs
       fin.getline(buf,512);
       while (!TString(buf).BeginsWith("#MVAPDFS")) fin.getline(buf,512);
-      if (fMVAPdfS != 0) { delete fMVAPdfS; fMVAPdfS = 0; }
-      if (fMVAPdfB != 0) { delete fMVAPdfB; fMVAPdfB = 0; }
+      if (fMVAPdfS != nullptr) { delete fMVAPdfS; fMVAPdfS = nullptr; }
+      if (fMVAPdfB != nullptr) { delete fMVAPdfB; fMVAPdfB = nullptr; }
       fMVAPdfS = new PDF(TString(GetName()) + " MVA PDF Sig");
       fMVAPdfB = new PDF(TString(GetName()) + " MVA PDF Bkg");
       fMVAPdfS->SetReadingVersion( GetTrainingTMVAVersionCode() );
@@ -1925,12 +1925,12 @@ void TMVA::MethodBase::ReadClassesFromXML( void* clsnode )
    }
 
    // retrieve signal and background class index
-   if (DataInfo().GetClassInfo("Signal") != 0) {
+   if (DataInfo().GetClassInfo("Signal") != nullptr) {
       fSignalClass = DataInfo().GetClassInfo("Signal")->GetNumber();
    }
    else
       fSignalClass=0;
-   if (DataInfo().GetClassInfo("Background") != 0) {
+   if (DataInfo().GetClassInfo("Background") != nullptr) {
       fBackgroundClass = DataInfo().GetClassInfo("Background")->GetNumber();
    }
    else
@@ -1963,11 +1963,11 @@ void TMVA::MethodBase::ReadTargetsFromXML( void* tarnode )
 
 TDirectory* TMVA::MethodBase::BaseDir() const
 {
-   if (fBaseDir != 0) return fBaseDir;
+   if (fBaseDir != nullptr) return fBaseDir;
    Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodName() << " not set yet --> check if already there.." <<Endl;
 
    TDirectory* methodDir = MethodBaseDir();
-   if (methodDir==0)
+   if (methodDir==nullptr)
       Log() << kFATAL <<Form("Dataset[%s] : ",DataInfo().GetName())<< "MethodBase::BaseDir() - MethodBaseDir() return a NULL pointer!" << Endl;
 
    TString defaultDir = GetMethodName();
@@ -1994,7 +1994,7 @@ TDirectory* TMVA::MethodBase::BaseDir() const
 
  TDirectory* TMVA::MethodBase::MethodBaseDir() const
  {
-    if (fMethodBaseDir != 0) return fMethodBaseDir;
+    if (fMethodBaseDir != nullptr) return fMethodBaseDir;
 
     Log()<<kDEBUG<<Form("Dataset[%s] : ",DataInfo().GetName())<<" Base Directory for " << GetMethodTypeName() << " not set yet --> check if already there.." <<Endl;
 
@@ -2061,12 +2061,12 @@ void TMVA::MethodBase::WriteEvaluationHistosToFile(Types::ETreeType treetype)
 
 
    // write MVA PDFs to file - if exist
-   if (0 != fMVAPdfS) {
+   if (nullptr != fMVAPdfS) {
       fMVAPdfS->GetOriginalHist()->Write();
       fMVAPdfS->GetSmoothedHist()->Write();
       fMVAPdfS->GetPDFHist()->Write();
    }
-   if (0 != fMVAPdfB) {
+   if (nullptr != fMVAPdfB) {
       fMVAPdfB->GetOriginalHist()->Write();
       fMVAPdfB->GetSmoothedHist()->Write();
       fMVAPdfB->GetPDFHist()->Write();
@@ -2149,7 +2149,7 @@ void TMVA::MethodBase::CreateMVAPdfs()
    ResultsClassification * mvaRes = dynamic_cast<ResultsClassification*>
       ( Data()->GetResults(GetMethodName(), Types::kTraining, Types::kClassification) );
 
-   if (mvaRes==0 || mvaRes->GetSize()==0) {
+   if (mvaRes==nullptr || mvaRes->GetSize()==0) {
       Log() << kERROR<<Form("Dataset[%s] : ",DataInfo().GetName())<< "<CreateMVAPdfs> No result of classifier testing available" << Endl;
    }
 
@@ -2420,11 +2420,11 @@ Double_t TMVA::MethodBase::GetEfficiency( const TString& theString, Types::ETree
       // find cut that corresponds to signal efficiency and update signal-like criterion
       Double_t cut = rootFinder.Root( 0.5*(effS + effS_) );
       SetSignalReferenceCut( cut );
-      fEffS = 0;
+      fEffS = nullptr;
    }
 
    // must exist...
-   if (0 == fSpleffBvsS) {
+   if (nullptr == fSpleffBvsS) {
       delete list;
       return 0.0;
    }
@@ -2629,14 +2629,14 @@ Double_t TMVA::MethodBase::GetTrainingEfficiency(const TString& theString)
          eff_bvss->SetBinContent( bini, effB     );
          rej_bvss->SetBinContent( bini, 1.0-effB );
       }
-      fEffS = 0;
+      fEffS = nullptr;
 
       // create splines for histogram
       fSplTrainEffBvsS = new TSpline1( "effBvsS", new TGraph( eff_bvss ) );
    }
 
    // must exist...
-   if (0 == fSplTrainEffBvsS) return 0.0;
+   if (nullptr == fSplTrainEffBvsS) return 0.0;
 
    // now find signal efficiency that corresponds to required background efficiency
    Double_t effS = 0., effB, effS_ = 0., effB_ = 0.;
@@ -2784,7 +2784,7 @@ Double_t TMVA::MethodBase::GetROCIntegral(TH1D *histS, TH1D *histB) const
    if ((!histS && histB) || (histS && !histB))
       Log() << kFATAL <<Form("Dataset[%s] : ",DataInfo().GetName())<< "<GetROCIntegral(TH1D*, TH1D*)> Mismatch in hists" << Endl;
 
-   if (histS==0 || histB==0) return 0.;
+   if (histS==nullptr || histB==nullptr) return 0.;
 
    TMVA::PDF *pdfS = new TMVA::PDF( " PDF Sig", histS, TMVA::PDF::kSpline3 );
    TMVA::PDF *pdfB = new TMVA::PDF( " PDF Bkg", histB, TMVA::PDF::kSpline3 );
@@ -2820,7 +2820,7 @@ Double_t TMVA::MethodBase::GetROCIntegral(PDF *pdfS, PDF *pdfB) const
    if (!pdfS) pdfS = fSplS;
    if (!pdfB) pdfB = fSplB;
 
-   if (pdfS==0 || pdfB==0) return 0.;
+   if (pdfS==nullptr || pdfB==nullptr) return 0.;
 
    Double_t xmin = TMath::Min(pdfS->GetXmin(), pdfB->GetXmin());
    Double_t xmax = TMath::Max(pdfS->GetXmax(), pdfB->GetXmax());
@@ -2863,7 +2863,7 @@ Double_t TMVA::MethodBase::GetMaximumSignificance( Double_t SignalEvents,
    TH1* eff_s = results->GetHist("MVA_EFF_S");
    TH1* eff_b = results->GetHist("MVA_EFF_B");
 
-   if ( (eff_s==0) || (eff_b==0) ) {
+   if ( (eff_s==nullptr) || (eff_b==nullptr) ) {
       Log() << kWARNING <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Efficiency histograms empty !" << Endl;
       Log() << kWARNING <<Form("Dataset[%s] : ",DataInfo().GetName())<< "no maximum cut found, return 0" << Endl;
       return 0;
@@ -3207,7 +3207,7 @@ void TMVA::MethodBase::PrintHelpMessage() const
 {
    // if options are written to reference file, also append help info
    std::streambuf* cout_sbuf = std::cout.rdbuf(); // save original sbuf
-   std::ofstream* o = 0;
+   std::ofstream* o = nullptr;
    if (gConfig().WriteOptionsReference()) {
       Log() << kINFO << "Print Help message for class " << GetName() << " into file: " << GetReferenceFile() << Endl;
       o = new std::ofstream( GetReferenceFile(), std::ios::app );
@@ -3298,7 +3298,7 @@ const std::vector<TMVA::Event*>& TMVA::MethodBase::GetEventCollection( Types::ET
    // transformed events. If the pointer is already != 0, i.e. the whole thing has been
    // done before, I don't need to do it again, but just "hand over" the pointer to those events.
    Int_t idx = Data()->TreeIndex(type);  //index indicating Training,Testing,...  events/datasets
-   if (fEventCollections.at(idx) == 0) {
+   if (fEventCollections.at(idx) == nullptr) {
       fEventCollections.at(idx) = &(Data()->GetEventCollection(type));
       fEventCollections.at(idx) = GetTransformationHandler().CalcTransformations(*(fEventCollections.at(idx)),kTRUE);
    }
@@ -3335,7 +3335,7 @@ Double_t TMVA::MethodBase::GetKSTrainingVsTest(Char_t SorB, TString opt){
    ResultsClassification* mvaRes = dynamic_cast<ResultsClassification*>
       ( Data()->GetResults(GetMethodName(),Types::kTesting, Types::kClassification) );
 
-   if (mvaRes != NULL) {
+   if (mvaRes != nullptr) {
       TH1D *mva_s = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_S"));
       TH1D *mva_b = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_B"));
       TH1D *mva_s_tr = dynamic_cast<TH1D*> (mvaRes->GetHist("MVA_TRAIN_S"));

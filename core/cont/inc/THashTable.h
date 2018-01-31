@@ -118,7 +118,7 @@ private:
    TListIter        *fListCursor;  //current position in collision list
    Bool_t            fDirection;   //iteration direction
 
-   THashTableIter() : fTable(0), fCursor(0), fListCursor(0), fDirection(kIterForward) { }
+   THashTableIter() : fTable(nullptr), fCursor(0), fListCursor(nullptr), fDirection(kIterForward) { }
    Int_t             NextSlot();
 
 public:

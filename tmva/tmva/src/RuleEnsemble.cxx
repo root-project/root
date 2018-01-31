@@ -65,12 +65,12 @@ TMVA::RuleEnsemble::RuleEnsemble( RuleFit *rf )
    , fRuleNCsig       ( 0 )
    , fRuleMinDist     ( 1e-3 ) // closest allowed 'distance' between two rules
    , fNRulesGenerated ( 0 )
-   , fEvent           ( 0 )
+   , fEvent           ( nullptr )
    , fEventCacheOK    ( true )
    , fRuleMapOK       ( true )
    , fRuleMapInd0     ( 0 )
    , fRuleMapInd1     ( 0 )
-   , fRuleMapEvents   ( 0 )
+   , fRuleMapEvents   ( nullptr )
    , fLogger( new MsgLogger("RuleFit") )
 {
    Initialize( rf );
@@ -81,9 +81,9 @@ TMVA::RuleEnsemble::RuleEnsemble( RuleFit *rf )
 
 TMVA::RuleEnsemble::RuleEnsemble( const RuleEnsemble& other )
    : fAverageSupport   ( 1 )
-   , fEvent(0)
-   , fRuleMapEvents(0)
-   , fRuleFit(0)
+   , fEvent(nullptr)
+   , fRuleMapEvents(nullptr)
+   , fRuleFit(nullptr)
    , fLogger( new MsgLogger("RuleFit") )
 {
    Copy( other );
@@ -105,13 +105,13 @@ TMVA::RuleEnsemble::RuleEnsemble()
    , fRuleNCsig       ( 0 )
    , fRuleMinDist     ( 1e-3 ) // closest allowed 'distance' between two rules
    , fNRulesGenerated ( 0 )
-   , fEvent           ( 0 )
+   , fEvent           ( nullptr )
    , fEventCacheOK    ( true )
    , fRuleMapOK       ( true )
    , fRuleMapInd0     ( 0 )
    , fRuleMapInd1     ( 0 )
-   , fRuleMapEvents   ( 0 )
-   , fRuleFit         ( 0 )
+   , fRuleMapEvents   ( nullptr )
+   , fRuleFit         ( nullptr )
    , fLogger( new MsgLogger("RuleFit") )
 {
 }
@@ -141,8 +141,8 @@ void TMVA::RuleEnsemble::Initialize( const RuleFit *rf )
    fLinPDFS.clear();
    //
    fVarImportance.resize( nvars,0.0 );
-   fLinPDFB.resize( nvars,0 );
-   fLinPDFS.resize( nvars,0 );
+   fLinPDFB.resize( nvars,nullptr );
+   fLinPDFS.resize( nvars,nullptr );
    fImportanceRef = 1.0;
    for (UInt_t i=0; i<nvars; i++) { // a priori all linear terms are equally valid
       fLinTermOK.push_back(kTRUE);
@@ -161,7 +161,7 @@ void TMVA::RuleEnsemble::SetMsgType( EMsgType t ) {
 
 const TMVA::MethodRuleFit*  TMVA::RuleEnsemble::GetMethodRuleFit() const
 {
-   return ( fRuleFit==0 ? 0:fRuleFit->GetMethodRuleFit());
+   return ( fRuleFit==nullptr ? nullptr:fRuleFit->GetMethodRuleFit());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -170,7 +170,7 @@ const TMVA::MethodRuleFit*  TMVA::RuleEnsemble::GetMethodRuleFit() const
 
 const TMVA::MethodBase*  TMVA::RuleEnsemble::GetMethodBase() const
 {
-   return ( fRuleFit==0 ? 0:fRuleFit->GetMethodBase());
+   return ( fRuleFit==nullptr ? nullptr:fRuleFit->GetMethodBase());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -497,7 +497,7 @@ void TMVA::RuleEnsemble::CalcVarImportance()
    Log() << kVERBOSE << "Compute variable importance" << Endl;
    Double_t rimp;
    UInt_t nrules = fRules.size();
-   if (GetMethodBase()==0) Log() << kFATAL << "RuleEnsemble::CalcVarImportance() - should not be here!" << Endl;
+   if (GetMethodBase()==nullptr) Log() << kFATAL << "RuleEnsemble::CalcVarImportance() - should not be here!" << Endl;
    UInt_t nvars  = GetMethodBase()->GetNvar();
    UInt_t nvarsUsed;
    Double_t rimpN;
@@ -1268,7 +1268,7 @@ void TMVA::RuleEnsemble::Copy( const RuleEnsemble & other )
 
 Int_t TMVA::RuleEnsemble::CalcNRules( const DecisionTree *dtree )
 {
-   if (dtree==0) return 0;
+   if (dtree==nullptr) return 0;
    Node *node = dtree->GetRoot();
    Int_t nendnodes = 0;
    FindNEndNodes( node, nendnodes );
@@ -1280,8 +1280,8 @@ Int_t TMVA::RuleEnsemble::CalcNRules( const DecisionTree *dtree )
 
 void TMVA::RuleEnsemble::FindNEndNodes( const Node *node, Int_t & nendnodes )
 {
-   if (node==0) return;
-   if ((node->GetRight()==0) && (node->GetLeft()==0)) {
+   if (node==nullptr) return;
+   if ((node->GetRight()==nullptr) && (node->GetLeft()==nullptr)) {
       ++nendnodes;
       return;
    }
@@ -1305,8 +1305,8 @@ void TMVA::RuleEnsemble::MakeRulesFromTree( const DecisionTree *dtree )
 
 void TMVA::RuleEnsemble::AddRule( const Node *node )
 {
-   if (node==0) return;
-   if (node->GetParent()==0) { // it's a root node, don't make a rule
+   if (node==nullptr) return;
+   if (node->GetParent()==nullptr) { // it's a root node, don't make a rule
       AddRule( node->GetRight() );
       AddRule( node->GetLeft() );
    }
@@ -1331,13 +1331,13 @@ void TMVA::RuleEnsemble::AddRule( const Node *node )
 
 TMVA::Rule *TMVA::RuleEnsemble::MakeTheRule( const Node *node )
 {
-   if (node==0) {
+   if (node==nullptr) {
       Log() << kFATAL << "<MakeTheRule> Input node is NULL. Should not happen. BUG!" << Endl;
-      return 0;
+      return nullptr;
    }
 
-   if (node->GetParent()==0) { // a root node - ignore
-      return 0;
+   if (node->GetParent()==nullptr) { // a root node - ignore
+      return nullptr;
    }
    //
    std::vector< const Node * > nodeVec;
@@ -1347,7 +1347,7 @@ TMVA::Rule *TMVA::RuleEnsemble::MakeTheRule( const Node *node )
    // <root node> <node1> <node2> ... <node given as argument>
    //
    nodeVec.push_back( node );
-   while (parent!=0) {
+   while (parent!=nullptr) {
       parent = parent->GetParent();
       if (!parent) continue;
       const DecisionTreeNode* dtn = dynamic_cast<const DecisionTreeNode*>(parent);
@@ -1357,7 +1357,7 @@ TMVA::Rule *TMVA::RuleEnsemble::MakeTheRule( const Node *node )
    }
    if (nodeVec.size()<2) {
       Log() << kFATAL << "<MakeTheRule> BUG! Inconsistent Rule!" << Endl;
-      return 0;
+      return nullptr;
    }
    Rule *rule = new Rule( this, nodeVec );
    rule->SetMsgType( Log().GetMinType() );
@@ -1371,7 +1371,7 @@ void TMVA::RuleEnsemble::MakeRuleMap(const std::vector<const Event *> *events, U
 {
    Log() << kVERBOSE << "Making Rule map for all events" << Endl;
    // make rule response map
-   if (events==0) events = GetTrainingEvents();
+   if (events==nullptr) events = GetTrainingEvents();
    if ((ifirst==0) || (ilast==0) || (ifirst>ilast)) {
       ifirst = 0;
       ilast  = events->size()-1;

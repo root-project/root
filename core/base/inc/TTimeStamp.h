@@ -148,11 +148,11 @@ public:
 
    void         Copy(TTimeStamp &ts) const;
    UInt_t       GetDate(Bool_t inUTC = kTRUE, Int_t secOffset = 0,
-                        UInt_t *year = 0, UInt_t *month = 0,
-                        UInt_t *day = 0) const;
+                        UInt_t *year = nullptr, UInt_t *month = nullptr,
+                        UInt_t *day = nullptr) const;
    UInt_t       GetTime(Bool_t inUTC = kTRUE, Int_t secOffset = 0,
-                        UInt_t *hour = 0, UInt_t *min = 0,
-                        UInt_t *sec = 0) const;
+                        UInt_t *hour = nullptr, UInt_t *min = nullptr,
+                        UInt_t *sec = nullptr) const;
    Int_t        GetDayOfYear(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
    Int_t        GetDayOfWeek(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;
    Int_t        GetMonth(Bool_t inUTC = kTRUE, Int_t secOffset = 0) const;

@@ -125,7 +125,7 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Even
    std::vector<Char_t> mask; // entries with kTRUE must not be transformed
    GetInput( ev, input, mask );
 
-   if (fTransformedEvent==0) fTransformedEvent = new Event();
+   if (fTransformedEvent==nullptr) fTransformedEvent = new Event();
 
    Float_t min,max;
    const FloatVector& minVector = fMin.at(cls);
@@ -178,7 +178,7 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::InverseTransform(const TMVA
    std::vector<Char_t> mask;
    GetInput( ev, input, mask, kTRUE );
 
-   if (fBackTransformedEvent==0) fBackTransformedEvent = new Event( *ev );
+   if (fBackTransformedEvent==nullptr) fBackTransformedEvent = new Event( *ev );
 
    Float_t min,max;
    const FloatVector& minVector = fMin.at(cls);
@@ -357,10 +357,10 @@ void TMVA::VariableNormalizeTransform::ReadFromXML( void* trfnode )
 {
    Bool_t newFormat = kFALSE;
 
-   void* inpnode = NULL;
+   void* inpnode = nullptr;
 
    inpnode = gTools().GetChild(trfnode, "Selection"); // new xml format
-   if( inpnode != NULL )
+   if( inpnode != nullptr )
       newFormat = kTRUE;
 
    if( newFormat ){

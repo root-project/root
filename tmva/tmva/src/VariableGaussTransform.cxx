@@ -155,7 +155,7 @@ const TMVA::Event* TMVA::VariableGaussTransform::Transform(const Event* const ev
          continue;
       }
 
-      if (0 != fCumulativePDF[ivar][cls]) {
+      if (nullptr != fCumulativePDF[ivar][cls]) {
          // first make it flat
          if(fTMVAVersion>TMVA_VERSION(3,9,7))
             cumulant = (fCumulativePDF[ivar][cls])->GetVal(input.at(ivar));
@@ -178,8 +178,8 @@ const TMVA::Event* TMVA::VariableGaussTransform::Transform(const Event* const ev
       }
    }
 
-   if (fTransformedEvent==0 || fTransformedEvent->GetNVariables()!=ev->GetNVariables()) {
-      if (fTransformedEvent!=0) { delete fTransformedEvent; fTransformedEvent = 0; }
+   if (fTransformedEvent==nullptr || fTransformedEvent->GetNVariables()!=ev->GetNVariables()) {
+      if (fTransformedEvent!=nullptr) { delete fTransformedEvent; fTransformedEvent = nullptr; }
       fTransformedEvent = new Event();
    }
 
@@ -224,7 +224,7 @@ const TMVA::Event* TMVA::VariableGaussTransform::InverseTransform(const  Event* 
          continue;
       }
 
-      if (0 != fCumulativePDF[ivar][cls]) {
+      if (nullptr != fCumulativePDF[ivar][cls]) {
          invCumulant = input.at(ivar);
 
          // first de-gauss ist if gaussianized
@@ -241,7 +241,7 @@ const TMVA::Event* TMVA::VariableGaussTransform::InverseTransform(const  Event* 
       }
    }
 
-   if (fBackTransformedEvent==0) fBackTransformedEvent = new Event( *ev );
+   if (fBackTransformedEvent==nullptr) fBackTransformedEvent = new Event( *ev );
 
    SetOutput( fBackTransformedEvent, output, mask, ev, kTRUE );
 
@@ -367,14 +367,14 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>
             binnings[k] = vsForBinning[icls][ivar][k];
          }
          fCumulativeDist[ivar].resize(numDist);
-         if (0 != fCumulativeDist[ivar][icls] ) {
+         if (nullptr != fCumulativeDist[ivar][icls] ) {
             delete fCumulativeDist[ivar][icls];
          }
          fCumulativeDist[ivar][icls] = new TH1F(Form("Cumulative_Var%d_cls%d",ivar,icls),
                                                 Form("Cumulative_Var%d_cls%d",ivar,icls),
                                                 nbins[icls][ivar] -1, // class icls
                                                 binnings);
-         fCumulativeDist[ivar][icls]->SetDirectory(0);
+         fCumulativeDist[ivar][icls]->SetDirectory(nullptr);
          delete [] binnings;
       }
    }
@@ -450,7 +450,7 @@ void TMVA::VariableGaussTransform::CleanUpCumulativeArrays(TString opt) {
    if (opt == "ALL" || opt == "PDF"){
       for (UInt_t ivar=0; ivar<fCumulativePDF.size(); ivar++) {
          for (UInt_t icls=0; icls<fCumulativePDF[ivar].size(); icls++) {
-            if (0 != fCumulativePDF[ivar][icls]) delete fCumulativePDF[ivar][icls];
+            if (nullptr != fCumulativePDF[ivar][icls]) delete fCumulativePDF[ivar][icls];
          }
       }
       fCumulativePDF.clear();
@@ -458,7 +458,7 @@ void TMVA::VariableGaussTransform::CleanUpCumulativeArrays(TString opt) {
    if (opt == "ALL" || opt == "Dist"){
       for (UInt_t ivar=0; ivar<fCumulativeDist.size(); ivar++) {
          for (UInt_t icls=0; icls<fCumulativeDist[ivar].size(); icls++) {
-            if (0 != fCumulativeDist[ivar][icls]) delete fCumulativeDist[ivar][icls];
+            if (nullptr != fCumulativeDist[ivar][icls]) delete fCumulativeDist[ivar][icls];
          }
       }
       fCumulativeDist.clear();
@@ -480,8 +480,8 @@ void TMVA::VariableGaussTransform::AttachXMLTo(void* parent) {
       //      gTools().AddAttr( varxml, "Name",     Variables()[ivar].GetLabel() );
       gTools().AddAttr( varxml, "VarIndex", ivar );
 
-      if ( fCumulativePDF[ivar][0]==0 ||
-           (fCumulativePDF[ivar].size()>1 && fCumulativePDF[ivar][1]==0 ))
+      if ( fCumulativePDF[ivar][0]==nullptr ||
+           (fCumulativePDF[ivar].size()>1 && fCumulativePDF[ivar][1]==nullptr ))
          Log() << kFATAL << "Cumulative histograms for variable " << ivar << " don't exist, can't write it to weight file" << Endl;
 
       for (UInt_t icls=0; icls<fCumulativePDF[ivar].size(); icls++){
@@ -506,13 +506,13 @@ void TMVA::VariableGaussTransform::ReadFromXML( void* trfnode ) {
 
    Bool_t newFormat = kFALSE;
 
-   void* inpnode = NULL;
+   void* inpnode = nullptr;
 
    inpnode = gTools().GetChild(trfnode, "Selection"); // new xml format
-   if( inpnode!=NULL )
+   if( inpnode!=nullptr )
       newFormat = kTRUE; // new xml format
 
-   void* varnode = NULL;
+   void* varnode = nullptr;
    if( newFormat ){
       // ------------- new format --------------------
       // read input
@@ -590,10 +590,10 @@ void TMVA::VariableGaussTransform::ReadTransformationFromStream( std::istream& i
          if(type>=fCumulativeDist[ivar].size()) fCumulativeDist[ivar].resize(type+1);
 
          TH1F * histToRead = fCumulativeDist[ivar][type];
-         if ( histToRead !=0 ) delete histToRead;
+         if ( histToRead !=nullptr ) delete histToRead;
          // recreate the cumulative histogram to be filled with the values read
          histToRead = new TH1F( hname, hname, nbins, Binnings );
-         histToRead->SetDirectory(0);
+         histToRead->SetDirectory(nullptr);
          fCumulativeDist[ivar][type]=histToRead;
 
          istr >> devnullS; // read the line "BinContent" ..

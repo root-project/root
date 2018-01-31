@@ -165,8 +165,8 @@ protected:
    Bool_t              UpdateInterpreterStateMarker();
 
 public:
-   TDictionary(): fAttributeMap(0), fUpdatingTransactionCount(0) { }
-   TDictionary(const char* name): TNamed(name, ""), fAttributeMap(0), fUpdatingTransactionCount(0) { }
+   TDictionary(): fAttributeMap(nullptr), fUpdatingTransactionCount(0) { }
+   TDictionary(const char* name): TNamed(name, ""), fAttributeMap(nullptr), fUpdatingTransactionCount(0) { }
    TDictionary(const TDictionary& dict);
    virtual ~TDictionary();
 

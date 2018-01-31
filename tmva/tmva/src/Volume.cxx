@@ -143,8 +143,8 @@ TMVA::Volume::~Volume( void )
 
 void TMVA::Volume::Delete( void )
 {
-   if (NULL != fLower) { delete fLower; fLower = NULL; }
-   if (NULL != fUpper) { delete fUpper; fUpper = NULL; }
+   if (nullptr != fLower) { delete fLower; fLower = nullptr; }
+   if (nullptr != fUpper) { delete fUpper; fUpper = nullptr; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

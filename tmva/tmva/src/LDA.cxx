@@ -47,8 +47,8 @@
 TMVA::LDA::LDA( Float_t tolerence, Bool_t debug )
    : fTolerence(tolerence),
      fNumParams(0),
-     fSigma(0),
-     fSigmaInverse(0),
+     fSigma(nullptr),
+     fSigmaInverse(nullptr),
      fDebug(debug),
      fLogger( new MsgLogger("LDA", (debug?kINFO:kDEBUG)) )
 {
@@ -108,7 +108,7 @@ void TMVA::LDA::Initialize(const LDAEvents& inputSignalEvents, const LDAEvents& 
    // the signal, background, and total matrix
    TMatrixF sigmaSignal(fNumParams, fNumParams);
    TMatrixF sigmaBack(fNumParams, fNumParams);
-   if (fSigma!=0) delete fSigma;
+   if (fSigma!=nullptr) delete fSigma;
    fSigma = new TMatrixF(fNumParams, fNumParams);
    for (UInt_t row=0; row < fNumParams; ++row) {
       for (UInt_t col=0; col < fNumParams; ++col) {

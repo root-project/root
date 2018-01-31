@@ -154,7 +154,7 @@ Float_t TMVA::PDEFoamTarget::GetCellValue(const std::vector<Float_t> &xvec, ECel
 
    if (!CellValueIsUndefined(cell)) {
       // cell is not empty
-      if (kernel == NULL)
+      if (kernel == nullptr)
          return GetCellValue(cell, cv);
       else
          return kernel->Estimate(this, txvec, cv);
@@ -187,8 +187,8 @@ Float_t TMVA::PDEFoamTarget::GetAverageNeighborsValue(std::vector<Float_t> &txve
    // loop over all dimensions and find neighbor cells
    for (Int_t dim = 0; dim < GetTotDim(); dim++) {
       std::vector<Float_t> ntxvec(txvec);
-      PDEFoamCell* left_cell  = 0; // left cell
-      PDEFoamCell* right_cell = 0; // right cell
+      PDEFoamCell* left_cell  = nullptr; // left cell
+      PDEFoamCell* right_cell = nullptr; // right cell
 
       // get left cell
       ntxvec[dim] = cellPosi[dim] - xoffset;

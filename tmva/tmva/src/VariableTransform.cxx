@@ -130,11 +130,11 @@ void CreateVariableTransforms(const TString& trafoDefinitionIn,
 
       if (trClsList->GetEntries() > 1) {
          TString trCls = "AllClasses";
-         ClassInfo *ci = NULL;
+         ClassInfo *ci = nullptr;
          trCls  = ((TObjString*)trClsList->At(1))->GetString();
          if (trCls != "AllClasses") {
             ci = dataInfo.GetClassInfo( trCls );
-            if (ci == NULL)
+            if (ci == nullptr)
                log << kFATAL <<Form("Dataset[%s] : ",dataInfo.GetName())<< "Class " << trCls << " not known for variable transformation "
                    << trName << ", please check." << Endl;
             else
@@ -142,7 +142,7 @@ void CreateVariableTransforms(const TString& trafoDefinitionIn,
          }
       }
 
-      VariableTransformBase* transformation = NULL;
+      VariableTransformBase* transformation = nullptr;
       if (trName == "I" || trName == "Ident" || trName == "Identity") {
          if (variables.Length() == 0) variables = "_V_";
          transformation = new VariableIdentityTransform(dataInfo);

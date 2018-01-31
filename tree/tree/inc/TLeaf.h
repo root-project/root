@@ -85,7 +85,7 @@ public:
    virtual Int_t    GetMinimum() const { return 0; }
    virtual Int_t    GetNdata() const { return fNdata; }
    virtual Int_t    GetOffset() const { return fOffset; }
-   virtual void    *GetValuePointer() const { return 0; }
+   virtual void    *GetValuePointer() const { return nullptr; }
    virtual const char *GetTypeName() const { return ""; }
 
    virtual Double_t GetValue(Int_t i = 0) const;
@@ -104,7 +104,7 @@ public:
       Error("ReadValue", "Not implemented!");
    }
            Int_t    ResetAddress(void *add, Bool_t destructor = kFALSE);
-   virtual void     SetAddress(void *add = 0);
+   virtual void     SetAddress(void *add = nullptr);
    virtual void     SetBranch(TBranch *branch) { fBranch = branch; }
    virtual void     SetLeafCount(TLeaf *leaf);
    virtual void     SetLen(Int_t len = 1) { fLen = len; }

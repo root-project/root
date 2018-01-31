@@ -66,7 +66,7 @@ Global auxiliary applications and data treatment routines.
 using namespace std;
 
 #if __cplusplus > 199711L
-std::atomic<TMVA::Tools*> TMVA::Tools::fgTools{0};
+std::atomic<TMVA::Tools*> TMVA::Tools::fgTools{nullptr};
 #else
 TMVA::Tools* TMVA::Tools::fgTools = 0;
 #endif
@@ -76,7 +76,7 @@ TMVA::Tools& TMVA::Tools::Instance()        {
 #if __cplusplus > 199711L
    if(!fgTools) {
       Tools* tmp = new Tools();
-      Tools* expected = 0;
+      Tools* expected = nullptr;
       if(! fgTools.compare_exchange_strong(expected,tmp)) {
          //another thread beat us
          delete tmp;
@@ -91,7 +91,7 @@ void         TMVA::Tools::DestroyInstance() {
    //NOTE: there is no thread safe way to do this so
    // one must only call this method ones in an executable
 #if __cplusplus > 199711L
-   if (fgTools != 0) { delete fgTools.load(); fgTools=0; }
+   if (fgTools != nullptr) { delete fgTools.load(); fgTools=nullptr; }
 #else
    if (fgTools != 0) { delete fgTools; fgTools=0; }
 #endif
@@ -217,7 +217,7 @@ void TMVA::Tools::ComputeStat( const std::vector<TMVA::Event*>& events, std::vec
                                Double_t& xmin,  Double_t& xmax,
                                Int_t signalClass, Bool_t  norm )
 {
-   if (0 == valVec)
+   if (nullptr == valVec)
       Log() << kFATAL << "<Tools::ComputeStat> value vector is zero pointer" << Endl;
 
    if ( events.size() != valVec->size() )
@@ -336,7 +336,7 @@ TMatrixD* TMVA::Tools::GetSQRootMatrix( TMatrixDSym* symMat )
 const TMatrixD* TMVA::Tools::GetCorrelationMatrix( const TMatrixD* covMat )
 {
 
-   if (covMat == 0) return 0;
+   if (covMat == nullptr) return nullptr;
    // sanity check
    Int_t nvar = covMat->GetNrows();
    if (nvar != covMat->GetNcols())
@@ -1126,8 +1126,8 @@ void TMVA::Tools::ReadAttr( void* node, const char* attrname, TString& value )
 
 void TMVA::Tools::AddAttr( void* node, const char* attrname, const char* value )
 {
-   if( node == 0 ) return;
-   gTools().xmlengine().NewAttr(node, 0, attrname, value );
+   if( node == nullptr ) return;
+   gTools().xmlengine().NewAttr(node, nullptr, attrname, value );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1135,14 +1135,14 @@ void TMVA::Tools::AddAttr( void* node, const char* attrname, const char* value )
 
 void* TMVA::Tools::AddChild( void* parent, const char* childname, const char* content, bool isRootNode )
 {
-   if( !isRootNode && parent == 0 ) return 0;
-   return gTools().xmlengine().NewChild(parent, 0, childname, content);
+   if( !isRootNode && parent == nullptr ) return nullptr;
+   return gTools().xmlengine().NewChild(parent, nullptr, childname, content);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Bool_t TMVA::Tools::AddComment( void* node, const char* comment ) {
-   if( node == 0 ) return kFALSE;
+   if( node == nullptr ) return kFALSE;
    return gTools().xmlengine().AddComment(node, comment);
 }
 
@@ -1162,8 +1162,8 @@ void* TMVA::Tools::GetParent( void* child)
 void* TMVA::Tools::GetChild( void* parent, const char* childname )
 {
    void* ch = xmlengine().GetChild(parent);
-   if (childname != 0) {
-      while (ch!=0 && strcmp(xmlengine().GetNodeName(ch),childname) != 0) ch = xmlengine().GetNext(ch);
+   if (childname != nullptr) {
+      while (ch!=nullptr && strcmp(xmlengine().GetNodeName(ch),childname) != 0) ch = xmlengine().GetNext(ch);
    }
    return ch;
 }
@@ -1174,8 +1174,8 @@ void* TMVA::Tools::GetChild( void* parent, const char* childname )
 void* TMVA::Tools::GetNextChild( void* prevchild, const char* childname )
 {
    void* ch = xmlengine().GetNext(prevchild);
-   if (childname != 0) {
-      while (ch!=0 && strcmp(xmlengine().GetNodeName(ch),childname)!=0) ch = xmlengine().GetNext(ch);
+   if (childname != nullptr) {
+      while (ch!=nullptr && strcmp(xmlengine().GetNodeName(ch),childname)!=0) ch = xmlengine().GetNext(ch);
    }
    return ch;
 }
@@ -1254,9 +1254,9 @@ TString TMVA::Tools::StringFromDouble( Double_t d )
 
 void TMVA::Tools::WriteTMatrixDToXML( void* node, const char* name, TMatrixD* mat )
 {
-   void* matnode = xmlengine().NewChild(node, 0, name);
-   xmlengine().NewAttr(matnode,0,"Rows", StringFromInt(mat->GetNrows()) );
-   xmlengine().NewAttr(matnode,0,"Columns", StringFromInt(mat->GetNcols()) );
+   void* matnode = xmlengine().NewChild(node, nullptr, name);
+   xmlengine().NewAttr(matnode,nullptr,"Rows", StringFromInt(mat->GetNrows()) );
+   xmlengine().NewAttr(matnode,nullptr,"Columns", StringFromInt(mat->GetNcols()) );
    std::stringstream s;
    for (Int_t row = 0; row<mat->GetNrows(); row++) {
       for (Int_t col = 0; col<mat->GetNcols(); col++) {
@@ -1527,7 +1527,7 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
 {
    if (events.empty()) {
       Log() << kWARNING << " Asked to calculate a covariance matrix for an empty event vectors.. sorry cannot do that -> return NULL"<<Endl;
-      return 0;
+      return nullptr;
    }
 
    UInt_t nvars=0, ntgts=0, nspcts=0;

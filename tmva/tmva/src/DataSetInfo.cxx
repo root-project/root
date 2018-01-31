@@ -60,9 +60,9 @@ Class that contains all the data information.
 
 TMVA::DataSetInfo::DataSetInfo(const TString& name)
    : TObject(),
-     fDataSetManager(NULL),
+     fDataSetManager(nullptr),
      fName(name),
-     fDataSet( 0 ),
+     fDataSet( nullptr ),
      fNeedsRebuilding( kTRUE ),
      fVariables(),
      fTargets(),
@@ -74,10 +74,10 @@ TMVA::DataSetInfo::DataSetInfo(const TString& name)
      fTrainingSumBackgrWeights(-1),
      fTestingSumSignalWeights (-1),
      fTestingSumBackgrWeights (-1),
-     fOwnRootDir(0),
+     fOwnRootDir(nullptr),
      fVerbose( kFALSE ),
      fSignalClass(0),
-     fTargetsForMulticlass(0),
+     fTargetsForMulticlass(nullptr),
      fLogger( new MsgLogger("DataSetInfo", kINFO) )
 {
 }
@@ -102,7 +102,7 @@ TMVA::DataSetInfo::~DataSetInfo()
 
 void TMVA::DataSetInfo::ClearDataSet() const
 {
-   if(fDataSet!=0) { delete fDataSet; fDataSet=0; }
+   if(fDataSet!=nullptr) { delete fDataSet; fDataSet=nullptr; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -143,7 +143,7 @@ TMVA::ClassInfo* TMVA::DataSetInfo::GetClassInfo( const TString& name ) const
    for (std::vector<ClassInfo*>::iterator it = fClasses.begin(); it < fClasses.end(); ++it) {
       if ((*it)->GetName() == name) return (*it);
    }
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -154,7 +154,7 @@ TMVA::ClassInfo* TMVA::DataSetInfo::GetClassInfo( Int_t cls ) const
       return fClasses.at(cls);
    }
    catch(...) {
-      return 0;
+      return nullptr;
    }
 }
 
@@ -202,7 +202,7 @@ Bool_t TMVA::DataSetInfo::HasCuts() const
 const TMatrixD* TMVA::DataSetInfo::CorrelationMatrix( const TString& className ) const
 {
    ClassInfo* ptr = GetClassInfo(className);
-   return ptr?ptr->GetCorrelationMatrix():0;
+   return ptr?ptr->GetCorrelationMatrix():nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -399,7 +399,7 @@ TH2* TMVA::DataSetInfo::CreateCorrelationMatrixHist( const TMatrixD* m,
                                                      const TString&  hName,
                                                      const TString&  hTitle ) const
 {
-   if (m==0) return 0;
+   if (m==nullptr) return nullptr;
 
    const UInt_t nvar = GetNVariables();
 
@@ -461,8 +461,8 @@ TH2* TMVA::DataSetInfo::CreateCorrelationMatrixHist( const TMatrixD* m,
 
 TMVA::DataSet* TMVA::DataSetInfo::GetDataSet() const
 {
-   if (fDataSet==0 || fNeedsRebuilding) {
-      if(fDataSet!=0) ClearDataSet();
+   if (fDataSet==nullptr || fNeedsRebuilding) {
+      if(fDataSet!=nullptr) ClearDataSet();
       //      fDataSet = DataSetManager::Instance().CreateDataSet(GetName()); //DSMTEST replaced by following lines
       if( !fDataSetManager )
          Log() << kFATAL << Form("Dataset[%s] : ",fName.Data()) << "DataSetManager has not been set in DataSetInfo (GetDataSet() )." << Endl;

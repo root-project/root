@@ -46,7 +46,7 @@ auto tupleSort = [](std::tuple<Float_t, Float_t, Bool_t> _a, std::tuple<Float_t,
 
 //_______________________________________________________________________
 TMVA::ROCCurve::ROCCurve(const std::vector<std::tuple<Float_t, Float_t, Bool_t>> &mvas)
-   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(NULL), fMva(mvas)
+   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(nullptr), fMva(mvas)
 {
 }
 
@@ -55,7 +55,7 @@ TMVA::ROCCurve::ROCCurve(const std::vector<std::tuple<Float_t, Float_t, Bool_t>>
 
 TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaValues, const std::vector<Bool_t> &mvaTargets,
                          const std::vector<Float_t> &mvaWeights)
-   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(NULL)
+   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(nullptr)
 {
    assert(mvaValues.size() == mvaTargets.size());
    assert(mvaValues.size() == mvaWeights.size());
@@ -71,7 +71,7 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaValues, const std::vecto
 ///
 
 TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaValues, const std::vector<Bool_t> &mvaTargets)
-   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(NULL)
+   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(nullptr)
 {
    assert(mvaValues.size() == mvaTargets.size());
 
@@ -86,7 +86,7 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaValues, const std::vecto
 ///
 
 TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vector<Float_t> &mvaBackground)
-   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(NULL)
+   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(nullptr)
 {
    for (UInt_t i = 0; i < mvaSignal.size(); i++) {
       fMva.emplace_back(mvaSignal[i], 1, kTRUE);
@@ -104,7 +104,7 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vecto
 
 TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vector<Float_t> &mvaBackground,
                          const std::vector<Float_t> &mvaSignalWeights, const std::vector<Float_t> &mvaBackgroundWeights)
-   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(NULL)
+   : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(nullptr)
 {
    assert(mvaSignal.size() == mvaSignalWeights.size());
    assert(mvaBackground.size() == mvaBackgroundWeights.size());

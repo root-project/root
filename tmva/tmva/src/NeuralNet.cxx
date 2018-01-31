@@ -233,7 +233,7 @@ namespace TMVA
             , m_maxConvergenceCount (0)
             , m_minError (1e10)
             , m_useMultithreading (_useMultithreading)
-            , fMonitoring (NULL)
+            , fMonitoring (nullptr)
         {
         }
     

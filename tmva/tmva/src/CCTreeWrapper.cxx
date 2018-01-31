@@ -45,7 +45,7 @@ TMVA::CCTreeWrapper::CCTreeNode::CCTreeNode( DecisionTreeNode* n ) :
    fMinAlphaC(-1.0),
    fDTNode(n)
 {
-   if ( n != NULL && n->GetRight() != NULL && n->GetLeft() != NULL ) {
+   if ( n != nullptr && n->GetRight() != nullptr && n->GetLeft() != nullptr ) {
       SetRight( new CCTreeNode( ((DecisionTreeNode*) n->GetRight()) ) );
       GetRight()->SetParent(this);
       SetLeft( new CCTreeNode( ((DecisionTreeNode*) n->GetLeft()) ) );
@@ -57,8 +57,8 @@ TMVA::CCTreeWrapper::CCTreeNode::CCTreeNode( DecisionTreeNode* n ) :
 /// destructor of a CCTreeNode
 
 TMVA::CCTreeWrapper::CCTreeNode::~CCTreeNode() {
-   if(GetLeft() != NULL) delete GetLeftDaughter();
-   if(GetRight() != NULL) delete GetRightDaughter();
+   if(GetLeft() != nullptr) delete GetLeftDaughter();
+   if(GetRight() != nullptr) delete GetRightDaughter();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,7 +92,7 @@ void TMVA::CCTreeWrapper::CCTreeNode::Print( std::ostream& os ) const {
 
 void TMVA::CCTreeWrapper::CCTreeNode::PrintRec( std::ostream& os ) const {
    this->Print(os);
-   if(this->GetLeft() != NULL && this->GetRight() != NULL) {
+   if(this->GetLeft() != nullptr && this->GetRight() != nullptr) {
       this->GetLeft()->PrintRec(os);
       this->GetRight()->PrintRec(os);
    }
@@ -102,7 +102,7 @@ void TMVA::CCTreeWrapper::CCTreeNode::PrintRec( std::ostream& os ) const {
 /// constructor
 
 TMVA::CCTreeWrapper::CCTreeWrapper( DecisionTree* T, SeparationBase* qualityIndex ) :
-   fRoot(NULL)
+   fRoot(nullptr)
 {
    fDTParent = T;
    fRoot = new CCTreeNode( dynamic_cast<DecisionTreeNode*>(T->GetRoot()) );
@@ -129,7 +129,7 @@ void TMVA::CCTreeWrapper::InitTree( CCTreeNode* t )
    // set R(t) = Gini(t) or MisclassificationError(t), etc.
    t->SetNodeResubstitutionEstimate((s+b)*fQualityIndex->GetSeparationIndex(s,b));
 
-   if(t->GetLeft() != NULL && t->GetRight() != NULL) { // n is an interior (non-leaf) node
+   if(t->GetLeft() != nullptr && t->GetRight() != nullptr) { // n is an interior (non-leaf) node
       // traverse the tree
       InitTree(t->GetLeftDaughter());
       InitTree(t->GetRightDaughter());
@@ -159,8 +159,8 @@ void TMVA::CCTreeWrapper::InitTree( CCTreeNode* t )
 
 void TMVA::CCTreeWrapper::PruneNode( CCTreeNode* t )
 {
-   if( t->GetLeft() != NULL &&
-       t->GetRight() != NULL ) {
+   if( t->GetLeft() != nullptr &&
+       t->GetRight() != nullptr ) {
       CCTreeNode* l = t->GetLeftDaughter();
       CCTreeNode* r = t->GetRightDaughter();
       t->SetNLeafDaughters( 1 );
@@ -169,8 +169,8 @@ void TMVA::CCTreeWrapper::PruneNode( CCTreeNode* t )
       t->SetMinAlphaC( std::numeric_limits<double>::infinity( ) );
       delete l;
       delete r;
-      t->SetLeft(NULL);
-      t->SetRight(NULL);
+      t->SetLeft(nullptr);
+      t->SetRight(nullptr);
    }else{
       std::cout << " ERROR in CCTreeWrapper::PruneNode: you try to prune a leaf node.. that does not make sense " << std::endl;
    }
@@ -229,8 +229,8 @@ Double_t TMVA::CCTreeWrapper::CheckEvent( const TMVA::Event & e, Bool_t useYesNo
    CCTreeNode* t = fRoot;
 
    while(//current->GetNodeType() == 0 &&
-         t->GetLeft() != NULL &&
-         t->GetRight() != NULL){ // at an interior (non-leaf) node
+         t->GetLeft() != nullptr &&
+         t->GetRight() != nullptr){ // at an interior (non-leaf) node
       if (current->GoesRight(e)) {
          //current = (DecisionTreeNode*)current->GetRight();
          t = t->GetRightDaughter();

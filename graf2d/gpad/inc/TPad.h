@@ -310,7 +310,7 @@ public:
    virtual void      RangeAxisChanged() { Emit("RangeAxisChanged()"); } // *SIGNAL*
    virtual void      RecursiveRemove(TObject *obj);
    virtual void      RedrawAxis(Option_t *option="");
-   virtual void      ResetView3D(TObject *view=0){fPadView3D=view;}
+   virtual void      ResetView3D(TObject *view=nullptr){fPadView3D=view;}
    virtual void      ResizePad(Option_t *option="");
    virtual void      Resized() { Emit("Resized()"); } // *SIGNAL*
    virtual void      SaveAs(const char *filename="",Option_t *option="") const; // *MENU*
@@ -352,7 +352,7 @@ public:
    virtual void      SetPhi(Double_t phi=30) {fPhi = phi; Modified();}
    virtual void      SetToolTipText(const char *text, Long_t delayms = 1000);
    virtual void      SetVertical(Bool_t vert=kTRUE);
-   virtual void      SetView(TView *view = 0);
+   virtual void      SetView(TView *view = nullptr);
    virtual void      SetViewer3D(TVirtualViewer3D *viewer3d) {fViewer3D = viewer3d;}
 
    virtual void      SetGLDevice(Int_t dev) {fGLDevice = dev;}

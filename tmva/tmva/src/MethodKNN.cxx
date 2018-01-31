@@ -66,7 +66,7 @@ ClassImp(TMVA::MethodKNN);
    : TMVA::MethodBase(jobName, Types::kKNN, methodTitle, theData, theOption)
    , fSumOfWeightsS(0)
    , fSumOfWeightsB(0)
-   , fModule(0)
+   , fModule(nullptr)
    , fnkNN(0)
    , fBalanceDepth(0)
    , fScaleFrac(0)
@@ -87,7 +87,7 @@ TMVA::MethodKNN::MethodKNN( DataSetInfo& theData,
    : TMVA::MethodBase( Types::kKNN, theData, theWeightFile)
    , fSumOfWeightsS(0)
    , fSumOfWeightsB(0)
-   , fModule(0)
+   , fModule(nullptr)
    , fnkNN(0)
    , fBalanceDepth(0)
    , fScaleFrac(0)
@@ -434,7 +434,7 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err, Double_t* errUpper )
 
 const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
 {
-   if( fRegressionReturnVal == 0 )
+   if( fRegressionReturnVal == nullptr )
       fRegressionReturnVal = new std::vector<Float_t>;
    else
       fRegressionReturnVal->clear();
@@ -517,7 +517,7 @@ const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
 
 const TMVA::Ranking* TMVA::MethodKNN::CreateRanking()
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -688,7 +688,7 @@ void TMVA::MethodKNN::WriteWeightsToStream(TFile &rf) const
 
    kNN::Event *event = new kNN::Event();
    TTree *tree = new TTree("knn", "event tree");
-   tree->SetDirectory(0);
+   tree->SetDirectory(nullptr);
    tree->Branch("event", "TMVA::kNN::Event", &event);
 
    Double_t size = 0.0;
