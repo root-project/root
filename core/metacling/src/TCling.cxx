@@ -354,27 +354,20 @@ void TCling__PrintStackTrace() {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Restore the interpreter lock.
+/// Re-apply the lock count delta that TCling__ResetInterpreterMutex() caused.
 
-extern "C" void TCling__RestoreInterpreterMutex(void *state)
+extern "C" void TCling__RestoreInterpreterMutex(void *delta)
 {
-   if (gInterpreterMutex && state) {
-      auto typedState = static_cast<TVirtualMutex::State *>(state);
-      std::unique_ptr<TVirtualMutex::State> uniqueP{typedState};
-      gInterpreterMutex->Restore(std::move(uniqueP));
-   }
+   ((TCling*)gCling)->ApplyToInterpreterMutex(delta);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Completely reset the interpreter lock.
+/// Reset the interpreter lock to the state it had before interpreter-related
+/// calls happened.
 
 extern "C" void *TCling__ResetInterpreterMutex()
 {
-   if (gInterpreterMutex) {
-      auto uniqueP = gInterpreterMutex->Reset();
-      return uniqueP.release();
-   }
-   return nullptr;
+   return ((TCling*)gCling)->RewindInterpreterMutex();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2120,7 +2113,7 @@ Long_t TCling::ProcessLine(const char* line, EErrorCode* error/*=0*/)
          gInterpreterMutex = gGlobalMutex->Factory(kTRUE);
       gGlobalMutex->UnLock();
    }
-   R__LOCKGUARD(fLockProcessLine ? gInterpreterMutex : 0);
+   R__LOCKGUARD_CLING(fLockProcessLine ? gInterpreterMutex : 0);
    gROOT->SetLineIsProcessing();
 
    struct InterpreterFlagsRAII {
@@ -2683,7 +2676,7 @@ void TCling::ClearStack()
 
 bool TCling::Declare(const char* code)
 {
-   R__LOCKGUARD(gInterpreterMutex);
+   R__LOCKGUARD_CLING(gInterpreterMutex);
 
    int oldload = SetClassAutoloading(0);
    SuspendAutoParsing autoParseRaii(this);
@@ -3000,7 +2993,7 @@ Int_t TCling::Load(const char* filename, Bool_t system)
    }
 
    // Used to return 0 on success, 1 on duplicate, -1 on failure, -2 on "fatal".
-   R__LOCKGUARD(gInterpreterMutex);
+   R__LOCKGUARD_CLING(gInterpreterMutex);
    cling::DynamicLibraryManager* DLM = fInterpreter->getDynamicLibraryManager();
    std::string canonLib = DLM->lookupLibrary(filename);
    cling::DynamicLibraryManager::LoadLibResult res
@@ -3051,7 +3044,7 @@ Long_t TCling::ProcessLineAsynch(const char* line, EErrorCode* error)
 
 Long_t TCling::ProcessLineSynch(const char* line, EErrorCode* error)
 {
-   R__LOCKGUARD(fLockProcessLine ? gInterpreterMutex : 0);
+   R__LOCKGUARD_CLING(fLockProcessLine ? gInterpreterMutex : 0);
    if (gApplication) {
       if (gApplication->IsCmdThread()) {
          return ProcessLine(line, error);
@@ -3079,7 +3072,7 @@ Long_t TCling::Calc(const char* line, EErrorCode* error)
       gROOT->SetLineIsProcessing();
    }
 #endif // R__WIN32
-   R__LOCKGUARD(gInterpreterMutex);
+   R__LOCKGUARD_CLING(gInterpreterMutex);
    if (error) {
       *error = TInterpreter::kNoError;
    }
@@ -4565,7 +4558,7 @@ void TCling::GetInterpreterTypeName(const char* name, std::string &output, Bool_
 
 void TCling::Execute(const char* function, const char* params, int* error)
 {
-   R__LOCKGUARD(gInterpreterMutex);
+   R__LOCKGUARD_CLING(gInterpreterMutex);
    if (error) {
       *error = TInterpreter::kNoError;
    }
@@ -4590,7 +4583,7 @@ void TCling::Execute(const char* function, const char* params, int* error)
 void TCling::Execute(TObject* obj, TClass* cl, const char* method,
                      const char* params, Bool_t objectIsConst, int* error)
 {
-   R__LOCKGUARD(gInterpreterMutex);
+   R__LOCKGUARD_CLING(gInterpreterMutex);
    if (error) {
       *error = TInterpreter::kNoError;
    }
@@ -4693,7 +4686,7 @@ void TCling::Execute(TObject* obj, TClass* cl, TMethod* method,
    }
 
    // And now execute it.
-   R__LOCKGUARD(gInterpreterMutex);
+   R__LOCKGUARD_CLING(gInterpreterMutex);
    if (error) {
       *error = TInterpreter::kNoError;
    }
@@ -4735,7 +4728,7 @@ void TCling::ExecuteWithArgsAndReturn(TMethod* method, void* address,
 
 Long_t TCling::ExecuteMacro(const char* filename, EErrorCode* error)
 {
-   R__LOCKGUARD(fLockProcessLine ? gInterpreterMutex : 0);
+   R__LOCKGUARD_CLING(fLockProcessLine ? gInterpreterMutex : 0);
    fCurExecutingMacros.push_back(filename);
    Long_t result = TApplication::ExecuteFile(filename, (int*)error);
    fCurExecutingMacros.pop_back();
@@ -8452,4 +8445,67 @@ const char* TCling::TypedefInfo_Title(TypedefInfo_t* tinfo) const
 {
    TClingTypedefInfo* TClinginfo = (TClingTypedefInfo*) tinfo;
    return TClinginfo->Title();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TCling::SnapshotMutexState(ROOT::TVirtualRWMutex* mtx)
+{
+   if (!fInitialMutex.back()) {
+      if (fInitialMutex.back().fRecurseCount) {
+         Error("SnapshotMutexState", "fRecurseCount != 0 even though initial mutex state is unset!");
+      }
+      fInitialMutex.back().fState = mtx->GetStateBefore();
+   }
+   // We will "forget" this lock once we backed out of all interpreter frames.
+   // Here we are entering one, so ++.
+   ++fInitialMutex.back().fRecurseCount;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void TCling::ForgetMutexState()
+{
+   if (!fInitialMutex.back())
+      return;
+   if (fInitialMutex.back().fRecurseCount == 0) {
+      Error("ForgetMutexState", "mutex state's recurse count already 0!");
+   }
+   else if (--fInitialMutex.back().fRecurseCount == 0) {
+      // We have returned from all interpreter frames. Reset the initial lock state.
+      fInitialMutex.back().fState.reset();
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Re-apply the lock count delta that TCling__ResetInterpreterMutex() caused.
+
+void TCling::ApplyToInterpreterMutex(void *delta)
+{
+   R__ASSERT(!fInitialMutex.empty() && "Inconsistent state of fInitialMutex!");
+   if (gInterpreterMutex) {
+      if (delta) {
+         auto typedDelta = static_cast<TVirtualRWMutex::StateDelta *>(delta);
+         std::unique_ptr<TVirtualRWMutex::StateDelta> uniqueP{typedDelta};
+         gCoreMutex->Apply(std::move(uniqueP));
+      }
+   }
+   fInitialMutex.pop_back();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset the interpreter lock to the state it had before interpreter-related
+/// calls happened.
+
+void *TCling::RewindInterpreterMutex()
+{
+   if (fInitialMutex.back()) {
+      std::unique_ptr<TVirtualRWMutex::StateDelta> uniqueP = gCoreMutex->Rewind(*fInitialMutex.back().fState);
+      // Need to start a new recurse count.
+      fInitialMutex.emplace_back();
+      return uniqueP.release();
+   }
+   // Need to start a new recurse count.
+   fInitialMutex.emplace_back();
+   return nullptr;
 }

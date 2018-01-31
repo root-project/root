@@ -29,8 +29,9 @@ public:
    void WriteUnLock(Hint_t *) override;
 
    TVirtualRWMutex *Factory(Bool_t /*recursive*/ = kFALSE) override;
-   std::unique_ptr<TVirtualMutex::State> Reset() override;
-   void Restore(std::unique_ptr<TVirtualMutex::State> &&) override;
+   std::unique_ptr<State> GetStateBefore() override;
+   std::unique_ptr<StateDelta> Rewind(const State &earlierState) override;
+   void Apply(std::unique_ptr<StateDelta> &&delta) override;
 
    ClassDefInlineOverride(TRWMutexImp,0)  // Concrete RW mutex lock class
 };

@@ -37,9 +37,6 @@ public:
    virtual Int_t  TryLock() = 0;
    virtual Int_t  UnLock() = 0;
 
-   virtual std::unique_ptr<TVirtualMutex::State> Reset() = 0;
-   virtual void Restore(std::unique_ptr<TVirtualMutex::State> &&) = 0;
-
    ClassDef(TMutexImp,0)  // Mutex lock implementation ABC
 };
 
