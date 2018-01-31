@@ -67,6 +67,10 @@ public:
       kEditDisableKeyEnable = BIT(8)   // window can handle keyboard events
    };
 
+   enum EStatusBits {
+      kIsHtmlView = BIT(14)
+   };
+
    TGWindow(const TGWindow *p = 0, Int_t x = 0, Int_t y = 0,
             UInt_t w = 0, UInt_t h = 0, UInt_t border = 0,
             Int_t depth = 0,

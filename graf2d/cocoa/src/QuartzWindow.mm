@@ -41,6 +41,9 @@
 #include "TSystem.h"
 #include "TGCocoa.h"
 #include "TROOT.h"
+#include "TGTextView.h"
+#include "TGView.h"
+#include "TGCanvas.h"
 
 
 namespace ROOT {
@@ -896,7 +899,10 @@ bool ViewIsTextView(unsigned viewID)
    const TGWindow * const window = gClient->GetWindowById(viewID);
    if (!window)
       return false;
-   return window->InheritsFrom("TGTextView");
+   // This code used to use TObject::InheritsFrom, however since this is
+   // run under the AppKit, we can not call core/meta functions, otherwise
+   // we will run into deadlocks.
+   return dynamic_cast<const TGTextView*>(window);
 }
 
 //______________________________________________________________________________
@@ -916,7 +922,10 @@ bool ViewIsTextViewFrame(NSView<X11Window> *view, bool checkParent)
    if (!window)
       return false;
 
-   if (!window->InheritsFrom("TGViewFrame"))
+   // This code used to use TObject::InheritsFrom, however since this is
+   // run under the AppKit, we can not call core/meta functions, otherwise
+   // we will run into deadlocks.
+   if (!dynamic_cast<const TGViewFrame*>(window))
       return false;
 
    if (!checkParent)
@@ -934,7 +943,10 @@ bool ViewIsHtmlView(unsigned viewID)
    const TGWindow * const window = gClient->GetWindowById(viewID);
    if (!window)
       return false;
-   return window->InheritsFrom("TGHtml");
+   // This code used to use TObject::InheritsFrom, however since this is
+   // run under the AppKit, we can not call core/meta functions, otherwise
+   // we will run into deadlocks.
+   return window->TestBit(TGWindow::kIsHtmlView);
 }
 
 //______________________________________________________________________________
@@ -955,7 +967,10 @@ bool ViewIsHtmlViewFrame(NSView<X11Window> *view, bool checkParent)
    if (!window)
       return false;
 
-   if (!window->InheritsFrom("TGViewFrame"))
+   // This code used to use TObject::InheritsFrom, however since this is
+   // run under the AppKit, we can not call core/meta functions, otherwise
+   // we will run into deadlocks.
+   if (!dynamic_cast<const TGViewFrame*>(window))
       return false;
 
    if (!checkParent)
@@ -2705,7 +2720,10 @@ void print_mask_info(ULong_t mask)
          if (self.fQuartzWindow.fShapeCombineMask)
             X11::ClipToShapeMask(self, fContext);
 
-         if (window->InheritsFrom("TGContainer"))//It always has an ExposureMask.
+         // This code used to use TObject::InheritsFrom, however since this is
+         // run under the AppKit, we can not call core/meta functions, otherwise
+         // we will run into deadlocks.
+         if (dynamic_cast<const TGContainer*>(window))//It always has an ExposureMask.
             vx->GetEventTranslator()->GenerateExposeEvent(self, [self visibleRect]);
 
          if (fEventMask & kExposureMask) {
