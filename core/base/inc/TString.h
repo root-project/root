@@ -248,7 +248,7 @@ public:
    TString();                           // Null string
    explicit TString(Ssiz_t ic);         // Suggested capacity
    TString(const TString &s);           // Copy constructor
-   TString(TString &&s);                // Move constructor
+   TString(TString &&s) noexcept;       // Move constructor
    TString(const char *s);              // Copy to embedded null
    TString(const char *s, Ssiz_t n);    // Copy past any embedded nulls
    TString(const std::string &s);
@@ -287,6 +287,7 @@ public:
    TString    &operator=(char s);                // Replace string
    TString    &operator=(const char *s);
    TString    &operator=(const TString &s);
+   TString    &operator=(TString &&s) noexcept;
    TString    &operator=(const std::string &s);
    TString    &operator=(const std::string_view &s);
    TString    &operator=(const TSubString &s);
