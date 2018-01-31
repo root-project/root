@@ -100,7 +100,7 @@ TMVA::DataLoader::DataLoader( TString thedlName)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-TMVA::DataLoader::~DataLoader( void )
+TMVA::DataLoader::~DataLoader()
 {
    // destructor
 

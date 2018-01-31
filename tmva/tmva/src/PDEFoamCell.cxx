@@ -191,7 +191,7 @@ void    TMVA::PDEFoamCell::GetHSize( PDEFoamVect &cellSize)  const
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculates volume of the cell using size params which are calculated
 
-void TMVA::PDEFoamCell::CalcVolume(void)
+void TMVA::PDEFoamCell::CalcVolume()
 {
    Int_t k;
    Double_t volu=1.0;

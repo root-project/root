@@ -71,12 +71,12 @@ namespace TMVA {
       MethodBoost( DataSetInfo& dsi,
                    const TString& theWeightFile );
 
-      virtual ~MethodBoost( void );
+      virtual ~MethodBoost();
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ );
 
       // training and boosting all the classifiers
-      void Train( void );
+      void Train();
 
       // ranking of input variables
       const Ranking* CreateRanking();
@@ -129,7 +129,7 @@ namespace TMVA {
       Double_t GetBoostROCIntegral(Bool_t, Types::ETreeType, Bool_t CalcOverlapIntergral=kFALSE);
 
       // writing the monitoring histograms and tree to a file
-      void WriteMonitoringHistosToFile( void ) const;
+      void WriteMonitoringHistosToFile() const;
 
       // write evaluation histograms into target file
       virtual void WriteEvaluationHistosToFile(Types::ETreeType treetype);

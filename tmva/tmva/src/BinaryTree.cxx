@@ -52,7 +52,7 @@ ClassImp(TMVA::BinaryTree);
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor for a yet "empty" tree. Needs to be filled afterwards
 
-TMVA::BinaryTree::BinaryTree( void )
+TMVA::BinaryTree::BinaryTree()
 : fRoot  ( nullptr ),
    fNNodes( 0 ),
    fDepth ( 0 )
@@ -62,7 +62,7 @@ TMVA::BinaryTree::BinaryTree( void )
 ////////////////////////////////////////////////////////////////////////////////
 ///destructor (deletes the nodes and "events" if owned by the tree
 
-TMVA::BinaryTree::~BinaryTree( void )
+TMVA::BinaryTree::~BinaryTree()
 {
    this->DeleteNode( fRoot );
    fRoot=nullptr;

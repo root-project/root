@@ -940,7 +940,7 @@ void TMVA::PDEFoam::PrintCell(Long_t iCell)
 ////////////////////////////////////////////////////////////////////////////////
 /// Prints geometry of ALL cells of the FOAM
 
-void TMVA::PDEFoam::PrintCells(void)
+void TMVA::PDEFoam::PrintCells()
 {
    for(Long_t iCell=0; iCell<=fLastCe; iCell++)
       PrintCell(iCell);

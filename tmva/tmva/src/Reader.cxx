@@ -279,7 +279,7 @@ void TMVA::Reader::DeclareOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::Reader::~Reader( void )
+TMVA::Reader::~Reader()
 {
    delete fDataSetManager; // DSMTEST
 
@@ -294,7 +294,7 @@ TMVA::Reader::~Reader( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisation (no member variables)
 
-void TMVA::Reader::Init( void )
+void TMVA::Reader::Init()
 {
    if (Verbose()) fLogger->SetMinType( kVERBOSE );
 

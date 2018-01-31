@@ -69,11 +69,11 @@ namespace TMVA {
       MethodCategory( DataSetInfo& dsi,
                       const TString& theWeightFile );
 
-      virtual ~MethodCategory( void );
+      virtual ~MethodCategory();
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ );
       // training and boosting all the classifiers
-      void Train( void );
+      void Train();
 
       // ranking of input variables
       const Ranking* CreateRanking();

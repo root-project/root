@@ -904,7 +904,7 @@ void TMVA::MethodCFMlpANN_Utils::GraphNN( Int_t *ilearn, Double_t * /*xxx*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// [smart comments to be added]
 
-Double_t TMVA::MethodCFMlpANN_Utils::Sen3a( void )
+Double_t TMVA::MethodCFMlpANN_Utils::Sen3a()
 {
    // Initialized data
    Int_t    m12 = 4096;

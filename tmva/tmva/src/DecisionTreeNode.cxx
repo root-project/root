@@ -188,7 +188,7 @@ Bool_t TMVA::DecisionTreeNode::GoesLeft(const TMVA::Event & e) const
 /// REM: even if nodes with purity 0.01 are very PURE background nodes, they still
 ///      get a small value of the purity.
 
-void TMVA::DecisionTreeNode::SetPurity( void )
+void TMVA::DecisionTreeNode::SetPurity()
 {
    if ( ( this->GetNSigEvents() + this->GetNBkgEvents() ) > 0 ) {
       fPurity = this->GetNSigEvents() / ( this->GetNSigEvents() + this->GetNBkgEvents());

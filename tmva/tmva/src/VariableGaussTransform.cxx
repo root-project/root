@@ -77,7 +77,7 @@ TMVA::VariableGaussTransform::VariableGaussTransform( DataSetInfo& dsi, TString 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::VariableGaussTransform::~VariableGaussTransform( void )
+TMVA::VariableGaussTransform::~VariableGaussTransform()
 {
    CleanUpCumulativeArrays();
 }

@@ -342,7 +342,7 @@ void TMVA::MethodDT::SetMinNodeSize(TString sizeInPercent){
 ////////////////////////////////////////////////////////////////////////////////
 /// common initialisation with defaults for the DT-Method
 
-void TMVA::MethodDT::Init( void )
+void TMVA::MethodDT::Init()
 {
    fMinNodeEvents  = -1;
    fMinNodeSize    = 5;
@@ -367,14 +367,14 @@ void TMVA::MethodDT::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 ///destructor
 
-TMVA::MethodDT::~MethodDT( void )
+TMVA::MethodDT::~MethodDT()
 {
    delete fTree;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::MethodDT::Train( void )
+void TMVA::MethodDT::Train()
 {
    TMVA::DecisionTreeNode::fgIsTraining=true;
    fTree = new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), 0,

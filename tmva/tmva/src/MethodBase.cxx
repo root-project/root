@@ -366,7 +366,7 @@ TMVA::MethodBase::MethodBase( Types::EMVA methodType,
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodBase::~MethodBase( void )
+TMVA::MethodBase::~MethodBase()
 {
    // destructor
    if (!fSetupCompleted) Log() << kFATAL <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Calling destructor of method which got never setup" << Endl;
@@ -2085,7 +2085,7 @@ void TMVA::MethodBase::WriteEvaluationHistosToFile(Types::ETreeType treetype)
 /// write special monitoring histograms to file
 /// dummy implementation here -----------------
 
-void  TMVA::MethodBase::WriteMonitoringHistosToFile( void ) const
+void  TMVA::MethodBase::WriteMonitoringHistosToFile() const
 {
 }
 
@@ -2728,7 +2728,7 @@ TMatrixD TMVA::MethodBase::GetMulticlassConfusionMatrix(Double_t effB, Types::ET
 /// significance = \frac{|<S> - <B>|}{\sqrt{RMS_{S2} + RMS_{B2}}}
 /// \f]
 
-Double_t TMVA::MethodBase::GetSignificance( void ) const
+Double_t TMVA::MethodBase::GetSignificance() const
 {
    Double_t rms = sqrt( fRmsS*fRmsS + fRmsB*fRmsB );
 

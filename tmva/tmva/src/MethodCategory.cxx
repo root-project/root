@@ -107,7 +107,7 @@ TMVA::MethodCategory::MethodCategory( DataSetInfo& dsi,
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodCategory::~MethodCategory( void )
+TMVA::MethodCategory::~MethodCategory()
 {
    std::vector<TTreeFormula*>::iterator formIt = fCatFormulas.begin();
    std::vector<TTreeFormula*>::iterator lastF = fCatFormulas.end();

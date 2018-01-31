@@ -121,7 +121,7 @@ TMVA::MethodFDA::MethodFDA( DataSetInfo& theData,
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisation
 
-void TMVA::MethodFDA::Init( void )
+void TMVA::MethodFDA::Init()
 {
    fNPars    = 0;
 
@@ -323,7 +323,7 @@ void TMVA::MethodFDA::ProcessOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodFDA::~MethodFDA( void )
+TMVA::MethodFDA::~MethodFDA()
 {
    ClearAll();
 }
@@ -343,7 +343,7 @@ Bool_t TMVA::MethodFDA::HasAnalysisType( Types::EAnalysisType type, UInt_t numbe
 ////////////////////////////////////////////////////////////////////////////////
 /// delete and clear all class members
 
-void TMVA::MethodFDA::ClearAll( void )
+void TMVA::MethodFDA::ClearAll()
 {
    // if there is more than one output dimension, the paramater ranges are the same again (object has been copied).
    // hence, ... erase the copied pointers to assure, that they are deleted only once.
@@ -360,7 +360,7 @@ void TMVA::MethodFDA::ClearAll( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// FDA training
 
-void TMVA::MethodFDA::Train( void )
+void TMVA::MethodFDA::Train()
 {
    // cache training events
    fSumOfWeights    = 0;

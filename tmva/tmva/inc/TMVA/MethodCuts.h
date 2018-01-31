@@ -73,12 +73,12 @@ namespace TMVA {
       // this is a workaround which is necessary since CINT is not capable of handling dynamic casts
       static MethodCuts* DynamicCast( IMethod* method ) { return dynamic_cast<MethodCuts*>(method); }
 
-      virtual ~MethodCuts( void );
+      virtual ~MethodCuts();
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
       // training method
-      void Train( void );
+      void Train();
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -91,7 +91,7 @@ namespace TMVA {
       Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
 
       // write method specific histos to target file
-      void WriteMonitoringHistosToFile( void ) const;
+      void WriteMonitoringHistosToFile() const;
 
       // test the method
       void TestClassification();
@@ -99,7 +99,7 @@ namespace TMVA {
       // also overwrite --> not computed for cuts
       Double_t GetSeparation  ( TH1*, TH1* ) const { return -1; }
       Double_t GetSeparation  ( PDF* = 0, PDF* = 0 ) const { return -1; }
-      Double_t GetSignificance( void )       const { return -1; }
+      Double_t GetSignificance()       const { return -1; }
       Double_t GetmuTransform ( TTree *)           { return -1; }
       Double_t GetEfficiency  ( const TString&, Types::ETreeType, Double_t& );
       Double_t GetTrainingEfficiency(const TString& );
@@ -223,7 +223,7 @@ namespace TMVA {
 
       // creates PDFs in case these are used to compute efficiencies 
       // (corresponds to: EffMethod == kUsePDFs)
-      void     CreateVariablePDFs( void );
+      void     CreateVariablePDFs();
 
       // returns signal and background efficiencies for given cuts - using event counting
       void     GetEffsfromSelection( Double_t* cutMin, Double_t* cutMax,
@@ -233,7 +233,7 @@ namespace TMVA {
                                 Double_t& effS, Double_t& effB );
 
       // default initialisation method called by all constructors
-      void     Init( void );
+      void     Init();
 
       ClassDef(MethodCuts,0);  // Multivariate optimisation of signal efficiency
    };

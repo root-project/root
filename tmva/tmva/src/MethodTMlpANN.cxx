@@ -129,14 +129,14 @@ Bool_t TMVA::MethodTMlpANN::HasAnalysisType( Types::EAnalysisType type, UInt_t n
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisations
 
-void TMVA::MethodTMlpANN::Init( void )
+void TMVA::MethodTMlpANN::Init()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodTMlpANN::~MethodTMlpANN( void )
+TMVA::MethodTMlpANN::~MethodTMlpANN()
 {
    if (fMLP) delete fMLP;
 }
@@ -264,7 +264,7 @@ Double_t TMVA::MethodTMlpANN::GetMvaValue( Double_t* err, Double_t* errUpper )
 /// TMultiLayerPerceptron wants test and training tree at once
 /// so merge the training and testing trees from the MVA factory first:
 
-void TMVA::MethodTMlpANN::Train( void )
+void TMVA::MethodTMlpANN::Train()
 {
    Int_t type;
    Float_t weight;

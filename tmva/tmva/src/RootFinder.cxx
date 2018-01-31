@@ -61,7 +61,7 @@ TMVA::RootFinder::RootFinder(TMVA::MethodBase *method ,
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::RootFinder::~RootFinder( void )
+TMVA::RootFinder::~RootFinder()
 {
    delete fLogger;
 }

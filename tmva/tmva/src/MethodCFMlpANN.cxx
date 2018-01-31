@@ -256,7 +256,7 @@ void TMVA::MethodCFMlpANN::ProcessOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisation called by all constructors
 
-void TMVA::MethodCFMlpANN::Init( void )
+void TMVA::MethodCFMlpANN::Init()
 {
    // CFMlpANN prefers normalised input variables
    SetNormalised( kTRUE );
@@ -268,7 +268,7 @@ void TMVA::MethodCFMlpANN::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodCFMlpANN::~MethodCFMlpANN( void )
+TMVA::MethodCFMlpANN::~MethodCFMlpANN()
 {
    delete fData;
    delete fClass;
@@ -284,7 +284,7 @@ TMVA::MethodCFMlpANN::~MethodCFMlpANN( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// training of the Clement-Ferrand NN classifier
 
-void TMVA::MethodCFMlpANN::Train( void )
+void TMVA::MethodCFMlpANN::Train()
 {
    Double_t dumDat(0);
    Int_t ntrain(Data()->GetNTrainingEvents());

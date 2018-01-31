@@ -53,12 +53,12 @@ namespace TMVA {
       MethodBayesClassifier( DataSetInfo& theData, 
                              const TString& theWeightFile);
       
-      virtual ~MethodBayesClassifier( void );
+      virtual ~MethodBayesClassifier();
     
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
       // training method
-      void Train( void );
+      void Train();
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -72,7 +72,7 @@ namespace TMVA {
       // calculate the MVA value
       Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
 
-      void Init( void );
+      void Init();
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }

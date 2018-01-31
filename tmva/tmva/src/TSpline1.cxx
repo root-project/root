@@ -50,7 +50,7 @@ TMVA::TSpline1::TSpline1( const TString& title, TGraph* theGraph )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::TSpline1::~TSpline1( void )
+TMVA::TSpline1::~TSpline1()
 {
    if (fGraph) delete fGraph; // ROOT's spline classes also own the TGraph
 }
@@ -84,7 +84,7 @@ Double_t TMVA::TSpline1::Eval( Double_t x ) const
 ////////////////////////////////////////////////////////////////////////////////
 /// no coefficients to precompute
 
-void TMVA::TSpline1::BuildCoeff( void )
+void TMVA::TSpline1::BuildCoeff()
 {
 }
 

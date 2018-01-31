@@ -168,7 +168,7 @@ Bool_t TMVA::MethodPDEFoam::HasAnalysisType( Types::EAnalysisType type, UInt_t n
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialization called by all constructors
 
-void TMVA::MethodPDEFoam::Init( void )
+void TMVA::MethodPDEFoam::Init()
 {
    // init PDEFoam options
    fSigBgSeparated = kFALSE;   // default: unified foam
@@ -307,7 +307,7 @@ void TMVA::MethodPDEFoam::ProcessOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodPDEFoam::~MethodPDEFoam( void )
+TMVA::MethodPDEFoam::~MethodPDEFoam()
 {
    DeleteFoams();
 
@@ -427,7 +427,7 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
 ////////////////////////////////////////////////////////////////////////////////
 /// Train PDE-Foam depending on the set options
 
-void TMVA::MethodPDEFoam::Train( void )
+void TMVA::MethodPDEFoam::Train()
 {
    Log() << kVERBOSE << "Calculate Xmin and Xmax for every dimension" << Endl;
    CalcXminXmax();
@@ -1143,7 +1143,7 @@ void TMVA::MethodPDEFoam::Reset()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::MethodPDEFoam::PrintCoefficients( void )
+void TMVA::MethodPDEFoam::PrintCoefficients()
 {}
 
 ////////////////////////////////////////////////////////////////////////////////

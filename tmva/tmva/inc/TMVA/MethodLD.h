@@ -62,12 +62,12 @@ namespace TMVA {
                 const TString& theWeightFile);
 
       // destructor
-      virtual ~MethodLD( void );
+      virtual ~MethodLD();
 
       Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
     
       // training method
-      void Train( void );
+      void Train();
 
       // calculate the MVA value
       Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
@@ -101,22 +101,22 @@ namespace TMVA {
       std::vector< std::vector<Double_t>* > *fLDCoeff; // LD coefficients
 
       // default initialisation called by all constructors
-      void Init( void );
+      void Init();
 
       // Initialization and allocation of matrices
-      void InitMatrices( void );
+      void InitMatrices();
 
       // Compute fSumMatx
-      void GetSum( void );
+      void GetSum();
 
       // Compute fSumValMatx
-      void GetSumVal( void );
+      void GetSumVal();
 
       // get LD coefficients
-      void GetLDCoeff( void );
+      void GetLDCoeff();
       
       // nice output
-      void PrintCoefficients( void );
+      void PrintCoefficients();
 
       ClassDef(MethodLD,0); //Linear discriminant analysis
    };

@@ -108,7 +108,7 @@ TMVA::MethodHMatrix::MethodHMatrix( DataSetInfo& theData,
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialization called by all constructors
 
-void TMVA::MethodHMatrix::Init( void )
+void TMVA::MethodHMatrix::Init()
 {
    //SetNormalised( kFALSE ); obsolete!
 
@@ -124,7 +124,7 @@ void TMVA::MethodHMatrix::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodHMatrix::~MethodHMatrix( void )
+TMVA::MethodHMatrix::~MethodHMatrix()
 {
    if (nullptr != fInvHMatrixS) delete fInvHMatrixS;
    if (nullptr != fInvHMatrixB) delete fInvHMatrixB;
@@ -159,7 +159,7 @@ void TMVA::MethodHMatrix::ProcessOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// computes H-matrices for signal and background samples
 
-void TMVA::MethodHMatrix::Train( void )
+void TMVA::MethodHMatrix::Train()
 {
    // covariance matrices for signal and background
    ComputeCovariance( kTRUE,  fInvHMatrixS );

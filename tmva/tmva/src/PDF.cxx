@@ -1136,7 +1136,7 @@ std::istream& TMVA::operator>> ( std::istream& istr, PDF& pdf )
    return istr;
 }
 
-TMVA::PDF*  TMVA::PDF::ThisPDF( void )
+TMVA::PDF*  TMVA::PDF::ThisPDF()
 {
    // return global "this" pointer of PDF
    return GetThisPdfThreadLocal();

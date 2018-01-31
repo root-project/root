@@ -175,7 +175,7 @@ Bool_t TMVA::MethodPDERS::HasAnalysisType( Types::EAnalysisType type, UInt_t num
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisation routine called by all constructors
 
-void TMVA::MethodPDERS::Init( void )
+void TMVA::MethodPDERS::Init()
 {
    fBinaryTree = nullptr;
 
@@ -207,7 +207,7 @@ void TMVA::MethodPDERS::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodPDERS::~MethodPDERS( void )
+TMVA::MethodPDERS::~MethodPDERS()
 {
    if (fDelta) delete fDelta;
    if (fShift) delete fShift;
@@ -349,7 +349,7 @@ void TMVA::MethodPDERS::ProcessOptions()
 /// trainingTree in the weight file, and to rebuild the binary tree in the
 /// test phase from scratch
 
-void TMVA::MethodPDERS::Train( void )
+void TMVA::MethodPDERS::Train()
 {
    if (IsNormalised()) Log() << kFATAL << "\"Normalise\" option cannot be used with PDERS; "
                              << "please remove the option from the configuration string, or "
@@ -480,7 +480,7 @@ void TMVA::MethodPDERS::CreateBinarySearchTree( Types::ETreeType type )
 ////////////////////////////////////////////////////////////////////////////////
 /// defines volume dimensions
 
-void TMVA::MethodPDERS::SetVolumeElement( void ) {
+void TMVA::MethodPDERS::SetVolumeElement() {
    if (GetNvar()==0) {
       Log() << kFATAL << "GetNvar() == 0" << Endl;
       return;
@@ -1181,14 +1181,14 @@ void TMVA::MethodPDERS::ReadWeightsFromStream( TFile& /*rf*/ )
 ////////////////////////////////////////////////////////////////////////////////
 /// static pointer to this object
 
-TMVA::MethodPDERS* TMVA::MethodPDERS::ThisPDERS( void )
+TMVA::MethodPDERS* TMVA::MethodPDERS::ThisPDERS()
 {
    return GetMethodPDERSThreadLocal();
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// update static this pointer
 
-void TMVA::MethodPDERS::UpdateThis( void )
+void TMVA::MethodPDERS::UpdateThis()
 {
    GetMethodPDERSThreadLocal() = this;
 }

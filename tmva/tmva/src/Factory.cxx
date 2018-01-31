@@ -309,7 +309,7 @@ Bool_t TMVA::Factory::IsModelPersistence()
 ////////////////////////////////////////////////////////////////////////////////
 /// Destructor.
 
-TMVA::Factory::~Factory( void )
+TMVA::Factory::~Factory()
 {
    std::vector<TMVA::VariableTransformBase*>::iterator trfIt = fDefaultTrfs.begin();
    for (;trfIt != fDefaultTrfs.end(); ++trfIt) delete (*trfIt);
@@ -327,7 +327,7 @@ TMVA::Factory::~Factory( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete methods.
 
-void TMVA::Factory::DeleteAllMethods( void )
+void TMVA::Factory::DeleteAllMethods()
 {
    std::map<TString,MVector*>::iterator itrMap;
 
@@ -1330,7 +1330,7 @@ void TMVA::Factory::EvaluateAllVariables(DataLoader *loader, TString options )
 ////////////////////////////////////////////////////////////////////////////////
 /// Iterates over all MVAs that have been booked, and calls their evaluation methods.
 
-void TMVA::Factory::EvaluateAllMethods( void )
+void TMVA::Factory::EvaluateAllMethods()
 {
    Log() << kHEADER << gTools().Color("bold") << "Evaluate all methods" << gTools().Color("reset") << Endl;
 

@@ -74,7 +74,7 @@ namespace TMVA {
    public:
 
       VariableGaussTransform( DataSetInfo& dsi, TString strcor=""  );
-      virtual ~VariableGaussTransform( void );
+      virtual ~VariableGaussTransform();
 
       void   Initialize();
       Bool_t PrepareTransformation (const std::vector<Event*>&);

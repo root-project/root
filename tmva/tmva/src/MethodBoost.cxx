@@ -144,7 +144,7 @@ TMVA::MethodBoost::MethodBoost( DataSetInfo& dsi,
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodBoost::~MethodBoost( void )
+TMVA::MethodBoost::~MethodBoost()
 {
    fMethodWeight.clear();
 
@@ -580,7 +580,7 @@ void TMVA::MethodBoost::ResetBoostWeights()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::MethodBoost::WriteMonitoringHistosToFile( void ) const
+void TMVA::MethodBoost::WriteMonitoringHistosToFile() const
 {
    TDirectory* dir=nullptr;
    if (fMonitorBoostedMethod) {

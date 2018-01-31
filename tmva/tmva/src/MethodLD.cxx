@@ -97,7 +97,7 @@ TMVA::MethodLD::MethodLD( DataSetInfo& theData, const TString& theWeightFile)
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialization called by all constructors
 
-void TMVA::MethodLD::Init( void )
+void TMVA::MethodLD::Init()
 {
    if(DataInfo().GetNTargets()!=0) fNRegOut = DataInfo().GetNTargets();
    else                fNRegOut = 1;
@@ -114,7 +114,7 @@ void TMVA::MethodLD::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodLD::~MethodLD( void )
+TMVA::MethodLD::~MethodLD()
 {
    if (fSumMatx)    { delete fSumMatx;    fSumMatx    = nullptr; }
    if (fSumValMatx) { delete fSumValMatx; fSumValMatx = nullptr; }
@@ -144,7 +144,7 @@ Bool_t TMVA::MethodLD::HasAnalysisType( Types::EAnalysisType type, UInt_t number
 ////////////////////////////////////////////////////////////////////////////////
 /// compute fSumMatx
 
-void TMVA::MethodLD::Train( void )
+void TMVA::MethodLD::Train()
 {
    GetSum();
 
@@ -219,7 +219,7 @@ const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialization method; creates global matrices and vectors
 
-void TMVA::MethodLD::InitMatrices( void )
+void TMVA::MethodLD::InitMatrices()
 {
    fSumMatx    = new TMatrixD( GetNvar()+1, GetNvar()+1 );
    fSumValMatx = new TMatrixD( GetNvar()+1, fNRegOut );
@@ -231,7 +231,7 @@ void TMVA::MethodLD::InitMatrices( void )
 /// Calculates the matrix transposed(X)*W*X with W being the diagonal weight matrix
 /// and X the coordinates values
 
-void TMVA::MethodLD::GetSum( void )
+void TMVA::MethodLD::GetSum()
 {
    const UInt_t nvar = DataInfo().GetNVariables();
 
@@ -268,7 +268,7 @@ void TMVA::MethodLD::GetSum( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculates the vector transposed(X)*W*Y with Y being the target vector
 
-void TMVA::MethodLD::GetSumVal( void )
+void TMVA::MethodLD::GetSumVal()
 {
    const UInt_t nvar = DataInfo().GetNVariables();
 
@@ -308,7 +308,7 @@ void TMVA::MethodLD::GetSumVal( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// Calculates the coefficients used for classification/regression
 
-void TMVA::MethodLD::GetLDCoeff( void )
+void TMVA::MethodLD::GetLDCoeff()
 {
    const UInt_t nvar = DataInfo().GetNVariables();
 
@@ -487,7 +487,7 @@ void TMVA::MethodLD::ProcessOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// Display the classification/regression coefficients for each variable
 
-void TMVA::MethodLD::PrintCoefficients( void )
+void TMVA::MethodLD::PrintCoefficients()
 {
    Log() << kHEADER << "Results for LD coefficients:" << Endl;
 

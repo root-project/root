@@ -69,7 +69,7 @@ ClassImp(TMVA::BinarySearchTree);
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
 
-TMVA::BinarySearchTree::BinarySearchTree( void ) :
+TMVA::BinarySearchTree::BinarySearchTree() :
 BinaryTree(),
    fPeriod      ( 1 ),
    fCurrentDepth( 0 ),
@@ -98,7 +98,7 @@ TMVA::BinarySearchTree::BinarySearchTree( const BinarySearchTree &b)
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::BinarySearchTree::~BinarySearchTree( void )
+TMVA::BinarySearchTree::~BinarySearchTree()
 {
    for(auto & pIt : fNormalizeTreeTable) {
       delete pIt.second;
@@ -223,7 +223,7 @@ TMVA::BinarySearchTreeNode* TMVA::BinarySearchTree::Search(Event* event, Node* n
 ////////////////////////////////////////////////////////////////////////////////
 /// return the sum of event (node) weights
 
-Double_t TMVA::BinarySearchTree::GetSumOfWeights( void ) const
+Double_t TMVA::BinarySearchTree::GetSumOfWeights() const
 {
    if (fSumOfWeights <= 0) {
       Log() << kWARNING << "you asked for the SumOfWeights, which is not filled yet"

@@ -166,7 +166,7 @@ TMVA::MethodRuleFit::MethodRuleFit( DataSetInfo& theData,
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodRuleFit::~MethodRuleFit( void )
+TMVA::MethodRuleFit::~MethodRuleFit()
 {
    for (auto & i : fEventSample) delete i;
    for (auto & i : fForest)      delete i;
@@ -419,7 +419,7 @@ void TMVA::MethodRuleFit::Init()
 /// This method should never be called without existing trainingTree, as it
 /// the vector of events from the ROOT training tree
 
-void TMVA::MethodRuleFit::InitEventSample( void )
+void TMVA::MethodRuleFit::InitEventSample()
 {
    if (Data()->GetNEvents()==0) Log() << kFATAL << "<Init> Data().TrainingTree() is zero pointer" << Endl;
 
@@ -441,7 +441,7 @@ void TMVA::MethodRuleFit::InitEventSample( void )
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::MethodRuleFit::Train( void )
+void TMVA::MethodRuleFit::Train()
 {
    TMVA::DecisionTreeNode::fgIsTraining=true;
    // training of rules
@@ -465,7 +465,7 @@ void TMVA::MethodRuleFit::Train( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// training of rules using TMVA implementation
 
-void TMVA::MethodRuleFit::TrainTMVARuleFit( void )
+void TMVA::MethodRuleFit::TrainTMVARuleFit()
 {
    if (IsNormalised()) Log() << kFATAL << "\"Normalise\" option cannot be used with RuleFit; "
                              << "please remove the option from the configuration string, or "
@@ -533,7 +533,7 @@ void TMVA::MethodRuleFit::TrainTMVARuleFit( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// training of rules using Jerome Friedmans implementation
 
-void TMVA::MethodRuleFit::TrainJFRuleFit( void )
+void TMVA::MethodRuleFit::TrainJFRuleFit()
 {
    fRuleFit.InitPtrs( this );
    Data()->SetCurrentType(Types::kTraining);
@@ -626,7 +626,7 @@ Double_t TMVA::MethodRuleFit::GetMvaValue( Double_t* err, Double_t* errUpper )
 ////////////////////////////////////////////////////////////////////////////////
 /// write special monitoring histograms to file (here ntuple)
 
-void  TMVA::MethodRuleFit::WriteMonitoringHistosToFile( void ) const
+void  TMVA::MethodRuleFit::WriteMonitoringHistosToFile() const
 {
    BaseDir()->cd();
    Log() << kINFO << "Write monitoring ntuple to file: " << BaseDir()->GetPath() << Endl;

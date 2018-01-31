@@ -65,13 +65,13 @@ namespace TMVA {
    public:
       
       // constructor
-      BinarySearchTree( void );
+      BinarySearchTree();
     
       // copy constructor
       BinarySearchTree (const BinarySearchTree &b);
 
       // destructor
-      virtual ~BinarySearchTree( void );
+      virtual ~BinarySearchTree();
     
       virtual Node * CreateNode( UInt_t ) const { return new BinarySearchTreeNode(); }
       virtual BinaryTree* CreateTree() const { return new BinarySearchTree(); }
@@ -86,7 +86,7 @@ namespace TMVA {
       void Insert( const Event * );
     
       // get sum of weights of the nodes;
-      Double_t GetSumOfWeights( void ) const;
+      Double_t GetSumOfWeights() const;
 
       //get sum of weights of the nodes of given type;
       Double_t GetSumOfWeights( Int_t theType ) const;
@@ -95,7 +95,7 @@ namespace TMVA {
       void SetPeriode( Int_t p )      { fPeriod = p; }
 
       // return periode (number of variables)
-      UInt_t  GetPeriode( void ) const { return fPeriod; }
+      UInt_t  GetPeriode() const { return fPeriod; }
 
       // counts events (weights) within a given volume 
       Double_t SearchVolume( Volume*, std::vector<const TMVA::BinarySearchTreeNode*>* events = 0 );

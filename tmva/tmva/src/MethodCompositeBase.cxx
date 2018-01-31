@@ -141,7 +141,7 @@ void TMVA::MethodCompositeBase::AddWeightsXMLTo( void* parent ) const
 ////////////////////////////////////////////////////////////////////////////////
 /// delete methods
 
-TMVA::MethodCompositeBase::~MethodCompositeBase( void )
+TMVA::MethodCompositeBase::~MethodCompositeBase()
 {
    std::vector<IMethod*>::iterator itrMethod = fMethods.begin();
    for (; itrMethod != fMethods.end(); ++itrMethod) {

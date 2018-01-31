@@ -171,7 +171,7 @@ TMVA::MethodSVM::~MethodSVM()
 ////////////////////////////////////////////////////////////////////////////////
 // reset the method, as if it had just been instantiated (forget all training etc.)
 
-void TMVA::MethodSVM::Reset( void )
+void TMVA::MethodSVM::Reset()
 {
    // reset the method, as if it had just been instantiated (forget all training etc.)
    fSupportVectors->clear();

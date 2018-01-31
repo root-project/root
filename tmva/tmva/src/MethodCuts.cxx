@@ -217,7 +217,7 @@ Bool_t TMVA::MethodCuts::HasAnalysisType( Types::EAnalysisType type, UInt_t numb
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisation called by all constructors
 
-void TMVA::MethodCuts::Init( void )
+void TMVA::MethodCuts::Init()
 {
    fVarHistS          = fVarHistB = nullptr;
    fVarHistS_smooth   = fVarHistB_smooth = nullptr;
@@ -267,7 +267,7 @@ void TMVA::MethodCuts::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodCuts::~MethodCuts( void )
+TMVA::MethodCuts::~MethodCuts()
 {
    delete fRangeSign;
    delete fMeanS;
@@ -575,7 +575,7 @@ Double_t TMVA::MethodCuts::GetCuts( Double_t effS,
 ////////////////////////////////////////////////////////////////////////////////
 /// training method: here the cuts are optimised for the training sample
 
-void  TMVA::MethodCuts::Train( void )
+void  TMVA::MethodCuts::Train()
 {
    if (fEffMethod == kUsePDFs) CreateVariablePDFs(); // create PDFs for variables
 
@@ -1103,7 +1103,7 @@ void TMVA::MethodCuts::GetEffsfromSelection( Double_t* cutMin, Double_t* cutMax,
 ////////////////////////////////////////////////////////////////////////////////
 /// for PDF method: create efficiency reference histograms and PDFs
 
-void TMVA::MethodCuts::CreateVariablePDFs( void )
+void TMVA::MethodCuts::CreateVariablePDFs()
 {
    // create list of histograms and PDFs
    fVarHistS        = new std::vector<TH1*>( GetNvar() );
@@ -1408,7 +1408,7 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
 ////////////////////////////////////////////////////////////////////////////////
 /// write histograms and PDFs to file for monitoring purposes
 
-void TMVA::MethodCuts::WriteMonitoringHistosToFile( void ) const
+void TMVA::MethodCuts::WriteMonitoringHistosToFile() const
 {
    Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
 

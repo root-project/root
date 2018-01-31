@@ -199,7 +199,7 @@ TMVA::MethodLikelihood::MethodLikelihood( DataSetInfo& theData,
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodLikelihood::~MethodLikelihood( void )
+TMVA::MethodLikelihood::~MethodLikelihood()
 {
    if (nullptr != fDefaultPDFLik)  delete fDefaultPDFLik;
    if (nullptr != fHistSig)        delete fHistSig;
@@ -227,7 +227,7 @@ Bool_t TMVA::MethodLikelihood::HasAnalysisType( Types::EAnalysisType type,
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisation called by all constructors
 
-void TMVA::MethodLikelihood::Init( void )
+void TMVA::MethodLikelihood::Init()
 {
    // no ranking test
    fDropVariable   = -1;
@@ -336,7 +336,7 @@ void TMVA::MethodLikelihood::ProcessOptions()
 /// the transformations are applied using both classes, also the corresponding boundaries
 /// need to take this into account
 
-void TMVA::MethodLikelihood::Train( void )
+void TMVA::MethodLikelihood::Train()
 {
    UInt_t nvar=GetNvar();
    std::vector<Double_t> xmin(nvar), xmax(nvar);
@@ -735,7 +735,7 @@ void  TMVA::MethodLikelihood::ReadWeightsFromStream( TFile& rf )
 ////////////////////////////////////////////////////////////////////////////////
 /// write histograms and PDFs to file for monitoring purposes
 
-void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
+void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile() const
 {
    Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
    BaseDir()->cd();

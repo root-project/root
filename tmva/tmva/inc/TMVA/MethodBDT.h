@@ -64,7 +64,7 @@ namespace TMVA {
       MethodBDT( DataSetInfo& theData,
                  const TString& theWeightFile);
 
-      virtual ~MethodBDT( void );
+      virtual ~MethodBDT();
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
@@ -78,10 +78,10 @@ namespace TMVA {
       virtual void SetTuneParameters(std::map<TString,Double_t> tuneParameters);
 
       // training method
-      void Train( void );
+      void Train();
 
       // revoke training
-      void Reset( void );
+      void Reset();
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -93,7 +93,7 @@ namespace TMVA {
       void ReadWeightsFromXML(void* parent);
 
       // write method specific histos to target file
-      void WriteMonitoringHistosToFile( void ) const;
+      void WriteMonitoringHistosToFile() const;
 
       // calculate the MVA value
       Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0);
@@ -162,7 +162,7 @@ namespace TMVA {
 
    private:
       // Init used in the various constructors
-      void Init( void );
+      void Init();
 
       void PreProcessNegativeEventWeights();
 

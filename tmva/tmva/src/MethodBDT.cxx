@@ -683,7 +683,7 @@ void TMVA::MethodBDT::SetMinNodeSize(TString sizeInPercent){
 ////////////////////////////////////////////////////////////////////////////////
 /// Common initialisation with defaults for the BDT-Method.
 
-void TMVA::MethodBDT::Init( void )
+void TMVA::MethodBDT::Init()
 {
    fNTrees         = 800;
    if (fAnalysisType == Types::kClassification || fAnalysisType == Types::kMulticlass ) {
@@ -721,7 +721,7 @@ void TMVA::MethodBDT::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the method, as if it had just been instantiated (forget all training etc.).
 
-void TMVA::MethodBDT::Reset( void )
+void TMVA::MethodBDT::Reset()
 {
    // I keep the BDT EventSample and its Validation sample (eventually they should all
    // disappear and just use the DataSet samples ..
@@ -749,7 +749,7 @@ void TMVA::MethodBDT::Reset( void )
 ///  - Note: fEventSample and ValidationSample are already deleted at the end of TRAIN
 ///         When they are not used anymore
 
-TMVA::MethodBDT::~MethodBDT( void )
+TMVA::MethodBDT::~MethodBDT()
 {
    for (auto & i : fForest) delete i;
 }
@@ -757,7 +757,7 @@ TMVA::MethodBDT::~MethodBDT( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize the event sample (i.e. reset the boost-weights... etc).
 
-void TMVA::MethodBDT::InitEventSample( void )
+void TMVA::MethodBDT::InitEventSample()
 {
    if (!HasTrainingTree()) Log() << kFATAL << "<Init> Data().TrainingTree() is zero pointer" << Endl;
 
@@ -2503,7 +2503,7 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
 /// Here we could write some histograms created during the processing
 /// to the output file.
 
-void  TMVA::MethodBDT::WriteMonitoringHistosToFile( void ) const
+void  TMVA::MethodBDT::WriteMonitoringHistosToFile() const
 {
    Log() << kDEBUG << "\tWrite monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
 
