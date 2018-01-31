@@ -767,7 +767,7 @@ void TList::RecursiveRemove(TObject *obj)
    // the node being cleared and/or deleted.
    {
       auto cached = fCache.lock();
-      if (cached && cached->fNext.get() == nullptr && cached->fPrev.lock().get() == nullptr) {
+      if (cached && cached->fNext == nullptr && cached->fPrev.lock() == nullptr) {
          TObject *ob = cached->GetObject();
          if (ob && ob->TestBit(kNotDeleted)) {
             ob->RecursiveRemove(obj);
@@ -949,7 +949,7 @@ void TList::Sort(Bool_t order)
    // correct back links
    std::shared_ptr<TObjLink> ol, lnk = fFirst;
 
-   if (lnk.get()) lnk->fPrev.reset();
+   if (lnk) lnk->fPrev.reset();
    while ((ol = lnk)) {
       lnk = lnk->fNext;
       if (lnk)

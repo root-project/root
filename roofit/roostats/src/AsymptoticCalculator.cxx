@@ -1368,7 +1368,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
 
       // part 1: create the nuisance pdf
       std::unique_ptr<RooAbsPdf> nuispdf(RooStats::MakeNuisancePdf(model,"TempNuisPdf") );
-      if (nuispdf.get() == 0) {
+      if (nuispdf == nullptr) {
          oocoutF((TObject*)0,Generation) << "AsymptoticCalculator::MakeAsimovData: model has nuisance parameters and global obs but no nuisance pdf "
                                          << std::endl;
       }
@@ -1380,7 +1380,7 @@ RooAbsData * AsymptoticCalculator::MakeAsimovData(const ModelConfig & model, con
       }
       else
          // nothing to unfold - just use the pdf
-         pdfList.add(*nuispdf.get());
+         pdfList.add(*nuispdf);
 
       RooLinkedListIter iter(pdfList.iterator());
       for (RooAbsArg *a = (RooAbsArg *) iter.Next(); a != 0; a = (RooAbsArg *) iter.Next()) {
