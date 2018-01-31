@@ -236,8 +236,8 @@ TString* TMVA::get_var_names(TString dataset, Int_t nVars )
                                     "InputVariables_Deco"};
    
    TDirectory* dir = 0;
-   for (Int_t i=0; i<6; i++) {
-      dir = (TDirectory*)Network_GFile->GetDirectory(dataset.Data())->Get( directories[i] );
+   for (const auto & directorie : directories) {
+      dir = (TDirectory*)Network_GFile->GetDirectory(dataset.Data())->Get( directorie );
       if (dir != 0) break;
    }
    if (dir==0) {

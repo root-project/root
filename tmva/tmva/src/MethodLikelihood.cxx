@@ -765,10 +765,10 @@ void  TMVA::MethodLikelihood::WriteMonitoringHistosToFile( void ) const
 
       // ---------- create cloned low-binned histogram for comparison in macros (mainly necessary for KDE)
       TH1* h[2] = { (*fHistSig)[ivar], (*fHistBgd)[ivar] };
-      for (UInt_t i=0; i<2; i++) {
-         TH1* hclone = (TH1F*)h[i]->Clone( TString(h[i]->GetName()) + "_nice" );
-         hclone->SetName ( TString(h[i]->GetName()) + "_nice" );
-         hclone->SetTitle( TString(h[i]->GetTitle()) + "" );
+      for (auto & i : h) {
+         TH1* hclone = (TH1F*)i->Clone( TString(i->GetName()) + "_nice" );
+         hclone->SetName ( TString(i->GetName()) + "_nice" );
+         hclone->SetTitle( TString(i->GetTitle()) + "" );
          if (hclone->GetNbinsX() > 100) {
             Int_t resFactor = 5;
             hclone->Rebin( resFactor );

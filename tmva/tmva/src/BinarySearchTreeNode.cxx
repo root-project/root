@@ -258,8 +258,8 @@ void TMVA::BinarySearchTreeNode::AddContentToNode( std::stringstream& s ) const
 {
    std::ios_base::fmtflags ff = s.flags();
    s.precision( 16 );
-   for (UInt_t i=0; i<fEventV.size();  i++) s << std::scientific << " " << fEventV[i];
-   for (UInt_t i=0; i<fTargets.size(); i++) s << std::scientific << " " << fTargets[i];
+   for (float i : fEventV) s << std::scientific << " " << i;
+   for (float fTarget : fTargets) s << std::scientific << " " << fTarget;
    s.flags(ff);
 }
 ////////////////////////////////////////////////////////////////////////////////
@@ -268,9 +268,9 @@ void TMVA::BinarySearchTreeNode::AddContentToNode( std::stringstream& s ) const
 void TMVA::BinarySearchTreeNode::ReadContent( std::stringstream& s )
 {
    Float_t temp=0;
-   for (UInt_t i=0; i<fEventV.size(); i++){
+   for (float & i : fEventV){
       s >> temp;
-      fEventV[i]=temp;
+      i=temp;
    }
    while (s >> temp) fTargets.push_back(temp);
 }

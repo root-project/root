@@ -171,8 +171,8 @@ TMVA::Reader::Reader( std::vector<TString>& inputVars, const TString& theOption,
 
    // arguments: names of input variables (vector)
    //            verbose flag
-   for (std::vector<TString>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ++ivar)
-      DataInfo().AddVariable( *ivar );
+   for (auto & inputVar : inputVars)
+      DataInfo().AddVariable( inputVar );
 
    Init();
 }
@@ -201,8 +201,8 @@ TMVA::Reader::Reader( std::vector<std::string>& inputVars, const TString& theOpt
 
    // arguments: names of input variables (vector)
    //            verbose flag
-   for (std::vector<std::string>::iterator ivar = inputVars.begin(); ivar != inputVars.end(); ++ivar)
-      DataInfo().AddVariable( ivar->c_str() );
+   for (auto & inputVar : inputVars)
+      DataInfo().AddVariable( inputVar.c_str() );
 
    Init();
 }
@@ -285,8 +285,8 @@ TMVA::Reader::~Reader( void )
 
    delete fLogger;
 
-   for (auto it=fMethodMap.begin(); it!=fMethodMap.end(); it++){
-      MethodBase * kl = dynamic_cast<TMVA::MethodBase*>(it->second);
+   for (auto & it : fMethodMap){
+      MethodBase * kl = dynamic_cast<TMVA::MethodBase*>(it.second);
       delete kl;
    }
 }

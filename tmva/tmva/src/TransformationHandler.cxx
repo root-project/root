@@ -132,8 +132,8 @@ void TMVA::TransformationHandler::AddStats( Int_t k, UInt_t ivar, Double_t mean,
 
 void TMVA::TransformationHandler::SetTransformationReferenceClass( Int_t cls )
 {
-   for (UInt_t i = 0; i < fTransformationsReferenceClasses.size(); i++) {
-      fTransformationsReferenceClasses.at( i ) = cls;
+   for (int & fTransformationsReferenceClasse : fTransformationsReferenceClasses) {
+      fTransformationsReferenceClasse = cls;
    }
 }
 
@@ -217,8 +217,8 @@ const std::vector<TMVA::Event*>* TMVA::TransformationHandler::CalcTransformation
    std::vector< Int_t >::iterator rClsIt = fTransformationsReferenceClasses.begin();
    while (VariableTransformBase *trf = (VariableTransformBase*) trIt()) {
       if (trf->PrepareTransformation(*transformedEvents)) {
-         for (UInt_t ievt = 0; ievt<transformedEvents->size(); ievt++) {  // loop through all events
-            *(*transformedEvents)[ievt] = *trf->Transform((*transformedEvents)[ievt],(*rClsIt));
+         for (auto & transformedEvent : *transformedEvents) {  // loop through all events
+            *transformedEvent = *trf->Transform(transformedEvent,(*rClsIt));
          }
          ++rClsIt;
       }
@@ -232,8 +232,8 @@ const std::vector<TMVA::Event*>* TMVA::TransformationHandler::CalcTransformation
    //sometimes, the actual transformed event vector is not used for anything but the previous
    //CalcStat and PlotVariables calles, in that case, we delete it again (and return NULL)
    if (!createNewVector) {  // if we don't want that newly created event vector to persist, then delete it
-      for ( UInt_t ievt = 0; ievt<transformedEvents->size(); ievt++)
-         delete (*transformedEvents)[ievt];
+      for (auto & transformedEvent : *transformedEvents)
+         delete transformedEvent;
       delete transformedEvents;
       transformedEvents=nullptr;
    }

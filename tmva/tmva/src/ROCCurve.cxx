@@ -88,12 +88,12 @@ TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaValues, const std::vecto
 TMVA::ROCCurve::ROCCurve(const std::vector<Float_t> &mvaSignal, const std::vector<Float_t> &mvaBackground)
    : fLogger(new TMVA::MsgLogger("ROCCurve")), fGraph(nullptr)
 {
-   for (UInt_t i = 0; i < mvaSignal.size(); i++) {
-      fMva.emplace_back(mvaSignal[i], 1, kTRUE);
+   for (float i : mvaSignal) {
+      fMva.emplace_back(i, 1, kTRUE);
    }
 
-   for (UInt_t i = 0; i < mvaBackground.size(); i++) {
-      fMva.emplace_back(mvaBackground[i], 1, kFALSE);
+   for (float i : mvaBackground) {
+      fMva.emplace_back(i, 1, kFALSE);
    }
 
    std::sort(fMva.begin(), fMva.end(), tupleSort);

@@ -34,8 +34,8 @@ void TMVA::likelihoodrefs(TString dataset, TDirectory *lhdir ) {
 
       // avoid duplicated plotting
       Bool_t found = kFALSE;
-      for (UInt_t j = 0; j < hasBeenUsed.size(); j++) {
-         if (hasBeenUsed[j] == hname.Data()) found = kTRUE;
+      for (const auto & j : hasBeenUsed) {
+         if (j == hname.Data()) found = kTRUE;
       }
       if (!found) {
 

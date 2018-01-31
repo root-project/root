@@ -1180,9 +1180,9 @@ void TMVA::Factory::TrainAllMethods()
       if(!IsSilentFile())RootBaseDir()->cd();
 
      // iterate through all booked methods
-     for (UInt_t i=0; i<methods->size(); i++) {
+     for (auto & method : *methods) {
 
-       MethodBase* m = dynamic_cast<MethodBase*>((*methods)[i]);
+       MethodBase* m = dynamic_cast<MethodBase*>(method);
        if(m==nullptr) continue;
 
        TMVA::Types::EMVA methodType = m->GetMethodType();
@@ -1217,7 +1217,7 @@ void TMVA::Factory::TrainAllMethods()
        m->SetTestvarName(testvarName);
 
        // replace trained method by newly created one (from weight file) in methods vector
-       (*methods)[i] = m;
+       method = m;
      }
        }
    }
@@ -1402,13 +1402,13 @@ void TMVA::Factory::EvaluateAllMethods( void )
       Bool_t doMulticlass = kFALSE;
 
       // iterate over methods and evaluate
-      for (MVector::iterator itrMethod =methods->begin(); itrMethod != methods->end(); ++itrMethod) {
+      for (auto & method : *methods) {
      Event::SetIsTraining(kFALSE);
-     MethodBase* theMethod = dynamic_cast<MethodBase*>(*itrMethod);
+     MethodBase* theMethod = dynamic_cast<MethodBase*>(method);
      if(theMethod==nullptr) continue;
      theMethod->SetFile(fgTargetFile);
      theMethod->SetSilentFile(IsSilentFile());
-     if (theMethod->GetMethodType() != Types::kCuts) methodsNoCuts.push_back( *itrMethod );
+     if (theMethod->GetMethodType() != Types::kCuts) methodsNoCuts.push_back( method );
 
      if (theMethod->DoRegression()) {
        doRegression = kTRUE;
@@ -2122,8 +2122,8 @@ void TMVA::Factory::EvaluateAllMethods( void )
      if(!IsSilentFile())
      {
          std::list<TString> datasets;
-         for (Int_t k=0; k<2; k++) {
-      for (Int_t i=0; i<nmeth_used[k]; i++) {
+         for (int k : nmeth_used) {
+      for (Int_t i=0; i<k; i++) {
           MethodBase* theMethod = dynamic_cast<MethodBase*>((*methods)[i]);
           if(theMethod==nullptr) continue;
           // write test/training trees

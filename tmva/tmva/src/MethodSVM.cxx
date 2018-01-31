@@ -161,8 +161,8 @@ TMVA::MethodSVM::MethodSVM( DataSetInfo& theData, const TString& theWeightFile)
 TMVA::MethodSVM::~MethodSVM()
 {
    fSupportVectors->clear();
-   for (UInt_t i=0; i<fInputData->size(); i++) {
-      delete fInputData->at(i);
+   for (auto & i : *fInputData) {
+      delete i;
    }
    if (fWgSet !=nullptr)           { delete fWgSet; fWgSet=nullptr; }
    if (fSVKernelFunction !=nullptr ) { delete fSVKernelFunction; fSVKernelFunction = nullptr; }
@@ -175,9 +175,9 @@ void TMVA::MethodSVM::Reset( void )
 {
    // reset the method, as if it had just been instantiated (forget all training etc.)
    fSupportVectors->clear();
-   for (UInt_t i=0; i<fInputData->size(); i++){
-      delete fInputData->at(i);
-      fInputData->at(i)=nullptr;
+   for (auto & i : *fInputData){
+      delete i;
+      i=nullptr;
    }
    fInputData->clear();
    if (fWgSet !=nullptr)           { fWgSet=nullptr; }
@@ -405,15 +405,14 @@ void TMVA::MethodSVM::AddWeightsXMLTo( void* parent ) const
    gTools().AddAttr(wght,"fOrder",fOrder);
    gTools().AddAttr(wght,"NSupVec",fSupportVectors->size());
 
-   for (std::vector<TMVA::SVEvent*>::iterator veciter=fSupportVectors->begin();
-        veciter!=fSupportVectors->end() ; ++veciter ) {
+   for (auto & fSupportVector : *fSupportVectors) {
       TVectorD temp(GetNvar()+4);
-      temp[0] = (*veciter)->GetNs();
-      temp[1] = (*veciter)->GetTypeFlag();
-      temp[2] = (*veciter)->GetAlpha();
-      temp[3] = (*veciter)->GetAlpha_p();
+      temp[0] = fSupportVector->GetNs();
+      temp[1] = fSupportVector->GetTypeFlag();
+      temp[2] = fSupportVector->GetAlpha();
+      temp[3] = fSupportVector->GetAlpha_p();
       for (UInt_t ivar = 0; ivar < GetNvar(); ivar++)
-         temp[ivar+4] = (*(*veciter)->GetDataVector())[ivar];
+         temp[ivar+4] = (*fSupportVector->GetDataVector())[ivar];
       gTools().WriteTVectorDToXML(wght,"SupportVector",&temp);
    }
    // write max/min data values
@@ -449,8 +448,8 @@ void TMVA::MethodSVM::ReadWeightsFromXML( void* wghtnode )
    if (fMinVars!=nullptr) delete fMinVars;
    fMinVars = new TVectorD( GetNvar() );
    if (fSupportVectors!=nullptr) {
-      for (vector< SVEvent* >::iterator it = fSupportVectors->begin(); it!=fSupportVectors->end(); ++it)
-         delete *it;
+      for (auto & fSupportVector : *fSupportVectors)
+         delete fSupportVector;
       delete fSupportVectors;
    }
    fSupportVectors = new std::vector<TMVA::SVEvent*>(0);
@@ -581,10 +580,10 @@ Double_t TMVA::MethodSVM::GetMvaValue( Double_t* err, Double_t* errUpper )
    // TODO: avoid creation of a new SVEvent every time (Joerg)
    SVEvent* ev = new SVEvent( GetEvent(), 0. ); // check for specificators
 
-   for (UInt_t ievt = 0; ievt < fSupportVectors->size() ; ievt++) {
-      myMVA += ( fSupportVectors->at(ievt)->GetAlpha()
-                 * fSupportVectors->at(ievt)->GetTypeFlag()
-                 * fSVKernelFunction->Evaluate( fSupportVectors->at(ievt), ev ) );
+   for (auto & fSupportVector : *fSupportVectors) {
+      myMVA += ( fSupportVector->GetAlpha()
+                 * fSupportVector->GetTypeFlag()
+                 * fSVKernelFunction->Evaluate( fSupportVector, ev ) );
    }
 
    delete ev;
@@ -610,9 +609,9 @@ const std::vector<Float_t>& TMVA::MethodSVM::GetRegressionValues()
    const Event *baseev = GetEvent();
    SVEvent* ev = new SVEvent( baseev,0. ); //check for specificators
 
-   for (UInt_t ievt = 0; ievt < fSupportVectors->size() ; ievt++) {
-      myMVA += ( fSupportVectors->at(ievt)->GetDeltaAlpha()
-                 *fSVKernelFunction->Evaluate( fSupportVectors->at(ievt), ev ) );
+   for (auto & fSupportVector : *fSupportVectors) {
+      myMVA += ( fSupportVector->GetDeltaAlpha()
+                 *fSVKernelFunction->Evaluate( fSupportVector, ev ) );
    }
    myMVA += fBparm;
    Event * evT = new Event(*baseev);

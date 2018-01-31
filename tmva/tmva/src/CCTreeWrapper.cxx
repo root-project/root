@@ -183,14 +183,14 @@ void TMVA::CCTreeWrapper::PruneNode( CCTreeNode* t )
 Double_t TMVA::CCTreeWrapper::TestTreeQuality( const EventList* validationSample )
 {
    Double_t ncorrect=0, nfalse=0;
-   for (UInt_t ievt=0; ievt < validationSample->size(); ievt++) {
-      Bool_t isSignalType = (CheckEvent(*(*validationSample)[ievt]) > fDTParent->GetNodePurityLimit() ) ? 1 : 0;
+   for (auto ievt : *validationSample) {
+      Bool_t isSignalType = (CheckEvent(*ievt) > fDTParent->GetNodePurityLimit() ) ? 1 : 0;
 
-      if (isSignalType == ((*validationSample)[ievt]->GetClass() == 0)) {
-         ncorrect += (*validationSample)[ievt]->GetWeight();
+      if (isSignalType == (ievt->GetClass() == 0)) {
+         ncorrect += ievt->GetWeight();
       }
       else{
-         nfalse += (*validationSample)[ievt]->GetWeight();
+         nfalse += ievt->GetWeight();
       }
    }
    return  ncorrect / (ncorrect + nfalse);

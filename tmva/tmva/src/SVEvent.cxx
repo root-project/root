@@ -130,7 +130,7 @@ TMVA::SVEvent::~SVEvent()
 void TMVA::SVEvent::Print( std::ostream& os ) const
 {
    os << "type::" << fTypeFlag <<" target::"<< fTarget << " alpha::" << fAlpha <<" alpha_p::"<< fAlpha_p<< " values::" ;
-   for (UInt_t j =0; j < fDataVector.size();j++) os<<fDataVector.at(j)<<" ";
+   for (float j : fDataVector) os<<j<<" ";
    os << std::endl;
 }
 

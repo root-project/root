@@ -241,7 +241,7 @@ void TMVA::TMVARegGui( const char* fName ,TString dataset)
    cbar->Show();
 
    // indicate inactive buttons
-   for (UInt_t i=0; i<TMVARegGui_inactiveButtons.size(); i++) cbar->SetButtonState( TMVARegGui_inactiveButtons[i], 3 );
+   for (auto & TMVARegGui_inactiveButton : TMVARegGui_inactiveButtons) cbar->SetButtonState( TMVARegGui_inactiveButton, 3 );
    if (TMVARegGui_inactiveButtons.size() > 0) {
       cout << "=== Note: inactive buttons indicate that the corresponding methods were not trained ===" << endl;
    }

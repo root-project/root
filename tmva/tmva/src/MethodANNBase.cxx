@@ -1022,17 +1022,17 @@ void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
       epochdir = BaseDir()->mkdir( Form("EpochMonitoring_%4d",epochVal) );
 
    epochdir->cd();
-   for (std::vector<TH1*>::const_iterator it = fEpochMonHistS.begin(); it != fEpochMonHistS.end(); ++it) {
-      (*it)->Write();
-      delete (*it);
+   for (auto it : fEpochMonHistS) {
+      it->Write();
+      delete it;
    }
-   for (std::vector<TH1*>::const_iterator it = fEpochMonHistB.begin(); it != fEpochMonHistB.end(); ++it) {
-      (*it)->Write();
-      delete (*it);
+   for (auto it : fEpochMonHistB) {
+      it->Write();
+      delete it;
    }
-   for (std::vector<TH1*>::const_iterator it = fEpochMonHistW.begin(); it != fEpochMonHistW.end(); ++it) {
-      (*it)->Write();
-      delete (*it);
+   for (auto it : fEpochMonHistW) {
+      it->Write();
+      delete it;
    }
    BaseDir()->cd();
 }

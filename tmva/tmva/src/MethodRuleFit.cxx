@@ -168,8 +168,8 @@ TMVA::MethodRuleFit::MethodRuleFit( DataSetInfo& theData,
 
 TMVA::MethodRuleFit::~MethodRuleFit( void )
 {
-   for (UInt_t i=0; i<fEventSample.size(); i++) delete fEventSample[i];
-   for (UInt_t i=0; i<fForest.size(); i++)      delete fForest[i];
+   for (auto & i : fEventSample) delete i;
+   for (auto & i : fForest)      delete i;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

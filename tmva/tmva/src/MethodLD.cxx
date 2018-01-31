@@ -120,8 +120,8 @@ TMVA::MethodLD::~MethodLD( void )
    if (fSumValMatx) { delete fSumValMatx; fSumValMatx = nullptr; }
    if (fCoeffMatx)  { delete fCoeffMatx;  fCoeffMatx  = nullptr; }
    if (fLDCoeff) {
-      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); ++vi){
-         if (*vi) { delete *vi; *vi = 0; }
+      for (auto & vi : *fLDCoeff){
+         if (vi) { delete vi; vi = 0; }
       }
       delete fLDCoeff; fLDCoeff = nullptr;
    }
@@ -174,8 +174,8 @@ Double_t TMVA::MethodLD::GetMvaValue( Double_t* err, Double_t* errUpper )
       (*fRegressionReturnVal)[iout] = (*(*fLDCoeff)[iout])[0] ;
 
       int icoeff=0;
-      for (std::vector<Float_t>::const_iterator it = ev->GetValues().begin();it!=ev->GetValues().end();++it){
-         (*fRegressionReturnVal)[iout] += (*(*fLDCoeff)[iout])[++icoeff] * (*it);
+      for (float it : ev->GetValues()){
+         (*fRegressionReturnVal)[iout] += (*(*fLDCoeff)[iout])[++icoeff] * it;
       }
    }
 
@@ -199,8 +199,8 @@ const std::vector< Float_t >& TMVA::MethodLD::GetRegressionValues()
       (*fRegressionReturnVal)[iout] = (*(*fLDCoeff)[iout])[0] ;
 
       int icoeff = 0;
-      for (std::vector<Float_t>::const_iterator it = ev->GetValues().begin();it!=ev->GetValues().end();++it){
-         (*fRegressionReturnVal)[iout] += (*(*fLDCoeff)[iout])[++icoeff] * (*it);
+      for (float it : ev->GetValues()){
+         (*fRegressionReturnVal)[iout] += (*(*fLDCoeff)[iout])[++icoeff] * it;
       }
    }
 
@@ -389,8 +389,8 @@ void TMVA::MethodLD::ReadWeightsFromXML( void* wghtnode )
 
    // create vector with coefficients (double vector due to arbitrary output dimension)
    if (fLDCoeff) {
-      for (vector< vector< Double_t >* >::iterator vi=fLDCoeff->begin(); vi!=fLDCoeff->end(); ++vi){
-         if (*vi) { delete *vi; *vi = 0; }
+      for (auto & vi : *fLDCoeff){
+         if (vi) { delete vi; vi = 0; }
       }
       delete fLDCoeff; fLDCoeff = nullptr;
    }

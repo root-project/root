@@ -242,9 +242,8 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector
       }
 
       UInt_t iinp = 0;
-      for( std::vector<Float_t>::iterator itInp = input.begin(), itInpEnd = input.end(); itInp != itInpEnd; ++itInp )
+      for(float value : input)
          {
-            Float_t value = (*itInp);
             dvec[iinp] = (Double_t)value;
             ++iinp;
          }
@@ -254,8 +253,8 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector
    }
 
    // delete possible leftovers
-   for (UInt_t i=0; i<fMeanValues.size(); i++)   if (fMeanValues[i]   != nullptr) delete fMeanValues[i];
-   for (UInt_t i=0; i<fEigenVectors.size(); i++) if (fEigenVectors[i] != nullptr) delete fEigenVectors[i];
+   for (auto & fMeanValue : fMeanValues)   if (fMeanValue   != nullptr) delete fMeanValue;
+   for (auto & fEigenVector : fEigenVectors) if (fEigenVector != nullptr) delete fEigenVector;
    fMeanValues.resize(maxPCA,nullptr);
    fEigenVectors.resize(maxPCA,nullptr);
 

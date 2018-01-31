@@ -56,9 +56,9 @@ void TMVA::boostcontrolplots(TString dataset, TDirectory *boostdir ) {
    //   Note: the ROCIntegral plots are only filled for option "Boost_DetailedMonitoring=ture" currently not filled...
    //   TString hname[nPlots]={"BoostWeight","MethodWeight","ErrFraction","ROCIntegral_test"};
 
-   for (Int_t i=0; i<nPlots; i++){
+   for (const auto & i : hname){
       Int_t color = 4; 
-      TH1 *h = (TH1*) boostdir->Get(hname[i]);
+      TH1 *h = (TH1*) boostdir->Get(i);
       TString plotname = h->GetName();
       h->SetMaximum(h->GetMaximum()*1.3);
       h->SetMinimum( 0 );

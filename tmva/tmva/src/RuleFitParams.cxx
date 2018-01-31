@@ -613,8 +613,8 @@ void TMVA::RuleFitParams::MakeGDPath()
    fRuleEnsemble->SetOffset(offsetMin);
    fRuleEnsemble->ClearCoefficients(0);
    fRuleEnsemble->ClearLinCoefficients(0);
-   for (UInt_t i=0; i<fGDOfsTst.size(); i++) {
-      fGDOfsTst[i] = offsetMin;
+   for (double & i : fGDOfsTst) {
+      i = offsetMin;
    }
    Log() << kVERBOSE << "Obtained initial offset = " << offsetMin << Endl;
 

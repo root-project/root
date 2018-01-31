@@ -1183,9 +1183,9 @@ void TMVA::Experimental::Classification::MergeFiles()
    TestTree->Write();
    ifile->Close();
    // cleaning
-   for (UInt_t i = 0; i < fMethods.size(); i++) {
-      auto methodname = fMethods[i].GetValue<TString>("MethodName");
-      auto methodtitle = fMethods[i].GetValue<TString>("MethodTitle");
+   for (auto & fMethod : fMethods) {
+      auto methodname = fMethod.GetValue<TString>("MethodName");
+      auto methodtitle = fMethod.GetValue<TString>("MethodTitle");
       auto fname = Form(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
       gSystem->Unlink(fname);
    }

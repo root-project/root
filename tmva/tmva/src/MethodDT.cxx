@@ -415,8 +415,8 @@ Double_t TMVA::MethodDT::PruneTree( )
       pruneTool->Optimize();
       std::vector<DecisionTreeNode*> nodes = pruneTool->GetOptimalPruneSequence();
       fPruneStrength = pruneTool->GetOptimalPruneStrength();
-      for(UInt_t i = 0; i < nodes.size(); i++)
-         fTree->PruneNode(nodes[i]);
+      for(auto & node : nodes)
+         fTree->PruneNode(node);
       delete pruneTool;
    }
    else if (fAutomatic &&  fPruneMethod != DecisionTree::kCostComplexityPruning){

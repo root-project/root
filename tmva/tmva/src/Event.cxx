@@ -284,8 +284,8 @@ const std::vector<Float_t>& TMVA::Event::GetValues() const
       UInt_t mapIdx;
       if (fDynamic) {
          fValues.clear();
-         for (UInt_t i=0; i< fVariableArrangement.size(); i++){
-            mapIdx = fVariableArrangement[i];
+         for (unsigned int i : fVariableArrangement){
+            mapIdx = i;
             fValues.push_back(*((fValuesDynamic)->at(mapIdx)));
          }
       } else {
@@ -293,8 +293,8 @@ const std::vector<Float_t>& TMVA::Event::GetValues() const
          // (change them permanently) ... guess the only way is to add a 'fValuesRearranged' array,
          // and living with the fact that it 'doubles' the Event size :(
          fValuesRearranged.clear();
-         for (UInt_t i=0; i< fVariableArrangement.size(); i++){
-            mapIdx = fVariableArrangement[i];
+         for (unsigned int i : fVariableArrangement){
+            mapIdx = i;
             fValuesRearranged.push_back(fValues.at(mapIdx));
          }
          return fValuesRearranged;

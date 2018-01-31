@@ -529,8 +529,8 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
 
 void TMVA::DecisionTree::FillTree( const std::vector<TMVA::Event*> & eventSample )
 {
-   for (UInt_t i=0; i<eventSample.size(); i++) {
-      this->FillEvent(*(eventSample[i]),nullptr);
+   for (auto i : eventSample) {
+      this->FillEvent(*i,nullptr);
    }
 }
 
@@ -655,9 +655,9 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
       //           << " has quality index " << info->QualityIndex << Endl;
 
 
-      for (UInt_t i = 0; i < info->PruneSequence.size(); ++i) {
+      for (auto & i : info->PruneSequence) {
 
-         PruneNode(info->PruneSequence[i]);
+         PruneNode(i);
       }
       // update the number of nodes after the pruning
       this->CountNodes();
@@ -679,8 +679,8 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
 void TMVA::DecisionTree::ApplyValidationSample( const EventConstList* validationSample ) const
 {
    GetRoot()->ResetValidationData();
-   for (UInt_t ievt=0; ievt < validationSample->size(); ievt++) {
-      CheckEventWithPrunedTree((*validationSample)[ievt]);
+   for (auto ievt : *validationSample) {
+      CheckEventWithPrunedTree(ievt);
    }
 }
 
@@ -768,9 +768,8 @@ void TMVA::DecisionTree::CheckEventWithPrunedTree( const Event* e ) const
 Double_t TMVA::DecisionTree::GetSumWeights( const EventConstList* validationSample ) const
 {
    Double_t sumWeights = 0.0;
-   for( EventConstList::const_iterator it = validationSample->begin();
-        it != validationSample->end(); ++it ) {
-      sumWeights += (*it)->GetWeight();
+   for(auto it : *validationSample) {
+      sumWeights += it->GetWeight();
    }
    return sumWeights;
 }
@@ -1564,16 +1563,16 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
 
    // Initialize (un)weighted counters for signal & background
    // Construct a list of event wrappers that point to the original data
-   for( std::vector<const TMVA::Event*>::const_iterator it = eventSample.begin(); it != eventSample.end(); ++it ) {
-      if((*it)->GetClass() == fSigClass) { // signal or background event
-         nTotS += (*it)->GetWeight();
+   for(auto it : eventSample) {
+      if(it->GetClass() == fSigClass) { // signal or background event
+         nTotS += it->GetWeight();
          ++nTotS_unWeighted;
       }
       else {
-         nTotB += (*it)->GetWeight();
+         nTotB += it->GetWeight();
          ++nTotB_unWeighted;
       }
-      bdtEventSample.push_back(TMVA::BDTEventWrapper(*it));
+      bdtEventSample.push_back(TMVA::BDTEventWrapper(it));
    }
 
    std::vector<Char_t> useVariable(fNvars); // <----- bool is stored (for performance reasons, no std::vector<bool>  has been taken)
@@ -1731,10 +1730,10 @@ Double_t TMVA::DecisionTree::CheckEvent( const TMVA::Event * e, Bool_t UseYesNoL
 Double_t  TMVA::DecisionTree::SamplePurity( std::vector<TMVA::Event*> eventSample )
 {
    Double_t sumsig=0, sumbkg=0, sumtot=0;
-   for (UInt_t ievt=0; ievt<eventSample.size(); ievt++) {
-      if (eventSample[ievt]->GetClass() != fSigClass) sumbkg+=eventSample[ievt]->GetWeight();
-      else sumsig+=eventSample[ievt]->GetWeight();
-      sumtot+=eventSample[ievt]->GetWeight();
+   for (auto & ievt : eventSample) {
+      if (ievt->GetClass() != fSigClass) sumbkg+=ievt->GetWeight();
+      else sumsig+=ievt->GetWeight();
+      sumtot+=ievt->GetWeight();
    }
    // sanity check
    if (sumtot!= (sumsig+sumbkg)){

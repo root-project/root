@@ -465,9 +465,9 @@ void TMVA::MethodPDEFoam::Train( void )
    }
 
    // delete the binary search tree in order to save memory
-   for(UInt_t i=0; i<fFoam.size(); i++) {
-      if(fFoam.at(i))
-         fFoam.at(i)->DeleteBinarySearchTree();
+   for(auto & i : fFoam) {
+      if(i)
+         i->DeleteBinarySearchTree();
    }
    ExitFromTraining();
 }
@@ -827,10 +827,10 @@ const TMVA::Ranking* TMVA::MethodPDEFoam::CreateRanking()
    std::vector<Float_t> importance(GetNvar(), 0);
 
    // determine variable importances
-   for (UInt_t ifoam = 0; ifoam < fFoam.size(); ++ifoam) {
+   for (auto & ifoam : fFoam) {
       // get the number of cuts made in every dimension of foam
-      PDEFoamCell *root_cell = fFoam.at(ifoam)->GetRootCell();
-      std::vector<UInt_t> nCuts(fFoam.at(ifoam)->GetTotDim(), 0);
+      PDEFoamCell *root_cell = ifoam->GetRootCell();
+      std::vector<UInt_t> nCuts(ifoam->GetTotDim(), 0);
       GetNCuts(root_cell, nCuts);
 
       // fill the importance vector (ignoring the target dimensions in
@@ -1072,8 +1072,8 @@ const std::vector<Float_t>& TMVA::MethodPDEFoam::GetRegressionValues()
       if (targets.size() != Data()->GetNTargets())
          Log() << kFATAL << "Something wrong with multi-target regression foam: "
                << "number of targets does not match the DataSet()" << Endl;
-      for(UInt_t i=0; i<targets.size(); i++)
-         fRegressionReturnVal->push_back(targets.at(i));
+      for(float target : targets)
+         fRegressionReturnVal->push_back(target);
    }
    else {
       fRegressionReturnVal->push_back(fFoam.at(0)->GetCellValue(vals, kValue, fKernelEstimator));
@@ -1120,8 +1120,8 @@ TMVA::PDEFoamKernelBase* TMVA::MethodPDEFoam::CreatePDEFoamKernel()
 
 void TMVA::MethodPDEFoam::DeleteFoams()
 {
-   for (UInt_t i=0; i<fFoam.size(); i++)
-      if (fFoam.at(i)) delete fFoam.at(i);
+   for (auto & i : fFoam)
+      if (i) delete i;
    fFoam.clear();
 }
 
@@ -1210,10 +1210,10 @@ void TMVA::MethodPDEFoam::WriteFoamsToFile() const
    else           rootFile = new TFile(rfname, "RECREATE");
 
    // write the foams
-   for (UInt_t i=0; i<fFoam.size(); ++i) {
-      Log() << "writing foam " << fFoam.at(i)->GetFoamName().Data()
+   for (auto i : fFoam) {
+      Log() << "writing foam " << i->GetFoamName().Data()
             << " to file" << Endl;
-      fFoam.at(i)->Write(fFoam.at(i)->GetFoamName().Data());
+      i->Write(i->GetFoamName().Data());
    }
 
    rootFile->Close();
@@ -1483,12 +1483,12 @@ TMVA::ETargetSelection TMVA::MethodPDEFoam::UIntToTargetSelection(UInt_t its)
 
 void TMVA::MethodPDEFoam::FillVariableNamesToFoam() const
 {
-   for (UInt_t ifoam=0; ifoam<fFoam.size(); ifoam++) {
-      for (Int_t idim=0; idim<fFoam.at(ifoam)->GetTotDim(); idim++) {
+   for (auto ifoam : fFoam) {
+      for (Int_t idim=0; idim<ifoam->GetTotDim(); idim++) {
          if(fMultiTargetRegression && (UInt_t)idim>=DataInfo().GetNVariables())
-            fFoam.at(ifoam)->AddVariableName(DataInfo().GetTargetInfo(idim-DataInfo().GetNVariables()).GetExpression().Data());
+            ifoam->AddVariableName(DataInfo().GetTargetInfo(idim-DataInfo().GetNVariables()).GetExpression().Data());
          else
-            fFoam.at(ifoam)->AddVariableName(DataInfo().GetVariableInfo(idim).GetExpression().Data());
+            ifoam->AddVariableName(DataInfo().GetVariableInfo(idim).GetExpression().Data());
       }
    }
 }

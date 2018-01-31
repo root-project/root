@@ -306,8 +306,7 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>
 
 
       Int_t ivar = 0;
-      for( std::vector<Float_t>::iterator itInput = input.begin(), itInputEnd = input.end(); itInput != itInputEnd; ++itInput ) {
-         Float_t value = (*itInput);
+      for(float value : input) {
          listsForBinning[cls][ivar].push_back(TMVA::TMVAGaussPair(value,eventWeight));
          if (numDist>1)listsForBinning[numDist-1][ivar].push_back(TMVA::TMVAGaussPair(value,eventWeight));
          ++ivar;
@@ -400,8 +399,7 @@ void TMVA::VariableGaussTransform::GetCumulativeDist( const std::vector< Event*>
       GetInput( ev, input, mask );
 
       Int_t ivar = 0;
-      for( std::vector<Float_t>::iterator itInput = input.begin(), itInputEnd = input.end(); itInput != itInputEnd; ++itInput ) {
-         Float_t value = (*itInput);
+      for(float value : input) {
          fCumulativeDist[ivar][cls]->Fill(value,eventWeight);
          if (numDist>1) fCumulativeDist[ivar][numDist-1]->Fill(value,eventWeight);
 
@@ -448,17 +446,17 @@ void TMVA::VariableGaussTransform::WriteTransformationToStream( std::ostream& ) 
 
 void TMVA::VariableGaussTransform::CleanUpCumulativeArrays(TString opt) {
    if (opt == "ALL" || opt == "PDF"){
-      for (UInt_t ivar=0; ivar<fCumulativePDF.size(); ivar++) {
-         for (UInt_t icls=0; icls<fCumulativePDF[ivar].size(); icls++) {
-            if (nullptr != fCumulativePDF[ivar][icls]) delete fCumulativePDF[ivar][icls];
+      for (auto & ivar : fCumulativePDF) {
+         for (UInt_t icls=0; icls<ivar.size(); icls++) {
+            if (nullptr != ivar[icls]) delete ivar[icls];
          }
       }
       fCumulativePDF.clear();
    }
    if (opt == "ALL" || opt == "Dist"){
-      for (UInt_t ivar=0; ivar<fCumulativeDist.size(); ivar++) {
-         for (UInt_t icls=0; icls<fCumulativeDist[ivar].size(); icls++) {
-            if (nullptr != fCumulativeDist[ivar][icls]) delete fCumulativeDist[ivar][icls];
+      for (auto & ivar : fCumulativeDist) {
+         for (UInt_t icls=0; icls<ivar.size(); icls++) {
+            if (nullptr != ivar[icls]) delete ivar[icls];
          }
       }
       fCumulativeDist.clear();

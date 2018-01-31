@@ -121,8 +121,8 @@ TMVA::RuleEnsemble::RuleEnsemble()
 
 TMVA::RuleEnsemble::~RuleEnsemble()
 {
-   for ( std::vector<Rule *>::iterator itrRule = fRules.begin(); itrRule != fRules.end(); ++itrRule ) {
-      delete *itrRule;
+   for (auto & fRule : fRules) {
+      delete fRule;
    }
    // NOTE: Should not delete the histos fLinPDFB/S since they are delete elsewhere
    delete fLogger;
@@ -389,15 +389,15 @@ void TMVA::RuleEnsemble::CalcRuleSupport()
    Double_t ew;
    //
    if ((nrules>0) && (events->size()>0)) {
-      for ( std::vector< Rule * >::iterator itrRule=fRules.begin(); itrRule!=fRules.end(); ++itrRule ) {
+      for (auto & fRule : fRules) {
          s=0.0;
          ssig=0.0;
          sbkg=0.0;
-         for ( std::vector<const Event * >::const_iterator itrEvent=events->begin(); itrEvent!=events->end(); ++itrEvent ) {
-            if ((*itrRule)->EvalEvent( *(*itrEvent) )) {
-               ew = (*itrEvent)->GetWeight();
+         for (auto event : *events) {
+            if (fRule->EvalEvent( *event )) {
+               ew = event->GetWeight();
                s += ew;
-               if (GetMethodRuleFit()->DataInfo().IsSignal(*itrEvent)) ssig += ew;
+               if (GetMethodRuleFit()->DataInfo().IsSignal(event)) ssig += ew;
                else                         sbkg += ew;
             }
          }
@@ -409,10 +409,10 @@ void TMVA::RuleEnsemble::CalcRuleSupport()
          ttot += t;
          ssum = ssig+sbkg;
          ssb = (ssum>0 ? Double_t(ssig)/Double_t(ssig+sbkg) : 0.0 );
-         (*itrRule)->SetSupport(s);
-         (*itrRule)->SetNorm(t);
-         (*itrRule)->SetSSB( ssb );
-         (*itrRule)->SetSSBNeve(Double_t(ssig+sbkg));
+         fRule->SetSupport(s);
+         fRule->SetNorm(t);
+         fRule->SetSSB( ssb );
+         fRule->SetSSBNeve(Double_t(ssig+sbkg));
          indrule++;
       }
       fAverageSupport   = stot/nrules;
@@ -438,8 +438,8 @@ void TMVA::RuleEnsemble::CalcImportance()
 
 void TMVA::RuleEnsemble::SetImportanceRef(Double_t impref)
 {
-   for ( UInt_t i=0; i<fRules.size(); i++ ) {
-      fRules[i]->SetImportanceRef(impref);
+   for (auto & fRule : fRules) {
+      fRule->SetImportanceRef(impref);
    }
    fImportanceRef = impref;
 }

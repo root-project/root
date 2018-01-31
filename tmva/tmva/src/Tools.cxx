@@ -530,7 +530,7 @@ std::vector<Double_t> TMVA::Tools::MVADiff( std::vector<Double_t>& a, std::vecto
 
 void TMVA::Tools::Scale( std::vector<Double_t>& v, Double_t f )
 {
-   for (UInt_t i=0; i<v.size();i++) v[i]*=f;
+   for (double & i : v) i*=f;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -538,7 +538,7 @@ void TMVA::Tools::Scale( std::vector<Double_t>& v, Double_t f )
 
 void TMVA::Tools::Scale( std::vector<Float_t>& v, Float_t f )
 {
-   for (UInt_t i=0; i<v.size();i++) v[i]*=f;
+   for (float & i : v) i*=f;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -725,8 +725,8 @@ Bool_t TMVA::Tools::CheckForVerboseOption( const TString& cs ) const
    s.ToLower();
    s.ReplaceAll(" ","");
    std::vector<TString> v = SplitString( s, ':' );
-   for (std::vector<TString>::iterator it = v.begin(); it != v.end(); ++it) {
-      if ((*it == "v" || *it == "verbose") && !it->Contains("!")) isVerbose = kTRUE;
+   for (auto & it : v) {
+      if ((it == "v" || it == "verbose") && !it.Contains("!")) isVerbose = kTRUE;
    }
 
    return isVerbose;
@@ -1507,9 +1507,9 @@ std::vector<TMatrixDSym*>*
 TMVA::Tools::CalcCovarianceMatrices( const std::vector<const Event*>& events, Int_t maxCls, VariableTransformBase* transformBase )
 {
    std::vector<Event*> eventVector;
-   for (std::vector<const Event*>::const_iterator it = events.begin(), itEnd = events.end(); it != itEnd; ++it)
+   for (auto event : events)
       {
-         eventVector.push_back (new Event(*(*it)));
+         eventVector.push_back (new Event(*event));
       }
    std::vector<TMatrixDSym*>* returnValue = CalcCovarianceMatrices (eventVector, maxCls, transformBase);
    for (std::vector<Event*>::const_iterator it = eventVector.begin(), itEnd = eventVector.end(); it != itEnd; ++it)
@@ -1568,10 +1568,9 @@ TMVA::Tools::CalcCovarianceMatrices( const std::vector<Event*>& events, Int_t ma
    }
 
    // perform event loop
-   for (UInt_t i=0; i<events.size(); i++) {
+   for (auto ev : events) {
 
       // fill the event
-      const Event * ev = events[i];
       cls = ev->GetClass();
       Double_t weight = ev->GetWeight();
 

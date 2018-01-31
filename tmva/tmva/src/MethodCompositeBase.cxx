@@ -159,7 +159,7 @@ void TMVA::MethodCompositeBase::ReadWeightsFromXML( void* wghtnode )
    UInt_t nMethods;
    TString methodName, methodTypeName, jobName, optionString;
 
-   for (UInt_t i=0;i<fMethods.size();i++) delete fMethods[i];
+   for (auto & fMethod : fMethods) delete fMethod;
    fMethods.clear();
    fMethodWeight.clear();
    gTools().ReadAttr( wghtnode, "NMethods",  nMethods );
@@ -238,7 +238,7 @@ void  TMVA::MethodCompositeBase::ReadWeightsFromStream( std::istream& istr )
    // coverity[tainted_data_argument]
    istr >> dummy >> methodNum;
    Log() << kINFO << "Read " << methodNum << " Classifiers" << Endl;
-   for (UInt_t i=0;i<fMethods.size();i++) delete fMethods[i];
+   for (auto & fMethod : fMethods) delete fMethod;
    fMethods.clear();
    fMethodWeight.clear();
    for (UInt_t i=0; i<methodNum; i++) {

@@ -392,9 +392,8 @@ TMVA::MethodBase::~MethodBase( void )
 
    for (Int_t i = 0; i < 2; i++ ) {
       if (fEventCollections.at(i)) {
-         for (std::vector<Event*>::const_iterator it = fEventCollections.at(i)->begin();
-              it != fEventCollections.at(i)->end(); ++it) {
-            delete (*it);
+         for (auto it : *fEventCollections.at(i)) {
+            delete it;
          }
          delete fEventCollections.at(i);
          fEventCollections.at(i) = nullptr;
@@ -1764,9 +1763,7 @@ void TMVA::MethodBase::AddSpectatorsXMLTo( void* parent ) const
    void* specs = gTools().AddChild(parent, "Spectators");
 
    UInt_t writeIdx=0;
-   for (UInt_t idx=0; idx<DataInfo().GetSpectatorInfos().size(); idx++) {
-
-      VariableInfo& vi = DataInfo().GetSpectatorInfos()[idx];
+   for (auto & vi : DataInfo().GetSpectatorInfos()) {
 
       // we do not want to write spectators that are category-cuts,
       // except if the method is the category method and the spectators belong to it

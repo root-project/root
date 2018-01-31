@@ -309,8 +309,8 @@ void TMVA::RuleFit::MakeForest()
 void TMVA::RuleFit::SaveEventWeights()
 {
    fEventWeights.clear();
-   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); ++e) {
-      Double_t w = (*e)->GetBoostWeight();
+   for (auto & fTrainingEvent : fTrainingEvents) {
+      Double_t w = fTrainingEvent->GetBoostWeight();
       fEventWeights.push_back(w);
    }
 }
@@ -325,8 +325,8 @@ void TMVA::RuleFit::RestoreEventWeights()
       Log() << kERROR << "RuleFit::RestoreEventWeights() called without having called SaveEventWeights() before!" << Endl;
       return;
    }
-   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); ++e) {
-      (*e)->SetBoostWeight(fEventWeights[ie]);
+   for (auto & fTrainingEvent : fTrainingEvents) {
+      fTrainingEvent->SetBoostWeight(fEventWeights[ie]);
       ie++;
    }
 }
@@ -343,12 +343,12 @@ void TMVA::RuleFit::Boost( DecisionTree *dt )
    //
    std::vector<Char_t> correctSelected; // <--- boolean stored
    //
-   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); ++e) {
-      Bool_t isSignalType = (dt->CheckEvent(*e,kTRUE) > 0.5 );
-      Double_t w = (*e)->GetWeight();
+   for (auto & fTrainingEvent : fTrainingEvents) {
+      Bool_t isSignalType = (dt->CheckEvent(fTrainingEvent,kTRUE) > 0.5 );
+      Double_t w = fTrainingEvent->GetWeight();
       sumw += w;
       //
-      if (isSignalType == fMethodBase->DataInfo().IsSignal(*e)) { // correctly classified
+      if (isSignalType == fMethodBase->DataInfo().IsSignal(fTrainingEvent)) { // correctly classified
          correctSelected.push_back(kTRUE);
       }
       else {                                // misclassified
@@ -365,16 +365,16 @@ void TMVA::RuleFit::Boost( DecisionTree *dt )
    Double_t newSumw=0.0;
    UInt_t ie=0;
    // set new weight to misclassified events
-   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); ++e) {
+   for (auto & fTrainingEvent : fTrainingEvents) {
       if (!correctSelected[ie])
-         (*e)->SetBoostWeight( (*e)->GetBoostWeight() * boostWeight);
-      newSumw+=(*e)->GetWeight();
+         fTrainingEvent->SetBoostWeight( fTrainingEvent->GetBoostWeight() * boostWeight);
+      newSumw+=fTrainingEvent->GetWeight();
       ie++;
    }
    // reweight all events
    Double_t scale = sumw/newSumw;
-   for (std::vector<const Event*>::iterator e=fTrainingEvents.begin(); e!=fTrainingEvents.end(); ++e) {
-      (*e)->SetBoostWeight( (*e)->GetBoostWeight() * scale);
+   for (auto & fTrainingEvent : fTrainingEvents) {
+      fTrainingEvent->SetBoostWeight( fTrainingEvent->GetBoostWeight() * scale);
    }
    Log() << kDEBUG << "boostWeight = " << boostWeight << "    scale = " << scale << Endl;
 }
@@ -519,8 +519,7 @@ void TMVA::RuleFit::NormVisHists(std::vector<TH2F *> & hlist)
    }
 
    //
-   for (UInt_t i=0; i<hlist.size(); i++) {
-      TH2F *hs = hlist[i];
+   for (auto hs : hlist) {
       hs->Scale(scale);
       hs->SetMinimum(usemin);
       hs->SetMaximum(usemax);
@@ -927,8 +926,8 @@ void TMVA::RuleFit::MakeVisHists()
 
    // write histograms to file
    methodDir->cd();
-   for (UInt_t i=0; i<h1Vector.size();     i++) h1Vector[i]->Write();
-   for (UInt_t i=0; i<h2CorrVector.size(); i++) h2CorrVector[i]->Write();
+   for (auto & i : h1Vector) i->Write();
+   for (auto & i : h2CorrVector) i->Write();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

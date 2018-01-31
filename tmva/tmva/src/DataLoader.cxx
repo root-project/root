@@ -537,8 +537,7 @@ TMVA::DataSetInfo& TMVA::DataLoader::DefaultDataSetInfo()
 
 void TMVA::DataLoader::SetInputVariables( std::vector<TString>* theVariables )
 {
-   for (std::vector<TString>::iterator it=theVariables->begin();
-        it!=theVariables->end(); ++it) AddVariable(*it);
+   for (auto & theVariable : *theVariables) AddVariable(theVariable);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

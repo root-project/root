@@ -727,7 +727,7 @@ void TMVA::MethodBDT::Reset( void )
    // disappear and just use the DataSet samples ..
 
    // remove all the trees
-   for (UInt_t i=0; i<fForest.size();           i++) delete fForest[i];
+   for (auto & i : fForest) delete i;
    fForest.clear();
 
    fBoostWeights.clear();
@@ -751,7 +751,7 @@ void TMVA::MethodBDT::Reset( void )
 
 TMVA::MethodBDT::~MethodBDT( void )
 {
-   for (UInt_t i=0; i<fForest.size();           i++) delete fForest[i];
+   for (auto & i : fForest) delete i;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -763,7 +763,7 @@ void TMVA::MethodBDT::InitEventSample( void )
 
    if (fEventSample.size() > 0) { // do not re-initialise the event sample, just set all boostweights to 1. as if it were untouched
       // reset all previously stored/accumulated BOOST weights in the event sample
-      for (UInt_t iev=0; iev<fEventSample.size(); iev++) fEventSample[iev]->SetBoostWeight(1.);
+      for (auto & iev : fEventSample) iev->SetBoostWeight(1.);
    } else {
       Data()->SetCurrentType(Types::kTraining);
       UInt_t nevents = Data()->GetNTrainingEvents();
@@ -778,7 +778,7 @@ void TMVA::MethodBDT::InitEventSample( void )
       if (!DoRegression()) DeterminePreselectionCuts(tmpEventSample);
       else fDoPreselection = kFALSE; // just to make sure...
 
-      for (UInt_t i=0; i<tmpEventSample.size(); i++) delete tmpEventSample[i];
+      for (auto & i : tmpEventSample) delete i;
 
 
       Bool_t firstNegWeight=kTRUE;
@@ -875,12 +875,12 @@ void TMVA::MethodBDT::InitEventSample( void )
       Double_t nevents = fEventSample.size();
       Double_t sumSigW=0, sumBkgW=0;
       Int_t    sumSig=0, sumBkg=0;
-      for (UInt_t ievt=0; ievt<fEventSample.size(); ievt++) {
-         if ((DataInfo().IsSignal(fEventSample[ievt])) ) {
-            sumSigW += fEventSample[ievt]->GetWeight();
+      for (auto & ievt : fEventSample) {
+         if ((DataInfo().IsSignal(ievt)) ) {
+            sumSigW += ievt->GetWeight();
             sumSig++;
          } else {
-            sumBkgW += fEventSample[ievt]->GetWeight();
+            sumBkgW += ievt->GetWeight();
             sumBkg++;
          }
       }
@@ -933,14 +933,14 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
    Double_t totalPosWeights = 0;
    Double_t totalWeights    = 0;
    std::vector<const Event*> negEvents;
-   for (UInt_t iev = 0; iev < fEventSample.size(); iev++){
-      if (fEventSample[iev]->GetWeight() < 0) {
-         totalNegWeights += fEventSample[iev]->GetWeight();
-         negEvents.push_back(fEventSample[iev]);
+   for (auto & iev : fEventSample){
+      if (iev->GetWeight() < 0) {
+         totalNegWeights += iev->GetWeight();
+         negEvents.push_back(iev);
       } else {
-         totalPosWeights += fEventSample[iev]->GetWeight();
+         totalPosWeights += iev->GetWeight();
       }
-      totalWeights += fEventSample[iev]->GetWeight();
+      totalWeights += iev->GetWeight();
    }
    if (totalNegWeights == 0 ) {
       Log() << kINFO << "no negative event weights found .. no preprocessing necessary" << Endl;
@@ -1030,28 +1030,28 @@ void TMVA::MethodBDT::PreProcessNegativeEventWeights(){
 
    std::vector<const Event*> newEventSample;
 
-   for (UInt_t iev = 0; iev < fEventSample.size(); iev++){
-      if (fEventSample[iev]->GetWeight() < 0) {
-         totalNegWeights += fEventSample[iev]->GetWeight();
-         totalWeights    += fEventSample[iev]->GetWeight();
+   for (auto & iev : fEventSample){
+      if (iev->GetWeight() < 0) {
+         totalNegWeights += iev->GetWeight();
+         totalWeights    += iev->GetWeight();
       } else {
-         totalPosWeights += fEventSample[iev]->GetWeight();
-         totalWeights    += fEventSample[iev]->GetWeight();
+         totalPosWeights += iev->GetWeight();
+         totalWeights    += iev->GetWeight();
       }
-      if (fEventSample[iev]->GetWeight() > 0) {
-         newEventSample.push_back(new Event(*fEventSample[iev]));
-         if (fEventSample[iev]->GetClass() == fSignalClass){
-            sigWeight += fEventSample[iev]->GetWeight();
+      if (iev->GetWeight() > 0) {
+         newEventSample.push_back(new Event(*iev));
+         if (iev->GetClass() == fSignalClass){
+            sigWeight += iev->GetWeight();
             nSig+=1;
          }else{
-            bkgWeight += fEventSample[iev]->GetWeight();
+            bkgWeight += iev->GetWeight();
             nBkg+=1;
          }
       }
    }
    if (totalNegWeights < 0) Log() << kFATAL << " compensation of negative event weights with positive ones did not work " << totalNegWeights << Endl;
 
-   for (UInt_t i=0; i<fEventSample.size();      i++) delete fEventSample[i];
+   for (auto & i : fEventSample) delete i;
    fEventSample = newEventSample;
 
    Log() << kINFO  << " after PreProcessing, the Event sample is left with " << fEventSample.size() << " events (unweighted), all with positive weights, adding up to " << totalWeights << Endl;
@@ -1404,8 +1404,8 @@ void TMVA::MethodBDT::Train()
    // reset all previously stored/accumulated BOOST weights in the event sample
    //   for (UInt_t iev=0; iev<fEventSample.size(); iev++) fEventSample[iev]->SetBoostWeight(1.);
    Log() << kDEBUG << "Now I delete the privat data sample"<< Endl;
-   for (UInt_t i=0; i<fEventSample.size();      i++) delete fEventSample[i];
-   for (UInt_t i=0; i<fValidationSample.size(); i++) delete fValidationSample[i];
+   for (auto & i : fEventSample) delete i;
+   for (auto & i : fValidationSample) delete i;
    fEventSample.clear();
    fValidationSample.clear();
 
@@ -1533,10 +1533,9 @@ Double_t TMVA::MethodBDT::GradBoostRegression(std::vector<const TMVA::Event*>& e
 
    // calculate the constant fit for each terminal node based upon the events in the node
    // node (iLeave->first), vector of event information (iLeave->second)
-   for (std::map<TMVA::DecisionTreeNode*,vector< TMVA::LossFunctionEventInfo > >::iterator iLeave=leaves.begin();
-        iLeave!=leaves.end();++iLeave){
-      Double_t fit = fRegressionLossFunctionBDTG->Fit(iLeave->second);
-      (iLeave->first)->SetResponse(fShrinkage*fit);
+   for (auto & leave : leaves){
+      Double_t fit = fRegressionLossFunctionBDTG->Fit(leave.second);
+      (leave.first)->SetResponse(fShrinkage*fit);
    }
 
    UpdateTargetsRegression(*fTrainSample);
@@ -1587,14 +1586,14 @@ void TMVA::MethodBDT::InitGradBoost( std::vector<const TMVA::Event*>& eventSampl
 Double_t TMVA::MethodBDT::TestTreeQuality( DecisionTree *dt )
 {
    Double_t ncorrect=0, nfalse=0;
-   for (UInt_t ievt=0; ievt<fValidationSample.size(); ievt++) {
-      Bool_t isSignalType= (dt->CheckEvent(fValidationSample[ievt]) > fNodePurityLimit ) ? 1 : 0;
+   for (auto & ievt : fValidationSample) {
+      Bool_t isSignalType= (dt->CheckEvent(ievt) > fNodePurityLimit ) ? 1 : 0;
 
-      if (isSignalType == (DataInfo().IsSignal(fValidationSample[ievt])) ) {
-         ncorrect += fValidationSample[ievt]->GetWeight();
+      if (isSignalType == (DataInfo().IsSignal(ievt)) ) {
+         ncorrect += ievt->GetWeight();
       }
       else{
-         nfalse += fValidationSample[ievt]->GetWeight();
+         nfalse += ievt->GetWeight();
       }
    }
 
@@ -1678,8 +1677,8 @@ void TMVA::MethodBDT::BoostMonitor(Int_t iTree)
    }
 
 
-   for (UInt_t iev=0; iev < fEventSample.size(); iev++){
-      if (fEventSample[iev]->GetBoostWeight() > max) max = 1.01*fEventSample[iev]->GetBoostWeight();
+   for (auto & iev : fEventSample){
+      if (iev->GetBoostWeight() > max) max = 1.01*iev->GetBoostWeight();
    }
    TH1F *tmpBoostWeightsS = new TH1F(Form("BoostWeightsInTreeS%d",iTree),Form("BoostWeightsInTreeS%d",iTree),100,0.,max);
    TH1F *tmpBoostWeightsB = new TH1F(Form("BoostWeightsInTreeB%d",iTree),Form("BoostWeightsInTreeB%d",iTree),100,0.,max);
@@ -1689,17 +1688,17 @@ void TMVA::MethodBDT::BoostMonitor(Int_t iTree)
    TH1F *tmpBoostWeights;
    std::vector<TH1F*> *h;
 
-   for (UInt_t iev=0; iev < fEventSample.size(); iev++){
-      if (fEventSample[iev]->GetClass() == signalClassNr) {
+   for (auto & iev : fEventSample){
+      if (iev->GetClass() == signalClassNr) {
          tmpBoostWeights=tmpBoostWeightsS;
          h=&hS;
       }else{
          tmpBoostWeights=tmpBoostWeightsB;
          h=&hB;
       }
-      tmpBoostWeights->Fill(fEventSample[iev]->GetBoostWeight());
+      tmpBoostWeights->Fill(iev->GetBoostWeight());
       for (UInt_t ivar=0; ivar<GetNvar(); ivar++){
-         (*h)[ivar]->Fill(fEventSample[iev]->GetValue(ivar),fEventSample[iev]->GetWeight());
+         (*h)[ivar]->Fill(iev->GetValue(ivar),iev->GetWeight());
       }
    }
 
@@ -2305,7 +2304,7 @@ void  TMVA::MethodBDT::ReadWeightsFromStream( std::istream& istr )
    istr >> dummy >> fNTrees;
    Log() << kINFO << "Read " << fNTrees << " Decision trees" << Endl;
 
-   for (UInt_t i=0;i<fForest.size();i++) delete fForest[i];
+   for (auto & i : fForest) delete i;
    fForest.clear();
    fBoostWeights.clear();
    Int_t iTree;
@@ -2473,8 +2472,8 @@ const std::vector<Float_t> & TMVA::MethodBDT::GetRegressionValues()
       evT->SetTarget(0, rVal/Double_t(count) );
    }
    else if(fBoostType=="Grad"){
-      for (UInt_t itree=0; itree<fForest.size(); itree++) {
-         myMVA += fForest[itree]->CheckEvent(ev,kFALSE);
+      for (auto & itree : fForest) {
+         myMVA += itree->CheckEvent(ev,kFALSE);
       }
       //      fRegressionReturnVal->push_back( myMVA+fBoostWeights[0]);
       evT->SetTarget(0, myMVA+fBoostWeights[0] );
@@ -2533,11 +2532,11 @@ vector< Double_t > TMVA::MethodBDT::GetVariableImportance()
       }
    }
 
-   for (UInt_t ivar=0; ivar< fVariableImportance.size(); ivar++){
-      fVariableImportance[ivar] = TMath::Sqrt(fVariableImportance[ivar]);
-      sum += fVariableImportance[ivar];
+   for (double & ivar : fVariableImportance){
+      ivar = TMath::Sqrt(ivar);
+      sum += ivar;
    }
-   for (UInt_t ivar=0; ivar< fVariableImportance.size(); ivar++) fVariableImportance[ivar] /= sum;
+   for (double & ivar : fVariableImportance) ivar /= sum;
 
    return fVariableImportance;
 }
@@ -2885,16 +2884,16 @@ void TMVA::MethodBDT::DeterminePreselectionCuts(const std::vector<const TMVA::Ev
 
    // Initialize (un)weighted counters for signal & background
    // Construct a list of event wrappers that point to the original data
-   for( std::vector<const TMVA::Event*>::const_iterator it = eventSample.begin(); it != eventSample.end(); ++it ) {
-      if (DataInfo().IsSignal(*it)){
-         nTotS += (*it)->GetWeight();
+   for(auto it : eventSample) {
+      if (DataInfo().IsSignal(it)){
+         nTotS += it->GetWeight();
          ++nTotS_unWeighted;
       }
       else {
-         nTotB += (*it)->GetWeight();
+         nTotB += it->GetWeight();
          ++nTotB_unWeighted;
       }
-      bdtEventSample.push_back(TMVA::BDTEventWrapper(*it));
+      bdtEventSample.push_back(TMVA::BDTEventWrapper(it));
    }
 
    for( UInt_t ivar = 0; ivar < GetNvar(); ivar++ ) { // loop over all discriminating variables

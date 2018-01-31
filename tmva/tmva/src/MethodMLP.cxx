@@ -399,9 +399,9 @@ Double_t TMVA::MethodMLP::CalculateEstimator( Types::ETreeType treeType, Int_t i
 
       Float_t weightRangeCut = fWeightRange*sumOfWeights;
       Float_t weightSum      = 0.f;
-      for(std::vector<std::pair<Float_t,Float_t> >::iterator itDev = fDeviationsFromTargets->begin(), itDevEnd = fDeviationsFromTargets->end(); itDev != itDevEnd; ++itDev ){
-         float deviation = (*itDev).first;
-         float devWeight = (*itDev).second;
+      for(auto & fDeviationsFromTarget : *fDeviationsFromTargets){
+         float deviation = fDeviationsFromTarget.first;
+         float devWeight = fDeviationsFromTarget.second;
          weightSum += devWeight; // add the weight of this event
          if( weightSum <= weightRangeCut ) { // if within the region defined by fWeightRange
             estimator += devWeight*deviation;

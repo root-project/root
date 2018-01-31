@@ -231,8 +231,8 @@ void TMVA::PDEFoamDecisionTree::Explore(PDEFoamCell *cell)
       SetCellElement(cell, 0, nTotS + nTotB);
 
    // clean up
-   for (UInt_t ih = 0; ih < hsig.size(); ih++)  delete hsig.at(ih);
-   for (UInt_t ih = 0; ih < hbkg.size(); ih++)  delete hbkg.at(ih);
-   for (UInt_t ih = 0; ih < hsig_unw.size(); ih++)  delete hsig_unw.at(ih);
-   for (UInt_t ih = 0; ih < hbkg_unw.size(); ih++)  delete hbkg_unw.at(ih);
+   for (auto & ih : hsig)  delete ih;
+   for (auto & ih : hbkg)  delete ih;
+   for (auto & ih : hsig_unw)  delete ih;
+   for (auto & ih : hbkg_unw)  delete ih;
 }

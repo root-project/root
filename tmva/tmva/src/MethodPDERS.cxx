@@ -411,8 +411,8 @@ const std::vector< Float_t >& TMVA::MethodPDERS::GetRegressionValues()
 
    Event * evT = new Event(*ev);
    UInt_t ivar = 0;
-   for (std::vector<Float_t>::iterator it = fRegressionReturnVal->begin(); it != fRegressionReturnVal->end(); ++it ) {
-      evT->SetTarget(ivar,(*it));
+   for (float & it : *fRegressionReturnVal) {
+      evT->SetTarget(ivar,it);
       ivar++;
    }
 
@@ -755,11 +755,11 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
 
          //getting all elements that are closer than fkNNMin-th element
          //signals
-         for (Int_t j=0;j<Int_t(events.size());j++) {
-            Double_t dist = GetNormalizedDistance( e, *events[j], dim_normalization );
+         for (auto & event : events) {
+            Double_t dist = GetNormalizedDistance( e, *event, dim_normalization );
 
             if (dist <= (*distances)[fkNNMin-1])
-               tempVector.push_back( events[j] );
+               tempVector.push_back( event );
          }
          fMax_distance = (*distances)[fkNNMin-1];
          delete distances;
@@ -844,19 +844,19 @@ Double_t TMVA::MethodPDERS::CKernelEstimate( const Event & event,
    Double_t pdfSumB = 0;
 
    // Iteration over sample points
-   for (std::vector<const BinarySearchTreeNode*>::iterator iev = events.begin(); iev != events.end(); ++iev) {
+   for (auto & iev : events) {
 
       // First switch to the one dimensional distance
-      Double_t normalized_distance = GetNormalizedDistance (event, *(*iev), dim_normalization);
+      Double_t normalized_distance = GetNormalizedDistance (event, *iev, dim_normalization);
 
       // always working within the hyperelipsoid, except for when we don't
       // note that rejection ratio goes to 1 as nvar goes to infinity
       if (normalized_distance > 1 && fKernelEstimator != kBox) continue;
 
-      if ( (*iev)->GetClass()==fSignalClass )
-         pdfSumS += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
+      if ( iev->GetClass()==fSignalClass )
+         pdfSumS += ApplyKernelFunction (normalized_distance) * iev->GetWeight();
       else
-         pdfSumB += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
+         pdfSumB += ApplyKernelFunction (normalized_distance) * iev->GetWeight();
    }
    pdfSumS = KernelNormalization( pdfSumS < 0. ? 0. : pdfSumS );
    pdfSumB = KernelNormalization( pdfSumB < 0. ? 0. : pdfSumB );
@@ -891,18 +891,18 @@ void TMVA::MethodPDERS::RKernelEstimate( const Event & event,
       pdfSum->push_back( 0 );
 
    // Iteration over sample points
-   for (std::vector<const BinarySearchTreeNode*>::iterator iev = events.begin(); iev != events.end(); ++iev) {
+   for (auto & iev : events) {
 
       // First switch to the one dimensional distance
-      Double_t normalized_distance = GetNormalizedDistance (event, *(*iev), dim_normalization);
+      Double_t normalized_distance = GetNormalizedDistance (event, *iev, dim_normalization);
 
       // always working within the hyperelipsoid, except for when we don't
       // note that rejection ratio goes to 1 as nvar goes to infinity
       if (normalized_distance > 1 && fKernelEstimator != kBox) continue;
 
       for (Int_t ivar = 0; ivar < fNRegOut ; ivar++) {
-         pdfSum->at(ivar) += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight() * (*iev)->GetTargets()[ivar];
-         pdfDiv           += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
+         pdfSum->at(ivar) += ApplyKernelFunction (normalized_distance) * iev->GetWeight() * iev->GetTargets()[ivar];
+         pdfDiv           += ApplyKernelFunction (normalized_distance) * iev->GetWeight();
       }
    }
 

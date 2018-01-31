@@ -89,8 +89,8 @@ TMVA::DataSetInfo::~DataSetInfo()
 {
    ClearDataSet();
 
-   for(UInt_t i=0, iEnd = fClasses.size(); i<iEnd; ++i) {
-      delete fClasses[i];
+   for(auto & fClasse : fClasses) {
+      delete fClasse;
    }
 
    delete fTargetsForMulticlass;
@@ -480,8 +480,8 @@ UInt_t TMVA::DataSetInfo::GetNSpectators(bool all) const
    if(all)
       return fSpectators.size();
    UInt_t nsp(0);
-   for(std::vector<VariableInfo>::const_iterator spit=fSpectators.begin(); spit!=fSpectators.end(); ++spit) {
-      if(spit->GetVarType()!='C') nsp++;
+   for(const auto & fSpectator : fSpectators) {
+      if(fSpectator.GetVarType()!='C') nsp++;
    }
    return nsp;
 }

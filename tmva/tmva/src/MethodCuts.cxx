@@ -692,7 +692,7 @@ void  TMVA::MethodCuts::Train( void )
       fitter->Run();
 
       // clean up
-      for (UInt_t ivar=0; ivar<ranges.size(); ivar++) delete ranges[ivar];
+      for (auto & range : ranges) delete range;
       delete fitter;
 
    }

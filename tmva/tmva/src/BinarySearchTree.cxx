@@ -100,9 +100,8 @@ TMVA::BinarySearchTree::BinarySearchTree( const BinarySearchTree &b)
 
 TMVA::BinarySearchTree::~BinarySearchTree( void )
 {
-   for(std::vector< std::pair<Double_t, const TMVA::Event*> >::iterator pIt = fNormalizeTreeTable.begin();
-       pIt != fNormalizeTreeTable.end(); ++pIt) {
-      delete pIt->second;
+   for(auto & pIt : fNormalizeTreeTable) {
+      delete pIt.second;
    }
 }
 

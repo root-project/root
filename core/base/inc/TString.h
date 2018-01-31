@@ -229,11 +229,7 @@ private:
    static Ssiz_t  MaxSize() { return (kMaxInt >> 1) - 1; }
 #endif
    void           UnLink() const { if (IsLong()) delete [] fRep.fLong.fData; }
-   void           Zero() {
-      Ssiz_t (&a)[kNwords] = fRep.fRaw.fWords;
-      for (UInt_t i = 0; i < kNwords; ++i)
-         a[i] = 0;
-   }
+   void           Zero() { for (auto &word : fRep.fRaw.fWords) word = 0; }
    char          *Init(Ssiz_t capacity, Ssiz_t nchar);
    void           Clone(Ssiz_t nc); // Make self a distinct copy w. capacity nc
    void           FormImp(const char *fmt, va_list ap);

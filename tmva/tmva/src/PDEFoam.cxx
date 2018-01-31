@@ -1045,8 +1045,8 @@ std::vector<Float_t> TMVA::PDEFoam::GetCellValue( const std::map<Int_t,Float_t>&
 {
    // transformed event
    std::map<Int_t,Float_t> txvec;
-   for (std::map<Int_t,Float_t>::const_iterator it=xvec.begin(); it!=xvec.end(); ++it)
-      txvec.insert(std::pair<Int_t, Float_t>(it->first, VarTransform(it->first, it->second)));
+   for (const auto & it : xvec)
+      txvec.insert(std::pair<Int_t, Float_t>(it.first, VarTransform(it.first, it.second)));
 
    // find all cells, which correspond to the transformed event
    std::vector<PDEFoamCell*> cells = FindCells(txvec);

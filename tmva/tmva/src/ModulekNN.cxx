@@ -294,8 +294,8 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
    fCount.clear();
 
    // sort each variable for all events - needs this before Optimize() and ComputeMetric()
-   for (VarMap::iterator it = fVar.begin(); it != fVar.end(); ++it) {
-      std::sort((it->second).begin(), (it->second).end());
+   for (auto & it : fVar) {
+      std::sort((it.second).begin(), (it.second).end());
    }
 
    if (option.find("metric") != std::string::npos && ifrac > 0) {
@@ -303,8 +303,8 @@ Bool_t TMVA::kNN::ModulekNN::Fill(const UShort_t odepth, const UInt_t ifrac, con
 
       // sort again each variable for all events - needs this before Optimize()
       // rescaling has changed variable values
-      for (VarMap::iterator it = fVar.begin(); it != fVar.end(); ++it) {
-         std::sort((it->second).begin(), (it->second).end());
+      for (auto & it : fVar) {
+         std::sort((it.second).begin(), (it.second).end());
       }
    }
 
@@ -612,11 +612,11 @@ void TMVA::kNN::ModulekNN::ComputeMetric(const UInt_t ifrac)
 
    fVar.clear();
 
-   for (UInt_t ievent = 0; ievent < fEvent.size(); ++ievent) {
-      fEvent[ievent] = Scale(fEvent[ievent]);
+   for (auto & ievent : fEvent) {
+      ievent = Scale(ievent);
 
       for (UInt_t ivar = 0; ivar < fDimn; ++ivar) {
-         fVar[ivar].push_back(fEvent[ievent].GetVar(ivar));
+         fVar[ivar].push_back(ievent.GetVar(ivar));
       }
    }
 }

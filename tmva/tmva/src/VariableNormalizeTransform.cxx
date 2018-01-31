@@ -133,15 +133,13 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::Transform( const TMVA::Even
 
    UInt_t iidx = 0;
    std::vector<Char_t>::iterator itMask = mask.begin();
-   for ( std::vector<Float_t>::iterator itInp = input.begin(), itInpEnd = input.end(); itInp != itInpEnd; ++itInp) { // loop over input variables
+   for (float val : input) { // loop over input variables
       if( (*itMask) ){
          ++iidx;
          ++itMask;
          // don't put any value into output if the value is masked
          continue;
       }
-
-      Float_t val = (*itInp);
 
       min = minVector.at(iidx);
       max = maxVector.at(iidx);
@@ -185,9 +183,7 @@ const TMVA::Event* TMVA::VariableNormalizeTransform::InverseTransform(const TMVA
    const FloatVector& maxVector = fMax.at(cls);
 
    UInt_t iidx = 0;
-   for ( std::vector<Float_t>::iterator itInp = input.begin(), itInpEnd = input.end(); itInp != itInpEnd; ++itInp) { // loop over input variables
-      Float_t val = (*itInp);
-
+   for (float val : input) { // loop over input variables
       min = minVector.at(iidx);
       max = maxVector.at(iidx);
       Float_t offset = min;
@@ -246,9 +242,7 @@ void TMVA::VariableNormalizeTransform::CalcNormalizationParams( const std::vecto
 
       GetInput(event,input,mask);    // select the input variables for the transformation and get them from the event
       UInt_t iidx = 0;
-      for ( std::vector<Float_t>::iterator itInp = input.begin(), itInpEnd = input.end(); itInp != itInpEnd; ++itInp) { // loop over input variables
-         Float_t val = (*itInp);
-
+      for (float val : input) { // loop over input variables
          if( minVector.at(iidx) > val ) minVector.at(iidx) = val;
          if( maxVector.at(iidx) < val ) maxVector.at(iidx) = val;
 
@@ -278,12 +272,12 @@ std::vector<TString>* TMVA::VariableNormalizeTransform::GetTransformationStrings
    std::vector<TString>* strVec = new std::vector<TString>(size);
 
    UInt_t iinp = 0;
-   for( ItVarTypeIdxConst itGet = fGet.begin(), itGetEnd = fGet.end(); itGet != itGetEnd; ++itGet ) {
+   for(const auto & itGet : fGet) {
       min = fMin.at(cls).at(iinp);
       max = fMax.at(cls).at(iinp);
 
-      Char_t type = (*itGet).first;
-      UInt_t idx  = (*itGet).second;
+      Char_t type = itGet.first;
+      UInt_t idx  = itGet.second;
       Float_t offset = min;
       Float_t scale  = 1.0/(max-min);
       TString str("");

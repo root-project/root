@@ -1228,9 +1228,9 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             // erase indices of not needed events
             indicesTraining.erase( indicesTraining.begin()+sizeTraining-UInt_t(requestedTraining), indicesTraining.end() );
             // delete all events with the given indices
-            for( std::vector<UInt_t>::iterator it = indicesTraining.begin(), itEnd = indicesTraining.end(); it != itEnd; ++it ){
-               delete eventVectorTraining.at( (*it) ); // delete event
-               eventVectorTraining.at( (*it) ) = nullptr; // set pointer to NULL
+            for(unsigned int & it : indicesTraining){
+               delete eventVectorTraining.at( it ); // delete event
+               eventVectorTraining.at( it ) = nullptr; // set pointer to NULL
             }
             // now remove and erase all events with pointer==NULL
             eventVectorTraining.erase( std::remove( eventVectorTraining.begin(), eventVectorTraining.end(), (void*)nullptr ), eventVectorTraining.end() );
@@ -1246,9 +1246,9 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             // erase indices of not needed events
             indicesTesting.erase( indicesTesting.begin()+sizeTesting-UInt_t(requestedTesting), indicesTesting.end() );
             // delete all events with the given indices
-            for( std::vector<UInt_t>::iterator it = indicesTesting.begin(), itEnd = indicesTesting.end(); it != itEnd; ++it ){
-               delete eventVectorTesting.at( (*it) ); // delete event
-               eventVectorTesting.at( (*it) ) = nullptr; // set pointer to NULL
+            for(unsigned int & it : indicesTesting){
+               delete eventVectorTesting.at( it ); // delete event
+               eventVectorTesting.at( it ) = nullptr; // set pointer to NULL
             }
             // now remove and erase all events with pointer==NULL
             eventVectorTesting.erase( std::remove( eventVectorTesting.begin(), eventVectorTesting.end(), (void*)nullptr ), eventVectorTesting.end() );
