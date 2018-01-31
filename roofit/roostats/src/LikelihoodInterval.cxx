@@ -258,7 +258,7 @@ bool LikelihoodInterval::CreateMinimizer() {
       ccoutI(InputArguments) << "LikelihoodInterval: using nll offset - set all RooAbsReal to hide the offset  " << std::endl;
       RooAbsReal::setHideOffset(kFALSE); // need to keep this false
    }
-   fFunctor = std::shared_ptr<RooFunctor>(new RooFunctor(nll, RooArgSet(), params ));
+   fFunctor = std::make_shared<RooFunctor>(nll, RooArgSet(), params);
 
    std::string minimType =  ROOT::Math::MinimizerOptions::DefaultMinimizerType();
    std::transform(minimType.begin(), minimType.end(), minimType.begin(), (int(*)(int)) tolower );
@@ -275,7 +275,7 @@ bool LikelihoodInterval::CreateMinimizer() {
 
    if (!fMinimizer.get()) return false;
 
-   fMinFunc = std::shared_ptr<ROOT::Math::IMultiGenFunction>( new ROOT::Math::WrappedMultiFunction<RooFunctor &> (*fFunctor, fFunctor->nPar() ) );
+   fMinFunc = std::make_shared<ROOT::Math::WrappedMultiFunction<RooFunctor &>>(*fFunctor, fFunctor->nPar());
    fMinimizer->SetFunction(*fMinFunc);
 
    // set minimizer parameters

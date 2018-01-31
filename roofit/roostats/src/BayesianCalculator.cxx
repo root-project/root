@@ -168,7 +168,7 @@ public:
 
    PosteriorCdfFunction(RooAbsReal & nll,  RooArgList & bindParams, RooAbsReal * prior = 0, const char * integType = 0, double nllMinimum = 0) :
       fFunctor(nll, bindParams, RooArgList() ),              // functor
-      fPriorFunc(std::shared_ptr<RooFunctor>((RooFunctor*)0)),
+      fPriorFunc(nullptr),
       fLikelihood(fFunctor, 0, nllMinimum),         // integral of exp(-nll) function
       fIntegrator(ROOT::Math::IntegratorMultiDim::GetType(integType) ),  // integrator
       fXmin(bindParams.getSize() ),               // vector of parameters (min values)
@@ -178,7 +178,7 @@ public:
    {
 
       if (prior) {
-         fPriorFunc = std::shared_ptr<RooFunctor>(new RooFunctor(*prior, bindParams, RooArgList() ));
+         fPriorFunc = std::make_shared<RooFunctor>(*prior, bindParams, RooArgList());
          fLikelihood.SetPrior(fPriorFunc.get() );
       }
 
@@ -354,7 +354,7 @@ public:
    PosteriorFunction(RooAbsReal & nll, RooRealVar & poi, RooArgList & nuisParams, RooAbsReal * prior = 0, const char * integType = 0, double
                      norm = 1.0,  double nllOffset = 0, int niter = 0) :
       fFunctor(nll, nuisParams, RooArgList() ),
-      fPriorFunc(std::shared_ptr<RooFunctor>((RooFunctor*)0)),
+      fPriorFunc(nullptr),
       fLikelihood(fFunctor, 0, nllOffset),
       fPoi(&poi),
       fXmin(nuisParams.getSize() ),
@@ -364,7 +364,7 @@ public:
    {
 
       if (prior) {
-         fPriorFunc = std::shared_ptr<RooFunctor>(new RooFunctor(*prior, nuisParams, RooArgList() ));
+         fPriorFunc = std::make_shared<RooFunctor>(*prior, nuisParams, RooArgList());
          fLikelihood.SetPrior(fPriorFunc.get() );
       }
 
@@ -470,7 +470,7 @@ public:
    PosteriorFunctionFromToyMC(RooAbsReal & nll, RooAbsPdf & pdf, RooRealVar & poi, RooArgList & nuisParams, RooAbsReal * prior = 0, double
                               nllOffset = 0, int niter = 0, bool redoToys = true ) :
       fFunctor(nll, nuisParams, RooArgList() ),
-      fPriorFunc(std::shared_ptr<RooFunctor>((RooFunctor*)0)),
+      fPriorFunc(nullptr),
       fLikelihood(fFunctor, 0, nllOffset),
       fPdf(&pdf),
       fPoi(&poi),
@@ -483,7 +483,7 @@ public:
       if (niter == 0) fNumIterations = 100; // default value
 
       if (prior) {
-         fPriorFunc = std::shared_ptr<RooFunctor>(new RooFunctor(*prior, nuisParams, RooArgList() ));
+         fPriorFunc = std::make_shared<RooFunctor>(*prior, nuisParams, RooArgList());
          fLikelihood.SetPrior(fPriorFunc.get() );
       }
 
