@@ -105,14 +105,15 @@ private:
   bool hasGStepSize() const override;
   double DoStepSize(const double *x, unsigned int icoord) const override;
 
+  virtual std::vector<ROOT::Fit::ParameterSettings>& parameter_settings() const;
+
+protected:
   Double_t GetPdfParamVal(Int_t index);
   Double_t GetPdfParamErr(Int_t index);
   void SetPdfParamErr(Int_t index, Double_t value);
   void ClearPdfParamAsymErr(Int_t index);
   void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
   inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const;
-
-  virtual std::vector<ROOT::Fit::ParameterSettings>& parameter_settings() const;
 
 public:
   explicit RooGradientFunction(RooAbsReal *funct,
@@ -145,6 +146,11 @@ public:
   void zeroEvalCount();
 
   void SetVerbose(Bool_t flag = kTRUE);
+
+  void set_step_tolerance(double step_tolerance) const;
+  void set_grad_tolerance(double grad_tolerance) const;
+  void set_ncycles(unsigned int ncycles) const;
+  void set_error_level(double error_level) const;
 };
 
 #endif //ROO_GRADIENT_FUNCTION

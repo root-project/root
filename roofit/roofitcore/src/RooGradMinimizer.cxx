@@ -109,7 +109,12 @@ RooGradMinimizer::RooGradMinimizer(RooAbsReal& function, bool always_exactly_mim
   _theFitter->Config().SetMinimizer(_minimizerType.c_str());
   setEps(1.0); // default tolerance
 
-  _fcn = new RooGradMinimizerFcn(_func, this, always_exactly_mimic_minuit2, _verbose);
+  _fcn = new RooGradMinimizerFcn(_func, this,
+                                 (always_exactly_mimic_minuit2 ?
+                                  RooGradientFunction::GradientCalculatorMode::ExactlyMinuit2 :
+                                  RooGradientFunction::GradientCalculatorMode::AlmostMinuit2
+                                 ),
+                                 _verbose);
 
   // default max number of calls
   _theFitter->Config().MinimizerOptions().SetMaxIterations(500*_fcn->NDim());
@@ -399,7 +404,6 @@ void RooGradMinimizer::zeroEvalCount() {
 
 
 inline Int_t RooGradMinimizer::getNPar() const { return fitterFcn()->NDim() ; }
-inline std::ofstream* RooGradMinimizer::logfile() { return fitterFcn()->GetLogFile(); }
 inline Double_t& RooGradMinimizer::maxFCN() { return fitterFcn()->GetMaxFCN() ; }
 
 

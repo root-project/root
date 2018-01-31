@@ -72,7 +72,7 @@ void RooGradMinimizerFcn::BackProp(const ROOT::Fit::FitResult &results)
 {
   // Transfer MINUIT fit results back into RooFit objects
 
-  for (Int_t index= 0; index < NDim(); index++) {
+  for (unsigned index = 0; index < NDim(); index++) {
     Double_t value = results.Value(index);
     SetPdfParamVal(index, value);
 
@@ -101,9 +101,9 @@ void RooGradMinimizerFcn::ApplyCovarianceMatrix(TMatrixDSym& V)
   // to all RRV parameter representations and give this matrix instead of the
   // HESSE matrix at the next save() call
 
-  for (Int_t i=0 ; i < NDim() ; i++) {
+  for (unsigned i = 0 ; i < NDim() ; i++) {
     // Skip fixed parameters
-    if (_function._floatParamList->at(i)->isConstant()) {
+    if (GetFloatParamList()->at(i)->isConstant()) {
       continue ;
     }
     SetPdfParamErr(i, sqrt(V(i,i))) ;		  
@@ -128,10 +128,10 @@ void RooGradMinimizerFcn::synchronize_gradient_with_minimizer() const {
   }
   ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(minimizer->Strategy()));
 
-  _gradf.set_step_tolerance(strategy.GradientStepTolerance());
-  _gradf.set_grad_tolerance(strategy.GradientTolerance());
-  _gradf.set_ncycles(strategy.GradientNCycles());
-  _gradf.set_error_level(minimizer->ErrorDef());
+  set_step_tolerance(strategy.GradientStepTolerance());
+  set_grad_tolerance(strategy.GradientTolerance());
+  set_ncycles(strategy.GradientNCycles());
+  set_error_level(minimizer->ErrorDef());
 
   synchronize_gradient_parameter_settings(fitter->Config().ParamsSettings());
 }

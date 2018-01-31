@@ -609,3 +609,16 @@ void RooGradientFunction::SetVerbose(Bool_t flag) {
 std::vector<ROOT::Fit::ParameterSettings> &RooGradientFunction::parameter_settings() const {
   return _parameter_settings;
 }
+
+void RooGradientFunction::set_step_tolerance(double step_tolerance) const {
+  _gradf.set_step_tolerance(step_tolerance);
+}
+void RooGradientFunction::set_grad_tolerance(double grad_tolerance) const {
+  _gradf.set_grad_tolerance(grad_tolerance);
+}
+void RooGradientFunction::set_ncycles(unsigned int ncycles) const {
+  _gradf.set_ncycles(ncycles);
+}
+void RooGradientFunction::set_error_level(double error_level) const {
+  _gradf.set_error_level(error_level);
+}

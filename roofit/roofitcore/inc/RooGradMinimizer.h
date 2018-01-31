@@ -84,7 +84,6 @@ protected:
   void profileStop() ;
 
   inline Int_t getNPar() const; // { return fitterFcn()->NDim() ; }
-  inline std::ofstream* logfile(); // { return fitterFcn()->GetLogFile(); }
   inline Double_t& maxFCN(); // { return fitterFcn()->GetMaxFCN() ; }
   
   const RooGradMinimizerFcn* fitterFcn() const; // {  return ( fitter()->GetFCN() ? (dynamic_cast<RooGradMinimizerFcn*>(fitter()->GetFCN())) : _fcn ) ; }
