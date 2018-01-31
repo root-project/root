@@ -3861,7 +3861,7 @@ Int_t TProof::HandleInputMessage(TSlave *sl, TMessage *mess, Bool_t deactonfail)
                            ourwi->SetSysInfo(slinfo->GetSysInfo());
                            ourwi->fHostName = slinfo->GetName();
                            if (slinfo->GetDataDir() && (strlen(slinfo->GetDataDir()) > 0))
-                           ourwi->fDataDir = slinfo->GetDataDir();
+                              ourwi->fDataDir = slinfo->GetDataDir();
                            break;
                         }
                      }
@@ -10402,10 +10402,10 @@ void TProof::ShowLog(Int_t qry)
    UInt_t tolog = (UInt_t)(endlog - startlog);
 
    // Perhaps nothing
-   if (tolog <= 0)
-
-   // Set starting point
-   lseek(fileno(fLogFileR), startlog, SEEK_SET);
+   if (tolog <= 0) {
+      // Set starting point
+      lseek(fileno(fLogFileR), startlog, SEEK_SET);
+   }
 
    // Now we go
    Int_t np = 0;
