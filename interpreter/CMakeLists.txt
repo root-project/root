@@ -1,3 +1,16 @@
+#--- Check if we need to build llvm and clang ------------------------------------------------------
+if (builtin_clang)
+  set(CLANG_INCLUDE_DIRS
+    ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include
+    ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include
+    )
+  if (NOT builtin_llvm)
+    set(LLVM_EXTERNAL_PROJECTS "${LLVM_EXTERNAL_PROJECTS};clang" CACHE STRING "")
+    set(LLVM_EXTERNAL_CLANG_SOURCE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/llvm/src/tools/clang" CACHE STRING "")
+  endif()
+else()
+  message(FATAL_ERROR "Due to ROOT-specific patches not yet in upstream clang, builtin_clang=on is currently required to build ROOT")
+endif()
 
 #---Define the way we want to build and what of llvm/clang/cling------------------------------------
 set(LLVM_ENABLE_WARNINGS OFF CACHE BOOL "")
