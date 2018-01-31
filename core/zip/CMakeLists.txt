@@ -10,12 +10,6 @@ Set(ZipRootHeaders
   ${CMAKE_CURRENT_SOURCE_DIR}/inc/RZip.h
 )
 
-# ZipInternalHeaders are necessary repeats of zlib headers.
-Set(ZipInternalHeaders
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/zlib.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/zconf.h
-)
-
 # These files implement the old-style compression algorithm
 Set(ZipOldSource
   ${CMAKE_CURRENT_SOURCE_DIR}/src/Bits.c
@@ -24,13 +18,7 @@ Set(ZipOldSource
   ${CMAKE_CURRENT_SOURCE_DIR}/src/ZInflate.c
 )
 
-# Depending on the system either the old and the new
-# or only the old compression is build
-if(builtin_zlib)
-  set(ZLIB_HEADERS ${ZipInternalHeaders} ${ZipRootHeaders})
-else()
-  set(ZLIB_HEADERS ${ZipRootHeaders})
-endif()
+set(ZLIB_HEADERS ${ZipRootHeaders})
 set(ZLIB_SRCS ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${CMAKE_CURRENT_SOURCE_DIR}/src/RZip.cxx)
 
 # Define all the header files which should be installed when
