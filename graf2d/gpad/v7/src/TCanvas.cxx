@@ -106,8 +106,7 @@ void ROOT::Experimental::TCanvas::Show(const std::string &where)
 
 void ROOT::Experimental::TCanvas::Hide()
 {
-   if (fPainter)
-      delete fPainter.release();
+   fPainter = nullptr;
 }
 
 void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename, bool async, CanvasCallback_t callback)
