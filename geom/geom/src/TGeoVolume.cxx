@@ -1082,7 +1082,7 @@ void TGeoVolume::AddNodeOverlap(TGeoVolume *vol, Int_t copy_no, TGeoMatrix *mat,
    node->SetNumber(copy_no);
    node->SetOverlapping();
    if (vol->GetMedium() == fMedium)
-   node->SetVirtual();
+      node->SetVirtual();
    vol->Grab();
 }
 

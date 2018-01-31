@@ -899,9 +899,10 @@ std::vector<Double_t> TMVA::MethodBase::GetMvaValues(Long64_t firstEvt, Long64_t
    Timer timer( nEvents, GetName(), kTRUE );
 
    if (logProgress)
-   Log() << kHEADER<<Form("[%s] : ",DataInfo().GetName())<< "Evaluation of " << GetMethodName() << " on "
-        << (Data()->GetCurrentType()==Types::kTraining?"training":"testing") << " sample (" << nEvents << " events)" << Endl;
-
+      Log() << kHEADER << Form("[%s] : ",DataInfo().GetName())
+            << "Evaluation of " << GetMethodName() << " on "
+            << (Data()->GetCurrentType() == Types::kTraining ? "training" : "testing")
+            << " sample (" << nEvents << " events)" << Endl;
 
    for (Int_t ievt=firstEvt; ievt<lastEvt; ievt++) {
       Data()->SetCurrentEvent(ievt);
