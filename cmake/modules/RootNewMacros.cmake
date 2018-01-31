@@ -54,6 +54,12 @@ set(CMAKE_INCLUDE_CURRENT_DIR OFF)
 
 include(CMakeParseArguments)
 
+macro(find_package)
+  if(NOT "${ARGV0}" IN_LIST builtins)
+    _find_package(${ARGV})
+  endif()
+endmacro()
+
 #---------------------------------------------------------------------------------------------------
 #---ROOT_GLOB_FILES( <variable> [REALTIVE path] [FILTER regexp] <sources> ...)
 #---------------------------------------------------------------------------------------------------
