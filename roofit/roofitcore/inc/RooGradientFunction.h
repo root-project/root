@@ -21,7 +21,6 @@
 
 #include "Math/IFunction.h"  // ROOT::Math::IMultiGradFunction
 #include "Fit/ParameterSettings.h"
-#include "Fit/FitResult.h"
 #include "NumericalDerivatorMinuit2.h"
 
 #include "TMatrixDSym.h"
@@ -53,13 +52,17 @@ class RooGradientFunction : public ROOT::Math::IMultiGradFunction {
 
     unsigned int _nDim = 0;
 
+    // put _verbose here, since Function also needs it and RooGradientFunction
+    // can still reach it here as well
+    bool _verbose;
+
     RooArgList *_floatParamList;
     std::vector<RooAbsArg *> _floatParamVec;
     RooArgList *_constParamList;
     RooArgList *_initFloatParamList;
     RooArgList *_initConstParamList;
 
-    explicit Function(RooAbsReal *funct);
+    Function(RooAbsReal *funct, bool verbose);
     Function(const Function& other);
     ~Function() override;
 
@@ -90,7 +93,7 @@ private:
   mutable RooFit::NumericalDerivatorMinuit2 _gradf;
   mutable ROOT::Minuit2::FunctionGradient _grad;
   mutable std::vector<double> _grad_params;
-  std::vector<ROOT::Fit::ParameterSettings> parameter_settings;
+  std::vector<ROOT::Fit::ParameterSettings> _parameter_settings;
 
   double DoEval(const double *x) const override;
   double DoDerivative(const double *x, unsigned int icoord) const override;
@@ -109,37 +112,39 @@ private:
   void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
   inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const;
 
+  virtual std::vector<ROOT::Fit::ParameterSettings>& parameter_settings() const;
+
 public:
   explicit RooGradientFunction(RooAbsReal *funct,
-                               GradientCalculatorMode grad_mode = GradientCalculatorMode::ExactlyMinuit2);
+                               GradientCalculatorMode grad_mode = GradientCalculatorMode::ExactlyMinuit2,
+                               bool verbose = false);
   RooGradientFunction(const RooGradientFunction &other);
 
   ROOT::Math::IMultiGradFunction *Clone() const override;
 
-  unsigned int NDim() const override { return _function.NDim(); }
-
-  RooArgList *GetFloatParamList() { return _function._floatParamList; }
-  RooArgList *GetConstParamList() { return _function._constParamList; }
-  RooArgList *GetInitFloatParamList() { return _function._initFloatParamList; }
-  RooArgList *GetInitConstParamList() { return _function._initConstParamList; }
-
-  void SetEvalErrorWall(Bool_t flag) { _function._doEvalErrorWall = flag; }
-  void SetPrintEvalErrors(Int_t numEvalErrors) { _function._printEvalErrors = numEvalErrors; }
-
-  Double_t &GetMaxFCN() { return _function._maxFCN; }
-  Int_t GetNumInvalidNLL() { return _function._numBadNLL; }
-
-  Bool_t synchronize_parameter_settings(Bool_t optConst = kTRUE);
-  void synchronize_gradient_parameter_settings() const;
-
-  void BackProp(const ROOT::Fit::FitResult &results);
-
-  void ApplyCovarianceMatrix(TMatrixDSym &V);
-
-  Int_t evalCounter() const { return _function._evalCounter; }
-  void zeroEvalCount() { _function._evalCounter = 0; }
+  Bool_t synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings>& parameter_settings,
+                                        Bool_t optConst = kTRUE, Bool_t verbose = kFALSE);
+  void synchronize_gradient_parameter_settings(std::vector<ROOT::Fit::ParameterSettings>& parameter_settings) const;
 
   bool returnsInMinuit2ParameterSpace() const override;
+
+  unsigned int NDim() const override;
+
+  RooArgList *GetFloatParamList();
+  RooArgList *GetConstParamList();
+  RooArgList *GetInitFloatParamList();
+  RooArgList *GetInitConstParamList();
+
+  void SetEvalErrorWall(Bool_t flag);
+  void SetPrintEvalErrors(Int_t numEvalErrors);
+
+  Double_t &GetMaxFCN();
+  Int_t GetNumInvalidNLL();
+
+  Int_t evalCounter() const;
+  void zeroEvalCount();
+
+  void SetVerbose(Bool_t flag = kTRUE);
 };
 
 #endif //ROO_GRADIENT_FUNCTION

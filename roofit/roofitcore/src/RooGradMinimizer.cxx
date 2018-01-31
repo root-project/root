@@ -119,8 +119,9 @@ RooGradMinimizer::RooGradMinimizer(RooAbsReal& function, bool always_exactly_mim
   setErrorLevel(_func->defaultErrorLevel()) ;
 
   // Declare our parameters to MINUIT
-  _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
-		    _optConst,_verbose) ;
+  _fcn->synchronize_parameter_settings(_theFitter->Config().ParamsSettings(),
+                                       _optConst, _verbose);
+  _fcn->synchronize_gradient_with_minimizer();
 }
 
 
@@ -160,13 +161,14 @@ void RooGradMinimizer::setStrategy(Int_t istrat) {
 
 Int_t RooGradMinimizer::migrad()
 {
-  _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
+  _fcn->synchronize_parameter_settings(_theFitter->Config().ParamsSettings(),
 		    _optConst,_verbose) ;
   //  profileStart() ;
   RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
   RooAbsReal::clearEvalErrorLog() ;
 
   _theFitter->Config().SetMinimizer(_minimizerType.c_str(),"migrad");
+  _fcn->synchronize_gradient_with_minimizer();
   bool ret = _theFitter->FitFCN(*_fcn);
   _status = ((ret) ? _theFitter->Result().Status() : -1);
 
@@ -195,13 +197,14 @@ Int_t RooGradMinimizer::hesse()
   }
   else {
 
-    _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
+    _fcn->synchronize_parameter_settings(_theFitter->Config().ParamsSettings(),
                       _optConst,_verbose) ;
     //    profileStart() ;
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
     RooAbsReal::clearEvalErrorLog() ;
 
     _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+    _fcn->synchronize_gradient_with_minimizer();
     bool ret = _theFitter->CalculateHessErrors();
     _status = ((ret) ? _theFitter->Result().Status() : -1);
 
@@ -232,13 +235,14 @@ Int_t RooGradMinimizer::minos()
   }
   else {
 
-    _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
+    _fcn->synchronize_parameter_settings(_theFitter->Config().ParamsSettings(),
                       _optConst,_verbose) ;
     //    profileStart() ;
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
     RooAbsReal::clearEvalErrorLog() ;
 
     _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+    _fcn->synchronize_gradient_with_minimizer();
     bool ret = _theFitter->CalculateMinosErrors();
     _status = ((ret) ? _theFitter->Result().Status() : -1);
 
@@ -269,7 +273,7 @@ Int_t RooGradMinimizer::minos(const RooArgSet& minosParamList)
   }
   else if (minosParamList.getSize()>0) {
 
-    _fcn->Synchronize(_theFitter->Config().ParamsSettings(),
+    _fcn->synchronize_parameter_settings(_theFitter->Config().ParamsSettings(),
                       _optConst,_verbose) ;
     profileStart() ;
     RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors) ;
@@ -293,6 +297,7 @@ Int_t RooGradMinimizer::minos(const RooArgSet& minosParamList)
       _theFitter->Config().SetMinosErrors(paramInd);
 
       _theFitter->Config().SetMinimizer(_minimizerType.c_str());
+      _fcn->synchronize_gradient_with_minimizer();
       bool ret = _theFitter->CalculateMinosErrors();
       _status = ((ret) ? _theFitter->Result().Status() : -1);
       // to avoid that following minimization computes automatically the Minos errors
