@@ -10,8 +10,13 @@ ROOT_GLOB_HEADERS(headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/*.h)
 
 set(ClingUtils_dict_headers ${headers} PARENT_SCOPE)
 
-include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
+
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/res ${CMAKE_CURRENT_SOURCE_DIR}/../foundation/res)
+include_directories(${CLING_INCLUDE_DIRS})
+# Register the llvm include directories after clangs. This instructs the compiler to resolve
+# headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
+# and we have installed clang headers, too.
+include_directories(SYSTEM ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 # This is to avoid warnings coming from GCC 7 in llvm/src/include/llvm/ADT/DenseMap.h:1010
