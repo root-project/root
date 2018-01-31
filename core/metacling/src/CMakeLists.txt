@@ -3,10 +3,14 @@
 
 ROOT_GLOB_SOURCES(sources ${CMAKE_CURRENT_SOURCE_DIR}/*.cxx)
 
-include_directories(${LLVM_INCLUDE_DIRS} ${CLING_INCLUDE_DIRS})
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/../res
         ${CMAKE_CURRENT_SOURCE_DIR}/../../clingutils/res
         ${CMAKE_CURRENT_SOURCE_DIR}/../../foundation/res)
+include_directories(${CLING_INCLUDE_DIRS})
+# Register the llvm include directories after clangs. This instructs the compiler to resolve
+# headers from our builtin clang. That's an issue when we are building with bultin_llvm=Off
+# and we have installed clang headers, too.
+include_directories(SYSTEM ${CLANG_INCLUDE_DIRS} ${LLVM_INCLUDE_DIRS})
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${CLING_CXXFLAGS}")
 
 if(MSVC)
