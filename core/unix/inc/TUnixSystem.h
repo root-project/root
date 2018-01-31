@@ -27,6 +27,31 @@
 
 typedef void (*SigHandler_t)(ESignals);
 
+//------------------- Unix TFdSet ----------------------------------------------
+#ifndef HOWMANY
+#   define HOWMANY(x, y)   (((x)+((y)-1))/(y))
+#endif
+
+const Int_t kNFDBITS = (sizeof(Long_t) * 8);  // 8 bits per byte
+#ifdef FD_SETSIZE
+const Int_t kFDSETSIZE = FD_SETSIZE;          // Linux = 1024 file descriptors
+#else
+const Int_t kFDSETSIZE = 256;                 // upto 256 file descriptors
+#endif
+
+class TFdSet {
+private:
+   ULong_t fds_bits[HOWMANY(kFDSETSIZE, kNFDBITS)];
+public:
+   TFdSet();
+   TFdSet(const TFdSet &org);
+   TFdSet &operator=(const TFdSet &rhs) { if (this != &rhs) { memcpy(fds_bits, rhs.fds_bits, sizeof(rhs.fds_bits));} return *this; }
+   void   Zero();
+   void   Set(Int_t n);
+   void   Clr(Int_t n);
+   Int_t  IsSet(Int_t n);
+   ULong_t *GetBits();
+};
 
 class TUnixSystem : public TSystem {
 
@@ -48,12 +73,6 @@ protected:
    static int          UnixSetitimer(Long_t ms);
    static int          UnixSelect(Int_t nfds, TFdSet *readready, TFdSet *writeready,
                                   Long_t timeout);
-   static void         UnixSignal(ESignals sig, SigHandler_t h);
-   static const char  *UnixSigname(ESignals sig);
-   static void         UnixSigAlarmInterruptsSyscalls(Bool_t set);
-   static void         UnixResetSignal(ESignals sig);
-   static void         UnixResetSignals();
-   static void         UnixIgnoreSignal(ESignals sig, Bool_t ignore);
    static int          UnixFilestat(const char *path, FileStat_t &buf);
    static int          UnixFSstat(const char *path, Long_t *id, Long_t *bsize,
                                   Long_t *blocks, Long_t *bfree);
@@ -88,6 +107,7 @@ public:
    //---- Handling of system events ----------------------------
    void              CheckChilds();
    Bool_t            CheckSignals(Bool_t sync);
+   Bool_t            HaveTrappedSignal(Bool_t pendingOnly);
    Bool_t            CheckDescriptors();
    void              DispatchSignals(ESignals sig);
    void              AddSignalHandler(TSignalHandler *sh);
@@ -95,6 +115,7 @@ public:
    void              ResetSignal(ESignals sig, Bool_t reset = kTRUE);
    void              ResetSignals();
    void              IgnoreSignal(ESignals sig, Bool_t ignore = kTRUE);
+   TSeqCollection   *GetListOfSignalHandlers();
    void              SigAlarmInterruptsSyscalls(Bool_t set);
    void              AddFileHandler(TFileHandler *fh);
    TFileHandler     *RemoveFileHandler(TFileHandler *fh);

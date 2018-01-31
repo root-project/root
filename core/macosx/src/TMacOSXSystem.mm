@@ -74,61 +74,6 @@ const NSEventType kApplicationDefined = NSApplicationDefined;
 //Fortunately, this does not violate ODR, but still UGLY.
 //
 
-//------------------- Unix TFdSet ----------------------------------------------
-#ifndef HOWMANY
-#   define HOWMANY(x, y)   (((x)+((y)-1))/(y))
-#endif
-
-const Int_t kNFDBITS = (sizeof(Long_t) * 8);  // 8 bits per byte
-#ifdef FD_SETSIZE
-const Int_t kFDSETSIZE = FD_SETSIZE;          // Linux = 1024 file descriptors
-#else
-const Int_t kFDSETSIZE = 256;                 // upto 256 file descriptors
-#endif
-
-
-class TFdSet {
-private:
-   ULong_t fds_bits[HOWMANY(kFDSETSIZE, kNFDBITS)];
-public:
-   TFdSet() { memset(fds_bits, 0, sizeof(fds_bits)); }
-   TFdSet(const TFdSet &org) { memcpy(fds_bits, org.fds_bits, sizeof(org.fds_bits)); }
-   TFdSet &operator=(const TFdSet &rhs)
-   {
-      if (this != &rhs) {
-         memcpy(fds_bits, rhs.fds_bits, sizeof(rhs.fds_bits));
-      }
-      return *this;
-   }
-   void   Zero() { memset(fds_bits, 0, sizeof(fds_bits)); }
-   void   Set(Int_t n)
-   {
-      if (n >= 0 && n < kFDSETSIZE) {
-         fds_bits[n/kNFDBITS] |= (1UL << (n % kNFDBITS));
-      } else {
-         ::Fatal("TFdSet::Set","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
-      }
-   }
-   void   Clr(Int_t n)
-   {
-      if (n >= 0 && n < kFDSETSIZE) {
-         fds_bits[n/kNFDBITS] &= ~(1UL << (n % kNFDBITS));
-      } else {
-         ::Fatal("TFdSet::Clr","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
-      }
-   }
-   Int_t  IsSet(Int_t n)
-   {
-      if (n >= 0 && n < kFDSETSIZE) {
-         return (fds_bits[n/kNFDBITS] & (1UL << (n % kNFDBITS))) != 0;
-      } else {
-         ::Fatal("TFdSet::IsSet","fd (%d) out of range [0..%d]", n, kFDSETSIZE-1);
-         return 0;
-      }
-   }
-   ULong_t *GetBits() { return (ULong_t *)fds_bits; }
-};
-
 namespace ROOT {
 namespace MacOSX {
 namespace Details {
@@ -387,12 +332,7 @@ void TMacOSXSystem::DispatchOneEvent(Bool_t pendingOnly)
          return;
 
       // check synchronous signals
-      if (fSigcnt > 0 && fSignalHandler->GetSize() > 0)
-         if (CheckSignals(kTRUE))
-            if (!pendingOnly) return;
-
-      fSigcnt = 0;
-      fSignals->Zero();
+      if (HaveTrappedSignal(pendingOnly)) return;
 
       // check synchronous timers
       Long_t nextto = 0;
