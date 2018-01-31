@@ -3142,7 +3142,7 @@ void TFitEditor::DoLibrary(Bool_t on)
                if ( fLibGSL->GetState() != kButtonDisabled )
                   fLibGSL->SetState(kButtonUp);
                if ( fLibGenetics->GetState() != kButtonDisabled )
-               fLibGenetics->SetState(kButtonUp);
+                  fLibGenetics->SetState(kButtonUp);
                fStatusBar->SetText("LIB Minuit", 1);
             }
 
