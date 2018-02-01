@@ -750,9 +750,9 @@ public:
    /// Ranges act as filters when it comes to selecting entries that downstream nodes should process
    bool CheckFilters(unsigned int slot, Long64_t entry) final
    {
-      if (fHasStopped) {
-         return false;
-      } else if (entry != fLastCheckedEntry) {
+      if (entry != fLastCheckedEntry) {
+         if (fHasStopped)
+            return false;
          if (!fPrevData.CheckFilters(slot, entry)) {
             // a filter upstream returned false, cache the result
             fLastResult = false;
