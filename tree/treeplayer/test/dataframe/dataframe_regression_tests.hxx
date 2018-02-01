@@ -90,6 +90,13 @@ TEST(TEST_CATEGORY, Ranges)
 
    EXPECT_DOUBLE_EQ(*fromARange, 20);
    EXPECT_DOUBLE_EQ(*fromAFilter, 4);
+
+   // reaching stop with multiple actions to be processed -- remaining actions must be processed for this last entry
+   auto ranged = d.Range(0,3);
+   auto c1 = ranged.Count();
+   auto c2 = ranged.Count();
+   EXPECT_EQ(*c1, 3ull);
+   EXPECT_EQ(*c2, *c1);
 }
 #endif
 
