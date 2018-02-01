@@ -749,24 +749,24 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a node that filters entries based on range: [start, stop)
+   /// \brief Creates a node that filters entries based on range: [begin, end)
    /// \param[in] begin Initial entry number considered for this range.
    /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
    /// \param[in] stride Process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
    ///
    /// Note that in case of previous Ranges and Filters the selected range refers to the transformed dataset.
    /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
-   TInterface<TDFDetail::TRange<Proxied>> Range(unsigned int start, unsigned int stop, unsigned int stride = 1)
+   TInterface<TDFDetail::TRange<Proxied>> Range(unsigned int begin, unsigned int end, unsigned int stride = 1)
    {
       // check invariants
-      if (stride == 0 || (stop != 0 && stop < start))
-         throw std::runtime_error("Range: stride must be strictly greater than 0 and stop must be greater than start.");
+      if (stride == 0 || (end != 0 && end < begin))
+         throw std::runtime_error("Range: stride must be strictly greater than 0 and end must be greater than begin.");
       if (ROOT::IsImplicitMTEnabled())
          throw std::runtime_error("Range was called with ImplicitMT enabled. Multi-thread ranges are not supported.");
 
       auto df = GetDataFrameChecked();
       using Range_t = TDFDetail::TRange<Proxied>;
-      auto RangePtr = std::make_shared<Range_t>(start, stop, stride, *fProxiedPtr);
+      auto RangePtr = std::make_shared<Range_t>(begin, end, stride, *fProxiedPtr);
       df->Book(RangePtr);
       TInterface<TDFDetail::TRange<Proxied>> tdf_r(RangePtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
       return tdf_r;
@@ -774,10 +774,10 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a node that filters entries based on range
-   /// \param[in] stop Total number of entries that will be processed before stopping. 0 means "never stop".
+   /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
    ///
    /// See the other Range overload for a detailed description.
-   TInterface<TDFDetail::TRange<Proxied>> Range(unsigned int stop) { return Range(0, stop, 1); }
+   TInterface<TDFDetail::TRange<Proxied>> Range(unsigned int end) { return Range(0, end, 1); }
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined function on each entry (*instant action*)
