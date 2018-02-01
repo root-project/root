@@ -126,8 +126,7 @@ int TMVACrossValidationRegression()
    // number of events in the training and test sets to 1, otherwise the non-CV
    // part of TMVA is unhappy.
    dataloader->PrepareTrainingAndTestTree("", "",
-                                          "nTest_Regression=1"
-                                          ":nTest_Regression=1"
+                                          ":nTest_Regression=0"
                                           ":SplitMode=Random"
                                           ":NormMode=NumEvents"
                                           ":!V");
@@ -136,17 +135,15 @@ int TMVACrossValidationRegression()
 
    //
    // This sets up a CrossValidation class (which wraps a TMVA::Factory
-   // internally) for 2-fold cross validation that splits the data on the
-   // dataset spectator `eventID`.
-   //
-   // The idea here is that eventID should be an event number that is integral,
-   // random and independent of the data, generated only once. This last
-   // property ensures that if a calibration is changed the same event will
-   // still be assigned the same fold.
+   // internally) for 2-fold cross validation. The data will be split into the
+   // two folds randomly if `splitExpr` is `""`.
+   // 
+   // One can also give a deterministic split using spectator variables. An
+   // example would be e.g. `"int(fabs([spec1]))%int([NumFolds])"`.
    //
    UInt_t numFolds = 2;
    TString analysisType = "Regression";
-   TString splitExpr = "int(fabs([spec1]))%int([NumFolds])";
+   TString splitExpr = "";
 
    TString cvOptions = Form("!V"
                             ":!Silent"
@@ -170,7 +167,7 @@ int TMVACrossValidationRegression()
                  "MaxDepth=4");
 
    ce.BookMethod(TMVA::Types::kMLP, "MLP",
-                 "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=20000:"
+                 "!H:!V:VarTransform=Norm:NeuronType=tanh:NCycles=200:"
                  "HiddenLayers=N+20:TestRate=6:TrainingMethod=BFGS:"
                  "Sampling=0.3:SamplingEpoch=0.8:ConvergenceImprove=1e-6:"
                  "ConvergenceTests=15:!UseRegulator" );
