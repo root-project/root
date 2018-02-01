@@ -82,12 +82,31 @@ int TMVACrossValidationApplication()
    {
       TString methodName = "BDTG";
       TString weightfile = TString("dataset/weights/") + jobname + "_" + methodName + TString(".weights.xml");
-      reader->BookMVA(methodName, weightfile);
+
+      Bool_t weightfileExists = (gSystem->AccessPathName(weightfile) == kFALSE);
+      if (weightfileExists) {
+         reader->BookMVA(methodName, weightfile);
+      } else {
+         std::cout << "Weightfile for method " << methodName << " not found."
+                      " Did you run TMVACrossValidation with a specified"
+                      " splitExpr?" << std::endl;
+         exit(0);
+      }
+      
    }
    {
       TString methodName = "Fisher";
       TString weightfile = TString("dataset/weights/") + jobname + "_" + methodName + TString(".weights.xml");
-      reader->BookMVA(methodName, weightfile);
+      
+      Bool_t weightfileExists = (gSystem->AccessPathName(weightfile) == kFALSE);
+      if (weightfileExists) {
+         reader->BookMVA(methodName, weightfile);
+      } else {
+         std::cout << "Weightfile for method " << methodName << " not found."
+                      " Did you run TMVACrossValidation with a specified"
+                      " splitExpr?" << std::endl;
+         exit(0);
+      }
    }
 
    // Load data
