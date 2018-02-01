@@ -22,8 +22,9 @@ elseif(cxx14)
 endif()
 
 if(builtin_zlib)
-  set(ZLIB_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include CACHE BOOL "" FORCE)
-  set(ZLIB_LIBRARY ${CMAKE_BINARY_DIR}/lib/libZLIB.a CACHE BOOL "" FORCE)
+  add_library(LLVMZLIB INTERFACE)
+  target_link_libraries(LLVMZLIB INTERFACE ZLIB::ZLIB)
+  set(ZLIB_LIBRARY LLVMZLIB)
 endif()
 
 # The llvm::ReverseIterate<bool>::value symbol from llvm's SmallPtrSet.h
