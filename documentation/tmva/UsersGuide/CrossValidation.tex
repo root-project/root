@@ -1,0 +1,250 @@
+
+% TODO: Add index
+% TODO: Add text to the ordinary flow, indicating that for CV, read here.
+
+%
+% sources
+%  "A survey of cross-validation procedures for model selection"
+%  "Elements of statistical learning"
+%  "Pattern recognition"
+%  "Nerual networks and learning machines"
+%  "No unbiased estimator of th evariance of k-fold cv"
+%  ...
+%
+%  Caltech lecture
+%
+
+\section{Cross Validation}
+Cross validation is an important tool for making the most out of limited data
+sets trading increased data efficiency for decreased computation efficiency.
+This is relevant to HEP applications since experiments are limited by the
+prohibitive cost of running detector and reconstruction simulation.
+
+Note: This is in no respect comprehensive since we elide alternatives such as
+AIC, BIC etc. For an explanation of these concepts, the interested reader is
+recommended to peruse (...).
+We also consider only a very specific application (regression). For the full
+discusion, for different contexts see (...).
+
+\subsection{Overview}
+
+% Find good source for this, spice up language
+In the domain of supervised learning the objective is to find a mapping from a set features to some given target.
+To that end we apply some algorithm to find such a mapping.
+
+A common set up is to have a dataset with a given number of samples, or events, with some ...
+
+\begin{equation}
+\mathcal{D} = \left\{x : x \in \mathbb{R}^{d}\right\}
+\end{equation}
+
+\paragraph{Overfitting}
+Bias-variance trade-off
+Basic example with polynomial to illustrate idea.
+
+N.B. Just because there is a discrepancy between the training and test error does \emph{not} mean that we have overfitting. Overfitting is when when the test error starts increasing. Training error is in general monotonically decreasing.
+
+\paragraph{Objectives}
+   model selection
+   performance estimation
+
+
+In general, we have no idea how well our model performs on unseen data. We can hope that it performs as good as on the training set, but this is for complex models, an optimistic (too good to be true) estimation. To get an idea of how 
+\begin{equation}
+\mathcal{D} = \mathcal{D}_{train} \cup \mathcal{D}_{test}
+\end{equation}
+\begin{equation}
+\mathcal{D}_{train} = \left\{x_k : x \in \mathbb{R}^{n}\right\}
+\end{equation}
+\begin{equation}
+\mathcal{D}_{test} = \left\{x_k : x \in \mathbb{R}^{n}\right\}
+\end{equation}
+
+% TODO: Figure with showing the different sets graphically.
+
+
+We cannot take \emph{any} decisions using the performance estimations we arrived at. Doing so introduces a bias.
+$z = min( x, y )$ where $p(x<0.5) = 0.5$ and $p(y<0.5) = 0.5$ yields $p(z<0.5) = 0.75$. So conciously choosing the best performing model will result in an optimistic (better than the truth) estimation of the performance.
+
+This is why we introduce the validation set
+\begin{equation}
+\mathcal{D} = \mathcal{D}_{train} \cup \mathcal{D}_{validation} \cup \mathcal{D}_{test}
+\end{equation}
+
+
+\begin{equation}
+E_{out} = \frac{1}{K}\sum_{k=1}^{K}L(f(x_k), y_k)
+\end{equation}
+\begin{equation}
+E_{val} = \frac{1}{K}\sum_{k=1}^{K}L(f(x_k), y_k)
+\end{equation}
+
+scaling to cross validation (benefits and drawbacks)
+% TODO: Figure with showing the different sets graphically.
+
+derivation for leave-one-out cv (+explanation)
+scale to k-folds (+explanation)
+
+\paragraph{K-folds}
+\paragraph{Stratification}
+
+% TODO: Figure with showing the different sets graphically.
+
+\subsubsection{Common workflows}
+
+\paragraph{Option 1}
+Describe what happens when you estimate the error for a smaller subset and train on the whole.
+\paragraph{"Cross Evaluation", change name}
+Describe "Cross evaluation".
+
+Motivation:
+In the first option we know that the average resulting model will on average
+perform better than our measure but there is this gap. In physics analysis
+there is a more stringent requirement on the statistical certainty. We want to
+know how the model we have _actually_ perform. One way of getting the best of
+both world is through a technique sometimes calles cross evaluation.
+
+
+
+
+\subsection{Implementation}
+
+... Implementiation details ...
+
+As a factory, but one that does cross validation automatically.
+
+Note: Interface is changed from ordinary factory w.r.t. dataloader handling.
+
+\subsubsection{Cross validation options}
+Booking options
+\begin{codeexample}
+\begin{tmvacode}
+CrossValidation cvFactory {"<jobname>", dataloader, "<options>"};
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Constructing a CrossValidation instance:
+   the first argument is a job name, which will get prepended to all files
+   produced by the CrossValidation factory; The second is the data loader that
+   will provide data for all methods booked through the CrossValidation class;
+   The third is a list of options configuring this instance. Available options
+   can be found in Table~\ref{tab:cv:options}.
+   Individual options are separated by a ':'. See
+   Sec.~\ref{sec:usingtmva:booking} for more information on the booking.}
+\end{codeexample}
+
+
+In addition to the options provided by the TMVA Factory, the CrossValidation class can be configured with the following options.
+
+\begin{optiontableAuto}
+SplitExpr & \mc{1}{c}{--} & "" &  \mc{1}{l}{--} 
+          & Expression used to assign events to folds \\
+
+NumFolds & \mc{1}{c}{--} & 2 &  \mc{1}{l}{--} 
+         & Number of folds to generate \\
+
+FoldFileOutput & \mc{1}{c}{--} & False &  \mc{1}{l}{--} 
+         & If given a TMVA output file will be generated for each fold.
+           Filename will be the same as specifed for the combined output with
+           a \_foldX suffix. \\
+
+OutputEnsembling & \mc{1}{c}{--} & "None" & "None", "Avg"
+         & Combines output from contained methods. If None, no combination is
+         performed. Valid values are "None", and "Avg". \\
+\end{optiontableAuto}
+
+\paragraph{Usage examples}
+
+\begin{codeexample}
+\begin{tmvacode}
+TMVA::DataLoader {}
+TFile * cvOutputFile = TFile::Open("path/to/file");
+TString cvOptions = "!V:!Silent:ModelPersistence"
+                    ":AnalysisType=Classification"
+                    ":NumFolds=2"
+                    ":SplitExpr=int(fabs([eventID]))\%int([NumFolds])";
+TMVA::CrossValidation cv {"", &dataloader, cvOutputFile, cvOptions};
+
+cv.BookMethod(...);
+cv.Evaluate();
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Just some filler for now}
+\end{codeexample}
+
+Usage examples
+   code examples
+   tutorial files?
+
+Limitations / Capabilities
+   Classification / Regression / Multiclass fully supported
+   ...
+
+\subsection{Performance}
+Present toy examples
+Scaling with number of examples
+Scaling with dimensions
+Scaling with folds
+
+Recommendation of parameters
+
+% \subsection{Examples}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+%
+% =============================================================================
+% === Examples                                                              ===
+% =============================================================================
+%
+
+% \subsection{Fisher discriminants (linear discriminant 
+%             analysis\index{Linear Discriminant Analysis})}
+% \label{sec:fisher}
+
+% \subsubsection{Booking options}
+% \subsubsection{Description and implementation}
+% \subsubsection{Variable ranking}
+% \subsubsection{Performance}
+% The Fisher discriminant is booked via the command:
+% \begin{codeexample}
+% \begin{tmvacode}
+% factory->BookMethod( Types::kFisher, "Fisher", "<options>" );
+% \end{tmvacode}
+% \caption[.]{\codeexampleCaptionSize Booking of the Fisher discriminant: the first 
+%          argument is a predefined enumerator, the second argument is a user-defined 
+%          string identifier, and the third argument is the configuration options string.
+%          Individual options are separated by a ':'. 
+%          See Sec.~\ref{sec:usingtmva:booking} for more information on the booking.}
+% \end{codeexample}
+% The configuration options for the Fisher discriminant are given in Option Table~\ref{opt:mva::fisher}.
+
+% % ======= input option table ==========================================
+% \begin{option}[t]
+% \input optiontables/MVA__Fisher.tex
+% \caption[.]{\optionCaptionSize 
+%      Configuration options reference for MVA method: {\em Fisher}.
+%      Values given are defaults. If predefined categories exist, the default category is marked by a '$star$'. The options in Option Table~ref{opt:mva::methodbase} on page~pageref{opt:mva::methodbase} can also be configured.
+     
+% }
+% \label{opt:mva::fisher}
+% \end{option}
