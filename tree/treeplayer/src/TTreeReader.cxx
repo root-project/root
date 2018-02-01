@@ -392,12 +392,14 @@ TTreeReader::EEntryStatus TTreeReader::SetEntryBase(Long64_t entry, Bool_t local
    fMostRecentTreeNumber = fTree->GetTreeNumber();
 
    if (!fProxiesSet) {
-      // Tell readers we now have a tree
-      for (std::deque<ROOT::Internal::TTreeReaderValueBase*>::const_iterator
-              i = fValues.begin(); i != fValues.end(); ++i) { // Iterator end changes when parameterized arrays are read
-         (*i)->CreateProxy();
+      // Tell readers we now have a tree.
+      // fValues gets insertions during this loop (when parameterized arrays are read),
+      // invalidating iterators. Use old-school counting instead.
+      for (size_t i = 0; i < fValues.size(); ++i) {
+         ROOT::Internal::TTreeReaderValueBase* reader = fValues[i];
+         reader->CreateProxy();
 
-         if (!(*i)->GetProxy()){
+         if (!reader->GetProxy()){
             fEntryStatus = kEntryDictionaryError;
             return fEntryStatus;
          }
