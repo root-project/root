@@ -19,6 +19,7 @@
 #include <fstream>
 #include <vector>
 
+#include "TObject.h"
 #include "Math/IFunction.h"  // ROOT::Math::IMultiGradFunction
 #include "Fit/ParameterSettings.h"
 #include "NumericalDerivatorMinuit2.h"
@@ -31,7 +32,21 @@ class RooAbsReal;
 
 #include "Minuit2/FunctionGradient.h"
 
-class RooGradientFunction : public ROOT::Math::IMultiGradFunction {
+// intermediary class necessary to implement pure virtual Clone method
+class CloningIMultiGenFunction : public ROOT::Math::IMultiGenFunction {
+  ROOT::Math::IMultiGenFunction *Clone() const override {
+    return new CloningIMultiGenFunction(*this);
+  }
+};
+
+// intermediary class necessary to implement pure virtual Clone method
+class CloningIMultiGradFunction : public ROOT::Math::IMultiGradFunction {
+  ROOT::Math::IMultiGradFunction *Clone() const override {
+    return new CloningIMultiGradFunction(*this);
+  }
+};
+
+class RooGradientFunction : public TObject, public CloningIMultiGradFunction {
   // An internal implementation class of all the function parts of
   // IMultiGradFunction, to which we will pass on all overrides from
   // RooGradientFunction. This is necessary so we can pass the fully
@@ -39,7 +54,7 @@ class RooGradientFunction : public ROOT::Math::IMultiGradFunction {
   // either pass the not yet fully constructed this-pointer, or do
   // deferred initialization. This way, everything can be handled by
   // the constructor.
-  struct Function : public ROOT::Math::IMultiGenFunction {
+  struct Function : public TObject, public CloningIMultiGenFunction {
     // mutables are because ROOT::Math::IMultiGenFunction::DoEval is const
     mutable Int_t _evalCounter = 0;
     RooAbsReal *_funct;
@@ -67,21 +82,28 @@ class RooGradientFunction : public ROOT::Math::IMultiGradFunction {
     ~Function() override;
 
     // overrides of ROOT::Math::IMultiGenFunction (pure) virtuals
-    ROOT::Math::IMultiGenFunction *Clone() const override;
-    unsigned int NDim() const override { return _nDim; }
+    // CAUTION: Clone has to be overridden from both TObject and
+    // IMultiGenFunction. In both classes the output types are different,
+    // so we can only override one here. We chose the TObject version, since
+    // that is far more likely to actually be used. Take care when using this
+    // pointer!
+    TObject* Clone() const override;
+    unsigned int NDim() const override;
 
     void updateFloatVec();
 
-  private:
+   private:
     double DoEval(const double *x) const override;
+
+    ClassDefOverride(RooGradientFunction::Function,0)
   };
 
-public:
+ public:
   enum class GradientCalculatorMode {
     ExactlyMinuit2, AlmostMinuit2
   };
 
-private:
+ private:
   // CAUTION: do not move _function below _gradf, as it is needed for _gradf
   //          construction
   Function _function;
@@ -107,21 +129,37 @@ private:
 
   virtual std::vector<ROOT::Fit::ParameterSettings>& parameter_settings() const;
 
-protected:
+ protected:
   Double_t GetPdfParamVal(Int_t index);
   Double_t GetPdfParamErr(Int_t index);
   void SetPdfParamErr(Int_t index, Double_t value);
   void ClearPdfParamAsymErr(Int_t index);
   void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
-  inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const;
+  inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const {
+    RooRealVar* par = (RooRealVar*)_function._floatParamVec[index];
 
-public:
+    if (par->getVal()!=value) {
+      if (_function._verbose) std::cout << par->GetName() << "=" << value << ", " ;
+
+      par->setVal(value);
+      return kTRUE;
+    }
+
+    return kFALSE;
+  }
+
+ public:
   explicit RooGradientFunction(RooAbsReal *funct,
                                GradientCalculatorMode grad_mode = GradientCalculatorMode::ExactlyMinuit2,
                                bool verbose = false);
   RooGradientFunction(const RooGradientFunction &other);
 
-  ROOT::Math::IMultiGradFunction *Clone() const override;
+  // CAUTION: Clone has to be overridden from both TObject and
+  // IMultiGradFunction. In both classes the output types are different,
+  // so we can only override one here. We chose the TObject version, since
+  // that is far more likely to actually be used. Take care when using this
+  // pointer!
+  TObject * Clone() const override;
 
   Bool_t synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings>& parameter_settings,
                                         Bool_t optConst = kTRUE, Bool_t verbose = kFALSE);
@@ -151,6 +189,8 @@ public:
   void set_grad_tolerance(double grad_tolerance) const;
   void set_ncycles(unsigned int ncycles) const;
   void set_error_level(double error_level) const;
+
+  ClassDefOverride(RooGradientFunction,0)
 };
 
-#endif //ROO_GRADIENT_FUNCTION
+#endif  // ROO_GRADIENT_FUNCTION

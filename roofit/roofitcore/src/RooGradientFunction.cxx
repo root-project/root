@@ -51,7 +51,6 @@
 
 #include <algorithm> // std::equal
 
-
 RooGradientFunction::RooGradientFunction(RooAbsReal *funct, GradientCalculatorMode grad_mode, bool verbose) :
     _function(funct, verbose),
     _gradf(_function, grad_mode == GradientCalculatorMode::ExactlyMinuit2),
@@ -120,7 +119,7 @@ RooGradientFunction::Function::Function(const RooGradientFunction::Function& oth
     _printEvalErrors(other._printEvalErrors),
     _doEvalErrorWall(other._doEvalErrorWall),
     _nDim(other._nDim),
-    _floatParamVec(other._floatParamVec),
+    _floatParamVec(other._floatParamVec)
 {
   _floatParamList = new RooArgList(*other._floatParamList);
   _constParamList = new RooArgList(*other._constParamList);
@@ -137,13 +136,16 @@ RooGradientFunction::Function::~Function() {
 }
 
 
-ROOT::Math::IMultiGenFunction* RooGradientFunction::Function::Clone() const {
+TObject* RooGradientFunction::Function::Clone() const {
   return new RooGradientFunction::Function(*this);
 }
-ROOT::Math::IMultiGradFunction* RooGradientFunction::Clone() const {
+TObject* RooGradientFunction::Clone() const {
   return new RooGradientFunction(*this);
 }
 
+unsigned int RooGradientFunction::Function::NDim() const {
+  return _nDim;
+}
 
 Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings>& parameter_settings,
                                                            Bool_t optConst, Bool_t verbose) {
@@ -433,21 +435,6 @@ void RooGradientFunction::SetPdfParamErr(Int_t index, Double_t loVal, Double_t h
 
   ((RooRealVar*)_function._floatParamList->at(index))->setAsymError(loVal,hiVal);
 }
-
-
-Bool_t RooGradientFunction::SetPdfParamVal(const Int_t &index, const Double_t &value) const {
-  RooRealVar* par = (RooRealVar*)_function._floatParamVec[index];
-
-  if (par->getVal()!=value) {
-    if (_function._verbose) std::cout << par->GetName() << "=" << value << ", " ;
-
-    par->setVal(value);
-    return kTRUE;
-  }
-
-  return kFALSE;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

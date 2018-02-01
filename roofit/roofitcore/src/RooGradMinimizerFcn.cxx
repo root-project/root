@@ -48,7 +48,6 @@
 
 #include <algorithm> // std::equal
 
-using namespace std;
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* context,
                                          RooGradientFunction::GradientCalculatorMode grad_mode, bool verbose) :
@@ -63,7 +62,7 @@ RooGradMinimizerFcn::RooGradMinimizerFcn(const RooGradMinimizerFcn& other) :
     _context(other._context) {}
 
 
-ROOT::Math::IMultiGradFunction* RooGradMinimizerFcn::Clone() const {
+TObject* RooGradMinimizerFcn::Clone() const {
   return new RooGradMinimizerFcn(*this) ;
 }
 
