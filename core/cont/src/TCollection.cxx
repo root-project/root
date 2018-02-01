@@ -815,8 +815,8 @@ TIter TIter::End()
 
 const TCollection &ROOT::Internal::EmptyCollection()
 {
-   static std::unique_ptr<TCollection> fgEmptyCollection((TCollection *)TClass::GetClass("TObjArray")->New());
-   return *fgEmptyCollection.get();
+   static TObjArray sEmpty;
+   return sEmpty;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
