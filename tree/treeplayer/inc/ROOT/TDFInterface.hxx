@@ -749,11 +749,12 @@ public:
    }
 
    ////////////////////////////////////////////////////////////////////////////
-   /// \brief Creates a node that filters entries based on range
-   /// \param[in] start How many entries to discard before resuming processing.
-   /// \param[in] stop Total number of entries that will be processed before stopping. 0 means "never stop".
-   /// \param[in] stride Process one entry every `stride` entries. Must be strictly greater than 0.
+   /// \brief Creates a node that filters entries based on range: [start, stop)
+   /// \param[in] begin Initial entry number considered for this range.
+   /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
+   /// \param[in] stride Process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
    ///
+   /// Note that in case of previous Ranges and Filters the selected range refers to the transformed dataset.
    /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
    TInterface<TDFDetail::TRange<Proxied>> Range(unsigned int start, unsigned int stop, unsigned int stride = 1)
    {
