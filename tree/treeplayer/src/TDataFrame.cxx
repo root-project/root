@@ -536,21 +536,21 @@ once, a run is triggered.
 ### <a name="ranges"></a>Ranges
 When `TDataFrame` is not being used in a multi-thread environment (i.e. no call to `EnableImplicitMT` was made),
 `Range` transformations are available. These act very much like filters but instead of basing their decision on
-a filter expression, they rely on `start`,`stop` and `stride` parameters.
+a filter expression, they rely on `begin`,`end` and `stride` parameters.
 
-- `start`: number of entries that will be skipped before starting processing again
-- `stop`: maximum number of entries that will be processed
-- `stride`: only process one entry every `stride` entries
+- `begin`: initial entry number considered for this range.
+- `end`: final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
+- `stride`: process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
 
-The actual number of entries processed downstream of a `Range` node will be `(stop - start)/stride` (or less if less
+The actual number of entries processed downstream of a `Range` node will be `(end - begin)/stride` (or less if less
 entries than that are available).
 
 Note that ranges act "locally", not based on the global entry count: `Range(10,50)` means "skip the first 10 entries
 *that reach this node*, let the next 40 entries pass, then stop processing". If a range node hangs from a filter node,
-and the range has a `start` parameter of 10, that means the range will skip the first 10 entries *that pass the
+and the range has a `begin` parameter of 10, that means the range will skip the first 10 entries *that pass the
 preceding filter*.
 
-Ranges allow "early quitting": if all branches of execution of a functional graph reached their `stop` value of
+Ranges allow "early quitting": if all branches of execution of a functional graph reached their `end` value of
 processed entries, the event-loop is immediately interrupted. This is useful for debugging and quick data explorations.
 
 ### <a name="custom-columns"></a> Custom columns
