@@ -238,6 +238,11 @@ void TDirectoryFile::Append(TObject *obj, Bool_t replace /* = kFALSE */)
 
 Int_t TDirectoryFile::AppendKey(TKey *key)
 {
+   if (!fKeys) {
+      Error("AppendKey","TDirectoryFile not initialized yet.");
+      return 0;
+   }
+
    fModified = kTRUE;
 
    key->SetMotherDir(this);
@@ -1087,6 +1092,8 @@ Int_t TDirectoryFile::GetBufferSize() const
 
 TKey *TDirectoryFile::GetKey(const char *name, Short_t cycle) const
 {
+   if (!fKeys) return nullptr;
+
    // TIter::TIter() already checks for null pointers
    TIter next( ((THashList *)(GetListOfKeys()))->GetListForObject(name) );
 
@@ -1309,7 +1316,7 @@ void TDirectoryFile::ReadAll(Option_t* opt)
 
 Int_t TDirectoryFile::ReadKeys(Bool_t forceRead)
 {
-   if (fFile==0) return 0;
+   if (fFile==0 || fKeys==0) return 0;
 
    if (!fFile->IsBinary())
       return fFile->DirReadKeys(this);
@@ -1430,7 +1437,7 @@ void TDirectoryFile::ResetAfterMerge(TFileMergeInfo *info)
    fSeekParent = 0; // updated by Init
    fSeekKeys = 0;   // updated by Init
    // Does not change: fFile
-   TKey *key = (TKey*)fKeys->FindObject(fName);
+   TKey *key = fKeys ? (TKey*)fKeys->FindObject(fName) : nullptr;
    TClass *cl = IsA();
    if (key) {
       cl = TClass::GetClass(key->GetClassName());
