@@ -2203,12 +2203,29 @@ void TGraph::SetPoint(Int_t i, Double_t x, Double_t y)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set graph name.
+void TGraph::SetName(const char *name)
+{
+   fName = name;
+   if (fHistogram) fHistogram->SetName(name);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set graph title.
 
 void TGraph::SetTitle(const char* title)
 {
    fTitle = title;
    if (fHistogram) fHistogram->SetTitle(title);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set graph name and title
+
+void TGraph::SetNameTitle(const char *name, const char *title)
+{
+   SetName(name);
+   SetTitle(title);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
