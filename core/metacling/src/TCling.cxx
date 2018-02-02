@@ -4884,7 +4884,7 @@ int TCling::ReadRootmapFile(const char *rootmapfile, TUniqueString *uniqueString
       bool newFormat=false;
       while (getline(file, line, '\n')) {
          if (!newFormat &&
-             (strstr(line.c_str(), "Library.") != nullptr || strstr(line.c_str(), "Declare.") != nullptr)) {
+             (line.compare(0, 8, "Library.") == 0 || line.compare(0, 8, "Declare.") == 0)) {
             file.close();
             return -3; // old format
          }
