@@ -170,6 +170,8 @@ public:
    virtual void          SetMinimum(Double_t minimum=-1111); // *MENU*
    virtual void          Set(Int_t n);
    virtual void          SetPoint(Int_t i, Double_t x, Double_t y);
+   virtual void          SetName(const char *name=""); // *MENU*
+   virtual void          SetNameTitle(const char *name="", const char *title="");
    virtual void          SetTitle(const char *title="");    // *MENU*
    virtual void          Sort(Bool_t (*greater)(const TGraph*, Int_t, Int_t)=&TGraph::CompareX,
                               Bool_t ascending=kTRUE, Int_t low=0, Int_t high=-1111);
