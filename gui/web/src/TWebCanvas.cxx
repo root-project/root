@@ -501,6 +501,8 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
          }
       }
 
+      if (r.active && (pad != gPad)) gPad = pad;
+
       pad->SetTicks(r.tickx, r.ticky);
       pad->SetGrid(r.gridx, r.gridy);
       pad->SetLogx(r.logx);
