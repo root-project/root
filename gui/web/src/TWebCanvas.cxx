@@ -260,6 +260,7 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
       primitives_lst = &master_lst;
 
    TPadWebSnapshot *curr = new TPadWebSnapshot();
+   curr->SetActive(pad == gPad);
    if (master) {
       curr->SetObjectIDAsPtr(pad);
       master->Add(curr);
@@ -692,6 +693,12 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          Info("ProcessWS", "SVG file %s has been created", filename.Data());
       }
       CheckDataToSend();
+   } else if (strncmp(cdata, "ACTIVEPAD:", 10) == 0) {
+      TPad *pad = dynamic_cast<TPad*> (FindPrimitive(cdata + 10));
+      if (pad && (pad != gPad)) {
+         Info("ProcessWS", "Activate pad %s", pad->GetName());
+         gPad = pad;
+      }
    } else {
       Error("ProcessWS", "GET unknown request %d %30s", (int)arg.length(), cdata);
    }
