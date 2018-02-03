@@ -261,15 +261,11 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
 
    TPadWebSnapshot *curr = new TPadWebSnapshot();
    curr->SetActive(pad == gPad);
-   if (master) {
-      curr->SetObjectIDAsPtr(pad);
-      master->Add(curr);
-   }
+   curr->SetObjectIDAsPtr(pad);
+   curr->SetSnapshot(TWebSnapshot::kSubPad, pad);
 
-   TWebSnapshot *padshot = new TWebSnapshot();
-   padshot->SetObjectIDAsPtr(pad);
-   padshot->SetSnapshot(TWebSnapshot::kObject, pad);
-   curr->Add(padshot);
+   if (master)
+      master->Add(curr);
 
    if (primitives_lst == &master_lst)
       AddCanvasSpecials(curr);
