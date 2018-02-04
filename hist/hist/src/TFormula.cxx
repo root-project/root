@@ -2774,7 +2774,7 @@ const char * TFormula::GetParName(Int_t ipar) const
    }
    Error("GetParName","Parameter with index %d not found !!",ipar);
    //return TString::Format("p%d",ipar);
-   return TString();
+   return "";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
