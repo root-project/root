@@ -354,7 +354,7 @@ void TLoopManager::CleanUpNodes()
    // forget TActions and detach TResultProxies
    fBookedActions.clear();
    for (auto readiness : fResProxyReadiness) {
-      *readiness.get() = true;
+      *readiness = true;
    }
    fResProxyReadiness.clear();
 
