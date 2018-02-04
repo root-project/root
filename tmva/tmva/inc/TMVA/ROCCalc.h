@@ -16,7 +16,6 @@ class TH1D;
 class TH2;
 class TH2F;
 class TSpline;
-class TSpline1;
 
 namespace TMVA {
 
