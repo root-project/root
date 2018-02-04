@@ -1,35 +1,18 @@
+#include "TCanvas.h"
+#include "TFile.h"
+#include "TH2F.h"
+#include "TIterator.h"
+#include "TKey.h"
+#include "TLegend.h"
+#include "TList.h"
 #include "TMVA/probas.h"
+#include "TMVA/tmvaglob.h"
+#include "TString.h"
+
 #include <iostream>
-#include <iomanip>
+
 using std::cout;
 using std::endl;
-
-
-
-#include "RQ_OBJECT.h"
-
-#include "TH1.h"
-#include "TROOT.h"
-#include "TList.h"
-#include "TIterator.h"
-#include "TStyle.h"
-#include "TPad.h"
-#include "TCanvas.h"
-#include "TLatex.h"
-#include "TLegend.h"
-#include "TLine.h"
-#include "TH2.h"
-#include "TFormula.h"
-#include "TFile.h"
-#include "TApplication.h"
-#include "TKey.h"
-#include "TClass.h"
-#include "TGaxis.h"
-
-#include "TGWindow.h"
-#include "TGButton.h"
-#include "TGLabel.h"
-#include "TGNumberEntry.h"
 
 // this macro plots the MVA probability distributions (Signal and
 // Background overlayed) of different MVA methods run in TMVA

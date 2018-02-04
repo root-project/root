@@ -21,10 +21,7 @@
 #include "TMap.h"
 
 #include <vector>
-#include <string>
 #include <map>
-
-using namespace std;
 
 class RooChangeTracker;
 
@@ -47,7 +44,7 @@ public:
          _grid.push_back(binning_y.clone());
          _grid.push_back(binning_z.clone());
       };
-      Grid2(const vector<RooAbsBinning *> binnings)
+      Grid2(const std::vector<RooAbsBinning *> binnings)
       {
          for (unsigned int i = 0; i < binnings.size(); i++) {
             _grid.push_back(binnings[i]->clone());
@@ -59,15 +56,15 @@ public:
       void addPdf(const RooAbsReal &func, int bin_x);
       void addPdf(const RooAbsReal &func, int bin_x, int bin_y);
       void addPdf(const RooAbsReal &func, int bin_x, int bin_y, int bin_z);
-      void addPdf(const RooAbsReal &func, vector<int> bins);
+      void addPdf(const RooAbsReal &func, std::vector<int> bins);
       void addBinning(const RooAbsBinning &binning) { _grid.push_back(binning.clone()); };
 
-      mutable vector<RooAbsBinning *> _grid;
+      mutable std::vector<RooAbsBinning *> _grid;
       mutable RooArgList _pdfList;
-      mutable map<vector<int>, int> _pdfMap;
+      mutable std::map<std::vector<int>, int> _pdfMap;
 
-      mutable vector<vector<double>> _nref;
-      mutable vector<int> _nnuis;
+      mutable std::vector<std::vector<double>> _nref;
+      mutable std::vector<int> _nnuis;
 
       ClassDef(RooMomentMorphFuncND::Grid2, 1)
    };
@@ -124,16 +121,16 @@ protected:
 
    template <typename T>
    struct Digits {
-      typename vector<T>::const_iterator begin;
-      typename vector<T>::const_iterator end;
-      typename vector<T>::const_iterator me;
+      typename std::vector<T>::const_iterator begin;
+      typename std::vector<T>::const_iterator end;
+      typename std::vector<T>::const_iterator me;
    };
 
    template <typename T>
-   static void cartesian_product(vector<vector<T>> &out, vector<vector<T>> &in);
+   static void cartesian_product(std::vector<std::vector<T>> &out, std::vector<std::vector<T>> &in);
    template <typename Iterator>
    static bool next_combination(const Iterator first, Iterator k, const Iterator last);
-   void findShape(const vector<double> &x) const;
+   void findShape(const std::vector<double> &x) const;
 
    friend class CacheElem;
    friend class Grid2;
@@ -151,8 +148,8 @@ protected:
 
    mutable TMatrixD *_M;
    mutable TMatrixD *_MSqr;
-   mutable vector<vector<double>> _squareVec;
-   mutable vector<int> _squareIdx;
+   mutable std::vector<std::vector<double>> _squareVec;
+   mutable std::vector<int> _squareIdx;
 
    Setting _setting;
    Bool_t _useHorizMorph;
