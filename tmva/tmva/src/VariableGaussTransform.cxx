@@ -746,7 +746,7 @@ void TMVA::VariableGaussTransform::MakeFunction( std::ostream& fout, const TStri
                if( type != 'v' ){
                   Log() << kWARNING << "MakeClass for the Gauss transformation works only for the transformation of variables. The transformation of targets/spectators is not implemented." << Endl;
                }
-            }catch( std::out_of_range except ){
+            } catch (const std::out_of_range &except) {
                Log() << kWARNING << "MakeClass for the Gauss transformation searched for a non existing variable index (" << ivar << ")" << Endl;
             }
 

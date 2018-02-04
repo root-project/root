@@ -633,7 +633,7 @@ Float_t TMVA::Reader::EvaluateRegression( UInt_t tgtNumber, const TString& metho
    try {
       return EvaluateRegression(methodTag, aux).at(tgtNumber);
    }
-   catch (std::out_of_range e) {
+   catch (const std::out_of_range &e) {
       Log() << kWARNING << "Regression could not be evaluated for target-number " << tgtNumber << Endl;
       return 0;
    }
@@ -699,7 +699,7 @@ Float_t TMVA::Reader::EvaluateMulticlass( UInt_t clsNumber, const TString& metho
    try {
       return EvaluateMulticlass(methodTag, aux).at(clsNumber);
    }
-   catch (std::out_of_range e) {
+   catch (const std::out_of_range &e) {
       Log() << kWARNING << "Multiclass could not be evaluated for class-number " << clsNumber << Endl;
       return 0;
    }

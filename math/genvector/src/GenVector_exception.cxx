@@ -23,8 +23,7 @@ void Throw(GenVector_exception & e) { if (GenVector_exception::fgOn) throw e; }
 
 void GenVector::Throw(const char * s) {
    if (!GenVector_exception::fgOn) return;
-   GenVector_exception e(s);
-   throw e;
+   throw GenVector_exception(s);
 }
 
 
