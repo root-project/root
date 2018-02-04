@@ -1415,7 +1415,7 @@ TH1 *TUnfoldBinning::ExtractHistogram
          }
       }
    }
-   delete binMap;
+   delete[] binMap;
    return r;
 }
 
