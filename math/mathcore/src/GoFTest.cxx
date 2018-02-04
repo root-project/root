@@ -178,7 +178,7 @@ namespace Math {
    GoFTest::~GoFTest() {}
 
    void GoFTest::SetSamples(std::vector<const Double_t*> samples, const std::vector<UInt_t> samplesSizes) {
-      fCombinedSamples.assign(std::accumulate(samplesSizes.begin(), samplesSizes.end(), 0), 0.0);
+      fCombinedSamples.assign(std::accumulate(samplesSizes.begin(), samplesSizes.end(), 0u), 0.0);
       UInt_t combinedSamplesSize = 0;
       for (UInt_t i = 0; i < samples.size(); ++i) {
          fSamples[i].assign(samples[i], samples[i] + samplesSizes[i]);
