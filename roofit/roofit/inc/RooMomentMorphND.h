@@ -21,10 +21,7 @@
 #include "TMap.h"
 
 #include <vector>
-#include <string>
 #include <map>
-
-using namespace std;
 
 class RooChangeTracker;
 
@@ -47,7 +44,7 @@ public:
          _grid.push_back(binning_y.clone());
          _grid.push_back(binning_z.clone());
       };
-      Grid(const vector<RooAbsBinning *> binnings)
+      Grid(const std::vector<RooAbsBinning *> binnings)
       {
          for (unsigned int i = 0; i < binnings.size(); i++) {
             _grid.push_back(binnings[i]->clone());
@@ -59,15 +56,15 @@ public:
       void addPdf(const RooAbsPdf &pdf, int bin_x);
       void addPdf(const RooAbsPdf &pdf, int bin_x, int bin_y);
       void addPdf(const RooAbsPdf &pdf, int bin_x, int bin_y, int bin_z);
-      void addPdf(const RooAbsPdf &pdf, vector<int> bins);
+      void addPdf(const RooAbsPdf &pdf, std::vector<int> bins);
       void addBinning(const RooAbsBinning &binning) { _grid.push_back(binning.clone()); };
 
-      mutable vector<RooAbsBinning *> _grid;
+      mutable std::vector<RooAbsBinning *> _grid;
       mutable RooArgList _pdfList;
-      mutable map<vector<int>, int> _pdfMap;
+      mutable std::map<std::vector<int>, int> _pdfMap;
 
-      mutable vector<vector<double>> _nref;
-      mutable vector<int> _nnuis;
+      mutable std::vector<std::vector<double>> _nref;
+      mutable std::vector<int> _nnuis;
    };
 
 protected:
@@ -120,7 +117,7 @@ protected:
    RooAbsPdf *sumPdf(const RooArgSet *nset);
    CacheElem *getCache(const RooArgSet *nset) const;
 
-   void findShape(const vector<double> &x) const;
+   void findShape(const std::vector<double> &x) const;
 
    friend class CacheElem;
    friend class Grid;
@@ -138,8 +135,8 @@ protected:
 
    mutable TMatrixD *_M;
    mutable TMatrixD *_MSqr;
-   mutable vector<vector<double>> _squareVec;
-   mutable vector<int> _squareIdx;
+   mutable std::vector<std::vector<double>> _squareVec;
+   mutable std::vector<int> _squareIdx;
 
    Setting _setting;
    Bool_t _useHorizMorph;

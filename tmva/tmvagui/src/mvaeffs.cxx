@@ -1,37 +1,34 @@
+#include "TApplication.h"
+#include "TCanvas.h"
+#include "TClass.h"
+#include "TFile.h"
+#include "TFormula.h"
+#include "TGButton.h"
+#include "TGLabel.h"
+#include "TGNumberEntry.h"
+#include "TGWindow.h"
+#include "TGaxis.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TIterator.h"
+#include "TKey.h"
+#include "TLatex.h"
+#include "TLegend.h"
+#include "TLine.h"
+#include "TList.h"
 #include "TMVA/mvaeffs.h"
-#include <iostream>
+#include "TMVA/tmvaglob.h"
+#include "TPad.h"
+#include "TROOT.h"
+#include "TStyle.h"
+
 #include <iomanip>
+#include <iostream>
+
 using std::cout;
 using std::endl;
 using std::setfill;
 using std::setw;
-
-
-
-#include "RQ_OBJECT.h"
-
-#include "TH1.h"
-#include "TROOT.h"
-#include "TList.h"
-#include "TIterator.h"
-#include "TStyle.h"
-#include "TPad.h"
-#include "TCanvas.h"
-#include "TLatex.h"
-#include "TLegend.h"
-#include "TLine.h"
-#include "TH2.h"
-#include "TFormula.h"
-#include "TFile.h"
-#include "TApplication.h"
-#include "TKey.h"
-#include "TClass.h"
-#include "TGaxis.h"
-
-#include "TGWindow.h"
-#include "TGButton.h"
-#include "TGLabel.h"
-#include "TGNumberEntry.h"
 
 // this macro plots the signal and background efficiencies
 // as a function of the MVA cut.
