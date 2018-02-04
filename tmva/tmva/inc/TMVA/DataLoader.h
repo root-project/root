@@ -54,7 +54,6 @@ namespace TMVA {
    class IMethod;   
    class VariableTransformBase;
    class VarTransformHandler;
-   class Classification;
 
    class DataLoader : public Configurable {
       friend class Factory;
