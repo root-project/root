@@ -525,7 +525,7 @@ int main( int argc, char **argv )
    };
 
    auto reductionFunc = [&]() {
-      for (auto pf : partialFiles) {
+      for (const auto &pf : partialFiles) {
          fileMerger.AddFile(pf.c_str());
       }
       return mergeFiles(fileMerger);
@@ -544,7 +544,7 @@ int main( int argc, char **argv )
          std::cout << "hadd failed at the parallel stage" << std::endl;
       }
       if (!debug) {
-         for (auto pf : partialFiles) {
+         for (const auto &pf : partialFiles) {
             gSystem->Unlink(pf.c_str());
          }
       }
