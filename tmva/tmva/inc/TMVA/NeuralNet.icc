@@ -800,6 +800,7 @@ template <typename LAYERDATA>
                             batches.push_back (Batch (itPat, testPattern.end ()));
 
                         std::vector<std::future<std::tuple<double,std::vector<double>>>> futures;
+                        futures.reserve(batches.size());
                         for (auto& batch : batches)
                         {
                             // -------------------- execute each of the batch ranges on a different thread -------------------------------
@@ -987,6 +988,7 @@ template <typename LAYERDATA>
         
                 // -------------------- loop  over batches -------------------------------------------
                 std::vector<std::future<double>> futures;
+                futures.reserve(batchVec.size());
                 for (auto& batchRange : batchVec)
                 {
                     // -------------------- execute each of the batch ranges on a different thread -------------------------------
