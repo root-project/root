@@ -17,3 +17,4 @@
 *.jpg binary
 *.pdf binary
 *.root binary
+*.fits binary
