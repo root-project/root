@@ -39,8 +39,8 @@ namespace RooFit {
 
   NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, bool always_exactly_mimic_minuit2) :
       fFunction(&f),
-      fG(f.NDim()),
       fN(f.NDim()),
+      fG(f.NDim()),
       _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
   {}
 
@@ -51,8 +51,8 @@ namespace RooFit {
       fGradTolerance(grad_tolerance),
       fNCycles(ncycles),
       Up(error_level),
-      fG(f.NDim()),
       fN(f.NDim()),
+      fG(f.NDim()),
       _always_exactly_mimic_minuit2(always_exactly_mimic_minuit2)
   {
     //number of dimensions, will look at vector size

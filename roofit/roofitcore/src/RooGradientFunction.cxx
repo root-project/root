@@ -93,7 +93,7 @@ RooGradientFunction::Function::Function(RooAbsReal *funct, bool verbose) : _func
   RooAbsArg* arg;
   while ((arg=(RooAbsArg*)pIter->Next())) {
     if (!arg->IsA()->InheritsFrom(RooAbsRealLValue::Class())) {
-      coutW(Evaluation) << "RooGradientFunction::RooGradientFunction: removing parameter "
+      oocoutW(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::RooGradientFunction: removing parameter "
                         << arg->GetName()
                         << " from list because it is not of type RooRealVar" << std::endl;
       _floatParamList->remove(*arg);
@@ -120,7 +120,7 @@ RooGradientFunction::Function::Function(const RooGradientFunction::Function& oth
     _printEvalErrors(other._printEvalErrors),
     _doEvalErrorWall(other._doEvalErrorWall),
     _nDim(other._nDim),
-    _floatParamVec(other._floatParamVec),
+    _floatParamVec(other._floatParamVec)
 {
   _floatParamList = new RooArgList(*other._floatParamList);
   _constParamList = new RooArgList(*other._constParamList);
@@ -178,7 +178,7 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
       _function._nDim++;
 
       if (verbose) {
-        coutI(Evaluation) << "RooGradientFunction::synchronize: parameter "
+        oocoutI(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::synchronize: parameter "
                           << par->GetName() << " is now floating." << std::endl ;
       }
     }
@@ -187,7 +187,7 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
     if (par->getVal()!= oldpar->getVal()) {
       constValChange=kTRUE;
       if (verbose) {
-        coutI(Evaluation) << "RooGradMinimizerFcn::synchronize: value of constant parameter "
+        oocoutI(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradMinimizerFcn::synchronize: value of constant parameter "
                           << par->GetName()
                           << " changed from " << oldpar->getVal() << " to "
                           << par->getVal() << std::endl ;
@@ -214,7 +214,7 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
 
       // Verify that floating parameter is indeed of type RooRealVar
       if (!par->IsA()->InheritsFrom(RooRealVar::Class())) {
-        coutW(Evaluation) << "RooGradientFunction::fit: Error, non-constant parameter "
+        oocoutW(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::fit: Error, non-constant parameter "
                                        << par->GetName()
                                        << " is not of type RooRealVar, skipping" << std::endl;
         _function._floatParamList->remove(*par);
@@ -252,7 +252,7 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
           pstep=1;
         }
         if (verbose) {
-          coutW(Evaluation) << "RooGradientFunction::synchronize: WARNING: no initial error estimate available for "
+          oocoutW(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::synchronize: WARNING: no initial error estimate available for "
                             << par->GetName() << ": using " << pstep << std::endl;
         }
       }
@@ -296,7 +296,7 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
       if (oldVar!=par->getVal()) {
         parameter_settings[index].SetValue(par->getVal());
         if (verbose) {
-          coutI(Evaluation) << "RooGradientFunction::synchronize: value of parameter "
+          oocoutI(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::synchronize: value of parameter "
                             << par->GetName() << " changed from " << oldVar
                             << " to " << par->getVal() << std::endl ;
         }
@@ -304,7 +304,7 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
       parameter_settings[index].Fix();
       constStatChange=kTRUE;
       if (verbose) {
-        coutI(Evaluation) << "RooGradientFunction::synchronize: parameter "
+        oocoutI(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::synchronize: parameter "
                           << par->GetName() << " is now fixed." << std::endl ;
       }
 
@@ -316,7 +316,7 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
         constValChange=kTRUE;
 
         if (verbose) {
-          coutI(Evaluation) << "RooGradientFunction::synchronize: value of fixed parameter "
+          oocoutI(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::synchronize: value of fixed parameter "
                             << par->GetName() << " changed from " << oldVar
                             << " to " << par->getVal() << std::endl ;
         }
@@ -329,7 +329,7 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
         constStatChange=kTRUE;
 
         if (verbose) {
-          coutI(Evaluation) << "RooGradientFunction::synchronize: parameter "
+          oocoutI(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::synchronize: parameter "
                             << par->GetName() << " is now floating." << std::endl ;
         }
       }
@@ -351,19 +351,19 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
         // if ierr<0, par was moved from the const list and a message was already printed
 
         if (oldVar!=par->getVal()) {
-          coutI(Evaluation) << "RooGradientFunction::synchronize: value of parameter "
+          oocoutI(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::synchronize: value of parameter "
                             << par->GetName() << " changed from " << oldVar << " to "
                             << par->getVal() << std::endl ;
         }
         if (oldVlo!=pmin || oldVhi!=pmax) {
-          coutI(Evaluation) << "RooGradientFunction::synchronize: limits of parameter "
+          oocoutI(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::synchronize: limits of parameter "
                             << par->GetName() << " changed from [" << oldVlo << "," << oldVhi
                             << "] to [" << pmin << "," << pmax << "]" << std::endl ;
         }
 
         // If oldVerr=0, then parameter was previously fixed
         if (oldVerr!=pstep && oldVerr!=0) {
-          coutI(Evaluation) << "RooGradientFunction::synchronize: error/step size of parameter "
+          oocoutI(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::synchronize: error/step size of parameter "
                             << par->GetName() << " changed from " << oldVerr << " to " << pstep << std::endl ;
         }
       }
@@ -375,10 +375,10 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
 
       RooAbsReal::setEvalErrorLoggingMode(RooAbsReal::CollectErrors);
 
-      coutI(Evaluation) << "RooGradientFunction::synchronize: set of constant parameters changed, rerunning const optimizer" << std::endl;
+      oocoutI(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::synchronize: set of constant parameters changed, rerunning const optimizer" << std::endl;
       _function._funct->constOptimizeTestStatistic(RooAbsArg::ConfigChange);
     } else if (constValChange) {
-      coutI(Evaluation) << "RooGradientFunction::synchronize: constant parameter values changed, rerunning const optimizer" << std::endl;
+      oocoutI(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction::synchronize: constant parameter values changed, rerunning const optimizer" << std::endl;
       _function._funct->constOptimizeTestStatistic(RooAbsArg::ValueChange);
     }
 
@@ -462,7 +462,7 @@ double RooGradientFunction::Function::DoEval(const double *x) const
   Bool_t parameters_changed = kFALSE;
 
   // Set the parameter values for this iteration
-  for (int index = 0; index < NDim(); index++) {
+  for (unsigned index = 0; index < NDim(); index++) {
     // also check whether the function was already evaluated for this set of parameters
     parameters_changed |= SetPdfParamVal(index,x[index]);
   }
@@ -481,26 +481,26 @@ double RooGradientFunction::Function::DoEval(const double *x) const
     if (_printEvalErrors>=0) {
 
       if (_doEvalErrorWall) {
-        coutW(Evaluation) << "RooGradientFunction: Minimized function has error status." << std::endl
+        oocoutW(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction: Minimized function has error status." << std::endl
                                        << "Returning maximum FCN so far (" << _maxFCN
                                        << ") to force MIGRAD to back out of this region. Error log follows" << std::endl;
       } else {
-        coutW(Evaluation) << "RooGradientFunction: Minimized function has error status but is ignored" << std::endl;
+        oocoutW(static_cast<RooAbsArg*>(nullptr),Evaluation) << "RooGradientFunction: Minimized function has error status but is ignored" << std::endl;
       }
 
       TIterator* iter = _floatParamList->createIterator();
       RooRealVar* var;
       Bool_t first(kTRUE);
-      ccoutW(Evaluation) << "Parameter values: ";
+      ooccoutW(static_cast<RooAbsArg*>(nullptr),Evaluation) << "Parameter values: ";
       while((var=(RooRealVar*)iter->Next())) {
-        if (first) { first = kFALSE ; } else ccoutW(Evaluation) << ", ";
-        ccoutW(Evaluation) << var->GetName() << "=" << var->getVal();
+        if (first) { first = kFALSE ; } else ooccoutW(static_cast<RooAbsArg*>(nullptr),Evaluation) << ", ";
+        ooccoutW(static_cast<RooAbsArg*>(nullptr),Evaluation) << var->GetName() << "=" << var->getVal();
       }
       delete iter;
-      ccoutW(Evaluation) << std::endl;
+      ooccoutW(static_cast<RooAbsArg*>(nullptr),Evaluation) << std::endl;
 
-      RooAbsReal::printEvalErrors(ccoutW(Evaluation),_printEvalErrors);
-      ccoutW(Evaluation) << std::endl;
+      RooAbsReal::printEvalErrors(ooccoutW(static_cast<RooAbsArg*>(nullptr),Evaluation),_printEvalErrors);
+      ooccoutW(static_cast<RooAbsArg*>(nullptr),Evaluation) << std::endl;
     }
 
     if (_doEvalErrorWall) {
@@ -535,7 +535,7 @@ void RooGradientFunction::run_derivator(const double *x) const {
 
     // Set the parameter values for this iteration
     // TODO: this is already done in DoEval as well; find efficient way to do only once
-    for (int index = 0; index < NDim(); index++) {
+    for (unsigned index = 0; index < NDim(); index++) {
       SetPdfParamVal(index,x[index]);
     }
 

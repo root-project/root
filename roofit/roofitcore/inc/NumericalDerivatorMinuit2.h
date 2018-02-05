@@ -96,7 +96,6 @@ namespace RooFit {
     // from InitGradient which is const because DoDerivative must be const because the
     // ROOT::Math::IMultiGradFunction interface requires this
     mutable ROOT::Minuit2::FunctionGradient fG;
-    mutable bool _fG_size_initialized;
     // same story for SetParameterHasLimits
     mutable std::vector <bool> _parameter_has_limits;
 

@@ -72,6 +72,19 @@ class RooGradientFunction : public ROOT::Math::IMultiGradFunction {
 
     void updateFloatVec();
 
+    inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const {
+      RooRealVar* par = (RooRealVar*)_floatParamVec[index];
+
+      if (par->getVal()!=value) {
+        if (_verbose) std::cout << par->GetName() << "=" << value << ", " ;
+
+        par->setVal(value);
+        return kTRUE;
+      }
+
+      return kFALSE;
+    }
+
   private:
     double DoEval(const double *x) const override;
   };
@@ -93,7 +106,7 @@ private:
   mutable RooFit::NumericalDerivatorMinuit2 _gradf;
   mutable ROOT::Minuit2::FunctionGradient _grad;
   mutable std::vector<double> _grad_params;
-  std::vector<ROOT::Fit::ParameterSettings> _parameter_settings;
+  mutable std::vector<ROOT::Fit::ParameterSettings> _parameter_settings;
 
   double DoEval(const double *x) const override;
   double DoDerivative(const double *x, unsigned int icoord) const override;
@@ -114,16 +127,7 @@ protected:
   void ClearPdfParamAsymErr(Int_t index);
   void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
   inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const {
-    RooRealVar* par = (RooRealVar*)_function._floatParamVec[index];
-
-    if (par->getVal()!=value) {
-      if (_function._verbose) std::cout << par->GetName() << "=" << value << ", " ;
-
-      par->setVal(value);
-      return kTRUE;
-    }
-
-    return kFALSE;
+    return _function.SetPdfParamVal(index, value);
   }
 
 public:
