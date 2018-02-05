@@ -32,5 +32,6 @@
 #pragma link C++ class std::vector<TWebObjectOptions>+;
 #pragma link C++ class TWebPadRange+;
 #pragma link C++ class std::vector<TWebPadRange>+;
+#pragma link C++ class TWebPadClick+;
 
 #endif

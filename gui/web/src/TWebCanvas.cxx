@@ -335,8 +335,8 @@ TString TWebCanvas::CreateSnapshot(TPad *pad, TPadWebSnapshot *master, TList *pr
    TString res = TBufferJSON::ConvertToJSON(curr, 23);
 
    // TODO: this is only for debugging, remove it later
-   // static int filecnt = 0;
-   // TBufferJSON::ExportToFile(Form("snapshot_%d.json", (filecnt++) % 10), curr);
+   static int filecnt = 0;
+   TBufferJSON::ExportToFile(Form("snapshot_%d.json", (filecnt++) % 10), curr);
 
    delete curr; // destroy created snapshot
 
@@ -691,14 +691,24 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
          Info("ProcessWS", "SVG file %s has been created", filename.Data());
       }
       CheckDataToSend();
-   } else if (strncmp(cdata, "ACTIVEPAD:", 10) == 0) {
-      TPad *pad = dynamic_cast<TPad*> (FindPrimitive(cdata + 10));
-      if (pad && (pad != gPad)) {
-         Info("ProcessWS", "Activate pad %s", pad->GetName());
-         gPad = pad;
-         Canvas()->SetSelected(pad);
-         if (fActivePadChangedSignal) fActivePadChangedSignal(pad);
+   } else if (strncmp(cdata, "PADCLICKED:", 11) == 0) {
+      TWebPadClick *click = nullptr;
+
+      TBufferJSON::FromJSON(click, cdata + 11);
+
+      if (click) {
+
+         TPad *pad = dynamic_cast<TPad*> (FindPrimitive(click->padid.c_str()));
+         if (pad && (pad != gPad)) {
+            Info("ProcessWS", "Activate pad %s", pad->GetName());
+            gPad = pad;
+            Canvas()->SetSelected(pad);
+            if (fActivePadChangedSignal) fActivePadChangedSignal(pad);
+         }
+
+         delete click; // do not forget to destroy
       }
+
    } else {
       Error("ProcessWS", "GET unknown request %d %30s", (int)arg.length(), cdata);
    }

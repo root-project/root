@@ -69,6 +69,18 @@ public:
 
 /////////////////////////////////////////////////////////
 
+/// Class used to transport pad click events
+class TWebPadClick {
+public:
+   std::string padid;                         ///< id of pad
+   std::string objid;                         ///< id of clicked object, "null" when not defined
+   int x{-1};                                 ///< x coordinate of click event
+   int y{-1};                                 ///< y coordinate of click event
+   TWebPadClick() = default;
+};
+
+/////////////////////////////////////////////////////////
+
 
 /// Function type called for signals, connected with pad like select pad
 using TWebCanvasPadSignal_t = std::function<void(TPad *)>;
