@@ -35,7 +35,7 @@ public:
 
   RooGradMinimizerFcn(const RooGradMinimizerFcn &other);
 
-  TObject* Clone() const override;
+  ROOT::Math::IMultiGradFunction* Clone() const override;
 
   void BackProp(const ROOT::Fit::FitResult &results);
   void ApplyCovarianceMatrix(TMatrixDSym &V);
@@ -46,8 +46,6 @@ private:
   std::vector<ROOT::Fit::ParameterSettings>& parameter_settings() const override;
 
   RooGradMinimizer *_context;
-
-  ClassDefOverride(RooGradMinimizerFcn,0)
 };
 #endif
 #endif
