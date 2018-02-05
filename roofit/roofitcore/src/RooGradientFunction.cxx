@@ -144,6 +144,9 @@ ROOT::Math::IMultiGradFunction* RooGradientFunction::Clone() const {
   return new RooGradientFunction(*this);
 }
 
+unsigned int RooGradientFunction::Function::NDim() const {
+  return _nDim;
+}
 
 Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings>& parameter_settings,
                                                            Bool_t optConst, Bool_t verbose) {
@@ -433,21 +436,6 @@ void RooGradientFunction::SetPdfParamErr(Int_t index, Double_t loVal, Double_t h
 
   ((RooRealVar*)_function._floatParamList->at(index))->setAsymError(loVal,hiVal);
 }
-
-
-Bool_t RooGradientFunction::SetPdfParamVal(const Int_t &index, const Double_t &value) const {
-  RooRealVar* par = (RooRealVar*)_function._floatParamVec[index];
-
-  if (par->getVal()!=value) {
-    if (_function._verbose) std::cout << par->GetName() << "=" << value << ", " ;
-
-    par->setVal(value);
-    return kTRUE;
-  }
-
-  return kFALSE;
-}
-
 
 
 ////////////////////////////////////////////////////////////////////////////////

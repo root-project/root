@@ -68,7 +68,7 @@ class RooGradientFunction : public ROOT::Math::IMultiGradFunction {
 
     // overrides of ROOT::Math::IMultiGenFunction (pure) virtuals
     ROOT::Math::IMultiGenFunction *Clone() const override;
-    unsigned int NDim() const override { return _nDim; }
+    unsigned int NDim() const override;
 
     void updateFloatVec();
 
@@ -113,7 +113,18 @@ protected:
   void SetPdfParamErr(Int_t index, Double_t value);
   void ClearPdfParamAsymErr(Int_t index);
   void SetPdfParamErr(Int_t index, Double_t loVal, Double_t hiVal);
-  inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const;
+  inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const {
+    RooRealVar* par = (RooRealVar*)_function._floatParamVec[index];
+
+    if (par->getVal()!=value) {
+      if (_function._verbose) std::cout << par->GetName() << "=" << value << ", " ;
+
+      par->setVal(value);
+      return kTRUE;
+    }
+
+    return kFALSE;
+  }
 
 public:
   explicit RooGradientFunction(RooAbsReal *funct,

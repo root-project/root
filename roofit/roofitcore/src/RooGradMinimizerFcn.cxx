@@ -48,7 +48,6 @@
 
 #include <algorithm> // std::equal
 
-using namespace std;
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* context,
                                          RooGradientFunction::GradientCalculatorMode grad_mode, bool verbose) :
