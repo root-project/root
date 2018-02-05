@@ -107,6 +107,8 @@ Redo is Undo for undo action. Use TQUndoManager::Redo method for that
 #include "TDataType.h"
 #include "stdarg.h"
 #include "TROOT.h"
+#include "ThreadLocalStorage.h"
+#include "TVirtualRWMutex.h"
 
 ClassImp(TQCommand);
 ClassImp(TQUndoManager);
@@ -670,7 +672,15 @@ const char *TQCommand::GetName() const
 {
    const Int_t maxname = 100;
 
-   if (!fName.IsNull()) return fName.Data();
+   if (!fName.IsNull())
+      return fName.Data();
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   // In case another thread already did the work while
+   // we were waiting.
+   if (!fName.IsNull())
+      return fName.Data();
 
    TString name;
 
@@ -691,11 +701,10 @@ const char *TQCommand::GetName() const
       lnk = lnk->Next();
    }
 
-   // trick against "constness"
-   TQCommand *m = (TQCommand *)this;
+   TQCommand *m = const_cast<TQCommand*>(this);
    m->fName = name;
 
-   return name.Data();
+   return fName;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -704,17 +713,22 @@ const char *TQCommand::GetName() const
 
 const char *TQCommand::GetTitle() const
 {
-   if (!fTitle.IsNull()) return fTitle.Data();
-
-   TString title = GetName();
+   if (!fTitle.IsNull())
+      return fTitle.Data();
 
    if (fUndo) {
+      TTHREAD_TLS_DECL_ARG(TString, title, GetName());
+
       title += "_";
       title += fUndo->GetClassName();
       title += "::";
-      if (fUndo->GetName())  title += fUndo->GetName();
+      if (fUndo->GetName())
+         title += fUndo->GetName();
+
+      return title.Data();
+   } else {
+      return GetName();
    }
-   return title.Data();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
