@@ -30,7 +30,7 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
 # Before setting ROOTSYS, make sure that the environment isn't polluted by a different
 # ROOT build. This is significant e,g. for roottest, which will otherwise have libraries
 # of a different ROOT build available / visible / reachable.
-if(DEFINED ENV{ROOTSYS})
+if($ENV{ROOTSYS})
   string(REPLACE "$ENV{ROOTSYS}/bin" "" ENV{PATH}, $ENV{PATH})
   string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV{LD_LIBRARY_PATH} $ENV{LD_LIBRARY_PATH})
   string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV{PYTHONPATH} $ENV{PYTHONPATH})
