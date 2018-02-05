@@ -30,6 +30,7 @@
 #include <list>
 #include <vector>
 #include <string>
+#include <functional>
 
 #include <ROOT/TWebWindow.hxx>
 
@@ -40,6 +41,7 @@ class TObjLink;
 class TWebSnapshot;
 class TPadWebSnapshot;
 class THttpServer;
+class TWebCanvas;
 
 /// Class used to transport drawing options from the client
 class TWebObjectOptions {
@@ -64,6 +66,13 @@ public:
    TWebPadRange() = default;
 };
 
+
+/////////////////////////////////////////////////////////
+
+
+/// Function type called for signals, connected with pad like select pad
+using TWebCanvasPadSignal_t = std::function<void(TPad *)>;
+
 class TWebCanvas : public TCanvasImp {
 
 protected:
@@ -84,6 +93,8 @@ protected:
    Bool_t fHasSpecials;   ///<! has special objects which may require pad ranges
    Long64_t fCanvVersion; ///<! actual canvas version, changed with every new Modified() call
    Bool_t fWaitNewConnection; ///<! when true, Update() will wait for a new connection
+
+   TWebCanvasPadSignal_t fActivePadChangedSignal; ///<!  signal issued when active pad changed in the canvas
 
    virtual void Lock() {}
    virtual void Unlock() {}
@@ -130,6 +141,9 @@ public:
    virtual void ShowEditor(Bool_t show = kTRUE) { ShowCmd("Editor", show); }
    virtual void ShowToolBar(Bool_t show = kTRUE) { ShowCmd("ToolBar", show); }
    virtual void ShowToolTips(Bool_t show = kTRUE) { ShowCmd("ToolTips", show); }
+
+
+   void SetActivePadChangedSignal(TWebCanvasPadSignal_t func) { fActivePadChangedSignal = func; }
 
    /*
       virtual void   ForceUpdate() { }

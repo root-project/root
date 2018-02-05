@@ -696,6 +696,8 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       if (pad && (pad != gPad)) {
          Info("ProcessWS", "Activate pad %s", pad->GetName());
          gPad = pad;
+         Canvas()->SetSelected(pad);
+         if (fActivePadChangedSignal) fActivePadChangedSignal(pad);
       }
    } else {
       Error("ProcessWS", "GET unknown request %d %30s", (int)arg.length(), cdata);
