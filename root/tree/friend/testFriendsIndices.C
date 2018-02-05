@@ -31,7 +31,7 @@ void createFiles(TString name, Float_t valConst)
    Int_t val3;
    for (int treeNo = 0; treeNo < noTrees; treeNo++) {
       vector<Int_t> data;
-      for (int j = 0; j < size[treeNo]; j++) {
+      for (int j = 0; j < ::size[treeNo]; j++) {
          data.push_back(nextToFill++);
       }
       random_shuffle(data.begin(), data.end());
@@ -48,7 +48,7 @@ void createFiles(TString name, Float_t valConst)
       T->Branch("val3", &val3, "val3/I");
       T->Branch("valConst", &valConst, "valConst/F");
 
-      for (Int_t j = 0; j < size[treeNo]; j++) {
+      for (Int_t j = 0; j < ::size[treeNo]; j++) {
          val = data[j];
          val2 = val*val;
          val3 = val + val2 + (Int_t)valConst;
