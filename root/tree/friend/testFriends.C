@@ -17,9 +17,9 @@ void createChain(TString name, Int_t constantValue)
       T->Branch("x", &x, "x/F");
       T->Branch("y", &y, "y/F");
       T->Branch("z", &z, "z/F");
-      for (Int_t j = 0; j < size[i]; j++) {
+      for (Int_t j = 0; j < ::size[i]; j++) {
          x = j;
-         y = size[i] - j;
+         y = ::size[i] - j;
          z = constantValue;
          T->Fill();
       }
