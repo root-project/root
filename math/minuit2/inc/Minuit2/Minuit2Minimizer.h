@@ -36,7 +36,8 @@ namespace ROOT {
          kSimplex,
          kCombined,
          kScan,
-         kFumili
+         kFumili,
+         kMigradBFGS
       };
 
    }

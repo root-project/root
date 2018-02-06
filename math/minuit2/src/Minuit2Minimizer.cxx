@@ -108,6 +108,7 @@ Minuit2Minimizer::Minuit2Minimizer(const char *  type ) :
    if (algoname == "minimize" ) algoType = kCombined;
    if (algoname == "scan" )     algoType = kScan;
    if (algoname == "fumili" )   algoType = kFumili;
+   if (algoname == "bfgs" )     algoType = kMigradBFGS;
 
    SetMinimizerType(algoType);
 }
@@ -119,6 +120,10 @@ void Minuit2Minimizer::SetMinimizerType(ROOT::Minuit2::EMinimizerType type) {
    case ROOT::Minuit2::kMigrad:
       //std::cout << "Minuit2Minimizer: minimize using MIGRAD " << std::endl;
       SetMinimizer( new ROOT::Minuit2::VariableMetricMinimizer() );
+      return;
+   case ROOT::Minuit2::kMigradBFGS:
+      //std::cout << "Minuit2Minimizer: minimize using MIGRAD " << std::endl;
+      SetMinimizer( new ROOT::Minuit2::VariableMetricMinimizer(VariableMetricMinimizer::BFGSType()) );
       return;
    case ROOT::Minuit2::kSimplex:
       //std::cout << "Minuit2Minimizer: minimize using SIMPLEX " << std::endl;
