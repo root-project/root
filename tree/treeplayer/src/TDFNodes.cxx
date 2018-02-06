@@ -67,7 +67,7 @@ void TCutFlowReport::Print()
       Printf("%-10s: pass=%-10lld all=%-10lld -- %8.3f %%", name.c_str(), pass, all, eff);
    }
 }
-const TCutInfo &TCutFlowReport::GetCutInfo(std::string_view cutName)
+const TCutInfo &TCutFlowReport::operator[](std::string_view cutName)
 {
    if (cutName.empty()) {
       throw std::runtime_error("Cannot look for an unnamed cut.");
