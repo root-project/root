@@ -76,11 +76,11 @@ public:
    std::string objid;                         ///< id of clicked object, "null" when not defined
    int x{-1};                                 ///< x coordinate of click event
    int y{-1};                                 ///< y coordinate of click event
+   bool dbl{false};                           ///< when double-click was performed
    TWebPadClick() = default;
 };
 
 /////////////////////////////////////////////////////////
-
 
 /// Function type called for signals, connected with pad like select pad
 using TWebCanvasPadSignal_t = std::function<void(TPad *)>;
@@ -117,6 +117,8 @@ protected:
    TWebCanvasObjSelectSignal_t fObjSelectSignal; ///<! signal emitted when new object selected in the pad
 
    TWebCanvasPadClickedSignal_t fPadClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
+
+   TWebCanvasPadClickedSignal_t fPadDblClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
 
    virtual void Lock() {}
    virtual void Unlock() {}
@@ -170,6 +172,8 @@ public:
    void SetObjSelectHandler(TWebCanvasObjSelectSignal_t func) { fObjSelectSignal = func; }
 
    void SetPadClickedHandler(TWebCanvasPadClickedSignal_t func) { fPadClickedSignal = func; }
+
+   void SetPadDblClickedHandler(TWebCanvasPadClickedSignal_t func) { fPadDblClickedSignal = func; }
 
    /*
       virtual void   ForceUpdate() { }

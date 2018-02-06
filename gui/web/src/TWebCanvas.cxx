@@ -610,8 +610,8 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       }
       CheckDataToSend();
    } else if (strncmp(cdata, "RANGES6:", 8) == 0) {
-      if (is_first)
-         DecodeAllRanges(cdata + 8); // only first connection can set ranges
+      if (is_first) // only first connection can set ranges
+         DecodeAllRanges(cdata + 8);
    } else if (strncmp(cdata, "GETMENU:", 8) == 0) {
       conn->fGetMenu = cdata + 8;
       CheckDataToSend();
@@ -619,7 +619,7 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       TString buf(cdata + 8);
       Int_t pos = buf.First(':');
 
-      if (pos > 0) {
+      if ((pos > 0) && is_first) { // only first client can execute commands
          TString sid(buf, pos);
          buf.Remove(0, pos + 1);
 
@@ -638,11 +638,11 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       }
    } else if (strncmp(cdata, "EXECANDSEND:", 12) == 0) {
       TString buf(cdata + 12), reply;
-      TObject *obj = 0;
+      TObject *obj = nullptr;
 
       Int_t pos = buf.First(':');
 
-      if (pos > 0) {
+      if ((pos > 0) && is_first) { // only first client can execute commands
          reply.Append(buf, pos);
          buf.Remove(0, pos + 1);
          pos = buf.First(':');
@@ -694,7 +694,9 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    } else if (strncmp(cdata, "PADCLICKED:", 11) == 0) {
       TWebPadClick *click = nullptr;
 
-      TBufferJSON::FromJSON(click, cdata + 11);
+      // only from the first client analyze pad click events
+      if (is_first)
+         TBufferJSON::FromJSON(click, cdata + 11);
 
       if (click) {
 
@@ -712,8 +714,12 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
             if (pad && selobj && fObjSelectSignal) fObjSelectSignal(pad, selobj);
          }
 
-         if ((click->x >= 0) && (click->y >= 0) && fPadClickedSignal)
-            fPadClickedSignal(pad, click->x, click->y);
+         if ((click->x >= 0) && (click->y >= 0)) {
+            if (click->dbl && fPadDblClickedSignal)
+               fPadDblClickedSignal(pad, click->x, click->y);
+            else if (fPadClickedSignal)
+               fPadClickedSignal(pad, click->x, click->y);
+         }
 
          delete click; // do not forget to destroy
       }
