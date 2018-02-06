@@ -30,6 +30,7 @@ set(TestSource
     testAnalyticalIntegrals.cxx
     testTStatistic.cxx
     testKahan.cxx
+    testMixMax.cxx
     fit/testFit.cxx
     fit/testGraphFit.cxx
     fit/SparseDataComparer.cxx
