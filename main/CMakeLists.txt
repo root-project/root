@@ -66,7 +66,7 @@ else()
 endif()
 
 ROOT_EXECUTABLE(rootcling src/rootcling.cxx
-                          LIBRARIES RIO Core Cling ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ${ZLIB_LIBRARIES}
+                          LIBRARIES RIO Core Cling ${PCRE_LIBRARIES} ${LZMA_LIBRARIES} ZLIB::ZLIB
                                     ${CMAKE_DL_LIBS} ${CMAKE_THREAD_LIBS_INIT}
                                     ${corelinklibs})
 # rootcling includes the ROOT complex header which would build the complex
