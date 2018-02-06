@@ -89,4 +89,4 @@ ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx
 #add interpreter test
 set(ROOT_root_CMD ${ROOT_BINARY_DIR}/root.exe)
 ROOT_ADD_TEST(test-testMixMax-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/testMixMax.cxx
-              FAILREGEX "FAILED|Error in"  )
+              FAILREGEX "FAILED|Error in|unresolved"  )
