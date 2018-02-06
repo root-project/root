@@ -29,12 +29,14 @@ void Classification()
    TMVA::Factory *factory = new TMVA::Factory("RMVAClassification", outputFile,
          "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification");
 
-   factory->AddVariable("myvar1 := var1+var2", 'F');
-   factory->AddVariable("myvar2 := var1-var2", "Expression 2", "", 'F');
-   factory->AddVariable("var3",                "Variable 3", "units", 'F');
-   factory->AddVariable("var4",                "Variable 4", "units", 'F');
-   factory->AddSpectator("spec1 := var1*2",  "Spectator 1", "units", 'F');
-   factory->AddSpectator("spec2 := var1*3",  "Spectator 2", "units", 'F');
+   TMVA::DataLoader *dataloader = new TMVA::DataLoader("dataset");
+
+   dataloader->AddVariable("myvar1 := var1+var2", 'F');
+   dataloader->AddVariable("myvar2 := var1-var2", "Expression 2", "", 'F');
+   dataloader->AddVariable("var3",                "Variable 3", "units", 'F');
+   dataloader->AddVariable("var4",                "Variable 4", "units", 'F');
+   dataloader->AddSpectator("spec1 := var1*2",  "Spectator 1", "units", 'F');
+   dataloader->AddSpectator("spec2 := var1*3",  "Spectator 2", "units", 'F');
 
    TFile *input(0);
    TString fname = "./tmva_class_example.root";
@@ -62,12 +64,12 @@ void Classification()
    Double_t backgroundWeight = 1.0;
 
    // You can add an arbitrary number of signal or background trees
-   factory->AddSignalTree(tsignal,     signalWeight);
-   factory->AddBackgroundTree(tbackground, backgroundWeight);
+   dataloader->AddSignalTree(tsignal,     signalWeight);
+   dataloader->AddBackgroundTree(tbackground, backgroundWeight);
 
 
    // Set individual event weights (the variables must exist in the original TTree)
-   factory->SetBackgroundWeightExpression("weight");
+   dataloader->SetBackgroundWeightExpression("weight");
 
 
    // Apply additional cuts on the signal and background samples (can be different)
@@ -75,18 +77,18 @@ void Classification()
    TCut mycutb = ""; // for example: TCut mycutb = "abs(var1)<0.5";
 
    // Tell the factory how to use the training and testing events
-   factory->PrepareTrainingAndTestTree(mycuts, mycutb,
+   dataloader->PrepareTrainingAndTestTree(mycuts, mycutb,
                                        "nTrain_Signal=0:nTrain_Background=0:nTest_Signal=0:nTest_Background=0:SplitMode=Random:NormMode=NumEvents:!V");
 
    //R TMVA Methods
-   factory->BookMethod(TMVA::Types::kC50, "C50",
+   factory->BookMethod(dataloader, TMVA::Types::kC50, "C50",
                        "!H:NTrials=10:Rules=kFALSE:ControlSubSet=kFALSE:ControlBands=0:ControlWinnow=kFALSE:ControlNoGlobalPruning=kTRUE:ControlCF=0.25:ControlMinCases=2:ControlFuzzyThreshold=kTRUE:ControlSample=0:ControlEarlyStopping=kTRUE:!V");
 
-   factory->BookMethod(TMVA::Types::kRXGB, "RXGB", "!V:NRounds=80:MaxDepth=2:Eta=1");
+   factory->BookMethod(dataloader, TMVA::Types::kRXGB, "RXGB", "!V:NRounds=80:MaxDepth=2:Eta=1");
 
-   factory->BookMethod(TMVA::Types::kRSNNS, "RMLP", "!H:VarTransform=N:Size=c(5):Maxit=200:InitFunc=Randomize_Weights:LearnFunc=Std_Backpropagation:LearnFuncParams=c(0.2,0):!V");
+   factory->BookMethod(dataloader, TMVA::Types::kRSNNS, "RMLP", "!H:VarTransform=N:Size=c(5):Maxit=200:InitFunc=Randomize_Weights:LearnFunc=Std_Backpropagation:LearnFuncParams=c(0.2,0):!V");
 
-   factory->BookMethod(TMVA::Types::kRSVM, "RSVM", "!H:Kernel=linear:Type=C-classification:VarTransform=Norm:Probability=kTRUE:Tolerance=0.1:!V");
+   factory->BookMethod(dataloader, TMVA::Types::kRSVM, "RSVM", "!H:Kernel=linear:Type=C-classification:VarTransform=Norm:Probability=kTRUE:Tolerance=0.1:!V");
 
 
    // Train MVAs using the set of training events

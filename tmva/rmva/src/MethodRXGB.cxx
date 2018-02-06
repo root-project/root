@@ -54,6 +54,8 @@ MethodRXGB::MethodRXGB(const TString &jobName,
    fNRounds(10),
    fEta(0.3),
    fMaxDepth(6),
+   fObjective("multi:softprob"),
+   fClassNum(2),
    predict("predict", "xgboost"),
    xgbtrain("xgboost"),
    xgbdmatrix("xgb.DMatrix"),
@@ -73,6 +75,8 @@ MethodRXGB::MethodRXGB(DataSetInfo &theData, const TString &theWeightFile)
      fNRounds(10),
      fEta(0.3),
      fMaxDepth(6),
+     fObjective("multi:softprob"),
+     fClassNum(2),
      predict("predict", "xgboost"),
      xgbtrain("xgboost"),
      xgbdmatrix("xgb.DMatrix"),
@@ -86,11 +90,13 @@ MethodRXGB::MethodRXGB(DataSetInfo &theData, const TString &theWeightFile)
 }
 
 
+
 //_______________________________________________________________________
 MethodRXGB::~MethodRXGB(void)
 {
    if (fModel) delete fModel;
 }
+
 
 //_______________________________________________________________________
 Bool_t MethodRXGB::HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/)
@@ -131,6 +137,8 @@ void MethodRXGB::Train()
    ROOT::R::TRDataFrame params;
    params["eta"] = fEta;
    params["max.depth"] = fMaxDepth;
+   params["objective"] = fObjective;
+   params["num_class"] = fClassNum;
 
    SEXP Model = xgbtrain(ROOT::R::Label["data"] = dmatrix,
                          ROOT::R::Label["label"] = fFactorNumeric,
@@ -141,7 +149,7 @@ void MethodRXGB::Train()
    fModel = new ROOT::R::TRObject(Model);
    if (IsModelPersistence())
    {
-        TString path = GetWeightFileDir() + "/RXGBModel.RData";
+        TString path = GetWeightFileDir() +  "/" + GetName() + ".RData";
         Log() << Endl;
         Log() << gTools().Color("bold") << "--- Saving State File In:" << gTools().Color("reset") << path << Endl;
         Log() << Endl;
@@ -155,11 +163,15 @@ void MethodRXGB::DeclareOptions()
    DeclareOptionRef(fNRounds, "NRounds", "The max number of iterations");
    DeclareOptionRef(fEta, "Eta", "Step size shrinkage used in update to prevents overfitting. After each boosting step, we can directly get the weights of new features. and eta actually shrinks the feature weights to make the boosting process more conservative.");
    DeclareOptionRef(fMaxDepth, "MaxDepth", "Maximum depth of the tree");
+   DeclareOptionRef(fObjectiveS, "objective", "The learning task and the corresponding learning objective");
+   DeclareOptionRef(fClassNum, "num_class", "Number of classes to be used for multiclass classification if using with multi:softmax and multi:softprob objectives ");;;;;;
 }
 
 //_______________________________________________________________________
 void MethodRXGB::ProcessOptions()
 {
+   fObjectiveS.ToLower();
+   if      (fObjectiveS == "multi_softprob") fObjective = "multi:softprob";
 }
 
 //_______________________________________________________________________
@@ -233,7 +245,11 @@ std::vector<Double_t> MethodRXGB::GetMvaValues(Long64_t firstEvt, Long64_t lastE
 
    std::vector<Double_t> mvaValues(nEvents); 
    ROOT::R::TRObject pred = predict(*fModel, xgbdmatrix(ROOT::R::Label["data"] = asmatrix(evtData)));
-   mvaValues = pred.As<std::vector<Double_t>>(); 
+   mvaValues = pred.As<std::vector<Double_t>>();
+   /*for (int i = 0; i < mvaValues.size(); ++i)
+    {
+      std::cout << i <<  mvaValues[i] << std::endl;
+    } */
 
    if (logProgress) {
       Log() << kINFO <<Form("Dataset[%s] : ",DataInfo().GetName())<< "Elapsed time for evaluation of " << nEvents <<  " events: "
@@ -267,7 +283,7 @@ void MethodRXGB::GetHelpMessage() const
 void TMVA::MethodRXGB::ReadModelFromFile()
 {
    ROOT::R::TRInterface::Instance().Require("RXGB");
-   TString path = GetWeightFileDir() + "/RXGBModel.RData";
+   TString path = GetWeightFileDir() +  "/" + GetName() + ".RData";
    Log() << Endl;
    Log() << gTools().Color("bold") << "--- Loading State File From:" << gTools().Color("reset") << path << Endl;
    Log() << Endl;

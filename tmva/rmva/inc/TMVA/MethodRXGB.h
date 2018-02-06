@@ -79,6 +79,7 @@ namespace TMVA {
       DataSetManager    *fDataSetManager;     // DSMTEST
       friend class Factory;                   // DSMTEST
       friend class Reader;                    // DSMTEST
+
    protected:
 
       
@@ -87,6 +88,9 @@ namespace TMVA {
       UInt_t fNRounds;
       Double_t fEta;
       UInt_t fMaxDepth;
+      TString fObjectiveS;
+      TString fObjective;
+      Int_t fClassNum;
       static Bool_t IsModuleLoaded;
 
       std::vector<UInt_t>  fFactorNumeric;   //factors creations
