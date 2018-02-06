@@ -85,6 +85,12 @@ public:
 /// Function type called for signals, connected with pad like select pad
 using TWebCanvasPadSignal_t = std::function<void(TPad *)>;
 
+/// Function type called for signals, connected with pad like select pad
+using TWebCanvasObjSelectSignal_t = std::function<void(TPad *, TObject *)>;
+
+/// Function type for pad-click signals
+using TWebCanvasPadClickedSignal_t = std::function<void(TPad *, int, int)>;
+
 class TWebCanvas : public TCanvasImp {
 
 protected:
@@ -106,7 +112,11 @@ protected:
    Long64_t fCanvVersion; ///<! actual canvas version, changed with every new Modified() call
    Bool_t fWaitNewConnection; ///<! when true, Update() will wait for a new connection
 
-   TWebCanvasPadSignal_t fActivePadChangedSignal; ///<!  signal issued when active pad changed in the canvas
+   TWebCanvasPadSignal_t fActivePadChangedSignal; ///<!  signal emitted when active pad changed in the canvas
+
+   TWebCanvasObjSelectSignal_t fObjSelectSignal; ///<! signal emitted when new object selected in the pad
+
+   TWebCanvasPadClickedSignal_t fPadClickedSignal; ///<! signal emitted when simple mouse click performed on the pad
 
    virtual void Lock() {}
    virtual void Unlock() {}
@@ -155,7 +165,11 @@ public:
    virtual void ShowToolTips(Bool_t show = kTRUE) { ShowCmd("ToolTips", show); }
 
 
-   void SetActivePadChangedSignal(TWebCanvasPadSignal_t func) { fActivePadChangedSignal = func; }
+   void SetActivePadChangedHandler(TWebCanvasPadSignal_t func) { fActivePadChangedSignal = func; }
+
+   void SetObjSelectHandler(TWebCanvasObjSelectSignal_t func) { fObjSelectSignal = func; }
+
+   void SetPadClickedHandler(TWebCanvasPadClickedSignal_t func) { fPadClickedSignal = func; }
 
    /*
       virtual void   ForceUpdate() { }
