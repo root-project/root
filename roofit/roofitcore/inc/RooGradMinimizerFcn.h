@@ -39,10 +39,9 @@ class RooGradMinimizerFcn : public RooGradientFunction {
   void BackProp(const ROOT::Fit::FitResult &results);
   void ApplyCovarianceMatrix(TMatrixDSym &V);
 
-  void synchronize_gradient_with_minimizer() const;
-
   ROOT::Minuit2::MnStrategy get_strategy() const;
   double get_error_def() const;
+  void set_strategy(int istrat);
 
  private:
   std::vector<ROOT::Fit::ParameterSettings>& parameter_settings() const override;

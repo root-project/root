@@ -126,7 +126,6 @@ RooGradMinimizer::RooGradMinimizer(RooAbsReal& function, bool always_exactly_mim
   // Declare our parameters to MINUIT
   _fcn->synchronize_parameter_settings(_theFitter->Config().ParamsSettings(),
                                        _optConst, _verbose);
-//  _fcn->synchronize_gradient_with_minimizer();
 }
 
 
@@ -155,6 +154,7 @@ RooGradMinimizer::~RooGradMinimizer()
 
 void RooGradMinimizer::setStrategy(Int_t istrat) {
   _theFitter->Config().MinimizerOptions().SetStrategy(istrat);
+  _fcn->set_strategy(static_cast<int>(istrat));
 }
 
 
@@ -173,7 +173,6 @@ Int_t RooGradMinimizer::migrad()
   RooAbsReal::clearEvalErrorLog() ;
 
   _theFitter->Config().SetMinimizer(_minimizerType.c_str(),"migrad");
-  _fcn->synchronize_gradient_with_minimizer();
   bool ret = _theFitter->FitFCN(*_fcn);
   _status = ((ret) ? _theFitter->Result().Status() : -1);
 
@@ -209,7 +208,6 @@ Int_t RooGradMinimizer::hesse()
     RooAbsReal::clearEvalErrorLog() ;
 
     _theFitter->Config().SetMinimizer(_minimizerType.c_str());
-    _fcn->synchronize_gradient_with_minimizer();
     bool ret = _theFitter->CalculateHessErrors();
     _status = ((ret) ? _theFitter->Result().Status() : -1);
 
@@ -247,7 +245,6 @@ Int_t RooGradMinimizer::minos()
     RooAbsReal::clearEvalErrorLog() ;
 
     _theFitter->Config().SetMinimizer(_minimizerType.c_str());
-    _fcn->synchronize_gradient_with_minimizer();
     bool ret = _theFitter->CalculateMinosErrors();
     _status = ((ret) ? _theFitter->Result().Status() : -1);
 
@@ -302,7 +299,6 @@ Int_t RooGradMinimizer::minos(const RooArgSet& minosParamList)
       _theFitter->Config().SetMinosErrors(paramInd);
 
       _theFitter->Config().SetMinimizer(_minimizerType.c_str());
-      _fcn->synchronize_gradient_with_minimizer();
       bool ret = _theFitter->CalculateMinosErrors();
       _status = ((ret) ? _theFitter->Result().Status() : -1);
       // to avoid that following minimization computes automatically the Minos errors
@@ -420,6 +416,7 @@ RooGradMinimizerFcn* RooGradMinimizer::fitterFcn() { return ( fitter()->GetFCN()
 void RooGradMinimizer::setErrorLevel(Double_t level)
 {
   _theFitter->Config().MinimizerOptions().SetErrorDef(level);
+  _fcn->set_error_level(level);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -433,9 +430,10 @@ void RooGradMinimizer::setEps(Double_t eps)
 ////////////////////////////////////////////////////////////////////////////////
 /// Choose the minimizer algorithm.
 
-void RooGradMinimizer::setMinimizerType(const char* type)
-{
-  _minimizerType = type;
+void RooGradMinimizer::setMinimizerType(const char* type) {
+  if (strcmp(type, "Minuit2") != 0) {
+    throw std::invalid_argument("In RooGradMinimizer::setMinimizerType: only Minuit2 is supported in RooGradMinimizer!");
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

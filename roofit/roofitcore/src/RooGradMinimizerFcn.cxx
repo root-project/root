@@ -51,7 +51,10 @@
 RooGradMinimizerFcn::RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer* context,
                                          RooGradientFunction::GradientCalculatorMode grad_mode, bool verbose) :
     RooGradientFunction(funct, grad_mode, verbose),
-    _context(context) {}
+    _context(context) {
+  set_strategy(ROOT::Math::MinimizerOptions::DefaultStrategy());
+  set_error_level(ROOT::Math::MinimizerOptions::DefaultErrorDef());
+}
 
 
 RooGradMinimizerFcn::RooGradMinimizerFcn(const RooGradMinimizerFcn& other) :
@@ -112,58 +115,18 @@ void RooGradMinimizerFcn::ApplyCovarianceMatrix(TMatrixDSym& V)
 
 // it's not actually const, it mutates mutables, but it has to be defined
 // const because it's called from DoDerivative, which insists on constness
-void RooGradMinimizerFcn::synchronize_gradient_with_minimizer() const {
-  // use context to setup gradient calculator
-  auto strategy = get_strategy();
+
+std::vector<ROOT::Fit::ParameterSettings>& RooGradMinimizerFcn::parameter_settings() const {
+  return _context->fitter()->Config().ParamsSettings();
+}
+
+void RooGradMinimizerFcn::set_strategy(int istrat) {
+  assert (istrat >= 0);
+  ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(istrat));
 
   set_step_tolerance(strategy.GradientStepTolerance());
   set_grad_tolerance(strategy.GradientTolerance());
   set_ncycles(strategy.GradientNCycles());
-  set_error_level(get_error_def());
-
-  ROOT::Fit::Fitter *fitter = _context->fitter();
-  if (!fitter) {
-    throw std::runtime_error("In RooGradMinimizerFcn::RooGradMinimizerFcn: fitter is null!");
-  }
-
-  synchronize_gradient_parameter_settings(fitter->Config().ParamsSettings());
-}
-
-
-ROOT::Minuit2::MnStrategy RooGradMinimizerFcn::get_strategy() const {
-  ROOT::Fit::Fitter *fitter = _context->fitter();
-  ROOT::Math::Minimizer *minimizer = nullptr;
-  if (fitter) {
-    minimizer = fitter->GetMinimizer();
-  }
-
-  if (minimizer) {
-    ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(minimizer->Strategy()));
-    return strategy;
-  } else {
-    ROOT::Minuit2::MnStrategy strategy(static_cast<unsigned int>(ROOT::Math::MinimizerOptions::DefaultStrategy()));
-    return strategy;
-  }
-}
-
-
-double RooGradMinimizerFcn::get_error_def() const {
-  ROOT::Fit::Fitter *fitter = _context->fitter();
-  ROOT::Math::Minimizer *minimizer = nullptr;
-  if (fitter) {
-    minimizer = fitter->GetMinimizer();
-  }
-
-  if (minimizer) {
-    return minimizer->ErrorDef();
-  } else {
-    return ROOT::Math::MinimizerOptions::DefaultErrorDef();
-  }
-}
-
-
-std::vector<ROOT::Fit::ParameterSettings>& RooGradMinimizerFcn::parameter_settings() const {
-  return _context->fitter()->Config().ParamsSettings();
 }
 
 #endif

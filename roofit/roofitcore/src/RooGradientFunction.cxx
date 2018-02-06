@@ -120,7 +120,8 @@ RooGradientFunction::Function::Function(const RooGradientFunction::Function& oth
     _printEvalErrors(other._printEvalErrors),
     _doEvalErrorWall(other._doEvalErrorWall),
     _nDim(other._nDim),
-    _floatParamVec(other._floatParamVec)
+    _floatParamVec(other._floatParamVec),
+    _verbose(other._verbose)
 {
   _floatParamList = new RooArgList(*other._floatParamList);
   _constParamList = new RooArgList(*other._constParamList);
