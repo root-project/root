@@ -1,43 +1,32 @@
-# Build core/clib
-# Define all header and source files which are needed
-# to build the Core library
-# The Core library is build in the main CMakeLists.txt
-# of the core subdirectory.
+find_package(ZLIB REQUIRED)
 
-# Public headers for ROOT compression.
-Set(ZipRootHeaders
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/Compression.h
-  ${CMAKE_CURRENT_SOURCE_DIR}/inc/RZip.h
+set(ZIP_HEADERS
+  inc/Compression.h
+  inc/RZip.h
 )
 
-# These files implement the old-style compression algorithm
-Set(ZipOldSource
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/Bits.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/ZDeflate.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/ZTrees.c
-  ${CMAKE_CURRENT_SOURCE_DIR}/src/ZInflate.c
+set(ZIP_SOURCES
+  src/Bits.c
+  src/ZDeflate.c
+  src/ZTrees.c
+  src/ZInflate.c
+  src/Compression.cxx
+  src/RZip.cxx
 )
 
-set(ZLIB_HEADERS ${ZipRootHeaders})
-set(ZLIB_SRCS ${ZipOldSource} ${CMAKE_CURRENT_SOURCE_DIR}/src/Compression.cxx ${CMAKE_CURRENT_SOURCE_DIR}/src/RZip.cxx)
+include_directories(${ZLIB_INCLUDE_DIR})
+ROOT_OBJECT_LIBRARY(Zip ${ZIP_SOURCES})
 
-# Define all the header files which should be installed when
-# doing a "make install"
-install(FILES ${ZLIB_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
-string(REPLACE ${CMAKE_SOURCE_DIR} "" tgt ${CMAKE_CURRENT_SOURCE_DIR})
-string(MAKE_C_IDENTIFIER move_header${tgt} tgt)
-set_property(GLOBAL APPEND PROPERTY ROOT_HEADER_TARGETS ${tgt})
-set(dst_list)
-foreach(include_file ${ZLIB_HEADERS})
-  get_filename_component(incname ${include_file} NAME)
-  set(dst ${CMAKE_BINARY_DIR}/include/${incname})
-  add_custom_command(
-    OUTPUT ${dst}
-    COMMAND ${CMAKE_COMMAND} -E copy ${include_file} ${dst}
-    DEPENDS ${include_file})
-    list(APPEND dst_list ${dst})  
+add_custom_target(Zip_headers DEPENDS ${ZIP_HEADERS})
+
+foreach(header ${ZIP_HEADERS})
+  string(REPLACE "inc/" "" header ${header})
+  set(src_header ${CMAKE_CURRENT_SOURCE_DIR}/inc/${header})
+  set(dst_header ${CMAKE_BINARY_DIR}/include/${header})
+  add_custom_command(TARGET Zip_headers BYPRODUCTS ${dst_header}
+    COMMAND ${CMAKE_COMMAND} -E copy ${src_header} ${dst_header})
 endforeach()
-add_custom_target(${tgt} DEPENDS ${dst_list})
-set_property(GLOBAL APPEND PROPERTY ROOT_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR}/inc)
 
-ROOT_OBJECT_LIBRARY(Zip ${ZLIB_SRCS})
+add_dependencies(Zip Zip_headers)
+
+install(FILES ${ZIP_HEADERS} DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} COMPONENT headers)
