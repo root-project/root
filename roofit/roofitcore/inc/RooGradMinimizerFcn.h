@@ -19,6 +19,7 @@
 #define ROO_GRAD_MINIMIZER_FCN
 
 #include "Fit/FitResult.h"
+#include "Minuit2/MnStrategy.h"
 #include "TMatrixDSym.h"
 #include "RooGradientFunction.h"
 
@@ -26,9 +27,7 @@ class RooGradMinimizer;
 
 
 class RooGradMinimizerFcn : public RooGradientFunction {
-
-public:
-
+ public:
   RooGradMinimizerFcn(RooAbsReal *funct, RooGradMinimizer *context,
                       GradientCalculatorMode grad_mode = GradientCalculatorMode::ExactlyMinuit2,
                       bool verbose = false);
@@ -42,7 +41,10 @@ public:
 
   void synchronize_gradient_with_minimizer() const;
 
-private:
+  ROOT::Minuit2::MnStrategy get_strategy() const;
+  double get_error_def() const;
+
+ private:
   std::vector<ROOT::Fit::ParameterSettings>& parameter_settings() const override;
 
   RooGradMinimizer *_context;

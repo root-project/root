@@ -126,7 +126,7 @@ RooGradMinimizer::RooGradMinimizer(RooAbsReal& function, bool always_exactly_mim
   // Declare our parameters to MINUIT
   _fcn->synchronize_parameter_settings(_theFitter->Config().ParamsSettings(),
                                        _optConst, _verbose);
-  _fcn->synchronize_gradient_with_minimizer();
+//  _fcn->synchronize_gradient_with_minimizer();
 }
 
 
