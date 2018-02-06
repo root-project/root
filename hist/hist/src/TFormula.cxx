@@ -766,7 +766,7 @@ bool TFormula::PrepareEvalMethod()
       // init method call using real function name (cling name) which is defined in ProcessFormula
       fMethod->InitWithPrototype(fClingName, prototypeArguments);
       if (!fMethod->IsValid()) {
-         Error("Eval", "Can't find %s function prototype with arguments %s", fClingName.Data(),
+         Error("PrepareEvalMethod", "Can't find %s function prototype with arguments %s", fClingName.Data(),
                prototypeArguments.Data());
          return false;
       }
@@ -787,8 +787,18 @@ bool TFormula::PrepareEvalMethod()
       // }
 
       CallFunc_t *callfunc = fMethod->GetCallFunc();
+
+      bool isvalid = gCling->CallFunc_IsValid(callfunc);
+      if (! isvalid ) {
+         Error("PrepareEvalMethod","Callfunc retuned from Cling is not valid");
+         return false; 
+      } 
       TInterpreter::CallFuncIFacePtr_t faceptr = gCling->CallFunc_IFacePtr(callfunc);
       fFuncPtr = faceptr.fGeneric;
+      if (fFuncPtr == 0) {
+         Error("PrepareEvalMethod","Compiled function pointer is null");
+         return false; 
+      }
    }
    return true;
 }
@@ -829,7 +839,7 @@ void TFormula::FillDefaults()
                                                 {"r", TMath::R()},
                                                 {"eg", TMath::EulerGamma()},
                                                 {"true", 1},
-                                                {"false", 0}};
+                                               {"false", 0}};
    // const pair<TString,Double_t> defconsts[] = { {"pi",TMath::Pi()}, {"sqrt2",TMath::Sqrt2()},
    //       {"infinity",TMath::Infinity()}, {"ln10",TMath::Ln10()},
    //       {"loge",TMath::LogE()}, {"true",1},{"false",0} };
@@ -3180,8 +3190,18 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
    }
    // this is needed when reading from a file
    if (!fClingInitialized) {
-      Error("DoEval", "Formula is invalid or not properly initialized - try calling TFormula::Compile");
-      return TMath::QuietNaN();
+      // try recompiling the formula. We need to lock because this is not anymore thread safe
+      R__LOCKGUARD(gROOTMutex);
+      auto thisFormula = const_cast<TFormula*>(this); 
+      thisFormula->fMethod->Delete();
+      thisFormula->fMethod = nullptr;
+      Warning("DoEval", "Formula is NOT properly initialized - try calling again TFormula::PrepareEvalMethod");
+      thisFormula->fClingInitialized = thisFormula->PrepareEvalMethod();
+      if (!fClingInitialized) {        
+         Error("DoEval", "Formula is invalid or not properly initialized - try calling TFormula::Compile");
+         return TMath::QuietNaN();
+      }
+      Info("DoEval", "Formula is now properly initialized !!");
 #ifdef EVAL_IS_NOT_CONST
       // need to replace in cling the name of the pointer of this object
       TString oldClingName = fClingName;
