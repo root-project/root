@@ -4,7 +4,9 @@
 #include "TFitResult.h"
 #include <iostream>
 
-bool testMixMax(int nbin = 1.E6 ) {
+
+
+int testMixMax(int nbin = 1.E6 ) {
 
 
    //int nbin = 1.E8; 
@@ -31,17 +33,22 @@ bool testMixMax(int nbin = 1.E6 ) {
 
    if (chi2 > double(nbin-1) + 100 * chi2_std ) {
       std::cout << "ERROR: Chi2 test failed for MixMax - " << chi2 << " larger than " << nbin-1 + 100 * chi2_std << std::endl;
-      return false;
+      return -1;
    }
-   return true; 
+   return 0;
 
 }
 
+
 int main() {
-   bool ret = testMixMax();
-   if (ret)
+   
+   int iret = testMixMax(); 
+   bool ok = (iret == 0); 
+   if (ok)
       std::cout << "Test OK" << std::endl;
    else
       std::cout << "Test Failed " << std::endl;
+
+   return iret;
 }
    

@@ -85,3 +85,7 @@ ROOT_ADD_GTEST(GradientUnit testGradient.cxx
 
 ROOT_ADD_GTEST(GradientFittingUnit testGradientFitting.cxx
       LIBRARIES Core MathCore Hist RIO Tree GenVector)
+
+#add interpreter test 
+ROOT_ADD_TEST(test-testMixMax-interpreted COMMAND ${ROOT_root_CMD} -b -q -l ${CMAKE_CURRENT_SOURCE_DIR}/testMixMax.cxx
+              FAILREGEX "FAILED|Error in"  )
