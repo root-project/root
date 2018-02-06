@@ -67,9 +67,9 @@ private:
 
 public:
    void Print();
-   const TCutInfo &GetCutInfo(std::string_view cutName);
-   std::vector<TCutInfo>::const_iterator begin() const {return fCutInfos.cbegin();}
-   std::vector<TCutInfo>::const_iterator end() const {return fCutInfos.cend();}
+   const TCutInfo &operator[](std::string_view cutName);
+   std::vector<TCutInfo>::const_iterator begin() const {return fCutInfos.begin();}
+   std::vector<TCutInfo>::const_iterator end() const {return fCutInfos.end();}
 };
 
 } // End NS TDF
