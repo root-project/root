@@ -751,8 +751,10 @@ public:
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a node that filters entries based on range: [begin, end)
    /// \param[in] begin Initial entry number considered for this range.
-   /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
-   /// \param[in] stride Process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
+   /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end
+   /// of the dataset.
+   /// \param[in] stride Process one entry of the [begin, end) range every `stride` entries. Must be strictly greater
+   /// than 0.
    ///
    /// Note that in case of previous Ranges and Filters the selected range refers to the transformed dataset.
    /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
@@ -774,7 +776,8 @@ public:
 
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a node that filters entries based on range
-   /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
+   /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end
+   /// of the dataset.
    ///
    /// See the other Range overload for a detailed description.
    TInterface<TDFDetail::TRange<Proxied>> Range(unsigned int end) { return Range(0, end, 1); }
@@ -1495,21 +1498,27 @@ public:
    /// the stats for all named filters in the chain section between the original
    /// `TDataFrame` and that node (included). Stats are printed in the same
    /// order as the named filters have been added to the graph.
-   void Report()
+   TCutFlowReport Report()
    {
       // if this is a TInterface<TLoopManager> on which `Define` has been called, users
       // are calling `Report` on a chain of the form LoopManager->Define->Define->..., which
       // certainly does not contain named filters.
       // The number 2 takes into account the implicit columns for entry and slot number
       if (std::is_same<Proxied, TLoopManager>::value && fValidCustomColumns.size() > 2)
-         return;
+         return TCutFlowReport();
 
       auto df = GetDataFrameChecked();
       // TODO: we could do better and check if the Report was asked for Filters that have already run
       // and in that case skip the event-loop
       if (df->MustRunNamedFilters())
          df->Run();
-      fProxiedPtr->Report();
+
+      TCutFlowReport rep;
+      fProxiedPtr->Report(rep);
+
+      rep.Print();
+
+      return rep;
    }
 
    /////////////////////////////////////////////////////////////////////////////

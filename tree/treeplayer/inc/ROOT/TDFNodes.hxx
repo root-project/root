@@ -21,7 +21,7 @@
 #include "TError.h"
 
 #include <map>
-#include <numeric> // std::accumulate (PrintReport), std::iota (TSlotStack)
+#include <numeric> // std::accumulate (FillReport), std::iota (TSlotStack)
 #include <string>
 #include <tuple>
 #include <cassert>
@@ -30,6 +30,50 @@
 #include <functional>
 
 namespace ROOT {
+
+namespace Detail {
+namespace TDF {
+class TFilterBase;
+} // End NS TDF
+} // End NS Detail
+
+namespace Experimental {
+namespace TDF {
+
+class TCutFlowReport;
+
+class TCutInfo {
+   friend class TCutFlowReport;
+   friend class ROOT::Detail::TDF::TFilterBase;
+
+private:
+   std::string fName;
+   ULong64_t fPass;
+   ULong64_t fAll;
+   TCutInfo(const std::string &name, ULong64_t pass, ULong64_t all) : fName(name), fPass(pass), fAll(all) {}
+public:
+   const std::string &GetName() const;
+   ULong64_t GetAll() const;
+   ULong64_t GetPass() const;
+   float GetEff() const;
+};
+
+class TCutFlowReport {
+   friend class ROOT::Detail::TDF::TFilterBase;
+
+private:
+   std::vector<TCutInfo> fCutInfos;
+   void AddCut(TCutInfo &&ci);
+
+public:
+   void Print();
+   const TCutInfo &GetCutInfo(std::string_view cutName);
+   std::vector<TCutInfo>::const_iterator begin() const {return fCutInfos.cbegin();}
+   std::vector<TCutInfo>::const_iterator end() const {return fCutInfos.cend();}
+};
+
+} // End NS TDF
+} // End NS Experimental
 
 namespace Internal {
 namespace TDF {
@@ -93,7 +137,9 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
 
    public:
       TCallback(ULong64_t everyN, Callback_t &&f, unsigned int nSlots)
-         : fFun(std::move(f)), fEveryN(everyN), fCounters(nSlots, 0ull) {}
+         : fFun(std::move(f)), fEveryN(everyN), fCounters(nSlots, 0ull)
+      {
+      }
 
       void operator()(unsigned int slot)
       {
@@ -144,7 +190,7 @@ class TLoopManager : public std::enable_shared_from_this<TLoopManager> {
    const std::unique_ptr<TDataSource> fDataSource; ///< Owning pointer to a data-source object. Null if no data-source
    ColumnNames_t fDefinedDataSourceColumns;        ///< List of data-source columns that have been `Define`d so far
    std::map<std::string, std::string> fAliasColumnNameMap; ///< ColumnNameAlias-columnName pairs
-   std::vector<TCallback> fCallbacks; ///< Registered callbacks
+   std::vector<TCallback> fCallbacks;                      ///< Registered callbacks
    std::vector<TOneTimeCallback> fCallbacksOnce; ///< Registered callbacks to invoke just once before running the loop
 
    void RunEmptySourceMT();
@@ -187,9 +233,9 @@ public:
    bool CheckFilters(int, unsigned int);
    unsigned int GetNSlots() const { return fNSlots; }
    bool MustRunNamedFilters() const { return fMustRunNamedFilters; }
-   void Report() const;
+   void Report(ROOT::Experimental::TDF::TCutFlowReport &rep) const;
    /// End of recursive chain of calls, does nothing
-   void PartialReport() const {}
+   void PartialReport(ROOT::Experimental::TDF::TCutFlowReport &) const {}
    void SetTree(const std::shared_ptr<TTree> &tree) { fTree = tree; }
    void IncrChildrenCount() { ++fNChildren; }
    void StopProcessing() { ++fNStopsReceived; }
@@ -430,9 +476,7 @@ private:
       return &fHelper.PartialUpdate(slot);
    }
    // this one is always available but has lower precedence thanks to `...`
-   void *PartialUpdateImpl(...) {
-      throw std::runtime_error("This action does not support callbacks yet!");
-   }
+   void *PartialUpdateImpl(...) { throw std::runtime_error("This action does not support callbacks yet!"); }
 };
 
 } // end NS TDF
@@ -589,11 +633,11 @@ public:
 
    virtual void InitSlot(TTreeReader *r, unsigned int slot) = 0;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
-   virtual void Report() const = 0;
-   virtual void PartialReport() const = 0;
+   virtual void Report(ROOT::Experimental::TDF::TCutFlowReport &) const = 0;
+   virtual void PartialReport(ROOT::Experimental::TDF::TCutFlowReport &) const = 0;
    TLoopManager *GetImplPtr() const;
    bool HasName() const;
-   void PrintReport() const;
+   void FillReport(ROOT::Experimental::TDF::TCutFlowReport &) const;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
    void ResetChildrenCount()
@@ -667,12 +711,12 @@ public:
    }
 
    // recursive chain of `Report`s
-   void Report() const final { PartialReport(); }
+   void Report(ROOT::Experimental::TDF::TCutFlowReport &rep) const final { PartialReport(rep); }
 
-   void PartialReport() const final
+   void PartialReport(ROOT::Experimental::TDF::TCutFlowReport &rep) const final
    {
-      fPrevData.PartialReport();
-      PrintReport();
+      fPrevData.PartialReport(rep);
+      FillReport(rep);
    }
 
    void StopProcessing() final
@@ -722,8 +766,8 @@ public:
 
    TLoopManager *GetImplPtr() const;
    virtual bool CheckFilters(unsigned int slot, Long64_t entry) = 0;
-   virtual void Report() const = 0;
-   virtual void PartialReport() const = 0;
+   virtual void Report(ROOT::Experimental::TDF::TCutFlowReport &) const = 0;
+   virtual void PartialReport(ROOT::Experimental::TDF::TCutFlowReport &) const = 0;
    virtual void IncrChildrenCount() = 0;
    virtual void StopProcessing() = 0;
    void ResetChildrenCount()
@@ -776,9 +820,9 @@ public:
 
    // recursive chain of `Report`s
    // TRange simply forwards these calls to the previous node
-   void Report() const final { fPrevData.PartialReport(); }
+   void Report(ROOT::Experimental::TDF::TCutFlowReport &rep) const final { fPrevData.PartialReport(rep); }
 
-   void PartialReport() const final { fPrevData.PartialReport(); }
+   void PartialReport(ROOT::Experimental::TDF::TCutFlowReport &rep) const final { fPrevData.PartialReport(rep); }
 
    void StopProcessing() final
    {
