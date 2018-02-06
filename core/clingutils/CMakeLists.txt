@@ -53,20 +53,13 @@ foreach(dict ${stldicts})
                                 DEPENDENCIES Core)
 endforeach()
 
-#---Deal with LLVM resource here----------------------------------------------
-set(copy_commands COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include/llvm/Config/llvm-config.h
-        ${CMAKE_BINARY_DIR}/etc/cling/llvm/Config/llvm-config.h)
-set(files_to_copy ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include/llvm/Config/llvm-config.h)
-
-install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/llvm/Config DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/llvm)
+#---Deal with clang resource here----------------------------------------------
 install(DIRECTORY ${CMAKE_BINARY_DIR}/etc/cling/lib/clang/${LLVM_VERSION}/include/
         DESTINATION ${CMAKE_INSTALL_SYSCONFDIR}/cling/lib/clang/${LLVM_VERSION}/include USE_SOURCE_PERMISSIONS)
 
 
 #---Install a bunch of files to /etc/cling------------------------------------
 set(clinginclude    ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
-set(llvminclude     ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include)
-set(llvminclude-bin ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include)
 
 foreach(file  Interpreter/DynamicExprInfo.h
         Interpreter/DynamicLookupRuntimeUniverse.h
