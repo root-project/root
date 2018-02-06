@@ -1498,6 +1498,8 @@ public:
    /// the stats for all named filters in the chain section between the original
    /// `TDataFrame` and that node (included). Stats are printed in the same
    /// order as the named filters have been added to the graph.
+   /// An instance of TCutFlowReport is returned to allow inspection of the effects
+   /// cuts had besides the report printed.
    TCutFlowReport Report()
    {
       // if this is a TInterface<TLoopManager> on which `Define` has been called, users
