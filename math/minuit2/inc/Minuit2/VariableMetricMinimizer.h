@@ -19,6 +19,8 @@ namespace ROOT {
 
    namespace Minuit2 {
 
+      class BFGSMinimizerType {};
+
 //______________________________________________________________________________
 /**
     Instantiates the SeedGenerator and MinimumBuilder for
@@ -27,12 +29,22 @@ namespace ROOT {
 
  */
 
+
+
 class VariableMetricMinimizer : public ModularFunctionMinimizer {
+
+   
 
 public:
 
+   class BFGSType {};
+
    VariableMetricMinimizer() : fMinSeedGen(MnSeedGenerator()),
                                fMinBuilder(VariableMetricBuilder()) {}
+
+    VariableMetricMinimizer(BFGSType) :
+       fMinSeedGen(MnSeedGenerator()),
+       fMinBuilder(VariableMetricBuilder(VariableMetricBuilder::kBFGS)) {}
 
    ~VariableMetricMinimizer() {}
 

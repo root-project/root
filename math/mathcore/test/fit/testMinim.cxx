@@ -636,6 +636,7 @@ int testRosenBrock() {
    double xRB[2] = { -1.,1.2};
    iret |= testNewMinimizer(fRB,xRB,s0,"Minuit","");
    iret |= testNewMinimizer(fRB,xRB,s0,"Minuit2","");
+   iret |= testNewMinimizer(fRB,xRB,s0,"Minuit2","BFGS");
 #ifdef R__HAS_MATHMORE
    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","ConjugateFR");
    iret |= testNewMinimizer(fRB,xRB,s0,"GSLMultiMin","ConjugatePR");
