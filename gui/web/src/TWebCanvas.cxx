@@ -35,12 +35,12 @@
 
 ClassImp(TWebCanvas);
 
-TWebCanvas::TWebCanvas() : TCanvasImp(), fWebConn(), fHasSpecials(kFALSE), fCanvVersion(1), fWaitNewConnection(kFALSE)
+TWebCanvas::TWebCanvas() : TCanvasImp(), fWebConn(), fHasSpecials(kFALSE), fCanvVersion(1), fWaitNewConnection(kFALSE), fClientBits(0)
 {
 }
 
 TWebCanvas::TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height)
-   : TCanvasImp(c, name, x, y, width, height), fWebConn(), fHasSpecials(kFALSE), fCanvVersion(1), fWaitNewConnection(kFALSE)
+   : TCanvasImp(c, name, x, y, width, height), fWebConn(), fHasSpecials(kFALSE), fCanvVersion(1), fWaitNewConnection(kFALSE), fClientBits(0)
 {
 }
 
@@ -459,18 +459,67 @@ void TWebCanvas::Show()
 void TWebCanvas::ShowCmd(const char *arg, Bool_t show)
 {
    // command used to toggle showing of menu, toolbar, editors, ...
-   for (WebConnList::iterator citer = fWebConn.begin(); citer != fWebConn.end(); ++citer) {
-      WebConn &conn = *citer;
-
-      if (!conn.fConnId)
+   for (auto conn = fWebConn.begin(); conn != fWebConn.end(); ++conn) {
+      if (!conn->fConnId)
          continue;
 
-      conn.fSend = "SHOW:";
-      conn.fSend.Append(arg);
-      conn.fSend.Append(show ? ":1" : ":0");
+      if (conn->fSend.Length() > 0)
+         Warning("ShowCmd", "Send operation not empty when try show %s", arg);
+
+      conn->fSend.Form("SHOW:%s:%d", arg, show ? 1 : 0);
    }
 
    CheckDataToSend();
+}
+
+void TWebCanvas::ActivateInEditor(TPad *pad, TObject *obj)
+{
+   if (!pad || !obj) return;
+
+   for (auto conn = fWebConn.begin(); conn != fWebConn.end(); ++conn) {
+      if (!conn->fConnId || !pad)
+         continue;
+
+      if (conn->fSend.Length() > 0)
+         Warning("ActivateInEditor", "Send operation not empty");
+
+      UInt_t hash = TString::Hash(&obj, sizeof(obj));
+
+      conn->fSend.Form("EDIT:%u", (unsigned) hash);
+
+      printf("TWEBCANVAS:: SEND %s\n", conn->fSend.Data());
+   }
+
+   CheckDataToSend();
+}
+
+Bool_t TWebCanvas::HasEditor() const
+{
+   return (fClientBits & TCanvas::kShowEditor) != 0;
+}
+
+Bool_t TWebCanvas::HasMenuBar() const
+{
+   return (fClientBits & TCanvas::kMenuBar) != 0;
+}
+
+Bool_t TWebCanvas::HasStatusBar() const
+{
+   return (fClientBits & TCanvas::kShowEventStatus) != 0;
+}
+
+Bool_t TWebCanvas::HasToolTips() const
+{
+   return (fClientBits & TCanvas::kShowToolTips) != 0;
+}
+
+void TWebCanvas::AssignStatusBits(UInt_t bits)
+{
+   fClientBits = bits;
+   Canvas()->SetBit(TCanvas::kShowEventStatus, bits & TCanvas::kShowEventStatus);
+   Canvas()->SetBit(TCanvas::kShowEditor, bits & TCanvas::kShowEditor);
+   Canvas()->SetBit(TCanvas::kShowToolTips, bits & TCanvas::kShowToolTips);
+   Canvas()->SetBit(TCanvas::kMenuBar, bits & TCanvas::kMenuBar);
 }
 
 Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
@@ -489,17 +538,11 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
    for (unsigned n = 0; n < arr->size(); ++n) {
       TWebPadRange &r = arr->at(n);
       TPad *pad = dynamic_cast<TPad *>(FindPrimitive(r.snapid.c_str()));
+
       if (!pad)
          continue;
 
-      if (n == 0) {
-         TCanvas *can = dynamic_cast<TCanvas *>(pad);
-         if (can) {
-            can->SetBit(TCanvas::kShowEventStatus, r.bits & TCanvas::kShowEventStatus);
-            can->SetBit(TCanvas::kShowEditor, r.bits & TCanvas::kShowEditor);
-            can->SetBit(TCanvas::kShowToolTips, r.bits & TCanvas::kShowToolTips);
-         }
-      }
+      if (pad == Canvas()) AssignStatusBits(r.bits);
 
       if (r.active && (pad != gPad)) gPad = pad;
 
@@ -519,6 +562,8 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
             lnk->SetOption(r.primitives[k].opt.c_str());
          }
       }
+
+      if (!r.ranges) continue;
 
       Double_t ux1_, ux2_, uy1_, uy2_, px1_, px2_, py1_, py2_;
 
@@ -541,6 +586,8 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
    }
 
    delete arr;
+
+   if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
 
    return kTRUE;
 }
@@ -594,7 +641,7 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
       ROOT::Experimental::TWebWindowsManager::Instance()->Terminate();
    } else if (strncmp(cdata, "READY6:", 7) == 0) {
       // this is reply on drawing of ROOT6 snapshot
-      // it confirmas when drawing of specific canvas version is completed
+      // it confirms when drawing of specific canvas version is completed
       cdata += 7;
 
       const char *separ = strchr(cdata, ':');
@@ -612,6 +659,11 @@ void TWebCanvas::ProcessData(unsigned connid, const std::string &arg)
    } else if (strncmp(cdata, "RANGES6:", 8) == 0) {
       if (is_first) // only first connection can set ranges
          DecodeAllRanges(cdata + 8);
+   } else if (strncmp(cdata, "STATUSBITS:", 11) == 0) {
+      if (is_first) { // only first connection can set ranges
+         AssignStatusBits((unsigned) TString(cdata + 11).Atoi());
+         if (fUpdatedSignal) fUpdatedSignal(); // invoke signal
+      }
    } else if (strncmp(cdata, "GETMENU:", 8) == 0) {
       conn->fGetMenu = cdata + 8;
       CheckDataToSend();

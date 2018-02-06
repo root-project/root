@@ -18,7 +18,7 @@ TWebSnapshot::~TWebSnapshot()
 }
 
 
-void TWebSnapshot::SetSnapshot(Int_t kind, TObject* shot, Bool_t owner)
+void TWebSnapshot::SetSnapshot(Int_t kind, TObject *shot, Bool_t owner)
 {
    if (fSnapshot && fOwner) delete fSnapshot;
    fKind = kind;
@@ -26,7 +26,7 @@ void TWebSnapshot::SetSnapshot(Int_t kind, TObject* shot, Bool_t owner)
    fOwner = owner;
 }
 
-void TWebSnapshot::SetObjectIDAsPtr(void* ptr)
+void TWebSnapshot::SetObjectIDAsPtr(void *ptr)
 {
    UInt_t hash = TString::Hash(&ptr, sizeof(ptr));
    SetObjectID(TString::UItoa(hash,10));

@@ -59,6 +59,7 @@ public:
    int logx{0}, logy{0}, logz{0};             ///< pad log properties
    int gridx{0}, gridy{0};                    ///< pad grid properties
    int tickx{0}, ticky{0};                    ///< pad ticks properties
+   bool ranges{false};                        ///< if true, pad has ranges
    Double_t px1{0}, py1{0}, px2{0}, py2{0};   ///< pad range
    Double_t ux1{0}, uy1{0}, ux2{0}, uy2{0};   ///< pad axis range
    unsigned bits{0};                          ///< canvas status bits like tool editor
@@ -81,6 +82,9 @@ public:
 };
 
 /////////////////////////////////////////////////////////
+
+/// Function type for signals, connected when canvas drawing or update is completed
+using TWebCanvasUpdatedSignal_t = std::function<void()>;
 
 /// Function type called for signals, connected with pad like select pad
 using TWebCanvasPadSignal_t = std::function<void(TPad *)>;
@@ -111,6 +115,9 @@ protected:
    Bool_t fHasSpecials;   ///<! has special objects which may require pad ranges
    Long64_t fCanvVersion; ///<! actual canvas version, changed with every new Modified() call
    Bool_t fWaitNewConnection; ///<! when true, Update() will wait for a new connection
+   UInt_t fClientBits; ///<! latest status bits from client like editor visisble or not
+
+   TWebCanvasUpdatedSignal_t  fUpdatedSignal; ///<! signal emitted when canvas updated or state is changed
 
    TWebCanvasPadSignal_t fActivePadChangedSignal; ///<!  signal emitted when active pad changed in the canvas
 
@@ -144,6 +151,8 @@ protected:
 
    void ShowCmd(const char *arg, Bool_t show);
 
+   void AssignStatusBits(UInt_t bits);
+
 public:
    TWebCanvas();
    TWebCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
@@ -167,6 +176,10 @@ public:
    virtual void ShowToolTips(Bool_t show = kTRUE) { ShowCmd("ToolTips", show); }
 
 
+   // web-canvas specific methods
+
+   void SetUpdatedHandler(TWebCanvasUpdatedSignal_t func) { fUpdatedSignal = func; }
+
    void SetActivePadChangedHandler(TWebCanvasPadSignal_t func) { fActivePadChangedSignal = func; }
 
    void SetObjSelectHandler(TWebCanvasObjSelectSignal_t func) { fObjSelectSignal = func; }
@@ -174,6 +187,8 @@ public:
    void SetPadClickedHandler(TWebCanvasPadClickedSignal_t func) { fPadClickedSignal = func; }
 
    void SetPadDblClickedHandler(TWebCanvasPadClickedSignal_t func) { fPadDblClickedSignal = func; }
+
+   void ActivateInEditor(TPad *pad, TObject *obj);
 
    /*
       virtual void   ForceUpdate() { }
@@ -185,13 +200,13 @@ public:
       virtual void   SetCanvasSize(UInt_t w, UInt_t h);
       virtual void   RaiseWindow();
       virtual void   ReallyDelete();
+    */
 
-      virtual Bool_t HasEditor() const { return kFALSE; }
-      virtual Bool_t HasMenuBar() const { return kFALSE; }
-      virtual Bool_t HasStatusBar() const { return kFALSE; }
-      virtual Bool_t HasToolBar() const { return kFALSE; }
-      virtual Bool_t HasToolTips() const { return kFALSE; }
-   */
+   virtual Bool_t HasEditor() const;
+   virtual Bool_t HasMenuBar() const;
+   virtual Bool_t HasStatusBar() const;
+   virtual Bool_t HasToolBar() const { return kFALSE; }
+   virtual Bool_t HasToolTips() const;
 
    ClassDef(TWebCanvas, 0) // ABC describing main window protocol
 };
