@@ -2,6 +2,7 @@
 #include "TH1.h"
 #include "TStopwatch.h"
 #include "TFitResult.h"
+#include <iostream>
 
 bool testMixMax(int nbin = 1.E6 ) {
 
