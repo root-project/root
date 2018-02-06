@@ -67,6 +67,7 @@ namespace RooFit {
       fNCycles(other.fNCycles),
       Up(other.Up),
       fVal(other.fVal),
+      fN(other.fN),
       fG(other.fG),
       _parameter_has_limits(other._parameter_has_limits),
       precision(other.precision),
@@ -82,30 +83,13 @@ namespace RooFit {
       fGradTolerance = other.fGradTolerance;
       fNCycles = other.fNCycles;
       fVal = other.fVal;
+      fN = other.fN;
       Up = other.Up;
       precision = other.precision;
       _always_exactly_mimic_minuit2 = other._always_exactly_mimic_minuit2;
     }
     return *this;
   }
-
-
-  // MODIFIED: ctors with higher level arguments
-// The parameters can be extracted from a ROOT::Fit::Fitter object, for
-// simpler initialization.
-//NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter) :
-//    NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(f, fitter,  ROOT::Minuit2::MnStrategy(fitter.GetMinimizer()->Strategy()))
-//{}
-//
-//NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(const ROOT::Math::IBaseFunctionMultiDim &f, const ROOT::Fit::Fitter &fitter, const ROOT::Minuit2::MnStrategy &strategy) :
-//    NumericalDerivatorMinuit2::NumericalDerivatorMinuit2(f,
-//                                                         strategy.GradientStepTolerance(),
-//                                                         strategy.GradientTolerance(),
-//                                                         strategy.GradientNCycles(),
-//                                                         fitter.GetMinimizer()->ErrorDef()
-//    )
-//{}
-
 
   void NumericalDerivatorMinuit2::SetStepTolerance(double value) {
     fStepTolerance = value;
