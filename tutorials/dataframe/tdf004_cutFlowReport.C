@@ -72,9 +72,7 @@ void tdf004_cutFlowReport()
    // We can now loop on the cuts
    std::cout << "Name\tAll\tPass\tEfficiency" << std::endl;
    for (auto &&cutInfo : allCutsReport) {
-      std::cout << cutInfo.GetName() << "\t"
-                << cutInfo.GetAll() << "\t"
-                << cutInfo.GetPass() << "\t"
+      std::cout << cutInfo.GetName() << "\t" << cutInfo.GetAll() << "\t" << cutInfo.GetPass() << "\t"
                 << cutInfo.GetEff() << " %" << std::endl;
    }
 
@@ -82,5 +80,4 @@ void tdf004_cutFlowReport()
    auto cutName = "Cut1";
    auto cut = allCutsReport["Cut1"];
    std::cout << cutName << " efficiency is " << cut.GetEff() << " %" << std::endl;
-
 }
