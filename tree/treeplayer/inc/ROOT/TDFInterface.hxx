@@ -1505,7 +1505,7 @@ public:
    /// order as the named filters have been added to the graph.
    /// An instance of TCutFlowReport is returned to allow inspection of the effects
    /// cuts had besides the report printed.
-   TCutFlowReport Report()
+   TCutFlowReport Report(bool printReport = true)
    {
       // if this is a TInterface<TLoopManager> on which `Define` has been called, users
       // are calling `Report` on a chain of the form LoopManager->Define->Define->..., which
@@ -1523,7 +1523,9 @@ public:
       TCutFlowReport rep;
       fProxiedPtr->Report(rep);
 
-      rep.Print();
+      if (printReport) {
+         rep.Print();
+      }
 
       return rep;
    }
