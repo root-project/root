@@ -339,10 +339,10 @@ public:
    TClass(const char *name, Version_t cversion, Bool_t silent = kFALSE);
    TClass(const char *name, Version_t cversion, EState theState, Bool_t silent = kFALSE);
    TClass(ClassInfo_t *info, Version_t cversion,
-          const char *dfil, const char *ifil = 0,
+          const char *dfil, const char *ifil = nullptr,
           Int_t dl = 0, Int_t il = 0, Bool_t silent = kFALSE);
    TClass(const char *name, Version_t cversion,
-          const char *dfil, const char *ifil = 0,
+          const char *dfil, const char *ifil = nullptr,
           Int_t dl = 0, Int_t il = 0, Bool_t silent = kFALSE);
    TClass(const char *name, Version_t cversion,
           const std::type_info &info, TVirtualIsAProxy *isa,
@@ -357,7 +357,7 @@ public:
    static Int_t       ReadRules();
    void               AdoptSchemaRules( ROOT::Detail::TSchemaRuleSet *rules );
    virtual void       Browse(TBrowser *b);
-   void               BuildRealData(void *pointer=0, Bool_t isTransient = kFALSE);
+   void               BuildRealData(void *pointer=nullptr, Bool_t isTransient = kFALSE);
    void               BuildEmulatedRealData(const char *name, Long_t offset, TClass *cl);
    void               CalculateStreamerOffset() const;
    Bool_t             CallShowMembers(const void* obj, TMemberInspector &insp, Bool_t isTransient = kFALSE) const;
@@ -377,7 +377,7 @@ public:
    TVirtualStreamerInfo     *FindConversionStreamerInfo( const TClass* onfile_cl, UInt_t checksum ) const;
    Bool_t             HasDataMemberInfo() const { return fHasRootPcmInfo || HasInterpreterInfo(); }
    Bool_t             HasDefaultConstructor() const;
-   Bool_t             HasInterpreterInfoInMemory() const { return 0 != fClassInfo; }
+   Bool_t             HasInterpreterInfoInMemory() const { return nullptr != fClassInfo; }
    Bool_t             HasInterpreterInfo() const { return fCanLoadClassInfo || fClassInfo; }
    UInt_t             GetCheckSum(ECheckSum code = kCurrentCheckSum) const;
    UInt_t             GetCheckSum(Bool_t &isvalid) const;
@@ -423,7 +423,7 @@ public:
    TClass            *GetActualClass(const void *object) const;
    TClass            *GetBaseClass(const char *classname);
    TClass            *GetBaseClass(const TClass *base);
-   Int_t              GetBaseClassOffset(const TClass *toBase, void *address = 0, bool isDerivedObject = true);
+   Int_t              GetBaseClassOffset(const TClass *toBase, void *address = nullptr, bool isDerivedObject = true);
    TClass            *GetBaseDataMember(const char *datamember);
    ROOT::ESTLType     GetCollectionType() const;
    ROOT::DirAutoAdd_t GetDirectoryAutoAdd() const;
@@ -558,7 +558,7 @@ public:
    const void        *DynamicCast(const TClass *base, const void *obj, Bool_t up = kTRUE);
    Bool_t             IsFolder(void *obj) const;
 
-   inline void        Streamer(void *obj, TBuffer &b, const TClass *onfile_class = 0) const
+   inline void        Streamer(void *obj, TBuffer &b, const TClass *onfile_class = nullptr) const
    {
       // Inline for performance, skipping one function call.
 #ifdef R__NO_ATOMIC_FUNCTION_POINTER

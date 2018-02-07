@@ -50,7 +50,7 @@ ClassImp(TMVA::PDEFoamVect);
 TMVA::PDEFoamVect::PDEFoamVect()
 : TObject(),
    fDim(0),
-   fCoords(0)
+   fCoords(nullptr)
 {
 }
 
@@ -61,7 +61,7 @@ TMVA::PDEFoamVect::PDEFoamVect()
 TMVA::PDEFoamVect::PDEFoamVect(Int_t n)
    : TObject(),
      fDim(n),
-     fCoords(0)
+     fCoords(nullptr)
 {
    if (n>0) {
       fCoords = new Double_t[fDim];
@@ -86,7 +86,7 @@ TMVA::PDEFoamVect::PDEFoamVect(const PDEFoamVect &vect)
 TMVA::PDEFoamVect::~PDEFoamVect()
 {
    delete [] fCoords; //  free(fCoords)
-   fCoords=0;
+   fCoords=nullptr;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -200,7 +200,7 @@ TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator =(Double_t Vect[])
 
 TMVA::PDEFoamVect& TMVA::PDEFoamVect::operator =(Double_t x)
 {
-   if(fCoords != 0) {
+   if(fCoords != nullptr) {
       for(Int_t i=0; i<fDim; i++)
          fCoords[i] = x;
    }

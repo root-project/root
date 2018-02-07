@@ -143,7 +143,7 @@ public:
    Int_t             GetEventY() const { return fEventY; }
    Color_t           GetHighLightColor() const { return fHighLightColor; }
    TVirtualPad      *GetPadSave() const { return fPadSave; }
-   void              ClearPadSave() { fPadSave = 0; }
+   void              ClearPadSave() { fPadSave = nullptr; }
    TObject          *GetSelected() const {return fSelected;}
    TObject          *GetClickSelected() const {return fClickSelected;}
    Int_t             GetSelectedX() const {return fSelectedX;}

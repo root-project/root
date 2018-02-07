@@ -53,8 +53,8 @@ Kernel matrix for Support Vector Machine
 
 TMVA::SVKernelMatrix::SVKernelMatrix()
    : fSize(0),
-     fKernelFunction(0),
-     fSVKernelMatrix(0),
+     fKernelFunction(nullptr),
+     fSVKernelMatrix(nullptr),
      fLogger( new MsgLogger("ResultsRegression", kINFO) )
 {
 }
@@ -89,10 +89,10 @@ TMVA::SVKernelMatrix::~SVKernelMatrix()
 {
    for (UInt_t i = fSize -1; i > 0; i--) {
       delete[] fSVKernelMatrix[i];
-      fSVKernelMatrix[i] = 0;
+      fSVKernelMatrix[i] = nullptr;
    }
    delete[] fSVKernelMatrix;
-   fSVKernelMatrix = 0;
+   fSVKernelMatrix = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -100,9 +100,9 @@ TMVA::SVKernelMatrix::~SVKernelMatrix()
 
 Float_t* TMVA::SVKernelMatrix::GetLine( UInt_t line )
 {
-   Float_t* fLine = NULL;
+   Float_t* fLine = nullptr;
    if (line >= fSize) {
-      return NULL;
+      return nullptr;
    }
    else {
       fLine = new Float_t[fSize];

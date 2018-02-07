@@ -81,16 +81,16 @@ public:
 
    virtual const Element *GetMatrixArray  () const;
    virtual       Element *GetMatrixArray  ();
-   virtual const Int_t   *GetRowIndexArray() const { return 0; }
-   virtual       Int_t   *GetRowIndexArray()       { return 0; }
-   virtual const Int_t   *GetColIndexArray() const { return 0; }
-   virtual       Int_t   *GetColIndexArray()       { return 0; }
+   virtual const Int_t   *GetRowIndexArray() const { return nullptr; }
+   virtual       Int_t   *GetRowIndexArray()       { return nullptr; }
+   virtual const Int_t   *GetColIndexArray() const { return nullptr; }
+   virtual       Int_t   *GetColIndexArray()       { return nullptr; }
 
    virtual       TMatrixTBase<Element> &SetRowIndexArray(Int_t * /*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); return *this; }
    virtual       TMatrixTBase<Element> &SetColIndexArray(Int_t * /*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
 
    virtual void   Clear      (Option_t * /*option*/ ="") { if (this->fIsOwner) Delete_m(this->fNelems,fElements);
-                                                           else fElements = 0;
+                                                           else fElements = nullptr;
                                                            this->fNelems = 0; }
    virtual Bool_t IsSymmetric() const { return kTRUE; }
 
@@ -121,8 +121,8 @@ public:
    virtual Double_t      Determinant   () const;
    virtual void          Determinant   (Double_t &d1,Double_t &d2) const;
 
-           TMatrixTSym<Element>  &Invert        (Double_t *det=0);
-           TMatrixTSym<Element>  &InvertFast    (Double_t *det=0);
+           TMatrixTSym<Element>  &Invert        (Double_t *det=nullptr);
+           TMatrixTSym<Element>  &InvertFast    (Double_t *det=nullptr);
            TMatrixTSym<Element>  &Transpose     (const TMatrixTSym<Element> &source);
    inline  TMatrixTSym<Element>  &T             () { return this->Transpose(*this); }
            TMatrixTSym<Element>  &Rank1Update   (const TVectorT   <Element> &v,Element alpha=1.0);

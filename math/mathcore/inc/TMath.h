@@ -457,7 +457,7 @@ struct Limits {
 
    //Sample quantiles
    void      Quantiles(Int_t n, Int_t nprob, Double_t *x, Double_t *quantiles, Double_t *prob,
-                       Bool_t isSorted=kTRUE, Int_t *index = 0, Int_t type=7);
+                       Bool_t isSorted=kTRUE, Int_t *index = nullptr, Int_t type=7);
 
    // IsInside
    template <typename T> Bool_t IsInside(T xp, T yp, Int_t np, T *x, T *y);
@@ -513,22 +513,22 @@ struct Limits {
 
    //Mean, Geometric Mean, Median, RMS(sigma)
 
-   template <typename T> Double_t Mean(Long64_t n, const T *a, const Double_t *w=0);
+   template <typename T> Double_t Mean(Long64_t n, const T *a, const Double_t *w=nullptr);
    template <typename Iterator> Double_t Mean(Iterator first, Iterator last);
    template <typename Iterator, typename WeightIterator> Double_t Mean(Iterator first, Iterator last, WeightIterator wfirst);
 
    template <typename T> Double_t GeomMean(Long64_t n, const T *a);
    template <typename Iterator> Double_t GeomMean(Iterator first, Iterator last);
 
-   template <typename T> Double_t RMS(Long64_t n, const T *a, const Double_t *w=0);
+   template <typename T> Double_t RMS(Long64_t n, const T *a, const Double_t *w=nullptr);
    template <typename Iterator> Double_t RMS(Iterator first, Iterator last);
    template <typename Iterator, typename WeightIterator> Double_t RMS(Iterator first, Iterator last, WeightIterator wfirst);
 
-   template <typename T> Double_t StdDev(Long64_t n, const T *a, const Double_t * w = 0) { return RMS<T>(n,a,w); }
+   template <typename T> Double_t StdDev(Long64_t n, const T *a, const Double_t * w = nullptr) { return RMS<T>(n,a,w); }
    template <typename Iterator> Double_t StdDev(Iterator first, Iterator last) { return RMS<Iterator>(first,last); }
    template <typename Iterator, typename WeightIterator> Double_t StdDev(Iterator first, Iterator last, WeightIterator wfirst) { return RMS<Iterator,WeightIterator>(first,last,wfirst); }
 
-   template <typename T> Double_t Median(Long64_t n, const T *a,  const Double_t *w=0, Long64_t *work=0);
+   template <typename T> Double_t Median(Long64_t n, const T *a,  const Double_t *w=nullptr, Long64_t *work=nullptr);
 
    //k-th order statistic
    template <class Element, typename Size> Element KOrdStat(Size n, const Element *a, Size k, Size *work = 0);

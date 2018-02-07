@@ -570,7 +570,6 @@ TGeoPNEntry::TGeoPNEntry(const char *name, const char *path)
       TString errmsg("Cannot define a physical node link without a closed geometry and a valid path !");
       Error("ctor", "%s", errmsg.Data());
       throw errmsg;
-      return;
    }
    gGeoManager->PushPath();
    gGeoManager->cd(path);

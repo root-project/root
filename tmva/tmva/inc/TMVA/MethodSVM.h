@@ -63,7 +63,7 @@ namespace TMVA
       
       MethodSVM( DataSetInfo& theData, const TString& theWeightFile);
 
-      virtual ~MethodSVM( void );
+      virtual ~MethodSVM();
     
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
@@ -74,10 +74,10 @@ namespace TMVA
       std::map< TString,std::vector<Double_t> > GetTuningOptions();
 
       // training method
-      void Train( void );
+      void Train();
 
       // revoke training (required for optimise tuning parameters)                    
-      void Reset( void );
+      void Reset();
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -94,7 +94,7 @@ namespace TMVA
       Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
       const std::vector<Float_t>& GetRegressionValues();
       
-      void Init( void );
+      void Init();
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; } 

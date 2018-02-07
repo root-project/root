@@ -155,7 +155,7 @@ TTree* TMVA::DataInputHandler::ReadInputTree( const TString& dataFile )
 {
    TTree* tr = new TTree( "tmp", dataFile );
    std::ifstream in(dataFile);
-   tr->SetDirectory(0); Log() << kWARNING << "Watch out, I (Helge) made the Tree not associated to the current directory .. Hopefully that does not have unwanted consequences" << Endl;
+   tr->SetDirectory(nullptr); Log() << kWARNING << "Watch out, I (Helge) made the Tree not associated to the current directory .. Hopefully that does not have unwanted consequences" << Endl;
    if (!in.good()) Log() << kFATAL << "Could not open file: " << dataFile << Endl;
    in.close();
 
@@ -195,8 +195,8 @@ void TMVA::DataInputHandler::ClearTreeList( const TString& className )
 std::vector< TString >* TMVA::DataInputHandler::GetClassList() const
 {
    std::vector< TString >* ret = new std::vector< TString >();
-   for ( std::map< TString, std::vector<TreeInfo> >::iterator it = fInputTrees.begin(); it != fInputTrees.end(); ++it ){
-      ret->push_back( it->first );
+   for (auto & fInputTree : fInputTrees){
+      ret->push_back( fInputTree.first );
    }
    return ret;
 }
@@ -218,8 +218,8 @@ UInt_t TMVA::DataInputHandler::GetEntries(const std::vector<TreeInfo>& tiV) cons
 UInt_t TMVA::DataInputHandler::GetEntries() const
 {
    UInt_t number = 0;
-   for (std::map< TString, std::vector<TreeInfo> >::iterator it = fInputTrees.begin(); it != fInputTrees.end(); ++it) {
-      number += GetEntries( it->second );
+   for (auto & fInputTree : fInputTrees) {
+      number += GetEntries( fInputTree.second );
    }
    return number;
 }

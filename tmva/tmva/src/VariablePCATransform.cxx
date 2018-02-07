@@ -67,8 +67,8 @@ TMVA::VariablePCATransform::VariablePCATransform( DataSetInfo& dsi )
 TMVA::VariablePCATransform::~VariablePCATransform()
 {
    for (UInt_t i=0; i<fMeanValues.size(); i++) {
-      if (fMeanValues.at(i)   != 0) delete fMeanValues.at(i);
-      if (fEigenVectors.at(i) != 0) delete fEigenVectors.at(i);
+      if (fMeanValues.at(i)   != nullptr) delete fMeanValues.at(i);
+      if (fEigenVectors.at(i) != nullptr) delete fEigenVectors.at(i);
    }
 }
 
@@ -126,7 +126,7 @@ Bool_t TMVA::VariablePCATransform::PrepareTransformation (const std::vector<Even
 
 const TMVA::Event* TMVA::VariablePCATransform::Transform( const Event* const ev, Int_t cls ) const
 {
-   if (!IsCreated()) return 0;
+   if (!IsCreated()) return nullptr;
 
    //   const Int_t inputSize = fGet.size();
    //   const UInt_t nCls = GetNClasses();
@@ -142,7 +142,7 @@ const TMVA::Event* TMVA::VariablePCATransform::Transform( const Event* const ev,
 
    // Perform PCA and put it into PCAed events tree
 
-   if (fTransformedEvent==0 ) {
+   if (fTransformedEvent==nullptr ) {
       fTransformedEvent = new Event();
    }
 
@@ -175,7 +175,7 @@ const TMVA::Event* TMVA::VariablePCATransform::Transform( const Event* const ev,
 
 const TMVA::Event* TMVA::VariablePCATransform::InverseTransform( const Event* const ev, Int_t cls ) const
 {
-   if (!IsCreated()) return 0;
+   if (!IsCreated()) return nullptr;
    //   const Int_t inputSize = fGet.size();
    const UInt_t nCls = GetNClasses();
    //UInt_t evCls = ev->GetClass();
@@ -186,7 +186,7 @@ const TMVA::Event* TMVA::VariablePCATransform::InverseTransform( const Event* co
    if (cls < 0 || UInt_t(cls) > nCls) cls = (fMeanValues.size()==1?0:2);//( GetNClasses() == 1 ? 0 : 1 );  ;
    // Perform PCA and put it into PCAed events tree
 
-   if (fBackTransformedEvent==0 ) fBackTransformedEvent = new Event();
+   if (fBackTransformedEvent==nullptr ) fBackTransformedEvent = new Event();
 
    std::vector<Float_t> principalComponents;
    std::vector<Char_t>  mask;
@@ -242,9 +242,8 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector
       }
 
       UInt_t iinp = 0;
-      for( std::vector<Float_t>::iterator itInp = input.begin(), itInpEnd = input.end(); itInp != itInpEnd; ++itInp )
+      for(float value : input)
          {
-            Float_t value = (*itInp);
             dvec[iinp] = (Double_t)value;
             ++iinp;
          }
@@ -254,10 +253,10 @@ void TMVA::VariablePCATransform::CalculatePrincipalComponents( const std::vector
    }
 
    // delete possible leftovers
-   for (UInt_t i=0; i<fMeanValues.size(); i++)   if (fMeanValues[i]   != 0) delete fMeanValues[i];
-   for (UInt_t i=0; i<fEigenVectors.size(); i++) if (fEigenVectors[i] != 0) delete fEigenVectors[i];
-   fMeanValues.resize(maxPCA,0);
-   fEigenVectors.resize(maxPCA,0);
+   for (auto & fMeanValue : fMeanValues)   if (fMeanValue   != nullptr) delete fMeanValue;
+   for (auto & fEigenVector : fEigenVectors) if (fEigenVector != nullptr) delete fEigenVector;
+   fMeanValues.resize(maxPCA,nullptr);
+   fEigenVectors.resize(maxPCA,nullptr);
 
    for (UInt_t i=0; i<maxPCA; i++ ) {
       pca.at(i)->MakePrincipals();
@@ -390,10 +389,10 @@ void TMVA::VariablePCATransform::ReadFromXML( void* trfnode )
 
    Bool_t newFormat = kFALSE;
 
-   void* inpnode = NULL;
+   void* inpnode = nullptr;
 
    inpnode = gTools().GetChild(trfnode, "Selection"); // new xml format
-   if( inpnode!=NULL )
+   if( inpnode!=nullptr )
       newFormat = kTRUE; // new xml format
 
    if( newFormat ){
@@ -413,8 +412,8 @@ void TMVA::VariablePCATransform::ReadFromXML( void* trfnode )
          gTools().ReadAttr(ch, "NRows",      nrows);
 
          // set the correct size
-         if (fMeanValues.size()<=clsIdx) fMeanValues.resize(clsIdx+1,0);
-         if (fMeanValues[clsIdx]==0) fMeanValues[clsIdx] = new TVectorD( nrows );
+         if (fMeanValues.size()<=clsIdx) fMeanValues.resize(clsIdx+1,nullptr);
+         if (fMeanValues[clsIdx]==nullptr) fMeanValues[clsIdx] = new TVectorD( nrows );
          fMeanValues[clsIdx]->ResizeTo( nrows );
 
          // now read vector entries
@@ -428,8 +427,8 @@ void TMVA::VariablePCATransform::ReadFromXML( void* trfnode )
          gTools().ReadAttr(ch, "NRows",      nrows);
          gTools().ReadAttr(ch, "NCols",      ncols);
 
-         if (fEigenVectors.size()<=clsIdx) fEigenVectors.resize(clsIdx+1,0);
-         if (fEigenVectors[clsIdx]==0) fEigenVectors[clsIdx] = new TMatrixD( nrows, ncols );
+         if (fEigenVectors.size()<=clsIdx) fEigenVectors.resize(clsIdx+1,nullptr);
+         if (fEigenVectors[clsIdx]==nullptr) fEigenVectors[clsIdx] = new TMatrixD( nrows, ncols );
          fEigenVectors[clsIdx]->ResizeTo( nrows, ncols );
 
          // now read matrix entries
@@ -456,8 +455,8 @@ void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& ist
    UInt_t classIdx=(classname=="signal"?0:1);
 
    for (UInt_t i=0; i<fMeanValues.size(); i++) {
-      if (fMeanValues.at(i)   != 0) delete fMeanValues.at(i);
-      if (fEigenVectors.at(i) != 0) delete fEigenVectors.at(i);
+      if (fMeanValues.at(i)   != nullptr) delete fMeanValues.at(i);
+      if (fEigenVectors.at(i) != nullptr) delete fEigenVectors.at(i);
    }
    fMeanValues.resize(3);
    fEigenVectors.resize(3);
@@ -478,7 +477,7 @@ void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& ist
          sstr >> nrows;
          Int_t sbType = (strvar=="signal" ? 0 : 1);
 
-         if (fMeanValues[sbType] == 0) fMeanValues[sbType] = new TVectorD( nrows );
+         if (fMeanValues[sbType] == nullptr) fMeanValues[sbType] = new TVectorD( nrows );
          else                          fMeanValues[sbType]->ResizeTo( nrows );
 
          // now read vector entries
@@ -506,7 +505,7 @@ void TMVA::VariablePCATransform::ReadTransformationFromStream( std::istream& ist
          sstr >> nrows >> dummy >> ncols;
          Int_t sbType = (strvar=="signal" ? 0 : 1);
 
-         if (fEigenVectors[sbType] == 0) fEigenVectors[sbType] = new TMatrixD( nrows, ncols );
+         if (fEigenVectors[sbType] == nullptr) fEigenVectors[sbType] = new TMatrixD( nrows, ncols );
          else                            fEigenVectors[sbType]->ResizeTo( nrows, ncols );
 
          // now read matrix entries

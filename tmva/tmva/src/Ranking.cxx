@@ -111,8 +111,8 @@ void TMVA::Ranking::AddRank( const Rank& rank )
 void TMVA::Ranking::Print() const
 {
    Int_t maxL = 0;
-   for (std::vector<Rank>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ++ir )
-      if ((*ir).GetVariable().Length() > maxL) maxL = (*ir).GetVariable().Length();
+   for (const auto & ir : fRanking)
+      if (ir.GetVariable().Length() > maxL) maxL = ir.GetVariable().Length();
 
    TString hline = "";
    for (Int_t i=0; i<maxL+15+fRankingDiscriminatorName.Length(); i++) hline += "-";
@@ -124,11 +124,11 @@ void TMVA::Ranking::Print() const
          << std::resetiosflags(std::ios::right)
          << " : " << fRankingDiscriminatorName << Endl;
    Log() << kINFO << hline << Endl;
-   for (std::vector<Rank>::const_iterator ir = fRanking.begin(); ir != fRanking.end(); ++ir ) {
+   for (const auto & ir : fRanking) {
       Log() << kINFO
-            << Form( "%4i : ",(*ir).GetRank() )
-            << std::setw(TMath::Max(maxL+0,9)) << (*ir).GetVariable().Data()
-            << Form( " : %3.3e", (*ir).GetRankValue() ) << Endl;
+            << Form( "%4i : ",ir.GetRank() )
+            << std::setw(TMath::Max(maxL+0,9)) << ir.GetVariable().Data()
+            << Form( " : %3.3e", ir.GetRankValue() ) << Endl;
    }
    Log() << kINFO << hline << Endl;
 }

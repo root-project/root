@@ -68,13 +68,13 @@ namespace TMVA {
       MethodPDERS( DataSetInfo& theData,
                    const TString& theWeightFile);
 
-      virtual ~MethodPDERS( void );
+      virtual ~MethodPDERS();
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
 
       // training method
-      void Train( void );
+      void Train();
 
       // write weights to file
       void WriteWeightsToStream( TFile& rf ) const;
@@ -97,7 +97,7 @@ namespace TMVA {
       Double_t         GetVolumeContentForRoot( Double_t );
 
       // static pointer to this object
-      static MethodPDERS* ThisPDERS( void );
+      static MethodPDERS* ThisPDERS();
 
    protected:
 
@@ -111,7 +111,7 @@ namespace TMVA {
       Int_t        fFcnCall;    // number of external function calls (RootFinder)
 
       // accessors
-      BinarySearchTree* GetBinaryTree( void ) const { return fBinaryTree; }
+      BinarySearchTree* GetBinaryTree() const { return fBinaryTree; }
 
       Double_t             CKernelEstimate( const Event&, std::vector<const BinarySearchTreeNode*>&, Volume& );
       void                 RKernelEstimate( const Event&, std::vector<const BinarySearchTreeNode*>&, Volume&, std::vector<Float_t> *pdfSum );
@@ -201,7 +201,7 @@ namespace TMVA {
       Bool_t             fPrinted;       // print
       Bool_t             fNormTree;      // binary-search tree is normalised
 
-      void    SetVolumeElement ( void );
+      void    SetVolumeElement ();
 
       Double_t              CRScalc           ( const Event& );
       void                  RRScalc           ( const Event&, std::vector<Float_t>* count );
@@ -214,7 +214,7 @@ namespace TMVA {
       static MethodPDERS*& GetMethodPDERSThreadLocal() {TTHREAD_TLS(MethodPDERS*) fgThisPDERS(nullptr); return fgThisPDERS;};
       void UpdateThis();
 
-      void Init( void );
+      void Init();
 
       ClassDef(MethodPDERS,0); // Multi-dimensional probability density estimator range search (PDERS) method
    };

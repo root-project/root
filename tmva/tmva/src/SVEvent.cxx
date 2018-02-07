@@ -51,7 +51,7 @@ TMVA::SVEvent::SVEvent()
    fIdx(0),
    fNs(0),
    fIsShrinked(0),
-   fLine(0),
+   fLine(nullptr),
    fTarget(0)
 {
 }
@@ -70,7 +70,7 @@ TMVA::SVEvent::SVEvent( const Event* event, Float_t C_par, Bool_t isSignal )
      fIdx     ( isSignal ? -1 : 1 ),
      fNs(0),
      fIsShrinked(0),
-     fLine(0),
+     fLine(nullptr),
      fTarget((event->GetNTargets() > 0 ? event->GetTarget(0) : 0))
 {
 }
@@ -89,7 +89,7 @@ TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Int_
      fIdx(-1),
      fNs(ns),
      fIsShrinked(0),
-     fLine(0),
+     fLine(nullptr),
      fTarget(0)
 {
 }
@@ -108,7 +108,7 @@ TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Floa
      fIdx(-1),
      fNs(0),
      fIsShrinked(0),
-     fLine(0),
+     fLine(nullptr),
      fTarget(0)
 {
 }
@@ -118,9 +118,9 @@ TMVA::SVEvent::SVEvent( const std::vector<Float_t>* svector, Float_t alpha, Floa
 
 TMVA::SVEvent::~SVEvent()
 {
-   if (fLine != 0) {
+   if (fLine != nullptr) {
       delete [] fLine;
-      fLine = 0;
+      fLine = nullptr;
    }
 }
 
@@ -130,7 +130,7 @@ TMVA::SVEvent::~SVEvent()
 void TMVA::SVEvent::Print( std::ostream& os ) const
 {
    os << "type::" << fTypeFlag <<" target::"<< fTarget << " alpha::" << fAlpha <<" alpha_p::"<< fAlpha_p<< " values::" ;
-   for (UInt_t j =0; j < fDataVector.size();j++) os<<fDataVector.at(j)<<" ";
+   for (float j : fDataVector) os<<j<<" ";
    os << std::endl;
 }
 

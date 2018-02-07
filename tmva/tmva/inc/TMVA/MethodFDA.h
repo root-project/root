@@ -69,12 +69,12 @@ namespace TMVA {
       MethodFDA( DataSetInfo& theData,
                  const TString& theWeightFile);
 
-      virtual ~MethodFDA( void );
+      virtual ~MethodFDA();
 
       Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
       // training method
-      void Train( void );
+      void Train();
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -89,7 +89,7 @@ namespace TMVA {
       virtual const std::vector<Float_t>& GetRegressionValues();
       virtual const std::vector<Float_t>& GetMulticlassValues();
 
-      void Init( void );
+      void Init();
 
       // ranking of input variables
       const Ranking* CreateRanking() { return 0; }

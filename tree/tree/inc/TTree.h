@@ -342,7 +342,7 @@ public:
    virtual TBranch        *BranchRef();
    virtual void            Browse(TBrowser*);
    virtual Int_t           BuildIndex(const char* majorname, const char* minorname = "0");
-   TStreamerInfo          *BuildStreamerInfo(TClass* cl, void* pointer = 0, Bool_t canOptimize = kTRUE);
+   TStreamerInfo          *BuildStreamerInfo(TClass* cl, void* pointer = nullptr, Bool_t canOptimize = kTRUE);
    virtual TFile          *ChangeFile(TFile* file);
    virtual TTree          *CloneTree(Long64_t nentries = -1, Option_t* option = "");
    virtual void            CopyAddresses(TTree*,Bool_t undo = kFALSE);
@@ -464,10 +464,10 @@ public:
    virtual Int_t           LoadBaskets(Long64_t maxmemory = 2000000000);
    virtual Long64_t        LoadTree(Long64_t entry);
    virtual Long64_t        LoadTreeFriend(Long64_t entry, TTree* T);
-   virtual Int_t           MakeClass(const char* classname = 0, Option_t* option = "");
-   virtual Int_t           MakeCode(const char* filename = 0);
-   virtual Int_t           MakeProxy(const char* classname, const char* macrofilename = 0, const char* cutfilename = 0, const char* option = 0, Int_t maxUnrolling = 3);
-   virtual Int_t           MakeSelector(const char* selector = 0, Option_t* option = "");
+   virtual Int_t           MakeClass(const char* classname = nullptr, Option_t* option = "");
+   virtual Int_t           MakeCode(const char* filename = nullptr);
+   virtual Int_t           MakeProxy(const char* classname, const char* macrofilename = nullptr, const char* cutfilename = nullptr, const char* option = nullptr, Int_t maxUnrolling = 3);
+   virtual Int_t           MakeSelector(const char* selector = nullptr, Option_t* option = "");
    Bool_t                  MemoryFull(Int_t nbytes);
    virtual Long64_t        Merge(TCollection* list, Option_t* option = "");
    virtual Long64_t        Merge(TCollection* list, TFileMergeInfo *info);
@@ -502,27 +502,27 @@ public:
    virtual void            SetAutoFlush(Long64_t autof = -30000000);
    virtual void            SetBasketSize(const char* bname, Int_t buffsize = 16000);
 #if !defined(__CINT__)
-   virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr = 0);
+   virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr = nullptr);
 #endif
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TClass *realClass, EDataType datatype, Bool_t isptr);
    virtual Int_t           SetBranchAddress(const char *bname,void *add, TBranch **ptr, TClass *realClass, EDataType datatype, Bool_t isptr);
-   template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = 0) {
+   template <class T> Int_t SetBranchAddress(const char *bname, T **add, TBranch **ptr = nullptr) {
       TClass *cl = TClass::GetClass(typeid(T));
       EDataType type = kOther_t;
-      if (cl==0) type = TDataType::GetType(typeid(T));
+      if (cl==nullptr) type = TDataType::GetType(typeid(T));
       return SetBranchAddress(bname,add,ptr,cl,type,true);
    }
 #ifndef R__NO_CLASS_TEMPLATE_SPECIALIZATION
    // This can only be used when the template overload resolution can distinguish between
    // T* and T**
-   template <class T> Int_t SetBranchAddress(const char *bname, T *add, TBranch **ptr = 0) {
+   template <class T> Int_t SetBranchAddress(const char *bname, T *add, TBranch **ptr = nullptr) {
       TClass *cl = TClass::GetClass(typeid(T));
       EDataType type = kOther_t;
-      if (cl==0) type = TDataType::GetType(typeid(T));
+      if (cl==nullptr) type = TDataType::GetType(typeid(T));
       return SetBranchAddress(bname,add,ptr,cl,type,false);
    }
 #endif
-   virtual void            SetBranchStatus(const char* bname, Bool_t status = 1, UInt_t* found = 0);
+   virtual void            SetBranchStatus(const char* bname, Bool_t status = 1, UInt_t* found = nullptr);
    static  void            SetBranchStyle(Int_t style = 1);  //style=0 for old branch, =1 for new branch style
    virtual Int_t           SetCacheSize(Long64_t cachesize = -1);
    virtual Int_t           SetCacheEntryRange(Long64_t first, Long64_t last);
@@ -571,8 +571,8 @@ public:
    virtual Int_t           StopCacheLearningPhase();
    virtual Int_t           UnbinnedFit(const char* funcname, const char* varexp, const char* selection = "", Option_t* option = "", Long64_t nentries = kMaxEntries, Long64_t firstentry = 0);
    void                    UseCurrentStyle();
-   virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
-   virtual Int_t           Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
+   virtual Int_t           Write(const char *name=nullptr, Int_t option=0, Int_t bufsize=0);
+   virtual Int_t           Write(const char *name=nullptr, Int_t option=0, Int_t bufsize=0) const;
 
    ClassDef(TTree, 20) // Tree descriptor (the main ROOT I/O class)
 };
@@ -593,7 +593,7 @@ protected:
    TIterator         *fTreeIter;     ///< current tree sub-iterator.
    Bool_t             fDirection;    ///< iteration direction
 
-   TTreeFriendLeafIter() : fTree(0), fLeafIter(0), fTreeIter(0),
+   TTreeFriendLeafIter() : fTree(nullptr), fLeafIter(nullptr), fTreeIter(nullptr),
        fDirection(0) { }
 
 public:
@@ -603,7 +603,7 @@ public:
    TIterator &operator=(const TIterator &rhs);
    TTreeFriendLeafIter &operator=(const TTreeFriendLeafIter &rhs);
 
-   const TCollection *GetCollection() const { return 0; }
+   const TCollection *GetCollection() const { return nullptr; }
    Option_t          *GetOption() const;
    TObject           *Next();
    void               Reset() { SafeDelete(fLeafIter); SafeDelete(fTreeIter); }

@@ -58,7 +58,7 @@ public:
    enum EMatrixCreatorsOp1 { kZero,kUnit,kTransposed,kInverted,kAtA };
    enum EMatrixCreatorsOp2 { kMult,kTransposeMult,kInvMult,kMultTranspose,kPlus,kMinus };
 
-   TMatrixT(): fDataStack(), fElements(0) { }
+   TMatrixT(): fDataStack(), fElements(nullptr) { }
    TMatrixT(Int_t nrows,Int_t ncols);
    TMatrixT(Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb);
    TMatrixT(Int_t nrows,Int_t ncols,const Element *data,Option_t *option="");
@@ -66,7 +66,7 @@ public:
    TMatrixT(const TMatrixT      <Element> &another);
    TMatrixT(const TMatrixTSym   <Element> &another);
    TMatrixT(const TMatrixTSparse<Element> &another);
-   template <class Element2> TMatrixT(const TMatrixT<Element2> &another): fElements(0)
+   template <class Element2> TMatrixT(const TMatrixT<Element2> &another): fElements(nullptr)
    {
       R__ASSERT(another.IsValid());
       Allocate(another.GetNrows(),another.GetNcols(),another.GetRowLwb(),another.GetColLwb());
@@ -109,16 +109,16 @@ public:
 
    virtual const Element *GetMatrixArray  () const;
    virtual       Element *GetMatrixArray  ();
-   virtual const Int_t   *GetRowIndexArray() const { return 0; }
-   virtual       Int_t   *GetRowIndexArray()       { return 0; }
-   virtual const Int_t   *GetColIndexArray() const { return 0; }
-   virtual       Int_t   *GetColIndexArray()       { return 0; }
+   virtual const Int_t   *GetRowIndexArray() const { return nullptr; }
+   virtual       Int_t   *GetRowIndexArray()       { return nullptr; }
+   virtual const Int_t   *GetColIndexArray() const { return nullptr; }
+   virtual       Int_t   *GetColIndexArray()       { return nullptr; }
 
    virtual       TMatrixTBase<Element> &SetRowIndexArray(Int_t * /*data*/) { MayNotUse("SetRowIndexArray(Int_t *)"); return *this; }
    virtual       TMatrixTBase<Element> &SetColIndexArray(Int_t * /*data*/) { MayNotUse("SetColIndexArray(Int_t *)"); return *this; }
 
    virtual void Clear(Option_t * /*option*/ ="") { if (this->fIsOwner) Delete_m(this->fNelems,fElements);
-                                                   else fElements = 0;
+                                                   else fElements = nullptr;
                                                    this->fNelems = 0; }
 
            TMatrixT    <Element> &Use     (Int_t row_lwb,Int_t row_upb,Int_t col_lwb,Int_t col_upb,Element *data);
@@ -144,8 +144,8 @@ public:
    virtual Double_t Determinant  () const;
    virtual void     Determinant  (Double_t &d1,Double_t &d2) const;
 
-           TMatrixT<Element> &Invert      (Double_t *det=0);
-           TMatrixT<Element> &InvertFast  (Double_t *det=0);
+           TMatrixT<Element> &Invert      (Double_t *det=nullptr);
+           TMatrixT<Element> &InvertFast  (Double_t *det=nullptr);
            TMatrixT<Element> &Transpose   (const TMatrixT<Element> &source);
    inline  TMatrixT<Element> &T           () { return this->Transpose(*this); }
            TMatrixT<Element> &Rank1Update (const TVectorT<Element> &v,Element alpha=1.0);

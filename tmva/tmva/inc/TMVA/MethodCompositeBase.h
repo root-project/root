@@ -81,7 +81,7 @@ namespace TMVA {
       // create ranking
       virtual const Ranking* CreateRanking() = 0;
 
-      virtual ~MethodCompositeBase( void );
+      virtual ~MethodCompositeBase();
 
    protected:
 

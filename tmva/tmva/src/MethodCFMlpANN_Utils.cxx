@@ -136,7 +136,7 @@ fg_999(999)
    for(i=0; i<max_Events_;++i) fVarn_1.nclass[i] = 0;
    for(i=0; i<max_nVar_;++i) fVarn_1.xmax[i] = 0;
 
-   fLogger = 0;
+   fLogger = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -904,7 +904,7 @@ void TMVA::MethodCFMlpANN_Utils::GraphNN( Int_t *ilearn, Double_t * /*xxx*/,
 ////////////////////////////////////////////////////////////////////////////////
 /// [smart comments to be added]
 
-Double_t TMVA::MethodCFMlpANN_Utils::Sen3a( void )
+Double_t TMVA::MethodCFMlpANN_Utils::Sen3a()
 {
    // Initialized data
    Int_t    m12 = 4096;

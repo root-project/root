@@ -47,7 +47,7 @@ TMVA::MethodCrossValidation::MethodCrossValidation(DataSetInfo &theData, const T
 /// Destructor.
 ///
 
-TMVA::MethodCrossValidation::~MethodCrossValidation(void) {}
+TMVA::MethodCrossValidation::~MethodCrossValidation() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -95,7 +95,7 @@ void TMVA::MethodCrossValidation::ProcessOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// Common initialisation with defaults for the Method.
 
-void TMVA::MethodCrossValidation::Init(void)
+void TMVA::MethodCrossValidation::Init()
 {
    fMulticlassValues = std::vector<Float_t>(DataInfo().GetNClasses());
 }
@@ -103,7 +103,7 @@ void TMVA::MethodCrossValidation::Init(void)
 ////////////////////////////////////////////////////////////////////////////////
 /// Reset the method, as if it had just been instantiated (forget all training etc.).
 
-void TMVA::MethodCrossValidation::Reset(void) {}
+void TMVA::MethodCrossValidation::Reset() {}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// \brief Returns filename of weight file for a given fold.
@@ -302,7 +302,7 @@ const std::vector<Float_t> &TMVA::MethodCrossValidation::GetRegressionValues()
 ////////////////////////////////////////////////////////////////////////////////
 ///
 
-void TMVA::MethodCrossValidation::WriteMonitoringHistosToFile(void) const
+void TMVA::MethodCrossValidation::WriteMonitoringHistosToFile() const
 {
    // // Used for evaluation, which is outside the life time of MethodCrossEval.
    // Log() << kFATAL << "Method CrossValidation should not be created manually,"

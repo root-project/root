@@ -47,10 +47,10 @@ protected:
    TDirectory *fMotherDir;   ///<!pointer to mother directory
 
    virtual Int_t    Read(const char *name) { return TObject::Read(name); }
-   virtual void     Create(Int_t nbytes, TFile* f = 0);
+   virtual void     Create(Int_t nbytes, TFile* f = nullptr);
            void     Build(TDirectory* motherDir, const char* classname, Long64_t filepos);
    virtual void     Reset(); // Currently only for the use of TBasket.
-   virtual Int_t    WriteFileKeepBuffer(TFile *f = 0);
+   virtual Int_t    WriteFileKeepBuffer(TFile *f = nullptr);
 
 
  public:
@@ -61,7 +61,7 @@ protected:
    TKey(const TString &name, const TString &title, const TClass *cl, Int_t nbytes, TDirectory* motherDir);
    TKey(const TObject *obj, const char *name, Int_t bufsize, TDirectory* motherDir);
    TKey(const void *obj, const TClass *cl, const char *name, Int_t bufsize, TDirectory* motherDir);
-   TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir = 0);
+   TKey(Long64_t pointer, Int_t nbytes, TDirectory* motherDir = nullptr);
    virtual ~TKey();
 
    virtual void        Browse(TBrowser *b);
@@ -106,7 +106,7 @@ protected:
    virtual void        SetParent(const TObject *parent);
            void        SetMotherDir(TDirectory* dir) { fMotherDir = dir; }
    virtual Int_t       Sizeof() const;
-   virtual Int_t       WriteFile(Int_t cycle=1, TFile* f = 0);
+   virtual Int_t       WriteFile(Int_t cycle=1, TFile* f = nullptr);
 
    ClassDef(TKey,4); //Header description of a logical record on file.
 };

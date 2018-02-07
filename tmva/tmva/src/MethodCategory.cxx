@@ -88,8 +88,8 @@ ClassImp(TMVA::MethodCategory);
                                          DataSetInfo& theData,
                                          const TString& theOption )
    : TMVA::MethodCompositeBase( jobName, Types::kCategory, methodTitle, theData, theOption),
-   fCatTree(0),
-   fDataSetManager(NULL)
+   fCatTree(nullptr),
+   fDataSetManager(nullptr)
 {
 }
 
@@ -99,15 +99,15 @@ ClassImp(TMVA::MethodCategory);
 TMVA::MethodCategory::MethodCategory( DataSetInfo& dsi,
                                       const TString& theWeightFile)
    : TMVA::MethodCompositeBase( Types::kCategory, dsi, theWeightFile),
-     fCatTree(0),
-     fDataSetManager(NULL)
+     fCatTree(nullptr),
+     fDataSetManager(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodCategory::~MethodCategory( void )
+TMVA::MethodCategory::~MethodCategory()
 {
    std::vector<TTreeFormula*>::iterator formIt = fCatFormulas.begin();
    std::vector<TTreeFormula*>::iterator lastF = fCatFormulas.end();
@@ -156,7 +156,7 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
    IMethod* addedMethod = ClassifierFactory::Instance().Create(addedMethodName,GetJobName(),theTitle,dsi,theOptions);
 
    MethodBase *method = (dynamic_cast<MethodBase*>(addedMethod));
-   if(method==0) return 0;
+   if(method==nullptr) return nullptr;
 
    if(fModelPersistence) method->SetWeightFileDir(fFileDir);
    method->SetModelPersistence(fModelPersistence);
@@ -171,7 +171,7 @@ TMVA::IMethod* TMVA::MethodCategory::AddMethod( const TCut& theCut,
    // set or create correct method base dir for added method
    const TString dirName(Form("Method_%s",method->GetMethodTypeName().Data()));
    TDirectory * dir = BaseDir()->GetDirectory(dirName);
-   if (dir != 0) method->SetMethodBaseDir( dir );
+   if (dir != nullptr) method->SetMethodBaseDir( dir );
    else method->SetMethodBaseDir( BaseDir()->mkdir(dirName,Form("Directory for all %s methods", method->GetMethodTypeName().Data())) );
 
    // method->SetBaseDir(eigenes base dir, gucken ob Fisher dir existiert, sonst erzeugen )
@@ -325,12 +325,12 @@ void TMVA::MethodCategory::InitCircularTree(const DataSetInfo& dsi)
 
    Bool_t hasAllExternalLinks = kTRUE;
    for (viIt = vars.begin(); viIt != vars.end(); ++viIt)
-      if( viIt->GetExternalLink() == 0 ) {
+      if( viIt->GetExternalLink() == nullptr ) {
          hasAllExternalLinks = kFALSE;
          break;
       }
    for (viIt = specs.begin(); viIt != specs.end(); ++viIt)
-      if( viIt->GetExternalLink() == 0 ) {
+      if( viIt->GetExternalLink() == nullptr ) {
          hasAllExternalLinks = kFALSE;
          break;
       }
@@ -429,7 +429,7 @@ void TMVA::MethodCategory::Train()
          MethodBase* mva = dynamic_cast<MethodBase*>(*itrMethod);
          if (mva && mva->Data()->GetNTrainingEvents() >= MinNoTrainingEvents) {
             const Ranking* ranking = (*itrMethod)->CreateRanking();
-            if (ranking != 0)
+            if (ranking != nullptr)
                ranking->Print();
             else
                Log() << kINFO << "No variable ranking supplied by classifier: "
@@ -446,7 +446,7 @@ void TMVA::MethodCategory::AddWeightsXMLTo( void* parent ) const
 {
    void* wght = gTools().AddChild(parent, "Weights");
    gTools().AddAttr( wght, "NSubMethods", fMethods.size() );
-   void* submethod(0);
+   void* submethod(nullptr);
 
    // iterate over methods and write them to XML file
    for (UInt_t i=0; i<fMethods.size(); i++) {
@@ -497,7 +497,7 @@ void TMVA::MethodCategory::ReadWeightsFromXML( void* wghtnode )
       // recreate sub-method from weights and add to fMethods
       MethodBase* method = dynamic_cast<MethodBase*>( ClassifierFactory::Instance().Create( methodType.Data(),
                                                                                             dsi, "none" ) );
-      if(method==0)
+      if(method==nullptr)
          Log() << kFATAL << "Could not create sub-method " << method << " from XML." << Endl;
 
       method->SetupMethod();
@@ -562,7 +562,7 @@ void TMVA::MethodCategory::GetHelpMessage() const
 
 const TMVA::Ranking* TMVA::MethodCategory::CreateRanking()
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -628,7 +628,7 @@ Double_t TMVA::MethodCategory::GetMvaValue( Double_t* err, Double_t* errUpper )
    // get mva value from the suitable sub-classifier
    ev->SetVariableArrangement(&fVarMaps[methodToUse]);
    Double_t mvaValue = dynamic_cast<MethodBase*>(fMethods[methodToUse])->GetMvaValue(ev,err,errUpper);
-   ev->SetVariableArrangement(0);
+   ev->SetVariableArrangement(nullptr);
 
    return mvaValue;
 }

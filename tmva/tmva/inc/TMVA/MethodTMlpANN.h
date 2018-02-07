@@ -58,12 +58,12 @@ namespace TMVA {
       MethodTMlpANN( DataSetInfo& theData,
                      const TString& theWeightFile);
 
-      virtual ~MethodTMlpANN( void );
+      virtual ~MethodTMlpANN();
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
       // training method
-      void Train( void );
+      void Train();
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -118,7 +118,7 @@ namespace TMVA {
       TString  fLearningMethod;     // the learning method (given via option string)
 
       // default initialisation called by all constructors
-      void Init( void );
+      void Init();
 
       ClassDef(MethodTMlpANN,0); // Implementation of interface for TMultiLayerPerceptron
    };

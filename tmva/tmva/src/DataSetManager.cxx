@@ -47,7 +47,7 @@ using std::endl;
 /// constructor
 
 TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput )
-   : fDatasetFactory(0),
+   : fDatasetFactory(nullptr),
      fDataInput(&dataInput),
      fDataSetInfoCollection(),
      fLogger( new MsgLogger("DataSetManager", kINFO) )
@@ -58,8 +58,8 @@ TMVA::DataSetManager::DataSetManager( DataInputHandler& dataInput )
 /// constructor
 
 TMVA::DataSetManager::DataSetManager( )
-: fDatasetFactory(0),
-fDataInput(0),
+: fDatasetFactory(nullptr),
+fDataInput(nullptr),
 fDataSetInfoCollection(),
 fLogger( new MsgLogger("DataSetManager", kINFO) )
 {
@@ -107,7 +107,7 @@ TMVA::DataSetInfo& TMVA::DataSetManager::AddDataSetInfo(DataSetInfo& dsi)
    dsi.SetDataSetManager( this ); // DSMTEST
 
    DataSetInfo * dsiInList = GetDataSetInfo(dsi.GetName());
-   if (dsiInList!=0) return *dsiInList;
+   if (dsiInList!=nullptr) return *dsiInList;
    fDataSetInfoCollection.Add( const_cast<DataSetInfo*>(&dsi) );
    return dsi;
 }

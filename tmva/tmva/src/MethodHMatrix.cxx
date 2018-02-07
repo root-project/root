@@ -85,10 +85,10 @@ ClassImp(TMVA::MethodHMatrix);
                                        DataSetInfo& theData,
                                        const TString& theOption )
    : TMVA::MethodBase( jobName, Types::kHMatrix, methodTitle, theData, theOption)
-   ,fInvHMatrixS(0)
-   ,fInvHMatrixB(0)
-   ,fVecMeanS(0)
-   ,fVecMeanB(0)
+   ,fInvHMatrixS(nullptr)
+   ,fInvHMatrixB(nullptr)
+   ,fVecMeanS(nullptr)
+   ,fVecMeanB(nullptr)
 {
 }
 
@@ -98,17 +98,17 @@ ClassImp(TMVA::MethodHMatrix);
 TMVA::MethodHMatrix::MethodHMatrix( DataSetInfo& theData,
                                     const TString& theWeightFile)
    : TMVA::MethodBase( Types::kHMatrix, theData, theWeightFile)
-   ,fInvHMatrixS(0)
-   ,fInvHMatrixB(0)
-   ,fVecMeanS(0)
-   ,fVecMeanB(0)
+   ,fInvHMatrixS(nullptr)
+   ,fInvHMatrixB(nullptr)
+   ,fVecMeanS(nullptr)
+   ,fVecMeanB(nullptr)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialization called by all constructors
 
-void TMVA::MethodHMatrix::Init( void )
+void TMVA::MethodHMatrix::Init()
 {
    //SetNormalised( kFALSE ); obsolete!
 
@@ -124,12 +124,12 @@ void TMVA::MethodHMatrix::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodHMatrix::~MethodHMatrix( void )
+TMVA::MethodHMatrix::~MethodHMatrix()
 {
-   if (NULL != fInvHMatrixS) delete fInvHMatrixS;
-   if (NULL != fInvHMatrixB) delete fInvHMatrixB;
-   if (NULL != fVecMeanS   ) delete fVecMeanS;
-   if (NULL != fVecMeanB   ) delete fVecMeanB;
+   if (nullptr != fInvHMatrixS) delete fInvHMatrixS;
+   if (nullptr != fInvHMatrixB) delete fInvHMatrixB;
+   if (nullptr != fVecMeanS   ) delete fVecMeanS;
+   if (nullptr != fVecMeanB   ) delete fVecMeanB;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -159,7 +159,7 @@ void TMVA::MethodHMatrix::ProcessOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// computes H-matrices for signal and background samples
 
-void TMVA::MethodHMatrix::Train( void )
+void TMVA::MethodHMatrix::Train()
 {
    // covariance matrices for signal and background
    ComputeCovariance( kTRUE,  fInvHMatrixS );

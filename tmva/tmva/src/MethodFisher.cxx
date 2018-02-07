@@ -137,16 +137,16 @@ TMVA::MethodFisher::MethodFisher( const TString& jobName,
                                   DataSetInfo& dsi,
                                   const TString& theOption ) :
    MethodBase( jobName, Types::kFisher, methodTitle, dsi, theOption),
-   fMeanMatx     ( 0 ),
+   fMeanMatx     ( nullptr ),
    fTheMethod    ( "Fisher" ),
    fFisherMethod ( kFisher ),
-   fBetw         ( 0 ),
-   fWith         ( 0 ),
-   fCov          ( 0 ),
+   fBetw         ( nullptr ),
+   fWith         ( nullptr ),
+   fCov          ( nullptr ),
    fSumOfWeightsS( 0 ),
    fSumOfWeightsB( 0 ),
-   fDiscrimPow   ( 0 ),
-   fFisherCoeff  ( 0 ),
+   fDiscrimPow   ( nullptr ),
+   fFisherCoeff  ( nullptr ),
    fF0           ( 0 )
 {
 }
@@ -157,16 +157,16 @@ TMVA::MethodFisher::MethodFisher( const TString& jobName,
 TMVA::MethodFisher::MethodFisher( DataSetInfo& dsi,
                                   const TString& theWeightFile) :
    MethodBase( Types::kFisher, dsi, theWeightFile),
-   fMeanMatx     ( 0 ),
+   fMeanMatx     ( nullptr ),
    fTheMethod    ( "Fisher" ),
    fFisherMethod ( kFisher ),
-   fBetw         ( 0 ),
-   fWith         ( 0 ),
-   fCov          ( 0 ),
+   fBetw         ( nullptr ),
+   fWith         ( nullptr ),
+   fCov          ( nullptr ),
    fSumOfWeightsS( 0 ),
    fSumOfWeightsB( 0 ),
-   fDiscrimPow   ( 0 ),
-   fFisherCoeff  ( 0 ),
+   fDiscrimPow   ( nullptr ),
+   fFisherCoeff  ( nullptr ),
    fF0           ( 0 )
 {
 }
@@ -174,7 +174,7 @@ TMVA::MethodFisher::MethodFisher( DataSetInfo& dsi,
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialization called by all constructors
 
-void TMVA::MethodFisher::Init( void )
+void TMVA::MethodFisher::Init()
 {
    // allocate Fisher coefficients
    fFisherCoeff = new std::vector<Double_t>( GetNvar() );
@@ -213,13 +213,13 @@ void TMVA::MethodFisher::ProcessOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodFisher::~MethodFisher( void )
+TMVA::MethodFisher::~MethodFisher()
 {
-   if (fBetw       ) { delete fBetw; fBetw = 0; }
-   if (fWith       ) { delete fWith; fWith = 0; }
-   if (fCov        ) { delete fCov;  fCov = 0; }
-   if (fDiscrimPow ) { delete fDiscrimPow; fDiscrimPow = 0; }
-   if (fFisherCoeff) { delete fFisherCoeff; fFisherCoeff = 0; }
+   if (fBetw       ) { delete fBetw; fBetw = nullptr; }
+   if (fWith       ) { delete fWith; fWith = nullptr; }
+   if (fCov        ) { delete fCov;  fCov = nullptr; }
+   if (fDiscrimPow ) { delete fDiscrimPow; fDiscrimPow = nullptr; }
+   if (fFisherCoeff) { delete fFisherCoeff; fFisherCoeff = nullptr; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -234,7 +234,7 @@ Bool_t TMVA::MethodFisher::HasAnalysisType( Types::EAnalysisType type, UInt_t nu
 ////////////////////////////////////////////////////////////////////////////////
 /// computation of Fisher coefficients by series of matrix operations
 
-void TMVA::MethodFisher::Train( void )
+void TMVA::MethodFisher::Train()
 {
    // get mean value of each variables for signal, backgd and signal+backgd
    GetMean();
@@ -282,7 +282,7 @@ Double_t TMVA::MethodFisher::GetMvaValue( Double_t* err, Double_t* errUpper )
 ////////////////////////////////////////////////////////////////////////////////
 /// initialization method; creates global matrices and vectors
 
-void TMVA::MethodFisher::InitMatrices( void )
+void TMVA::MethodFisher::InitMatrices()
 {
    // average value of each variables for S, B, S+B
    fMeanMatx = new TMatrixD( GetNvar(), 3 );
@@ -299,7 +299,7 @@ void TMVA::MethodFisher::InitMatrices( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// compute mean values of variables in each sample, and the overall means
 
-void TMVA::MethodFisher::GetMean( void )
+void TMVA::MethodFisher::GetMean()
 {
    // initialize internal sum-of-weights variables
    fSumOfWeightsS = 0;
@@ -348,7 +348,7 @@ void TMVA::MethodFisher::GetMean( void )
 /// the matrix of covariance 'within class' reflects the dispersion of the
 /// events relative to the center of gravity of their own class
 
-void TMVA::MethodFisher::GetCov_WithinClass( void )
+void TMVA::MethodFisher::GetCov_WithinClass()
 {
    // assert required
    assert( fSumOfWeightsS > 0 && fSumOfWeightsB > 0 );
@@ -414,7 +414,7 @@ void TMVA::MethodFisher::GetCov_WithinClass( void )
 /// events of a class relative to the global center of gravity of all the class
 /// hence the separation between classes
 
-void TMVA::MethodFisher::GetCov_BetweenClass( void )
+void TMVA::MethodFisher::GetCov_BetweenClass()
 {
    // assert required
    assert( fSumOfWeightsS > 0 && fSumOfWeightsB > 0);
@@ -437,7 +437,7 @@ void TMVA::MethodFisher::GetCov_BetweenClass( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// compute full covariance matrix from sum of within and between matrices
 
-void TMVA::MethodFisher::GetCov_Full( void )
+void TMVA::MethodFisher::GetCov_Full()
 {
    for (UInt_t x=0; x<GetNvar(); x++)
       for (UInt_t y=0; y<GetNvar(); y++)
@@ -454,13 +454,13 @@ void TMVA::MethodFisher::GetCov_Full( void )
 /// then the array of Fisher coefficients is
 /// [coeff] =sqrt(fNsig*fNbgd)/fNevt*transpose{Xs-Xb}*InvWith
 
-void TMVA::MethodFisher::GetFisherCoeff( void )
+void TMVA::MethodFisher::GetFisherCoeff()
 {
    // assert required
    assert( fSumOfWeightsS > 0 && fSumOfWeightsB > 0);
 
    // invert covariance matrix
-   TMatrixD* theMat = 0;
+   TMatrixD* theMat = nullptr;
    switch (GetFisherMethod()) {
    case kFisher:
       theMat = fWith;
@@ -525,7 +525,7 @@ void TMVA::MethodFisher::GetFisherCoeff( void )
 /// we want signal & backgd classes as compact and separated as possible
 /// the discriminating power is then defined as the ration "fBetw/fWith"
 
-void TMVA::MethodFisher::GetDiscrimPower( void )
+void TMVA::MethodFisher::GetDiscrimPower()
 {
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
       if ((*fCov)(ivar, ivar) != 0)
@@ -554,7 +554,7 @@ const TMVA::Ranking* TMVA::MethodFisher::CreateRanking()
 /// display Fisher coefficients and discriminating power for each variable
 /// check maximum length of variable name
 
-void TMVA::MethodFisher::PrintCoefficients( void )
+void TMVA::MethodFisher::PrintCoefficients()
 {
    Log() << kHEADER << "Results for Fisher coefficients:" << Endl;
 

@@ -229,11 +229,7 @@ private:
    static Ssiz_t  MaxSize() { return (kMaxInt >> 1) - 1; }
 #endif
    void           UnLink() const { if (IsLong()) delete [] fRep.fLong.fData; }
-   void           Zero() {
-      Ssiz_t (&a)[kNwords] = fRep.fRaw.fWords;
-      for (UInt_t i = 0; i < kNwords; ++i)
-         a[i] = 0;
-   }
+   void           Zero() { for (auto &word : fRep.fRaw.fWords) word = 0; }
    char          *Init(Ssiz_t capacity, Ssiz_t nchar);
    void           Clone(Ssiz_t nc); // Make self a distinct copy w. capacity nc
    void           FormImp(const char *fmt, va_list ap);
@@ -248,7 +244,7 @@ public:
    TString();                           // Null string
    explicit TString(Ssiz_t ic);         // Suggested capacity
    TString(const TString &s);           // Copy constructor
-   TString(TString &&s);                // Move constructor
+   TString(TString &&s) noexcept;       // Move constructor
    TString(const char *s);              // Copy to embedded null
    TString(const char *s, Ssiz_t n);    // Copy past any embedded nulls
    TString(const std::string &s);
@@ -289,6 +285,7 @@ public:
    TString    &operator=(char s);                // Replace string
    TString    &operator=(const char *s);
    TString    &operator=(const TString &s);
+   TString    &operator=(TString &&s) noexcept;
    TString    &operator=(const std::string &s);
    TString    &operator=(const std::string_view &s);
    TString    &operator=(const TSubString &s);
@@ -617,10 +614,10 @@ inline TString &TString::Prepend(const TString &s, Ssiz_t n)
 { return Replace(0, 0, s.Data(), TMath::Min(n, s.Length())); }
 
 inline TString &TString::Remove(Ssiz_t pos)
-{ return Replace(pos, TMath::Max(0, Length()-pos), 0, 0); }
+{ return Replace(pos, TMath::Max(0, Length()-pos), nullptr, 0); }
 
 inline TString &TString::Remove(Ssiz_t pos, Ssiz_t n)
-{ return Replace(pos, n, 0, 0); }
+{ return Replace(pos, n, nullptr, 0); }
 
 inline TString &TString::Chop()
 { return Remove(TMath::Max(0, Length()-1)); }

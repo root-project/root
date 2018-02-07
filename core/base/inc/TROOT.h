@@ -191,7 +191,7 @@ public:
 
    typedef std::vector<std::pair<std::string, int> > FwdDeclArgsToKeepCollection_t;
 
-                     TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = 0);
+                     TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc = nullptr);
    virtual           ~TROOT();
    void              AddClass(TClass *cl);
    void              AddClassGenerator(TClassGenerator *gen);
@@ -262,15 +262,15 @@ public:
    TCollection      *GetListOfFunctionTemplates();
    TList            *GetListOfBrowsables() const { return fBrowsables; }
    TDataType        *GetType(const char *name, Bool_t load = kFALSE) const;
-   TFile            *GetFile() const { if (gDirectory != this) return gDirectory->GetFile(); else return 0;}
+   TFile            *GetFile() const { if (gDirectory != this) return gDirectory->GetFile(); else return nullptr;}
    TFile            *GetFile(const char *name) const;
    TFunctionTemplate*GetFunctionTemplate(const char *name);
    TStyle           *GetStyle(const char *name) const;
    TObject          *GetFunction(const char *name) const;
    TGlobal          *GetGlobal(const char *name, Bool_t load = kFALSE) const;
    TGlobal          *GetGlobal(const TObject *obj, Bool_t load = kFALSE) const;
-   TFunction        *GetGlobalFunction(const char *name, const char *params = 0, Bool_t load = kFALSE);
-   TFunction        *GetGlobalFunctionWithPrototype(const char *name, const char *proto = 0, Bool_t load = kFALSE);
+   TFunction        *GetGlobalFunction(const char *name, const char *params = nullptr, Bool_t load = kFALSE);
+   TFunction        *GetGlobalFunctionWithPrototype(const char *name, const char *proto = nullptr, Bool_t load = kFALSE);
    TObject          *GetGeometry(const char *name) const;
    const TObject    *GetSelectedPrimitive() const { return fPrimitive; }
    TVirtualPad      *GetSelectedPad() const { return fSelectPad; }
@@ -278,7 +278,7 @@ public:
    Int_t             GetNtypes() const { return fTypes->GetSize(); }
    TFolder          *GetRootFolder() const { return fRootFolder; }
    TProcessUUID     *GetUUIDs() const { return fUUIDs; }
-   void              Idle(UInt_t idleTimeInSec, const char *command = 0);
+   void              Idle(UInt_t idleTimeInSec, const char *command = nullptr);
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }
    Bool_t            IsExecutingMacro() const { return fExecutingMacro; }
@@ -291,14 +291,14 @@ public:
    void              ls(Option_t *option = "") const;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    TClass           *LoadClass(const char *name, Bool_t silent = kFALSE) const;
-   Int_t             LoadMacro(const char *filename, Int_t *error = 0, Bool_t check = kFALSE);
-   Long_t            Macro(const char *filename, Int_t *error = 0, Bool_t padUpdate = kTRUE);
+   Int_t             LoadMacro(const char *filename, Int_t *error = nullptr, Bool_t check = kFALSE);
+   Long_t            Macro(const char *filename, Int_t *error = nullptr, Bool_t padUpdate = kTRUE);
    TCanvas          *MakeDefCanvas() const;
    void              Message(Int_t id, const TObject *obj);
    Bool_t            MustClean() const { return fMustClean; }
-   Long_t            ProcessLine(const char *line, Int_t *error = 0);
-   Long_t            ProcessLineSync(const char *line, Int_t *error = 0);
-   Long_t            ProcessLineFast(const char *line, Int_t *error = 0);
+   Long_t            ProcessLine(const char *line, Int_t *error = nullptr);
+   Long_t            ProcessLineSync(const char *line, Int_t *error = nullptr);
+   Long_t            ProcessLineFast(const char *line, Int_t *error = nullptr);
    Bool_t            ReadingObject() const;
    void              RecursiveRemove(TObject *obj);
    void              RefreshBrowsers();

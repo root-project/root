@@ -311,7 +311,7 @@ void TMVA::TMVAGui( const char* fName  , TString dataset)
    cbar->Show();
 
    // indicate inactive buttons
-   for (UInt_t i=0; i<TMVAGui_inactiveButtons.size(); i++) cbar->SetButtonState(TMVAGui_inactiveButtons[i], 3 );
+   for (auto & TMVAGui_inactiveButton : TMVAGui_inactiveButtons) cbar->SetButtonState(TMVAGui_inactiveButton, 3 );
    if (TMVAGui_inactiveButtons.size() > 0) {
       cout << "=== Note: inactive buttons indicate classifiers that were not trained, ===" << endl;
       cout << "===       or functionalities that were not invoked during the training ===" << endl;

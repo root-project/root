@@ -45,7 +45,7 @@ void TBufferMerger::Init(std::unique_ptr<TFile> output)
 
 TBufferMerger::~TBufferMerger()
 {
-   for (auto f : fAttachedFiles)
+   for (const auto &f : fAttachedFiles)
       if (!f.expired()) Fatal("TBufferMerger", " TBufferMergerFiles must be destroyed before the server");
 
    this->Push(nullptr);

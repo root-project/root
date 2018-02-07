@@ -247,7 +247,7 @@ public:
 private:
    unsigned int fNBins;         ///< Number of bins including under- and overflow.
    std::string fTitle;          ///< Title of this axis, used for graphics / text.
-   const bool fCanGrow = false; ///< Whether this axis can grow (and thus has no overflow bins).
+   bool fCanGrow = false;       ///< Whether this axis can grow (and thus has no overflow bins).
 };
 
 ///\name TAxisBase::const_iterator comparison operators

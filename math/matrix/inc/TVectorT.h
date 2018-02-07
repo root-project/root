@@ -50,7 +50,7 @@ protected:
 
 public:
 
-   TVectorT() : fNrows(0), fRowLwb(0), fElements(0), fDataStack (), fIsOwner(kTRUE) { }
+   TVectorT() : fNrows(0), fRowLwb(0), fElements(nullptr), fDataStack (), fIsOwner(kTRUE) { }
    explicit TVectorT(Int_t n);
    TVectorT(Int_t lwb,Int_t upb);
    TVectorT(Int_t n,const Element *elements);
@@ -172,7 +172,7 @@ public:
    void Add(const TVectorT<Element> &v);
    void Add(const TVectorT<Element> &v1, const TVectorT<Element> &v2);
    void Clear(Option_t * /*option*/ ="") { if (fIsOwner) Delete_m(fNrows,fElements);
-                                           else fElements = 0;
+                                           else fElements = nullptr;
                                            fNrows = 0; }
    void Draw (Option_t *option=""); // *MENU*
    void Print(Option_t *option="") const;  // *MENU*

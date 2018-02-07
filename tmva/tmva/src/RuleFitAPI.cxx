@@ -175,7 +175,7 @@ void TMVA::RuleFitAPI::CheckRFWorkDir()
    }
    // check rf_go.exe
    FILE *f = fopen("rf_go.exe","r");
-   if (f==0) {
+   if (f==nullptr) {
       fLogger << kWARNING << "No rf_go.exe file in directory : " << fRFWorkDir << Endl;
       HowtoSetupRF();
       fLogger << kFATAL << "Setup failed - aborting!" << Endl;

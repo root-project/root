@@ -60,8 +60,8 @@ const std::string                      TMVA::MsgLogger::fgPrefix = "";
 const std::string                      TMVA::MsgLogger::fgSuffix = ": ";
 #if __cplusplus > 199711L
 std::atomic<Bool_t>                                       TMVA::MsgLogger::fgInhibitOutput{kFALSE};
-std::atomic<const std::map<TMVA::EMsgType, std::string>*> TMVA::MsgLogger::fgTypeMap{0};
-std::atomic<const std::map<TMVA::EMsgType, std::string>*> TMVA::MsgLogger::fgColorMap{0};
+std::atomic<const std::map<TMVA::EMsgType, std::string>*> TMVA::MsgLogger::fgTypeMap{nullptr};
+std::atomic<const std::map<TMVA::EMsgType, std::string>*> TMVA::MsgLogger::fgColorMap{nullptr};
 #else
 Bool_t                                       TMVA::MsgLogger::fgInhibitOutput = kFALSE;
 const std::map<TMVA::EMsgType, std::string>* TMVA::MsgLogger::fgTypeMap  = 0;
@@ -89,7 +89,7 @@ TMVA::MsgLogger::MsgLogger( const TObject* source, EMsgType minType )
 /// constructor
 
 TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
-   : fObjSource ( 0 ),
+   : fObjSource ( nullptr ),
      fStrSource ( source ),
      fActiveType( kINFO ),
      fMinType   ( minType )
@@ -101,7 +101,7 @@ TMVA::MsgLogger::MsgLogger( const std::string& source, EMsgType minType )
 /// constructor
 
 TMVA::MsgLogger::MsgLogger( EMsgType minType )
-   : fObjSource ( 0 ),
+   : fObjSource ( nullptr ),
      fStrSource ( "Unknown" ),
      fActiveType( kINFO ),
      fMinType   ( minType )
@@ -116,7 +116,7 @@ TMVA::MsgLogger::MsgLogger( const MsgLogger& parent )
    : std::basic_ios<MsgLogger::char_type, MsgLogger::traits_type>(),
      std::ostringstream(),
      TObject(),
-     fObjSource(0)
+     fObjSource(nullptr)
 {
    InitMaps();
    *this = parent;
@@ -279,7 +279,7 @@ void TMVA::MsgLogger::InitMaps()
       (*tmp)[kFATAL]    = std::string("FATAL");
       (*tmp)[kSILENT]   = std::string("SILENT");
       (*tmp)[kHEADER]   = std::string("HEADER");
-      const std::map<TMVA::EMsgType, std::string>* expected=0;
+      const std::map<TMVA::EMsgType, std::string>* expected=nullptr;
       if(fgTypeMap.compare_exchange_strong(expected,tmp)) {
          //Have the global own this
          gOwnTypeMap.reset(tmp);
@@ -300,7 +300,7 @@ void TMVA::MsgLogger::InitMaps()
       (*tmp)[kFATAL]   = std::string("\033[37;41;1m");
       (*tmp)[kSILENT]  = std::string("\033[30m");
 
-      const std::map<TMVA::EMsgType, std::string>* expected=0;
+      const std::map<TMVA::EMsgType, std::string>* expected=nullptr;
       if(fgColorMap.compare_exchange_strong(expected,tmp)) {
          //Have the global own this
          gOwnColorMap.reset(tmp);

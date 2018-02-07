@@ -71,7 +71,7 @@ public:
    TVirtualX(const char *name, const char *title);
    virtual ~TVirtualX() { }
 
-   virtual Bool_t    Init(void *display=0);
+   virtual Bool_t    Init(void *display=nullptr);
    virtual void      ClearWindow();
    virtual void      ClosePixmap();
    virtual void      CloseWindow();
@@ -103,7 +103,7 @@ public:
    EDrawMode         GetDrawMode() { return fDrawMode; }
    virtual Int_t     GetDoubleBuffer(Int_t wid);
    virtual void      GetGeometry(Int_t wid, Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
-   virtual const char *DisplayName(const char * = 0);
+   virtual const char *DisplayName(const char * = nullptr);
    virtual Handle_t  GetNativeEvent() const;
    virtual ULong_t   GetPixel(Color_t cindex);
    virtual void      GetPlanes(Int_t &nplanes);

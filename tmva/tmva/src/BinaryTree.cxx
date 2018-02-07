@@ -52,8 +52,8 @@ ClassImp(TMVA::BinaryTree);
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor for a yet "empty" tree. Needs to be filled afterwards
 
-TMVA::BinaryTree::BinaryTree( void )
-: fRoot  ( NULL ),
+TMVA::BinaryTree::BinaryTree()
+: fRoot  ( nullptr ),
    fNNodes( 0 ),
    fDepth ( 0 )
 {
@@ -62,10 +62,10 @@ TMVA::BinaryTree::BinaryTree( void )
 ////////////////////////////////////////////////////////////////////////////////
 ///destructor (deletes the nodes and "events" if owned by the tree
 
-TMVA::BinaryTree::~BinaryTree( void )
+TMVA::BinaryTree::~BinaryTree()
 {
    this->DeleteNode( fRoot );
-   fRoot=0;
+   fRoot=nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -73,7 +73,7 @@ TMVA::BinaryTree::~BinaryTree( void )
 
 void TMVA::BinaryTree::DeleteNode( TMVA::Node* node )
 {
-   if (node != NULL) { //If the node is not NULL...
+   if (node != nullptr) { //If the node is not NULL...
       this->DeleteNode(node->GetLeft());  //Delete its left node.
       this->DeleteNode(node->GetRight()); //Delete its right node.
 
@@ -102,17 +102,17 @@ TMVA::Node* TMVA::BinaryTree::GetRightDaughter( Node *n)
 
 UInt_t TMVA::BinaryTree::CountNodes(TMVA::Node *n)
 {
-   if (n == NULL){ //default, start at the tree top, then descend recursively
+   if (n == nullptr){ //default, start at the tree top, then descend recursively
       n = (Node*)this->GetRoot();
-      if (n == NULL) return 0 ;
+      if (n == nullptr) return 0 ;
    }
 
    UInt_t countNodes=1;
 
-   if (this->GetLeftDaughter(n) != NULL){
+   if (this->GetLeftDaughter(n) != nullptr){
       countNodes += this->CountNodes( this->GetLeftDaughter(n) );
    }
-   if (this->GetRightDaughter(n) != NULL) {
+   if (this->GetRightDaughter(n) != nullptr) {
       countNodes += this->CountNodes( this->GetRightDaughter(n) );
    }
 
@@ -169,9 +169,9 @@ std::ostream& TMVA::operator<< (std::ostream& os, const TMVA::BinaryTree& tree)
 void TMVA::BinaryTree::Read(std::istream & istr, UInt_t tmva_Version_Code )
 {
    Node * currentNode = GetRoot();
-   Node* parent = 0;
+   Node* parent = nullptr;
 
-   if(currentNode==0) {
+   if(currentNode==nullptr) {
       currentNode=CreateNode();
       SetRoot(currentNode);
    }
@@ -184,9 +184,9 @@ void TMVA::BinaryTree::Read(std::istream & istr, UInt_t tmva_Version_Code )
       }
 
       // find parent node
-      while( parent!=0 && parent->GetDepth() != currentNode->GetDepth()-1) parent=parent->GetParent();
+      while( parent!=nullptr && parent->GetDepth() != currentNode->GetDepth()-1) parent=parent->GetParent();
 
-      if (parent!=0) { // link new node to parent
+      if (parent!=nullptr) { // link new node to parent
          currentNode->SetParent(parent);
          if (currentNode->GetPos()=='l') parent->SetLeft(currentNode);
          if (currentNode->GetPos()=='r') parent->SetRight(currentNode);
@@ -212,17 +212,17 @@ std::istream& TMVA::operator>> (std::istream& istr, TMVA::BinaryTree& tree)
 
 void TMVA::BinaryTree::SetTotalTreeDepth( Node *n)
 {
-   if (n == NULL){ //default, start at the tree top, then descend recursively
+   if (n == nullptr){ //default, start at the tree top, then descend recursively
       n = (Node*) this->GetRoot();
-      if (n == NULL) {
+      if (n == nullptr) {
          Log() << kFATAL << "SetTotalTreeDepth: started with undefined ROOT node" <<Endl;
          return ;
       }
    }
-   if (this->GetLeftDaughter(n) != NULL){
+   if (this->GetLeftDaughter(n) != nullptr){
       this->SetTotalTreeDepth( this->GetLeftDaughter(n) );
    }
-   if (this->GetRightDaughter(n) != NULL) {
+   if (this->GetRightDaughter(n) != nullptr) {
       this->SetTotalTreeDepth( this->GetRightDaughter(n) );
    }
    if (n->GetDepth() > this->GetTotalTreeDepth()) this->SetTotalTreeDepth(n->GetDepth());

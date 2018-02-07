@@ -75,7 +75,7 @@ namespace TMVA {
       Reader( std::vector<TString>& varNames, const TString& theOption = "", Bool_t verbose = 0 );
       Reader( const TString& varNames, const TString& theOption, Bool_t verbose = 0 );  // format: "var1:var2:..."
 
-      virtual ~Reader( void );
+      virtual ~Reader();
 
       // book MVA method via weight file
       IMethod* BookMVA( const TString& methodTag, const TString& weightfile );
@@ -114,7 +114,7 @@ namespace TMVA {
 
       // accessors
       virtual const char* GetName() const { return "Reader"; }
-      Bool_t   Verbose( void ) const  { return fVerbose; }
+      Bool_t   Verbose() const  { return fVerbose; }
       void     SetVerbose( Bool_t v ) { fVerbose = v; }
 
       const DataSetInfo& DataInfo() const { return fDataSetInfo; }
@@ -141,7 +141,7 @@ namespace TMVA {
       DataInputHandler fDataInputHandler;
 
       // Init Reader class
-      void Init( void );
+      void Init();
 
       // Decode Constructor string (or TString) and fill variable name std::vector
       void DecodeVarNames( const std::string& varNames );

@@ -49,12 +49,12 @@ ClassImp(TMVA::Node);
 Int_t TMVA::Node::fgCount = 0;
 
 TMVA::Node::Node()
-   : fParent( NULL ),
-     fLeft  ( NULL),
-     fRight ( NULL ),
+   : fParent( nullptr ),
+     fLeft  ( nullptr),
+     fRight ( nullptr ),
      fPos   ( 'u' ),
      fDepth ( 0 ),
-     fParentTree( NULL )
+     fParentTree( nullptr )
 {
    // default constructor
    fgCount++;
@@ -65,8 +65,8 @@ TMVA::Node::Node()
 
 TMVA::Node::Node( Node* p, char pos )
    : fParent ( p ),
-     fLeft ( NULL ),
-     fRight( NULL ),
+     fLeft ( nullptr ),
+     fRight( nullptr ),
      fPos  ( pos ),
      fDepth( p->GetDepth() + 1),
      fParentTree(p->GetParentTree())
@@ -82,12 +82,12 @@ TMVA::Node::Node( Node* p, char pos )
 /// constructors of the derived classes
 
 TMVA::Node::Node ( const Node &n )
-   : fParent( NULL ),
-     fLeft  ( NULL),
-     fRight ( NULL ),
+   : fParent( nullptr ),
+     fLeft  ( nullptr),
+     fRight ( nullptr ),
      fPos   ( n.fPos ),
      fDepth ( n.fDepth ),
-     fParentTree( NULL )
+     fParentTree( nullptr )
 {
    fgCount++;
 }
@@ -114,9 +114,9 @@ int TMVA::Node::GetCount()
 Int_t TMVA::Node::CountMeAndAllDaughters() const
 {
    Int_t n=1;
-   if (this->GetLeft() != NULL)
+   if (this->GetLeft() != nullptr)
       n+= this->GetLeft()->CountMeAndAllDaughters();
-   if (this->GetRight() != NULL)
+   if (this->GetRight() != nullptr)
       n+= this->GetRight()->CountMeAndAllDaughters();
 
    return n;
@@ -137,7 +137,7 @@ std::ostream& TMVA::operator<<( std::ostream& os, const TMVA::Node& node )
 
 std::ostream& TMVA::operator<<( std::ostream& os, const TMVA::Node* node )
 {
-   if (node!=NULL) node->Print(os);
+   if (node!=nullptr) node->Print(os);
    return os;                // Return the output stream.
 }
 

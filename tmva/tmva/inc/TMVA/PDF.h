@@ -203,7 +203,7 @@ namespace TMVA {
       // This is a workaround for OSx where static thread_local data members are
       // not supported. The C++ solution would indeed be the following:
       static PDF*& GetThisPdfThreadLocal() { TTHREAD_TLS(PDF*) fgThisPDF(nullptr); return fgThisPDF; };
-      static PDF*              ThisPDF( void ); 
+      static PDF*              ThisPDF(); 
 
       // external auxiliary functions 
       static Double_t          IGetVal( Double_t*, Double_t* );

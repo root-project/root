@@ -129,10 +129,9 @@ std::vector<Float_t> TMVA::PDEFoamMultiTarget::GetCellValue(const std::map<Int_t
 {
    // transform event vector
    std::map<Int_t, Float_t> txvec; // transformed event vector
-   for (std::map<Int_t, Float_t>::const_iterator it = xvec.begin();
-        it != xvec.end(); ++it) {
-      Float_t coordinate = it->second; // event coordinate
-      Int_t dim = it->first;           // dimension
+   for (const auto & it : xvec) {
+      Float_t coordinate = it.second; // event coordinate
+      Int_t dim = it.first;           // dimension
       // checkt whether coordinate is within foam borders. if not,
       // push event coordinate into foam
       if (coordinate <= fXmin[dim])
@@ -204,26 +203,24 @@ void TMVA::PDEFoamMultiTarget::CalculateMpv(std::map<Int_t, Float_t>& target, co
    Double_t max_dens = 0.0;            // maximum cell density
 
    // loop over all cells and find cell with maximum event density
-   for (std::vector<PDEFoamCell*>::const_iterator cell_it = cells.begin();
-        cell_it != cells.end(); ++cell_it) {
+   for (auto cell : cells) {
 
       // get event density of cell
-      const Double_t cell_density = GetCellValue(*cell_it, kValueDensity);
+      const Double_t cell_density = GetCellValue(cell, kValueDensity);
 
       // has this cell a larger event density?
       if (cell_density > max_dens) {
          // get cell position and size
          PDEFoamVect  cellPosi(GetTotDim()), cellSize(GetTotDim());
-         (*cell_it)->GetHcub(cellPosi, cellSize);
+         cell->GetHcub(cellPosi, cellSize);
 
          // save new maximum density
          max_dens = cell_density;
 
          // calculate new target values
-         for (std::map<Int_t, Float_t>::iterator target_it = target.begin();
-              target_it != target.end(); ++target_it) {
-            const Int_t dim = target_it->first; // target dimension
-            target_it->second =
+         for (auto & target_it : target) {
+            const Int_t dim = target_it.first; // target dimension
+            target_it.second =
                VarTransformInvers(dim, cellPosi[dim] + 0.5 * cellSize[dim]);
          }
       }
@@ -251,21 +248,19 @@ void TMVA::PDEFoamMultiTarget::CalculateMean(std::map<Int_t, Float_t>& target, c
    std::map<Int_t, Float_t> norm;
 
    // loop over all cells and find cell with maximum event density
-   for (std::vector<PDEFoamCell*>::const_iterator cell_it = cells.begin();
-        cell_it != cells.end(); ++cell_it) {
+   for (auto cell : cells) {
 
       // get event density of cell
-      const Double_t cell_density = GetCellValue(*cell_it, kValueDensity);
+      const Double_t cell_density = GetCellValue(cell, kValueDensity);
 
       // get cell position and size
       PDEFoamVect  cellPosi(GetTotDim()), cellSize(GetTotDim());
-      (*cell_it)->GetHcub(cellPosi, cellSize);
+      cell->GetHcub(cellPosi, cellSize);
 
       // accumulate weighted target values
-      for (std::map<Int_t, Float_t>::iterator target_it = target.begin();
-           target_it != target.end(); ++target_it) {
-         const Int_t dim = target_it->first; // target dimension
-         target_it->second += cell_density *
+      for (auto & target_it : target) {
+         const Int_t dim = target_it.first; // target dimension
+         target_it.second += cell_density *
             VarTransformInvers(dim, cellPosi[dim] + 0.5 * cellSize[dim]);
          norm[dim] += cell_density;
       }

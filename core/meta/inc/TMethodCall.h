@@ -61,8 +61,8 @@ private:
    Bool_t         fDtorOnly;  //call only dtor and not delete when calling ~xxx
    EReturnType    fRetType;   //method return type
 
-   void Execute(const char *,  const char *, int * /*error*/ = 0) { }    // versions of TObject
-   void Execute(TMethod *, TObjArray *, int * /*error*/ = 0) { }
+   void Execute(const char *,  const char *, int * /*error*/ = nullptr) { }    // versions of TObject
+   void Execute(TMethod *, TObjArray *, int * /*error*/ = nullptr) { }
 
    void InitImplementation(const char *methodname, const char *params, const char *proto, Bool_t objectIsConst, TClass *cl, const ClassInfo_t *cinfo, ROOT::EFunctionMatchMode mode = ROOT::kConversionMatch);
 
@@ -123,22 +123,22 @@ public:
    void     Execute(Double_t &retDouble);
    void     Execute(const char *params, Double_t &retDouble);
 
-   void     Execute(void *objAddress, const void* args[], int nargs, void *ret = 0);
+   void     Execute(void *objAddress, const void* args[], int nargs, void *ret = nullptr);
 
    ClassDef(TMethodCall,0)  //Method calling interface
 };
 
 inline void TMethodCall::Execute()
-   { Execute((void *)0); }
+   { Execute((void *)nullptr); }
 inline void TMethodCall::Execute(const char *params)
-   { Execute((void *)0, params); }
+   { Execute((void *)nullptr, params); }
 inline void TMethodCall::Execute(Long_t &retLong)
-   { Execute((void *)0, retLong); }
+   { Execute((void *)nullptr, retLong); }
 inline void TMethodCall::Execute(const char *params, Long_t &retLong)
-   { Execute((void *)0, params, retLong); }
+   { Execute((void *)nullptr, params, retLong); }
 inline void TMethodCall::Execute(Double_t &retDouble)
-   { Execute((void *)0, retDouble); }
+   { Execute((void *)nullptr, retDouble); }
 inline void TMethodCall::Execute(const char *params, Double_t &retDouble)
-   { Execute((void *)0, params, retDouble); }
+   { Execute((void *)nullptr, params, retDouble); }
 
 #endif

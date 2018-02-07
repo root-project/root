@@ -52,7 +52,7 @@ public:
       friend class TDirectory;
    public:
       TContext(TDirectory *previous, TDirectory *newCurrent)
-         : fDirectory(previous), fActiveDestructor(false), fDirectoryWait(false), fPrevious(0), fNext(0)
+         : fDirectory(previous), fActiveDestructor(false), fDirectoryWait(false), fPrevious(nullptr), fNext(nullptr)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
@@ -61,16 +61,16 @@ public:
          else CdNull();
       }
       TContext()
-         : fDirectory(TDirectory::CurrentDirectory()), fActiveDestructor(false), fDirectoryWait(false), fPrevious(0),
-           fNext(0)
+         : fDirectory(TDirectory::CurrentDirectory()), fActiveDestructor(false), fDirectoryWait(false), fPrevious(nullptr),
+           fNext(nullptr)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
          if ( fDirectory ) (*fDirectory).RegisterContext(this);
       }
       TContext(TDirectory *newCurrent)
-         : fDirectory(TDirectory::CurrentDirectory()), fActiveDestructor(false), fDirectoryWait(false), fPrevious(0),
-           fNext(0)
+         : fDirectory(TDirectory::CurrentDirectory()), fActiveDestructor(false), fDirectoryWait(false), fPrevious(nullptr),
+           fNext(nullptr)
       {
          // Store the current directory so we can restore it
          // later and cd to the new directory.
@@ -110,7 +110,7 @@ protected:
 public:
 
    TDirectory();
-   TDirectory(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = 0);
+   TDirectory(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = nullptr);
    virtual ~TDirectory();
    static  void        AddDirectory(Bool_t add=kTRUE);
    static  Bool_t      AddDirectoryStatus();
@@ -118,22 +118,22 @@ public:
    virtual void        Add(TObject *obj, Bool_t replace = kFALSE) { Append(obj,replace); }
    virtual Int_t       AppendKey(TKey *) {return 0;}
    virtual void        Browse(TBrowser *b);
-   virtual void        Build(TFile* motherFile = 0, TDirectory* motherDir = 0);
+   virtual void        Build(TFile* motherFile = nullptr, TDirectory* motherDir = nullptr);
    virtual void        Clear(Option_t *option="");
    virtual TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE);
    virtual void        Close(Option_t *option="");
    static TDirectory *&CurrentDirectory();  // Return the current directory for this thread.
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
-   virtual Bool_t      cd(const char *path = 0);
+   virtual Bool_t      cd(const char *path = nullptr);
    virtual void        DeleteAll(Option_t *option="");
    virtual void        Delete(const char *namecycle="");
    virtual void        Draw(Option_t *option="");
-   virtual TKey       *FindKey(const char * /*keyname*/) const {return 0;}
-   virtual TKey       *FindKeyAny(const char * /*keyname*/) const {return 0;}
+   virtual TKey       *FindKey(const char * /*keyname*/) const {return nullptr;}
+   virtual TKey       *FindKeyAny(const char * /*keyname*/) const {return nullptr;}
    virtual TObject    *FindObject(const char *name) const;
    virtual TObject    *FindObject(const TObject *obj) const;
    virtual TObject    *FindObjectAny(const char *name) const;
-   virtual TObject    *FindObjectAnyFile(const char * /*name*/) const {return 0;}
+   virtual TObject    *FindObjectAnyFile(const char * /*name*/) const {return nullptr;}
    virtual TObject    *Get(const char *namecycle);
    virtual TDirectory *GetDirectory(const char *namecycle, Bool_t printError = false, const char *funcname = "GetDirectory");
    template <class T> inline void GetObject(const char* namecycle, T*& ptr) // See TDirectory::Get for information
@@ -144,12 +144,12 @@ public:
    virtual void       *GetObjectChecked(const char *namecycle, const TClass* cl);
    virtual void       *GetObjectUnchecked(const char *namecycle);
    virtual Int_t       GetBufferSize() const {return 0;}
-   virtual TFile      *GetFile() const { return 0; }
-   virtual TKey       *GetKey(const char * /*name */, Short_t /* cycle */=9999) const {return 0;}
+   virtual TFile      *GetFile() const { return nullptr; }
+   virtual TKey       *GetKey(const char * /*name */, Short_t /* cycle */=9999) const {return nullptr;}
    virtual TList      *GetList() const { return fList; }
-   virtual TList      *GetListOfKeys() const { return 0; }
+   virtual TList      *GetListOfKeys() const { return nullptr; }
    virtual TObject    *GetMother() const { return fMother; }
-   virtual TDirectory *GetMotherDir() const { return fMother==0 ? 0 : dynamic_cast<TDirectory*>(fMother); }
+   virtual TDirectory *GetMotherDir() const { return fMother==nullptr ? nullptr : dynamic_cast<TDirectory*>(fMother); }
    virtual Int_t       GetNbytesKeys() const { return 0; }
    virtual Int_t       GetNkeys() const { return 0; }
    virtual Long64_t    GetSeekDir() const { return 0; }
@@ -165,7 +165,7 @@ public:
    virtual TDirectory *mkdir(const char *name, const char *title="");
    virtual TFile      *OpenFile(const char * /*name*/, Option_t * /*option*/ = "",
                             const char * /*ftitle*/ = "", Int_t /*compress*/ = 1,
-                            Int_t /*netopt*/ = 0) {return 0;}
+                            Int_t /*netopt*/ = 0) {return nullptr;}
    virtual void        Paint(Option_t *option="");
    virtual void        Print(Option_t *option="") const;
    virtual void        Purge(Short_t /*nkeep*/=1) {}
@@ -187,9 +187,9 @@ public:
    virtual void        SetSeekDir(Long64_t) {}
    virtual void        SetWritable(Bool_t) {}
    virtual Int_t       Sizeof() const {return 0;}
-   virtual Int_t       Write(const char * /*name*/=0, Int_t /*opt*/=0, Int_t /*bufsize*/=0){return 0;}
-   virtual Int_t       Write(const char * /*name*/=0, Int_t /*opt*/=0, Int_t /*bufsize*/=0) const {return 0;}
-   virtual Int_t       WriteTObject(const TObject *obj, const char *name =0, Option_t * /*option*/="", Int_t /*bufsize*/ =0);
+   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Int_t /*bufsize*/=0){return 0;}
+   virtual Int_t       Write(const char * /*name*/=nullptr, Int_t /*opt*/=0, Int_t /*bufsize*/=0) const {return 0;}
+   virtual Int_t       WriteTObject(const TObject *obj, const char *name =nullptr, Option_t * /*option*/="", Int_t /*bufsize*/ =0);
 private:
            Int_t       WriteObject(void *obj, const char* name, Option_t *option="", Int_t bufsize=0); // Intentionaly not implemented.
 public:

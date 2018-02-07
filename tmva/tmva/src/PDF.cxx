@@ -72,14 +72,14 @@ TMVA::PDF::PDF( const TString& name, Bool_t norm )
    fNsmooth       ( 0 ),
    fMinNsmooth    (-1 ),
    fMaxNsmooth    (-1 ),
-   fNSmoothHist   ( 0 ),
+   fNSmoothHist   ( nullptr ),
    fInterpolMethod( PDF::kSpline2 ),
-   fSpline        ( 0 ),
-   fPDFHist       ( 0 ),
-   fHist          ( 0 ),
-   fHistOriginal  ( 0 ),
-   fGraph         ( 0 ),
-   fIGetVal       ( 0 ),
+   fSpline        ( nullptr ),
+   fPDFHist       ( nullptr ),
+   fHist          ( nullptr ),
+   fHistOriginal  ( nullptr ),
+   fGraph         ( nullptr ),
+   fIGetVal       ( nullptr ),
    fHistAvgEvtPerBin  ( 0 ),
    fHistDefinedNBins  ( 0 ),
    fKDEtypeString     ( 0 ),
@@ -94,7 +94,7 @@ TMVA::PDF::PDF( const TString& name, Bool_t norm )
    fCheckHist     ( kFALSE ),
    fNormalize     ( norm ),
    fSuffix        ( "" ),
-   fLogger        ( 0 )
+   fLogger        ( nullptr )
 {
    fLogger   = new MsgLogger(this);
    GetThisPdfThreadLocal() = this;
@@ -115,14 +115,14 @@ TMVA::PDF::PDF( const TString& name,
    fPDFName       ( name ),
    fMinNsmooth    ( minnsmooth ),
    fMaxNsmooth    ( maxnsmooth ),
-   fNSmoothHist   ( 0 ),
+   fNSmoothHist   ( nullptr ),
    fInterpolMethod( method ),
-   fSpline        ( 0 ),
-   fPDFHist       ( 0 ),
-   fHist          ( 0 ),
-   fHistOriginal  ( 0 ),
-   fGraph         ( 0 ),
-   fIGetVal       ( 0 ),
+   fSpline        ( nullptr ),
+   fPDFHist       ( nullptr ),
+   fHist          ( nullptr ),
+   fHistOriginal  ( nullptr ),
+   fGraph         ( nullptr ),
+   fIGetVal       ( nullptr ),
    fHistAvgEvtPerBin  ( 0 ),
    fHistDefinedNBins  ( 0 ),
    fKDEtypeString     ( 0 ),
@@ -137,7 +137,7 @@ TMVA::PDF::PDF( const TString& name,
    fCheckHist     ( checkHist ),
    fNormalize     ( norm ),
    fSuffix        ( "" ),
-   fLogger        ( 0 )
+   fLogger        ( nullptr )
 {
    fLogger   = new MsgLogger(this);
    BuildPDF( hist );
@@ -159,14 +159,14 @@ TMVA::PDF::PDF( const TString& name,
    fNsmooth       ( 0 ),
    fMinNsmooth    (-1 ),
    fMaxNsmooth    (-1 ),
-   fNSmoothHist   ( 0 ),
+   fNSmoothHist   ( nullptr ),
    fInterpolMethod( PDF::kKDE ),
-   fSpline        ( 0 ),
-   fPDFHist       ( 0 ),
-   fHist          ( 0 ),
-   fHistOriginal  ( 0 ),
-   fGraph         ( 0 ),
-   fIGetVal       ( 0 ),
+   fSpline        ( nullptr ),
+   fPDFHist       ( nullptr ),
+   fHist          ( nullptr ),
+   fHistOriginal  ( nullptr ),
+   fGraph         ( nullptr ),
+   fIGetVal       ( nullptr ),
    fHistAvgEvtPerBin  ( 0 ),
    fHistDefinedNBins  ( 0 ),
    fKDEtypeString     ( 0 ),
@@ -181,7 +181,7 @@ TMVA::PDF::PDF( const TString& name,
    fCheckHist     ( kFALSE ),
    fNormalize     ( norm ),
    fSuffix        ( "" ),
-   fLogger        ( 0 )
+   fLogger        ( nullptr )
 {
    fLogger   = new MsgLogger(this);
    BuildPDF( hist );
@@ -200,14 +200,14 @@ TMVA::PDF::PDF( const TString& name,
    fNsmooth       ( 0 ),
    fMinNsmooth    ( -1 ),
    fMaxNsmooth    ( -1 ),
-   fNSmoothHist   ( 0 ),
+   fNSmoothHist   ( nullptr ),
    fInterpolMethod( PDF::kSpline0 ),
-   fSpline        ( 0 ),
-   fPDFHist       ( 0 ),
-   fHist          ( 0 ),
-   fHistOriginal  ( 0 ),
-   fGraph         ( 0 ),
-   fIGetVal       ( 0 ),
+   fSpline        ( nullptr ),
+   fPDFHist       ( nullptr ),
+   fHist          ( nullptr ),
+   fHistOriginal  ( nullptr ),
+   fGraph         ( nullptr ),
+   fIGetVal       ( nullptr ),
    fHistAvgEvtPerBin  ( 50 ),
    fHistDefinedNBins  ( 0 ),
    fKDEtypeString     ( "Gauss" ),
@@ -222,10 +222,10 @@ TMVA::PDF::PDF( const TString& name,
    fCheckHist     ( kFALSE ),
    fNormalize     ( norm ),
    fSuffix        ( suffix ),
-   fLogger        ( 0 )
+   fLogger        ( nullptr )
 {
    fLogger   = new MsgLogger(this);
-   if (defaultPDF != 0) {
+   if (defaultPDF != nullptr) {
       fNsmooth            = defaultPDF->fNsmooth;
       fMinNsmooth         = defaultPDF->fMinNsmooth;
       fMaxNsmooth         = defaultPDF->fMaxNsmooth;
@@ -245,12 +245,12 @@ TMVA::PDF::PDF( const TString& name,
 TMVA::PDF::~PDF()
 {
    // destructor
-   if (fSpline       != NULL) delete fSpline;
-   if (fHist         != NULL) delete fHist;
-   if (fPDFHist      != NULL) delete fPDFHist;
-   if (fHistOriginal != NULL) delete fHistOriginal;
-   if (fIGetVal      != NULL) delete fIGetVal;
-   if (fGraph        != NULL) delete fGraph;
+   if (fSpline       != nullptr) delete fSpline;
+   if (fHist         != nullptr) delete fHist;
+   if (fPDFHist      != nullptr) delete fPDFHist;
+   if (fHistOriginal != nullptr) delete fHistOriginal;
+   if (fIGetVal      != nullptr) delete fIGetVal;
+   if (fGraph        != nullptr) delete fGraph;
    delete fLogger;
 }
 
@@ -260,7 +260,7 @@ void TMVA::PDF::BuildPDF( const TH1* hist )
 {
    GetThisPdfThreadLocal() = this;
    // sanity check
-   if (hist == NULL) Log() << kFATAL << "Called without valid histogram pointer!" << Endl;
+   if (hist == nullptr) Log() << kFATAL << "Called without valid histogram pointer!" << Endl;
 
    // histogram should be non empty
    if (hist->GetEntries() <= 0)
@@ -290,8 +290,8 @@ void TMVA::PDF::BuildPDF( const TH1* hist )
    fHist        ->SetTitle( fHist->GetName() );
 
    // do not store in current target file
-   fHistOriginal->SetDirectory(0);
-   fHist        ->SetDirectory(0);
+   fHistOriginal->SetDirectory(nullptr);
+   fHist        ->SetDirectory(nullptr);
    fUseHistogram = kFALSE;
 
    if (fInterpolMethod == PDF::kKDE) BuildKDEPDF();
@@ -322,7 +322,7 @@ void TMVA::PDF::BuildSplinePDF()
    // (not useful for discrete distributions, or if no splines are requested)
    if (fInterpolMethod != PDF::kSpline0 && fCheckHist) CheckHist();
    // use ROOT TH1 smooth method
-   fNSmoothHist = 0;
+   fNSmoothHist = nullptr;
    if (fMaxNsmooth > 0 && fMinNsmooth >=0 ) SmoothHistogram();
 
    // fill histogramm to graph
@@ -376,7 +376,7 @@ void TMVA::PDF::BuildSplinePDF()
    if (fNormalize)
       if (integral>0) fPDFHist->Scale( 1.0/integral );
 
-   fPDFHist->SetDirectory(0);
+   fPDFHist->SetDirectory(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -446,7 +446,7 @@ void TMVA::PDF::BuildKDEPDF()
    // normalize
    if (fNormalize)
       if (integral>0) fPDFHist->Scale( 1.0/integral );
-   fPDFHist->SetDirectory(0);
+   fPDFHist->SetDirectory(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -547,7 +547,7 @@ void TMVA::PDF::FillSplineToHist()
          fPDFHist->SetBinContent( bin, TMath::Max(y, fgEpsilon) );
       }
    }
-   fPDFHist->SetDirectory(0);
+   fPDFHist->SetDirectory(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -555,7 +555,7 @@ void TMVA::PDF::FillSplineToHist()
 
 void TMVA::PDF::CheckHist() const
 {
-   if (fHist == NULL) {
+   if (fHist == nullptr) {
       Log() << kFATAL << "<CheckHist> Called without valid histogram pointer!" << Endl;
    }
 
@@ -691,7 +691,7 @@ Double_t TMVA::PDF::GetIntegral( Double_t xmin, Double_t xmax )
    else {
 
       // compute via Gaussian quadrature (C++ version of CERNLIB function DGAUSS)
-      if (fIGetVal == 0) fIGetVal = new TF1( "IGetVal", PDF::IGetVal, GetXmin(), GetXmax(), 0 );
+      if (fIGetVal == nullptr) fIGetVal = new TF1( "IGetVal", PDF::IGetVal, GetXmin(), GetXmax(), 0 );
       integral = fIGetVal->Integral( xmin, xmax );
    }
 
@@ -986,10 +986,10 @@ void TMVA::PDF::ReadXML( void* pdfnode )
    gTools().ReadAttr( histch, "HasEquidistantBins", hasEquidistantBinning );
 
    // recreate the original hist
-   TH1* newhist = 0;
+   TH1* newhist = nullptr;
    if (hasEquidistantBinning) {
       newhist = new TH1F( hname, hname, nbins, xmin, xmax );
-      newhist->SetDirectory(0);
+      newhist->SetDirectory(nullptr);
       const char* content = gTools().GetContent(histch);
       std::stringstream s(content);
       Double_t val;
@@ -1013,7 +1013,7 @@ void TMVA::PDF::ReadXML( void* pdfnode )
       std::stringstream sb(binString);
       for (UInt_t i=0; i<=nbins; i++) sb >> binns[i];
       newhist =  new TH1F( hname, hname, nbins, binns.GetMatrixArray() );
-      newhist->SetDirectory(0);
+      newhist->SetDirectory(nullptr);
       for (UInt_t i=0; i<nbins; i++) {
          s >> val;
          newhist->SetBinContent(i+1,val);
@@ -1023,11 +1023,11 @@ void TMVA::PDF::ReadXML( void* pdfnode )
    TString hnameSmooth = hname;
    hnameSmooth.ReplaceAll( "_original", "_smoothed" );
 
-   if (fHistOriginal != 0) delete fHistOriginal;
+   if (fHistOriginal != nullptr) delete fHistOriginal;
    fHistOriginal = newhist;
    fHist = (TH1F*)fHistOriginal->Clone( hnameSmooth );
    fHist->SetTitle( hnameSmooth );
-   fHist->SetDirectory(0);
+   fHist->SetDirectory(nullptr);
 
    if (fInterpolMethod == PDF::kKDE) BuildKDEPDF();
    else                              BuildSplinePDF();
@@ -1114,18 +1114,18 @@ std::istream& TMVA::operator>> ( std::istream& istr, PDF& pdf )
       std::exit(1);
    }
    TH1* newhist = new TH1F( hname,hname, nbins, xmin, xmax );
-   newhist->SetDirectory(0);
+   newhist->SetDirectory(nullptr);
    Float_t val;
    for (Int_t i=0; i<nbins; i++) {
       istr >> val;
       newhist->SetBinContent(i+1,val);
    }
 
-   if (pdf.fHistOriginal != 0) delete pdf.fHistOriginal;
+   if (pdf.fHistOriginal != nullptr) delete pdf.fHistOriginal;
    pdf.fHistOriginal = newhist;
    pdf.fHist = (TH1F*)pdf.fHistOriginal->Clone( hnameSmooth );
    pdf.fHist->SetTitle( hnameSmooth );
-   pdf.fHist->SetDirectory(0);
+   pdf.fHist->SetDirectory(nullptr);
 
    if (pdf.fMinNsmooth>=0) pdf.BuildSplinePDF();
    else {
@@ -1136,7 +1136,7 @@ std::istream& TMVA::operator>> ( std::istream& istr, PDF& pdf )
    return istr;
 }
 
-TMVA::PDF*  TMVA::PDF::ThisPDF( void )
+TMVA::PDF*  TMVA::PDF::ThisPDF()
 {
    // return global "this" pointer of PDF
    return GetThisPdfThreadLocal();

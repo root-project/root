@@ -250,8 +250,8 @@ void TMVA::Envelope::WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA:
    fDataSetInfo.GetDataSet(); // builds dataset (including calculation of correlation matrix)
 
    // correlation matrix of the default DS
-   const TMatrixD *m(0);
-   const TH2 *h(0);
+   const TMatrixD *m(nullptr);
+   const TH2 *h(nullptr);
 
    if (fAnalysisType == Types::kMulticlass) {
       for (UInt_t cls = 0; cls < fDataSetInfo.GetNClasses(); cls++) {
@@ -259,7 +259,7 @@ void TMVA::Envelope::WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA:
          h = fDataSetInfo.CreateCorrelationMatrixHist(
             m, TString("CorrelationMatrix") + fDataSetInfo.GetClassInfo(cls)->GetName(),
             TString("Correlation Matrix (") + fDataSetInfo.GetClassInfo(cls)->GetName() + TString(")"));
-         if (h != 0) {
+         if (h != nullptr) {
             h->Write();
             delete h;
          }
@@ -267,21 +267,21 @@ void TMVA::Envelope::WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA:
    } else {
       m = fDataSetInfo.CorrelationMatrix("Signal");
       h = fDataSetInfo.CreateCorrelationMatrixHist(m, "CorrelationMatrixS", "Correlation Matrix (signal)");
-      if (h != 0) {
+      if (h != nullptr) {
          h->Write();
          delete h;
       }
 
       m = fDataSetInfo.CorrelationMatrix("Background");
       h = fDataSetInfo.CreateCorrelationMatrixHist(m, "CorrelationMatrixB", "Correlation Matrix (background)");
-      if (h != 0) {
+      if (h != nullptr) {
          h->Write();
          delete h;
       }
 
       m = fDataSetInfo.CorrelationMatrix("Regression");
       h = fDataSetInfo.CreateCorrelationMatrixHist(m, "CorrelationMatrix", "Correlation Matrix");
-      if (h != 0) {
+      if (h != nullptr) {
          h->Write();
          delete h;
       }
@@ -296,7 +296,7 @@ void TMVA::Envelope::WriteDataInformation(TMVA::DataSetInfo &fDataSetInfo, TMVA:
 
    // remove any trace of identity transform - if given (avoid to apply it twice)
    std::vector<TMVA::TransformationHandler *> trfs;
-   TransformationHandler *identityTrHandler = 0;
+   TransformationHandler *identityTrHandler = nullptr;
 
    std::vector<TString> trfsDef = gTools().SplitString(processTrfs, ';');
    std::vector<TString>::iterator trfsDefIt = trfsDef.begin();

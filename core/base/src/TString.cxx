@@ -173,7 +173,7 @@ TString::TString(const TString &s)
 ////////////////////////////////////////////////////////////////////////////////
 /// Move constructor.
 
-TString::TString(TString &&s)
+TString::TString(TString &&s) noexcept
 {
    // Short or long, all data is in fRaw.
    fRep.fRaw = s.fRep.fRaw;
@@ -317,6 +317,17 @@ TString& TString::operator=(const TString &rhs)
          memcpy(data, rhs.GetLongPointer(), n);
       }
    }
+   return *this;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Move-Assignment operator.
+
+TString& TString::operator=(TString &&rhs) noexcept
+{
+   UnLink();
+   fRep.fRaw = rhs.fRep.fRaw;
+   rhs.Zero();
    return *this;
 }
 

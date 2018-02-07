@@ -61,7 +61,7 @@ TMVA::Results::Results( const DataSetInfo* dsi, TString resultsName )
 
 TMVA::Results::Results( )
 : fTreeType(Types::kTraining),
-fDsi(0),
+fDsi(nullptr),
 fStorage( new TList() ),
 fHistAlias( new std::map<TString, TObject*> ),
 fLogger( new MsgLogger("Results", kINFO))
@@ -93,13 +93,13 @@ void TMVA::Results::Store( TObject* obj, const char* alias )
    }
 
    TString as(obj->GetName());
-   if (alias!=0) as=TString(alias);
+   if (alias!=nullptr) as=TString(alias);
    if (fHistAlias->find(as) != fHistAlias->end()) {
       // alias exists
       *fLogger << kFATAL << "Alias " << as << " already exists in results storage" << Endl;
    }
    if( obj->InheritsFrom(TH1::Class()) ) {
-      ((TH1*)obj)->SetDirectory(0);
+      ((TH1*)obj)->SetDirectory(nullptr);
    }
    fStorage->Add( obj );
    fHistAlias->insert(std::pair<TString, TObject*>(as,obj));

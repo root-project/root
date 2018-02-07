@@ -59,15 +59,15 @@ namespace TMVA {
       Volume( Double_t l , Double_t u );
 
       // destructor
-      virtual ~Volume( void );
+      virtual ~Volume();
 
       // destruct the volue 
-      void Delete       ( void );
+      void Delete       ();
       // "scale" the volume by multiplying each upper and lower boundary by "f" 
       void Scale        ( Double_t f );
       // "scale" the volume by symmetrically blowing up the interval in each dimension
       void ScaleInterval( Double_t f );
-      void Print        ( void ) const;
+      void Print        () const;
 
       // allow direct access for better speed
       std::vector<Double_t> *fLower;    // vector with lower volume dimensions

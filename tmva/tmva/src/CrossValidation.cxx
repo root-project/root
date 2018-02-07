@@ -318,7 +318,7 @@ void TMVA::CrossValidation::SetNumFolds(UInt_t i)
    if (i != fNumFolds) {
       fNumFolds = i;
       fSplit = std::unique_ptr<CvSplitCrossValidation>(new CvSplitCrossValidation(fNumFolds, fSplitExprString));
-      fDataLoader->MakeKFoldDataSet(*fSplit.get());
+      fDataLoader->MakeKFoldDataSet(*fSplit);
       fFoldStatus = kTRUE;
    }
 }
@@ -331,7 +331,7 @@ void TMVA::CrossValidation::SetSplitExpr(TString splitExpr)
    if (splitExpr != fSplitExprString) {
       fSplitExprString = splitExpr;
       fSplit = std::unique_ptr<CvSplitCrossValidation>(new CvSplitCrossValidation(fNumFolds, fSplitExprString));
-      fDataLoader->MakeKFoldDataSet(*fSplit.get());
+      fDataLoader->MakeKFoldDataSet(*fSplit);
       fFoldStatus = kTRUE;
    }
 }
@@ -369,7 +369,7 @@ void TMVA::CrossValidation::ProcessFold(UInt_t iFold, UInt_t iMethod)
       fFoldFactory = std::unique_ptr<TMVA::Factory>(new TMVA::Factory(fJobName, foldOutputFile, fCvFactoryOptions));
    }
 
-   fDataLoader->PrepareFoldDataSet(*fSplit.get(), iFold, TMVA::Types::kTraining);
+   fDataLoader->PrepareFoldDataSet(*fSplit, iFold, TMVA::Types::kTraining);
    MethodBase *smethod = fFoldFactory->BookMethod(fDataLoader.get(), methodName, foldTitle, methodOptions);
 
    // Train method (train method and eval train set)
@@ -436,7 +436,7 @@ void TMVA::CrossValidation::Evaluate()
 
       // Generate K folds on given dataset
       if (!fFoldStatus) {
-         fDataLoader->MakeKFoldDataSet(*fSplit.get());
+         fDataLoader->MakeKFoldDataSet(*fSplit);
          fFoldStatus = kTRUE;
       }
 
@@ -456,7 +456,7 @@ void TMVA::CrossValidation::Evaluate()
       fFactory->BookMethod(fDataLoader.get(), Types::kCrossValidation, methodTitle, options);
 
       // Evaluation
-      fDataLoader->RecombineKFoldDataSet(*fSplit.get());
+      fDataLoader->RecombineKFoldDataSet(*fSplit);
 
       fFactory->TrainAllMethods();
       fFactory->TestAllMethods();

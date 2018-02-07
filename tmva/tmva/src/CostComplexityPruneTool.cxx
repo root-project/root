@@ -88,7 +88,7 @@ CostComplexityPruneTool::CostComplexityPruneTool( SeparationBase* qualityIndex )
 /// the destructor for the cost complexity pruning
 
 CostComplexityPruneTool::~CostComplexityPruneTool( ) {
-   if(fQualityIndexTool != NULL) delete fQualityIndexTool;
+   if(fQualityIndexTool != nullptr) delete fQualityIndexTool;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -102,11 +102,11 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
 {
    if( isAutomatic ) SetAutomatic();
 
-   if( dt == NULL || (IsAutomatic() && validationSample == NULL) ) {
+   if( dt == nullptr || (IsAutomatic() && validationSample == nullptr) ) {
       // must have a valid decision tree to prune, and if the prune strength
       // is to be chosen automatically, must have a test sample from
       // which to calculate the quality of the pruned tree(s)
-      return NULL;
+      return nullptr;
    }
 
    Double_t Q = -1.0;
@@ -128,10 +128,10 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
    try {
       InitTreePruningMetaData((DecisionTreeNode*)dt->GetRoot());
    }
-   catch(std::string error) {
+   catch(const std::string &error) {
       Log() << kERROR << "Couldn't initialize the tree meta data because of error ("
             << error << ")" << Endl;
-      return NULL;
+      return nullptr;
    }
 
    Log() << kDEBUG << "Automatic cost complexity pruning is " << (IsAutomatic()?"on":"off") << "." << Endl;
@@ -139,10 +139,10 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
    try {
       Optimize( dt, W );  // run the cost complexity pruning algorithm
    }
-   catch(std::string error) {
+   catch(const std::string &error) {
       Log() << kERROR << "Error optimizing pruning sequence ("
             << error << ")" << Endl;
-      return NULL;
+      return nullptr;
    }
 
    Log() << kDEBUG << "Index of pruning sequence to stop at: " << fOptimalK << Endl;
@@ -180,7 +180,7 @@ CostComplexityPruneTool::CalculatePruningInfo( DecisionTree* dt,
 /// critical alpha, the minimal alpha down the tree, etc...  for each node!!
 
 void CostComplexityPruneTool::InitTreePruningMetaData( DecisionTreeNode* n ) {
-   if( n == NULL ) return;
+   if( n == nullptr ) return;
 
    Double_t s = n->GetNSigEvents();
    Double_t b = n->GetNBkgEvents();
@@ -188,7 +188,7 @@ void CostComplexityPruneTool::InitTreePruningMetaData( DecisionTreeNode* n ) {
    if (fQualityIndexTool) n->SetNodeR( (s+b)*fQualityIndexTool->GetSeparationIndex(s,b));
    else n->SetNodeR( (s+b)*n->GetSeparationIndex() );
 
-   if(n->GetLeft() != NULL && n->GetRight() != NULL) { // n is an interior (non-leaf) node
+   if(n->GetLeft() != nullptr && n->GetRight() != nullptr) { // n is an interior (non-leaf) node
       n->SetTerminal(kFALSE);
       // traverse the tree
       InitTreePruningMetaData(n->GetLeft());

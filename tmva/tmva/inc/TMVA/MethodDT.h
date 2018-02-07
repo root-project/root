@@ -56,11 +56,11 @@ namespace TMVA {
       MethodDT( DataSetInfo& dsi,
                 const TString& theWeightFile);
 
-      virtual ~MethodDT( void );
+      virtual ~MethodDT();
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
-      void Train( void );
+      void Train();
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -98,7 +98,7 @@ namespace TMVA {
 
    private:
       // Init used in the various constructors
-      void Init( void );
+      void Init();
 
    private:
 

@@ -82,11 +82,11 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
       isAutomatic = kFALSE;
       Log() << kWARNING << "Sorry automatic pruning strength determination is not implemented yet" << Endl;
    }
-   if( dt == NULL || (IsAutomatic() && validationSample == NULL) ) {
+   if( dt == nullptr || (IsAutomatic() && validationSample == nullptr) ) {
       // must have a valid decision tree to prune, and if the prune strength
       // is to be chosen automatically, must have a test sample from
       // which to calculate the quality of the pruned tree(s)
-      return NULL;
+      return nullptr;
    }
    fNodePurityLimit = dt->GetNodePurityLimit();
 
@@ -158,7 +158,7 @@ TMVA::ExpectedErrorPruneTool::CalculatePruningInfo( DecisionTree* dt,
 
         return new PruningInfo(it->first, it->second, fPruneSequence);
       */
-      return NULL;
+      return nullptr;
    }
    else { // no automatic pruning - just use the provided prune strength parameter
       FindListOfNodes( (DecisionTreeNode*)dt->GetRoot() );

@@ -42,17 +42,17 @@ public:
    // constructor for calculating BDT-MVA using previously generatad decision trees
    MethodCrossValidation(DataSetInfo &theData, const TString &theWeightFile);
 
-   virtual ~MethodCrossValidation(void);
+   virtual ~MethodCrossValidation();
 
    // optimize tuning parameters
    // virtual std::map<TString,Double_t> OptimizeTuningParameters(TString fomType="ROCIntegral", TString
    // fitType="FitGA"); virtual void SetTuneParameters(std::map<TString,Double_t> tuneParameters);
 
    // training method
-   void Train(void);
+   void Train();
 
    // revoke training
-   void Reset(void);
+   void Reset();
 
    using MethodBase::ReadWeightsFromStream;
 
@@ -64,7 +64,7 @@ public:
    void ReadWeightsFromXML(void *parent);
 
    // write method specific histos to target file
-   void WriteMonitoringHistosToFile(void) const;
+   void WriteMonitoringHistosToFile() const;
 
    // calculate the MVA value
    Double_t GetMvaValue(Double_t *err = 0, Double_t *errUpper = 0);
@@ -85,7 +85,7 @@ public:
    Bool_t HasAnalysisType(Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets);
 
 protected:
-   void Init(void);
+   void Init();
    void DeclareCompatibilityOptions();
 
 private:

@@ -572,9 +572,9 @@ void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) 
       const std::unique_ptr<unsigned char[]>
                pixelData(gVirtualX->GetColorBits(canvas->GetCanvasID(), 0, 0, w, h));
 
-      if (pixelData.get()) {
+      if (pixelData) {
          const std::unique_ptr<TImage> image(TImage::Create());
-         if (image.get()) {
+         if (image) {
             image->DrawRectangle(0, 0, w, h);
             if (unsigned char *argb = (unsigned char *)image->GetArgbArray()) {
                //Ohhh.
@@ -609,7 +609,7 @@ void TPadPainter::SaveImage(TVirtualPad *pad, const char *fileName, Int_t type) 
       gVirtualX->WriteGIF((char*)fileName);
    } else {
       const std::unique_ptr<TImage> img(TImage::Create());
-      if (img.get()) {
+      if (img) {
          img->FromPad(pad);
          img->WriteImage(fileName, (TImage::EImageFileTypes)type);
       }

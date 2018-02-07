@@ -43,10 +43,10 @@ protected:
    virtual Bool_t IsLocked() { return kFALSE; }
 
    virtual Bool_t PerformUpdate() { return kFALSE; }
-   virtual TVirtualPadPainter *CreatePadPainter() { return 0; }
+   virtual TVirtualPadPainter *CreatePadPainter() { return nullptr; }
 
 public:
-   TCanvasImp(TCanvas *c=0) : fCanvas(c) { }
+   TCanvasImp(TCanvas *c=nullptr) : fCanvas(c) { }
    TCanvasImp(TCanvas *c, const char *name, UInt_t width, UInt_t height);
    TCanvasImp(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
    virtual ~TCanvasImp() { }
@@ -57,7 +57,7 @@ public:
    virtual UInt_t GetWindowGeometry(Int_t &x, Int_t &y, UInt_t &w, UInt_t &h);
    virtual void   Iconify() { }
    virtual Int_t  InitWindow() { return 0; }
-   virtual void   SetStatusText(const char *text = 0, Int_t partidx = 0);
+   virtual void   SetStatusText(const char *text = nullptr, Int_t partidx = 0);
    virtual void   SetWindowPosition(Int_t x, Int_t y);
    virtual void   SetWindowSize(UInt_t w, UInt_t h);
    virtual void   SetWindowTitle(const char *newTitle);

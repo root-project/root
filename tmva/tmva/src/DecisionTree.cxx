@@ -120,8 +120,8 @@ TMVA::DecisionTree::DecisionTree():
    fUseFisherCuts  (kFALSE),
    fMinLinCorrForFisher (1),
    fUseExclusiveVars (kTRUE),
-   fSepType        (NULL),
-   fRegType        (NULL),
+   fSepType        (nullptr),
+   fRegType        (nullptr),
    fMinSize        (0),
    fMinNodeSize    (1),
    fMinSepGain (0),
@@ -133,12 +133,12 @@ TMVA::DecisionTree::DecisionTree():
    fRandomisedTree (kFALSE),
    fUseNvars       (0),
    fUsePoissonNvars(kFALSE),
-   fMyTrandom (NULL),
+   fMyTrandom (nullptr),
    fMaxDepth       (999999),
    fSigClass       (0),
    fTreeID         (0),
    fAnalysisType   (Types::kClassification),
-   fDataSetInfo    (NULL)
+   fDataSetInfo    (nullptr)
 {
 }
 
@@ -158,7 +158,7 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize
    fMinLinCorrForFisher (1),
    fUseExclusiveVars (kTRUE),
    fSepType        (sepType),
-   fRegType        (NULL),
+   fRegType        (nullptr),
    fMinSize        (0),
    fMinNodeSize    (minSize),
    fMinSepGain     (0),
@@ -177,7 +177,7 @@ TMVA::DecisionTree::DecisionTree( TMVA::SeparationBase *sepType, Float_t minSize
    fAnalysisType   (Types::kClassification),
    fDataSetInfo    (dataInfo)
 {
-   if (sepType == NULL) { // it is interpreted as a regression tree, where
+   if (sepType == nullptr) { // it is interpreted as a regression tree, where
                           // currently the separation type (simple least square)
                           // cannot be chosen freely)
       fAnalysisType = Types::kRegression;
@@ -247,26 +247,26 @@ TMVA::DecisionTree::~DecisionTree()
 
 void TMVA::DecisionTree::SetParentTreeInNodes( Node *n )
 {
-   if (n == NULL) { //default, start at the tree top, then descend recursively
+   if (n == nullptr) { //default, start at the tree top, then descend recursively
       n = this->GetRoot();
-      if (n == NULL) {
+      if (n == nullptr) {
          Log() << kFATAL << "SetParentTreeNodes: started with undefined ROOT node" <<Endl;
          return ;
       }
    }
 
-   if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) != NULL) ) {
+   if ((this->GetLeftDaughter(n) == nullptr) && (this->GetRightDaughter(n) != nullptr) ) {
       Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
-   }  else if ((this->GetLeftDaughter(n) != NULL) && (this->GetRightDaughter(n) == NULL) ) {
+   }  else if ((this->GetLeftDaughter(n) != nullptr) && (this->GetRightDaughter(n) == nullptr) ) {
       Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
    }
    else {
-      if (this->GetLeftDaughter(n) != NULL) {
+      if (this->GetLeftDaughter(n) != nullptr) {
          this->SetParentTreeInNodes( this->GetLeftDaughter(n) );
       }
-      if (this->GetRightDaughter(n) != NULL) {
+      if (this->GetRightDaughter(n) != nullptr) {
          this->SetParentTreeInNodes( this->GetRightDaughter(n) );
       }
    }
@@ -294,7 +294,7 @@ TMVA::DecisionTree* TMVA::DecisionTree::CreateFromXML(void* node, UInt_t tmva_Ve
 UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & eventSample,
                                       TMVA::DecisionTreeNode *node)
 {
-   if (node==NULL) {
+   if (node==nullptr) {
       //start with the root node
       node = new TMVA::DecisionTreeNode();
       fNNodes = 1;
@@ -529,8 +529,8 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
 
 void TMVA::DecisionTree::FillTree( const std::vector<TMVA::Event*> & eventSample )
 {
-   for (UInt_t i=0; i<eventSample.size(); i++) {
-      this->FillEvent(*(eventSample[i]),NULL);
+   for (auto i : eventSample) {
+      this->FillEvent(*i,nullptr);
    }
 }
 
@@ -541,7 +541,7 @@ void TMVA::DecisionTree::FillTree( const std::vector<TMVA::Event*> & eventSample
 void TMVA::DecisionTree::FillEvent( const TMVA::Event & event,
                                     TMVA::DecisionTreeNode *node )
 {
-   if (node == NULL) { // that's the start, take the Root node
+   if (node == nullptr) { // that's the start, take the Root node
       node = this->GetRoot();
    }
 
@@ -561,9 +561,9 @@ void TMVA::DecisionTree::FillEvent( const TMVA::Event & event,
 
    if (node->GetNodeType() == 0) { //intermediate node --> go down
       if (node->GoesRight(event))
-         this->FillEvent(event,static_cast<TMVA::DecisionTreeNode*>(node->GetRight())) ;
+         this->FillEvent(event, node->GetRight());
       else
-         this->FillEvent(event,static_cast<TMVA::DecisionTreeNode*>(node->GetLeft())) ;
+         this->FillEvent(event, node->GetLeft());
    }
 }
 
@@ -572,7 +572,7 @@ void TMVA::DecisionTree::FillEvent( const TMVA::Event & event,
 
 void TMVA::DecisionTree::ClearTree()
 {
-   if (this->GetRoot()!=NULL) this->GetRoot()->ClearNodeAndAllDaughters();
+   if (this->GetRoot()!=nullptr) this->GetRoot()->ClearNodeAndAllDaughters();
 
 }
 
@@ -586,7 +586,7 @@ void TMVA::DecisionTree::ClearTree()
 
 UInt_t TMVA::DecisionTree::CleanTree( DecisionTreeNode *node )
 {
-   if (node==NULL) {
+   if (node==nullptr) {
       node = this->GetRoot();
    }
 
@@ -613,8 +613,8 @@ UInt_t TMVA::DecisionTree::CleanTree( DecisionTreeNode *node )
 
 Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
 {
-   IPruneTool* tool(NULL);
-   PruningInfo* info(NULL);
+   IPruneTool* tool(nullptr);
+   PruningInfo* info(nullptr);
 
    if( fPruneMethod == kNoPruning ) return 0.0;
 
@@ -634,7 +634,7 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
 
    tool->SetPruneStrength(GetPruneStrength());
    if(tool->IsAutomatic()) {
-      if(validationSample == NULL){
+      if(validationSample == nullptr){
          Log() << kFATAL << "Cannot automate the pruning algorithm without an "
                << "independent validation sample!" << Endl;
       }else if(validationSample->size() == 0) {
@@ -655,9 +655,9 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
       //           << " has quality index " << info->QualityIndex << Endl;
 
 
-      for (UInt_t i = 0; i < info->PruneSequence.size(); ++i) {
+      for (auto & i : info->PruneSequence) {
 
-         PruneNode(info->PruneSequence[i]);
+         PruneNode(i);
       }
       // update the number of nodes after the pruning
       this->CountNodes();
@@ -679,8 +679,8 @@ Double_t TMVA::DecisionTree::PruneTree( const EventConstList* validationSample )
 void TMVA::DecisionTree::ApplyValidationSample( const EventConstList* validationSample ) const
 {
    GetRoot()->ResetValidationData();
-   for (UInt_t ievt=0; ievt < validationSample->size(); ievt++) {
-      CheckEventWithPrunedTree((*validationSample)[ievt]);
+   for (auto ievt : *validationSample) {
+      CheckEventWithPrunedTree(ievt);
    }
 }
 
@@ -692,15 +692,15 @@ void TMVA::DecisionTree::ApplyValidationSample( const EventConstList* validation
 
 Double_t TMVA::DecisionTree::TestPrunedTreeQuality( const DecisionTreeNode* n, Int_t mode ) const
 {
-   if (n == NULL) { // default, start at the tree top, then descend recursively
+   if (n == nullptr) { // default, start at the tree top, then descend recursively
       n = this->GetRoot();
-      if (n == NULL) {
+      if (n == nullptr) {
          Log() << kFATAL << "TestPrunedTreeQuality: started with undefined ROOT node" <<Endl;
          return 0;
       }
    }
 
-   if( n->GetLeft() != NULL && n->GetRight() != NULL && !n->IsTerminal() ) {
+   if( n->GetLeft() != nullptr && n->GetRight() != nullptr && !n->IsTerminal() ) {
       return (TestPrunedTreeQuality( n->GetLeft(), mode ) +
               TestPrunedTreeQuality( n->GetRight(), mode ));
    }
@@ -735,11 +735,11 @@ Double_t TMVA::DecisionTree::TestPrunedTreeQuality( const DecisionTreeNode* n, I
 void TMVA::DecisionTree::CheckEventWithPrunedTree( const Event* e ) const
 {
    DecisionTreeNode* current =  this->GetRoot();
-   if (current == NULL) {
+   if (current == nullptr) {
       Log() << kFATAL << "CheckEventWithPrunedTree: started with undefined ROOT node" <<Endl;
    }
 
-   while(current != NULL) {
+   while(current != nullptr) {
       if(e->GetClass() == fSigClass)
          current->SetNSValidation(current->GetNSValidation() + e->GetWeight());
       else
@@ -750,8 +750,8 @@ void TMVA::DecisionTree::CheckEventWithPrunedTree( const Event* e ) const
          current->AddToSumTarget2(e->GetWeight()*e->GetTarget(0)*e->GetTarget(0));
       }
 
-      if (current->GetRight() == NULL || current->GetLeft() == NULL) {
-         current = NULL;
+      if (current->GetRight() == nullptr || current->GetLeft() == nullptr) {
+         current = nullptr;
       }
       else {
          if (current->GoesRight(*e))
@@ -768,9 +768,8 @@ void TMVA::DecisionTree::CheckEventWithPrunedTree( const Event* e ) const
 Double_t TMVA::DecisionTree::GetSumWeights( const EventConstList* validationSample ) const
 {
    Double_t sumWeights = 0.0;
-   for( EventConstList::const_iterator it = validationSample->begin();
-        it != validationSample->end(); ++it ) {
-      sumWeights += (*it)->GetWeight();
+   for(auto it : *validationSample) {
+      sumWeights += it->GetWeight();
    }
    return sumWeights;
 }
@@ -780,9 +779,9 @@ Double_t TMVA::DecisionTree::GetSumWeights( const EventConstList* validationSamp
 
 UInt_t TMVA::DecisionTree::CountLeafNodes( TMVA::Node *n )
 {
-   if (n == NULL) { // default, start at the tree top, then descend recursively
+   if (n == nullptr) { // default, start at the tree top, then descend recursively
       n =  this->GetRoot();
-      if (n == NULL) {
+      if (n == nullptr) {
          Log() << kFATAL << "CountLeafNodes: started with undefined ROOT node" <<Endl;
          return 0;
       }
@@ -790,14 +789,14 @@ UInt_t TMVA::DecisionTree::CountLeafNodes( TMVA::Node *n )
 
    UInt_t countLeafs=0;
 
-   if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) == NULL) ) {
+   if ((this->GetLeftDaughter(n) == nullptr) && (this->GetRightDaughter(n) == nullptr) ) {
       countLeafs += 1;
    }
    else {
-      if (this->GetLeftDaughter(n) != NULL) {
+      if (this->GetLeftDaughter(n) != nullptr) {
          countLeafs += this->CountLeafNodes( this->GetLeftDaughter(n) );
       }
-      if (this->GetRightDaughter(n) != NULL) {
+      if (this->GetRightDaughter(n) != nullptr) {
          countLeafs += this->CountLeafNodes( this->GetRightDaughter(n) );
       }
    }
@@ -809,30 +808,30 @@ UInt_t TMVA::DecisionTree::CountLeafNodes( TMVA::Node *n )
 
 void TMVA::DecisionTree::DescendTree( Node* n )
 {
-   if (n == NULL) { // default, start at the tree top, then descend recursively
+   if (n == nullptr) { // default, start at the tree top, then descend recursively
       n =  this->GetRoot();
-      if (n == NULL) {
+      if (n == nullptr) {
          Log() << kFATAL << "DescendTree: started with undefined ROOT node" <<Endl;
          return ;
       }
    }
 
-   if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) == NULL) ) {
+   if ((this->GetLeftDaughter(n) == nullptr) && (this->GetRightDaughter(n) == nullptr) ) {
       // do nothing
    }
-   else if ((this->GetLeftDaughter(n) == NULL) && (this->GetRightDaughter(n) != NULL) ) {
+   else if ((this->GetLeftDaughter(n) == nullptr) && (this->GetRightDaughter(n) != nullptr) ) {
       Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
    }
-   else if ((this->GetLeftDaughter(n) != NULL) && (this->GetRightDaughter(n) == NULL) ) {
+   else if ((this->GetLeftDaughter(n) != nullptr) && (this->GetRightDaughter(n) == nullptr) ) {
       Log() << kFATAL << " Node with only one daughter?? Something went wrong" << Endl;
       return;
    }
    else {
-      if (this->GetLeftDaughter(n) != NULL) {
+      if (this->GetLeftDaughter(n) != nullptr) {
          this->DescendTree( this->GetLeftDaughter(n) );
       }
-      if (this->GetRightDaughter(n) != NULL) {
+      if (this->GetRightDaughter(n) != nullptr) {
          this->DescendTree( this->GetRightDaughter(n) );
       }
    }
@@ -846,8 +845,8 @@ void TMVA::DecisionTree::PruneNode( DecisionTreeNode* node )
    DecisionTreeNode *l = node->GetLeft();
    DecisionTreeNode *r = node->GetRight();
 
-   node->SetRight(NULL);
-   node->SetLeft(NULL);
+   node->SetRight(nullptr);
+   node->SetLeft(nullptr);
    node->SetSelector(-1);
    node->SetSeparationGain(-1);
    if (node->GetPurity() > fNodePurityLimit) node->SetNodeType(1);
@@ -865,7 +864,7 @@ void TMVA::DecisionTree::PruneNode( DecisionTreeNode* node )
 /// pruning stages without "touching" the tree.
 
 void TMVA::DecisionTree::PruneNodeInPlace( DecisionTreeNode* node ) {
-   if(node == NULL) return;
+   if(node == nullptr) return;
    node->SetNTerminal(1);
    node->SetSubTreeR( node->GetNodeR() );
    node->SetAlpha( std::numeric_limits<double>::infinity( ) );
@@ -1564,16 +1563,16 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
 
    // Initialize (un)weighted counters for signal & background
    // Construct a list of event wrappers that point to the original data
-   for( std::vector<const TMVA::Event*>::const_iterator it = eventSample.begin(); it != eventSample.end(); ++it ) {
-      if((*it)->GetClass() == fSigClass) { // signal or background event
-         nTotS += (*it)->GetWeight();
+   for(auto it : eventSample) {
+      if(it->GetClass() == fSigClass) { // signal or background event
+         nTotS += it->GetWeight();
          ++nTotS_unWeighted;
       }
       else {
-         nTotB += (*it)->GetWeight();
+         nTotB += it->GetWeight();
          ++nTotB_unWeighted;
       }
-      bdtEventSample.push_back(TMVA::BDTEventWrapper(*it));
+      bdtEventSample.push_back(TMVA::BDTEventWrapper(it));
    }
 
    std::vector<Char_t> useVariable(fNvars); // <----- bool is stored (for performance reasons, no std::vector<bool>  has been taken)
@@ -1623,7 +1622,7 @@ Double_t TMVA::DecisionTree::TrainNodeFull( const EventConstList & eventSample,
       // Locate the optimal cut for this (ivar-th) variable
       for( it = bdtEventSample.begin(); it != it_end; ++it ) {
          if( index == 0 ) { ++index; continue; }
-         if( *(*it) == NULL ) {
+         if( *(*it) == nullptr ) {
             Log() << kFATAL << "In TrainNodeFull(): have a null event! Where index="
                   << index << ", and parent node=" << node->GetParent() << Endl;
             break;
@@ -1731,10 +1730,10 @@ Double_t TMVA::DecisionTree::CheckEvent( const TMVA::Event * e, Bool_t UseYesNoL
 Double_t  TMVA::DecisionTree::SamplePurity( std::vector<TMVA::Event*> eventSample )
 {
    Double_t sumsig=0, sumbkg=0, sumtot=0;
-   for (UInt_t ievt=0; ievt<eventSample.size(); ievt++) {
-      if (eventSample[ievt]->GetClass() != fSigClass) sumbkg+=eventSample[ievt]->GetWeight();
-      else sumsig+=eventSample[ievt]->GetWeight();
-      sumtot+=eventSample[ievt]->GetWeight();
+   for (auto & ievt : eventSample) {
+      if (ievt->GetClass() != fSigClass) sumbkg+=ievt->GetWeight();
+      else sumsig+=ievt->GetWeight();
+      sumtot+=ievt->GetWeight();
    }
    // sanity check
    if (sumtot!= (sumsig+sumbkg)){

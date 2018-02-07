@@ -63,8 +63,8 @@ Double_t gGDLinLoop=0;
 /// constructor
 
 TMVA::RuleFitParams::RuleFitParams()
-   : fRuleFit ( 0 )
-   , fRuleEnsemble ( 0 )
+   : fRuleFit ( nullptr )
+   , fRuleEnsemble ( nullptr )
    , fNRules ( 0 )
    , fNLinear ( 0 )
    , fPathIdx1 ( 0 )
@@ -83,14 +83,14 @@ TMVA::RuleFitParams::RuleFitParams()
    , fGDErrScale ( 1.1 )
    , fAverageTruth( 0 )
    , fFstarMedian ( 0 )
-   , fGDNtuple    ( 0 )
+   , fGDNtuple    ( nullptr )
    , fNTRisk      ( 0 )
    , fNTErrorRate ( 0 )
    , fNTNuval     ( 0 )
    , fNTCoefRad   ( 0 )
    , fNTOffset ( 0 )
-   , fNTCoeff ( 0 )
-   , fNTLinCoeff ( 0 )
+   , fNTCoeff ( nullptr )
+   , fNTLinCoeff ( nullptr )
    , fsigave( 0 )
    , fsigrms( 0 )
    , fbkgave( 0 )
@@ -104,8 +104,8 @@ TMVA::RuleFitParams::RuleFitParams()
 
 TMVA::RuleFitParams::~RuleFitParams()
 {
-   if (fNTCoeff)     { delete fNTCoeff; fNTCoeff = 0; }
-   if (fNTLinCoeff)  { delete fNTLinCoeff;fNTLinCoeff = 0; }
+   if (fNTCoeff)     { delete fNTCoeff; fNTCoeff = nullptr; }
+   if (fNTLinCoeff)  { delete fNTLinCoeff;fNTLinCoeff = nullptr; }
    delete fLogger;
 }
 
@@ -114,8 +114,8 @@ TMVA::RuleFitParams::~RuleFitParams()
 
 void TMVA::RuleFitParams::Init()
 {
-   if (fRuleFit==0) return;
-   if (fRuleFit->GetMethodRuleFit()==0) {
+   if (fRuleFit==nullptr) return;
+   if (fRuleFit->GetMethodRuleFit()==nullptr) {
       Log() << kFATAL << "RuleFitParams::Init() - MethodRuleFit ptr is null" << Endl;
    }
    UInt_t neve = fRuleFit->GetTrainingEvents().size();
@@ -192,8 +192,8 @@ void TMVA::RuleFitParams::InitNtuple()
    fGDNtuple->Branch("coefrad", &fNTCoefRad,  "coefrad/D");
    fGDNtuple->Branch("offset",  &fNTOffset,   "offset/D");
    //
-   fNTCoeff    = (fNRules >0 ? new Double_t[fNRules]  : 0);
-   fNTLinCoeff = (fNLinear>0 ? new Double_t[fNLinear] : 0);
+   fNTCoeff    = (fNRules >0 ? new Double_t[fNRules]  : nullptr);
+   fNTLinCoeff = (fNLinear>0 ? new Double_t[fNLinear] : nullptr);
 
    for (UInt_t i=0; i<fNRules; i++) {
       fGDNtuple->Branch(Form("a%d",i+1),&fNTCoeff[i],Form("a%d/D",i+1));
@@ -220,7 +220,7 @@ void TMVA::RuleFitParams::EvaluateAverage( UInt_t ind1, UInt_t ind2,
    //
    if (fNLinear>0) avsel.resize(fNLinear,0);
    if (fNRules>0)  avrul.resize(fNRules,0);
-   const std::vector<UInt_t> *eventRuleMap=0;
+   const std::vector<UInt_t> *eventRuleMap=nullptr;
    Double_t ew;
    Double_t sumew=0;
    //
@@ -613,8 +613,8 @@ void TMVA::RuleFitParams::MakeGDPath()
    fRuleEnsemble->SetOffset(offsetMin);
    fRuleEnsemble->ClearCoefficients(0);
    fRuleEnsemble->ClearLinCoefficients(0);
-   for (UInt_t i=0; i<fGDOfsTst.size(); i++) {
-      fGDOfsTst[i] = offsetMin;
+   for (double & i : fGDOfsTst) {
+      i = offsetMin;
    }
    Log() << kVERBOSE << "Obtained initial offset = " << offsetMin << Endl;
 
@@ -1289,7 +1289,7 @@ void TMVA::RuleFitParams::MakeTstGradientVector()
    Double_t sF;   // score function value
    Double_t r;   // eq 35, ref 1
    Double_t y;   // true score (+1 or -1)
-   const std::vector<UInt_t> *eventRuleMap=0;
+   const std::vector<UInt_t> *eventRuleMap=nullptr;
    UInt_t rind;
    //
    // Loop over all events
@@ -1407,7 +1407,7 @@ void TMVA::RuleFitParams::MakeGradientVector()
    Double_t sF;   // score function value
    Double_t r;   // eq 35, ref 1
    Double_t y;   // true score (+1 or -1)
-   const std::vector<UInt_t> *eventRuleMap=0;
+   const std::vector<UInt_t> *eventRuleMap=nullptr;
    UInt_t rind;
    //
    gGDInit += Double_t(clock()-t0)/CLOCKS_PER_SEC;

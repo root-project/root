@@ -1721,7 +1721,7 @@ void TEveElement::DestroyOrWarn()
    {
       Destroy();
    }
-   catch (TEveException& exc)
+   catch (const TEveException& exc)
    {
       Warning(eh, "%s", exc.Data());
    }
@@ -1742,7 +1742,7 @@ void TEveElement::DestroyElements()
          try {
             c->Destroy();
          }
-         catch (TEveException exc) {
+         catch (const TEveException &exc) {
             Warning(eh, "element destruction failed: '%s'.", exc.Data());
             RemoveElement(c);
          }

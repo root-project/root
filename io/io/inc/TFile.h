@@ -192,7 +192,7 @@ public:
    Long64_t            GetArchiveOffset() const { return fArchiveOffset; }
    Int_t               GetBestBuffer() const;
    virtual Int_t       GetBytesToPrefetch() const;
-   TFileCacheRead     *GetCacheRead(TObject* tree = 0) const;
+   TFileCacheRead     *GetCacheRead(TObject* tree = nullptr) const;
    TFileCacheWrite    *GetCacheWrite() const;
    TArrayC            *GetClassIndex() const { return fClassIndex; }
    Int_t               GetCompressionAlgorithm() const;
@@ -250,7 +250,7 @@ public:
    virtual Int_t       Recover();
    virtual Int_t       ReOpen(Option_t *mode);
    virtual void        Seek(Long64_t offset, ERelativeTo pos = kBeg);
-   virtual void        SetCacheRead(TFileCacheRead *cache, TObject* tree = 0, ECacheAction action = kDisconnect);
+   virtual void        SetCacheRead(TFileCacheRead *cache, TObject* tree = nullptr, ECacheAction action = kDisconnect);
    virtual void        SetCacheWrite(TFileCacheWrite *cache);
    virtual void        SetCompressionAlgorithm(Int_t algorithm=0);
    virtual void        SetCompressionLevel(Int_t level=1);
@@ -263,8 +263,8 @@ public:
    virtual Int_t       Sizeof() const;
    void                SumBuffer(Int_t bufsize);
    virtual Bool_t      WriteBuffer(const char *buf, Int_t len);
-   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0);
-   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsiz=0) const;
+   virtual Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0);
+   virtual Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsiz=0) const;
    virtual void        WriteFree();
    virtual void        WriteHeader();
    virtual UShort_t    WriteProcessID(TProcessID *pid);
@@ -279,7 +279,7 @@ public:
                             Int_t netopt = 0);
    static TFile       *Open(TFileOpenHandle *handle);
 
-   static EFileType    GetType(const char *name, Option_t *option = "", TString *prefix = 0);
+   static EFileType    GetType(const char *name, Option_t *option = "", TString *prefix = nullptr);
 
    static EAsyncOpenStatus GetAsyncOpenStatus(const char *name);
    static EAsyncOpenStatus GetAsyncOpenStatus(TFileOpenHandle *handle);
@@ -346,7 +346,7 @@ private:
                                fNetOpt(0), fFile(f) { }
    TFileOpenHandle(const char *n, const char *o, const char *t, Int_t cmp,
                    Int_t no) : TNamed(n,t), fOpt(o), fCompress(cmp),
-                               fNetOpt(no), fFile(0) { }
+                               fNetOpt(no), fFile(nullptr) { }
    TFileOpenHandle(const TFileOpenHandle&);
    TFileOpenHandle& operator=(const TFileOpenHandle&);
 

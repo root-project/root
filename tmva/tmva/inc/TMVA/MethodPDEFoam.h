@@ -79,16 +79,16 @@ namespace TMVA {
       MethodPDEFoam( DataSetInfo& dsi,
                      const TString& theWeightFile);
 
-      virtual ~MethodPDEFoam( void );
+      virtual ~MethodPDEFoam();
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
       // training methods
-      void Train( void );
-      void TrainMonoTargetRegression( void );    // Regression output: one value
-      void TrainMultiTargetRegression( void );   // Regression output: any number of values
-      void TrainSeparatedClassification( void ); // Classification: one foam for Sig, one for Bg
-      void TrainUnifiedClassification( void );   // Classification: one foam for Signal and Bg
+      void Train();
+      void TrainMonoTargetRegression();    // Regression output: one value
+      void TrainMultiTargetRegression();   // Regression output: any number of values
+      void TrainSeparatedClassification(); // Classification: one foam for Sig, one for Bg
+      void TrainUnifiedClassification();   // Classification: one foam for Signal and Bg
       void TrainMultiClassification();           // Classification: one foam for every class
 
       using MethodBase::ReadWeightsFromStream;
@@ -124,7 +124,7 @@ namespace TMVA {
       void GetNCuts(PDEFoamCell *cell, std::vector<UInt_t> &nCuts);
 
       // helper functions to convert enum types to UInt_t and back
-      EKernel GetKernel( void ) { return fKernel; }
+      EKernel GetKernel() { return fKernel; }
       UInt_t KernelToUInt(EKernel ker) const { return UInt_t(ker); }
       EKernel UIntToKernel(UInt_t iker);
       UInt_t TargetSelectionToUInt(ETargetSelection ts) const { return UInt_t(ts); }
@@ -167,7 +167,7 @@ namespace TMVA {
       void ProcessOptions();
 
       // nice output
-      void PrintCoefficients( void );
+      void PrintCoefficients();
 
       // Square function (fastest implementation)
       template<typename T> T Sqr(T x) const { return x*x; }
@@ -205,7 +205,7 @@ namespace TMVA {
       std::vector<PDEFoam*> fFoam;    // grown PDEFoams
 
       // default initialisation called by all constructors
-      void Init( void );
+      void Init();
 
       ClassDef(MethodPDEFoam,0); // Multi-dimensional probability density estimator using TFoam (PDE-Foam)
    };

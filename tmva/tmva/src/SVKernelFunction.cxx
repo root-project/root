@@ -208,8 +208,8 @@ Float_t TMVA::SVKernelFunction::Evaluate( SVEvent* ev1, SVEvent* ev2 )
          // Methods" by Cristianini and Shawe-Taylor, Section 3.3.2
          Float_t kernelVal;
          kernelVal = 1;
-         for(UInt_t i = 0; i<fKernelsList.size(); i++){
-            fKernel = fKernelsList.at(i);
+         for(auto & i : fKernelsList){
+            fKernel = i;
             Float_t a = Evaluate(ev1,ev2);
             kernelVal *= a;
          }
@@ -223,8 +223,8 @@ Float_t TMVA::SVKernelFunction::Evaluate( SVEvent* ev1, SVEvent* ev2 )
          // kSum before returning so it can be used again. Described in "An Introduction to          // Support Vector Machines and Other Kernel-based Learning
          // Methods" by Cristianini and Shawe-Taylor, Section 3.3.2
          Float_t kernelVal = 0;
-         for(UInt_t i = 0; i<fKernelsList.size(); i++){
-            fKernel = fKernelsList.at(i);
+         for(auto & i : fKernelsList){
+            fKernel = i;
             Float_t a = Evaluate(ev1,ev2);
             kernelVal += a;
          }

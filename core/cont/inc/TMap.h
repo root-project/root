@@ -84,8 +84,8 @@ public:
    TPair            *RemoveEntry(TObject *key);
    virtual void      SetOwnerValue(Bool_t enable = kTRUE);
    virtual void      SetOwnerKeyValue(Bool_t ownkeys = kTRUE, Bool_t ownvals = kTRUE);
-   virtual Int_t     Write(const char *name=0, Int_t option=0, Int_t bufsize=0);
-   virtual Int_t     Write(const char *name=0, Int_t option=0, Int_t bufsize=0) const;
+   virtual Int_t     Write(const char *name=nullptr, Int_t option=0, Int_t bufsize=0);
+   virtual Int_t     Write(const char *name=nullptr, Int_t option=0, Int_t bufsize=0) const;
 
    ClassDef(TMap,3)  //A (key,value) map
 };
@@ -151,7 +151,7 @@ private:
    THashTableIter   *fCursor;      //current position in map
    Bool_t            fDirection;   //iteration direction
 
-   TMapIter() : fMap(0), fCursor(0), fDirection(kIterForward) { }
+   TMapIter() : fMap(nullptr), fCursor(nullptr), fDirection(kIterForward) { }
 
 public:
    TMapIter(const TMap *map, Bool_t dir = kIterForward);

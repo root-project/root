@@ -1376,7 +1376,7 @@ public:
    template <typename FirstColumn, typename... OtherColumns, typename T> // need FirstColumn to disambiguate overloads
    TResultProxy<T> Fill(T &&model, const ColumnNames_t &columnList)
    {
-      auto h = std::make_shared<T>(std::move(model));
+      auto h = std::make_shared<T>(std::forward(model));
       if (!TDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
@@ -1397,7 +1397,7 @@ public:
    template <typename T>
    TResultProxy<T> Fill(T &&model, const ColumnNames_t &bl)
    {
-      auto h = std::make_shared<T>(std::move(model));
+      auto h = std::make_shared<T>(std::forward(model));
       if (!TDFInternal::HistoUtils<T>::HasAxisLimits(*h)) {
          throw std::runtime_error("The absence of axes limits is not supported yet.");
       }
@@ -1792,7 +1792,7 @@ private:
 
       // Here we check if the return type is a pointer. In this case, we assume it points to valid memory
       // and we treat the column as if it came from a data source, i.e. it points to valid memory.
-      loopManager->Book(std::make_shared<NewCol_t>(name, std::move(expression), validColumnNames, loopManager.get()));
+      loopManager->Book(std::make_shared<NewCol_t>(name, std::forward(expression), validColumnNames, loopManager.get()));
       TInterface<Proxied> newInterface(fProxiedPtr, fImplWeakPtr, fValidCustomColumns, fDataSource);
       newInterface.fValidCustomColumns.emplace_back(name);
       return newInterface;

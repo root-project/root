@@ -85,8 +85,8 @@ Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunction
 
    // Calculate the sum of the weights
    Double_t sumOfWeights = 0;
-   for(UInt_t i = 0; i<evs.size(); i++)
-      sumOfWeights+=evs[i].weight;
+   for(auto & ev : evs)
+      sumOfWeights+=ev.weight;
 
    return sumOfWeights;
 }
@@ -131,8 +131,8 @@ void TMVA::HuberLossFunction::SetTransitionPoint(std::vector<LossFunctionEventIn
    // the quantile was chosen too low. Let's use the first nonzero residual as the transition point instead.
    if(fTransitionPoint == 0){
       // evs should already be sorted according to the magnitude of the residuals, since CalculateQuantile does this
-      for(UInt_t i=0; i<evs.size(); i++){
-         Double_t residual = TMath::Abs(evs[i].trueValue - evs[i].predictedValue);
+      for(auto & ev : evs){
+         Double_t residual = TMath::Abs(ev.trueValue - ev.predictedValue);
          if(residual != 0){
             fTransitionPoint = residual;
             break;
@@ -189,8 +189,8 @@ Double_t TMVA::HuberLossFunction::CalculateNetLoss(std::vector<LossFunctionEvent
    SetTransitionPoint(evs);
 
    Double_t netloss = 0;
-   for(UInt_t i=0; i<evs.size(); i++)
-       netloss+=CalculateLoss(evs[i]);
+   for(auto & ev : evs)
+       netloss+=CalculateLoss(ev);
    return netloss;
    // should get a function to return the average loss as well
    // return netloss/fSumOfWeights
@@ -207,8 +207,8 @@ Double_t TMVA::HuberLossFunction::CalculateMeanLoss(std::vector<LossFunctionEven
    SetTransitionPoint(evs);
 
    Double_t netloss = 0;
-   for(UInt_t i=0; i<evs.size(); i++)
-       netloss+=CalculateLoss(evs[i]);
+   for(auto & ev : evs)
+       netloss+=CalculateLoss(ev);
    return netloss/fSumOfWeights;
 }
 
@@ -225,10 +225,11 @@ TMVA::HuberLossFunctionBDT::HuberLossFunctionBDT(){
 ////////////////////////////////////////////////////////////////////////////////
 /// huber BDT, initialize the targets and prepare for the regression
 
-void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
+void TMVA::HuberLossFunctionBDT::Init(std::unordered_map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Run this once before building the forest. Set initial prediction to weightedMedian.
 
    std::vector<LossFunctionEventInfo> evinfovec;
+   evinfovec.reserve(evinfomap.size());
    for (auto &e: evinfomap){
       evinfovec.push_back(LossFunctionEventInfo(e.second.trueValue, e.second.predictedValue, e.first->GetWeight()));
    }
@@ -248,11 +249,12 @@ void TMVA::HuberLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionE
 ////////////////////////////////////////////////////////////////////////////////
 /// huber BDT, set the targets for a collection of events
 
-void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::unordered_map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
    std::vector<LossFunctionEventInfo> eventvec;
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e){
-      eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
+   eventvec.reserve(evs.size());
+   for (const auto &e : evs) {
+      eventvec.push_back(LossFunctionEventInfo(evinfomap[e].trueValue, evinfomap[e].predictedValue, e->GetWeight()));
    }
 
    // Recalculate the residual that separates the "core" of the data and the "tails"
@@ -261,8 +263,8 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
    SetSumOfWeights(eventvec); // This was already set in init, but may change if there is subsampling for each tree
    SetTransitionPoint(eventvec);
 
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e) {
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
+   for (auto &e : evs) {
+         const_cast<TMVA::Event*>(e)->SetTarget(0,Target(evinfomap[e]));
    }
 }
 
@@ -289,13 +291,13 @@ Double_t TMVA::HuberLossFunctionBDT::Fit(std::vector<LossFunctionEventInfo>& evs
    Double_t sumOfWeights = CalculateSumOfWeights(evs);
    Double_t shift=0,diff= 0;
    Double_t residualMedian = CalculateQuantile(evs,0.5,sumOfWeights, false);
-   for(UInt_t j=0;j<evs.size();j++){
-      Double_t residual = evs[j].trueValue - evs[j].predictedValue;
+   for (const auto &lfei : evs) {
+      Double_t residual = lfei.trueValue - lfei.predictedValue;
       diff = residual-residualMedian;
       // if we are using weights then I'm not sure why this isn't weighted
       shift+=1.0/evs.size()*((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
       // I think this should be
-      // shift+=evs[j].weight/sumOfWeights*((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
+      // shift+=lfei.weight/sumOfWeights*((diff<0)?-1.0:1.0)*TMath::Min(fTransitionPoint,fabs(diff));
       // not sure why it was originally coded like this
    }
    return (residualMedian + shift);
@@ -326,8 +328,8 @@ Double_t TMVA::LeastSquaresLossFunction::CalculateLoss(LossFunctionEventInfo& e)
 
 Double_t TMVA::LeastSquaresLossFunction::CalculateNetLoss(std::vector<LossFunctionEventInfo>& evs){
    Double_t netloss = 0;
-   for(UInt_t i=0; i<evs.size(); i++)
-       netloss+=CalculateLoss(evs[i]);
+   for(auto & ev : evs)
+       netloss+=CalculateLoss(ev);
    return netloss;
    // should get a function to return the average loss as well
    // return netloss/fSumOfWeights
@@ -339,9 +341,9 @@ Double_t TMVA::LeastSquaresLossFunction::CalculateNetLoss(std::vector<LossFuncti
 Double_t TMVA::LeastSquaresLossFunction::CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs){
    Double_t netloss = 0;
    Double_t sumOfWeights = 0;
-   for(UInt_t i=0; i<evs.size(); i++){
-       sumOfWeights+=evs[i].weight;
-       netloss+=CalculateLoss(evs[i]);
+   for(auto & ev : evs){
+       sumOfWeights+=ev.weight;
+       netloss+=CalculateLoss(ev);
    }
    // return the weighted mean
    return netloss/sumOfWeights;
@@ -359,10 +361,11 @@ Least Squares BDT Loss Function.
 ////////////////////////////////////////////////////////////////////////////////
 /// least squares BDT, initialize the targets and prepare for the regression
 
-void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
+void TMVA::LeastSquaresLossFunctionBDT::Init(std::unordered_map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Run this once before building the forest. Set initial prediction to the weightedMean
 
    std::vector<LossFunctionEventInfo> evinfovec;
+   evinfovec.reserve(evinfomap.size());
    for (auto &e: evinfomap){
       evinfovec.push_back(LossFunctionEventInfo(e.second.trueValue, e.second.predictedValue, e.first->GetWeight()));
    }
@@ -381,15 +384,16 @@ void TMVA::LeastSquaresLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFu
 ////////////////////////////////////////////////////////////////////////////////
 /// least squares BDT, set the targets for a collection of events
 
-void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::unordered_map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
    std::vector<LossFunctionEventInfo> eventvec;
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e){
-      eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
+   eventvec.reserve(evs.size());
+   for (const auto &e : evs) {
+      eventvec.push_back(LossFunctionEventInfo(evinfomap[e].trueValue, evinfomap[e].predictedValue, e->GetWeight()));
    }
 
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e) {
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
+   for (auto &e : evs) {
+         const_cast<TMVA::Event*>(e)->SetTarget(0,Target(evinfomap[e]));
    }
 }
 
@@ -411,10 +415,10 @@ Double_t TMVA::LeastSquaresLossFunctionBDT::Fit(std::vector<LossFunctionEventInf
 // The fit in the terminal node for least squares is the weighted average of the residuals.
    Double_t sumOfWeights = 0;
    Double_t weightedResidualSum = 0;
-   for(UInt_t j=0;j<evs.size();j++){
-      sumOfWeights += evs[j].weight;
-      Double_t residual = evs[j].trueValue - evs[j].predictedValue;
-      weightedResidualSum += evs[j].weight*residual;
+   for(auto & ev : evs){
+      sumOfWeights += ev.weight;
+      Double_t residual = ev.trueValue - ev.predictedValue;
+      weightedResidualSum += ev.weight*residual;
    }
    Double_t weightedMean = weightedResidualSum/sumOfWeights;
 
@@ -445,8 +449,8 @@ Double_t TMVA::AbsoluteDeviationLossFunction::CalculateLoss(LossFunctionEventInf
 Double_t TMVA::AbsoluteDeviationLossFunction::CalculateNetLoss(std::vector<LossFunctionEventInfo>& evs){
 
    Double_t netloss = 0;
-   for(UInt_t i=0; i<evs.size(); i++)
-       netloss+=CalculateLoss(evs[i]);
+   for(auto & ev : evs)
+       netloss+=CalculateLoss(ev);
    return netloss;
 }
 
@@ -456,9 +460,9 @@ Double_t TMVA::AbsoluteDeviationLossFunction::CalculateNetLoss(std::vector<LossF
 Double_t TMVA::AbsoluteDeviationLossFunction::CalculateMeanLoss(std::vector<LossFunctionEventInfo>& evs){
    Double_t sumOfWeights = 0;
    Double_t netloss = 0;
-   for(UInt_t i=0; i<evs.size(); i++){
-       sumOfWeights+=evs[i].weight;
-       netloss+=CalculateLoss(evs[i]);
+   for(auto & ev : evs){
+       sumOfWeights+=ev.weight;
+       netloss+=CalculateLoss(ev);
    }
    return netloss/sumOfWeights;
 }
@@ -473,10 +477,11 @@ Absolute Deviation BDT Loss Function.
 ////////////////////////////////////////////////////////////////////////////////
 /// absolute deviation BDT, initialize the targets and prepare for the regression
 
-void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
+void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::unordered_map<const TMVA::Event*, LossFunctionEventInfo>& evinfomap, std::vector<double>& boostWeights){
 // Run this once before building the forest. Set initial prediction to weightedMedian.
 
    std::vector<LossFunctionEventInfo> evinfovec;
+   evinfovec.reserve(evinfomap.size());
    for (auto &e: evinfomap){
       evinfovec.push_back(LossFunctionEventInfo(e.second.trueValue, e.second.predictedValue, e.first->GetWeight()));
    }
@@ -494,15 +499,16 @@ void TMVA::AbsoluteDeviationLossFunctionBDT::Init(std::map<const TMVA::Event*, L
 ////////////////////////////////////////////////////////////////////////////////
 /// absolute deviation BDT, set the targets for a collection of events
 
-void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
+void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs, std::unordered_map< const TMVA::Event*, LossFunctionEventInfo >& evinfomap){
 
    std::vector<LossFunctionEventInfo> eventvec;
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e){
-      eventvec.push_back(LossFunctionEventInfo(evinfomap[*e].trueValue, evinfomap[*e].predictedValue, (*e)->GetWeight()));
+   for (const auto &e : evs) {
+      auto &lfei = evinfomap[e];
+      eventvec.push_back(LossFunctionEventInfo(lfei.trueValue, lfei.predictedValue, e->GetWeight()));
    }
 
-   for (std::vector<const TMVA::Event*>::const_iterator e=evs.begin(); e!=evs.end();++e) {
-         const_cast<TMVA::Event*>(*e)->SetTarget(0,Target(evinfomap[*e]));
+   for (auto &e : evs) {
+         const_cast<TMVA::Event*>(e)->SetTarget(0,Target(evinfomap[e]));
    }
 }
 
@@ -525,13 +531,13 @@ Double_t TMVA::AbsoluteDeviationLossFunctionBDT::Fit(std::vector<LossFunctionEve
 
    // use a lambda function to tell the vector how to sort the LossFunctionEventInfo data structures
    // sort in ascending order of residual value
-   std::sort(evs.begin(), evs.end(), [](LossFunctionEventInfo a, LossFunctionEventInfo b){
+   std::sort(evs.begin(), evs.end(), [](const LossFunctionEventInfo &a, const LossFunctionEventInfo &b){
                                         return (a.trueValue-a.predictedValue) < (b.trueValue-b.predictedValue); });
 
    // calculate the sum of weights, used in the weighted median calculation
    Double_t sumOfWeights = 0;
-   for(UInt_t j=0; j<evs.size(); j++)
-      sumOfWeights+=evs[j].weight;
+   for(auto & ev : evs)
+      sumOfWeights+=ev.weight;
 
    // get the index of the weighted median
    UInt_t i = 0;

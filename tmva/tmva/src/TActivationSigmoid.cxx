@@ -57,8 +57,8 @@ TMVA::TActivationSigmoid::TActivationSigmoid()
 
 TMVA::TActivationSigmoid::~TActivationSigmoid()
 {
-   if (fEqn != NULL) delete fEqn;
-   if (fEqnDerivative != NULL) delete fEqnDerivative;
+   if (fEqn != nullptr) delete fEqn;
+   if (fEqnDerivative != nullptr) delete fEqnDerivative;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -66,7 +66,7 @@ TMVA::TActivationSigmoid::~TActivationSigmoid()
 
 Double_t TMVA::TActivationSigmoid::Eval(Double_t arg)
 {
-   if (fEqn == NULL) return UNINITIALIZED;
+   if (fEqn == nullptr) return UNINITIALIZED;
    return fEqn->Eval(arg);
 
    //return EvalFast(arg);
@@ -77,7 +77,7 @@ Double_t TMVA::TActivationSigmoid::Eval(Double_t arg)
 
 Double_t TMVA::TActivationSigmoid::EvalDerivative(Double_t arg)
 {
-   if (fEqnDerivative == NULL) return UNINITIALIZED;
+   if (fEqnDerivative == nullptr) return UNINITIALIZED;
    return fEqnDerivative->Eval(arg);
 
    //return EvalDerivativeFast(arg);
@@ -90,12 +90,12 @@ TString TMVA::TActivationSigmoid::GetExpression()
 {
    TString expr = "";
 
-   if (fEqn == NULL) expr += "<null>";
+   if (fEqn == nullptr) expr += "<null>";
    else              expr += fEqn->GetExpFormula();
 
    expr += "\t\t";
 
-   if (fEqnDerivative == NULL) expr += "<null>";
+   if (fEqnDerivative == nullptr) expr += "<null>";
    else                        expr += fEqnDerivative->GetExpFormula();
 
    return expr;

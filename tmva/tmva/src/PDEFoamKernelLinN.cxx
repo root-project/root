@@ -76,7 +76,7 @@ TMVA::PDEFoamKernelLinN::PDEFoamKernelLinN(const PDEFoamKernelLinN &other)
 
 Float_t TMVA::PDEFoamKernelLinN::Estimate(PDEFoam *foam, std::vector<Float_t> &txvec, ECellValue cv)
 {
-   if (foam == NULL)
+   if (foam == nullptr)
       Log() << kFATAL << "<PDEFoamKernelLinN::Estimate>: PDEFoam not set!" << Endl;
 
    return WeightLinNeighbors(foam, txvec, cv, kTRUE);
@@ -131,7 +131,7 @@ Float_t TMVA::PDEFoamKernelLinN::WeightLinNeighbors(PDEFoam *foam, std::vector<F
    for (Int_t dim = 0; dim < foam->GetTotDim(); dim++) {
       std::vector<Float_t> ntxvec(txvec);
       Float_t mindist;
-      PDEFoamCell *mindistcell = 0; // cell with minimal distance to txvec
+      PDEFoamCell *mindistcell = nullptr; // cell with minimal distance to txvec
       // calc minimal distance to neighbor cell
       mindist = (txvec[dim] - cellPosi[dim]) / cellSize[dim];
       if (mindist < 0.5) { // left neighbour
@@ -183,8 +183,8 @@ Float_t TMVA::PDEFoamKernelLinN::GetAverageNeighborsValue(PDEFoam *foam,
    // loop over all dimensions and find neighbor cells
    for (Int_t dim = 0; dim < foam->GetTotDim(); dim++) {
       std::vector<Float_t> ntxvec(txvec);
-      PDEFoamCell* left_cell  = 0; // left cell
-      PDEFoamCell* right_cell = 0; // right cell
+      PDEFoamCell* left_cell  = nullptr; // left cell
+      PDEFoamCell* right_cell = nullptr; // right cell
 
       // get left cell
       ntxvec[dim] = cellPosi[dim] - xoffset;

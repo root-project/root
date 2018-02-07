@@ -45,7 +45,7 @@ protected:
    TList      *fKeys;            ///< Pointer to keys list in memory
 
    virtual void         CleanTargets();
-   void Init(TClass *cl = 0);
+   void Init(TClass *cl = nullptr);
 
 private:
    TDirectoryFile(const TDirectoryFile &directory);  //Directories cannot be copied
@@ -56,17 +56,17 @@ public:
    enum { kCloseDirectory = BIT(7) };
 
    TDirectoryFile();
-   TDirectoryFile(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = 0);
+   TDirectoryFile(const char *name, const char *title, Option_t *option="", TDirectory* motherDir = nullptr);
    virtual ~TDirectoryFile();
    virtual void        Append(TObject *obj, Bool_t replace = kFALSE);
            void        Add(TObject *obj, Bool_t replace = kFALSE) { Append(obj,replace); }
            Int_t       AppendKey(TKey *key);
    virtual void        Browse(TBrowser *b);
-           void        Build(TFile* motherFile = 0, TDirectory* motherDir = 0);
+           void        Build(TFile* motherFile = nullptr, TDirectory* motherDir = nullptr);
    virtual TObject    *CloneObject(const TObject *obj, Bool_t autoadd = kTRUE);
    virtual void        Close(Option_t *option="");
    virtual void        Copy(TObject &) const { MayNotUse("Copy(TObject &)"); }
-   virtual Bool_t      cd(const char *path = 0);
+   virtual Bool_t      cd(const char *path = nullptr);
    virtual void        Delete(const char *namecycle="");
    virtual void        FillBuffer(char *&buffer);
    virtual TKey       *FindKey(const char *keyname) const;
@@ -115,9 +115,9 @@ public:
    virtual void        SetTRefAction(TObject *ref, TObject *parent);
    void                SetWritable(Bool_t writable=kTRUE);
    virtual Int_t       Sizeof() const;
-   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsize=0);
-   virtual Int_t       Write(const char *name=0, Int_t opt=0, Int_t bufsize=0) const ;
-   virtual Int_t       WriteTObject(const TObject *obj, const char *name=0, Option_t *option="", Int_t bufsize=0);
+   virtual Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0);
+   virtual Int_t       Write(const char *name=nullptr, Int_t opt=0, Int_t bufsize=0) const ;
+   virtual Int_t       WriteTObject(const TObject *obj, const char *name=nullptr, Option_t *option="", Int_t bufsize=0);
    virtual Int_t       WriteObjectAny(const void *obj, const char *classname, const char *name, Option_t *option="", Int_t bufsize=0);
    virtual Int_t       WriteObjectAny(const void *obj, const TClass *cl, const char *name, Option_t *option="", Int_t bufsize=0);
    virtual void        WriteDirHeader();

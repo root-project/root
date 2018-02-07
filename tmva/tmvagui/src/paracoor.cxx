@@ -60,7 +60,7 @@ void TMVA::paracoor(TString dataset, TString fin , Bool_t useTMVAStyle )
 
          // create draw option
          TString varstr = mvas[imva] + ":";
-         for (UInt_t ivar=0; ivar<vars.size(); ivar++) varstr += vars[ivar] + ":";
+         for (const auto & var : vars) varstr += var + ":";
          varstr.Resize( varstr.Last( ':' ) );
 
          // create canvas

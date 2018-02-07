@@ -211,15 +211,15 @@ std::vector<Int_t>* TMVA::MethodANNBase::ParseLayoutString(TString layerSpec)
 
 void TMVA::MethodANNBase::InitANNBase()
 {
-   fNetwork         = NULL;
-   frgen            = NULL;
-   fActivation      = NULL;
-   fOutput          = NULL; //zjh
-   fIdentity        = NULL;
-   fInputCalculator = NULL;
-   fSynapses        = NULL;
-   fEstimatorHistTrain = NULL;
-   fEstimatorHistTest  = NULL;
+   fNetwork         = nullptr;
+   frgen            = nullptr;
+   fActivation      = nullptr;
+   fOutput          = nullptr; //zjh
+   fIdentity        = nullptr;
+   fInputCalculator = nullptr;
+   fSynapses        = nullptr;
+   fEstimatorHistTrain = nullptr;
+   fEstimatorHistTest  = nullptr;
 
    // reset monitoring histogram vectors
    fEpochMonHistS.clear();
@@ -227,7 +227,7 @@ void TMVA::MethodANNBase::InitANNBase()
    fEpochMonHistW.clear();
 
    // these will be set in BuildNetwork()
-   fInputLayer = NULL;
+   fInputLayer = nullptr;
    fOutputNeurons.clear();
 
    frgen = new TRandom3(fRandomSeed);
@@ -248,7 +248,7 @@ TMVA::MethodANNBase::~MethodANNBase()
 
 void TMVA::MethodANNBase::DeleteNetwork()
 {
-   if (fNetwork != NULL) {
+   if (fNetwork != nullptr) {
       TObjArray *layer;
       Int_t numLayers = fNetwork->GetEntriesFast();
       for (Int_t i = 0; i < numLayers; i++) {
@@ -258,20 +258,20 @@ void TMVA::MethodANNBase::DeleteNetwork()
       delete fNetwork;
    }
 
-   if (frgen != NULL)            delete frgen;
-   if (fActivation != NULL)      delete fActivation;
-   if (fOutput != NULL)          delete fOutput;  //zjh
-   if (fIdentity != NULL)        delete fIdentity;
-   if (fInputCalculator != NULL) delete fInputCalculator;
-   if (fSynapses != NULL)        delete fSynapses;
+   if (frgen != nullptr)            delete frgen;
+   if (fActivation != nullptr)      delete fActivation;
+   if (fOutput != nullptr)          delete fOutput;  //zjh
+   if (fIdentity != nullptr)        delete fIdentity;
+   if (fInputCalculator != nullptr) delete fInputCalculator;
+   if (fSynapses != nullptr)        delete fSynapses;
 
-   fNetwork         = NULL;
-   frgen            = NULL;
-   fActivation      = NULL;
-   fOutput          = NULL; //zjh
-   fIdentity        = NULL;
-   fInputCalculator = NULL;
-   fSynapses        = NULL;
+   fNetwork         = nullptr;
+   frgen            = nullptr;
+   fActivation      = nullptr;
+   fOutput          = nullptr; //zjh
+   fIdentity        = nullptr;
+   fInputCalculator = nullptr;
+   fSynapses        = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -328,7 +328,7 @@ void TMVA::MethodANNBase::BuildNetwork( std::vector<Int_t>* layout, std::vector<
       fOutputNeurons.push_back( (TNeuron*)outputLayer->At(i) );
    }
 
-   if (weights == NULL) InitWeights();
+   if (weights == nullptr) InitWeights();
    else                 ForceWeights(weights);
 }
 
@@ -338,7 +338,7 @@ void TMVA::MethodANNBase::BuildNetwork( std::vector<Int_t>* layout, std::vector<
 void TMVA::MethodANNBase::BuildLayers( std::vector<Int_t>* layout, Bool_t fromFile )
 {
    TObjArray* curLayer;
-   TObjArray* prevLayer = NULL;
+   TObjArray* prevLayer = nullptr;
 
    Int_t numLayers = layout->size();
 
@@ -639,7 +639,7 @@ const std::vector<Float_t> &TMVA::MethodANNBase::GetRegressionValues()
    // check the output of the network
    TObjArray* outputLayer = (TObjArray*)fNetwork->At( fNetwork->GetEntriesFast()-1 );
 
-   if (fRegressionReturnVal == NULL) fRegressionReturnVal = new std::vector<Float_t>();
+   if (fRegressionReturnVal == nullptr) fRegressionReturnVal = new std::vector<Float_t>();
    fRegressionReturnVal->clear();
 
    Event * evT = new Event(*ev);
@@ -677,7 +677,7 @@ const std::vector<Float_t> &TMVA::MethodANNBase::GetMulticlassValues()
 
    // check the output of the network
 
-   if (fMulticlassReturnVal == NULL) fMulticlassReturnVal = new std::vector<Float_t>();
+   if (fMulticlassReturnVal == nullptr) fMulticlassReturnVal = new std::vector<Float_t>();
    fMulticlassReturnVal->clear();
    std::vector<Float_t> temp;
 
@@ -707,16 +707,16 @@ const std::vector<Float_t> &TMVA::MethodANNBase::GetMulticlassValues()
 void TMVA::MethodANNBase::AddWeightsXMLTo( void* parent ) const
 {
    Int_t numLayers = fNetwork->GetEntriesFast();
-   void* wght = gTools().xmlengine().NewChild(parent, 0, "Weights");
-   void* xmlLayout = gTools().xmlengine().NewChild(wght, 0, "Layout");
-   gTools().xmlengine().NewAttr(xmlLayout, 0, "NLayers", gTools().StringFromInt(fNetwork->GetEntriesFast()) );
+   void* wght = gTools().xmlengine().NewChild(parent, nullptr, "Weights");
+   void* xmlLayout = gTools().xmlengine().NewChild(wght, nullptr, "Layout");
+   gTools().xmlengine().NewAttr(xmlLayout, nullptr, "NLayers", gTools().StringFromInt(fNetwork->GetEntriesFast()) );
    TString weights = "";
    for (Int_t i = 0; i < numLayers; i++) {
       TObjArray* layer = (TObjArray*)fNetwork->At(i);
       Int_t numNeurons = layer->GetEntriesFast();
-      void* layerxml = gTools().xmlengine().NewChild(xmlLayout, 0, "Layer");
-      gTools().xmlengine().NewAttr(layerxml, 0, "Index",    gTools().StringFromInt(i) );
-      gTools().xmlengine().NewAttr(layerxml, 0, "NNeurons", gTools().StringFromInt(numNeurons) );
+      void* layerxml = gTools().xmlengine().NewChild(xmlLayout, nullptr, "Layer");
+      gTools().xmlengine().NewAttr(layerxml, nullptr, "Index",    gTools().StringFromInt(i) );
+      gTools().xmlengine().NewAttr(layerxml, nullptr, "NNeurons", gTools().StringFromInt(numNeurons) );
       for (Int_t j = 0; j < numNeurons; j++) {
          TNeuron* neuron = (TNeuron*)layer->At(j);
          Int_t numSynapses = neuron->NumPostLinks();
@@ -735,15 +735,15 @@ void TMVA::MethodANNBase::AddWeightsXMLTo( void* parent ) const
 
    // if inverse hessian exists, write inverse hessian to weight file
    if( fInvHessian.GetNcols()>0 ){
-      void* xmlInvHessian = gTools().xmlengine().NewChild(wght, 0, "InverseHessian");
+      void* xmlInvHessian = gTools().xmlengine().NewChild(wght, nullptr, "InverseHessian");
 
       // get the matrix dimensions
       Int_t nElements = fInvHessian.GetNoElements();
       Int_t nRows     = fInvHessian.GetNrows();
       Int_t nCols     = fInvHessian.GetNcols();
-      gTools().xmlengine().NewAttr(xmlInvHessian, 0, "NElements", gTools().StringFromInt(nElements) );
-      gTools().xmlengine().NewAttr(xmlInvHessian, 0, "NRows", gTools().StringFromInt(nRows) );
-      gTools().xmlengine().NewAttr(xmlInvHessian, 0, "NCols", gTools().StringFromInt(nCols) );
+      gTools().xmlengine().NewAttr(xmlInvHessian, nullptr, "NElements", gTools().StringFromInt(nElements) );
+      gTools().xmlengine().NewAttr(xmlInvHessian, nullptr, "NRows", gTools().StringFromInt(nRows) );
+      gTools().xmlengine().NewAttr(xmlInvHessian, nullptr, "NCols", gTools().StringFromInt(nCols) );
 
       // read in the matrix elements
       Double_t* elements = new Double_t[nElements+10];
@@ -752,8 +752,8 @@ void TMVA::MethodANNBase::AddWeightsXMLTo( void* parent ) const
       // store the matrix elements row-wise
       Int_t index = 0;
       for( Int_t row = 0; row < nRows; ++row ){
-         void* xmlRow = gTools().xmlengine().NewChild(xmlInvHessian, 0, "Row");
-         gTools().xmlengine().NewAttr(xmlRow, 0, "Index", gTools().StringFromInt(row) );
+         void* xmlRow = gTools().xmlengine().NewChild(xmlInvHessian, nullptr, "Row");
+         gTools().xmlengine().NewAttr(xmlRow, nullptr, "Index", gTools().StringFromInt(row) );
 
          // create the rows
          std::stringstream s("");
@@ -778,7 +778,7 @@ void TMVA::MethodANNBase::ReadWeightsFromXML( void* wghtnode )
    Bool_t fromFile = kTRUE;
    std::vector<Int_t>* layout = new std::vector<Int_t>();
 
-   void* xmlLayout = NULL;
+   void* xmlLayout = nullptr;
    xmlLayout = gTools().GetChild(wghtnode, "Layout");
    if( !xmlLayout )
       xmlLayout = wghtnode;
@@ -797,7 +797,7 @@ void TMVA::MethodANNBase::ReadWeightsFromXML( void* wghtnode )
       ch = gTools().GetNextChild(ch);
    }
 
-   BuildNetwork( layout, NULL, fromFile );
+   BuildNetwork( layout, nullptr, fromFile );
    // use 'slow' (exact) TanH if processing old weigh file to ensure 100% compatible results
    // otherwise use the new default, the 'tast tanh' approximation
    if (GetTrainingTMVAVersionCode() < TMVA_VERSION(4,2,1) && fActivation->GetExpression().Contains("tanh")){
@@ -840,7 +840,7 @@ void TMVA::MethodANNBase::ReadWeightsFromXML( void* wghtnode )
 
    delete layout;
 
-   void* xmlInvHessian = NULL;
+   void* xmlInvHessian = nullptr;
    xmlInvHessian = gTools().GetChild(wghtnode, "InverseHessian");
    if( !xmlInvHessian )
       // no inverse hessian available
@@ -1015,24 +1015,24 @@ void TMVA::MethodANNBase::WriteMonitoringHistosToFile() const
    static int epochMonitoringDirectoryNumber = 0;
 #endif
    int epochVal = epochMonitoringDirectoryNumber++;
-   TDirectory* epochdir = NULL;
+   TDirectory* epochdir = nullptr;
    if( epochVal == 0 )
       epochdir = BaseDir()->mkdir( "EpochMonitoring" );
    else
       epochdir = BaseDir()->mkdir( Form("EpochMonitoring_%4d",epochVal) );
 
    epochdir->cd();
-   for (std::vector<TH1*>::const_iterator it = fEpochMonHistS.begin(); it != fEpochMonHistS.end(); ++it) {
-      (*it)->Write();
-      delete (*it);
+   for (auto it : fEpochMonHistS) {
+      it->Write();
+      delete it;
    }
-   for (std::vector<TH1*>::const_iterator it = fEpochMonHistB.begin(); it != fEpochMonHistB.end(); ++it) {
-      (*it)->Write();
-      delete (*it);
+   for (auto it : fEpochMonHistB) {
+      it->Write();
+      delete it;
    }
-   for (std::vector<TH1*>::const_iterator it = fEpochMonHistW.begin(); it != fEpochMonHistW.end(); ++it) {
-      (*it)->Write();
-      delete (*it);
+   for (auto it : fEpochMonHistW) {
+      it->Write();
+      delete it;
    }
    BaseDir()->cd();
 }

@@ -327,7 +327,7 @@ void TMVA::TMVAMultiClassGui(const char* fName ,TString dataset)
    cbar->Show();
 
    // indicate inactive buttons
-   for (UInt_t i=0; i<TMVAMultiClassGui_inactiveButtons.size(); i++) cbar->SetButtonState( TMVAMultiClassGui_inactiveButtons[i], 3 );
+   for (auto & TMVAMultiClassGui_inactiveButton : TMVAMultiClassGui_inactiveButtons) cbar->SetButtonState( TMVAMultiClassGui_inactiveButton, 3 );
    if (TMVAMultiClassGui_inactiveButtons.size() > 0) {
       std::cout << "=== Note: inactive buttons indicate that the corresponding classifiers were not trained ===" << std::endl;
    }

@@ -190,12 +190,12 @@ public:
    static  Bool_t   AddDirectoryStatus();
    virtual void     Browse(TBrowser *b);
    virtual Bool_t   CanExtendAllAxes() const;
-   virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = 0) const;
-   virtual Double_t Chi2TestX(const TH1* h2, Double_t &chi2, Int_t &ndf, Int_t &igood,Option_t *option = "UU",  Double_t *res = 0) const;
+   virtual Double_t Chi2Test(const TH1* h2, Option_t *option = "UU", Double_t *res = nullptr) const;
+   virtual Double_t Chi2TestX(const TH1* h2, Double_t &chi2, Int_t &ndf, Int_t &igood,Option_t *option = "UU",  Double_t *res = nullptr) const;
    virtual Double_t Chisquare(TF1 * f1, Option_t *option = "") const;
    virtual void     ClearUnderflowAndOverflow();
    virtual Double_t ComputeIntegral(Bool_t onlyPositive = false);
-   TObject*         Clone(const char* newname=0) const;
+   TObject*         Clone(const char* newname=nullptr) const;
    virtual void     Copy(TObject &hnew) const;
    virtual void     DirectoryAutoAdd(TDirectory *);
    virtual Int_t    DistancetoPrimitive(Int_t px, Int_t py);
@@ -249,7 +249,7 @@ public:
    virtual Float_t  GetTickLength(Option_t *axis="X") const;
    virtual Float_t  GetBarOffset() const {return Float_t(0.001*Float_t(fBarOffset));}
    virtual Float_t  GetBarWidth() const  {return Float_t(0.001*Float_t(fBarWidth));}
-   virtual Int_t    GetContour(Double_t *levels=0);
+   virtual Int_t    GetContour(Double_t *levels=nullptr);
    virtual Double_t GetContourLevel(Int_t level) const;
    virtual Double_t GetContourLevelPad(Int_t level) const;
 
@@ -298,7 +298,7 @@ public:
 
    TVirtualHistPainter *GetPainter(Option_t *option="");
 
-   virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum=0);
+   virtual Int_t    GetQuantiles(Int_t nprobSum, Double_t *q, const Double_t *probSum=nullptr);
    virtual Double_t GetRandom() const;
    virtual void     GetStats(Double_t *stats) const;
    virtual Double_t GetStdDev(Int_t axis=1) const;
@@ -339,8 +339,8 @@ public:
    virtual void     Paint(Option_t *option="");
    virtual void     Print(Option_t *option="") const;
    virtual void     PutStats(Double_t *stats);
-   virtual TH1     *Rebin(Int_t ngroup=2, const char*newname="", const Double_t *xbins=0);  // *MENU*
-   virtual TH1     *RebinX(Int_t ngroup=2, const char*newname="") { return Rebin(ngroup,newname, (Double_t*) 0); }
+   virtual TH1     *Rebin(Int_t ngroup=2, const char*newname="", const Double_t *xbins=nullptr);  // *MENU*
+   virtual TH1     *RebinX(Int_t ngroup=2, const char*newname="") { return Rebin(ngroup,newname, (Double_t*) nullptr); }
    virtual void     Rebuild(Option_t *option="");
    virtual void     RecursiveRemove(TObject *obj);
    virtual void     Reset(Option_t *option="");
@@ -370,7 +370,7 @@ public:
    virtual void     SetBuffer(Int_t buffersize, Option_t *option="");
    virtual UInt_t   SetCanExtend(UInt_t extendBitMask);
    virtual void     SetContent(const Double_t *content);
-   virtual void     SetContour(Int_t nlevels, const Double_t *levels=0);
+   virtual void     SetContour(Int_t nlevels, const Double_t *levels=nullptr);
    virtual void     SetContourLevel(Int_t level, Double_t value);
    static  void     SetDefaultBufferSize(Int_t buffersize=1000);
    static  void     SetDefaultSumw2(Bool_t sumw2=kTRUE);

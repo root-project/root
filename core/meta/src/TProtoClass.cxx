@@ -99,8 +99,8 @@ TProtoClass::TProtoClass(TClass* cl):
          fPRealData.push_back(protoRealData);
       }
 
-      if (gDebug > 2) {
-         for (auto data : fPRealData) {
+      // if (gDebug > 2) {
+         // for (const auto &data : fPRealData) {
             // const auto classType = dataPtr->IsA();
             // const auto dataName = data.fName;
             // const auto dataClass = data.fClass;
@@ -112,8 +112,8 @@ TProtoClass::TProtoClass(TClass* cl):
             //    Info("TProtoClass","Data is a objectstring: %s", dataPtrName);
             // if (dataPtr->TestBit(TRealData::kTransient))
             //    Info("TProtoClass","And is transient");
-         }
-      }
+         // }
+      // }
    }
 
    // this crashes

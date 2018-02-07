@@ -91,7 +91,7 @@ TMVA::VariableInfo::VariableInfo()
      fXrmsNorm     ( 0 ),
      fXvarianceNorm( 0 ),
      fNormalized   ( kFALSE ),
-     fExternalData ( 0 ),
+     fExternalData ( nullptr ),
      fVarCounter   ( 0 )
 {
    fXminNorm     =  1e30;

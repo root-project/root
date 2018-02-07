@@ -69,7 +69,7 @@ ClassImp(TMVA::BinarySearchTree);
 ////////////////////////////////////////////////////////////////////////////////
 /// default constructor
 
-TMVA::BinarySearchTree::BinarySearchTree( void ) :
+TMVA::BinarySearchTree::BinarySearchTree() :
 BinaryTree(),
    fPeriod      ( 1 ),
    fCurrentDepth( 0 ),
@@ -98,11 +98,10 @@ TMVA::BinarySearchTree::BinarySearchTree( const BinarySearchTree &b)
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::BinarySearchTree::~BinarySearchTree( void )
+TMVA::BinarySearchTree::~BinarySearchTree()
 {
-   for(std::vector< std::pair<Double_t, const TMVA::Event*> >::iterator pIt = fNormalizeTreeTable.begin();
-       pIt != fNormalizeTreeTable.end(); ++pIt) {
-      delete pIt->second;
+   for(auto & pIt : fNormalizeTreeTable) {
+      delete pIt.second;
    }
 }
 
@@ -125,7 +124,7 @@ void TMVA::BinarySearchTree::Insert( const Event* event )
    fCurrentDepth=0;
    fStatisticsIsValid = kFALSE;
 
-   if (this->GetRoot() == NULL) {           // If the list is empty...
+   if (this->GetRoot() == nullptr) {           // If the list is empty...
       this->SetRoot( new BinarySearchTreeNode(event)); //Make the new node the root.
       // have to use "s" for start as "r" for "root" would be the same as "r" for "right"
       this->GetRoot()->SetPos('s');
@@ -160,7 +159,7 @@ void TMVA::BinarySearchTree::Insert( const Event *event,
    fStatisticsIsValid = kFALSE;
 
    if (node->GoesLeft(*event)){    // If the adding item is less than the current node's data...
-      if (node->GetLeft() != NULL){            // If there is a left node...
+      if (node->GetLeft() != nullptr){            // If there is a left node...
          // Add the new event to the left node
          this->Insert(event, node->GetLeft());
       }
@@ -177,7 +176,7 @@ void TMVA::BinarySearchTree::Insert( const Event *event,
       }
    }
    else if (node->GoesRight(*event)) { // If the adding item is less than or equal to the current node's data...
-      if (node->GetRight() != NULL) {              // If there is a right node...
+      if (node->GetRight() != nullptr) {              // If there is a right node...
          // Add the new node to it.
          this->Insert(event, node->GetRight());
       }
@@ -209,7 +208,7 @@ TMVA::BinarySearchTreeNode* TMVA::BinarySearchTree::Search( Event* event ) const
 
 TMVA::BinarySearchTreeNode* TMVA::BinarySearchTree::Search(Event* event, Node* node) const
 {
-   if (node != NULL) {               // If the node is not NULL...
+   if (node != nullptr) {               // If the node is not NULL...
       // If we have found the node...
       if (((BinarySearchTreeNode*)(node))->EqualsMe(*event))
          return (BinarySearchTreeNode*)node;                  // Return it
@@ -218,13 +217,13 @@ TMVA::BinarySearchTreeNode* TMVA::BinarySearchTree::Search(Event* event, Node* n
       else                          //If the node's data is less than the search item...
          return this->Search(event, node->GetRight()); //Search the right node.
    }
-   else return NULL; //If the node is NULL, return NULL.
+   else return nullptr; //If the node is NULL, return NULL.
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return the sum of event (node) weights
 
-Double_t TMVA::BinarySearchTree::GetSumOfWeights( void ) const
+Double_t TMVA::BinarySearchTree::GetSumOfWeights() const
 {
    if (fSumOfWeights <= 0) {
       Log() << kWARNING << "you asked for the SumOfWeights, which is not filled yet"
@@ -285,7 +284,7 @@ Double_t TMVA::BinarySearchTree::Fill( const std::vector<Event*>& events, Int_t 
          fSumOfWeights += events[ievt]->GetWeight();
       }
    } // end of event loop
-   CalcStatistics(0);
+   CalcStatistics(nullptr);
 
    return fSumOfWeights;
 }
@@ -354,8 +353,8 @@ void TMVA::BinarySearchTree::NormalizeTree ( std::vector< std::pair<Double_t, co
 void TMVA::BinarySearchTree::NormalizeTree()
 {
    SetNormalize( kFALSE );
-   Clear( NULL );
-   this->SetRoot(NULL);
+   Clear( nullptr );
+   this->SetRoot(nullptr);
    NormalizeTree( fNormalizeTreeTable.begin(), fNormalizeTreeTable.end(), 0 );
 }
 
@@ -364,12 +363,12 @@ void TMVA::BinarySearchTree::NormalizeTree()
 
 void TMVA::BinarySearchTree::Clear( Node* n )
 {
-   BinarySearchTreeNode* currentNode = (BinarySearchTreeNode*)(n == NULL ? this->GetRoot() : n);
+   BinarySearchTreeNode* currentNode = (BinarySearchTreeNode*)(n == nullptr ? this->GetRoot() : n);
 
-   if (currentNode->GetLeft()  != 0) Clear( currentNode->GetLeft()  );
-   if (currentNode->GetRight() != 0) Clear( currentNode->GetRight() );
+   if (currentNode->GetLeft()  != nullptr) Clear( currentNode->GetLeft()  );
+   if (currentNode->GetRight() != nullptr) Clear( currentNode->GetRight() );
 
-   if (n != NULL) delete n;
+   if (n != nullptr) delete n;
 
    return;
 }
@@ -391,16 +390,16 @@ Double_t TMVA::BinarySearchTree::SearchVolume( Volume* volume,
 Double_t TMVA::BinarySearchTree::SearchVolume( Node* t, Volume* volume, Int_t depth,
                                                std::vector<const BinarySearchTreeNode*>* events )
 {
-   if (t==NULL) return 0;  // Are we at an outer leave?
+   if (t==nullptr) return 0;  // Are we at an outer leave?
 
    BinarySearchTreeNode* st = (BinarySearchTreeNode*)t;
 
    Double_t count = 0.0;
    if (InVolume( st->GetEventV(), volume )) {
       count += st->GetWeight();
-      if (NULL != events) events->push_back( st );
+      if (nullptr != events) events->push_back( st );
    }
-   if (st->GetLeft()==NULL && st->GetRight()==NULL) {
+   if (st->GetLeft()==nullptr && st->GetRight()==nullptr) {
 
       return count;  // Are we at an outer leave?
    }
@@ -445,7 +444,7 @@ void TMVA::BinarySearchTree::CalcStatistics( Node* n )
    BinarySearchTreeNode * currentNode = (BinarySearchTreeNode*)n;
 
    // default, start at the tree top, then descend recursively
-   if (n == NULL) {
+   if (n == nullptr) {
       fSumOfWeights = 0;
       for (Int_t sb=0; sb<2; sb++) {
          fNEventsW[sb]  = 0;
@@ -462,7 +461,7 @@ void TMVA::BinarySearchTree::CalcStatistics( Node* n )
          }
       }
       currentNode = (BinarySearchTreeNode*) this->GetRoot();
-      if (currentNode == NULL) return; // no root-node
+      if (currentNode == nullptr) return; // no root-node
    }
 
    const std::vector<Float_t> & evtVec = currentNode->GetEventV();
@@ -482,10 +481,10 @@ void TMVA::BinarySearchTree::CalcStatistics( Node* n )
       if (val > fMax[type][j]) fMax[type][j] = val;
    }
 
-   if ( (currentNode->GetLeft()  != NULL) ) CalcStatistics( currentNode->GetLeft() );
-   if ( (currentNode->GetRight() != NULL) ) CalcStatistics( currentNode->GetRight() );
+   if ( (currentNode->GetLeft()  != nullptr) ) CalcStatistics( currentNode->GetLeft() );
+   if ( (currentNode->GetRight() != nullptr) ) CalcStatistics( currentNode->GetRight() );
 
-   if (n == NULL) { // i.e. the root node
+   if (n == nullptr) { // i.e. the root node
       for (Int_t sb=0; sb<2; sb++) {
          for (UInt_t j=0; j<fPeriod; j++) {
             if (fNEventsW[sb] == 0) { fMeans[sb][j] = fRMS[sb][j] = 0; continue; }
@@ -506,7 +505,7 @@ void TMVA::BinarySearchTree::CalcStatistics( Node* n )
 Int_t TMVA::BinarySearchTree::SearchVolumeWithMaxLimit( Volume *volume, std::vector<const BinarySearchTreeNode*>* events,
                                                         Int_t max_points )
 {
-   if (this->GetRoot() == NULL) return 0;  // Are we at an outer leave?
+   if (this->GetRoot() == nullptr) return 0;  // Are we at an outer leave?
 
    std::queue< std::pair< const BinarySearchTreeNode*, Int_t > > queue;
    std::pair< const BinarySearchTreeNode*, Int_t > st = std::make_pair( (const BinarySearchTreeNode*)this->GetRoot(), 0 );
@@ -522,7 +521,7 @@ Int_t TMVA::BinarySearchTree::SearchVolumeWithMaxLimit( Volume *volume, std::vec
 
       if (InVolume( st.first->GetEventV(), volume )) {
          count++;
-         if (NULL != events) events->push_back( st.first );
+         if (nullptr != events) events->push_back( st.first );
       }
 
       Bool_t tl, tr;
@@ -534,8 +533,8 @@ Int_t TMVA::BinarySearchTree::SearchVolumeWithMaxLimit( Volume *volume, std::vec
                << d << " != " << "node "<< st.first->GetSelector() << Endl;
       }
 
-      tl = (*(volume->fLower))[d] <  st.first->GetEventV()[d] && st.first->GetLeft()  != NULL;  // Should we descend left?
-      tr = (*(volume->fUpper))[d] >= st.first->GetEventV()[d] && st.first->GetRight() != NULL;  // Should we descend right?
+      tl = (*(volume->fLower))[d] <  st.first->GetEventV()[d] && st.first->GetLeft()  != nullptr;  // Should we descend left?
+      tr = (*(volume->fUpper))[d] >= st.first->GetEventV()[d] && st.first->GetRight() != nullptr;  // Should we descend right?
 
       if (tl) queue.push( std::make_pair( (const BinarySearchTreeNode*)st.first->GetLeft(), d+1 ) );
       if (tr) queue.push( std::make_pair( (const BinarySearchTreeNode*)st.first->GetRight(), d+1 ) );

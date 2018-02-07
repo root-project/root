@@ -103,7 +103,7 @@ ClassImp(TMVA::MethodPDEFoam);
    , fMaxDepth(0)
    , fKernelStr("None")
    , fKernel(kNone)
-   , fKernelEstimator(NULL)
+   , fKernelEstimator(nullptr)
    , fTargetSelectionStr("Mean")
    , fTargetSelection(kMean)
    , fFillFoamWithOrigWeights(kFALSE)
@@ -139,7 +139,7 @@ TMVA::MethodPDEFoam::MethodPDEFoam( DataSetInfo& dsi,
    , fMaxDepth(0)
    , fKernelStr("None")
    , fKernel(kNone)
-   , fKernelEstimator(NULL)
+   , fKernelEstimator(nullptr)
    , fTargetSelectionStr("Mean")
    , fTargetSelection(kMean)
    , fFillFoamWithOrigWeights(kFALSE)
@@ -168,7 +168,7 @@ Bool_t TMVA::MethodPDEFoam::HasAnalysisType( Types::EAnalysisType type, UInt_t n
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialization called by all constructors
 
-void TMVA::MethodPDEFoam::Init( void )
+void TMVA::MethodPDEFoam::Init()
 {
    // init PDEFoam options
    fSigBgSeparated = kFALSE;   // default: unified foam
@@ -188,7 +188,7 @@ void TMVA::MethodPDEFoam::Init( void )
    fDTSeparation   = kFoam;    // separation type
 
    fKernel         = kNone; // default: use no kernel
-   fKernelEstimator= NULL;  // kernel estimator used during evaluation
+   fKernelEstimator= nullptr;  // kernel estimator used during evaluation
    fTargetSelection= kMean; // default: use mean for target selection (only multi target regression!)
 
    fCompress              = kTRUE;  // compress ROOT output file
@@ -307,11 +307,11 @@ void TMVA::MethodPDEFoam::ProcessOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodPDEFoam::~MethodPDEFoam( void )
+TMVA::MethodPDEFoam::~MethodPDEFoam()
 {
    DeleteFoams();
 
-   if (fKernelEstimator != NULL)
+   if (fKernelEstimator != nullptr)
       delete fKernelEstimator;
 }
 
@@ -427,7 +427,7 @@ void TMVA::MethodPDEFoam::CalcXminXmax()
 ////////////////////////////////////////////////////////////////////////////////
 /// Train PDE-Foam depending on the set options
 
-void TMVA::MethodPDEFoam::Train( void )
+void TMVA::MethodPDEFoam::Train()
 {
    Log() << kVERBOSE << "Calculate Xmin and Xmax for every dimension" << Endl;
    CalcXminXmax();
@@ -465,9 +465,9 @@ void TMVA::MethodPDEFoam::Train( void )
    }
 
    // delete the binary search tree in order to save memory
-   for(UInt_t i=0; i<fFoam.size(); i++) {
-      if(fFoam.at(i))
-         fFoam.at(i)->DeleteBinarySearchTree();
+   for(auto & i : fFoam) {
+      if(i)
+         i->DeleteBinarySearchTree();
    }
    ExitFromTraining();
 }
@@ -733,8 +733,8 @@ Double_t TMVA::MethodPDEFoam::GetMvaValue( Double_t* err, Double_t* errUpper )
    // calculate the error
    if (err || errUpper) {
       const Double_t discr_error = CalculateMVAError();
-      if (err != 0) *err = discr_error;
-      if (errUpper != 0) *errUpper = discr_error;
+      if (err != nullptr) *err = discr_error;
+      if (errUpper != nullptr) *errUpper = discr_error;
    }
 
    if (fUseYesNoCell)
@@ -791,7 +791,7 @@ const std::vector<Float_t>& TMVA::MethodPDEFoam::GetMulticlassValues()
    const TMVA::Event *ev = GetEvent();
    std::vector<Float_t> xvec = ev->GetValues();
 
-   if (fMulticlassReturnVal == NULL)
+   if (fMulticlassReturnVal == nullptr)
       fMulticlassReturnVal = new std::vector<Float_t>();
    fMulticlassReturnVal->clear();
    fMulticlassReturnVal->reserve(DataInfo().GetNClasses());
@@ -827,10 +827,10 @@ const TMVA::Ranking* TMVA::MethodPDEFoam::CreateRanking()
    std::vector<Float_t> importance(GetNvar(), 0);
 
    // determine variable importances
-   for (UInt_t ifoam = 0; ifoam < fFoam.size(); ++ifoam) {
+   for (auto & ifoam : fFoam) {
       // get the number of cuts made in every dimension of foam
-      PDEFoamCell *root_cell = fFoam.at(ifoam)->GetRootCell();
-      std::vector<UInt_t> nCuts(fFoam.at(ifoam)->GetTotDim(), 0);
+      PDEFoamCell *root_cell = ifoam->GetRootCell();
+      std::vector<UInt_t> nCuts(ifoam->GetTotDim(), 0);
       GetNCuts(root_cell, nCuts);
 
       // fill the importance vector (ignoring the target dimensions in
@@ -875,14 +875,14 @@ const TMVA::Ranking* TMVA::MethodPDEFoam::CreateRanking()
 
 void TMVA::MethodPDEFoam::GetNCuts(PDEFoamCell *cell, std::vector<UInt_t> &nCuts)
 {
-   if (cell == NULL || cell->GetStat() == 1) // cell is active
+   if (cell == nullptr || cell->GetStat() == 1) // cell is active
       return;
 
    nCuts.at(cell->GetBest())++;
 
-   if (cell->GetDau0() != NULL)
+   if (cell->GetDau0() != nullptr)
       GetNCuts(cell->GetDau0(), nCuts);
-   if (cell->GetDau1() != NULL)
+   if (cell->GetDau1() != nullptr)
       GetNCuts(cell->GetDau1(), nCuts);
 }
 
@@ -948,8 +948,8 @@ TMVA::PDEFoam* TMVA::MethodPDEFoam::InitFoam(TString foamcaption, EFoamType ft, 
    }
 
    // create PDEFoam and PDEFoamDensityBase
-   PDEFoam *pdefoam = NULL;
-   PDEFoamDensityBase *density = NULL;
+   PDEFoam *pdefoam = nullptr;
+   PDEFoamDensityBase *density = nullptr;
    if (fDTSeparation == kFoam) {
       // use PDEFoam algorithm
       switch (ft) {
@@ -979,7 +979,7 @@ TMVA::PDEFoam* TMVA::MethodPDEFoam::InitFoam(TString foamcaption, EFoamType ft, 
 
       // create separation type class, which is owned by
       // PDEFoamDecisionTree (i.e. PDEFoamDecisionTree will delete it)
-      SeparationBase *sepType = NULL;
+      SeparationBase *sepType = nullptr;
       switch (fDTSeparation) {
       case kGiniIndex:
          sepType = new GiniIndex();
@@ -1049,7 +1049,7 @@ TMVA::PDEFoam* TMVA::MethodPDEFoam::InitFoam(TString foamcaption, EFoamType ft, 
 
 const std::vector<Float_t>& TMVA::MethodPDEFoam::GetRegressionValues()
 {
-   if (fRegressionReturnVal == 0) fRegressionReturnVal = new std::vector<Float_t>();
+   if (fRegressionReturnVal == nullptr) fRegressionReturnVal = new std::vector<Float_t>();
    fRegressionReturnVal->clear();
    fRegressionReturnVal->reserve(Data()->GetNTargets());
 
@@ -1072,8 +1072,8 @@ const std::vector<Float_t>& TMVA::MethodPDEFoam::GetRegressionValues()
       if (targets.size() != Data()->GetNTargets())
          Log() << kFATAL << "Something wrong with multi-target regression foam: "
                << "number of targets does not match the DataSet()" << Endl;
-      for(UInt_t i=0; i<targets.size(); i++)
-         fRegressionReturnVal->push_back(targets.at(i));
+      for(float target : targets)
+         fRegressionReturnVal->push_back(target);
    }
    else {
       fRegressionReturnVal->push_back(fFoam.at(0)->GetCellValue(vals, kValue, fKernelEstimator));
@@ -1110,9 +1110,9 @@ TMVA::PDEFoamKernelBase* TMVA::MethodPDEFoam::CreatePDEFoamKernel()
       return new PDEFoamKernelGauss(fVolFrac/2.0);
    default:
       Log() << kFATAL << "Kernel: " << fKernel << " not supported!" << Endl;
-      return NULL;
+      return nullptr;
    }
-   return NULL;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1120,8 +1120,8 @@ TMVA::PDEFoamKernelBase* TMVA::MethodPDEFoam::CreatePDEFoamKernel()
 
 void TMVA::MethodPDEFoam::DeleteFoams()
 {
-   for (UInt_t i=0; i<fFoam.size(); i++)
-      if (fFoam.at(i)) delete fFoam.at(i);
+   for (auto & i : fFoam)
+      if (i) delete i;
    fFoam.clear();
 }
 
@@ -1135,15 +1135,15 @@ void TMVA::MethodPDEFoam::Reset()
 {
    DeleteFoams();
 
-   if (fKernelEstimator != NULL) {
+   if (fKernelEstimator != nullptr) {
       delete fKernelEstimator;
-      fKernelEstimator = NULL;
+      fKernelEstimator = nullptr;
    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::MethodPDEFoam::PrintCoefficients( void )
+void TMVA::MethodPDEFoam::PrintCoefficients()
 {}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1205,15 +1205,15 @@ void TMVA::MethodPDEFoam::WriteFoamsToFile() const
    // add foam indicator to distinguish from main weight file
    rfname.ReplaceAll( ".xml", "_foams.root" );
 
-   TFile *rootFile = 0;
+   TFile *rootFile = nullptr;
    if (fCompress) rootFile = new TFile(rfname, "RECREATE", "foamfile", 9);
    else           rootFile = new TFile(rfname, "RECREATE");
 
    // write the foams
-   for (UInt_t i=0; i<fFoam.size(); ++i) {
-      Log() << "writing foam " << fFoam.at(i)->GetFoamName().Data()
+   for (auto i : fFoam) {
+      Log() << "writing foam " << i->GetFoamName().Data()
             << " to file" << Endl;
-      fFoam.at(i)->Write(fFoam.at(i)->GetFoamName().Data());
+      i->Write(i->GetFoamName().Data());
    }
 
    rootFile->Close();
@@ -1348,7 +1348,7 @@ void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode )
    ReadFoamsFromFile();
 
    // recreate the pdefoam kernel estimator
-   if (fKernelEstimator != NULL)
+   if (fKernelEstimator != nullptr)
       delete fKernelEstimator;
    fKernelEstimator = CreatePDEFoamKernel();
 }
@@ -1373,22 +1373,22 @@ void TMVA::MethodPDEFoam::ReadWeightsFromXML( void* wghtnode )
 
 TMVA::PDEFoam* TMVA::MethodPDEFoam::ReadClonedFoamFromFile(TFile* file, const TString& foamname)
 {
-   if (file == NULL) {
+   if (file == nullptr) {
       Log() << kWARNING << "<ReadClonedFoamFromFile>: NULL pointer given" << Endl;
-      return NULL;
+      return nullptr;
    }
 
    // try to load the foam from the file
    PDEFoam *foam = (PDEFoam*) file->Get(foamname);
-   if (foam == NULL) {
-      return NULL;
+   if (foam == nullptr) {
+      return nullptr;
    }
    // try to clone the foam
    foam = (PDEFoam*) foam->Clone();
-   if (foam == NULL) {
+   if (foam == nullptr) {
       Log() << kWARNING << "<ReadClonedFoamFromFile>: " << foamname
             << " could not be cloned!" << Endl;
-      return NULL;
+      return nullptr;
    }
 
    return foam;
@@ -1425,7 +1425,7 @@ void TMVA::MethodPDEFoam::ReadFoamsFromFile()
       } else {
          // try to load discriminator foam
          PDEFoam *foam = ReadClonedFoamFromFile(rootFile, "DiscrFoam");
-         if (foam != NULL)
+         if (foam != nullptr)
             fFoam.push_back(foam);
          else {
             // load multiclass foams
@@ -1483,12 +1483,12 @@ TMVA::ETargetSelection TMVA::MethodPDEFoam::UIntToTargetSelection(UInt_t its)
 
 void TMVA::MethodPDEFoam::FillVariableNamesToFoam() const
 {
-   for (UInt_t ifoam=0; ifoam<fFoam.size(); ifoam++) {
-      for (Int_t idim=0; idim<fFoam.at(ifoam)->GetTotDim(); idim++) {
+   for (auto ifoam : fFoam) {
+      for (Int_t idim=0; idim<ifoam->GetTotDim(); idim++) {
          if(fMultiTargetRegression && (UInt_t)idim>=DataInfo().GetNVariables())
-            fFoam.at(ifoam)->AddVariableName(DataInfo().GetTargetInfo(idim-DataInfo().GetNVariables()).GetExpression().Data());
+            ifoam->AddVariableName(DataInfo().GetTargetInfo(idim-DataInfo().GetNVariables()).GetExpression().Data());
          else
-            fFoam.at(ifoam)->AddVariableName(DataInfo().GetVariableInfo(idim).GetExpression().Data());
+            ifoam->AddVariableName(DataInfo().GetVariableInfo(idim).GetExpression().Data());
       }
    }
 }

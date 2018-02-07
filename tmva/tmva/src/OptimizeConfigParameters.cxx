@@ -63,10 +63,10 @@ TMVA::OptimizeConfigParameters::OptimizeConfigParameters(MethodBase * const meth
    fTuneParameters(tuneParameters),
    fFOMType(fomType),
    fOptimizationFitType(optimizationFitType),
-   fMvaSig(NULL),
-   fMvaBkg(NULL),
-   fMvaSigFineBin(NULL),
-   fMvaBkgFineBin(NULL),
+   fMvaSig(nullptr),
+   fMvaBkg(nullptr),
+   fMvaSigFineBin(nullptr),
+   fMvaBkgFineBin(nullptr),
    fNotDoneYet(kFALSE)
 {
    std::string name = "OptimizeConfigParameters_";
@@ -149,9 +149,9 @@ std::map<TString,Double_t> TMVA::OptimizeConfigParameters::optimize()
 
 std::vector< int > TMVA::OptimizeConfigParameters::GetScanIndices( int val, std::vector<int> base){
    std::vector < int > indices;
-   for (UInt_t i=0; i< base.size(); i++){
-      indices.push_back(val % base[i] );
-      val = int( floor( float(val) / float(base[i]) ) );
+   for (int i : base){
+      indices.push_back(val % i );
+      val = int( floor( float(val) / float(i) ) );
    }
    return indices;
 }
@@ -194,9 +194,9 @@ void TMVA::OptimizeConfigParameters::optimizeScan()
    }
    Int_t Ntot = 1;
    std::vector< int > Nindividual;
-   for (UInt_t i=0; i<v.size(); i++) {
-      Ntot *= v[i].size();
-      Nindividual.push_back(v[i].size());
+   for (auto & i : v) {
+      Ntot *= i.size();
+      Nindividual.push_back(i.size());
    }
    //loop on the total number of different combinations
 
@@ -208,9 +208,8 @@ void TMVA::OptimizeConfigParameters::optimizeScan()
       }
       Log() << kINFO << "--------------------------" << Endl;
       Log() << kINFO <<"Settings being evaluated:" << Endl;
-      for (std::map<TString,Double_t>::iterator it_print=currentParameters.begin();
-           it_print!=currentParameters.end(); ++it_print){
-         Log() << kINFO << "  " << it_print->first  << " = " << it_print->second << Endl;
+      for (auto & currentParameter : currentParameters){
+         Log() << kINFO << "  " << currentParameter.first  << " = " << currentParameter.second << Endl;
       }
 
       GetMethod()->Reset();
@@ -227,9 +226,8 @@ void TMVA::OptimizeConfigParameters::optimizeScan()
 
       if (currentFOM > bestFOM) {
          bestFOM = currentFOM;
-         for (std::map<TString,Double_t>::iterator iter=currentParameters.begin();
-              iter != currentParameters.end(); ++iter){
-            fTunedParameters[iter->first]=iter->second;
+         for (auto & currentParameter : currentParameters){
+            fTunedParameters[currentParameter.first]=currentParameter.second;
          }
       }
    }
@@ -259,7 +257,7 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
 
    // create the fitter
 
-   FitterBase* fitter = NULL;
+   FitterBase* fitter = nullptr;
 
    if ( fOptimizationFitType == "Minuit"  ) {
       TString opt="FitStrategy=0:UseImprove=False:UseMinos=False:Tolerance=100";
@@ -288,7 +286,7 @@ void TMVA::OptimizeConfigParameters::optimizeFit()
    fitter->Run(pars);
 
    // clean up
-   for (UInt_t ipar=0; ipar<ranges.size(); ipar++) delete ranges[ipar];
+   for (auto & range : ranges) delete range;
 
    GetMethod()->Reset();
 
@@ -401,16 +399,16 @@ void TMVA::OptimizeConfigParameters::GetMVADists()
 
    //   fMethod->GetTransformationHandler().CalcTransformations(fMethod->Data()->GetEventCollection(Types::kTesting));
 
-   for (UInt_t iev=0; iev < events.size() ; iev++){
+   for (auto event : events){
       //      std::cout << " GetMVADists event " << iev << std::endl;
       //      std::cout << " Class  = " << events[iev]->GetClass() << std::endl;
       //         std::cout << " MVA Value = " << fMethod->GetMvaValue(events[iev]) << std::endl;
-      if (events[iev]->GetClass() == signalClassNr) {
-         fMvaSig->Fill(fMethod->GetMvaValue(events[iev]),events[iev]->GetWeight());
-         fMvaSigFineBin->Fill(fMethod->GetMvaValue(events[iev]),events[iev]->GetWeight());
+      if (event->GetClass() == signalClassNr) {
+         fMvaSig->Fill(fMethod->GetMvaValue(event),event->GetWeight());
+         fMvaSigFineBin->Fill(fMethod->GetMvaValue(event),event->GetWeight());
       } else {
-         fMvaBkg->Fill(fMethod->GetMvaValue(events[iev]),events[iev]->GetWeight());
-         fMvaBkgFineBin->Fill(fMethod->GetMvaValue(events[iev]),events[iev]->GetWeight());
+         fMvaBkg->Fill(fMethod->GetMvaValue(event),event->GetWeight());
+         fMvaBkgFineBin->Fill(fMethod->GetMvaValue(event),event->GetWeight());
       }
    }
 }

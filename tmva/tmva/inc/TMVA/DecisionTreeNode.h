@@ -151,34 +151,34 @@ namespace TMVA {
       // set the cut value applied at this node
       void  SetCutValue ( Float_t c ) { fCutValue  = c; }
       // return the cut value applied at this node
-      Float_t GetCutValue ( void ) const { return fCutValue;  }
+      Float_t GetCutValue () const { return fCutValue;  }
 
       // set true: if event variable > cutValue ==> signal , false otherwise
       void SetCutType( Bool_t t   ) { fCutType = t; }
       // return kTRUE: Cuts select signal, kFALSE: Cuts select bkg
-      Bool_t GetCutType( void ) const { return fCutType; }
+      Bool_t GetCutType() const { return fCutType; }
 
       // set node type: 1 signal node, -1 bkg leave, 0 intermediate Node
       void  SetNodeType( Int_t t ) { fNodeType = t;}
       // return node type: 1 signal node, -1 bkg leave, 0 intermediate Node
-      Int_t GetNodeType( void ) const { return fNodeType; }
+      Int_t GetNodeType() const { return fNodeType; }
 
       //return  S/(S+B) (purity) at this node (from  training)
-      Float_t GetPurity( void ) const { return fPurity;}
+      Float_t GetPurity() const { return fPurity;}
       //calculate S/(S+B) (purity) at this node (from  training)
-      void SetPurity( void );
+      void SetPurity();
 
       //set the response of the node (for regression)
       void SetResponse( Float_t r ) { fResponse = r;}
 
       //return the response of the node (for regression)
-      Float_t GetResponse( void ) const { return fResponse;}
+      Float_t GetResponse() const { return fResponse;}
 
       //set the RMS of the response of the node (for regression)
       void SetRMS( Float_t r ) { fRMS = r;}
 
       //return the RMS of the response of the node (for regression)
-      Float_t GetRMS( void ) const { return fRMS;}
+      Float_t GetRMS() const { return fRMS;}
 
       // set the sum of the signal weights in the node
       void SetNSigEvents( Float_t s ) { fTrainInfo->fNSigEvents = s; }
@@ -226,42 +226,42 @@ namespace TMVA {
       void IncrementNEvents_unweighted( ){ fTrainInfo->fNEvents_unweighted +=1 ; }
 
       // return the sum of the signal weights in the node
-      Float_t GetNSigEvents( void ) const  { return fTrainInfo->fNSigEvents; }
+      Float_t GetNSigEvents() const  { return fTrainInfo->fNSigEvents; }
 
       // return the sum of the backgr weights in the node
-      Float_t GetNBkgEvents( void ) const  { return fTrainInfo->fNBkgEvents; }
+      Float_t GetNBkgEvents() const  { return fTrainInfo->fNBkgEvents; }
 
       // return  the number of events that entered the node (during training)
-      Float_t GetNEvents( void ) const  { return fTrainInfo->fNEvents; }
+      Float_t GetNEvents() const  { return fTrainInfo->fNEvents; }
 
       // return the sum of unweighted signal weights in the node
-      Float_t GetNSigEvents_unweighted( void ) const  { return fTrainInfo->fNSigEvents_unweighted; }
+      Float_t GetNSigEvents_unweighted() const  { return fTrainInfo->fNSigEvents_unweighted; }
 
       // return the sum of unweighted backgr weights in the node
-      Float_t GetNBkgEvents_unweighted( void ) const  { return fTrainInfo->fNBkgEvents_unweighted; }
+      Float_t GetNBkgEvents_unweighted() const  { return fTrainInfo->fNBkgEvents_unweighted; }
 
       // return  the number of unweighted events that entered the node (during training)
-      Float_t GetNEvents_unweighted( void ) const  { return fTrainInfo->fNEvents_unweighted; }
+      Float_t GetNEvents_unweighted() const  { return fTrainInfo->fNEvents_unweighted; }
 
       // return the sum of unboosted signal weights in the node
-      Float_t GetNSigEvents_unboosted( void ) const  { return fTrainInfo->fNSigEvents_unboosted; }
+      Float_t GetNSigEvents_unboosted() const  { return fTrainInfo->fNSigEvents_unboosted; }
 
       // return the sum of unboosted backgr weights in the node
-      Float_t GetNBkgEvents_unboosted( void ) const  { return fTrainInfo->fNBkgEvents_unboosted; }
+      Float_t GetNBkgEvents_unboosted() const  { return fTrainInfo->fNBkgEvents_unboosted; }
 
       // return  the number of unboosted events that entered the node (during training)
-      Float_t GetNEvents_unboosted( void ) const  { return fTrainInfo->fNEvents_unboosted; }
+      Float_t GetNEvents_unboosted() const  { return fTrainInfo->fNEvents_unboosted; }
 
 
       // set the choosen index, measure of "purity" (separation between S and B) AT this node
       void SetSeparationIndex( Float_t sep ){ fTrainInfo->fSeparationIndex =sep ; }
       // return the separation index AT this node
-      Float_t GetSeparationIndex( void ) const  { return fTrainInfo->fSeparationIndex; }
+      Float_t GetSeparationIndex() const  { return fTrainInfo->fSeparationIndex; }
 
       // set the separation, or information gained BY this nodes selection
       void SetSeparationGain( Float_t sep ){ fTrainInfo->fSeparationGain =sep ; }
       // return the gain in separation obtained by this nodes selection
-      Float_t GetSeparationGain( void ) const  { return fTrainInfo->fSeparationGain; }
+      Float_t GetSeparationGain() const  { return fTrainInfo->fSeparationGain; }
 
       // printout of the node
       virtual void Print( std::ostream& os ) const;
@@ -283,9 +283,9 @@ namespace TMVA {
       inline virtual DecisionTreeNode* GetParent( ) const { return static_cast<DecisionTreeNode*>(fParent); }
 
       // set pointer to the left/right daughter and parent node
-      inline virtual void SetLeft  (Node* l) { fLeft   = static_cast<DecisionTreeNode*>(l);} 
-      inline virtual void SetRight (Node* r) { fRight  = static_cast<DecisionTreeNode*>(r);} 
-      inline virtual void SetParent(Node* p) { fParent = static_cast<DecisionTreeNode*>(p);} 
+      inline virtual void SetLeft  (Node* l) { fLeft   = l;}
+      inline virtual void SetRight (Node* r) { fRight  = r;}
+      inline virtual void SetParent(Node* p) { fParent = p;}
 
 
 

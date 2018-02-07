@@ -112,26 +112,26 @@ namespace TMVA {
 
       // training for all booked methods
       void TrainAllMethods                 ();
-      void TrainAllMethodsForClassification( void ) { TrainAllMethods(); }
-      void TrainAllMethodsForRegression    ( void ) { TrainAllMethods(); }
+      void TrainAllMethodsForClassification() { TrainAllMethods(); }
+      void TrainAllMethodsForRegression    () { TrainAllMethods(); }
 
       // testing
       void TestAllMethods();
 
       // performance evaluation
-      void EvaluateAllMethods( void );
+      void EvaluateAllMethods();
       void EvaluateAllVariables(DataLoader *loader, TString options = "" ); 
   
       TH1F* EvaluateImportance( DataLoader *loader,VIType vitype, Types::EMVA theMethod,  TString methodTitle, const char *theOption = "" );
 
       // delete all methods and reset the method vector
-      void DeleteAllMethods( void );
+      void DeleteAllMethods();
 
       // accessors
       IMethod* GetMethod( const TString& datasetname, const TString& title ) const;
       Bool_t   HasMethod( const TString& datasetname, const TString& title ) const;
 
-      Bool_t Verbose( void ) const { return fVerbose; }
+      Bool_t Verbose() const { return fVerbose; }
       void SetVerbose( Bool_t v=kTRUE );
 
       // make ROOT-independent C++ class for classifier response 

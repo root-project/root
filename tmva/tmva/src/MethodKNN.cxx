@@ -66,7 +66,7 @@ ClassImp(TMVA::MethodKNN);
    : TMVA::MethodBase(jobName, Types::kKNN, methodTitle, theData, theOption)
    , fSumOfWeightsS(0)
    , fSumOfWeightsB(0)
-   , fModule(0)
+   , fModule(nullptr)
    , fnkNN(0)
    , fBalanceDepth(0)
    , fScaleFrac(0)
@@ -87,7 +87,7 @@ TMVA::MethodKNN::MethodKNN( DataSetInfo& theData,
    : TMVA::MethodBase( Types::kKNN, theData, theWeightFile)
    , fSumOfWeightsS(0)
    , fSumOfWeightsB(0)
-   , fModule(0)
+   , fModule(nullptr)
    , fnkNN(0)
    , fBalanceDepth(0)
    , fScaleFrac(0)
@@ -366,24 +366,24 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err, Double_t* errUpper )
    UInt_t count_all = 0;
    Double_t weight_all = 0, weight_sig = 0, weight_bac = 0;
 
-   for (kNN::List::const_iterator lit = rlist.begin(); lit != rlist.end(); ++lit) {
+   for (const auto & lit : rlist) {
 
       // get reference to current node to make code more readable
-      const kNN::Node<kNN::Event> &node = *(lit->first);
+      const kNN::Node<kNN::Event> &node = *(lit.first);
 
       // Warn about Monte-Carlo event with zero distance
       // this happens when this query event is also in learning sample
-      if (lit->second < 0.0) {
+      if (lit.second < 0.0) {
          Log() << kFATAL << "A neighbor has negative distance to query event" << Endl;
       }
-      else if (!(lit->second > 0.0)) {
+      else if (!(lit.second > 0.0)) {
          Log() << kVERBOSE << "A neighbor has zero distance to query event" << Endl;
       }
 
       // get event weight and scale weight by kernel function
       Double_t evweight = node.GetWeight();
       if      (use_gaus) evweight *= MethodKNN::GausKernel(event_knn, node.GetEvent(), rms_vec);
-      else if (use_poln) evweight *= MethodKNN::PolnKernel(TMath::Sqrt(lit->second)*kradius);
+      else if (use_poln) evweight *= MethodKNN::PolnKernel(TMath::Sqrt(lit.second)*kradius);
 
       if (fUseWeight) weight_all += evweight;
       else          ++weight_all;
@@ -434,7 +434,7 @@ Double_t TMVA::MethodKNN::GetMvaValue( Double_t* err, Double_t* errUpper )
 
 const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
 {
-   if( fRegressionReturnVal == 0 )
+   if( fRegressionReturnVal == nullptr )
       fRegressionReturnVal = new std::vector<Float_t>;
    else
       fRegressionReturnVal->clear();
@@ -469,10 +469,10 @@ const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
    Double_t weight_all = 0;
    UInt_t count_all = 0;
 
-   for (kNN::List::const_iterator lit = rlist.begin(); lit != rlist.end(); ++lit) {
+   for (const auto & lit : rlist) {
 
       // get reference to current node to make code more readable
-      const kNN::Node<kNN::Event> &node = *(lit->first);
+      const kNN::Node<kNN::Event> &node = *(lit.first);
       const kNN::VarVec &tvec = node.GetEvent().GetTargets();
       const Double_t weight = node.GetEvent().GetWeight();
 
@@ -502,8 +502,8 @@ const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
       return *fRegressionReturnVal;
    }
 
-   for (UInt_t ivar = 0; ivar < reg_vec.size(); ++ivar) {
-      reg_vec[ivar] /= weight_all;
+   for (float & ivar : reg_vec) {
+      ivar /= weight_all;
    }
 
    // copy result
@@ -517,7 +517,7 @@ const std::vector< Float_t >& TMVA::MethodKNN::GetRegressionValues()
 
 const TMVA::Ranking* TMVA::MethodKNN::CreateRanking()
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -529,22 +529,22 @@ void TMVA::MethodKNN::AddWeightsXMLTo( void* parent ) const {
    if (fEvent.size()>0) gTools().AddAttr(wght,"NVar",fEvent.begin()->GetNVar());
    if (fEvent.size()>0) gTools().AddAttr(wght,"NTgt",fEvent.begin()->GetNTgt());
 
-   for (kNN::EventVec::const_iterator event = fEvent.begin(); event != fEvent.end(); ++event) {
+   for (const auto & event : fEvent) {
 
       std::stringstream s("");
       s.precision( 16 );
-      for (UInt_t ivar = 0; ivar < event->GetNVar(); ++ivar) {
+      for (UInt_t ivar = 0; ivar < event.GetNVar(); ++ivar) {
          if (ivar>0) s << " ";
-         s << std::scientific << event->GetVar(ivar);
+         s << std::scientific << event.GetVar(ivar);
       }
 
-      for (UInt_t itgt = 0; itgt < event->GetNTgt(); ++itgt) {
-         s << " " << std::scientific << event->GetTgt(itgt);
+      for (UInt_t itgt = 0; itgt < event.GetNTgt(); ++itgt) {
+         s << " " << std::scientific << event.GetTgt(itgt);
       }
 
       void* evt = gTools().AddChild(wght, "Event", s.str().c_str());
-      gTools().AddAttr(evt,"Type", event->GetType());
-      gTools().AddAttr(evt,"Weight", event->GetWeight());
+      gTools().AddAttr(evt,"Type", event.GetType());
+      gTools().AddAttr(evt,"Weight", event.GetWeight());
    }
 }
 
@@ -688,12 +688,12 @@ void TMVA::MethodKNN::WriteWeightsToStream(TFile &rf) const
 
    kNN::Event *event = new kNN::Event();
    TTree *tree = new TTree("knn", "event tree");
-   tree->SetDirectory(0);
+   tree->SetDirectory(nullptr);
    tree->Branch("event", "TMVA::kNN::Event", &event);
 
    Double_t size = 0.0;
-   for (kNN::EventVec::const_iterator it = fEvent.begin(); it != fEvent.end(); ++it) {
-      (*event) = (*it);
+   for (const auto & it : fEvent) {
+      (*event) = it;
       size += tree->Fill();
    }
 
@@ -872,11 +872,11 @@ Double_t TMVA::MethodKNN::getKernelRadius(const kNN::List &rlist) const
    UInt_t kcount = 0;
    const UInt_t knn = static_cast<UInt_t>(fnkNN);
 
-   for (kNN::List::const_iterator lit = rlist.begin(); lit != rlist.end(); ++lit)
+   for (const auto & lit : rlist)
       {
-         if (!(lit->second > 0.0)) continue;
+         if (!(lit.second > 0.0)) continue;
 
-         if (kradius < lit->second || kradius < 0.0) kradius = lit->second;
+         if (kradius < lit.second || kradius < 0.0) kradius = lit.second;
 
          ++kcount;
          if (kcount >= knn) break;
@@ -896,12 +896,12 @@ const std::vector<Double_t> TMVA::MethodKNN::getRMS(const kNN::List &rlist, cons
    UInt_t kcount = 0;
    const UInt_t knn = static_cast<UInt_t>(fnkNN);
 
-   for (kNN::List::const_iterator lit = rlist.begin(); lit != rlist.end(); ++lit)
+   for (const auto & lit : rlist)
       {
-         if (!(lit->second > 0.0)) continue;
+         if (!(lit.second > 0.0)) continue;
 
-         const kNN::Node<kNN::Event> *node_ = lit -> first;
-         const kNN::Event &event_ = node_-> GetEvent();
+         const kNN::Node<kNN::Event> *node_ = lit.first;
+         const kNN::Event &event_ = node_->GetEvent();
 
          if (rvec.empty()) {
             rvec.insert(rvec.end(), event_.GetNVar(), 0.0);
@@ -946,10 +946,10 @@ Double_t TMVA::MethodKNN::getLDAValue(const kNN::List &rlist, const kNN::Event &
 {
    LDAEvents sig_vec, bac_vec;
 
-   for (kNN::List::const_iterator lit = rlist.begin(); lit != rlist.end(); ++lit) {
+   for (const auto & lit : rlist) {
 
       // get reference to current node to make code more readable
-      const kNN::Node<kNN::Event> &node = *(lit->first);
+      const kNN::Node<kNN::Event> &node = *(lit.first);
       const kNN::VarVec &tvec = node.GetEvent().GetVars();
 
       if (node.GetEvent().GetType() == 1) { // signal type = 1

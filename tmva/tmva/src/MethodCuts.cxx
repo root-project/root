@@ -133,34 +133,34 @@ TMVA::MethodCuts::MethodCuts( const TString& jobName,
    MethodBase( jobName, Types::kCuts, methodTitle, theData, theOption),
    fFitMethod  ( kUseGeneticAlgorithm ),
    fEffMethod  ( kUseEventSelection ),
-   fFitParams (0),
+   fFitParams (nullptr),
    fTestSignalEff(0.7),
    fEffSMin    ( 0 ),
    fEffSMax    ( 0 ),
-   fCutRangeMin( 0 ),
-   fCutRangeMax( 0 ),
-   fBinaryTreeS( 0 ),
-   fBinaryTreeB( 0 ),
-   fCutMin     ( 0 ),
-   fCutMax     ( 0 ),
-   fTmpCutMin  ( 0 ),
-   fTmpCutMax  ( 0 ),
-   fAllVarsI   ( 0 ),
+   fCutRangeMin( nullptr ),
+   fCutRangeMax( nullptr ),
+   fBinaryTreeS( nullptr ),
+   fBinaryTreeB( nullptr ),
+   fCutMin     ( nullptr ),
+   fCutMax     ( nullptr ),
+   fTmpCutMin  ( nullptr ),
+   fTmpCutMax  ( nullptr ),
+   fAllVarsI   ( nullptr ),
    fNpar       ( 0 ),
    fEffRef     ( 0 ),
-   fRangeSign  ( 0 ),
-   fRandom     ( 0 ),
-   fMeanS      ( 0 ),
-   fMeanB      ( 0 ),
-   fRmsS       ( 0 ),
-   fRmsB       ( 0 ),
-   fEffBvsSLocal( 0 ),
-   fVarHistS   ( 0 ),
-   fVarHistB   ( 0 ),
-   fVarHistS_smooth( 0 ),
-   fVarHistB_smooth( 0 ),
-   fVarPdfS    ( 0 ),
-   fVarPdfB    ( 0 ),
+   fRangeSign  ( nullptr ),
+   fRandom     ( nullptr ),
+   fMeanS      ( nullptr ),
+   fMeanB      ( nullptr ),
+   fRmsS       ( nullptr ),
+   fRmsB       ( nullptr ),
+   fEffBvsSLocal( nullptr ),
+   fVarHistS   ( nullptr ),
+   fVarHistB   ( nullptr ),
+   fVarHistS_smooth( nullptr ),
+   fVarHistB_smooth( nullptr ),
+   fVarPdfS    ( nullptr ),
+   fVarPdfB    ( nullptr ),
    fNegEffWarning( kFALSE )
 {
 }
@@ -173,34 +173,34 @@ TMVA::MethodCuts::MethodCuts( DataSetInfo& theData,
    MethodBase( Types::kCuts, theData, theWeightFile),
    fFitMethod  ( kUseGeneticAlgorithm ),
    fEffMethod  ( kUseEventSelection ),
-   fFitParams (0),
+   fFitParams (nullptr),
    fTestSignalEff(0.7),
    fEffSMin    ( 0 ),
    fEffSMax    ( 0 ),
-   fCutRangeMin( 0 ),
-   fCutRangeMax( 0 ),
-   fBinaryTreeS( 0 ),
-   fBinaryTreeB( 0 ),
-   fCutMin     ( 0 ),
-   fCutMax     ( 0 ),
-   fTmpCutMin  ( 0 ),
-   fTmpCutMax  ( 0 ),
-   fAllVarsI   ( 0 ),
+   fCutRangeMin( nullptr ),
+   fCutRangeMax( nullptr ),
+   fBinaryTreeS( nullptr ),
+   fBinaryTreeB( nullptr ),
+   fCutMin     ( nullptr ),
+   fCutMax     ( nullptr ),
+   fTmpCutMin  ( nullptr ),
+   fTmpCutMax  ( nullptr ),
+   fAllVarsI   ( nullptr ),
    fNpar       ( 0 ),
    fEffRef     ( 0 ),
-   fRangeSign  ( 0 ),
-   fRandom     ( 0 ),
-   fMeanS      ( 0 ),
-   fMeanB      ( 0 ),
-   fRmsS       ( 0 ),
-   fRmsB       ( 0 ),
-   fEffBvsSLocal( 0 ),
-   fVarHistS   ( 0 ),
-   fVarHistB   ( 0 ),
-   fVarHistS_smooth( 0 ),
-   fVarHistB_smooth( 0 ),
-   fVarPdfS    ( 0 ),
-   fVarPdfB    ( 0 ),
+   fRangeSign  ( nullptr ),
+   fRandom     ( nullptr ),
+   fMeanS      ( nullptr ),
+   fMeanB      ( nullptr ),
+   fRmsS       ( nullptr ),
+   fRmsB       ( nullptr ),
+   fEffBvsSLocal( nullptr ),
+   fVarHistS   ( nullptr ),
+   fVarHistB   ( nullptr ),
+   fVarHistS_smooth( nullptr ),
+   fVarHistB_smooth( nullptr ),
+   fVarPdfS    ( nullptr ),
+   fVarPdfB    ( nullptr ),
    fNegEffWarning( kFALSE )
 {
 }
@@ -217,13 +217,13 @@ Bool_t TMVA::MethodCuts::HasAnalysisType( Types::EAnalysisType type, UInt_t numb
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisation called by all constructors
 
-void TMVA::MethodCuts::Init( void )
+void TMVA::MethodCuts::Init()
 {
-   fVarHistS          = fVarHistB = 0;
-   fVarHistS_smooth   = fVarHistB_smooth = 0;
-   fVarPdfS           = fVarPdfB = 0;
-   fFitParams         = 0;
-   fBinaryTreeS       = fBinaryTreeB = 0;
+   fVarHistS          = fVarHistB = nullptr;
+   fVarHistS_smooth   = fVarHistB_smooth = nullptr;
+   fVarPdfS           = fVarPdfB = nullptr;
+   fFitParams         = nullptr;
+   fBinaryTreeS       = fBinaryTreeB = nullptr;
    fEffSMin           = 0;
    fEffSMax           = 0;
 
@@ -267,7 +267,7 @@ void TMVA::MethodCuts::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodCuts::~MethodCuts( void )
+TMVA::MethodCuts::~MethodCuts()
 {
    delete fRangeSign;
    delete fMeanS;
@@ -277,24 +277,24 @@ TMVA::MethodCuts::~MethodCuts( void )
    delete fFitParams;
    delete fEffBvsSLocal;
 
-   if (NULL != fCutRangeMin) delete [] fCutRangeMin;
-   if (NULL != fCutRangeMax) delete [] fCutRangeMax;
-   if (NULL != fAllVarsI)    delete [] fAllVarsI;
+   if (nullptr != fCutRangeMin) delete [] fCutRangeMin;
+   if (nullptr != fCutRangeMax) delete [] fCutRangeMax;
+   if (nullptr != fAllVarsI)    delete [] fAllVarsI;
 
    for (UInt_t i=0;i<GetNvar();i++) {
-      if (NULL != fCutMin[i]  ) delete [] fCutMin[i];
-      if (NULL != fCutMax[i]  ) delete [] fCutMax[i];
-      if (NULL != fCutRange[i]) delete fCutRange[i];
+      if (nullptr != fCutMin[i]  ) delete [] fCutMin[i];
+      if (nullptr != fCutMax[i]  ) delete [] fCutMax[i];
+      if (nullptr != fCutRange[i]) delete fCutRange[i];
    }
 
-   if (NULL != fCutMin) delete [] fCutMin;
-   if (NULL != fCutMax) delete [] fCutMax;
+   if (nullptr != fCutMin) delete [] fCutMin;
+   if (nullptr != fCutMax) delete [] fCutMax;
 
-   if (NULL != fTmpCutMin) delete [] fTmpCutMin;
-   if (NULL != fTmpCutMax) delete [] fTmpCutMax;
+   if (nullptr != fTmpCutMin) delete [] fTmpCutMin;
+   if (nullptr != fTmpCutMax) delete [] fTmpCutMax;
 
-   if (NULL != fBinaryTreeS) delete fBinaryTreeS;
-   if (NULL != fBinaryTreeB) delete fBinaryTreeB;
+   if (nullptr != fBinaryTreeS) delete fBinaryTreeS;
+   if (nullptr != fBinaryTreeB) delete fBinaryTreeB;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -336,7 +336,7 @@ void TMVA::MethodCuts::DeclareOptions()
    fCutRangeMin = new Double_t[GetNvar()];
    fCutRangeMax = new Double_t[GetNvar()];
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
-      fCutRange[ivar] = 0;
+      fCutRange[ivar] = nullptr;
       fCutRangeMin[ivar] = fCutRangeMax[ivar] = -1;
    }
 
@@ -435,7 +435,7 @@ Double_t TMVA::MethodCuts::GetMvaValue( Double_t* err, Double_t* errUpper )
    NoErrorCalc(err, errUpper);
 
    // sanity check
-   if (fCutMin == NULL || fCutMax == NULL || fNbins == 0) {
+   if (fCutMin == nullptr || fCutMax == nullptr || fNbins == 0) {
       Log() << kFATAL << "<Eval_Cuts> fCutMin/Max have zero pointer. "
             << "Did you book Cuts ?" << Endl;
    }
@@ -471,7 +471,7 @@ void TMVA::MethodCuts::PrintCuts( Double_t effS ) const
    Double_t trueEffS = GetCuts( effS, cutsMin, cutsMax );
 
    // retrieve variable expressions (could be transformations)
-   std::vector<TString>* varVec = 0;
+   std::vector<TString>* varVec = nullptr;
    if (GetTransformationHandler().GetNumOfTransformations() == 0) {
       // no transformation applied, replace by current variables
       varVec = new std::vector<TString>;
@@ -575,13 +575,13 @@ Double_t TMVA::MethodCuts::GetCuts( Double_t effS,
 ////////////////////////////////////////////////////////////////////////////////
 /// training method: here the cuts are optimised for the training sample
 
-void  TMVA::MethodCuts::Train( void )
+void  TMVA::MethodCuts::Train()
 {
    if (fEffMethod == kUsePDFs) CreateVariablePDFs(); // create PDFs for variables
 
    // create binary trees (global member variables) for signal and background
-   if (fBinaryTreeS != 0) { delete fBinaryTreeS; fBinaryTreeS = 0; }
-   if (fBinaryTreeB != 0) { delete fBinaryTreeB; fBinaryTreeB = 0; }
+   if (fBinaryTreeS != nullptr) { delete fBinaryTreeS; fBinaryTreeS = nullptr; }
+   if (fBinaryTreeB != nullptr) { delete fBinaryTreeB; fBinaryTreeB = nullptr; }
 
    // the variables may be transformed by a transformation method: to coherently
    // treat signal and background one must decide which transformation type shall
@@ -623,7 +623,7 @@ void  TMVA::MethodCuts::Train( void )
    delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal",
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
-   fEffBvsSLocal->SetDirectory(0); // it's local
+   fEffBvsSLocal->SetDirectory(nullptr); // it's local
 
    // init
    for (Int_t ibin=1; ibin<=fNbins; ibin++) fEffBvsSLocal->SetBinContent( ibin, -0.1 );
@@ -665,7 +665,7 @@ void  TMVA::MethodCuts::Train( void )
       }
 
       // create the fitter
-      FitterBase* fitter = NULL;
+      FitterBase* fitter = nullptr;
 
       switch (fFitMethod) {
       case kUseGeneticAlgorithm:
@@ -692,7 +692,7 @@ void  TMVA::MethodCuts::Train( void )
       fitter->Run();
 
       // clean up
-      for (UInt_t ivar=0; ivar<ranges.size(); ivar++) delete ranges[ivar];
+      for (auto & range : ranges) delete range;
       delete fitter;
 
    }
@@ -795,8 +795,8 @@ void  TMVA::MethodCuts::Train( void )
    // --------------------------------------------------------------------------
    else Log() << kFATAL << "Unknown minimisation method: " << fFitMethod << Endl;
 
-   if (fBinaryTreeS != 0) { delete fBinaryTreeS; fBinaryTreeS = 0; }
-   if (fBinaryTreeB != 0) { delete fBinaryTreeB; fBinaryTreeB = 0; }
+   if (fBinaryTreeS != nullptr) { delete fBinaryTreeS; fBinaryTreeS = nullptr; }
+   if (fBinaryTreeB != nullptr) { delete fBinaryTreeB; fBinaryTreeB = nullptr; }
 
    // force cut ranges within limits
    for (UInt_t ivar=0; ivar<GetNvar(); ivar++) {
@@ -1103,7 +1103,7 @@ void TMVA::MethodCuts::GetEffsfromSelection( Double_t* cutMin, Double_t* cutMax,
 ////////////////////////////////////////////////////////////////////////////////
 /// for PDF method: create efficiency reference histograms and PDFs
 
-void TMVA::MethodCuts::CreateVariablePDFs( void )
+void TMVA::MethodCuts::CreateVariablePDFs()
 {
    // create list of histograms and PDFs
    fVarHistS        = new std::vector<TH1*>( GetNvar() );
@@ -1262,10 +1262,10 @@ void  TMVA::MethodCuts::ReadWeightsFromStream( std::istream& istr )
 
    Int_t   tmpbin;
    Float_t tmpeffS, tmpeffB;
-   if (fEffBvsSLocal != 0) delete fEffBvsSLocal;
+   if (fEffBvsSLocal != nullptr) delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal",
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
-   fEffBvsSLocal->SetDirectory(0); // it's local
+   fEffBvsSLocal->SetDirectory(nullptr); // it's local
 
    for (Int_t ibin=0; ibin<fNbins; ibin++) {
       istr >> tmpbin >> tmpeffS >> tmpeffB;
@@ -1328,11 +1328,11 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
 {
    // delete old min and max
    for (UInt_t i=0; i<GetNvar(); i++) {
-      if (fCutMin[i] != 0) delete [] fCutMin[i];
-      if (fCutMax[i] != 0) delete [] fCutMax[i];
+      if (fCutMin[i] != nullptr) delete [] fCutMin[i];
+      if (fCutMax[i] != nullptr) delete [] fCutMax[i];
    }
-   if (fCutMin != 0) delete [] fCutMin;
-   if (fCutMax != 0) delete [] fCutMax;
+   if (fCutMin != nullptr) delete [] fCutMin;
+   if (fCutMax != nullptr) delete [] fCutMax;
 
    Int_t tmpEffMethod, tmpFitMethod;
    gTools().ReadAttr( wghtnode, "OptimisationMethod", tmpEffMethod );
@@ -1366,7 +1366,7 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
    delete fEffBvsSLocal;
    fEffBvsSLocal = new TH1F( GetTestvarName() + "_effBvsSLocal",
                              TString(GetName()) + " efficiency of B vs S", fNbins, 0.0, 1.0 );
-   fEffBvsSLocal->SetDirectory(0); // it's local
+   fEffBvsSLocal->SetDirectory(nullptr); // it's local
    for (Int_t ibin=1; ibin<=fNbins; ibin++) fEffBvsSLocal->SetBinContent( ibin, -0.1 ); // Init
 
    fCutMin = new Double_t*[GetNvar()];
@@ -1408,7 +1408,7 @@ void TMVA::MethodCuts::ReadWeightsFromXML( void* wghtnode )
 ////////////////////////////////////////////////////////////////////////////////
 /// write histograms and PDFs to file for monitoring purposes
 
-void TMVA::MethodCuts::WriteMonitoringHistosToFile( void ) const
+void TMVA::MethodCuts::WriteMonitoringHistosToFile() const
 {
    Log() << kINFO << "Write monitoring histograms to file: " << BaseDir()->GetPath() << Endl;
 
@@ -1460,10 +1460,10 @@ Double_t TMVA::MethodCuts::GetTrainingEfficiency(const TString& theString)
    delete list;
 
    // first round ? --> create histograms
-   if (results->GetHist("EFF_BVSS_TR")==0) {
+   if (results->GetHist("EFF_BVSS_TR")==nullptr) {
 
-      if (fBinaryTreeS != 0) { delete fBinaryTreeS; fBinaryTreeS = 0; }
-      if (fBinaryTreeB != 0) { delete fBinaryTreeB; fBinaryTreeB = 0; }
+      if (fBinaryTreeS != nullptr) { delete fBinaryTreeS; fBinaryTreeS = nullptr; }
+      if (fBinaryTreeB != nullptr) { delete fBinaryTreeB; fBinaryTreeB = nullptr; }
 
       fBinaryTreeS = new BinarySearchTree();
       fBinaryTreeS->Fill( GetEventCollection(Types::kTraining), fSignalClass );
@@ -1519,7 +1519,7 @@ Double_t TMVA::MethodCuts::GetTrainingEfficiency(const TString& theString)
    }
 
    // must exist...
-   if (NULL == fSplTrainEffBvsS) return 0.0;
+   if (nullptr == fSplTrainEffBvsS) return 0.0;
 
    // now find signal efficiency that corresponds to required background efficiency
    Double_t effS = 0., effB, effS_ = 0., effB_ = 0.;
@@ -1580,10 +1580,10 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
 
 
    // first round ? --> create histograms
-   if (results->GetHist("MVA_EFF_BvsS")==0) {
+   if (results->GetHist("MVA_EFF_BvsS")==nullptr) {
 
-      if (fBinaryTreeS!=0) { delete fBinaryTreeS; fBinaryTreeS = 0; }
-      if (fBinaryTreeB!=0) { delete fBinaryTreeB; fBinaryTreeB = 0; }
+      if (fBinaryTreeS!=nullptr) { delete fBinaryTreeS; fBinaryTreeS = nullptr; }
+      if (fBinaryTreeB!=nullptr) { delete fBinaryTreeB; fBinaryTreeB = nullptr; }
 
       // the variables may be transformed by a transformation method: to coherently
       // treat signal and background one must decide which transformation type shall
@@ -1654,7 +1654,7 @@ Double_t TMVA::MethodCuts::GetEfficiency( const TString& theString, Types::ETree
    }
 
    // must exist...
-   if (NULL == fSpleffBvsS) return 0.0;
+   if (nullptr == fSpleffBvsS) return 0.0;
 
    // now find signal efficiency that corresponds to required background efficiency
    Double_t effS = 0, effB = 0, effS_ = 0, effB_ = 0;

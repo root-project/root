@@ -63,13 +63,13 @@ namespace TMVA {
       MethodFisher( DataSetInfo& dsi,
                     const TString& theWeightFile);
 
-      virtual ~MethodFisher( void );
+      virtual ~MethodFisher();
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t numberTargets );
 
 
       // training method
-      void Train( void );
+      void Train();
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -84,13 +84,13 @@ namespace TMVA {
       Double_t GetMvaValue( Double_t* err = 0, Double_t* errUpper = 0 );
 
       enum EFisherMethod { kFisher, kMahalanobis };
-      EFisherMethod GetFisherMethod( void ) { return fFisherMethod; }
+      EFisherMethod GetFisherMethod() { return fFisherMethod; }
 
       // ranking of input variables
       const Ranking* CreateRanking();
 
       // nice output
-      void PrintCoefficients( void );
+      void PrintCoefficients();
 
 
    protected:
@@ -108,25 +108,25 @@ namespace TMVA {
       void ProcessOptions();
 
       // Initialization and allocation of matrices
-      void InitMatrices( void );
+      void InitMatrices();
 
       // get mean value of variables
-      void GetMean( void );
+      void GetMean();
 
       // get matrix of covariance within class
-      void GetCov_WithinClass( void );
+      void GetCov_WithinClass();
 
       // get matrix of covariance between class
-      void GetCov_BetweenClass( void );
+      void GetCov_BetweenClass();
 
       // and the full covariance matrix
-      void GetCov_Full( void );
+      void GetCov_Full();
 
       // get discriminating power
-      void GetDiscrimPower( void );
+      void GetDiscrimPower();
 
       // get Fisher coefficients
-      void GetFisherCoeff( void );
+      void GetFisherCoeff();
 
       // matrix of variables means: S, B, S+B vs. variables
       TMatrixD *fMeanMatx;
@@ -149,7 +149,7 @@ namespace TMVA {
       Double_t fF0;                   // offset
 
       // default initialisation called by all constructors
-      void Init( void );
+      void Init();
 
       ClassDef(MethodFisher,0); // Analysis of Fisher discriminant (Fisher or Mahalanobis approach) 
    };

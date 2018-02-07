@@ -72,7 +72,7 @@ namespace TMVA {
                                    Double_t*, Int_t*, Int_t* ) = 0;
   
       Double_t Fdecroi(Int_t *i__);
-      Double_t Sen3a(void);
+      Double_t Sen3a();
 
       void  Wini      ();
       void  En_avant  (Int_t *ievent);
@@ -150,7 +150,7 @@ namespace TMVA {
                return fxx[0][0];
             }
          }
-         void Delete( void ) {
+         void Delete() {
             if (0 != fxx) for (Int_t i=0; i<fNevt; i++) if (0 != fxx[i]) delete [] fxx[i];
             delete[] fxx;
             fxx=0;

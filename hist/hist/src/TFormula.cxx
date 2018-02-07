@@ -849,7 +849,7 @@ void TFormula::FillDefaults()
    for (int i = 0; i < 9; ++i)
       defvars2[i] = TString::Format("x[%d]",i);
 
-   for (auto var : defvars) {
+   for (const auto &var : defvars) {
       int pos = fVars.size();
       fVars[var] = TFormulaVariable(var, 0, pos);
       fClingVariables.push_back(0);
@@ -2774,7 +2774,7 @@ const char * TFormula::GetParName(Int_t ipar) const
    }
    Error("GetParName","Parameter with index %d not found !!",ipar);
    //return TString::Format("p%d",ipar);
-   return TString();
+   return "";
 }
 
 ////////////////////////////////////////////////////////////////////////////////

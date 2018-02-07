@@ -259,7 +259,7 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
    //tp]
 
    if (fPlotType == kGLDefaultPlot)
-      return fDefaultPainter.get() ? fDefaultPainter->DistancetoPrimitive(px, py) : 9999;
+      return fDefaultPainter ? fDefaultPainter->DistancetoPrimitive(px, py) : 9999;
    else {
       //Adjust px and py - canvas can have several pads inside, so we need to convert
       //the from canvas' system into pad's.
@@ -296,7 +296,7 @@ Int_t TGLHistPainter::DistancetoPrimitive(Int_t px, Int_t py)
 
 void TGLHistPainter::DrawPanel()
 {
-   if (fDefaultPainter.get())
+   if (fDefaultPainter)
       fDefaultPainter->DrawPanel();
 }
 
@@ -314,7 +314,7 @@ void TGLHistPainter::DrawPanel()
 void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
    if (fPlotType == kGLDefaultPlot) {
-      if(fDefaultPainter.get()) {
+      if(fDefaultPainter) {
          fDefaultPainter->ExecuteEvent(event, px, py);
       }
    } else {
@@ -439,7 +439,7 @@ void TGLHistPainter::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
 TList *TGLHistPainter::GetContourList(Double_t contour)const
 {
-   return fDefaultPainter.get() ? fDefaultPainter->GetContourList(contour) : 0;
+   return fDefaultPainter ? fDefaultPainter->GetContourList(contour) : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -454,8 +454,8 @@ char *TGLHistPainter::GetObjectInfo(Int_t px, Int_t py)const
 {
    static char errMsg[] = { "TGLHistPainter::GetObjectInfo: Error in a hist painter\n" };
    if (fPlotType == kGLDefaultPlot)
-      return fDefaultPainter.get() ? fDefaultPainter->GetObjectInfo(px, py)
-                                   : errMsg;
+      return fDefaultPainter ? fDefaultPainter->GetObjectInfo(px, py)
+                             : errMsg;
    else {
       TGLUtil::InitializeIfNeeded();
       const Float_t scale = TGLUtil::GetScreenScalingFactor();
@@ -483,7 +483,7 @@ TList *TGLHistPainter::GetStack()const
 Bool_t TGLHistPainter::IsInside(Int_t x, Int_t y)
 {
    if (fPlotType == kGLDefaultPlot)
-      return fDefaultPainter.get() ? fDefaultPainter->IsInside(x, y) : kFALSE;
+      return fDefaultPainter ? fDefaultPainter->IsInside(x, y) : kFALSE;
 
    return kFALSE;
 }
@@ -495,7 +495,7 @@ Bool_t TGLHistPainter::IsInside(Int_t x, Int_t y)
 Bool_t TGLHistPainter::IsInside(Double_t x, Double_t y)
 {
    if (fPlotType == kGLDefaultPlot)
-      return fDefaultPainter.get() ? fDefaultPainter->IsInside(x, y) : kFALSE;
+      return fDefaultPainter ? fDefaultPainter->IsInside(x, y) : kFALSE;
 
    return kFALSE;
 }
@@ -506,7 +506,7 @@ Bool_t TGLHistPainter::IsInside(Double_t x, Double_t y)
 
 void TGLHistPainter::PaintStat(Int_t dostat, TF1 *fit)
 {
-   if (fDefaultPainter.get())
+   if (fDefaultPainter)
       fDefaultPainter->PaintStat(dostat, fit);
 }
 
@@ -518,7 +518,7 @@ void TGLHistPainter::ProcessMessage(const char *m, const TObject *o)
    if (!std::strcmp(m, "SetF3"))
       fF3 = (TF3 *)o;
 
-   if (fDefaultPainter.get())
+   if (fDefaultPainter)
       fDefaultPainter->ProcessMessage(m, o);
 }
 
@@ -529,7 +529,7 @@ void TGLHistPainter::SetHistogram(TH1 *h)
 {
    fHist = h;
 
-   if (fDefaultPainter.get())
+   if (fDefaultPainter)
       fDefaultPainter->SetHistogram(h);
 }
 
@@ -540,7 +540,7 @@ void TGLHistPainter::SetStack(TList *s)
 {
    fStack = s;
 
-   if (fDefaultPainter.get())
+   if (fDefaultPainter)
       fDefaultPainter->SetStack(s);
 }
 
@@ -579,7 +579,7 @@ void TGLHistPainter::Paint(Option_t *o)
       option.Remove(glPos, 2);
    else if (fPlotType != kGLParametricPlot && fPlotType != kGL5D && fPlotType != kGLTH3Composition) {
       gPad->SetCopyGLDevice(kFALSE);
-      if (fDefaultPainter.get())
+      if (fDefaultPainter)
          fDefaultPainter->Paint(o);//option.Data());
       return;
    }
@@ -595,7 +595,7 @@ void TGLHistPainter::Paint(Option_t *o)
       //gPad->SetCopyGLDevice(kFALSE);
       //tp]
 
-      if (fDefaultPainter.get())
+      if (fDefaultPainter)
          fDefaultPainter->Paint(option.Data());
    } else {
       Int_t glContext = gPad->GetGLDevice();
@@ -697,30 +697,30 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
    }
 
    if (option.fPlotType == kGLLegoPlot) {
-      if (!fGLPainter.get()) {
+      if (!fGLPainter) {
          if (dynamic_cast<TH2Poly*>(fHist))
             fGLPainter.reset(new TGLH2PolyPainter(fHist, &fCamera, &fCoord));
          else
             fGLPainter.reset(new TGLLegoPainter(fHist, &fCamera, &fCoord));
       }
    } else if (option.fPlotType == kGLSurfacePlot) {
-      if (!fGLPainter.get())
+      if (!fGLPainter)
          fGLPainter.reset(new TGLSurfacePainter(fHist, &fCamera, &fCoord));
    } else if (option.fPlotType == kGLBoxPlot) {
-      if (!fGLPainter.get())
+      if (!fGLPainter)
          fGLPainter.reset(new TGLBoxPainter(fHist, &fCamera, &fCoord));
    } else if (option.fPlotType == kGLTF3Plot) {
-      if (!fGLPainter.get())
+      if (!fGLPainter)
          fGLPainter.reset(new TGLTF3Painter(fF3, fHist, &fCamera, &fCoord));
    } else if (option.fPlotType == kGLIsoPlot) {
-      if (!fGLPainter.get())
+      if (!fGLPainter)
          fGLPainter.reset(new TGLIsoPainter(fHist, &fCamera, &fCoord));
    } else if (option.fPlotType == kGLVoxel) {
-      if (!fGLPainter.get())
+      if (!fGLPainter)
          fGLPainter.reset(new TGLVoxelPainter(fHist, &fCamera, &fCoord));
    }
 
-   if (fGLPainter.get()) {
+   if (fGLPainter) {
       fPlotType = option.fPlotType;
       fCoord.SetXLog(gPad->GetLogx());
       fCoord.SetYLog(gPad->GetLogy());
@@ -740,7 +740,7 @@ void TGLHistPainter::CreatePainter(const PlotOption_t &option, const TString &ad
 
 void TGLHistPainter::SetShowProjection(const char *option, Int_t nbins)
 {
-   if (fDefaultPainter.get()) fDefaultPainter->SetShowProjection(option, nbins);
+   if (fDefaultPainter) fDefaultPainter->SetShowProjection(option, nbins);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

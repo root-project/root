@@ -61,19 +61,19 @@ namespace TMVA {
 
       Timer( const char* prefix = "", Bool_t colourfulOutput = kTRUE );
       Timer( Int_t ncounts, const char* prefix = "", Bool_t colourfulOutput = kTRUE );
-      virtual ~Timer( void );
+      virtual ~Timer();
 
       void Init ( Int_t ncounts );
-      void Reset( void );
+      void Reset();
 
       // when the "Scientific" flag set, time is returned with sub-decimals
       // for algorithm timing measurement
       TString   GetElapsedTime ( Bool_t Scientific = kTRUE  );
-      Double_t  ElapsedSeconds ( void );
-      TString   GetLeftTime     ( Int_t icounts );
+      Double_t  ElapsedSeconds ();
+      TString   GetLeftTime    ( Int_t icounts );
       void      DrawProgressBar( Int_t, const TString& comment = "" );
       void      DrawProgressBar( TString );
-      void      DrawProgressBar( void );
+      void      DrawProgressBar();
 
    private:
 

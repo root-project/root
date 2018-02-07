@@ -200,7 +200,7 @@ TMVA::Experimental::Classification::Classification(DataLoader *dataloader, TFile
  * \param options string extra options.
  */
 TMVA::Experimental::Classification::Classification(DataLoader *dataloader, TString options)
-   : TMVA::Envelope("Classification", dataloader, NULL, options), fAnalysisType(Types::kClassification),
+   : TMVA::Envelope("Classification", dataloader, nullptr, options), fAnalysisType(Types::kClassification),
      fCorrelations(kFALSE), fROC(kTRUE)
 {
 
@@ -221,7 +221,7 @@ TMVA::Experimental::Classification::Classification(DataLoader *dataloader, TStri
 TMVA::Experimental::Classification::~Classification()
 {
    for (auto m : fIMethods) {
-      if (m != NULL)
+      if (m != nullptr)
          delete m;
    }
 }
@@ -386,7 +386,7 @@ TMVA::MethodBase *TMVA::Experimental::Classification::GetMethod(TString methodna
    if (!HasMethod(methodname, methodtitle)) {
       std::cout << methodname << " " << methodtitle << std::endl;
       Log() << kERROR << "Trying to get method not booked." << Endl;
-      return 0;
+      return nullptr;
    }
    Int_t index = -1;
    if (HasMethodObject(methodname, methodtitle, index)) {
@@ -440,8 +440,8 @@ TMVA::MethodBase *TMVA::Experimental::Classification::GetMethod(TString methodna
    }
 
    MethodBase *method = dynamic_cast<MethodBase *>(im);
-   if (method == 0)
-      return 0; // could not create method
+   if (method == nullptr)
+      return nullptr; // could not create method
 
    // set fDataSetManager if MethodCategory (to enable Category to create datasetinfo objects)
    if (method->GetMethodType() == Types::kCategory) {
@@ -461,7 +461,7 @@ TMVA::MethodBase *TMVA::Experimental::Classification::GetMethod(TString methodna
                                 GetDataLoaderDataSetInfo().GetNTargets())) {
       Log() << kWARNING << "Method " << method->GetMethodTypeName() << " is not capable of handling ";
       Log() << "classification with " << GetDataLoaderDataSetInfo().GetNClasses() << " classes." << Endl;
-      return 0;
+      return nullptr;
    }
 
    if (fModelPersistence)
@@ -556,7 +556,7 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
    method->SetFile(fFile.get());
    method->SetSilentFile(IsSilentFile());
 
-   MethodBase *methodNoCuts = NULL;
+   MethodBase *methodNoCuts = nullptr;
    if (!IsCutsMethod(method))
       methodNoCuts = method;
 
@@ -634,7 +634,7 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
    // --> count overlaps
    // -----------------------------------------------------------------------
    if (fCorrelations) {
-      const Int_t nmeth = methodNoCuts == NULL ? 0 : 1;
+      const Int_t nmeth = methodNoCuts == nullptr ? 0 : 1;
       const Int_t nvar = method->fDataSetInfo.GetNVariables();
       if (nmeth > 0) {
 
@@ -668,7 +668,7 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
             const Event *ev = defDs->GetEvent(ievt);
 
             //                 for correlations
-            TMatrixD *theMat = 0;
+            TMatrixD *theMat = nullptr;
             for (Int_t im = 0; im < nmeth; im++) {
                //                    check for NaN value
                Double_t retval = (Double_t)(*mvaRes[im])[ievt][0];
@@ -715,7 +715,7 @@ void TMVA::Experimental::Classification::TestMethod(TString methodname, TString 
          const TMatrixD *corrMatB = gTools().GetCorrelationMatrix(covMatB);
 
          //              print correlation matrices
-         if (corrMatS != 0 && corrMatB != 0) {
+         if (corrMatS != nullptr && corrMatB != nullptr) {
 
             //                 extract MVA matrix
             TMatrixD mvaMatS(nmeth, nmeth);
@@ -1128,15 +1128,15 @@ void TMVA::Experimental::Classification::MergeFiles()
 {
 
    auto dsdir = fFile->mkdir(fDataLoader->GetName()); // dataset dir
-   TTree *TrainTree = 0;
-   TTree *TestTree = 0;
-   TFile *ifile = 0;
-   TFile *ofile = 0;
+   TTree *TrainTree = nullptr;
+   TTree *TestTree = nullptr;
+   TFile *ifile = nullptr;
+   TFile *ofile = nullptr;
    for (UInt_t i = 0; i < fMethods.size(); i++) {
       auto methodname = fMethods[i].GetValue<TString>("MethodName");
       auto methodtitle = fMethods[i].GetValue<TString>("MethodTitle");
       auto fname = Form(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
-      TDirectoryFile *ds = 0;
+      TDirectoryFile *ds = nullptr;
       if (i == 0) {
          ifile = new TFile(fname);
          ds = (TDirectoryFile *)ifile->Get(fDataLoader->GetName());
@@ -1183,9 +1183,9 @@ void TMVA::Experimental::Classification::MergeFiles()
    TestTree->Write();
    ifile->Close();
    // cleaning
-   for (UInt_t i = 0; i < fMethods.size(); i++) {
-      auto methodname = fMethods[i].GetValue<TString>("MethodName");
-      auto methodtitle = fMethods[i].GetValue<TString>("MethodTitle");
+   for (auto & fMethod : fMethods) {
+      auto methodname = fMethod.GetValue<TString>("MethodName");
+      auto methodtitle = fMethod.GetValue<TString>("MethodTitle");
       auto fname = Form(".%s%s%s.root", fDataLoader->GetName(), methodname.Data(), methodtitle.Data());
       gSystem->Unlink(fname);
    }

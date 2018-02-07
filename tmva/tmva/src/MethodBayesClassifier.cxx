@@ -81,7 +81,7 @@ Bool_t TMVA::MethodBayesClassifier::HasAnalysisType( Types::EAnalysisType type, 
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisation
 
-void TMVA::MethodBayesClassifier::Init( void )
+void TMVA::MethodBayesClassifier::Init()
 {
 }
 
@@ -102,14 +102,14 @@ void TMVA::MethodBayesClassifier::ProcessOptions()
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodBayesClassifier::~MethodBayesClassifier( void )
+TMVA::MethodBayesClassifier::~MethodBayesClassifier()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// some training
 
-void TMVA::MethodBayesClassifier::Train( void )
+void TMVA::MethodBayesClassifier::Train()
 {
 }
 

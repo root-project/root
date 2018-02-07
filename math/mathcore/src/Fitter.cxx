@@ -318,7 +318,7 @@ bool Fitter::EvalFCN() {
       return false;
    }
    // create a Fit result from the fit configuration
-   fResult = std::shared_ptr<ROOT::Fit::FitResult>(new ROOT::Fit::FitResult(fConfig) );
+   fResult = std::make_shared<ROOT::Fit::FitResult>(fConfig);
    // evaluate one time the FCN
    double fcnval = (*fObjFunction)(fResult->GetParams() );
    // update fit result
@@ -620,7 +620,7 @@ bool Fitter::DoLinearFit( ) {
 bool Fitter::CalculateHessErrors() {
    // compute the Hesse errors according to configuration
    // set in the parameters and append value in fit result
-   if (fObjFunction.get() == 0) {
+   if (!fObjFunction) {
       MATH_ERROR_MSG("Fitter::CalculateHessErrors","Objective function has not been set");
       return false;
    }
@@ -700,12 +700,12 @@ bool Fitter::CalculateMinosErrors() {
    // (in DoMinimization) when creating the FItResult if the
    //  FitConfig::MinosErrors() flag is set
 
-   if (!fMinimizer.get() ) {
+   if (!fMinimizer) {
        MATH_ERROR_MSG("Fitter::CalculateMinosErrors","Minimizer does not exist - cannot calculate Minos errors");
        return false;
    }
 
-   if (!fResult.get() || fResult->IsEmpty() ) {
+   if (!fResult || fResult->IsEmpty() ) {
        MATH_ERROR_MSG("Fitter::CalculateMinosErrors","Invalid Fit Result - cannot calculate Minos errors");
        return false;
    }
@@ -773,7 +773,7 @@ bool Fitter::DoInitMinimizer() {
    // create first Minimizer
    // using an auto_Ptr will delete the previous existing one
    fMinimizer = std::shared_ptr<ROOT::Math::Minimizer> ( fConfig.CreateMinimizer() );
-   if (fMinimizer.get() == 0) {
+   if (!fMinimizer) {
       MATH_ERROR_MSG("Fitter::FitFCN","Minimizer cannot be created");
       return false;
    }
@@ -811,7 +811,7 @@ bool Fitter::DoMinimization(const ROOT::Math::IMultiGenFunction * chi2func) {
    // unsigned int ncalls =  ObjFuncTrait<ObjFunc>::NCalls(*fcn);
    // int fitType =  ObjFuncTrait<ObjFunc>::Type(objFunc);
 
-   if (!fResult) fResult =  std::shared_ptr<FitResult> ( new FitResult() );
+   if (!fResult) fResult = std::make_shared<FitResult>();
    fResult->FillResult(fMinimizer,fConfig, fFunc, ret, fDataSize, fBinFit, chi2func );
 
    // when possible get ncalls from FCN and set in fit result
@@ -882,7 +882,7 @@ bool Fitter::ApplyWeightCorrection(const ROOT::Math::IMultiGenFunction & loglw2,
    // - the objective function is a likelihood function and Likelihood::UseSumOfWeightSquare()
    //    has been called before
 
-   if (fMinimizer.get() == 0) {
+   if (!fMinimizer) {
       MATH_ERROR_MSG("Fitter::ApplyWeightCorrection","Must perform first a fit before applying the correction");
       return false;
    }

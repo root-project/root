@@ -93,8 +93,8 @@ ClassImp(TMVA::MethodTMlpANN);
                                        DataSetInfo& theData,
                                        const TString& theOption) :
    TMVA::MethodBase( jobName, Types::kTMlpANN, methodTitle, theData, theOption),
-   fMLP(0),
-   fLocalTrainingTree(0),
+   fMLP(nullptr),
+   fLocalTrainingTree(nullptr),
    fNcycles(100),
    fValidationFraction(0.5),
    fLearningMethod( "" )
@@ -107,8 +107,8 @@ ClassImp(TMVA::MethodTMlpANN);
 TMVA::MethodTMlpANN::MethodTMlpANN( DataSetInfo& theData,
                                     const TString& theWeightFile) :
    TMVA::MethodBase( Types::kTMlpANN, theData, theWeightFile),
-   fMLP(0),
-   fLocalTrainingTree(0),
+   fMLP(nullptr),
+   fLocalTrainingTree(nullptr),
    fNcycles(100),
    fValidationFraction(0.5),
    fLearningMethod( "" )
@@ -129,14 +129,14 @@ Bool_t TMVA::MethodTMlpANN::HasAnalysisType( Types::EAnalysisType type, UInt_t n
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisations
 
-void TMVA::MethodTMlpANN::Init( void )
+void TMVA::MethodTMlpANN::Init()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodTMlpANN::~MethodTMlpANN( void )
+TMVA::MethodTMlpANN::~MethodTMlpANN()
 {
    if (fMLP) delete fMLP;
 }
@@ -264,7 +264,7 @@ Double_t TMVA::MethodTMlpANN::GetMvaValue( Double_t* err, Double_t* errUpper )
 /// TMultiLayerPerceptron wants test and training tree at once
 /// so merge the training and testing trees from the MVA factory first:
 
-void TMVA::MethodTMlpANN::Train( void )
+void TMVA::MethodTMlpANN::Train()
 {
    Int_t type;
    Float_t weight;
@@ -312,7 +312,7 @@ void TMVA::MethodTMlpANN::Train( void )
    // localTrainingTree->Print();
 
    // create NN
-   if (fMLP != 0) { delete fMLP; fMLP = 0; }
+   if (fMLP != nullptr) { delete fMLP; fMLP = nullptr; }
    fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(),
                                      localTrainingTree,
                                      trainList,
@@ -363,12 +363,12 @@ void TMVA::MethodTMlpANN::AddWeightsXMLTo( void* parent ) const
    std::ifstream inf( tmpfile.Data() );
    char temp[256];
    TString data("");
-   void *ch=NULL;
+   void *ch=nullptr;
    while (inf.getline(temp,256)) {
       TString dummy(temp);
       //std::cout << dummy << std::endl; // remove annoying debug printout with std::cout
       if (dummy.BeginsWith('#')) {
-         if (ch!=0) gTools().AddRawLine( ch, data.Data() );
+         if (ch!=nullptr) gTools().AddRawLine( ch, data.Data() );
          dummy = dummy.Strip(TString::kLeading, '#');
          dummy = dummy(0,dummy.First(' '));
          ch = gTools().AddChild(wght, dummy);
@@ -377,7 +377,7 @@ void TMVA::MethodTMlpANN::AddWeightsXMLTo( void* parent ) const
       }
       data += (dummy + " ");
    }
-   if (ch != 0) gTools().AddRawLine( ch, data.Data() );
+   if (ch != nullptr) gTools().AddRawLine( ch, data.Data() );
 
    inf.close();
 }
@@ -439,7 +439,7 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromXML( void* wghtnode )
    }
    dummyTree->Branch("type", &type, "type/I");
 
-   if (fMLP != 0) { delete fMLP; fMLP = 0; }
+   if (fMLP != nullptr) { delete fMLP; fMLP = nullptr; }
    fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(), dummyTree );
    fMLP->LoadWeights( fname );
 }
@@ -468,7 +468,7 @@ void  TMVA::MethodTMlpANN::ReadWeightsFromStream( std::istream& istr )
    }
    dummyTree->Branch("type", &type, "type/I");
 
-   if (fMLP != 0) { delete fMLP; fMLP = 0; }
+   if (fMLP != nullptr) { delete fMLP; fMLP = nullptr; }
    fMLP = new TMultiLayerPerceptron( fMLPBuildOptions.Data(), dummyTree );
 
    fMLP->LoadWeights( "./TMlp.nn.weights.temp" );

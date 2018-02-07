@@ -131,8 +131,8 @@ ClassImp(TMVA::MethodDT);
                              DataSetInfo& theData,
                              const TString& theOption) :
    TMVA::MethodBase( jobName, Types::kDT, methodTitle, theData, theOption)
-   , fTree(0)
-   , fSepType(0)
+   , fTree(nullptr)
+   , fSepType(nullptr)
    , fMinNodeEvents(0)
    , fMinNodeSize(0)
    , fNCuts(0)
@@ -157,8 +157,8 @@ ClassImp(TMVA::MethodDT);
 TMVA::MethodDT::MethodDT( DataSetInfo& dsi,
                           const TString& theWeightFile) :
    TMVA::MethodBase( Types::kDT, dsi, theWeightFile)
-   , fTree(0)
-   , fSepType(0)
+   , fTree(nullptr)
+   , fSepType(nullptr)
    , fMinNodeEvents(0)
    , fMinNodeSize(0)
    , fNCuts(0)
@@ -342,7 +342,7 @@ void TMVA::MethodDT::SetMinNodeSize(TString sizeInPercent){
 ////////////////////////////////////////////////////////////////////////////////
 /// common initialisation with defaults for the DT-Method
 
-void TMVA::MethodDT::Init( void )
+void TMVA::MethodDT::Init()
 {
    fMinNodeEvents  = -1;
    fMinNodeSize    = 5;
@@ -367,14 +367,14 @@ void TMVA::MethodDT::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 ///destructor
 
-TMVA::MethodDT::~MethodDT( void )
+TMVA::MethodDT::~MethodDT()
 {
    delete fTree;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::MethodDT::Train( void )
+void TMVA::MethodDT::Train()
 {
    TMVA::DecisionTreeNode::fgIsTraining=true;
    fTree = new DecisionTree( fSepType, fMinNodeSize, fNCuts, &(DataInfo()), 0,
@@ -415,8 +415,8 @@ Double_t TMVA::MethodDT::PruneTree( )
       pruneTool->Optimize();
       std::vector<DecisionTreeNode*> nodes = pruneTool->GetOptimalPruneSequence();
       fPruneStrength = pruneTool->GetOptimalPruneStrength();
-      for(UInt_t i = 0; i < nodes.size(); i++)
-         fTree->PruneNode(nodes[i]);
+      for(auto & node : nodes)
+         fTree->PruneNode(node);
       delete pruneTool;
    }
    else if (fAutomatic &&  fPruneMethod != DecisionTree::kCostComplexityPruning){
@@ -567,5 +567,5 @@ void TMVA::MethodDT::GetHelpMessage() const
 
 const TMVA::Ranking* TMVA::MethodDT::CreateRanking()
 {
-   return 0;
+   return nullptr;
 }

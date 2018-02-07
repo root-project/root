@@ -224,7 +224,7 @@ public:
    virtual void      SetEntries(Long64_t entries);
    virtual void      SetEntryOffsetLen(Int_t len, Bool_t updateSubBranches = kFALSE);
    virtual void      SetFirstEntry( Long64_t entry );
-   virtual void      SetFile(TFile *file=0);
+   virtual void      SetFile(TFile *file=nullptr);
    virtual void      SetFile(const char *filename);
    void              SetIOFeatures(TIOFeatures &features) {fIOFeatures = features;}
    virtual Bool_t    SetMakeClass(Bool_t decomposeObj = kTRUE);

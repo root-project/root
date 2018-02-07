@@ -61,7 +61,7 @@ protected:
    TDataType& operator=(const TDataType&);
 
 public:
-   TDataType(TypedefInfo_t *info = 0);
+   TDataType(TypedefInfo_t *info = nullptr);
    TDataType(const char *typenam);
    virtual       ~TDataType();
    Int_t          Size() const;

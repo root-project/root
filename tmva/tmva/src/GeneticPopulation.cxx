@@ -80,7 +80,7 @@ TMVA::GeneticPopulation::GeneticPopulation(const std::vector<Interval*>& ranges,
 
 TMVA::GeneticPopulation::~GeneticPopulation()
 {
-   if (fRandomGenerator != NULL) delete fRandomGenerator;
+   if (fRandomGenerator != nullptr) delete fRandomGenerator;
 
    std::vector<GeneticRange*>::iterator it = fRanges.begin();
    for (;it!=fRanges.end(); ++it) delete *it;
@@ -205,16 +205,16 @@ TMVA::GeneticGenes* TMVA::GeneticPopulation::GetGenes( Int_t index )
 
 void TMVA::GeneticPopulation::Print( Int_t untilIndex )
 {
-   for ( unsigned int it = 0; it < fGenePool.size(); ++it )
+   for (auto & it : fGenePool)
       {
          Int_t n=0;
          if (untilIndex >= -1 ) {
             if (untilIndex == -1 ) return;
             untilIndex--;
          }
-         Log() << "fitness: " << fGenePool[it].GetFitness() << "    ";
-         for (vector< Double_t >::iterator vec = fGenePool[it].GetFactors().begin();
-              vec < fGenePool[it].GetFactors().end(); ++vec ) {
+         Log() << "fitness: " << it.GetFitness() << "    ";
+         for (vector< Double_t >::iterator vec = it.GetFactors().begin();
+              vec < it.GetFactors().end(); ++vec ) {
             Log() << "f_" << n++ << ": " << (*vec) << "     ";
          }
          Log() << Endl;
@@ -227,15 +227,15 @@ void TMVA::GeneticPopulation::Print( Int_t untilIndex )
 
 void TMVA::GeneticPopulation::Print( ostream & out, Int_t untilIndex )
 {
-   for ( unsigned int it = 0; it < fGenePool.size(); ++it ) {
+   for (auto & it : fGenePool) {
       Int_t n=0;
       if (untilIndex >= -1 ) {
          if (untilIndex == -1 ) return;
          untilIndex--;
       }
-      out << "fitness: " << fGenePool[it].GetFitness() << "    ";
-      for (vector< Double_t >::iterator vec = fGenePool[it].GetFactors().begin();
-           vec < fGenePool[it].GetFactors().end(); ++vec ) {
+      out << "fitness: " << it.GetFitness() << "    ";
+      for (vector< Double_t >::iterator vec = it.GetFactors().begin();
+           vec < it.GetFactors().end(); ++vec ) {
          out << "f_" << n++ << ": " << (*vec) << "     ";
       }
       out << std::endl;
@@ -282,9 +282,8 @@ vector<Double_t> TMVA::GeneticPopulation::VariableDistribution( Int_t /*varNumbe
 
 void TMVA::GeneticPopulation::AddPopulation( GeneticPopulation *strangers )
 {
-   for (std::vector<TMVA::GeneticGenes>::iterator it = strangers->fGenePool.begin();
-        it != strangers->fGenePool.end(); ++it ) {
-      GiveHint( it->GetFactors(), it->GetFitness() );
+   for (auto & it : strangers->fGenePool) {
+      GiveHint( it.GetFactors(), it.GetFitness() );
    }
 }
 

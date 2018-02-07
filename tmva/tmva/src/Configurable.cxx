@@ -71,7 +71,7 @@ TMVA::Configurable::Configurable( const TString& theOption)
 : TNamed("Configurable","Configurable"),
    fOptions                    ( theOption ),
    fLooseOptionCheckingEnabled ( kTRUE ),
-   fLastDeclaredOption         ( 0 ),
+   fLastDeclaredOption         ( nullptr ),
    fConfigDescription          ( "No description" ),
    fReferenceFile              ( "None" ),
    fLogger                     ( new MsgLogger(this) )
@@ -170,7 +170,7 @@ void TMVA::Configurable::ParseOptions()
          // the optname. Sometimes the [] is part of the optname and
          // does not describe an array
          OptionBase* decOpt = (OptionBase *)fListOfOptions.FindObject(optname);
-         if (decOpt==0 && optname.Contains('[')) {
+         if (decOpt==nullptr && optname.Contains('[')) {
             // now we see if there is an [] and if the optname exists
             // after removing the [idx]
             TString st = optname(optname.First('[')+1,100);
@@ -182,7 +182,7 @@ void TMVA::Configurable::ParseOptions()
          }
 
          TListIter optIt(&fListOfOptions);
-         if (decOpt!=0) {
+         if (decOpt!=nullptr) {
             if (decOpt->IsSet())
                Log() << kWARNING << "Value for option " << decOpt->GetName()
                      << " was previously set to " << decOpt->GetValue() << Endl;
@@ -220,19 +220,19 @@ void TMVA::Configurable::ParseOptions()
          Bool_t hasNotSign = kFALSE;
          if (s.BeginsWith("!")) { s.Remove(0,1); preserveNotSign = hasNotSign = kTRUE; }
          TString optname(s); optname.ToLower();
-         OptionBase* decOpt = 0;
+         OptionBase* decOpt = nullptr;
          Bool_t optionExists = kFALSE;
          TListIter optIt(&fListOfOptions);
-         while ((decOpt = (OptionBase*)optIt()) !=0) {
+         while ((decOpt = (OptionBase*)optIt()) !=nullptr) {
             TString predOptName(decOpt->GetName());
             predOptName.ToLower();
             if (predOptName == optname) optionExists = kTRUE;
-            if (dynamic_cast<Option<bool>*>(decOpt)==0) continue; // not a boolean option
+            if (dynamic_cast<Option<bool>*>(decOpt)==nullptr) continue; // not a boolean option
             if (predOptName == optname) break;
          }
 
 
-         if (decOpt != 0) {
+         if (decOpt != nullptr) {
             decOpt->SetValue( hasNotSign ? "0" : "1" );
             paramParsed = kTRUE;
          }
@@ -356,7 +356,7 @@ void TMVA::Configurable::AddOptionsXMLTo( void* parent ) const
    void* opts = gTools().AddChild(parent, "Options");
    TListIter optIt( &fListOfOptions );
    while (OptionBase * opt = (OptionBase *) optIt()) {
-      void* optnode = 0;
+      void* optnode = nullptr;
       if (opt->IsArrayOpt()) {
          std::stringstream s("");
          s.precision( 16 );
@@ -384,7 +384,7 @@ void TMVA::Configurable::ReadOptionsFromXML( void* node )
    void* opt = gTools().GetChild(node);
    TString optName, optValue;
    fOptions="";
-   while (opt != 0) {
+   while (opt != nullptr) {
       if (fOptions.Length()!=0) fOptions += ":";
       gTools().ReadAttr(opt, "name", optName);
       optValue = TString( gTools().GetContent(opt) );

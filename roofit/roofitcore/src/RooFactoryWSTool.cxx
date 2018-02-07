@@ -410,7 +410,7 @@ RooAbsArg* RooFactoryWSTool::createArg(const char* className, const char* objNam
       }
     }
     cintExpr += ") ;" ;
-  } catch (string err) {
+  } catch (const string &err) {
     coutE(ObjectHandling) << "RooFactoryWSTool::createArg() ERROR constructing " << className << "::" << objName << ": " << err << endl ;
     logError() ;
     return 0 ;
@@ -481,7 +481,7 @@ RooAddPdf* RooFactoryWSTool::add(const char *objName, const char* specList, Bool
     }
     pdfList.add(pdfList2) ;
 
-  } catch (string err) {
+  } catch (const string &err) {
     coutE(ObjectHandling) << "RooFactoryWSTool::add(" << objName << ") ERROR creating RooAddPdf: " << err << endl ;    
     logError() ;
     return 0 ;
@@ -523,7 +523,7 @@ RooRealSumPdf* RooFactoryWSTool::amplAdd(const char *objName, const char* specLi
     }
     amplList.add(amplList2) ;
 
-  } catch (string err) {
+  } catch (const string &err) {
     coutE(ObjectHandling) << "RooFactoryWSTool::add(" << objName << ") ERROR creating RooRealSumPdf: " << err << endl ;    
     logError() ;
     return 0 ;
@@ -565,7 +565,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
       
       try {
  	cmdList.Add(Conditional(asSET(tok),asSET(sep),!invCond).Clone()) ;
-      } catch (string err) {
+      } catch (const string &err) {
 	coutE(ObjectHandling) << "RooFactoryWSTool::prod(" << objName << ") ERROR creating RooProdPdf Conditional argument: " << err << endl ;
 	logError() ;
 	return 0 ;
@@ -585,7 +585,7 @@ RooProdPdf* RooFactoryWSTool::prod(const char *objName, const char* pdfList)
   RooProdPdf* pdf = 0 ;
   try {
     pdf = new RooProdPdf(objName,objName,asSET(regPdfList.c_str()),cmdList) ;
-  } catch (string err) {
+  } catch (const string &err) {
     coutE(ObjectHandling) << "RooFactoryWSTool::prod(" << objName << ") ERROR creating RooProdPdf input set of regular p.d.f.s: " << err << endl ;
     logError() ;
     pdf = 0 ;
@@ -626,7 +626,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
 
       try {
 	theMap[tok] = &asPDF(eq+1) ;
-      } catch ( string err ) {
+      } catch (const string &err) {
 	coutE(ObjectHandling) << "RooFactoryWSTool::simul(" << objName << ") ERROR creating RooSimultaneous: " << err << endl ;
 	logError() ;
       }
@@ -639,7 +639,7 @@ RooSimultaneous* RooFactoryWSTool::simul(const char* objName, const char* indexC
   RooSimultaneous* pdf(0) ;
   try {
     pdf = new RooSimultaneous(objName,objName,theMap,asCATLV(indexCat)) ;
-  } catch (string err) {
+  } catch (const string &err) {
     coutE(ObjectHandling) << "RooFactoryWSTool::simul(" << objName << ") ERROR creating RooSimultaneous::" << objName << " " << err << endl ;
     logError() ;
   }
@@ -678,7 +678,7 @@ RooAddition* RooFactoryWSTool::addfunc(const char *objName, const char* specList
       tok = strtok_r(0,",",&save) ;
     }
 
-  } catch (string err) {
+  } catch (const string &err) {
     coutE(ObjectHandling) << "RooFactoryWSTool::addfunc(" << objName << ") ERROR creating RooAddition: " << err << endl ;
     logError() ;
     return 0 ;
@@ -856,7 +856,7 @@ RooAbsArg* RooFactoryWSTool::process(const char* expr)
   string out ;
   try {
     out = processExpression(buf) ;
-  } catch (string error) {
+  } catch (const string &error) {
     coutE(ObjectHandling) << "RooFactoryWSTool::processExpression() ERROR in parsing: " << error << endl ;
     logError() ;
   }

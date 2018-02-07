@@ -133,5 +133,5 @@ TObject *TMVA::MinuitWrapper::Clone(char const* newname) const
 {
    MinuitWrapper *named = (MinuitWrapper*)TNamed::Clone(newname);
    named->fFitterTarget = fFitterTarget;
-   return 0;
+   return nullptr;
 }

@@ -71,7 +71,7 @@ TMVA::DataSet::DataSet(const DataSetInfo& dsi)
    fBlockBelongToTraining.push_back(kTRUE);
 
    // sampling
-   fSamplingRandom = 0;
+   fSamplingRandom = nullptr;
 
    Int_t treeNum = 2;
    fSampling.resize( treeNum );
@@ -103,7 +103,7 @@ TMVA::DataSet::DataSet()
     fBlockBelongToTraining.push_back(kTRUE);
 
     // sampling
-    fSamplingRandom = 0;
+    fSamplingRandom = nullptr;
 
     Int_t treeNum = 2;
     fSampling.resize( treeNum );
@@ -129,14 +129,14 @@ TMVA::DataSet::~DataSet()
 
    fBlockBelongToTraining.clear();
    // delete results
-   for (std::vector< std::map< TString, Results* > >::iterator it = fResults.begin(); it != fResults.end(); ++it) {
-      for (std::map< TString, Results* >::iterator itMap = (*it).begin(); itMap != (*it).end(); ++itMap) {
+   for (auto & fResult : fResults) {
+      for (std::map< TString, Results* >::iterator itMap = fResult.begin(); itMap != fResult.end(); ++itMap) {
          delete itMap->second;
       }
    }
 
    // delete sampling
-   if (fSamplingRandom != 0 ) delete fSamplingRandom;
+   if (fSamplingRandom != nullptr ) delete fSamplingRandom;
 
 
    // need also to delete fEventCollections[2] and [3], not sure if they are used
@@ -170,10 +170,10 @@ Long64_t TMVA::DataSet::GetNClassEvents( Int_t type, UInt_t classNumber )
    try {
       return fClassEvents.at(type).at(classNumber);
    }
-   catch (std::out_of_range excpt) {
+   catch (const std::out_of_range &excpt) {
       ClassInfo* ci = fdsi->GetClassInfo( classNumber );
       Log() << kFATAL << Form("Dataset[%s] : ",fdsi->GetName()) << "No " << (type==0?"training":(type==1?"testing":"_unknown_type_"))
-            << " events for class " << (ci==NULL?"_no_name_known_":ci->GetName()) << " (index # "<<classNumber<<")"
+            << " events for class " << (ci==nullptr?"_no_name_known_":ci->GetName()) << " (index # "<<classNumber<<")"
             << " available. Check if all class names are spelled correctly and if events are"
             << " passing the selection cuts." << Endl;
    }
@@ -192,7 +192,7 @@ void TMVA::DataSet::DestroyCollection(Types::ETreeType type, Bool_t deleteEvents
    if (i>=fEventCollection.size() || fEventCollection[i].size()==0) return;
    if (deleteEvents) {
 
-      for (UInt_t j=0; j<fEventCollection[i].size(); j++) delete fEventCollection[i][j];
+      for (auto & j : fEventCollection[i]) delete j;
    }
    fEventCollection[i].clear();
 }
@@ -281,7 +281,7 @@ TMVA::Results* TMVA::DataSet::GetResults( const TString & resultsName,
 
    // nothing found
 
-   Results * newresults = 0;
+   Results * newresults = nullptr;
    switch(analysistype) {
    case Types::kClassification:
       newresults = new ResultsClassification(fdsi,resultsName);
@@ -297,7 +297,7 @@ TMVA::Results* TMVA::DataSet::GetResults( const TString & resultsName,
       break;
    case Types::kMaxAnalysisType:
       //Log() << kINFO << " GetResults("<<info<<") can't create new one." << Endl;
-      return 0;
+      return nullptr;
       break;
    }
 
@@ -430,7 +430,7 @@ Long64_t TMVA::DataSet::GetNEvtBkgdTrain()
 void TMVA::DataSet::InitSampling( Float_t fraction, Float_t weight, UInt_t seed  )
 {
    // add a random generator if not yet present
-   if (fSamplingRandom == 0 ) fSamplingRandom = new TRandom3( seed );
+   if (fSamplingRandom == nullptr ) fSamplingRandom = new TRandom3( seed );
 
    // first, clear the lists
    std::vector< std::pair< Float_t, Long64_t >* > evtList;
@@ -482,7 +482,7 @@ void TMVA::DataSet::CreateSampling() const
 
    if (!fSampling.at(treeIdx) ) return;
 
-   if (fSamplingRandom == 0 )
+   if (fSamplingRandom == nullptr )
       Log() << kFATAL<< Form("Dataset[%s] : ",fdsi->GetName())
             << "no random generator present for creating a random/importance sampling (initialized?)" << Endl;
 
@@ -583,7 +583,7 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
 
    // the dataset does not hold the tree, this function returns a new tree every time it is called
 
-   if (type!=Types::kTraining && type!=Types::kTesting) return 0;
+   if (type!=Types::kTraining && type!=Types::kTesting) return nullptr;
 
    Types::ETreeType savedType = GetCurrentType();
 
@@ -620,27 +620,24 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
 
    // create all branches for the variables
    Int_t n = 0;
-   for (std::vector<VariableInfo>::const_iterator itVars = fdsi->GetVariableInfos().begin();
-        itVars != fdsi->GetVariableInfos().end(); ++itVars) {
+   for (const auto & itVars : fdsi->GetVariableInfos()) {
 
       // has to be changed to take care of types different than float: TODO
-      tree->Branch( (*itVars).GetInternalName(), &varVals[n], (*itVars).GetInternalName()+TString("/F") );
+      tree->Branch( itVars.GetInternalName(), &varVals[n], itVars.GetInternalName()+TString("/F") );
       n++;
    }
    // create the branches for the targets
    n = 0;
-   for (std::vector<VariableInfo>::const_iterator itTgts = fdsi->GetTargetInfos().begin();
-        itTgts != fdsi->GetTargetInfos().end(); ++itTgts) {
+   for (const auto & itTgts : fdsi->GetTargetInfos()) {
       // has to be changed to take care of types different than float: TODO
-      tree->Branch( (*itTgts).GetInternalName(), &tgtVals[n], (*itTgts).GetInternalName()+TString("/F") );
+      tree->Branch( itTgts.GetInternalName(), &tgtVals[n], itTgts.GetInternalName()+TString("/F") );
       n++;
    }
    // create the branches for the spectator variables
    n = 0;
-   for (std::vector<VariableInfo>::const_iterator itVis = fdsi->GetSpectatorInfos().begin();
-        itVis != fdsi->GetSpectatorInfos().end(); ++itVis) {
+   for (const auto & itVis : fdsi->GetSpectatorInfos()) {
       // has to be changed to take care of types different than float: TODO
-      tree->Branch( (*itVis).GetInternalName(), &visVals[n], (*itVis).GetInternalName()+TString("/F") );
+      tree->Branch( itVis.GetInternalName(), &visVals[n], itVis.GetInternalName()+TString("/F") );
       n++;
    }
 
@@ -648,18 +645,17 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
 
    // create all the branches for the results
    n = 0;
-   for (std::map< TString, Results* >::iterator itMethod = fResults.at(t).begin();
-        itMethod != fResults.at(t).end(); ++itMethod) {
+   for (auto & itMethod : fResults.at(t)) {
 
 
-      Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << "analysis type: " << (itMethod->second->GetAnalysisType()==Types::kRegression ? "Regression" :
-                                                                                        (itMethod->second->GetAnalysisType()==Types::kMulticlass ? "Multiclass" : "Classification" )) << Endl;
+      Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << "analysis type: " << (itMethod.second->GetAnalysisType()==Types::kRegression ? "Regression" :
+                                                                                        (itMethod.second->GetAnalysisType()==Types::kMulticlass ? "Multiclass" : "Classification" )) << Endl;
 
-      if (itMethod->second->GetAnalysisType() == Types::kClassification) {
+      if (itMethod.second->GetAnalysisType() == Types::kClassification) {
          // classification
-         tree->Branch( itMethod->first, &(metVals[n][0]), itMethod->first + "/F" );
+         tree->Branch( itMethod.first, &(metVals[n][0]), itMethod.first + "/F" );
       }
-      else if (itMethod->second->GetAnalysisType() == Types::kMulticlass) {
+      else if (itMethod.second->GetAnalysisType() == Types::kMulticlass) {
          // multiclass classification
          TString leafList("");
          for (UInt_t iCls = 0; iCls < fdsi->GetNClasses(); iCls++) {
@@ -667,11 +663,11 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
             leafList.Append( fdsi->GetClassInfo( iCls )->GetName() );
             leafList.Append( "/F" );
          }
-         Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << "itMethod->first " << itMethod->first <<  "    LEAFLIST: "
-               << leafList << "    itMethod->second " << itMethod->second <<  Endl;
-         tree->Branch( itMethod->first, (metVals[n]), leafList );
+         Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << "itMethod->first " << itMethod.first <<  "    LEAFLIST: "
+               << leafList << "    itMethod->second " << itMethod.second <<  Endl;
+         tree->Branch( itMethod.first, (metVals[n]), leafList );
       }
-      else if (itMethod->second->GetAnalysisType() == Types::kRegression) {
+      else if (itMethod.second->GetAnalysisType() == Types::kRegression) {
          // regression
          TString leafList("");
          for (UInt_t iTgt = 0; iTgt < fdsi->GetNTargets(); iTgt++) {
@@ -680,9 +676,9 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
             //            leafList.Append( fdsi->GetTargetInfo( iTgt ).GetLabel() );
             leafList.Append( "/F" );
          }
-         Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << "itMethod->first " << itMethod->first <<  "    LEAFLIST: "
-               << leafList << "    itMethod->second " << itMethod->second <<  Endl;
-         tree->Branch( itMethod->first, (metVals[n]), leafList );
+         Log() << kDEBUG << Form("Dataset[%s] : ",fdsi->GetName()) << "itMethod->first " << itMethod.first <<  "    LEAFLIST: "
+               << leafList << "    itMethod->second " << itMethod.second <<  Endl;
+         tree->Branch( itMethod.first, (metVals[n]), leafList );
       }
       else {
          Log() << kWARNING << Form("Dataset[%s] : ",fdsi->GetName()) << "Unknown analysis type for result found when writing TestTree." << Endl;
@@ -708,24 +704,23 @@ TTree* TMVA::DataSet::GetTree( Types::ETreeType type )
 
       // loop through all the results and write the branches
       n=0;
-      for (std::map<TString, Results*>::iterator itMethod = fResults.at(t).begin();
-           itMethod != fResults.at(t).end(); ++itMethod) {
-         Results* results = itMethod->second;
+      for (auto & itMethod : fResults.at(t)) {
+         Results* results = itMethod.second;
 
          const std::vector< Float_t >& vals = results->operator[](iEvt);
 
-         if (itMethod->second->GetAnalysisType() == Types::kClassification) {
+         if (itMethod.second->GetAnalysisType() == Types::kClassification) {
             // classification
             metVals[n][0] = vals[0];
          }
-         else if (itMethod->second->GetAnalysisType() == Types::kMulticlass) {
+         else if (itMethod.second->GetAnalysisType() == Types::kMulticlass) {
             // multiclass classification
             for (UInt_t nCls = 0, nClsEnd=fdsi->GetNClasses(); nCls < nClsEnd; nCls++) {
                Float_t val = vals.at(nCls);
                metVals[n][nCls] = val;
             }
          }
-         else if (itMethod->second->GetAnalysisType() == Types::kRegression) {
+         else if (itMethod.second->GetAnalysisType() == Types::kRegression) {
             // regression
             for (UInt_t nTgts = 0; nTgts < fdsi->GetNTargets(); nTgts++) {
                Float_t val = vals.at(nTgts);

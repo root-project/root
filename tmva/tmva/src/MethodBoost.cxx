@@ -104,15 +104,15 @@ ClassImp(TMVA::MethodBoost);
    , fBoostedMethodTitle(methodTitle)
    , fBoostedMethodOptions(theOption)
    , fMonitorBoostedMethod(kFALSE)
-   , fMonitorTree(0)
+   , fMonitorTree(nullptr)
    , fBoostWeight(0)
    , fMethodError(0)
    , fROC_training(0.0)
    , fOverlap_integral(0.0)
-   , fMVAvalues(0)
+   , fMVAvalues(nullptr)
 {
    fMVAvalues = new std::vector<Float_t>;
-   fDataSetManager = NULL;
+   fDataSetManager = nullptr;
    fHistoricBoolOption = kFALSE;
 }
 
@@ -129,22 +129,22 @@ TMVA::MethodBoost::MethodBoost( DataSetInfo& dsi,
    , fBoostedMethodTitle("")
    , fBoostedMethodOptions("")
    , fMonitorBoostedMethod(kFALSE)
-   , fMonitorTree(0)
+   , fMonitorTree(nullptr)
    , fBoostWeight(0)
    , fMethodError(0)
    , fROC_training(0.0)
    , fOverlap_integral(0.0)
-   , fMVAvalues(0)
+   , fMVAvalues(nullptr)
 {
    fMVAvalues = new std::vector<Float_t>;
-   fDataSetManager = NULL;
+   fDataSetManager = nullptr;
    fHistoricBoolOption = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodBoost::~MethodBoost( void )
+TMVA::MethodBoost::~MethodBoost()
 {
    fMethodWeight.clear();
 
@@ -159,7 +159,7 @@ TMVA::MethodBoost::~MethodBoost( void )
 
    if (fMVAvalues) {
       delete fMVAvalues;
-      fMVAvalues = 0;
+      fMVAvalues = nullptr;
    }
 }
 
@@ -354,7 +354,7 @@ void TMVA::MethodBoost::CheckSetup()
 
 void TMVA::MethodBoost::Train()
 {
-   TDirectory* methodDir( 0 );
+   TDirectory* methodDir( nullptr );
    TString     dirName,dirTitle;
    Int_t       StopCounter=0;
    Results* results = Data()->GetResults(GetMethodName(), Types::kTraining, GetAnalysisType());
@@ -401,7 +401,7 @@ void TMVA::MethodBoost::Train()
       // suppressing the rest of the classifier output the right way
       fCurrentMethod  = (dynamic_cast<MethodBase*>(method));
 
-      if (fCurrentMethod==0) {
+      if (fCurrentMethod==nullptr) {
          Log() << kFATAL << "uups.. guess the booking of the " << fCurrentMethodIdx << "-th classifier somehow failed" << Endl;
          return; // hope that makes coverity happy (as if fears I might use the pointer later on, not knowing that FATAL exits
       }
@@ -432,7 +432,7 @@ void TMVA::MethodBoost::Train()
       {
         if (fMonitorBoostedMethod) {
             methodDir=GetFile()->GetDirectory(dirName=Form("%s_B%04i",fBoostedMethodName.Data(),fCurrentMethodIdx));
-            if (methodDir==0) {
+            if (methodDir==nullptr) {
                 methodDir=BaseDir()->mkdir(dirName,dirTitle=Form("Directory Boosted %s #%04i", fBoostedMethodName.Data(),fCurrentMethodIdx));
             }
             fCurrentMethod->SetMethodDir(methodDir);
@@ -546,7 +546,7 @@ void TMVA::MethodBoost::CreateMVAHistorgrams()
    // nrms = number of rms around the average to use for outline (of the 0 classifier)
    Double_t meanS, meanB, rmsS, rmsB, xmin, xmax, nrms = 10;
    Int_t signalClass = 0;
-   if (DataInfo().GetClassInfo("Signal") != 0) {
+   if (DataInfo().GetClassInfo("Signal") != nullptr) {
       signalClass = DataInfo().GetClassInfo("Signal")->GetNumber();
    }
    gTools().ComputeStat( GetEventCollection( Types::kMaxTreeType ), fMVAvalues,
@@ -580,9 +580,9 @@ void TMVA::MethodBoost::ResetBoostWeights()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void TMVA::MethodBoost::WriteMonitoringHistosToFile( void ) const
+void TMVA::MethodBoost::WriteMonitoringHistosToFile() const
 {
-   TDirectory* dir=0;
+   TDirectory* dir=nullptr;
    if (fMonitorBoostedMethod) {
       for (UInt_t imtd=0;imtd<fBoostNum;imtd++) {
 
@@ -645,13 +645,13 @@ void TMVA::MethodBoost::WriteEvaluationHistosToFile(Types::ETreeType treetype)
    UInt_t nloop = fTestSigMVAHist.size();
    if (fMethods.size()<nloop) nloop = fMethods.size();
    if (fMonitorBoostedMethod) {
-      TDirectory* dir=0;
+      TDirectory* dir=nullptr;
       for (UInt_t imtd=0;imtd<nloop;imtd++) {
          //writing the histograms in the specific classifier's directory
          MethodBase* mva = dynamic_cast<MethodBase*>(fMethods[imtd]);
          if (!mva) continue;
          dir = mva->BaseDir();
-         if (dir==0) continue;
+         if (dir==nullptr) continue;
          dir->cd();
          fTestSigMVAHist[imtd]->SetDirectory(dir);
          fTestSigMVAHist[imtd]->Write();
@@ -881,7 +881,7 @@ Double_t TMVA::MethodBoost::AdaBoost(MethodBase* method, Bool_t discreteAdaBoost
    Float_t w,v; Bool_t sig=kTRUE;
    Double_t sumAll=0, sumWrong=0;
    Bool_t* WrongDetection=new Bool_t[GetNEvents()];
-   QuickMVAProbEstimator *MVAProb=NULL;
+   QuickMVAProbEstimator *MVAProb=nullptr;
 
    if (discreteAdaBoost) {
       FindMVACut(method);
@@ -1093,7 +1093,7 @@ void TMVA::MethodBoost::GetHelpMessage() const
 
 const TMVA::Ranking* TMVA::MethodBoost::CreateRanking()
 {
-   return 0;
+   return nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1107,7 +1107,7 @@ Double_t TMVA::MethodBoost::GetMvaValue( Double_t* err, Double_t* errUpper )
    //Double_t fact    = TMath::Exp(-1.)+TMath::Exp(1.);
    for (UInt_t i=0;i< fMethods.size(); i++){
       MethodBase* m = dynamic_cast<MethodBase*>(fMethods[i]);
-      if (m==0) continue;
+      if (m==nullptr) continue;
       Double_t val = fTmpEvent ? m->GetMvaValue(fTmpEvent) : m->GetMvaValue();
       Double_t sigcut = m->GetSignalReferenceCut();
 
@@ -1165,7 +1165,7 @@ Double_t TMVA::MethodBoost::GetBoostROCIntegral(Bool_t singleMethod, Types::ETre
    // set data sample training / testing
    Data()->SetCurrentType(eTT);
 
-   MethodBase* method = singleMethod ? dynamic_cast<MethodBase*>(fMethods.back()) : 0; // ToDo CoVerity flags this line as there is no protection against a zero-pointer delivered by dynamic_cast
+   MethodBase* method = singleMethod ? dynamic_cast<MethodBase*>(fMethods.back()) : nullptr; // ToDo CoVerity flags this line as there is no protection against a zero-pointer delivered by dynamic_cast
    // to make CoVerity happy (although, OF COURSE, the last method in the committee
    // has to be also of type MethodBase as ANY method is... hence the dynamic_cast
    // will never by "zero" ...
@@ -1213,7 +1213,7 @@ Double_t TMVA::MethodBoost::GetBoostROCIntegral(Bool_t singleMethod, Types::ETre
 
    // now create histograms for calculation of the ROC integral
    Int_t signalClass = 0;
-   if (DataInfo().GetClassInfo("Signal") != 0) {
+   if (DataInfo().GetClassInfo("Signal") != nullptr) {
       signalClass = DataInfo().GetClassInfo("Signal")->GetNumber();
    }
    gTools().ComputeStat( GetEventCollection(eTT), mvaRes,
@@ -1226,7 +1226,7 @@ Double_t TMVA::MethodBoost::GetBoostROCIntegral(Bool_t singleMethod, Types::ETre
    // calculate ROC integral
    TH1* mva_s = new TH1F( "MVA_S", "MVA_S", fNbins, xmin, xmax );
    TH1* mva_b = new TH1F( "MVA_B", "MVA_B", fNbins, xmin, xmax );
-   TH1 *mva_s_overlap=0, *mva_b_overlap=0;
+   TH1 *mva_s_overlap=nullptr, *mva_b_overlap=nullptr;
    if (CalcOverlapIntergral) {
       mva_s_overlap = new TH1F( "MVA_S_OVERLAP", "MVA_S_OVERLAP", fNbins, xmin, xmax );
       mva_b_overlap = new TH1F( "MVA_B_OVERLAP", "MVA_B_OVERLAP", fNbins, xmin, xmax );

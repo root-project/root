@@ -97,7 +97,7 @@ TMVA::Timer::Timer( Int_t ncounts, const char* prefix, Bool_t colourfulOutput  )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::Timer::~Timer( void )
+TMVA::Timer::~Timer()
 {
    delete fLogger;
 }
@@ -112,7 +112,7 @@ void TMVA::Timer::Init( Int_t ncounts )
 ////////////////////////////////////////////////////////////////////////////////
 /// resets timer
 
-void TMVA::Timer::Reset( void )
+void TMVA::Timer::Reset()
 {
    TStopwatch::Start( kTRUE );
    fPreviousProgress = -1;
@@ -122,7 +122,7 @@ void TMVA::Timer::Reset( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// computes elapsed tim in seconds
 
-Double_t TMVA::Timer::ElapsedSeconds( void )
+Double_t TMVA::Timer::ElapsedSeconds()
 {
    Double_t rt = TStopwatch::RealTime(); TStopwatch::Start( kFALSE );
    return rt;

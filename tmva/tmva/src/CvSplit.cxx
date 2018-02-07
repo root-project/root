@@ -73,25 +73,25 @@ void TMVA::CvSplitBootstrappedStratified::MakeKFoldDataSet(DataSetInfo &dsi)
    std::vector<TMVA::Event *> TestBkgData;
 
    // Split the testing and training sets into signal and background classes.
-   for (UInt_t i = 0; i < TrainingData.size(); ++i) {
-      if (strncmp(dsi.GetClassInfo(TrainingData.at(i)->GetClass())->GetName(), "Signal", 6) == 0) {
-         TrainSigData.push_back(TrainingData.at(i));
-      } else if (strncmp(dsi.GetClassInfo(TrainingData.at(i)->GetClass())->GetName(), "Background", 10) == 0) {
-         TrainBkgData.push_back(TrainingData.at(i));
+   for (auto i : TrainingData) {
+      if (strncmp(dsi.GetClassInfo(i->GetClass())->GetName(), "Signal", 6) == 0) {
+         TrainSigData.push_back(i);
+      } else if (strncmp(dsi.GetClassInfo(i->GetClass())->GetName(), "Background", 10) == 0) {
+         TrainBkgData.push_back(i);
       } else {
          Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, "
-               << dsi.GetClassInfo(TrainingData.at(i)->GetClass())->GetName() << " is not a recognised class" << Endl;
+               << dsi.GetClassInfo(i->GetClass())->GetName() << " is not a recognised class" << Endl;
       }
    }
 
-   for (UInt_t i = 0; i < TestingData.size(); ++i) {
-      if (strncmp(dsi.GetClassInfo(TestingData.at(i)->GetClass())->GetName(), "Signal", 6) == 0) {
-         TestSigData.push_back(TestingData.at(i));
-      } else if (strncmp(dsi.GetClassInfo(TestingData.at(i)->GetClass())->GetName(), "Background", 10) == 0) {
-         TestBkgData.push_back(TestingData.at(i));
+   for (auto i : TestingData) {
+      if (strncmp(dsi.GetClassInfo(i->GetClass())->GetName(), "Signal", 6) == 0) {
+         TestSigData.push_back(i);
+      } else if (strncmp(dsi.GetClassInfo(i->GetClass())->GetName(), "Background", 10) == 0) {
+         TestBkgData.push_back(i);
       } else {
          Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, "
-               << dsi.GetClassInfo(TestingData.at(i)->GetClass())->GetName() << " is not a recognised class" << Endl;
+               << dsi.GetClassInfo(i->GetClass())->GetName() << " is not a recognised class" << Endl;
       }
    }
 

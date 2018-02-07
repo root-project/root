@@ -236,7 +236,7 @@ TH2D* TMVA::PDEFoamDiscriminant::Project2(Int_t idim1, Int_t idim2, ECellValue c
             }
             // get the cell value using the kernel
             Float_t cv = 0;
-            if (kernel != NULL) {
+            if (kernel != nullptr) {
                cv = kernel->Estimate(this, tvec, cell_value);
             } else {
                cv = GetCellValue(FindCell(tvec), cell_value);

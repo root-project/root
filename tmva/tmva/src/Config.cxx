@@ -42,7 +42,7 @@ Singleton class for global configuration settings used by TMVA.
 ClassImp(TMVA::Config);
 
 #if __cplusplus > 199711L
-std::atomic<TMVA::Config*> TMVA::Config::fgConfigPtr{ 0 };
+std::atomic<TMVA::Config*> TMVA::Config::fgConfigPtr{ nullptr };
 #else
 TMVA::Config* TMVA::Config::fgConfigPtr = 0;
 #endif
@@ -89,7 +89,7 @@ TMVA::Config::~Config()
 void TMVA::Config::DestroyInstance()
 {
 #if __cplusplus > 199711L
-   delete fgConfigPtr.exchange(0);
+   delete fgConfigPtr.exchange(nullptr);
 #else
    if (fgConfigPtr != 0) { delete fgConfigPtr; fgConfigPtr = 0;}
 #endif
@@ -103,7 +103,7 @@ TMVA::Config& TMVA::Config::Instance()
 #if __cplusplus > 199711L
    if(!fgConfigPtr) {
       TMVA::Config* tmp = new Config();
-      TMVA::Config* expected = 0;
+      TMVA::Config* expected = nullptr;
       if(! fgConfigPtr.compare_exchange_strong(expected,tmp) ) {
          //another thread beat us to the switch
          delete tmp;

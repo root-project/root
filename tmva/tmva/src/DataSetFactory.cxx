@@ -95,7 +95,7 @@ TMVA::DataSetFactory::DataSetFactory() :
    fVerbose(kFALSE),
    fVerboseLevel(TString("Info")),
    fScaleWithPreselEff(0),
-   fCurrentTree(0),
+   fCurrentTree(nullptr),
    fCurrentEvtIdx(0),
    fInputFormulas(0),
    fLogger( new MsgLogger("DataSetFactory", kINFO) )
@@ -169,7 +169,7 @@ TMVA::DataSet* TMVA::DataSetFactory::BuildDynamicDataSet( TMVA::DataSetInfo& dsi
    std::vector<VariableInfo>::iterator it = varinfos.begin(), itEnd=varinfos.end();
    for (;it!=itEnd;++it) {
       Float_t* external=(Float_t*)(*it).GetExternalLink();
-      if (external==0)
+      if (external==nullptr)
          Log() << kDEBUG << Form("Dataset[%s] : ",dsi.GetName()) << "The link to the external variable is NULL while I am trying to build a dynamic data set. In this case fTmpEvent from MethodBase HAS TO BE USED in the method to get useful values in variables." << Endl;
       else evdyn->push_back (external);
    }
@@ -300,7 +300,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    std::vector<TTreeFormula*>::const_iterator formIt, formItEnd;
    for (formIt = fInputFormulas.begin(), formItEnd=fInputFormulas.end(); formIt!=formItEnd; ++formIt) if (*formIt) delete *formIt;
    fInputFormulas.clear();
-   TTreeFormula* ttf = 0;
+   TTreeFormula* ttf = nullptr;
 
    for (UInt_t i=0; i<dsi.GetNVariables(); i++) {
       ttf = new TTreeFormula( Form( "Formula%s", dsi.GetVariableInfo(i).GetInternalName().Data() ),
@@ -344,7 +344,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
    for (UInt_t clIdx=0; clIdx<dsi.GetNClasses(); clIdx++) {
       const TCut& tmpCut = dsi.GetClassInfo(clIdx)->GetCut();
       const TString tmpCutExp(tmpCut.GetTitle());
-      ttf = 0;
+      ttf = nullptr;
       if (tmpCutExp!="") {
          ttf = new TTreeFormula( Form("CutClass%i",clIdx), tmpCutExp, tr );
          Bool_t worked = CheckTTreeFormula( ttf, tmpCutExp, hasDollar );
@@ -366,11 +366,11 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
       const TString tmpWeight = dsi.GetClassInfo(clIdx)->GetWeight();
 
       if (dsi.GetClassInfo(clIdx)->GetName() != tinfo.GetClassName() ) { // if the tree is of another class
-         fWeightFormula.push_back( 0 );
+         fWeightFormula.push_back( nullptr );
          continue;
       }
 
-      ttf = 0;
+      ttf = nullptr;
       if (tmpWeight!="") {
          ttf = new TTreeFormula( "FormulaWeight", tmpWeight, tr );
          Bool_t worked = CheckTTreeFormula( ttf, tmpWeight, hasDollar );
@@ -380,7 +380,7 @@ void TMVA::DataSetFactory::ChangeToNewTree( TreeInfo& tinfo, const DataSetInfo &
          }
       }
       else {
-         ttf = 0;
+         ttf = nullptr;
       }
       fWeightFormula.push_back( ttf );
    }
@@ -807,7 +807,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                   }
                };
 
-               TTreeFormula* formula = 0;
+               TTreeFormula* formula = nullptr;
 
                // the cut expression
                Double_t cutVal = 1.;
@@ -857,7 +857,7 @@ TMVA::DataSetFactory::BuildEventVector( TMVA::DataSetInfo& dsi,
                // the weight
                Float_t weight = currentInfo.GetWeight(); // multiply by tree weight
                formula = fWeightFormula[cl];
-               if (formula!=0) {
+               if (formula!=nullptr) {
                   Int_t ndata = formula->GetNdata();
                   weight *= (ndata == 1 ?
                              formula->EvalInstance() :
@@ -1228,12 +1228,12 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             // erase indices of not needed events
             indicesTraining.erase( indicesTraining.begin()+sizeTraining-UInt_t(requestedTraining), indicesTraining.end() );
             // delete all events with the given indices
-            for( std::vector<UInt_t>::iterator it = indicesTraining.begin(), itEnd = indicesTraining.end(); it != itEnd; ++it ){
-               delete eventVectorTraining.at( (*it) ); // delete event
-               eventVectorTraining.at( (*it) ) = NULL; // set pointer to NULL
+            for(unsigned int & it : indicesTraining){
+               delete eventVectorTraining.at( it ); // delete event
+               eventVectorTraining.at( it ) = nullptr; // set pointer to NULL
             }
             // now remove and erase all events with pointer==NULL
-            eventVectorTraining.erase( std::remove( eventVectorTraining.begin(), eventVectorTraining.end(), (void*)NULL ), eventVectorTraining.end() );
+            eventVectorTraining.erase( std::remove( eventVectorTraining.begin(), eventVectorTraining.end(), (void*)nullptr ), eventVectorTraining.end() );
          }
 
          UInt_t sizeTesting   = eventVectorTesting.size();
@@ -1246,12 +1246,12 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
             // erase indices of not needed events
             indicesTesting.erase( indicesTesting.begin()+sizeTesting-UInt_t(requestedTesting), indicesTesting.end() );
             // delete all events with the given indices
-            for( std::vector<UInt_t>::iterator it = indicesTesting.begin(), itEnd = indicesTesting.end(); it != itEnd; ++it ){
-               delete eventVectorTesting.at( (*it) ); // delete event
-               eventVectorTesting.at( (*it) ) = NULL; // set pointer to NULL
+            for(unsigned int & it : indicesTesting){
+               delete eventVectorTesting.at( it ); // delete event
+               eventVectorTesting.at( it ) = nullptr; // set pointer to NULL
             }
             // now remove and erase all events with pointer==NULL
-            eventVectorTesting.erase( std::remove( eventVectorTesting.begin(), eventVectorTesting.end(), (void*)NULL ), eventVectorTesting.end() );
+            eventVectorTesting.erase( std::remove( eventVectorTesting.begin(), eventVectorTesting.end(), (void*)nullptr ), eventVectorTesting.end() );
          }
       }
       else { // erase at end

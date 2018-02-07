@@ -132,7 +132,7 @@ TMVA::Volume::Volume( Volume& V )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::Volume::~Volume( void )
+TMVA::Volume::~Volume()
 {
    // delete volume boundaries only if owned by the volume
    if (fOwnerShip) this->Delete();
@@ -141,10 +141,10 @@ TMVA::Volume::~Volume( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// delete array of volume bondaries
 
-void TMVA::Volume::Delete( void )
+void TMVA::Volume::Delete()
 {
-   if (NULL != fLower) { delete fLower; fLower = NULL; }
-   if (NULL != fUpper) { delete fUpper; fUpper = NULL; }
+   if (nullptr != fLower) { delete fLower; fLower = nullptr; }
+   if (nullptr != fUpper) { delete fUpper; fUpper = nullptr; }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -172,7 +172,7 @@ void TMVA::Volume::ScaleInterval( Double_t f )
 ////////////////////////////////////////////////////////////////////////////////
 /// printout of the volume boundaries
 
-void TMVA::Volume::Print( void ) const
+void TMVA::Volume::Print() const
 {
    MsgLogger fLogger( "Volume" );
    for (UInt_t ivar=0; ivar<fLower->size(); ivar++) {

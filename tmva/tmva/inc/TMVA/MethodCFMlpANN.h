@@ -103,12 +103,12 @@ namespace TMVA {
       MethodCFMlpANN( DataSetInfo& theData,
                       const TString& theWeightFile);
 
-      virtual ~MethodCFMlpANN( void );
+      virtual ~MethodCFMlpANN();
 
       virtual Bool_t HasAnalysisType( Types::EAnalysisType type, UInt_t numberClasses, UInt_t /*numberTargets*/ );
 
       // training method
-      void Train( void );
+      void Train();
 
       using MethodBase::ReadWeightsFromStream;
 
@@ -170,7 +170,7 @@ namespace TMVA {
       Double_t NN_fonc( Int_t, Double_t ) const;
 
       // default initialisation
-      void Init( void );
+      void Init();
 
       ClassDef(MethodCFMlpANN,0); // Interface for Clermond-Ferrand artificial neural network
    };

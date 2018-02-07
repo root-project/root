@@ -45,12 +45,12 @@ namespace TMVA {
    public:
   
       TSpline2( const TString& title, TGraph* theGraph );
-      virtual ~TSpline2( void );
+      virtual ~TSpline2();
 
       virtual  Double_t Eval( Double_t x ) const;
 
       // dummy implementations
-      virtual void BuildCoeff( void );
+      virtual void BuildCoeff();
       virtual void GetKnot( Int_t i, Double_t& x, Double_t& y ) const;
 
    private:

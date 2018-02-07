@@ -53,7 +53,7 @@ namespace TMVA {
                   Double_t rootMin, Double_t rootMax,
                   Int_t    maxIterations = 100, 
                   Double_t absTolerance  = 0.0 );
-      virtual ~RootFinder( void );
+      virtual ~RootFinder();
       
       // returns the root of the function
       Double_t Root( Double_t refValue );

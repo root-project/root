@@ -107,8 +107,8 @@ ClassImp(TMVA::MethodPDERS);
    fFcnCall(0),
    fVRangeMode(kAdaptive),
    fKernelEstimator(kBox),
-   fDelta(0),
-   fShift(0),
+   fDelta(nullptr),
+   fShift(nullptr),
    fScaleS(0),
    fScaleB(0),
    fDeltaFrac(0),
@@ -126,8 +126,8 @@ ClassImp(TMVA::MethodPDERS);
    fPrinted(0),
    fNormTree(0)
 {
-      fHelpVolume = NULL;
-      fBinaryTree = NULL;
+      fHelpVolume = nullptr;
+      fBinaryTree = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,8 +139,8 @@ TMVA::MethodPDERS::MethodPDERS( DataSetInfo& theData,
    fFcnCall(0),
    fVRangeMode(kAdaptive),
    fKernelEstimator(kBox),
-   fDelta(0),
-   fShift(0),
+   fDelta(nullptr),
+   fShift(nullptr),
    fScaleS(0),
    fScaleB(0),
    fDeltaFrac(0),
@@ -158,8 +158,8 @@ TMVA::MethodPDERS::MethodPDERS( DataSetInfo& theData,
    fPrinted(0),
    fNormTree(0)
 {
-      fHelpVolume = NULL;
-      fBinaryTree = NULL;
+      fHelpVolume = nullptr;
+      fBinaryTree = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -175,9 +175,9 @@ Bool_t TMVA::MethodPDERS::HasAnalysisType( Types::EAnalysisType type, UInt_t num
 ////////////////////////////////////////////////////////////////////////////////
 /// default initialisation routine called by all constructors
 
-void TMVA::MethodPDERS::Init( void )
+void TMVA::MethodPDERS::Init()
 {
-   fBinaryTree = NULL;
+   fBinaryTree = nullptr;
 
    UpdateThis();
 
@@ -207,12 +207,12 @@ void TMVA::MethodPDERS::Init( void )
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TMVA::MethodPDERS::~MethodPDERS( void )
+TMVA::MethodPDERS::~MethodPDERS()
 {
    if (fDelta) delete fDelta;
    if (fShift) delete fShift;
 
-   if (NULL != fBinaryTree) delete fBinaryTree;
+   if (nullptr != fBinaryTree) delete fBinaryTree;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -349,7 +349,7 @@ void TMVA::MethodPDERS::ProcessOptions()
 /// trainingTree in the weight file, and to rebuild the binary tree in the
 /// test phase from scratch
 
-void TMVA::MethodPDERS::Train( void )
+void TMVA::MethodPDERS::Train()
 {
    if (IsNormalised()) Log() << kFATAL << "\"Normalise\" option cannot be used with PDERS; "
                              << "please remove the option from the configuration string, or "
@@ -391,7 +391,7 @@ Double_t TMVA::MethodPDERS::GetMvaValue( Double_t* err, Double_t* errUpper )
 
 const std::vector< Float_t >& TMVA::MethodPDERS::GetRegressionValues()
 {
-   if (fRegressionReturnVal == 0) fRegressionReturnVal = new std::vector<Float_t>;
+   if (fRegressionReturnVal == nullptr) fRegressionReturnVal = new std::vector<Float_t>;
    fRegressionReturnVal->clear();
    // init the size of a volume element using a defined fraction of the
    // volume containing the entire events
@@ -411,8 +411,8 @@ const std::vector< Float_t >& TMVA::MethodPDERS::GetRegressionValues()
 
    Event * evT = new Event(*ev);
    UInt_t ivar = 0;
-   for (std::vector<Float_t>::iterator it = fRegressionReturnVal->begin(); it != fRegressionReturnVal->end(); ++it ) {
-      evT->SetTarget(ivar,(*it));
+   for (float & it : *fRegressionReturnVal) {
+      evT->SetTarget(ivar,it);
       ivar++;
    }
 
@@ -456,7 +456,7 @@ void TMVA::MethodPDERS::CalcAverages()
 
 void TMVA::MethodPDERS::CreateBinarySearchTree( Types::ETreeType type )
 {
-   if (NULL != fBinaryTree) delete fBinaryTree;
+   if (nullptr != fBinaryTree) delete fBinaryTree;
    fBinaryTree = new BinarySearchTree();
    if (fNormTree) {
       fBinaryTree->SetNormalize( kTRUE );
@@ -480,7 +480,7 @@ void TMVA::MethodPDERS::CreateBinarySearchTree( Types::ETreeType type )
 ////////////////////////////////////////////////////////////////////////////////
 /// defines volume dimensions
 
-void TMVA::MethodPDERS::SetVolumeElement( void ) {
+void TMVA::MethodPDERS::SetVolumeElement() {
    if (GetNvar()==0) {
       Log() << kFATAL << "GetNvar() == 0" << Endl;
       return;
@@ -619,7 +619,7 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
 
          fBinaryTree->SearchVolume( volume, &events );
 
-         fHelpVolume = NULL;
+         fHelpVolume = nullptr;
       }
       // -----------------------------------------------------------------------
       else {
@@ -755,11 +755,11 @@ void TMVA::MethodPDERS::GetSample( const Event& e,
 
          //getting all elements that are closer than fkNNMin-th element
          //signals
-         for (Int_t j=0;j<Int_t(events.size());j++) {
-            Double_t dist = GetNormalizedDistance( e, *events[j], dim_normalization );
+         for (auto & event : events) {
+            Double_t dist = GetNormalizedDistance( e, *event, dim_normalization );
 
             if (dist <= (*distances)[fkNNMin-1])
-               tempVector.push_back( events[j] );
+               tempVector.push_back( event );
          }
          fMax_distance = (*distances)[fkNNMin-1];
          delete distances;
@@ -844,19 +844,19 @@ Double_t TMVA::MethodPDERS::CKernelEstimate( const Event & event,
    Double_t pdfSumB = 0;
 
    // Iteration over sample points
-   for (std::vector<const BinarySearchTreeNode*>::iterator iev = events.begin(); iev != events.end(); ++iev) {
+   for (auto & iev : events) {
 
       // First switch to the one dimensional distance
-      Double_t normalized_distance = GetNormalizedDistance (event, *(*iev), dim_normalization);
+      Double_t normalized_distance = GetNormalizedDistance (event, *iev, dim_normalization);
 
       // always working within the hyperelipsoid, except for when we don't
       // note that rejection ratio goes to 1 as nvar goes to infinity
       if (normalized_distance > 1 && fKernelEstimator != kBox) continue;
 
-      if ( (*iev)->GetClass()==fSignalClass )
-         pdfSumS += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
+      if ( iev->GetClass()==fSignalClass )
+         pdfSumS += ApplyKernelFunction (normalized_distance) * iev->GetWeight();
       else
-         pdfSumB += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
+         pdfSumB += ApplyKernelFunction (normalized_distance) * iev->GetWeight();
    }
    pdfSumS = KernelNormalization( pdfSumS < 0. ? 0. : pdfSumS );
    pdfSumB = KernelNormalization( pdfSumB < 0. ? 0. : pdfSumB );
@@ -891,18 +891,18 @@ void TMVA::MethodPDERS::RKernelEstimate( const Event & event,
       pdfSum->push_back( 0 );
 
    // Iteration over sample points
-   for (std::vector<const BinarySearchTreeNode*>::iterator iev = events.begin(); iev != events.end(); ++iev) {
+   for (auto & iev : events) {
 
       // First switch to the one dimensional distance
-      Double_t normalized_distance = GetNormalizedDistance (event, *(*iev), dim_normalization);
+      Double_t normalized_distance = GetNormalizedDistance (event, *iev, dim_normalization);
 
       // always working within the hyperelipsoid, except for when we don't
       // note that rejection ratio goes to 1 as nvar goes to infinity
       if (normalized_distance > 1 && fKernelEstimator != kBox) continue;
 
       for (Int_t ivar = 0; ivar < fNRegOut ; ivar++) {
-         pdfSum->at(ivar) += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight() * (*iev)->GetTargets()[ivar];
-         pdfDiv           += ApplyKernelFunction (normalized_distance) * (*iev)->GetWeight();
+         pdfSum->at(ivar) += ApplyKernelFunction (normalized_distance) * iev->GetWeight() * iev->GetTargets()[ivar];
+         pdfDiv           += ApplyKernelFunction (normalized_distance) * iev->GetWeight();
       }
    }
 
@@ -1112,7 +1112,7 @@ void TMVA::MethodPDERS::AddWeightsXMLTo( void* parent ) const
 
 void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
 {
-   if (NULL != fBinaryTree) delete fBinaryTree;
+   if (nullptr != fBinaryTree) delete fBinaryTree;
    void* treenode = gTools().GetChild(wghtnode);
    fBinaryTree = TMVA::BinarySearchTree::CreateFromXML(treenode);
    if(!fBinaryTree)
@@ -1139,7 +1139,7 @@ void TMVA::MethodPDERS::ReadWeightsFromXML( void* wghtnode)
 
 void TMVA::MethodPDERS::ReadWeightsFromStream( std::istream& istr)
 {
-   if (NULL != fBinaryTree) delete fBinaryTree;
+   if (nullptr != fBinaryTree) delete fBinaryTree;
 
    fBinaryTree = new BinarySearchTree();
 
@@ -1181,14 +1181,14 @@ void TMVA::MethodPDERS::ReadWeightsFromStream( TFile& /*rf*/ )
 ////////////////////////////////////////////////////////////////////////////////
 /// static pointer to this object
 
-TMVA::MethodPDERS* TMVA::MethodPDERS::ThisPDERS( void )
+TMVA::MethodPDERS* TMVA::MethodPDERS::ThisPDERS()
 {
    return GetMethodPDERSThreadLocal();
 }
 ////////////////////////////////////////////////////////////////////////////////
 /// update static this pointer
 
-void TMVA::MethodPDERS::UpdateThis( void )
+void TMVA::MethodPDERS::UpdateThis()
 {
    GetMethodPDERSThreadLocal() = this;
 }
