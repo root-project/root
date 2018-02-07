@@ -6,13 +6,14 @@
 if(root7)
     set(root7src v7/src/)
     ROOT_GLOB_HEADERS(Gpad_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/T*.hxx)
+    set(ROOTGPRIMITIVESLIB ROOTGPrimitives)
 endif()
 
 ROOT_STANDARD_LIBRARY_PACKAGE(Gpad
                               HEADERS *.h ${Gpad_v7_dict_headers}
                               SOURCES *.cxx ${root7src}
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES Graf Hist)
+                              DEPENDENCIES Graf Hist ${ROOTGPRIMITIVESLIB})
 
 if(root7)
     ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
