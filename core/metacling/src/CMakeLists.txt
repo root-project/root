@@ -40,7 +40,24 @@ ROOT_LINKER_LIBRARY(Cling
 
 if(MSVC)
   set_target_properties(Cling PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-  set(cling_exports ??_7type_info@@6B@
+  set(cling_exports
+      ??_7type_info@@6B@
+      ?__type_info_root_node@@3U__type_info_node@@A
+      ??2@YAPAXI@Z
+      ??3@YAXPAX@Z
+      ??3@YAXPAXI@Z
+      ??_U@YAPAXI@Z
+      ??_V@YAXPAX@Z
+      ??_V@YAXPAXI@Z
+      ??3@YAXPAX0@Z
+      ??_V@YAXPAX0@Z
+      ??_7type_info@@6B@
+      ?__type_info_root_node@@3U__type_info_node@@A
+      ?nothrow@std@@3Unothrow_t@1@B
+      ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@H@Z
+      ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@M@Z
+      ??6?$basic_ostream@DU?$char_traits@D@std@@@std@@QAEAAV01@N@Z
+      ??$?6U?$char_traits@D@std@@@std@@YAAAV?$basic_ostream@DU?$char_traits@D@std@@@0@AAV10@D@Z
       cling_runtime_internal_throwIfInvalidPointer
       ?_Facet_Register@std@@YAXPAV_Facet_base@1@@Z
       ??1Value@cling@@QAE@XZ
@@ -53,6 +70,7 @@ if(MSVC)
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00D_K@Z
       ?setValueNoAlloc@internal@runtime@cling@@YAXPAX00DPBX@Z
       ?setValueWithAlloc@internal@runtime@cling@@YAPAXPAX00D@Z
+      ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PBX@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PB_N@Z
       ?printValue@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@PAPBX@Z
       ??$toUTF8@D@cling@@YA?AV?$basic_string@DU?$char_traits@D@std@@V?$allocator@D@2@@std@@QBDID@Z
