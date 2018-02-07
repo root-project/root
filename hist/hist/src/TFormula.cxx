@@ -813,6 +813,8 @@ void TFormula::InputFormulaIntoCling()
       // add pragma for optimization of the formula
       fClingInput = TString("#pragma cling optimize(2)\n") + fClingInput;
       gCling->Declare(fClingInput);
+      // delay the Cling initialization (Jiting to later)
+      if (fLazyInitialization) return; 
       fClingInitialized = PrepareEvalMethod();
    }
 }
@@ -1799,10 +1801,7 @@ void TFormula::ExtractFunctors(TString &formula)
             }
          } else {
             // handle whitespace characters in parname
-            Int_t oldParamLength  = param.Length();
             param.ReplaceAll("\\s", " ");
-            // we need to change index i after replacing since string length changes
-            i -= param.Length() - oldParamLength;
 
             // only add if parameter does not already exist, because maybe
             // `HandleFunctionArguments` already assigned a default value to the
@@ -1816,6 +1815,10 @@ void TFormula::ExtractFunctors(TString &formula)
          TString replacement = TString::Format("{[%s]}", param.Data());
          formula.Replace(tmp, i - tmp, replacement, replacement.Length());
          fFuncs.push_back(TFormulaFunction(param));
+         // we need to change index i after replacing since string length changes
+         // and we need to re-calculate i position
+         int deltai = replacement.Length() - (i-tmp); 
+         i += deltai;
          // printf("found parameter %s \n",param.Data() );
          continue;
       }
@@ -3000,7 +3003,7 @@ void TFormula::ReplaceParamName(TString & formula, const TString & oldName, cons
          Error("SetParName", "Parameter %s is not defined.", oldName.Data());
          return;
       }
-      // change whitespace to \\s avoid problems in parsing
+      // change whitespace to \s to avoid problems in parsing
       TString newName = name;
       newName.ReplaceAll(" ", "\\s");
       TString pattern = TString::Format("[%s]", oldName.Data());
@@ -3180,6 +3183,18 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
       return TMath::QuietNaN();
    }
 
+   // Lazy initialization is set and needed when reading from a file
+   if (!fClingInitialized && fLazyInitialization) {
+      // try recompiling the formula. We need to lock because this is not anymore thread safe
+      R__LOCKGUARD(gROOTMutex);
+      auto thisFormula = const_cast<TFormula*>(this);
+      thisFormula->ReInitializeEvalMethod();
+   }
+   if (!fClingInitialized) {
+      Error("DoEval", "Formula has error and  it is not properly initialized ");
+      return TMath::QuietNaN();
+   }
+
    if (fLambdaPtr && TestBit(TFormula::kLambda)) {// case of lambda functions
       std::function<double(double *, double *)> & fptr = * ( (std::function<double(double *, double *)> *) fLambdaPtr);
       assert(x);
@@ -3188,28 +3203,7 @@ Double_t TFormula::DoEval(const double * x, const double * params) const
       double * p = (params) ? const_cast<double*>(params) : const_cast<double*>(fClingParameters.data());
       return fptr(v, p);
    }
-   // this is needed when reading from a file
-   if (!fClingInitialized) {
-      // try recompiling the formula. We need to lock because this is not anymore thread safe
-      R__LOCKGUARD(gROOTMutex);
-      auto thisFormula = const_cast<TFormula*>(this); 
-      thisFormula->fMethod->Delete();
-      thisFormula->fMethod = nullptr;
-      Warning("DoEval", "Formula is NOT properly initialized - try calling again TFormula::PrepareEvalMethod");
-      thisFormula->fClingInitialized = thisFormula->PrepareEvalMethod();
-      if (!fClingInitialized) {        
-         Error("DoEval", "Formula is invalid or not properly initialized - try calling TFormula::Compile");
-         return TMath::QuietNaN();
-      }
-      Info("DoEval", "Formula is now properly initialized !!");
-#ifdef EVAL_IS_NOT_CONST
-      // need to replace in cling the name of the pointer of this object
-      TString oldClingName = fClingName;
-      fClingName.Replace(fClingName.Index("_0x")+1,fClingName.Length(), TString::Format("%p",this) );
-      fClingInput.ReplaceAll(oldClingName, fClingName);
-      InputFormulaIntoCling();
-#endif
-   }
+
 
    Double_t result = 0;
    void* args[2];
@@ -3242,17 +3236,11 @@ ROOT::Double_v TFormula::DoEvalVec(const ROOT::Double_v *x, const double *params
    }
    // todo maybe save lambda ptr stuff for later
 
-   if (!fClingInitialized) {
-      Error("DoEvalVec", "Formula is invalid or not properly initialized - try calling TFormula::Compile");
-      return TMath::QuietNaN();
-// todo: the below never gets executed anyway?
-#ifdef EVAL_IS_NOT_CONST
-      // need to replace in cling the name of the pointer of this object
-      TString oldClingName = fClingName;
-      fClingName.Replace(fClingName.Index("_0x") + 1, fClingName.Length(), TString::Format("%p", this));
-      fClingInput.ReplaceAll(oldClingName, fClingName);
-      InputFormulaIntoCling();
-#endif
+   if (!fClingInitialized && fLazyInitialization) {
+      // try recompiling the formula. We need to lock because this is not anymore thread safe
+      R__LOCKGUARD(gROOTMutex);
+      auto thisFormula = const_cast<TFormula*>(this);
+      thisFormula->ReInitializeEvalMethod();
    }
 
    ROOT::Double_v result = 0;
@@ -3270,6 +3258,36 @@ ROOT::Double_v TFormula::DoEvalVec(const ROOT::Double_v *x, const double *params
    return result;
 }
 #endif // R__HAS_VECCORE
+
+
+//////////////////////////////////////////////////////////////////////////////
+/// Re-initialize eval method
+///
+/// This function is called by DoEval and DoEvalVector in case of a previous failure
+///  or in case of reading from a file
+////////////////////////////////////////////////////////////////////////////////
+void TFormula::ReInitializeEvalMethod() {
+
+
+   if (TestBit(TFormula::kLambda) ) {
+      Info("ReInitializeEvalMethod","compile now lambda expression function using Cling"); 
+      InitLambdaExpression(fFormula);
+      fLazyInitialization = false;
+      return;
+   }
+   if (fMethod) {
+      fMethod->Delete();
+      fMethod = nullptr;
+   }
+   if (!fLazyInitialization)   Warning("ReInitializeEvalMethod", "Formula is NOT properly initialized - try calling again TFormula::PrepareEvalMethod");
+   else  Info("ReInitializeEvalMethod", "Compile now the formula expression using Cling");
+
+   fClingInitialized = PrepareEvalMethod();
+   if (fClingInitialized && !fLazyInitialization) Info("ReInitializeEvalMethod", "Formula is now properly initialized !!");
+   fLazyInitialization = false;
+
+   return;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the expression formula.
@@ -3453,8 +3471,15 @@ void TFormula::Streamer(TBuffer &b)
          auto paramMap = fParams;
          fNpar = fParams.size();
 
+         fLazyInitialization = true;   // when reading we initialize the formula later to avoid problem of recursive Jitting
+
          if (!TestBit(TFormula::kLambda) ) {
 
+            // save dimension read from the file
+            // and we check after initializing if it is the same 
+            int ndim = fNdim;  
+            fNdim = 0; 
+            
             //std::cout << "Streamer::Reading preprocess the formula " << fFormula << " ndim = " << fNdim << " npar = " << fNpar << std::endl;
             // for ( auto &p : fParams)
             //    std::cout << "parameter " << p.first << " index " << p.second << std::endl;
@@ -3478,13 +3503,20 @@ void TFormula::Streamer(TBuffer &b)
                Error("Streamer","number of parameters computed (%d) is not same as the stored parameters (%d)",fNpar,int(parValues.size()) );
                Print("v");
             }
+            if (fNdim != ndim) {
+               Error("Streamer","number of dimension computed (%d) is not same as the stored value (%d)",fNdim, ndim );
+               Print("v");
+            }
          }
          else {
-            // case of lamda expressions
-            bool ret = InitLambdaExpression(fFormula);
-            if (ret) {
+            // we also delay the initializtion of lamda expressions
+            if (!fLazyInitialization) { 
+               bool ret = InitLambdaExpression(fFormula);
+               if (ret) {
+                  fClingInitialized  = true;
+               }
+            }else {
                fReadyToExecute  = true;
-               fClingInitialized  = true;
             }
          }
          assert(fNpar == (int) parValues.size() );
