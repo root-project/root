@@ -1,3 +1,4 @@
+add_subdirectory(primitives)
 add_subdirectory(gpad)
 add_subdirectory(graf)
 add_subdirectory(postscript)
@@ -24,5 +25,3 @@ if(cocoa)
   add_subdirectory(quartz)
   add_subdirectory(cocoa)
 endif()
-
-
