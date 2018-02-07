@@ -18,6 +18,45 @@
 #include <typeinfo>
 
 namespace ROOT {
+
+namespace Internal {
+namespace TDS {
+
+/// Mother class of TTypedPointerHolder. The instances
+/// of this class can be put in a container. Upon destruction,
+/// the correct deletion of the pointer is performed in the
+/// dauther class.
+class TPointerHolder {
+protected:
+   void *fPointer{nullptr};
+
+public:
+   TPointerHolder(void *ptr) : fPointer(ptr) {}
+   void *GetPointer() { return fPointer; }
+   void *GetPointerAddr() { return &fPointer; }
+   virtual TPointerHolder *GetDeepCopy() = 0;
+   virtual ~TPointerHolder(){};
+};
+
+/// Class to wrap a pointer and delete the memory associated to it
+/// correctly
+template <typename T>
+class TTypedPointerHolder final : public TPointerHolder {
+public:
+   TTypedPointerHolder(T *ptr) : TPointerHolder((void *)ptr) {}
+
+   virtual TPointerHolder *GetDeepCopy()
+   {
+      const auto typedPtr = (T *)fPointer;
+      return new TTypedPointerHolder(new T(*typedPtr));
+   }
+
+   ~TTypedPointerHolder() { delete (T *)fPointer; }
+};
+
+} // ns TDS
+} // ns Internal
+
 namespace Experimental {
 namespace TDF {
 
