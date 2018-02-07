@@ -552,6 +552,11 @@ Bool_t TWebCanvas::DecodeAllRanges(const char *arg)
       pad->SetLogy(r.logy);
       pad->SetLogz(r.logz);
 
+      pad->SetLeftMargin(r.mleft);
+      pad->SetRightMargin(r.mright);
+      pad->SetTopMargin(r.mtop);
+      pad->SetBottomMargin(r.mbottom);
+
       for (unsigned k = 0; k < r.primitives.size(); ++k) {
          TObjLink *lnk = nullptr;
          TObject *obj = FindPrimitive(r.primitives[k].snapid.c_str(), pad, &lnk);

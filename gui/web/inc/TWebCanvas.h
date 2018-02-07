@@ -59,6 +59,7 @@ public:
    int logx{0}, logy{0}, logz{0};             ///< pad log properties
    int gridx{0}, gridy{0};                    ///< pad grid properties
    int tickx{0}, ticky{0};                    ///< pad ticks properties
+   Float_t mleft{0}, mright{0}, mtop{0}, mbottom{0}; ///< frame margins
    bool ranges{false};                        ///< if true, pad has ranges
    Double_t px1{0}, py1{0}, px2{0}, py2{0};   ///< pad range
    Double_t ux1{0}, uy1{0}, ux2{0}, uy2{0};   ///< pad axis range
