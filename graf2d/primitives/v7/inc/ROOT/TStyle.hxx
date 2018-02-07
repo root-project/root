@@ -34,9 +34,10 @@ namespace Experimental {
 class TStyle {
 public:
    /// A map of attribute name to attribute value for an attribute type `PRIMITIVE`.
-   template <class PRIMITIVE> using Attrs_t = std::unordered_map<std::string, PRIMITIVE>;
-   using AllAttrs_t = std::tuple<Attrs_t<TColor>, Attrs_t<long long>, Attrs_t<double>>;   
-      
+   template <class PRIMITIVE>
+   using Attrs_t = std::unordered_map<std::string, PRIMITIVE>;
+   using AllAttrs_t = std::tuple<Attrs_t<TColor>, Attrs_t<long long>, Attrs_t<double>>;
+
 private:
    /// Mapping of user coordinates to normal coordinates.
    std::string fName; // Name of the attribute set.
@@ -50,12 +51,12 @@ public:
    explicit TStyle(std::string_view name): fName(name) {}
 
    /// Constructor taking user coordinate system, position and extent.
-   TStyle(std::string_view name, AllAttrs_t&& attrs): fName(name), fAttrs(std::move(attrs)) {}
+   TStyle(std::string_view name, AllAttrs_t &&attrs): fName(name), fAttrs(std::move(attrs)) {}
 
-   const std::string& GetName() const { return fName; }
+   const std::string &GetName() const { return fName; }
 
    /// Register a copy of `style` in the global style collection, possibly replacing a global style with the same name.
-   static void Register(const TStyle& style);
+   static void Register(const TStyle &style);
 
    /// Get the `TStyle` named `name` from the global style collection, or `nullptr` if that doesn't exist.
    static TStyle *Get(std::string_view name);
@@ -64,10 +65,7 @@ public:
    static TStyle &GetCurrent();
 
    /// Set the current TStyle by copying `style` into the static current style object.
-   static void SetCurrent(const TStyle& style)
-   {
-      GetCurrent() = style;      
-   }
+   static void SetCurrent(const TStyle &style) { GetCurrent() = style; }
 };
 
 } // namespace Experimental
