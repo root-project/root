@@ -12,6 +12,7 @@
 #define ROOT_TDFNODES
 
 #include "ROOT/TypeTraits.hxx"
+#include "ROOT/TCutFlowReport.hxx"
 #include "ROOT/TDataSource.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TArrayBranch.hxx"
@@ -30,51 +31,6 @@
 #include <functional>
 
 namespace ROOT {
-
-namespace Detail {
-namespace TDF {
-class TFilterBase;
-} // End NS TDF
-} // End NS Detail
-
-namespace Experimental {
-namespace TDF {
-
-class TCutFlowReport;
-
-class TCutInfo {
-   friend class TCutFlowReport;
-   friend class ROOT::Detail::TDF::TFilterBase;
-
-private:
-   std::string fName;
-   ULong64_t fPass;
-   ULong64_t fAll;
-   TCutInfo(const std::string &name, ULong64_t pass, ULong64_t all) : fName(name), fPass(pass), fAll(all) {}
-public:
-   const std::string &GetName() const;
-   ULong64_t GetAll() const;
-   ULong64_t GetPass() const;
-   float GetEff() const;
-};
-
-class TCutFlowReport {
-   friend class ROOT::Detail::TDF::TFilterBase;
-
-private:
-   std::vector<TCutInfo> fCutInfos;
-   void AddCut(TCutInfo &&ci);
-
-public:
-   void Print();
-   const TCutInfo &operator[](std::string_view cutName);
-   std::vector<TCutInfo>::const_iterator begin() const { return fCutInfos.begin(); }
-   std::vector<TCutInfo>::const_iterator end() const { return fCutInfos.end(); }
-};
-
-} // End NS TDF
-} // End NS Experimental
-
 namespace Internal {
 namespace TDF {
 class TActionBase;

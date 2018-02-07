@@ -9,6 +9,7 @@
  *************************************************************************/
 
 #include "RConfigure.h" // R__USE_IMT
+#include "ROOT/TCutFlowReport.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TSpinMutex.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
@@ -29,67 +30,6 @@ using namespace ROOT::Detail::TDF;
 using namespace ROOT::Internal::TDF;
 
 namespace ROOT {
-namespace Experimental {
-namespace TDF {
-
-const std::string &TCutInfo::GetName() const
-{
-   return fName;
-}
-
-ULong64_t TCutInfo::GetAll() const
-{
-   return fAll;
-}
-
-ULong64_t TCutInfo::GetPass() const
-{
-   return fPass;
-}
-
-float TCutInfo::GetEff() const
-{
-   return 100.f * (fPass / float(fAll));
-}
-
-void TCutFlowReport::AddCut(TCutInfo &&ci)
-{
-   fCutInfos.emplace_back(std::move(ci));
-}
-
-void TCutFlowReport::Print()
-{
-   for (auto &&ci : fCutInfos) {
-      auto &name = ci.GetName();
-      auto pass = ci.GetPass();
-      auto all = ci.GetAll();
-      auto eff = ci.GetEff();
-      Printf("%-10s: pass=%-10lld all=%-10lld -- %8.3f %%", name.c_str(), pass, all, eff);
-   }
-}
-const TCutInfo &TCutFlowReport::operator[](std::string_view cutName)
-{
-   if (cutName.empty()) {
-      throw std::runtime_error("Cannot look for an unnamed cut.");
-   }
-   auto pred = [&cutName](const TCutInfo &ci) { return ci.GetName() == cutName; };
-   auto ciItEnd = fCutInfos.end();
-   auto it = std::find_if(fCutInfos.begin(), ciItEnd, pred);
-   if (ciItEnd == it) {
-      std::string err = "Cannot find a cut called \"";
-      err += cutName;
-      err += "\". Available named cuts are: \n";
-      for (auto &&ci : fCutInfos) {
-         err += " - " + ci.GetName() + "\n";
-      }
-      throw std::runtime_error(err);
-   }
-   return *it;
-}
-
-} // End NS TDF
-} // End NS Experimental
-
 namespace Internal {
 namespace TDF {
 
