@@ -336,6 +336,12 @@ if(TARGET g2root)
 endif()
 
 #--periodic----------------------------------------------------------------------------------------
-ROOT_ADD_TEST(test-periodic-build COMMAND ${CMAKE_CTEST_COMMAND} 
+ROOT_ADD_TEST(test-periodic-build COMMAND ${CMAKE_CTEST_COMMAND}
                                   --build-and-test ${CMAKE_CURRENT_SOURCE_DIR}/periodic periodic-build 
                                   --build-generator ${CMAKE_GENERATOR})
+
+if(builtin_zlib)
+  ROOT_ADD_TEST(test-zlib-version
+    COMMAND ${ROOT_root_CMD} -v -l -q ${CMAKE_CURRENT_SOURCE_DIR}/test_zlib_version.C
+    PASSREGEX "symbol 'zlibVersion' unresolved")
+endif()
