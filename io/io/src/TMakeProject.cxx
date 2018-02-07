@@ -116,7 +116,7 @@ TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos
                   if (strcmp(name + strlen(name) - 2, ".h") == 0) {
                      result.Append(".h");
                   }
-                  ChopFileName(result,255);
+                  ChopFileName(result,127);
                   return result;
                }
 #ifndef WIN32
@@ -148,7 +148,7 @@ TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos
             result.Append(name[i]);
       }
    }
-   ChopFileName(result,255);
+   ChopFileName(result,127);
    return result;
 }
 
