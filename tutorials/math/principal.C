@@ -17,7 +17,7 @@
 
 void principal(Int_t n=10, Int_t m=10000)
 {
-   Int_t c = n / 5 + 1;
+   Int_t c = int(n / 5) + 1;
 
    cout << "*************************************************" << endl;
    cout << "*         Principal Component Analysis          *" << endl;
