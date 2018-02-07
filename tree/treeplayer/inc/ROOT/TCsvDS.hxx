@@ -28,7 +28,6 @@ namespace TDF {
 class TCsvDS final : public ROOT::Experimental::TDF::TDataSource {
 
 private:
-   using Record = std::vector<void *>;
    // Possible values are d, b, l, s. This is possible only because we treat double, bool, Long64_t and string
    using ColType_t = char;
    static const std::map<ColType_t, std::string> fgColTypeMap;
@@ -41,7 +40,7 @@ private:
    std::list<ColType_t> fColTypesList;
    std::vector<std::vector<void *>> fColAddresses; // fColAddresses[column][slot]
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges;
-   std::vector<Record> fRecords;                           // fRecords[entry][column]
+   std::vector<Record_t> fRecords;                         // fRecords[entry][column]
    std::vector<std::vector<double>> fDoubleEvtValues;      // one per column per slot
    std::vector<std::vector<Long64_t>> fLong64EvtValues;    // one per column per slot
    std::vector<std::vector<std::string>> fStringEvtValues; // one per column per slot
@@ -52,7 +51,7 @@ private:
    static TRegexp intRegex, doubleRegex1, doubleRegex2, trueRegex, falseRegex;
 
    void FillHeaders(const std::string &);
-   void FillRecord(const std::string &, Record &);
+   void FillRecord(const std::string &, Record_t &);
    void GenerateHeaders(size_t);
    std::vector<void *> GetColumnReadersImpl(std::string_view, const std::type_info &);
    void InferColTypes(std::vector<std::string> &);
