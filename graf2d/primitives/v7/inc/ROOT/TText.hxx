@@ -20,7 +20,6 @@
 
 #include <ROOT/TDrawable.hxx>
 #include <ROOT/TPad.hxx>
-#include <ROOT/TDisplayItem.hxx>
 #include <ROOT/TVirtualCanvasPainter.hxx>
 
 #include <ROOT/TDrawingAttrs.hxx>
