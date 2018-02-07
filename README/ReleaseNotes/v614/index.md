@@ -117,4 +117,19 @@ Changes in websockets handling in THttpServer.
 
 ## Build, Configuration and Testing Infrastructure
 
+The `python3` option to CMake has been removed. Python support is enabled by
+default. To configure ROOT to use specific Python versions, there is a new
+option called `python_version`. This is how to configure ROOT and Python for
+the common use cases:
+
+* Use the default Python interpreter:
+  - `-Dpython=ON` (default)
+* Search only for Python 2.x or only 3.x:
+  - `-Dpython_version=2` or `-Dpython_version=3`
+* Use a specific version of Python from `$PATH`:
+  - `-Dpython_version=2.7` or `-Dpython_version=3.5`
+* Use a specific Python interpreter, whatever the version:
+  - `-DPYTHON_EXECUTABLE=/usr/local/bin/python`
+
+Note: The use of `PYTHON_EXECUTABLE` requires the full path to the interpreter.
 
