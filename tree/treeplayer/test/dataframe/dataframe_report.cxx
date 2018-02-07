@@ -68,3 +68,29 @@ TEST(TDataFrameReport, AnalyseCuts)
    }
    ASSERT_EQ(0, ret) << "No exception thrown when trying to get an unnamed cut.\n";
 }
+
+TEST(TDataFrameReport, Printing)
+{
+   // Full coverage :) ?
+   TDataFrame d(8);
+   TRandom r(1);
+   auto gen = [&r]() { return r.Gaus(0, 1); };
+   auto cut0 = [](double x) { return x > 0; };
+   auto colName = "col0";
+   auto dd = d.Define(colName, gen).Filter(cut0, {colName}, "cut0");
+
+   testing::internal::CaptureStdout();
+   dd.Report();
+   std::string output0 = testing::internal::GetCapturedStdout();
+   EXPECT_FALSE(output0.empty());
+
+   testing::internal::CaptureStdout();
+   auto rep = dd.Report(false);
+   std::string output1 = testing::internal::GetCapturedStdout();
+   EXPECT_TRUE(output1.empty());
+
+   testing::internal::CaptureStdout();
+   rep.Print();
+   output1 = testing::internal::GetCapturedStdout();
+   EXPECT_STREQ(output1.c_str(), output0.c_str());
+}
