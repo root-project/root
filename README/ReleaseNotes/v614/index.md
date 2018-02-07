@@ -40,6 +40,7 @@ The following people have contributed to this new version:
 ## Core Libraries
    - Optimize away redundant deserialization of template specializations. This reduces the memory footprint for hsimple
      by around 22% while improving the runtime performance for various cases by around 15%.
+   - When ROOT is signaled with a SIGUSR2 (i.e. on Linux and MacOS X) it will now print a backtrace.
 
 ## I/O Libraries
    - Implement reading of objects data from JSON
