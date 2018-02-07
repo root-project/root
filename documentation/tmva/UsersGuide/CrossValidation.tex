@@ -3,6 +3,9 @@
 % TODO: Add text to the ordinary flow, indicating that for CV, read here.
 
 %
+% TODO: Short definition: "Validation" -> What is it?
+% TODO: To what does the test set belong? Validation for performance estimation?
+%
 % sources
 %  "A survey of cross-validation procedures for model selection"
 %  "Elements of statistical learning"
@@ -13,9 +16,14 @@
 %
 %  Caltech lecture
 %
+% sources 2
+%  Geisser (1975) - Introduces V-fold CV
+%
+
+% Validation estimates directly the out of sample error. (I mean this is just a test set that you can reuse).
 
 \section{Cross Validation}
-Cross validation is an important tool for making the most out of limited data
+Cross validation is a tool for making the most out of limited data
 sets trading increased data efficiency for decreased computation efficiency.
 This is relevant to HEP applications since experiments are limited by the
 prohibitive cost of running detector and reconstruction simulation.
@@ -26,94 +34,237 @@ recommended to peruse (...).
 We also consider only a very specific application (regression). For the full
 discusion, for different contexts see (...).
 
+TODO: Summarise the complete section heavily.
+
 \subsection{Overview}
+TMVA is a framework for performing supervised learning where the objective is to find a mapping from a set of samples to some given target. The samples are comprised of a number of features. In TMVA parlance the set of samples are called \emph{events}, the features of those events are called \emph{variables} and the target is called just that.
 
-% Find good source for this, spice up language
-In the domain of supervised learning the objective is to find a mapping from a set features to some given target.
-To that end we apply some algorithm to find such a mapping.
+TODO: Add a description of modelling. $y = \hat{f}(x)$.
 
-A common set up is to have a dataset with a given number of samples, or events, with some ...
+% TODO: 
+% In this discussion, the set of input events will be denoted $x$ which is a matrix in $\mathbb{R}^{N \times d}$ where $N$ is the number of events in the set and $d$ is the number of features, or variables, per event. The target is given as $y$.
 
-\begin{equation}
-\mathcal{D} = \left\{x : x \in \mathbb{R}^{d}\right\}
-\end{equation}
+% This notation is inspired by Hastie et. al. \cite{hastie-elem-of-stat}.
 
-\paragraph{Overfitting}
-Bias-variance trade-off
-Basic example with polynomial to illustrate idea.
+Given a data set consisting of $N$ events $x$, each drawn from $\mathbb{R}^{d}$ with some probability $p(x)$. There exists some mapping from feature space to target space which for classification can be written as $y = \<p(c_k | x); 1 \leq k \leq K\>$ where $K$ is the number of classes. In the case of binary classification this simplifies to $y = p_{signal}(x) = f(x)$ since $p_{background}(x) = 1 - p_{signal}(x)$.
 
-N.B. Just because there is a discrepancy between the training and test error does \emph{not} mean that we have overfitting. Overfitting is when when the test error starts increasing. Training error is in general monotonically decreasing.
+The goal of supervised learning is to approximate the target function $f$. The estimate is here denoted $\hat{f}$.
+
+\begin{align}
+\mathcal{D} &= \left\{x : x \in \mathbb{R}^{d}\right\} \\
+|\mathcal{D}| &= N
+\end{align}
 
 \paragraph{Objectives}
-   model selection
-   performance estimation
+Two main objectives of cross validation can be identified: Model selection and performance estimation. The procedures involved are very similar, the differences lie in how the results are used.
 
+In model selection the goal is to to performance estimation on several candidate models to select the best one. This includes choosing between different learning algorithms such as BDT's, kNN's or multilayer perceptrons and tuning hyper-parameters for an algorithm.
+ % since these parameters control the number of free parameters of the resulting model.
 
-In general, we have no idea how well our model performs on unseen data. We can hope that it performs as good as on the training set, but this is for complex models, an optimistic (too good to be true) estimation. To get an idea of how 
+In performance estimation one seeks an estimation of the prediction error, $Err_{\mathcal{T}}$, for a final selected method.
+
+In model selection, the validation set is reused several times, once for each candidate model which leads to an optimistic bias of the performance even if every constituent estimation is unbiased.  This necessitates the use of final estimation on out-of-sample data to get an unbiased estimate for the selected model.
+
+% Consider the coin flip example for optimistic bias.
+
+If our data set is large, the best approach to achieve both of these goals is to partition the data into three sets, the train, validation and test set.  The validation set is used for model selection while the test set is used for performance estimation of the final selected model.
+% In some circumstances one can introduce several validation sets, however that does not change the below reasoning.
 \begin{equation}
-\mathcal{D} = \mathcal{D}_{train} \cup \mathcal{D}_{test}
+\mathcal{D} = \mathcal{D}_{train} \cup \mathcal{D}_{val} \cup \mathcal{D}_{test}
 \end{equation}
-\begin{equation}
-\mathcal{D}_{train} = \left\{x_k : x \in \mathbb{R}^{n}\right\}
-\end{equation}
-\begin{equation}
-\mathcal{D}_{test} = \left\{x_k : x \in \mathbb{R}^{n}\right\}
-\end{equation}
+\begin{align}
+\mathcal{D}_{train} &= \left\{x_k : 1 \leq k \leq N_t \right\} \\
+\mathcal{D}_{val} &= \left\{x_k : 1 \leq k \leq N_v \right\} \\
+\mathcal{D}_{test} &= \left\{x_k : 1 \leq k \leq N_{test} \right\} \\
+N &= N_t + N_v + N_{train}
+\end{align}
+
+\begin{center}
+\begin{figure}
+   \missingfigure{}
+   \label{fig:test0}
+   \caption{The training, validation and test set.}
+\end{figure}
+\end{center}
 
 % TODO: Figure with showing the different sets graphically.
 
+% To get an intuition why these two objectives are different, consider randomly flipping two fair coins. The probability 
 
-We cannot take \emph{any} decisions using the performance estimations we arrived at. Doing so introduces a bias.
-$z = min( x, y )$ where $p(x<0.5) = 0.5$ and $p(y<0.5) = 0.5$ yields $p(z<0.5) = 0.75$. So conciously choosing the best performing model will result in an optimistic (better than the truth) estimation of the performance.
+% Tie in from model selection.
+% We cannot take \emph{any} decisions using the performance estimations we arrived at. Doing so introduces a bias.
+% $z = min( x, y )$ where $p(x<0.5) = 0.5$ and $p(y<0.5) = 0.5$ yields $p(z<0.5) = 0.75$. So conciously choosing the best performing model will result in an optimistic (better than the truth) estimation of the performance.
 
-This is why we introduce the validation set
+% This is why we introduce the validation set
+% \begin{equation}
+% \mathcal{D} = \mathcal{D}_{train} \cup \mathcal{D}_{validation} \cup \mathcal{D}_{test}
+% \end{equation}
+
+The prediction error is the expected performance of model given a training set as measured on events not seen during training and is defined as
 \begin{equation}
-\mathcal{D} = \mathcal{D}_{train} \cup \mathcal{D}_{validation} \cup \mathcal{D}_{test}
+Err_{\mathcal{T}} = E\left[L(Y,f(X)) | \mathcal{T} \right]
+\end{equation}
+where $(X, Y)$ are two random variables drawn from the joint probability distribution.
+
+A related measure, the expected prediction error, additionally averages over all possible training sets
+\begin{equation}
+Err = E\left[L(Y, \hat{f}(X))\right] = E\left[Err_{\mathcal{T}}\right]
 \end{equation}
 
-
+The training is defined as
 \begin{equation}
-E_{out} = \frac{1}{K}\sum_{k=1}^{K}L(f(x_k), y_k)
+\overline{err} = \frac{1}{N_t}\sum_{k=1}^{N_t}L(y_k, \hat{f}(x_k))
 \end{equation}
-\begin{equation}
-E_{val} = \frac{1}{K}\sum_{k=1}^{K}L(f(x_k), y_k)
-\end{equation}
+.
 
-scaling to cross validation (benefits and drawbacks)
+% \paragraph{Bias-variance trade-off}
+% Tie in from performance estimation.
+
+% \paragraph{Validation as training}
+% We can improve performance of "our algorithm" by doing model selection. Consider having a hyper parameter that is tuned by model selection. This can improve our final performance [why?] but will introduce bias. Consider a two random variables estimating our function with some variance. The expected value for both is $1$. When we do model selection we are doing lots of estimates of the error, all with some expected value and a variance. We then choose the minimum as our best model. But what happens with the expected value of our two random variables in this case? $E[min(A, B)] < 1$ since the probability that at least one of them is below $1$ is larger than 50\%.
+
+% Hence two conclusions. If we reuse the validation set too much, the optimistic bias introduced will start becoming significant. It is then better to introduce another validation set which is "fresh". We also need a final test set that provides an unbiased estimate of the final model.
+
+% Basic example with polynomial to illustrate idea. We have many more possible realisations of a high degree polynomial than a low degree one. The higher degree model can, in theory implemented all the function that a lower degree one can, and then some. This means, in general that the expressive power of a model goes up along with the number of parameters. Or cast in different words, that the bias of the model decreases. However, at a certain level, the model will start adapting to the noise in the target. (Consider a linear function with additive noise). 15 degree poly can fit exactly 15 data points (roots of the poly). Depending on what 15 points were chosen we will have wildly varying solutions. Fitting the the constant model will give us an estimation of $E\left[Y\right]$, but it will never be able to find the true function that was linear.
+
+% Notice that this becomes a factor when the number of parameters in the model is on the same order, or larger, that the number of events in the training sample.
+
+% N.B. Just because there is a discrepancy between the training and test error does \emph{not} mean that we have overfitting. Overfitting is when when the test error starts increasing. Training error is in general monotonically decreasing.
+
+\subsubsection{Cross validation}
+Cross validation is designed for situations where there access to data is limited and entails efficient reuse of data. It allows us to evaluate our model on the complete dataset and use a larger sample size for training than with ordinary validation.  The price to pay is an increase in computational cost.
+
+The general framework of cross validation splits the data into K parts where, in turn, one part is used as the validation set and the rest as the training set. This requires K trainings of the model with a training set size of $N - N_K$ where $N$ is the total number of events and $N_K$ is number of events in a part.
+
+The procedure can be combined with ordinary validation or be nested to generate the three required data sets.
+
+% Main diff. between scaling folds is the size AND the correlation between the data sets.
+
 % TODO: Figure with showing the different sets graphically.
 
-derivation for leave-one-out cv (+explanation)
-scale to k-folds (+explanation)
+To understand the theoretical underpinnings we will start with considering a form of cross validation called leave-one-out, first introduced in \cite{loo-paper}. In leave-one-out a single event is put in the validation set for each training iteration.
 
-\paragraph{K-folds}
-\paragraph{Stratification}
+If we consider a regression setting where we want to model $y = f(x) + \nu$ where $y$ is our measurement, $f$ is the true function and $\nu$ is additive Gaussian noise with zero mean and a variance of $\sigma^2$. 
 
+The expected error for a single point will now be $Err_{\mathcal{T}} = E\left[ L(Y, f(X)) \right]$.
+
+Performing the leave-one-out procedure suffers from two problems. In large datasets the time requirements for the N training sessions can be prohibitive event with models that are cheap to train. There is also significant correlation between the different training sets. This affects the estimated variance of the expected prediction error.
+
+K-folds cross validation is a modification of the leave-one-out procedure where, instead of using a single point for validation per training iteration, we use a collection. The data is split randomly into K folds, each being roughly equal in size. This significantly reduce the number of training sessions required and decorrelates the training sets.
+
+In particular when $K=2$ the two resulting sets will be independent.
+
+\begin{center}
+\begin{figure}
+   \missingfigure{}
+   \label{fig:cv}
+   \caption{In cross validation, the original data is split into a number of partitions.}
+\end{figure}
+\end{center}
+
+\begin{center}
+\begin{figure}
+   \missingfigure{}
+   \label{fig:cv2}
+   \caption{These partitions are then assembled into training sessions.}
+\end{figure}
+\end{center}
+
+% TODO: Put in the error estimation from 15:00 in video
+% Error discussion should invovle going from random vairables to sample estimates
+
+% \paragraph{Bias in cross validation}
+% When we split up the folds in cv, if the different training sets share data points as in e.g. LOO or 10-fold cv they will be correlated which will affect the estimation.
+% And even the 2-fold cross validation might be biased \cite{no-unbiased-cv-est.}
+
+
+% \paragraph{Stratification}
 % TODO: Figure with showing the different sets graphically.
 
 \subsubsection{Common workflows}
 
-\paragraph{Option 1}
+\paragraph{Cross validation for performance estimation}
 Describe what happens when you estimate the error for a smaller subset and train on the whole.
+
+A simple approach to evaluating the performance of a model using cross validation is to evaluate the learning algorithm on each fold, training on the remaining folds.
+
+This will yield an estimate of the model performance when trained on $N_t$ events. We can then retrain the model on the complete dataset. If the number of events when doing cross validation is approximately the same, we can extrapolate the error estimates to the final training.
+
+The reasoning is that $Err_{\mathcal{T}_{N_t}}$ is an estimate of $Err_{\mathcal{T}_{N_t}}$. We then assume that since $N \approx N_t$ then $Err_{\mathcal{T}_{N_t}} \approx Err_{\mathcal{T}_{N}}$.
+
+That is, put in a different way: On average, the final model will have the given average performance. Note that there are two averages here since our estimation was not done for the trained model but for a similar one.
+
+\begin{center}
+\begin{figure}
+   \missingfigure{}
+   \label{fig:workflow0}
+   \caption{Pictorial description of the work flow for the common case}
+\end{figure}
+\end{center}
+
 \paragraph{"Cross Evaluation", change name}
-Describe "Cross evaluation".
+Describe "Cross evaluation". When our goal is performance estimation and when it is important that the estimation holds for the final model.
+
+In the previously suggested work flow, the estimation is not done for the final model. This alternative is suitable when the estimated performance must estimate the final model.
 
 Motivation:
 In the first option we know that the average resulting model will on average
 perform better than our measure but there is this gap. In physics analysis
 there is a more stringent requirement on the statistical certainty. We want to
-know how the model we have _actually_ perform. One way of getting the best of
-both world is through a technique sometimes calles cross evaluation.
+know how the model we have \emph{actually} perform. One way of getting the best of
+both world is through a technique sometimes called cross evaluation.
 
+% A different approach is to do a fold deterministic split using a unique sample id.
 
+A different approach is to use all K models generated by the k-folds cross validation procedure for application as well. In this setting it is important that all samples end up in the same fold. (Or rather, that a sample used in training does not end up in testing for that model, ever.) This can be achieved e.g. by calculating the split on a unique identifier assigned at generation/collection time.
 
+The idea is to say: The model will perform this well on average. If we compare this statement to the one in \ref{para:just-before} here we get an estimation for the final model while the previous statement was for the expectation of the final model.
+
+We can here analyse each final model individually, and collectively.
+
+\begin{center}
+\begin{figure}
+   \missingfigure{}
+   \label{fig:workflow1}
+   \caption{Pictorial description of the alternate work flow.}
+\end{figure}
+\end{center}
 
 \subsection{Implementation}
+Cross validation in TMVA is implemented as a wrapper around the Factory class. This means the cross validated work flow uses a separate entry point, but effort is made to maintain similarity between the two interfaces.
 
-... Implementiation details ...
-
-As a factory, but one that does cross validation automatically.
+Classification / Regression / Multi class fully supported
 
 Note: Interface is changed from ordinary factory w.r.t. dataloader handling.
+
+Note: Currently supports only one kind of split, k-fold cv.
+
+Feature: Deterministic split.
+\paragraph{Split Expression}
+If given as "" the split will be random.
+
+For a deterministic split.
+TFormula
+Will be provided a context.
+ - All spectators. No variables b/c the splitting should be independent of the data
+ - Special variables. Currently only NumFolds/numFolds.
+
+The output should be an integer that is a fold. [What happens else?].
+
+Example "int([eventNumber])\%int([NumFolds])". The syntax is a consequence of the expression being backed by a TFormula. They are made available trough named parameters, hence the brackets "[]". Further more the formula can only handle doubles, hence the "int()".
+
+\paragraph{Output}
+
+\paragraph{Graphs, aggregate metrics}
+One can get the ROCCurves for the folds. One can get avg and std.
+This is how one does it.
+
+\paragraph{Files}
+Describe how output files are handled. One combined output file. Also fold output files are possible.
+All models will always be saved, however this can change in future versions.
+
+\paragraph{Application}
+Describe the application phase and requirements.
 
 \subsubsection{Cross validation options}
 Booking options
@@ -136,14 +287,17 @@ In addition to the options provided by the TMVA Factory, the CrossValidation cla
 
 \begin{optiontableAuto}
 SplitExpr & \mc{1}{c}{--} & "" &  \mc{1}{l}{--} 
-          & Expression used to assign events to folds \\
+          & Expression used to assign events to folds. If not given or given as "" events will be assigned to folds randomly. \\
+
+SplitSeed & \mc{1}{c}{--} & "" &  \mc{1}{l}{--} 
+          & Only used when SplitExpr is "". Determines the seed for the random assignment of events to folds. \\
 
 NumFolds & \mc{1}{c}{--} & 2 &  \mc{1}{l}{--} 
-         & Number of folds to generate \\
+         & Number of folds to generate. \\
 
 FoldFileOutput & \mc{1}{c}{--} & False &  \mc{1}{l}{--} 
          & If given a TMVA output file will be generated for each fold.
-           Filename will be the same as specifed for the combined output with
+           File name will be the same as specified for the combined output with
            a \_foldX suffix. \\
 
 OutputEnsembling & \mc{1}{c}{--} & "None" & "None", "Avg"
@@ -173,17 +327,48 @@ Usage examples
    code examples
    tutorial files?
 
-Limitations / Capabilities
-   Classification / Regression / Multiclass fully supported
-   ...
-
 \subsection{Performance}
 Present toy examples
-Scaling with number of examples
-Scaling with dimensions
-Scaling with folds
+
+\paragraph{Scaling with number of examples}
+   - $\overline{err}$ and $Err$
+      show both E[·] and var(·)
+   - Uninteresting, more of a guarantee that it is working as intended.
+\begin{center}
+\begin{figure}
+   \missingfigure{}
+   \label{fig:test1}
+   \caption{Scaling with number of examples.}
+\end{figure}
+\end{center}
+
+\paragraph{Scaling with dimensions}
+   - $\overline{err}$ and $Err$
+      show both E[·] and var(·)
+   - The idea here is that in high dimensional spaces, the data will always be sparse and can benefit from an increase in training set size.  See Figure 7.8 (p.243) of "The Elements".
+\begin{center}
+\begin{figure}
+   \missingfigure{}
+   \label{fig:test2}
+   \caption{Scaling with dimensions.}
+\end{figure}
+\end{center}
+
+\paragraph{Scaling with folds}
+   - $\overline{err}$ and $Err$
+      show both E[·] and var(·)
+   - As we increase the number of folds, the size of the training set increases leading to better average performance. However, the correlations between training sets increase as well, so it is interesting to compare the estimated performance and the "true performance". Especially variance.
+\begin{center}
+\begin{figure}
+   \missingfigure{}
+   \label{fig:test3}
+   \caption{Scaling with folds.}
+\end{figure}
+\end{center}
 
 Recommendation of parameters
+   - Litt. says 10-fold generally offers a good compromise. It is possible to do better, but that depends on you use case.
+   - If one is concerned about the training set correlation, 2-fold is recommended.
 
 % \subsection{Examples}
 
