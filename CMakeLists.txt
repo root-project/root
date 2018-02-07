@@ -327,6 +327,7 @@ if(MSVC)
   string(REPLACE "-nologo" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-EHsc-" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-GR" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+  string(REPLACE "-MDd" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
 endif()
 
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
@@ -366,7 +367,6 @@ else()
 endif()
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
-if(NOT WIN32)
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
 if(WIN32)
@@ -385,7 +385,6 @@ else()
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 endif()
 install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
-endif()
 
 #---version--------------------------------------------------------------------------------------
 if(NOT WIN32)
