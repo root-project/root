@@ -79,6 +79,7 @@ The following people have contributed to this new version:
      Nuñez J, Anderton C, and Renslow R. Optimizing colormaps with consideration
      for color vision deficiency to enable accurate interpretation of scientific data.
      See the article [here](https://arxiv.org/abs/1712.01662)
+   - New graphics style "ATLAS" from M.Sutton.
 
 ## 3D Graphics Libraries
   - When a LEGO plot was drawn with Theta=90, the X and Y axis were misplaced.
@@ -106,6 +107,8 @@ Changes in websockets handling in THttpServer.
 ## JavaScript ROOT
 
 ## Tutorials
+
+  - New graphics tutorial AtlasExample.C illustrating the ATLAS style
 
 ## Class Reference Guide
 
