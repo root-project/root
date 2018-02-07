@@ -15,38 +15,6 @@
 #include <vector>
 
 namespace ROOT {
-namespace Internal {
-namespace TDS {
-
-class TPointerHolder {
-protected:
-   void *fPointer{nullptr};
-
-public:
-   TPointerHolder(void *ptr) : fPointer(ptr) {}
-   void *GetPointer() { return fPointer; }
-   void *GetPointerAddr() { return &fPointer; }
-   virtual TPointerHolder *GetDeepCopy() = 0;
-   virtual ~TPointerHolder(){};
-};
-
-template <typename T>
-class TTypedPointerHolder final : public TPointerHolder {
-public:
-   TTypedPointerHolder(T *ptr) : TPointerHolder((void *)ptr) {}
-
-   virtual TPointerHolder *GetDeepCopy()
-   {
-      const auto typedPtr = (T *)fPointer;
-      return new TTypedPointerHolder(new T(*typedPtr));
-   }
-
-   ~TTypedPointerHolder() { delete (T *)fPointer; }
-};
-
-} // ns TDS
-} // ns Internal
-
 namespace Experimental {
 namespace TDF {
 ////////////////////////////////////////////////////////////////////////////////////////////////
@@ -68,7 +36,15 @@ class TLazyDS final : public ROOT::Experimental::TDF::TDataSource {
    const std::map<std::string, std::string> fColTypesMap;
    const PointerHolderPtrs_t fPointerHoldersModels;
    std::vector<PointerHolderPtrs_t> fPointerHolders;
-   std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges{};
+   std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges
+
+
+
+
+
+
+
+   {};
    unsigned int fNSlots{0};
 
    Record_t GetColumnReadersImpl(std::string_view colName, const std::type_info &id)
