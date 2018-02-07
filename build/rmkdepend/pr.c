@@ -109,12 +109,18 @@ char *file, *base, *dep;
          ipifile[1] = ipifile[0];
          ipifile[0] = '/';
       } else {
+#ifdef _MSC_VER
+         /* native Windows */
+         ipifile = malloc(len);
+         strcpy(ipifile, ip->i_file);
+#else
          /* generic cygwin */
          ipifile = malloc(len + 11);
          strcpy(ipifile, "/cygdrive/");
          ipifile[10] = ip->i_file[0];
          strcpy(ipifile + 11, ip->i_file + 2);
          len += 9;
+#endif
       }
    } else ipifile = ip->i_file;
 
