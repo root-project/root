@@ -414,13 +414,8 @@ char **argv;
       *incp++ = defincdir;
    }
 
-   fprintf(stderr, "WARNING: this tool is deprecated and will be removed in ROOT 6.16!\n");
-   fprintf(stderr, "Please use compiler-generated dependency files (`gcc -MMD` etc).\n");
-
    redirect(startat, makefile);
 
-   fprintf(stdout, "\n$(warning WARNING: this tool is deprecated and will be removed in ROOT 6.16!)\n");
-   fprintf(stdout, "$(warning Please use compiler-generated dependency files (`gcc -MMD` etc).)\n\n");
    /*
     * catch signals.
     */
