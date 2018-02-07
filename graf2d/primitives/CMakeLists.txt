@@ -9,9 +9,10 @@ if(root7)
    ROOT_GLOB_HEADERS(Graf2dPrim_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/T*.hxx)
 
    ROOT_STANDARD_LIBRARY_PACKAGE(ROOTGPrimitives
-      HEADERS ${Graf2dPrim_v7_dict_headers}
+      HEADERS *.h ${Graf2dPrim_v7_dict_headers}
       SOURCES *.cxx ${root7src}
-      DICTIONARY_OPTIONS "-writeEmptyRootPCM")
+      DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+      DEPENDENCIES RIO)
 
    if(testing)
       add_subdirectory(v7/test)
