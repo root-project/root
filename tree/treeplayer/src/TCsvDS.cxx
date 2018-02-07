@@ -103,7 +103,7 @@ void TCsvDS::FillHeaders(const std::string &line)
    }
 }
 
-void TCsvDS::FillRecord(const std::string &line, Record &record)
+void TCsvDS::FillRecord(const std::string &line, Record_t &record)
 {
    std::istringstream lineStream(line);
    auto i = 0U;
