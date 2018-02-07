@@ -37,7 +37,7 @@ The following people have contributed to this new version:
 
 ## Removed and deprecated interfaces
 
-### rmkdepend
+### rmdepend
 `rmkdepend` will be removed in v6.16. Please migrate to use CMake or use `gcc -MMD` and alike.
 
 ## Core Libraries
