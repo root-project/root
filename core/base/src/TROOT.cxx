@@ -2829,7 +2829,7 @@ const TString& TROOT::GetRootSys() {
 #endif
       static TString rootsys;
       if (rootsys.IsNull())
-         rootsys = gSystem->Getenv("ROOTSYS");
+         rootsys = gSystem->UnixPathName(gSystem->Getenv("ROOTSYS"));
       if (rootsys.IsNull())
          rootsys = gRootDir;
       return rootsys;
@@ -2969,9 +2969,6 @@ const TString& TROOT::GetMacroDir() {
          rootmacrodir = "macros";
          gSystem->PrependPathName(GetRootSys(), rootmacrodir);
       }
-#ifdef R__WIN32
-      rootmacrodir.ReplaceAll("\\", "/");
-#endif
       return rootmacrodir;
 #ifdef ROOTMACRODIR
    } else {
