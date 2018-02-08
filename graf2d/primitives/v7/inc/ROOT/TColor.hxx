@@ -209,6 +209,8 @@ inline TPadCoord::Normal operator"" _alpha(long double val)
 }
 #endif
 
+void InitializeAttrFromString(const std::string &name, const std::string &strval, TColor& val);
+
 } // namespace Experimental
 } // namespace ROOT
 
