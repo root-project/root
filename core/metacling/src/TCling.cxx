@@ -5883,8 +5883,13 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    //  function name.
    //
 
-   if (!strncmp(name.c_str(), "public: __thiscall ", sizeof("public: __thiscall ")-1)) {
-      name.erase(0, sizeof("public: __thiscall ")-1);
+   std::string::size_type pos = name.find("__thiscall ");
+   if (pos != std::string::npos) {
+      name.erase(0, pos + sizeof("__thiscall ")-1);
+   }
+   pos = name.find("__cdecl ");
+   if (pos != std::string::npos) {
+      name.erase(0, pos + sizeof("__cdecl ")-1);
    }
    if (!strncmp(name.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
       name.erase(0, sizeof("typeinfo for ")-1);
@@ -5894,7 +5899,7 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
               && !isalnum(name[sizeof("operator")])) {
      // operator...(A, B) - let's try with A!
      name.erase(0, sizeof("operator")-1);
-     std::string::size_type pos = name.rfind('(');
+     pos = name.rfind('(');
      if (pos != std::string::npos) {
        name.erase(0, pos + 1);
        pos = name.find(",");
