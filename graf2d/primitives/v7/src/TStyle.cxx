@@ -19,6 +19,8 @@
 #include "ROOT/TPadExtent.hxx"
 #include "ROOT/TPadPos.hxx"
 
+#include "TStyleReader.hxx" // in src/
+
 #include <cassert>
 #include <limits>
 
@@ -73,4 +75,12 @@ TStyle &TStyle::GetCurrent()
 {
    static TStyle sCurrentStyle = GetInitialCurrent();
    return sCurrentStyle;
+}
+
+std::string TStyle::GetAttribute(const std::string &attrName) const {
+   auto iter = fAttrs.find(attrName);
+   if (iter != fAttrs.end())
+      return iter->second;
+   R__WARNING_HERE("Graf2d") << "Stripping of outer name parts not yet implemented!";
+   return {};
 }

@@ -33,15 +33,13 @@ namespace Experimental {
 
 class TStyle {
 public:
-   /// A map of attribute name to attribute value for an attribute type `PRIMITIVE`.
-   template <class PRIMITIVE>
-   using Attrs_t = std::unordered_map<std::string, PRIMITIVE>;
-   using AllAttrs_t = std::tuple<Attrs_t<TColor>, Attrs_t<long long>, Attrs_t<double>>;
+   /// A map of attribute name to string attribute values/
+   using Attrs_t = std::unordered_map<std::string, std::string>;
 
 private:
    /// Mapping of user coordinates to normal coordinates.
    std::string fName; // Name of the attribute set.
-   AllAttrs_t fAttrs; // Pairs of name / attribute values.
+   Attrs_t fAttrs; // Pairs of name / attribute values.
 
 public:
    /// Default constructor, creating an unnamed, empty style.
@@ -50,8 +48,8 @@ public:
    /// Creates a named but empty style.
    explicit TStyle(std::string_view name): fName(name) {}
 
-   /// Constructor taking user coordinate system, position and extent.
-   TStyle(std::string_view name, AllAttrs_t &&attrs): fName(name), fAttrs(std::move(attrs)) {}
+   /// Constructor taking the style name and a set of attributes (e.g. read from the config files).
+   TStyle(std::string_view name, Attrs_t &&attrs): fName(name), fAttrs(std::move(attrs)) {}
 
    const std::string &GetName() const { return fName; }
 
@@ -66,6 +64,12 @@ public:
 
    /// Set the current TStyle by copying `style` into the static current style object.
    static void SetCurrent(const TStyle &style) { GetCurrent() = style; }
+
+   /// Get the style value as a string, given an attribute name.
+   /// Strips leading "foo." from the name until the first entry in the style is found.
+   /// E.g. if the default style has not entry for "Hist.1D.Fill.Color", the value might
+   /// be initialized to the default style's entry for the more general "1D.Fill.Color".
+   std::string GetAttribute(const std::string &attrName) const;
 };
 
 } // namespace Experimental
