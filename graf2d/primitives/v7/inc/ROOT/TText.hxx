@@ -16,7 +16,7 @@
 #ifndef ROOT7_TText
 #define ROOT7_TText
 
-#include <ROOT/TDrawingOptsBase.hxx>
+#include <ROOT/TDrawingAttrs.hxx>
 
 #include <ROOT/TDrawable.hxx>
 #include <ROOT/TPad.hxx>
@@ -65,32 +65,25 @@ public:
    double GetY() const { return fY; }
 };
 
-class TextDrawingOpts : public TDrawingOptsBase<TextDrawingOpts> {
-
-   TLineAttrs fLine{*this, "Text.Line", TColor::kBlack, TLineAttrs::Width{3}}; ///< The line attributes
-   TFillAttrs fFill{*this, "Text.Fill", TColor::kWhite};                       ///< The fill attributes
+class TextDrawingOpts {
+   TDrawingAttrOrRef<int> fLineWidth{"Text.Line.Width", 3}; ///< The line width.
+   TDrawingAttrOrRef<TColor> fLineColor{"Text.Line.Color", TColor::kBlack}; ///< The line color.
+   TDrawingAttrOrRef<TColor> fFillColor{"Text.Fill.Color", TColor::kInvisible}; ///< The fill color.
 
 public:
-   TextDrawingOpts() = default;
-   explicit TextDrawingOpts(TPadBase &pad) : TDrawingOptsBase<TextDrawingOpts>(pad, "Text") {}
-   //      fLine{*this, "Text.Line", TColor::kBlack, TLineAttrs::Width{3}},
-   //      fAttr{*this, "Text.Fill", TColor::kWhite}
-   //   {}
-
    /// The color of the line.
-   void SetLineColor(const TColor &col) { Update(fLine.fColor, col); }
-   TColor &GetLineColor() { return this->Get(fLine.fColor); }
-   //   const TColor &GetLineColor() const { return this->Get(fLine.fColor); }
+   void SetLineColor(const TColor &col) { fLineColor = col; }
+   TColor &GetLineColor() { return fLineColor.Get(); }
+   const TColor &GetLineColor() const { return fLineColor.Get(); }
 
    /// The width of the line.
-   //   void SetLineWidth(TLineAttrs::Width width) { this->Update(fLine.fWidth, width); }
-   //   TLineAttrs::Width &GetLineWidth() { return this->Get(fLine.fWidth); }
-   //   const TLineAttrs::Width GetLineWidth() const { return this->Get(fLine.fWidth); }
+   void SetLineWidth(int width) { fLineWidth = width; }
+   int GetLineWidth() { return (int)fLineWidth; }
 
    /// The fill color
-   void SetFillColor(const TColor &col) { this->Update(fFill.fColor, col); }
-   TColor &GetFillColor() { return this->Get(fFill.fColor); }
-   //   const TColor &GetFillColor() const { return this->Get(fFill.fColor); }
+   void SetFillColor(const TColor &col) { fFillColor = col; }
+   TColor &GetFillColor() { return fFillColor.Get(); }
+   const TColor &GetFillColor() const { return fFillColor.Get(); }
 };
 
 class TTextDrawable : public TDrawable {
@@ -100,13 +93,13 @@ private:
    Internal::TUniWeakPtr<ROOT::Experimental::TText> fText{};
 
    /// Text attributes
-   TextDrawingOpts fOpts{};
+   TextDrawingOpts fOpts;
 
 public:
    TTextDrawable() = default;
 
-   TTextDrawable(const std::shared_ptr<ROOT::Experimental::TText> &txt, TPadBase &pad)
-      : TDrawable(), fText(txt), fOpts(pad)
+   TTextDrawable(const std::shared_ptr<ROOT::Experimental::TText> &txt)
+      : TDrawable(), fText(txt)
    {
    }
 
@@ -120,9 +113,9 @@ public:
 };
 
 inline std::unique_ptr<ROOT::Experimental::TTextDrawable>
-GetDrawable(const std::shared_ptr<ROOT::Experimental::TText> &text, TPadBase &pad)
+GetDrawable(const std::shared_ptr<ROOT::Experimental::TText> &text)
 {
-   return std::make_unique<ROOT::Experimental::TTextDrawable>(text, pad);
+   return std::make_unique<ROOT::Experimental::TTextDrawable>(text);
 }
 
 } // namespace Experimental
