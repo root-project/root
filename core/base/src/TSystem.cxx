@@ -2581,11 +2581,7 @@ static void R__FixLink(TString &cmd)
 }
 #endif
 
-#ifndef WIN32
-static void R__AddPath(TString &target, const TString &path) {
-   target += path;
-}
-#else
+#if defined(__CYGWIN__)
 static void R__AddPath(TString &target, const TString &path) {
    if (path.Length() > 2 && path[1]==':') {
       target += TString::Format("/cygdrive/%c",path[0]) + path(2,path.Length()-2);
@@ -2593,15 +2589,14 @@ static void R__AddPath(TString &target, const TString &path) {
       target += path;
    }
 }
+#else
+static void R__AddPath(TString &target, const TString &path) {
+   target += path;
+}
 #endif
 
-#ifndef WIN32
 static void R__WriteDependencyFile(const TString & build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
                                    const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath)
-#else
-static void R__WriteDependencyFile(const TString &build_loc, const TString &depfilename, const TString &filename, const TString &library, const TString &libname,
-                                   const TString &extension, const char *version_var_prefix, const TString &includes, const TString &defines, const TString &incPath)
-#endif
 {
    // Generate the dependency via standard output, not searching the
    // standard include directories,
@@ -2931,6 +2926,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    // ======= Get the right file names for the dictionary and the shared library
    TString expFileName(filename);
    ExpandPathName( expFileName );
+#ifdef WIN32
+   expFileName.ReplaceAll("\\", "/");
+#endif
    TString library = expFileName;
    if (! IsAbsoluteFileName(library) )
    {
@@ -3147,6 +3145,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString depfilename;
    AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
    depfilename += "_" + extension + ".d";
+#ifdef WIN32
+   depfilename.ReplaceAll("\\", "/");
+#endif
 
    if ( !recompile ) {
 
@@ -3320,6 +3321,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString libmapfilename;
    AssignAndDelete( libmapfilename, ConcatFileName( build_loc, libname ) );
    libmapfilename += ".rootmap";
+#ifdef WIN32
+   libmapfilename.ReplaceAll("\\", "/");
+#endif
 #if (defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5)) || defined(R__WIN32)
    Bool_t produceRootmap = kTRUE;
 #else
@@ -3401,6 +3405,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    dict += "cxx"; //no need to keep the extension of the original file, any extension will do
    dicth += "h";
    dictObj += fObjExt;
+#ifdef WIN32
+   dicth.ReplaceAll("\\", "/");
+   dictObj.ReplaceAll("\\", "/");
+#endif
 
    // ======= Generate a linkdef file
 
@@ -3446,7 +3454,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       lookup.Append(extensions[i]);
       name = Which(incPath,lookup);
       if (name) {
-         linkdefFile << "#pragma link C++ defined_in "<<name<<";"<< std::endl;
+         TString sname(name);
+#ifdef WIN32
+         sname.ReplaceAll("\\", "/");
+#endif
+         linkdefFile << "#pragma link C++ defined_in "<<sname.Data()<<";"<< std::endl;
          delete [] name;
       }
    }
@@ -3454,7 +3466,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    linkdefFile << std::endl;
    linkdefFile << "#endif" << std::endl;
    linkdefFile.close();
-
+#ifdef WIN32
+   linkdef.ReplaceAll("\\", "/");
+#endif
    // ======= Generate the list of rootmap files to be looked at
 
    TString mapfile;
@@ -3496,6 +3510,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
    mapfileStream.close();
+#ifdef WIN32
+   mapfile.ReplaceAll("\\", "/");
+#endif
 
    // ======= Generate the rootcling command line
    TString rcling = "rootcling";
@@ -3615,7 +3632,11 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
 
+#ifdef _MSC_VER
+   linkLibraries.Prepend(linkLibrariesNoQuotes);
+#else
    linkLibraries.Prepend(librariesWithQuotes);
+#endif
 
    // ======= Generate the build command lines
    TString cmd = fMakeSharedLib;
@@ -3647,6 +3668,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    }
 #ifdef WIN32
    R__FixLink(cmd);
+   cmd.ReplaceAll("-std=", "-std:");
+   cmd.ReplaceAll("\\", "/");
 #endif
 
    TString testcmd = fMakeExe;
@@ -3685,6 +3708,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 
 #ifdef WIN32
    R__FixLink(testcmd);
+   testcmd.ReplaceAll("-std=", "-std:");
+   testcmd.ReplaceAll("\\", "/");
 #endif
 
    // ======= Build the library
