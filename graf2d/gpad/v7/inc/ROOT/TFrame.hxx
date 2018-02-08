@@ -16,7 +16,7 @@
 #ifndef ROOT7_TFrame
 #define ROOT7_TFrame
 
-#include "ROOT/TDrawingOptsBase.hxx"
+#include "ROOT/TDrawingAttrs.hxx"
 #include "ROOT/TPadExtent.hxx"
 #include "ROOT/TPadPos.hxx"
 #include "ROOT/TPadUserCoordBase.hxx"
@@ -33,14 +33,12 @@ namespace Experimental {
 
 class TFrame {
 public:
-   class DrawingOpts: public TDrawingOptsBase<DrawingOpts> {
+   class DrawingOpts {
    public:
       /// Position of the frame in parent TPad coordinates.
-      TPadPos fPos = {0.1_normal, 0.1_normal};
+      TDrawingAttrOrRef<TPadPos> fPos{"frame.pos", 0.1_normal, 0.1_normal};
       /// Size of the frame in parent TPad coordinates.
-      TPadExtent fSize = {0.8_normal, 0.8_normal};
-
-      DrawingOpts(TPadBase &pad): TDrawingOptsBase<DrawingOpts>(pad, "Frame") {}
+      TDrawingAttrOrRef<TPadExtent> fSize{"frame.size", 0.8_normal, 0.8_normal};
    };
 
 private:
@@ -58,12 +56,11 @@ private:
 
 public:
    /// Constructor taking user coordinate system, position and extent.
-   explicit TFrame(std::unique_ptr<Detail::TPadUserCoordBase> &&coords, const TPadPos &pos = DrawingOpts::Default().fPos,
-          const TPadExtent &size = DrawingOpts::Default().fSize);
+   explicit TFrame(std::unique_ptr<Detail::TPadUserCoordBase> &&coords, const DrawingOpts &opts);
 
    // Constructor taking position and extent.
-   explicit TFrame(const TPadPos &pos = DrawingOpts::Default().fPos, const TPadExtent &size = DrawingOpts::Default().fSize)
-      : TFrame(nullptr, pos, size)
+   explicit TFrame(const DrawingOpts &opts)
+      : TFrame(nullptr, opts)
    {}
 
    /// Get the current user coordinate system.
