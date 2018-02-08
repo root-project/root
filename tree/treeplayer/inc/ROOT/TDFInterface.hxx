@@ -634,8 +634,10 @@ public:
                                                                                       fValidCustomColumns, fDataSource);
       // build a string equivalent to
       // "(TInterface<nodetype*>*)(this)->Snapshot<Ts...>(treename,filename,*(ColumnNames_t*)(&columnList), options)"
+      // on Windows, to prefix the hexadecimal value of a pointer with '0x',
+      // one need to write: std::hex << std::showbase << (size_t)pointer
       snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
-               << &upcastInterface << ")->Snapshot<";
+               << std::hex << std::showbase << (size_t)&upcastInterface << ")->Snapshot<";
       bool first = true;
       for (auto &b : columnList) {
          if (!first)
@@ -645,8 +647,9 @@ public:
       };
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-               << &columnList << "),"
-               << "*reinterpret_cast<ROOT::Experimental::TDF::TSnapshotOptions*>(" << &options << "));";
+               << std::hex << std::showbase << (size_t)&columnList << "),"
+               << "*reinterpret_cast<ROOT::Experimental::TDF::TSnapshotOptions*>("
+               << std::hex << std::showbase << (size_t)&options << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
       auto newTDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
@@ -715,8 +718,10 @@ public:
                                                                                       fValidCustomColumns, fDataSource);
       // build a string equivalent to
       // "(TInterface<nodetype*>*)(this)->Cache<Ts...>(*(ColumnNames_t*)(&columnList))"
+      // on Windows, to prefix the hexadecimal value of a pointer with '0x',
+      // one need to write: std::hex << std::showbase << (size_t)pointer
       snapCall << "reinterpret_cast<ROOT::Experimental::TDF::TInterface<" << upcastInterface.GetNodeTypeName() << ">*>("
-               << &upcastInterface << ")->Cache<";
+               << std::hex << std::showbase << (size_t)&upcastInterface << ")->Cache<";
       bool first = true;
       for (auto &b : columnList) {
          if (!first)
@@ -725,7 +730,7 @@ public:
          first = false;
       };
       snapCall << ">(*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
-               << &columnList << "));";
+               << std::hex << std::showbase << (size_t)&columnList << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
       auto newTDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
