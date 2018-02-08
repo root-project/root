@@ -1900,7 +1900,7 @@ public:
       auto argsEnd = v.end();
       auto argsBeginPlusOne = ++v.begin();
       auto argPos = std::find_if(argsBeginPlusOne, argsEnd,
-                              [](std::string& arg){return arg.front() == ':';});
+           [](std::string& arg){return (!arg.empty() && arg.front() == ':');});
       if (argPos != argsEnd) {
          const int lenght = clName.size();
          int wedgeBalance = 0;
