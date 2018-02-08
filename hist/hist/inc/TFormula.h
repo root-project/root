@@ -43,7 +43,7 @@ public:
    Bool_t operator<(const TFormulaFunction &rhv) const
    {
       // order by length - first the longer ones to avoid replacing wrong functions 
-      if ( fName.Length() > rhv.fName.Length() )
+      if ( fName.Length() < rhv.fName.Length() )
          return true;
       else if ( fName.Length() > rhv.fName.Length() )
          return false;
