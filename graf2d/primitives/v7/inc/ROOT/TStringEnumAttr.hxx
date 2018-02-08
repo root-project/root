@@ -13,9 +13,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TStringAttr
-#define ROOT7_TStringAttr
+#ifndef ROOT7_TStringEnumAttr
+#define ROOT7_TStringEnumAttr
 
+#include <algorithm>
+#include <initializer_list>
 #include <string>
 #include <vector>
 
@@ -26,11 +28,14 @@ namespace Experimental {
  Graphics attribute that consists of a string, selected from a set of options.
  This is the set of options. It's expected to be of static storage duration.
  */
-class TStringAttrSet {
+class TStringEnumAttrSet {
    std::vector<std::string> fOptSet; ///< The set of options.
 
 public:
-   TStringAttrSet(std::vector<std::string> &&optionsSet): fOptSet(std::move(optionsSet)) {}
+   TStringEnumAttrSet(std::initializer_list<const char*> il)
+   {
+      fOptSet.insert(fOptSet.end(), il.begin(), il.end());
+   }
    const std::vector<std::string>& GetSet() const { return fOptSet; }
 
    std::size_t Find(const std::string &opt) const {
@@ -46,15 +51,22 @@ public:
 /** \class ROOT::Experimental::TStringAttr
  Graphics attribute that consists of a string, selected from a set of options.
  */
-class TStringAttr {
+class TStringEnumAttr {
    std::size_t fIdx; ///< Selected option from fStringSet.
-   const TStringAttrSet &fStringSet; ///< Reference to the set of options.
+   const TStringEnumAttrSet &fStringSet; ///< Reference to the set of options.
 
 public:
-   TStringAttr(std::size_t idx, const TStringAttrSet &strSet): fIdx(idx), fStringSet(strSet) {}
+   TStringEnumAttr(std::size_t idx, const TStringEnumAttrSet &strSet): fIdx(idx), fStringSet(strSet) {}
    const std::string& GetAsString() const { return fStringSet[fIdx]; }
 
 };
+
+/// Initialize an attribute `val` from a string value.
+///
+///\param[in] name - the attribute name, for diagnostic purposes.
+///\param[in] strval - the attribute value as a string.
+///\param[out] val - the value to be initialized.
+void InitializeAttrFromString(const std::string &name, const std::string &strval, TStringEnumAttr& val);
 
 } // namespace Experimental
 } // namespace ROOT
