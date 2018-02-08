@@ -71,7 +71,7 @@ protected:
 public:
    virtual ~TPadBase();
 
-   /// Divide this pad into a grid of subpad with padding in between.
+   /// Divide this pad into a grid of subpads with padding in between.
    /// \param nHoriz Number of horizontal pads.
    /// \param nVert Number of vertical pads.
    /// \param padding Padding between pads.
@@ -119,10 +119,10 @@ public:
    virtual std::array<TPadCoord::Normal, 2> PixelsToNormal(const std::array<TPadCoord::Pixel, 2> &pos) const = 0;
 
    /// Access to the top-most canvas, if any (const version).
-   virtual const TCanvas &GetCanvas() const = 0;
+   virtual const TCanvas *GetCanvas() const = 0;
 
    /// Access to the top-most canvas, if any (non-const version).
-   virtual TCanvas &GetCanvas() = 0;
+   virtual TCanvas *GetCanvas() = 0;
 
    /// Convert user coordinates to normal coordinates.
    std::array<TPadCoord::Normal, 2> UserToNormal(const std::array<TPadCoord::User, 2> &pos) const
@@ -140,13 +140,16 @@ class TPadDrawable;
 class TPad: public TPadBase {
 private:
    /// Pad containing this pad as a sub-pad.
-   TPadBase *fParent = nullptr; //-> This must never be nullptr!
+   TPadBase *fParent = nullptr; /// The parent pad, if this pad has one.
 
    /// Size of the pad in the parent's (!) coordinate system.
-   TPadExtent fSize;
+   TPadExtent fSize = {640_px, 400_px};
 
 public:
    friend std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, const TPadBase &parent);
+
+   /// Create a topmost, non-paintable pad.
+   TPad() = default;
 
    /// Create a child pad.
    TPad(TPadBase &parent, const TPadExtent &size): fParent(&parent), fSize(size) {}
@@ -155,16 +158,16 @@ public:
    virtual ~TPad();
 
    /// Access to the parent pad (const version).
-   const TPadBase &GetParent() const { return *fParent; }
+   const TPadBase *GetParent() const { return fParent; }
 
    /// Access to the parent pad (non-const version).
-   TPadBase &GetParent() { return *fParent; }
+   TPadBase *GetParent() { return fParent; }
 
    /// Access to the top-most canvas (const version).
-   const TCanvas &GetCanvas() const override { return fParent->GetCanvas(); }
+   const TCanvas *GetCanvas() const override { return fParent ? fParent->GetCanvas() : nullptr; }
 
    /// Access to the top-most canvas (non-const version).
-   TCanvas &GetCanvas() override { return fParent->GetCanvas(); }
+   TCanvas *GetCanvas() override { return fParent ? fParent->GetCanvas() : nullptr; }
 
    /// Get the size of the pad in parent (!) coordinates.
    const TPadExtent &GetSize() const { return fSize; }
@@ -197,11 +200,10 @@ public:
  Drawing options for a TPad
  */
 
-class TPadDrawingOpts: public TDrawingOptsBase<TPadDrawingOpts> {
-   TPadPos fPos; ///< Offset with respect to parent TPad.
-public:
-   TPadDrawingOpts(TPadBase &parent): TDrawingOptsBase<TPadDrawingOpts>(parent, "Pad") {}
+class TPadDrawingOpts {
+   TDrawingAttrOrRef<TPadPos> fPos{"PadOffset"}; ///< Offset with respect to parent TPad.
 
+public:
    /// Set the position of this pad with respect to the parent pad.
    TPadDrawingOpts &At(const TPadPos &pos)
    {
