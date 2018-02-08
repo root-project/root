@@ -16,7 +16,6 @@
 #ifndef ROOT7_TCanvas
 #define ROOT7_TCanvas
 
-#include "ROOT/TColor.hxx"
 #include "ROOT/TPad.hxx"
 #include "ROOT/TVirtualCanvasPainter.hxx"
 
@@ -33,7 +32,6 @@ class TDrawingAttrRef;
 
 /** \class ROOT::Experimental::TCanvas
   A window's topmost `TPad`.
-  Access is through TCanvasPtr.
   */
 
 class TCanvas: public TPadBase {
@@ -43,15 +41,6 @@ private:
 
    /// Size of the canvas in pixels,
    std::array<TPadCoord::Pixel, 2> fSize;
-
-   /// Colors used by drawing options in the pad and any sub-pad.
-   Internal::TDrawingAttrTable<TColor> fColorTable;
-
-   /// Integers used by drawing options in the pad and any sub-pad.
-   Internal::TDrawingAttrTable<long long> fIntAttrTable;
-
-   /// Floating points used by drawing options in the pad and any sub-pad.
-   Internal::TDrawingAttrTable<double> fFPAttrTable;
 
    /// Modify counter, incremented every time canvas is changed
    uint64_t fModified; ///<!
@@ -67,31 +56,13 @@ private:
    /// Disable assignment for now.
    TCanvas &operator=(const TCanvas &) = delete;
 
-   ///\{
-   ///\name Drawing options attribute handling
-
-   /// Attribute table (non-const access).
-   Internal::TDrawingAttrTable<TColor> &GetAttrTable(TColor *) { return fColorTable; }
-   Internal::TDrawingAttrTable<long long> &GetAttrTable(long long *) { return fIntAttrTable; }
-   Internal::TDrawingAttrTable<double> &GetAttrTable(double *) { return fFPAttrTable; }
-
-   /// Attribute table (const access).
-   const Internal::TDrawingAttrTable<TColor> &GetAttrTable(TColor *) const { return fColorTable; }
-   const Internal::TDrawingAttrTable<long long> &GetAttrTable(long long *) const { return fIntAttrTable; }
-   const Internal::TDrawingAttrTable<double> &GetAttrTable(double *) const { return fFPAttrTable; }
-
-   friend class ROOT::Experimental::TDrawingOptsBaseNoDefault;
-   template <class PRIMITIVE>
-   friend class ROOT::Experimental::TDrawingAttrRef;
-   ///\}
-
 public:
    static std::shared_ptr<TCanvas> Create(const std::string &title);
 
    /// Create a temporary TCanvas; for long-lived ones please use Create().
    TCanvas() = default;
 
-   ~TCanvas() { Wipe(); /* FIXME: this should become Attrs owned and referenced by the TPads */}
+   ~TCanvas() = default;
 
    const TCanvas &GetCanvas() const override { return *this; }
 
