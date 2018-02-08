@@ -659,6 +659,11 @@ TReshapeLayer<Architecture_t> *TDeepNet<Architecture_t, Layer_t>::AddReshapeLaye
       outputNSlices = 1;
       outputNRows = this->GetBatchSize();
       outputNCols = depth * height * width;
+      size_t inputNCols =  inputDepth * inputHeight *  inputWidth;
+      if (outputNCols != inputNCols ) {
+         Fatal("AddReshapeLayer","Dimensions not compatibles - product of input %zu x %zu % x %zu should be equal to output %zu x %zu %zu ",
+               inputDepth, inputHeight, inputWidth, depth, height, width); 
+      }
    } else {
       outputNSlices = this->GetBatchSize();
       outputNRows = depth;

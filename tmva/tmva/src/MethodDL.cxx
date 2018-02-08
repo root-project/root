@@ -448,6 +448,7 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
    TIter nextLayer(layerStrings);
    TObjString *layerString = (TObjString *)nextLayer();
 
+
    for (; layerString != nullptr; layerString = (TObjString *)nextLayer()) {
       // Split layer details
       TObjArray *subStrings = layerString->GetString().Tokenize(subDelimiter);
@@ -456,6 +457,7 @@ void MethodDL::CreateDeepNet(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
 
       // Determine the type of the layer
       TString strLayerType = token->GetString();
+
 
       if (strLayerType == "DENSE") {
          ParseDenseLayer(deepNet, nets, layerString->GetString(), subDelimiter);
@@ -541,6 +543,9 @@ void MethodDL::ParseDenseLayer(DNN::TDeepNet<Architecture_t, Layer_t> &deepNet,
    //for (size_t i = 0; i < nets.size(); i++) {
    //   nets[i].AddDenseLayer(copyDenseLayer);
    //}
+
+   // check compatibility of added layer
+   // for a dense layer input should be 1 x 1 x DxHxW
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1162,6 +1167,19 @@ void MethodDL::TrainCpu()
       EInitialization I = this->GetWeightInitialization();
       ERegularization R = settings.regularization;
       Scalar_t weightDecay = settings.weightDecay;
+
+      //LM these need to be equal for the time being
+      if (batchDepth != batchSize) {
+         Error("TrainCpu","Given batch depth of %zu (specified in BatchLayout)  should be equal to given batch size %zu",batchSize,batchDepth);
+         return;
+      }
+
+      //check also that input layout compatible with natch layout
+      if (inputDepth * inputHeight * inputWidth != batchHeight * batchWidth ) {
+         Error("TrainCpu","Given input layout %zu x %zu x %zu is not compatible with  batch layout %zu x  %zu (depth is not printed is the size)",
+               inputDepth,inputHeight,inputWidth,batchHeight,batchWidth);
+         return;
+      }
 
       //fNet = std::unique_ptr<DeepNet_t>(new DeepNet_t(batchSize, inputDepth, inputHeight, inputWidth, batchDepth,
       //                                                batchHeight, batchWidth, J, I, R, weightDecay));
