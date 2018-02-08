@@ -22,11 +22,12 @@ using namespace ROOT::Experimental;
 // TColor constexpr values:
 constexpr TColor::Alpha TColor::kOpaque;
 constexpr TColor::Alpha TColor::kTransparent;
-constexpr TColor::PredefinedRGB TColor::kRed;
-constexpr TColor::PredefinedRGB TColor::kGreen;
-constexpr TColor::PredefinedRGB TColor::kBlue;
-constexpr TColor::PredefinedRGB TColor::kWhite;
-constexpr TColor::PredefinedRGB TColor::kBlack;
+constexpr TColor::RGBA TColor::kRed;
+constexpr TColor::RGBA TColor::kGreen;
+constexpr TColor::RGBA TColor::kBlue;
+constexpr TColor::RGBA TColor::kWhite;
+constexpr TColor::RGBA TColor::kBlack;
+constexpr TColor::RGBA TColor::kInvisible;
 constexpr TColor::AutoTag TColor::kAuto;
 
 
