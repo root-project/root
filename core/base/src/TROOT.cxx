@@ -2969,6 +2969,9 @@ const TString& TROOT::GetMacroDir() {
          rootmacrodir = "macros";
          gSystem->PrependPathName(GetRootSys(), rootmacrodir);
       }
+#ifdef R__WIN32
+      rootmacrodir.ReplaceAll("\\", "/");
+#endif
       return rootmacrodir;
 #ifdef ROOTMACRODIR
    } else {
