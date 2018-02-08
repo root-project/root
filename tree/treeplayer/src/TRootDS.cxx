@@ -40,9 +40,11 @@ TRootDS::TRootDS(std::string_view treeName, std::string_view fileNameGlob)
 {
    fModelChain.Add(fFileNameGlob.c_str());
 
-   auto &lob = *fModelChain.GetListOfBranches();
+   const TObjArray &lob = *fModelChain.GetListOfBranches();
    fListOfBranches.resize(lob.GetEntries());
-   std::transform(lob.begin(), lob.end(), fListOfBranches.begin(), [](TObject *o) { return o->GetName(); });
+
+   TIterCategory<TObjArray> iter(&lob);
+   std::transform(iter.Begin(), iter.End(), fListOfBranches.begin(), [](TObject *o) { return o->GetName(); });
 }
 
 TRootDS::~TRootDS()
