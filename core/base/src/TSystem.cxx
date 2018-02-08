@@ -1051,8 +1051,8 @@ const char *TSystem::UnixPathName(const char *name)
 
 char *TSystem::ConcatFileName(const char *dir, const char *name)
 {
-   TString nameString(name);
-   PrependPathName(dir, nameString);
+   TString nameString(gSystem->UnixPathName(name));
+   PrependPathName(gSystem->UnixPathName(dir), nameString);
    return StrDup(nameString.Data());
 }
 
@@ -2899,10 +2899,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (strchr(opt,'-')!=0);
 
    // if non-zero, build_loc indicates where to build the shared library.
-   TString build_loc = ExpandFileName(GetBuildDir());
+   TString build_loc = gSystem->UnixPathName(ExpandFileName(GetBuildDir()));
    if (build_dir && strlen(build_dir)) build_loc = build_dir;
    if (build_loc == ".") {
-      build_loc = WorkingDirectory();
+      build_loc = gSystem->UnixPathName(WorkingDirectory());
    } else if (build_loc.Length() && (!IsAbsoluteFileName(build_loc)) ) {
       AssignAndDelete( build_loc , ConcatFileName( WorkingDirectory(), build_loc ) );
    }
@@ -2924,11 +2924,8 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    incPath.Prepend(WorkingDirectory());
 
    // ======= Get the right file names for the dictionary and the shared library
-   TString expFileName(filename);
+   TString expFileName(gSystem->UnixPathName(filename));
    ExpandPathName( expFileName );
-#ifdef WIN32
-   expFileName.ReplaceAll("\\", "/");
-#endif
    TString library = expFileName;
    if (! IsAbsoluteFileName(library) )
    {
@@ -3145,9 +3142,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString depfilename;
    AssignAndDelete( depfilename, ConcatFileName(depdir, BaseName(libname_noext)) );
    depfilename += "_" + extension + ".d";
-#ifdef WIN32
-   depfilename.ReplaceAll("\\", "/");
-#endif
 
    if ( !recompile ) {
 
@@ -3321,9 +3315,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    TString libmapfilename;
    AssignAndDelete( libmapfilename, ConcatFileName( build_loc, libname ) );
    libmapfilename += ".rootmap";
-#ifdef WIN32
-   libmapfilename.ReplaceAll("\\", "/");
-#endif
 #if (defined(R__MACOSX) && !defined(MAC_OS_X_VERSION_10_5)) || defined(R__WIN32)
    Bool_t produceRootmap = kTRUE;
 #else
@@ -3405,10 +3396,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    dict += "cxx"; //no need to keep the extension of the original file, any extension will do
    dicth += "h";
    dictObj += fObjExt;
-#ifdef WIN32
-   dicth.ReplaceAll("\\", "/");
-   dictObj.ReplaceAll("\\", "/");
-#endif
 
    // ======= Generate a linkdef file
 
@@ -3454,11 +3441,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       lookup.Append(extensions[i]);
       name = Which(incPath,lookup);
       if (name) {
-         TString sname(name);
-#ifdef WIN32
-         sname.ReplaceAll("\\", "/");
-#endif
-         linkdefFile << "#pragma link C++ defined_in "<<sname.Data()<<";"<< std::endl;
+         linkdefFile << "#pragma link C++ defined_in "<<gSystem->UnixPathName(name)<<";"<< std::endl;
          delete [] name;
       }
    }
@@ -3466,9 +3449,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    linkdefFile << std::endl;
    linkdefFile << "#endif" << std::endl;
    linkdefFile.close();
-#ifdef WIN32
-   linkdef.ReplaceAll("\\", "/");
-#endif
    // ======= Generate the list of rootmap files to be looked at
 
    TString mapfile;
@@ -3510,9 +3490,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
       }
    }
    mapfileStream.close();
-#ifdef WIN32
-   mapfile.ReplaceAll("\\", "/");
-#endif
 
    // ======= Generate the rootcling command line
    TString rcling = "rootcling";
@@ -3669,7 +3646,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 #ifdef WIN32
    R__FixLink(cmd);
    cmd.ReplaceAll("-std=", "-std:");
-   cmd.ReplaceAll("\\", "/");
+   cmd = gSystem->UnixPathName(cmd.Data());
 #endif
 
    TString testcmd = fMakeExe;
@@ -3709,7 +3686,7 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 #ifdef WIN32
    R__FixLink(testcmd);
    testcmd.ReplaceAll("-std=", "-std:");
-   testcmd.ReplaceAll("\\", "/");
+   testcmd = gSystem->UnixPathName(testcmd.Data());
 #endif
 
    // ======= Build the library
