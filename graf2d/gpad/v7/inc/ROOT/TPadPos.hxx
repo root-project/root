@@ -89,6 +89,9 @@ struct TPadPos: Internal::TPadHorizVert {
    };
 };
 
+/// Initialize a TPadPos from a style string.
+void InitializeAttrFromString(const std::string &name, const std::string attrStrVal, TPadPos& val);
+
 } // namespace Experimental
 } // namespace ROOT
 
