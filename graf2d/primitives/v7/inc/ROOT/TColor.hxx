@@ -67,7 +67,7 @@ private:
    bool AssertNotPalettePos() const;
 
 public:
-   using PredefinedRGB = std::array<float, 3>;
+   using RGBA = std::array<float, 4>;
 
    // Default constructor: good old solid black.
    constexpr TColor() = default;
@@ -78,8 +78,8 @@ public:
    /// Initialize a TColor with red, green, blue and alpha component.
    constexpr TColor(float r, float g, float b, Alpha alpha = kOpaque): TColor(r, g, b, alpha.fVal) {}
 
-   /// Initialize a TColor with red, green, blue and alpha component.
-   constexpr TColor(const PredefinedRGB &predef): TColor(predef[0], predef[1], predef[2]) {}
+   /// Initialize a TColor with red, green, blue and alpha component as an array.
+   constexpr TColor(const RGBA &rgba): TColor(rgba[0], rgba[1], rgba[2], rgba[3]) {}
 
    /// Initialize a `TColor` with a `TPalette` ordinal. The actual color is determined from the pad's
    /// (or rather its `TFrame`'s) `TPalette`
@@ -182,11 +182,12 @@ public:
 
    ///\{
    ///\name Default colors
-   static constexpr PredefinedRGB kRed{{1., 0., 0.}};
-   static constexpr PredefinedRGB kGreen{{0., 1., 0.}};
-   static constexpr PredefinedRGB kBlue{{0., 0, 1.}};
-   static constexpr PredefinedRGB kWhite{{1., 1, 1.}};
-   static constexpr PredefinedRGB kBlack{{0., 0., 0.}};
+   static constexpr RGBA kRed{{1., 0., 0., 1.}};
+   static constexpr RGBA kGreen{{0., 1., 0., 1.}};
+   static constexpr RGBA kBlue{{0., 0, 1., 1.}};
+   static constexpr RGBA kWhite{{1., 1, 1., 1.}};
+   static constexpr RGBA kBlack{{0., 0., 0., 1.}};
+   static constexpr RGBA kInvisible{{0., 0., 0., 0.}};
    static constexpr AutoTag kAuto{};
    ///\}
 };
