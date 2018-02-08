@@ -18,13 +18,6 @@
 // but currently histpainter does not creates dictionary at all
 #pragma extra_include "ROOT/TDisplayItem.hxx";
 
-#pragma link C++ class ROOT::Experimental::THistCoreAttrs+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<1>>+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<2>>+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<3>>+;
-#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<1>>+;
-#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<2>>+;
-#pragma link C++ class ROOT::Experimental::THistDrawingOptsBase<ROOT::Experimental::THistDrawingOpts<3>>+;
 #pragma link C++ class ROOT::Experimental::THistDrawingOpts<1>+;
 #pragma link C++ class ROOT::Experimental::THistDrawingOpts<2>+;
 #pragma link C++ class ROOT::Experimental::THistDrawingOpts<3>+;
