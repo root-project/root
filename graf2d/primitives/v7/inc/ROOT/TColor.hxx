@@ -1,4 +1,4 @@
-/// \file ROOT/TPalette.hxx
+/// \file ROOT/TColor.hxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2017-09-26
