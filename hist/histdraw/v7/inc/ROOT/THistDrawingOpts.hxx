@@ -35,16 +35,16 @@ class THistDrawingOpts {
 template <>
 class THistDrawingOpts<1> {
    enum class EStyle { kBar, kText };
-   static const TStringEnumAttrSet fgStyles;
-   TDrawingAttrOrRef<TStringEnumAttr> fStyle{"Hist.1D.Style", 0, fgStyles};
+   static const TStringEnumAttrSet &Styles() {
+      static const TStringEnumAttrSet styles{"hist", "bar", "text"};
+      return styles;
+   }
+   TDrawingAttrOrRef<TStringEnumAttr> fStyle{"Hist.1D.Style", 0, Styles()};
    TDrawingAttrOrRef<TColor> fLineColor{"Hist.1D.Line.Color"};
    TDrawingAttrOrRef<int> fLineWidth{"Hist.1D.Line.Width"};
 public:
    THistDrawingOpts() = default;
 };
-
-const TStringEnumAttrSet THistDrawingOpts<1>::fgStyles{"hist", "bar", "text"};
-
 
 /** \class THistDrawingOpts<2>
  Drawing options for a 1D histogram.
@@ -53,15 +53,16 @@ template <>
 class THistDrawingOpts<2> {
    enum class EStyle { kBox, kSurf, kText };
    static const TStringEnumAttrSet fgStyles;
-   TDrawingAttrOrRef<TStringEnumAttr> fStyle{"Hist.2D.Style", 0, fgStyles};
+   static const TStringEnumAttrSet &Styles() {
+      static const TStringEnumAttrSet styles{"box", "surf", "text"};
+      return styles;
+   }
+   TDrawingAttrOrRef<TStringEnumAttr> fStyle{"Hist.2D.Style", 0, Styles()};
    TDrawingAttrOrRef<TColor> fLineColor{"Hist.2D.Line.Color"};
    TDrawingAttrOrRef<int> fLineWidth{"Hist.2D.Line.Width"};
 public:
    THistDrawingOpts() = default;
 };
-
-const TStringEnumAttrSet THistDrawingOpts<2>::fgStyles{"box", "surf", "text"};
-
 
 /** \class THistDrawingOpts<3>
  Drawing options for a 1D histogram.
@@ -69,15 +70,16 @@ const TStringEnumAttrSet THistDrawingOpts<2>::fgStyles{"box", "surf", "text"};
 template <>
 class THistDrawingOpts<3> {
    enum class EStyle { kBox, kIso };
-   static const TStringEnumAttrSet fgStyles;
-   TDrawingAttrOrRef<TStringEnumAttr> fStyle{"Hist.3D.Style", 0, fgStyles};
+   static const TStringEnumAttrSet &Styles() {
+      static const TStringEnumAttrSet styles{"box", "iso"};
+      return styles;
+   }
+   TDrawingAttrOrRef<TStringEnumAttr> fStyle{"Hist.3D.Style", 0, Styles()};
    TDrawingAttrOrRef<TColor> fLineColor{"Hist.3D.Line.Color"};
    TDrawingAttrOrRef<int> fLineWidth{"Hist.3D.Line.Width"};
 public:
    THistDrawingOpts() = default;
 };
-
-const TStringEnumAttrSet THistDrawingOpts<3>::fgStyles{"box", "iso"};
 
 } // namespace Experimental
 } // namespace ROOT
