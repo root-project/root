@@ -175,7 +175,9 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
 
    // Here we have two cases: filter and column
    ss.str("");
-   ss << targetTypeName << "(((" << interfaceTypeName << "*)" << thisPtr << ")->" << methodName << "(";
+   // on Windows, to prefix the hexadecimal value of a pointer with '0x',
+   // one need to write: std::hex << std::showbase << (size_t)pointer
+   ss << targetTypeName << "(((" << interfaceTypeName << "*)" << std::hex << std::showbase << (size_t)thisPtr << ")->" << methodName << "(";
    if (methodName == "Define") {
       ss << "\"" << name << "\", ";
    }
@@ -264,15 +266,18 @@ std::string JitBuildAndBook(const ColumnNames_t &bl, const std::string &prevNode
                     << "<" << actionTypeName;
    for (auto &colType : columnTypeNames)
       createAction_str << ", " << colType;
-   createAction_str << ">(*reinterpret_cast<" << prevNodeTypename << "*>(" << prevNode << "), {";
+   // on Windows, to prefix the hexadecimal value of a pointer with '0x',
+   // one need to write: std::hex << std::showbase << (size_t)pointer
+   createAction_str << ">(*reinterpret_cast<" << prevNodeTypename << "*>(" << std::hex << std::showbase << (size_t)prevNode << "), {";
    for (auto i = 0u; i < bl.size(); ++i) {
       if (i != 0u)
          createAction_str << ", ";
       createAction_str << '"' << bl[i] << '"';
    }
-   createAction_str << "}, " << nSlots << ", reinterpret_cast<" << actionResultTypeName << "*>(" << rOnHeap << ")"
-                    << ", reinterpret_cast<const std::shared_ptr<ROOT::Internal::TDF::TActionBase*>*>(" << actionPtrPtr
-                    << "));";
+   createAction_str << "}, " << std::dec << std::noshowbase << nSlots << ", reinterpret_cast<" << actionResultTypeName << "*>("
+                    << std::hex << std::showbase << (size_t)rOnHeap << ")"
+                    << ", reinterpret_cast<const std::shared_ptr<ROOT::Internal::TDF::TActionBase*>*>("
+                    << std::hex << std::showbase << (size_t)actionPtrPtr << "));";
    return createAction_str.str();
 }
 
