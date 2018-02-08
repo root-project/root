@@ -46,13 +46,6 @@ public:
 
    static Attrs_t ReadDefaults();
 
-   /// Parse a TColor from attr's value.
-   /// Colors can be specified as RGBA (red green blue alpha) or RRGGBBAA:
-   ///     #fa7f #ffa07bff
-   /// For all predefined colors in TColor, colors can be specified as name without leading 'k', e.g. `red` for
-   /// `TColor::kRed`.
-   /// Prints an error and returns `TColor::kBlack` if the attribute string cannot be parsed or if the attribute has no
-   /// entry in `fAttrs`.
    TColor ParseColor(std::string_view attr, const TColor& deflt);
 
    /// Parse an integer attribute, or if `opts` is given, return the index of the string from the options file in

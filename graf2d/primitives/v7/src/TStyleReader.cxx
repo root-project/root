@@ -13,7 +13,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TDrawingOptsReader.hxx" // in src/
+#include "TStyleReader.hxx" // in src/
 
 #include <ROOT/TColor.hxx>
 #include <ROOT/TLogger.hxx>
