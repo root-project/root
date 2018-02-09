@@ -113,9 +113,9 @@ class TLazyDS final : public ROOT::Experimental::TDF::TDataSource {
 public:
    TLazyDS(std::pair<std::string, TResultProxy<std::vector<ColumnTypes>>>... colsNameVals)
       : fColumns(std::tuple<TResultProxy<std::vector<ColumnTypes>>...>(colsNameVals.second...)),
-        fColNames{colsNameVals.first...},
+        fColNames({colsNameVals.first...}),
         fColTypesMap({{colsNameVals.first, ROOT::Internal::TDF::TypeID2TypeName(typeid(ColumnTypes))}...}),
-        fPointerHoldersModels{new ROOT::Internal::TDS::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...}
+        fPointerHoldersModels({new ROOT::Internal::TDS::TTypedPointerHolder<ColumnTypes>(new ColumnTypes())...})
    {
    }
 
