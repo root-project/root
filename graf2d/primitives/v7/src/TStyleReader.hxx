@@ -13,24 +13,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TDrawingOptsReader
-#define ROOT7_TDrawingOptsReader
-
-#include <ROOT/TColor.hxx>
+#ifndef ROOT7_TStyleReader
+#define ROOT7_TStyleReader
 
 #include <RStringView.h>
 
+#include <string>
 #include <unordered_map>
 #include <vector>
 
 namespace ROOT {
 namespace Experimental {
 namespace Internal {
-/** \class ROOT::Experimental::TFrame
+/** \class ROOT::Experimental::TStyleReader
  Reads the attribute config values from `.rootstylerc`. If the style entry is not found there, tries `~/.rootstylerc`
  and finally `$ROOTSYS/etc/system.rootstylerc`.
   */
-class TDrawingOptsReader {
+class TStyleReader {
 public:
    using Attrs_t = std::unordered_map<std::string, std::string>;
 
@@ -39,7 +38,7 @@ private:
    Attrs_t &fAttrs;
 
 public:
-   TDrawingOptsReader(Attrs_t &attrs): fAttrs(attrs) {}
+   TStyleReader(Attrs_t &attrs): fAttrs(attrs) {}
 
    ///  Reads the attribute config values from `.rootstylerc`. If the style entry is not found there, tries
    ///  `~/.rootstylerc` and finally `$ROOTSYS/etc/system.rootstylerc`.

@@ -24,17 +24,17 @@
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 
-TDrawingOptsReader::Attrs_t TDrawingOptsReader::ReadDefaults()
+TStyleReader::Attrs_t TStyleReader::ReadDefaults()
 {
    Attrs_t ret;
-   TDrawingOptsReader reader(ret);
+   TStyleReader reader(ret);
    reader.AddFromStyleFile(std::string(TROOT::GetEtcDir().Data()) + "/system.rootstylerc");
    reader.AddFromStyleFile(gSystem->GetHomeDirectory() + "/.rootstylerc");
    reader.AddFromStyleFile(".rootstylerc");
    return ret;
 }
 
-bool TDrawingOptsReader::AddFromStyleFile(std::string_view filename)
+bool TStyleReader::AddFromStyleFile(std::string_view filename)
 {
    R__WARNING_HERE("Gpad") << "Not implemented yet, while reading style file " << filename;
    return false;
