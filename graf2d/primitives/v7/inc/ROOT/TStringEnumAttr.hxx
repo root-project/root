@@ -48,7 +48,7 @@ public:
    const std::string &operator[](std::size_t idx) const { return fOptSet[idx]; }
 };
 
-/** \class ROOT::Experimental::TStringAttr
+/** \class ROOT::Experimental::TStringEnumAttr
  Graphics attribute that consists of a string, selected from a set of options.
  */
 class TStringEnumAttr {
@@ -56,9 +56,17 @@ class TStringEnumAttr {
    const TStringEnumAttrSet &fStringSet; ///< Reference to the set of options.
 
 public:
+   /// Construct the option from the set of strings and the selected option index.
    TStringEnumAttr(std::size_t idx, const TStringEnumAttrSet &strSet): fIdx(idx), fStringSet(strSet) {}
+
+   /// Set the index of the selected option.
+   void SetIndex(int idx) { fIdx = idx; }
+
+   /// Get the string representing the selected option.
    const std::string& GetAsString() const { return fStringSet[fIdx]; }
 
+   /// Get the index of the selected option.
+   std::size_t GetIndex() const { return fIdx; }
 };
 
 /// Initialize an attribute `val` from a string value.
