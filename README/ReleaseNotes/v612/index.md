@@ -625,13 +625,30 @@ be removed; please migrate to the CMake-based build system.
 * [ROOT-8980] - variadic template warning in genreflex prohibits use in CMS build system
 * [ROOT-9125] - Making TEnv::GetValue and Lookup const
 
+## Release 6.12/06
 
-
-## HEAD of the v6-12-00-patches branch
-
-These changes will be part of the future 6.12/06
+Released on February 9, 2018
 
 ### Core Libraries
 
 * Remove issue leading to TClass of unexpected type being 'Unloaded'.
 * Reduce drastically the number of obj alloc in TCheckHashRecurveRemoveConsistency.
+
+### Bugs and Issues fixed in this release
+
+* [ROOT-9116] - TDF: bad interaction between multi-thread execution and separate output TFile
+* [ROOT-9147] - rootcling crashes when compiling ROOT with C++17 and GCC 7.2.0
+* [ROOT-9154] - root crashes when trying to start opengl viewer
+* [ROOT-9158] - EVE is broken for 6.12
+* [ROOT-9196] - [Jenkins] MakeProject file names too long
+* [ROOT-9199] - TDF: improper handling of branches with leaflists
+* [ROOT-9201] - Bad placement of x-axis title when drawing histogram
+* [ROOT-9232] - [TDF] Entry loss when using Range and multiple actions
+* [ROOT-9233] - Simple rootmap file can not be read by ROOT
+* [ROOT-9237] - [Jenkins] roottest_python_JupyROOT_cppcompleter_doctest fails on 32bit
+* [ROOT-9238] - [pyROOT] Crash when value-printing empty TFile
+
+
+## HEAD of the v6-12-00-patches branch
+
+These changes will be part of the future 6.12/08
