@@ -1,10 +1,7 @@
 #! /usr//bin/env python
-'''
-Usage: watch.py -c "root -e sleep(7)" -t .2
-'''
 
+usage = '''Usage: watch.py .2 -- root -e "sleep(7)"'''
 
-import argparse
 import os
 import signal
 import subprocess
@@ -22,7 +19,6 @@ class AsyncExecutor(threading.Thread):
       self.proc = subprocess.Popen(self.command,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
-                                   #shell=True,
                                    preexec_fn=os.setsid)
    def _OutputGenerator(self):
       while True:
@@ -79,39 +75,28 @@ def launchAndSendSignal(command, sig, timeout):
 
    return 0
 
-def buildParser():
-   descr='Spawn a process and send signal after a certain timeout.'
-   usage='%(prog)s [options]'
-   parser = argparse.ArgumentParser(description = descr)
-   parser.add_argument('-t', action='store', dest='timeout', default=-1.,
-                       help='The timeout in seconds (default is no timeout)')
-   parser.add_argument('-c', action='store', dest='command', default="",
-                       help='The command to execute')
-   parser.add_argument('-s', action='store', dest='sigName', default="SIGUSR2",
-                       help='The command to execute')
-
-   return parser
-
-def checkArgs(timeout, command, sigName):
+def checkArgs(timeout, command):
    if "" == command:
-      print ('No command to watch specified')
-      sys.exit(1)
-   if not hasattr(signal, sigName):
-      print ('Signal %s is not recognised.' %sigName)
+      print ('No command to watch specified.\n%s' %usage)
       sys.exit(1)
 
 def getArgs():
-   parser = buildParser()
-   results = parser.parse_args()
-   timeout, command, sigName = float(results.timeout), results.command, results.sigName
-   checkArgs(timeout, command, sigName)
+   # the rules are quite strict: %prog [timeout] -- my-command -and all --its "options until the" -end of --the --line
+   args = sys.argv
+   timeouts = args[1]
+   if '--' != args[2]:
+      print ('Second argument must be "--".\n%s' %usage)
+      sys.exit(1)
+   command = " ".join(args[3:])
+   checkArgs(timeouts, command)
+   timeout = float(timeouts)
    if timeout != -1:
       timeout += timeoutOffset
       print ('Adding to the timeout a safety margin of %s seconds to allow gdb to fire up: total timeout is %s' %( timeoutOffset, timeout))
-   return timeout, command, sigName
+   return timeout, command
 
 if __name__ == "__main__":
-   timeout, command, sigName = getArgs()
-   sig = getattr(signal, sigName)
+   timeout, command = getArgs()
+   sig = signal.SIGUSR2
    ret = launchAndSendSignal(command, sig, timeout)
    sys.exit(ret)
