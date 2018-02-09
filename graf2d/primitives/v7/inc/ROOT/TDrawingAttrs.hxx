@@ -84,7 +84,7 @@ public:
    }
 
    /// Construct a *non-shared* attribute, copying the attribute's value.
-   TDrawingAttrOrRef(TDrawingAttrOrRef &other): fAttr(other.Get()) {}
+   TDrawingAttrOrRef(const TDrawingAttrOrRef &other): fAttr(other.Get()) {}
 
    /// Move an attribute.
    TDrawingAttrOrRef(TDrawingAttrOrRef &&other) = default;
