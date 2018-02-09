@@ -47,11 +47,11 @@ public:
 
    virtual TPointerHolder *GetDeepCopy()
    {
-      const auto typedPtr = (T *)fPointer;
+      const auto typedPtr = static_cast<T *>(fPointer);
       return new TTypedPointerHolder(new T(*typedPtr));
    }
 
-   ~TTypedPointerHolder() { delete (T *)fPointer; }
+   ~TTypedPointerHolder() { delete static_cast<T *>(fPointer); }
 };
 
 } // ns TDS
@@ -184,7 +184,7 @@ public:
 
 protected:
    /// type-erased vector of pointers to pointers to column values - one per slot
-   virtual std::vector<void *> GetColumnReadersImpl(std::string_view name, const std::type_info &) = 0;
+   virtual Record_t GetColumnReadersImpl(std::string_view name, const std::type_info &) = 0;
 };
 
 } // ns TDF
