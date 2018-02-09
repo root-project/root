@@ -17,6 +17,8 @@
 #include "TEnv.h"
 #endif
 
+#include "TVirtualRWMutex.h"
+
 #include <iomanip>
 
 namespace ROOT {
@@ -92,15 +94,25 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
    // return default minimizer
    // if is "" (no default is set) read from etc/system.rootrc
 
-   if (Minim::gDefaultMinimizer.size() == 0) {
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+
+   if (Minim::gDefaultMinimizer.size() != 0)
+      return Minim::gDefaultMinimizer;
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   // Another thread also waiting for the write lock might have
+   // done the assignment
+   if (Minim::gDefaultMinimizer.size() != 0)
+      return Minim::gDefaultMinimizer;
+
 #ifndef MATH_NO_PLUGIN_MANAGER
    // use value defined in etc/system.rootrc  (if not found Minuit is used)
-      if (gEnv)
-         Minim::gDefaultMinimizer = gEnv->GetValue("Root.Fitter","Minuit");
+   if (gEnv)
+      Minim::gDefaultMinimizer = gEnv->GetValue("Root.Fitter","Minuit");
 #else
-      Minim::gDefaultMinimizer = "Minuit2";  // in case no PM exists
+   Minim::gDefaultMinimizer = "Minuit2";  // in case no PM exists
 #endif
-   }
 
    return Minim::gDefaultMinimizer;
 }
