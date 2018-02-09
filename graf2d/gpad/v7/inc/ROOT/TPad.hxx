@@ -84,7 +84,7 @@ public:
    auto &Draw(const std::shared_ptr<T> &what)
    {
       // Requires GetDrawable(what) to be known!
-      return AddDrawable(GetDrawable(what, *this));
+      return AddDrawable(GetDrawable(what));
    }
 
    /// Add something to be painted. The pad claims ownership.
@@ -92,7 +92,7 @@ public:
    auto &Draw(std::unique_ptr<T> &&what)
    {
       // Requires GetDrawable(what) to be known!
-      return AddDrawable(GetDrawable(std::move(what), *this));
+      return AddDrawable(GetDrawable(std::move(what)));
    }
 
    /// Add a copy of something to be painted.
@@ -146,7 +146,7 @@ private:
    TPadExtent fSize = {640_px, 400_px};
 
 public:
-   friend std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, const TPadBase &parent);
+   friend std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad);
 
    /// Create a topmost, non-paintable pad.
    TPad() = default;
@@ -222,7 +222,7 @@ private:
 
 public:
    /// Move a sub-pad into this (i.e. parent's) list of drawables.
-   TPadDrawable(std::unique_ptr<TPad> &&pPad, TPadBase &parent);
+   TPadDrawable(std::unique_ptr<TPad> &&pPad);
 
    /// Paint the pad.
    void Paint(Internal::TVirtualCanvasPainter & /*canv*/) final
@@ -236,9 +236,9 @@ public:
    TPadDrawingOpts &GetOptions() { return fOpts; }
 };
 
-inline std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, TPadBase &parent)
+inline std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad)
 {
-   return std::make_unique<TPadDrawable>(std::move(pad), parent);
+   return std::make_unique<TPadDrawable>(std::move(pad));
 }
 
 } // namespace Experimental
