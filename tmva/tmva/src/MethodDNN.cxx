@@ -1198,7 +1198,7 @@ void TMVA::MethodDNN::TrainCpu()
             }
             trainingError /= (Double_t) (nTrainingSamples / settings.batchSize);
 
-       if (fInteractive){
+            if (fInteractive){
                fInteractive->AddPoint(stepCount, trainingError, testError);
                fIPyCurrentIter = 100*(double)minimizer.GetConvergenceCount() /(double)settings.convergenceSteps;
                if (fExitFromTraining) break;
