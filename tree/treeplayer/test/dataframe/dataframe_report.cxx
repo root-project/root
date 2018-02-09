@@ -32,7 +32,7 @@ TEST(TDataFrameReport, AnalyseCuts)
    std::vector<const char *> cutNames{"cut0", "cut1", "cut2"};
    std::vector<ULong64_t> allEvts{128, 67, 59};
    std::vector<ULong64_t> passEvts{67, 59, 50};
-   std::vector<float> effs{52.34375, 88.0597, 84.745766};
+   std::vector<float> effs{52.34375f, 88.0597f, 84.745766f};
    unsigned int i = 0;
 
    for (auto &&cut : rep) {
