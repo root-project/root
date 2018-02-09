@@ -51,7 +51,8 @@ void InitializeAttrFromString(const std::string &name, const std::string &strval
 template <class ATTR>
 class TDrawingAttrOrRef {
 private:
-   std::shared_ptr<ATTR> fPtr; ///< The shared_ptr, shared with the relevant attribute table of `TTopmostPad`.
+   /// The shared_ptr, shared with the relevant attribute table of `TTopmostPad`.
+   std::shared_ptr<ATTR> fPtr; //!
    ATTR fAttr; ///< The attribute value, used if `!fPtr`.
 
    /// Whether this attribute is shared (through `TTopmostPad`'s attribute table) with other `TDrawingAttrOrRef`
