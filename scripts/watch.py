@@ -57,11 +57,18 @@ def launchAndSendSignal(command, sig, timeout):
          ae.join()
          return rc
       if timeout > 0 and (time.clock() - start) > timeout:
-         print ('Timeout reached: sending %s signal to process %s' %(sig, proc.pid))
          # Here it is *fundamental* to use killpg to reach all the processes
          # in the process group. This covers cases where for example root is invoked
          # and it launches root.exe -splash
-         pgid = os.getpgid(proc.pid)
+         try:
+            pgid = os.getpgid(proc.pid)
+         except:
+            pgid = 0
+         if 0 == pgid:
+            rc = ae.Poll()
+            ae.join()
+            return rc
+         print ('Timeout reached: sending %s signal to process %s' %(sig, proc.pid))
          os.killpg(pgid, sig)
          # give the time to GDB to fire up
          time.sleep(timeoutOffset)
@@ -69,7 +76,10 @@ def launchAndSendSignal(command, sig, timeout):
          # full stack trace built with gdb. This is a bit of black magic.
          # It is not yet clear why to flush the buffers the process group needs
          # to be terminated by hand and it does not terminate by itself.
-         os.killpg(pgid, signal.SIGKILL)
+         try:
+            os.killpg(pgid, signal.SIGKILL)
+         except:
+            pass
          ae.join()
          return 1
 
