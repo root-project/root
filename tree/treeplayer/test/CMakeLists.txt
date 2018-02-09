@@ -14,6 +14,7 @@ ROOT_ADD_GTEST(dataframe_simple dataframe/dataframe_simple.cxx LIBRARIES TreePla
 ROOT_ADD_GTEST(dataframe_snapshot dataframe/dataframe_snapshot.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(dataframe_utils dataframe/dataframe_utils.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(dataframe_report dataframe/dataframe_report.cxx LIBRARIES TreePlayer)
+ROOT_ADD_GTEST(dataframe_helpers dataframe/dataframe_helpers.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_GTEST(datasource_more dataframe/datasource_more.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(datasource_root dataframe/datasource_root.cxx LIBRARIES TreePlayer)
