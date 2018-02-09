@@ -34,9 +34,8 @@ public:
 };
 } // namespace
 
-ROOT::Experimental::TFrame::TFrame(std::unique_ptr<Detail::TPadUserCoordBase> &&coords, const TPadPos &pos,
-                                   const TPadExtent &size)
-   : fUserCoord(std::move(coords)), fPalette(TPalette::GetPalette("default")), fPos(pos), fSize(size)
+ROOT::Experimental::TFrame::TFrame(std::unique_ptr<Detail::TPadUserCoordBase> &&coords, const DrawingOpts &opts)
+   : fUserCoord(std::move(coords)), fPalette(TPalette::GetPalette("default")), fPos(opts.fPos.Get()), fSize(opts.fSize.Get())
 {
    if (!fUserCoord)
       fUserCoord.reset(new TPadUserCoordDefault);
