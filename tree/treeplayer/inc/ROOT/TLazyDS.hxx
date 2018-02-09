@@ -44,6 +44,10 @@ class TLazyDS final : public ROOT::Experimental::TDF::TDataSource {
    std::tuple<TResultProxy<std::vector<ColumnTypes>>...> fColumns;
    const std::vector<std::string> fColNames;
    const std::map<std::string, std::string> fColTypesMap;
+   // The role of the fPouinterHoldersModels is to be initialised with the pack
+   // of arguments in the constrcutor signature at construction time
+   // Once the number of slots is known, the fPointerHolders are initialised
+   // according to the models.
    const PointerHolderPtrs_t fPointerHoldersModels;
    std::vector<PointerHolderPtrs_t> fPointerHolders;
    std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges {};
@@ -85,7 +89,7 @@ class TLazyDS final : public ROOT::Experimental::TDF::TDataSource {
    void SetEntryHelper(unsigned int slot, ULong64_t entry, ROOT::Internal::TDF::StaticSeq<S...>)
    {
       std::initializer_list<int> expander{
-         (*((ColumnTypes *)fPointerHolders[S][slot]->GetPointer()) = (*std::get<S>(fColumns))[entry], 0)...};
+         (* static_cast<ColumnTypes *>(fPointerHolders[S][slot]->GetPointer()) = (*std::get<S>(fColumns))[entry], 0)...};
       (void)expander; // avoid unused variable warnings
    }
 
