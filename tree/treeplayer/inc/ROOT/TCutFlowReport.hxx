@@ -49,7 +49,7 @@ class TCutFlowReport {
 
 private:
    std::vector<TCutInfo> fCutInfos;
-   void AddCut(TCutInfo &&ci) { return fCutInfos.emplace_back(std::move(ci)); };
+   void AddCut(TCutInfo &&ci) { fCutInfos.emplace_back(std::move(ci)); };
 
 public:
    void Print();
