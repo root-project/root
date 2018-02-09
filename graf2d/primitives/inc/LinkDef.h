@@ -16,8 +16,6 @@
 
 #pragma link C++ class ROOT::Experimental::TDisplayItem+;
 #pragma link C++ class ROOT::Experimental::TPadDisplayItem+;
-#pragma link C++ class ROOT::Experimental::TUniqueDisplayItem<TPad>+;
-#pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<TH1>+;
 #pragma link C++ class ROOT::Experimental::TPalette+;
 #pragma link C++ class ROOT::Experimental::TColor+;
 #pragma link C++ class ROOT::Experimental::TStringEnumAttr+;
