@@ -178,7 +178,7 @@ void TTensorDataLoader<TMVAInput_t, TReference<Real_t>>::CopyTensorInput(std::ve
          for (size_t j = 0; j < fBatchHeight; j++) {
             for (size_t k = 0; k < fBatchWidth; k++) {
                event = std::get<0>(fData)[sampleIndex];
-               tensor[i](j, k) = static_cast<Real_t>(event->GetValue(j * fBatchHeight + k));
+               tensor[i](j, k) = static_cast<Real_t>(event->GetValue(j * fBatchWidth + k));
             }
          }
          sampleIterator++;
@@ -250,7 +250,7 @@ void TTensorDataLoader<TMVAInput_t, TReference<Double_t>>::CopyTensorInput(std::
          for (size_t j = 0; j < fBatchHeight; j++) {
             for (size_t k = 0; k < fBatchWidth; k++) {
                event = std::get<0>(fData)[sampleIndex];
-               tensor[i](j, k) = event->GetValue(j * fBatchHeight + k);
+               tensor[i](j, k) = event->GetValue(j * fBatchWidth + k);
             }
          }
          sampleIterator++;
