@@ -24,9 +24,6 @@
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 
-namespace {
-}
-
 TDrawingOptsReader::Attrs_t TDrawingOptsReader::ReadDefaults()
 {
    Attrs_t ret;
@@ -37,30 +34,8 @@ TDrawingOptsReader::Attrs_t TDrawingOptsReader::ReadDefaults()
    return ret;
 }
 
-ROOT::Experimental::TColor
-TDrawingOptsReader::ParseColor(std::string_view attr, const ROOT::Experimental::TColor &deflt)
+bool TDrawingOptsReader::AddFromStyleFile(std::string_view filename)
 {
-   auto iAttr = fAttrs.find(std::string(attr));
-   if (iAttr == fAttrs.end())
-      return deflt;
-   return ROOT::Experimental::TColor::kBlack;
-}
-
-long long TDrawingOptsReader::ParseInt(std::string_view /*attr*/, long long /*deflt*/,
-   std::vector<std::string_view> /*opts*/ /*= {}*/)
-{
-   // TODO: implement!
-   return 0;
-}
-
-double TDrawingOptsReader::ParseFP(std::string_view /*attr*/, double /*deflt*/)
-{
-   // TODO: implement!
-   return 0.;
-}
-
-bool TDrawingOptsReader::AddFromStyleFile(std::string_view /*filename*/)
-{
-   // TODO - implement!
+   R__WARNING_HERE("Gpad") << "Not implemented yet, while reading style file " << filename;
    return false;
 }
