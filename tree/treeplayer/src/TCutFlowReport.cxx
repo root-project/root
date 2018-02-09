@@ -30,8 +30,8 @@ const TCutInfo &TCutFlowReport::operator[](std::string_view cutName)
       throw std::runtime_error("Cannot look for an unnamed cut.");
    }
    auto pred = [&cutName](const TCutInfo &ci) { return ci.GetName() == cutName; };
-   auto ciItEnd = fCutInfos.end();
-   auto it = std::find_if(fCutInfos.begin(), ciItEnd, pred);
+   const auto ciItEnd = fCutInfos.end();
+   const auto it = std::find_if(fCutInfos.begin(), ciItEnd, pred);
    if (ciItEnd == it) {
       std::string err = "Cannot find a cut called \"";
       err += cutName;
