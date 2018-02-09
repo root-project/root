@@ -15,6 +15,8 @@
 
 #include "ROOT/TPadExtent.hxx"
 
+#include <ROOT/TLogger.hxx>
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize a TPadExtent from a style string.
 /// Syntax: X, Y
@@ -23,8 +25,8 @@
 /// user or normal coordinates. Spaces between any part is allowed.
 /// Example: `100 px + 0.1 user, 0.5 normal` is a `TPadExtent{100_px + 0.1_user, 0.5_normal}`.
 
-void ROOT::Experimental::InitializeAttrFromString(const std::string &name, const std::string attrStrVal,
-                                                  ROOT::Experimental::TPadExtent& val)
+void ROOT::Experimental::InitializeAttrFromString(const std::string & /*name*/, const std::string & /*attrStrVal*/,
+                                                  ROOT::Experimental::TPadExtent& /*val*/)
 {
    R__ERROR_HERE("Gpad") << "Not yet implemented!";
 }
