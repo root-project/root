@@ -23,6 +23,8 @@
 
 #include <cassert>
 #include <limits>
+#include <string>
+#include <sstream>
 
 using namespace ROOT::Experimental;
 
@@ -78,9 +80,17 @@ TStyle &TStyle::GetCurrent()
 }
 
 std::string TStyle::GetAttribute(const std::string &attrName) const {
-   auto iter = fAttrs.find(attrName);
-   if (iter != fAttrs.end())
-      return iter->second;
-   R__WARNING_HERE("Graf2d") << "Stripping of outer name parts not yet implemented!";
+   std::string trailingPart(attrName);
+   while (!trailingPart.empty()) {
+      auto iter = fAttrs.find(trailingPart);
+      if (iter != fAttrs.end())
+         return iter->second;
+      auto posDot = trailingPart.find('.');
+      if (posDot != std::string::npos) {
+         trailingPart.erase(0, posDot + 1);
+      } else {
+         return {};
+      }
+   }
    return {};
 }
