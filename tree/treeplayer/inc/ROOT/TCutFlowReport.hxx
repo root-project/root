@@ -28,8 +28,6 @@ class TFilterBase;
 namespace Experimental {
 namespace TDF {
 
-class TCutFlowReport;
-
 class TCutInfo {
    friend class TCutFlowReport;
    friend class ROOT::Detail::TDF::TFilterBase;
