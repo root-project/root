@@ -34,7 +34,10 @@ class THistDrawingOpts {
  */
 template <>
 class THistDrawingOpts<1> {
+public:
    enum class EStyle { kBar, kText };
+
+private:
    static const TStringEnumAttrSet &Styles() {
       static const TStringEnumAttrSet styles{"hist", "bar", "text"};
       return styles;
@@ -42,8 +45,16 @@ class THistDrawingOpts<1> {
    TDrawingAttrOrRef<TStringEnumAttr> fStyle{"Hist.1D.Style", 0, Styles()};
    TDrawingAttrOrRef<TColor> fLineColor{"Hist.1D.Line.Color"};
    TDrawingAttrOrRef<int> fLineWidth{"Hist.1D.Line.Width"};
+
 public:
-   THistDrawingOpts() = default;
+   EStyle GetStyle() const { return static_cast<EStyle>(fStyle.Get().GetIndex()); }
+   void SetStyle(EStyle style) { fStyle.Get().SetIndex(static_cast<int>(style)); }
+
+   TColor GetLineColor() const { return fLineColor.Get(); }
+   void SetLineColor(const TColor& col) { fLineColor = col; }
+
+   int GetLineWidth() const { return fLineWidth.Get(); }
+   void SetLineWidth(int width) { fLineWidth = width; }
 };
 
 /** \class THistDrawingOpts<2>
@@ -51,8 +62,10 @@ public:
  */
 template <>
 class THistDrawingOpts<2> {
+public:
    enum class EStyle { kBox, kSurf, kText };
-   static const TStringEnumAttrSet fgStyles;
+
+private:
    static const TStringEnumAttrSet &Styles() {
       static const TStringEnumAttrSet styles{"box", "surf", "text"};
       return styles;
@@ -60,8 +73,16 @@ class THistDrawingOpts<2> {
    TDrawingAttrOrRef<TStringEnumAttr> fStyle{"Hist.2D.Style", 0, Styles()};
    TDrawingAttrOrRef<TColor> fLineColor{"Hist.2D.Line.Color"};
    TDrawingAttrOrRef<int> fLineWidth{"Hist.2D.Line.Width"};
+
 public:
-   THistDrawingOpts() = default;
+   EStyle GetStyle() const { return static_cast<EStyle>(fStyle.Get().GetIndex()); }
+   void SetStyle(EStyle style) { fStyle.Get().SetIndex(static_cast<int>(style)); }
+
+   TColor GetLineColor() const { return fLineColor.Get(); }
+   void SetLineColor(const TColor& col) { fLineColor = col; }
+
+   int GetLineWidth() const { return fLineWidth.Get(); }
+   void SetLineWidth(int width) { fLineWidth = width; }
 };
 
 /** \class THistDrawingOpts<3>
@@ -69,7 +90,10 @@ public:
  */
 template <>
 class THistDrawingOpts<3> {
+public:
    enum class EStyle { kBox, kIso };
+
+private:
    static const TStringEnumAttrSet &Styles() {
       static const TStringEnumAttrSet styles{"box", "iso"};
       return styles;
@@ -77,8 +101,16 @@ class THistDrawingOpts<3> {
    TDrawingAttrOrRef<TStringEnumAttr> fStyle{"Hist.3D.Style", 0, Styles()};
    TDrawingAttrOrRef<TColor> fLineColor{"Hist.3D.Line.Color"};
    TDrawingAttrOrRef<int> fLineWidth{"Hist.3D.Line.Width"};
+
 public:
-   THistDrawingOpts() = default;
+   EStyle GetStyle() const { return static_cast<EStyle>(fStyle.Get().GetIndex()); }
+   void SetStyle(EStyle style) { fStyle.Get().SetIndex(static_cast<int>(style)); }
+
+   TColor GetLineColor() const { return fLineColor.Get(); }
+   void SetLineColor(const TColor& col) { fLineColor = col; }
+
+   int GetLineWidth() const { return fLineWidth.Get(); }
+   void SetLineWidth(int width) { fLineWidth = width; }
 };
 
 } // namespace Experimental
