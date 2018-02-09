@@ -54,7 +54,6 @@
 #pragma link C++ class ROOT::Experimental::TPadDrawable+;
 #pragma link C++ class ROOT::Experimental::TCanvas+;
 #pragma link C++ class ROOT::Experimental::TFrame+;
-#pragma link C++ class ROOT::Experimental::TPalette+;
 #pragma link C++ class ROOT::Experimental::TPadCoord+;
 #pragma link C++ class ROOT::Experimental::TPadCoord::Pixel+;
 #pragma link C++ class ROOT::Experimental::TPadCoord::Normal+;
@@ -62,31 +61,10 @@
 #pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Pixel>+;
 #pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Normal>+;
 #pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::User>+;
-#pragma link C++ class ROOT::Experimental::TColor+;
-#pragma link C++ class ROOT::Experimental::TDrawingAttrRef<ROOT::Experimental::TColor>+;
-#pragma link C++ class ROOT::Experimental::TDrawingAttrRef<long long>+;
-#pragma link C++ class ROOT::Experimental::TDrawingAttrRef<double>+;
-#pragma link C++ class ROOT::Experimental::Internal::TDrawingAttrTable<ROOT::Experimental::TColor>+;
-#pragma link C++ class ROOT::Experimental::Internal::TDrawingAttrTable<long long>+;
-#pragma link C++ class ROOT::Experimental::Internal::TDrawingAttrTable<double>+;
-#pragma link C++ class ROOT::Experimental::TLineAttrs+;
-#pragma link C++ class ROOT::Experimental::TFillAttrs+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<ROOT::Experimental::TColor>+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<long long>+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBaseNoDefault::OptsAttrRefArr<double>+;
-#pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TCanvas>+;
-#pragma link C++ class ROOT::Experimental::TText+;
-#pragma link C++ class ROOT::Experimental::TextDrawingOpts+;
-#pragma link C++ class ROOT::Experimental::TDrawingOptsBase<ROOT::Experimental::TextDrawingOpts>+;
-#pragma link C++ class ROOT::Experimental::TTextDrawable+;
-#pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::TText>+;
-#pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TTextDrawable>+;
 
-
-//#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Pixel>+;
-//#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Normal>+;
-//#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::User>+;
+// ROOT 6 display items:
+#pragma link C++ class ROOT::Experimental::TUniqueDisplayItem<TPad>+;
+#pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<TH1>+;
 #endif
 
 #endif
