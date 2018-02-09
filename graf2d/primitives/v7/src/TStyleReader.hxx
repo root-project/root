@@ -28,43 +28,22 @@ namespace Experimental {
 namespace Internal {
 /** \class ROOT::Experimental::TFrame
  Reads the attribute config values from `.rootstylerc`. If the style entry is not found there, tries `~/.rootstylerc`
- and finally `$ROOTSYS/system.rootstylerc`.
+ and finally `$ROOTSYS/etc/system.rootstylerc`.
   */
 class TDrawingOptsReader {
 public:
    using Attrs_t = std::unordered_map<std::string, std::string>;
 
 private:
-   /// Attributes to operate on.
+   /// Attributes to read into.
    Attrs_t &fAttrs;
 
 public:
    TDrawingOptsReader(Attrs_t &attrs): fAttrs(attrs) {}
 
    ///  Reads the attribute config values from `.rootstylerc`. If the style entry is not found there, tries
-   ///  `~/.rootstylerc` and finally `$ROOTSYS/system.rootstylerc`.
-
+   ///  `~/.rootstylerc` and finally `$ROOTSYS/etc/system.rootstylerc`.
    static Attrs_t ReadDefaults();
-
-   TColor ParseColor(std::string_view attr, const TColor& deflt);
-
-   /// Parse an integer attribute, or if `opts` is given, return the index of the string from the options file in
-   /// `opts`. Returns `0` (and prints an error) if the string cannot be found in opts, or if the integer cannot be
-   /// parsed or if the attribute has no entry in `fAttrs`.
-   long long ParseInt(std::string_view attr, long long deflt, std::vector<std::string_view> opts = {});
-
-   /// Parse a floating point attribute.
-   /// Returns `0.` and prints an error if the attribute string cannot be parsed as a floating point number.
-   /// Prints an error if the attribute has no entry in `fAttrs`.
-   double ParseFP(std::string_view attr, double deflt);
-
-   /// Convenience overloads:
-   TColor Parse(std::string_view attr, const TColor &deflt, std::vector<std::string_view> = {}) { return ParseColor(attr, deflt); }
-   long long Parse(std::string_view attr, long long deflt, std::vector<std::string_view> opts = {})
-   {
-      return ParseInt(attr, deflt, opts);
-   }
-   double Parse(std::string_view attr, double deflt, std::vector<std::string_view> = {}) { return ParseFP(attr, deflt); }
 
    /// Adds attributes specified in `filename` to those already existing in `fAttrs`.
    /// Overwrites values for attributes that already exist in `attrs`!
