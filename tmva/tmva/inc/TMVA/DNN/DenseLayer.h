@@ -158,7 +158,6 @@ auto TDenseLayer<Architecture_t>::Forward(std::vector<Matrix_t> &input, bool app
    if (applyDropout && (this->GetDropoutProbability() != 1.0)) {
       Architecture_t::Dropout(input[0], this->GetDropoutProbability());
    }
-
    Architecture_t::MultiplyTranspose(this->GetOutputAt(0), input[0], this->GetWeightsAt(0));
    Architecture_t::AddRowWise(this->GetOutputAt(0), this->GetBiasesAt(0));
    evaluateDerivative<Architecture_t>(this->GetDerivativesAt(0), this->GetActivationFunction(), this->GetOutputAt(0));
@@ -194,6 +193,9 @@ void TDenseLayer<Architecture_t>::Print() const
 {
    std::cout << "Rows = " << this->GetWeightsAt(0).GetNrows();
    std::cout << "Cols = " << this->GetWeightsAt(0).GetNcols();
+   if (this->GetOutput().size() > 0) { 
+      std::cout << "Output = ( " << this->GetOutput().size() << " , " << this->GetOutput()[0].GetNrows() << " , " << this->GetOutput()[0].GetNcols() << " ) " << std::endl;
+   }     
    std::cout << ", Activation Function = ";
    std::cout << static_cast<int>(fF) << std::endl;
 }

@@ -30,9 +30,18 @@ void TCpu<AFloat>::MultiplyTranspose(TCpuMatrix<AFloat> &output, const TCpuMatri
    int k = (int)input.GetNcols();
    int n = (int)Weights.GetNrows();
 
-   R__ASSERT((int) output.GetNrows() == m);
-   R__ASSERT((int) output.GetNcols() == n);
-   R__ASSERT((int) Weights.GetNcols() == k); 
+   if (output.GetNrows() != m) {
+      Error("MultiplyTranspose","Invalid input - output  rows  - input:  %d != output : %d",m, (int) output.GetNrows());
+      R__ASSERT((int) output.GetNrows() == m);
+   }
+   if (output.GetNcols() != n) {
+      Error("MultiplyTranspose","Invalid output cols or weight  rows  - output cols:  %d != weight rows : %d",(int) output.GetNcols(),n);
+      R__ASSERT((int) output.GetNcols() == n);
+   }
+   if (Weights.GetNcols() != k) {
+      Error("MultiplyTranspose","Invalid input cols or weight cols  - input cols:  %d != weight cols : %d", k, (int) Weights.GetNcols());
+      R__ASSERT((int) Weights.GetNcols() == k); 
+   }
 
    char transa = 'N';
    char transb = 'T';

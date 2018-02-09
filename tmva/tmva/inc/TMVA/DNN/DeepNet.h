@@ -373,9 +373,12 @@ auto TDeepNet<Architecture_t, Layer_t>::calculateDimension(int imgDim, int fltDi
 {
    Scalar_t dimension = ((imgDim - fltDim + 2 * padding) / stride) + 1;
    if (!isInteger(dimension) || dimension <= 0) {
-      std::cout << "calculateDimension - Not compatible hyper parameters (imgDim, fltDim, padding, stride)"
-                << imgDim << " , " << fltDim << " , " <<  padding << " , " << stride<< " resulting dim is " << dimension << std::endl;
-      std::exit(EXIT_FAILURE);
+      this->Print(); 
+      int iLayer = fLayers.size(); 
+      Fatal("calculateDimension","Not compatible hyper parameters for layer %d - (imageDim, filterDim, padding, stride) %zu , %zu , %zu , %zu");
+      // std::cout << " calculateDimension - Not compatible hyper parameters (imgDim, fltDim, padding, stride)"
+      //           << imgDim << " , " << fltDim << " , " <<  padding << " , " << stride<< " resulting dim is " << dimension << std::endl;
+      // std::exit(EXIT_FAILURE);
    }
 
    return (size_t)dimension;
@@ -1130,6 +1133,7 @@ auto TDeepNet<Architecture_t, Layer_t>::Print() -> void
    std::cout << "\t Layers: " << std::endl;
 
    for (size_t i = 0; i < fLayers.size(); i++) {
+      std::cout << "Layer " << i << "\t";
       fLayers[i]->Print();
    }
 }

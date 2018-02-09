@@ -1168,17 +1168,27 @@ void MethodDL::TrainCpu()
       ERegularization R = settings.regularization;
       Scalar_t weightDecay = settings.weightDecay;
 
-      //LM these need to be equal for the time being
-      if (batchDepth != batchSize) {
-         Error("TrainCpu","Given batch depth of %zu (specified in BatchLayout)  should be equal to given batch size %zu",batchSize,batchDepth);
+      //Batch size should be included in batch layout as well. There are two possibilities:
+      //  1.  Batch depth = batch size   one will input tensorsa as (batch_size x d1 x d2)
+      //       This is case for example if first layer is a conv layer and d1 = image depth, d2 = image width x image height
+      //  2.  Batch depth = 1, batch height = batch size  batxch width = dim of input features
+      //        This should be case if first layer is a Dense 1 and input tensor must be ( 1 x batch_size x input_features )
+      
+      if (batchDepth != batchSize && batchDepth > 1) {
+         Error("TrainCpu","Given batch depth of %zu (specified in BatchLayout)  should be equal to given batch size %zu",batchDepth,batchSize);
          return;
       }
+      if (batchDepth == 1 && batchSize > 1 && batchSize != batchHeight ) {
+         Error("TrainCpu","Given batch height of %zu (specified in BatchLayout)  should be equal to given batch size %zu",batchHeight,batchSize);
+         return;
+      }
+         
 
-      //check also that input layout compatible with natch layout
+      //check also that input layout compatible with batch layout
       if (inputDepth * inputHeight * inputWidth != batchHeight * batchWidth ) {
          Error("TrainCpu","Given input layout %zu x %zu x %zu is not compatible with  batch layout %zu x  %zu (depth is not printed is the size)",
                inputDepth,inputHeight,inputWidth,batchHeight,batchWidth);
-         return;
+         // return;
       }
 
       //fNet = std::unique_ptr<DeepNet_t>(new DeepNet_t(batchSize, inputDepth, inputHeight, inputWidth, batchDepth,
@@ -1187,6 +1197,7 @@ void MethodDL::TrainCpu()
 
       DeepNet_t deepNet(batchSize, inputDepth, inputHeight, inputWidth, batchDepth, batchHeight, batchWidth, J, I, R, weightDecay);
 
+      // create a copy of DeepNet for evaluating but with batch size = 1 
       fNet = std::unique_ptr<DeepNet_t>(new DeepNet_t(1, inputDepth, inputHeight, inputWidth, batchDepth, 
                                                       batchHeight, batchWidth, J, I, R, weightDecay));
 
@@ -1199,7 +1210,11 @@ void MethodDL::TrainCpu()
       }
 
       // Add all appropriate layers to deepNet and copies to fNet
-      CreateDeepNet(deepNet, nets); 
+      CreateDeepNet(deepNet, nets);
+
+      // print the created network
+      std::cout << "*****   Deep Learning Network *****\n";
+      deepNet.Print(); 
 
       // Loading the training and testing datasets
       TMVAInput_t trainingTuple = std::tie(GetEventCollection(Types::kTraining), DataInfo());
@@ -1364,10 +1379,14 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    using Matrix_t = typename Architecture_t::Matrix_t;
 
    size_t nVariables = GetEvent()->GetNVariables();
-   int ntime = fNet->GetBatchHeight();
-   int nvar = fNet->GetBatchWidth();
+   int batchWidth = fNet->GetBatchWidth();
+   int batchDepth = fNet->GetBatchDepth();
+   int batchHeight = fNet->GetBatchHeight();
    int nb = fNet->GetBatchSize();
    int noutput = fNet->GetOutputWidth();
+
+   // note that batch size whould be equal to 1
+   R__ASSERT(nb == 1); 
 
    std::vector<Matrix_t> X{};
    Matrix_t YHat(nb, noutput);
@@ -1375,16 +1394,29 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    // get current event
    const std::vector<Float_t> &inputValues = GetEvent()->GetValues();
 
-   for (int i = 0; i < nb; ++i) X.push_back(Matrix_t(ntime, nvar));
+   //   for (int i = 0; i < batchDepth; ++i)
 
-   // need to fill lal lbatch with same event
-   for (int i = 0; i < nb; ++i) { // batch size loop
-      for (int j = 0; j < ntime; ++j) {
-         for (int k = 0; k < (Int_t)nvar; k++) {
-            int ivar = j * ntime + k;
-            R__ASSERT(ivar < (Int_t)nVariables);
-            X[i](j, k) = inputValues[ivar];
+   // find dimension of matrices
+   // Tensor outer size must be equal to 1
+   // because nb ==1 by definition
+   int n1 = 1;
+   int n2 = batchWidth; 
+   if (batchDepth > 1)  
+      n1 = batchHeight;   // case of conv or (rnn ? ) layers: n1 is conv depth
+
+   X.emplace_back(Matrix_t(n1, n2));
+
+   if (n1 > 1) {
+      // for CNN or RNN evaluations
+      for (int j = 0; j < n1; ++j) {
+         for (int k = 0; k < n2; k++) {
+            X[0](j, k) = inputValues[j*n1+k];
          }
+      }
+   }
+   else {
+      for (int k = 0; k < n2; k++) {
+         X[0](0, k) = inputValues[k];
       }
    }
 
