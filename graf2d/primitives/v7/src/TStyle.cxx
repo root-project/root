@@ -29,7 +29,7 @@ using namespace ROOT::Experimental;
 namespace {
 static std::unordered_map<std::string, TStyle> ReadGlobalDefaultStyles()
 {
-   // TODO: use AttrReader
+   // TODO: use TStyleReader
    return {};
 }
 
