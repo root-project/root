@@ -192,22 +192,8 @@ public:
    ///\}
 };
 
-#if 0
 // TODO: see also imagemagick's C++ interface for TColor operations!
 // https://www.imagemagick.org/api/magick++-classes.php
-
-/// User-defined literal to add alpha to a `TColor`
-///
-/// Use as
-/// ```
-/// using namespace ROOT::Experimental;
-/// TColor red = TColor::kRed + 0.2_alpha;
-/// ```
-inline TPadCoord::Normal operator"" _alpha(long double val)
-{
-   return TPadCoord::Normal{(double)val};
-}
-#endif
 
 void InitializeAttrFromString(const std::string &name, const std::string &strval, TColor& val);
 
