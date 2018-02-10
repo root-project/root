@@ -95,6 +95,7 @@ private:
    Bool_t            fLazyInitialization = kFALSE;  //! transient flag to control lazy initialization (needed for reading from files)
    TMethodCall *fMethod;                      //! pointer to methodcall
    TString           fClingName;     //! unique name passed to Cling to define the function ( double clingName(double*x, double*p) )
+   std::string       fSavedInputFormula;  //! unique name used to defined the function and used in the global map (need to be saved in case of lazy initialization)
 
    TInterpreter::CallFuncIFacePtr_t::Generic_t fFuncPtr;   //!  function pointer
    void *   fLambdaPtr;                                    //!  pointer to the lambda function
