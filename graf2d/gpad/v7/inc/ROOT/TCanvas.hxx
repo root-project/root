@@ -40,7 +40,7 @@ private:
    std::string fTitle;
 
    /// Size of the canvas in pixels,
-   std::array<TPadCoord::Pixel, 2> fSize;
+   std::array<TPadLength::Pixel, 2> fSize;
 
    /// Modify counter, incremented every time canvas is changed
    uint64_t fModified; ///<!
@@ -70,13 +70,13 @@ public:
    TCanvas *GetCanvas() override { return this; }
 
    /// Return canvas pixel size as array with two elements - width and height
-   const std::array<TPadCoord::Pixel, 2> &GetSize() const { return fSize; }
+   const std::array<TPadLength::Pixel, 2> &GetSize() const { return fSize; }
 
    /// Set canvas pixel size as array with two elements - width and height
-   void SetSize(const std::array<TPadCoord::Pixel, 2> &sz) { fSize = sz; }
+   void SetSize(const std::array<TPadLength::Pixel, 2> &sz) { fSize = sz; }
 
    /// Set canvas pixel size - width and height
-   void SetSize(const TPadCoord::Pixel &width, const TPadCoord::Pixel &height)
+   void SetSize(const TPadLength::Pixel &width, const TPadLength::Pixel &height)
    {
       fSize[0] = width;
       fSize[1] = height;
@@ -114,7 +114,7 @@ public:
    void SetTitle(const std::string &title) { fTitle = title; }
 
    /// Convert a `Pixel` position to Canvas-normalized positions.
-   std::array<TPadCoord::Normal, 2> PixelsToNormal(const std::array<TPadCoord::Pixel, 2> &pos) const final
+   std::array<TPadLength::Normal, 2> PixelsToNormal(const std::array<TPadLength::Pixel, 2> &pos) const final
    {
       return {{pos[0] / fSize[0], pos[1] / fSize[1]}};
    }

@@ -75,7 +75,7 @@ public:
    }
 
    /// Convert user coordinates to normal coordinates.
-   std::array<TPadCoord::Normal, 2> UserToNormal(const std::array<TPadCoord::User, 2> &pos) const
+   std::array<TPadLength::Normal, 2> UserToNormal(const std::array<TPadLength::User, 2> &pos) const
    {
       return fUserCoord->ToNormal(pos);
    }

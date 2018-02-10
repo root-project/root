@@ -16,7 +16,7 @@
 #ifndef ROOT7_TPadUserCoordBase
 #define ROOT7_TPadUserCoordBase
 
-#include <ROOT/TPadCoord.hxx>
+#include <ROOT/TPadLength.hxx>
 
 #include <array>
 
@@ -45,7 +45,7 @@ public:
    virtual ~TPadUserCoordBase();
 
    /// Convert user coordinates to normal coordinates.
-   virtual std::array<TPadCoord::Normal, 2> ToNormal(const std::array<TPadCoord::User, 2> &) const = 0;
+   virtual std::array<TPadLength::Normal, 2> ToNormal(const std::array<TPadLength::User, 2> &) const = 0;
 };
 
 } // namespace Detail

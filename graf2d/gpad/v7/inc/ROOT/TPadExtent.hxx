@@ -16,7 +16,7 @@
 #ifndef ROOT7_TPadExtent
 #define ROOT7_TPadExtent
 
-#include "ROOT/TPadCoord.hxx"
+#include "ROOT/TPadLength.hxx"
 
 #include <array>
 
@@ -25,16 +25,16 @@ namespace Experimental {
 
 namespace Internal {
 /** \class ROOT::Experimental::Internal::TPadHorizVert
-   A 2D (horizontal and vertical) combination of `TPadCoord`s.
+   A 2D (horizontal and vertical) combination of `TPadLength`s.
    */
 
 struct TPadHorizVert {
-   TPadCoord fHoriz; ///< Horizontal position
-   TPadCoord fVert;  ///< Vertical position
+   TPadLength fHoriz; ///< Horizontal position
+   TPadLength fVert;  ///< Vertical position
 
    TPadHorizVert() = default;
-   TPadHorizVert(const std::array<TPadCoord, 2> &hv): fHoriz(hv[0]), fVert(hv[1]) {}
-   TPadHorizVert(const TPadCoord &horiz, const TPadCoord &vert): fHoriz(horiz), fVert(vert) {}
+   TPadHorizVert(const std::array<TPadLength, 2> &hv): fHoriz(hv[0]), fVert(hv[1]) {}
+   TPadHorizVert(const TPadLength &horiz, const TPadLength &vert): fHoriz(horiz), fVert(vert) {}
 };
 }; // namespace Internal
 
@@ -73,7 +73,7 @@ struct TPadExtent: Internal::TPadHorizVert {
    };
 
    /** \class ScaleFactor
-      A scale factor (separate factors for horizontal and vertical) for scaling a `TPadCoord`.
+      A scale factor (separate factors for horizontal and vertical) for scaling a `TPadLength`.
       */
    struct ScaleFactor {
       double fHoriz; ///< Horizontal scale factor
