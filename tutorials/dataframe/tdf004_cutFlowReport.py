@@ -44,13 +44,4 @@ print('Cut3 stats:')
 filtered3.Report()
 print('All stats:')
 allCutsReport = d.Report()
-
-# We can now loop on the cuts
-print('Name\tAll\tPass\tEfficiency')
-for cutInfo in allCutsReport:
-   print('%s\t%s\t%s\t%s' %(cutInfo.GetName(),cutInfo.GetAll(),cutInfo.GetPass(),cutInfo.GetEff()))
-
-#Or get information about them individually
-cutName = "Cut1"
-cut = allCutsReport["Cut1"]
-print('%s efficiency is %s %%' %(cutName, cut.GetEff()))
+allCutsReport.Print()
