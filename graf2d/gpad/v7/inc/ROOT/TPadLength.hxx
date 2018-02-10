@@ -1,4 +1,4 @@
-/// \file ROOT/TPadCoord.hxx
+/// \file ROOT/TPadLength.hxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2017-07-06
@@ -13,17 +13,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TPadCoord
-#define ROOT7_TPadCoord
+#ifndef ROOT7_TPadLength
+#define ROOT7_TPadLength
 
 namespace ROOT {
 namespace Experimental {
 
-/** \class ROOT::Experimental::TPadCoord
+/** \class ROOT::Experimental::TPadLength
   A coordinate in a `TPad`.
   */
 
-class TPadCoord {
+class TPadLength {
 public:
    template <class DERIVED>
    struct CoordSysBase {
@@ -99,39 +99,39 @@ public:
    User fUser;
 
    /// Default constructor, initializing all coordinate parts to `0.`.
-   TPadCoord() = default;
+   TPadLength() = default;
 
    /// Constructor from a `Normal` coordinate.
-   TPadCoord(Normal normal): fNormal(normal) {}
+   TPadLength(Normal normal): fNormal(normal) {}
 
    /// Constructor from a `Pixel` coordinate.
-   TPadCoord(Pixel px): fPixel(px) {}
+   TPadLength(Pixel px): fPixel(px) {}
 
    /// Constructor from a `User` coordinate.
-   TPadCoord(User user): fUser(user) {}
+   TPadLength(User user): fUser(user) {}
 
    /// Sort-of aggregate initialization constructor taking normal, pixel and user parts.
-   TPadCoord(Normal normal, Pixel px, User user): fNormal(normal), fPixel(px), fUser(user) {}
+   TPadLength(Normal normal, Pixel px, User user): fNormal(normal), fPixel(px), fUser(user) {}
 
-   /// Add two `TPadCoord`s.
-   friend TPadCoord operator+(TPadCoord lhs, const TPadCoord &rhs)
+   /// Add two `TPadLength`s.
+   friend TPadLength operator+(TPadLength lhs, const TPadLength &rhs)
    {
-      return TPadCoord{lhs.fNormal + rhs.fNormal, lhs.fPixel + rhs.fPixel, lhs.fUser + rhs.fUser};
+      return TPadLength{lhs.fNormal + rhs.fNormal, lhs.fPixel + rhs.fPixel, lhs.fUser + rhs.fUser};
    }
 
-   /// Subtract two `TPadCoord`s.
-   friend TPadCoord operator-(TPadCoord lhs, const TPadCoord &rhs)
+   /// Subtract two `TPadLength`s.
+   friend TPadLength operator-(TPadLength lhs, const TPadLength &rhs)
    {
-      return TPadCoord{lhs.fNormal - rhs.fNormal, lhs.fPixel - rhs.fPixel, lhs.fUser - rhs.fUser};
+      return TPadLength{lhs.fNormal - rhs.fNormal, lhs.fPixel - rhs.fPixel, lhs.fUser - rhs.fUser};
    }
 
    /// Unary -.
-   TPadCoord operator-() {
-      return TPadCoord(-fNormal, -fPixel, -fUser);
+   TPadLength operator-() {
+      return TPadLength(-fNormal, -fPixel, -fUser);
    }
 
-   /// Add a `TPadCoord`.
-   TPadCoord &operator+=(const TPadCoord &rhs)
+   /// Add a `TPadLength`.
+   TPadLength &operator+=(const TPadLength &rhs)
    {
       fNormal += rhs.fNormal;
       fPixel += rhs.fPixel;
@@ -139,8 +139,8 @@ public:
       return *this;
    };
 
-   /// Subtract a `TPadCoord`.
-   TPadCoord &operator-=(const TPadCoord &rhs)
+   /// Subtract a `TPadLength`.
+   TPadLength &operator-=(const TPadLength &rhs)
    {
       fNormal -= rhs.fNormal;
       fPixel -= rhs.fPixel;
@@ -148,7 +148,7 @@ public:
       return *this;
    };
 
-   TPadCoord &operator*=(double scale)
+   TPadLength &operator*=(double scale)
    {
       fNormal *= scale;
       fPixel *= scale;
@@ -157,52 +157,52 @@ public:
    }
 };
 
-/// User-defined literal for `TPadCoord::Normal`
+/// User-defined literal for `TPadLength::Normal`
 ///
 /// Use as
 /// ```
 /// using namespace ROOT::Experimental;
 /// TLine(0.1_normal, 0.0_normal, TLineExtent(0.2_normal, 0.5_normal));
 /// ```
-inline TPadCoord::Normal operator"" _normal(long double val)
+inline TPadLength::Normal operator"" _normal(long double val)
 {
-   return TPadCoord::Normal{(double)val};
+   return TPadLength::Normal{(double)val};
 }
-inline TPadCoord::Normal operator"" _normal(unsigned long long int val)
+inline TPadLength::Normal operator"" _normal(unsigned long long int val)
 {
-   return TPadCoord::Normal{(double)val};
+   return TPadLength::Normal{(double)val};
 }
 
-/// User-defined literal for `TPadCoord::Pixel`
+/// User-defined literal for `TPadLength::Pixel`
 ///
 /// Use as
 /// ```
 /// using namespace ROOT::Experimental;
 /// TLine(100_px, 0_px, TLineExtent(20_px, 50_px));
 /// ```
-inline TPadCoord::Pixel operator"" _px(long double val)
+inline TPadLength::Pixel operator"" _px(long double val)
 {
-   return TPadCoord::Pixel{(double)val};
+   return TPadLength::Pixel{(double)val};
 }
-inline TPadCoord::Pixel operator"" _px(unsigned long long int val)
+inline TPadLength::Pixel operator"" _px(unsigned long long int val)
 {
-   return TPadCoord::Pixel{(double)val};
+   return TPadLength::Pixel{(double)val};
 }
 
-/// User-defined literal for `TPadCoord::User`
+/// User-defined literal for `TPadLength::User`
 ///
 /// Use as
 /// ```
 /// using namespace ROOT::Experimental;
 /// TLine(0.1_user, 0.0_user, TLineExtent(0.2_user, 0.5_user));
 /// ```
-inline TPadCoord::User operator"" _user(long double val)
+inline TPadLength::User operator"" _user(long double val)
 {
-   return TPadCoord::User{(double)val};
+   return TPadLength::User{(double)val};
 }
-inline TPadCoord::User operator"" _user(unsigned long long int val)
+inline TPadLength::User operator"" _user(unsigned long long int val)
 {
-   return TPadCoord::User{(double)val};
+   return TPadLength::User{(double)val};
 }
 
 } // namespace Experimental
