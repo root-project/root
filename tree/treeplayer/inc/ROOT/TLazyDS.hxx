@@ -98,11 +98,13 @@ class TLazyDS final : public ROOT::Experimental::TDF::TDataSource {
    {
       const std::vector<size_t> colLenghts{std::get<S>(fColumns)->size()...};
       const auto colLength = colLenghts[0];
+      const auto colLengh0_s = std::to_string(colLenghts[0]);
+      const auto colLengh1_s = std::to_string(colLenghts[1]);
       std::string err;
       for (auto i : TSeqI(colLenghts.size())) {
          if (colLength != colLenghts[i]) {
             err += "Column \"" + fColNames[i] + "\" and column \"" + fColNames[0] + "\" have different lengths: " +
-                   colLenghts[0] + " and " + colLenghts[1];
+                   colLengh0_s + " and " + colLengh1_s;
          }
       }
       if (!err.empty()) {
