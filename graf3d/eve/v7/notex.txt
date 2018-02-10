@@ -39,6 +39,12 @@ Issues:
 
 * SceneInfo
 
+* Review ownership of shape in TEveGeoShape
+
+* Argh, CSG/Boolean shapes were generated through GL.
+  Need to re-extract Timur's stuff and hack a TPad krappe around it.
+  ! Ask what is the plan for TGeo !
+
 -----
 
 * Inverted sign of magnetic field ... fix it.
