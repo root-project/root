@@ -92,6 +92,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
                             {"TText", false},
                             {"TLatex", false},
                             {"TMathText", false},
+                            {"TMarker", false},
                             {"TPolyMarker3D", false},
                             {"TGraph2D", false},
                             {0, false}};
@@ -107,7 +108,7 @@ Bool_t TWebCanvas::IsJSSupportedClass(TObject *obj)
          if (obj->InheritsFrom(supported_classes[i].name))
             return kTRUE;
 
-   printf("Unsupported class %s\n", obj->ClassName());
+   // printf("Unsupported class %s\n", obj->ClassName());
 
    return kFALSE;
 }
