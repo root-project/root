@@ -2323,7 +2323,7 @@ void TFormula::ProcessFormula(TString &formula)
    }
 
    // clean up un-used default variables in case formula is valid
-   //if (fClingInitialized && fReadyToExecute) {        \
+   //if (fClingInitialized && fReadyToExecute) {        
    //don't check fClingInitialized in case of lazy execution
    if (fReadyToExecute) {
        auto itvar = fVars.begin();
