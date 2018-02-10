@@ -745,7 +745,6 @@ Int_t TWebVirtualX::RequestString(Int_t x, Int_t y, char *text)
 void TWebVirtualX::RescaleWindow(Int_t wid, UInt_t w, UInt_t h)
 {
    return fX11->RescaleWindow(wid, w, h);
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -803,7 +802,7 @@ void TWebVirtualX::SetCharacterUp(Float_t chupx, Float_t chupy)
 
 void TWebVirtualX::SetClipOFF(Int_t wid)
 {
-   return fX11->SetClipOFF(wid);
+   if (!IsWeb(wid)) fX11->SetClipOFF(wid);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -816,7 +815,7 @@ void TWebVirtualX::SetClipOFF(Int_t wid)
 void TWebVirtualX::SetClipRegion(Int_t wid, Int_t x, Int_t y,
                               UInt_t w, UInt_t h)
 {
-   return fX11->SetClipRegion(wid, x, y,w, h);
+   if (!IsWeb(wid)) fX11->SetClipRegion(wid, x, y,w, h);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
