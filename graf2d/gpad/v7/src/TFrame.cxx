@@ -26,7 +26,7 @@ using namespace ROOT::Experimental;
 class TPadUserCoordDefault: public Detail::TPadUserCoordBase {
 
 public:
-   std::array<TPadCoord::Normal, 2> ToNormal(const std::array<TPadCoord::User, 2> &user) const override
+   std::array<TPadLength::Normal, 2> ToNormal(const std::array<TPadLength::User, 2> &user) const override
    {
       R__ERROR_HERE("Gpad") << "Not yet implemented!";
       return {{user[0].fVal, user[1].fVal}};

@@ -116,7 +116,7 @@ public:
    const Primitives_t &GetPrimitives() const { return fPrimitives; }
 
    /// Convert a `Pixel` position to Canvas-normalized positions.
-   virtual std::array<TPadCoord::Normal, 2> PixelsToNormal(const std::array<TPadCoord::Pixel, 2> &pos) const = 0;
+   virtual std::array<TPadLength::Normal, 2> PixelsToNormal(const std::array<TPadLength::Pixel, 2> &pos) const = 0;
 
    /// Access to the top-most canvas, if any (const version).
    virtual const TCanvas *GetCanvas() const = 0;
@@ -125,7 +125,7 @@ public:
    virtual TCanvas *GetCanvas() = 0;
 
    /// Convert user coordinates to normal coordinates.
-   std::array<TPadCoord::Normal, 2> UserToNormal(const std::array<TPadCoord::User, 2> &pos) const
+   std::array<TPadLength::Normal, 2> UserToNormal(const std::array<TPadLength::User, 2> &pos) const
    {
       return fFrame->UserToNormal(pos);
    }
@@ -173,12 +173,12 @@ public:
    const TPadExtent &GetSize() const { return fSize; }
 
    /// Convert a `Pixel` position to Canvas-normalized positions.
-   std::array<TPadCoord::Normal, 2> PixelsToNormal(const std::array<TPadCoord::Pixel, 2> &pos) const override
+   std::array<TPadLength::Normal, 2> PixelsToNormal(const std::array<TPadLength::Pixel, 2> &pos) const override
    {
-      std::array<TPadCoord::Normal, 2> posInParentNormal = fParent->PixelsToNormal(pos);
-      std::array<TPadCoord::Normal, 2> myPixelInNormal =
+      std::array<TPadLength::Normal, 2> posInParentNormal = fParent->PixelsToNormal(pos);
+      std::array<TPadLength::Normal, 2> myPixelInNormal =
          fParent->PixelsToNormal({{fSize.fHoriz.fPixel, fSize.fVert.fPixel}});
-      std::array<TPadCoord::Normal, 2> myUserInNormal =
+      std::array<TPadLength::Normal, 2> myUserInNormal =
          fParent->UserToNormal({{fSize.fHoriz.fUser, fSize.fVert.fUser}});
       // If the parent says pos is at 0.6 in normal coords, and our size converted to normal is 0.2, then pos in our
       // coord system is 3.0!
@@ -187,10 +187,10 @@ public:
    }
 
    /// Convert a TPadPos to [x, y] of normalized coordinates.
-   std::array<TPadCoord::Normal, 2> ToNormal(const Internal::TPadHorizVert &pos) const
+   std::array<TPadLength::Normal, 2> ToNormal(const Internal::TPadHorizVert &pos) const
    {
-      std::array<TPadCoord::Normal, 2> pixelsInNormal = PixelsToNormal({{pos.fHoriz.fPixel, pos.fVert.fPixel}});
-      std::array<TPadCoord::Normal, 2> userInNormal = UserToNormal({{pos.fHoriz.fUser, pos.fVert.fUser}});
+      std::array<TPadLength::Normal, 2> pixelsInNormal = PixelsToNormal({{pos.fHoriz.fPixel, pos.fVert.fPixel}});
+      std::array<TPadLength::Normal, 2> userInNormal = UserToNormal({{pos.fHoriz.fUser, pos.fVert.fUser}});
       return {{pos.fHoriz.fNormal + pixelsInNormal[0] + userInNormal[0],
                pos.fVert.fNormal + pixelsInNormal[1] + userInNormal[1]}};
    }

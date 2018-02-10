@@ -54,13 +54,13 @@
 #pragma link C++ class ROOT::Experimental::TPadDrawable+;
 #pragma link C++ class ROOT::Experimental::TCanvas+;
 #pragma link C++ class ROOT::Experimental::TFrame+;
-#pragma link C++ class ROOT::Experimental::TPadCoord+;
-#pragma link C++ class ROOT::Experimental::TPadCoord::Pixel+;
-#pragma link C++ class ROOT::Experimental::TPadCoord::Normal+;
-#pragma link C++ class ROOT::Experimental::TPadCoord::User+;
-#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Pixel>+;
-#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::Normal>+;
-#pragma link C++ class ROOT::Experimental::TPadCoord::CoordSysBase<ROOT::Experimental::TPadCoord::User>+;
+#pragma link C++ class ROOT::Experimental::TPadLength+;
+#pragma link C++ class ROOT::Experimental::TPadLength::Pixel+;
+#pragma link C++ class ROOT::Experimental::TPadLength::Normal+;
+#pragma link C++ class ROOT::Experimental::TPadLength::User+;
+#pragma link C++ class ROOT::Experimental::TPadLength::CoordSysBase<ROOT::Experimental::TPadLength::Pixel>+;
+#pragma link C++ class ROOT::Experimental::TPadLength::CoordSysBase<ROOT::Experimental::TPadLength::Normal>+;
+#pragma link C++ class ROOT::Experimental::TPadLength::CoordSysBase<ROOT::Experimental::TPadLength::User>+;
 
 // ROOT 6 display items:
 #pragma link C++ class ROOT::Experimental::TUniqueDisplayItem<TPad>+;

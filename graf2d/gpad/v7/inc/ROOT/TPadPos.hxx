@@ -72,7 +72,7 @@ struct TPadPos: Internal::TPadHorizVert {
    };
 
    /** \class ScaleFactor
-      A scale factor (separate factors for horizontal and vertical) for scaling a `TPadCoord`.
+      A scale factor (separate factors for horizontal and vertical) for scaling a `TPadLength`.
       */
    struct ScaleFactor {
       double fHoriz; ///< Horizontal scale factor
