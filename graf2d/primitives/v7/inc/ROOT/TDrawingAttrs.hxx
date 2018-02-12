@@ -37,6 +37,12 @@ void InitializeAttrFromString(const std::string &name, const std::string &strval
 void InitializeAttrFromString(const std::string &name, const std::string &strval, std::string& val);
 ///\}
 
+class TDrawingAttrOrRefBase {
+public:
+   virtual void SyncFromShared() = 0;
+   virtual ~TDrawingAttrOrRefBase();
+};
+
 /** \class ROOT::Experimental::TDrawingAttrOrRef
  A wrapper for a graphics attribute, for instance a `TColor`.
  The `TTopmostPad` keeps track of shared attributes used by multiple drawing options by means of
@@ -46,7 +52,7 @@ void InitializeAttrFromString(const std::string &name, const std::string &strval
  */
 
 template <class ATTR>
-class TDrawingAttrOrRef {
+class TDrawingAttrOrRef: public TDrawingAttrOrRefBase {
 private:
    /// The shared_ptr, shared with the relevant attribute table of `TTopmostPad`.
    std::shared_ptr<ATTR> fPtr; //!
@@ -90,6 +96,12 @@ public:
    /// Create a shared attribute.
    TDrawingAttrOrRef Share() {
       return GetSharedPtr();
+   }
+
+   /// Update fAttr from the value of the shared state
+   void SyncFromShared() final {
+      if (IsShared())
+         fAttr = Get();
    }
 
    /// Get the const attribute, whether it's shared or not.
