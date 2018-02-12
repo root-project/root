@@ -1185,10 +1185,12 @@ void MethodDL::TrainCpu()
          
 
       //check also that input layout compatible with batch layout
-      if (inputDepth * inputHeight * inputWidth != batchHeight * batchWidth ) {
-         Error("TrainCpu","Given input layout %zu x %zu x %zu is not compatible with  batch layout %zu x  %zu (depth is not printed is the size)",
-               inputDepth,inputHeight,inputWidth,batchHeight,batchWidth);
-         // return;
+      if (( batchDepth != 1  && inputDepth * inputHeight * inputWidth != batchHeight * batchWidth ) ||
+          ( batchDepth == 1  && inputDepth * inputHeight * inputWidth !=  batchWidth  ) )
+      {
+         Error("TrainCpu","Given input layout %zu x %zu x %zu is not compatible with  batch layout %zu x %zu x  %zu ",
+               inputDepth,inputHeight,inputWidth,batchDepth,batchHeight,batchWidth);
+         return;
       }
 
       //fNet = std::unique_ptr<DeepNet_t>(new DeepNet_t(batchSize, inputDepth, inputHeight, inputWidth, batchDepth,
@@ -1378,7 +1380,7 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    using Architecture_t = DNN::TCpu<Double_t>;
    using Matrix_t = typename Architecture_t::Matrix_t;
 
-   size_t nVariables = GetEvent()->GetNVariables();
+   int nVariables = GetEvent()->GetNVariables();
    int batchWidth = fNet->GetBatchWidth();
    int batchDepth = fNet->GetBatchDepth();
    int batchHeight = fNet->GetBatchHeight();
@@ -1407,6 +1409,7 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
    X.emplace_back(Matrix_t(n1, n2));
 
    if (n1 > 1) {
+      R__ASSERT( n1*n2 == nVariables);
       // for CNN or RNN evaluations
       for (int j = 0; j < n1; ++j) {
          for (int k = 0; k < n2; k++) {
@@ -1415,6 +1418,7 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
       }
    }
    else {
+      R__ASSERT( n2 == nVariables);
       for (int k = 0; k < n2; k++) {
          X[0](0, k) = inputValues[k];
       }
