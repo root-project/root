@@ -26,10 +26,6 @@
 namespace ROOT {
 namespace Experimental {
 
-class TDrawingOptsBaseNoDefault;
-template <class PRIMITIVE>
-class TDrawingAttrRef;
-
 /** \class ROOT::Experimental::TCanvas
   A window's topmost `TPad`.
   */
