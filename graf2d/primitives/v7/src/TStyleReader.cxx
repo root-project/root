@@ -21,21 +21,93 @@
 #include <TROOT.h>
 #include <TSystem.h>
 
+#include <fstream>
+#include <string>
+
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
 
-TStyleReader::Attrs_t TStyleReader::ReadDefaults()
+void TStyleReader::ReadDefaults()
 {
-   Attrs_t ret;
-   TStyleReader reader(ret);
+   TStyleReader reader(fAttrs);
    reader.AddFromStyleFile(std::string(TROOT::GetEtcDir().Data()) + "/system.rootstylerc");
    reader.AddFromStyleFile(gSystem->GetHomeDirectory() + "/.rootstylerc");
    reader.AddFromStyleFile(".rootstylerc");
-   return ret;
 }
 
-bool TStyleReader::AddFromStyleFile(std::string_view filename)
+namespace {
+   /// Possibly remove trailing comment starting with '#'
+   void RemoveComment(std::string& line)
+   {
+      auto posComment = line.find('#');
+      if (posComment != std::string::npos)
+         line.erase(posComment - 1);
+   }
+
+   /// Create a view on the key and one on the value of the line.
+   std::array<std::string_view, 2> SeparateKeyValue(const std::string& line)
+   {
+      std::string::size_type posColon = line.find(':');
+      if (posColon == std::string::npos)
+         return {};
+      std::array<std::string_view, 2> ret{{line, line}};
+      ret[0] = ret[0].substr(0, posColon);
+      ret[1] = ret[1].substr(posColon + 1);
+      return ret;
+   }
+
+   /// Remove leading an trailing whitespace from string_view.
+   std::string_view TrimWhitespace(std::string_view view)
+   {
+      std::string_view ret(view);
+      auto begin = ret.begin();
+      for (auto end = ret.end(); begin != end; ++begin) {
+         if (!std::isspace(*begin))
+            break;
+      }
+      ret.remove_prefix(begin - ret.begin());
+
+      auto rbegin = ret.rbegin();
+      for (auto rend = ret.rend(); rbegin != rend; ++rbegin) {
+         if (!std::isspace(*rbegin))
+            break;
+      }
+      ret.remove_suffix(rbegin - ret.rbegin());
+      return ret;
+   }
+}
+
+bool TStyleReader::AddFromStyleFile(const std::string &filename)
 {
-   R__WARNING_HERE("Gpad") << "Not implemented yet, while reading style file " << filename;
-   return false;
+   std::ifstream in(filename);
+   if (!in)
+      return false;
+   std::string styleName;
+   std::string line;
+   long long lineNo = 0;
+   while (std::getline(in, line)) {
+      ++lineNo;
+      RemoveComment(line);
+      auto noSpaceLine = TrimWhitespace(line);
+      if (noSpaceLine.compare(0, 1, "[") == 0 && noSpaceLine.compare(noSpaceLine.length() - 1, 1, "]")) {
+         // A section introducing a style name.
+         noSpaceLine.remove_prefix(1); // [
+         noSpaceLine.remove_suffix(1); // ]
+         noSpaceLine = TrimWhitespace(noSpaceLine);
+         styleName = noSpaceLine;
+         continue;
+      }
+
+      auto keyValue = SeparateKeyValue(line);
+      for (auto& kv: keyValue)
+         kv = TrimWhitespace(kv);
+      if (keyValue[0].empty()) {
+         R__ERROR_HERE("GPrimitive") << "Syntax error in style file " << filename << ":" << lineNo << ": "
+            << "missing key in line \n" << line << "\nInoring line.";
+         continue;
+      }
+
+      fAttrs[styleName].GetAttribute(std::string(keyValue[0])) = keyValue[1];
+   }
+   return true;
 }

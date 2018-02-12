@@ -51,10 +51,17 @@ public:
    /// Constructor taking the style name and a set of attributes (e.g. read from the config files).
    TStyle(std::string_view name, Attrs_t &&attrs): fName(name), fAttrs(std::move(attrs)) {}
 
+   /// Get this stryle's name. (No setter as that would upset the unordered_map.)
    const std::string &GetName() const { return fName; }
 
-   /// Register a copy of `style` in the global style collection, possibly replacing a global style with the same name.
-   static void Register(const TStyle &style);
+   /// Get the style value as a string, given an attribute name.
+   /// Strips leading "foo." from the name until the first entry in the style is found.
+   /// E.g. if the default style has not entry for "Hist.1D.Fill.Color", the value might
+   /// be initialized to the default style's entry for the more general "1D.Fill.Color".
+   std::string GetAttribute(const std::string &attrName) const;
+
+   /// Move-register `style` in the global style collection, possibly replacing a global style with the same name.
+   static TStyle &Register(TStyle &&style);
 
    /// Get the `TStyle` named `name` from the global style collection, or `nullptr` if that doesn't exist.
    static TStyle *Get(std::string_view name);
@@ -64,12 +71,6 @@ public:
 
    /// Set the current TStyle by copying `style` into the static current style object.
    static void SetCurrent(const TStyle &style) { GetCurrent() = style; }
-
-   /// Get the style value as a string, given an attribute name.
-   /// Strips leading "foo." from the name until the first entry in the style is found.
-   /// E.g. if the default style has not entry for "Hist.1D.Fill.Color", the value might
-   /// be initialized to the default style's entry for the more general "1D.Fill.Color".
-   std::string GetAttribute(const std::string &attrName) const;
 };
 
 } // namespace Experimental
