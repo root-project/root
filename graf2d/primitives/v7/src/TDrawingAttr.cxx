@@ -13,15 +13,21 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "ROOT/TDrawingAttrs.hxx"
+#include "ROOT/TDrawingAttr.hxx"
 
-#include "ROOT/TColor.hxx"
+#include "ROOT/TDrawingOptsBase.h"
 #include "ROOT/TLogger.hxx"
-#include "ROOT/TStringEnumAttr.hxx"
 
 
 // pin vtable.
 ROOT::Experimental::TDrawingAttrOrRefBase::~TDrawingAttrOrRefBase() = default;
+
+/// Register an attribute with the TDrawingOptionsBase.
+ROOT::Experimental::TDrawingAttrOrRefBase::TDrawingAttrOrRefBase(TDrawingOptsBase& owner, const char *name):
+{
+   owner.AddAttr(name, *this);
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize an attribute `val` from a string value.
