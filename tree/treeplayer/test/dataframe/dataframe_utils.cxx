@@ -10,60 +10,17 @@ using namespace ROOT::Experimental;
 TEST(TDataFrameUtils, DeduceAllPODsFromTmpColumns)
 {
    TDataFrame tdf(1);
-   auto d = tdf.Define("char_tmp",
-                       []() {
-                          char v(0);
-                          return v;
-                       })
-               .Define("uchar_tmp",
-                       []() {
-                          unsigned char v(0);
-                          return v;
-                       })
-               .Define("int_tmp",
-                       []() {
-                          int v(0);
-                          return v;
-                       })
-               .Define("uint_tmp",
-                       []() {
-                          unsigned int v(0);
-                          return v;
-                       })
-               .Define("short_tmp",
-                       []() {
-                          short v(0);
-                          return v;
-                       })
-               .Define("ushort_tmp",
-                       []() {
-                          unsigned short v(0);
-                          return v;
-                       })
-               .Define("double_tmp",
-                       []() {
-                          double v(0);
-                          return v;
-                       })
-               .Define("float_tmp",
-                       []() {
-                          float v(0);
-                          return v;
-                       })
-               .Define("Long64_t_tmp",
-                       []() {
-                          Long64_t v(0);
-                          return v;
-                       })
-               .Define("ULong64_t_tmp",
-                       []() {
-                          ULong64_t v(0);
-                          return v;
-                       })
-               .Define("bool_tmp", []() {
-                  bool v(0);
-                  return v;
-               });
+   auto d = tdf.Define("char_tmp", []() { return char(0); })
+               .Define("uchar_tmp", []() { return (unsigned char)(0u); })
+               .Define("int_tmp", []() { return int(0); })
+               .Define("uint_tmp", []() { return (unsigned int)(0u); })
+               .Define("short_tmp", []() { return short(0); })
+               .Define("ushort_tmp", []() { return (unsigned short)(0u); })
+               .Define("double_tmp", []() { return double(0.); })
+               .Define("float_tmp", []() { return float(0.f); })
+               .Define("Long64_t_tmp", []() { return Long64_t(0ll); })
+               .Define("ULong64_t_tmp", []() { return ULong64_t(0ull); })
+               .Define("bool_tmp", []() { return bool(false); });
    auto c = d.Snapshot<char, unsigned char, int, unsigned int, short, unsigned short, double, float, Long64_t,
                        ULong64_t, bool>("t", "dataframe_interfaceAndUtils_1.root",
                                         {"char_tmp", "uchar_tmp", "int_tmp", "uint_tmp", "short_tmp", "ushort_tmp",
