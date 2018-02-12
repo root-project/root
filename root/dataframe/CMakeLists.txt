@@ -163,3 +163,7 @@ ROOTTEST_ADD_TEST(par
                   OUTREF test_par.ref
                   DEPENDS ${GENERATE_EXECUTABLE_TEST})
 
+ROOTTEST_GENERATE_EXECUTABLE(read_leaves test_read_leaves.cxx LIBRARIES ${DFLIBRARIES})
+ROOTTEST_ADD_TEST(read_leaves
+                  EXEC read_leaves
+                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
