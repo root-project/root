@@ -17,6 +17,7 @@
 #define ROOT7_TStyleReader
 
 #include <RStringView.h>
+#include <ROOT/TStyle.hxx>
 
 #include <string>
 #include <unordered_map>
@@ -31,24 +32,27 @@ namespace Internal {
   */
 class TStyleReader {
 public:
-   using Attrs_t = std::unordered_map<std::string, std::string>;
+   /// Key is the style name.
+   using AllStyles_t = std::unordered_map<std::string, TStyle>;
 
 private:
-   /// Attributes to read into.
-   Attrs_t &fAttrs;
+   /// Collection of attributes to read into.
+   AllStyles_t &fAttrs;
 
 public:
-   TStyleReader(Attrs_t &attrs): fAttrs(attrs) { (void) fAttrs; }
+   TStyleReader(AllStyles_t &attrs): fAttrs(attrs) {}
 
    ///  Reads the attribute config values from `.rootstylerc`. If the style entry is not found there, tries
    ///  `~/.rootstylerc` and finally `$ROOTSYS/etc/system.rootstylerc`.
-   static Attrs_t ReadDefaults();
+   ///
+   ///\param[out] target - collection to read into.
+   void ReadDefaults();
 
    /// Adds attributes specified in `filename` to those already existing in `fAttrs`.
    /// Overwrites values for attributes that already exist in `attrs`!
    /// \returns `true` on success, `false` if the file cannot be found or the syntax is wrong.
    /// Prints an error if the syntax is wrong (but not if the file does not exist).
-   bool AddFromStyleFile(std::string_view filename);
+   bool AddFromStyleFile(const std::string &filename);
 };
 } // namespace Internal
 } // namespace Experimental
