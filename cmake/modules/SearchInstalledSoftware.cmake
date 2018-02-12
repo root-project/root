@@ -1376,9 +1376,6 @@ if(vc AND NOT Vc_FOUND)
   target_include_directories(Vc SYSTEM BEFORE INTERFACE $<BUILD_INTERFACE:${Vc_INCLUDE_DIR}>)
   target_link_libraries(Vc INTERFACE VcExt)
 
-  # propagate build-time include directories to rootcling
-  set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
-
   find_package_handle_standard_args(Vc
     FOUND_VAR Vc_FOUND
     REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
@@ -1452,9 +1449,6 @@ if(veccore AND NOT VecCore_FOUND)
   add_library(VecCore INTERFACE)
   target_include_directories(VecCore SYSTEM INTERFACE $<BUILD_INTERFACE:${VecCore_ROOTDIR}/include>)
   add_dependencies(VecCore VECCORE)
-
-  # propagate build-time include directories to rootcling
-  set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${VecCore_ROOTDIR}/include)
 
   if (Vc_FOUND)
     set(VecCore_Vc_FOUND True)
