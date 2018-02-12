@@ -38,7 +38,7 @@ private:
    Attrs_t &fAttrs;
 
 public:
-   TStyleReader(Attrs_t &attrs): fAttrs(attrs) {}
+   TStyleReader(Attrs_t &attrs): fAttrs(attrs) { (void) fAttrs; }
 
    ///  Reads the attribute config values from `.rootstylerc`. If the style entry is not found there, tries
    ///  `~/.rootstylerc` and finally `$ROOTSYS/etc/system.rootstylerc`.
