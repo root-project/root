@@ -20,6 +20,9 @@
 #include "ROOT/TStringEnumAttr.hxx"
 
 
+// pin vtable.
+ROOT::Experimental::TDrawingAttrOrRefBase::~TDrawingAttrOrRefBase() = default;
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize an attribute `val` from a string value.
 ///
