@@ -1,4 +1,4 @@
-/// \file ROOT/TDrawingAttrs.hxx
+/// \file ROOT/TDrawingAttr.hxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2017-09-26
@@ -13,8 +13,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT7_TDrawingAttrs
-#define ROOT7_TDrawingAttrs
+#ifndef ROOT7_TDrawingAttr
+#define ROOT7_TDrawingAttr
 
 #include <ROOT/TStyle.hxx>
 
@@ -24,6 +24,8 @@
 
 namespace ROOT {
 namespace Experimental {
+
+class TDrawingOptsBase;
 
 ///\{
 /// Initialize an attribute `val` from a string value.
@@ -38,7 +40,13 @@ void InitializeAttrFromString(const std::string &name, const std::string &strval
 ///\}
 
 class TDrawingAttrOrRefBase {
+private:
+   TDrawingAttrOrRefBase(TDrawingOptsBase& owner, const char *name);
+
 public:
+   /// Initialize TDrawingAttrOrRefBase from a string literal.
+   template <int N>
+   TDrawingAttrOrRefBase(TDrawingOptsBase& owner, const char (&name)[N]): TDrawingAttrOrRefBase(owner, (const char*)name) {}
    virtual void SyncFromShared() = 0;
    virtual ~TDrawingAttrOrRefBase();
 };
@@ -69,21 +77,20 @@ private:
       return fPtr;
    }
 
-   /// Construct a TDrawingAttrOrRef from an shared_ptr.
-   TDrawingAttrOrRef(const std::shared_ptr<ATTR> &otherPtr): fPtr(otherPtr) {}
-
 public:
    /// Construct a default, non-shared attribute. The default value gets read from the default style,
    /// given the attribute's name.
-   TDrawingAttrOrRef(const std::string &name) {
+   template <int N>
+   TDrawingAttrOrRef(TDrawingOptionsBase& owner, const char (&name)[N]): TDrawingAttrOrRefBase(owner, name) {
       InitializeAttrFromString(name, TStyle::GetCurrent().GetAttribute(name), fAttr);
    }
 
    /// Construct a default, non-shared attribute. The default value gets read from the default style,
    /// given the attribute's name and arguments for the default attribute constructor, should no
    /// style entry be found.
-   template <class... ARGS>
-   TDrawingAttrOrRef(const std::string &name, ARGS... args): fAttr(args...) {
+   template <int N, class... ARGS>
+   TDrawingAttrOrRef(TDrawingOptionsBase& owner, const char (&name)[N], ARGS... args):
+      TDrawingAttrOrRefBase(owner, name), fAttr(args...) {
       InitializeAttrFromString(name, TStyle::GetCurrent().GetAttribute(name), fAttr);
    }
 
@@ -132,4 +139,4 @@ public:
 } // namespace Experimental
 } // namespace ROOT
 
-#endif // ROOT7_TDrawingAttrs
+#endif // ROOT7_TDrawingAttr
