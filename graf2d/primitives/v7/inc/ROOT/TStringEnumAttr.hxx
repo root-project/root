@@ -54,17 +54,17 @@ public:
 class TStringEnumAttr {
    std::size_t fIdx; ///< Selected option from fStringSet.
    /// Reference to the set of options.
-   const TStringEnumAttrSet &fStringSet; //!
+   const TStringEnumAttrSet *fStringSet; //!
 
 public:
    /// Construct the option from the set of strings and the selected option index.
-   TStringEnumAttr(std::size_t idx, const TStringEnumAttrSet &strSet): fIdx(idx), fStringSet(strSet) {}
+   TStringEnumAttr(std::size_t idx, const TStringEnumAttrSet &strSet): fIdx(idx), fStringSet(&strSet) {}
 
    /// Set the index of the selected option.
    void SetIndex(int idx) { fIdx = idx; }
 
    /// Get the string representing the selected option.
-   const std::string& GetAsString() const { return fStringSet[fIdx]; }
+   const std::string& GetAsString() const { return (*fStringSet)[fIdx]; }
 
    /// Get the index of the selected option.
    std::size_t GetIndex() const { return fIdx; }
