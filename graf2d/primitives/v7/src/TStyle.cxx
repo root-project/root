@@ -21,6 +21,8 @@
 
 #include "TStyleReader.hxx" // in src/
 
+#include <RStringView.h>
+
 #include <cassert>
 #include <limits>
 #include <string>
@@ -29,22 +31,26 @@
 using namespace ROOT::Experimental;
 
 namespace {
-static std::unordered_map<std::string, TStyle> ReadGlobalDefaultStyles()
+static Internal::TStyleReader::AllStyles_t ReadGlobalDefaultStyles()
 {
-   // TODO: use TStyleReader
-   return {};
+   Internal::TStyleReader::AllStyles_t target;
+   Internal::TStyleReader reader(target);
+   reader.ReadDefaults();
+   return target;
 }
 
-static std::unordered_map<std::string, TStyle> &GetGlobalStyles()
+static Internal::TStyleReader::AllStyles_t &GetGlobalStyles()
 {
-   static std::unordered_map<std::string, TStyle> sStyles = ReadGlobalDefaultStyles();
+   static Internal::TStyleReader::AllStyles_t sStyles = ReadGlobalDefaultStyles();
    return sStyles;
 }
-}
+} // unnamed namespace
 
-void TStyle::Register(const TStyle& style)
+TStyle &TStyle::Register(TStyle&& style)
 {
-   GetGlobalStyles()[style.GetName()] = style;
+   TStyle& ret = GetGlobalStyles()[style.GetName()];
+   ret = style;
+   return ret;
 }
 
 TStyle *TStyle::Get(std::string_view name)
@@ -65,8 +71,7 @@ static TStyle GetInitialCurrent()
       R__ERROR_HERE("Gpad") << "Cannot find initial default style named \"" << kDefaultStyleName
       << "\", using an empty one.";
       TStyle defStyle(kDefaultStyleName);
-      TStyle::Register(defStyle);
-      return defStyle;
+      return TStyle::Register(std::move(defStyle));
    } else {
       return iDefStyle->second;
    }
