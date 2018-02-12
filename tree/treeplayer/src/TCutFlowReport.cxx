@@ -10,6 +10,9 @@
 
 #include "ROOT/TCutFlowReport.hxx"
 
+#include <algorithm>
+#include <stdexcept>
+
 namespace ROOT {
 namespace Experimental {
 namespace TDF {
