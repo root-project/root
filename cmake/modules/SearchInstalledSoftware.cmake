@@ -453,7 +453,7 @@ if(python OR python3)
   message(STATUS "Looking for Python")
   #---First look for the python interpreter and fix the version of it for the libraries--
   if(python3)
-    find_package(PythonInterp 3.5)
+    find_package(PythonInterp 3)
   else()
     find_package(PythonInterp)
   endif()
