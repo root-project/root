@@ -2492,10 +2492,13 @@ Bool_t TWinNTSystem::IsAbsoluteFileName(const char *dir)
 
 const char *TWinNTSystem::UnixPathName(const char *name)
 {
-   static char temp[1024];
-   strlcpy(temp, name,1024);
+   const int kBufSize = 1024;
+   TTHREAD_TLS_ARRAY(char, kBufSize, temp);
+
+   strlcpy(temp, name, kBufSize);
    char *currentChar = temp;
 
+   // This can not change the size of the string.
    while (*currentChar != '\0') {
       if (*currentChar == '\\') *currentChar = '/';
       currentChar++;
