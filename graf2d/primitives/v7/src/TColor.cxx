@@ -52,7 +52,7 @@ bool TColor::AssertNotPalettePos() const
 ////////////////////////////////////////////////////////////////////////////////
 /// Initialize an attribute `val` from a string value.
 /// Colors can be specified as RGBA (red green blue alpha) or RRGGBBAA:
-///     #fa7f #ffa07bff
+///     %fa7f %ffa07bff # hash introduces a comment!
 /// For all predefined colors in TColor, colors can be specified as name without leading 'k', e.g. `red` for
 /// `TColor::kRed`.
 /// Prints an error and returns `TColor::kBlack` if the attribute string cannot be parsed or if the attribute has no
