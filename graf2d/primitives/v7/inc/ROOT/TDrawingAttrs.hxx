@@ -25,9 +25,6 @@
 namespace ROOT {
 namespace Experimental {
 
-class TColor;
-class TStringAttr;
-
 ///\{
 /// Initialize an attribute `val` from a string value.
 ///
