@@ -24,6 +24,7 @@
 #pragma link C++ class ROOT::Experimental::TDrawingAttrOrRef<int>+;
 #pragma link C++ class ROOT::Experimental::TDrawingAttrOrRef<float>+;
 #pragma link C++ class ROOT::Experimental::TDrawingAttrOrRef<ROOT::Experimental::TStringEnumAttr>+;
+#pragma link C++ class ROOT::Experimental::TDrawingOptsBase+;
 #pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TCanvas>+;
 #pragma link C++ class ROOT::Experimental::TText+;
 #pragma link C++ class ROOT::Experimental::TextDrawingOpts+;
