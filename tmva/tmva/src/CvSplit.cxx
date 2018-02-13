@@ -12,6 +12,7 @@
 #include "TMVA/CvSplit.h"
 
 #include "TMVA/DataSet.h"
+#include "TMVA/DataSetFactory.h"
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"
 #include "TMVA/MsgLogger.h"
@@ -21,7 +22,6 @@
 
 #include <algorithm>
 #include <numeric>
-#include <random>
 #include <stdexcept>
 
 ClassImp(TMVA::CvSplit);
@@ -293,7 +293,7 @@ std::vector<UInt_t> TMVA::CvSplitKFolds::GetEventIndexToFoldMapping(UInt_t nEntr
    }
 
    // Shuffle assignment
-   std::default_random_engine rng(seed);
+   TMVA::RandomGenerator rng(seed);
    std::shuffle(fOrigToFoldMapping.begin(), fOrigToFoldMapping.end(), rng);
 
    return fOrigToFoldMapping;
