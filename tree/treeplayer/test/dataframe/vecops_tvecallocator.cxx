@@ -9,9 +9,9 @@ using namespace ROOT::Experimental::VecOps;
 
 TEST(TVecAllocator, ReusePointer)
 {
-   std::vector<double> vreference{1, 2, 3,4,5,6,7,8,9,10};
+   std::vector<double> vreference{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
-   std::vector<double> vmodel (vreference);
+   std::vector<double> vmodel(vreference);
    TVecAllocator<double> alloc0(vmodel.data(), vmodel.size());
 
    EXPECT_EQ(vmodel.data(), alloc0.allocate(123));
@@ -24,9 +24,9 @@ TEST(TVecAllocator, ReusePointer)
    EXPECT_EQ(vmodel.data(), v.data());
    EXPECT_EQ(vmodel.size(), v.size());
 
-   for (size_t i=0; i < vmodel.size(); ++i) {
-      EXPECT_EQ(vmodel[i],vreference[i]);
-      EXPECT_EQ(v[i],vreference[i]);
+   for (size_t i = 0; i < vmodel.size(); ++i) {
+      EXPECT_EQ(vmodel[i], vreference[i]);
+      EXPECT_EQ(v[i], vreference[i]);
    }
 
    v.emplace_back(3.);
@@ -41,10 +41,10 @@ TEST(TVecAllocator, ReusePointer)
    EXPECT_EQ(1, res);
 }
 
-class TCopySignal
-{
+class TCopySignal {
 private:
    unsigned int *fCopyCount = nullptr;
+
 public:
    TCopySignal(unsigned int &copyCount) : fCopyCount(&copyCount){};
    TCopySignal(const TCopySignal &other)
@@ -57,9 +57,9 @@ public:
 TEST(TVecAllocator, NewAllocations)
 {
    unsigned int copyCount = 0;
-   std::vector<TCopySignal> model; model.reserve(8);
-   for (int i = 0 ; i< 8; ++i)
-   {
+   std::vector<TCopySignal> model;
+   model.reserve(8);
+   for (int i = 0; i < 8; ++i) {
       model.emplace_back(copyCount);
    }
 
@@ -67,11 +67,9 @@ TEST(TVecAllocator, NewAllocations)
 
    unsigned int dummy;
    TVecAllocator<TCopySignal> alloc(model.data(), model.size());
-   ROOT::Detail::VecOps::TVecImpl<TCopySignal> v(model.size(), dummy ,alloc);
+   ROOT::Detail::VecOps::TVecImpl<TCopySignal> v(model.size(), dummy, alloc);
 
    EXPECT_EQ(0U, copyCount);
    v.emplace_back(copyCount);
    EXPECT_EQ(8U, copyCount);
-
-
 }
