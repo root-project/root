@@ -53,9 +53,12 @@ void GuiHandler::OnTitleChange(CefRefPtr<CefBrowser> browser, const CefString &t
    }
 }
 
-bool GuiHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser, const CefString &message, const CefString &source,
+bool GuiHandler::OnConsoleMessage(CefRefPtr<CefBrowser> browser,
+                                  cef_log_severity_t level,
+                                  const CefString &message, const CefString &source,
                                   int line)
 {
+
    printf("CONSOLE: %s\n", message.ToString().c_str());
 
    // CefRefPtr<CefProcessMessage> msg = CefProcessMessage::Create("PING");

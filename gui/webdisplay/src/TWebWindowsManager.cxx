@@ -264,15 +264,25 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
    const char *cef_path = gSystem->Getenv("CEF_PATH");
    const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || is_cef)) {
-      typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
+   if (cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || is_cef)) {
 
-      printf("Show canvas in CEF window:  %s\n", addr.Data());
+      if (!symbol_cef) {
+         gSystem->Load("libROOTCefDisplay");
+         // TODO: make minimal C++ interface here
+         symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
+      }
 
-      FunctionCef3 func = (FunctionCef3)symbol_cef;
-      func(addr.Data(), fServer.get(), batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
+      if (symbol_cef) {
 
-      return true;
+         typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
+
+         printf("Show canvas in CEF window:  %s\n", addr.Data());
+
+         FunctionCef3 func = (FunctionCef3)symbol_cef;
+         func(addr.Data(), fServer.get(), batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
+
+         return true;
+      }
    }
 
    if (!CreateHttpServer(true)) {
