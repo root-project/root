@@ -23,8 +23,6 @@
 
 #include <memory>
 
-class TH1;
-
 namespace ROOT {
 namespace Experimental {
 
@@ -63,12 +61,7 @@ extern template class THistPainterBase<3>;
 } // namespace Internal
 
 class THistDrawableBase: public TDrawable {
-protected:
-   std::unique_ptr<TH1> fOldHist;
-
 public:
-   TH1 *GetOldHist() const { return fOldHist.get(); }
-
    THistDrawableBase();
    THistDrawableBase(THistDrawableBase &&);
    virtual ~THistDrawableBase();
@@ -91,8 +84,6 @@ public:
 private:
    Internal::TUniWeakPtr<HistImpl_t> fHistImpl;
    THistDrawingOpts<DIMENSIONS> fOpts;
-
-   bool UpdateOldHist();
 
 public:
    THistDrawable();
