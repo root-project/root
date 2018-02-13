@@ -15,5 +15,5 @@ ROOT::Experimental::Detail::TPadUserAxisBase::~TPadUserAxisBase()
 ROOT::Experimental::TPadLength::Normal
 ROOT::Experimental::TPadCartesianUserAxis::ToNormal(const TPadLength::User &usercoord) const
 {
-   return usercoord.fVal * (fEnd - fBegin) + fBegin;
+   return (usercoord.fVal - fBegin) / GetSensibleDenominator();
 }
