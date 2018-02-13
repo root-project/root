@@ -7,14 +7,11 @@ if(EXISTS $ENV{CEF_PATH})
 
 set(libname ROOTCefDisplay)
 
-# ROOT_GLOB_HEADERS(WebDisplay_headers ${CMAKE_CURRENT_SOURCE_DIR}/inc/ROOT/*.hxx)
-# ROOT_GLOB_SOURCES(WebDisplay_sources src/*.cxx)
-
-# ROOT_GENERATE_DICTIONARY(G__${libname} ${WebDisplay_headers} MODULE ${libname} LINKDEF ${CMAKE_CURRENT_SOURCE_DIR}/inc/LinkDef.h OPTIONS DEPENDENCIES RHTTP)
+ROOT_GLOB_SOURCES(CEF_sources src/simple_app.cxx src/base_handler.cxx src/osr_handler.cxx src/gui_handler.cxx)
 
 if(ROOT_ARCHITECTURE MATCHES macosx)
    include_directories($ENV{CEF_PATH} inc)
-   ROOT_GLOB_SOURCES(CEF_sources src/simple_app.cxx src/base_handler.cxx src/osr_handler.cxx src/gui_handler.cxx src/gui_handler_mac.mm)
+   ROOT_GLOB_SOURCES(CEF_platform src/gui_handler_mac.mm)
    set(CEF_DLL_WRAPPER $ENV{CEF_PATH}/build/libcef_dll_wrapper/libcef_dll_wrapper.a)
    set(CEF_MAIN "src/cef_main.cxx")
    set(CEF_RESOURCES $ENV{CEF_PATH}/Release/Chromium\ Embedded\ Framework.framework/Resources)
@@ -27,7 +24,7 @@ if(ROOT_ARCHITECTURE MATCHES macosx)
 else ()
    include_directories($ENV{CEF_PATH} inc)
 #   add_definitions(-DWEBGUI_WITH_CEF)
-   ROOT_GLOB_SOURCES(CEF_sources src/simple_app.cxx src/base_handler.cxx src/osr_handler.cxx src/gui_handler.cxx src/gui_handler_linux.cxx)
+   ROOT_GLOB_SOURCES(CEF_platform src/gui_handler_linux.cxx)
    configure_file($ENV{CEF_PATH}/Resources/icudtl.dat "../../bin/icudtl.dat" COPYONLY)
    configure_file($ENV{CEF_PATH}/Release/natives_blob.bin "../../bin/natives_blob.bin" COPYONLY)
    configure_file($ENV{CEF_PATH}/Release/snapshot_blob.bin "../../bin/snapshot_blob.bin" COPYONLY)
@@ -38,7 +35,7 @@ else ()
 endif()
 
 
-ROOT_OBJECT_LIBRARY(ROOTCefDisplayObjs ${CEF_sources})
+ROOT_OBJECT_LIBRARY(ROOTCefDisplayObjs ${CEF_sources} ${CEF_platform})
 
 ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:ROOTCefDisplayObjs> 
                     LIBRARIES ${CMAKE_DL_LIBS} ${CEF_LIBRARY} ${CEF_DLL_WRAPPER} ${CEF_LIB_DEPENDENCY}
