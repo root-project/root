@@ -19,7 +19,7 @@ namespace Detail {
 namespace VecOps {
 
 template <typename T>
-class TVecAllocator // : public std::allocator<T>
+class TVecAllocator
 {
 public:
    using StdAlloc_t = std::allocator<T>;
@@ -34,13 +34,13 @@ public:
 private:
    enum class EAllocType : char { kRegular, kFromExternalPointer, kNoneYet };
    using StdAllocTraits_t = std::allocator_traits<StdAlloc_t>;
-   const_pointer fInitialAddress = nullptr;
+   pointer fInitialAddress = nullptr;
    size_type fInitialSize = 0;
    EAllocType fAllocType = EAllocType::kRegular;
    StdAlloc_t fStdAllocator;
 
 public:
-   TVecAllocator(const_pointer p, size_type n) : fInitialAddress(p), fInitialSize(n), fAllocType(EAllocType::kNoneYet){};
+   TVecAllocator(pointer p, size_type n) : fInitialAddress(p), fInitialSize(n), fAllocType(EAllocType::kNoneYet){};
    TVecAllocator() = default;
    TVecAllocator(const TVecAllocator&) = default;
 
@@ -65,7 +65,7 @@ public:
          throw std::bad_alloc();
       if (EAllocType::kNoneYet == fAllocType) {
          fAllocType = EAllocType::kFromExternalPointer;
-         return (pointer)fInitialAddress;
+         return fInitialAddress;
       }
       fAllocType = EAllocType::kRegular;
       return StdAllocTraits_t::allocate(fStdAllocator, n);
