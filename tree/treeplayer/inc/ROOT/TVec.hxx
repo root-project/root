@@ -75,12 +75,33 @@ TVec<typename TCallTraits<F>::ret_type> Operate(const TVec<T> &v0, const TVec<V>
    return w;
 }
 
-template <typename T, typename F>
-TVec<typename TCallTraits<F>::ret_type> Operate(const TVec<T> &v0, F f)
+template <typename T, typename V, typename F>
+TVec<typename TCallTraits<F>::ret_type> &OperateInPlace(TVec<T> &v0, const TVec<V> &v1, std::string_view opName, F f)
 {
-   TVec<typename TCallTraits<F>::ret_type> w(v0.size());
-   std::transform(v0.begin(), v0.end(), w.begin(), f);
+   const auto v0size = v0.size();
+   CheckSizes(v0size, v1.size(), opName);
+   for (size_t i= 0; i < v0size; ++i) {
+      v0[i] = f(v0[i], v1[i]);
+   }
+   return v0;
+}
+
+template <typename T, typename F>
+TVec<typename TCallTraits<F>::ret_type> Operate(const TVec<T> &v, F f)
+{
+   TVec<typename TCallTraits<F>::ret_type> w(v.size());
+   std::transform(v.begin(), v.end(), w.begin(), f);
    return w;
+}
+
+template <typename T, typename F>
+TVec<T> &OperateInPlace(TVec<T> &v, F f)
+{
+   std::for_each(v.begin(), v.end(), f);
+   for (auto && x : v) {
+      x = f(x);
+   }
+   return v;
 }
 
 
@@ -212,6 +233,67 @@ public:
    void resize( size_type count ) { fData.resize(count);}
    void resize( size_type count, const value_type& value ) { fData.resize(count, value);}
    void swap( TVec<T>& other ) { std::swap(fData, other.fData);}
+// arithmetic operators
+   template <typename V>
+   TVec<T> &operator+=(const V &c)
+   {
+      return ROOT::Internal::VecOps::OperateInPlace(*this, [&c](const T& t) {return t+c;});
+   }
+
+   template <typename V>
+   TVec<T> &operator-=(const V &c)
+   {
+      return ROOT::Internal::VecOps::OperateInPlace(*this, [&c](const T& t) {return t-c;});
+   }
+
+   template <typename V>
+   TVec<T> &operator*=(const V &c)
+   {
+      return ROOT::Internal::VecOps::OperateInPlace(*this, [&c](const T& t) {return t*c;});
+   }
+
+   template <typename V>
+   TVec<T> & operator/=(const V &c)
+   {
+      return ROOT::Internal::VecOps::OperateInPlace(*this, [&c](const T& t) {return t/c;});
+   }
+
+   template <typename V>
+   TVec<T> & operator%=(const V &c)
+   {
+      return ROOT::Internal::VecOps::OperateInPlace(*this, [&c](const T& t) {return t%c;});
+   }
+
+   template <typename V>
+   TVec<T> & operator+=(const TVec<V> &v0)
+   {
+      return ROOT::Internal::VecOps::OperateInPlace(*this, v0, "+", [](const T& t, const V &v) {return t+v;});
+   }
+
+   template <typename V>
+   TVec<T> & operator-=(const TVec<V> &v0)
+   {
+      return ROOT::Internal::VecOps::OperateInPlace(*this, v0, "-", [](const T& t, const V &v) {return t-v;});
+   }
+
+   template <typename V>
+   TVec<T> & operator*=(const TVec<V> &v0)
+   {
+      return ROOT::Internal::VecOps::OperateInPlace(*this, v0, "*", [](const T& t, const V &v) {return t*v;});
+   }
+
+   template <typename V>
+   TVec<T> & operator/=(const TVec<V> &v0)
+   {
+      return ROOT::Internal::VecOps::OperateInPlace(*this, v0, "/", [](const T& t, const V &v) {return t/v;});
+   }
+
+   template <typename V>
+   TVec<T> &operator%=(const TVec<V> &v0)
+   {
+      return ROOT::Internal::VecOps::OperateInPlace(*this, v0, "%", [](const T& t, const V &v) {return t%v;});
+   }
+
 };
 
 /** @name Math Operators with scalars
