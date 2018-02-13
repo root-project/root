@@ -41,12 +41,19 @@ void InitializeAttrFromString(const std::string &name, const std::string &strval
 
 class TDrawingAttrOrRefBase {
 private:
-   TDrawingAttrOrRefBase(TDrawingOptsBase& owner, const char *name);
+   struct Internal_t{};
+   static constexpr const Internal_t Internal{};
+   TDrawingAttrOrRefBase(Internal_t, TDrawingOptsBase& owner, const char *name);
 
 public:
    /// Initialize TDrawingAttrOrRefBase from a string literal.
    template <int N>
-   TDrawingAttrOrRefBase(TDrawingOptsBase& owner, const char (&name)[N]): TDrawingAttrOrRefBase(owner, (const char*)name) {}
+   TDrawingAttrOrRefBase(TDrawingOptsBase& owner, const char (&name)[N]): TDrawingAttrOrRefBase(Internal, owner, (const char*)name) {}
+   TDrawingAttrOrRefBase(const TDrawingAttrOrRefBase&) = default;
+   TDrawingAttrOrRefBase(TDrawingAttrOrRefBase&&) = default;
+   TDrawingAttrOrRefBase& operator=(const TDrawingAttrOrRefBase&) = default;
+   TDrawingAttrOrRefBase& operator=(TDrawingAttrOrRefBase&&) = default;
+
    virtual void SyncFromShared() = 0;
    virtual ~TDrawingAttrOrRefBase();
 };
@@ -81,7 +88,7 @@ public:
    /// Construct a default, non-shared attribute. The default value gets read from the default style,
    /// given the attribute's name.
    template <int N>
-   TDrawingAttrOrRef(TDrawingOptionsBase& owner, const char (&name)[N]): TDrawingAttrOrRefBase(owner, name) {
+   TDrawingAttrOrRef(TDrawingOptsBase& owner, const char (&name)[N]): TDrawingAttrOrRefBase(owner, name) {
       InitializeAttrFromString(name, TStyle::GetCurrent().GetAttribute(name), fAttr);
    }
 
@@ -89,13 +96,13 @@ public:
    /// given the attribute's name and arguments for the default attribute constructor, should no
    /// style entry be found.
    template <int N, class... ARGS>
-   TDrawingAttrOrRef(TDrawingOptionsBase& owner, const char (&name)[N], ARGS... args):
+   TDrawingAttrOrRef(TDrawingOptsBase& owner, const char (&name)[N], ARGS... args):
       TDrawingAttrOrRefBase(owner, name), fAttr(args...) {
       InitializeAttrFromString(name, TStyle::GetCurrent().GetAttribute(name), fAttr);
    }
 
    /// Construct a *non-shared* attribute, copying the attribute's value.
-   TDrawingAttrOrRef(const TDrawingAttrOrRef &other): fAttr(other.Get()) {}
+   TDrawingAttrOrRef(const TDrawingAttrOrRef &other): TDrawingAttrOrRefBase(other), fAttr(other.Get()) {}
 
    /// Move an attribute.
    TDrawingAttrOrRef(TDrawingAttrOrRef &&other) = default;
