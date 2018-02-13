@@ -69,8 +69,7 @@ template <typename T, typename V, typename F>
 TVec<typename TCallTraits<F>::ret_type> Operate(const TVec<T> &v0, const TVec<V> &v1, std::string_view opName, F f)
 {
    CheckSizes(v0.size(), v1.size(), opName);
-   TVec<typename TCallTraits<F>::ret_type> w;
-   w.resize(v0.size());
+   TVec<typename TCallTraits<F>::ret_type> w(v0.size());
    std::transform(v0.begin(), v0.end(), v1.begin(), w.begin(), f);
    return w;
 }
@@ -78,8 +77,7 @@ TVec<typename TCallTraits<F>::ret_type> Operate(const TVec<T> &v0, const TVec<V>
 template <typename T, typename F>
 TVec<typename TCallTraits<F>::ret_type> Operate(const TVec<T> &v0, F f)
 {
-   TVec<typename TCallTraits<F>::ret_type> w;
-   w.resize(v0.size());
+   TVec<typename TCallTraits<F>::ret_type> w(v0.size());
    std::transform(v0.begin(), v0.end(), w.begin(), f);
    return w;
 }
