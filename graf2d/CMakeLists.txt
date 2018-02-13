@@ -1,4 +1,7 @@
-add_subdirectory(primitives)
+if(root7)
+  add_subdirectory(primitives)
+  add_subdirectory(gpadv7)
+endif()
 add_subdirectory(gpad)
 add_subdirectory(graf)
 add_subdirectory(postscript)
