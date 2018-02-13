@@ -54,7 +54,7 @@ namespace VecOps {
 
 using namespace ROOT::Experimental::VecOps;
 
-void CheckSizes(size_t s0, size_t s1, const char *opName)
+void CheckSizes(size_t s0, size_t s1, std::string_view opName)
 {
    if (s0 != s1) {
       std::stringstream err;
