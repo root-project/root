@@ -10,7 +10,7 @@ if(root7)
          HEADERS ${HistDraw_v7_dict_headers}
          SOURCES *.cxx ${root7src}
          DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-         DEPENDENCIES ROOTGraphics)
+         DEPENDENCIES ROOTGraphicsPrimitives)
 
     ROOT_ADD_TEST_SUBDIRECTORY(v7/test)
 endif()
