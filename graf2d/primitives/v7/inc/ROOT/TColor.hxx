@@ -41,7 +41,7 @@ public:
    enum class EKind {
       kRGBA, ///< The color is defined as specific RGBA values.
       kPalettePos, ///< The color is defined as a value in the `TFrame`'s `TPalette`.
-      kAuto ///< The color will be set upon drawing the canvas choosing a `TPalatte` color, see `TColor(Auto_t)`
+      kAuto ///< The color will be set upon drawing the canvas choosing a `TPalette` color, see `TColor(Auto_t)`
    };
 
 private:
