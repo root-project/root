@@ -16,13 +16,11 @@
 #ifndef ROOT7_TText
 #define ROOT7_TText
 
-#include <ROOT/TDrawingAttrs.hxx>
-
 #include <ROOT/TDrawable.hxx>
+#include <ROOT/TDrawingAttr.hxx>
+#include <ROOT/TDrawingOptsBase.hxx>
 #include <ROOT/TPad.hxx>
 #include <ROOT/TVirtualCanvasPainter.hxx>
-
-#include <ROOT/TDrawingAttrs.hxx>
 
 #include <initializer_list>
 #include <memory>
@@ -65,10 +63,10 @@ public:
    double GetY() const { return fY; }
 };
 
-class TextDrawingOpts {
-   TDrawingAttrOrRef<int> fLineWidth{"Text.Line.Width", 3}; ///< The line width.
-   TDrawingAttrOrRef<TColor> fLineColor{"Text.Line.Color", TColor::kBlack}; ///< The line color.
-   TDrawingAttrOrRef<TColor> fFillColor{"Text.Fill.Color", TColor::kInvisible}; ///< The fill color.
+class TextDrawingOpts: public TDrawingOptsBase {
+   TDrawingAttrOrRef<int> fLineWidth{*this, "Text.Line.Width", 3}; ///< The line width.
+   TDrawingAttrOrRef<TColor> fLineColor{*this, "Text.Line.Color", TColor::kBlack}; ///< The line color.
+   TDrawingAttrOrRef<TColor> fFillColor{*this, "Text.Fill.Color", TColor::kInvisible}; ///< The fill color.
 
 public:
    /// The color of the line.

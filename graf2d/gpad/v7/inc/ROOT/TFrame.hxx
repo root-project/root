@@ -16,7 +16,8 @@
 #ifndef ROOT7_TFrame
 #define ROOT7_TFrame
 
-#include "ROOT/TDrawingAttrs.hxx"
+#include "ROOT/TDrawingAttr.hxx"
+#include "ROOT/TDrawingOptsBase.hxx"
 #include "ROOT/TPadExtent.hxx"
 #include "ROOT/TPadPos.hxx"
 #include "ROOT/TPadUserCoordBase.hxx"
@@ -33,12 +34,12 @@ namespace Experimental {
 
 class TFrame {
 public:
-   class DrawingOpts {
+   class DrawingOpts: public TDrawingOptsBase {
    public:
       /// Position of the frame in parent TPad coordinates.
-      TDrawingAttrOrRef<TPadPos> fPos{"frame.pos", 0.1_normal, 0.1_normal};
+      TDrawingAttrOrRef<TPadPos> fPos{*this, "frame.pos", 0.1_normal, 0.1_normal};
       /// Size of the frame in parent TPad coordinates.
-      TDrawingAttrOrRef<TPadExtent> fSize{"frame.size", 0.8_normal, 0.8_normal};
+      TDrawingAttrOrRef<TPadExtent> fSize{*this, "frame.size", 0.8_normal, 0.8_normal};
    };
 
 private:
