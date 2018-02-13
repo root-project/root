@@ -18,6 +18,7 @@
 #include <cmath>   // for sqrt
 #include <numeric> // for inner_product
 #include <sstream>
+#include <stdexcept>
 #include <vector>
 
 namespace ROOT {
