@@ -16,7 +16,8 @@
 #ifndef ROOT7_THistDrawingOpts
 #define ROOT7_THistDrawingOpts
 
-#include <ROOT/TDrawingAttrs.hxx>
+#include <ROOT/TDrawingAttr.hxx>
+#include <ROOT/TDrawingOptsBase.hxx>
 #include <ROOT/TStringEnumAttr.hxx>
 
 namespace ROOT {
@@ -33,7 +34,7 @@ class THistDrawingOpts {
  Drawing options for a 1D histogram.
  */
 template <>
-class THistDrawingOpts<1> {
+class THistDrawingOpts<1>: public TDrawingOptsBase {
 public:
    enum class EStyle { kBar, kText };
 
@@ -42,9 +43,9 @@ private:
       static const TStringEnumAttrSet styles{"hist", "bar", "text"};
       return styles;
    }
-   TDrawingAttrOrRef<TStringEnumAttr> fStyle{"Hist.1D.Style", 0, Styles()};
-   TDrawingAttrOrRef<TColor> fLineColor{"Hist.1D.Line.Color"};
-   TDrawingAttrOrRef<int> fLineWidth{"Hist.1D.Line.Width"};
+   TDrawingAttrOrRef<TStringEnumAttr> fStyle{*this, "Hist.1D.Style", 0, Styles()};
+   TDrawingAttrOrRef<TColor> fLineColor{*this, "Hist.1D.Line.Color"};
+   TDrawingAttrOrRef<int> fLineWidth{*this, "Hist.1D.Line.Width"};
 
 public:
    EStyle GetStyle() const { return static_cast<EStyle>(fStyle.Get().GetIndex()); }
@@ -58,10 +59,10 @@ public:
 };
 
 /** \class THistDrawingOpts<2>
- Drawing options for a 1D histogram.
+ Drawing options for a 2D histogram.
  */
 template <>
-class THistDrawingOpts<2> {
+class THistDrawingOpts<2>: public TDrawingOptsBase {
 public:
    enum class EStyle { kBox, kSurf, kText };
 
@@ -70,9 +71,9 @@ private:
       static const TStringEnumAttrSet styles{"box", "surf", "text"};
       return styles;
    }
-   TDrawingAttrOrRef<TStringEnumAttr> fStyle{"Hist.2D.Style", 0, Styles()};
-   TDrawingAttrOrRef<TColor> fLineColor{"Hist.2D.Line.Color"};
-   TDrawingAttrOrRef<int> fLineWidth{"Hist.2D.Line.Width"};
+   TDrawingAttrOrRef<TStringEnumAttr> fStyle{*this, "Hist.2D.Style", 0, Styles()};
+   TDrawingAttrOrRef<TColor> fLineColor{*this, "Hist.2D.Line.Color"};
+   TDrawingAttrOrRef<int> fLineWidth{*this, "Hist.2D.Line.Width"};
 
 public:
    EStyle GetStyle() const { return static_cast<EStyle>(fStyle.Get().GetIndex()); }
@@ -86,10 +87,10 @@ public:
 };
 
 /** \class THistDrawingOpts<3>
- Drawing options for a 1D histogram.
+ Drawing options for a 3D histogram.
  */
 template <>
-class THistDrawingOpts<3> {
+class THistDrawingOpts<3>: public TDrawingOptsBase {
 public:
    enum class EStyle { kBox, kIso };
 
@@ -98,9 +99,9 @@ private:
       static const TStringEnumAttrSet styles{"box", "iso"};
       return styles;
    }
-   TDrawingAttrOrRef<TStringEnumAttr> fStyle{"Hist.3D.Style", 0, Styles()};
-   TDrawingAttrOrRef<TColor> fLineColor{"Hist.3D.Line.Color"};
-   TDrawingAttrOrRef<int> fLineWidth{"Hist.3D.Line.Width"};
+   TDrawingAttrOrRef<TStringEnumAttr> fStyle{*this, "Hist.3D.Style", 0, Styles()};
+   TDrawingAttrOrRef<TColor> fLineColor{*this, "Hist.3D.Line.Color"};
+   TDrawingAttrOrRef<int> fLineWidth{*this, "Hist.3D.Line.Width"};
 
 public:
    EStyle GetStyle() const { return static_cast<EStyle>(fStyle.Get().GetIndex()); }
