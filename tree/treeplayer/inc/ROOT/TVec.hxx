@@ -153,7 +153,7 @@ public:
       std::copy(other.begin(), other.end(), fData.begin());
    }
    TVec( std::initializer_list<T> init) : fData(init) {}
-   TVec( const_pointer p, size_type n) : fData(n, T() , ROOT::Detail::VecOps::TVecAllocator<T>(p, n)) {}
+   TVec( pointer p, size_type n) : fData(n, T() , ROOT::Detail::VecOps::TVecAllocator<T>(p, n)) {}
 // assignment
    TVec<T>& operator=( std::initializer_list<T> ilist ) { return fData = ilist;}
 // accessors
