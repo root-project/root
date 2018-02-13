@@ -34,7 +34,7 @@ TEST(TVecAllocator, ReusePointer)
 
    auto res = 0;
    try {
-      v.resize(-1);
+      v.resize(std::numeric_limits<size_t>::max());
    } catch (...) {
       res = 1;
    }
@@ -67,7 +67,7 @@ TEST(TVecAllocator, NewAllocations)
 
    unsigned int dummy;
    TVecAllocator<TCopySignal> alloc(model.data(), model.size());
-   TVec<TCopySignal> v(model.size(), dummy ,alloc);
+   ROOT::Detail::VecOps::TVecImpl<TCopySignal> v(model.size(), dummy ,alloc);
 
    EXPECT_EQ(0U, copyCount);
    v.emplace_back(copyCount);
