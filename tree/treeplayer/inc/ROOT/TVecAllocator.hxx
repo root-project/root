@@ -19,8 +19,7 @@ namespace Detail {
 namespace VecOps {
 
 template <typename T>
-class TVecAllocator
-{
+class TVecAllocator {
 public:
    using StdAlloc_t = std::allocator<T>;
    using value_type = typename StdAlloc_t::value_type;
@@ -42,7 +41,7 @@ private:
 public:
    TVecAllocator(pointer p, size_type n) : fInitialAddress(p), fInitialSize(n), fAllocType(EAllocType::kNoneYet){};
    TVecAllocator() = default;
-   TVecAllocator(const TVecAllocator&) = default;
+   TVecAllocator(const TVecAllocator &) = default;
 
    void construct(pointer p, const_reference val)
    {
