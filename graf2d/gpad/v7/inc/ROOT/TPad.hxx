@@ -20,6 +20,8 @@
 #include <vector>
 
 #include "ROOT/TDrawable.hxx"
+#include "ROOT/TDrawingAttr.hxx"
+#include "ROOT/TDrawingOptsBase.hxx"
 #include "ROOT/TFrame.hxx"
 #include "ROOT/TPadExtent.hxx"
 #include "ROOT/TPadPos.hxx"
@@ -200,8 +202,8 @@ public:
  Drawing options for a TPad
  */
 
-class TPadDrawingOpts {
-   TDrawingAttrOrRef<TPadPos> fPos{"PadOffset"}; ///< Offset with respect to parent TPad.
+class TPadDrawingOpts: public TDrawingOptsBase {
+   TDrawingAttrOrRef<TPadPos> fPos{*this, "PadOffset"}; ///< Offset with respect to parent TPad.
 
 public:
    /// Set the position of this pad with respect to the parent pad.
