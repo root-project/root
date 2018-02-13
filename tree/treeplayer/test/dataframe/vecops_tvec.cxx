@@ -69,6 +69,25 @@ TEST(VecOps, MathScalar)
    }
 }
 
+TEST(VecOps, MathScalarInPlace)
+{
+   using namespace ROOT::Experimental::VecOps;
+   TVec<double> ref {1,2,3};
+   const TVec<double> v (ref);
+   int scalar = 3;
+   auto plus = v; plus += scalar;
+   auto minus = v; minus -= scalar;
+   auto mult = v; mult *= scalar;
+   auto div = v; div /= scalar;
+
+   for (unsigned int i = 0; i< v.size(); ++i) {
+      EXPECT_EQ(plus[i], ref[i] + scalar);
+      EXPECT_EQ(minus[i], ref[i] - scalar);
+      EXPECT_EQ(mult[i], ref[i] * scalar);
+      EXPECT_EQ(div[i], ref[i] / scalar);
+   }
+}
+
 TEST(VecOps, MathVector)
 {
    using namespace ROOT::Experimental::VecOps;
@@ -113,6 +132,25 @@ TEST(VecOps, MathVector)
       EXPECT_EQ(minus[i], ref[i] - w2[i]);
       EXPECT_EQ(mult[i], ref[i] * w2[i]);
       EXPECT_EQ(div[i], ref[i] / w2[i]);
+   }
+}
+
+TEST(VecOps, MathVectorInPlace)
+{
+   using namespace ROOT::Experimental::VecOps;
+   TVec<double> ref {1,2,3};
+   TVec<double> vec {3,4,5};
+   TVec<double> v (ref);
+   auto plus = v; plus += vec;
+   auto minus = v; minus -= vec;
+   auto mult = v; mult *= vec;
+   auto div = v; div /= vec;
+
+   for (unsigned int i = 0; i< v.size(); ++i) {
+      EXPECT_EQ(plus[i], ref[i] + vec[i]);
+      EXPECT_EQ(minus[i], ref[i] - vec[i]);
+      EXPECT_EQ(mult[i], ref[i] * vec[i]);
+      EXPECT_EQ(div[i], ref[i] / vec[i]);
    }
 }
 
@@ -187,7 +225,7 @@ TEST(VecOps, MathFuncs)
    CheckEq("tanh",tanh(v), Map(v, [](double x){ return std::tanh(x);}));
    CheckEq("asinh",asinh(v), Map(v, [](double x){ return std::asinh(x);}));
    CheckEq("acosh",acosh(v), Map(v, [](double x){ return std::acosh(x);}));
-   v = v / 10.;
+   v /= 10.;
    CheckEq("asin",asin(v), Map(v, [](double x){ return std::asin(x);}));
    CheckEq("acos",acos(v), Map(v, [](double x){ return std::acos(x);}));
    CheckEq("atanh",atanh(v), Map(v, [](double x){ return std::atanh(x);}));
