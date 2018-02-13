@@ -46,6 +46,7 @@ public:
 
    void construct(pointer p, const_reference val)
    {
+      // We refuse to do anything since we assume the memory is already initialised
       if (EAllocType::kFromExternalPointer == fAllocType)
          return;
       fStdAllocator.construct(p, val);
@@ -54,6 +55,7 @@ public:
    template <class U, class... Args>
    void construct(U *p, Args &&... args)
    {
+      // We refuse to do anything since we assume the memory is already initialised
       if (EAllocType::kFromExternalPointer == fAllocType)
          return;
       fStdAllocator.construct(p, args...);
