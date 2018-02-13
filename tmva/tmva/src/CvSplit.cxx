@@ -19,7 +19,9 @@
 #include <TString.h>
 #include <TFormula.h>
 
+#include <algorithm>
 #include <numeric>
+#include <random>
 #include <stdexcept>
 
 ClassImp(TMVA::CvSplit);
@@ -291,9 +293,8 @@ std::vector<UInt_t> TMVA::CvSplitKFolds::GetEventIndexToFoldMapping(UInt_t nEntr
    }
 
    // Shuffle assignment
-   TRandom3 rng(seed);
-   auto rand = [&rng](UInt_t a) { return rng.Integer(a); };
-   std::random_shuffle(fOrigToFoldMapping.begin(), fOrigToFoldMapping.end(), rand);
+   std::default_random_engine rng(seed);
+   std::shuffle(fOrigToFoldMapping.begin(), fOrigToFoldMapping.end(), rng);
 
    return fOrigToFoldMapping;
 }
