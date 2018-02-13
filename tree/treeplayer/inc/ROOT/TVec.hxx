@@ -22,15 +22,26 @@
 
 namespace ROOT {
 
+namespace Detail {
+
+namespace VecOps {
+
+template <typename T>
+using TVecImpl = std::vector<T, ROOT::Detail::VecOps::TVecAllocator<T>>;
+
+} // End of VecOps NS
+
+} // End of Detail NS
+
 namespace Experimental {
 
 namespace VecOps {
 
 template<typename T>
-using TCallTraits = typename ROOT::TypeTraits::CallableTraits<T>;
+class TVec;
 
-template <typename T>
-using TVec = std::vector<T, ROOT::Detail::VecOps::TVecAllocator<T>>;
+template<typename T>
+using TCallTraits = typename ROOT::TypeTraits::CallableTraits<T>;
 
 } // End of Experimental NS
 
@@ -117,6 +128,93 @@ namespace Experimental {
 
 namespace VecOps {
 
+template<typename T>
+class TVec {
+private:
+   ROOT::Detail::VecOps::TVecImpl<T> fData;
+public:
+   using Impl_t = typename ROOT::Detail::VecOps::TVecImpl<T>;
+   using value_type = typename Impl_t::value_type;
+   using size_type = typename Impl_t::size_type;
+   using difference_type = typename Impl_t::difference_type;
+   using reference = typename Impl_t::reference;
+   using const_reference = typename Impl_t::const_reference;
+   using pointer = typename Impl_t::pointer;
+   using const_pointer = typename Impl_t::const_pointer;
+   using iterator = typename Impl_t::iterator;
+   using const_iterator = typename Impl_t::const_iterator;
+   using reverse_iterator = typename Impl_t::reverse_iterator;
+
+// ctors
+   TVec() {}
+   TVec(size_type count, const T& value) : fData(count, value) {}
+   explicit TVec( size_type count ) : fData(count) {}
+   TVec( const std::vector<T>& other )
+   {
+      std::copy(other.begin(), other.end(), fData.begin());
+   }
+   TVec( std::initializer_list<T> init) : fData(init) {}
+   TVec( const_pointer p, size_type n) : fData(n, T() , ROOT::Detail::VecOps::TVecAllocator<T>(p, n)) {}
+// assignment
+   TVec<T>& operator=( std::initializer_list<T> ilist ) { return fData = ilist;}
+// accessors
+   reference at( size_type pos ) {return fData.at(pos);}
+   const_reference at( size_type pos ) const {return fData.at(pos);}
+   reference operator[]( size_type pos ) {return fData[pos];}
+   const_reference operator[]( size_type pos ) const {return fData[pos];}
+   template<typename V>
+   TVec<T> operator[]( const TVec<V> conds )
+   {
+      const auto thisSize = size();
+      ROOT::Internal::VecOps::CheckSizes(thisSize, conds.size(), "operator[]");
+      TVec<T> w;
+      w.reserve(thisSize);
+      for (size_t i = 0; i< thisSize; i++) {
+         if (conds[i]) w.emplace_back(fData[i]);
+      }
+      return w;
+   }
+   reference front() {return fData.front(); }
+   const_reference front() const {return fData.front(); }
+   reference back() {return fData.back(); }
+   const_reference back() const {return fData.back(); }
+   T* data() noexcept {return fData.data(); }
+   const T* data() const noexcept {return fData.data(); }
+// iterators
+   iterator begin() noexcept {return fData.begin();}
+   const_iterator begin() const noexcept {return fData.begin();}
+   const_iterator cbegin() const noexcept {return fData.cbegin();}
+   iterator end() noexcept {return fData.end();}
+   const_iterator end() const noexcept {return fData.end();}
+   const_iterator cend() const noexcept {return fData.cend();}
+   iterator rbegin() noexcept {return fData.rbegin();}
+   const_iterator rbegin() const noexcept {return fData.rbegin();}
+   const_iterator crbegin() const noexcept {return fData.crbegin();}
+   iterator rend() noexcept {return fData.rend();}
+   const_iterator rend() const noexcept {return fData.rend();}
+   const_iterator crend() const noexcept {return fData.crend();}
+// capacity
+   bool empty() const noexcept { return fData.empty();}
+   size_type size() const noexcept {return fData.size();}
+   size_type max_size() const noexcept {return fData.size();}
+   void reserve( size_type new_cap ) { fData.reserve(new_cap);}
+   size_type capacity() const noexcept { return fData.capacity();}
+   void shrink_to_fit() { fData.shrink_to_fit();};
+// modifiers
+   void clear() noexcept { fData.clear(); }
+   iterator erase( const_iterator pos ) { return fData.erase(pos); }
+   iterator erase( const_iterator first, const_iterator last ) { return fData.erase(first, last);}
+   void push_back( T&& value ) { fData.push_back(std::forward<T>(value)); }
+   template< class... Args > // this is from C++17
+   reference emplace_back( Args&&... args) { fData.emplace_back(std::forward<T>(args)...); return fData.back();}
+   template< class... Args >
+   iterator emplace( const_iterator pos, Args&&... args ) { return fData.emplace(pos, std::forward<Args...>(args...)); }
+   void pop_back() { fData.pop_back(); }
+   void resize( size_type count ) { fData.resize(count);}
+   void resize( size_type count, const value_type& value ) { fData.resize(count, value);}
+   void swap( TVec<T>& other ) { std::swap(fData, other.fData);}
+};
+
 /** @name Math Operators with scalars
  *  Math operators involving TVec
 */
@@ -143,6 +241,12 @@ template <typename T, typename V>
 auto operator/(const TVec<T> &v, const V &c) -> TVec<decltype(v[0] / c)>
 {
    return ROOT::Internal::VecOps::Operate(v, [&c](const T& t) {return t/c;});
+}
+
+template <typename T, typename V>
+auto operator%(const TVec<T> &v, const V &c) -> TVec<decltype(v[0] % c)>
+{
+   return ROOT::Internal::VecOps::Operate(v, [&c](const T& t) {return t%c;});
 }
 
 template <typename T, typename V, typename D = typename std::enable_if<!ROOT::Detail::VecOps::TIsTVec<V>::value, int>::type>
@@ -210,6 +314,12 @@ template <typename T, typename V>
 auto operator/(const TVec<T> &v0, const TVec<V> &v1) -> TVec<decltype(v0[0] / v1[0])>
 {
    return ROOT::Internal::VecOps::Operate(v0, v1, "/", [](const T& t, const V &v) {return t/v;});
+}
+
+template <typename T, typename V>
+auto operator%(const TVec<T> &v0, const TVec<V> &v1) -> TVec<decltype(v0[0] % v1[0])>
+{
+   return ROOT::Internal::VecOps::Operate(v0, v1, "%", [](const T& t, const V &v) {return t%v;});
 }
 
 template <typename T, typename V>
@@ -325,6 +435,12 @@ T Sum(const TVec<T> v)
    return std::accumulate(v.begin(), v.end(), 0);
 }
 
+template <typename T, typename F>
+TVec<typename TCallTraits<F>::ret_type> Map(const TVec<T> &v, F f)
+{
+   return ROOT::Internal::VecOps::Operate(v, f);
+}
+
 template <class T>
 std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
 {
@@ -340,25 +456,6 @@ std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
    }
    os << " }";
    return os;
-}
-
-template <typename T>
-TVec<T> Filter(const TVec<T> &v, bool cond)
-{
-   return cond ? v : TVec<T>();
-}
-
-template <typename T, typename V>
-TVec<T> Filter(const TVec<T> &v, const TVec<V> &conds)
-{
-   ROOT::Internal::VecOps::CheckSizes(v.size(), conds.size(), "Filter");
-   TVec<T> w;
-   auto size = v.size();
-   w.reserve(size);
-   for (size_t i = 0; i< size; i++) {
-      if (conds[i]) w.emplace_back(v[i]);
-   }
-   return w;
 }
 
 } // End of VecOps NS
