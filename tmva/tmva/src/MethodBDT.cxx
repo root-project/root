@@ -1499,7 +1499,7 @@ void TMVA::MethodBDT::UpdateTargetsRegression(std::vector<const TMVA::Event*>& e
          return 0;
       };
 
-      fPool.Map(f, seeds);
+      TMVA::Config::Instance().GetThreadExecutor().Map(f, seeds);
    }
    #else // ROOT was not compiled with multithreading, use standard version
    if(!first){

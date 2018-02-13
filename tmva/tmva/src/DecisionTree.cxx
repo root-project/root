@@ -468,7 +468,7 @@ UInt_t TMVA::DecisionTree::BuildTree( const std::vector<const TMVA::Event*> & ev
 
    // #### Run the threads in parallel then merge the results
    auto redfunc = [nodeInfoInit](std::vector<BuildNodeInfo> v) -> BuildNodeInfo { return std::accumulate(v.begin(), v.end(), nodeInfoInit); };
-   BuildNodeInfo nodeInfo = fPool.MapReduce(f, seeds, redfunc);
+   BuildNodeInfo nodeInfo = TMVA::Config::Instance().GetThreadExecutor().MapReduce(f, seeds, redfunc);
    //NodeInfo nodeInfo(fNvars);
 
    if (nodeInfo.s+nodeInfo.b < 0) {
@@ -1585,7 +1585,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
       return 0;
    };
-   fPool.Map(fvarInitCuts, varSeeds);
+   TMVA::Config::Instance().GetThreadExecutor().Map(fvarInitCuts, varSeeds);
   
    // #### Loop through the events to get the total sig and background
    // #### Then loop through the vars to get the counts in each bin in each var
@@ -1660,7 +1660,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
 
       // #### Run the threads in parallel then merge the results
       auto redfunc = [nodeInfoInit](std::vector<TrainNodeInfo> v) -> TrainNodeInfo { return std::accumulate(v.begin(), v.end(), nodeInfoInit); };
-      nodeInfo = fPool.MapReduce(f, seeds, redfunc);
+      nodeInfo = TMVA::Config::Instance().GetThreadExecutor().MapReduce(f, seeds, redfunc);
    }
  
 
@@ -1716,7 +1716,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
          return 0;
       };
 
-      fPool.Map(fvarFillNodeInfo, varSeeds);
+      TMVA::Config::Instance().GetThreadExecutor().Map(fvarFillNodeInfo, varSeeds);
    }
 
    // now turn each "histogram" into a cumulative distribution
@@ -1751,7 +1751,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
       return 0;
    };
-   fPool.Map(fvarCumulative, varSeeds);
+   TMVA::Config::Instance().GetThreadExecutor().Map(fvarCumulative, varSeeds);
 
    // #### Again, if bins is on the order of the training data or with an order or so, then this is worth parallelizing
    // now select the optimal cuts for each varable and find which one gives
@@ -1805,7 +1805,7 @@ Double_t TMVA::DecisionTree::TrainNodeFast( const EventConstList & eventSample,
       }
       return 0;
    };
-   fPool.Map(fvarMaxSep, varSeeds);
+   TMVA::Config::Instance().GetThreadExecutor().Map(fvarMaxSep, varSeeds);
 
    // you found the best separation cut for each variable, now compare the variables
    for (UInt_t ivar=0; ivar < cNvars; ivar++) {

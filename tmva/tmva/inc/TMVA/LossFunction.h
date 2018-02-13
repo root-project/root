@@ -99,8 +99,6 @@ namespace TMVA {
       // #### only use multithreading if the compilation flag is turned on
       #ifdef R__USE_IMT
       UInt_t fNumPoolThreads = 1;
-      // #### ROOT multithreading object
-      ROOT::TThreadExecutor fPool;
 
       // #### number of threads in the pool
       UInt_t GetNumThreadsInPool(){

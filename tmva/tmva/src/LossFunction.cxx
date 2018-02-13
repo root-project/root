@@ -104,7 +104,7 @@ Double_t TMVA::HuberLossFunction::CalculateSumOfWeights(std::vector<LossFunction
       return sumOfWeightsN;
    };
 
-   auto sumOfWeightsN = fPool.MapReduce(f, seeds, redfunc, nPartitions);
+   auto sumOfWeightsN = TMVA::Config::Instance().GetThreadExecutor().MapReduce(f, seeds, redfunc, nPartitions);
    return sumOfWeightsN;
 }
 // Standard version of HuberLossFunction::CalculateSumOfWeights
@@ -300,7 +300,7 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
       return 0;
    };
 
-   fPool.Map(fcopy, seedscopy);
+   TMVA::Config::Instance().GetThreadExecutor().Map(fcopy, seedscopy);
 
    // Recalculate the residual that separates the "core" of the data and the "tails"
    // This residual is the quantile given by fQuantile, defaulted to 0.7
@@ -323,7 +323,7 @@ void TMVA::HuberLossFunctionBDT::SetTargets(std::vector<const TMVA::Event*>& evs
       return 0;
    };
 
-   fPool.Map(f, seeds);
+   TMVA::Config::Instance().GetThreadExecutor().Map(f, seeds);
 }
 
 // Standard version of HuberLossFunctionBDT::SetTargets
@@ -481,7 +481,7 @@ void TMVA::LeastSquaresLossFunctionBDT::SetTargets(std::vector<const TMVA::Event
       return 0;
    };
 
-   fPool.Map(f, seeds);
+   TMVA::Config::Instance().GetThreadExecutor().Map(f, seeds);
 }
 // Standard version of LeastSquaresLossFunctionBDT::SetTargets
 #else
@@ -613,7 +613,7 @@ void TMVA::AbsoluteDeviationLossFunctionBDT::SetTargets(std::vector<const TMVA::
       return 0;
    };
 
-   fPool.Map(f, seeds);
+   TMVA::Config::Instance().GetThreadExecutor().Map(f, seeds);
 }
 // Standard version of AbsoluteDeviationLossFunctionBDT::SetTargets
 #else
