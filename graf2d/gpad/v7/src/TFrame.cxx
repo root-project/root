@@ -16,27 +16,15 @@
 #include "ROOT/TFrame.hxx"
 
 #include "ROOT/TLogger.hxx"
-#include "ROOT/TPadUserCoordBase.hxx"
+#include "ROOT/TPadUserAxis.hxx"
 
 #include <cassert>
 
-namespace {
-using namespace ROOT::Experimental;
-// FIXME: Replace by array of TFrameAxis!
-class TPadUserCoordDefault: public Detail::TPadUserCoordBase {
-
-public:
-   std::array<TPadLength::Normal, 2> ToNormal(const std::array<TPadLength::User, 2> &user) const override
-   {
-      R__ERROR_HERE("Gpad") << "Not yet implemented!";
-      return {{user[0].fVal, user[1].fVal}};
-   }
-};
-} // namespace
-
-ROOT::Experimental::TFrame::TFrame(std::unique_ptr<Detail::TPadUserCoordBase> &&coords, const DrawingOpts &opts)
+ROOT::Experimental::TFrame::TFrame(std::vector<std::unique_ptr<Detail::TPadUserAxisBase>> &&coords, const DrawingOpts &opts)
    : fUserCoord(std::move(coords)), fPalette(TPalette::GetPalette("default")), fPos(opts.fPos.Get()), fSize(opts.fSize.Get())
 {
-   if (!fUserCoord)
-      fUserCoord.reset(new TPadUserCoordDefault);
+   if (fUserCoord.empty()) {
+      fUserCoord.emplace_back(new TPadCartesianUserAxis);
+      fUserCoord.emplace_back(new TPadCartesianUserAxis);
+   }
 }

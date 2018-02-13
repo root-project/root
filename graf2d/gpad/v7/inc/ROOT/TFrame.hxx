@@ -20,7 +20,7 @@
 #include "ROOT/TDrawingOptsBase.hxx"
 #include "ROOT/TPadExtent.hxx"
 #include "ROOT/TPadPos.hxx"
-#include "ROOT/TPadUserCoordBase.hxx"
+#include "ROOT/TPadUserAxis.hxx"
 #include "ROOT/TPalette.hxx"
 
 #include <memory>
@@ -43,8 +43,8 @@ public:
    };
 
 private:
-   /// Mapping of user coordinates to normal coordinates.
-   std::unique_ptr<Detail::TPadUserCoordBase> fUserCoord;
+   /// Mapping of user coordinates to normal coordinates, one entry per dimension.
+   std::vector<std::unique_ptr<Detail::TPadUserAxisBase>> fUserCoord;
 
    /// Palette used to visualize user coordinates.
    TPalette fPalette;
@@ -57,28 +57,23 @@ private:
 
 public:
    /// Constructor taking user coordinate system, position and extent.
-   explicit TFrame(std::unique_ptr<Detail::TPadUserCoordBase> &&coords, const DrawingOpts &opts);
+   explicit TFrame(std::vector<std::unique_ptr<Detail::TPadUserAxisBase>> &&coords, const DrawingOpts &opts);
 
    // Constructor taking position and extent.
    explicit TFrame(const DrawingOpts &opts)
-      : TFrame(nullptr, opts)
+      : TFrame({}, opts)
    {}
 
-   /// Get the current user coordinate system.
-   Detail::TPadUserCoordBase &GetUserCoord() const;
+   /// Get the current user coordinate system for a given dimension.
+   Detail::TPadUserAxisBase &GetUserAxis(size_t dimension) const { return *fUserCoord[dimension]; }
 
-   /// Get the current user coordinate system.
-   std::unique_ptr<Detail::TPadUserCoordBase> SwapUserCoordSystem(std::unique_ptr<Detail::TPadUserCoordBase> &&newCoord)
-   {
-      std::unique_ptr<Detail::TPadUserCoordBase> ret(std::move(newCoord));
-      std::swap(ret, fUserCoord);
-      return ret;
-   }
+   /// Set the user coordinate system.
+   void SetUserAxis(std::vector<std::unique_ptr<Detail::TPadUserAxisBase>> &&axes) { fUserCoord = std::move(axes); }
 
    /// Convert user coordinates to normal coordinates.
    std::array<TPadLength::Normal, 2> UserToNormal(const std::array<TPadLength::User, 2> &pos) const
    {
-      return fUserCoord->ToNormal(pos);
+      return {{fUserCoord[0]->ToNormal(pos[0]), fUserCoord[1]->ToNormal(pos[1])}};
    }
 };
 
