@@ -198,8 +198,6 @@ namespace TMVA {
       // Only include parallelizatiion if the multithreading compilation flag is turned on
       #ifdef R__USE_IMT 
 
-      // #### root multithreading object
-      ROOT::TThreadExecutor fPool;
       // number of CPUs available for parallelization
       UInt_t fNumPoolThreads = 1;
 
