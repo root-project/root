@@ -20,6 +20,8 @@ if(root7)
                        G__Graf2dPrim_v7.cxx
                        DEPENDENCIES RIO)
 
+   ROOT_INSTALL_HEADERS()
+
    if(testing)
       add_subdirectory(v7/test)
    endif()
