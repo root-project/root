@@ -15,7 +15,7 @@
 
 #include "ROOT/TDrawingAttr.hxx"
 
-#include "ROOT/TDrawingOptsBase.h"
+#include "ROOT/TDrawingOptsBase.hxx"
 #include "ROOT/TLogger.hxx"
 
 
@@ -23,9 +23,9 @@
 ROOT::Experimental::TDrawingAttrOrRefBase::~TDrawingAttrOrRefBase() = default;
 
 /// Register an attribute with the TDrawingOptionsBase.
-ROOT::Experimental::TDrawingAttrOrRefBase::TDrawingAttrOrRefBase(TDrawingOptsBase& owner, const char *name):
+ROOT::Experimental::TDrawingAttrOrRefBase::TDrawingAttrOrRefBase(Internal_t, TDrawingOptsBase& owner, const char *name)
 {
-   owner.AddAttr(name, *this);
+   owner.AddAttr(*this, name);
 }
 
 
