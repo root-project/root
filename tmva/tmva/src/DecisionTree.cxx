@@ -76,6 +76,7 @@ more signal respective background events from the training sample.
 #include "TMVA/BinarySearchTree.h"
 
 #include "TMVA/Tools.h"
+#include "TMVA/Config.h"
 
 #include "TMVA/GiniIndex.h"
 #include "TMVA/CrossEntropy.h"

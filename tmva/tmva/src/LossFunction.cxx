@@ -36,6 +36,7 @@ Huber Loss Function.
 */
 
 #include "TMVA/LossFunction.h"
+#include "TMVA/Config.h"
 
 #include "TMVA/MsgLogger.h"
 
