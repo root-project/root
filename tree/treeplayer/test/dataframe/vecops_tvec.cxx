@@ -55,8 +55,7 @@ TEST(VecOps, MathScalar)
    }
 
    // The same with views
-   ROOT::Detail::VecOps::TVecAllocator<double> alloc(ref.data(), ref.size());
-   std::vector<double, ROOT::Detail::VecOps::TVecAllocator<double>> w(ref.size(), 0, alloc);
+   ROOT::Experimental::VecOps::TVec<double> w(ref.data(), ref.size());
    plus = w + scalar;
    minus = w - scalar;
    mult = w * scalar;
@@ -89,8 +88,7 @@ TEST(VecOps, MathVector)
    }
 
    // The same with 1 view
-   ROOT::Detail::VecOps::TVecAllocator<double> alloc(ref.data(), ref.size());
-   std::vector<double, ROOT::Detail::VecOps::TVecAllocator<double>> w(ref.size(), 0, alloc);
+   ROOT::Experimental::VecOps::TVec<double> w(ref.data(), ref.size());
    plus = w + vec;
    minus = w - vec;
    mult = w * vec;
@@ -104,8 +102,7 @@ TEST(VecOps, MathVector)
    }
 
    // The same with 2 views
-   ROOT::Detail::VecOps::TVecAllocator<double> alloc2(ref.data(), ref.size());
-   std::vector<double, ROOT::Detail::VecOps::TVecAllocator<double>> w2(ref.size(), 0, alloc);
+   ROOT::Experimental::VecOps::TVec<double> w2(ref.data(), ref.size());
    plus = w + w2;
    minus = w - w2;
    mult = w * w2;
@@ -117,6 +114,21 @@ TEST(VecOps, MathVector)
       EXPECT_EQ(mult[i], ref[i] * w2[i]);
       EXPECT_EQ(div[i], ref[i] / w2[i]);
    }
+}
+
+TEST(VecOps, Filter)
+{
+   using namespace ROOT::Experimental::VecOps;
+   TVec<int> v {0,1,2,3,4,5};
+   std::vector<int> vEvenRef {0,2,4};
+   std::vector<int> vOddRef {1,3,5};
+   auto vEven = v[ v % 2 == 0];
+   auto vOdd = v[ v % 2 == 1];
+   for (int i = 0 ; i < 3; ++i) {
+      EXPECT_EQ(vEven[i], vEvenRef[i]);
+      EXPECT_EQ(vOdd[i], vOddRef[i]);
+   }
+
 }
 
 template<typename T, typename V>
@@ -144,32 +156,39 @@ TEST(VecOps, PrintOps)
    CompAndPrintTVec(v, 2.);
    CompAndPrintTVec(v, ref+2);
 
-   ROOT::Detail::VecOps::TVecAllocator<int> alloc(ref.data(), ref.size());
-   std::vector<int, ROOT::Detail::VecOps::TVecAllocator<int>> w(ref.size(), 0, alloc);
+   ROOT::Experimental::VecOps::TVec<int> w(ref.data(), ref.size());
 
    CompAndPrintTVec(v, 2.);
    CompAndPrintTVec(v, ref+2);
 
 }
 
+void CheckEq(const char* name, const ROOT::Experimental::VecOps::TVec<double> v, const ROOT::Experimental::VecOps::TVec<double> w)
+{
+   auto wsize = w.size();
+   EXPECT_EQ(wsize, v.size());
+   for (unsigned int i = 0 ; i < wsize; i++) {
+      EXPECT_DOUBLE_EQ(v[i], w[i]) << " error while checking math function " << name;
+   }
+}
+
 TEST(VecOps, MathFuncs)
 {
    using namespace ROOT::Experimental::VecOps;
-   TVec<double> ref {1,2,3};
-   TVec<double> ref2 {11,12,13};
-   sqrt(ref);
-   log(ref);
-   sin(ref);
-   cos(ref);
-   asin(ref);
-   acos(ref);
-   tan(ref);
-   atan(ref);
-   sinh(ref);
-   cosh(ref);
-   asinh(ref);
-   acosh(ref);
-   tanh(ref);
-   atanh(ref);
-
+   TVec<double> v {1,2,3};
+   CheckEq("sqrt", sqrt(v), Map(v, [](double x){ return std::sqrt(x);}));
+   CheckEq("log",log(v), Map(v, [](double x){ return std::log(x);}));
+   CheckEq("sin",sin(v), Map(v, [](double x){ return std::sin(x);}));
+   CheckEq("cos",cos(v), Map(v, [](double x){ return std::cos(x);}));
+   CheckEq("asin",asin(v), Map(v, [](double x){ return std::asin(x);}));
+   CheckEq("acos",acos(v), Map(v, [](double x){ return std::acos(x);}));
+   CheckEq("tan",tan(v), Map(v, [](double x){ return std::tan(x);}));
+   CheckEq("atan",atan(v), Map(v, [](double x){ return std::atan(x);}));
+   v = v / 10.;
+   CheckEq("sinh",sinh(v), Map(v, [](double x){ return std::sinh(x);}));
+   CheckEq("cosh",cosh(v), Map(v, [](double x){ return std::cosh(x);}));
+   CheckEq("asinh",asinh(v), Map(v, [](double x){ return std::asinh(x);}));
+   CheckEq("acosh",acosh(v), Map(v, [](double x){ return std::acosh(x);}));
+   CheckEq("tanh",tanh(v), Map(v, [](double x){ return std::tanh(x);}));
+   CheckEq("atanh",atanh(v), Map(v, [](double x){ return std::atanh(x);}));
 }
