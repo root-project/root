@@ -47,6 +47,13 @@
 #include "TMVA/Event.h"
 #include "TMVA/LossFunction.h"
 
+// Multithreading only if the compilation flag is turned on
+#ifdef R__USE_IMT
+#include <memory>
+#include <ROOT/TThreadExecutor.hxx>
+#include "TSystem.h"
+#endif
+
 namespace TMVA {
 
    class SeparationBase;
@@ -54,6 +61,7 @@ namespace TMVA {
    class MethodBDT : public MethodBase {
 
    public:
+
       // constructor for training and reading
       MethodBDT( const TString& jobName,
                  const TString& methodTitle,
@@ -101,6 +109,18 @@ namespace TMVA {
       // get the actual forest size (might be less than fNTrees, the requested one, if boosting is stopped early
       UInt_t   GetNTrees() const {return fForest.size();}
    private:
+
+      // #### Multithreading only if the compilation flag is turned on
+
+      #ifdef R__USE_IMT
+      UInt_t fNumPoolThreads = 1;
+
+      // #### number of threads in the pool
+      UInt_t GetNumThreadsInPool(){
+         return ROOT::GetImplicitMTPoolSize();
+      };
+      #endif
+
       Double_t GetMvaValue( Double_t* err, Double_t* errUpper, UInt_t useNTrees );
       Double_t PrivateGetMvaValue( const TMVA::Event *ev, Double_t* err=0, Double_t* errUpper=0, UInt_t useNTrees=0 );
       void     BoostMonitor(Int_t iTree);
