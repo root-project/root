@@ -32,7 +32,7 @@ Issues:
 
 * Get rid of ClassDefs ?
 
-* What does redraw do? We know hich elements / scenes have changed.
+* What does redraw do? We know which elements / scenes have changed.
   Has to be synchronized with expectations of the client.
 
 * Event scene / EventManager - is it needed?
