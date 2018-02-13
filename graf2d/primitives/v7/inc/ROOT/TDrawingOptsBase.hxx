@@ -16,14 +16,15 @@
 #ifndef ROOT7_TDrawingOptsBase
 #define ROOT7_TDrawingOptsBase
 
+#include <ROOT/TDrawingAttr.hxx>
+
+
 #include <RStringView.h>
 #include <utility>
 #include <vector>
 
 namespace ROOT {
 namespace Experimental {
-
-class TDrawingAttrOrRefBase;
 
 class TDrawingOptsBase {
 private:
