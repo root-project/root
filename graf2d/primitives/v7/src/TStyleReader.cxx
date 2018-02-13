@@ -94,7 +94,7 @@ bool TStyleReader::AddFromStyleFile(const std::string &filename)
          noSpaceLine.remove_prefix(1); // [
          noSpaceLine.remove_suffix(1); // ]
          noSpaceLine = TrimWhitespace(noSpaceLine);
-         styleName = noSpaceLine;
+         styleName = std::string(noSpaceLine);
          continue;
       }
 
