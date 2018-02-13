@@ -144,16 +144,15 @@
 // GL-interface
 #pragma link C++ class ROOT::Experimental::TEveScene+;
 #pragma link C++ class ROOT::Experimental::TEveSceneList+;
-#pragma link C++ class ROOT::Experimental::TEveSceneInfo+;
+// #pragma link C++ class ROOT::Experimental::TEveSceneInfo+;
 #pragma link C++ class ROOT::Experimental::TEveViewer+;
 #pragma link C++ class ROOT::Experimental::TEveViewerList+;
-#pragma link C++ class ROOT::Experimental::TEveViewerListEditor+;
 
 // TEvePad
 // #pragma link C++ class TEvePad+;
 
 // TEveMacro
-#pragma link C++ class ROOT::Experimental::TEveMacro+;
+// #pragma link C++ class ROOT::Experimental::TEveMacro+;
 
 // Projections / non-linear transformations
 #pragma link C++ class ROOT::Experimental::TEveProjectable+;
@@ -170,14 +169,13 @@
 #pragma link C++ class ROOT::Experimental::TEve3DProjection+;
 
 #pragma link C++ class ROOT::Experimental::TEveProjectionManager+;
-#pragma link C++ class ROOT::Experimental::TEveProjectionAxes+;
+// #pragma link C++ class ROOT::Experimental::TEveProjectionAxes+;
 
 // Generic configuration
 // #pragma link C++ class TEveParamList;
 // #pragma link C++ class TEveParamList::FloatConfig_t+;
 // #pragma link C++ class TEveParamList::IntConfig_t+;
 // #pragma link C++ class TEveParamList::BoolConfig_t+;
-// #pragma link C++ class TEveParamListEditor+;
 
 // TEveTrack
 #pragma link C++ class ROOT::Experimental::TEveTrack+;
@@ -194,7 +192,6 @@
 // TEvePointSet
 #pragma link C++ class ROOT::Experimental::TEvePointSet+;
 #pragma link C++ class ROOT::Experimental::TEvePointSetArray+;
-#pragma link C++ class ROOT::Experimental::TEvePointSetArrayEditor+;
 #pragma link C++ class ROOT::Experimental::TEvePointSetProjected+;
 
 // TEveLine

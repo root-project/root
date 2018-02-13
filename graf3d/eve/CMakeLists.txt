@@ -2,11 +2,6 @@
 # CMakeLists.txt file for building ROOT graf3d/eve package
 ############################################################################
 
-#if(root7)
-    ROOT_GLOB_SOURCES(Eve_v7_sources      ${CMAKE_CURRENT_SOURCE_DIR}/v7/src/*.cxx)
-    ROOT_GLOB_HEADERS(Eve_v7_dict_headers ${CMAKE_CURRENT_SOURCE_DIR}/v7/inc/ROOT/*.hxx)
-#endif()
-
 include_directories(${OPENGL_INCLUDE_DIR})
 
 set(headers1 TEveBrowser.h TEveChunkManager.h TEveCompound.h
@@ -36,13 +31,8 @@ if(MSVC)
   ROOT_INSTALL_HEADERS()
 else()
   ROOT_STANDARD_LIBRARY_PACKAGE(Eve
-    # HEADERS   ${headers1} ${headers2} ${Eve_v7_dict_headers}
-    # SOURCES   *.cxx ${Eve_v7_sources}
-    # LIBRARIES ${OPENGL_LIBRARIES} GLEW ${FTGL_LIBRARIES}
-    # DEPENDENCIES Core Geom Ged RGL Physics EG)
-    HEADERS   ${Eve_v7_dict_headers}
-    SOURCES   ${Eve_v7_sources}
-    LIBRARIES 
-    DEPENDENCIES Core Geom Physics EG TreePlayer)
+    HEADERS   ${headers1} ${headers2}
+    SOURCES   ${CMAKE_CURRENT_SOURCE_DIR}/src/*.cxx
+    LIBRARIES ${OPENGL_LIBRARIES} GLEW ${FTGL_LIBRARIES}
+    DEPENDENCIES Core Geom Ged RGL Physics EG)
 endif()
-
