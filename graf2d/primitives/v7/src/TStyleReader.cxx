@@ -107,7 +107,7 @@ bool TStyleReader::AddFromStyleFile(const std::string &filename)
          continue;
       }
 
-      fAttrs[styleName].GetAttribute(std::string(keyValue[0])) = keyValue[1];
+      fAttrs[styleName].GetAttribute(std::string(keyValue[0])) = std::string(keyValue[1]);
    }
    return true;
 }
