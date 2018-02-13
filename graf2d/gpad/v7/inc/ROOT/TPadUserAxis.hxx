@@ -72,6 +72,14 @@ private:
    /// End of the axis range (but see fBoundsKind)
    double fEnd = 1.;
 
+   /// For (pos-min)/(max-min) calculations, return a sensible, div-by-0 protected denominator.
+   double GetSensibleDenominator() const
+   {
+      if (fBegin < fEnd)
+         return std::max(std::numeric_limits<double>::min(), fEnd - fBegin);
+      return std::min(-std::numeric_limits<double>::min(), fEnd - fBegin);
+   }
+
 public:
    /// Construct a cartesian axis with automatic axis bounds.
    TPadCartesianUserAxis() = default;
