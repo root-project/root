@@ -18,7 +18,6 @@
 #include "ROOT/THistDrawable.hxx"
 #include "ROOT/TVirtualCanvasPainter.hxx"
 #include "ROOT/TDisplayItem.hxx"
-#include "TH1.h"
 
 #include <iostream>
 #include <cassert>
