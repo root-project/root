@@ -163,7 +163,7 @@ TEST(VecOps, PrintOps)
 
 }
 
-void CheckEq(const char* name, const ROOT::Experimental::VecOps::TVec<double> v, const ROOT::Experimental::VecOps::TVec<double> w)
+void CheckEq(std::string_view name, const ROOT::Experimental::VecOps::TVec<double> v, const ROOT::Experimental::VecOps::TVec<double> w)
 {
    auto wsize = w.size();
    EXPECT_EQ(wsize, v.size());
@@ -180,15 +180,15 @@ TEST(VecOps, MathFuncs)
    CheckEq("log",log(v), Map(v, [](double x){ return std::log(x);}));
    CheckEq("sin",sin(v), Map(v, [](double x){ return std::sin(x);}));
    CheckEq("cos",cos(v), Map(v, [](double x){ return std::cos(x);}));
-   CheckEq("asin",asin(v), Map(v, [](double x){ return std::asin(x);}));
-   CheckEq("acos",acos(v), Map(v, [](double x){ return std::acos(x);}));
    CheckEq("tan",tan(v), Map(v, [](double x){ return std::tan(x);}));
    CheckEq("atan",atan(v), Map(v, [](double x){ return std::atan(x);}));
-   v = v / 10.;
    CheckEq("sinh",sinh(v), Map(v, [](double x){ return std::sinh(x);}));
    CheckEq("cosh",cosh(v), Map(v, [](double x){ return std::cosh(x);}));
+   CheckEq("tanh",tanh(v), Map(v, [](double x){ return std::tanh(x);}));
    CheckEq("asinh",asinh(v), Map(v, [](double x){ return std::asinh(x);}));
    CheckEq("acosh",acosh(v), Map(v, [](double x){ return std::acosh(x);}));
-   CheckEq("tanh",tanh(v), Map(v, [](double x){ return std::tanh(x);}));
+   v = v / 10.;
+   CheckEq("asin",asin(v), Map(v, [](double x){ return std::asin(x);}));
+   CheckEq("acos",acos(v), Map(v, [](double x){ return std::acos(x);}));
    CheckEq("atanh",atanh(v), Map(v, [](double x){ return std::atanh(x);}));
 }
