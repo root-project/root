@@ -108,6 +108,7 @@ the selection.
 
 
 #include "TMVA/MethodBDT.h"
+#include "TMVA/Config.h"
 
 #include "TMVA/BDTEventWrapper.h"
 #include "TMVA/BinarySearchTree.h"
