@@ -7,6 +7,8 @@ if(EXISTS $ENV{CEF_PATH})
 
 set(libname ROOTCefDisplay)
 
+set(cefweb ON)
+
 ROOT_GLOB_SOURCES(CEF_sources src/simple_app.cxx src/base_handler.cxx src/osr_handler.cxx src/gui_handler.cxx)
 
 if(ROOT_ARCHITECTURE MATCHES macosx)
@@ -43,9 +45,7 @@ ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:ROOTCefDisplayObjs>
                     
 # ROOT_INSTALL_HEADERS()
 
-if(DEFINED CEF_MAIN)
-  ROOT_EXECUTABLE(cef_main ${CEF_MAIN} LIBRARIES ${CEF_LIBRARY} ${CEF_DLL_WRAPPER})
-endif()
+ROOT_EXECUTABLE(cef_main ${CEF_MAIN} LIBRARIES ${CEF_LIBRARY} ${CEF_DLL_WRAPPER})
 
 endif()
 endif()
