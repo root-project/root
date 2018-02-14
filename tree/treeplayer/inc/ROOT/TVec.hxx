@@ -22,6 +22,7 @@
 #include <sstream>
 #include <stdexcept>
 #include <vector>
+#include <utility>
 
 namespace ROOT {
 
@@ -496,6 +497,18 @@ template <typename T, typename F>
 TVec<typename TCallTraits<F>::ret_type> Map(const TVec<T> &v, F f)
 {
    return ROOT::Internal::VecOps::Operate(v, f);
+}
+
+template <typename T, typename F>
+TVec<T> Filter(TVec<T> &v, F f)
+{
+   TVec<T> w; w.reserve(v.size());
+   for(auto &&x : v) {
+      if (f(x)) {
+         w.emplace_back(x);
+      }
+   }
+   return w;
 }
 
 template <class T>
