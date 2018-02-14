@@ -71,8 +71,8 @@ int largeStandaloneBasket()
    }
    auto duplicates(ps2->GetDuplicateBasketCache());
    if (!duplicates.empty()) {
-      Error("largeStandaloneBasket", "For %s: %ld branches have duplicate basket reads", t2->GetName(),
-            duplicates.size());
+      Error("largeStandaloneBasket", "For %s: %d branches have duplicate basket reads", t2->GetName(),
+            (int)duplicates.size());
    }
    ps2->Print("basket");
    ps2->SaveAs("t2.root");
@@ -215,7 +215,7 @@ int largeWithSkip(bool skip = true, bool split = true, bool wrongOrder = true, i
    }
    auto duplicates(ps2->GetDuplicateBasketCache());
    if (!duplicates.empty()) {
-      Error("largeWithSkip", "For %s: %ld branches have duplicate basket reads", config.Data(), duplicates.size());
+      Error("largeWithSkip", "For %s: %d branches have duplicate basket reads", config.Data(), (int)duplicates.size());
    }
    ps2->Print("basket");
    ps2->SaveAs("t1.root");
@@ -383,7 +383,7 @@ int tooSmall(bool skip = false, bool split = false, bool wrongOrder = false, boo
    }
    auto duplicates(ps2->GetDuplicateBasketCache());
    if (!duplicates.empty()) {
-      Error("tooSmall", "For %s: %ld branches have duplicate basket reads", config.Data(), duplicates.size());
+      Error("tooSmall", "For %s: %d branches have duplicate basket reads", config.Data(), (int)duplicates.size());
    }
    ps2->Print("basket");
    ps2->SaveAs("t1.root");
@@ -515,7 +515,7 @@ int regular(bool skip = false, bool wrongOrder = false, bool uselarge = true, in
    }
    auto duplicates(ps1->GetDuplicateBasketCache());
    if (!duplicates.empty()) {
-      Error("regular", "For %s: %ld branches have duplicate basket reads", config.Data(), duplicates.size());
+      Error("regular", "For %s: %d branches have duplicate basket reads", config.Data(), (int)duplicates.size());
    }
    ps1->Print("basket");
    ps1->SaveAs("t1.root");
