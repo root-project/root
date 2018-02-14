@@ -19,11 +19,11 @@
 #pragma link C++ class ROOT::Experimental::TPalette+;
 #pragma link C++ class ROOT::Experimental::TColor+;
 #pragma link C++ class ROOT::Experimental::TStringEnumAttr+;
-#pragma link C++ class ROOT::Experimental::TDrawingAttrOrRefBase+;
-#pragma link C++ class ROOT::Experimental::TDrawingAttrOrRef<ROOT::Experimental::TColor>+;
-#pragma link C++ class ROOT::Experimental::TDrawingAttrOrRef<int>+;
-#pragma link C++ class ROOT::Experimental::TDrawingAttrOrRef<float>+;
-#pragma link C++ class ROOT::Experimental::TDrawingAttrOrRef<ROOT::Experimental::TStringEnumAttr>+;
+#pragma link C++ class ROOT::Experimental::TDrawingAttrBase+;
+#pragma link C++ class ROOT::Experimental::TDrawingAttr<ROOT::Experimental::TColor>+;
+#pragma link C++ class ROOT::Experimental::TDrawingAttr<int>+;
+#pragma link C++ class ROOT::Experimental::TDrawingAttr<float>+;
+#pragma link C++ class ROOT::Experimental::TDrawingAttr<ROOT::Experimental::TStringEnumAttr>+;
 #pragma link C++ class ROOT::Experimental::TDrawingOptsBase+;
 #pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TCanvas>+;
 #pragma link C++ class ROOT::Experimental::TText+;

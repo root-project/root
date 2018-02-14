@@ -33,7 +33,7 @@ private:
 
 public:
    /// Register a TDrawingAttrOrRefBase. NOTE: the name's lifetime must be larger than this.
-   void AddAttr(TDrawingAttrOrRefBase& attr, const char *name)
+   void AddAttr(TDrawingAttrBase& attr, const char *name)
    {
       fAttrNameOffsets.push_back(std::pair<const char*, size_t>(name, (char*)&attr - (char*)this));
    }
@@ -41,7 +41,7 @@ public:
    /// Synchronize all shared attributes into their local copy.
    void SyncFromShared() {
       for (auto&& attrOffset: fAttrNameOffsets) {
-         reinterpret_cast<TDrawingAttrOrRefBase*>((char*)this + attrOffset.second)->SyncFromShared();
+         reinterpret_cast<TDrawingAttrBase*>((char*)this + attrOffset.second)->SyncFromShared();
       }
    }
 };

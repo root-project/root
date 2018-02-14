@@ -64,9 +64,9 @@ public:
 };
 
 class TextDrawingOpts: public TDrawingOptsBase {
-   TDrawingAttrOrRef<int> fLineWidth{*this, "Text.Line.Width", 3}; ///< The line width.
-   TDrawingAttrOrRef<TColor> fLineColor{*this, "Text.Line.Color", TColor::kBlack}; ///< The line color.
-   TDrawingAttrOrRef<TColor> fFillColor{*this, "Text.Fill.Color", TColor::kInvisible}; ///< The fill color.
+   TDrawingAttr<int> fLineWidth{*this, "Text.Line.Width", 3}; ///< The line width.
+   TDrawingAttr<TColor> fLineColor{*this, "Text.Line.Color", TColor::kBlack}; ///< The line color.
+   TDrawingAttr<TColor> fFillColor{*this, "Text.Fill.Color", TColor::kInvisible}; ///< The fill color.
 
 public:
    /// The color of the line.

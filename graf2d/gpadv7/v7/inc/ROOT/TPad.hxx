@@ -203,7 +203,7 @@ public:
  */
 
 class TPadDrawingOpts: public TDrawingOptsBase {
-   TDrawingAttrOrRef<TPadPos> fPos{*this, "PadOffset"}; ///< Offset with respect to parent TPad.
+   TDrawingAttr<TPadPos> fPos{*this, "PadOffset"}; ///< Offset with respect to parent TPad.
 
 public:
    /// Set the position of this pad with respect to the parent pad.
