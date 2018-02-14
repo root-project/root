@@ -149,7 +149,7 @@ void ROOT::Experimental::TFitPanel::DoFit(const std::string &dname, const std::s
       fFitHist->Fill(6);
       fFitHist->Fill(7);
 
-      fCanvas->Draw(fFitHist).SetLineColor(Experimental::TColor::kBlue);
+      fCanvas->Draw(fFitHist)->GetOptions().SetLineColor(Experimental::TColor::kBlue);
 
       // workaround to keep histogram in the lists
       ROOT::Experimental::TDirectory::Heap().Add("fitaxis", xaxis);
