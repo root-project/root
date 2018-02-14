@@ -12,6 +12,9 @@
 // Stdlib
 #include <iostream>
 
+// External
+#include "gtest/gtest.h"
+
 using TRandom1StdGen = TMVA::RandomGenerator<TRandom1, UInt_t, kMaxUInt << 2>;
 using TRandom2StdGen = TMVA::RandomGenerator<TRandom2, UInt_t, kMaxUInt << 2>;
 using TRandom3StdGen = TMVA::RandomGenerator<TRandom3>;
@@ -90,12 +93,17 @@ void test_example()
    std::cout << std::endl;
 }
 
-int main()
+TEST(RandomGenerator, print)
 {
-
    test_print(10);
-   test_discard(10);
-   test_example();
+}
 
-   return 0;
+TEST(RandomGenerator, discard)
+{
+   test_discard(10);
+}
+
+TEST(RandomGenerator, example)
+{
+   test_example();
 }

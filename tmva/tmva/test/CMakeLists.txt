@@ -6,12 +6,10 @@
 set(Libraries TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 
-# Tests
-ROOT_EXECUTABLE(TestRandomGenerator
-                TestRandomGenerator.cxx
-                LIBRARIES ${Libraries})
-ROOT_ADD_TEST(TMVA-RandomGenerator
-              COMMAND TestRandomGenerator)
+# Tests using google test
+ROOT_ADD_GTEST(TestRandomGenerator
+               TestRandomGenerator.cxx
+               LIBRARIES ${Libraries})
 
 # Subdirectories
 ROOT_ADD_TEST_SUBDIRECTORY(test/crossvalidation)
