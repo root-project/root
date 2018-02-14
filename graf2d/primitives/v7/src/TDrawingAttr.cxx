@@ -20,10 +20,10 @@
 
 
 // pin vtable.
-ROOT::Experimental::TDrawingAttrOrRefBase::~TDrawingAttrOrRefBase() = default;
+ROOT::Experimental::TDrawingAttrBase::~TDrawingAttrBase() = default;
 
 /// Register an attribute with the TDrawingOptionsBase.
-ROOT::Experimental::TDrawingAttrOrRefBase::TDrawingAttrOrRefBase(Internal_t, TDrawingOptsBase& owner, const char *name)
+void ROOT::Experimental::TDrawingAttrBase::Register(TDrawingOptsBase& owner, const char *name)
 {
    owner.AddAttr(*this, name);
 }
