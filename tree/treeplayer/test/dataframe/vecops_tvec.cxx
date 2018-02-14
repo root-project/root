@@ -175,6 +175,14 @@ TEST(VecOps, Filter)
       EXPECT_EQ(vEven[i], vEvenRef[i]);
       EXPECT_EQ(vOdd[i], vOddRef[i]);
    }
+
+   // now with the helper function
+   vEven = Filter(v, [](int i) {return 0 == i%2;});
+   vOdd = Filter(v, [](int i) {return 1 == i%2;});
+   for (int i = 0; i < 3; ++i) {
+      EXPECT_EQ(vEven[i], vEvenRef[i]);
+      EXPECT_EQ(vOdd[i], vOddRef[i]);
+   }
 }
 
 template <typename T, typename V>
