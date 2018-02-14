@@ -55,7 +55,7 @@ namespace VecOps {
 
 using namespace ROOT::Experimental::VecOps;
 
-void CheckSizes(size_t s0, size_t s1, std::string_view opName)
+void CheckSizes(std::size_t s0, std::size_t s1, std::string_view opName)
 {
    if (s0 != s1) {
       std::stringstream err;
@@ -178,7 +178,7 @@ public:
       ROOT::Internal::VecOps::CheckSizes(thisSize, conds.size(), "operator[]");
       TVec<T> w;
       w.reserve(thisSize);
-      for (size_t i = 0; i < thisSize; i++) {
+      for (std::size_t i = 0; i < thisSize; i++) {
          if (conds[i])
             w.emplace_back(fData[i]);
       }
@@ -507,7 +507,7 @@ std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
    os << "{ ";
    auto size = v.size();
    if (size) {
-      for (size_t i = 0; i < size - 1; ++i) {
+      for (std::size_t i = 0; i < size - 1; ++i) {
          os << (Print_t)v[i] << ", ";
       }
       os << (Print_t)v[size - 1];
