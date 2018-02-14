@@ -81,27 +81,30 @@ public:
 
    /// Add something to be painted.
    /// The pad observes what's lifetime through a weak pointer.
-   template <class T>
-   auto &Draw(const std::shared_ptr<T> &what)
+   /// Drawing options will be constructed through `args`, which can be empty for default-constructed options.
+   template <class T, class... ARGS>
+   auto Draw(const std::shared_ptr<T> &what, ARGS... args)
    {
       // Requires GetDrawable(what) to be known!
-      return AddDrawable(GetDrawable(what));
+      return AddDrawable(GetDrawable(what, args...));
    }
 
    /// Add something to be painted. The pad claims ownership.
-   template <class T>
-   auto &Draw(std::unique_ptr<T> &&what)
+   /// Drawing options will be constructed through `args`, which can be empty for default-constructed options.
+   template <class T, class... ARGS>
+   auto Draw(std::unique_ptr<T> &&what, ARGS... args)
    {
       // Requires GetDrawable(what) to be known!
-      return AddDrawable(GetDrawable(std::move(what)));
+      return AddDrawable(GetDrawable(std::move(what), args...));
    }
 
    /// Add a copy of something to be painted.
-   template <class T, class = typename std::enable_if<!ROOT::TypeTraits::IsSmartOrDumbPtr<T>::value>::type>
-   auto &Draw(const T &what)
+   /// Drawing options will be constructed through `args`, which can be empty for default-constructed options.
+   template <class T, class... ARGS, class = typename std::enable_if<!ROOT::TypeTraits::IsSmartOrDumbPtr<T>::value>::type>
+   auto Draw(const T &what, ARGS... args)
    {
       // Requires GetDrawable(what) to be known!
-      return Draw(std::make_unique<T>(what));
+      return Draw(std::make_unique<T>(what), args...);
    }
 
    /// Remove an object from the list of primitives.
@@ -205,6 +208,11 @@ class TPadDrawingOpts: public TDrawingOptsBase {
    TDrawingAttr<TPadPos> fPos{*this, "PadOffset"}; ///< Offset with respect to parent TPad.
 
 public:
+   TPadDrawingOpts() = default;
+
+   /// Construct the drawing options.
+   TPadDrawingOpts(const TPadPos& pos): fPos(*this, "PadOffset", pos) {}
+
    /// Set the position of this pad with respect to the parent pad.
    TPadDrawingOpts &At(const TPadPos &pos)
    {
@@ -223,7 +231,7 @@ private:
 
 public:
    /// Move a sub-pad into this (i.e. parent's) list of drawables.
-   TPadDrawable(std::unique_ptr<TPad> &&pPad);
+   TPadDrawable(std::unique_ptr<TPad> &&pPad, const TPadDrawingOpts& opts = {});
 
    /// Paint the pad.
    void Paint(Internal::TVirtualCanvasPainter & /*canv*/) final
@@ -236,10 +244,10 @@ public:
    /// Drawing options.
    TPadDrawingOpts &GetOptions() { return fOpts; }
 };
-
-inline std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad)
+template <class... ARGS>
+inline std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, ARGS... args)
 {
-   return std::make_unique<TPadDrawable>(std::move(pad));
+   return std::make_unique<TPadDrawable>(std::move(pad), TPadDrawingOpts(args...));
 }
 
 } // namespace Experimental
