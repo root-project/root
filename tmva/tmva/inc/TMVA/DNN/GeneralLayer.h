@@ -29,6 +29,9 @@
 
 #include <iostream>
 
+// for xml
+#include "TMVA/Tools.h"
+
 namespace TMVA {
 namespace DNN {
 
@@ -127,6 +130,12 @@ public:
    /*! Prints the info about the layer. */
    virtual void Print() const = 0;
 
+   /*! Writes the information and the weights about the layer in an XML node. */
+   virtual void AddWeightsXMLTo(void *parent) = 0;
+
+   /*! Read the information and the weights about the layer from XML node. */
+   virtual void ReadWeightsFromXML(void *parent) = 0;
+
    /*! Getters */
    size_t GetBatchSize() const { return fBatchSize; }
    size_t GetInputDepth() const { return fInputDepth; }
@@ -184,6 +193,13 @@ public:
    void SetHeight(size_t height) { fHeight = height; }
    void SetWidth(size_t width) { fWidth = width; }
    void SetIsTraining(bool isTraining) { fIsTraining = isTraining; }
+
+   /// helper functions for XML
+   void WriteTensorToXML( void * node, const char * name, const std::vector<Matrix_t> & tensor); 
+   void WriteMatrixToXML( void * node, const char * name, const Matrix_t & matrix);
+
+   void ReadMatrixXML( void * node, const char * name, Matrix_t & matrix);
+   
 };
 
 //
@@ -430,6 +446,77 @@ auto VGeneralLayer<Architecture_t>::CopyBiases(const std::vector<Matrix_t> &othe
 {
    for (size_t i = 0; i < fBiases.size(); i++) {
       Architecture_t::Copy(fBiases[i], otherBiases[i]);
+   }
+}
+
+
+//_________________________________________________________________________________________________
+template <typename Architecture_t>
+auto VGeneralLayer<Architecture_t>::WriteTensorToXML(void * node, const char * name, const std::vector<Matrix_t> & tensor) -> void
+{
+   auto xmlengine = gTools().xmlengine(); 
+   void* matnode = xmlengine.NewChild(node, 0, name);
+   if (tensor.size() == 0) return; 
+   auto & mat = tensor[0];
+   xmlengine.NewAttr(matnode,0,"Depth", gTools().StringFromInt(tensor.size()) );
+   // assume same number of rows and columns for every matrix in std::vector
+   xmlengine.NewAttr(matnode,0,"Rows", gTools().StringFromInt(tensor[0].GetNrows()) );
+   xmlengine.NewAttr(matnode,0,"Columns", gTools().StringFromInt(tensor[0].GetNcols()) );
+   std::stringstream s;
+   for (size_t i = 0; i < tensor.size(); ++i) {
+      auto & mat = tensor[i];
+      for (Int_t row = 0; row < mat.GetNrows(); row++) {
+         for (Int_t col = 0; col < mat.GetNcols(); col++) {
+            TString tmp = TString::Format( "%5.15e ", (mat)(row,col) );
+            s << tmp.Data(); 
+         }
+      }
+   }
+   xmlengine.AddRawLine( matnode, s.str().c_str() );
+}
+
+//_________________________________________________________________________________________________
+template <typename Architecture_t>
+auto VGeneralLayer<Architecture_t>::WriteMatrixToXML(void * node, const char * name, const Matrix_t & matrix) -> void
+{
+   auto xmlengine = gTools().xmlengine(); 
+   void* matnode = xmlengine.NewChild(node, 0, name);
+
+   xmlengine.NewAttr(matnode,0,"Rows", gTools().StringFromInt(matrix.GetNrows()) );
+   xmlengine.NewAttr(matnode,0,"Columns", gTools().StringFromInt(matrix.GetNcols()) );
+   std::stringstream s;
+   s.precision( 16 );
+   for (Int_t row = 0; row < matrix.GetNrows(); row++) {
+      for (Int_t col = 0; col < matrix.GetNcols(); col++) {
+         //TString tmp = TString::Format( "%5.15e ", matrix(row,col) );
+         s << std::scientific <<  matrix(row,col) << "  ";
+      }
+   }
+
+   xmlengine.AddRawLine( matnode, s.str().c_str() );
+}
+
+//_________________________________________________________________________________________________
+template <typename Architecture_t>
+auto VGeneralLayer<Architecture_t>::ReadMatrixXML(void * node, const char * name, Matrix_t & matrix) -> void
+{
+   void *matrixXML = gTools().GetChild(node, name);
+   size_t rows, cols;
+   gTools().ReadAttr(matrixXML, "Rows", rows);
+   gTools().ReadAttr(matrixXML, "Columns", cols);
+
+   R__ASSERT(matrix.GetNrows() == rows); 
+   R__ASSERT(matrix.GetNcols() == cols); 
+
+   const char * matrixString = gTools().xmlengine().GetNodeContent(matrixXML);
+   std::stringstream matrixStringStream(matrixString);
+
+   for (size_t i = 0; i < rows; i++)
+   {
+      for (size_t j = 0; j < cols; j++)
+      {
+         matrixStringStream >> matrix(i,j);
+      }
    }
 }
 

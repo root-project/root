@@ -98,6 +98,13 @@ public:
    void Backward(std::vector<Matrix_t> &gradients_backward, const std::vector<Matrix_t> &activations_backward,
                  std::vector<Matrix_t> &inp1, std::vector<Matrix_t> &inp2);
 
+   /*! Writes the information and the weights about the layer in an XML node. */
+   virtual void AddWeightsXMLTo(void *parent);
+
+   /*! Read the information and the weights about the layer from XML node. */
+   virtual void ReadWeightsFromXML(void *parent);
+
+
    /*! Prints the info about the layer. */
    void Print() const;
 
@@ -204,6 +211,27 @@ auto TMaxPoolLayer<Architecture_t>::Print() const -> void
 
    std::cout << "\t\t\t Frame Width = " << this->GetFrameWidth() << std::endl;
    std::cout << "\t\t\t Frame Height = " << this->GetFrameHeight() << std::endl;
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TMaxPoolLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
+{
+   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "MaxPoolLayer");
+
+   // write  maxpool layer info
+   gTools().xmlengine().NewAttr(layerxml, 0, "FrameHeight", gTools().StringFromInt(this->GetFrameHeight()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "FrameWidth", gTools().StringFromInt(this->GetFrameWidth()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "StrideRows", gTools().StringFromInt(this->GetStrideRows()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "StrideCols", gTools().StringFromInt(this->GetStrideCols()));
+
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TMaxPoolLayer<Architecture_t>::ReadWeightsFromXML(void * /*parent */)
+{
+   // all info is read before - nothing to do 
 }
 
 } // namespace CNN

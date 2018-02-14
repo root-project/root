@@ -88,6 +88,13 @@ public:
 
    void Print() const;
 
+   /*! Writes the information and the weights about the layer in an XML node. */
+   virtual void AddWeightsXMLTo(void * /* parent */ ) {}
+
+   /*! Read the information and the weights about the layer from XML node. */
+   virtual void ReadWeightsFromXML(void * /* parent */ ) {}
+
+
    size_t GetVisibleUnits() const { return fVisibleUnits; }
    size_t GetHiddenUnits() const {return fHiddenUnits;}
    size_t GetType() const {return fType;}
