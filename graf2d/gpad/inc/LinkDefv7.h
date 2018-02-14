@@ -22,7 +22,7 @@
 #pragma link C++ class ROOT::Experimental::Detail::TArgsMenuItem+;
 #pragma link C++ class ROOT::Experimental::TMenuItems+;
 #pragma link C++ class ROOT::Experimental::TObjectDrawable+;
-#pragma link C++ class ROOT::Experimental::Detail::TPadUserCoordBase+;
+#pragma link C++ class ROOT::Experimental::Detail::TPadUserAxisBase+;
 #pragma link C++ class ROOT::Experimental::TPadCartesianUserAxis+;
 #pragma link C++ struct ROOT::Experimental::Internal::TPadHorizVert+;
 #pragma link C++ struct ROOT::Experimental::TPadExtent+;
