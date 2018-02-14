@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveGeoShape
-#define ROOT_TEveGeoShape
+#ifndef ROOT_TEveGeoShape_hxx
+#define ROOT_TEveGeoShape_hxx
 
 #include "ROOT/TEveShape.hxx"
 

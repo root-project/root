@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEvePolygonSetProjected
-#define ROOT_TEvePolygonSetProjected
+#ifndef ROOT_TEvePolygonSetProjected_hxx
+#define ROOT_TEvePolygonSetProjected_hxx
 
 #include "ROOT/TEveVector.hxx"
 #include "ROOT/TEveShape.hxx"

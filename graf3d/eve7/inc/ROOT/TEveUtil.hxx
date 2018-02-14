@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveUtil
-#define ROOT_TEveUtil
+#ifndef ROOT_TEveUtil_hxx
+#define ROOT_TEveUtil_hxx
 
 #include "TObject.h"
 #include "TString.h"

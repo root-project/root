@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveLine
-#define ROOT_TEveLine
+#ifndef ROOT_TEveLine_hxx
+#define ROOT_TEveLine_hxx
 
 #include "ROOT/TEvePointSet.hxx"
 #include "ROOT/TEveVector.hxx"

@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveSelection
-#define ROOT_TEveSelection
+#ifndef ROOT_TEveSelection_hxx
+#define ROOT_TEveSelection_hxx
 
 #include "ROOT/TEveElement.hxx"
 

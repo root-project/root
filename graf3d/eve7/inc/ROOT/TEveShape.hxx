@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveShape
-#define ROOT_TEveShape
+#ifndef ROOT_TEveShape_hxx
+#define ROOT_TEveShape_hxx
 
 #include "ROOT/TEveElement.hxx"
 #include "ROOT/TEveVector.hxx"
