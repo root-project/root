@@ -37,9 +37,9 @@ public:
    class DrawingOpts: public TDrawingOptsBase {
    public:
       /// Position of the frame in parent TPad coordinates.
-      TDrawingAttrOrRef<TPadPos> fPos{*this, "frame.pos", 0.1_normal, 0.1_normal};
+      TDrawingAttr<TPadPos> fPos{*this, "frame.pos", 0.1_normal, 0.1_normal};
       /// Size of the frame in parent TPad coordinates.
-      TDrawingAttrOrRef<TPadExtent> fSize{*this, "frame.size", 0.8_normal, 0.8_normal};
+      TDrawingAttr<TPadExtent> fSize{*this, "frame.size", 0.8_normal, 0.8_normal};
    };
 
 private:
