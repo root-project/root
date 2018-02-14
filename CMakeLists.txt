@@ -410,16 +410,16 @@ if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_INSTALL_PREFIX)
     install(DIRECTORY README DESTINATION ${CMAKE_INSTALL_DOCDIR})
   endif()
   install(DIRECTORY etc/ DESTINATION ${CMAKE_INSTALL_SYSCONFDIR} USE_SOURCE_PERMISSIONS
-                         REGEX system.rootrc EXCLUDE
-                         REGEX system.rootauthrc EXCLUDE
-                         REGEX system.rootdaemonrc EXCLUDE
-                         REGEX rootd.rc.d EXCLUDE
-                         REGEX proofd.rc.d EXCLUDE
-                         REGEX rootd.xinetd EXCLUDE
-                         REGEX proofd.xinetd EXCLUDE
-                         REGEX root.mimes EXCLUDE
+                         REGEX "/system.rootrc$" EXCLUDE
+                         REGEX "/system.rootauthrc$" EXCLUDE
+                         REGEX "/system.rootdaemonrc$" EXCLUDE
+                         REGEX "/rootd.rc.d$" EXCLUDE
+                         REGEX "/proofd.rc.d$" EXCLUDE
+                         REGEX "/rootd.xinetd$" EXCLUDE
+                         REGEX "/proofd.xinetd$" EXCLUDE
+                         REGEX "/root.mimes$" EXCLUDE
                          REGEX "/cmake$" EXCLUDE
-                         REGEX /http EXCLUDE )
+                         REGEX "/http$" EXCLUDE )
   install(DIRECTORY fonts/  DESTINATION ${CMAKE_INSTALL_FONTDIR})
   install(DIRECTORY icons/  DESTINATION ${CMAKE_INSTALL_ICONDIR})
   install(DIRECTORY macros/ DESTINATION ${CMAKE_INSTALL_MACRODIR})
