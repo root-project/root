@@ -68,6 +68,7 @@ Class that contains all the data information
 #include "TMVA/DataInputHandler.h"
 #include "TMVA/Event.h"
 
+#include "TMVA/Tools.h"
 #include "TMVA/Types.h"
 #include "TMVA/VariableInfo.h"
 
@@ -985,7 +986,7 @@ TMVA::DataSetFactory::MixEvents( DataSetInfo& dsi,
                                  const TString& normMode,
                                  UInt_t splitSeed)
 {
-   TMVA::RandomGenerator rndm(splitSeed);
+   TMVA::RandomGenerator<TRandom3> rndm(splitSeed);
 
    // ==== splitting of undefined events to kTraining and kTesting
 
