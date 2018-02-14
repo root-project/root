@@ -16,6 +16,7 @@
 #include "TMVA/DataSetInfo.h"
 #include "TMVA/Event.h"
 #include "TMVA/MsgLogger.h"
+#include "TMVA/Tools.h"
 
 #include <TString.h>
 #include <TFormula.h>
@@ -293,7 +294,7 @@ std::vector<UInt_t> TMVA::CvSplitKFolds::GetEventIndexToFoldMapping(UInt_t nEntr
    }
 
    // Shuffle assignment
-   TMVA::RandomGenerator rng(seed);
+   TMVA::RandomGenerator<TRandom3> rng(seed);
    std::shuffle(fOrigToFoldMapping.begin(), fOrigToFoldMapping.end(), rng);
 
    return fOrigToFoldMapping;
