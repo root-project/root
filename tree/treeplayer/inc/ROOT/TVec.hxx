@@ -11,6 +11,8 @@
 #ifndef ROOT_TVEC
 #define ROOT_TVEC
 
+#include "RStringView.h"
+
 #include <ROOT/TVecAllocator.hxx>
 #include <ROOT/TypeTraits.hxx>
 
