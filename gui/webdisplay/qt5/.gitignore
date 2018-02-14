@@ -1,6 +1,0 @@
-Makefile
-rootqt5
-moc_rootwebview.cpp
-moc_rootwebpage.cpp
-.qmake.stash
-moc_predefs.h
