@@ -50,7 +50,7 @@ ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &pa
          subPos *= {1. * nHoriz, 1. * nVert};
          auto uniqPad = std::make_unique<TPad>(*this, size);
          ret[iHoriz][iVert] = uniqPad.get();
-         Draw(std::move(uniqPad)).At(subPos);
+         Draw(std::move(uniqPad), subPos);
       }
    }
    return ret;
@@ -58,7 +58,7 @@ ROOT::Experimental::TPadBase::Divide(int nHoriz, int nVert, const TPadExtent &pa
 
 ROOT::Experimental::TPad::~TPad() = default;
 
-ROOT::Experimental::TPadDrawable::TPadDrawable(std::unique_ptr<TPad> &&pPad)
-   : fPad(std::move(pPad))
+ROOT::Experimental::TPadDrawable::TPadDrawable(std::unique_ptr<TPad> &&pPad, const TPadDrawingOpts& opts /*= {}*/)
+   : fPad(std::move(pPad)), fOpts(opts)
 {
 }
