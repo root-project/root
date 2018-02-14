@@ -1402,7 +1402,7 @@ void TMVA::MethodBase::ReadStateFromFile()
 
    TString tfname(GetWeightFileName());
 
-   Log() << kDEBUG //<<Form("Dataset[%s] : ",DataInfo().GetName())
+   Log() << kINFO //<<Form("Dataset[%s] : ",DataInfo().GetName())
     << "Reading weight file: "
          << gTools().Color("lightblue") << tfname << gTools().Color("reset") << Endl;
 
@@ -1412,6 +1412,9 @@ void TMVA::MethodBase::ReadStateFromFile()
 #else
       void* doc = gTools().xmlengine().ParseFile(tfname);
 #endif
+      if (!doc) {
+         Log() << kFATAL << "Error parsing XML file " << tfname << Endl;
+      }
       void* rootnode = gTools().xmlengine().DocGetRootElement(doc); // node "MethodSetup"
       ReadStateFromXML(rootnode);
       gTools().xmlengine().FreeDoc(doc);
@@ -1458,8 +1461,10 @@ void TMVA::MethodBase::ReadStateFromXMLString( const char* xmlstr ) {
 
 void TMVA::MethodBase::ReadStateFromXML( void* methodNode )
 {
+
    TString fullMethodName;
    gTools().ReadAttr( methodNode, "Method", fullMethodName );
+
    fMethodName = fullMethodName(fullMethodName.Index("::")+2,fullMethodName.Length());
 
    // update logger

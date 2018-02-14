@@ -124,6 +124,13 @@ public:
    /** Prints the info about the layer */
    void Print() const;
 
+   /*! Writes the information and the weights about the layer in an XML node. */
+   virtual void AddWeightsXMLTo(void *parent);
+
+   /*! Read the information and the weights about the layer from XML node. */
+   virtual void ReadWeightsFromXML(void *parent);
+   
+
    /** Getters */
    size_t GetTimeSteps() const { return fTimeSteps; }
    size_t GetStateSize() const { return fStateSize; }
@@ -339,6 +346,23 @@ auto inline TBasicRNNLayer<Architecture_t>::CellBackward(Matrix_t & state_gradie
                                                  fBiasGradients, fDerivatives, precStateActivations, fWeightsInput,
                                                  fWeightsState, input, input_gradient);
 }
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TBasicRNNLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
+{
+   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "RNN Layer");
+
+   // write All other info like the depth, height, width etc ....
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TBasicRNNLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
+{
+   // Read all layer info from XML
+}
+
 
 } // namespace RNN
 } // namespace DNN

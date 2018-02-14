@@ -106,6 +106,12 @@ public:
    /*! Prints the info about the layer. */
    void Print() const;
 
+   /*! Writes the information and the weights about the layer in an XML node. */
+   virtual void AddWeightsXMLTo(void *parent);
+
+   /*! Read the information and the weights about the layer from XML node. */
+   virtual void ReadWeightsFromXML(void *parent);
+
    /*! Getters */
    size_t GetFilterDepth() const { return fFilterDepth; }
    size_t GetFilterHeight() const { return fFilterHeight; }
@@ -304,6 +310,45 @@ auto TConvLayer<Architecture_t>::Print() const -> void
    std::cout << "\t\t\t Local Views = " << this->GetNLocalViews()  << std::endl;
    std::cout << "\t\t\t Activation Function = " << static_cast<int>(fF) << std::endl;
 }
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TConvLayer<Architecture_t>::AddWeightsXMLTo(void *parent)
+{
+   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "ConvLayer");
+
+   gTools().xmlengine().NewAttr(layerxml, 0, "Depth", gTools().StringFromInt(this->GetDepth()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "FilterHeight", gTools().StringFromInt(this->GetFilterHeight()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "FilterWidth", gTools().StringFromInt(this->GetFilterWidth()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "StrideRows", gTools().StringFromInt(this->GetStrideRows()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "StrideCols", gTools().StringFromInt(this->GetStrideCols()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "PaddingHeight", gTools().StringFromInt(this->GetPaddingHeight()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "PaddingWidth", gTools().StringFromInt(this->GetPaddingWidth()));
+
+
+   int activationFunction = static_cast<int>(this -> GetActivationFunction());
+   gTools().xmlengine().NewAttr(layerxml, 0, "ActivationFunction",
+                                TString::Itoa(activationFunction, 10));
+
+   // write weights and bias matrix 
+   this->WriteMatrixToXML(layerxml, "Weights", this -> GetWeightsAt(0));
+   this->WriteMatrixToXML(layerxml, "Biases",  this -> GetBiasesAt(0));
+
+
+
+   // write All other info like the depth, height, width etc ....
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TConvLayer<Architecture_t>::ReadWeightsFromXML(void *parent)
+{
+   // read weights and biases
+   // rest is read before because it is needed before creating the Conv layer
+   this->ReadMatrixXML(parent,"Weights", this -> GetWeightsAt(0));
+   this->ReadMatrixXML(parent,"Biases", this -> GetBiasesAt(0));
+}
+
 
 } // namespace CNN
 } // namespace DNN

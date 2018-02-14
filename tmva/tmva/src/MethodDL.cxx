@@ -1436,15 +1436,206 @@ Double_t MethodDL::GetMvaValue(Double_t * /*errLower*/, Double_t * /*errUpper*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void MethodDL::AddWeightsXMLTo(void * /*parent*/) const
+void MethodDL::AddWeightsXMLTo(void * parent) const
 {
-   // TODO
+      // Create the parrent XML node with name "Weights"
+   auto & xmlEngine = gTools().xmlengine(); 
+   void* nn = xmlEngine.NewChild(parent, 0, "Weights");
+   
+   /*! Get all necessary information, in order to be able to reconstruct the net 
+    *  if we read the same XML file. */
+
+   // Deep Net specific info
+   Int_t depth = fNet->GetDepth();
+
+   Int_t inputDepth = fNet->GetInputDepth();
+   Int_t inputHeight = fNet->GetInputHeight();
+   Int_t inputWidth = fNet->GetInputWidth();
+
+   Int_t batchSize = fNet->GetBatchSize();
+
+   Int_t batchDepth = fNet->GetBatchDepth();
+   Int_t batchHeight = fNet->GetBatchHeight();
+   Int_t batchWidth = fNet->GetBatchWidth();
+
+   char lossFunction = static_cast<char>(fNet->GetLossFunction());
+   char initialization = static_cast<char>(fNet->GetInitialization());
+   char regularization = static_cast<char>(fNet->GetRegularization());
+
+   Double_t weightDecay = fNet->GetWeightDecay();
+
+   // Method specific info (not sure these are needed)
+   char outputFunction = static_cast<char>(this->GetOutputFunction());
+   //char lossFunction = static_cast<char>(this->GetLossFunction());
+
+   // Add attributes to the parent node
+   xmlEngine.NewAttr(nn, 0, "NetDepth", gTools().StringFromInt(depth));
+
+   xmlEngine.NewAttr(nn, 0, "InputDepth", gTools().StringFromInt(inputDepth));
+   xmlEngine.NewAttr(nn, 0, "InputHeight", gTools().StringFromInt(inputHeight));
+   xmlEngine.NewAttr(nn, 0, "InputWidth", gTools().StringFromInt(inputWidth));
+
+   xmlEngine.NewAttr(nn, 0, "BatchSize", gTools().StringFromInt(batchSize));
+   xmlEngine.NewAttr(nn, 0, "BatchDepth", gTools().StringFromInt(batchDepth));
+   xmlEngine.NewAttr(nn, 0, "BatchHeight", gTools().StringFromInt(batchHeight));
+   xmlEngine.NewAttr(nn, 0, "BatchWidth", gTools().StringFromInt(batchWidth));
+
+   xmlEngine.NewAttr(nn, 0, "LossFunction", TString(lossFunction));
+   xmlEngine.NewAttr(nn, 0, "Initialization", TString(initialization));
+   xmlEngine.NewAttr(nn, 0, "Regularization", TString(regularization));
+   xmlEngine.NewAttr(nn, 0, "OutputFunction", TString(outputFunction));
+
+   gTools().AddAttr(nn, "WeightDecay", weightDecay);
+
+
+   for (Int_t i = 0; i < depth; i++)
+   {
+      fNet->GetLayerAt(i) -> AddWeightsXMLTo(nn);
+   }
+
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-void MethodDL::ReadWeightsFromXML(void * /*rootXML*/)
+void MethodDL::ReadWeightsFromXML(void * rootXML)
 {
-   // TODO
+   
+   auto netXML = gTools().GetChild(rootXML, "Weights");
+   if (!netXML){
+      netXML = rootXML;
+   }
+
+   size_t netDepth;
+   gTools().ReadAttr(netXML, "NetDepth", netDepth);
+
+   size_t inputDepth, inputHeight, inputWidth;
+   gTools().ReadAttr(netXML, "InputDepth", inputDepth);
+   gTools().ReadAttr(netXML, "InputHeight", inputHeight);
+   gTools().ReadAttr(netXML, "InputWidth", inputWidth);
+
+   size_t batchSize, batchDepth, batchHeight, batchWidth;
+   gTools().ReadAttr(netXML, "BatchSize", batchSize);
+   // use always batchsize = 1
+   //batchSize = 1; 
+   gTools().ReadAttr(netXML, "BatchDepth", batchDepth);
+   gTools().ReadAttr(netXML, "BatchHeight", batchHeight);
+   gTools().ReadAttr(netXML, "BatchWidth",  batchWidth);
+
+   char lossFunctionChar;
+   gTools().ReadAttr(netXML, "LossFunction", lossFunctionChar);
+   char initializationChar;
+   gTools().ReadAttr(netXML, "Initialization", initializationChar);
+   char regularizationChar;
+   gTools().ReadAttr(netXML, "Regularization", regularizationChar);
+   char outputFunctionChar;
+   gTools().ReadAttr(netXML, "OutputFunction", outputFunctionChar);
+   double weightDecay;
+   gTools().ReadAttr(netXML, "WeightDecay", weightDecay);
+
+   // create the net
+
+   // assume CPU implementation
+   using Architecture_t = DNN::TCpu<Double_t>;
+   //using Scalar_t = Architecture_t::Scalar_t;
+   //    using Matrix_t = typename Architecture_t::Matrix_t;
+   using DeepNet_t = TMVA::DNN::TDeepNet<Architecture_t>;
+
+   
+   fNet = std::unique_ptr<DeepNet_t>(new DeepNet_t(batchSize, inputDepth, inputHeight, inputWidth, batchDepth,
+                                                   batchHeight, batchWidth,
+                                                   static_cast<ELossFunction>(lossFunctionChar),
+                                                   static_cast<EInitialization>(initializationChar),
+                                                   static_cast<ERegularization>(regularizationChar),
+                                                    weightDecay));
+
+   fOutputFunction = static_cast<EOutputFunction>(outputFunctionChar);
+
+
+   //size_t previousWidth = inputWidth;
+   auto layerXML = gTools().xmlengine().GetChild(netXML);
+
+   // loop on the layer and add them to the network
+   for (size_t i = 0; i < netDepth; i++) {
+
+      TString layerName = gTools().xmlengine().GetNodeName(layerXML);
+
+      // case of dense layer 
+      if (layerName == "DenseLayer") {
+
+         // read width and activation function and then we can create the layer
+         size_t width = 0;
+         gTools().ReadAttr(layerXML, "Width", width);
+
+         // Read activation function.
+         TString funcString; 
+         gTools().ReadAttr(layerXML, "ActivationFunction", funcString);
+         EActivationFunction func = static_cast<EActivationFunction>(funcString.Atoi());
+
+
+         fNet->AddDenseLayer(width, func, 0.0); // no need to pass dropout probability
+         
+      }
+      // Convolutional Layer
+      else if (layerName == "ConvLayer") {
+
+         // read width and activation function and then we can create the layer
+         size_t depth = 0;
+         gTools().ReadAttr(layerXML, "Depth", depth);
+         size_t fltHeight, fltWidth = 0;
+         size_t strideRows, strideCols = 0;
+         size_t padHeight, padWidth = 0;
+         gTools().ReadAttr(layerXML, "FilterHeight", fltHeight);
+         gTools().ReadAttr(layerXML, "FilterWidth", fltWidth);
+         gTools().ReadAttr(layerXML, "StrideRows", strideRows);
+         gTools().ReadAttr(layerXML, "StrideCols", strideCols);
+         gTools().ReadAttr(layerXML, "PaddingHeight", padHeight);
+         gTools().ReadAttr(layerXML, "PaddingWidth", padWidth);
+
+         // Read activation function.
+         TString funcString; 
+         gTools().ReadAttr(layerXML, "ActivationFunction", funcString);
+         EActivationFunction actFunction = static_cast<EActivationFunction>(funcString.Atoi());
+
+
+         fNet->AddConvLayer(depth, fltHeight, fltWidth, strideRows, strideCols,
+                            padHeight, padWidth, actFunction);
+
+      }
+
+      // MaxPool Layer
+      else if (layerName == "MaxPoolLayer") {
+
+         // read maxpool layer info
+         size_t frameHeight, frameWidth = 0;
+         size_t strideRows, strideCols = 0;
+         gTools().ReadAttr(layerXML, "FrameHeight", frameHeight);
+         gTools().ReadAttr(layerXML, "FrameWidth", frameWidth);
+         gTools().ReadAttr(layerXML, "StrideRows", strideRows);
+         gTools().ReadAttr(layerXML, "StrideCols", strideCols);
+
+         fNet->AddMaxPoolLayer(frameHeight, frameWidth, strideRows, strideCols);
+      }
+      else if (layerName == "ReshapeLayer") {
+
+         // read reshape layer info
+         size_t depth, height, width = 0; 
+         gTools().ReadAttr(layerXML, "Depth", depth);
+         gTools().ReadAttr(layerXML, "Height", height);
+         gTools().ReadAttr(layerXML, "Width", width);
+         int flattening = 0;
+         gTools().ReadAttr(layerXML, "Flattening",flattening );
+
+         fNet->AddReshapeLayer(depth, height, width, flattening);
+
+      }
+
+
+      // read eventually weights and biases
+      fNet->GetLayers().back()->ReadWeightsFromXML(layerXML);
+
+      // read next layer
+      layerXML = gTools().GetNextChild(layerXML);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -72,7 +72,14 @@ public:
    /*! Prints the info about the layer. */
    void Print() const;
 
-   /*! TODO Add documentation 
+   /*! Writes the information and the weights about the layer in an XML node. */
+   virtual void AddWeightsXMLTo(void *parent);
+
+   /*! Read the information and the weights about the layer from XML node. */
+   virtual void ReadWeightsFromXML(void *parent);
+
+
+   /*! TODO Add documentation
     * Does this layer flatten? (necessary for DenseLayer)
     * B x D1 x D2 --> 1 x B x (D1 * D2) */
    bool isFlattening() const { return fFlattening; }
@@ -163,6 +170,29 @@ template <typename Architecture_t>
 auto TReshapeLayer<Architecture_t>::Print() const -> void
 {
 }
+
+template <typename Architecture_t>
+auto TReshapeLayer<Architecture_t>::AddWeightsXMLTo(void *parent) -> void
+{
+   auto layerxml = gTools().xmlengine().NewChild(parent, 0, "ReshapeLayer");
+
+   // write info for reshapelayer
+   gTools().xmlengine().NewAttr(layerxml, 0, "Depth", gTools().StringFromInt(this->GetDepth()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "Height", gTools().StringFromInt(this->GetHeight()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "Width", gTools().StringFromInt(this->GetWidth()));
+   gTools().xmlengine().NewAttr(layerxml, 0, "Flattening", gTools().StringFromInt(this->isFlattening()));
+
+
+}
+
+//______________________________________________________________________________
+template <typename Architecture_t>
+void TReshapeLayer<Architecture_t>::ReadWeightsFromXML(void * /*parent*/)
+{
+   // no info to read
+}
+
+
 
 } // namespace DNN
 } // namespace TMVA
