@@ -18,6 +18,9 @@
 
 #include <ROOT/TPadLength.hxx>
 
+#include <algorithm>
+#include <limits>
+
 namespace ROOT {
 namespace Experimental {
 
