@@ -3,9 +3,6 @@
 # @author Kim Albertsson
 ############################################################################
 
-project(tmva-tests)
-find_package(ROOT REQUIRED)
-
 set(Libraries TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 
