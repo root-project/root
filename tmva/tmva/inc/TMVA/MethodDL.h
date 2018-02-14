@@ -190,25 +190,25 @@ public:
    const Ranking *CreateRanking();
 
    /* Getters */
-   size_t GetInputDepth() { return fInputDepth; }
-   size_t GetInputHeight() { return fInputHeight; }
-   size_t GetInputWidth() { return fInputWidth; }
+   size_t GetInputDepth() const { return fInputDepth; }
+   size_t GetInputHeight() const { return fInputHeight; }
+   size_t GetInputWidth() const { return fInputWidth; }
 
-   size_t GetBatchDepth() { return fBatchDepth; }
-   size_t GetBatchHeight() { return fBatchHeight; }
-   size_t GetBatchWidth() { return fBatchWidth; }
+   size_t GetBatchDepth() const { return fBatchDepth; }
+   size_t GetBatchHeight() const { return fBatchHeight; }
+   size_t GetBatchWidth() const { return fBatchWidth; }
 
-   DNN::EInitialization GetWeightInitialization() { return fWeightInitialization; }
-   DNN::EOutputFunction GetOutputFunction() { return fOutputFunction; }
-   DNN::ELossFunction GetLossFunction() { return fLossFunction; }
+   DNN::EInitialization GetWeightInitialization() const { return fWeightInitialization; }
+   DNN::EOutputFunction GetOutputFunction() const { return fOutputFunction; }
+   DNN::ELossFunction GetLossFunction() const { return fLossFunction; }
 
-   TString GetInputLayoutString() { return fInputLayoutString; }
-   TString GetBatchLayoutString() { return fBatchLayoutString; }
-   TString GetLayoutString() { return fLayoutString; }
-   TString GetErrorStrategyString() { return fErrorStrategy; }
-   TString GetTrainingStrategyString() { return fTrainingStrategyString; }
-   TString GetWeightInitializationString() { return fWeightInitializationString; }
-   TString GetArchitectureString() { return fArchitectureString; }
+   TString GetInputLayoutString() const { return fInputLayoutString; }
+   TString GetBatchLayoutString() const { return fBatchLayoutString; }
+   TString GetLayoutString() const { return fLayoutString; }
+   TString GetErrorStrategyString() const { return fErrorStrategy; }
+   TString GetTrainingStrategyString() const { return fTrainingStrategyString; }
+   TString GetWeightInitializationString() const { return fWeightInitializationString; }
+   TString GetArchitectureString() const { return fArchitectureString; }
 
    const std::vector<TTrainingSettings> &GetTrainingSettings() const { return fTrainingSettings; }
    std::vector<TTrainingSettings> &GetTrainingSettings() { return fTrainingSettings; }
