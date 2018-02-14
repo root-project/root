@@ -60,16 +60,16 @@ public:
    using difference_type = typename StdAlloc_t::difference_type;
 
 private:
-   enum class EAllocType : char { kRegular, kFromExternalPointer, kNoneYet };
+   enum class EAllocType : char { kOwning, kAdopting, kAdoptingNoAllocYet };
    using StdAllocTraits_t = std::allocator_traits<StdAlloc_t>;
    pointer fInitialAddress = nullptr;
    size_type fInitialSize = 0;
-   EAllocType fAllocType = EAllocType::kRegular;
+   EAllocType fAllocType = EAllocType::kOwning;
    StdAlloc_t fStdAllocator;
 
 public:
    /// This is the constructor which allows the allocator to adopt a certain memory region.
-   TAdoptAllocator(pointer p, size_type n) : fInitialAddress(p), fInitialSize(n), fAllocType(EAllocType::kNoneYet){};
+   TAdoptAllocator(pointer p, size_type n) : fInitialAddress(p), fInitialSize(n), fAllocType(EAllocType::kAdoptingNoAllocYet){};
    TAdoptAllocator() = default;
    TAdoptAllocator(const TAdoptAllocator &) = default;
 
@@ -78,7 +78,7 @@ public:
    void construct(pointer p, const_reference val)
    {
       // We refuse to do anything since we assume the memory is already initialised
-      if (EAllocType::kFromExternalPointer == fAllocType)
+      if (EAllocType::kAdopting == fAllocType)
          return;
       fStdAllocator.construct(p, val);
    }
@@ -93,7 +93,7 @@ public:
    void construct(U *p, Args &&... args)
    {
       // We refuse to do anything since we assume the memory is already initialised
-      if (EAllocType::kFromExternalPointer == fAllocType)
+      if (EAllocType::kAdopting == fAllocType)
          return;
       fStdAllocator.construct(p, args...);
    }
@@ -105,11 +105,11 @@ public:
    {
       if (n > std::size_t(-1) / sizeof(T))
          throw std::bad_alloc();
-      if (EAllocType::kNoneYet == fAllocType) {
-         fAllocType = EAllocType::kFromExternalPointer;
+      if (EAllocType::kAdoptingNoAllocYet == fAllocType) {
+         fAllocType = EAllocType::kAdopting;
          return fInitialAddress;
       }
-      fAllocType = EAllocType::kRegular;
+      fAllocType = EAllocType::kOwning;
       return StdAllocTraits_t::allocate(fStdAllocator, n);
    }
 
