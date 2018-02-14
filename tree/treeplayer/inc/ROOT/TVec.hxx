@@ -13,7 +13,7 @@
 
 #include "RStringView.h"
 
-#include <ROOT/TVecAllocator.hxx>
+#include <ROOT/TAdoptAllocator.hxx>
 #include <ROOT/TypeTraits.hxx>
 
 #include <algorithm>
@@ -30,7 +30,7 @@ namespace Detail {
 namespace VecOps {
 
 template <typename T>
-using TVecImpl = std::vector<T, ROOT::Detail::VecOps::TVecAllocator<T>>;
+using TVecImpl = std::vector<T, ROOT::Detail::VecOps::TAdoptAllocator<T>>;
 
 } // End of VecOps NS
 
@@ -170,7 +170,7 @@ public:
    explicit TVec(size_type count) : fData(count) {}
    TVec(const std::vector<T> &other) { std::copy(other.begin(), other.end(), fData.begin()); }
    TVec(std::initializer_list<T> init) : fData(init) {}
-   TVec(pointer p, size_type n) : fData(n, T(), ROOT::Detail::VecOps::TVecAllocator<T>(p, n)) {}
+   TVec(pointer p, size_type n) : fData(n, T(), ROOT::Detail::VecOps::TAdoptAllocator<T>(p, n)) {}
    // assignment
    TVec<T> &operator=(std::initializer_list<T> ilist) { return fData = ilist; }
    // accessors
