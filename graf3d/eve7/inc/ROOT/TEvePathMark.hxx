@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEvePathMark
-#define ROOT_TEvePathMark
+#ifndef ROOT_TEvePathMark_hxx
+#define ROOT_TEvePathMark_hxx
 
 #include <TEveVector.h>
 

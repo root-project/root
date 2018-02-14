@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveProjectionManager
-#define ROOT_TEveProjectionManager
+#ifndef ROOT_TEveProjectionManager_hxx
+#define ROOT_TEveProjectionManager_hxx
 
 #include "ROOT/TEveElement.hxx"
 #include "TAttBBox.h"

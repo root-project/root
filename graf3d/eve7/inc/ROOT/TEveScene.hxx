@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveScene
-#define ROOT_TEveScene
+#ifndef ROOT_TEveScene_hxx
+#define ROOT_TEveScene_hxx
 
 #include "ROOT/TEveElement.hxx"
 

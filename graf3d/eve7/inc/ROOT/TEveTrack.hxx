@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveTrack
-#define ROOT_TEveTrack
+#ifndef ROOT_TEveTrack_hxx
+#define ROOT_TEveTrack_hxx
 
 #include <vector>
 

@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveSecondarySelectable
-#define ROOT_TEveSecondarySelectable
+#ifndef ROOT_TEveSecondarySelectable_hxx
+#define ROOT_TEveSecondarySelectable_hxx
 
 #include "Rtypes.h"
 

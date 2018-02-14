@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveGeoShapeExtract
-#define ROOT_TEveGeoShapeExtract
+#ifndef ROOT_TEveGeoShapeExtract_hxx
+#define ROOT_TEveGeoShapeExtract_hxx
 
 #include "TNamed.h"
 

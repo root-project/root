@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveTrackProjected
-#define ROOT_TEveTrackProjected
+#ifndef ROOT_TEveTrackProjected_hxx
+#define ROOT_TEveTrackProjected_hxx
 
 #include "ROOT/TEveTrack.hxx"
 #include "ROOT/TEveProjectionBases.hxx"

@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveTrackPropagator
-#define ROOT_TEveTrackPropagator
+#ifndef ROOT_TEveTrackPropagator_hxx
+#define ROOT_TEveTrackPropagator_hxx
 
 #include "ROOT/TEveVector.hxx"
 #include "ROOT/TEvePathMark.hxx"

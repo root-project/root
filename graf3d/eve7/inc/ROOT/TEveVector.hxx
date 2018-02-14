@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveVector
-#define ROOT_TEveVector
+#ifndef ROOT_TEveVector_hxx
+#define ROOT_TEveVector_hxx
 
 #include "TMath.h"
 #include <cstddef>

@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveTrans
-#define ROOT_TEveTrans
+#ifndef ROOT_TEveTrans_hxx
+#define ROOT_TEveTrans_hxx
 
 #include "ROOT/TEveVector.hxx"
 #include "TVector3.h"

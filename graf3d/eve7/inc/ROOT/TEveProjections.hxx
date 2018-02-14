@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TEveProjections
-#define ROOT_TEveProjections
+#ifndef ROOT_TEveProjections_hxx
+#define ROOT_TEveProjections_hxx
 
 #include "ROOT/TEveVector.hxx"
 #include "TString.h"
