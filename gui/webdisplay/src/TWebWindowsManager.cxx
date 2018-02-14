@@ -32,6 +32,7 @@
 #include "TStopwatch.h"
 #include "TApplication.h"
 #include "TTimer.h"
+#include "RConfigure.h"
 
 /** \class ROOT::Experimental::TWebWindowManager
 \ingroup webdisplay
@@ -250,11 +251,12 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
 
    if ((is_native && symbol_qt5) || is_qt5) {
+//#ifdef R__HAS_QT5WEBENGINE
       if (!symbol_qt5) {
          gSystem->Load("libROOTQt5WebDisplay");
          symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
       }
-
+//#endif
       if (symbol_qt5) {
          typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
          printf("Show canvas in Qt5 window:  %s\n", addr.Data());
@@ -271,11 +273,13 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    const char *rootsys = gSystem->Getenv("ROOTSYS");
    if (cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || is_cef)) {
 
+// #ifdef R__HAS_CEF
       if (!symbol_cef) {
          gSystem->Load("libROOTCefDisplay");
          // TODO: make minimal C++ interface here
          symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
       }
+// #endif
 
       if (symbol_cef) {
 
