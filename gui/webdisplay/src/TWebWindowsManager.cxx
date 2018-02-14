@@ -249,14 +249,19 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
    Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
 
-   if (symbol_qt5 && (is_native || is_qt5)) {
-      typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
+   if ((is_native && symbol_qt5) || is_qt5) {
+      if (!symbol_qt5) {
+         gSystem->Load("libROOTQt5WebDisplay");
+         symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
+      }
 
-      printf("Show canvas in Qt5 window:  %s\n", addr.Data());
-
-      FunctionQt5 func = (FunctionQt5)symbol_qt5;
-      func(addr.Data(), fServer.get(), batch_mode, win.GetWidth(), win.GetHeight());
-      return false;
+      if (symbol_qt5) {
+         typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
+         printf("Show canvas in Qt5 window:  %s\n", addr.Data());
+         FunctionQt5 func = (FunctionQt5)symbol_qt5;
+         func(addr.Data(), fServer.get(), batch_mode, win.GetWidth(), win.GetHeight());
+         return true;
+      }
    }
 
    // TODO: one should try to load CEF libraries only when really needed
