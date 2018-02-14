@@ -1,6 +1,7 @@
 #include <gtest/gtest.h>
 #include <ROOT/TVec.hxx>
 #include <vector>
+#include <sstream>
 
 TEST(VecOps, DefaultCtor)
 {
@@ -177,19 +178,21 @@ TEST(VecOps, Filter)
 }
 
 template <typename T, typename V>
-void CompAndPrintTVec(ROOT::Experimental::VecOps::TVec<T> v, V w)
+std::string PrintTVec(ROOT::Experimental::VecOps::TVec<T> v, V w)
 {
    using namespace ROOT::Experimental::VecOps;
-   std::cout << v << " " << w << std::endl;
-   std::cout << v + w << std::endl;
-   std::cout << v - w << std::endl;
-   std::cout << v * w << std::endl;
-   std::cout << v / w << std::endl;
-   std::cout << (v > w) << std::endl;
-   std::cout << (v >= w) << std::endl;
-   std::cout << (v == w) << std::endl;
-   std::cout << (v <= w) << std::endl;
-   std::cout << (v < w) << std::endl;
+   std::stringstream ss;
+   ss << v << " " << w << std::endl;
+   ss << v + w << std::endl;
+   ss << v - w << std::endl;
+   ss << v * w << std::endl;
+   ss << v / w << std::endl;
+   ss << (v > w) << std::endl;
+   ss << (v >= w) << std::endl;
+   ss << (v == w) << std::endl;
+   ss << (v <= w) << std::endl;
+   ss << (v < w) << std::endl;
+   return ss.str();
 }
 
 TEST(VecOps, PrintOps)
@@ -197,13 +200,63 @@ TEST(VecOps, PrintOps)
    using namespace ROOT::Experimental::VecOps;
    TVec<int> ref{1, 2, 3};
    TVec<int> v(ref);
-   CompAndPrintTVec(v, 2.);
-   CompAndPrintTVec(v, ref + 2);
+
+   auto ref0 = R"ref0({ 1, 2, 3 } 2
+{ 3, 4, 5 }
+{ -1, 0, 1 }
+{ 2, 4, 6 }
+{ 0.5, 1, 1.5 }
+{ 0, 0, 1 }
+{ 0, 1, 1 }
+{ 0, 1, 0 }
+{ 1, 1, 0 }
+{ 1, 0, 0 }
+)ref0";
+   auto t0 = PrintTVec(v, 2.);
+   EXPECT_STREQ(t0.c_str(), ref0);
+   auto ref1 = R"ref1({ 1, 2, 3 } { 3, 4, 5 }
+{ 4, 6, 8 }
+{ -2, -2, -2 }
+{ 3, 8, 15 }
+{ 0, 0, 0 }
+{ 0, 0, 0 }
+{ 0, 0, 0 }
+{ 0, 0, 0 }
+{ 1, 1, 1 }
+{ 1, 1, 1 }
+)ref1";
+   auto t1 = PrintTVec(v, ref + 2);
+   EXPECT_STREQ(t1.c_str(), ref1);
 
    ROOT::Experimental::VecOps::TVec<int> w(ref.data(), ref.size());
 
-   CompAndPrintTVec(v, 2.);
-   CompAndPrintTVec(v, ref + 2);
+   auto ref2 = R"ref2({ 1, 2, 3 } 2
+{ 3, 4, 5 }
+{ -1, 0, 1 }
+{ 2, 4, 6 }
+{ 0.5, 1, 1.5 }
+{ 0, 0, 1 }
+{ 0, 1, 1 }
+{ 0, 1, 0 }
+{ 1, 1, 0 }
+{ 1, 0, 0 }
+)ref2";
+   auto t2 = PrintTVec(v, 2.);
+   EXPECT_STREQ(t2.c_str(), ref2);
+
+   auto ref3 = R"ref3({ 1, 2, 3 } { 3, 4, 5 }
+{ 4, 6, 8 }
+{ -2, -2, -2 }
+{ 3, 8, 15 }
+{ 0, 0, 0 }
+{ 0, 0, 0 }
+{ 0, 0, 0 }
+{ 0, 0, 0 }
+{ 1, 1, 1 }
+{ 1, 1, 1 }
+)ref3";
+   auto t3 = PrintTVec(v, ref + 2);
+   EXPECT_STREQ(t3.c_str(), ref3);
 }
 
 void CheckEq(std::string_view name, const ROOT::Experimental::VecOps::TVec<double> v,
