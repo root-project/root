@@ -25,7 +25,7 @@ configure_file(dataframe/TCsvDS_test_noheaders.csv . COPYONLY)
 ROOT_ADD_GTEST(datasource_csv dataframe/datasource_csv.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(datasource_lazy dataframe/datasource_lazy.cxx LIBRARIES TreePlayer)
 
-ROOT_ADD_GTEST(vecops_tvecallocator dataframe/vecops_tvecallocator.cxx LIBRARIES TreePlayer)
+ROOT_ADD_GTEST(vecops_tvecallocator dataframe/vecops_tadoptallocator.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(vecops_tvec dataframe/vecops_tvec.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_PYUNITTEST(dataframe_misc dataframe/dataframe_misc.py)

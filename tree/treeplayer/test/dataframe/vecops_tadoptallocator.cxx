@@ -7,18 +7,18 @@
 using namespace ROOT::Detail::VecOps;
 using namespace ROOT::Experimental::VecOps;
 
-TEST(TVecAllocator, ReusePointer)
+TEST(TAdoptAllocator, ReusePointer)
 {
    std::vector<double> vreference{1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
    std::vector<double> vmodel(vreference);
-   TVecAllocator<double> alloc0(vmodel.data(), vmodel.size());
+   TAdoptAllocator<double> alloc0(vmodel.data(), vmodel.size());
 
    EXPECT_EQ(vmodel.data(), alloc0.allocate(123));
 
-   TVecAllocator<double> alloc1(vmodel.data(), vmodel.size());
+   TAdoptAllocator<double> alloc1(vmodel.data(), vmodel.size());
 
-   std::vector<double, TVecAllocator<double>> v(alloc1);
+   std::vector<double, TAdoptAllocator<double>> v(alloc1);
    v.resize(vmodel.size());
 
    EXPECT_EQ(vmodel.data(), v.data());
@@ -54,7 +54,7 @@ public:
    }
 };
 
-TEST(TVecAllocator, NewAllocations)
+TEST(TAdoptAllocator, NewAllocations)
 {
    unsigned int copyCount = 0;
    std::vector<TCopySignal> model;
@@ -66,7 +66,7 @@ TEST(TVecAllocator, NewAllocations)
    EXPECT_EQ(0U, copyCount);
 
    unsigned int dummy;
-   TVecAllocator<TCopySignal> alloc(model.data(), model.size());
+   TAdoptAllocator<TCopySignal> alloc(model.data(), model.size());
    ROOT::Detail::VecOps::TVecImpl<TCopySignal> v(model.size(), dummy, alloc);
 
    EXPECT_EQ(0U, copyCount);
