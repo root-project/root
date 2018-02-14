@@ -17,7 +17,7 @@
 #include <ROOT/TypeTraits.hxx>
 
 #include <algorithm>
-#include <cmath>   // for sqrt
+#include <cmath>
 #include <numeric> // for inner_product
 #include <sstream>
 #include <stdexcept>
@@ -44,9 +44,6 @@ namespace VecOps {
 template <typename T>
 class TVec;
 
-template <typename T>
-using TCallTraits = typename ROOT::TypeTraits::CallableTraits<T>;
-
 } // End of Experimental NS
 
 } // End of VecOps NS
@@ -68,40 +65,35 @@ void CheckSizes(size_t s0, size_t s1, std::string_view opName)
 }
 
 template <typename T, typename V, typename F>
-TVec<typename TCallTraits<F>::ret_type> Operate(const TVec<T> &v0, const TVec<V> &v1, std::string_view opName, F f)
+auto Operate(const TVec<T> &v0, const TVec<V> &v1, std::string_view opName, F &&f) -> TVec<decltype(f(v0[0], v1[1]))>
 {
    CheckSizes(v0.size(), v1.size(), opName);
-   TVec<typename TCallTraits<F>::ret_type> w(v0.size());
-   std::transform(v0.begin(), v0.end(), v1.begin(), w.begin(), f);
+   TVec<decltype(f(v0[0], v1[1]))> w(v0.size());
+   std::transform(v0.begin(), v0.end(), v1.begin(), w.begin(), std::forward<F>(f));
    return w;
 }
 
 template <typename T, typename V, typename F>
-TVec<typename TCallTraits<F>::ret_type> &OperateInPlace(TVec<T> &v0, const TVec<V> &v1, std::string_view opName, F f)
+TVec<T> &OperateInPlace(TVec<T> &v0, const TVec<V> &v1, std::string_view opName, F &&f)
 {
    const auto v0size = v0.size();
    CheckSizes(v0size, v1.size(), opName);
-   for (size_t i = 0; i < v0size; ++i) {
-      v0[i] = f(v0[i], v1[i]);
-   }
+   std::transform(v0.begin(), v0.end(), v1.begin(), v0.begin(), std::forward<F>(f));
    return v0;
 }
 
 template <typename T, typename F>
-TVec<typename TCallTraits<F>::ret_type> Operate(const TVec<T> &v, F f)
+auto Operate(const TVec<T> &v, F &&f) -> TVec<decltype(f(v[0]))>
 {
-   TVec<typename TCallTraits<F>::ret_type> w(v.size());
-   std::transform(v.begin(), v.end(), w.begin(), f);
+   TVec<decltype(f(v[0]))> w(v.size());
+   std::transform(v.begin(), v.end(), w.begin(), std::forward<F>(f));
    return w;
 }
 
 template <typename T, typename F>
-TVec<T> &OperateInPlace(TVec<T> &v, F f)
+TVec<T> &OperateInPlace(TVec<T> &v, F &&f)
 {
-   std::for_each(v.begin(), v.end(), f);
-   for (auto &&x : v) {
-      x = f(x);
-   }
+   std::transform(v.begin(), v.end(), v.begin(), std::forward<F>(f));
    return v;
 }
 
@@ -494,20 +486,16 @@ T Sum(const TVec<T> v)
 }
 
 template <typename T, typename F>
-TVec<typename TCallTraits<F>::ret_type> Map(const TVec<T> &v, F f)
+auto Map(const TVec<T> &v, F &&f) -> TVec<decltype(f(v[0]))>
 {
-   return ROOT::Internal::VecOps::Operate(v, f);
+   return ROOT::Internal::VecOps::Operate(v, std::forward<F>(f));
 }
 
 template <typename T, typename F>
-TVec<T> Filter(TVec<T> &v, F f)
+TVec<T> Filter(const TVec<T> &v, F &&f)
 {
    TVec<T> w; w.reserve(v.size());
-   for(auto &&x : v) {
-      if (f(x)) {
-         w.emplace_back(x);
-      }
-   }
+   std::copy_if(v.begin(), v.end(), w.begin(), std::forward<F>(f));
    return w;
 }
 
