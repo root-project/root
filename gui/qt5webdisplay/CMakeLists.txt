@@ -12,6 +12,8 @@ find_package(Qt5WebEngineWidgets)
 
 if(Qt5WebEngineWidgets_FOUND)
 
+   set(qt5web ON)
+
    set(CMAKE_AUTOMOC ON)
    set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
