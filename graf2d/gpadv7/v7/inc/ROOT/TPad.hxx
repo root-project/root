@@ -42,7 +42,7 @@ class TVirtualCanvasPainter;
 
 class TPadBase {
 public:
-   using Primitives_t = std::vector<std::unique_ptr<TDrawable>>;
+   using Primitives_t = std::vector<std::shared_ptr<TDrawable>>;
 
 private:
    /// Content of the pad.
@@ -57,13 +57,12 @@ private:
    /// Disable assignment.
    TPadBase &operator=(const TPadBase &) = delete;
 
-   /// Adds a `DRAWABLE` to `fPrimitives`, returning the drawing options as given by `DRAWABLE::Options()`.
+   /// Adds a `DRAWABLE` to `fPrimitives`, returning a `shared_ptr` to the `DRAWABLE`.
    template <class DRAWABLE>
-   auto &AddDrawable(std::unique_ptr<DRAWABLE> &&uPtr)
+   std::shared_ptr<DRAWABLE> AddDrawable(std::unique_ptr<DRAWABLE> &&uPtr)
    {
-      DRAWABLE &drw = *uPtr;
       fPrimitives.emplace_back(std::move(uPtr));
-      return drw.GetOptions();
+      return std::static_pointer_cast<DRAWABLE>(fPrimitives.back());
    }
 
 protected:
