@@ -1,13 +1,8 @@
 ############################################################################
-# CMakeLists.txt file for building ROOT gui/canvaspainter package
+# CMakeLists.txt file for building ROOT gui/cefdisplay package
 ############################################################################
 
-if(DEFINED ENV{CEF_PATH})
-if(EXISTS $ENV{CEF_PATH})
-
 set(libname ROOTCefDisplay)
-
-set(cefweb ON)
 
 ROOT_GLOB_SOURCES(CEF_sources src/simple_app.cxx src/base_handler.cxx src/osr_handler.cxx src/gui_handler.cxx)
 
@@ -46,6 +41,3 @@ ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:ROOTCefDisplayObjs>
 # ROOT_INSTALL_HEADERS()
 
 ROOT_EXECUTABLE(cef_main ${CEF_MAIN} LIBRARIES ${CEF_LIBRARY} ${CEF_DLL_WRAPPER})
-
-endif()
-endif()
