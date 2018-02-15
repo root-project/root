@@ -31,6 +31,15 @@ namespace ROOT {
 /// The current algorithms support level 1 to 9. The higher the level the greater
 /// the compression and more CPU time and memory resources used during compression.
 /// Level 0 means no compression.
+///
+/// Recommendation for the compression algorithm's levels:
+///  - ZLIB is recommended to be used with compression level 1 [101] 
+///  - LZMA is recommended to be used with compression level 7-8 (higher is better, 
+///   since in the case of LZMA we don't care about compression/decompression speed)
+///   [207 - 208]
+///  - LZ4 is recommended to be used with compression level 4 [404]
+
+
 enum ECompressionAlgorithm {
    /// Use the global compression setting
    kUseGlobalCompressionSetting,
