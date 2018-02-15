@@ -209,72 +209,35 @@ if(builtin_lzma)
   endif()
 endif()
 
+#---Check for xxHash-----------------------------------------------------------------
+if(NOT builtin_xxhash)
+  message(STATUS "Looking for xxHash")
+  find_package(xxHash)
+  if(NOT xxHash_FOUND)
+    message(STATUS "xxHash not found. Switching on builtin_xxhash option")
+    set(builtin_xxhash ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
+if(builtin_xxhash)
+  list(APPEND ROOT_BUILTINS xxHash)
+  add_subdirectory(builtins/xxhash)
+endif()
 
 #---Check for LZ4--------------------------------------------------------------------
 if(NOT builtin_lz4)
   message(STATUS "Looking for LZ4")
   find_package(LZ4)
-  if(LZ4_FOUND)
-  else()
+  if(NOT LZ4_FOUND)
     message(STATUS "LZ4 not found. Switching on builtin_lz4 option")
     set(builtin_lz4 ON CACHE BOOL "" FORCE)
   endif()
 endif()
-# Note: the above if-statement may change the value of builtin_lz4 to ON.
-if(builtin_lz4)
-  set(lz4_version v1.7.5)
-  message(STATUS "Building LZ4 version ${lz4_version} included in ROOT itself")
-  if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-    set(LZ4_CFLAGS "-Wno-format-nonliteral")
-  elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
-    set(LZ4_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179")
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    set(LZ4_CFLAGS "/Zl")
-  endif()
-  set(LZ4_URL ${lcgpackages}/lz4-${lz4_version}.tar.gz)
-  set(LZ4_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
-  if(CMAKE_MINIMUM_REQUIRED_VERSION VERSION_GREATER 3.6.99)
-    message(WARNING "Obsoleted code needs to be removed since the the minimal required version of CMake make it useless")
-  endif()
-  if(CMAKE_VERSION VERSION_LESS 3.7.0)
-    ExternalProject_Add(
-      LZ4
-      URL ${LZ4_URL}
-      URL_HASH SHA256=0190cacd63022ccb86f44fa5041dc6c3804407ad61550ca21c382827319e7e7e
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ${CMAKE_COMMAND} 
-                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-                -DBUILD_SHARED_LIBS=OFF
-                -DCMAKE_INSTALL_LIBDIR=lib
-                -G${CMAKE_GENERATOR}
-                <SOURCE_DIR>/contrib/cmake_unofficial
-      BUILD_COMMAND ${CMAKE_COMMAND} --build .
-      INSTALL_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -P cmake_install.cmake
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
-  else()
-    ExternalProject_Add(
-      LZ4
-      URL ${LZ4_URL}
-      URL_HASH SHA256=0190cacd63022ccb86f44fa5041dc6c3804407ad61550ca21c382827319e7e7e
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      SOURCE_SUBDIR contrib/cmake_unofficial
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-                -DBUILD_SHARED_LIBS=OFF
-                -DCMAKE_INSTALL_LIBDIR=lib
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
-  endif()
-  set(LZ4_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-endif()
 
+if(builtin_lz4)
+  list(APPEND ROOT_BUILTINS LZ4)
+  add_subdirectory(builtins/lz4)
+endif()
 
 #---Check for X11 which is mandatory lib on Unix--------------------------------------
 if(x11)
