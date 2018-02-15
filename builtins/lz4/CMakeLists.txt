@@ -1,5 +1,7 @@
 project(LZ4 C)
 
+find_package(xxHash REQUIRED)
+
 set(LZ4_PUBLIC_HEADERS
   lz4.h
   lz4frame.h
@@ -34,8 +36,9 @@ set(LZ4_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 set(LZ4_INCLUDE_DIRS ${CMAKE_CURRENT_SOURCE_DIR} CACHE INTERNAL "")
 
 add_library(lz4 STATIC ${LZ4_PUBLIC_HEADERS} ${LZ4_PRIVATE_HEADERS} ${LZ4_SOURCES})
-target_include_directories(lz4 INTERFACE $<BUILD_INTERFACE:${LZ4_INCLUDE_DIR}>)
 target_compile_options(lz4 PRIVATE -fvisibility=hidden)
+target_include_directories(lz4 INTERFACE $<BUILD_INTERFACE:${LZ4_INCLUDE_DIR}>)
+target_link_libraries(lz4 PRIVATE xxHash::xxHash)
 
 add_library(LZ4::LZ4 ALIAS lz4)
 
