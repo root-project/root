@@ -39,6 +39,15 @@ TString ferr;
 TString fres;
 Int_t gverbose = 0;
 
+void PrintDeprecation(bool withctx = true)
+{
+   if (withctx) printf(" \n");
+   printf(" NB: The PQ2 tools are deprecated and not maintained any longer and will be removed in ROOT v6.16/00\n");
+   printf("     Please contact the ROOT team in the unlikely event this change is disruptive for your workflow.\n");
+   if (withctx) printf(" \n");
+}
+
+
 //_____________________________batch only_____________________
 int main(int argc, char **argv)
 {
@@ -74,8 +83,12 @@ int main(int argc, char **argv)
       printf("   serviceurl    entry point of the service to be used to get the information (PROOF master\n");
       printf("                 or data server) in the form '[user@]host.domain[:port]'\n");
       printf(" \n");
+      PrintDeprecation(false);
+      printf(" \n");
       gSystem->Exit(0);
    }
+
+   PrintDeprecation();
 
    // Parse options
    const char *action = 0;
@@ -346,6 +359,8 @@ int main(int argc, char **argv)
       if (!gSystem->AccessPathName(flog)) Printf(" -> %s", flog.Data());
       if (!gSystem->AccessPathName(fres)) Printf(" -> %s", fres.Data());
    }
+
+   PrintDeprecation();
 
    gSystem->Exit(rc);
 }
