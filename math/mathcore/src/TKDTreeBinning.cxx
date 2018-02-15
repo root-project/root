@@ -241,7 +241,7 @@ void TKDTreeBinning::SetTreeData() {
 
 void TKDTreeBinning::SetBinsContent() {
    // Sets the bins' content
-   fBinsContent.reserve(fNBins);
+   fBinsContent.resize(fNBins);
    for (UInt_t i = 0; i < fNBins; ++i)
       fBinsContent[i] = fDataBins->GetBucketSize();
    if ( fDataSize % fNBins != 0 )

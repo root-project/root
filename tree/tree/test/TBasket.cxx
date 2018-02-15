@@ -102,7 +102,7 @@ TEST(TBasket, CreateAndDestroy)
    f->Close();
 
    Long64_t maxsize = f->GetSize();
-   memBuffer.reserve(maxsize);
+   memBuffer.resize(maxsize);
    f->CopyTo(&memBuffer[0], maxsize);
 
    delete f;
@@ -182,7 +182,7 @@ TEST(TBasket, TestUnsupportedIO)
 
    std::vector<char> memBuffer;
    Long64_t maxsize = f->GetSize();
-   memBuffer.reserve(maxsize);
+   memBuffer.resize(maxsize);
    f->CopyTo(&memBuffer[0], maxsize);
 
    TMemFile f2("tbasket_test.root", &memBuffer[0], maxsize, "READ");
@@ -230,7 +230,7 @@ TEST(TBasket, TestVarLengthArrays)
    f->Close();
    std::vector<char> memBuffer;
    Long64_t maxsize = f->GetSize();
-   memBuffer.reserve(maxsize);
+   memBuffer.resize(maxsize);
    f->CopyTo(&memBuffer[0], maxsize);
 
    TMemFile f2("tbasket_test.root", &memBuffer[0], maxsize, "READ");
@@ -334,7 +334,7 @@ TEST(TBasket, TestSettingIOBits)
    f->Close();
    std::vector<char> memBuffer;
    Long64_t maxsize = f->GetSize();
-   memBuffer.reserve(maxsize);
+   memBuffer.resize(maxsize);
    f->CopyTo(&memBuffer[0], maxsize);
 
    TMemFile f2("tbasket_test.root", &memBuffer[0], maxsize, "READ");
