@@ -142,6 +142,14 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
    Init(tag);
 }
 
+TClingClassInfo::TClingClassInfo(cling::Interpreter *interp,
+                                 const Decl *D)
+   : fInterp(interp), fFirstTime(true), fDescend(false), fIterAll(kTRUE),
+     fIsIter(false), fDecl(0), fType(0), fTitle(""), fOffsetCache(0)
+{
+   Init(D);
+}
+
 void TClingClassInfo::AddBaseOffsetValue(const clang::Decl* decl, ptrdiff_t offset)
 {
    // Add the offset value from this class to the non-virtual base class

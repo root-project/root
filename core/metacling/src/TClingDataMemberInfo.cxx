@@ -78,7 +78,7 @@ TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
 TClingDataMemberInfo::TClingDataMemberInfo(cling::Interpreter *interp,
                                            const clang::ValueDecl *ValD,
                                            TClingClassInfo *ci)
-: fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp)), fFirstTime(true),
+: fInterp(interp), fClassInfo(ci ? new TClingClassInfo(*ci) : new TClingClassInfo(interp, ValD)), fFirstTime(true),
     fTitle(""), fSingleDecl(ValD), fContextIdx(0U), fIoType(""), fIoName(""){
 
    using namespace llvm;
