@@ -55,6 +55,6 @@ endif()
 ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
                               HEADERS ${headers}
                               SOURCES ${sources}
-                              LIBRARIES ${SYSLIBS} ${ZLIB_LIBRARIES} ${RT_LIBRARIES} ${FASTCGI_LIBRARY}
+                              LIBRARIES ${SYSLIBS} ZLIB::ZLIB ${RT_LIBRARIES} ${FASTCGI_LIBRARY}
                                         ${OPENSSL_LIBRARIES} ${CMAKE_DL_LIBS}
                               DEPENDENCIES Thread Tree Hist Gpad Graf RIO XMLIO)
