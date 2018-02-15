@@ -472,7 +472,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   set(excluded_headers RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
                         RtypesCore.h TClassEdit.h
                         TIsAProxy.h TVirtualIsAProxy.h
-                        DllImport.h ESTLType.h RStringView.h Varargs.h
+                        DllImport.h ESTLType.h ROOT/RStringView.hxx Varargs.h
                         libcpp_string_view.h
                         RWrap_libcpp_string_view.h
                         ThreadLocalStorage.h

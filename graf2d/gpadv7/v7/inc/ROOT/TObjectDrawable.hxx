@@ -18,7 +18,7 @@
 
 #include <ROOT/TDrawable.hxx>
 #include <ROOT/TDrawingOptsBase.hxx>
-#include "RStringView.h"
+#include "ROOT/RStringView.hxx"
 #include <memory>
 #include <string>
 

@@ -26,7 +26,7 @@
 #include "ROOT/TSnapshotOptions.hxx"
 #include "ROOT/TThreadedObject.hxx"
 #include "ROOT/TypeTraits.hxx"
-#include "RStringView.h"
+#include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 #include "TBranch.h"
 #include "TDirectory.h"

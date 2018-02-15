@@ -18,7 +18,7 @@
 
 #include <ROOT/TColor.hxx>
 
-#include <RStringView.h>
+#include <ROOT/RStringView.hxx>
 
 #include <string>
 #include <tuple>

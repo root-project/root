@@ -16,7 +16,7 @@
 #ifndef ROOT7_TStyleReader
 #define ROOT7_TStyleReader
 
-#include <RStringView.h>
+#include <ROOT/RStringView.hxx>
 #include <ROOT/TStyle.hxx>
 
 #include <string>

@@ -15,7 +15,7 @@
 #include <ROOT/TDFNodes.hxx>
 #include <ROOT/TDFUtils.hxx>
 #include <ROOT/TypeTraits.hxx>
-#include <RStringView.h>
+#include <ROOT/RStringView.hxx>
 #include <algorithm>
 #include <deque>
 #include <functional>
