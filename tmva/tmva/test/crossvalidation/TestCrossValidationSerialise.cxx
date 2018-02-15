@@ -34,9 +34,14 @@ class TestContex {
 public:
    virtual ~TestContex()
    {
-      if (fOutputFile) {
-         fOutputFile->Close();
-      }
+      delete fCrossEvaluate;
+      fCrossEvaluate = nullptr;
+
+      delete fTreeClass0;
+      fTreeClass0 = nullptr;
+
+      delete fTreeClass1;
+      fTreeClass1 = nullptr;
    }
 
    void setUpCrossValidation(TString jobname, TMVA::Types::EMVA methodType, TString methodName, TString methodOptions);
@@ -49,8 +54,8 @@ private:
    const TString fOutputFileName = ("TMVA.root");
 
    TMVA::CrossValidation *fCrossEvaluate;
-   TFile *fOutputFile;
-   TMVA::Reader *fReader;
+   TFile fOutputFile{fOutputFileName, "RECREATE"};
+   TMVA::Reader fReader{"!Color:Silent:!V"};
 
    TTree *fTreeClass0;
    TTree *fTreeClass1;
@@ -133,9 +138,8 @@ void TestContex::setUpCrossValidation(TString jobname, TMVA::Types::EMVA methodT
 
    dataloader->PrepareTrainingAndTestTree("", "", "nTest_Signal=0:nTest_Background=0)");
 
-   fOutputFile = new TFile(fOutputFileName, "RECREATE");
    fCrossEvaluate = new TMVA::CrossValidation(
-      jobname, dataloader, fOutputFile,
+      jobname, dataloader, &fOutputFile,
       "!V:Silent:!ROC:!FoldFileOutput:AnalysisType=Classification:SplitExpr=int([EventNumber])%int([NumFolds])");
 
    fCrossEvaluate->BookMethod(methodType, methodName, methodOptions);
@@ -146,17 +150,7 @@ void TestContex::runCrossValidation()
 {
    std::cout << "Running cross validation" << std::endl;
    fCrossEvaluate->Evaluate();
-   fOutputFile->Flush();
-   fOutputFile->Close();
-
-   delete fCrossEvaluate;
-   fCrossEvaluate = nullptr;
-   delete fOutputFile;
-   fOutputFile = nullptr;
-   delete fTreeClass0;
-   fTreeClass0 = nullptr;
-   delete fTreeClass1;
-   fTreeClass1 = nullptr;
+   fOutputFile.Flush();
    std::cout << "Done running crossvalidation" << std::endl;
 }
 
@@ -170,23 +164,20 @@ void TestContex::runCrossValidation()
 void TestContex::setUpApplicationPhase(TString jobname, TString methodName)
 {
    std::cout << "Setting application phase up" << std::endl;
-   fReader = new TMVA::Reader("!Color:Silent:!V");
 
-   fReader->AddVariable("x", &fX);
-   fReader->AddVariable("y", &fY);
-   fReader->AddSpectator("EventNumber", &fevNum);
+   fReader.AddVariable("x", &fX);
+   fReader.AddVariable("y", &fY);
+   fReader.AddSpectator("EventNumber", &fevNum);
 
    TString weightfile = TString("dataset/weights/") + jobname + "_" + methodName + TString(".weights.xml");
-   fReader->BookMVA(methodName, weightfile);
+   fReader.BookMVA(methodName, weightfile);
    std::cout << "Done setting application phase up" << std::endl;
 }
 
 void TestContex::runApplicationPhase(TString methodName)
 {
    std::cout << "Running application phase" << std::endl;
-   fOutputFile = new TFile(fOutputFileName);
-   TTree *tree = (TTree *)fOutputFile->Get("dataset/TestTree");
-   tree->ResetBranchAddresses();
+   TTree *tree = (TTree *)fOutputFile.Get("dataset/TestTree");
    tree->SetBranchAddress("x", &fX);
    tree->SetBranchAddress("y", &fY);
    tree->SetBranchAddress("EventNumber", &fevNum);
@@ -196,7 +187,7 @@ void TestContex::runApplicationPhase(TString methodName)
    for (Long64_t ievt = 0; ievt < tree->GetEntries(); ievt++) {
       tree->GetEntry(ievt);
 
-      Float_t val = fReader->EvaluateMVA(methodName);
+      Float_t val = fReader.EvaluateMVA(methodName);
       fApplicationResults.push_back(val);
 
       fEvaluationResults.push_back(fMvaEval);
@@ -233,12 +224,12 @@ void TestCvSerialise(TMVA::Types::EMVA methodType, TString methodName, TString m
 {
    TString jobname = "test_cv_serialise";
 
-   TestContex *tc = new TestContex();
-   tc->setUpCrossValidation(jobname, methodType, methodName, methodOptions);
-   tc->runCrossValidation(); // serialises cv method if modelPersitance
-   tc->setUpApplicationPhase(jobname, methodName);
-   tc->runApplicationPhase(methodName);
-   tc->verifyApplicationPhase();
+   TestContex tc{};
+   tc.setUpCrossValidation(jobname, methodType, methodName, methodOptions);
+   tc.runCrossValidation(); // serialises cv method if modelPersitance
+   tc.setUpApplicationPhase(jobname, methodName);
+   tc.runApplicationPhase(methodName);
+   tc.verifyApplicationPhase();
    std::cout << "Done!" << std::endl;
 }
 
