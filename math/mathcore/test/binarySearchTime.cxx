@@ -58,9 +58,8 @@ template <typename T> bool testBinarySearch(const int n, double* tTMath, double*
    t.Start();
    for (int j = 0; j < npass; ++j) {
       for ( T elem = 0; elem < maxint; ++elem ) {
-         T* pind;
-         pind = std::lower_bound(&k[0], &k[n], elem);
-         Long_t index2 = (((pind != &(k[n])) && (*pind == elem)) ? (pind - &k[0]): ( pind - &k[0] - 1));
+         auto pind = std::lower_bound(k.begin(), k.end(), elem);
+         Long_t index2 = (((pind != k.end()) && (*pind == elem)) ? (pind - k.begin()) : (pind - k.begin() - 1));
          s2+= index2;
       }
    }

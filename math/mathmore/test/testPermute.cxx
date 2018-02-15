@@ -64,7 +64,7 @@ bool checkPermute()
    //cout << original << vM << vS << endl;
 
    while ( TMath::Permute(n, &vM[0]) ) {
-      std::next_permutation(&vS[0], &vS[n]);
+      std::next_permutation(vS.begin(), vS.end());
       //cout << vM << vS << endl;
       equals &= equal(vM.begin(), vM.end(), vS.begin());
    }
@@ -99,7 +99,7 @@ void permuteTime(const int n, double* tTMath, double* tStd)
    t.Start();
    for (int j = 0; j < npass; ++j) {
       copy(original.begin(), original.end(), v.begin());
-      while ( std::next_permutation(&v[0], &v[n]) ) {}
+      while ( std::next_permutation(v.begin(), v.end()) ) {}
    }
    t.Stop();
    *tStd = t.RealTime();
