@@ -82,9 +82,9 @@ void testkdTreeBinning() {
    int ibinMax = kdBins->GetBinMaxDensity();
 
    std::cout << "Bin with minimum density: " << ibinMin << " density = " <<  kdBins->GetBinDensity(ibinMin) << " content = " << kdBins->GetBinContent(ibinMin)  << std::endl;
-   std::cout << "Bin with maximum density: " << ibinMax << " density = " <<  kdBins->GetBinDensity(ibinMax) << " content = " << kdBins->GetBinContent(ibinMin) << std::endl;
+   std::cout << "Bin with maximum density: " << ibinMax << " density = " <<  kdBins->GetBinDensity(ibinMax) << " content = " << kdBins->GetBinContent(ibinMax) << std::endl;
 
-   if (kdBins->GetBinDensity(ibinMax) != DATASZ/NBINS) 
+   if (kdBins->GetBinContent(ibinMax) != DATASZ/NBINS)
       Error("testkdTreeBinning","Wrong bin content");
 
    // order bins by density
