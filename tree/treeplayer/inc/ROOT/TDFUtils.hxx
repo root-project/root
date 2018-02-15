@@ -14,13 +14,12 @@
 #include "ROOT/TDataSource.hxx" // ColumnName2ColumnTypeName
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/TArrayBranch.hxx"
-#include "Compression.h"
+#include "ROOT/TSnapshotOptions.hxx"
 #include "TH1.h"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
 
 #include <array>
-#include <cstddef> // std::size_t
 #include <deque>
 #include <functional>
 #include <memory>
@@ -30,30 +29,6 @@
 
 class TTree;
 class TTreeReader;
-
-namespace ROOT {
-namespace Experimental {
-namespace TDF {
-/// A collection of options to steer the creation of the dataset on file
-struct TSnapshotOptions {
-   using ECAlgo = ::ROOT::ECompressionAlgorithm;
-   TSnapshotOptions() = default;
-   TSnapshotOptions(const TSnapshotOptions &) = default;
-   TSnapshotOptions(TSnapshotOptions &&) = default;
-   TSnapshotOptions(std::string_view mode, ECAlgo comprAlgo, int comprLevel, int autoFlush, int splitLevel)
-      : fMode(mode), fCompressionAlgorithm(comprAlgo), fCompressionLevel{comprLevel}, fAutoFlush(autoFlush),
-        fSplitLevel(splitLevel)
-   {
-   }
-   std::string fMode = "RECREATE";             //< Mode of creation of output file
-   ECAlgo fCompressionAlgorithm = ROOT::kZLIB; //< Compression algorithm of output file
-   int fCompressionLevel = 1;                  //< Compression level of output file
-   int fAutoFlush = 0;                         //< AutoFlush value for output tree
-   int fSplitLevel = 99;                       //< Split level of output tree
-};
-}
-}
-}
 
 /// \cond HIDDEN_SYMBOLS
 
