@@ -20,8 +20,8 @@ FOUNDATIONH     := $(filter-out $(MODDIRI)/libcpp_string_view.h,\
 FOUNDATIONS     := $(filter-out $(MODDIRS)/G__%,$(wildcard $(MODDIRS)/*.cxx))
 
 FOUNDATIONTH     += $(MODDIRI)/root_std_complex.h
-FOUNDATIONTH     += $(MODDIRI)/libcpp_string_view.h
-FOUNDATIONTH     += $(MODDIRI)/RWrap_libcpp_string_view.h
+FOUNDATIONTH     += $(MODDIRI)/ROOT/libcpp_string_view.h
+FOUNDATIONTH     += $(MODDIRI)/ROOT/RWrap_libcpp_string_view.h
 FOUNDATIONTH     += $(MODDIRI)/ROOT/RArrayView.hxx
 FOUNDATIONTH     += $(MODDIRI)/ROOT/RMakeUnique.hxx
 FOUNDATIONTH     += $(MODDIRI)/ROOT/TypeTraits.hxx
