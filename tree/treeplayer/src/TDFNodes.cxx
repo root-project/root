@@ -14,7 +14,7 @@
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TDataSource.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
-#include "RStringView.h"
+#include "ROOT/RStringView.hxx"
 #include "TTree.h"
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"

@@ -28,10 +28,10 @@ module ROOT_Config [system] {
 module ROOT_Foundation_Stage1_NoRTTI [system] {
   module "RtypesCore.h" { header "RtypesCore.h" export * }
   module "ESTLType.h" { header "ESTLType.h" export * }
-  module "RStringView.h" {
-    // RWrap_libcpp_string_view.h is meant to be included only by RStringView.h
-    textual header "RWrap_libcpp_string_view.h"
-    header "RStringView.h"
+  module "ROOT/RStringView.hxx" {
+    // RWrap_libcpp_string_view.h is meant to be included only by ROOT/RStringView.hxx
+    textual header "ROOT/RWrap_libcpp_string_view.h"
+    header "ROOT/RStringView.hxx"
     export *
   }
   // Varargs contains a lot of macros for supporting the obsolete va_args.

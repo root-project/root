@@ -21,7 +21,7 @@
 
 #include "TStyleReader.hxx" // in src/
 
-#include <RStringView.h>
+#include <ROOT/RStringView.hxx>
 
 #include <cassert>
 #include <limits>

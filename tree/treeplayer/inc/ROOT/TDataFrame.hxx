@@ -28,7 +28,7 @@ ROOT's TDataFrame allows to analyse data stored in TTrees with a high level inte
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TDataSource.hxx"
 #include "ROOT/TypeTraits.hxx"
-#include "RStringView.h"
+#include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 #include "TTree.h"
 

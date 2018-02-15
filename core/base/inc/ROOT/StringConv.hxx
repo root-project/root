@@ -13,7 +13,7 @@
 #define ROOT_StringConv
 
 
-#include "RStringView.h"
+#include "ROOT/RStringView.hxx"
 #include "Rtypes.h"
 #include "RConfigure.h"
 #include <cmath>

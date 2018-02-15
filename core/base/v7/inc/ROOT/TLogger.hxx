@@ -19,7 +19,7 @@
 #include <array>
 #include <memory>
 #include <sstream>
-#include "RStringView.h"
+#include "ROOT/RStringView.hxx"
 #include <vector>
 
 namespace ROOT {
