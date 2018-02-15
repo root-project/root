@@ -231,7 +231,7 @@ namespace ROOT {
             fCoordsPtr.resize(fDim);
 
             for (unsigned int i = 0; i < fDim; i++) {
-               fCoordsPtr[i] = &fCoords[i].front();
+               fCoordsPtr[i] = fCoords[i].empty() ? NULL : &fCoords[i].front();
             }
          }
 

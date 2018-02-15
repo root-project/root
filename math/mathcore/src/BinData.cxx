@@ -770,7 +770,7 @@ namespace ROOT {
       unsigned vectorPadding = FitData::VectorPadding(fNPoints);
       fData.resize(fNPoints + vectorPadding);
       std::copy( fDataPtr, fDataPtr + fNPoints, fData.begin() );
-      fDataPtr = &fData.front();
+      fDataPtr = fData.empty() ? NULL : &fData.front();
 
       for ( unsigned int i=0; i < fDim; i++ )
       {
@@ -785,7 +785,7 @@ namespace ROOT {
 
         fDataError.resize(fNPoints + vectorPadding);
         std::copy(fDataErrorPtr, fDataErrorPtr + fNPoints + vectorPadding, fDataError.begin());
-        fDataErrorPtr = &fDataError.front();
+        fDataErrorPtr = fDataError.empty() ? NULL : &fDataError.front();
       }
 
       if ( kValueError == fErrorType )
@@ -817,8 +817,8 @@ namespace ROOT {
           fDataErrorLow.resize(fNPoints + vectorPadding);
           std::copy(fDataErrorHighPtr, fDataErrorHighPtr + fNPoints + vectorPadding, fDataErrorHigh.begin());
           std::copy(fDataErrorLowPtr, fDataErrorLowPtr + fNPoints + vectorPadding, fDataErrorLow.begin());
-          fDataErrorHighPtr = &fDataErrorHigh.front();
-          fDataErrorLowPtr = &fDataErrorLow.front();
+          fDataErrorHighPtr = fDataErrorHigh.empty() ? NULL : &fDataErrorHigh.front();
+          fDataErrorLowPtr = fDataErrorLow.empty() ? NULL : &fDataErrorLow.front();
         }
       }
 

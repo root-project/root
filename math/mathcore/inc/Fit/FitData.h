@@ -185,7 +185,7 @@ namespace ROOT {
 
             for (unsigned int i = 0; i < fDim; i++) {
                fCoords[i].resize(fMaxPoints + VectorPadding(fMaxPoints));
-               fCoordsPtr[i] = &fCoords[i].front();
+               fCoordsPtr[i] = fCoords[i].empty() ? NULL : &fCoords[i].front();
             }
 
             if (fpTmpCoordVector) {
@@ -354,7 +354,7 @@ namespace ROOT {
                unsigned padding = VectorPadding(fNPoints);
                fCoords[i].resize(fNPoints + padding);
                std::copy(fCoordsPtr[i], fCoordsPtr[i] + fNPoints + padding, fCoords[i].begin());
-               fCoordsPtr[i] = &fCoords[i].front();
+               fCoordsPtr[i] = fCoords[i].empty() ? NULL : &fCoords[i].front();
             }
 
             fWrapped = false;
