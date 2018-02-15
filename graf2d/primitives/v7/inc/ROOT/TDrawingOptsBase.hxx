@@ -19,7 +19,7 @@
 #include <ROOT/TDrawingAttr.hxx>
 
 
-#include <RStringView.h>
+#include <ROOT/RStringView.hxx>
 #include <utility>
 #include <vector>
 

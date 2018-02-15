@@ -25,7 +25,7 @@
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TDataSource.hxx"
 #include "ROOT/TSeq.hxx"
-#include "RStringView.h"
+#include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 #include "TClass.h"
 #include "TInterpreter.h"

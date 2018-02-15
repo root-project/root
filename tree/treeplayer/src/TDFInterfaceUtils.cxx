@@ -15,7 +15,7 @@
 #include <utility>
 
 #include "ROOT/TDFUtils.hxx"
-#include "RStringView.h"
+#include "ROOT/RStringView.hxx"
 #include "TObject.h"
 #include "TTree.h"
 

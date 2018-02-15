@@ -12,7 +12,7 @@
 #define ROOT_TSNAPSHOTOPTIONS
 
 #include <Compression.h>
-#include <RStringView.h>
+#include <ROOT/RStringView.hxx>
 #include <string>
 
 namespace ROOT {
