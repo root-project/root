@@ -90,6 +90,7 @@ using namespace ROOT::Experimental::TDF;
 
 /// Compile-time integer sequence generator
 /// e.g. calling GenStaticSeq<3>::type() instantiates a StaticSeq<0,1,2>
+// TODO substitute all usages of StaticSeq and GenStaticSeq with std::index_sequence when it becomes available
 template <int...>
 struct StaticSeq {
 };
