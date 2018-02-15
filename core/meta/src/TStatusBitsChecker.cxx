@@ -42,7 +42,7 @@
       // used in TStreamerElement
       kHasRange = TStreamerElement::kHasRange
    };
-  ~~~ {.cpp}
+   ~~~ {.cpp}
 
   Without the EStatusBitsDupExceptions enum you would see
 

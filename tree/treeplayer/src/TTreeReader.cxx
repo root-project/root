@@ -235,7 +235,7 @@ void TTreeReader::Initialize()
 /// If end <= begin, `end` is ignored (set to `-1`) and only `begin` is used.
 /// Example:
 ///
-///  ~~~ {.cpp}
+/// ~~~ {.cpp}
 /// reader.SetEntriesRange(3, 5);
 /// while (reader.Next()) {
 ///   // Will load entries 3 and 4.
