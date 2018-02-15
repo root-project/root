@@ -46,7 +46,7 @@ TODO: Add a description of modelling. $y = \hat{f}(x)$.
 
 % This notation is inspired by Hastie et. al. \cite{hastie-elem-of-stat}.
 
-Given a data set consisting of $N$ events $x$, each drawn from $\mathbb{R}^{d}$ with some probability $p(x)$. There exists some mapping from feature space to target space which for classification can be written as $y = \<p(c_k | x); 1 \leq k \leq K\>$ where $K$ is the number of classes. In the case of binary classification this simplifies to $y = p_{signal}(x) = f(x)$ since $p_{background}(x) = 1 - p_{signal}(x)$.
+Given a data set consisting of $N$ events $x$, each drawn from $\mathbb{R}^{d}$ with some probability $p(x)$. There exists some mapping from feature space to target space which for classification can be written as $y = \left<p(c_k | x); 1 \leq k \leq K\right>$ where $K$ is the number of classes. In the case of binary classification this simplifies to $y = p_{signal}(x) = f(x)$ since $p_{background}(x) = 1 - p_{signal}(x)$.
 
 The goal of supervised learning is to approximate the target function $f$. The estimate is here denoted $\hat{f}$.
 
@@ -235,6 +235,8 @@ Cross validation in TMVA is implemented as a wrapper around the Factory class. T
 
 Classification / Regression / Multi class fully supported
 
+Note: Data that is to be used for CV should be put in the training set. CV will then pick them up and do something else.
+
 Note: Interface is changed from ordinary factory w.r.t. dataloader handling.
 
 Note: Currently supports only one kind of split, k-fold cv.
@@ -370,14 +372,92 @@ Recommendation of parameters
    - Litt. says 10-fold generally offers a good compromise. It is possible to do better, but that depends on you use case.
    - If one is concerned about the training set correlation, 2-fold is recommended.
 
-% \subsection{Examples}
+\subsection{Examples}
+
+\begin{codeexample}
+\begin{tmvacode}
+auto d = new TMVA::DataLoader("<datasetName");
+d->AddVariable("x");
+d->AddSpectator("eventID");
+d->AddSignalTree(sigTree);
+d->AddBackgroundTree(bkgTree);
+d->PrepareTrainingAndTestTree("", "nTest_Signal=0"
+                                  ":nTest_Background=0");
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize
+Setting up a typical dataloader for using with cross validation. It is assumed that you have available to TTrees, one with signal events, one with background events, both with suitable variables defined.
+Cross validation in TMVA uses a separate splitting mechanism which is applied after the ordinary splitting step. It uses only events in the training set, the test set is currently left unused. To make all events available to cross validation, they are placed in the training set by setting the size of the test set to zero.
+}
+\label{code:cv-dataloader}
+\end{codeexample}
 
 
 
+\begin{codeexample}
+\begin{tmvacode}
+auto d = new TMVA::DataLoader("<datasetName>");
+auto f = TFile::Open("path/to/file");
+TString opt = "!V:!Silent:!Correlations"
+              ":AnalysisType=Classification"
+              ":NumFolds=2";
+TMVA::CrossValidation cv {"<jobname>", d, f, opt};
 
+cv.BookMethod(TMVA::Types::kBDT, "BDT", "<options>");
+cv.Evaluate();
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Minimal example to get cross validation up and running using the dataloader defined in \ref{code:cv-dataloader}. The example sets up a cross validated BDT with 2 folds where the folds are assigned randomly. The results will be available for inspection with the TMVA gui interface under \textbb{"path/to/file"}.}
+\label{code:cv-minimal}
+\end{codeexample}
 
+\begin{codeexample}
+\begin{tmvacode}
+root -l -e 'TMVAGui("path/to/file")'
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Command to run to inspect the resulting output file.}
+\label{code:cv-gui}
+\end{codeexample}
 
+\begin{codeexample}
+\begin{tmvacode}
+root -l -e 'TMVAGui("path/to/fold")'
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Command to run to inspect the resulting per fold output files.}
+\label{code:cv-gui-fold}
+\end{codeexample}
 
+\begin{codeexample}
+\begin{tmvacode}
+TMVA::CrossValidation cv {"<jobname>", <dataloader>, <outputFile>, "<options>"};
+cv.BookMethod(<methodType>, "<methodName>", "<options>");
+cv.Evaluate();
+
+for (auto result : cv.GetResults()) {
+   std::cout << "Summary for method <methodName>:" << std::endl;
+   result.Print();
+}
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Printing summary statistics from after cross validation.}
+\label{code:cv-results}
+\end{codeexample}
+
+\begin{codeexample}
+\begin{tmvacode}
+TMVA::CrossValidation cv {"<jobname>", <dataloader>, <outputFile>, "<options>"};
+cv.BookMethod(<methodType>, "<methodName>", "<options>");
+cv.Evaluate();
+
+for (auto result : cv.GetResults()) {
+   std::cout << "Summary for method <methodName>:" << std::endl;
+   for (UInt_t iFold = 0; i<cv.GetNumFolds(); ++i) {
+      std::cout << "Fold " << iFold << ": " << std::endl;
+      std::cout << "\tROC integral - " << result.GetROCValues()[iFold] << std::endl;
+      std::cout << "\tBkgEff@SigEff=0.3: " << result.GetEff30Values()[iFold] << std::endl;
+   }
+}
+\end{tmvacode}
+\caption[.]{\codeexampleCaptionSize Statistics is available through the CrossValidationResults object. For example, ROC integrals and effciencies can be accessed per fold. See the ROOT reference for up to date interface documentation.}
+\label{code:cv-results}
+\end{codeexample}
 
 
 
