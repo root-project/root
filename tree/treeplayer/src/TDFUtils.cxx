@@ -104,7 +104,6 @@ std::string TypeID2TypeName(const std::type_info &id)
       return "bool";
    else
       return "";
-
 }
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary

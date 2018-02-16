@@ -50,7 +50,7 @@ class TLazyDS final : public ROOT::Experimental::TDF::TDataSource {
    // according to the models.
    const PointerHolderPtrs_t fPointerHoldersModels;
    std::vector<PointerHolderPtrs_t> fPointerHolders;
-   std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges {};
+   std::vector<std::pair<ULong64_t, ULong64_t>> fEntryRanges{};
    unsigned int fNSlots{0};
 
    Record_t GetColumnReadersImpl(std::string_view colName, const std::type_info &id)
@@ -60,15 +60,14 @@ class TLazyDS final : public ROOT::Experimental::TDF::TDataSource {
       const auto idName = ROOT::Internal::TDF::TypeID2TypeName(id);
       auto it = fColTypesMap.find(colNameStr);
       if (fColTypesMap.end() == it) {
-         std::string err = "The specified column name, \"" + colNameStr
-                         + "\" is not known to the data source.";
+         std::string err = "The specified column name, \"" + colNameStr + "\" is not known to the data source.";
          throw std::runtime_error(err);
       }
 
       const auto colIdName = it->second;
       if (colIdName != idName) {
-         std::string err = "Column " + colNameStr + " has type " + colIdName
-                         + " while the id specified is associated to type " + idName;
+         std::string err = "Column " + colNameStr + " has type " + colIdName +
+                           " while the id specified is associated to type " + idName;
          throw std::runtime_error(err);
       }
 
@@ -89,7 +88,7 @@ class TLazyDS final : public ROOT::Experimental::TDF::TDataSource {
    void SetEntryHelper(unsigned int slot, ULong64_t entry, ROOT::Internal::TDF::StaticSeq<S...>)
    {
       std::initializer_list<int> expander{
-         (* static_cast<ColumnTypes *>(fPointerHolders[S][slot]->GetPointer()) = (*std::get<S>(fColumns))[entry], 0)...};
+         (*static_cast<ColumnTypes *>(fPointerHolders[S][slot]->GetPointer()) = (*std::get<S>(fColumns))[entry], 0)...};
       (void)expander; // avoid unused variable warnings
    }
 
@@ -103,8 +102,8 @@ class TLazyDS final : public ROOT::Experimental::TDF::TDataSource {
       std::string err;
       for (auto i : TSeqI(colLenghts.size())) {
          if (colLength != colLenghts[i]) {
-            err += "Column \"" + fColNames[i] + "\" and column \"" + fColNames[0] + "\" have different lengths: " +
-                   colLengh0_s + " and " + colLengh1_s;
+            err += "Column \"" + fColNames[i] + "\" and column \"" + fColNames[0] +
+                   "\" have different lengths: " + colLengh0_s + " and " + colLengh1_s;
          }
       }
       if (!err.empty()) {
@@ -201,13 +200,13 @@ public:
 /// \brief Factory method to create a Lazy TDataFrame.
 /// \param[in] colNameProxyPairs the series of pairs to describe the columns of the data source, first element of the pair is the name of the column and the second is the TResultProxy to the column in the parent data frame.
 // clang-format on
-template<typename... ColumnTypes>
-TDataFrame MakeLazyDataFrame(std::pair<std::string, TResultProxy<std::vector<ColumnTypes>>>&&... colNameProxyPairs)
+template <typename... ColumnTypes>
+TDataFrame MakeLazyDataFrame(std::pair<std::string, TResultProxy<std::vector<ColumnTypes>>> &&... colNameProxyPairs)
 {
-   TDataFrame tdf(std::make_unique<TLazyDS<ColumnTypes...>>(std::forward<std::pair<std::string, TResultProxy<std::vector<ColumnTypes>>>>(colNameProxyPairs)...));
+   TDataFrame tdf(std::make_unique<TLazyDS<ColumnTypes...>>(
+      std::forward<std::pair<std::string, TResultProxy<std::vector<ColumnTypes>>>>(colNameProxyPairs)...));
    return tdf;
 }
-
 
 } // ns TDF
 } // ns Experimental
