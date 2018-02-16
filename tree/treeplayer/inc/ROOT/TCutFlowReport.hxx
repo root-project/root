@@ -37,6 +37,7 @@ private:
    const ULong64_t fPass;
    const ULong64_t fAll;
    TCutInfo(const std::string &name, ULong64_t pass, ULong64_t all) : fName(name), fPass(pass), fAll(all) {}
+
 public:
    const std::string &GetName() const { return fName; }
    ULong64_t GetAll() const { return fAll; }

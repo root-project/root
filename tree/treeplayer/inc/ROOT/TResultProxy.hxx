@@ -134,7 +134,7 @@ class TResultProxy {
    std::shared_ptr<TDFInternal::TActionBase *> GetActionPtrPtr() const { return fActionPtrPtr; }
 
 public:
-   using Value_t = T; ///< Convenience alias to simplify access to proxied type
+   using Value_t = T;                       ///< Convenience alias to simplify access to proxied type
    static constexpr ULong64_t kOnce = 0ull; ///< Convenience definition to express a callback must be executed once
 
    TResultProxy() = delete;
@@ -172,6 +172,7 @@ public:
       return TIterationHelper<T>::GetEnd(*fObjPtr);
    }
 
+   // clang-format off
    /// Register a callback that TDataFrame will execute "everyNEvents" on a partial result.
    ///
    /// \param[in] everyNEvents Frequency at which the callback will be called, as a number of events processed
@@ -212,7 +213,8 @@ public:
    ///   might change between calls
    /// To register a callback that is called by _each_ worker thread (concurrently) every N events one can use
    /// OnPartialResultSlot.
-   TResultProxy<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T&)> callback)
+   // clang-format on
+   TResultProxy<T> &OnPartialResult(ULong64_t everyNEvents, std::function<void(T &)> callback)
    {
       auto lm = fImplWeakPtr.lock();
       if (!lm)
@@ -222,13 +224,14 @@ public:
       auto c = [nSlots, actionPtrPtr, callback](unsigned int slot) {
          if (slot != nSlots - 1)
             return;
-         auto partialResult = static_cast<Value_t*>((*actionPtrPtr)->PartialUpdate(slot));
+         auto partialResult = static_cast<Value_t *>((*actionPtrPtr)->PartialUpdate(slot));
          callback(*partialResult);
       };
       lm->RegisterCallback(everyNEvents, std::move(c));
       return *this;
    }
 
+   // clang-format off
    /// Register a callback that TDataFrame will execute in each worker thread concurrently on that thread's partial result.
    ///
    /// \param[in] everyNEvents Frequency at which the callback will be called by each thread, as a number of events processed
@@ -258,14 +261,15 @@ public:
    /// *c; // trigger the event loop by accessing an action's result
    /// std::cout << "\nDone!" << std::endl;
    /// \endcode
-   TResultProxy<T> &OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T&)> callback)
+   // clang-format on
+   TResultProxy<T> &OnPartialResultSlot(ULong64_t everyNEvents, std::function<void(unsigned int, T &)> callback)
    {
       auto lm = fImplWeakPtr.lock();
       if (!lm)
          throw std::runtime_error("The main TDataFrame is not reachable: did it go out of scope?");
       auto actionPtrPtr = fActionPtrPtr.get();
       auto c = [actionPtrPtr, callback](unsigned int slot) {
-         auto partialResult = static_cast<Value_t*>((*actionPtrPtr)->PartialUpdate(slot));
+         auto partialResult = static_cast<Value_t *>((*actionPtrPtr)->PartialUpdate(slot));
          callback(slot, *partialResult);
       };
       lm->RegisterCallback(everyNEvents, std::move(c));

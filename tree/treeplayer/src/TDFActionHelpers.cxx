@@ -143,9 +143,11 @@ void MeanHelper::Exec(unsigned int slot, double v)
 void MeanHelper::Finalize()
 {
    double sumOfSums = 0;
-   for (auto &s : fSums) sumOfSums += s;
+   for (auto &s : fSums)
+      sumOfSums += s;
    ULong64_t sumOfCounts = 0;
-   for (auto &c : fCounts) sumOfCounts += c;
+   for (auto &c : fCounts)
+      sumOfCounts += c;
    *fResultMean = sumOfSums / (sumOfCounts > 0 ? sumOfCounts : 1);
 }
 

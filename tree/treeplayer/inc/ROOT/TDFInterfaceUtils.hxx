@@ -95,7 +95,6 @@ struct HistoUtils<T, true> {
    static bool HasAxisLimits(T &) { return true; }
 };
 
-
 // Generic filling (covers Histo2D, Histo3D, Profile1D and Profile2D actions, with and without weights)
 template <typename... BranchTypes, typename ActionType, typename ActionResultType, typename PrevNodeType>
 TActionBase *BuildAndBook(const ColumnNames_t &bl, const std::shared_ptr<ActionResultType> &h,
@@ -376,37 +375,31 @@ struct TEvalAnd {
 };
 
 // Check if a class is a specialisation of stl containers templates
+// clang-format off
 template <typename>
-struct IsVector_t : std::false_type {
-};
+struct IsVector_t : std::false_type {};
 
 template <typename T>
-struct IsVector_t<std::vector<T>> : std::true_type {
-};
+struct IsVector_t<std::vector<T>> : std::true_type {};
 
 template <typename>
-struct IsList_t : std::false_type {
-};
+struct IsList_t : std::false_type {};
 
 template <typename T>
-struct IsList_t<std::list<T>> : std::true_type {
-};
+struct IsList_t<std::list<T>> : std::true_type {};
 
 template <typename>
-struct IsDeque_t : std::false_type {
-};
+struct IsDeque_t : std::false_type {};
 
 template <typename T>
-struct IsDeque_t<std::deque<T>> : std::true_type {
-};
+struct IsDeque_t<std::deque<T>> : std::true_type {};
 
 template <typename>
-struct IsTArrayBranch_t : std::false_type {
-};
+struct IsTArrayBranch_t : std::false_type {};
 
 template <typename T>
-struct IsTArrayBranch_t<ROOT::Experimental::TDF::TArrayBranch<T>> : std::true_type {
-};
+struct IsTArrayBranch_t<ROOT::Experimental::TDF::TArrayBranch<T>> : std::true_type {};
+// clang-format on
 
 } // namespace TDF
 } // namespace Internal

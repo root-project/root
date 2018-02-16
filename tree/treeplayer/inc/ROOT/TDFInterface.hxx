@@ -383,8 +383,8 @@ public:
       snapCall << ">(\"" << treename << "\", \"" << filename << "\", "
                << "*reinterpret_cast<std::vector<std::string>*>(" // vector<string> should be ColumnNames_t
                << std::hex << std::showbase << (size_t)&columnList << "),"
-               << "*reinterpret_cast<ROOT::Experimental::TDF::TSnapshotOptions*>("
-               << std::hex << std::showbase << (size_t)&options << "));";
+               << "*reinterpret_cast<ROOT::Experimental::TDF::TSnapshotOptions*>(" << std::hex << std::showbase
+               << (size_t)&options << "));";
       // jit snapCall, return result
       TInterpreter::EErrorCode errorCode;
       auto newTDFPtr = gInterpreter->Calc(snapCall.str().c_str(), &errorCode);
@@ -488,7 +488,7 @@ public:
       return Cache(selectedColumns);
    }
 
-// clang-format off
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a node that filters entries based on range: [begin, end)
    /// \param[in] begin Initial entry number considered for this range.
@@ -497,7 +497,7 @@ public:
    ///
    /// Note that in case of previous Ranges and Filters the selected range refers to the transformed dataset.
    /// Ranges are only available if EnableImplicitMT has _not_ been called. Multi-thread ranges are not supported.
-// clang-format on
+   // clang-format on
    TInterface<TDFDetail::TRange<Proxied>> Range(unsigned int begin, unsigned int end, unsigned int stride = 1)
    {
       // check invariants
@@ -514,16 +514,16 @@ public:
       return tdf_r;
    }
 
-// clang-format off
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Creates a node that filters entries based on range
    /// \param[in] end Final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
    ///
    /// See the other Range overload for a detailed description.
-// clang-format on
+   // clang-format on
    TInterface<TDFDetail::TRange<Proxied>> Range(unsigned int end) { return Range(0, end, 1); }
 
-// clang-format off
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined function on each entry (*instant action*)
    /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined calculations.
@@ -534,7 +534,7 @@ public:
    /// is triggered.
    /// Users are responsible for the thread-safety of this callable when executing
    /// with implicit multi-threading enabled (i.e. ROOT::EnableImplicitMT).
-// clang-format on
+   // clang-format on
    template <typename F>
    void Foreach(F f, const ColumnNames_t &columns = {})
    {
@@ -543,7 +543,7 @@ public:
       ForeachSlot(TDFInternal::AddSlotParameter<ret_type>(f, arg_types()), columns);
    }
 
-// clang-format off
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined function requiring a processing slot index on each entry (*instant action*)
    /// \param[in] f Function, lambda expression, functor class or any other callable object performing user defined calculations.
@@ -559,7 +559,7 @@ public:
    /// *streams of processing* indexed by the first parameter.
    /// `ForeachSlot` works just as well with single-thread execution: in that
    /// case `slot` will always be `0`.
-// clang-format on
+   // clang-format on
    template <typename F>
    void ForeachSlot(F f, const ColumnNames_t &columns = {})
    {
@@ -577,7 +577,7 @@ public:
       loopManager->Run();
    }
 
-// clang-format off
+   // clang-format off
    ////////////////////////////////////////////////////////////////////////////
    /// \brief Execute a user-defined reduce operation on the values of a column.
    /// \tparam F The type of the reduce callable. Automatically deduced.
@@ -600,7 +600,7 @@ public:
    ///
    /// This action is *lazy*: upon invocation of this method the calculation is
    /// booked but not executed. See TResultProxy documentation.
-// clang-format on
+   // clang-format on
    template <typename F, typename T = typename TTraits::CallableTraits<F>::ret_type>
    TResultProxy<T> Reduce(F f, std::string_view columnName = "")
    {
