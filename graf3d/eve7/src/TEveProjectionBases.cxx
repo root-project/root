@@ -52,7 +52,7 @@ TEveProjectable::~TEveProjectable()
       TEveElement* el = p->GetProjectedAsElement();
       assert(el);
       {
-         gEve->PreDeleteElement(el);
+         REX::gEve->PreDeleteElement(el);
          delete el;
       }
    }
@@ -153,8 +153,6 @@ projection transformation.
 It is assumed that all classes deriving from TEveProjected are also
 derived from TEveElement.
 */
-
-ClassImp(TEveProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.

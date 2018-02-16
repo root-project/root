@@ -27,6 +27,7 @@
 #include <algorithm>
 
 using namespace ROOT::Experimental;
+namespace REX = ROOT::Experimental;
 
 /** \class TEveElement
 \ingroup TEve
@@ -187,7 +188,7 @@ TEveElement::~TEveElement()
 
 void TEveElement::PreDeleteElement()
 {
-   gEve->PreDeleteElement(this);
+   REX::gEve->PreDeleteElement(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -346,7 +347,7 @@ void TEveElement::SetVizModel(TEveElement* model)
 
 Bool_t TEveElement::FindVizModel()
 {
-   TEveElement* model = gEve->FindVizDBEntry(fVizTag);
+   TEveElement* model = REX::gEve->FindVizDBEntry(fVizTag);
    if (model)
    {
       SetVizModel(model);
@@ -480,7 +481,7 @@ void TEveElement::SaveVizParams(std::ostream& out, const TString& tag, const TSt
 
    WriteVizParams(out, var);
 
-   out << t << "gEve->InsertVizDBEntry(\"" << tag << "\", "<< var <<");\n";
+   out << t << "REX::gEve->InsertVizDBEntry(\"" << tag << "\", "<< var <<");\n";
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -510,7 +511,7 @@ void TEveElement::VizDB_Apply(const char* tag)
    if (ApplyVizTag(tag))
    {
       PropagateVizParamsToProjecteds();
-      gEve->Redraw3D();
+      REX::gEve->Redraw3D();
    }
 }
 
@@ -524,7 +525,7 @@ void TEveElement::VizDB_Reapply()
    {
       CopyVizParamsFromDB();
       PropagateVizParamsToProjecteds();
-      gEve->Redraw3D();
+      REX::gEve->Redraw3D();
    }
 }
 
@@ -542,7 +543,7 @@ void TEveElement::VizDB_UpdateModel(Bool_t update)
       if (update)
       {
          fVizModel->PropagateVizParamsToElements(fVizModel);
-         gEve->Redraw3D();
+         REX::gEve->Redraw3D();
       }
    }
    else
@@ -567,9 +568,9 @@ void TEveElement::VizDB_Insert(const char* tag, Bool_t replace, Bool_t update)
       return;
    }
    el->CopyVizParams(this);
-   Bool_t succ = gEve->InsertVizDBEntry(tag, el, replace, update);
+   Bool_t succ = REX::gEve->InsertVizDBEntry(tag, el, replace, update);
    if (succ && update)
-      gEve->Redraw3D();
+      REX::gEve->Redraw3D();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -637,13 +638,13 @@ void TEveElement::CheckReferenceCount(const TEveException& eh)
    if (NumParents() <= fParentIgnoreCnt && fTopItemCnt  <= 0 &&
        fDestroyOnZeroRefCnt             && fDenyDestroy <= 0)
    {
-      if (gEve->GetUseOrphanage())
+      if (REX::gEve->GetUseOrphanage())
       {
          if (gDebug > 0)
             Info(eh, "moving to orphanage '%s' on zero reference count.", GetElementName());
 
          PreDeleteElement();
-         gEve->GetOrphanage()->AddElement(this);
+         REX::gEve->GetOrphanage()->AddElement(this);
       }
       else
       {
@@ -896,7 +897,7 @@ Bool_t TEveElement::SetRnrState(Bool_t rnr)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Propagate render state to the projected replicas of this element.
-/// Maybe this should be optional on gEve/element level.
+/// Maybe this should be optional on REX::gEve/element level.
 
 void TEveElement::PropagateRnrStateToProjecteds()
 {
@@ -1432,7 +1433,7 @@ void TEveElement::Annihilate()
 
    AnnihilateRecursively();
 
-   gEve->Redraw3D();
+   REX::gEve->Redraw3D();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1465,7 +1466,7 @@ void TEveElement::Destroy()
 
    PreDeleteElement();
    delete this;
-   gEve->Redraw3D();
+   REX::gEve->Redraw3D();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1513,7 +1514,7 @@ void TEveElement::DestroyElements()
       }
    }
 
-   gEve->Redraw3D();
+   REX::gEve->Redraw3D();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1599,7 +1600,7 @@ void TEveElement::DecParentIgnoreCnt()
 
 Bool_t TEveElement::HandleElementPaste(TEveElement* el)
 {
-   gEve->AddElement(el, this);
+   REX::gEve->AddElement(el, this);
    return kTRUE;
 }
 
@@ -1609,7 +1610,7 @@ Bool_t TEveElement::HandleElementPaste(TEveElement* el)
 
 void TEveElement::ElementChanged(Bool_t update_scenes, Bool_t redraw)
 {
-   gEve->ElementChanged(this, update_scenes, redraw);
+   REX::gEve->ElementChanged(this, update_scenes, redraw);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1778,22 +1779,22 @@ UChar_t TEveElement::GetSelectedLevel() const
 void TEveElement::RecheckImpliedSelections()
 {
    if (fSelected || fImpliedSelected)
-      gEve->GetSelection()->RecheckImpliedSetForElement(this);
+      REX::gEve->GetSelection()->RecheckImpliedSetForElement(this);
 
    if (fHighlighted || fImpliedHighlighted)
-      gEve->GetHighlight()->RecheckImpliedSetForElement(this);
+      REX::gEve->GetHighlight()->RecheckImpliedSetForElement(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add (bitwise or) given stamps to fChangeBits.
-/// Register this element to gEve as stamped.
+/// Register this element to REX::gEve as stamped.
 /// This method is virtual so that sub-classes can add additional
 /// actions. The base-class method should still be called (or replicated).
 
 void TEveElement::AddStamp(UChar_t bits)
 {
    fChangeBits |= bits;
-   if (fDestructing == kNone) gEve->ElementStamped(this);
+   if (fDestructing == kNone) REX::gEve->ElementStamped(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

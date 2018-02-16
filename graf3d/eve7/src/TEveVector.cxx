@@ -103,9 +103,6 @@ No TObject inheritance and virtual functions.
 Also used in VSD.
 */
 
-ClassImp(TEveVector4T<Float_t>);
-ClassImp(TEveVector4T<Double_t>);
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Dump to stdout as "(x, y, z; t)\n".
 
@@ -124,8 +121,6 @@ No TObject inheritance and virtual functions.
 Also used in VSD.
 */
 
-ClassImp(TEveVector2T<Float_t>);
-ClassImp(TEveVector2T<Double_t>);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normalize the vector to length if current length is non-zero.

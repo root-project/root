@@ -264,8 +264,8 @@ void TEveUtil::SetColorBrightness(Float_t value, Bool_t full_redraw)
       }
    }
 
-   if (full_redraw && gEve != 0)
-      gEve->FullRedraw3D();
+   if (full_redraw && REX::gEve != 0)
+      REX::gEve->FullRedraw3D();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -401,8 +401,6 @@ Functionality to lock-unlock via setting of a static lock in
 TGeoManager should be added (new feature of TGeoManager).
 */
 
-ClassImp(TEveGeoManagerHolder);
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 /// If n_seg is specified and larger than 2, the new geo-manager's
@@ -454,15 +452,11 @@ Base-class for reference-counted objects.
 By default the object is destroyed when zero reference-count is reached.
 */
 
-ClassImp(TEveRefCnt);
-
 /** \class TEveRefBackPtr
 \ingroup TEve
 Base-class for reference-counted objects with reverse references to
 TEveElement objects.
 */
-
-ClassImp(TEveRefBackPtr);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

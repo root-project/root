@@ -252,8 +252,6 @@ void TEveTrackProjected::SecSelected(TEveTrack* /*track*/)
 Specialization of TEveTrackList for holding TEveTrackProjected objects.
 */
 
-ClassImp(TEveTrackListProjected);
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.
 

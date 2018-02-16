@@ -1085,14 +1085,14 @@ TEveTrack* TEveTrackList::FindTrackByLabel(Int_t label)
    {
       if (((TEveTrack*)(*i))->GetLabel() == label)
       {
-         // TGListTree     *lt   = gEve->GetLTEFrame()->GetListTree();
+         // TGListTree     *lt   = REX::gEve->GetLTEFrame()->GetListTree();
          // TGListTreeItem *mlti = lt->GetSelected();
          // if (mlti->GetUserData() != this)
          //    mlti = FindListTreeItem(lt);
          // TGListTreeItem *tlti = (*i)->FindListTreeItem(lt, mlti);
          // lt->HighlightItem(tlti);
          // lt->SetSelected(tlti);
-         // gEve->EditElement(*i);
+         // REX::gEve->EditElement(*i);
          return (TEveTrack*) *i;
       }
    }
@@ -1108,14 +1108,14 @@ TEveTrack* TEveTrackList::FindTrackByIndex(Int_t index)
    {
       if (((TEveTrack*)(*i))->GetIndex() == index)
       {
-         // TGListTree     *lt   = gEve->GetLTEFrame()->GetListTree();
+         // TGListTree     *lt   = REX::gEve->GetLTEFrame()->GetListTree();
          // TGListTreeItem *mlti = lt->GetSelected();
          // if (mlti->GetUserData() != this)
          //    mlti = FindListTreeItem(lt);
          // TGListTreeItem *tlti = (*i)->FindListTreeItem(lt, mlti);
          // lt->HighlightItem(tlti);
          // lt->SetSelected(tlti);
-         // gEve->EditElement(*i);
+         // REX::gEve->EditElement(*i);
          return (TEveTrack*) *i;
       }
    }

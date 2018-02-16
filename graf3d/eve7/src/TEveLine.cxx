@@ -25,8 +25,6 @@ namespace
 An arbitrary polyline with fixed line and marker attributes.
 */
 
-ClassImp(TEveLine);
-
 Bool_t TEveLine::fgDefaultSmooth = kFALSE;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -311,7 +309,6 @@ void TEveLine::SetDefaultSmooth(Bool_t r)
 Projected copy of a TEveLine.
 */
 
-ClassImp(TEveLineProjected);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor.

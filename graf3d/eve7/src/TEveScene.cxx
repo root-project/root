@@ -51,8 +51,8 @@ TEveScene::~TEveScene()
 {
    fDestructing = kStandard;
 
-   gEve->GetViewers()->SceneDestructing(this);
-   gEve->GetScenes()->RemoveElement(this);
+   REX::gEve->GetViewers()->SceneDestructing(this);
+   REX::gEve->GetScenes()->RemoveElement(this);
    // delete fPad;
 }
 

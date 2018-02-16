@@ -369,7 +369,7 @@ TEveGeoShape* TEveGeoShape::ImportShapeExtract(TEveGeoShapeExtract* gse,
                                                TEveElement*         parent)
 {
    TEveGeoManagerHolder gmgr(fgGeoMangeur);
-   TEveManager::TRedrawDisabler redrawOff(gEve);
+   TEveManager::TRedrawDisabler redrawOff(REX::gEve);
    TEveGeoShape* gsre = SubImportShapeExtract(gse, parent);
    gsre->ElementChanged();
    return gsre;
