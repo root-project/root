@@ -10,7 +10,6 @@
 #define ROOT_strlcpy
 
 #include <ROOT/RConfig.h>
-#include "RtypesCore.h"
 
 #ifndef HAS_STRLCPY
 
