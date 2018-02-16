@@ -3,6 +3,17 @@
 #include <vector>
 #include <sstream>
 
+template<typename T, typename V>
+void CheckEqual(const T& a,  const V& b, std::string_view msg = "")
+{
+   const auto asize = a.size();
+   const auto bsize = b.size();
+   EXPECT_EQ(asize, bsize);
+   for (unsigned int i = 0; i < asize; ++i) {
+      EXPECT_EQ(a[i], b[i]) << msg;
+   }
+}
+
 TEST(VecOps, DefaultCtor)
 {
    ROOT::Experimental::VecOps::TVec<int> v;
@@ -48,12 +59,10 @@ TEST(VecOps, MathScalar)
    auto mult = v * scalar;
    auto div = v / scalar;
 
-   for (unsigned int i = 0; i < v.size(); ++i) {
-      EXPECT_EQ(plus[i], ref[i] + scalar);
-      EXPECT_EQ(minus[i], ref[i] - scalar);
-      EXPECT_EQ(mult[i], ref[i] * scalar);
-      EXPECT_EQ(div[i], ref[i] / scalar);
-   }
+   CheckEqual(plus, ref + scalar);
+   CheckEqual(minus, ref - scalar);
+   CheckEqual(mult, ref * scalar);
+   CheckEqual(div, ref / scalar);
 
    // The same with views
    ROOT::Experimental::VecOps::TVec<double> w(ref.data(), ref.size());
@@ -62,12 +71,10 @@ TEST(VecOps, MathScalar)
    mult = w * scalar;
    div = w / scalar;
 
-   for (unsigned int i = 0; i < v.size(); ++i) {
-      EXPECT_EQ(plus[i], ref[i] + scalar);
-      EXPECT_EQ(minus[i], ref[i] - scalar);
-      EXPECT_EQ(mult[i], ref[i] * scalar);
-      EXPECT_EQ(div[i], ref[i] / scalar);
-   }
+   CheckEqual(plus, ref + scalar);
+   CheckEqual(minus, ref - scalar);
+   CheckEqual(mult, ref * scalar);
+   CheckEqual(div, ref / scalar);
 }
 
 TEST(VecOps, MathScalarInPlace)
@@ -85,12 +92,10 @@ TEST(VecOps, MathScalarInPlace)
    auto div = v;
    div /= scalar;
 
-   for (unsigned int i = 0; i < v.size(); ++i) {
-      EXPECT_EQ(plus[i], ref[i] + scalar);
-      EXPECT_EQ(minus[i], ref[i] - scalar);
-      EXPECT_EQ(mult[i], ref[i] * scalar);
-      EXPECT_EQ(div[i], ref[i] / scalar);
-   }
+   CheckEqual(plus, ref + scalar);
+   CheckEqual(minus, ref - scalar);
+   CheckEqual(mult, ref * scalar);
+   CheckEqual(div, ref / scalar);
 }
 
 TEST(VecOps, MathVector)
@@ -104,12 +109,10 @@ TEST(VecOps, MathVector)
    auto mult = v * vec;
    auto div = v / vec;
 
-   for (unsigned int i = 0; i < v.size(); ++i) {
-      EXPECT_EQ(plus[i], ref[i] + vec[i]);
-      EXPECT_EQ(minus[i], ref[i] - vec[i]);
-      EXPECT_EQ(mult[i], ref[i] * vec[i]);
-      EXPECT_EQ(div[i], ref[i] / vec[i]);
-   }
+   CheckEqual(plus, ref + vec);
+   CheckEqual(minus, ref - vec);
+   CheckEqual(mult, ref * vec);
+   CheckEqual(div, ref / vec);
 
    // The same with 1 view
    ROOT::Experimental::VecOps::TVec<double> w(ref.data(), ref.size());
@@ -118,12 +121,11 @@ TEST(VecOps, MathVector)
    mult = w * vec;
    div = w / vec;
 
-   for (unsigned int i = 0; i < v.size(); ++i) {
-      EXPECT_EQ(plus[i], ref[i] + vec[i]);
-      EXPECT_EQ(minus[i], ref[i] - vec[i]);
-      EXPECT_EQ(mult[i], ref[i] * vec[i]);
-      EXPECT_EQ(div[i], ref[i] / vec[i]);
-   }
+   CheckEqual(plus, ref + vec);
+   CheckEqual(minus, ref - vec);
+   CheckEqual(mult, ref * vec);
+   CheckEqual(div, ref / vec);
+
 
    // The same with 2 views
    ROOT::Experimental::VecOps::TVec<double> w2(ref.data(), ref.size());
@@ -132,12 +134,10 @@ TEST(VecOps, MathVector)
    mult = w * w2;
    div = w / w2;
 
-   for (unsigned int i = 0; i < v.size(); ++i) {
-      EXPECT_EQ(plus[i], ref[i] + w2[i]);
-      EXPECT_EQ(minus[i], ref[i] - w2[i]);
-      EXPECT_EQ(mult[i], ref[i] * w2[i]);
-      EXPECT_EQ(div[i], ref[i] / w2[i]);
-   }
+   CheckEqual(plus, ref + w2);
+   CheckEqual(minus, ref - w2);
+   CheckEqual(mult, ref * w2);
+   CheckEqual(div, ref / w2);
 }
 
 TEST(VecOps, MathVectorInPlace)
@@ -155,34 +155,28 @@ TEST(VecOps, MathVectorInPlace)
    auto div = v;
    div /= vec;
 
-   for (unsigned int i = 0; i < v.size(); ++i) {
-      EXPECT_EQ(plus[i], ref[i] + vec[i]);
-      EXPECT_EQ(minus[i], ref[i] - vec[i]);
-      EXPECT_EQ(mult[i], ref[i] * vec[i]);
-      EXPECT_EQ(div[i], ref[i] / vec[i]);
-   }
+   CheckEqual(plus, ref + vec);
+   CheckEqual(minus, ref - vec);
+   CheckEqual(mult, ref * vec);
+   CheckEqual(div, ref / vec);
 }
 
 TEST(VecOps, Filter)
 {
    using namespace ROOT::Experimental::VecOps;
    TVec<int> v{0, 1, 2, 3, 4, 5};
-   std::vector<int> vEvenRef{0, 2, 4};
-   std::vector<int> vOddRef{1, 3, 5};
+   const std::vector<int> vEvenRef{0, 2, 4};
+   const std::vector<int> vOddRef{1, 3, 5};
    auto vEven = v[v % 2 == 0];
    auto vOdd = v[v % 2 == 1];
-   for (int i = 0; i < 3; ++i) {
-      EXPECT_EQ(vEven[i], vEvenRef[i]);
-      EXPECT_EQ(vOdd[i], vOddRef[i]);
-   }
+   CheckEqual(vEven, vEvenRef, "Even check");
+   CheckEqual(vOdd, vOddRef, "Odd check");
 
    // now with the helper function
    vEven = Filter(v, [](int i) {return 0 == i%2;});
    vOdd = Filter(v, [](int i) {return 1 == i%2;});
-   for (int i = 0; i < 3; ++i) {
-      EXPECT_EQ(vEven[i], vEvenRef[i]);
-      EXPECT_EQ(vOdd[i], vOddRef[i]);
-   }
+   CheckEqual(vEven, vEvenRef, "Even check");
+   CheckEqual(vOdd, vOddRef, "Odd check");
 }
 
 template <typename T, typename V>
@@ -267,33 +261,23 @@ TEST(VecOps, PrintOps)
    EXPECT_STREQ(t3.c_str(), ref3);
 }
 
-void CheckEq(std::string_view name, const ROOT::Experimental::VecOps::TVec<double> v,
-             const ROOT::Experimental::VecOps::TVec<double> w)
-{
-   auto wsize = w.size();
-   EXPECT_EQ(wsize, v.size());
-   for (unsigned int i = 0; i < wsize; i++) {
-      EXPECT_DOUBLE_EQ(v[i], w[i]) << " error while checking math function " << name;
-   }
-}
-
 TEST(VecOps, MathFuncs)
 {
    using namespace ROOT::Experimental::VecOps;
    TVec<double> v{1, 2, 3};
-   CheckEq("sqrt", sqrt(v), Map(v, [](double x) { return std::sqrt(x); }));
-   CheckEq("log", log(v), Map(v, [](double x) { return std::log(x); }));
-   CheckEq("sin", sin(v), Map(v, [](double x) { return std::sin(x); }));
-   CheckEq("cos", cos(v), Map(v, [](double x) { return std::cos(x); }));
-   CheckEq("tan", tan(v), Map(v, [](double x) { return std::tan(x); }));
-   CheckEq("atan", atan(v), Map(v, [](double x) { return std::atan(x); }));
-   CheckEq("sinh", sinh(v), Map(v, [](double x) { return std::sinh(x); }));
-   CheckEq("cosh", cosh(v), Map(v, [](double x) { return std::cosh(x); }));
-   CheckEq("tanh", tanh(v), Map(v, [](double x) { return std::tanh(x); }));
-   CheckEq("asinh", asinh(v), Map(v, [](double x) { return std::asinh(x); }));
-   CheckEq("acosh", acosh(v), Map(v, [](double x) { return std::acosh(x); }));
+   CheckEqual(sqrt(v), Map(v, [](double x) { return std::sqrt(x); }), " error checking math function sqrt");
+   CheckEqual(log(v), Map(v, [](double x) { return std::log(x); }), " error checking math function log");
+   CheckEqual(sin(v), Map(v, [](double x) { return std::sin(x); }), " error checking math function sin");
+   CheckEqual(cos(v), Map(v, [](double x) { return std::cos(x); }), " error checking math function cos");
+   CheckEqual(tan(v), Map(v, [](double x) { return std::tan(x); }), " error checking math function tan");
+   CheckEqual(atan(v), Map(v, [](double x) { return std::atan(x); }), " error checking math function atan");
+   CheckEqual(sinh(v), Map(v, [](double x) { return std::sinh(x); }), " error checking math function sinh");
+   CheckEqual(cosh(v), Map(v, [](double x) { return std::cosh(x); }), " error checking math function cosh");
+   CheckEqual(tanh(v), Map(v, [](double x) { return std::tanh(x); }), " error checking math function tanh");
+   CheckEqual(asinh(v), Map(v, [](double x) { return std::asinh(x); }), " error checking math function asinh");
+   CheckEqual(acosh(v), Map(v, [](double x) { return std::acosh(x); }), " error checking math function acosh");
    v /= 10.;
-   CheckEq("asin", asin(v), Map(v, [](double x) { return std::asin(x); }));
-   CheckEq("acos", acos(v), Map(v, [](double x) { return std::acos(x); }));
-   CheckEq("atanh", atanh(v), Map(v, [](double x) { return std::atanh(x); }));
+   CheckEqual(asin(v), Map(v, [](double x) { return std::asin(x); }), " error checking math function asin");
+   CheckEqual(acos(v), Map(v, [](double x) { return std::acos(x); }), " error checking math function acos");
+   CheckEqual(atanh(v), Map(v, [](double x) { return std::atanh(x); }), " error checking math function atanh");
 }
