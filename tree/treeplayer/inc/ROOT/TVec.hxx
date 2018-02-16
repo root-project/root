@@ -432,7 +432,7 @@ MATH_FUNC(atanh)
 
 /// Inner product
 template <typename T, typename V>
-auto Dot(const TVec<T> v0, const TVec<V> v1) -> decltype(v0[0] * v1[0])
+auto Dot(const TVec<T> &v0, const TVec<V> &v1) -> decltype(v0[0] * v1[0])
 {
    ROOT::Internal::VecOps::CheckSizes(v0.size(), v1.size(), "Dot");
    return std::inner_product(v0.begin(), v0.end(), v1.begin(), decltype(v0[0] * v1[0])(0));
@@ -440,7 +440,7 @@ auto Dot(const TVec<T> v0, const TVec<V> v1) -> decltype(v0[0] * v1[0])
 
 /// Sum elements
 template <typename T>
-T Sum(const TVec<T> v)
+T Sum(const TVec<T> &v)
 {
    return std::accumulate(v.begin(), v.end(), 0);
 }
