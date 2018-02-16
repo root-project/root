@@ -11,20 +11,32 @@
 #ifndef ROOT_TDFOPERATIONS
 #define ROOT_TDFOPERATIONS
 
-#include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
-#include "ROOT/TypeTraits.hxx"
-#include "ROOT/TDFUtils.hxx"
-#include "ROOT/TThreadedObject.hxx"
-#include "ROOT/TArrayBranch.hxx"
-#include "TH1.h"
-#include "TTreeReader.h" // for SnapshotHelper
-#include "TFile.h"       // for SnapshotHelper
-
 #include <algorithm>
+#include <limits>
 #include <memory>
 #include <stdexcept>
+#include <string>
 #include <type_traits>
 #include <vector>
+
+#include "Compression.h"
+#include "ROOT/TArrayBranch.hxx"
+#include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
+#include "ROOT/TDFUtils.hxx"
+#include "ROOT/TSnapshotOptions.hxx"
+#include "ROOT/TThreadedObject.hxx"
+#include "ROOT/TypeTraits.hxx"
+#include "RStringView.h"
+#include "RtypesCore.h"
+#include "TBranch.h"
+#include "TDirectory.h"
+#include "TFile.h" // for SnapshotHelper
+#include "TH1.h"
+#include "TLeaf.h"
+#include "TObjArray.h"
+#include "TObject.h"
+#include "TTree.h"
+#include "TTreeReader.h" // for SnapshotHelper
 
 /// \cond HIDDEN_SYMBOLS
 

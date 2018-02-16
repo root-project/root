@@ -11,21 +11,36 @@
 #include "RConfigure.h" // R__USE_IMT
 #include "ROOT/TCutFlowReport.hxx"
 #include "ROOT/TDFNodes.hxx"
-#include "ROOT/TSpinMutex.hxx"
+#include "ROOT/TDFUtils.hxx"
+#include "ROOT/TDataSource.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
+#include "RStringView.h"
+#include "TTree.h"
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif
+#include <limits.h>
+#include <cassert>
+#include <functional>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <numeric>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "RtypesCore.h" // Long64_t
 #include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled
 #include "TTreeReader.h"
 
-#include <cassert>
-#include <mutex>
-#include <string>
 class TDirectory;
-class TTree;
+namespace ROOT {
+class TSpinMutex;
+} // namespace ROOT
+
 using namespace ROOT::Detail::TDF;
 using namespace ROOT::Internal::TDF;
 
