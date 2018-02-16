@@ -67,7 +67,7 @@ TEST(TAdoptAllocator, NewAllocations)
 
    unsigned int dummy;
    TAdoptAllocator<TCopySignal> alloc(model.data(), model.size());
-   ROOT::Detail::VecOps::TVecImpl<TCopySignal> v(model.size(), dummy, alloc);
+   TVec<TCopySignal>::Impl_t v(model.size(), dummy, alloc);
 
    EXPECT_EQ(0U, copyCount);
    v.emplace_back(copyCount);
