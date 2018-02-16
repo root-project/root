@@ -29,7 +29,7 @@ auto TCpu<AFloat>::RecurrentLayerBackward(TCpuMatrix<AFloat> & state_gradients_b
                                           TCpuMatrix<AFloat> & input_weight_gradients,
                                           TCpuMatrix<AFloat> & state_weight_gradients,
                                           TCpuMatrix<AFloat> & bias_gradients,
-                                          TCpuMatrix<AFloat> & df, //DxH
+                                          TCpuMatrix<AFloat> & df, //BxH
                                           const TCpuMatrix<AFloat> & state, // BxH
                                           const TCpuMatrix<AFloat> & weights_input, // HxD 
                                           const TCpuMatrix<AFloat> & weights_state, // HxH
