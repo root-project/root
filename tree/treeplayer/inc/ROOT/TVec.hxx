@@ -117,24 +117,6 @@ struct TIsChar {
 
 } // End of Internal NS
 
-namespace Detail {
-
-namespace VecOps {
-
-template <typename>
-struct TIsTVec {
-   static const bool value = false;
-};
-
-template <typename T>
-struct TIsTVec<ROOT::Experimental::VecOps::TVec<T>> {
-   static const bool value = true;
-};
-
-} // End of VecOps NS
-
-} // End of Detail NS
-
 namespace Experimental {
 
 namespace VecOps {
@@ -328,44 +310,38 @@ auto operator%(const TVec<T> &v, const V &c) -> TVec<decltype(v[0] % c)>
 
 using Boolean_t = int;
 
-template <typename T, typename V,
-          typename D = typename std::enable_if<!ROOT::Detail::VecOps::TIsTVec<V>::value, int>::type>
-TVec<Boolean_t> operator>(const TVec<T> &v, const V &c)
+template <typename T, typename V>
+auto operator>(const TVec<T> &v, const V &c) -> decltype(v[0] > c, TVec<Boolean_t>())
 {
    return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t > c; });
 }
 
-template <typename T, typename V,
-          typename D = typename std::enable_if<!ROOT::Detail::VecOps::TIsTVec<V>::value, int>::type>
-TVec<Boolean_t> operator>=(const TVec<T> &v, const V &c)
+template <typename T, typename V>
+auto operator>=(const TVec<T> &v, const V &c) -> decltype(v[0] >= c, TVec<Boolean_t>())
 {
    return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t >= c; });
 }
 
-template <typename T, typename V,
-          typename D = typename std::enable_if<!ROOT::Detail::VecOps::TIsTVec<V>::value, int>::type>
-TVec<Boolean_t> operator==(const TVec<T> &v, const V &c)
+template <typename T, typename V>
+auto operator==(const TVec<T> &v, const V &c) -> decltype(v[0] == c, TVec<Boolean_t>())
 {
    return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t == c; });
 }
 
-template <typename T, typename V,
-          typename D = typename std::enable_if<!ROOT::Detail::VecOps::TIsTVec<V>::value, int>::type>
-TVec<Boolean_t> operator!=(const TVec<T> &v, const V &c)
+template <typename T, typename V>
+auto operator!=(const TVec<T> &v, const V &c) -> decltype(v[0] != c, TVec<Boolean_t>())
 {
    return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t != c; });
 }
 
-template <typename T, typename V,
-          typename D = typename std::enable_if<!ROOT::Detail::VecOps::TIsTVec<V>::value, int>::type>
-TVec<Boolean_t> operator<=(const TVec<T> &v, const V &c)
+template <typename T, typename V>
+auto operator<=(const TVec<T> &v, const V &c) -> decltype(v[0] <= c, TVec<Boolean_t>())
 {
    return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t <= c; });
 }
 
-template <typename T, typename V,
-          typename D = typename std::enable_if<!ROOT::Detail::VecOps::TIsTVec<V>::value, int>::type>
-TVec<Boolean_t> operator<(const TVec<T> &v, const V &c)
+template <typename T, typename V>
+auto operator<(const TVec<T> &v, const V &c) -> decltype(v[0] < c, TVec<Boolean_t>())
 {
    return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t < c; });
 }
