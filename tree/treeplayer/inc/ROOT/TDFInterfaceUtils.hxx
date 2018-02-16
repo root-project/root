@@ -11,13 +11,40 @@
 #ifndef ROOT_TDF_TINTERFACE_UTILS
 #define ROOT_TDF_TINTERFACE_UTILS
 
-#include <RStringView.h>
 #include <ROOT/TDFActionHelpers.hxx> // for BuildAndBook
 #include <ROOT/TDFNodes.hxx>
 #include <ROOT/TDFUtils.hxx>
 #include <ROOT/TypeTraits.hxx>
-
+#include <RStringView.h>
+#include <algorithm>
+#include <deque>
+#include <functional>
+#include <initializer_list>
+#include <list>
+#include <map>
 #include <memory>
+#include <string>
+#include <type_traits>
+#include <typeinfo>
+#include <vector>
+
+#include "RtypesCore.h"
+#include "TError.h"
+#include "TH1.h"
+
+class TObjArray;
+class TTree;
+namespace ROOT {
+namespace Experimental {
+namespace TDF {
+class TDataSource;
+template <typename T>
+class TArrayBranch;
+} // namespace TDF
+template <int D, typename P, template <int, typename, template <typename> class> class... S>
+class THist;
+} // namespace Experimental
+} // namespace ROOT
 
 /// \cond HIDDEN_SYMBOLS
 
@@ -366,6 +393,7 @@ bool IsInternalColumn(std::string_view colName);
 // Check if a condition is true for all types
 template <bool...>
 struct TBoolPack;
+
 template <bool... bs>
 using IsTrueForAllImpl_t = typename std::is_same<TBoolPack<bs..., true>, TBoolPack<true, bs...>>;
 

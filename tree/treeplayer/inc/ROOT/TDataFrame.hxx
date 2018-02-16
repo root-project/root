@@ -16,19 +16,23 @@ ROOT's TDataFrame allows to analyse data stored in TTrees with a high level inte
 #ifndef ROOT_TDATAFRAME
 #define ROOT_TDATAFRAME
 
-#include "ROOT/TypeTraits.hxx"
-#include "ROOT/TDataSource.hxx"
+#include <iosfwd> // std::ostringstream
+#include <memory>
+#include <ostream>
+#include <string>
+#include <vector>
+
+#include "ROOT/TCutFlowReport.hxx"
 #include "ROOT/TDFInterface.hxx"
 #include "ROOT/TDFNodes.hxx"
 #include "ROOT/TDFUtils.hxx"
-#include "TChain.h"
+#include "ROOT/TDataSource.hxx"
+#include "ROOT/TypeTraits.hxx"
+#include "RStringView.h"
+#include "RtypesCore.h"
+#include "TTree.h"
 
-#include <memory>
-#include <iosfwd> // std::ostringstream
-#include <stdexcept>
-#include <string>
 class TDirectory;
-class TTree;
 
 namespace ROOT {
 namespace Experimental {

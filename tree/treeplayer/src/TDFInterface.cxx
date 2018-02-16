@@ -8,14 +8,32 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TClass.h"
-#include "TRegexp.h"
+#include <stddef.h>
+#include <algorithm>
+#include <map>
+#include <memory>
+#include <ostream>
+#include <stdexcept>
+#include <string>
+#include <typeinfo>
+#include <utility>
+#include <vector>
 
 #include "ROOT/TDFInterface.hxx"
+#include "ROOT/TDFInterfaceUtils.hxx"
+#include "ROOT/TDFNodes.hxx"
+#include "ROOT/TDFUtils.hxx"
+#include "ROOT/TDataSource.hxx"
 #include "ROOT/TSeq.hxx"
+#include "RStringView.h"
+#include "RtypesCore.h"
+#include "TClass.h"
+#include "TInterpreter.h"
+#include "TRegexp.h"
+#include "TString.h"
 
-#include <vector>
-#include <string>
+class TTree;
+
 using namespace ROOT::Experimental::TDF;
 using namespace ROOT::Internal::TDF;
 using namespace ROOT::Detail::TDF;

@@ -8,7 +8,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <algorithm>
+#include <stdexcept>
+
 #include "ROOT/TDataFrame.hxx"
+#include "TChain.h"
+#include "TDirectory.h"
+
 using namespace ROOT::Experimental;
 
 // clang-format off

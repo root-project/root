@@ -10,6 +10,14 @@
 
 #include <ROOT/TDFInterfaceUtils.hxx>
 #include <TFriendElement.h>
+#include <set>
+#include <stdexcept>
+#include <utility>
+
+#include "ROOT/TDFUtils.hxx"
+#include "RStringView.h"
+#include "TObject.h"
+#include "TTree.h"
 
 namespace ROOT {
 namespace Internal {

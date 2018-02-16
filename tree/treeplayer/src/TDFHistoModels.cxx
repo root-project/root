@@ -8,14 +8,17 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/TSeq.hxx>
 #include <ROOT/TDFHistoModels.hxx>
-
-#include <TH1D.h>
-#include <TH2D.h>
-#include <TH3D.h>
+#include <ROOT/TSeq.hxx>
 #include <TProfile.h>
 #include <TProfile2D.h>
+#include <stddef.h>
+#include <vector>
+
+#include "TAxis.h"
+#include "TH1.h"
+#include "TH2.h"
+#include "TH3.h"
 
 /**
 * \class ROOT::Experimental::TDF::TH1DModel
