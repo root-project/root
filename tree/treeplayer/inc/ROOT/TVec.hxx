@@ -319,6 +319,18 @@ auto operator<(const TVec<T> &v, const V &c) -> decltype(v[0] < c, TVec<Boolean_
 {
    return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t < c; });
 }
+
+template <typename T, typename V>
+auto operator&&(const TVec<T> &v, const V &c) -> decltype(v[0] && c, TVec<Boolean_t>())
+{
+   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t && c; });
+}
+
+template <typename T, typename V>
+auto operator||(const TVec<T> &v, const V &c) -> decltype(v[0] || c, TVec<Boolean_t>())
+{
+   return ROOT::Internal::VecOps::Operate(v, [&c](const T &t) -> Boolean_t { return t || c; });
+}
 ///@}
 
 /** @name Math Operators with TVecs
@@ -390,6 +402,19 @@ TVec<Boolean_t> operator<(const TVec<T> &v0, const TVec<V> &v1)
 {
    return ROOT::Internal::VecOps::Operate(v0, v1, "<", [](const T &t, const V &v) -> Boolean_t { return t < v; });
 }
+
+template <typename T, typename V>
+TVec<Boolean_t> operator&&(const TVec<T> &v0, const TVec<V> &v1)
+{
+   return ROOT::Internal::VecOps::Operate(v0, v1, "&&", [](const T &t, const V &v) -> Boolean_t { return t && v; });
+}
+
+template <typename T, typename V>
+TVec<Boolean_t> operator||(const TVec<T> &v0, const TVec<V> &v1)
+{
+   return ROOT::Internal::VecOps::Operate(v0, v1, "||", [](const T &t, const V &v) -> Boolean_t { return t || v; });
+}
+
 ///@}
 
 /** @name Math Functions
@@ -417,6 +442,7 @@ MATH_FUNC(asinh)
 MATH_FUNC(acosh)
 MATH_FUNC(tanh)
 MATH_FUNC(atanh)
+MATH_FUNC(abs)
 
 ///@}
 
