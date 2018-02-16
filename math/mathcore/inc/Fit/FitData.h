@@ -126,7 +126,7 @@ namespace ROOT {
             fNPoints(fMaxPoints),
             fDim(dim),
             fCoordsPtr(fDim),
-            fpTmpCoordVector(NULL)
+            fpTmpCoordVector(nullptr)
          {
             assert(fDim >= 1);
             for (unsigned int i = 0; i < fDim; i++) {
@@ -135,7 +135,7 @@ namespace ROOT {
 
             if (fpTmpCoordVector) {
                delete[] fpTmpCoordVector;
-               fpTmpCoordVector = NULL;
+               fpTmpCoordVector = nullptr;
             }
 
             fpTmpCoordVector = new double [fDim];
@@ -153,7 +153,7 @@ namespace ROOT {
             fMaxPoints(maxpoints),
             fNPoints(0),
             fDim(dim),
-            fpTmpCoordVector(NULL)
+            fpTmpCoordVector(nullptr)
          {
             assert(fDim >= 1);
             InitCoordsVector();
@@ -185,12 +185,12 @@ namespace ROOT {
 
             for (unsigned int i = 0; i < fDim; i++) {
                fCoords[i].resize(fMaxPoints + VectorPadding(fMaxPoints));
-               fCoordsPtr[i] = fCoords[i].empty() ? NULL : &fCoords[i].front();
+               fCoordsPtr[i] = fCoords[i].empty() ? nullptr : &fCoords[i].front();
             }
 
             if (fpTmpCoordVector) {
                delete[] fpTmpCoordVector;
-               fpTmpCoordVector = NULL;
+               fpTmpCoordVector = nullptr;
             }
 
             fpTmpCoordVector = new double [fDim];
@@ -354,7 +354,7 @@ namespace ROOT {
                unsigned padding = VectorPadding(fNPoints);
                fCoords[i].resize(fNPoints + padding);
                std::copy(fCoordsPtr[i], fCoordsPtr[i] + fNPoints + padding, fCoords[i].begin());
-               fCoordsPtr[i] = fCoords[i].empty() ? NULL : &fCoords[i].front();
+               fCoordsPtr[i] = fCoords[i].empty() ? nullptr : &fCoords[i].front();
             }
 
             fWrapped = false;
