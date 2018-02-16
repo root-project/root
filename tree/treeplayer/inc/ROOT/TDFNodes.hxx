@@ -14,6 +14,7 @@
 #include "ROOT/TypeTraits.hxx"
 #include "ROOT/TCutFlowReport.hxx"
 #include "ROOT/TDataSource.hxx"
+#include "ROOT/TDFNodesUtils.hxx"
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TArrayBranch.hxx"
 #include "ROOT/TSpinMutex.hxx"
