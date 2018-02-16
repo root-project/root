@@ -158,7 +158,7 @@ public:
    reference operator[](size_type pos) { return fData[pos]; }
    const_reference operator[](size_type pos) const { return fData[pos]; }
    template <typename V>
-   TVec<T> operator[](const TVec<V>& conds)
+   TVec<T> operator[](const TVec<V> &conds)
    {
       const auto thisSize = size();
       ROOT::Internal::VecOps::CheckSizes(thisSize, conds.size(), "operator[]");
@@ -512,12 +512,11 @@ TVec<T> Filter(const TVec<T> &v, F &&f)
    return w;
 }
 
-template<typename T>
-void swap(TVec<T>& lhs, TVec<T>& rhs)
+template <typename T>
+void swap(TVec<T> &lhs, TVec<T> &rhs)
 {
    lhs.swap(rhs);
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Print a TVec at the prompt:
@@ -525,13 +524,10 @@ template <class T>
 std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
 {
    // In order to print properly, convert to 64 bit int if this is a char
-   constexpr bool mustConvert = std::is_same<char, T>::value ||
-                                std::is_same<signed char, T>::value ||
-                                std::is_same<unsigned char, T>::value ||
-                                std::is_same<wchar_t, T>::value ||
-                                std::is_same<char16_t, T>::value ||
-                                std::is_same<char32_t, T>::value;
-   using Print_t = typename std::conditional<mustConvert, long long int ,T>::type;
+   constexpr bool mustConvert = std::is_same<char, T>::value || std::is_same<signed char, T>::value ||
+                                std::is_same<unsigned char, T>::value || std::is_same<wchar_t, T>::value ||
+                                std::is_same<char16_t, T>::value || std::is_same<char32_t, T>::value;
+   using Print_t = typename std::conditional<mustConvert, long long int, T>::type;
    os << "{ ";
    auto size = v.size();
    if (size) {
@@ -549,8 +545,6 @@ std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
 } // End of Experimental NS
 
 } // End of ROOT NS
-
-
 
 namespace cling {
 template <typename T>

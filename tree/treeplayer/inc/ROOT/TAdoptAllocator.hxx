@@ -69,7 +69,8 @@ private:
 
 public:
    /// This is the constructor which allows the allocator to adopt a certain memory region.
-   TAdoptAllocator(pointer p, size_type n) : fInitialAddress(p), fInitialSize(n), fAllocType(EAllocType::kAdoptingNoAllocYet){};
+   TAdoptAllocator(pointer p, size_type n)
+      : fInitialAddress(p), fInitialSize(n), fAllocType(EAllocType::kAdoptingNoAllocYet){};
    TAdoptAllocator() = default;
    TAdoptAllocator(const TAdoptAllocator &) = default;
 
