@@ -20,7 +20,7 @@ namespace VecOps {
 
 /*
 \class ROOT::Detail::VecOps::TAdoptAllocator
-\ingroup VecOps
+\ingroup vecops
 \brief TAdoptAllocator allows to bind to an already initialised memory region as managed.
 
 The TAdoptAllocator behaves like the standard allocator, and, as such, can be used to create

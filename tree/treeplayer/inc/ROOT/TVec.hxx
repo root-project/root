@@ -8,6 +8,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+/**
+  \defgroup vecops VecOps
+ROOT's TDataFrame allows to analyse data stored in TTrees with a high level interface.
+*/
+
 #ifndef ROOT_TVEC
 #define ROOT_TVEC
 
@@ -93,7 +98,32 @@ TVec<T> &OperateInPlace(TVec<T> &v, F &&f)
 namespace Experimental {
 
 namespace VecOps {
+// clang-format off
+/*
+\class ROOT::Experimental::VecOps::TVec
+\ingroup vecops
+\brief A "std:::vector"-like collection of values implementing handy operation to analyse them
+\tparam T The type of the contained objects
 
+A TVec is a container designed to make analysis of values' collections fast and easy.
+Its storage is contiguous in memory and its interface is designed such to resemble to the one
+of the stl vector. In addition the interface features methods and external functions to ease
+the manipulation and analysis of the data in the TVec.
+
+For example, suppose to have in hands an event featuring eight muons with a certain pseudorapidity,
+momentum and charge. Suppose you want to extract the transverse momenta of the muons satisfying certain
+criteria. Something which would require, among the other things, the management of an explicit loop,
+becomes straightforward with TVec:
+~~~{.cpp}
+TVec<short> mu_charge {1, 1, -1, -1, -1, 1, 1, -1};
+TVec<float> mu_pt {56, 45, 32, 24, 12, 8, 7, 6.2};
+TVec<float> mu_eta {3.1, -.2, -1.1, 1, 4.1, 1.6, 2.4, -.5};
+auto goodMuons_pt = mu_pt[ (mu_pt > 10.f && abs(mu_eta) <= 2.f && mu_charge == -1)
+~~~
+Now the clean collection of transverse momenta can be used within the rest of the data analysis, for
+example to fill a histogram.
+*/
+// clang-format on
 template <typename T>
 class TVec {
 public:
@@ -461,12 +491,14 @@ T Sum(const TVec<T> &v)
    return std::accumulate(v.begin(), v.end(), 0);
 }
 
+/// Create new collection applying a callable to the elements of the input collection
 template <typename T, typename F>
 auto Map(const TVec<T> &v, F &&f) -> TVec<decltype(f(v[0]))>
 {
    return ROOT::Internal::VecOps::Operate(v, std::forward<F>(f));
 }
 
+/// Create a new collection with the elements passing the filter expressed by the predicate
 template <typename T, typename F>
 TVec<T> Filter(const TVec<T> &v, F &&f)
 {
@@ -486,6 +518,9 @@ void swap(TVec<T>& lhs, TVec<T>& rhs)
    lhs.swap(rhs);
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print a TVec at the prompt:
 template <class T>
 std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
 {
