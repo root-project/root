@@ -200,7 +200,7 @@ public:
    template <class... Args> // this is from C++17
    reference emplace_back(Args &&... args)
    {
-      fData.emplace_back(std::forward<T>(args)...);
+      fData.emplace_back(std::forward<Args>(args)...);
       return fData.back();
    }
    template <class... Args>
@@ -470,8 +470,13 @@ auto Map(const TVec<T> &v, F &&f) -> TVec<decltype(f(v[0]))>
 template <typename T, typename F>
 TVec<T> Filter(const TVec<T> &v, F &&f)
 {
-   TVec<T> w; w.reserve(v.size());
-   std::copy_if(v.begin(), v.end(), w.begin(), std::forward<F>(f));
+   const auto thisSize = v.size();
+   TVec<T> w;
+   w.reserve(thisSize);
+   for (auto &&val : v) {
+      if (f(val))
+         w.emplace_back(val);
+   }
    return w;
 }
 
