@@ -18,7 +18,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(PyROOT
                               DICTIONARY_OPTIONS "-writeEmptyRootPCM"
                               LIBRARIES Core Net Tree MathCore Rint ${PYTHON_LIBRARIES}
                               DEPENDENCIES Core MathCore Net Tree Rint)
-ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core)
+ROOT_LINKER_LIBRARY(JupyROOT ../JupyROOT/src/*.cxx DEPENDENCIES Core CMAKENOEXPORT)
 
 if(MSVC)
   add_custom_command(TARGET PyROOT POST_BUILD
