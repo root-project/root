@@ -464,6 +464,12 @@ TVec<T> Filter(const TVec<T> &v, F &&f)
    return w;
 }
 
+template<typename T>
+void swap(TVec<T>& lhs, TVec<T>& rhs)
+{
+   lhs.swap(rhs);
+}
+
 template <class T>
 std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
 {
@@ -492,6 +498,8 @@ std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
 } // End of Experimental NS
 
 } // End of ROOT NS
+
+
 
 namespace cling {
 template <typename T>
