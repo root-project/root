@@ -97,22 +97,6 @@ TVec<T> &OperateInPlace(TVec<T> &v, F &&f)
    return v;
 }
 
-template <typename...>
-struct TIsOneOf {
-   static constexpr bool value = false;
-};
-
-template <typename F, typename S, typename... T>
-struct TIsOneOf<F, S, T...> {
-   static constexpr bool value = std::is_same<F, S>::value || TIsOneOf<F, T...>::value;
-};
-
-template <typename T>
-struct TIsChar {
-   static constexpr bool value =
-      TIsOneOf<typename std::decay<T>::type, char, signed char, unsigned char, wchar_t, char16_t, char32_t>::value;
-};
-
 } // End of VecOps NS
 
 } // End of Internal NS
@@ -484,7 +468,13 @@ template <class T>
 std::ostream &operator<<(std::ostream &os, const TVec<T> &v)
 {
    // In order to print properly, convert to 64 bit int if this is a char
-   using Print_t = typename std::conditional<ROOT::Internal::VecOps::TIsChar<T>::value, long long int, T>::type;
+   constexpr bool mustConvert = std::is_same<char, T>::value ||
+                                std::is_same<signed char, T>::value ||
+                                std::is_same<unsigned char, T>::value ||
+                                std::is_same<wchar_t, T>::value ||
+                                std::is_same<char16_t, T>::value ||
+                                std::is_same<char32_t, T>::value;
+   using Print_t = typename std::conditional<mustConvert, long long int ,T>::type;
    os << "{ ";
    auto size = v.size();
    if (size) {
