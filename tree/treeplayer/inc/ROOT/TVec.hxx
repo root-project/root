@@ -26,17 +26,6 @@
 
 namespace ROOT {
 
-namespace Detail {
-
-namespace VecOps {
-
-template <typename T>
-using TVecImpl = std::vector<T, ROOT::Detail::VecOps::TAdoptAllocator<T>>;
-
-} // End of VecOps NS
-
-} // End of Detail NS
-
 namespace Experimental {
 
 namespace VecOps {
@@ -107,11 +96,8 @@ namespace VecOps {
 
 template <typename T>
 class TVec {
-private:
-   ROOT::Detail::VecOps::TVecImpl<T> fData;
-
 public:
-   using Impl_t = typename ROOT::Detail::VecOps::TVecImpl<T>;
+   using Impl_t = typename std::vector<T, ROOT::Detail::VecOps::TAdoptAllocator<T>>;
    using value_type = typename Impl_t::value_type;
    using size_type = typename Impl_t::size_type;
    using difference_type = typename Impl_t::difference_type;
@@ -123,6 +109,10 @@ public:
    using const_iterator = typename Impl_t::const_iterator;
    using reverse_iterator = typename Impl_t::reverse_iterator;
 
+private:
+   Impl_t fData;
+
+public:
    // ctors
    TVec() {}
    TVec(size_type count, const T &value) : fData(count, value) {}
