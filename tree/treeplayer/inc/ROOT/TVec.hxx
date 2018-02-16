@@ -154,7 +154,7 @@ public:
    reference operator[](size_type pos) { return fData[pos]; }
    const_reference operator[](size_type pos) const { return fData[pos]; }
    template <typename V>
-   TVec<T> operator[](const TVec<V> conds)
+   TVec<T> operator[](const TVec<V>& conds)
    {
       const auto thisSize = size();
       ROOT::Internal::VecOps::CheckSizes(thisSize, conds.size(), "operator[]");
