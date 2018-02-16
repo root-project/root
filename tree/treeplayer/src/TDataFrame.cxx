@@ -706,7 +706,7 @@ TDataFrame::TDataFrame(std::string_view treeName, const std::vector<std::string>
    std::string treeNameInt(treeName);
    auto chain = std::make_shared<TChain>(treeNameInt.c_str());
    for (auto &fileName : filenames)
-      chain->Add(TDFInternal::ToConstCharPtr(fileName));
+      chain->Add(fileName.c_str());
    GetProxiedPtr()->SetTree(chain);
 }
 
