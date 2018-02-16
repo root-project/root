@@ -8,17 +8,23 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "RConfigure.h"      // R__USE_IMT
-#include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName -> TCustomColumnBase, FindUnknownColumns -> TLoopManager
-#include "ROOT/TDFUtils.hxx"
-#include "TBranch.h"
-#include "TBranchElement.h"
-#include "TClassRef.h"
-#include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
-
 #include <stdexcept>
 #include <string>
-class TTree;
+#include <typeinfo>
+
+#include "RConfigure.h"      // R__USE_IMT
+#include "ROOT/TDFNodes.hxx" // ColumnName2ColumnTypeName -> TCustomColumnBase, FindUnknownColumns -> TLoopManager
+#include "ROOT/TDataSource.hxx"
+#include "RtypesCore.h"
+#include "TBranch.h"
+#include "TBranchElement.h"
+#include "TClass.h"
+#include "TClassRef.h"
+#include "TLeaf.h"
+#include "TObjArray.h"
+#include "TROOT.h" // IsImplicitMTEnabled, GetImplicitMTPoolSize
+#include "TTree.h"
+
 using namespace ROOT::Detail::TDF;
 using namespace ROOT::Experimental::TDF;
 
