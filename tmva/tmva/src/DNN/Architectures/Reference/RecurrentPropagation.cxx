@@ -20,6 +20,7 @@
 namespace TMVA {
 namespace DNN  {
 
+  
 //______________________________________________________________________________
 template<typename Scalar_t>
 auto TReference<Scalar_t>::RecurrentLayerBackward(TMatrixT<Scalar_t> & state_gradients_backward, // BxH

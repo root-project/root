@@ -43,6 +43,20 @@ auto printTensor(const std::vector<typename Architecture::Matrix_t> &A, const st
   } 
 }
 
+template <typename Architecture>
+auto printTensor(const typename Architecture::Matrix_t &A, const std::string name = "matrix")
+-> void
+{
+  std::cout << name << "\n";
+  for (Int_t i = 0; i < A.GetNrows(); ++i) {
+    for (Int_t j = 0; j < A.GetNcols(); ++j) {
+        std::cout << A(i, j) << " ";
+    }
+    std::cout << "\n";
+  }
+  std::cout << "********\n";
+}
+
 /*! Compute the loss of the net as a function of the weight at index (i,j) in
  *  layer l. dx is added as an offset to the current value of the weight. */
 //______________________________________________________________________________
@@ -89,16 +103,26 @@ auto testRecurrentBackpropagationWeights(size_t timeSteps, size_t batchSize, siz
    using Net_t      = TDeepNet<Architecture>;
    using Scalar_t = typename Architecture::Scalar_t;
 
-   std::vector<TMatrixT<Double_t>> XRef(batchSize, TMatrixT<Double_t>(timeSteps, inputSize));    // T x B x D
+   std::vector<TMatrixT<Double_t>> XRef(batchSize, TMatrixT<Double_t>(timeSteps, inputSize));    // B x T x D
    Tensor_t XArch;
    //for (size_t i = 0; i < batchSize; ++i) XArch.emplace_back(timeSteps, inputSize); // B x T x D
    for (size_t i = 0; i < batchSize; ++i) {
-      randomMatrix(XRef[i]);
+      //randomMatrix(XRef[i]);
+      for (size_t l = 0; l < XRef[i].GetNrows(); ++l) {
+        for (size_t m = 0; m < XRef[i].GetNcols(); ++m) {
+          XRef[i](l, m) = i + l + m;
+        }
+      } 
       XArch.emplace_back(XRef[i]);
    }
 
    Matrix_t Y(batchSize, timeSteps * stateSize), weights(batchSize, 1);
-   randomMatrix(Y);
+   //randomMatrix(Y);
+   for (size_t i = 0; i < Y.GetNrows(); ++i) {
+     for (size_t j = 0; j < Y.GetNcols(); ++j) {
+       Y(i, j) = (i + j)/2.0 - 0.75;
+     }
+   }
    fillMatrix(weights, 1.0);
 
    Net_t rnn(batchSize, batchSize, timeSteps, inputSize, 0, 0, 0, ELossFunction::kMeanSquaredError, EInitialization::kGauss);

@@ -28,7 +28,7 @@ using namespace TMVA::DNN;
 using namespace TMVA::DNN::RNN;
 
 template <typename Architecture>
-auto printTensor(const std::vector<typename Architecture::Matrix_t> &A, const std::string name = "matrix")
+auto printTensor1(const std::vector<typename Architecture::Matrix_t> &A, const std::string name = "matrix")
 -> void
 {
   std::cout << name << "\n";
@@ -44,7 +44,7 @@ auto printTensor(const std::vector<typename Architecture::Matrix_t> &A, const st
 }
 
 template <typename Architecture>
-auto printMatrix(const typename Architecture::Matrix_t &A, const std::string name = "matrix")
+auto printMatrix1(const typename Architecture::Matrix_t &A, const std::string name = "matrix")
 -> void
 {
   std::cout << name << "\n";
