@@ -24,3 +24,5 @@ add_library(xxHash::xxHash ALIAS xxhash)
 
 set(xxHash_LIBRARY $<TARGET_FILE:xxhash> CACHE INTERNAL "")
 set(xxHash_LIBRARIES xxHash::xxHash CACHE INTERNAL "")
+
+set_property(GLOBAL APPEND PROPERTY ROOT_BUILTIN_TARGETS xxHash::xxHash)

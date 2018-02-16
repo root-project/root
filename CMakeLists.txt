@@ -305,7 +305,8 @@ file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_e
 set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
-add_custom_target(move_headers ALL DEPENDS ${__allHeaders})
+get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
+add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins})
 
 #---Global PCH-----------------------------------------------------------------------------------
 get_property(__allTargets GLOBAL PROPERTY ROOT_DICTIONARY_TARGETS)
