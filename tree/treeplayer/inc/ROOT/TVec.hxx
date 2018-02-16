@@ -488,7 +488,7 @@ auto Dot(const TVec<T> &v0, const TVec<V> &v1) -> decltype(v0[0] * v1[0])
 template <typename T>
 T Sum(const TVec<T> &v)
 {
-   return std::accumulate(v.begin(), v.end(), 0);
+   return std::accumulate(v.begin(), v.end(), T(0));
 }
 
 /// Create new collection applying a callable to the elements of the input collection
