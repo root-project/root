@@ -147,14 +147,6 @@ TEST(TDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
    }
 }
 
-TEST(TDataFrameUtils, ToConstCharPtr)
-{
-   const char *s_content("mystring");
-   std::string s("mystring");
-   EXPECT_STREQ(s_content, ROOT::Internal::TDF::ToConstCharPtr(s_content));
-   EXPECT_STREQ(s_content, ROOT::Internal::TDF::ToConstCharPtr(s));
-}
-
 TEST(TDataFrameUtils, CheckNonExistingCustomColumnNullTree)
 {
    // CheckCustomColumn(std::string_view definedCol, TTree *treePtr, const ColumnNames_t &customCols,
