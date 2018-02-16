@@ -197,7 +197,7 @@ public:
    iterator erase(const_iterator pos) { return fData.erase(pos); }
    iterator erase(const_iterator first, const_iterator last) { return fData.erase(first, last); }
    void push_back(T &&value) { fData.push_back(std::forward<T>(value)); }
-   template <class... Args> // this is from C++17
+   template <class... Args>
    reference emplace_back(Args &&... args)
    {
       fData.emplace_back(std::forward<Args>(args)...);
