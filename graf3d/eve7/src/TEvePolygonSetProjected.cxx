@@ -45,8 +45,6 @@ Internal struct Polygon_t holds only indices into the master vertex
 array in TEvePolygonSetProjected.
 */
 
-ClassImp(TEvePolygonSetProjected);
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 

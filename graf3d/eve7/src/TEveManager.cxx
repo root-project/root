@@ -48,8 +48,6 @@ Central application manager for Eve.
 Manages elements, GUI, GL scenes and GL viewers.
 */
 
-ClassImp(TEveManager);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
@@ -94,10 +92,10 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
 
    static const TEveException eh("TEveManager::TEveManager ");
 
-   if (gEve != 0)
-      throw(eh + "There can be only one!");
+   if (REX::gEve != 0)
+      throw eh + "There can be only one!";
 
-   gEve = this;
+   REX::gEve = this;
 
    fExcHandler = new TExceptionHandler;
 
@@ -586,7 +584,7 @@ TGeoManager* TEveManager::GetGeometry(const TString& filename)
          TGeoManager::UnlockGeometry();
       }
       if (TGeoManager::Import(filename) == 0) {
-         throw(eh + "TGeoManager::Import() failed for '" + exp_filename + "'.");
+         throw eh + "TGeoManager::Import() failed for '" + exp_filename + "'.";
       }
       if (locked) {
          TGeoManager::LockGeometry();
@@ -629,7 +627,7 @@ TGeoManager* TEveManager::GetGeometryByAlias(const TString& alias)
 
    TObjString* full_name = (TObjString*) fGeometryAliases->GetValue(alias);
    if (!full_name)
-      throw(eh + "geometry alias '" + alias + "' not registered.");
+      throw eh + "geometry alias '" + alias + "' not registered.";
    return GetGeometry(full_name->String());
 }
 
@@ -646,7 +644,7 @@ TGeoManager* TEveManager::GetDefaultGeometry()
 /// Register 'name' as an alias for geometry file 'filename'.
 /// The old aliases are silently overwritten.
 /// After that the geometry can be retrieved also by calling:
-///   gEve->GetGeometryByName(name);
+///   REX::gEve->GetGeometryByName(name);
 
 void TEveManager::RegisterGeometryAlias(const TString& alias, const TString& filename)
 {
@@ -667,20 +665,20 @@ void TEveManager::ClearROOTClassSaved()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If global TEveManager* gEve is not set initialize it.
-/// Returns gEve.
+/// If global TEveManager* REX::gEve is not set initialize it.
+/// Returns REX::gEve.
 
 TEveManager* TEveManager::Create()
 {
    static const TEveException eh("TEveManager::Create ");
 
-   if (gEve == 0)
+   if (REX::gEve == 0)
    {
       // XXXX Initialize some server stuff ???
 
-      gEve = new TEveManager();
+      REX::gEve = new TEveManager();
    }
-   return gEve;
+   return REX::gEve;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -688,10 +686,10 @@ TEveManager* TEveManager::Create()
 
 void TEveManager::Terminate()
 {
-   if (!gEve) return;
+   if (!REX::gEve) return;
 
-   delete gEve;
-   gEve = 0;
+   delete REX::gEve;
+   REX::gEve = 0;
 }
 
 /** \class TEveManager::TExceptionHandler
@@ -699,7 +697,6 @@ void TEveManager::Terminate()
 Exception handler for Eve exceptions.
 */
 
-ClassImp(TEveManager::TExceptionHandler);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle exceptions deriving from TEveException.
@@ -710,7 +707,7 @@ TEveManager::TExceptionHandler::Handle(std::exception& exc)
    TEveException* ex = dynamic_cast<TEveException*>(&exc);
    if (ex) {
       Info("Handle", "%s", ex->Data());
-      // gEve->SetStatusLine(ex->Data());
+      // REX::gEve->SetStatusLine(ex->Data());
       gSystem->Beep();
       return kSEHandled;
    } else {

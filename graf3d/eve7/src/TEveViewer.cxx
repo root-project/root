@@ -42,8 +42,6 @@ file (or set corresponding gEnv entry in application initialization):
 ~~~
 */
 
-ClassImp(TEveViewer);
-
 Bool_t REX::TEveViewer::fgInitInternal        = kFALSE;
 Bool_t REX::TEveViewer::fgRecreateGlOnDockOps = kFALSE;
 
@@ -500,9 +498,9 @@ void TEveViewerList::HandleTooltip()
    {
       // TGLViewer       *glw = dynamic_cast<TGLViewer*>((TQObject*) gTQSender);
       // TGLEventHandler *glh = (TGLEventHandler*) glw->GetEventHandler();
-      // if (gEve->GetHighlight()->NumChildren() == 1)
+      // if (REX::gEve->GetHighlight()->NumChildren() == 1)
       // {
-      //    TString title(gEve->GetHighlight()->FirstChild()->GetHighlightTooltip());
+      //    TString title(REX::gEve->GetHighlight()->FirstChild()->GetHighlightTooltip());
       //    if ( ! title.IsNull())
       //       glh->TriggerTooltip(title);
       // }
@@ -532,7 +530,7 @@ void TEveViewerList::OnMouseOver(TObject *obj, UInt_t /*state*/)
       el = 0;
 
    // void *qsender = gTQSender;
-   // gEve->GetHighlight()->UserPickedElement(el, kFALSE);
+   // REX::gEve->GetHighlight()->UserPickedElement(el, kFALSE);
    // gTQSender = qsender;
 
    HandleTooltip();
@@ -554,7 +552,7 @@ void TEveViewerList::OnReMouseOver(TObject *obj, UInt_t /*state*/)
       el = 0;
 
    // void *qsender = gTQSender;
-   // gEve->GetHighlight()->UserRePickedElement(el);
+   // REX::gEve->GetHighlight()->UserRePickedElement(el);
    // gTQSender = qsender;
 
    HandleTooltip();
@@ -576,7 +574,7 @@ void TEveViewerList::OnUnMouseOver(TObject *obj, UInt_t /*state*/)
       el = 0;
 
    // void *qsender = gTQSender;
-   // gEve->GetHighlight()->UserUnPickedElement(el);
+   // REX::gEve->GetHighlight()->UserUnPickedElement(el);
    // gTQSender = qsender;
 
    HandleTooltip();
@@ -596,7 +594,7 @@ void TEveViewerList::OnClicked(TObject *obj, UInt_t /*button*/, UInt_t state)
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
       el = 0;
-   gEve->GetSelection()->UserPickedElement(el, state & kKeyControlMask);
+   REX::gEve->GetSelection()->UserPickedElement(el, state & kKeyControlMask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -613,7 +611,7 @@ void TEveViewerList::OnReClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
       el = 0;
-   gEve->GetSelection()->UserRePickedElement(el);
+   REX::gEve->GetSelection()->UserRePickedElement(el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -630,7 +628,7 @@ void TEveViewerList::OnUnClicked(TObject *obj, UInt_t /*button*/, UInt_t /*state
    TEveElement* el = dynamic_cast<TEveElement*>(obj);
    if (el && !el->IsPickable())
       el = 0;
-   gEve->GetSelection()->UserUnPickedElement(el);
+   REX::gEve->GetSelection()->UserUnPickedElement(el);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

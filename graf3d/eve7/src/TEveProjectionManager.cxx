@@ -193,7 +193,7 @@ void TEveProjectionManager::UpdateDependentElsAndScenes(TEveElement* root)
 
    List_t scenes;
    root->CollectSceneParentsFromChildren(scenes, 0);
-   gEve->ScenesChanged(scenes);
+   REX::gEve->ScenesChanged(scenes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

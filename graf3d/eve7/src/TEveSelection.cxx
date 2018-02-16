@@ -364,8 +364,8 @@ void TEveSelection::UserPickedElement(TEveElement* el, Bool_t multi)
             AddElement(el);
       }
       if (fIsMaster)
-         gEve->ElementSelect(edit_el ? edit_el : el);
-      gEve->Redraw3D();
+         REX::gEve->ElementSelect(edit_el ? edit_el : el);
+      REX::gEve->Redraw3D();
    }
 }
 
@@ -378,7 +378,7 @@ void TEveSelection::UserRePickedElement(TEveElement* el)
    if (el && HasChild(el))
    {
       SelectionRepeated(el);
-      gEve->Redraw3D();
+      REX::gEve->Redraw3D();
    }
 }
 
@@ -391,6 +391,6 @@ void TEveSelection::UserUnPickedElement(TEveElement* el)
    if (el)
    {
       RemoveElement(el);
-      gEve->Redraw3D();
+      REX::gEve->Redraw3D();
    }
 }
