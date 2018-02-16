@@ -281,3 +281,21 @@ TEST(VecOps, MathFuncs)
    CheckEqual(acos(v), Map(v, [](double x) { return std::acos(x); }), " error checking math function acos");
    CheckEqual(atanh(v), Map(v, [](double x) { return std::atanh(x); }), " error checking math function atanh");
 }
+
+TEST(VecOps, PhysicsSelections)
+{
+   // We emulate 8 muons
+   ROOT::Experimental::VecOps::TVec<short> mu_charge {1, 1, -1, -1, -1, 1, 1, -1};
+   ROOT::Experimental::VecOps::TVec<float> mu_pt {56, 45, 32, 24, 12, 8, 7, 6.2};
+   ROOT::Experimental::VecOps::TVec<float> mu_eta {3.1, -.2, -1.1, 1, 4.1, 1.6, 2.4, -.5};
+
+   // Pick the pt of the muons with a pt greater than 10, an eta between -2 and 2 and a negative charge
+   // or the ones with a pt > 20, outside the eta range -2:2 and with positive charge
+   auto goodMuons_pt = mu_pt[ (mu_pt > 10.f && abs(mu_eta) <= 2.f && mu_charge == -1) || (mu_pt > 15.f && abs(mu_eta) > 2.f && mu_charge == 1) ];
+   ROOT::Experimental::VecOps::TVec<float> goodMuons_pt_ref = {56, 32, 24};
+   CheckEqual(goodMuons_pt, goodMuons_pt_ref, "Muons quality cut");
+
+
+}
+
+
