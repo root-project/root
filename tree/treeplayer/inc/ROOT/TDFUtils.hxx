@@ -91,8 +91,6 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *, TCustomColumnBase
 
 char TypeName2ROOTTypeName(const std::string &b);
 
-const char *ToConstCharPtr(const char *s);
-const char *ToConstCharPtr(const std::string &s);
 unsigned int GetNSlots();
 
 /// `type` is TypeList if MustRemove is false, otherwise it is a TypeList with the first type removed

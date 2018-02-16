@@ -199,16 +199,6 @@ char TypeName2ROOTTypeName(const std::string &b)
    return ' ';
 }
 
-const char *ToConstCharPtr(const char *s)
-{
-   return s;
-}
-
-const char *ToConstCharPtr(const std::string &s)
-{
-   return s.c_str();
-}
-
 unsigned int GetNSlots()
 {
    unsigned int nSlots = 1;
