@@ -27,9 +27,9 @@ namespace ROOT {
       ErrorType err ) :
       FitData( maxpoints, dim ),
       fErrorType( err ),
-      fDataPtr( NULL ),
-      fDataErrorPtr( NULL ), fDataErrorHighPtr( NULL ), fDataErrorLowPtr( NULL ),
-      fpTmpCoordErrorVector( NULL ), fpTmpBinEdgeVector( NULL )
+      fDataPtr( nullptr ),
+      fDataErrorPtr( nullptr ), fDataErrorHighPtr( nullptr ), fDataErrorLowPtr( nullptr ),
+      fpTmpCoordErrorVector( nullptr ), fpTmpBinEdgeVector( nullptr )
     {
       InitializeErrors();
       InitDataVector( );
@@ -43,9 +43,9 @@ namespace ROOT {
       unsigned int dim, ErrorType err ) :
       FitData( opt, maxpoints, dim ),
       fErrorType( err ),
-      fDataPtr( NULL ),
-      fDataErrorPtr( NULL ), fDataErrorHighPtr( NULL ), fDataErrorLowPtr( NULL ),
-      fpTmpCoordErrorVector( NULL ), fpTmpBinEdgeVector( NULL )
+      fDataPtr( nullptr ),
+      fDataErrorPtr( nullptr ), fDataErrorHighPtr( nullptr ), fDataErrorLowPtr( nullptr ),
+      fpTmpCoordErrorVector( nullptr ), fpTmpBinEdgeVector( nullptr )
     {
       InitializeErrors();
       InitDataVector( );
@@ -59,9 +59,9 @@ namespace ROOT {
       unsigned int maxpoints, unsigned int dim, ErrorType err ) :
       FitData( opt, range, maxpoints, dim ),
       fErrorType( err ),
-      fDataPtr( NULL ),
-      fDataErrorPtr( NULL ), fDataErrorHighPtr( NULL ), fDataErrorLowPtr( NULL ),
-      fpTmpCoordErrorVector( NULL ), fpTmpBinEdgeVector( NULL )
+      fDataPtr( nullptr ),
+      fDataErrorPtr( nullptr ), fDataErrorHighPtr( nullptr ), fDataErrorLowPtr( nullptr ),
+      fpTmpCoordErrorVector( nullptr ), fpTmpBinEdgeVector( nullptr )
     {
       InitializeErrors();
       InitDataVector( );
@@ -75,20 +75,20 @@ namespace ROOT {
     BinData::BinData (unsigned int n, const double * dataX, const double * val,
       const double * ex , const double * eval ) :
       FitData( n, dataX ),
-      fDataPtr( NULL ),
-      fDataErrorPtr( NULL ), fDataErrorHighPtr( NULL ), fDataErrorLowPtr( NULL ),
-      fpTmpCoordErrorVector( NULL ), fpTmpBinEdgeVector( NULL )
+      fDataPtr( nullptr ),
+      fDataErrorPtr( nullptr ), fDataErrorHighPtr( nullptr ), fDataErrorLowPtr( nullptr ),
+      fpTmpCoordErrorVector( nullptr ), fpTmpBinEdgeVector( nullptr )
     {
       assert( val );
       fDataPtr = val;
 
-      if ( NULL != eval )
+      if ( nullptr != eval )
       {
         fDataErrorPtr = eval;
 
         fErrorType = kValueError;
 
-        if ( NULL != ex )
+        if ( nullptr != ex )
         {
           fCoordErrorsPtr.resize( 1 );
 
@@ -114,19 +114,19 @@ namespace ROOT {
       const double * val, const double * ex , const double * ey,
       const double * eval  ) :
       FitData( n, dataX, dataY ),
-      fDataErrorPtr( NULL ), fDataErrorHighPtr( NULL ), fDataErrorLowPtr( NULL ),
-      fpTmpCoordErrorVector( NULL ), fpTmpBinEdgeVector( NULL )
+      fDataErrorPtr( nullptr ), fDataErrorHighPtr( nullptr ), fDataErrorLowPtr( nullptr ),
+      fpTmpCoordErrorVector( nullptr ), fpTmpBinEdgeVector( nullptr )
     {
       assert( val );
       fDataPtr = val;
 
-      if ( NULL != eval )
+      if ( nullptr != eval )
       {
         fDataErrorPtr = eval;
 
         fErrorType = kValueError;
 
-        if ( NULL != ex || NULL != ey )
+        if ( nullptr != ex || nullptr != ey )
         {
           fCoordErrorsPtr.resize( 2 );
 
@@ -152,19 +152,19 @@ namespace ROOT {
       const double * dataZ, const double * val, const double * ex ,
       const double * ey , const double * ez , const double * eval   ) :
       FitData( n, dataX, dataY, dataZ ),
-      fDataErrorPtr( NULL ), fDataErrorHighPtr( NULL ), fDataErrorLowPtr( NULL ),
-      fpTmpCoordErrorVector( NULL ), fpTmpBinEdgeVector( NULL )
+      fDataErrorPtr( nullptr ), fDataErrorHighPtr( nullptr ), fDataErrorLowPtr( nullptr ),
+      fpTmpCoordErrorVector( nullptr ), fpTmpBinEdgeVector( nullptr )
     {
       assert( val );
       fDataPtr = val;
 
-      if ( NULL != eval )
+      if ( nullptr != eval )
       {
         fDataErrorPtr = eval;
 
         fErrorType = kValueError;
 
-        if ( NULL != ex || NULL != ey || NULL != ez )
+        if ( nullptr != ex || nullptr != ey || nullptr != ez )
         {
           fCoordErrorsPtr.resize( 3 );
 
@@ -207,13 +207,13 @@ namespace ROOT {
       if ( fpTmpBinEdgeVector )
       {
         delete[] fpTmpBinEdgeVector;
-        fpTmpBinEdgeVector= NULL;
+        fpTmpBinEdgeVector= nullptr;
       }
 
       if ( fpTmpCoordErrorVector )
       {
         delete[] fpTmpCoordErrorVector;
-        fpTmpCoordErrorVector = NULL;
+        fpTmpCoordErrorVector = nullptr;
       }
     }
 
@@ -235,17 +235,17 @@ namespace ROOT {
         assert( Opt().fIntegral );
 
         delete[] fpTmpBinEdgeVector;
-        fpTmpBinEdgeVector= NULL;
+        fpTmpBinEdgeVector= nullptr;
       }
 
       if ( fpTmpCoordErrorVector )
       {
         delete[] fpTmpCoordErrorVector;
-        fpTmpCoordErrorVector = NULL;
+        fpTmpCoordErrorVector = nullptr;
       }
 
-      fDataPtr = NULL;
-      fDataErrorPtr= fDataErrorHighPtr= fDataErrorLowPtr= NULL;
+      fDataPtr = nullptr;
+      fDataErrorPtr= fDataErrorHighPtr= fDataErrorLowPtr= nullptr;
 
       fErrorType = rhs.fErrorType;
       fRefVolume = rhs.fRefVolume;
@@ -284,7 +284,7 @@ namespace ROOT {
 
           for ( unsigned int i=0; i<fDim; i++ )
           {
-            fCoordErrorsPtr[i] = fCoordErrors[i].empty() ? NULL : &fCoordErrors[i].front();
+            fCoordErrorsPtr[i] = fCoordErrors[i].empty() ? nullptr : &fCoordErrors[i].front();
           }
         }
 
@@ -371,7 +371,7 @@ namespace ROOT {
       if ( kNoError == fErrorType )
       {
          fDataError.resize(fNPoints + FitData::VectorPadding(fNPoints));
-         fDataErrorPtr = fDataError.empty() ? NULL : &fDataError.front();
+         fDataErrorPtr = fDataError.empty() ? nullptr : &fDataError.front();
       }
 
       for ( unsigned int i=0; i < fNPoints; i++ )
@@ -659,7 +659,7 @@ namespace ROOT {
     void BinData::InitDataVector ()
     {
        fData.resize(fMaxPoints + FitData::VectorPadding(fMaxPoints));
-       fDataPtr = fData.empty() ? NULL : &fData.front();
+       fDataPtr = fData.empty() ? nullptr : &fData.front();
     }
 
     void BinData::InitializeErrors()
@@ -670,7 +670,7 @@ namespace ROOT {
       if ( fpTmpCoordErrorVector )
       {
         delete[] fpTmpCoordErrorVector;
-        fpTmpCoordErrorVector = NULL;
+        fpTmpCoordErrorVector = nullptr;
       }
 
       if ( kNoError == fErrorType )
@@ -679,13 +679,13 @@ namespace ROOT {
         fCoordErrorsPtr.clear();
 
         fDataErrorHigh.clear();
-        fDataErrorHighPtr = NULL;
+        fDataErrorHighPtr = nullptr;
 
         fDataErrorLow.clear();
-        fDataErrorLowPtr = NULL;
+        fDataErrorLowPtr = nullptr;
 
         fDataError.clear();
-        fDataErrorPtr = NULL;
+        fDataErrorPtr = nullptr;
 
         return;
       }
@@ -698,7 +698,7 @@ namespace ROOT {
         {
            fCoordErrors[i].resize(fMaxPoints + FitData::VectorPadding(fMaxPoints));
 
-           fCoordErrorsPtr[i] = fCoordErrors[i].empty() ? NULL : &fCoordErrors[i].front();
+           fCoordErrorsPtr[i] = fCoordErrors[i].empty() ? nullptr : &fCoordErrors[i].front();
         }
 
         fpTmpCoordErrorVector = new double[fDim];
@@ -712,23 +712,23 @@ namespace ROOT {
       if ( kValueError == fErrorType || kCoordError == fErrorType )
       {
          fDataError.resize(fMaxPoints + FitData::VectorPadding(fMaxPoints));
-         fDataErrorPtr = fDataError.empty() ? NULL : &fDataError.front();
+         fDataErrorPtr = fDataError.empty() ? nullptr : &fDataError.front();
 
          fDataErrorHigh.clear();
-         fDataErrorHighPtr = NULL;
+         fDataErrorHighPtr = nullptr;
          fDataErrorLow.clear();
-         fDataErrorLowPtr = NULL;
+         fDataErrorLowPtr = nullptr;
       }
       else if ( fErrorType == kAsymError )
       {
          fDataErrorHigh.resize(fMaxPoints + FitData::VectorPadding(fMaxPoints));
-         fDataErrorHighPtr = fDataErrorHigh.empty() ? NULL : &fDataErrorHigh.front();
+         fDataErrorHighPtr = fDataErrorHigh.empty() ? nullptr : &fDataErrorHigh.front();
 
          fDataErrorLow.resize(fMaxPoints + FitData::VectorPadding(fMaxPoints));
-         fDataErrorLowPtr = fDataErrorLow.empty() ? NULL : &fDataErrorLow.front();
+         fDataErrorLowPtr = fDataErrorLow.empty() ? nullptr : &fDataErrorLow.front();
 
          fDataError.clear();
-         fDataErrorPtr = NULL;
+         fDataErrorPtr = nullptr;
       }
       else
       {
@@ -748,7 +748,7 @@ namespace ROOT {
       if ( fpTmpBinEdgeVector )
       {
         delete[] fpTmpBinEdgeVector;
-        fpTmpBinEdgeVector = NULL;
+        fpTmpBinEdgeVector = nullptr;
       }
 
       fpTmpBinEdgeVector = new double[ fDim ];
@@ -770,7 +770,7 @@ namespace ROOT {
       unsigned vectorPadding = FitData::VectorPadding(fNPoints);
       fData.resize(fNPoints + vectorPadding);
       std::copy( fDataPtr, fDataPtr + fNPoints, fData.begin() );
-      fDataPtr = fData.empty() ? NULL : &fData.front();
+      fDataPtr = fData.empty() ? nullptr : &fData.front();
 
       for ( unsigned int i=0; i < fDim; i++ )
       {
@@ -785,7 +785,7 @@ namespace ROOT {
 
         fDataError.resize(fNPoints + vectorPadding);
         std::copy(fDataErrorPtr, fDataErrorPtr + fNPoints + vectorPadding, fDataError.begin());
-        fDataErrorPtr = fDataError.empty() ? NULL : &fDataError.front();
+        fDataErrorPtr = fDataError.empty() ? nullptr : &fDataError.front();
       }
 
       if ( kValueError == fErrorType )
@@ -804,7 +804,7 @@ namespace ROOT {
           assert( fCoordErrorsPtr[i] );
           fCoordErrors[i].resize(fNPoints + vectorPadding);
           std::copy(fCoordErrorsPtr[i], fCoordErrorsPtr[i] + fNPoints + vectorPadding, fCoordErrors[i].begin());
-          fCoordErrorsPtr[i] = fCoordErrors[i].empty() ? NULL : &fCoordErrors[i].front();
+          fCoordErrorsPtr[i] = fCoordErrors[i].empty() ? nullptr : &fCoordErrors[i].front();
         }
 
         if( kAsymError == fErrorType )
@@ -817,8 +817,8 @@ namespace ROOT {
           fDataErrorLow.resize(fNPoints + vectorPadding);
           std::copy(fDataErrorHighPtr, fDataErrorHighPtr + fNPoints + vectorPadding, fDataErrorHigh.begin());
           std::copy(fDataErrorLowPtr, fDataErrorLowPtr + fNPoints + vectorPadding, fDataErrorLow.begin());
-          fDataErrorHighPtr = fDataErrorHigh.empty() ? NULL : &fDataErrorHigh.front();
-          fDataErrorLowPtr = fDataErrorLow.empty() ? NULL : &fDataErrorLow.front();
+          fDataErrorHighPtr = fDataErrorHigh.empty() ? nullptr : &fDataErrorHigh.front();
+          fDataErrorLowPtr = fDataErrorLow.empty() ? nullptr : &fDataErrorLow.front();
         }
       }
 
