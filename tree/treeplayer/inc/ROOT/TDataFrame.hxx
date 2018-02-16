@@ -39,6 +39,7 @@ namespace TTraits = ROOT::TypeTraits;
 class TDataFrame : public TDF::TInterface<TDFDetail::TLoopManager> {
    using ColumnNames_t = TDFDetail::ColumnNames_t;
    using TDataSource = ROOT::Experimental::TDF::TDataSource;
+
 public:
    TDataFrame(std::string_view treeName, std::string_view filenameglob, const ColumnNames_t &defaultBranches = {});
    TDataFrame(std::string_view treename, const std::vector<std::string> &filenames,

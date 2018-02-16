@@ -15,7 +15,6 @@ namespace ROOT {
 namespace Internal {
 namespace TDF {
 
-
 // The set here is used as a registry, the real list, which keeps the order, is
 // the one in the vector
 void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
@@ -147,7 +146,6 @@ bool IsInternalColumn(std::string_view colName)
 {
    return 0 == colName.find("tdf") && '_' == colName.back();
 }
-
 
 } // namespace TDF
 } // namespace Internal
