@@ -29,8 +29,8 @@ TEST(IOTest, OneDOpts)
    TAxisConfig xaxis{10, 0., 1.};
    auto h = std::make_unique<TH1D>(xaxis);
    TCanvas canv;
-   auto drawable = canv.Draw(std::move(h));
-   drawable->GetOptions().SetLineColor(TColor::kRed);
+   auto optsPtr = canv.Draw(std::move(h));
+   optsPtr->SetLineColor(TColor::kRed);
 
    auto file = TFile::Recreate("IOTestOneDOpts.root");
    file->Write("canv", canv);
