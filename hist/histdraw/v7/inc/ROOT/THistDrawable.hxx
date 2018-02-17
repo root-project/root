@@ -60,13 +60,10 @@ extern template class THistPainterBase<3>;
 
 } // namespace Internal
 
-class THistDrawableBase: public TDrawable {
+template <class DERIVED>
+class THistDrawableBase: public TDrawableBase<DERIVED> {
 public:
-   THistDrawableBase();
-   THistDrawableBase(THistDrawableBase &&);
-   virtual ~THistDrawableBase();
-
-   THistDrawableBase &operator=(THistDrawableBase &&);
+   virtual ~THistDrawableBase() = default;
 
    void PopulateMenu(TMenuItems &) final;
 
@@ -77,7 +74,7 @@ public:
 };
 
 template <int DIMENSIONS>
-class THistDrawable final: public THistDrawableBase {
+class THistDrawable final: public THistDrawableBase<THistDrawable<DIMENSIONS>> {
 public:
    using HistImpl_t = Detail::THistImplPrecisionAgnosticBase<DIMENSIONS>;
 
@@ -104,6 +101,10 @@ public:
    THistDrawingOpts<DIMENSIONS> &GetOptions() { return fOpts; }
    const THistDrawingOpts<DIMENSIONS> &GetOptions() const { return fOpts; }
 };
+
+extern template class THistDrawableBase<THistDrawable<1>>;
+extern template class THistDrawableBase<THistDrawable<2>>;
+extern template class THistDrawableBase<THistDrawable<3>>;
 
 extern template class THistDrawable<1>;
 extern template class THistDrawable<2>;
