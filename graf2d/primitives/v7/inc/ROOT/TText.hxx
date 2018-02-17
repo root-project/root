@@ -84,7 +84,7 @@ public:
    const TColor &GetFillColor() const { return fFillColor.Get(); }
 };
 
-class TTextDrawable : public TDrawable {
+class TTextDrawable : public TDrawableBase<TTextDrawable> {
 private:
    /// Text string to be drawn
 
@@ -97,7 +97,7 @@ public:
    TTextDrawable() = default;
 
    TTextDrawable(const std::shared_ptr<ROOT::Experimental::TText> &txt)
-      : TDrawable(), fText(txt)
+      : fText(txt)
    {
    }
 
