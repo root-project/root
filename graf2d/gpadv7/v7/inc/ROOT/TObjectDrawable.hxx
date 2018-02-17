@@ -17,8 +17,10 @@
 #define ROOT7_TObjectDrawable
 
 #include <ROOT/TDrawable.hxx>
+#include <ROOT/TDrawingOptsBase.hxx>
 #include "RStringView.h"
 #include <memory>
+#include <string>
 
 class TObject;
 
@@ -27,14 +29,20 @@ namespace Experimental {
 
 class TPadBase;
 
-/// \class ROOT::Experimental::Internal::TObjectDrawable
-/// Provides v7 drawing facilities for TObject types (TGraph etc).
-class TObjectDrawable: public TDrawable {
-   const std::shared_ptr<TObject> fObj; ///< The object to be painted
+/// \class ROOT::Experimental::Internal::TObjectDrawingOpts Drawing options for TObject.
+class TObjectDrawingOpts: public TDrawingOptsBase {
    std::string fOpts;                   ///< The drawing options
 
 public:
+   const std::string &GetOptionString() const { return fOpts; }
+};
 
+/// \class ROOT::Experimental::Internal::TObjectDrawable
+/// Provides v7 drawing facilities for TObject types (TGraph etc).
+class TObjectDrawable: public TDrawableBase<TObjectDrawable> {
+   const std::shared_ptr<TObject> fObj; ///< The object to be painted
+   TObjectDrawingOpts fOpts;
+public:
    TObjectDrawable() = default;
 
    TObjectDrawable(const std::shared_ptr<TObject> &obj): fObj(obj) {}
@@ -46,7 +54,7 @@ public:
    void PopulateMenu(TMenuItems &) final;
 
    /// Get the options - a string!
-   std::string &Options() { return fOpts; }
+   TObjectDrawingOpts &GetOptions() { return fOpts; }
 
    /// Executes menu item
    void Execute(const std::string &) final;
