@@ -23,6 +23,7 @@ namespace ROOT {
 namespace Experimental {
 
 class TCanvas;
+class TDrawingOptsBase;
 class TMenuItems;
 
 namespace Internal {
@@ -43,6 +44,17 @@ public:
    virtual void PopulateMenu(TMenuItems &){};
 
    virtual void Execute(const std::string &);
+
+   /// Get the reference to the drawing options as TDrawingOptsBase. Used e.g. to identify the TDrawable in
+   /// the list of primitives.
+   virtual TDrawingOptsBase& GetOptionsBase() = 0;
+
+};
+
+template <class DERIVED>
+class TDrawableBase: public TDrawable {
+public:
+   TDrawingOptsBase& GetOptionsBase() override { return static_cast<DERIVED*>(this)->GetOptions(); }
 };
 
 namespace Internal {
