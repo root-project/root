@@ -285,13 +285,13 @@ TEST(VecOps, PhysicsSelections)
 {
    // We emulate 8 muons
    ROOT::Experimental::VecOps::TVec<short> mu_charge{1, 1, -1, -1, -1, 1, 1, -1};
-   ROOT::Experimental::VecOps::TVec<float> mu_pt{56, 45, 32, 24, 12, 8, 7, 6.2};
-   ROOT::Experimental::VecOps::TVec<float> mu_eta{3.1, -.2, -1.1, 1, 4.1, 1.6, 2.4, -.5};
+   ROOT::Experimental::VecOps::TVec<float> mu_pt{56.f, 45.f, 32.f, 24.f, 12.f, 8.f, 7.f, 6.2f};
+   ROOT::Experimental::VecOps::TVec<float> mu_eta{3.1f, -.2f, -1.1f, 1.f, 4.1f, 1.6f, 2.4f, -.5f};
 
    // Pick the pt of the muons with a pt greater than 10, an eta between -2 and 2 and a negative charge
    // or the ones with a pt > 20, outside the eta range -2:2 and with positive charge
    auto goodMuons_pt = mu_pt[(mu_pt > 10.f && abs(mu_eta) <= 2.f && mu_charge == -1) ||
                              (mu_pt > 15.f && abs(mu_eta) > 2.f && mu_charge == 1)];
-   ROOT::Experimental::VecOps::TVec<float> goodMuons_pt_ref = {56, 32, 24};
+   ROOT::Experimental::VecOps::TVec<float> goodMuons_pt_ref = {56.f, 32.f, 24.f};
    CheckEqual(goodMuons_pt, goodMuons_pt_ref, "Muons quality cut");
 }
