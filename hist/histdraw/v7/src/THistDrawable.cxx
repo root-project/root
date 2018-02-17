@@ -60,13 +60,8 @@ THistPainterBase<DIMENSION> *THistPainterBase<DIMENSION>::GetPainter()
    return GetPainterPtr();
 }
 
-THistDrawableBase::THistDrawableBase() = default;
-THistDrawableBase::THistDrawableBase(THistDrawableBase &&) = default;
-THistDrawableBase::~THistDrawableBase() = default;
-
-THistDrawableBase &THistDrawableBase::operator=(THistDrawableBase &&) = default;
-
-void THistDrawableBase::PopulateMenu(TMenuItems &)
+template <class DERIVED>
+void THistDrawableBase<DERIVED>::PopulateMenu(TMenuItems &)
 {
    // here should be filling of context menu for the given object
 }
@@ -90,6 +85,10 @@ template class THistPainterBase<1>;
 template class THistPainterBase<2>;
 template class THistPainterBase<3>;
 } // namespace Internal
+
+template class THistDrawableBase<THistDrawable<1>>;
+template class THistDrawableBase<THistDrawable<2>>;
+template class THistDrawableBase<THistDrawable<3>>;
 
 template class THistDrawable<1>;
 template class THistDrawable<2>;
