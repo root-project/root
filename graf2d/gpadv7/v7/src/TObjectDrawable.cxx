@@ -28,7 +28,7 @@
 void ROOT::Experimental::TObjectDrawable::Paint(Internal::TVirtualCanvasPainter &canv)
 {
    ROOT::Experimental::TDisplayItem *res = new TOrdinaryDisplayItem<TObject>(fObj.get());
-   res->SetOption(fOpts.c_str());
+   res->SetOption(fOpts.GetOptionString().c_str());
 
    canv.AddDisplayItem(res);
 }
