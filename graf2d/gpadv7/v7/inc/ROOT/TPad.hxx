@@ -57,12 +57,17 @@ private:
    /// Disable assignment.
    TPadBase &operator=(const TPadBase &) = delete;
 
-   /// Adds a `DRAWABLE` to `fPrimitives`, returning a `shared_ptr` to the `DRAWABLE`.
+   /// Adds a `DRAWABLE` to `fPrimitives`, returning a `shared_ptr` to `DRAWABLE::GetOptions()`.
    template <class DRAWABLE>
-   std::shared_ptr<DRAWABLE> AddDrawable(std::unique_ptr<DRAWABLE> &&uPtr)
+   auto AddDrawable(std::unique_ptr<DRAWABLE> &&uPtr)
    {
       fPrimitives.emplace_back(std::move(uPtr));
-      return std::static_pointer_cast<DRAWABLE>(fPrimitives.back());
+
+      using Options_t = typename std::remove_reference<decltype(uPtr->GetOptions())>::type;
+      auto spDrawable = std::static_pointer_cast<DRAWABLE>(fPrimitives.back());
+      // Return a shared_ptr to the GetOptions() sub-object of the drawable inserted into fPrimitives,
+      // where the entry in fPrimitives defines the lifetime.
+      return std::shared_ptr<Options_t>(spDrawable, &spDrawable->GetOptions());
    }
 
 protected:
@@ -108,7 +113,14 @@ public:
    }
 
    /// Remove an object from the list of primitives.
-   // TODO: void Wipe(???);
+   bool Remove(TDrawingOptsBase& opts) {
+      auto iter = std::find_if(fPrimitives.begin(), fPrimitives.end(),
+         [&opts](const std::shared_ptr<TDrawable>& drawable) { return &drawable->GetOptionsBase() == &opts; });
+      if (iter == fPrimitives.end())
+         return false;
+      iter->reset();
+      return true;
+   }
 
    /// Wipe the pad by clearing the list of primitives.
    void Wipe()
@@ -224,7 +236,7 @@ public:
 /** \class TPadDrawable
    Draw a TPad, by drawing its contained graphical elements at the pad offset in the parent pad.'
    */
-class TPadDrawable: public TDrawable {
+class TPadDrawable: public TDrawableBase<TPadDrawable> {
 private:
    const std::unique_ptr<TPad> fPad; ///< The pad to be painted
    TPadDrawingOpts fOpts;            ///< The drawing options.
