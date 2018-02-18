@@ -21,7 +21,6 @@
 #pragma link C++ class ROOT::Experimental::THistDrawingOpts<1>+;
 #pragma link C++ class ROOT::Experimental::THistDrawingOpts<2>+;
 #pragma link C++ class ROOT::Experimental::THistDrawingOpts<3>+;
-#pragma link C++ class ROOT::Experimental::THistDrawableBase+;
 #pragma link C++ class ROOT::Experimental::THistDrawable<1>+;
 #pragma link C++ class ROOT::Experimental::THistDrawable<2>+;
 #pragma link C++ class ROOT::Experimental::THistDrawable<3>+;
