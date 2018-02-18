@@ -594,7 +594,7 @@ Bool_t TPgSQLStatement::GetDatime(Int_t npar, Int_t& year, Int_t& month, Int_t& 
 
 void TPgSQLStatement::ConvertTimeToUTC(const TString &PQvalue, Int_t& year, Int_t& month, Int_t& day, Int_t& hour, Int_t& min, Int_t& sec)
 {
-   Ssiz_t p = PQvalue.Last('.');
+   Ssiz_t p = PQvalue.Last(':');
    // Check if timestamp has timezone
    TSubString *s_zone = nullptr;
    Bool_t hasZone = kFALSE;
