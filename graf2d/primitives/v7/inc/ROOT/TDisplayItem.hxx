@@ -23,6 +23,7 @@
 namespace ROOT {
 namespace Experimental {
 class TCanvas;
+class TFrame;
 
 /** \class TDisplayItem
   Base class for painting data for JS.
@@ -56,11 +57,12 @@ public:
 
 class TPadDisplayItem : public TDisplayItem {
 protected:
+   const TFrame *fFrame{nullptr};         ///! temporary pointer on frame object
    std::vector<TDisplayItem *> fPrimitives;
-
 public:
    TPadDisplayItem() : TDisplayItem(), fPrimitives() { SetKind(3); }
    virtual ~TPadDisplayItem();
+   void SetFrame(const TFrame *f) { fFrame = f; }
    void Add(TDisplayItem *snap) { fPrimitives.push_back(snap); }
    TDisplayItem *Last() const { return fPrimitives[fPrimitives.size() - 1]; }
    void Clear();
