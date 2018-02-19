@@ -281,7 +281,7 @@ public:
    /// \param[in] name The name of the custom column.
    /// \param[in] expression An expression in C++ which represents the temporary value
    ///
-   /// The expression is just-in-time compiled and used to produce the column entries. The
+   /// The expression is just-in-time compiled and used to produce the column entries.
    /// It must be valid C++ syntax in which variable names are substituted with the names
    /// of branches/columns.
    ///
