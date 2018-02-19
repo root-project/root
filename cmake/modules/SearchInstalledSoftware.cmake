@@ -29,6 +29,10 @@ endif()
 #---Check for Zlib ------------------------------------------------------------------
 if(NOT builtin_zlib)
   message(STATUS "Looking for ZLib")
+  # Clear cache variables, or LLVM may use old values for ZLIB
+  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
+    unset(ZLIB_${suffix} CACHE)
+  endforeach()
   find_package(ZLIB)
   if(NOT ZLIB_FOUND)
     message(STATUS "Zlib not found. Switching on builtin_zlib option")
