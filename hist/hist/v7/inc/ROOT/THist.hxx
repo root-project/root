@@ -321,7 +321,7 @@ void Add(THist<DIMENSIONS, PRECISION_TO, STAT_TO...> &to, const THist<DIMENSIONS
 
 /// Interface to graphics taking a shared_ptr<THist>.
 template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
-std::unique_ptr<THistDrawable<DIMENSIONS>>
+std::shared_ptr<THistDrawable<DIMENSIONS>>
 GetDrawable(const std::shared_ptr<THist<DIMENSIONS, PRECISION, STAT...>> &hist,
             const THistDrawingOpts<DIMENSIONS> &opts = {})
 {
@@ -330,7 +330,7 @@ GetDrawable(const std::shared_ptr<THist<DIMENSIONS, PRECISION, STAT...>> &hist,
 
 /// Interface to graphics taking a unique_ptr<THist>.
 template <int DIMENSIONS, class PRECISION, template <int D_, class P_, template <class P__> class S_> class... STAT>
-std::unique_ptr<THistDrawable<DIMENSIONS>>
+std::shared_ptr<THistDrawable<DIMENSIONS>>
 GetDrawable(std::unique_ptr<THist<DIMENSIONS, PRECISION, STAT...>> &&hist,
             const THistDrawingOpts<DIMENSIONS> &opts = {})
 {
