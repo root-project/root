@@ -49,7 +49,7 @@ namespace VecOps {
 
 using namespace ROOT::Experimental::VecOps;
 
-void CheckSizes(std::size_t s0, std::size_t s1, std::string_view opName)
+inline void CheckSizes(std::size_t s0, std::size_t s1, std::string_view opName)
 {
    if (s0 != s1) {
       std::stringstream err;
@@ -59,7 +59,7 @@ void CheckSizes(std::size_t s0, std::size_t s1, std::string_view opName)
 }
 
 template <typename T, typename V, typename F>
-auto Operate(const TVec<T> &v0, const TVec<V> &v1, std::string_view opName, F &&f) -> TVec<decltype(f(v0[0], v1[1]))>
+inline auto Operate(const TVec<T> &v0, const TVec<V> &v1, std::string_view opName, F &&f) -> TVec<decltype(f(v0[0], v1[1]))>
 {
    CheckSizes(v0.size(), v1.size(), opName);
    TVec<decltype(f(v0[0], v1[1]))> w(v0.size());
@@ -68,7 +68,7 @@ auto Operate(const TVec<T> &v0, const TVec<V> &v1, std::string_view opName, F &&
 }
 
 template <typename T, typename V, typename F>
-TVec<T> &OperateInPlace(TVec<T> &v0, const TVec<V> &v1, std::string_view opName, F &&f)
+inline TVec<T> &OperateInPlace(TVec<T> &v0, const TVec<V> &v1, std::string_view opName, F &&f)
 {
    const auto v0size = v0.size();
    CheckSizes(v0size, v1.size(), opName);
@@ -77,7 +77,7 @@ TVec<T> &OperateInPlace(TVec<T> &v0, const TVec<V> &v1, std::string_view opName,
 }
 
 template <typename T, typename F>
-auto Operate(const TVec<T> &v, F &&f) -> TVec<decltype(f(v[0]))>
+inline auto Operate(const TVec<T> &v, F &&f) -> TVec<decltype(f(v[0]))>
 {
    TVec<decltype(f(v[0]))> w(v.size());
    std::transform(v.begin(), v.end(), w.begin(), std::forward<F>(f));
@@ -85,7 +85,7 @@ auto Operate(const TVec<T> &v, F &&f) -> TVec<decltype(f(v[0]))>
 }
 
 template <typename T, typename F>
-TVec<T> &OperateInPlace(TVec<T> &v, F &&f)
+inline TVec<T> &OperateInPlace(TVec<T> &v, F &&f)
 {
    std::transform(v.begin(), v.end(), v.begin(), std::forward<F>(f));
    return v;
