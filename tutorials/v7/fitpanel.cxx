@@ -68,7 +68,7 @@ void fitpanel() {
    pHist->Fill(3);
 
    auto canvas = Experimental::TCanvas::Create("Canvas Title");
-   canvas->Draw(pHist).SetLineColor(Experimental::TColor::kRed);
+   canvas->Draw(pHist)->GetOptions().SetLineColor(Experimental::TColor::kRed);
 
    canvas->Show();
    canvas->Update(); // need to ensure canvas is drawn
