@@ -1338,6 +1338,17 @@ void TGraph2D::Paint(Option_t *option)
 
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Print 2D graph values.
+
+void TGraph2D::Print(Option_t *) const
+{
+   for (Int_t i = 0; i < fNpoints; i++) {
+      printf("x[%d]=%g, y[%d]=%g, z[%d]=%g\n", i, fX[i], i, fY[i], i, fZ[i]);
+   }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Projects a 2-d graph into 1 or 2-d histograms depending on the
 /// option parameter
 /// option may contain a combination of the characters x,y,z

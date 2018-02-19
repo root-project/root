@@ -135,6 +135,7 @@ public:
    virtual Double_t      GetZminE() const {return GetZmin();};
    Double_t              Interpolate(Double_t x, Double_t y);
    void                  Paint(Option_t *option="");
+   virtual void          Print(Option_t *chopt="") const;
    TH1                  *Project(Option_t *option="x") const; // *MENU*
    Int_t                 RemovePoint(Int_t ipoint); // *MENU*
    virtual void          SavePrimitive(std::ostream &out, Option_t *option = "");

@@ -23,7 +23,7 @@
 ClassImp(TGraph2DErrors);
 
 /** \class TGraph2DErrors
-    \ingroup Hist 
+    \ingroup Hist
 Graph 2D class with errors.
 
 A TGraph2DErrors is a TGraph2D with errors. It behaves like a TGraph2D and has
@@ -299,6 +299,16 @@ Double_t TGraph2DErrors::GetZminE() const
    return v;
 }
 
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print 2D graph and errors values.
+
+void TGraph2DErrors::Print(Option_t *) const
+{
+   for (Int_t i = 0; i < fNpoints; i++) {
+      printf("x[%d]=%g, y[%d]=%g, z[%d]=%g, ex[%d]=%g, ey[%d]=%g, ez[%d]=%g\n", i, fX[i], i, fY[i], i, fZ[i], i, fEX[i], i, fEY[i], i, fEZ[i]);
+   }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set number of points in the 2D graph.
