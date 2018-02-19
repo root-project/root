@@ -180,6 +180,74 @@ public:
          fAlpha = (float)a;
    }
 
+   /// Return the Hue, Light, Saturation (HLS) definition of this TColor
+   void GetHLS(float &hue, float &light, float &satur) {
+      hue = light = satur = 0.;
+      if (AssertNotPalettePos()) {
+         float rnorm, gnorm, bnorm, minval, maxval, msum, mdiff;
+         minval = maxval =0 ;
+
+         minval = fRedOrPalettePos;
+         if (fGreen < minval) minval = fGreen;
+         if (fBlue < minval)  minval = fBlue;
+         maxval = fRedOrPalettePos;
+         if (fGreen > maxval) maxval = fGreen;
+         if (fBlue > maxval)  maxval = fBlue;
+
+         rnorm = gnorm = bnorm = 0;
+         mdiff = maxval - minval;
+         msum  = maxval + minval;
+         light = 0.5 * msum;
+         if (maxval != minval) {
+            rnorm = (maxval - fRedOrPalettePos)/mdiff;
+            gnorm = (maxval - fGreen)/mdiff;
+            bnorm = (maxval - fBlue)/mdiff;
+         } else {
+            satur = hue = 0;
+            return;
+         }
+
+         if (light < 0.5) satur = mdiff/msum;
+         else             satur = mdiff/(2.0 - msum);
+
+         if      (fRedOrPalettePos == maxval) hue = 60.0 * (6.0 + bnorm - gnorm);
+         else if (fGreen == maxval)           hue = 60.0 * (2.0 + rnorm - bnorm);
+         else                                 hue = 60.0 * (4.0 + gnorm - rnorm);
+
+         if (hue > 360) hue = hue - 360;
+      }
+   }
+
+   /// Set the Red Green and Blue (RGB) values from the Hue, Light, Saturation (HLS).
+   void SetRGBFromHLS(float hue, float light, float satur) {
+      if (AssertNotPalettePos()) {
+         float rh, rl, rs, rm1, rm2;
+         rh = rl = rs = 0;
+         if (hue   > 0) { rh = hue;   if (rh > 360) rh = 360; }
+         if (light > 0) { rl = light; if (rl > 1)   rl = 1; }
+         if (satur > 0) { rs = satur; if (rs > 1)   rs = 1; }
+
+         if (rl <= 0.5) rm2 = rl*(1.0 + rs);
+         else           rm2 = rl + rs - rl*rs;
+         rm1 = 2.0*rl - rm2;
+
+         if (!rs) { fRedOrPalettePos = fGreen = fBlue = rl; return; }
+
+         auto toRGB = [rm1, rm2] (float hue) {
+            if (hue > 360) hue = hue - 360;
+            if (hue < 0)   hue = hue + 360;
+            if (hue < 60 ) return rm1 + (rm2-rm1)*hue/60;
+            if (hue < 180) return rm2;
+            if (hue < 240) return rm1 + (rm2-rm1)*(240-hue)/60;
+            return rm1;
+         };
+
+         fRedOrPalettePos = toRGB(rh+120);
+         fGreen           = toRGB(rh);
+         fBlue            = toRGB(rh-120);
+      }
+   }
+
    ///\{
    ///\name Default colors
    static constexpr RGBA kRed{{1., 0., 0., 1.}};
