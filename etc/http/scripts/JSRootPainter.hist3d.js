@@ -37,6 +37,8 @@
 
       if ((arg!==undefined) && (arg<0)) {
 
+         if (!this.mode3d) return;
+
          //if (typeof this.TestAxisVisibility === 'function')
          this.TestAxisVisibility(null, this.toplevel);
 
@@ -64,7 +66,7 @@
             delete this.render_tmout;
          }
 
-         delete this.mode3d;
+         this.mode3d = false;
 
          return;
       }
@@ -264,11 +266,10 @@
 
          var tm1 = new Date();
 
-         if (this.FrontBox === undefined) this.FrontBox = true;
-         if (this.BackBox === undefined) this.BackBox = true;
+         if (!this.opt3d) this.opt3d = { FrontBox: true, BackBox: true };
 
          //if (typeof this.TestAxisVisibility === 'function')
-         this.TestAxisVisibility(this.camera, this.toplevel, this.FrontBox, this.BackBox);
+         this.TestAxisVisibility(this.camera, this.toplevel, this.opt3d.FrontBox, this.opt3d.BackBox);
 
          // do rendering, most consuming time
          this.renderer.render(this.scene, this.camera);
@@ -459,6 +460,10 @@
             chld.visible = testvisible(chld.zboxid + shift, range);
          }
       }
+   }
+
+   JSROOT.TFramePainter.prototype.Set3DOptions = function(hopt) {
+      this.opt3d = hopt;
    }
 
    JSROOT.TFramePainter.prototype.DrawXYZ = function(toplevel, opts) {
@@ -1084,11 +1089,10 @@
           rsegments = [0, 1, 1, 2, 2, 3, 3, 0],
           // reduced vertices
           rvertices = [ new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 1, 0), new THREE.Vector3(1, 1, 0), new THREE.Vector3(1, 0, 0) ],
-          hmain = this.main_painter(),
           main = this.frame_painter(),
           axis_zmin = main.grz.domain()[0],
           axis_zmax = main.grz.domain()[1],
-          handle = hmain.PrepareColorDraw({ rounding: false, use3d: true, extra: 1 }),
+          handle = this.PrepareColorDraw({ rounding: false, use3d: true, extra: 1 }),
           i1 = handle.i1, i2 = handle.i2, j1 = handle.j1, j2 = handle.j2,
           i, j, x1, x2, y1, y2, binz1, binz2, reduced, nobottom, notop,
           pthis = this,
@@ -1131,15 +1135,22 @@
       // DRAW ALL CUBES
 
       if ((this.options.Lego === 12) || (this.options.Lego === 14)) {
+         // drawing colors levels, axis can not exceed palette
          levels = this.CreateContour(histo.fContour ? histo.fContour.length : 20, main.lego_zmin, main.lego_zmax);
          palette = this.GetPalette();
+         //axis_zmin = levels[0];
+         //axis_zmax = levels[levels.length-1];
       }
 
       for (var nlevel=0; nlevel<levels.length-1;++nlevel) {
 
          var zmin = levels[nlevel], zmax = levels[nlevel+1],
-             z1 = 0, z2 = 0, grzmin = main.grz(zmin), grzmax = main.grz(zmax),
-             numvertices = 0, num2vertices = 0;
+             z1 = 0, z2 = 0, numvertices = 0, num2vertices = 0;
+
+         // artifically extend last level of color pallette to maximial visible value
+         if (palette && (nlevel==levels.length-2) && zmax < axis_zmax) zmax = axis_zmax;
+
+         var grzmin = main.grz(zmin), grzmax = main.grz(zmax);
 
          // now calculate size of buffer geometry for boxes
 
@@ -1176,8 +1187,8 @@
          }
 
          for (i=i1;i<i2;++i) {
-            x1 = handle.grx[i];
-            x2 = handle.grx[i+1];
+            x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+1]-handle.grx[i]);
+            x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+1]-handle.grx[i]);
             for (j=j1;j<j2;++j) {
 
                if (!GetBinContent(i,j,nlevel)) continue;
@@ -1185,8 +1196,8 @@
                nobottom = !reduced && (nlevel>0);
                notop = !reduced && (binz2 > zmax) && (nlevel < levels.length-2);
 
-               y1 = handle.gry[j];
-               y2 = handle.gry[j+1];
+               y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]);
+               y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]);
 
                z1 = (binz1 <= zmin) ? grzmin : main.grz(binz1);
                z2 = (binz2 > zmax) ? grzmax : main.grz(binz2);
@@ -1271,23 +1282,21 @@
          mesh.zmax = axis_zmax;
          mesh.baseline = (this.options.BaseLine===false) ? axis_zmin : this.options.BaseLine;
          mesh.tip_color = (rootcolor===3) ? 0xFF0000 : 0x00FF00;
+         mesh.handle = handle;
 
          mesh.tooltip = function(intersect) {
             if ((intersect.index<0) || (intersect.index >= this.bins_index.length)) return null;
             var p = this.painter,
+                handle = this.handle,
                 main = p.frame_painter(),
                 histo = p.GetHisto(),
                 tip = p.Get3DToolTip( this.bins_index[intersect.index] );
 
-            tip.x1 = Math.max(-main.size_xy3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix)));
-            tip.x2 = Math.min(main.size_xy3d, main.grx(histo.fXaxis.GetBinLowEdge(tip.ix+1)));
-            if (p.Dimension()===1) {
-               tip.y1 = main.gry(0);
-               tip.y2 = main.gry(1);
-            } else {
-               tip.y1 = Math.max(-main.size_xy3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy)));
-               tip.y2 = Math.min(main.size_xy3d, main.gry(histo.fYaxis.GetBinLowEdge(tip.iy+1)));
-            }
+            tip.x1 = Math.max(-main.size_xy3d,  handle.grx[tip.ix-1] + handle.xbar1*(handle.grx[tip.ix]-handle.grx[tip.ix-1]));
+            tip.x2 = Math.min(main.size_xy3d, handle.grx[tip.ix-1] + handle.xbar2*(handle.grx[tip.ix]-handle.grx[tip.ix-1]));
+
+            tip.y1 = Math.max(-main.size_xy3d, handle.gry[tip.iy-1] + handle.ybar1*(handle.gry[tip.iy] - handle.gry[tip.iy-1]));
+            tip.y2 = Math.min(main.size_xy3d, handle.gry[tip.iy-1] + handle.ybar2*(handle.gry[tip.iy] - handle.gry[tip.iy-1]));
 
             var binz1 = this.baseline, binz2 = tip.value;
             if (histo['$baseh']) binz1 = histo['$baseh'].getBinContent(tip.ix, tip.iy);
@@ -1355,24 +1364,20 @@
       if (!uselineindx) numlinevertices = numsegments*3;
 
       var lpositions = new Float32Array( numlinevertices * 3 ),
-          lindicies = uselineindx ? new Uint16Array( numsegments ) : null;
-//          intersect_size = uselineindx ? numsegments : numlinevertices,
-//          intersect_index = use16indx ? new Uint16Array( intersect_size ) : new Uint32Array( intersect_size );
-
-      var z1 = 0, z2 = 0,
+          lindicies = uselineindx ? new Uint16Array( numsegments ) : null,
           grzmin = main.grz(axis_zmin),
           grzmax = main.grz(axis_zmax),
-          ll = 0, ii = 0;
+          z1 = 0, z2 = 0, ll = 0, ii = 0;
 
       for (i=i1;i<i2;++i) {
-         x1 = handle.grx[i];
-         x2 = handle.grx[i+1];
+         x1 = handle.grx[i] + handle.xbar1*(handle.grx[i+1]-handle.grx[i]);
+         x2 = handle.grx[i] + handle.xbar2*(handle.grx[i+1]-handle.grx[i]);
          for (j=j1;j<j2;++j) {
 
             if (!GetBinContent(i,j,0)) continue;
 
-            y1 = handle.gry[j];
-            y2 = handle.gry[j+1];
+            y1 = handle.gry[j] + handle.ybar1*(handle.gry[j+1] - handle.gry[j]);
+            y2 = handle.gry[j] + handle.ybar2*(handle.gry[j+1] - handle.gry[j]);
 
             z1 = (binz1 <= axis_zmin) ? grzmin : main.grz(binz1);
             z2 = (binz2 > axis_zmax) ? grzmax : main.grz(binz2);
@@ -1489,6 +1494,7 @@
          if (is_main) {
             main.Create3DScene();
             main.SetAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, 0, 0);
+            main.Set3DOptions(this.options);
             main.DrawXYZ(main.toplevel, { use_y_for_z: true, zmult: 1.1, zoom: JSROOT.gStyle.Zooming, ndim: 1 });
          }
 
@@ -1503,7 +1509,7 @@
 
       if (is_main) {
          // (re)draw palette by resize while canvas may change dimension
-         this.DrawColorPalette((this.options.Zscale > 0) && ((this.options.Lego===12) || (this.options.Lego===14)));
+         this.DrawColorPalette(this.options.Zscale && ((this.options.Lego===12) || (this.options.Lego===14)));
 
          this.DrawTitle();
       }
@@ -1545,6 +1551,7 @@
          if (is_main) {
             main.Create3DScene();
             main.SetAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax);
+            main.Set3DOptions(this.options);
             main.DrawXYZ(main.toplevel, { zmult: zmult, zoom: JSROOT.gStyle.Zooming, ndim: 2 });
          }
 
@@ -1560,8 +1567,8 @@
       if (is_main) {
 
          //  (re)draw palette by resize while canvas may change dimension
-         this.DrawColorPalette((this.options.Zscale > 0) && ((this.options.Lego===12) || (this.options.Lego===14) ||
-                                (this.options.Surf===11) || (this.options.Surf===12)));
+         this.DrawColorPalette(this.options.Zscale && ((this.options.Lego===12) || (this.options.Lego===14) ||
+                               (this.options.Surf===11) || (this.options.Surf===12)));
 
          this.DrawTitle();
       }
@@ -1601,9 +1608,8 @@
 
    JSROOT.TH2Painter.prototype.DrawSurf = function() {
       var histo = this.GetHisto(),
-          hmain = this.main_painter(),
           main = this.frame_painter(),
-          handle = hmain.PrepareColorDraw({rounding: false, use3d: true, extra: 1, middle: 0.5 }),
+          handle = this.PrepareColorDraw({rounding: false, use3d: true, extra: 1, middle: 0.5 }),
           i,j, x1, y1, x2, y2, z11, z12, z21, z22,
           axis_zmin = main.grz.domain()[0],
           axis_zmax = main.grz.domain()[1];
@@ -1937,7 +1943,7 @@
 
       if (this.options.Surf === 13) {
 
-         handle = hmain.PrepareColorDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 });
+         handle = this.PrepareColorDraw({rounding: false, use3d: true, extra: 100, middle: 0.0 });
 
          // get levels
          var levels = this.GetContour(), // init contour
@@ -2001,9 +2007,8 @@
 
    JSROOT.TH2Painter.prototype.DrawError = function() {
       var pthis = this,
-          hmain = this.main_painter(),
           main = this.frame_painter(),
-          handle = hmain.PrepareColorDraw({ rounding: false, use3d: true, extra: 1 }),
+          handle = this.PrepareColorDraw({ rounding: false, use3d: true, extra: 1 }),
           zmin = main.grz.domain()[0],
           zmax = main.grz.domain()[1],
           i, j, bin, binz, binerr, x1, y1, x2, y2, z1, z2,
@@ -2592,7 +2597,7 @@
           buffer_size = 0, use_lambert = false,
           use_helper = false, use_colors = false, use_opacity = 1, use_scale = true,
           single_bin_verts, single_bin_norms,
-          box_option = this.options.Box,
+          box_option = this.options.Box ? this.options.BoxStyle : 0,
           tipscale = 0.5;
 
       if (!box_option && this.options.Lego) box_option = (this.options.Lego===1) ? 10 : this.options.Lego;
@@ -2900,7 +2905,7 @@
 
          main.Create3DScene();
          main.SetAxesRanges(histo.fXaxis, this.xmin, this.xmax, histo.fYaxis, this.ymin, this.ymax, histo.fZaxis, this.zmin, this.zmax);
-
+         main.Set3DOptions(this.options);
          main.DrawXYZ(main.toplevel, { zoom: JSROOT.gStyle.Zooming, ndim: 3 });
          this.Draw3DBins();
          main.Render3D();
@@ -2912,7 +2917,7 @@
    }
 
    TH3Painter.prototype.FillToolbar = function() {
-      var pp = this.pad_painter(true);
+      var pp = this.pad_painter();
       if (pp===null) return;
 
       pp.AddButton(JSROOT.ToolbarIcons.auto_zoom, 'Unzoom all axes', 'ToggleZoom', "Ctrl *");
@@ -2996,8 +3001,9 @@
          if (arg==='inspect')
             return JSROOT.draw(this.divid, this.GetObject(),arg);
 
-         this.options = this.DecodeOptions(arg);
+         this.DecodeOptions(arg);
          this.Redraw();
+         this.InteractiveRedraw(true,"drawopt");
       });
    }
 
@@ -3007,7 +3013,7 @@
 
       painter.SetDivId(divid, 4);
 
-      painter.options = painter.DecodeOptions(opt);
+      painter.DecodeOptions(opt);
 
       painter.CheckPadRange();
 
@@ -3034,14 +3040,21 @@
    TGraph2DPainter.prototype.DecodeOptions = function(opt) {
       var d = new JSROOT.DrawOptions(opt);
 
-      var res = { Color: d.check("COL"), Line: d.check("LINE"),
-                  Error: d.check("ERR") && this.MatchObjectType("TGraph2DErrors"),
-                  Circles: d.check("P0"), Markers: d.check("P") };
+      if (!this.options)
+         this.options = {};
+
+      var res = this.options;
+
+      res.Color = d.check("COL");
+      res.Line = d.check("LINE");
+      res.Error = d.check("ERR") && this.MatchObjectType("TGraph2DErrors");
+      res.Circles = d.check("P0");
+      res.Markers = d.check("P");
 
       if (!res.Markers && !res.Error && !res.Circles && !res.Line) res.Markers = true;
       if (!res.Markers) res.Color = false;
 
-      return res;
+      this.OptionsStore(opt);
    }
 
    TGraph2DPainter.prototype.CreateHistogram = function() {
@@ -3333,7 +3346,7 @@
 
       painter.SetDivId(divid, -1); // just to get access to existing elements
 
-      painter.options = painter.DecodeOptions(opt);
+      painter.DecodeOptions(opt);
 
       if (painter.main_painter()) {
          painter.SetDivId(divid);

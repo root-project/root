@@ -4,7 +4,7 @@
    <head>
       <meta charset="UTF-8">
       <meta http-equiv="X-UA-Compatible" content="IE=edge">
-      <title>Draw of single element</title>
+      <title>ROOT7 TCanvas</title>
       <script type="text/javascript" src="jsrootsys/scripts/JSRootCore.js"></script>
    </head>
    
@@ -29,11 +29,8 @@
    
    <script type='text/javascript'>
    
-      function InitV7Canvas() {
-         var socket_kind = "websocket", use_openui = true;
-         if (JSROOT.GetUrlOption("longpoll")!==null) socket_kind = "longpoll"; else
-         if (JSROOT.GetUrlOption("cef3")!==null) socket_kind = "cefquery"; else
-         if (JSROOT.GetUrlOption("qt5")!==null) { JSROOT.browser.qt5 = true; socket_kind = "longpoll"; }
+      function InitV7Canvas(handle, args) {
+         var use_openui = true;
 
          var painter = new JSROOT.v7.TCanvasPainter(null);
          painter.batch_mode = JSROOT.GetUrlOption("batch_mode") !== null;
@@ -46,7 +43,7 @@
 
          if (use_openui && !painter.batch_mode) {
 
-            painter._configured_socket_kind = socket_kind;
+            painter._configured_socket_kind = args.socket_kind;
             painter.use_openui = true;
 
             return JSROOT.AssertPrerequisites('openui5', function() {
@@ -64,12 +61,16 @@
 
          painter.SetDivId("CanvasDiv", -1); // just assign id, nothing else is happens
 
-         painter.OpenWebsocket(socket_kind); // when connection activated, ROOT must send new instance of the canvas
+         painter.UseWebsocket(handle); // when connection activated, ROOT must send new instance of the canvas
 
          if (!painter.batch_mode) JSROOT.RegisterForResize(painter);
       }
       
-      JSROOT.AssertPrerequisites("2d;v7;", InitV7Canvas, "CanvasDiv");
+      JSROOT.ConnectWebWindow({
+         prereq: "2d;v7;",
+         prereq_logdiv: "CanvasDiv",
+         callback: InitV7Canvas
+      });
 
    </script>
 

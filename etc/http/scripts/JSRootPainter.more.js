@@ -110,9 +110,9 @@
                 this.AxisToSvg("x", polyline.fX[n], isndc) + "," +
                 this.AxisToSvg("y", polyline.fY[n], isndc);
 
-      if (polyline._typename != "TPolyLine") fillatt.color = "none";
+      if (polyline._typename != "TPolyLine") fillatt.SetSolidColor("none");
 
-      if (fillatt.color!=='none') cmd+="Z";
+      if (!fillatt.empty()) cmd+="Z";
 
       this.draw_g
           .append("svg:path")
@@ -127,8 +127,8 @@
 
       var ellipse = this.GetObject();
 
-      if(!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(ellipse);
-      if (!this.fillatt) this.fillatt = this.createAttFill(ellipse);
+      this.createAttLine({ attr: ellipse });
+      this.createAttFill({ attr: ellipse });
 
       // create svg:g container for ellipse drawing
       this.CreateG();
@@ -264,11 +264,12 @@
 
    // =============================================================================
 
-   function drawBox(divid, obj, opt) {
+   function drawBox() {
 
       var box = this.GetObject(),
-          draw_line = (typeof this._drawopt == 'string') && (this._drawopt.toUpperCase().indexOf("L")>=0),
-          lineatt = new JSROOT.TAttLineHandler(box),
+          opt = this.OptionsAsString(),
+          draw_line = (opt.toUpperCase().indexOf("L")>=0),
+          lineatt = this.createAttLine(box),
           fillatt = this.createAttFill(box);
 
       // create svg:g container for box drawing
@@ -282,7 +283,7 @@
           ww = Math.abs(x2-x1), hh = Math.abs(y1-y2);
 
       // if box filled, contour line drawn only with "L" draw option:
-      if ((fillatt.color != 'none') && !draw_line) lineatt.color = "none";
+      if (!fillatt.empty() && !draw_line) lineatt.color = "none";
 
       this.draw_g
           .append("svg:rect")
@@ -365,8 +366,8 @@
           wsize = Math.max(3, Math.round(Math.max(this.pad_width(), this.pad_height()) * arrow.fArrowSize)),
           hsize = Math.round(wsize * Math.tan(arrow.fAngle/2*Math.PI/180));
 
-      if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(arrow);
-      if (!this.fillatt) this.fillatt = this.createAttFill(arrow);
+      this.createAttLine({ attr: arrow });
+      this.createAttFill({ attr: arrow });
 
       // create svg:g container for line drawing
       this.CreateG();
@@ -435,7 +436,7 @@
                             .call(this.lineatt.func);
          if (midkind > 10) {
             pmid.call(this.fillatt.func);
-            if ((this.fillatt.color == this.lineatt.color) && this.fillatt.isSolid()) pmid.style('stroke-width',1);
+            if (this.fillatt.isSolid(this.lineatt.color)) pmid.style('stroke-width',1);
          }
       }
 
@@ -457,7 +458,7 @@
                        .call(this.lineatt.func);
          if (closed) {
             pend.call(this.fillatt.func);
-            if ((this.fillatt.color == this.lineatt.color) && this.fillatt.isSolid()) pend.style('stroke-width',1);
+            if (this.fillatt.isSolid(this.lineatt.color)) pend.style('stroke-width',1);
             var dx = x2-x1, dy = y2-y1, len = Math.sqrt(dx*dx + dy*dy);
             if (len>wsize) {
                var ratio = wsize/len;
@@ -647,7 +648,7 @@
                   x: bin.grx,
                   y: bin.gry,
                   color1: this.lineatt.color,
-                  color2: this.fillatt.color,
+                  color2: this.fillatt.fillcolor(),
                   lines: [],
                   exact: (Math.abs(bin.grx - pnt.x) < radius) && (Math.abs(bin.gry - pnt.y) < radius) };
 
@@ -684,12 +685,10 @@
       // recalculate drawing bins when necessary
       this.bins = this.CreateBins(false);
 
-      if (!this.lineatt)
-         this.lineatt = new JSROOT.TAttLineHandler(tf1);
+      this.createAttLine({ attr: tf1 });
       this.lineatt.used = false;
 
-      if (!this.fillatt)
-         this.fillatt = this.createAttFill(tf1, undefined, undefined, 1);
+      this.createAttFill({ attr: tf1, kind: 1 });
       this.fillatt.used = false;
 
       // first calculate graphical coordinates
@@ -716,7 +715,7 @@
                .style("fill", "none")
                .call(this.lineatt.func);
 
-         if (this.fillatt.color != "none")
+         if (!this.fillatt.empty())
             this.draw_g.append("svg:path")
                .attr("class", "area")
                .attr("d", path.path + path.close)
@@ -799,9 +798,14 @@
    TGraphPainter.prototype.DecodeOptions = function(opt) {
 
       var graph = this.GetObject(),
-          d = new JSROOT.DrawOptions(opt),
-          res = { Line: 0, Curve: 0, Rect: 0, Mark: 0, Bar: 0, OutRange: 0,  EF:0, Fill: 0, NoOpt: 0,
-                  MainError: 1, Ends: 1, Axis: "", original: opt };
+          d = new JSROOT.DrawOptions(opt);
+
+      if (!this.options) this.options = {};
+
+      JSROOT.extend(this.options, { Line: 0, Curve: 0, Rect: 0, Mark: 0, Bar: 0, OutRange: 0,  EF:0, Fill: 0, NoOpt: 0,
+                                   MainError: 1, Ends: 1, Axis: "", original: opt });
+
+      var res = this.options;
 
       res._pfc = d.check("PFC");
       res._plc = d.check("PLC");
@@ -810,8 +814,7 @@
       if (d.check('NOOPT')) res.NoOpt = 1;
       if (d.check('L')) res.Line = 1;
       if (d.check('F')) res.Fill = 1;
-      if (d.check('IA')) res.Axis = "A"; else
-      if (d.check('A')) res.Axis = "AXIS";
+      if (d.check('A')) res.Axis = d.check("I") ? "A" : "AXIS"; // I means invisible axis
       if (d.check('X+')) res.Axis += "X+";
       if (d.check('Y+')) res.Axis += "Y+";
       if (d.check('RX')) res.Axis += "RX";
@@ -860,8 +863,6 @@
       } else if (res.Axis.indexOf("A")<0) {
          res.Axis = "AXIS," + res.Axis;
       }
-
-      return res;
    }
 
    TGraphPainter.prototype.CreateBins = function() {
@@ -1042,7 +1043,7 @@
          if (!this.pallette && JSROOT.Painter.GetColorPalette)
             this.palette = JSROOT.Painter.GetColorPalette();
 
-         var pp = this.pad_painter(true);
+         var pp = this.pad_painter();
          if (this.palette && pp) {
             var indx = pp.GetCurrentPrimitiveIndx(), num = pp.GetNumPrimitives();
 
@@ -1057,10 +1058,9 @@
          this.options._pfc = this.options._plc = this.options._pmc = false;
       }
 
-      if (!this.lineatt)
-         this.lineatt = new JSROOT.TAttLineHandler(graph, undefined, true);
-      if (!this.fillatt)
-         this.fillatt = this.createAttFill(graph, undefined, undefined, 1);
+      this.createAttLine({ attr: graph, can_excl: true });
+
+      this.createAttFill({ attr: graph, kind: 1 });
       this.fillatt.used = false; // mark used only when really used
 
       this.draw_kind = "none"; // indicate if special svg:g were created for each bin
@@ -1310,10 +1310,7 @@
          // for tooltips use markers only if nodes where not created
          var path = "", pnt, grx, gry;
 
-         if (!this.markeratt)
-            this.markeratt = new JSROOT.TAttMarkerHandler(graph, this.options.Mark - 100);
-         else
-            this.markeratt.Change(undefined, this.options.Mark - 100);
+         this.createAttMarker({ attr: graph, style: this.options.Mark - 100 });
 
          this.marker_size = this.markeratt.GetFullSize();
 
@@ -1359,7 +1356,8 @@
           height = this.frame_height(),
           pmain = this.frame_painter(),
           painter = this,
-          findbin = null, best_dist2 = 1e10, best = null;
+          findbin = null, best_dist2 = 1e10, best = null,
+          msize = this.marker_size ? Math.round(this.marker_size/2 + 1.5) : 0;
 
       this.draw_g.selectAll('.grpoint').each(function() {
          var d = d3.select(this).datum();
@@ -1371,12 +1369,11 @@
          var rect = null;
 
          if (d.error || d.rect || d.marker) {
-            rect = { x1: Math.min(-painter.error_size, d.grx0),
-                     x2: Math.max(painter.error_size, d.grx2),
-                     y1: Math.min(-painter.error_size, d.gry2),
-                     y2: Math.max(painter.error_size, d.gry0) };
-         } else
-         if (d.bar) {
+            rect = { x1: Math.min(-painter.error_size, d.grx0, -msize),
+                     x2: Math.max(painter.error_size, d.grx2, msize),
+                     y1: Math.min(-painter.error_size, d.gry2, -msize),
+                     y2: Math.max(painter.error_size, d.gry0, msize) };
+         } else if (d.bar) {
              rect = { x1: -d.width/2, x2: d.width/2, y1: 0, y2: height - d.gry1 };
 
              if (painter.options.Bar===1) {
@@ -1387,8 +1384,8 @@
           } else {
              rect = { x1: -5, x2: 5, y1: -5, y2: 5 };
           }
-          var matchx = (pnt.x >= d.grx1 + rect.x1) && (pnt.x <= d.grx1 + rect.x2);
-          var matchy = (pnt.y >= d.gry1 + rect.y1) && (pnt.y <= d.gry1 + rect.y2);
+          var matchx = (pnt.x >= d.grx1 + rect.x1) && (pnt.x <= d.grx1 + rect.x2),
+              matchy = (pnt.y >= d.gry1 + rect.y1) && (pnt.y <= d.gry1 + rect.y2);
 
           if (matchx && (matchy || (pnt.nproc > 1))) {
              best_dist2 = dist2;
@@ -1408,7 +1405,7 @@
                   lines: this.TooltipText(d),
                   rect: best, d3bin: findbin  };
 
-      if (this.fillatt && this.fillatt.used) res.color2 = this.fillatt.color;
+      if (this.fillatt && this.fillatt.used && !this.fillatt.empty()) res.color2 = this.fillatt.fillcolor();
 
       if (best.exact) res.exact = true;
       res.menu = res.exact; // activate menu only when exactly locate bin
@@ -1602,7 +1599,7 @@
             res.click_handler = this.InvokeClickHandler.bind(this);
       }
 
-      if (this.fillatt && this.fillatt.used) res.color2 = this.fillatt.color;
+      if (this.fillatt && this.fillatt.used && !this.fillatt.empty()) res.color2 = this.fillatt.fillcolor();
 
       if (!islines) {
          res.color1 = this.get_color(gr.fMarkerColor);
@@ -1679,7 +1676,7 @@
    TGraphPainter.prototype.endPntHandler = function() {
       if (this.snapid && this.interactive_bin) {
          var exec = "SetPoint(" + this.interactive_bin.indx + "," + this.interactive_bin.x + "," + this.interactive_bin.y + ")";
-         var canp = this.pad_painter();
+         var canp = this.canv_painter();
          if (canp) canp.SendWebsocket("OBJEXEC:" + this.snapid + ":" + exec);
       }
 
@@ -1715,7 +1712,7 @@
    TGraphPainter.prototype.ExecuteMenuCommand = function(method, args) {
       if (JSROOT.TObjectPainter.prototype.ExecuteMenuCommand.call(this,method,args)) return true;
 
-      var canp = this.pad_painter(), fp = this.frame_painter();
+      var canp = this.canv_painter(), fp = this.frame_painter();
 
       if ((method.fName == 'RemovePoint') || (method.fName == 'InsertPoint')) {
          var pnt = fp ? fp.GetLastEventPos() : null;
@@ -1746,7 +1743,7 @@
       if (!this.MatchObjectType(obj)) return false;
 
       if ((opt !== undefined) && (opt != this.options.original))
-         this.options = this.DecodeOptions(opt);
+         this.DecodeOptions(opt);
 
       var graph = this.GetObject();
       // TODO: make real update of TGraph object content
@@ -1822,7 +1819,7 @@
       if (stats) return stats;
 
       // do not create stats box when drawing canvas
-      var pp = this.pad_painter();
+      var pp = this.canv_painter();
       if (pp && pp.normal_canvas) return null;
 
       this.create_stats = true;
@@ -1902,7 +1899,7 @@
 
       painter.SetDivId(divid, -1); // just to get access to existing elements
 
-      painter.options = painter.DecodeOptions(opt);
+      painter.DecodeOptions(opt);
 
       painter.CreateBins();
 
@@ -2062,8 +2059,8 @@
       var ticks = this.r.ticks(5),
           nminor = Math.floor((polar.fNdivRad % 10000) / 100);
 
-      if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(polar);
-      if (!this.gridatt) this.gridatt = new JSROOT.TAttLineHandler({ fLineColor: polar.fLineColor, fLineStyle: 2, fLineWidth: 1 });
+      this.createAttLine({ attr: polar });
+      if (!this.gridatt) this.gridatt = new JSROOT.TAttLineHandler({ color: polar.fLineColor, style: 2, width: 1 });
 
       var range = Math.abs(polar.fRwrmax - polar.fRwrmin);
       this.ndig = (range <= 0) ? -3 : Math.round(JSROOT.log10(ticks.length / range));
@@ -2205,6 +2202,7 @@
              console.error('Cannot superimpose TGraphPolargram with any other drawings');
           return null;
       }
+
       painter.SetDivId(divid, 4); // main object without need of frame
       painter.Redraw();
       return painter.DrawingReady();
@@ -2226,13 +2224,17 @@
 
       var d = new JSROOT.DrawOptions(opt || "L");
 
-      this.options = {
+      if (!this.options) this.options = {};
+
+      JSROOT.extend(this.options, {
           mark: d.check("P"),
           err: d.check("E"),
           fill: d.check("F"),
           line: d.check("L"),
           curve: d.check("C")
-      }
+      });
+
+      this.OptionsStore(opt);
    }
 
    TGraphPolarPainter.prototype.DrawBins = function() {
@@ -2241,9 +2243,9 @@
 
       if (!graph || !main || !main.$polargram) return;
 
-      if (this.options.mark && !this.markeratt) this.markeratt = new JSROOT.TAttMarkerHandler(graph);
-      if ((this.options.err || this.options.line || this.options.curve) && !this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(graph);
-      if (this.options.fill && !this.fillatt) this.fillatt = this.createAttFill(graph);
+      if (this.options.mark) this.createAttMarker({ attr: graph });
+      if (this.options.err || this.options.line || this.options.curve) this.createAttLine({ attr: graph });
+      if (this.options.fill) this.createAttFill({ attr: graph });
 
       this.CreateG();
 
@@ -2426,13 +2428,13 @@
             return null;
          }
          painter.PerformDrawing(divid);
-      } else {
-         if (!graph.fPolargram) graph.fPolargram = painter.CreatePolargram();
 
-         JSROOT.draw(divid, graph.fPolargram, "", painter.PerformDrawing.bind(painter, divid));
+         return painter;
       }
 
-      return painter;
+      if (!graph.fPolargram) graph.fPolargram = painter.CreatePolargram();
+
+      return JSROOT.draw(divid, graph.fPolargram, "", painter.PerformDrawing.bind(painter, divid));
    }
 
    // ==============================================================
@@ -2618,7 +2620,7 @@
 
       this.knot_size = 5; // used in tooltip handling
 
-      if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(spline);
+      this.createAttLine({ attr: spline });
 
       if (this.options.Line || this.options.Curve) {
 
@@ -2665,8 +2667,7 @@
          // for tooltips use markers only if nodes where not created
          var path = "";
 
-         if (!this.markeratt)
-            this.markeratt = new JSROOT.TAttMarkerHandler(spline);
+         this.createAttMarker({ attr: spline })
 
          this.markeratt.reset_pos();
 
@@ -2704,12 +2705,16 @@
    TSplinePainter.prototype.DecodeOptions = function(opt) {
       var d = new JSROOT.DrawOptions(opt);
 
-      this.options = {
+      if (!this.options) this.options = {};
+
+      JSROOT.extend(this.options, {
          Same: d.check('SAME'),
          Line: d.check('L'),
          Curve: d.check('C'),
          Mark: d.check('P')
-      }
+      });
+
+      this.OptionsStore(opt);
    }
 
    TSplinePainter.prototype.FirstDraw = function() {
@@ -2754,11 +2759,15 @@
 
       var d = new JSROOT.DrawOptions(opt || "REPEAT");
 
-      this.options = {
+      if (!this.options) this.options = {};
+
+      JSROOT.extend(this.options, {
           once: d.check("ONCE"),
           repeat: d.check("REPEAT"),
           first: d.check("FIRST")
-      }
+      });
+
+      this.OptionsStore(opt);
    }
 
    TGraphTimePainter.prototype.DrawPrimitives = function(indx, callback, ppainter) {
@@ -2809,7 +2818,7 @@
          delete this.wait_animation_frame;
 
          // clear pad
-         var pp = this.pad_painter(true);
+         var pp = this.pad_painter();
          if (!pp) {
             // most probably, pad is cleared
             delete this.step;

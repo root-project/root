@@ -99,7 +99,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 8/01/2018";
+   JSROOT.version = "dev 19/02/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -179,6 +179,14 @@
 
          // these are TStyle attributes, which can be changed via URL 'style' parameter
 
+         fOptLogx : 0,
+         fOptLogy : 0,
+         fOptLogz : 0,
+         fOptDate : 0,
+         fOptFile : 0,
+         fOptFit  : 0,
+         fOptStat : 1,
+         fOptTitle : 1,
          fPadBottomMargin : 0.1,
          fPadTopMargin : 0.1,
          fPadLeftMargin : 0.1,
@@ -1008,6 +1016,7 @@
 
       var ext = jsroot.source_min ? ".min" : "",
           need_jquery = false,
+          use_require = (typeof define === "function") && define.amd,
           use_bower = jsroot.bower_dir!==null,
           mainfiles = "",
           extrafiles = "", // scripts for direct loading
@@ -1018,7 +1027,7 @@
          if (jsroot.sources.indexOf("io")<0) {
             mainfiles += "&&&scripts/rawinflate.min.js;" +
                          "$$$scripts/JSRootIOEvolution" + ext + ".js;";
-            modules.push('rawinflate','JSRootIOEvolution');
+            modules.push('rawinflate', 'JSRootIOEvolution');
          }
 
       if ((kind.indexOf('math;')>=0) || (kind.indexOf('tree;')>=0) || (kind.indexOf('more2d;')>=0))
@@ -1035,23 +1044,9 @@
 
       if ((kind.indexOf('2d;')>=0) || (kind.indexOf('v6;')>=0) || (kind.indexOf('v7;')>=0) ||
           (kind.indexOf("3d;")>=0) || (kind.indexOf("geom;")>=0) || (kind.indexOf("openui5;")>=0)) {
-         if (jsroot._test_d3_ === undefined) {
-            if ((typeof d3 == 'object') && d3.version && (d3.version[0]==="4"))  {
-               jsroot.console('Reuse existing d3.js ' + d3.version + ", expected 4.4.4", debugout);
-               jsroot._test_d3_ = 4;
-            } else
-            if ((typeof d3 == 'object') && d3.version && (d3.version[0]==="3")) {
-               jsroot.console("d3 version is " + d3.version + ", try to adjust");
-               d3.timeFormat = d3.time.format;
-               d3.scaleTime = d3.time.scale;
-               d3.scaleLog = d3.scale.log;
-               d3.scaleLinear = d3.scale.linear;
-
-               jsroot._test_d3_ = 3;
-            } else {
-               mainfiles += use_bower ? '###d3/d3.min.js;' : '&&&scripts/d3.min.js;';
-               jsroot._test_d3_ = 4;
-            }
+          if (!use_require && (typeof d3 != 'object') && (jsroot._test_d3_ === undefined)) {
+             mainfiles += use_bower ? '###d3/d3.min.js;' : '&&&scripts/d3.min.js;';
+             jsroot._test_d3_ = null;
          }
          if (jsroot.sources.indexOf("2d") < 0) {
             modules.push('JSRootPainter');
@@ -1496,7 +1491,7 @@
                                  fXlowNDC: 0, fYlowNDC: 0, fXUpNDC: 0, fYUpNDC: 0, fWNDC: 1, fHNDC: 1,
                                  fAbsXlowNDC: 0, fAbsYlowNDC: 0, fAbsWNDC: 1, fAbsHNDC: 1,
                                  fUxmin: 0, fUymin: 0, fUxmax: 0, fUymax: 0, fTheta: 30, fPhi: 30, fAspectRatio: 0,
-                                 fNumber: 0, fLogx: 0, fLogy: 0, fLogz: 0,
+                                 fNumber: 0, fLogx: JSROOT.gStyle.fOptLogx, fLogy: JSROOT.gStyle.fOptLogy, fLogz: JSROOT.gStyle.fOptLogz,
                                  fTickx: JSROOT.gStyle.fPadTickX,
                                  fTicky: JSROOT.gStyle.fPadTickY,
                                  fPadPaint: 0, fCrosshair: 0, fCrosshairPos: 0, fBorderSize: 2,
