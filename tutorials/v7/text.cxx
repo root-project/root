@@ -32,7 +32,7 @@ void text()
    auto canvas = Experimental::TCanvas::Create("Canvas Title");
 
   auto text = std::make_shared<ROOT::Experimental::TText>("Hello World");
-  canvas->Draw(text)->GetOptions().SetFillColor(Experimental::TColor::kRed);
+  canvas->Draw(text)->SetFillColor(Experimental::TColor::kRed);
 
   // Register the text with ROOT: now it lives even after draw() ends.
   Experimental::TDirectory::Heap().Add("text", text);
