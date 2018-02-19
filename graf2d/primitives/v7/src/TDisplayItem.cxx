@@ -53,6 +53,7 @@ ROOT::Experimental::TPadDisplayItem::~TPadDisplayItem()
 
 void ROOT::Experimental::TPadDisplayItem::Clear()
 {
+   fFrame = nullptr;
    for (unsigned n = 0; n < fPrimitives.size(); ++n) delete fPrimitives[n];
    fPrimitives.clear();
 }
