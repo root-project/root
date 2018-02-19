@@ -20,7 +20,13 @@
 17. Implement "RX", "RY" options for TGraph
 18. Make drawing of TCanvas with many primitives smoother 
 19. Correct positioning of custom axis labels
-20. Correctly show histogram with negative bins and fill attributes (#143) 
+20. Correctly show histogram with negative bins and fill attributes (#143)
+21. Fix - correctly toggle lin/log axes in lego plot
+22. Fix - let correctly change marker attributes interactively 
+23. Fix - correctly use preloaded d3.js in notebooks/require.js environment  
+24. Use barwidth/baroffset parameters in lego plots
+25. Add fOptTitle, fOptLogx/y/z fields in JSROOT.gStyle
+26. Support LZ4 compression - future default compression algorithm starting from ROOT 6.14 
 
 
 ## Changes in 5.3.0
