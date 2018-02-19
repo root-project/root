@@ -59,7 +59,7 @@ private:
 
    /// Adds a `DRAWABLE` to `fPrimitives`, returning a `shared_ptr` to `DRAWABLE::GetOptions()`.
    template <class DRAWABLE>
-   auto AddDrawable(std::unique_ptr<DRAWABLE> &&uPtr)
+   auto AddDrawable(std::shared_ptr<DRAWABLE> &&uPtr)
    {
       fPrimitives.emplace_back(std::move(uPtr));
 
@@ -259,9 +259,9 @@ public:
    TPadDrawingOpts &GetOptions() { return fOpts; }
 };
 template <class... ARGS>
-inline std::unique_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, ARGS... args)
+inline std::shared_ptr<TPadDrawable> GetDrawable(std::unique_ptr<TPad> &&pad, ARGS... args)
 {
-   return std::make_unique<TPadDrawable>(std::move(pad), TPadDrawingOpts(args...));
+   return std::make_shared<TPadDrawable>(std::move(pad), TPadDrawingOpts(args...));
 }
 
 } // namespace Experimental
