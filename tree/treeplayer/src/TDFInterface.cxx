@@ -170,7 +170,7 @@ Long_t JitTransformation(void *thisPtr, std::string_view methodName, std::string
       // It can't be const reference in general, as users might want/need to call non-const methods on the values
       // In the special case of arguments of type `TArrayBranch`, it *has* to be a const ref as we will pass in
       // temporaries converted from TTreeReaderArrays.
-      if (usedBranchesTypes[i].find_first_of("ROOT::Experimental::TDF::TArrayBranch<") == 0u)
+      if (usedBranchesTypes[i].find("ROOT::Experimental::TDF::TArrayBranch<") == 0u)
          ss << "const ";
       // Here we do not replace anything: the name of the parameters of the lambda does not need to be the real
       // column name, it must be an alias to compile.
