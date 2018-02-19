@@ -1051,8 +1051,8 @@ const char *TSystem::UnixPathName(const char *name)
 
 char *TSystem::ConcatFileName(const char *dir, const char *name)
 {
-   TString nameString(gSystem->UnixPathName(name));
-   PrependPathName(gSystem->UnixPathName(dir), nameString);
+   TString nameString(name);
+   PrependPathName(dir, nameString);
    return StrDup(nameString.Data());
 }
 
@@ -2899,10 +2899,10 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    Bool_t flatBuildDir = (fAclicProperties & kFlatBuildDir) || (strchr(opt,'-')!=0);
 
    // if non-zero, build_loc indicates where to build the shared library.
-   TString build_loc = gSystem->UnixPathName(ExpandFileName(GetBuildDir()));
+   TString build_loc = ExpandFileName(GetBuildDir());
    if (build_dir && strlen(build_dir)) build_loc = build_dir;
    if (build_loc == ".") {
-      build_loc = gSystem->UnixPathName(WorkingDirectory());
+      build_loc = WorkingDirectory();
    } else if (build_loc.Length() && (!IsAbsoluteFileName(build_loc)) ) {
       AssignAndDelete( build_loc , ConcatFileName( WorkingDirectory(), build_loc ) );
    }
@@ -2924,8 +2924,9 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
    incPath.Prepend(WorkingDirectory());
 
    // ======= Get the right file names for the dictionary and the shared library
-   TString expFileName(gSystem->UnixPathName(filename));
+   TString expFileName(filename);
    ExpandPathName( expFileName );
+   expFileName = gSystem->UnixPathName(expFileName);
    TString library = expFileName;
    if (! IsAbsoluteFileName(library) )
    {
@@ -3646,7 +3647,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 #ifdef WIN32
    R__FixLink(cmd);
    cmd.ReplaceAll("-std=", "-std:");
-   cmd = gSystem->UnixPathName(cmd.Data());
 #endif
 
    TString testcmd = fMakeExe;
@@ -3686,7 +3686,6 @@ int TSystem::CompileMacro(const char *filename, Option_t *opt,
 #ifdef WIN32
    R__FixLink(testcmd);
    testcmd.ReplaceAll("-std=", "-std:");
-   testcmd = gSystem->UnixPathName(testcmd.Data());
 #endif
 
    // ======= Build the library
