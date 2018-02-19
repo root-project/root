@@ -681,9 +681,11 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
    fDisplayList.SetObjectIDAsPtr((void *)&can);
 
-   auto *snap = new ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TCanvas>(&can);
-   snap->SetObjectIDAsPtr((void *)&can);
-   fDisplayList.Add(snap);
+   fDisplayList.SetFrame(can.GetFrame());
+
+   // auto *snap = new ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TCanvas>(&can);
+   // snap->SetObjectIDAsPtr((void *)&can);
+   // fDisplayList.Add(snap);
 
    for (auto &&drawable : can.GetPrimitives()) {
 
@@ -697,9 +699,9 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
       // lst.Add(sub);
    }
 
-   TString res = TBufferJSON::ConvertToJSON(&fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+   TString res = TBufferJSON::ToJSON(&fDisplayList  /*, 23 */);
 
-   //   TBufferJSON::ExportToFile("canv.json", &fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+   // TBufferJSON::ExportToFile("canv.json", &fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
 
    fDisplayList.Clear();
 

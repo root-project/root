@@ -46,7 +46,7 @@ void draw()
 
    // Create a canvas to be displayed.
    auto canvas = Experimental::TCanvas::Create("Canvas Title");
-   canvas->Draw(pHist).SetLineColor(Experimental::TColor::kRed);
+   canvas->Draw(pHist)->GetOptions().SetLineColor(Experimental::TColor::kRed);
 
    canvas->Show();
 }

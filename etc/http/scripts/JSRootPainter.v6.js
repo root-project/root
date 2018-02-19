@@ -456,13 +456,13 @@
       if (this.invert_side) second_shift = -second_shift;
 
       if (is_gaxis) {
-         if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(axis);
+         this.createAttLine({ attr: axis });
          draw_lines = axis.fLineColor != 0;
          chOpt = axis.fChopt;
          tickSize = axis.fTickSize;
          scaling_size = (vertical ? 1.7*h : 0.6*w);
       } else {
-         if (!this.lineatt) this.lineatt = new JSROOT.TAttLineHandler(axis.fAxisColor, 1);
+         this.createAttLine({ color: axis.fAxisColor, width: 1, style: 1 });
          chOpt = myXor(vertical, this.invert_side) ? "-S" : "+S";
          tickSize = axis.fTickLength;
          scaling_size = (vertical ? pad_w : pad_h);
@@ -1077,8 +1077,14 @@
          if (opts.ndim && (opts.ndim > 1)) this.CheckAxisZoom('y');
          if (opts.ndim && (opts.ndim > 2)) this.CheckAxisZoom('z');
 
-         this.CheckPadUserRange(pad, 'x');
-         this.CheckPadUserRange(pad, 'y');
+         if (opts.check_pad_range === "pad_range") {
+            var canp = this.canv_painter();
+            // ignore range set in the online canvas
+            if (!canp || !canp.online_canvas) {
+               this.CheckPadUserRange(pad, 'x');
+               this.CheckPadUserRange(pad, 'y');
+            }
+         }
       }
 
       if (this.zoom_xmin != this.zoom_xmax) {
@@ -1204,25 +1210,16 @@
 
       if (is3d) {
          // this is fake values, algorithm should be copied from TView3D class of ROOT
-         pad.fLogx = pad.fLogy = 0;
+         // pad.fLogx = pad.fLogy = 0;
          pad.fUxmin = pad.fUymin = -0.9;
          pad.fUxmax = pad.fUymax = 0.9;
       } else {
          pad.fLogx = (this.swap_xy ? this.logy : this.logx) ? 1 : 0;
-         pad.fUxmin = this.scale_xmin;
-         pad.fUxmax = this.scale_xmax;
+         pad.fUxmin = pad.fLogx ? JSROOT.log10(this.scale_xmin) : this.scale_xmin;
+         pad.fUxmax = pad.fLogx ? JSROOT.log10(this.scale_xmax) : this.scale_xmax;
          pad.fLogy = (this.swap_xy ? this.logx : this.logy) ? 1 : 0;
-         pad.fUymin = this.scale_ymin;
-         pad.fUymax = this.scale_ymax;
-      }
-
-      if (pad.fLogx) {
-         pad.fUxmin = JSROOT.log10(pad.fUxmin);
-         pad.fUxmax = JSROOT.log10(pad.fUxmax);
-      }
-      if (pad.fLogy) {
-         pad.fUymin = JSROOT.log10(pad.fUymin);
-         pad.fUymax = JSROOT.log10(pad.fUymax);
+         pad.fUymin = pad.fLogy ? JSROOT.log10(this.scale_ymin) : this.scale_ymin;
+         pad.fUymax = pad.fLogy ? JSROOT.log10(this.scale_ymax) : this.scale_ymax;
       }
 
       var rx = pad.fUxmax - pad.fUxmin,
@@ -1403,19 +1400,18 @@
       }
 
       if (this.fillatt === undefined) {
-         if (tframe) this.fillatt = this.createAttFill(tframe);
-         else if (pad) this.fillatt = pad.fFrameFillColor ? this.createAttFill(null, pad.fFrameFillStyle, pad.fFrameFillColor) : this.createAttFill(pad);
-         else this.fillatt = this.createAttFill(null, 1001, 0);
+         if (tframe) this.createAttFill({ attr: tframe });
+         else if (pad && pad.fFrameFillColor) this.createAttFill({ pattern: pad.fFrameFillStyle, color: pad.fFrameFillColor });
+         else if (pad) this.createAttFill({ attr: pad });
+         else this.createAttFill({ pattern: 1001, color: 0});
 
-         // force white color for the frame
-         if (!tframe && (this.fillatt.color == 'none') && this.pad_painter(true) && this.pad_painter(true).iscan) {
-            this.fillatt.color = 'white';
-         }
+         // force white color for the canvas frame
+         if (!tframe && this.fillatt.empty() && this.pad_painter() && this.pad_painter().iscan)
+            this.fillatt.SetSolidColor('white');
       }
 
-      if (this.lineatt === undefined)
-         if (pad) this.lineatt = new JSROOT.TAttLineHandler({ fLineColor: pad.fFrameLineColor, fLineWidth: pad.fFrameLineWidth, fLineStyle: pad.fFrameLineStyle });
-             else this.lineatt = new JSROOT.TAttLineHandler(tframe ? tframe : 'black');
+      if (pad) this.createAttLine({ color: pad.fFrameLineColor, width: pad.fFrameLineWidth, style: pad.fFrameLineStyle });
+      else this.createAttLine({ attr: tframe, color: 'black' });
    }
 
    TFramePainter.prototype.SizeChanged = function() {
@@ -1467,7 +1463,7 @@
       this.axes_drawn = false;
    }
 
-   TFramePainter.prototype.CleanDrawings = function() {
+   TFramePainter.prototype.CleanFrameDrawings = function() {
 
       // cleanup all 3D drawings if any
       if (typeof this.Create3DScene === 'function')
@@ -1496,11 +1492,6 @@
       this.xaxis = null;
       this.yaxis = null;
       this.zaxis = null;
-   }
-
-   TFramePainter.prototype.Cleanup = function() {
-
-      this.CleanDrawings();
 
       if (this.draw_g) {
          this.draw_g.selectAll("*").remove();
@@ -1509,6 +1500,7 @@
                     .on("wheel", null)
                     .on("contextmenu", null)
                     .property('interactive_set', null);
+         this.draw_g.remove();
       }
 
       this.draw_g = null;
@@ -1517,13 +1509,17 @@
          window.removeEventListener('keydown', this.keys_handler, false);
          this.keys_handler = null;
       }
+   }
+
+   TFramePainter.prototype.Cleanup = function() {
+      this.CleanFrameDrawings();
 
       JSROOT.TooltipHandler.prototype.Cleanup.call(this);
    }
 
    TFramePainter.prototype.Redraw = function() {
 
-      var pp = this.pad_painter(true);
+      var pp = this.pad_painter();
       if (pp) pp.frame_painter_ref = this; // keep direct reference to the frame painter
 
       if (this.mode3d) return; // no need to create any elements in 3d mode
@@ -1652,23 +1648,24 @@
    }
 
    TFramePainter.prototype.ToggleLog = function(axis) {
-      var pad = this.root_pad(),
-          curr = pad["fLog" + axis];
+      var pad = this.root_pad();
+      if (!pad) return;
+
       // do not allow log scale for labels
-      if (!curr) {
+      if (!pad["fLog" + axis]) {
          var kind = this[axis+"_kind"];
          if (this.swap_xy && axis==="x") kind = this.y_kind; else
          if (this.swap_xy && axis==="y") kind = this.x_kind;
          if (kind === "labels") return;
       }
 
-      var pp = this.pad_painter(true), canp = this.pad_painter();
-      if (pp && pp.snapid && canp && canp._websocket) {
-         canp.SendWebsocket("OBJEXEC:" + pp.snapid + ":SetLog" + axis + (curr ? "(0)" : "(1)"));
-      } else {
-         pad["fLog" + axis] = curr ? 0 : 1;
-         this.RedrawPad();
-      }
+      // directly change attribute in the pad
+      pad["fLog" + axis] = pad["fLog" + axis] ? 0 : 1;
+
+      this.RedrawPad();
+
+      var canp = this.canv_painter();
+      if (canp) canp.ProcessChanges("log"+axis, this.pad_painter());
    }
 
    TFramePainter.prototype.FillContextMenu = function(menu, kind, obj) {
@@ -1687,7 +1684,7 @@
          menu.addchk(faxis.TestBit(JSROOT.EAxisBits.kNoExponent), "No exponent",
                function() { faxis.InvertBit(JSROOT.EAxisBits.kNoExponent); this.RedrawPad(); });
 
-         if ((kind === "z") && main && main.options && (main.options.Zscale > 0))
+         if ((kind === "z") && main && main.options && main.options.Zscale)
             if (typeof main.FillPaletteMenu == 'function') main.FillPaletteMenu(menu);
 
          if (faxis) {
@@ -1793,7 +1790,7 @@
       // function called when frame is clicked and object selection can be performed
       // such event can be used to select
 
-      var pp = this.pad_painter(true);
+      var pp = this.pad_painter();
       if (!pp) return;
 
       pnt.painters = true; // provide painters reference in the hints
@@ -1806,7 +1803,9 @@
       //if (exact) console.log('Click exact', pnt, exact.painter.GetTipName());
       //      else console.log('Click frame', pnt);
 
-      pp.SelectObjectPainter(exact ? exact.painter : this, pnt);
+      var pos = { x: pnt.x + (this._frame_x || 0),  y: pnt.y + (this._frame_y || 0) };
+
+      pp.SelectObjectPainter(exact ? exact.painter : this, pos);
    }
 
    TFramePainter.prototype.AddKeysHandler = function() {
@@ -1863,7 +1862,7 @@
          evnt.stopPropagation();
          evnt.preventDefault();
       } else {
-         var pp = this.pad_painter(true),
+         var pp = this.pad_painter(),
              func = pp ? pp.FindButton(key) : "";
          if (func) {
             pp.PadButtonClick(func);
@@ -1876,7 +1875,7 @@
    }
 
    TFramePainter.prototype.FindAlternativeClickHandler = function(pos) {
-      var pp = this.pad_painter(true);
+      var pp = this.pad_painter();
       if (!pp) return false;
 
       var pnt = { x: pos[0], y: pos[1], painters: true, disabled: true, click_handler: true };
@@ -2026,10 +2025,12 @@
                if (fp) fp.ProcessFrameClick(pnt);
                break;
             case 2:
-               this.pad_painter().SelectObjectPainter(this.x_handle);
+               var pp = this.pad_painter();
+               if (pp) pp.SelectObjectPainter(this.x_handle);
                break;
             case 3:
-               this.pad_painter().SelectObjectPainter(this.y_handle);
+               var pp = this.pad_painter();
+               if (pp) pp.SelectObjectPainter(this.y_handle);
                break;
          }
       }
@@ -2044,7 +2045,10 @@
       var kind = "xyz";
       if ((m[0] < 0) || (m[0] > this.frame_width())) kind = this.swap_xy ? "x" : "y"; else
       if ((m[1] < 0) || (m[1] > this.frame_height())) kind = this.swap_xy ? "y" : "x";
-      this.Unzoom(kind);
+      if (this.Unzoom(kind)) return;
+
+      var pp = this.pad_painter();
+      if (pp) pp.SelectObjectPainter(pp, { x: m[0]+this.frame_x(), y: m[1]+this.frame_y(), dbl: true });
    }
 
    TFramePainter.prototype.Zoom = function(xmin, xmax, ymin, ymax, zmin, zmax) {
@@ -2131,7 +2135,7 @@
          // first try to unzoom all overlapped objects
          if (!changed) {
             // than try to unzoom all overlapped objects
-            var pp = this.pad_painter(true);
+            var pp = this.pad_painter();
             if (pp && pp.painters)
                pp.painters.forEach(function(paint){
                   if (paint && (typeof paint.UnzoomUserRange == 'function'))
@@ -2140,7 +2144,8 @@
          }
       }
 
-      if (changed) this.RedrawPad();
+      if (changed)
+         this.InteractiveRedraw("pad", "zoom");
 
       return changed;
    }
@@ -2166,7 +2171,6 @@
          this.zoom_changed_interactive = (!isNaN(last) && (last>0)) ? last - 1 : 0;
 
       return changed;
-
    }
 
    TFramePainter.prototype.AnalyzeMouseWheelEvent = function(event, item, dmin, ignore) {
@@ -2247,7 +2251,7 @@
       // it is typically for 2-Dim histograms or
       // when histogram not draw, defined by other painters
 
-      var pad_painter = this.pad_painter(true);
+      var pad_painter = this.pad_painter();
       if (pad_painter && pad_painter.painters)
          for (var k = 0; k < pad_painter.painters.length; ++k) {
             var subpainter = pad_painter.painters[k];
@@ -2475,7 +2479,7 @@
          if (kind === undefined) {
             var ms = d3.mouse(this.svg_frame().node()),
                 tch = d3.touches(this.svg_frame().node()),
-                pp = this.pad_painter(true),
+                pp = this.pad_painter(),
                 pnt = null, sel = null;
 
             fp = this.frame_painter();
@@ -2664,13 +2668,18 @@
       return this._num_primitives || 1;
    }
 
-   TPadPainter.prototype.ForEachPainterInPad = function(userfunc, onlypadpainters) {
-      userfunc(this);
+   /// call function for each painter
+   /// kind == "all" for all objects (default)
+   /// kind == "pads" only pads and subpads
+   /// kind == "objects" only for object in current pad
+   TPadPainter.prototype.ForEachPainterInPad = function(userfunc, kind) {
+      if (!kind) kind = "all";
+      if (kind!="objects") userfunc(this);
       for (var k = 0; k < this.painters.length; ++k) {
          var sub = this.painters[k];
-         if (typeof sub.ForEachPainterInPad === 'function')
-            sub.ForEachPainterInPad(userfunc, onlypadpainters);
-         else if (!onlypadpainters) userfunc(sub);
+         if (typeof sub.ForEachPainterInPad === 'function') {
+            if (kind!="objects") sub.ForEachPainterInPad(userfunc, kind);
+         } else if (kind != "pads") userfunc(sub);
       }
    }
 
@@ -2688,8 +2697,53 @@
       if (fp) fp.tooltip_allowed = on;
    }
 
-   TPadPainter.prototype.SelectObjectPainter = function(painter) {
-      // dummy function, redefined in the TCanvasPainter
+   /// Retrive different event when object selected or pad is redrawn
+   TPadPainter.prototype.RegisterForPadEvents = function(receiver) {
+      this.pad_events_receiver = receiver;
+   }
+
+   /// method redirect call to pad events receiver
+   TPadPainter.prototype.SelectObjectPainter = function(_painter, pos) {
+      var istoppad = (this.iscan || !this.has_canvas),
+          canp = istoppad ? this : this.canv_painter(),
+          pp = _painter instanceof TPadPainter ? _painter : _painter.pad_painter();
+
+      if (pos && !istoppad)
+         this.CalcAbsolutePosition(this.svg_pad(this.this_pad_name), pos);
+
+      if (typeof canp.SelectActivePad == "function")
+         canp.SelectActivePad(pp, _painter, pos);
+
+      if (canp.pad_events_receiver)
+         canp.pad_events_receiver({ what: "select", padpainter: pp, painter: _painter, position: pos });
+   }
+
+   /// method redirect call to pad events receiver
+   TPadPainter.prototype.InteractiveObjectRedraw = function(_painter) {
+      var canp = (this.iscan || !this.has_canvas) ? this : this.canv_painter(),
+          pp = _painter instanceof TPadPainter ? _painter : _painter.pad_painter();
+
+      if (canp && canp.pad_events_receiver)
+         canp.pad_events_receiver({ what: "redraw", padpainter: pp, painter: _painter });
+   }
+
+   TPadPainter.prototype.DrawActiveBorder = function(svg_rect, is_active) {
+      if (is_active !== undefined) {
+         if (this.is_active_pad === is_active) return;
+         this.is_active_pad = is_active;
+      }
+
+      if (this.is_active_pad === undefined) return;
+
+      if (!svg_rect)
+         svg_rect = this.iscan ? this.svg_canvas().select(".canvas_fillrect") :
+                       this.svg_pad(this.this_pad_name).select(".root_pad_border");
+
+      var lineatt = this.is_active_pad ? new JSROOT.TAttLineHandler({ style: 1, width: 1, color: "red" }) : this.lineatt;
+
+      if (!lineatt) lineatt = new JSROOT.TAttLineHandler({ color: "none" });
+
+      svg_rect.call(lineatt.func);
    }
 
    TPadPainter.prototype.CreateCanvasSvg = function(check_resize, new_size) {
@@ -2754,8 +2808,7 @@
          }
       }
 
-      if (!this.fillatt || !this.fillatt.changed)
-         this.fillatt = this.createAttFill(this.pad);
+      this.createAttFill({ attr: this.pad });
 
       if ((rect.width<=lmt) || (rect.height<=lmt)) {
          svg.style("display", "none");
@@ -2793,10 +2846,12 @@
          .property('draw_width', rect.width)
          .property('draw_height', rect.height);
 
-      svg.select(".canvas_fillrect")
+      var fill_rect = svg.select(".canvas_fillrect")
          .attr("width", rect.width)
          .attr("height", rect.height)
          .call(this.fillatt.func);
+
+      this.DrawActiveBorder(fill_rect);
 
       this.svg_layer("btns_layer")
           .attr("transform","translate(2," + (rect.height - this.ButtonSize(1.25)) + ")")
@@ -2879,12 +2934,8 @@
                     .on("mouseenter", this.ShowObjectStatus.bind(this));
       }
 
-      if (!this.fillatt || !this.fillatt.changed)
-         this.fillatt = this.createAttFill(this.pad);
-      if (!this.lineatt || !this.lineatt.changed) {
-         this.lineatt = new JSROOT.TAttLineHandler(this.pad);
-         if (this.pad.fBorderMode == 0) this.lineatt.color = 'none';
-      }
+      this.createAttFill({ attr: this.pad });
+      this.createAttLine({ attr: this.pad, color0: this.pad.fBorderMode == 0 ? 'none' : '' });
 
       svg_pad
               //.attr("transform", "translate(" + x + "," + y + ")") // is not handled for SVG
@@ -2906,6 +2957,8 @@
               .attr("height", h)
               .call(this.fillatt.func)
               .call(this.lineatt.func);
+
+      this.DrawActiveBorder(svg_rect);
 
       if (svg_pad.property('can3d') === 1)
          // special case of 3D canvas overlay
@@ -3101,6 +3154,8 @@
             this.pad[arg.substr(1)] = parseInt(arg[0]);
             var main = this.svg_pad(this.this_pad_name).property('mainpainter');
             if (main && (typeof main.DrawAxes == 'function')) main.DrawAxes();
+            var canp = this.canv_painter();
+            if (canp) canp.ProcessChanges(arg.substr(1), this.pad_painter());
          }
 
          menu.addchk(this.pad.fGridx, 'Grid x', (this.pad.fGridx ? '0' : '1') + 'fGridx', SetPadField);
@@ -3121,8 +3176,8 @@
 
       menu.add("separator");
 
-      if (this.ToggleEventStatus)
-         menu.addchk(this.HasEventStatus(), "Event status", this.ToggleEventStatus.bind(this));
+      if (this.ActivateStatusBar)
+         menu.addchk(this.HasEventStatus(), "Event status", this.ActivateStatusBar.bind(this, 'toggle'));
 
       if (this.enlarge_main() || (this.has_canvas && this.HasObjectsToDraw()))
          menu.addchk((this.enlarge_main('state')=='on'), "Enlarge " + (this.iscan ? "canvas" : "pad"), this.EnlargePad.bind(this));
@@ -3208,6 +3263,8 @@
 
       if (!this.iscan && this.has_canvas) return false;
 
+      if ((size === true) || (size === false)) { force = size; size = null; }
+
       if (size && (typeof size === 'object') && size.force) force = true;
 
       if (!force) force = this.RedrawByResize();
@@ -3282,7 +3339,7 @@
       // function called when drawing next snapshot from the list
       // it is also used as callback for drawing of previous snap
 
-      if (indx===0) {
+      if (indx === -1) {
          // flag used to prevent immediate pad redraw during first draw
          this._doing_pad_draw = true;
          this._snaps_map = {}; // to control how much snaps are drawn
@@ -3291,7 +3348,7 @@
 
       while (true) {
 
-         if (objpainter && lst && lst[indx] && objpainter.snapid === undefined) {
+         if (objpainter && lst && lst[indx] && (objpainter.snapid === undefined)) {
             // keep snap id in painter, will be used for the
             if (this.painters.indexOf(objpainter)<0) this.painters.push(objpainter);
             objpainter.snapid = lst[indx].fObjectID;
@@ -3352,18 +3409,18 @@
 
          if (snap.fKind === 3) { // subpad
 
-            var subpad = snap.fPrimitives[0].fSnapshot;
+            var subpad = snap.fSnapshot;
 
             subpad.fPrimitives = null; // clear primitives, they just because of I/O
 
             var padpainter = new TPadPainter(subpad, false);
-            padpainter.DecodeOptions(snap.fPrimitives[0].fOption);
+            padpainter.DecodeOptions(snap.fOption);
             padpainter.SetDivId(this.divid); // pad painter will be registered in the canvas painters list
             padpainter.snapid = snap.fObjectID;
 
             padpainter.CreatePadSvg();
 
-            if (padpainter.MatchObjectType("TPad") && snap.fPrimitives.length > 1) {
+            if (padpainter.MatchObjectType("TPad") && snap.fPrimitives.length > 0) {
                padpainter.AddButton(JSROOT.ToolbarIcons.camera, "Create PNG", "PadSnapShot");
                padpainter.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge pad", "EnlargePad");
 
@@ -3373,7 +3430,7 @@
 
             // we select current pad, where all drawing is performed
             var prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
-            padpainter.DrawNextSnap(snap.fPrimitives, 0, function() {
+            padpainter.DrawNextSnap(snap.fPrimitives, -1, function() {
                padpainter.CurrentPadName(prev_name);
                draw_callback(padpainter);
             });
@@ -3418,6 +3475,11 @@
 
       if (this.enlarge_main('verify'))
          this.AddButton(JSROOT.ToolbarIcons.circle, "Enlarge canvas", "EnlargePad");
+
+      if (this.brlayout) {
+         this.AddButton(JSROOT.ToolbarIcons.diamand, "Toggle Ged", "ToggleGed");
+         this.AddButton(JSROOT.ToolbarIcons.three_circles, "Toggle Status", "ToggleStatus");
+      }
    }
 
    TPadPainter.prototype.RedrawPadSnap = function(snap, call_back) {
@@ -3427,13 +3489,15 @@
 
       if (!snap || !snap.fPrimitives) return;
 
-      var first = snap.fPrimitives[0].fSnapshot;
+      this.is_active_pad = !!snap.fActive; // enforce boolean flag
+
+      var first = snap.fSnapshot;
       first.fPrimitives = null; // primitives are not interesting, just cannot disable it in IO
 
       if (this.snapid === undefined) {
          // first time getting snap, create all gui elements first
 
-         this.snapid = snap.fPrimitives[0].fObjectID;
+         this.snapid = snap.fObjectID;
 
          this.draw_object = first;
          this.pad = first;
@@ -3445,10 +3509,20 @@
          // case of ROOT7 with always dummy TPad as first entry
          if (!first.fCw || !first.fCh) this._fixed_size = false;
 
+         if (JSROOT.BrowserLayout && (typeof this.divid == 'string') && !this.batch_mode) {
+            this.brlayout = new JSROOT.BrowserLayout(this.divid, null, this);
+            this.brlayout.Create(this.divid, true);
+            // this.brlayout.ToggleBrowserKind("float");
+            this.SetDivId(this.brlayout.drawing_divid(), -1);  // assign id for drawing
+            JSROOT.RegisterForResize(this.brlayout);
+         }
+
          this.CreateCanvasSvg(0);
          this.SetDivId(this.divid);  // now add to painters list
-         this.AddOnlineButtons();
-         this.DrawNextSnap(snap.fPrimitives, 0, call_back);
+         if (!this.batch_mode)
+            this.AddOnlineButtons();
+
+         this.DrawNextSnap(snap.fPrimitives, -1, call_back);
          return;
       }
 
@@ -3468,7 +3542,7 @@
          var sub = this.painters[k];
          if (sub.snapid===undefined) continue; // look only for painters with snapid
 
-         for (var i=1;i<snap.fPrimitives.length;++i)
+         for (var i=9;i<snap.fPrimitives.length;++i)
             if (snap.fPrimitives[i].fObjectID === sub.snapid) { sub = null; isanyfound = true; break; }
 
          if (sub) {
@@ -3492,7 +3566,7 @@
          this.painters = [];
          if (fp) {
             this.painters.push(fp);
-            fp.CleanDrawings();
+            fp.CleanFrameDrawings();
          }
          this.RemoveButtons();
          this.AddOnlineButtons();
@@ -3501,7 +3575,7 @@
       var padpainter = this,
           prev_name = padpainter.CurrentPadName(padpainter.this_pad_name);
 
-      padpainter.DrawNextSnap(snap.fPrimitives, 0, function() {
+      padpainter.DrawNextSnap(snap.fPrimitives, -1, function() {
          padpainter.CurrentPadName(prev_name);
          JSROOT.CallBack(call_back, padpainter);
       });
@@ -3521,59 +3595,85 @@
       }
    }
 
-   TPadPainter.prototype.GetAllRanges = function() {
-      var res = "";
+   TPadPainter.prototype.GetAllRanges = function(arg) {
+      var is_top = (arg === undefined), elem = null;
+      if (is_top) arg = [];
 
       if (this.snapid) {
-         res = this.GetPadRanges();
-         if (res) res = "id=" + this.snapid + ":" + res + ";";
+         elem = { _typename: "TWebPadRange", snapid: this.snapid.toString(),
+                  active: !!this.is_active_pad,
+                  bits: 0, primitives: [],
+                  logx: this.pad.fLogx, logy: this.pad.fLogy, logz: this.pad.fLogz,
+                  gridx: this.pad.fGridx, gridy: this.pad.fGridy,
+                  tickx: this.pad.fTickx, ticky: this.pad.fTicky,
+                  mleft: this.pad.fLeftMargin, mright: this.pad.fRightMargin,
+                  mtop: this.pad.fTopMargin, mbottom: this.pad.fBottomMargin
+         };
+
+         if (this.iscan) elem.bits = this.GetStatusBits();
+
+         if (this.GetPadRanges(elem))
+            arg.push(elem);
+         else
+            console.log('fail to get ranges for pad ' +  this.pad.fName);
       }
 
-      for (var k=0;k<this.painters.length;++k)
-         if (typeof this.painters[k].GetAllRanges == "function")
-            res += this.painters[k].GetAllRanges();
+      for (var k=0;k<this.painters.length;++k) {
+         var sub = this.painters[k];
+         if (typeof sub.GetAllRanges == "function")
+            sub.GetAllRanges(arg);
+         else if (sub.snapid)
+            elem.primitives.push({ _typename: "TWebObjectOptions", snapid: sub.snapid.toString(), opt: sub.OptionsAsString() });
+      }
 
-      return res;
+      if (is_top) return JSROOT.toJSON(arg);
    }
 
-   TPadPainter.prototype.GetPadRanges = function() {
+   TPadPainter.prototype.GetPadRanges = function(r) {
       // function returns actual ranges in the pad, which can be applied to the server
+
+      if (!r) return false;
+
       var main = this.frame_painter_ref,
-          p = this.svg_pad(this.this_pad_name),
-          f = this.svg_frame(this.this_pad_name);
+          p = this.svg_pad(this.this_pad_name);
 
-      if (!main) return "";
+      r.ranges = main ? true : false; // indicate that ranges are assigned
 
-      var res1 = main.scale_xmin + ":" +
-                 main.scale_xmax + ":" +
-                 main.scale_ymin + ":" +
-                 main.scale_ymax;
+      r.ux1 = r.px1 = main ? main.scale_xmin : 0; // need to initialize for JSON reader
+      r.uy1 = r.py1 = main ? main.scale_ymin : 0;
+      r.ux2 = r.px2 = main ? main.scale_xmax : 0;
+      r.uy2 = r.py2 = main ? main.scale_ymax : 0;
 
-      if (f.empty() || p.empty()) return res1 + ":" + res1;
-
-      var res2 = "";
+      if (!main || p.empty()) return true;
 
       // calculate user range for full pad
       var same = function(x) { return x; },
-          exp10 = function(x) { return Math.pow(10, x); };
+          exp10 = function(x) { return Math.pow(10, x); },
+          func = main.logx ? JSROOT.log10 : same,
+          func2 = main.logx ? exp10 : same,
+          k = (func(main.scale_xmax) - func(main.scale_xmin))/p.property("draw_width"),
+          x1 = func(main.scale_xmin) - k*p.property("draw_x"),
+          x2 = x1 + k*p.property("draw_width");
 
-      var func = main.logx ? JSROOT.log10 : same,
-          func2 = main.logx ? exp10 : same;
+       // method checks if new value v1 close to the old value v0
+       function match(v1, v0, range) {
+          return (Math.abs(v0-v1)<Math.abs(range)*1e-10) ? v0 : v1;
+       }
 
-      var k = (func(main.scale_xmax) - func(main.scale_xmin))/f.property("draw_width");
-      var x1 = func(main.scale_xmin) - k*f.property("draw_x");
-      var x2 = x1 + k*p.property("draw_width");
-      res2 += func2(x1) + ":" + func2(x2);
+      r.ux1 = match( func2(x1), r.ux1, r.px2-r.px1);
+      r.ux2 = match( func2(x2), r.ux2, r.px2-r.px1);
 
       func = main.logy ? JSROOT.log10 : same;
       func2 = main.logy ? exp10 : same;
 
-      var k = (func(main.scale_ymax) - func(main.scale_ymin))/f.property("draw_height");
-      var y2 = func(main.scale_ymax) + k*f.property("draw_y");
-      var y1 = y2 - k*p.property("draw_height");
-      res2 += ":" + func2(y1) + ":" + func2(y2);
+      k = (func(main.scale_ymax) - func(main.scale_ymin))/p.property("draw_height");
+      var y2 = func(main.scale_ymax) + k*p.property("draw_y"),
+          y1 = y2 - k*p.property("draw_height");
 
-      return res1 + ":" + res2;
+      r.uy1 = match( func2(y1), r.uy1, r.py2-r.py1);
+      r.uy2 = match( func2(y2), r.uy2, r.py2-r.py1);
+
+      return true;
    }
 
    TPadPainter.prototype.ItemContextMenu = function(name) {
@@ -3642,7 +3742,7 @@
 
       if (elem.empty()) return;
 
-      var painter = full_canvas ? this.pad_painter() : this;
+      var painter = full_canvas ? this.canv_painter() : this;
 
       document.body.style.cursor = 'wait';
 
@@ -3666,7 +3766,7 @@
               .attr("class","temp_saveaspng")
               .attr("transform", "translate(" + sz.x + "," + sz.y + ")")
               .node().appendChild(svg3d);      // add code
-      }, true);
+      }, "pads");
 
 //      if (((can3d === 1) || (can3d === 2)) && main && main.Render3D) {
            // this was saving of image buffer from 3D render
@@ -3878,8 +3978,8 @@
          ctrl.attr("x", group.property('nextx'));
       }
 
-      if (!iscan && (funcname.indexOf("Pad")!=0) && (this.pad_painter()!==this) && (funcname !== "EnlargePad"))
-         this.pad_painter().AddButton(btn, tooltip, funcname);
+      if (!iscan && (funcname.indexOf("Pad")!=0) && (this.canv_painter()!==this) && (funcname !== "EnlargePad"))
+         this.canv_painter().AddButton(btn, tooltip, funcname);
    }
 
    TPadPainter.prototype.DrawingReady = function(res_painter) {
@@ -3898,8 +3998,9 @@
       var d = new JSROOT.DrawOptions(opt);
 
       if (d.check('WEBSOCKET')) this.OpenWebsocket();
+      if (!this.options) this.options = {};
 
-      this.options = { GlobalColors: true, LocalColors: false, CreatePalette: 0, IgnorePalette: false, RotateFrame: false, FixFrame: false };
+      JSROOT.extend(this.options, { GlobalColors: true, LocalColors: false, CreatePalette: 0, IgnorePalette: false, RotateFrame: false, FixFrame: false });
 
       if (d.check('NOCOLORS') || d.check('NOCOL')) this.options.GlobalColors = this.options.LocalColors = false;
       if (d.check('LCOLORS') || d.check('LCOL')) { this.options.GlobalColors = false; this.options.LocalColors = true; }
@@ -3920,6 +4021,8 @@
       if (d.check('TICKX')) pad.fTickx = 1;
       if (d.check('TICKY')) pad.fTicky = 1;
       if (d.check('TICK')) pad.fTickx = pad.fTicky = 1;
+
+      this.OptionsStore(opt);
    }
 
    function drawPad(divid, pad, opt) {
@@ -4142,23 +4245,13 @@
    }
 
    TCanvasPainter.prototype.OnWebsocketMsg = function(handle, msg) {
+      console.log("GET MSG " + msg.substr(0,30));
 
       if (msg == "CLOSE") {
          this.OnWebsocketClosed();
          this.CloseWebsocket(true);
-      } else if (msg.substr(0,5)=='SNAP:') {
-         msg = msg.substr(5);
-         var p1 = msg.indexOf(":"),
-             snapid = msg.substr(0,p1),
-             snap = JSROOT.parse(msg.substr(p1+1));
-         this.RedrawPadSnap(snap, function() {
-            handle.Send("SNAPDONE:" + snapid); // send ready message back when drawing completed
-         });
       } else if (msg.substr(0,6)=='SNAP6:') {
-         // This is snapshot, produced with ROOT6, handled slighly different
-
-         this.root6_canvas = true; // indicate that drawing of root6 canvas is peformed
-         // if (!this.snap_cnt) this.snap_cnt = 1; else this.snap_cnt++;
+         // This is snapshot, produced with ROOT6
 
          msg = msg.substr(6);
          var p1 = msg.indexOf(":"),
@@ -4166,22 +4259,15 @@
              snap = JSROOT.parse(msg.substr(p1+1)),
              pthis = this;
 
-         // console.log('Get SNAP6', this.snap_cnt);
-
          this.RedrawPadSnap(snap, function() {
-            // console.log('Complete SNAP6', pthis.snap_cnt);
             pthis.CompeteCanvasSnapDrawing();
             var ranges = pthis.GetAllRanges();
-            if (ranges) ranges = ":" + ranges;
-            // if (ranges) console.log("ranges: " + ranges);
-            handle.Send("RREADY:" + snapid + ranges); // send ready message back when drawing completed
+            if (ranges) {
+               // console.log("ranges: " + ranges);
+               ranges = ":" + ranges;
+            }
+            handle.Send("READY6:" + snapid + ranges); // send ready message back when drawing completed
          });
-
-      } else if (msg.substr(0,4)=='JSON') {
-         var obj = JSROOT.parse(msg.substr(4));
-         // console.log("get JSON ", msg.length-4, obj._typename);
-         this.RedrawObject(obj);
-
       } else if (msg.substr(0,5)=='MENU:') {
          // this is menu with exact identifier for object
          msg = msg.substr(5);
@@ -4211,18 +4297,111 @@
          this.DrawProjection(kind, hist);
       } else if (msg.substr(0,5)=='SHOW:') {
          var that = msg.substr(5),
-             on = that[that.length-1] == '1';
+             on = (that[that.length-1] == '1');
          this.ShowSection(that.substr(0,that.length-2), on);
+      } else if (msg.substr(0,5) == "EDIT:") {
+         var obj_painter = this.FindSnap(msg.substr(5));
+         console.log('GET EDIT ' + msg.substr(5) +  ' found ' + !!obj_painter);
+         if (obj_painter) {
+            this.ShowSection("Editor", true);
+
+            if (this.pad_events_receiver)
+               this.pad_events_receiver({ what: "select", padpainter: this, painter: obj_painter });
+         }
+
       } else {
          console.log("unrecognized msg " + msg);
       }
    }
 
+   TCanvasPainter.prototype.PadButtonClick = function(funcname) {
+      if (funcname == "ToggleGed") return this.ActivateGed(this, null, "toggle");
+      if (funcname == "ToggleStatus") return this.ActivateStatusBar("toggle");
+      TPadPainter.prototype.PadButtonClick.call(this, funcname);
+   }
+
+   TCanvasPainter.prototype.HasEventStatus = function() {
+      if (this.use_openui) return this.openuiHasEventStatus();
+
+      return this.brlayout ? this.brlayout.HasStatus() : false;
+   }
+
+   TCanvasPainter.prototype.ActivateStatusBar = function(state) {
+      if (this.use_openui)
+         this.openuiToggleEventStatus(state);
+      else if (this.brlayout)
+         this.brlayout.CreateStatusLine(23, state);
+
+      this.ProcessChanges("sbits", this);
+   }
+
+   TCanvasPainter.prototype.HasGed = function() {
+      if (this.use_openui)
+         return this.openuiHasGed();
+
+      return this.brlayout ? this.brlayout.HasContent() : false;
+   }
+
+   TCanvasPainter.prototype.RemoveGed = function() {
+      if (typeof this.CleanupGed == 'function')
+         this.CleanupGed();
+      if (this.brlayout)
+         this.brlayout.DeleteContent();
+
+      this.ProcessChanges("sbits", this);
+   }
+
+
+   TCanvasPainter.prototype.ActivateGed = function(objpainter, kind, mode) {
+      // function used to actiavte GED
+
+      if (this.use_openui)
+         return this.openuiActivateGed(objpainter, kind, mode);
+
+      if (!this.brlayout) return;
+
+      if (this.brlayout.HasContent()) {
+         if ((mode === "toggle") || (mode === false))
+            return this.RemoveGed();
+         return this.SelectObjectPainter(objpainter);
+      }
+
+      if (mode === false) return;
+
+      var btns = this.brlayout.CreateBrowserBtns();
+
+      JSROOT.ToolbarIcons.CreateSVG(btns, JSROOT.ToolbarIcons.diamand, 15, "toggle fix-pos mode")
+                         .style("margin","3px").on("click", this.brlayout.Toggle.bind(this.brlayout, 'fix'));
+
+      JSROOT.ToolbarIcons.CreateSVG(btns, JSROOT.ToolbarIcons.circle, 15, "toggle float mode")
+                         .style("margin","3px").on("click", this.brlayout.Toggle.bind(this.brlayout, 'float'));
+
+     JSROOT.ToolbarIcons.CreateSVG(btns, JSROOT.ToolbarIcons.cross, 15, "delete GED")
+                         .style("margin","3px").on("click", this.RemoveGed.bind(this));
+
+      // be aware, that jsroot_browser_hierarchy required for flexible layout that element use full browser area
+      this.brlayout.SetBrowserContent("<div class='jsroot_browser_hierarchy' id='ged_placeholder'>Loading GED ...</div>");
+      this.brlayout.SetBrowserTitle("GED");
+      this.brlayout.ToggleBrowserKind(kind || "float");
+
+      var pthis = this;
+
+      JSROOT.AssertPrerequisites('openui5', function() {
+         pthis.ShowGed(objpainter);
+         pthis.ProcessChanges("sbits", pthis);
+      });
+   }
+
    TCanvasPainter.prototype.ShowSection = function(that, on) {
+      if (this.use_openui)
+         return this.fullShowSection(that, on);
+
+      console.log('Show section ' + that + ' flag = ' + on);
+
       switch(that) {
          case "Menu": break;
-         case "StatusBar": break;
-         case "Editor": break;
+         case "StatusBar": this.ActivateStatusBar(on); break;
+         case "Editor": this.ActivateGed(this, null, !!on); break;
          case "ToolBar": break;
          case "ToolTips": this.SetTooltipAllowed(on); break;
       }
@@ -4242,9 +4421,56 @@
       this.ShowSection("ToolTips", this.pad.TestBit(JSROOT.TCanvasStatusBits.kShowToolTips));
    }
 
-   TCanvasPainter.prototype.HasEventStatus = function() {
-      return this.has_event_status;
+   /// method informs that something was changed in the canvas
+   /// used to update information on the server (when used with web6gui)
+   TCanvasPainter.prototype.ProcessChanges = function(kind, source_pad) {
+      if (!this._websocket) return;
+
+      var msg = (kind == "sbits") ? "STATUSBITS:" + this.GetStatusBits() : "RANGES6:" + this.GetAllRanges();
+
+      this._websocket.Send(msg);
    }
+
+   TCanvasPainter.prototype.SelectActivePad = function(pad_painter, obj_painter, click_pos) {
+      if ((this.snapid === undefined) || !pad_painter) return; // only interactive canvas
+
+      var arg = null, ischanged = false;
+
+      if ((pad_painter.snapid !== undefined) && this._websocket)
+         arg = { _typename: "TWebPadClick", padid: pad_painter.snapid.toString(), objid: "", x: -1, y: -1, dbl: false };
+
+      if (!pad_painter.is_active_pad) {
+         ischanged = true;
+         this.ForEachPainterInPad(function(pp) {
+            pp.DrawActiveBorder(null, pp === pad_painter);
+         }, "pads");
+      }
+
+      if (obj_painter && (obj_painter.snapid!==undefined) && arg) {
+         ischanged = true;
+         arg.objid = obj_painter.snapid.toString();
+      }
+
+      if (click_pos && arg) {
+         ischanged = true;
+         arg.x = Math.round(click_pos.x || 0);
+         arg.y = Math.round(click_pos.y || 0);
+         if (click_pos.dbl) arg.dbl = true;
+      }
+
+      if (this._websocket && arg && ischanged)
+         this._websocket.Send("PADCLICKED:" + JSROOT.toJSON(arg));
+   }
+
+   TCanvasPainter.prototype.GetStatusBits = function() {
+      var bits = 0;
+      if (this.HasEventStatus()) bits |= JSROOT.TCanvasStatusBits.kShowEventStatus;
+      if (this.HasGed()) bits |= JSROOT.TCanvasStatusBits.kShowEditor;
+      if (this.IsTooltipAllowed()) bits |= JSROOT.TCanvasStatusBits.kShowToolTips;
+      if (this.use_openui) bits |= JSROOT.TCanvasStatusBits.kMenuBar;
+      return bits;
+   }
+
 
    function drawCanvas(divid, can, opt) {
       var nocanvas = (can===null);

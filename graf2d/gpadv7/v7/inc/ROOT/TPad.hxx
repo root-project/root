@@ -128,6 +128,8 @@ public:
       fPrimitives.clear();
    }
 
+   const TFrame *GetFrame() const { return fFrame.get(); }
+
    /// Get the elements contained in the canvas.
    const Primitives_t &GetPrimitives() const { return fPrimitives; }
 
