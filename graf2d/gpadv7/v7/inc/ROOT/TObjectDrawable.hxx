@@ -34,6 +34,8 @@ class TObjectDrawingOpts: public TDrawingOptsBase {
    std::string fOpts;                   ///< The drawing options
 
 public:
+   TObjectDrawingOpts(const std::string &opts = "") : fOpts(opts) {}
+
    const std::string &GetOptionString() const { return fOpts; }
 };
 
@@ -54,6 +56,8 @@ public:
    void PopulateMenu(TMenuItems &) final;
 
    /// Get the options - a string!
+   const TObjectDrawingOpts &GetOptions() const { return fOpts; }
+
    TObjectDrawingOpts &GetOptions() { return fOpts; }
 
    /// Executes menu item
@@ -64,8 +68,8 @@ public:
 
 /// Interface to graphics taking a shared_ptr<TObject>.
 /// Must be on global scope, else lookup cannot find it (no ADL for TObject).
-inline std::unique_ptr<ROOT::Experimental::TDrawable>
-GetDrawable(const std::shared_ptr<TObject> &obj , const std::string &opt = "")
+inline std::unique_ptr<ROOT::Experimental::TObjectDrawable>
+GetDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt = "")
 {
    return std::make_unique<ROOT::Experimental::TObjectDrawable>(obj, opt);
 }
