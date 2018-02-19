@@ -45,7 +45,7 @@ class TObjectDrawable: public TDrawableBase<TObjectDrawable> {
 public:
    TObjectDrawable() = default;
 
-   TObjectDrawable(const std::shared_ptr<TObject> &obj): fObj(obj) {}
+   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt): fObj(obj), fOpts(opt) {}
 
    /// Paint the histogram
    void Paint(Internal::TVirtualCanvasPainter &canv) final;
@@ -65,9 +65,9 @@ public:
 /// Interface to graphics taking a shared_ptr<TObject>.
 /// Must be on global scope, else lookup cannot find it (no ADL for TObject).
 inline std::unique_ptr<ROOT::Experimental::TDrawable>
-GetDrawable(const std::shared_ptr<TObject> &obj, ROOT::Experimental::TPadBase & /* parent */)
+GetDrawable(const std::shared_ptr<TObject> &obj , const std::string &opt = "")
 {
-   return std::make_unique<ROOT::Experimental::TObjectDrawable>(obj);
+   return std::make_unique<ROOT::Experimental::TObjectDrawable>(obj, opt);
 }
 
 #endif
