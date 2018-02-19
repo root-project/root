@@ -122,6 +122,18 @@ auto goodMuons_pt = mu_pt[ (mu_pt > 10.f && abs(mu_eta) <= 2.f && mu_charge == -
 ~~~
 Now the clean collection of transverse momenta can be used within the rest of the data analysis, for
 example to fill a histogram.
+
+## Owning and adopting memory
+TVec has contiguous memory associated to it. It can own it or simply adopt it. In the latter case,
+it can be constructed with the address of the memory associated to it and its lenght. For example:
+~~~{.cpp}
+std::vector<int> myStlVec {1,2,3};
+TVec<int> myTVec(myStlVec.data(), myStlVec.size());
+~~~
+In this case, the memory associated to myStlVec and myTVec is the same, myTVec simply "adopted it".
+If any method which implies a re-allocation is called, e.g. *emplace_back* or *resize*, the adopted
+memory is released and new one is allocated. The previous content is copied in the new memory and
+preserved.
 */
 // clang-format on
 template <typename T>
