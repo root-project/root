@@ -157,6 +157,8 @@ private:
 public:
    // ctors
    TVec() {}
+   template< class InputIt >
+   TVec( InputIt first, InputIt last) : fData(first, last) {}
    TVec(size_type count, const T &value) : fData(count, value) {}
    explicit TVec(size_type count) : fData(count) {}
    TVec(const std::vector<T> &other) { std::copy(other.begin(), other.end(), fData.begin()); }
