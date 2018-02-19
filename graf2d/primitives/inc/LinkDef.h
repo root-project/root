@@ -33,6 +33,7 @@
 #pragma link C++ class ROOT::Experimental::TText+;
 #pragma link C++ class ROOT::Experimental::TextDrawingOpts+;
 #pragma link C++ class ROOT::Experimental::TTextDrawable+;
+#pragma link C++ class ROOT::Experimental::TDrawableBase<ROOT::Experimental::TTextDrawable>+;
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::TText>+;
 #pragma link C++ class ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TTextDrawable>+;
 #pragma link C++ class ROOT::Experimental::TStyle+;
