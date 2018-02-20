@@ -284,7 +284,7 @@ namespace ROOT {
 
           for ( unsigned int i=0; i<fDim; i++ )
           {
-            fCoordErrorsPtr[i] = fCoordErrors.empty() ? NULL : &fCoordErrors[i].front();
+            fCoordErrorsPtr[i] = &fCoordErrors[i].front();
           }
         }
 
@@ -298,13 +298,13 @@ namespace ROOT {
         if ( !fDataError.empty() )
         {
           assert( kValueError == fErrorType || kCoordError == fErrorType );
-          fDataErrorPtr = fDataError.empty() ? NULL : &fDataError.front();
+          fDataErrorPtr = &fDataError.front();
         }
         else if ( !fDataErrorHigh.empty() && !fDataErrorLow.empty() )
         {
           assert( kAsymError == fErrorType );
-          fDataErrorHighPtr = fDataErrorHigh.empty() ? NULL : &fDataErrorHigh.front();
-          fDataErrorLowPtr = fDataErrorLow.empty() ? NULL : &fDataErrorLow.front();
+          fDataErrorHighPtr = &fDataErrorHigh.front();
+          fDataErrorLowPtr = &fDataErrorLow.front();
         }
       }
 
@@ -698,7 +698,7 @@ namespace ROOT {
         {
            fCoordErrors[i].resize(fMaxPoints + FitData::VectorPadding(fMaxPoints));
 
-           fCoordErrorsPtr[i] = fCoordErrors.empty() ? NULL : &fCoordErrors[i].front();
+           fCoordErrorsPtr[i] = fCoordErrors[i].empty() ? NULL : &fCoordErrors[i].front();
         }
 
         fpTmpCoordErrorVector = new double[fDim];
@@ -770,7 +770,7 @@ namespace ROOT {
       unsigned vectorPadding = FitData::VectorPadding(fNPoints);
       fData.resize(fNPoints + vectorPadding);
       std::copy( fDataPtr, fDataPtr + fNPoints, fData.begin() );
-      fDataPtr = fData.empty() ? NULL : &fData.front();
+      fDataPtr = &fData.front();
 
       for ( unsigned int i=0; i < fDim; i++ )
       {
@@ -785,7 +785,7 @@ namespace ROOT {
 
         fDataError.resize(fNPoints + vectorPadding);
         std::copy(fDataErrorPtr, fDataErrorPtr + fNPoints + vectorPadding, fDataError.begin());
-        fDataErrorPtr = fDataError.empty() ? NULL : &fDataError.front();
+        fDataErrorPtr = &fDataError.front();
       }
 
       if ( kValueError == fErrorType )
@@ -804,7 +804,7 @@ namespace ROOT {
           assert( fCoordErrorsPtr[i] );
           fCoordErrors[i].resize(fNPoints + vectorPadding);
           std::copy(fCoordErrorsPtr[i], fCoordErrorsPtr[i] + fNPoints + vectorPadding, fCoordErrors[i].begin());
-          fCoordErrorsPtr[i] = fCoordErrors.empty() ? NULL : &fCoordErrors[i].front();
+          fCoordErrorsPtr[i] = fCoordErrors[i].empty() ? NULL : &fCoordErrors[i].front();
         }
 
         if( kAsymError == fErrorType )
@@ -817,8 +817,8 @@ namespace ROOT {
           fDataErrorLow.resize(fNPoints + vectorPadding);
           std::copy(fDataErrorHighPtr, fDataErrorHighPtr + fNPoints + vectorPadding, fDataErrorHigh.begin());
           std::copy(fDataErrorLowPtr, fDataErrorLowPtr + fNPoints + vectorPadding, fDataErrorLow.begin());
-          fDataErrorHighPtr = fDataErrorHigh.empty() ? NULL : &fDataErrorHigh.front();
-          fDataErrorLowPtr = fDataErrorLow.empty() ? NULL : &fDataErrorLow.front();
+          fDataErrorHighPtr = &fDataErrorHigh.front();
+          fDataErrorLowPtr = &fDataErrorLow.front();
         }
       }
 
