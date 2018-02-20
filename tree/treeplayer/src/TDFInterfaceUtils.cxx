@@ -153,13 +153,30 @@ SelectColumns(unsigned int nRequiredNames, const ColumnNames_t &names, const Col
    }
 }
 
+bool IsTreeLeaf(TTree &t, const std::string &leaf)
+{
+   // TODO understand why GetBranch is also needed (run the tests without, inspect failures)
+   if (t.GetBranch(leaf.c_str()) != nullptr)
+      return true;
+   if (t.GetLeaf(leaf.c_str()) != nullptr)
+      return true;
+   auto lastDot = leaf.find_last_of('.');
+   if (lastDot != std::string::npos) {
+      std::string leafWithSlash(leaf);
+      leafWithSlash[lastDot] = '/';
+      if (t.GetLeaf(leafWithSlash.c_str()) != nullptr)
+         return true;
+   }
+
+   return false;
+}
+
 ColumnNames_t FindUnknownColumns(const ColumnNames_t &requiredCols, TTree *tree, const ColumnNames_t &definedCols,
                                  const ColumnNames_t &dataSourceColumns)
 {
    ColumnNames_t unknownColumns;
    for (auto &column : requiredCols) {
-      const auto isTreeBranch = (tree != nullptr && tree->GetBranch(column.c_str()) != nullptr);
-      if (isTreeBranch)
+      if (tree != nullptr && IsTreeLeaf(*tree, column))
          continue;
       const auto isCustomColumn = std::find(definedCols.begin(), definedCols.end(), column) != definedCols.end();
       if (isCustomColumn)
