@@ -56,7 +56,7 @@ public:
    virtual bool IsBatchMode() const { return true; }
 
    /// add display item to the canvas
-   virtual void AddDisplayItem(TDisplayItem *item) = 0;
+   virtual void AddDisplayItem(std::unique_ptr<TDisplayItem> &&item) = 0;
 
    /// indicate that canvas changed, provides current version of the canvas
    virtual void CanvasUpdated(uint64_t, bool, CanvasCallback_t) = 0;
