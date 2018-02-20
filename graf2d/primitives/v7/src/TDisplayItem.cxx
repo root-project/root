@@ -41,7 +41,7 @@ std::string ROOT::Experimental::TDisplayItem::MakeIDFromPtr(void *ptr)
 void ROOT::Experimental::TDisplayItem::SetObjectIDAsPtr(void *ptr)
 {
    std::string id = MakeIDFromPtr(ptr);
-   SetObjectID(id.c_str());
+   SetObjectID(id);
 }
 
 // =================

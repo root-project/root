@@ -21,6 +21,7 @@
 #pragma link C++ class std::vector<ROOT::Experimental::Detail::TMenuArgument>+;
 #pragma link C++ class ROOT::Experimental::Detail::TArgsMenuItem+;
 #pragma link C++ class ROOT::Experimental::TMenuItems+;
+#pragma link C++ class ROOT::Experimental::TObjectDrawingOpts+;
 #pragma link C++ class ROOT::Experimental::TObjectDrawable+;
 #pragma link C++ class ROOT::Experimental::Detail::TPadUserAxisBase+;
 #pragma link C++ class ROOT::Experimental::TPadCartesianUserAxis+;
