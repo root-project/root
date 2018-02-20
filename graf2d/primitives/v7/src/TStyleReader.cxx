@@ -23,6 +23,7 @@
 
 #include <fstream>
 #include <string>
+#include <cctype>
 
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::Internal;
