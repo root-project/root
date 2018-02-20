@@ -1074,9 +1074,9 @@ Int_t TRatioPlot::BuildLowerPlot()
             ((TGraphAsymmErrors*)fRatioGraph)->SetPointError(ipoint,  fH1->GetBinWidth(i)/2., fH1->GetBinWidth(i)/2., 0.5, 0.5);
 
             fConfidenceInterval1->SetPoint(ipoint, x, 0);
-            fConfidenceInterval1->SetPointError(ipoint, x, i < ci1.size() ? ci1[i] / error : 0);
+            fConfidenceInterval1->SetPointError(ipoint, x, i < (Int_t)ci1.size() ? ci1[i] / error : 0);
             fConfidenceInterval2->SetPoint(ipoint, x, 0);
-            fConfidenceInterval2->SetPointError(ipoint, x, i < ci2.size() ? ci2[i] / error : 0);
+            fConfidenceInterval2->SetPointError(ipoint, x, i < (Int_t)ci2.size() ? ci2[i] / error : 0);
 
             ++ipoint;
 
