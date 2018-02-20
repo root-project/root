@@ -32,8 +32,8 @@ namespace Experimental {
 class TPadBase;
 
 /// \class ROOT::Experimental::Internal::TObjectDrawingOpts Drawing options for TObject.
-class TObjectDrawingOpts: public TDrawingOptsBase {
-   std::string fOpts;                   ///< The drawing options
+class TObjectDrawingOpts : public TDrawingOptsBase {
+   std::string fOpts; ///< The drawing options
 
 public:
    TObjectDrawingOpts(const std::string &opts = "") : fOpts(opts) {}
@@ -43,13 +43,14 @@ public:
 
 /// \class ROOT::Experimental::Internal::TObjectDrawable
 /// Provides v7 drawing facilities for TObject types (TGraph etc).
-class TObjectDrawable: public TDrawableBase<TObjectDrawable> {
+class TObjectDrawable : public TDrawableBase<TObjectDrawable> {
    const std::shared_ptr<TObject> fObj; ///< The object to be painted
    TObjectDrawingOpts fOpts;
+
 public:
    TObjectDrawable() = default;
 
-   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt): fObj(obj), fOpts(opt) {}
+   TObjectDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt) : fObj(obj), fOpts(opt) {}
 
    /// Paint the histogram
    void Paint(Internal::TVirtualCanvasPainter &canv) final;
@@ -84,6 +85,5 @@ GetDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt = "")
 {
    return std::make_unique<ROOT::Experimental::TObjectDrawable>(obj, opt);
 }
-
 
 #endif

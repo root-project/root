@@ -17,16 +17,6 @@
 
 #include "TString.h"
 
-ROOT::Experimental::TDisplayItem::TDisplayItem(const TDisplayItem &rhs)
-   : fObjectID(rhs.fObjectID)
-{
-}
-
-// pin vtable
-ROOT::Experimental::TDisplayItem::~TDisplayItem()
-{
-}
-
 std::string ROOT::Experimental::TDisplayItem::MakeIDFromPtr(void *ptr)
 {
    UInt_t hash = TString::Hash(&ptr, sizeof(ptr));
@@ -49,6 +39,7 @@ ROOT::Experimental::TPadDisplayItem::~TPadDisplayItem()
 void ROOT::Experimental::TPadDisplayItem::Clear()
 {
    fFrame = nullptr;
-   for (unsigned n = 0; n < fPrimitives.size(); ++n) delete fPrimitives[n];
+   for (unsigned n = 0; n < fPrimitives.size(); ++n)
+      delete fPrimitives[n];
    fPrimitives.clear();
 }

@@ -31,12 +31,11 @@ class TFrame;
 
 class TDisplayItem {
 protected:
-   std::string fObjectID;   ///< unique object identifier
+   std::string fObjectID; ///< unique object identifier
 
 public:
    TDisplayItem() = default;
-   TDisplayItem(const TDisplayItem &rhs);
-   virtual ~TDisplayItem();
+   virtual ~TDisplayItem() {}
 
    void SetObjectIDAsPtr(void *ptr);
    void SetObjectID(const std::string &id) { fObjectID = id; }
@@ -49,8 +48,8 @@ public:
 
 class TPadDisplayItem : public TDisplayItem {
 protected:
-   const TFrame *fFrame{nullptr};               ///< temporary pointer on frame object
-   std::vector<TDisplayItem *> fPrimitives;
+   const TFrame *fFrame{nullptr};           ///< temporary pointer on frame object
+   std::vector<TDisplayItem *> fPrimitives; ///< display items for all primitives in the pad
 public:
    TPadDisplayItem() = default;
    virtual ~TPadDisplayItem();
@@ -65,12 +64,10 @@ public:
 template <class T>
 class TOrdinaryDisplayItem : public TDisplayItem {
 protected:
-   const T *fObject;
+   const T *fObject{nullptr};
 
 public:
    TOrdinaryDisplayItem(const T *addr) : TDisplayItem(), fObject(addr) {}
-   TOrdinaryDisplayItem(const TOrdinaryDisplayItem<T> &&rhs) : TDisplayItem(rhs), fObject(rhs.fObject) {}
-   virtual ~TOrdinaryDisplayItem() {}
 
    const T *GetObject() const { return fObject; }
 };
@@ -84,8 +81,6 @@ protected:
 
 public:
    TUniqueDisplayItem(T *addr) : TDisplayItem(), fObject(addr) {}
-   TUniqueDisplayItem(const TUniqueDisplayItem<T> &&rhs) : TDisplayItem(rhs), fObject(std::move(rhs.fObject)) {}
-   virtual ~TUniqueDisplayItem() {}
 
    T *GetObject() const { return fObject.get(); }
 };
