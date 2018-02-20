@@ -203,12 +203,13 @@ private:
 
    std::shared_ptr<TWebWindow> fWindow; ///!< configured display
 
-   WebConnList fWebConn;         ///<! connections list
-   bool fHadWebConn;             ///<! true if any connection were existing
-   TPadDisplayItem fDisplayList; ///!< full list of items to display
-   WebCommandsList fCmds;        ///!< list of submitted commands
-   uint64_t fCmdsCnt;            ///!< commands counter
-   std::string fWaitingCmdId;    ///!< command id waited for completion
+   WebConnList fWebConn;           ///<! connections list
+   bool fHadWebConn;               ///<! true if any connection were existing
+   TPadDisplayItem fDisplayList;   ///!< full list of items to display
+   std::string fCurrentDrawableId; ///!< id of drawable, which paint method is called
+   WebCommandsList fCmds;          ///!< list of submitted commands
+   uint64_t fCmdsCnt;              ///!< commands counter
+   std::string fWaitingCmdId;      ///!< command id waited for completion
 
    uint64_t fSnapshotVersion;   ///!< version of snapshot
    std::string fSnapshot;       ///!< last produced snapshot
@@ -255,7 +256,11 @@ public:
    /// returns true is canvas used in batch mode
    virtual bool IsBatchMode() const override { return fBatchMode; }
 
-   virtual void AddDisplayItem(std::unique_ptr<TDisplayItem> &&item) override { fDisplayList.Add(std::move(item)); }
+   virtual void AddDisplayItem(std::unique_ptr<TDisplayItem> &&item) override
+   {
+      item->SetObjectID(fCurrentDrawableId);
+      fDisplayList.Add(std::move(item));
+   }
 
    virtual void CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental::CanvasCallback_t callback) override;
 
@@ -690,9 +695,11 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
    for (auto &&drawable : can.GetPrimitives()) {
 
+      fCurrentDrawableId = TDisplayItem::MakeIDFromPtr(drawable.get());
+
       drawable->Paint(*this);
 
-      fDisplayList.Last()->SetObjectIDAsPtr(&(*drawable));
+      // fDisplayList.Last()->SetObjectIDAsPtr(&(*drawable));
 
       // ROOT::Experimental::TDisplayItem *sub = drawable->CreateSnapshot(can);
       // if (!sub) continue;

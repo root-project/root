@@ -27,6 +27,10 @@ namespace Experimental {
 
 using TDisplayItemsVector = std::vector<std::unique_ptr<TDisplayItem>>;
 
+/// Display item for the pad
+/// Includes different graphical properties of the pad itself plus
+/// list of created items for all primitives
+
 class TPadDisplayItem : public TDisplayItem {
 protected:
    const TFrame *fFrame{nullptr};   ///< temporary pointer on frame object
@@ -37,8 +41,11 @@ public:
    void SetFrame(const TFrame *f) { fFrame = f; }
    TDisplayItemsVector &GetPrimitives() { return fPrimitives; }
    void Add(std::unique_ptr<TDisplayItem> &&item) { fPrimitives.push_back(std::move(item)); }
-   TDisplayItem *Last() const { return fPrimitives.back().get(); }
-   void Clear() { fPrimitives.clear(); }
+   void Clear()
+   {
+      fPrimitives.clear();
+      fFrame = nullptr;
+   }
 };
 
 } // Experimental
