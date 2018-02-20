@@ -97,7 +97,7 @@ TEST(GradMinimizer, Gaussian1D) {
   }
 }
 
-
+/*
 TEST(GradMinimizer, Gaussian2DVarToConst) {
   RooMsgService::instance().setGlobalKillBelow(RooFit::ERROR);
 
@@ -321,7 +321,7 @@ TEST(GradMinimizer, Gaussian2DConstToVar) {
   EXPECT_EQ(muerr2_0, muerr2_1);
   EXPECT_EQ(edm0, edm1);
 }
-
+*/
 
 TEST(GradMinimizer, GaussianND) {
   // test RooGradMinimizer class with simple N-dimensional pdf
