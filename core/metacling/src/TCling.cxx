@@ -5848,20 +5848,15 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
    //  function name.
    //
 
-   std::string::size_type pos = name.find("__thiscall ");
-   if (pos != std::string::npos) {
-      name.erase(0, pos + sizeof("__thiscall ")-1);
+   std::string::size_type pos = std::string::npos;
+   for (const char *toRemove: {"__thiscall ", "__cdecl ", "typeinfo for ", "vtable for "}) {
+      pos = name.find(toRemove);
+      if (pos != std::string::npos) {
+         name.erase(0, pos + strlen(toRemove));
+      }
    }
-   pos = name.find("__cdecl ");
-   if (pos != std::string::npos) {
-      name.erase(0, pos + sizeof("__cdecl ")-1);
-   }
-   if (!strncmp(name.c_str(), "typeinfo for ", sizeof("typeinfo for ")-1)) {
-      name.erase(0, sizeof("typeinfo for ")-1);
-   } else if (!strncmp(name.c_str(), "vtable for ", sizeof("vtable for ")-1)) {
-      name.erase(0, sizeof("vtable for ")-1);
-   } else if (!strncmp(name.c_str(), "operator", sizeof("operator")-1)
-              && !isalnum(name[sizeof("operator")])) {
+   if (!strncmp(name.c_str(), "operator", sizeof("operator")-1)
+       && !isalnum(name[sizeof("operator")])) {
      // operator...(A, B) - let's try with A!
      name.erase(0, sizeof("operator")-1);
      pos = name.rfind('(');
@@ -5881,7 +5876,7 @@ void* TCling::LazyFunctionCreatorAutoload(const std::string& mangled_name) {
      }
    } else {
       // Remove the function arguments.
-      std::string::size_type pos = name.rfind('(');
+      pos = name.rfind('(');
       if (pos != std::string::npos) {
          name.erase(pos);
       }
