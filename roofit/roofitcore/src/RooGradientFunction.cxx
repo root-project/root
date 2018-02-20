@@ -119,9 +119,9 @@ RooGradientFunction::Function::Function(const RooGradientFunction::Function& oth
     _numBadNLL(other._numBadNLL),
     _printEvalErrors(other._printEvalErrors),
     _doEvalErrorWall(other._doEvalErrorWall),
-    _verbose(other._verbose),
+    _nDim(other._nDim),
     _floatParamVec(other._floatParamVec),
-    _nDim(other._nDim)
+    _verbose(other._verbose)
 {
   _floatParamList = new RooArgList(*other._floatParamList);
   _constParamList = new RooArgList(*other._constParamList);
@@ -148,11 +148,6 @@ ROOT::Math::IMultiGradFunction* RooGradientFunction::Clone() const {
 unsigned int RooGradientFunction::Function::NDim() const {
   return _nDim;
 }
-
-void RooGradientFunction::Function::set_nDim(unsigned int ndim) const {
-  _nDim = ndim;
-}
-
 
 Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit::ParameterSettings>& parameter_settings,
                                                            Bool_t optConst, Bool_t verbose) {
@@ -181,7 +176,7 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
       _function._initFloatParamList->addClone(*oldpar);
       _function._initConstParamList->remove(*oldpar);
       constStatChange=kTRUE;
-      set_nDim(NDim() + 1);
+      _function._nDim++;
 
       if (verbose) {
         oocoutI(static_cast<RooAbsArg*>(nullptr),Eval) << "RooGradientFunction::synchronize: parameter "
@@ -225,7 +220,7 @@ Bool_t RooGradientFunction::synchronize_parameter_settings(std::vector<ROOT::Fit
                                        << " is not of type RooRealVar, skipping" << std::endl;
         _function._floatParamList->remove(*par);
         index--;
-        set_nDim(NDim() - 1);
+        _function._nDim--;
         continue;
       }
 
@@ -615,9 +610,4 @@ void RooGradientFunction::set_ncycles(unsigned int ncycles) const {
 }
 void RooGradientFunction::set_error_level(double error_level) const {
   _gradf.set_error_level(error_level);
-}
-
-void RooGradientFunction::set_nDim(unsigned int ndim) const {
-  _function.set_nDim(ndim);
-  _gradf.set_fN(ndim);
 }

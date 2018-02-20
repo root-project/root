@@ -72,9 +72,7 @@ namespace RooFit {
     void set_ncycles(unsigned int ncycles);
     void set_error_level(double error_level);
 
-    void set_fN(unsigned int fN_new);
-
-   private:
+  private:
 
     // CAUTION: we only use fFunction to check whether the same function is used on every call.
     // We do not use it directly as a callable function, as this would require us to:

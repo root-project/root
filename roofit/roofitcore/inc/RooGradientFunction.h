@@ -50,6 +50,8 @@ class RooGradientFunction : public ROOT::Math::IMultiGradFunction {
     mutable int _printEvalErrors = 10;
     Bool_t _doEvalErrorWall = kTRUE;
 
+    unsigned int _nDim = 0;
+
     // put _verbose here, since Function also needs it and RooGradientFunction
     // can still reach it here as well
     bool _verbose;
@@ -68,8 +70,6 @@ class RooGradientFunction : public ROOT::Math::IMultiGradFunction {
     ROOT::Math::IMultiGenFunction *Clone() const override;
     unsigned int NDim() const override;
 
-    void set_nDim(unsigned int ndim) const;
-
     void updateFloatVec();
 
     inline Bool_t SetPdfParamVal(const Int_t &index, const Double_t &value) const {
@@ -87,7 +87,6 @@ class RooGradientFunction : public ROOT::Math::IMultiGradFunction {
 
   private:
     double DoEval(const double *x) const override;
-    mutable unsigned int _nDim = 0;
   };
 
 public:
@@ -167,8 +166,6 @@ public:
   void set_grad_tolerance(double grad_tolerance) const;
   void set_ncycles(unsigned int ncycles) const;
   void set_error_level(double error_level) const;
-
-  void set_nDim(unsigned int ndim) const;
 };
 
 #endif //ROO_GRADIENT_FUNCTION

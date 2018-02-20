@@ -374,10 +374,6 @@ namespace RooFit {
     Up = error_level;
   }
 
-  void NumericalDerivatorMinuit2::set_fN(unsigned int fN_new) {
-    fN = fN_new;
-  }
-
 } // namespace RooFit
 
 
