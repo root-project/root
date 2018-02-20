@@ -340,6 +340,8 @@ void TLoopManager::InitNodes()
       filter->InitNode();
    for (auto &customColumn : fBookedCustomColumns)
       customColumn.second->InitNode();
+   for (auto &range : fBookedRanges)
+      range->InitNode();
 }
 
 /// Perform clean-up operations. To be called at the end of each event loop.
@@ -358,6 +360,8 @@ void TLoopManager::CleanUpNodes()
    fNChildren = 0;
    fNStopsReceived = 0;
    for (auto &ptr : fBookedFilters)
+      ptr->ResetChildrenCount();
+   for (auto &ptr : fBookedRanges)
       ptr->ResetChildrenCount();
    for (auto &ptr : fBookedRanges)
       ptr->ResetChildrenCount();
@@ -513,4 +517,11 @@ TRangeBase::TRangeBase(TLoopManager *implPtr, unsigned int start, unsigned int s
 TLoopManager *TRangeBase::GetImplPtr() const
 {
    return fImplPtr;
+}
+
+void TRangeBase::ResetCounters()
+{
+   fLastCheckedEntry = -1;
+   fNProcessedEntries = 0;
+   fHasStopped = false;
 }
