@@ -44,27 +44,12 @@ public:
    static std::string MakeIDFromPtr(void *ptr);
 };
 
-// list of snapshot for primitives in pad
-
-class TPadDisplayItem : public TDisplayItem {
-protected:
-   const TFrame *fFrame{nullptr};           ///< temporary pointer on frame object
-   std::vector<TDisplayItem *> fPrimitives; ///< display items for all primitives in the pad
-public:
-   TPadDisplayItem() = default;
-   virtual ~TPadDisplayItem();
-   void SetFrame(const TFrame *f) { fFrame = f; }
-   void Add(TDisplayItem *snap) { fPrimitives.push_back(snap); }
-   TDisplayItem *Last() const { return fPrimitives[fPrimitives.size() - 1]; }
-   void Clear();
-};
-
 // direct pointer to some object without ownership
 
 template <class T>
 class TOrdinaryDisplayItem : public TDisplayItem {
 protected:
-   const T *fObject{nullptr};
+   const T *fObject{nullptr}; ///<  direct pointer without ownership
 
 public:
    TOrdinaryDisplayItem(const T *addr) : TDisplayItem(), fObject(addr) {}

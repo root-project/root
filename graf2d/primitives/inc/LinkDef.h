@@ -15,7 +15,6 @@
 #pragma link off all functions;
 
 #pragma link C++ class ROOT::Experimental::TDisplayItem+;
-#pragma link C++ class ROOT::Experimental::TPadDisplayItem+;
 #pragma link C++ class ROOT::Experimental::TPalette+;
 #pragma link C++ class ROOT::Experimental::TColor+;
 #pragma link C++ class ROOT::Experimental::TStringEnumAttr+;
