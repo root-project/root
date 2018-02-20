@@ -19,6 +19,8 @@
 #include <ROOT/TDrawable.hxx>
 #include <ROOT/TDrawingOptsBase.hxx>
 #include "ROOT/RStringView.hxx"
+#include "ROOT/TDisplayItem.hxx"
+
 #include <memory>
 #include <string>
 
@@ -63,6 +65,15 @@ public:
    /// Executes menu item
    void Execute(const std::string &) final;
 };
+
+class TObjectDisplayItem : public TDisplayItem {
+protected:
+   const TObject *fObject; ///< object to draw
+   std::string fOption;    ///< v6 draw options
+public:
+   TObjectDisplayItem(TObject *obj, const std::string &opt) : fObject(obj), fOption(opt) {}
+};
+
 } // namespace Experimental
 } // namespace ROOT
 
@@ -73,5 +84,6 @@ GetDrawable(const std::shared_ptr<TObject> &obj, const std::string &opt = "")
 {
    return std::make_unique<ROOT::Experimental::TObjectDrawable>(obj, opt);
 }
+
 
 #endif
