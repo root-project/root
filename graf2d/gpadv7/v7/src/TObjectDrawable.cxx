@@ -27,10 +27,7 @@
 
 void ROOT::Experimental::TObjectDrawable::Paint(Internal::TVirtualCanvasPainter &canv)
 {
-   ROOT::Experimental::TDisplayItem *res = new TOrdinaryDisplayItem<TObject>(fObj.get());
-   res->SetOption(fOpts.GetOptionString());
-
-   canv.AddDisplayItem(res);
+   canv.AddDisplayItem(new TObjectDisplayItem(fObj.get(), fOpts.GetOptionString()));
 }
 
 void ROOT::Experimental::TObjectDrawable::PopulateMenu(TMenuItems &items)

@@ -17,12 +17,8 @@
 
 #include "TString.h"
 
-ROOT::Experimental::TDisplayItem::TDisplayItem() : fObjectID(), fOption()
-{
-}
-
 ROOT::Experimental::TDisplayItem::TDisplayItem(const TDisplayItem &rhs)
-   : fObjectID(rhs.fObjectID), fOption(rhs.fOption)
+   : fObjectID(rhs.fObjectID)
 {
 }
 
@@ -34,8 +30,7 @@ ROOT::Experimental::TDisplayItem::~TDisplayItem()
 std::string ROOT::Experimental::TDisplayItem::MakeIDFromPtr(void *ptr)
 {
    UInt_t hash = TString::Hash(&ptr, sizeof(ptr));
-   TString res = TString::UItoa(hash, 10);
-   return std::string(res.Data());
+   return std::to_string(hash);
 }
 
 void ROOT::Experimental::TDisplayItem::SetObjectIDAsPtr(void *ptr)
