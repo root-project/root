@@ -715,6 +715,8 @@ protected:
    bool fHasStopped{false};         ///< True if the end of the range has been reached
    const unsigned int fNSlots;      ///< Number of thread slots used by this node, inherited from parent node.
 
+   void ResetCounters();
+
 public:
    TRangeBase(TLoopManager *implPtr, unsigned int start, unsigned int stop, unsigned int stride,
               const unsigned int nSlots);
@@ -733,6 +735,7 @@ public:
       fNStopsReceived = 0;
    }
    unsigned int GetNSlots() const { return fNSlots; }
+   void InitNode() { ResetCounters(); }
 };
 
 template <typename PrevData>
