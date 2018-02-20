@@ -47,8 +47,6 @@ using ColumnNames_t = std::vector<std::string>;
 
 // fwd decl for ColumnName2ColumnTypeName
 class TCustomColumnBase;
-// fwd decl for FindUnknownColumns
-class TLoopManager;
 
 // type used for tag dispatching
 struct TInferType {
