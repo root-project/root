@@ -821,9 +821,9 @@
    // ===============================================
 
    function TFramePainter(tframe) {
+      if (tframe && tframe.$dummy) tframe = null;
       JSROOT.TooltipHandler.call(this, tframe);
       this.zoom_kind = 0;
-
       this.mode3d = false;
       this.shrink_frame_left = 0.;
       this.x_kind = 'normal'; // 'normal', 'log', 'time', 'labels'
@@ -1387,7 +1387,7 @@
           tframe = this.GetObject();
 
       if ((this.fX1NDC === undefined) || (force && !this.modified_NDC)) {
-         if (!pad) {
+         if (!pad || (pad.fLeftMargin===undefined)) {
             JSROOT.extend(this, JSROOT.gStyle.FrameNDC);
          } else {
             JSROOT.extend(this, {
@@ -1410,8 +1410,10 @@
             this.fillatt.SetSolidColor('white');
       }
 
-      if (pad) this.createAttLine({ color: pad.fFrameLineColor, width: pad.fFrameLineWidth, style: pad.fFrameLineStyle });
-      else this.createAttLine({ attr: tframe, color: 'black' });
+      if (pad && pad.fFrameLineColor!==undefined)
+         this.createAttLine({ color: pad.fFrameLineColor, width: pad.fFrameLineWidth, style: pad.fFrameLineStyle });
+      else
+         this.createAttLine({ attr: tframe, color: 'black' });
    }
 
    TFramePainter.prototype.SizeChanged = function() {

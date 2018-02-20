@@ -2788,7 +2788,8 @@
 
       // create TFrame element if not exists
       if (this.svg_frame().select(".main_layer").empty() && ((is_main == 1) || (is_main == 3) || (is_main == 4))) {
-         JSROOT.Painter.drawFrame(divid, null, (is_main == 4) ? "3d" : "");
+         if (typeof JSROOT.Painter.drawFrame == 'function')
+            JSROOT.Painter.drawFrame(divid, null, (is_main == 4) ? "3d" : "");
          if ((is_main != 4) && this.svg_frame().empty()) return alert("Fail to draw dummy TFrame");
       }
 
@@ -3533,7 +3534,7 @@
       var painter = this.pad_painter();
       if ((painter === null) || (painter.pad === null)) return null;
 
-      if (painter.pad.fPrimitives !== null)
+      if (painter.pad.fPrimitives)
          for (var n=0;n<painter.pad.fPrimitives.arr.length;++n) {
             var prim = painter.pad.fPrimitives.arr[n];
             if (('fName' in prim) && (prim.fName === objname)) return prim;
