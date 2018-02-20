@@ -12,9 +12,9 @@ import threading
 timeoutOffset = 5 # to give gdb the time to fire up
 
 class AsyncExecutor(threading.Thread):
-   def __init__(self, command):
+   def __init__(self, commandArgs):
       threading.Thread.__init__(self)
-      self.command = command.split()
+      self.command = commandArgs
       self.canPoll = True
       self.proc = subprocess.Popen(self.command,
                                    stdout=subprocess.PIPE,
@@ -45,9 +45,9 @@ class AsyncExecutor(threading.Thread):
    def Poll(self):
       return self.proc.poll() if self.canPoll else None
 
-def launchAndSendSignal(command, sig, timeout):
+def launchAndSendSignal(commandArgs, sig, timeout):
    start = time.clock()
-   ae = AsyncExecutor(command)
+   ae = AsyncExecutor(commandArgs)
    ae.start()
    proc = ae.GetProc()
 
@@ -85,8 +85,8 @@ def launchAndSendSignal(command, sig, timeout):
 
    return 0
 
-def checkArgs(timeout, command):
-   if "" == command:
+def checkArgs(timeout, commandArgs):
+   if 0 == len(commandArgs):
       print ('No command to watch specified.\n%s' %usage)
       sys.exit(1)
 
@@ -97,16 +97,16 @@ def getArgs():
    if '--' != args[2]:
       print ('Second argument must be "--".\n%s' %usage)
       sys.exit(1)
-   command = " ".join(args[3:])
-   checkArgs(timeouts, command)
+   commandArgs = args[3:]
+   checkArgs(timeouts, commandArgs)
    timeout = float(timeouts)
    if timeout != -1:
       timeout += timeoutOffset
-      print ('Adding to the timeout a safety margin of %s seconds to allow gdb to fire up: total timeout is %s' %( timeoutOffset, timeout))
-   return timeout, command
+      print ('Adding to the timeout a safety margin of %s seconds to allow gdb to fire up: total timeout is %s s' %( timeoutOffset, timeout))
+   return timeout, commandArgs
 
 if __name__ == "__main__":
-   timeout, command = getArgs()
+   timeout, commandArgs = getArgs()
    sig = signal.SIGUSR2
-   ret = launchAndSendSignal(command, sig, timeout)
+   ret = launchAndSendSignal(commandArgs, sig, timeout)
    sys.exit(ret)
