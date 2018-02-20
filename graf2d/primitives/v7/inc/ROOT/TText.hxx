@@ -63,9 +63,9 @@ public:
    double GetY() const { return fY; }
 };
 
-class TextDrawingOpts: public TDrawingOptsBase {
-   TDrawingAttr<int> fLineWidth{*this, "Text.Line.Width", 3}; ///< The line width.
-   TDrawingAttr<TColor> fLineColor{*this, "Text.Line.Color", TColor::kBlack}; ///< The line color.
+class TextDrawingOpts : public TDrawingOptsBase {
+   TDrawingAttr<int> fLineWidth{*this, "Text.Line.Width", 3};                     ///< The line width.
+   TDrawingAttr<TColor> fLineColor{*this, "Text.Line.Color", TColor::kBlack};     ///< The line color.
    TDrawingAttr<TColor> fFillColor{*this, "Text.Fill.Color", TColor::kInvisible}; ///< The fill color.
 
 public:
@@ -96,17 +96,15 @@ private:
 public:
    TTextDrawable() = default;
 
-   TTextDrawable(const std::shared_ptr<ROOT::Experimental::TText> &txt)
-      : fText(txt)
-   {
-   }
+   TTextDrawable(const std::shared_ptr<ROOT::Experimental::TText> &txt) : fText(txt) {}
 
    TextDrawingOpts &GetOptions() { return fOpts; }
    const TextDrawingOpts &GetOptions() const { return fOpts; }
 
    void Paint(Internal::TVirtualCanvasPainter &canv) final
    {
-      canv.AddDisplayItem(new ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TTextDrawable>(this));
+      canv.AddDisplayItem(
+         std::make_unique<ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TTextDrawable>>(this));
    }
 };
 

@@ -17,6 +17,7 @@
 #include "ROOT/TCanvas.hxx"
 #include <ROOT/TLogger.hxx>
 #include <ROOT/TDisplayItem.hxx>
+#include <ROOT/TPadDisplayItem.hxx>
 #include <ROOT/TMenuItem.hxx>
 
 #include <ROOT/TWebWindow.hxx>
@@ -254,7 +255,7 @@ public:
    /// returns true is canvas used in batch mode
    virtual bool IsBatchMode() const override { return fBatchMode; }
 
-   virtual void AddDisplayItem(TDisplayItem *item) override { fDisplayList.Add(item); }
+   virtual void AddDisplayItem(std::unique_ptr<TDisplayItem> &&item) override { fDisplayList.Add(std::move(item)); }
 
    virtual void CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental::CanvasCallback_t callback) override;
 
@@ -699,7 +700,7 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
       // lst.Add(sub);
    }
 
-   TString res = TBufferJSON::ToJSON(&fDisplayList  /*, 23 */);
+   TString res = TBufferJSON::ToJSON(&fDisplayList /*, 23 */);
 
    // TBufferJSON::ExportToFile("canv.json", &fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
 

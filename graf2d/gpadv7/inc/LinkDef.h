@@ -14,6 +14,8 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
+#pragma link C++ class std::vector<std::unique_ptr<ROOT::Experimental::TDisplayItem>>+;
+#pragma link C++ class ROOT::Experimental::TPadDisplayItem+;
 #pragma link C++ class ROOT::Experimental::Detail::TMenuItem+;
 #pragma link C++ class std::vector<ROOT::Experimental::Detail::TMenuItem*>+;
 #pragma link C++ class ROOT::Experimental::Detail::TCheckedMenuItem+;

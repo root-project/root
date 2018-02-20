@@ -28,18 +28,3 @@ void ROOT::Experimental::TDisplayItem::SetObjectIDAsPtr(void *ptr)
    std::string id = MakeIDFromPtr(ptr);
    SetObjectID(id);
 }
-
-// =================
-
-ROOT::Experimental::TPadDisplayItem::~TPadDisplayItem()
-{
-   Clear();
-}
-
-void ROOT::Experimental::TPadDisplayItem::Clear()
-{
-   fFrame = nullptr;
-   for (unsigned n = 0; n < fPrimitives.size(); ++n)
-      delete fPrimitives[n];
-   fPrimitives.clear();
-}

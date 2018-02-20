@@ -27,7 +27,7 @@
 
 void ROOT::Experimental::TObjectDrawable::Paint(Internal::TVirtualCanvasPainter &canv)
 {
-   canv.AddDisplayItem(new TObjectDisplayItem(fObj.get(), fOpts.GetOptionString()));
+   canv.AddDisplayItem(std::make_unique<TObjectDisplayItem>(fObj.get(), fOpts.GetOptionString()));
 }
 
 void ROOT::Experimental::TObjectDrawable::PopulateMenu(TMenuItems &items)
