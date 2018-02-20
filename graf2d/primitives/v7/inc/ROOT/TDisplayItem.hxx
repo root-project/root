@@ -32,19 +32,15 @@ class TFrame;
 class TDisplayItem {
 protected:
    std::string fObjectID;   ///< unique object identifier
-   std::string fOption;     ///< draw options, probably need to remove from here
 
 public:
-   TDisplayItem();
+   TDisplayItem() = default;
    TDisplayItem(const TDisplayItem &rhs);
    virtual ~TDisplayItem();
 
    void SetObjectIDAsPtr(void *ptr);
    void SetObjectID(const std::string &id) { fObjectID = id; }
    std::string GetObjectID() const { return fObjectID; }
-
-   void SetOption(const std::string &opt) { fOption = opt; }
-   std::string GetOption() const { return fOption; }
 
    static std::string MakeIDFromPtr(void *ptr);
 };
@@ -56,7 +52,7 @@ protected:
    const TFrame *fFrame{nullptr};               ///< temporary pointer on frame object
    std::vector<TDisplayItem *> fPrimitives;
 public:
-   TPadDisplayItem() : TDisplayItem(), fPrimitives() { }
+   TPadDisplayItem() = default;
    virtual ~TPadDisplayItem();
    void SetFrame(const TFrame *f) { fFrame = f; }
    void Add(TDisplayItem *snap) { fPrimitives.push_back(snap); }
@@ -69,14 +65,14 @@ public:
 template <class T>
 class TOrdinaryDisplayItem : public TDisplayItem {
 protected:
-   const T *fSnapshot;
+   const T *fObject;
 
 public:
-   TOrdinaryDisplayItem(const T *addr) : TDisplayItem(), fSnapshot(addr) {}
-   TOrdinaryDisplayItem(const TOrdinaryDisplayItem<T> &&rhs) : TDisplayItem(rhs), fSnapshot(rhs.fSnapshot) {}
-   virtual ~TOrdinaryDisplayItem() { fSnapshot = 0; }
+   TOrdinaryDisplayItem(const T *addr) : TDisplayItem(), fObject(addr) {}
+   TOrdinaryDisplayItem(const TOrdinaryDisplayItem<T> &&rhs) : TDisplayItem(rhs), fObject(rhs.fObject) {}
+   virtual ~TOrdinaryDisplayItem() {}
 
-   const T *GetSnapshot() const { return fSnapshot; }
+   const T *GetObject() const { return fObject; }
 };
 
 // unique pointer of specified class with ownership
@@ -84,14 +80,14 @@ public:
 template <class T>
 class TUniqueDisplayItem : public TDisplayItem {
 protected:
-   std::unique_ptr<T> fSnapshot;
+   std::unique_ptr<T> fObject;
 
 public:
-   TUniqueDisplayItem(T *addr) : TDisplayItem(), fSnapshot(addr) {}
-   TUniqueDisplayItem(const TUniqueDisplayItem<T> &&rhs) : TDisplayItem(rhs), fSnapshot(std::move(rhs.fSnapshot)) {}
+   TUniqueDisplayItem(T *addr) : TDisplayItem(), fObject(addr) {}
+   TUniqueDisplayItem(const TUniqueDisplayItem<T> &&rhs) : TDisplayItem(rhs), fObject(std::move(rhs.fObject)) {}
    virtual ~TUniqueDisplayItem() {}
 
-   T *GetSnapshot() const { return fSnapshot.get(); }
+   T *GetObject() const { return fObject.get(); }
 };
 
 } // namespace Experimental
