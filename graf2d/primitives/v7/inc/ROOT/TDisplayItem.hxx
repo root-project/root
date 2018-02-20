@@ -41,11 +41,11 @@ public:
    virtual ~TDisplayItem();
 
    void SetObjectIDAsPtr(void *ptr);
-   void SetObjectID(const char *id) { fObjectID = id; }
-   const char *GetObjectID() const { return fObjectID.c_str(); }
+   void SetObjectID(const std::string &id) { fObjectID = id; }
+   std::string GetObjectID() const { return fObjectID; }
 
-   void SetOption(const char *opt) { fOption = opt; }
-   const char *GetOption() { return fOption.c_str(); }
+   void SetOption(const std::string &opt) { fOption = opt; }
+   std::string GetOption() const { return fOption; }
 
    void SetKind(int kind) { fKind = kind; }
    int GetKind() const { return fKind; }
