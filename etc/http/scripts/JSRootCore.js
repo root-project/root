@@ -99,7 +99,7 @@
 
    "use strict";
 
-   JSROOT.version = "dev 19/02/2018";
+   JSROOT.version = "dev 20/02/2018";
 
    JSROOT.source_dir = "";
    JSROOT.source_min = false;
@@ -2087,6 +2087,7 @@
       if (JSROOT.GetUrlOption('io', src)!=null) prereq += "io;";
       if (JSROOT.GetUrlOption('tree', src)!=null) prereq += "tree;";
       if (JSROOT.GetUrlOption('2d', src)!=null) prereq += "2d;";
+      if (JSROOT.GetUrlOption('v7', src)!=null) prereq += "v7;";
       if (JSROOT.GetUrlOption('hist', src)!=null) prereq += "2d;hist;";
       if (JSROOT.GetUrlOption('hierarchy', src)!=null) prereq += "2d;hierarchy;";
       if (JSROOT.GetUrlOption('jq2d', src)!=null) prereq += "2d;hierarchy;jq2d;";
