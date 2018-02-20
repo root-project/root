@@ -558,11 +558,13 @@ namespace Internal {
    void EnableImplicitMT(UInt_t numthreads)
    {
 #ifdef R__USE_IMT
+      if (ROOT::Internal::IsImplicitMTEnabledImpl())
+         return;
       EnableThreadSafety();
       static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableImplicitMT");
       if (sym)
          sym(numthreads);
-      ROOT::Internal::IsImplicitMTEnabledImpl() = kTRUE;
+      ROOT::Internal::IsImplicitMTEnabledImpl() = true;
 #else
       ::Warning("EnableImplicitMT", "Cannot enable implicit multi-threading with %d threads, please build ROOT with -Dimt=ON", numthreads);
 #endif
