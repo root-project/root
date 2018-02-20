@@ -117,3 +117,13 @@ TEST_F(TDFRanges, FinishAllActions)
    EXPECT_EQ(*c1, 3ull);
    EXPECT_EQ(*c2, *c1);
 }
+
+TEST_F(TDFRanges, EntryLoss)
+{
+   // regression test for ROOT-9272
+   auto d = GetTDF();
+   auto d_0_30 = d.Range(0, 30);
+   EXPECT_EQ(*d_0_30.Count(), 30u);
+   EXPECT_EQ(*d_0_30.Count(), 30u);
+}
+/****** END REGRESSION TESTS ******/
