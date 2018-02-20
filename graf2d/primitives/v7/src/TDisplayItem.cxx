@@ -17,12 +17,12 @@
 
 #include "TString.h"
 
-ROOT::Experimental::TDisplayItem::TDisplayItem() : fObjectID(), fOption(), fKind(0)
+ROOT::Experimental::TDisplayItem::TDisplayItem() : fObjectID(), fOption()
 {
 }
 
 ROOT::Experimental::TDisplayItem::TDisplayItem(const TDisplayItem &rhs)
-   : fObjectID(rhs.fObjectID), fOption(rhs.fOption), fKind(rhs.fKind)
+   : fObjectID(rhs.fObjectID), fOption(rhs.fOption)
 {
 }
 

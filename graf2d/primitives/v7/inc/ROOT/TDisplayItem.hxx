@@ -31,9 +31,8 @@ class TFrame;
 
 class TDisplayItem {
 protected:
-   std::string fObjectID;
-   std::string fOption;
-   int fKind;
+   std::string fObjectID;   ///< unique object identifier
+   std::string fOption;     ///< draw options, probably need to remove from here
 
 public:
    TDisplayItem();
@@ -47,9 +46,6 @@ public:
    void SetOption(const std::string &opt) { fOption = opt; }
    std::string GetOption() const { return fOption; }
 
-   void SetKind(int kind) { fKind = kind; }
-   int GetKind() const { return fKind; }
-
    static std::string MakeIDFromPtr(void *ptr);
 };
 
@@ -57,10 +53,10 @@ public:
 
 class TPadDisplayItem : public TDisplayItem {
 protected:
-   const TFrame *fFrame{nullptr};         ///! temporary pointer on frame object
+   const TFrame *fFrame{nullptr};               ///< temporary pointer on frame object
    std::vector<TDisplayItem *> fPrimitives;
 public:
-   TPadDisplayItem() : TDisplayItem(), fPrimitives() { SetKind(3); }
+   TPadDisplayItem() : TDisplayItem(), fPrimitives() { }
    virtual ~TPadDisplayItem();
    void SetFrame(const TFrame *f) { fFrame = f; }
    void Add(TDisplayItem *snap) { fPrimitives.push_back(snap); }
@@ -76,7 +72,7 @@ protected:
    const T *fSnapshot;
 
 public:
-   TOrdinaryDisplayItem(const T *addr) : TDisplayItem(), fSnapshot(addr) { SetKind(1); }
+   TOrdinaryDisplayItem(const T *addr) : TDisplayItem(), fSnapshot(addr) {}
    TOrdinaryDisplayItem(const TOrdinaryDisplayItem<T> &&rhs) : TDisplayItem(rhs), fSnapshot(rhs.fSnapshot) {}
    virtual ~TOrdinaryDisplayItem() { fSnapshot = 0; }
 
@@ -91,7 +87,7 @@ protected:
    std::unique_ptr<T> fSnapshot;
 
 public:
-   TUniqueDisplayItem(T *addr) : TDisplayItem(), fSnapshot(addr) { SetKind(1); }
+   TUniqueDisplayItem(T *addr) : TDisplayItem(), fSnapshot(addr) {}
    TUniqueDisplayItem(const TUniqueDisplayItem<T> &&rhs) : TDisplayItem(rhs), fSnapshot(std::move(rhs.fSnapshot)) {}
    virtual ~TUniqueDisplayItem() {}
 
