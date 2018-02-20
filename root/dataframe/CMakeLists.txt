@@ -76,12 +76,6 @@ ROOTTEST_ADD_TEST(test_snapshot
                   MACRO test_snapshot.C+
                   OUTREF test_snapshot.ref)
 
-ROOTTEST_GENERATE_EXECUTABLE(test_ranges test_ranges.cxx LIBRARIES ${DFLIBRARIES})
-ROOTTEST_ADD_TEST(test_ranges
-                  EXEC test_ranges
-                  OUTREF test_ranges.ref
-                  DEPENDS ${GENERATE_EXECUTABLE_TEST})
-
 ROOTTEST_ADD_TEST(test_stringfiltercolumn
                   MACRO test_stringfiltercolumn.C+
                   OUTREF test_stringfiltercolumn.ref)
