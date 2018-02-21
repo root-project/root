@@ -28,6 +28,8 @@ class TExMap;
 class TBufferIO : public TBuffer {
 
 protected:
+   enum { kNullTag = 0 }; ///< tag value for nullptr in objects map
+
    Int_t fMapCount{0};         ///< Number of objects or classes in map
    Int_t fMapSize{0};          ///< Default size of map
    Int_t fDisplacement{0};     ///< Value to be added to the map offsets
@@ -45,9 +47,29 @@ protected:
              ReAllocCharFun_t reallocfunc = nullptr);
 
 public:
-   enum { kMapSize = 503 };
+   enum { kMapSize = 503 }; ///< default objects map size
+
+   enum EStatusBits {
+     kNotDecompressed    = BIT(15),    //indicates a weird buffer, used by TBasket
+     kTextBasedStreaming = BIT(18), //indicates if buffer used for XML/SQL object streaming
+
+     kUser1 = BIT(21), //free for user
+     kUser2 = BIT(22), //free for user
+     kUser3 = BIT(23)  //free for user
+   };
 
    virtual ~TBufferIO();
+
+   virtual void SetReadParam(Int_t mapsize);
+   virtual void SetWriteParam(Int_t mapsize);
+   virtual void InitMap();
+   virtual void ResetMap();
+   virtual Int_t GetMapCount() const { return fMapCount; }
+
+   static void SetGlobalReadParam(Int_t mapsize);
+   static void SetGlobalWriteParam(Int_t mapsize);
+   static Int_t GetGlobalReadParam();
+   static Int_t GetGlobalWriteParam();
 
    ClassDef(TBufferIO, 0) // base class, share methods for TBufferFile and TBufferText
 };

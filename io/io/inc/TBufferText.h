@@ -110,10 +110,6 @@ public:
    virtual Version_t ReadVersionNoCheckSum(UInt_t *, UInt_t *) { return 0; }
 
    virtual void Reset() { ResetMap(); }
-   virtual void InitMap();
-   virtual void ResetMap();
-   virtual void SetReadParam(Int_t mapsize);
-   virtual void SetWriteParam(Int_t mapsize);
 
    virtual Int_t GetBufferDisplacement() const { return fDisplacement; }
    virtual void SetBufferDisplacement() { fDisplacement = 0; }
@@ -134,7 +130,6 @@ public:
    virtual void WriteString(const char * /*s*/) { Error("WriteString", "useless"); }
 
    virtual Int_t GetVersionOwner() const;
-   virtual Int_t GetMapCount() const { return fMapCount; }
    virtual void GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const;
    virtual void MapObject(const TObject *obj, UInt_t offset = 1);
    virtual void MapObject(const void *obj, const TClass *cl, UInt_t offset = 1);
@@ -178,11 +173,6 @@ public:
    static void CompactFloatString(char *buf, unsigned len);
    static const char *ConvertFloat(Float_t v, char *buf, unsigned len, Bool_t not_optimize = kFALSE);
    static const char *ConvertDouble(Double_t v, char *buf, unsigned len, Bool_t not_optimize = kFALSE);
-
-   static void SetGlobalReadParam(Int_t mapsize);
-   static void SetGlobalWriteParam(Int_t mapsize);
-   static Int_t GetGlobalReadParam();
-   static Int_t GetGlobalWriteParam();
 
 protected:
    virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) = 0;
