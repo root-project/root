@@ -131,11 +131,6 @@ public:
 
    virtual Int_t GetVersionOwner() const;
    virtual void GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const;
-   virtual void MapObject(const TObject *obj, UInt_t offset = 1);
-   virtual void MapObject(const void *obj, const TClass *cl, UInt_t offset = 1);
-
-   virtual Bool_t CheckObject(const TObject *obj);
-   virtual Bool_t CheckObject(const void *ptr, const TClass *cl);
 
    virtual Version_t ReadVersionForMemberWise(const TClass * /*cl*/ = nullptr)
    {
@@ -177,14 +172,7 @@ public:
 protected:
    virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) = 0;
 
-   // method used in TBufferFile, keep here for full compatibility
-   virtual void CheckCount(UInt_t) {}
-
    Long64_t GetMapEntry(const void *obj);
-
-   ////////////////////////////////////////////////////////////////////////////////
-   /// Return hash value for this object.
-   static R__ALWAYS_INLINE ULong_t Void_Hash(const void *ptr) { return TString::Hash(&ptr, sizeof(void *)); }
 
    static const char *fgFloatFmt;  ///<!  printf argument for floats, either "%f" or "%e" or "%10f" and so on
    static const char *fgDoubleFmt; ///<!  printf argument for doubles, either "%f" or "%e" or "%10f" and so on

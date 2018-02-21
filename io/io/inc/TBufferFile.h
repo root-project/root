@@ -59,7 +59,7 @@ protected:
    void operator=(const TBufferFile &);    ///<  not implemented
 
    Int_t  CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss, const char* classname);
-   void   CheckCount(UInt_t offset);
+   virtual void  CheckCount(UInt_t offset);
    UInt_t CheckObject(UInt_t offset, const TClass *cl, Bool_t readClass = kFALSE);
 
    virtual  void  WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse);
@@ -73,12 +73,7 @@ public:
    virtual ~TBufferFile();
 
    void     GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const;
-   void     MapObject(const TObject *obj, UInt_t offset = 1);
-   void     MapObject(const void *obj, const TClass *cl, UInt_t offset = 1);
    void     Reset() { SetBufferOffset(); ResetMap(); }
-
-   Bool_t   CheckObject(const TObject *obj);
-   Bool_t   CheckObject(const void *obj, const TClass *ptrClass);
 
    virtual Int_t      GetVersionOwner() const;
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
