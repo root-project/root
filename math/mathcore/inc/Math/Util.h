@@ -18,7 +18,14 @@
 
 #include <cmath>
 #include <limits>
+
+
+// This can be protected against by defining ROOT_Math_VecTypes
+// This is only used for the R__HAS_VECCORE define
+// and a single VecCore function in EvalLog
+#ifndef ROOT_Math_VecTypes
 #include "Types.h"
+#endif
 
 
 // for defining unused variables in the interfaces
@@ -55,10 +62,10 @@ namespace ROOT {
    template<class T>
    inline T EvalLog(T x) {
       static const T epsilon = T(2.0 * std::numeric_limits<double>::min());
-#if !defined(R__HAS_VECCORE)
-      T logval = x <= epsilon ? x / epsilon + std::log(epsilon) - T(1.0) : std::log(x);
-#else
+#ifdef R__HAS_VECCORE
       T logval = vecCore::Blend<T>(x <= epsilon, x / epsilon + std::log(epsilon) - T(1.0), std::log(x));
+#else
+      T logval = x <= epsilon ? x / epsilon + std::log(epsilon) - T(1.0) : std::log(x);
 #endif
       return logval;
    }
