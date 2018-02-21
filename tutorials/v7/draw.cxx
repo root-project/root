@@ -18,7 +18,7 @@
 
 #include "Rtypes.h"
 
-R__LOAD_LIBRARY(libGpad);
+R__LOAD_LIBRARY(libROOTHistDraw);
 
 #include "ROOT/THist.hxx"
 #include "ROOT/TCanvas.hxx"
