@@ -50,7 +50,6 @@ The concrete implementation of TBuffer for writing/reading to/from a ROOT file o
 #endif
 
 
-const UInt_t kNullTag           = 0;
 const UInt_t kNewClassTag       = 0xFFFFFFFF;
 const UInt_t kClassMask         = 0x80000000;  // OR the class index with this
 const UInt_t kByteCountMask     = 0x40000000;  // OR the byte count with this
@@ -2546,7 +2545,7 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
    if (!actualObjectStart) {
 
       // save kNullTag to represent NULL pointer
-      *this << kNullTag;
+      *this << (UInt_t) kNullTag;
 
    } else {
 
@@ -3400,90 +3399,6 @@ void TBufferFile::MapObject(const void *obj, const TClass* cl, UInt_t offset)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set the initial size of the map used to store object and class
-/// references during reading. The default size is TBufferFile::kMapSize.
-/// Increasing the default has the benefit that when reading many
-/// small objects the map does not need to be resized too often
-/// (the system is always dynamic, even with the default everything
-/// will work, only the initial resizing will cost some time).
-/// This method can only be called directly after the creation of
-/// the TBuffer, before any reading is done. Globally this option
-/// can be changed using SetGlobalReadParam().
-
-void TBufferFile::SetReadParam(Int_t mapsize)
-{
-   R__ASSERT(IsReading());
-   R__ASSERT(fMap == 0);
-
-   fMapSize = mapsize;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the initial size of the hashtable used to store object and class
-/// references during writing. The default size is TBufferFile::kMapSize.
-/// Increasing the default has the benefit that when writing many
-/// small objects the hashtable does not get too many collisions
-/// (the system is always dynamic, even with the default everything
-/// will work, only a large number of collisions will cost performance).
-/// For optimal performance hashsize should always be a prime.
-/// This method can only be called directly after the creation of
-/// the TBuffer, before any writing is done. Globally this option
-/// can be changed using SetGlobalWriteParam().
-
-void TBufferFile::SetWriteParam(Int_t mapsize)
-{
-   R__ASSERT(IsWriting());
-   R__ASSERT(fMap == 0);
-
-   fMapSize = mapsize;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Create the fMap container and initialize them
-/// with the null object.
-
-void TBufferFile::InitMap()
-{
-   if (IsWriting()) {
-      if (!fMap) {
-         fMap = new TExMap(fMapSize);
-         // No need to keep track of the class in write mode
-         // fClassMap = new TExMap(fMapSize);
-         fMapCount = 0;
-      }
-   } else {
-      if (!fMap) {
-         fMap = new TExMap(fMapSize);
-         fMap->Add(0, kNullTag);      // put kNullTag in slot 0
-         fMapCount = 1;
-      } else if (fMapCount==0) {
-         fMap->Add(0, kNullTag);      // put kNullTag in slot 0
-         fMapCount = 1;
-      }
-      if (!fClassMap) {
-         fClassMap = new TExMap(fMapSize);
-         fClassMap->Add(0, kNullTag);      // put kNullTag in slot 0
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Delete existing fMap and reset map counter.
-
-void TBufferFile::ResetMap()
-{
-   if (fMap) fMap->Delete();
-   if (fClassMap) fClassMap->Delete();
-   fMapCount     = 0;
-   fDisplacement = 0;
-
-   // reset user bits
-   ResetBit(kUser1);
-   ResetBit(kUser2);
-   ResetBit(kUser3);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Read max bytes from the I/O buffer into buf. The function returns
 /// the actual number of bytes read.
 
@@ -4071,54 +3986,4 @@ Int_t TBufferFile::ApplySequence(const TStreamerInfoActions::TActionSequence &se
    }
 
    return 0;
-}
-
-//---- Static functions --------------------------------------------------------
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the initial size of the map used to store object and class
-/// references during reading.
-///
-/// The default size is kMapSize.
-/// Increasing the default has the benefit that when reading many
-/// small objects the array does not need to be resized too often
-/// (the system is always dynamic, even with the default everything
-/// will work, only the initial resizing will cost some time).
-/// Per TBuffer object this option can be changed using SetReadParam().
-
-void TBufferFile::SetGlobalReadParam(Int_t mapsize)
-{
-   fgMapSize = mapsize;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set the initial size of the map used to store object and class
-/// references during reading.
-///
-/// The default size is kMapSize.
-/// Increasing the default has the benefit that when reading many
-/// small objects the array does not need to be resized too often
-/// (the system is always dynamic, even with the default everything
-/// will work, only the initial resizing will cost some time).
-/// Per TBuffer object this option can be changed using SetReadParam().
-
-void TBufferFile::SetGlobalWriteParam(Int_t mapsize)
-{
-   fgMapSize = mapsize;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get default read map size.
-
-Int_t TBufferFile::GetGlobalReadParam()
-{
-   return fgMapSize;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Get default write map size.
-
-Int_t TBufferFile::GetGlobalWriteParam()
-{
-   return fgMapSize;
 }
