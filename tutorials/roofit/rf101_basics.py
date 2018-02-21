@@ -11,7 +11,7 @@
 
 import ROOT
 
-# Setup model
+# Set up model
 # ---------------------
 # Declare variables x,mean,sigma with associated name, title, initial
 # value and allowed range
@@ -50,7 +50,6 @@ gauss.plotOn(xframe2)
 
 # Fit model to data
 # -----------------------------
-
 # Fit pdf to data
 gauss.fitTo(data)
 

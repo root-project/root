@@ -1,15 +1,14 @@
 ## \file
 ## \ingroup tutorial_roofit
 ## \notebook
-## 'BASIC FUNCTIONALITY' ROOT.RooFit tutorial macro #102
-## Importing data from ROOT ROOT.TTrees and ROOT.THx histograms
+## 'BASIC FUNCTIONALITY' RooFit tutorial macro #102
+## Importing data from ROOT TTrees and THx histograms
 ##
 ## \macro_code
 ##
 ## \date February 2018
 ## \author Clemens Lange
 ## \author Wouter Verkerke (C version)
-
 
 import ROOT
 from array import array
@@ -88,12 +87,11 @@ gauss.plotOn(frame2)
 #
 # A (binned) ML fit will ALWAYS assume the Poisson error interpretation of data (the mathematical definition
 # of likelihood does not take any external definition of errors). Data with non-unit weights can only be correctly
-# fitted with a chi^2 fit (see rf602_chi2fit.C)
-########################
-# Importing ROOT TTrees#
-########################
-# Import ROOT TTree into a RooDataSet
+# fitted with a chi^2 fit (see rf602_chi2fit.py)
+#
+# Importing ROOT TTrees
 # -----------------------------------------------------------
+# Import ROOT TTree into a RooDataSet
 
 tree = makeTTree()
 
@@ -111,7 +109,7 @@ y = ROOT.RooRealVar("y", "y", -10, 10)
 ds = ROOT.RooDataSet("ds", "ds", ROOT.RooArgSet(x, y),
                         ROOT.RooFit.Import(tree))
 
-#Plot data set with multiple binning choices
+# Plot data set with multiple binning choices
 # ------------------------------------------------------------------------------------
 # Print number of events in dataset
 ds.Print()
