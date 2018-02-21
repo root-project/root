@@ -62,14 +62,6 @@ const Int_t  kMapOffset         = 2;   // first 2 map entries are taken by null 
 ClassImp(TBufferFile);
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return hash value for this object.
-
-static inline ULong_t Void_Hash(const void *ptr)
-{
-   return TString::Hash(&ptr, sizeof(void*));
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Thread-safe check on StreamerInfos of a TClass
 
 static inline bool Class_Has_StreamerInfo(const TClass* cl)
@@ -3272,39 +3264,6 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
    return offset;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object is already in the buffer.
-/// Returns kTRUE if object already in the buffer, kFALSE otherwise
-/// (also if obj is 0 or TBuffer not in writing mode).
-
-Bool_t TBufferFile::CheckObject(const TObject *obj)
-{
-   return CheckObject(obj, TObject::Class());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object of the specified class is already in
-/// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is 0 ).
-
-Bool_t TBufferFile::CheckObject(const void *obj, const TClass *ptrClass)
-{
-   if (!obj || !fMap || !ptrClass) return kFALSE;
-
-   TClass *clActual = ptrClass->GetActualClass(obj);
-
-   ULong_t idx;
-
-   if (clActual && (ptrClass != clActual)) {
-      const char *temp = (const char*) obj;
-      temp -= clActual->GetBaseClassOffset(ptrClass);
-      idx = (ULong_t)fMap->GetValue(Void_Hash(temp), (Long_t)temp);
-   } else {
-      idx = (ULong_t)fMap->GetValue(Void_Hash(obj), (Long_t)obj);
-   }
-
-   return idx ? kTRUE : kFALSE;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This offset is used when a key (or basket) is transfered from one
@@ -3332,69 +3291,6 @@ void TBufferFile::GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) con
    } else {
       ptr = (void*)(Long_t)fMap->GetValue(tag);
       ClassPtr = (TClass*) (Long_t)fClassMap->GetValue(tag);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add object to the fMap container.
-///
-/// If obj is not 0 add object to the map (in read mode also add 0 objects to
-/// the map). This method may only be called outside this class just before
-/// calling obj->Streamer() to prevent self reference of obj, in case obj
-/// contains (via via) a pointer to itself. In that case offset must be 1
-/// (default value for offset).
-
-void TBufferFile::MapObject(const TObject *obj, UInt_t offset)
-{
-   if (IsWriting()) {
-      if (!fMap) InitMap();
-
-      if (obj) {
-         CheckCount(offset);
-         ULong_t hash = Void_Hash(obj);
-         fMap->Add(hash, (Long_t)obj, offset);
-         // No need to keep track of the class in write mode
-         // fClassMap->Add(hash, (Long_t)obj, (Long_t)((TObject*)obj)->IsA());
-         fMapCount++;
-      }
-   } else {
-      if (!fMap || !fClassMap) InitMap();
-
-      fMap->Add(offset, (Long_t)obj);
-      fClassMap->Add(offset,
-             (obj && obj != (TObject*)-1) ? (Long_t)((TObject*)obj)->IsA() : 0);
-      fMapCount++;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add object to the fMap container.
-///
-/// If obj is not 0 add object to the map (in read mode also add 0 objects to
-/// the map). This method may only be called outside this class just before
-/// calling obj->Streamer() to prevent self reference of obj, in case obj
-/// contains (via via) a pointer to itself. In that case offset must be 1
-/// (default value for offset).
-
-void TBufferFile::MapObject(const void *obj, const TClass* cl, UInt_t offset)
-{
-   if (IsWriting()) {
-      if (!fMap) InitMap();
-
-      if (obj) {
-         CheckCount(offset);
-         ULong_t hash = Void_Hash(obj);
-         fMap->Add(hash, (Long_t)obj, offset);
-         // No need to keep track of the class in write mode
-         // fClassMap->Add(hash, (Long_t)obj, (Long_t)cl);
-         fMapCount++;
-      }
-   } else {
-      if (!fMap || !fClassMap) InitMap();
-
-      fMap->Add(offset, (Long_t)obj);
-      fClassMap->Add(offset, (Long_t)cl);
-      fMapCount++;
    }
 }
 
