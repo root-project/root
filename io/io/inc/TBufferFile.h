@@ -22,7 +22,7 @@
 //                                                                      //
 //////////////////////////////////////////////////////////////////////////
 
-#include "TBuffer.h"
+#include "TBufferIO.h"
 #include "Bytes.h"
 
 #include <vector>
@@ -44,7 +44,7 @@ namespace TStreamerInfoActions {
    class TActionSequence;
 }
 
-class TBufferFile : public TBuffer {
+class TBufferFile : public TBufferIO {
 
 protected:
    typedef std::vector<TStreamerInfo*> InfoList_t;
@@ -61,7 +61,7 @@ protected:
    static Int_t    fgMapSize;      ///< Default map size for all TBuffer objects
 
    // Default ctor
-   TBufferFile() : TBuffer(), fMapCount(0), fMapSize(0),
+   TBufferFile() : TBufferIO(), fMapCount(0), fMapSize(0),
                fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
      fInfo(0), fInfoStack() {}
 

@@ -90,7 +90,7 @@ static inline bool Class_Has_StreamerInfo(const TClass* cl)
 /// TBuffer::kInitialSize (1024) bytes.
 
 TBufferFile::TBufferFile(TBuffer::EMode mode)
-            :TBuffer(mode),
+            :TBufferIO(mode),
              fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
              fInfo(0), fInfoStack()
 {
@@ -107,7 +107,7 @@ TBufferFile::TBufferFile(TBuffer::EMode mode)
 /// TBuffer::kWrite.
 
 TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
-            :TBuffer(mode,bufsiz),
+            :TBufferIO(mode,bufsiz),
              fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
              fInfo(0), fInfoStack()
 {
@@ -130,7 +130,7 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
 /// expand.
 
 TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
-   TBuffer(mode,bufsiz,buf,adopt,reallocfunc),
+   TBufferIO(mode,bufsiz,buf,adopt,reallocfunc),
    fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
    fInfo(0), fInfoStack()
 {
