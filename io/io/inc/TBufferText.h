@@ -21,19 +21,11 @@ class TExMap;
 class TBufferText : public TBufferIO {
 
 protected:
-   UShort_t fPidOffset;    ///< value of current PID offset, not relevant for text-base streamers
-   Int_t fMapCount;        ///< Number of objects or classes in map
-   Int_t fMapSize;         ///< Default size of map
-   Int_t fDisplacement;    ///< Value to be added to the map offsets
-   TExMap *fMap;           ///< Map containing object,offset pairs for reading/writing
-   TExMap *fClassMap;      ///< Map containing object,class pairs for reading
-   static Int_t fgMapSize; ///< Default map size for all TBuffer objects
 
    TBufferText();
    TBufferText(TBuffer::EMode mode, TObject *parent = nullptr);
 
 public:
-   enum { kMapSize = 503 };
 
    virtual ~TBufferText();
 

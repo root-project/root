@@ -41,14 +41,13 @@ ClassImp(TBufferText);
 const char *TBufferText::fgFloatFmt = "%e";
 const char *TBufferText::fgDoubleFmt = "%.14e";
 
-Int_t TBufferText::fgMapSize = kMapSize;
 const UInt_t kNullTag = 0;
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
 TBufferText::TBufferText()
-   : TBufferIO(), fPidOffset(0), fMapCount(0), fMapSize(0), fDisplacement(0), fMap(nullptr), fClassMap(nullptr)
+   : TBufferIO()
 {
 }
 
@@ -56,11 +55,9 @@ TBufferText::TBufferText()
 /// Normal constructor
 
 TBufferText::TBufferText(TBuffer::EMode mode, TObject *parent)
-   : TBufferIO(mode), fPidOffset(0), fMapCount(0), fMapSize(0), fDisplacement(0), fMap(nullptr), fClassMap(nullptr)
+   : TBufferIO(mode)
 {
    fBufSize = 1000000000;
-
-   fMapSize = fgMapSize;
 
    SetParent(parent);
    SetBit(kCannotHandleMemberWiseStreaming);
@@ -71,8 +68,6 @@ TBufferText::TBufferText(TBuffer::EMode mode, TObject *parent)
 
 TBufferText::~TBufferText()
 {
-   delete fMap;
-   delete fClassMap;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

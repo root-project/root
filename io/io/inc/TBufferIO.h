@@ -23,19 +23,30 @@
 
 #include "TBuffer.h"
 
+class TExMap;
+
 class TBufferIO : public TBuffer {
 
 protected:
+   Int_t fMapCount{0};         ///< Number of objects or classes in map
+   Int_t fMapSize{0};          ///< Default size of map
+   Int_t fDisplacement{0};     ///< Value to be added to the map offsets
+   UShort_t fPidOffset{0};     ///< Offset to be added to the pid index in this key/buffer.
+   TExMap *fMap{nullptr};      ///< Map containing object,offset pairs for reading/writing
+   TExMap *fClassMap{nullptr}; ///< Map containing object,class pairs for reading
+
+   static Int_t fgMapSize; ///< Default map size for all TBuffer objects
+
    TBufferIO() = default;
 
-   TBufferIO(TBuffer::EMode mode) : TBuffer(mode) {}
-   TBufferIO(TBuffer::EMode mode, Int_t bufsiz) : TBuffer(mode, bufsiz) {}
-   TBufferIO(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0)
-      : TBuffer(mode, bufsiz, buf, adopt, reallocfunc)
-   {
-   }
+   TBufferIO(TBuffer::EMode mode);
+   TBufferIO(TBuffer::EMode mode, Int_t bufsiz);
+   TBufferIO(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE,
+             ReAllocCharFun_t reallocfunc = nullptr);
 
 public:
+   enum { kMapSize = 503 };
+
    virtual ~TBufferIO();
 
    ClassDef(TBufferIO, 0) // base class, share methods for TBufferFile and TBufferText
