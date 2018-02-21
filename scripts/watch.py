@@ -15,19 +15,16 @@ class AsyncExecutor(threading.Thread):
    def __init__(self, commandArgs):
       threading.Thread.__init__(self)
       self.command = commandArgs
-      self.canPoll = True
       self.proc = subprocess.Popen(self.command,
                                    stdout=subprocess.PIPE,
                                    stderr=subprocess.PIPE,
                                    preexec_fn=os.setsid)
    def _OutputGenerator(self):
       while True:
-         self.canPoll = False
          lineo = self.proc.stdout.readline().rstrip()
          linee = self.proc.stderr.readline().rstrip()
          if not linee and not lineo:
             break
-         self.canPoll = True
          yield linee, lineo
 
    def Print(self):
@@ -43,7 +40,7 @@ class AsyncExecutor(threading.Thread):
       return self.proc
 
    def Poll(self):
-      return self.proc.poll() if self.canPoll else None
+      return self.proc.poll()
 
 def launchAndSendSignal(commandArgs, sig, timeout):
    start = time.clock()
