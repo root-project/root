@@ -16,34 +16,32 @@
 #ifndef ROOT7_TDrawingOptsBase
 #define ROOT7_TDrawingOptsBase
 
-#include <ROOT/TDrawingAttr.hxx>
-
-
-#include <ROOT/RStringView.hxx>
-#include <utility>
-#include <vector>
+#include <functional>
+#include <string>
 
 namespace ROOT {
 namespace Experimental {
+class TDrawingAttrBase;
 
 class TDrawingOptsBase {
-private:
-   /// Collection of all attributes (name and member offset) owned by the derived class.
-   std::vector<std::pair<const char*, size_t>> fAttrNameOffsets;
+   /// Attribute style class of these options.
+   std::string fStyleClass;
 
 public:
-   /// Register a TDrawingAttrOrRefBase. NOTE: the name's lifetime must be larger than this.
-   void AddAttr(TDrawingAttrBase& attr, const char *name)
-   {
-      fAttrNameOffsets.push_back(std::pair<const char*, size_t>(name, (char*)&attr - (char*)this));
-   }
+   /// Initialize the options with a (possibly empty) style class.
+   TDrawingOptsBase(const std::string &styleClass = {}): fStyleClass(styleClass) {}
+
+   using VisitFunc_t = std::function<void(TDrawingAttrBase&)>;
+   virtual ~TDrawingOptsBase();
+
+   /// Get the attribute style class of these options.
+   const std::string &GetStyleClass() const { return fStyleClass; }
+
+   /// Invoke func with each attribute as argument.
+   void VisitAttributes(const VisitFunc_t &func);
 
    /// Synchronize all shared attributes into their local copy.
-   void SyncFromShared() {
-      for (auto&& attrOffset: fAttrNameOffsets) {
-         reinterpret_cast<TDrawingAttrBase*>((char*)this + attrOffset.second)->SyncFromShared();
-      }
-   }
+   void Snapshot();
 };
 
 } // namespace Experimental
