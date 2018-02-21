@@ -39,6 +39,22 @@ void InitializeAttrFromString(const std::string &name, const std::string &strval
 void InitializeAttrFromString(const std::string &name, const std::string &strval, std::string& val);
 ///\}
 
+class TDrawingAttrBase {
+   /// The attribute name, as used in style files.
+   std::string fName;
+
+protected:
+   const std::string &GetStyleClass(const TDrawingOptsBase& opts) const;
+
+public:
+   TDrawingAttrBase() = default;
+   TDrawingAttrBase(const char* name): fName(name) {}
+
+   const std::string& GetName() const { return fName; }
+   virtual void Snapshot() = 0;
+   virtual ~TDrawingAttrBase();
+};
+
 /** \class ROOT::Experimental::TDrawingAttrOrRef
  A wrapper for a graphics attribute, for instance a `TColor`.
  The `TTopmostPad` keeps track of shared attributes used by multiple drawing options by means of
@@ -48,11 +64,14 @@ void InitializeAttrFromString(const std::string &name, const std::string &strval
  */
 
 template <class ATTR>
-class TDrawingAttrValOrRef {
+class TDrawingAttr: public TDrawingAttrBase {
 private:
    /// The shared_ptr, shared with the relevant attribute table of `TTopmostPad`.
    std::shared_ptr<ATTR> fPtr; //!
-   ATTR fAttr; ///< The attribute value, used if `!fPtr`.
+
+   /// The attribute value. It is authoritative if `!fPtr && !fIsDefault`, otherwise it gets
+   /// updated by `Snapshot()`.
+   ATTR fAttr;
 
    /// Whether this attribute is shared (through `TTopmostPad`'s attribute table) with other `TDrawingAttrOrRef`
    /// objects.
@@ -68,31 +87,31 @@ private:
 public:
    /// Construct a default, non-shared attribute. The default value gets read from the default style,
    /// given the attribute's name.
-   TDrawingAttrValOrRef(const char *name) {
-      InitializeAttrFromString(name, TStyle::GetCurrent().GetAttribute(name), fAttr);
+   TDrawingAttr(TDrawingOptsBase& opts, const char *name): TDrawingAttrBase(name) {
+      InitializeAttrFromString(name, TStyle::GetCurrent().GetAttribute(name, GetStyleClass(opts)), fAttr);
    }
 
    /// Construct a default, non-shared attribute. The default value gets read from the default style,
    /// given the attribute's name and arguments for the default attribute constructor, should no
    /// style entry be found.
    template <class...ARGS>
-   TDrawingAttrValOrRef(const char *name, ARGS... args): fAttr(args...) {
-      InitializeAttrFromString(name, TStyle::GetCurrent().GetAttribute(name), fAttr);
+   TDrawingAttr(TDrawingOptsBase& opts, const char *name, ARGS... args): TDrawingAttrBase(name), fAttr(args...) {
+      InitializeAttrFromString(name, TStyle::GetCurrent().GetAttribute(name, GetStyleClass(opts)), fAttr);
    }
 
    /// Construct a *non-shared* attribute, copying the attribute's value.
-   TDrawingAttrValOrRef(const TDrawingAttrValOrRef &other): fAttr(other.Get()) {}
+   TDrawingAttr(const TDrawingAttr &other): TDrawingAttrBase(other), fAttr(other.Get()) {}
 
    /// Move an attribute.
-   TDrawingAttrValOrRef(TDrawingAttrValOrRef &&other) = default;
+   TDrawingAttr(TDrawingAttr &&other) = default;
 
    /// Create a shared attribute.
-   TDrawingAttrValOrRef Share() {
+   TDrawingAttr Share() {
       return GetSharedPtr();
    }
 
    /// Update fAttr from the value of the shared state
-   void SyncFromShared() {
+   void Snapshot() override {
       if (IsShared())
          fAttr = Get();
    }
@@ -117,72 +136,18 @@ public:
    explicit operator ATTR& () { return Get(); }
 
    /// Assign an ATTR.
-   TDrawingAttrValOrRef& operator=(const ATTR& attr) { Get() = attr; return *this; }
-   /// Move-assign an ATTR.
-   TDrawingAttrValOrRef& operator=(ATTR&& attr) { Get() = std::move(attr); return *this; }
-};
-
-class TDrawingAttrBase {
-protected:
-   void Register(TDrawingOptsBase& owner, const char *name);
-
-public:
-   virtual void SyncFromShared() = 0;
-   virtual ~TDrawingAttrBase();
-};
-
-template <class ATTR>
-class TDrawingAttr: public TDrawingAttrBase {
-private:
-   TDrawingAttrValOrRef<ATTR> fAttr;
-
-public:
-   /// Initialize TDrawingAttr from a string literal.
-   template <int N>
-   TDrawingAttr(TDrawingOptsBase& owner, const char (&name)[N]): fAttr(name)
-   {
-      Register(owner, name);
+   TDrawingAttr& operator=(const ATTR& attr) {
+      fPtr.reset();
+      fAttr = attr;
+      return *this;
    }
-
-   template <int N, class...ARGS>
-   TDrawingAttr(TDrawingOptsBase& owner, const char (&name)[N], ARGS... args): fAttr(name, args...)
-   {
-      Register(owner, name);
+   /// Move-assign an ATTR.
+   TDrawingAttr& operator=(ATTR&& attr) {
+      fPtr.reset();
+      fAttr = attr;
+      return *this;
    }
-
-   TDrawingAttr(const TDrawingAttr&) = default;
-   TDrawingAttr(TDrawingAttr&&) = default;
-   TDrawingAttr& operator=(const TDrawingAttr&) = default;
-   TDrawingAttr& operator=(TDrawingAttr&&) = default;
-
-   /// Create a shared attribute.
-   TDrawingAttrValOrRef<ATTR> Share() { return fAttr.GetSharedPtr(); }
-
-   /// Update fAttr from the value of the shared state
-   void SyncFromShared() final { fAttr.SyncFromShared(); }
-
-   /// Get the const attribute, whether it's shared or not.
-   const ATTR &Get() const { return fAttr.Get(); }
-
-   /// Get the non-const attribute, whether it's shared or not.
-   ATTR &Get() { return fAttr.Get(); }
-
-   /// Convert to an ATTR (const).
-   explicit operator const ATTR& () const{ return fAttr.Get(); }
-   /// Convert to an ATTR (non-const).
-   explicit operator ATTR& () { return fAttr.Get(); }
-
-   /// Assign an ATTR.
-   TDrawingAttr& operator=(const ATTR& attr) { Get() = attr; return *this; }
-   /// Move-assign an ATTR.
-   TDrawingAttr& operator=(ATTR&& attr) { Get() = std::move(attr); return *this; }
-
-   /// Assign an ATTR.
-   TDrawingAttr& operator=(const TDrawingAttrValOrRef<ATTR>& attr) { fAttr = attr; return *this; }
-   /// Move-assign an ATTR.
-   TDrawingAttr& operator=(TDrawingAttrValOrRef<ATTR>&& attr) { fAttr = std::move(attr); return *this; }
 };
-
 
 } // namespace Experimental
 } // namespace ROOT
