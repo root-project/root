@@ -84,7 +84,7 @@ TStyle &TStyle::GetCurrent()
    return sCurrentStyle;
 }
 
-std::string TStyle::GetAttribute(const std::string &attrName) const {
+std::string TStyle::GetAttribute(const std::string &attrName, const std::string &/*className*/) const {
    std::string trailingPart(attrName);
    while (!trailingPart.empty()) {
       auto iter = fAttrs.find(trailingPart);
