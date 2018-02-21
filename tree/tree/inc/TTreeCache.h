@@ -171,7 +171,7 @@ public:
    virtual void         StopLearningPhase();
    virtual void         UpdateBranches(TTree *tree);
 
-   ClassDef(TTreeCache,2)  //Specialization of TFileCacheRead for a TTree
+   ClassDef(TTreeCache,3)  //Specialization of TFileCacheRead for a TTree
 };
 
 #endif
