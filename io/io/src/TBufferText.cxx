@@ -1075,72 +1075,6 @@ const char *TBufferText::ConvertDouble(Double_t value, char *buf, unsigned len, 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Add object to the fMap container.
-///
-/// If obj is not 0 add object to the map (in read mode also add 0 objects to
-/// the map). This method may only be called outside this class just before
-/// calling obj->Streamer() to prevent self reference of obj, in case obj
-/// contains (via via) a pointer to itself. In that case offset must be 1
-/// (default value for offset).
-
-void TBufferText::MapObject(const TObject *obj, UInt_t offset)
-{
-   if (IsWriting()) {
-      if (!fMap)
-         InitMap();
-
-      if (obj) {
-         CheckCount(offset);
-         ULong_t hash = Void_Hash(obj);
-         fMap->Add(hash, (Long_t)obj, offset);
-         // No need to keep track of the class in write mode
-         // fClassMap->Add(hash, (Long_t)obj, (Long_t)((TObject*)obj)->IsA());
-         fMapCount++;
-      }
-   } else {
-      if (!fMap || !fClassMap)
-         InitMap();
-
-      fMap->Add(offset, (Long_t)obj);
-      fClassMap->Add(offset, (obj && obj != (TObject *)-1) ? (Long_t)((TObject *)obj)->IsA() : 0);
-      fMapCount++;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Add object to the fMap container.
-///
-/// If obj is not 0 add object to the map (in read mode also add 0 objects to
-/// the map). This method may only be called outside this class just before
-/// calling obj->Streamer() to prevent self reference of obj, in case obj
-/// contains (via via) a pointer to itself. In that case offset must be 1
-/// (default value for offset).
-
-void TBufferText::MapObject(const void *obj, const TClass *cl, UInt_t offset)
-{
-   if (IsWriting()) {
-      if (!fMap)
-         InitMap();
-
-      if (obj) {
-         CheckCount(offset);
-         ULong_t hash = Void_Hash(obj);
-         fMap->Add(hash, (Long_t)obj, offset);
-         // No need to keep track of the class in write mode
-         // fClassMap->Add(hash, (Long_t)obj, (Long_t)cl);
-         fMapCount++;
-      }
-   } else {
-      if (!fMap || !fClassMap)
-         InitMap();
-
-      fMap->Add(offset, (Long_t)obj);
-      fClassMap->Add(offset, (Long_t)cl);
-      fMapCount++;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Retrieve the object stored in the buffer's object map at 'tag'
 /// Set ptr and ClassPtr respectively to the address of the object and
 /// a pointer to its TClass.
@@ -1156,41 +1090,6 @@ void TBufferText::GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) con
    ptr = (void *)(Long_t)fMap->GetValue(tag);
    ClassPtr = (TClass *)(Long_t)fClassMap->GetValue(tag);
    //  }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object of the specified class is already in
-/// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is 0 ).
-
-Bool_t TBufferText::CheckObject(const TObject *obj)
-{
-   return CheckObject(obj, TObject::Class());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object of the specified class is already in
-/// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is 0 ).
-
-Bool_t TBufferText::CheckObject(const void *obj, const TClass *ptrClass)
-{
-   if (!obj || !fMap || !ptrClass)
-      return kFALSE;
-
-   TClass *clActual = ptrClass->GetActualClass(obj);
-
-   Long64_t idx;
-
-   if (clActual && (ptrClass != clActual)) {
-      const char *temp = (const char *)obj;
-      temp -= clActual->GetBaseClassOffset(ptrClass);
-      idx = GetMapEntry(temp);
-   } else {
-      idx = GetMapEntry(obj);
-   }
-
-   return idx == 0 ? kFALSE : kTRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////

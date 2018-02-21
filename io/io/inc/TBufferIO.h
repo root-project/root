@@ -23,6 +23,8 @@
 
 #include "TBuffer.h"
 
+#include "TString.h"
+
 class TExMap;
 
 class TBufferIO : public TBuffer {
@@ -46,16 +48,23 @@ protected:
    TBufferIO(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE,
              ReAllocCharFun_t reallocfunc = nullptr);
 
+   ////////////////////////////////////////////////////////////////////////////////
+   /// Return hash value for provided object.
+   static R__ALWAYS_INLINE ULong_t Void_Hash(const void *ptr) { return TString::Hash(&ptr, sizeof(void *)); }
+
+   // method used in TBufferFile, keep here for full compatibility
+   virtual void CheckCount(UInt_t) {}
+
 public:
    enum { kMapSize = 503 }; ///< default objects map size
 
    enum EStatusBits {
-     kNotDecompressed    = BIT(15),    //indicates a weird buffer, used by TBasket
-     kTextBasedStreaming = BIT(18), //indicates if buffer used for XML/SQL object streaming
+      kNotDecompressed = BIT(15),    // indicates a weird buffer, used by TBasket
+      kTextBasedStreaming = BIT(18), // indicates if buffer used for XML/SQL object streaming
 
-     kUser1 = BIT(21), //free for user
-     kUser2 = BIT(22), //free for user
-     kUser3 = BIT(23)  //free for user
+      kUser1 = BIT(21), // free for user
+      kUser2 = BIT(22), // free for user
+      kUser3 = BIT(23)  // free for user
    };
 
    virtual ~TBufferIO();
@@ -65,6 +74,10 @@ public:
    virtual void InitMap();
    virtual void ResetMap();
    virtual Int_t GetMapCount() const { return fMapCount; }
+   virtual void MapObject(const TObject *obj, UInt_t offset = 1);
+   virtual void MapObject(const void *obj, const TClass *cl, UInt_t offset = 1);
+   virtual Bool_t CheckObject(const TObject *obj);
+   virtual Bool_t CheckObject(const void *obj, const TClass *ptrClass);
 
    static void SetGlobalReadParam(Int_t mapsize);
    static void SetGlobalWriteParam(Int_t mapsize);
