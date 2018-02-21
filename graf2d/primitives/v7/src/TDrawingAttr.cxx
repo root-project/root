@@ -1,4 +1,4 @@
-/// \file TDrawingOptsBase.cxx
+/// \file TDrawingAttrBase.cxx
 /// \ingroup Gpad ROOT7
 /// \author Axel Naumann <axel@cern.ch>
 /// \date 2017-09-26
@@ -22,10 +22,10 @@
 // pin vtable.
 ROOT::Experimental::TDrawingAttrBase::~TDrawingAttrBase() = default;
 
-/// Register an attribute with the TDrawingOptionsBase.
-void ROOT::Experimental::TDrawingAttrBase::Register(TDrawingOptsBase& owner, const char *name)
+/// Get the style class currently active in the TDrawingOptsBase.
+const std::string &ROOT::Experimental::TDrawingAttrBase::GetStyleClass(const TDrawingOptsBase& opts) const
 {
-   owner.AddAttr(*this, name);
+   return opts.GetStyleClass();
 }
 
 
