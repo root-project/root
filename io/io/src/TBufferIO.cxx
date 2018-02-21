@@ -17,12 +17,46 @@
 Direct subclass of TBuffer, implements common methods for TBufferFile and TBufferText classes
 */
 
-
 #include "TBufferIO.h"
+
+#include "TExMap.h"
+
+
+Int_t TBufferIO::fgMapSize = kMapSize;
+
+ClassImp(TBufferIO);
+
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
+TBufferIO::TBufferIO(TBuffer::EMode mode) : TBuffer(mode)
+{
+   fMapSize = fgMapSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
+TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsiz) : TBuffer(mode, bufsiz)
+{
+   fMapSize = fgMapSize;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// constructor
+
+TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt,
+                     ReAllocCharFun_t reallocfunc)
+   : TBuffer(mode, bufsiz, buf, adopt, reallocfunc)
+{
+   fMapSize = fgMapSize;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
 TBufferIO::~TBufferIO()
 {
+   delete fMap;
+   delete fClassMap;
 }

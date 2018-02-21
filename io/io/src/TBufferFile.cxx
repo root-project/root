@@ -59,8 +59,6 @@ const Version_t kByteCountVMask = 0x4000;      // OR the version byte count with
 const Version_t kMaxVersion     = 0x3FFF;      // highest possible version number
 const Int_t  kMapOffset         = 2;   // first 2 map entries are taken by null obj and self obj
 
-Int_t TBufferFile::fgMapSize   = kMapSize;
-
 
 ClassImp(TBufferFile);
 
@@ -91,15 +89,8 @@ static inline bool Class_Has_StreamerInfo(const TClass* cl)
 
 TBufferFile::TBufferFile(TBuffer::EMode mode)
             :TBufferIO(mode),
-             fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
-             fInfo(0), fInfoStack()
+             fInfo(nullptr), fInfoStack()
 {
-   fMapCount     = 0;
-   fMapSize      = fgMapSize;
-   fMap          = 0;
-   fClassMap     = 0;
-   fParent       = 0;
-   fDisplacement = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -108,14 +99,8 @@ TBufferFile::TBufferFile(TBuffer::EMode mode)
 
 TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
             :TBufferIO(mode,bufsiz),
-             fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
-             fInfo(0), fInfoStack()
+             fInfo(nullptr), fInfoStack()
 {
-   fMapCount = 0;
-   fMapSize  = fgMapSize;
-   fMap      = 0;
-   fClassMap = 0;
-   fDisplacement = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -131,14 +116,8 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz)
 
 TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc) :
    TBufferIO(mode,bufsiz,buf,adopt,reallocfunc),
-   fDisplacement(0),fPidOffset(0), fMap(0), fClassMap(0),
-   fInfo(0), fInfoStack()
+   fInfo(nullptr), fInfoStack()
 {
-   fMapCount = 0;
-   fMapSize  = fgMapSize;
-   fMap      = 0;
-   fClassMap = 0;
-   fDisplacement = 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -146,8 +125,6 @@ TBufferFile::TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t ad
 
 TBufferFile::~TBufferFile()
 {
-   delete fMap;
-   delete fClassMap;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
