@@ -48,7 +48,7 @@ const UInt_t kNullTag = 0;
 /// Default constructor
 
 TBufferText::TBufferText()
-   : TBuffer(), fPidOffset(0), fMapCount(0), fMapSize(0), fDisplacement(0), fMap(nullptr), fClassMap(nullptr)
+   : TBufferIO(), fPidOffset(0), fMapCount(0), fMapSize(0), fDisplacement(0), fMap(nullptr), fClassMap(nullptr)
 {
 }
 
@@ -56,7 +56,7 @@ TBufferText::TBufferText()
 /// Normal constructor
 
 TBufferText::TBufferText(TBuffer::EMode mode, TObject *parent)
-   : TBuffer(mode), fPidOffset(0), fMapCount(0), fMapSize(0), fDisplacement(0), fMap(nullptr), fClassMap(nullptr)
+   : TBufferIO(mode), fPidOffset(0), fMapCount(0), fMapSize(0), fDisplacement(0), fMap(nullptr), fClassMap(nullptr)
 {
    fBufSize = 1000000000;
 

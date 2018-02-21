@@ -12,13 +12,13 @@
 #ifndef ROOT_TBufferText
 #define ROOT_TBufferText
 
-#include "TBuffer.h"
+#include "TBufferIO.h"
 #include "TString.h"
 
 class TStreamerBase;
 class TExMap;
 
-class TBufferText : public TBuffer {
+class TBufferText : public TBufferIO {
 
 protected:
    UShort_t fPidOffset;    ///< value of current PID offset, not relevant for text-base streamers
