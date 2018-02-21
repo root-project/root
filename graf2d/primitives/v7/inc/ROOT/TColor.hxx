@@ -233,12 +233,12 @@ public:
 
          if (!rs) { fRedOrPalettePos = fGreen = fBlue = rl; return; }
 
-         auto toRGB = [rm1, rm2] (float hue) {
-            if (hue > 360) hue = hue - 360;
-            if (hue < 0)   hue = hue + 360;
-            if (hue < 60 ) return rm1 + (rm2-rm1)*hue/60;
-            if (hue < 180) return rm2;
-            if (hue < 240) return rm1 + (rm2-rm1)*(240-hue)/60;
+         auto toRGB = [rm1, rm2] (float h) {
+            if (h > 360) h = h - 360;
+            if (h < 0)   h = h + 360;
+            if (h < 60 ) return rm1 + (rm2-rm1)*h/60;
+            if (h < 180) return rm2;
+            if (h < 240) return rm1 + (rm2-rm1)*(240-h)/60;
             return rm1;
          };
 
