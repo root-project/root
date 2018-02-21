@@ -66,29 +66,16 @@ protected:
 
 public:
    enum { kStreamedMemberWise = BIT(14) }; //added to version number to know if a collection has been stored member-wise
-   enum EStatusBits {
-     kNotDecompressed    = BIT(15),    //indicates a weird buffer, used by TBasket
-     kTextBasedStreaming = BIT(18), //indicates if buffer used for XML/SQL object streaming
-
-     kUser1 = BIT(21), //free for user
-     kUser2 = BIT(22), //free for user
-     kUser3 = BIT(23)  //free for user
-   };
 
    TBufferFile(TBuffer::EMode mode);
    TBufferFile(TBuffer::EMode mode, Int_t bufsiz);
    TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
    virtual ~TBufferFile();
 
-   Int_t    GetMapCount() const { return fMapCount; }
    void     GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const;
    void     MapObject(const TObject *obj, UInt_t offset = 1);
    void     MapObject(const void *obj, const TClass *cl, UInt_t offset = 1);
    void     Reset() { SetBufferOffset(); ResetMap(); }
-   void     InitMap();
-   void     ResetMap();
-   void     SetReadParam(Int_t mapsize);
-   void     SetWriteParam(Int_t mapsize);
 
    Bool_t   CheckObject(const TObject *obj);
    Bool_t   CheckObject(const void *obj, const TClass *ptrClass);
@@ -308,11 +295,6 @@ public:
    Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
    Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
    Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection, void *end_collection);
-
-   static void    SetGlobalReadParam(Int_t mapsize);
-   static void    SetGlobalWriteParam(Int_t mapsize);
-   static Int_t   GetGlobalReadParam();
-   static Int_t   GetGlobalWriteParam();
 
    ClassDef(TBufferFile,0)  //concrete implementation of TBuffer for writing/reading to/from a ROOT file or socket.
 };
