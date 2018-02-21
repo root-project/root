@@ -86,12 +86,12 @@ protected:
          Entry(IOPos io) : fIO(io) {}
 
          IOPos fIO;
-         ULong64_t fIndex{0}; //! Location in fData corresponding to this entry.
+         ULong64_t fIndex{0}; ///<! Location in fData corresponding to this entry.
          friend bool operator<(const Entry &a, const Entry &b) { return a.fIO.fPos < b.fIO.fPos; }
       };
-      std::vector<Entry> fEntries;      //! Description of buffers in the miss cache.
-      std::vector<TBranch *> fBranches; //! list of branches that we read on misses.
-      std::vector<char> fData;          //! Actual data in the cache.
+      std::vector<Entry> fEntries;      ///<! Description of buffers in the miss cache.
+      std::vector<TBranch *> fBranches; ///<! list of branches that we read on misses.
+      std::vector<char> fData;          ///<! Actual data in the cache.
 
       void clear()
       {
@@ -101,10 +101,10 @@ protected:
       }
    };
 
-   std::unique_ptr<MissCache> fMissCache; //! Cache contents for misses
+   std::unique_ptr<MissCache> fMissCache; ///<! Cache contents for misses
 
 private:
-   TTreeCache(const TTreeCache &) = delete; // this class cannot be copied
+   TTreeCache(const TTreeCache &) = delete; ///< this class cannot be copied
    TTreeCache &operator=(const TTreeCache &) = delete;
 
    // These are all functions related to the "miss cache": this attempts to
@@ -115,14 +115,13 @@ private:
    // for local work (i.e., laptop with SSD), this CPU cost may outweight the
    // benefit.
    Bool_t CheckMissCache(char *buf, Long64_t pos,
-                         int len); // Check the miss cache for a particular buffer, fetching if deemed necessary.
-   Bool_t FillMissCache();         // Fill the miss cache from the current set of active branches.
-   Bool_t CalculateMissCache();    // Calculate the appropriate miss cache to fetch; helper function for FillMissCache
-   IOPos FindBranchBasketPos(TBranch &, Long64_t entry); // Given a branch and an entry, determine the file location
-                                                         // (offset / size) of the corresponding basket.
-   TBranch *CalculateMissEntries(Long64_t, int, bool);   // Given an file read, try to determine the corresponding branch.
-   Bool_t
-   ProcessMiss(Long64_t pos, int len); // Given a file read not in the miss cache, handle (possibly) loading the data.
+                         int len); ///< Check the miss cache for a particular buffer, fetching if deemed necessary.
+   Bool_t FillMissCache();         ///< Fill the miss cache from the current set of active branches.
+   Bool_t CalculateMissCache();    ///< Calculate the appropriate miss cache to fetch; helper function for FillMissCache
+   IOPos  FindBranchBasketPos(TBranch &, Long64_t entry); ///< Given a branch and an entry, determine the file location
+                                                          ///< (offset / size) of the corresponding basket.
+   TBranch *CalculateMissEntries(Long64_t, int, bool);    ///< Given an file read, try to determine the corresponding branch.
+   Bool_t   ProcessMiss(Long64_t pos, int len); ///<! Given a file read not in the miss cache, handle (possibly) loading the data.
 
 public:
 
