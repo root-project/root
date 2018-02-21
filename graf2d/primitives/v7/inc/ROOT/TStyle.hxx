@@ -58,7 +58,8 @@ public:
    /// Strips leading "foo." from the name until the first entry in the style is found.
    /// E.g. if the default style has not entry for "Hist.1D.Fill.Color", the value might
    /// be initialized to the default style's entry for the more general "1D.Fill.Color".
-   std::string GetAttribute(const std::string &attrName) const;
+   /// The className is the name of a CSS-style class, possibly overriding the generic attribute.
+   std::string GetAttribute(const std::string &attrName, const std::string &className = {}) const;
 
    /// Move-register `style` in the global style collection, possibly replacing a global style with the same name.
    static TStyle &Register(TStyle &&style);
