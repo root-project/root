@@ -416,6 +416,18 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          // used when started by front-end program to signal that
          // splash screen can be popped down (TRint::PrintLogo())
          argv[i] = null;
+      } else if (!strcmp(argv[i], "-web")) {
+         // the web mode is requested.
+         argv[i] = null;
+         ++i;
+         TString opt;
+         opt = argv[i];
+         if (opt.Contains("-")) {
+            gROOT->SetWeb("");
+         } else {
+            argv[i] = null;
+            gROOT->SetWeb(opt.Data());
+         }
       } else if (!strcmp(argv[i], "-e")) {
          argv[i] = null;
          ++i;
