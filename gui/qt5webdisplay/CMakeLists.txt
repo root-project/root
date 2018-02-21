@@ -4,11 +4,7 @@
 
 set(libname ROOTQt5WebDisplay)
 
-find_package(Qt5Core)
-
-find_package(Qt5WebEngine)
-
-find_package(Qt5WebEngineWidgets)
+find_package(Qt5 COMPONENTS Core WebEngine WebEngineWidgets REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
