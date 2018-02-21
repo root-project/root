@@ -44,8 +44,8 @@ protected:
    Long64_t fEntryNext{-1};    ///<! next entry number where cache must be filled
    Int_t fNbranches{0};        ///<! Number of branches in the cache
    Int_t fNReadOk{0};          ///<  Number of blocks read and found in the cache
-   Int_t fNMissReadOk{0}; ///<  Number of blocks read, not found in the primary cache, and found in the secondary cache.
-   Int_t fNReadMiss{0};   ///<  Number of blocks read and not found in the cache
+   Int_t fNMissReadOk{0};      ///<  Number of blocks read, not found in the primary cache, and found in the secondary cache.
+   Int_t fNReadMiss{0};        ///<  Number of blocks read and not found in the cache
    Int_t fNMissReadMiss{0};          ///<  Number of blocks read and not found in either cache.
    Int_t fNReadPref{0};              ///<  Number of blocks that were prefetched
    Int_t fNMissReadPref{0};          ///<  Number of blocks read into the secondary ("miss") cache.
@@ -135,7 +135,7 @@ public:
    virtual Int_t        DropBranch(const char *branch, Bool_t subbranches = kFALSE);
    virtual void         Disable() {fEnabled = kFALSE;}
    virtual void         Enable() {fEnabled = kTRUE;}
-   Bool_t GetOptimizeMisses() const { return fOptimizeMisses; }
+   Bool_t               GetOptimizeMisses() const { return fOptimizeMisses; }
    const TObjArray     *GetCachedBranches() const { return fBranches; }
    EPrefillType         GetConfiguredPrefillType() const;
    Double_t             GetEfficiency() const;
@@ -144,8 +144,8 @@ public:
    virtual Int_t        GetEntryMax() const {return fEntryMax;}
    static Int_t         GetLearnEntries();
    virtual EPrefillType GetLearnPrefill() const {return fPrefillType;}
-   Double_t GetMissEfficiency() const;
-   Double_t GetMissEfficiencyRel() const;
+   Double_t             GetMissEfficiency() const;
+   Double_t             GetMissEfficiencyRel() const;
    TTree               *GetTree() const {return fTree;}
    Bool_t               IsAutoCreated() const {return fAutoCreated;}
    virtual Bool_t       IsEnabled() const {return fEnabled;}
@@ -159,14 +159,14 @@ public:
    virtual Int_t        ReadBufferNormal(char *buf, Long64_t pos, Int_t len);
    virtual Int_t        ReadBufferPrefetch(char *buf, Long64_t pos, Int_t len);
    virtual void         ResetCache();
-   void ResetMissCache(); // Reset the miss cache.
+   void                 ResetMissCache(); // Reset the miss cache.
    void                 SetAutoCreated(Bool_t val) {fAutoCreated = val;}
    virtual Int_t        SetBufferSize(Int_t buffersize);
    virtual void         SetEntryRange(Long64_t emin,   Long64_t emax);
    virtual void         SetFile(TFile *file, TFile::ECacheAction action=TFile::kDisconnect);
    virtual void         SetLearnPrefill(EPrefillType type = kNoPrefill);
    static void          SetLearnEntries(Int_t n = 10);
-   void SetOptimizeMisses(Bool_t opt);
+   void                 SetOptimizeMisses(Bool_t opt);
    void                 StartLearningPhase();
    virtual void         StopLearningPhase();
    virtual void         UpdateBranches(TTree *tree);
