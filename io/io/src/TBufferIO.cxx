@@ -33,7 +33,6 @@ Direct subclass of TBuffer, implements common methods for TBufferFile and TBuffe
 #include "TInterpreter.h"
 #include "TROOT.h"
 
-
 Int_t TBufferIO::fgMapSize = kMapSize;
 
 ClassImp(TBufferIO);
@@ -348,20 +347,20 @@ void TBufferIO::ForceWriteInfoClones(TClonesArray *a)
 ////////////////////////////////////////////////////////////////////////////////
 /// Mark the classindex of the current file as using this TStreamerInfo
 
-void TBufferIO::TagStreamerInfo(TVirtualStreamerInfo* info)
+void TBufferIO::TagStreamerInfo(TVirtualStreamerInfo *info)
 {
-   TFile *file = (TFile*)GetParent();
+   TFile *file = (TFile *)GetParent();
    if (file) {
       TArrayC *cindex = file->GetClassIndex();
       Int_t nindex = cindex->GetSize();
       Int_t number = info->GetNumber();
       if (number < 0 || number >= nindex) {
-         Error("TagStreamerInfo","StreamerInfo: %s number: %d out of range[0,%d] in file: %s",
-               info->GetName(),number,nindex,file->GetName());
+         Error("TagStreamerInfo", "StreamerInfo: %s number: %d out of range[0,%d] in file: %s", info->GetName(), number,
+               nindex, file->GetName());
          return;
       }
       if (cindex->fArray[number] == 0) {
-         cindex->fArray[0]       = 1;
+         cindex->fArray[0] = 1;
          cindex->fArray[number] = 1;
       }
    }
@@ -462,7 +461,6 @@ UShort_t TBufferIO::WriteProcessID(TProcessID *pid)
    return file->WriteProcessID(pid);
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 namespace {
@@ -473,8 +471,6 @@ struct DynamicType {
    virtual ~DynamicType() {}
 };
 } // namespace
-
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Write object to I/O buffer.
@@ -507,18 +503,18 @@ Int_t TBufferIO::WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t 
 
    TClass *clActual = ptrClass->GetActualClass(obj);
 
-   if (clActual==0 || clActual->GetState() == TClass::kForwardDeclared) {
+   if (clActual == 0 || clActual->GetState() == TClass::kForwardDeclared) {
       // The ptrClass is a class with a virtual table and we have no
       // TClass with the actual type_info in memory.
 
-      DynamicType* d_ptr = (DynamicType*)obj;
-      Warning("WriteObjectAny",
-              "An object of type %s (from type_info) passed through a %s pointer was truncated (due a missing dictionary)!!!",
-              typeid(*d_ptr).name(),ptrClass->GetName());
+      DynamicType *d_ptr = (DynamicType *)obj;
+      Warning("WriteObjectAny", "An object of type %s (from type_info) passed through a %s pointer was truncated (due "
+                                "a missing dictionary)!!!",
+              typeid(*d_ptr).name(), ptrClass->GetName());
       WriteObjectClass(obj, ptrClass, cacheReuse);
       return 2;
    } else if (clActual && (clActual != ptrClass)) {
-      const char *temp = (const char*) obj;
+      const char *temp = (const char *)obj;
       temp -= clActual->GetBaseClassOffset(ptrClass);
       WriteObjectClass(temp, clActual, cacheReuse);
       return 1;
@@ -535,7 +531,6 @@ void TBufferIO::WriteObject(const TObject *obj, Bool_t cacheReuse)
 {
    WriteObjectAny(obj, TObject::Class(), cacheReuse);
 }
-
 
 //---- Static functions --------------------------------------------------------
 

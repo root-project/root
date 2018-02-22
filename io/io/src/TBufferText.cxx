@@ -703,7 +703,7 @@ void TBufferText::ReadBaseClass(void *start, TStreamerBase *elem)
 
 void TBufferText::CompactFloatString(char *sbuf, unsigned len)
 {
-   char *pnt = 0, *exp = 0, *lastdecimal = 0, *s = sbuf;
+   char *pnt = nullptr, *exp = nullptr, *lastdecimal = nullptr, *s = sbuf;
    bool negative_exp = false;
    int power = 0;
    while (*s && --len) {
