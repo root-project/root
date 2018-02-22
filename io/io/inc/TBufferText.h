@@ -104,8 +104,6 @@ public:
    virtual void SkipVersion(const TClass *cl = nullptr);
    virtual Version_t ReadVersionNoCheckSum(UInt_t *, UInt_t *) { return 0; }
 
-   virtual void Reset() { ResetMap(); }
-
    virtual Int_t ReadBuf(void * /*buf*/, Int_t /*max*/)
    {
       Error("ReadBuf", "useless in text streamers");
@@ -121,7 +119,6 @@ public:
    virtual void WriteString(const char * /*s*/) { Error("WriteString", "useless"); }
 
    virtual Int_t GetVersionOwner() const;
-   virtual void GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const;
 
    virtual Version_t ReadVersionForMemberWise(const TClass * /*cl*/ = nullptr)
    {

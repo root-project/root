@@ -80,11 +80,13 @@ public:
    virtual void SetWriteParam(Int_t mapsize);
    virtual void InitMap();
    virtual void ResetMap();
+   virtual void Reset();
    virtual Int_t GetMapCount() const { return fMapCount; }
    virtual void MapObject(const TObject *obj, UInt_t offset = 1);
    virtual void MapObject(const void *obj, const TClass *cl, UInt_t offset = 1);
    virtual Bool_t CheckObject(const TObject *obj);
    virtual Bool_t CheckObject(const void *obj, const TClass *ptrClass);
+   virtual void GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const;
 
    static void SetGlobalReadParam(Int_t mapsize);
    static void SetGlobalWriteParam(Int_t mapsize);

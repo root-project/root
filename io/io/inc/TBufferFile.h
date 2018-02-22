@@ -72,9 +72,6 @@ public:
    TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
    virtual ~TBufferFile();
 
-   void     GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const;
-   void     Reset() { SetBufferOffset(); ResetMap(); }
-
    virtual Int_t      GetVersionOwner() const;
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);

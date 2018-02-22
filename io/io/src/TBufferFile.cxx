@@ -3266,22 +3266,6 @@ UInt_t TBufferFile::CheckObject(UInt_t offset, const TClass *cl, Bool_t readClas
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Retrieve the object stored in the buffer's object map at 'tag'
-/// Set ptr and ClassPtr respectively to the address of the object and
-/// a pointer to its TClass.
-
-void TBufferFile::GetMappedObject(UInt_t tag, void* &ptr, TClass* &ClassPtr) const
-{
-   if (tag > (UInt_t)fMap->GetSize()) {
-      ptr = 0;
-      ClassPtr = 0;
-   } else {
-      ptr = (void*)(Long_t)fMap->GetValue(tag);
-      ClassPtr = (TClass*) (Long_t)fClassMap->GetValue(tag);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Read max bytes from the I/O buffer into buf. The function returns
 /// the actual number of bytes read.
 

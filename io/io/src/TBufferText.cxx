@@ -1074,24 +1074,6 @@ const char *TBufferText::ConvertDouble(Double_t value, char *buf, unsigned len, 
    return buf;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Retrieve the object stored in the buffer's object map at 'tag'
-/// Set ptr and ClassPtr respectively to the address of the object and
-/// a pointer to its TClass.
-
-void TBufferText::GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const
-{
-   // original code in TBufferFile is wrong, fMap->GetSize() is just number of entries, cannot be used for tag checks
-
-   //  if (tag > (UInt_t)fMap->GetSize()) {
-   //     ptr = nullptr;
-   //     ClassPtr = nullptr;
-   //   } else {
-   ptr = (void *)(Long_t)fMap->GetValue(tag);
-   ClassPtr = (TClass *)(Long_t)fClassMap->GetValue(tag);
-   //  }
-}
-
 ////////////////////////////////////////////////////////////////////////////////////
 /// Returns object map entry for specified object
 

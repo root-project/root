@@ -46,8 +46,7 @@ TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsiz) : TBuffer(mode, bufsiz)
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt,
-                     ReAllocCharFun_t reallocfunc)
+TBufferIO::TBufferIO(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt, ReAllocCharFun_t reallocfunc)
    : TBuffer(mode, bufsiz, buf, adopt, reallocfunc)
 {
    fMapSize = fgMapSize;
@@ -101,7 +100,6 @@ void TBufferIO::SetWriteParam(Int_t mapsize)
    fMapSize = mapsize;
 }
 
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Create the fMap container and initialize them
 /// with the null object.
@@ -118,15 +116,15 @@ void TBufferIO::InitMap()
    } else {
       if (!fMap) {
          fMap = new TExMap(fMapSize);
-         fMap->Add(0, kNullTag);      // put kNullTag in slot 0
+         fMap->Add(0, kNullTag); // put kNullTag in slot 0
          fMapCount = 1;
-      } else if (fMapCount==0) {
-         fMap->Add(0, kNullTag);      // put kNullTag in slot 0
+      } else if (fMapCount == 0) {
+         fMap->Add(0, kNullTag); // put kNullTag in slot 0
          fMapCount = 1;
       }
       if (!fClassMap) {
          fClassMap = new TExMap(fMapSize);
-         fClassMap->Add(0, kNullTag);      // put kNullTag in slot 0
+         fClassMap->Add(0, kNullTag); // put kNullTag in slot 0
       }
    }
 }
@@ -143,7 +141,8 @@ void TBufferIO::InitMap()
 void TBufferIO::MapObject(const TObject *obj, UInt_t offset)
 {
    if (IsWriting()) {
-      if (!fMap) InitMap();
+      if (!fMap)
+         InitMap();
 
       if (obj) {
          CheckCount(offset);
@@ -154,11 +153,11 @@ void TBufferIO::MapObject(const TObject *obj, UInt_t offset)
          fMapCount++;
       }
    } else {
-      if (!fMap || !fClassMap) InitMap();
+      if (!fMap || !fClassMap)
+         InitMap();
 
       fMap->Add(offset, (Long_t)obj);
-      fClassMap->Add(offset,
-             (obj && obj != (TObject*)-1) ? (Long_t)((TObject*)obj)->IsA() : 0);
+      fClassMap->Add(offset, (obj && obj != (TObject *)-1) ? (Long_t)((TObject *)obj)->IsA() : 0);
       fMapCount++;
    }
 }
@@ -172,10 +171,11 @@ void TBufferIO::MapObject(const TObject *obj, UInt_t offset)
 /// contains (via via) a pointer to itself. In that case offset must be 1
 /// (default value for offset).
 
-void TBufferIO::MapObject(const void *obj, const TClass* cl, UInt_t offset)
+void TBufferIO::MapObject(const void *obj, const TClass *cl, UInt_t offset)
 {
    if (IsWriting()) {
-      if (!fMap) InitMap();
+      if (!fMap)
+         InitMap();
 
       if (obj) {
          CheckCount(offset);
@@ -186,7 +186,8 @@ void TBufferIO::MapObject(const void *obj, const TClass* cl, UInt_t offset)
          fMapCount++;
       }
    } else {
-      if (!fMap || !fClassMap) InitMap();
+      if (!fMap || !fClassMap)
+         InitMap();
 
       fMap->Add(offset, (Long_t)obj);
       fClassMap->Add(offset, (Long_t)cl);
@@ -211,14 +212,15 @@ Bool_t TBufferIO::CheckObject(const TObject *obj)
 
 Bool_t TBufferIO::CheckObject(const void *obj, const TClass *ptrClass)
 {
-   if (!obj || !fMap || !ptrClass) return kFALSE;
+   if (!obj || !fMap || !ptrClass)
+      return kFALSE;
 
    TClass *clActual = ptrClass->GetActualClass(obj);
 
    ULong_t idx;
 
    if (clActual && (ptrClass != clActual)) {
-      const char *temp = (const char*) obj;
+      const char *temp = (const char *)obj;
       temp -= clActual->GetBaseClassOffset(ptrClass);
       idx = (ULong_t)fMap->GetValue(Void_Hash(temp), (Long_t)temp);
    } else {
@@ -228,15 +230,34 @@ Bool_t TBufferIO::CheckObject(const void *obj, const TClass *ptrClass)
    return idx ? kTRUE : kFALSE;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Retrieve the object stored in the buffer's object map at 'tag'
+/// Set ptr and ClassPtr respectively to the address of the object and
+/// a pointer to its TClass.
+
+void TBufferIO::GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const
+{
+   // original code in TBufferFile is wrong, fMap->GetSize() is just number of entries, cannot be used for tag checks
+
+   //  if (tag > (UInt_t)fMap->GetSize()) {
+   //     ptr = nullptr;
+   //     ClassPtr = nullptr;
+   //   } else {
+   ptr = (void *)(Long_t)fMap->GetValue(tag);
+   ClassPtr = (TClass *)(Long_t)fClassMap->GetValue(tag);
+   //  }
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete existing fMap and reset map counter.
 
 void TBufferIO::ResetMap()
 {
-   if (fMap) fMap->Delete();
-   if (fClassMap) fClassMap->Delete();
-   fMapCount     = 0;
+   if (fMap)
+      fMap->Delete();
+   if (fClassMap)
+      fClassMap->Delete();
+   fMapCount = 0;
    fDisplacement = 0;
 
    // reset user bits
@@ -245,6 +266,13 @@ void TBufferIO::ResetMap()
    ResetBit(kUser3);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Reset buffer object. Resets map and buffer offset
+void TBufferIO::Reset()
+{
+   SetBufferOffset();
+   ResetMap();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// This offset is used when a key (or basket) is transfered from one
