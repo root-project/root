@@ -71,6 +71,8 @@ public:
 
    virtual ~TBufferIO();
 
+   virtual Int_t GetVersionOwner() const;
+
    // See comment in TBuffer::SetPidOffset
    virtual UShort_t GetPidOffset() const { return fPidOffset; }
    virtual void SetPidOffset(UShort_t offset);
