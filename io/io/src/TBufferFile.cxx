@@ -229,7 +229,7 @@ void TBufferFile::WriteTString(const TString &s)
 
 void TBufferFile::ReadStdString(std::string *obj)
 {
-   if (obj == 0) {
+   if (obj == nullptr) {
       Error("TBufferFile::ReadStdString","The std::string address is nullptr but should not");
       return;
    }
@@ -285,7 +285,7 @@ void TBufferFile::WriteStdString(const std::string *obj)
 void TBufferFile::ReadCharStar(char* &s)
 {
    delete [] s;
-   s = 0;
+   s = nullptr;
 
    Int_t nch;
    *this >> nch;
@@ -409,7 +409,7 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
 Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss)
 {
    if (!bcnt) return 0;
-   return CheckByteCount( startpos, bcnt, clss, 0);
+   return CheckByteCount( startpos, bcnt, clss, nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -423,7 +423,7 @@ Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *cl
 Int_t TBufferFile::CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname)
 {
    if (!bcnt) return 0;
-   return CheckByteCount( startpos, bcnt, 0, classname);
+   return CheckByteCount( startpos, bcnt, nullptr, classname);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2320,7 +2320,7 @@ Int_t TBufferFile::WriteFastArray(void **start, const TClass *cl, Int_t n,
 
 TObject *TBufferFile::ReadObject(const TClass * /*clReq*/)
 {
-   return (TObject*) ReadObjectAny(0);
+   return (TObject*) ReadObjectAny(nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2359,7 +2359,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
    // attempt to load next object as TClass clCast
    UInt_t tag;       // either tag or byte count
    TClass *clRef = ReadClass(clCast, &tag);
-   TClass *clOnfile = 0;
+   TClass *clOnfile = nullptr;
    Int_t baseOffset = 0;
    if (clRef && (clRef!=(TClass*)(-1)) && clCast) {
       //baseOffset will be -1 if clRef does not inherit from clCast.
@@ -2374,7 +2374,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
             Error("ReadObject", "got object of wrong class! requested %s but got %s",
                   clCast->GetName(), clRef->GetName());
 
-            CheckByteCount(startpos, tag, (TClass*)0); // avoid mis-leading byte count error message
+            CheckByteCount(startpos, tag, (TClass *)nullptr); // avoid mis-leading byte count error message
             return 0; // We better return at this point
          }
          baseOffset = 0; // For now we do not support requesting from a class that is the base of one of the class for which there is transformation to ....
@@ -2387,7 +2387,7 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
          //we cannot mix a compiled class with an emulated class in the inheritance
          Error("ReadObject", "trying to read an emulated class (%s) to store in a compiled pointer (%s)",
                clRef->GetName(),clCast->GetName());
-         CheckByteCount(startpos, tag, (TClass*)0); // avoid mis-leading byte count error message
+         CheckByteCount(startpos, tag, (TClass *)nullptr); // avoid mis-leading byte count error message
          return 0;
       }
    }
@@ -2397,10 +2397,10 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
    char *obj;
    if (fVersion > 0) {
       obj = (char *) (Long_t)fMap->GetValue(startpos+kMapOffset);
-      if (obj == (void*) -1) obj = 0;
+      if (obj == (void*) -1) obj = nullptr;
       if (obj) {
-         CheckByteCount(startpos, tag, (TClass*)0);
-         return (obj+baseOffset);
+         CheckByteCount(startpos, tag, (TClass *)nullptr);
+         return (obj + baseOffset);
       }
    }
 
@@ -2410,8 +2410,8 @@ void *TBufferFile::ReadObjectAny(const TClass *clCast)
       if (fVersion > 0)
          MapObject((TObject*) -1, startpos+kMapOffset);
       else
-         MapObject((void*)0, 0, fMapCount);
-      CheckByteCount(startpos, tag, (TClass*)0);
+         MapObject((void*)nullptr, nullptr, fMapCount);
+      CheckByteCount(startpos, tag, (TClass *)nullptr);
       return 0;
    }
 
@@ -2517,7 +2517,7 @@ void TBufferFile::WriteObjectClass(const void *actualObjectStart, const TClass *
 
          // A warning to let the user know it will need to change the class code
          // to  be able to read this back.
-         if (actualClass->HasDefaultConstructor() == 0) {
+         if (!actualClass->HasDefaultConstructor()) {
             Warning("WriteObjectAny", "since %s has no public constructor\n"
                "\twhich can be called without argument, objects of this class\n"
                "\tcan not be read with the current library. You will need to\n"
@@ -3242,7 +3242,7 @@ Int_t TBufferFile::ReadClassEmulated(const TClass *cl, void *object, const TClas
    Version_t v = ReadVersion(&start,&count);
 
    if (count) {
-      TStreamerInfo *sinfo = 0;
+      TStreamerInfo *sinfo = nullptr;
       if( onFileClass ) {
          sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, v );
          if( !sinfo )
@@ -3281,7 +3281,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
    // The ondisk class has been specified so get foreign streamer info
    /////////////////////////////////////////////////////////////////////////////
 
-   TStreamerInfo *sinfo = 0;
+   TStreamerInfo *sinfo = nullptr;
    if( onFileClass ) {
       sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, version );
       if( !sinfo ) {
@@ -3308,7 +3308,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
          return 0;
       }
       sinfo = (TStreamerInfo*)infos->At(version);
-      if (sinfo == 0) {
+      if (sinfo == nullptr) {
          // Unless the data is coming via a socket connection from with schema evolution
          // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
          // one for the current version, otherwise let's complain ...
@@ -3381,7 +3381,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    // The ondisk class has been specified so get foreign streamer info
    /////////////////////////////////////////////////////////////////////////////
 
-   TStreamerInfo *sinfo = 0;
+   TStreamerInfo *sinfo = nullptr;
    if( onFileClass ) {
       sinfo = (TStreamerInfo*)cl->GetConversionStreamerInfo( onFileClass, version );
       if( !sinfo ) {
@@ -3432,7 +3432,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
             }
          }
 
-         if (sinfo == 0) {
+         if (sinfo == nullptr) {
             // Unless the data is coming via a socket connection from with schema evolution
             // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
             // one for the current version, otherwise let's complain ...
@@ -3504,11 +3504,11 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
 {
    //build the StreamerInfo if first time for the class
    TStreamerInfo *sinfo = (TStreamerInfo*)const_cast<TClass*>(cl)->GetCurrentStreamerInfo();
-   if (sinfo == 0) {
+   if (sinfo == nullptr) {
       //Have to be sure between the check and the taking of the lock if the current streamer has changed
       R__LOCKGUARD(gInterpreterMutex);
       sinfo = (TStreamerInfo*)const_cast<TClass*>(cl)->GetCurrentStreamerInfo();
-      if(sinfo == 0) {
+      if (sinfo == nullptr) {
          const_cast<TClass*>(cl)->BuildRealData(pointer);
          sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
          const_cast<TClass*>(cl)->SetCurrentStreamerInfo(sinfo);
@@ -3531,7 +3531,6 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
    //NOTE: In the future Philippe wants this to happen via a custom action
    TagStreamerInfo(sinfo);
    ApplySequence(*(sinfo->GetWriteObjectWiseActions()), (char*)pointer);
-
 
    //write the byte count at the start of the buffer
    SetByteCount(R__c, kTRUE);
