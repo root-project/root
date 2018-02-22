@@ -72,7 +72,6 @@ public:
    TBufferFile(TBuffer::EMode mode, Int_t bufsiz, void *buf, Bool_t adopt = kTRUE, ReAllocCharFun_t reallocfunc = 0);
    virtual ~TBufferFile();
 
-   virtual Int_t      GetVersionOwner() const;
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const TClass *clss);
    virtual Int_t      CheckByteCount(UInt_t startpos, UInt_t bcnt, const char *classname);
    virtual void       SetByteCount(UInt_t cntpos, Bool_t packInVersion = kFALSE);

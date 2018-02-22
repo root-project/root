@@ -118,8 +118,6 @@ public:
    }
    virtual void WriteString(const char * /*s*/) { Error("WriteString", "useless"); }
 
-   virtual Int_t GetVersionOwner() const;
-
    virtual Version_t ReadVersionForMemberWise(const TClass * /*cl*/ = nullptr)
    {
       Error("ReadVersionForMemberWise", "not defined in text-based streamers");
