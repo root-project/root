@@ -84,17 +84,18 @@ namespace RooFit {
           // set worker_id before each fork so that fork will sync it to the worker
           worker_id = ix;
           pipes.emplace_back();
+          if (pipes.back().isChild()) {
+            _is_master = false;
+          }
         }
       }
 
       // Send a message vector from master to all slaves
-      template <typename T>
-      void to_slaves(const std::vector<T> &message) {
+      template <typename T_message>
+      void to_slaves(T_message message) {
         for (const RooFit::BidirMMapPipe & pipe : pipes) {
           if (pipe.isParent()) {
-            for (auto message_element : message) {
-              pipe << message_element;
-            }
+            pipe << message;
           } else {
             throw std::logic_error("calling Communicator::to_slaves from slave process");
           }
@@ -102,25 +103,36 @@ namespace RooFit {
       }
 
       // Receive a message vector from master to a slave (complement of to_slaves)
-      template <typename T>
-      const std::vector<T> &message from_master(const std::vector<T> &message) {
-        for (const RooFit::BidirMMapPipe & pipe : pipes) {
-          if (pipe.isParent()) {
-            for (auto message_element : message) {
-              pipe << message_element;
-            }
-          } else {
-            throw std::logic_error("calling Communicator::to_slaves from slave process");
-          }
-        }
+//      template <typename T>
+//      const std::vector<T>& from_master(const std::vector<T> &message) {
+////        for (const RooFit::BidirMMapPipe & pipe : pipes) {
+////          if (pipe.isParent()) {
+////            for (auto message_element : message) {
+////              pipe << message_element;
+////            }
+////          } else {
+////            throw std::logic_error("calling Communicator::to_slaves from slave process");
+////          }
+////        }
+//      }
+
+    template <typename T_message>
+    T_message from_master() {
+      RooFit::BidirMMapPipe& pipe = pipes[worker_id];
+      if (pipe.isChild()) {
+        T_message message;
+        pipe >> message;
+      } else {
+        throw std::logic_error("calling Communicator::from_master from master process");
       }
+    }
 
       // Send a message from a slave back to master
-      template <typename T>
-      void to_master(T message, std::size_t index) {
+      template <typename T_message>
+      void to_master(T_message message) {
         RooFit::BidirMMapPipe& pipe = pipes[worker_id];
         if (pipe.isChild()) {
-          pipe << index << message;
+          pipe << message;
         } else {
           throw std::logic_error("calling Communicator::to_master from master process");
         }
@@ -133,12 +145,21 @@ namespace RooFit {
 
       // Enqueue something on the master queue
       void to_master_queue(T_task task) {
-        master_queue.push(task);
+        if (is_master()) {
+          master_queue.push(task);
+        } else {
+          throw std::logic_error("calling Communicator::to_master_queue from slave process");
+        }
+      }
+
+      bool is_master() {
+        return _is_master;
       }
 
      private:
       std::vector<RooFit::BidirMMapPipe> pipes;
       std::size_t worker_id;
+      bool _is_master = true;
       std::queue<T_task> master_queue;
     };
 
@@ -146,18 +167,39 @@ namespace RooFit {
     // Vector defines an interface and communication machinery to build a
     // parallelized subclass of an existing non-concurrent numerical class that
     // can be expressed as a vector of independent sub-calculations.
-    template <typename Base>
+    //
+    // A subclass can communicate between master and worker processes using
+    // messages that the subclass defines for itself. The interface uses int
+    // type for messages. Two messages are predefined:
+    // * -1 means terminate the worker_loop
+    // *  0 means take a new task from the queue (essentially: no message)
+    // * any other value is deferred to the subclass-defined process_message
+    //   method.
+    //
+    template <typename Base, typename T_task = std::size_t>
     class Vector : public Base {
      public:
       template <typename... Targs>
       Vector(std::size_t NumCPU, Targs ...args) :
           Base(args...),
-          _NumCPU(NumCPU),
-          queuemunicator(NumCPU)
+          _NumCPU(NumCPU)
       {
-        task_indices.reserve(num_tasks_from_cpus());
-        for (std::size_t ix = 0; ix < num_tasks_from_cpus(); ++ix) {
-          task_indices.emplace_back(ix);
+//        task_indices.reserve(num_tasks_from_cpus());
+//        for (std::size_t ix = 0; ix < num_tasks_from_cpus(); ++ix) {
+//          task_indices.emplace_back(ix);
+//        }
+      }
+
+      ~Vector() {
+        delete queuemunicator;
+      }
+
+      void initialize_parallel_work_system() {
+        if (queuemunicator == nullptr) {
+          queuemunicator = new Queuemunicator<T_task>(_NumCPU);
+        }
+        if (!queuemunicator->is_master()) {
+          worker_loop();
         }
       }
 
@@ -173,17 +215,24 @@ namespace RooFit {
       };
 
       void worker_loop() {
-        while ()
-        int message = from_master_queue();
-        if (message == 0) {
-          process_message(message);
+        bool carry_on = true;
+        while (carry_on) {
+          int message = from_master();
+          if (message == 0) {
+            // get a task from the queue
+          } else if (message == -1) {
+            // terminate
+            carry_on = false;
+          } else {
+            process_message(message);
+          }
         }
       }
 
      protected:
-      std::vector<std::size_t> task_indices;
+//      std::vector<std::size_t> task_indices;
       std::size_t _NumCPU;
-      Queuemunicator queuemunicator;
+      Queuemunicator<T_task> * queuemunicator = nullptr;
 
       template <typename T>
       void enqueue_message(int m, T a) {};
@@ -202,15 +251,23 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
       BASE(NumCPU, b_init, x_init) // NumCPU stands for everything that defines the parallelization behaviour (number of cpu, strategy, affinity etc)
   {}
 
-  enum class Message : int {set_b_worker, retrieve_task_elements};
-//  std::map<Message, void (*)()>
+  enum class Message : int {set_b_worker = 1, evaluate_tasks = 2, retrieve_task_elements = 3};
 
-//  void evaluate() override {
+  void evaluate() override {
 //    // sync remote first: local b -> workers
 //    sync();
 //    // choose parallel strategy from multiprocess vector
-//    // and don't pass evaluate_task (because virtual)
-//  }
+
+
+    // master fills queue with tasks
+    for (std::size_t ix = 0; ix < x.size(); ++ix) {
+      queuemunicator->to_master_queue(ix);
+    }
+    // instruct workers to evaluate tasks
+    queuemunicator->to_slaves(Message::evaluate_tasks);
+    // sync task result back from worker to master
+
+  }
 
   void set_b_workers(double b) {}
 
@@ -245,6 +302,10 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
         break;
       }
+      case Message::evaluate_tasks: {
+        evaluate_task()
+        break;
+      }
       default: {
         throw std::runtime_error("go away");
       }
@@ -271,7 +332,6 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
     return _NumCPU;
   }
 
-
 };
 
 
@@ -294,6 +354,7 @@ TEST(MultiProcess_Vector, xSquaredPlusB) {
 
   std::size_t NumCPU = 1;
   xSquaredPlusBVectorParallel x_sq_plus_b_parallel(NumCPU, b_initial, x);
+  x_sq_plus_b_parallel.initialize_parallel_work_system();
 
   auto y_parallel = x_sq_plus_b_parallel.get_result();
 
