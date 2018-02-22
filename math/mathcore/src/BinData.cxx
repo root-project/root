@@ -284,7 +284,7 @@ namespace ROOT {
 
           for ( unsigned int i=0; i<fDim; i++ )
           {
-            fCoordErrorsPtr[i] = &fCoordErrors[i].front();
+            fCoordErrorsPtr[i] = fCoordErrors[i].empty() ? NULL : &fCoordErrors[i].front();
           }
         }
 
