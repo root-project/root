@@ -193,6 +193,15 @@ std::string PrintTVec(ROOT::Experimental::VecOps::TVec<T> v, V w)
    ss << (v == w) << std::endl;
    ss << (v <= w) << std::endl;
    ss << (v < w) << std::endl;
+   ss << w + v << std::endl;
+   ss << w - v << std::endl;
+   ss << w * v << std::endl;
+   ss << w / v << std::endl;
+   ss << (w > v) << std::endl;
+   ss << (w >= v) << std::endl;
+   ss << (w == v) << std::endl;
+   ss << (w <= v) << std::endl;
+   ss << (w < v) << std::endl;
    return ss.str();
 }
 
@@ -212,6 +221,15 @@ TEST(VecOps, PrintOps)
 { 0, 1, 0 }
 { 1, 1, 0 }
 { 1, 0, 0 }
+{ 3, 4, 5 }
+{ 1, 0, -1 }
+{ 2, 4, 6 }
+{ 2, 1, 0.666667 }
+{ 1, 0, 0 }
+{ 1, 1, 0 }
+{ 0, 1, 0 }
+{ 0, 1, 1 }
+{ 0, 0, 1 }
 )ref0";
    auto t0 = PrintTVec(v, 2.);
    EXPECT_STREQ(t0.c_str(), ref0);
@@ -225,6 +243,15 @@ TEST(VecOps, PrintOps)
 { 0, 0, 0 }
 { 1, 1, 1 }
 { 1, 1, 1 }
+{ 4, 6, 8 }
+{ 2, 2, 2 }
+{ 3, 8, 15 }
+{ 3, 2, 1 }
+{ 1, 1, 1 }
+{ 1, 1, 1 }
+{ 0, 0, 0 }
+{ 0, 0, 0 }
+{ 0, 0, 0 }
 )ref1";
    auto t1 = PrintTVec(v, ref + 2);
    EXPECT_STREQ(t1.c_str(), ref1);
@@ -241,6 +268,15 @@ TEST(VecOps, PrintOps)
 { 0, 1, 0 }
 { 1, 1, 0 }
 { 1, 0, 0 }
+{ 3, 4, 5 }
+{ 1, 0, -1 }
+{ 2, 4, 6 }
+{ 2, 1, 0.666667 }
+{ 1, 0, 0 }
+{ 1, 1, 0 }
+{ 0, 1, 0 }
+{ 0, 1, 1 }
+{ 0, 0, 1 }
 )ref2";
    auto t2 = PrintTVec(v, 2.);
    EXPECT_STREQ(t2.c_str(), ref2);
@@ -255,6 +291,15 @@ TEST(VecOps, PrintOps)
 { 0, 0, 0 }
 { 1, 1, 1 }
 { 1, 1, 1 }
+{ 4, 6, 8 }
+{ 2, 2, 2 }
+{ 3, 8, 15 }
+{ 3, 2, 1 }
+{ 1, 1, 1 }
+{ 1, 1, 1 }
+{ 0, 0, 0 }
+{ 0, 0, 0 }
+{ 0, 0, 0 }
 )ref3";
    auto t3 = PrintTVec(v, ref + 2);
    EXPECT_STREQ(t3.c_str(), ref3);
