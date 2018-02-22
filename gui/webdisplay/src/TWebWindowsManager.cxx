@@ -32,6 +32,7 @@
 #include "TStopwatch.h"
 #include "TApplication.h"
 #include "TTimer.h"
+#include "RConfigure.h"
 
 /** \class ROOT::Experimental::TWebWindowManager
 \ingroup webdisplay
@@ -247,33 +248,49 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       }
    }
 
-   Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
+#ifdef R__HAS_CEFWEB
 
-   if (symbol_qt5 && (is_native || is_qt5)) {
-      typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
-
-      printf("Show canvas in Qt5 window:  %s\n", addr.Data());
-
-      FunctionQt5 func = (FunctionQt5)symbol_qt5;
-      func(addr.Data(), fServer.get(), batch_mode, win.GetWidth(), win.GetHeight());
-      return false;
-   }
-
-   // TODO: one should try to load CEF libraries only when really needed
-   // probably, one should create separate DLL with CEF-related code
-   Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
    const char *cef_path = gSystem->Getenv("CEF_PATH");
    const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || is_cef)) {
-      typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
+   if (cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || is_cef)) {
 
-      printf("Show canvas in CEF window:  %s\n", addr.Data());
+      Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
 
-      FunctionCef3 func = (FunctionCef3)symbol_cef;
-      func(addr.Data(), fServer.get(), batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
+      if (!symbol_cef) {
+         gSystem->Load("libROOTCefDisplay");
+         // TODO: make minimal C++ interface here
+         symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
+      }
 
-      return true;
+      if (symbol_cef) {
+         typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
+         printf("Show canvas in CEF window:  %s\n", addr.Data());
+         FunctionCef3 func = (FunctionCef3)symbol_cef;
+         func(addr.Data(), fServer.get(), batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
+         return true;
+      }
    }
+
+#endif
+
+#ifdef R__HAS_QT5WEB
+
+   if (is_native || is_qt5) {
+      Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
+
+      if (!symbol_qt5) {
+         gSystem->Load("libROOTQt5WebDisplay");
+         symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
+      }
+      if (symbol_qt5) {
+         typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
+         printf("Show canvas in Qt5 window:  %s\n", addr.Data());
+         FunctionQt5 func = (FunctionQt5)symbol_qt5;
+         func(addr.Data(), fServer.get(), batch_mode, win.GetWidth(), win.GetHeight());
+         return true;
+      }
+   }
+#endif
 
    if (!CreateHttpServer(true)) {
       R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server";

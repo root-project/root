@@ -27,12 +27,6 @@ RootWebView::RootWebView(QWidget *parent, unsigned width, unsigned height) :
 {
    setPage(new RootWebPage());
 
-   // connect(this, SIGNAL(javaScriptConsoleMessage(JavaScriptConsoleMessageLevel, const QString &, int, const QString
-   // &)),
-   //        this, SLOT(doConsole(JavaScriptConsoleMessageLevel, const QString &, int, const QString &)));
-
-   // connect(this, &QWebEngineView::javaScriptConsoleMessage, this, &RootWebView::doConsole);
-
    connect(page(), &QWebEnginePage::windowCloseRequested, this, &RootWebView::onWindowCloseRequested);
 
    setAcceptDrops(true);
@@ -57,17 +51,12 @@ void RootWebView::dragEnterEvent( QDragEnterEvent *e )
 
 void RootWebView::dropEvent(QDropEvent* event)
 {
-   printf("RootWebView drop event\n");
    emit drop(event);
 }
-
-
 
 void RootWebView::closeEvent(QCloseEvent *)
 {
    page()->runJavaScript("if (window && window.onqt5unload) window.onqt5unload();");
-
-   // printf("run javascript done\n");
 }
 
 void RootWebView::onWindowCloseRequested()
