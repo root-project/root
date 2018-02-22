@@ -17,7 +17,7 @@
 #include <exception>
 
 #include <RooRealVar.h>
-//#include <Bidi>
+//#include <BidirMMapPipe.h>
 //#include <roofit/MultiProcess/Vector.h>
 
 #include "gtest/gtest.h"
@@ -53,9 +53,8 @@ namespace RooFit {
   namespace MultiProcess {
 
 
-    template <typename Base, typename Derived>
+    template <typename Base>
     class Vector : public Base {
-      using typename Derived::Message;
      public:
       template <typename... Targs>
       Vector(std::size_t NumCPU, Targs ...args) :
@@ -75,39 +74,34 @@ namespace RooFit {
       virtual void sync_worker(std::size_t worker_id) {};
 
 
-      virtual void process_message(Message m) = 0;
+      virtual void process_message(int m) = 0;
 
       virtual std::size_t num_tasks_from_cpus() {
         return 1;
       };
-
-//      template <typename M, typename... Targs>
-//      void call_method_at_worker(M method, Targs ...args) {
-//        method(args...);
-//      };
 
      protected:
       std::vector<std::size_t> task_indices;
       std::size_t _NumCPU;
 
       template <typename T>
-      void enqueue_message(Message m, T a) {};
+      void enqueue_message(int m, T a) {};
       template <typename T1, typename T2>
-      void enqueue_message(Message m, T1 a1, T2 a2) {};
+      void enqueue_message(int m, T1 a1, T2 a2) {};
     };
 
   }
 }
 
 
-class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial, xSquaredPlusBVectorParallel> {
-  using BASE = RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial, xSquaredPlusBVectorParallel>;
+class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial> {
+  using BASE = RooFit::MultiProcess::Vector<xSquaredPlusBVectorSerial>;
  public:
   xSquaredPlusBVectorParallel(std::size_t NumCPU, double b_init, std::vector<double> x_init) :
       BASE(NumCPU, b_init, x_init) // NumCPU stands for everything that defines the parallelization behaviour (number of cpu, strategy, affinity etc)
   {}
 
-  enum class Message {set_b_worker, retrieve_task_elements};
+  enum class Message : int {set_b_worker, retrieve_task_elements};
 //  std::map<Message, void (*)()>
 
 //  void evaluate() override {
@@ -129,8 +123,14 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
 
 
  private:
-  // gets called from the server loop (on worker) when a message arrives
-  void process_message(Message m) override {
+  // Gets called from the server loop (on worker) when a message arrives.
+  // Internally forwards to an overload with a Message class enum, which is
+  // just for convenience, not a requirement.
+  void process_message(int m) override {
+    process_message(static_cast<Message>(m));
+  }
+
+  void process_message(Message m) {
     // do nothing for now
     switch (m) {
       case Message::set_b_worker: {
@@ -148,6 +148,13 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
         throw std::runtime_error("go away");
       }
     }
+  }
+
+  using BASE::enqueue_message;  // to unhide the method from the base class that we're going to overload next
+
+  template <typename... Targs>
+  void enqueue_message(Message m, Targs ...args) {
+    enqueue_message(static_cast<int>(m), args...);
   }
 
   void sync_worker(std::size_t worker_id) override {
