@@ -115,15 +115,7 @@ public:
 
    virtual Int_t      WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
 
-   UShort_t GetPidOffset() const {
-      // See comment in TBuffer::SetPidOffset
-      return fPidOffset;
-   }
-   void     SetPidOffset(UShort_t offset);
-   Int_t    GetBufferDisplacement() const { return fDisplacement; }
-   void     SetBufferDisplacement() { fDisplacement = 0; }
-   void     SetBufferDisplacement(Int_t skipped)
-            { fDisplacement =  (Int_t)(Length() - skipped); }
+   using TBufferIO::CheckObject;
 
    // basic types and arrays of basic types
    virtual   void     ReadFloat16 (Float_t *f, TStreamerElement *ele=0);
