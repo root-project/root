@@ -80,6 +80,7 @@ public:
    virtual void SetBufferDisplacement() { fDisplacement = 0; }
    virtual void SetBufferDisplacement(Int_t skipped) { fDisplacement = (Int_t)(Length() - skipped); }
 
+   // Utilities for objects map
    virtual void SetReadParam(Int_t mapsize);
    virtual void SetWriteParam(Int_t mapsize);
    virtual void InitMap();
@@ -91,6 +92,12 @@ public:
    virtual Bool_t CheckObject(const TObject *obj);
    virtual Bool_t CheckObject(const void *obj, const TClass *ptrClass);
    virtual void GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const;
+
+   // Utilities for TStreamerInfo
+   virtual   void   ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force);
+   virtual   void   ForceWriteInfoClones(TClonesArray *a);
+   virtual   Int_t  ReadClones (TClonesArray *a, Int_t nobjects, Version_t objvers);
+   virtual   Int_t  WriteClones(TClonesArray *a, Int_t nobjects);
 
    static void SetGlobalReadParam(Int_t mapsize);
    static void SetGlobalWriteParam(Int_t mapsize);

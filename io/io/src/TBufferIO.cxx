@@ -23,6 +23,9 @@ Direct subclass of TBuffer, implements common methods for TBufferFile and TBuffe
 #include "TClass.h"
 #include "TFile.h"
 #include "TError.h"
+#include "TClonesArray.h"
+#include "TStreamerInfo.h"
+
 
 Int_t TBufferIO::fgMapSize = kMapSize;
 
@@ -67,11 +70,12 @@ TBufferIO::~TBufferIO()
 
 Int_t TBufferIO::GetVersionOwner() const
 {
-   TFile *file = (TFile*)GetParent();
-   if (file) return file->GetVersion();
-   else return 0;
+   TFile *file = (TFile *)GetParent();
+   if (file)
+      return file->GetVersion();
+   else
+      return 0;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the initial size of the map used to store object and class
@@ -309,6 +313,56 @@ void TBufferIO::Reset()
 void TBufferIO::SetPidOffset(UShort_t offset)
 {
    fPidOffset = offset;
+}
+
+//---- Utilities for TStreamerInfo ----------------------------------------------
+
+////////////////////////////////////////////////////////////////////////////////
+/// force writing the TStreamerInfo to the file
+
+void TBufferIO::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force)
+{
+   if (info)
+      info->ForceWriteInfo((TFile *)GetParent(), force);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Make sure TStreamerInfo is not optimized, otherwise it will not be
+/// possible to support schema evolution in read mode.
+/// In case the StreamerInfo has already been computed and optimized,
+/// one must disable the option BypassStreamer.
+
+void TBufferIO::ForceWriteInfoClones(TClonesArray *a)
+{
+   TStreamerInfo *sinfo = (TStreamerInfo *)a->GetClass()->GetStreamerInfo();
+   ForceWriteInfo(sinfo, kFALSE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to TStreamerInfo::ReadBufferClones.
+
+Int_t TBufferIO::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers)
+{
+   char **arr = (char **)a->GetObjectRef(0);
+   char **end = arr + nobjects;
+   // a->GetClass()->GetStreamerInfo()->ReadBufferClones(*this,a,nobjects,-1,0);
+   TStreamerInfo *info = (TStreamerInfo *)a->GetClass()->GetStreamerInfo(objvers);
+   // return info->ReadBuffer(*this,arr,-1,nobjects,0,1);
+   return ApplySequenceVecPtr(*(info->GetReadMemberWiseActions(kTRUE)), arr, end);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Interface to TStreamerInfo::WriteBufferClones.
+
+Int_t TBufferIO::WriteClones(TClonesArray *a, Int_t nobjects)
+{
+   char **arr = reinterpret_cast<char **>(a->GetObjectRef(0));
+   // a->GetClass()->GetStreamerInfo()->WriteBufferClones(*this,(TClonesArray*)a,nobjects,-1,0);
+   TStreamerInfo *info = (TStreamerInfo *)a->GetClass()->GetStreamerInfo();
+   // return info->WriteBufferAux(*this,arr,-1,nobjects,0,1);
+   char **end = arr + nobjects;
+   // No need to tell call ForceWriteInfo as it by ForceWriteInfoClones.
+   return ApplySequenceVecPtr(*(info->GetWriteMemberWiseActions(kTRUE)), arr, end);
 }
 
 //---- Static functions --------------------------------------------------------
