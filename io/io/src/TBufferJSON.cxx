@@ -1109,7 +1109,7 @@ void TBufferJSON::JsonWriteObject(const void *obj, const TClass *cl, Bool_t chec
    if (special_kind <= 0) {
       // add element name which should correspond to the object
       if (check_map) {
-         Long64_t refid = GetMapEntry(obj);
+         Long64_t refid = GetObjectTag(obj);
          if (refid > 0) {
             // old-style refs, coded into string like "$ref12"
             // AppendOutput(Form("\"$ref:%u\"", iter->second));
