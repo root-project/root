@@ -248,6 +248,18 @@ void TBufferIO::GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const
    //  }
 }
 
+////////////////////////////////////////////////////////////////////////////////////
+/// Returns tag for specified object from objects map (if exists)
+/// Returns 0 if object not included into objects map
+
+Long64_t TBufferIO::GetObjectTag(const void *obj)
+{
+   if (!obj || !fMap)
+      return 0;
+
+   return fMap->GetValue(Void_Hash(obj), (Long_t)obj);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 /// Delete existing fMap and reset map counter.
 
