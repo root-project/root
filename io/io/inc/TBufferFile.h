@@ -86,7 +86,6 @@ public:
    virtual void      *ReadObjectAny(const TClass* cast);
    virtual void       SkipObjectAny();
 
-   virtual void       TagStreamerInfo(TVirtualStreamerInfo* info);
    virtual void       IncrementLevel(TVirtualStreamerInfo* info);
    virtual void       SetStreamerElementNumber(TStreamerElement*,Int_t) {}
    virtual void       DecrementLevel(TVirtualStreamerInfo*);
@@ -105,11 +104,6 @@ public:
    virtual void       WriteClass(const TClass *cl);
 
    virtual TObject   *ReadObject(const TClass *cl);
-   virtual void       WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE);
-
-   using TBuffer::WriteObject;
-
-   virtual Int_t      WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
 
    using TBufferIO::CheckObject;
 
@@ -255,12 +249,6 @@ public:
    using              TBuffer::WriteStdString;
    virtual   void     WriteStdString(const std::string *s);
    virtual   void     WriteCharStar(char *s);
-
-   // Special basic ROOT objects and collections
-   virtual   TProcessID *GetLastProcessID(TRefTable *reftable) const;
-   virtual   UInt_t      GetTRefExecId();
-   virtual   TProcessID *ReadProcessID(UShort_t pidf);
-   virtual   UShort_t    WriteProcessID(TProcessID *pid);
 
    // Utilities for TClass
    virtual   Int_t  ReadClassEmulated(const TClass *cl, void *object, const TClass *onfile_class);
