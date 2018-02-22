@@ -57,6 +57,8 @@ protected:
 
    Long64_t GetObjectTag(const void *obj);
 
+   virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) = 0;
+
 public:
    enum { kMapSize = 503 }; ///< default objects map size
 
@@ -94,10 +96,21 @@ public:
    virtual void GetMappedObject(UInt_t tag, void *&ptr, TClass *&ClassPtr) const;
 
    // Utilities for TStreamerInfo
-   virtual   void   ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force);
-   virtual   void   ForceWriteInfoClones(TClonesArray *a);
-   virtual   Int_t  ReadClones (TClonesArray *a, Int_t nobjects, Version_t objvers);
-   virtual   Int_t  WriteClones(TClonesArray *a, Int_t nobjects);
+   virtual void ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force);
+   virtual void ForceWriteInfoClones(TClonesArray *a);
+   virtual Int_t ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers);
+   virtual Int_t WriteClones(TClonesArray *a, Int_t nobjects);
+   virtual void TagStreamerInfo(TVirtualStreamerInfo *info);
+
+   // Special basic ROOT objects and collections
+   virtual TProcessID *GetLastProcessID(TRefTable *reftable) const;
+   virtual UInt_t GetTRefExecId();
+   virtual TProcessID *ReadProcessID(UShort_t pidf);
+   virtual UShort_t WriteProcessID(TProcessID *pid);
+
+   virtual Int_t WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
+   virtual void WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE);
+   using TBuffer::WriteObject;
 
    static void SetGlobalReadParam(Int_t mapsize);
    static void SetGlobalWriteParam(Int_t mapsize);
