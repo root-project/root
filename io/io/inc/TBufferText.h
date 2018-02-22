@@ -31,18 +31,6 @@ public:
    // probably, one can move them to TBufferImpl class, which can be base
    // for TBufferFile and TBufferText
 
-   virtual TProcessID *GetLastProcessID(TRefTable *reftable) const;
-   virtual UInt_t GetTRefExecId();
-   virtual TProcessID *ReadProcessID(UShort_t pidf);
-   virtual UShort_t WriteProcessID(TProcessID *pid);
-
-   virtual void TagStreamerInfo(TVirtualStreamerInfo *info);
-
-   virtual void WriteObject(const TObject *obj, Bool_t cacheReuse = kTRUE);
-   using TBuffer::WriteObject;
-
-   virtual Int_t WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse = kTRUE);
-
    virtual void StreamObject(void *obj, const std::type_info &typeinfo, const TClass *onFileClass = nullptr);
    virtual void StreamObject(void *obj, const char *className, const TClass *onFileClass = nullptr);
    virtual void StreamObject(TObject *obj);
@@ -150,7 +138,6 @@ public:
    static const char *ConvertDouble(Double_t v, char *buf, unsigned len, Bool_t not_optimize = kFALSE);
 
 protected:
-   virtual void WriteObjectClass(const void *actualObjStart, const TClass *actualClass, Bool_t cacheReuse) = 0;
 
    static const char *fgFloatFmt;  ///<!  printf argument for floats, either "%f" or "%e" or "%10f" and so on
    static const char *fgDoubleFmt; ///<!  printf argument for doubles, either "%f" or "%e" or "%10f" and so on

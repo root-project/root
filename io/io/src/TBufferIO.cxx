@@ -25,6 +25,13 @@ Direct subclass of TBuffer, implements common methods for TBufferFile and TBuffe
 #include "TError.h"
 #include "TClonesArray.h"
 #include "TStreamerInfo.h"
+#include "TStreamerElement.h"
+#include "TArrayC.h"
+#include "TRefTable.h"
+#include "TProcessID.h"
+#include "TVirtualMutex.h"
+#include "TInterpreter.h"
+#include "TROOT.h"
 
 
 Int_t TBufferIO::fgMapSize = kMapSize;
@@ -339,6 +346,28 @@ void TBufferIO::ForceWriteInfoClones(TClonesArray *a)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Mark the classindex of the current file as using this TStreamerInfo
+
+void TBufferIO::TagStreamerInfo(TVirtualStreamerInfo* info)
+{
+   TFile *file = (TFile*)GetParent();
+   if (file) {
+      TArrayC *cindex = file->GetClassIndex();
+      Int_t nindex = cindex->GetSize();
+      Int_t number = info->GetNumber();
+      if (number < 0 || number >= nindex) {
+         Error("TagStreamerInfo","StreamerInfo: %s number: %d out of range[0,%d] in file: %s",
+               info->GetName(),number,nindex,file->GetName());
+         return;
+      }
+      if (cindex->fArray[number] == 0) {
+         cindex->fArray[0]       = 1;
+         cindex->fArray[number] = 1;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Interface to TStreamerInfo::ReadBufferClones.
 
 Int_t TBufferIO::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers)
@@ -364,6 +393,149 @@ Int_t TBufferIO::WriteClones(TClonesArray *a, Int_t nobjects)
    // No need to tell call ForceWriteInfo as it by ForceWriteInfoClones.
    return ApplySequenceVecPtr(*(info->GetWriteMemberWiseActions(kTRUE)), arr, end);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the last TProcessID in the file.
+
+TProcessID *TBufferIO::GetLastProcessID(TRefTable *reftable) const
+{
+   TFile *file = (TFile *)GetParent();
+   // warn if the file contains > 1 PID (i.e. if we might have ambiguity)
+   if (file && !reftable->TestBit(TRefTable::kHaveWarnedReadingOld) && file->GetNProcessIDs() > 1) {
+      Warning("ReadBuffer", "The file was written during several processes with an "
+                            "older ROOT version; the TRefTable entries might be inconsistent.");
+      reftable->SetBit(TRefTable::kHaveWarnedReadingOld);
+   }
+
+   // the file's last PID is the relevant one, all others might have their tables overwritten
+   TProcessID *fileProcessID = TProcessID::GetProcessID(0);
+   if (file && file->GetNProcessIDs() > 0) {
+      // take the last loaded PID
+      fileProcessID = (TProcessID *)file->GetListOfProcessIDs()->Last();
+   }
+   return fileProcessID;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// The TProcessID with number pidf is read from file.
+/// If the object is not already entered in the gROOT list, it is added.
+
+TProcessID *TBufferIO::ReadProcessID(UShort_t pidf)
+{
+   TFile *file = (TFile *)GetParent();
+   if (!file) {
+      if (!pidf)
+         return TProcessID::GetPID(); // may happen when cloning an object
+      return nullptr;
+   }
+
+   TProcessID *pid = nullptr;
+   {
+      R__LOCKGUARD_IMT(gInterpreterMutex); // Lock for parallel TTree I/O
+      pid = file->ReadProcessID(pidf);
+   }
+
+   return pid;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the exec id stored in the current TStreamerInfo element.
+/// The execid has been saved in the unique id of the TStreamerElement
+/// being read by TStreamerElement::Streamer.
+/// The current element (fgElement) is set as a static global
+/// by TStreamerInfo::ReadBuffer (Clones) when reading this TRef.
+
+UInt_t TBufferIO::GetTRefExecId()
+{
+   return TStreamerInfo::GetCurrentElement()->GetUniqueID();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if the ProcessID pid is already in the file.
+/// If not, add it and return the index number in the local file list.
+
+UShort_t TBufferIO::WriteProcessID(TProcessID *pid)
+{
+   TFile *file = (TFile *)GetParent();
+   if (!file)
+      return 0;
+   return file->WriteProcessID(pid);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+namespace {
+struct DynamicType {
+   // Helper class to enable typeid on any address
+   // Used in code similar to:
+   //    typeid( * (DynamicType*) void_ptr );
+   virtual ~DynamicType() {}
+};
+} // namespace
+
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write object to I/O buffer.
+///
+/// This function assumes that the value in 'obj' is the value stored in
+/// a pointer to a "ptrClass". The actual type of the object pointed to
+/// can be any class derived from "ptrClass".
+/// Return:
+///   - 0: failure
+///   - 1: success
+///   - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
+///
+/// If 'cacheReuse' is true (default) upon seeing an object address a second time,
+/// we record the offset where its was written the first time rather than streaming
+/// the object a second time.
+/// If 'cacheReuse' is false, we always stream the object.  This allows the (re)use
+/// of temporary object to store different data in the same buffer.
+
+Int_t TBufferIO::WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse /* = kTRUE */)
+{
+   if (!obj) {
+      WriteObjectClass(nullptr, nullptr, kTRUE);
+      return 1;
+   }
+
+   if (!ptrClass) {
+      Error("WriteObjectAny", "ptrClass argument may not be 0");
+      return 0;
+   }
+
+   TClass *clActual = ptrClass->GetActualClass(obj);
+
+   if (clActual==0 || clActual->GetState() == TClass::kForwardDeclared) {
+      // The ptrClass is a class with a virtual table and we have no
+      // TClass with the actual type_info in memory.
+
+      DynamicType* d_ptr = (DynamicType*)obj;
+      Warning("WriteObjectAny",
+              "An object of type %s (from type_info) passed through a %s pointer was truncated (due a missing dictionary)!!!",
+              typeid(*d_ptr).name(),ptrClass->GetName());
+      WriteObjectClass(obj, ptrClass, cacheReuse);
+      return 2;
+   } else if (clActual && (clActual != ptrClass)) {
+      const char *temp = (const char*) obj;
+      temp -= clActual->GetBaseClassOffset(ptrClass);
+      WriteObjectClass(temp, clActual, cacheReuse);
+      return 1;
+   } else {
+      WriteObjectClass(obj, ptrClass, cacheReuse);
+      return 1;
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write object to I/O buffer.
+
+void TBufferIO::WriteObject(const TObject *obj, Bool_t cacheReuse)
+{
+   WriteObjectAny(obj, TObject::Class(), cacheReuse);
+}
+
 
 //---- Static functions --------------------------------------------------------
 
