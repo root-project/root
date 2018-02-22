@@ -13,11 +13,11 @@
 
 #include <cmath>
 #include <vector>
-#include <map>
+#include <queue>
 #include <exception>
 
 #include <RooRealVar.h>
-//#include <BidirMMapPipe.h>
+#include <../src/BidirMMapPipe.h>
 //#include <roofit/MultiProcess/Vector.h>
 
 #include "gtest/gtest.h"
@@ -52,21 +52,113 @@ class xSquaredPlusBVectorSerial {
 namespace RooFit {
   namespace MultiProcess {
 
+    // Queuemunicator handles message passing and communication with the
+    // master's queue.
+    //
+    // For message passing, any type of message T can be sent. The implementer
+    // must make sure that T can be sent over the BidirMMapPipe, i.e. that
+    // BidirMMapPipe::operator<<(T) and >>(T) are implemented. This can be done
+    // locally in the implementation file of the messenger, e.g.:
+    //
+    //    namespace RooFit {
+    //      struct T {
+    //        int a, b;
+    //      };
+    //      BidirMMapPipe& BidirMMapPipe::operator<<(const T & sent) {
+    //        *this << sent.a << sent.b;
+    //        return *this;
+    //      }
+    //      BidirMMapPipe& BidirMMapPipe::operator>>(T & received) {
+    //        *this >> received.a >> received.b;
+    //        return *this;
+    //      }
+    //    }
+    //
+    // The
 
+    template <typename T_task>
+    class Queuemunicator {
+     public:
+      explicit Queuemunicator(std::size_t NumCPU) {
+        for (std::size_t ix = 0; ix < NumCPU; ++ix) {
+          // set worker_id before each fork so that fork will sync it to the worker
+          worker_id = ix;
+          pipes.emplace_back();
+        }
+      }
+
+      // Send a message vector from master to all slaves
+      template <typename T>
+      void to_slaves(const std::vector<T> &message) {
+        for (const RooFit::BidirMMapPipe & pipe : pipes) {
+          if (pipe.isParent()) {
+            for (auto message_element : message) {
+              pipe << message_element;
+            }
+          } else {
+            throw std::logic_error("calling Communicator::to_slaves from slave process");
+          }
+        }
+      }
+
+      // Receive a message vector from master to a slave (complement of to_slaves)
+      template <typename T>
+      const std::vector<T> &message from_master(const std::vector<T> &message) {
+        for (const RooFit::BidirMMapPipe & pipe : pipes) {
+          if (pipe.isParent()) {
+            for (auto message_element : message) {
+              pipe << message_element;
+            }
+          } else {
+            throw std::logic_error("calling Communicator::to_slaves from slave process");
+          }
+        }
+      }
+
+      // Send a message from a slave back to master
+      template <typename T>
+      void to_master(T message, std::size_t index) {
+        RooFit::BidirMMapPipe& pipe = pipes[worker_id];
+        if (pipe.isChild()) {
+          pipe << index << message;
+        } else {
+          throw std::logic_error("calling Communicator::to_master from master process");
+        }
+      }
+
+      // Have a slave ask for a task-message from the master queue
+      T_task from_master_queue() {
+        return master_queue.pop();
+      }
+
+      // Enqueue something on the master queue
+      void to_master_queue(T_task task) {
+        master_queue.push(task);
+      }
+
+     private:
+      std::vector<RooFit::BidirMMapPipe> pipes;
+      std::size_t worker_id;
+      std::queue<T_task> master_queue;
+    };
+
+
+    // Vector defines an interface and communication machinery to build a
+    // parallelized subclass of an existing non-concurrent numerical class that
+    // can be expressed as a vector of independent sub-calculations.
     template <typename Base>
     class Vector : public Base {
      public:
       template <typename... Targs>
       Vector(std::size_t NumCPU, Targs ...args) :
           Base(args...),
-          _NumCPU(NumCPU)
+          _NumCPU(NumCPU),
+          queuemunicator(NumCPU)
       {
         task_indices.reserve(num_tasks_from_cpus());
         for (std::size_t ix = 0; ix < num_tasks_from_cpus(); ++ix) {
           task_indices.emplace_back(ix);
         }
-
-
       }
 
      private:
@@ -80,9 +172,18 @@ namespace RooFit {
         return 1;
       };
 
+      void worker_loop() {
+        while ()
+        int message = from_master_queue();
+        if (message == 0) {
+          process_message(message);
+        }
+      }
+
      protected:
       std::vector<std::size_t> task_indices;
       std::size_t _NumCPU;
+      Queuemunicator queuemunicator;
 
       template <typename T>
       void enqueue_message(int m, T a) {};
@@ -165,6 +266,12 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
   void evaluate_task(std::size_t task_index) {
     result[task_index] = std::pow(x[task_index], 2) + _b.getVal();
   } // if serial implementation doesn't define evaluate_task -> implement here
+
+  virtual std::size_t num_tasks_from_cpus() {
+    return _NumCPU;
+  }
+
+
 };
 
 
