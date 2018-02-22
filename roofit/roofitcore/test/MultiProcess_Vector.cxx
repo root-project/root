@@ -80,11 +80,18 @@ namespace RooFit {
     class Queuemunicator {
      public:
       explicit Queuemunicator(std::size_t NumCPU) {
+
+
+
+        // at this point, the queue_pipe is already set-up, so it will have no worker pipes...
+
+
+
         for (std::size_t ix = 0; ix < NumCPU; ++ix) {
           // set worker_id before each fork so that fork will sync it to the worker
           worker_id = ix;
-          pipes.emplace_back();
-          if (pipes.back().isChild()) {
+          worker_pipes.emplace_back();
+          if (worker_pipes.back().isChild()) {
             _is_master = false;
           }
         }
@@ -93,7 +100,7 @@ namespace RooFit {
       // Send a message vector from master to all slaves
       template <typename T_message>
       void to_slaves(T_message message) {
-        for (const RooFit::BidirMMapPipe & pipe : pipes) {
+        for (const RooFit::BidirMMapPipe & pipe : worker_pipes) {
           if (pipe.isParent()) {
             pipe << message;
           } else {
@@ -117,10 +124,9 @@ namespace RooFit {
 //      }
 
     template <typename T_message>
-    T_message from_master() {
-      RooFit::BidirMMapPipe& pipe = pipes[worker_id];
+    bool from_master(T_message & message) {
+      RooFit::BidirMMapPipe& pipe = worker_pipes[worker_id];
       if (pipe.isChild()) {
-        T_message message;
         pipe >> message;
       } else {
         throw std::logic_error("calling Communicator::from_master from master process");
@@ -130,7 +136,7 @@ namespace RooFit {
       // Send a message from a slave back to master
       template <typename T_message>
       void to_master(T_message message) {
-        RooFit::BidirMMapPipe& pipe = pipes[worker_id];
+        RooFit::BidirMMapPipe& pipe = worker_pipes[worker_id];
         if (pipe.isChild()) {
           pipe << message;
         } else {
@@ -139,14 +145,20 @@ namespace RooFit {
       }
 
       // Have a slave ask for a task-message from the master queue
-      T_task from_master_queue() {
-        return master_queue.pop();
+      bool from_master_queue(T_task & task) {
+        if (master_queue.empty()) {
+          return false;
+        } else {
+          task = master_queue.pop();
+          return true;
+        }
       }
 
       // Enqueue something on the master queue
       void to_master_queue(T_task task) {
         if (is_master()) {
           master_queue.push(task);
+
         } else {
           throw std::logic_error("calling Communicator::to_master_queue from slave process");
         }
@@ -157,7 +169,8 @@ namespace RooFit {
       }
 
      private:
-      std::vector<RooFit::BidirMMapPipe> pipes;
+      std::vector<RooFit::BidirMMapPipe> worker_pipes;
+      RooFit::BidirMMapPipe queue_pipe;
       std::size_t worker_id;
       bool _is_master = true;
       std::queue<T_task> master_queue;
@@ -204,7 +217,7 @@ namespace RooFit {
       }
 
      private:
-      virtual void evaluate_task(std::size_t task_index) = 0;
+      virtual void evaluate_task(T_task task_index) = 0;
       virtual void sync_worker(std::size_t worker_id) {};
 
 
@@ -216,15 +229,20 @@ namespace RooFit {
 
       void worker_loop() {
         bool carry_on = true;
+        T_task task_index;
+        int message;
         while (carry_on) {
-          int message = from_master();
-          if (message == 0) {
-            // get a task from the queue
-          } else if (message == -1) {
-            // terminate
-            carry_on = false;
-          } else {
-            process_message(message);
+          if (queuemunicator->from_master_queue(task_index)) {
+            evaluate_task(task_index);
+          } else if (queuemunicator->from_master(message)) {
+            if (message == 0) {
+              // get a task from the queue
+            } else if (message == -1) {
+              // terminate
+              carry_on = false;
+            } else {
+              process_message(message);
+            }
           }
         }
       }
@@ -263,10 +281,10 @@ class xSquaredPlusBVectorParallel : public RooFit::MultiProcess::Vector<xSquared
     for (std::size_t ix = 0; ix < x.size(); ++ix) {
       queuemunicator->to_master_queue(ix);
     }
-    // instruct workers to evaluate tasks
-    queuemunicator->to_slaves(Message::evaluate_tasks);
-    // sync task result back from worker to master
-
+    // wait for workers to evaluate tasks; this should happen automatically if no messages are being processed... but how? do we need a queue_loop? then we would also need a separate queue process, because otherwise it won't be asynchronous with the master...
+//    queuemunicator->to_slaves(Message::evaluate_tasks);
+    // wait for task results back from worker to master
+    result = queuemunicator->get
   }
 
   void set_b_workers(double b) {}
