@@ -3302,7 +3302,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
       auto infos = cl->GetStreamerInfos();
       auto ninfos = infos->GetSize();
       if (version < -1 || version >= ninfos) {
-         Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
+         Error("ReadClassBuffer", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
                cl->GetName(), version, Length() );
          CheckByteCount(start, count, cl);
          return 0;
@@ -3320,7 +3320,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, Int_t versio
             // current 'locked' section.
             sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
             const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
-            if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
+            if (gDebug > 0) Info("ReadClassBuffer", "Creating StreamerInfo for class: %s, version: %d", cl->GetName(), version);
             sinfo->Build();
          } else if (version==0) {
             // When the object was written the class was version zero, so
@@ -3455,14 +3455,12 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
                   sinfo->SetClassVersion(version);
                   const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
                   if (gDebug > 0)
-                     printf(
-                           "Creating StreamerInfo for class: %s, version: %d\n",
+                     Info("ReadClassBuffer", "Creating StreamerInfo for class: %s, version: %d",
                            cl->GetName(), version);
                   if (v2file) {
-                     sinfo->Build(); // Get the elements.
-                     sinfo->Clear("build"); // Undo compilation.
-                     sinfo->BuildEmulated(
-                           file); // Fix the types and redo compilation.
+                     sinfo->Build();             // Get the elements.
+                     sinfo->Clear("build");      // Undo compilation.
+                     sinfo->BuildEmulated(file); // Fix the types and redo compilation.
                   } else {
                      sinfo->Build();
                   }
@@ -3490,7 +3488,7 @@ Int_t TBufferFile::ReadClassBuffer(const TClass *cl, void *pointer, const TClass
    // Check that the buffer position corresponds to the byte count.
    CheckByteCount(R__s, R__c, cl);
 
-   if (gDebug > 2) printf(" ReadBuffer for class: %s has read %d bytes\n", cl->GetName(), R__c);
+   if (gDebug > 2) Info("ReadClassBuffer", "For class: %s has read %d bytes", cl->GetName(), R__c);
 
    return 0;
 }
@@ -3515,7 +3513,7 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
          sinfo = new TStreamerInfo(const_cast<TClass*>(cl));
          const_cast<TClass*>(cl)->SetCurrentStreamerInfo(sinfo);
          const_cast<TClass*>(cl)->RegisterStreamerInfo(sinfo);
-         if (gDebug > 0) printf("Creating StreamerInfo for class: %s, version: %d\n",cl->GetName(),cl->GetClassVersion());
+         if (gDebug > 0) Info("WritedClassBuffer", "Creating StreamerInfo for class: %s, version: %d",cl->GetName(),cl->GetClassVersion());
          sinfo->Build();
       }
    } else if (!sinfo->IsCompiled()) {
@@ -3538,7 +3536,7 @@ Int_t TBufferFile::WriteClassBuffer(const TClass *cl, void *pointer)
    //write the byte count at the start of the buffer
    SetByteCount(R__c, kTRUE);
 
-   if (gDebug > 2) printf(" WriteBuffer for class: %s version %d has written %d bytes\n",cl->GetName(),cl->GetClassVersion(),UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t));
+   if (gDebug > 2) Info("WritedClassBuffer", "For class: %s version %d has written %d bytes",cl->GetName(),cl->GetClassVersion(),UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t));
    return 0;
 }
 
