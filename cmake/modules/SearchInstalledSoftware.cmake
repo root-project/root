@@ -4,6 +4,12 @@ include(FindPackageHandleStandardArgs)
 
 set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 
+macro(find_package)
+  if(NOT "${ARGV0}" IN_LIST ROOT_BUILTINS)
+    _find_package(${ARGV})
+  endif()
+endmacro()
+
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
 
