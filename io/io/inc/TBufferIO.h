@@ -69,6 +69,13 @@ public:
 
    virtual ~TBufferIO();
 
+   // See comment in TBuffer::SetPidOffset
+   virtual UShort_t GetPidOffset() const { return fPidOffset; }
+   virtual void SetPidOffset(UShort_t offset);
+   virtual Int_t GetBufferDisplacement() const { return fDisplacement; }
+   virtual void SetBufferDisplacement() { fDisplacement = 0; }
+   virtual void SetBufferDisplacement(Int_t skipped) { fDisplacement = (Int_t)(Length() - skipped); }
+
    virtual void SetReadParam(Int_t mapsize);
    virtual void SetWriteParam(Int_t mapsize);
    virtual void InitMap();
