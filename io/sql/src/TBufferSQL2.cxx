@@ -278,7 +278,7 @@ Int_t TBufferSQL2::SqlWriteObject(const void *obj, const TClass *cl, Bool_t cach
    if (!obj) {
       objid = 0;
    } else {
-      Long64_t value = GetMapEntry(obj);
+      Long64_t value = GetObjectTag(obj);
       if (value > 0)
          objid = fFirstObjId + value - 1;
    }

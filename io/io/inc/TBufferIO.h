@@ -55,6 +55,8 @@ protected:
    // method used in TBufferFile, keep here for full compatibility
    virtual void CheckCount(UInt_t) {}
 
+   Long64_t GetObjectTag(const void *obj);
+
 public:
    enum { kMapSize = 503 }; ///< default objects map size
 

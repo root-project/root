@@ -1074,17 +1074,6 @@ const char *TBufferText::ConvertDouble(Double_t value, char *buf, unsigned len, 
    return buf;
 }
 
-////////////////////////////////////////////////////////////////////////////////////
-/// Returns object map entry for specified object
-
-Long64_t TBufferText::GetMapEntry(const void *obj)
-{
-   if (!obj || !fMap)
-      return 0;
-
-   return fMap->GetValue(Void_Hash(obj), (Long_t)obj);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return the version number of the owner file.
 
