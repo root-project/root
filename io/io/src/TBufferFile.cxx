@@ -119,16 +119,6 @@ TBufferFile::~TBufferFile()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Return the version number of the owner file.
-
-Int_t TBufferFile::GetVersionOwner() const
-{
-   TFile *file = (TFile*)GetParent();
-   if (file) return file->GetVersion();
-   else return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Mark the classindex of the current file as using this TStreamerInfo
 
 void TBufferFile::TagStreamerInfo(TVirtualStreamerInfo* info)

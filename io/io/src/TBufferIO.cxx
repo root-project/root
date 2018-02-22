@@ -21,6 +21,7 @@ Direct subclass of TBuffer, implements common methods for TBufferFile and TBuffe
 
 #include "TExMap.h"
 #include "TClass.h"
+#include "TFile.h"
 #include "TError.h"
 
 Int_t TBufferIO::fgMapSize = kMapSize;
@@ -60,6 +61,17 @@ TBufferIO::~TBufferIO()
    delete fMap;
    delete fClassMap;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return the version number of the owner file.
+
+Int_t TBufferIO::GetVersionOwner() const
+{
+   TFile *file = (TFile*)GetParent();
+   if (file) return file->GetVersion();
+   else return 0;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the initial size of the map used to store object and class

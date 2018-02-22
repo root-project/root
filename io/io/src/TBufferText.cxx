@@ -44,16 +44,14 @@ const char *TBufferText::fgDoubleFmt = "%.14e";
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
-TBufferText::TBufferText()
-   : TBufferIO()
+TBufferText::TBufferText() : TBufferIO()
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Normal constructor
 
-TBufferText::TBufferText(TBuffer::EMode mode, TObject *parent)
-   : TBufferIO(mode)
+TBufferText::TBufferText(TBuffer::EMode mode, TObject *parent) : TBufferIO(mode)
 {
    fBufSize = 1000000000;
 
@@ -1072,16 +1070,4 @@ const char *TBufferText::ConvertDouble(Double_t value, char *buf, unsigned len, 
       CompactFloatString(buf, len);
    }
    return buf;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the version number of the owner file.
-
-Int_t TBufferText::GetVersionOwner() const
-{
-   TFile *file = (TFile *)GetParent();
-   if (file)
-      return file->GetVersion();
-   else
-      return 0;
 }
