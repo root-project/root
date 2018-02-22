@@ -27,16 +27,12 @@ protected:
 public:
    virtual ~TBufferText();
 
-   // virtual abstract TBuffer methods, which could be redefined here
-   // probably, one can move them to TBufferImpl class, which can be base
-   // for TBufferFile and TBufferText
+   // virtual TBuffer methods, which are generic for all text-based streamers
 
    virtual void StreamObject(void *obj, const std::type_info &typeinfo, const TClass *onFileClass = nullptr);
    virtual void StreamObject(void *obj, const char *className, const TClass *onFileClass = nullptr);
    virtual void StreamObject(TObject *obj);
    using TBuffer::StreamObject;
-
-   // virtual TBuffer methods, which are generic for all text-based streamers
 
    virtual Int_t ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *object);
    virtual Int_t ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection,
@@ -138,7 +134,6 @@ public:
    static const char *ConvertDouble(Double_t v, char *buf, unsigned len, Bool_t not_optimize = kFALSE);
 
 protected:
-
    static const char *fgFloatFmt;  ///<!  printf argument for floats, either "%f" or "%e" or "%10f" and so on
    static const char *fgDoubleFmt; ///<!  printf argument for doubles, either "%f" or "%e" or "%10f" and so on
 
