@@ -246,6 +246,18 @@ void TBufferIO::ResetMap()
 }
 
 
+////////////////////////////////////////////////////////////////////////////////
+/// This offset is used when a key (or basket) is transfered from one
+/// file to the other.  In this case the TRef and TObject might have stored a
+/// pid index (to retrieve TProcessIDs) which referred to their order on the original
+/// file, the fPidOffset is to be added to those values to correctly find the
+/// TProcessID.  This fPidOffset needs to be increment if the key/basket is copied
+/// and need to be zero for new key/basket.
+
+void TBufferIO::SetPidOffset(UShort_t offset)
+{
+   fPidOffset = offset;
+}
 
 //---- Static functions --------------------------------------------------------
 

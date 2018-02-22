@@ -21,12 +21,10 @@ class TExMap;
 class TBufferText : public TBufferIO {
 
 protected:
-
    TBufferText();
    TBufferText(TBuffer::EMode mode, TObject *parent = nullptr);
 
 public:
-
    virtual ~TBufferText();
 
    // virtual abstract TBuffer methods, which could be redefined here
@@ -37,9 +35,6 @@ public:
    virtual UInt_t GetTRefExecId();
    virtual TProcessID *ReadProcessID(UShort_t pidf);
    virtual UShort_t WriteProcessID(TProcessID *pid);
-
-   virtual UShort_t GetPidOffset() const { return fPidOffset; }
-   virtual void SetPidOffset(UShort_t offset) { fPidOffset = offset; }
 
    virtual void TagStreamerInfo(TVirtualStreamerInfo *info);
 
@@ -110,10 +105,6 @@ public:
    virtual Version_t ReadVersionNoCheckSum(UInt_t *, UInt_t *) { return 0; }
 
    virtual void Reset() { ResetMap(); }
-
-   virtual Int_t GetBufferDisplacement() const { return fDisplacement; }
-   virtual void SetBufferDisplacement() { fDisplacement = 0; }
-   virtual void SetBufferDisplacement(Int_t skipped) { fDisplacement = skipped; }
 
    virtual Int_t ReadBuf(void * /*buf*/, Int_t /*max*/)
    {
