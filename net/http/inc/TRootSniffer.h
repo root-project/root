@@ -133,8 +133,8 @@ protected:
 
    virtual void ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj);
 
-   void ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, const char *foldername = 0,
-                       TCollection *keys_lst = 0);
+   void
+   ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, const char *foldername = 0, TCollection *keys_lst = 0);
 
    /** Method is used to scan ROOT objects.
     * Can be reimplemented to extend scanning */
@@ -224,15 +224,14 @@ public:
 
    virtual Bool_t ProduceImage(Int_t kind, const char *path, const char *options, void *&ptr, Long_t &length);
 
-   Bool_t ProduceExe(const char *path, const char *options, Int_t reskind, TString *ret_str, void **ret_ptr = 0,
-                     Long_t *ret_length = 0);
+   virtual Bool_t ProduceExe(const char *path, const char *options, Int_t reskind, TString *ret_str,
+                             void **ret_ptr = nullptr, Long_t *ret_length = nullptr);
 
    Bool_t ExecuteCmd(const char *path, const char *options, TString &res);
 
    Bool_t ProduceItem(const char *path, const char *options, TString &res, Bool_t asjson = kTRUE);
 
-   Bool_t ProduceMulti(const char *path, const char *options, void *&ptr, Long_t &length, TString &str,
-                       Bool_t asjson = kTRUE);
+   Bool_t ProduceMulti(const char *path, const char *options, void *&ptr, Long_t &length, TString &str, Bool_t asjson = kTRUE);
 
    Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str);
 
