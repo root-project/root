@@ -4,6 +4,10 @@
 
 set(libname ROOTQt5WebDisplay)
 
+if(POLICY CMP0071)
+  cmake_policy(SET CMP0071 NEW)
+endif()
+
 find_package(Qt5 COMPONENTS Core WebEngine WebEngineWidgets REQUIRED)
 
 set(CMAKE_AUTOMOC ON)
