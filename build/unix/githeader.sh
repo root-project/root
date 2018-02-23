@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 # Generate the header file from the Store info about in which git branch, what SHA1 and at what date/time
 # we executed make.

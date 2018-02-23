@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 # -*- sh-indentation: 3 -*-
 # This script returns the machine dependent compile options needed
 # to compile and link applications using the ROOT libraries.

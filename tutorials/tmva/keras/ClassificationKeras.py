@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/env python
 
 from ROOT import TMVA, TFile, TTree, TCut
 from subprocess import call

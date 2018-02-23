@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 # Check version of interpreter/llvm directory and if it is changed force
 # a make in the LLVM tree. It creates the file

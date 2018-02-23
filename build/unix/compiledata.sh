@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/env bash
 
 # Script to generate the file include/compiledata.h.
 # Called by main Makefile.

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/env python
 # Author: Pau Miquel i Mir <pau.miquel.mir@cern.ch> <pmm1g15@soton.ac.uk>>
 # Date: July, 2016
 #
