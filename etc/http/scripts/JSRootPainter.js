@@ -344,7 +344,8 @@
                 '#perp': '\u22A5',
                 '#odot': '\u2299',
                 '#left': '',
-                '#right': ''
+                '#right': '',
+                '{}': ''
           },
           math_symbols_map: {
                 '#LT':"\\langle",

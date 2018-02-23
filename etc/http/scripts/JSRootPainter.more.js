@@ -2801,6 +2801,8 @@
    }
 
    TGraphTimePainter.prototype.ContineDrawing = function() {
+      if (!this.options) return;
+
       var gr = this.GetObject();
 
       if (!this.ready_called) {
