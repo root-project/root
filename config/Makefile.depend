@@ -145,7 +145,7 @@ RECLIBDEPM             = $(IOLIB) $(TREELIB) $(GUILIB) $(THREADLIB)
 FITSIOLIBDEPM          = $(HISTLIB) $(GPADLIB) $(GRAFLIB) $(MATRIXLIB)
 RLIBDEPM               = $(MATRIXLIB) $(GUILIB) $(THREADLIB)
 HTTPLIBDEPM            = $(THREADLIB) $(TREELIB) $(HISTLIB) $(GPADLIB) \
-                         $(GRAFLIB) $(IOLIB) $(XMLLIB)
+                         $(GRAFLIB) $(IOLIB)
 HTTPSNIFFLIBDEPM       = $(HTTPLIB) $(THREADLIB) $(TREELIB) $(HISTLIB) $(GPADLIB) \
                          $(GRAFLIB) $(IOLIB) $(XMLLIB)
 
@@ -441,8 +441,7 @@ RECLIBEXTRA             = lib/libGui.lib lib/libRIO.lib lib/libTree.lib \
 FITSIOLIBEXTRA          = lib/libHist.lib lib/libGpad.lib lib/libGraf.lib \
                           lib/libMatrix.lib
 HTTPLIBEXTRA            = lib/libThread.lib lib/libTree.lib lib/libHist.lib \
-                          lib/libGpad.lib lib/libGraf.lib  lib/libRIO.lib \
-                          lib/libXMLIO.lib
+                          lib/libGpad.lib lib/libGraf.lib  lib/libRIO.lib
 ifeq ($(USEFASCGI), yes)
 HTTPLIBEXTRA           += libfcgi
 endif
@@ -580,7 +579,7 @@ MEMSTATGUILIBEXTRA      = -Llib -lMemStat -lTree -lGui
 RECLIBEXTRA             = -Llib -lGui -lRIO -lTree -lThread
 FITSIOLIBEXTRA          = -Llib -lHist -lGpad -lGraf -lMatrix
 RLIBEXTRA               = -Llib -lCore -lMatrix -lGui -lreadline -lThread
-HTTPLIBEXTRA            = -Llib -lThread -lTree -lHist -lGpad -lGraf -lRIO -lXMLIO
+HTTPLIBEXTRA            = -Llib -lThread -lTree -lHist -lGpad -lGraf -lRIO
 ifeq ($(USEFASCGI), yes)
 HTTPLIBEXTRA           += -lfcgi
 endif

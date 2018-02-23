@@ -198,4 +198,329 @@ Bool_t TRootSnifferFull::ProduceXml(const char *path, const char * /*options*/, 
    return res.Length() > 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// execute command for specified object
+/// options include method and extra list of parameters
+/// sniffer should be not-readonly to allow execution of the commands
+/// reskind defines kind of result 0 - debug, 1 - json, 2 - binary
 
+Bool_t TRootSnifferFull::ProduceExe(const char *path, const char *options, Int_t reskind, TString *res_str, void **res_ptr,
+                                Long_t *res_length)
+{
+   TString *debug = (reskind == 0) ? res_str : nullptr;
+
+   if (!path || (*path == 0)) {
+      if (debug) debug->Append("Item name not specified\n");
+      return debug != nullptr;
+   }
+
+   if (*path == '/') path++;
+
+   TClass *obj_cl = nullptr;
+   void *obj_ptr = FindInHierarchy(path, &obj_cl);
+   if (debug) debug->Append(TString::Format("Item:%s found:%s\n", path, obj_ptr ? "true" : "false"));
+   if (!obj_ptr || !obj_cl) return debug != 0;
+
+   TUrl url;
+   url.SetOptions(options);
+
+   const char *method_name = url.GetValueFromOptions("method");
+   TString prototype = DecodeUrlOptionValue(url.GetValueFromOptions("prototype"), kTRUE);
+   TString funcname = DecodeUrlOptionValue(url.GetValueFromOptions("func"), kTRUE);
+   TMethod *method = nullptr;
+   TFunction *func = nullptr;
+   if (method_name != 0) {
+      if (prototype.Length() == 0) {
+         if (debug) debug->Append(TString::Format("Search for any method with name \'%s\'\n", method_name));
+         method = obj_cl->GetMethodAllAny(method_name);
+      } else {
+         if (debug)
+            debug->Append(
+               TString::Format("Search for method \'%s\' with prototype \'%s\'\n", method_name, prototype.Data()));
+         method = obj_cl->GetMethodWithPrototype(method_name, prototype);
+      }
+   }
+
+   if (method != nullptr) {
+      if (debug) debug->Append(TString::Format("Method: %s\n", method->GetPrototype()));
+   } else {
+      if (funcname.Length() > 0) {
+         if (prototype.Length() == 0) {
+            if (debug) debug->Append(TString::Format("Search for any function with name \'%s\'\n", funcname.Data()));
+            func = gROOT->GetGlobalFunction(funcname);
+         } else {
+            if (debug)
+               debug->Append(TString::Format("Search for function \'%s\' with prototype \'%s\'\n", funcname.Data(),
+                                             prototype.Data()));
+            func = gROOT->GetGlobalFunctionWithPrototype(funcname, prototype);
+         }
+      }
+
+      if (func != nullptr) {
+         if (debug) debug->Append(TString::Format("Function: %s\n", func->GetPrototype()));
+      }
+   }
+
+   if (!method && !func) {
+      if (debug) debug->Append("Method not found\n");
+      return debug != nullptr;
+   }
+
+   if ((fReadOnly && (fCurrentRestrict == 0)) || (fCurrentRestrict == 1)) {
+      if ((method != nullptr) && (fCurrentAllowedMethods.Index(method_name) == kNPOS)) {
+         if (debug) debug->Append("Server runs in read-only mode, method cannot be executed\n");
+         return debug != nullptr;
+      } else if ((func != nullptr) && (fCurrentAllowedMethods.Index(funcname) == kNPOS)) {
+         if (debug) debug->Append("Server runs in read-only mode, function cannot be executed\n");
+         return debug != nullptr;
+      } else {
+         if (debug) debug->Append("For that special method server allows access even read-only mode is specified\n");
+      }
+   }
+
+   TList *args = method ? method->GetListOfMethodArgs() : func->GetListOfMethodArgs();
+
+   TList garbage;
+   garbage.SetOwner(kTRUE); // use as garbage collection
+   TObject *post_obj = nullptr;   // object reconstructed from post request
+   TString call_args;
+
+   TIter next(args);
+   TMethodArg *arg = nullptr;
+   while ((arg = (TMethodArg *)next()) != nullptr) {
+
+      if ((strcmp(arg->GetName(), "rest_url_opt") == 0) && (strcmp(arg->GetFullTypeName(), "const char*") == 0) &&
+          (args->GetSize() == 1)) {
+         // very special case - function requires list of options after method=argument
+
+         const char *pos = strstr(options, "method=");
+         if ((pos == 0) || (strlen(pos) < strlen(method_name) + 8)) return debug != nullptr;
+         call_args.Form("\"%s\"", pos + strlen(method_name) + 8);
+         break;
+      }
+
+      TString sval;
+      const char *val = url.GetValueFromOptions(arg->GetName());
+      if (val) {
+         sval = DecodeUrlOptionValue(val, kFALSE);
+         val = sval.Data();
+      }
+
+      if ((val != nullptr) && (strcmp(val, "_this_") == 0)) {
+         // special case - object itself is used as argument
+         sval.Form("(%s*)0x%lx", obj_cl->GetName(), (long unsigned)obj_ptr);
+         val = sval.Data();
+      } else if ((val != nullptr) && (fCurrentArg != nullptr) && (fCurrentArg->GetPostData() != nullptr)) {
+         // process several arguments which are specific for post requests
+         if (strcmp(val, "_post_object_xml_") == 0) {
+            // post data has extra 0 at the end and can be used as null-terminated string
+            post_obj = TBufferXML::ConvertFromXML((const char *)fCurrentArg->GetPostData());
+            if (post_obj == nullptr) {
+               sval = "0";
+            } else {
+               sval.Form("(%s*)0x%lx", post_obj->ClassName(), (long unsigned)post_obj);
+               if (url.HasOption("_destroy_post_")) garbage.Add(post_obj);
+            }
+            val = sval.Data();
+         } else if (strcmp(val, "_post_object_json_") == 0) {
+            // post data has extra 0 at the end and can be used as null-terminated string
+            post_obj = TBufferJSON::ConvertFromJSON((const char *)fCurrentArg->GetPostData());
+            if (post_obj == nullptr) {
+               sval = "0";
+            } else {
+               sval.Form("(%s*)0x%lx", post_obj->ClassName(), (long unsigned)post_obj);
+               if (url.HasOption("_destroy_post_")) garbage.Add(post_obj);
+            }
+            val = sval.Data();
+         } else if ((strcmp(val, "_post_object_") == 0) && url.HasOption("_post_class_")) {
+            TString clname = url.GetValueFromOptions("_post_class_");
+            TClass *arg_cl = gROOT->GetClass(clname, kTRUE, kTRUE);
+            if ((arg_cl != nullptr) && (arg_cl->GetBaseClassOffset(TObject::Class()) == 0) && (post_obj == nullptr)) {
+               post_obj = (TObject *)arg_cl->New();
+               if (post_obj == nullptr) {
+                  if (debug) debug->Append(TString::Format("Fail to create object of class %s\n", clname.Data()));
+               } else {
+                  if (debug)
+                     debug->Append(TString::Format("Reconstruct object of class %s from POST data\n", clname.Data()));
+                  TBufferFile buf(TBuffer::kRead, fCurrentArg->GetPostDataLength(), fCurrentArg->GetPostData(), kFALSE);
+                  buf.MapObject(post_obj, arg_cl);
+                  post_obj->Streamer(buf);
+                  if (url.HasOption("_destroy_post_")) garbage.Add(post_obj);
+               }
+            }
+            sval.Form("(%s*)0x%lx", clname.Data(), (long unsigned)post_obj);
+            val = sval.Data();
+         } else if (strcmp(val, "_post_data_") == 0) {
+            sval.Form("(void*)0x%lx", (long unsigned)*res_ptr);
+            val = sval.Data();
+         } else if (strcmp(val, "_post_length_") == 0) {
+            sval.Form("%ld", (long)*res_length);
+            val = sval.Data();
+         }
+      }
+
+      if (val == nullptr) val = arg->GetDefault();
+
+      if (debug)
+         debug->Append(TString::Format("  Argument:%s Type:%s Value:%s \n", arg->GetName(), arg->GetFullTypeName(),
+                                       val ? val : "<missed>"));
+      if (val == 0) return debug != nullptr;
+
+      if (call_args.Length() > 0) call_args += ", ";
+
+      if ((strcmp(arg->GetFullTypeName(), "const char*") == 0) || (strcmp(arg->GetFullTypeName(), "Option_t*") == 0)) {
+         int len = strlen(val);
+         if ((strlen(val) < 2) || (*val != '\"') || (val[len - 1] != '\"'))
+            call_args.Append(TString::Format("\"%s\"", val));
+         else
+            call_args.Append(val);
+      } else {
+         call_args.Append(val);
+      }
+   }
+
+   TMethodCall *call = nullptr;
+
+   if (method != nullptr) {
+      call = new TMethodCall(obj_cl, method_name, call_args.Data());
+      if (debug) debug->Append(TString::Format("Calling obj->%s(%s);\n", method_name, call_args.Data()));
+   } else {
+      call = new TMethodCall(funcname.Data(), call_args.Data());
+      if (debug) debug->Append(TString::Format("Calling %s(%s);\n", funcname.Data(), call_args.Data()));
+   }
+
+   garbage.Add(call);
+
+   if (!call->IsValid()) {
+      if (debug) debug->Append("Fail: invalid TMethodCall\n");
+      return debug != nullptr;
+   }
+
+   Int_t compact = 0;
+   if (url.GetValueFromOptions("compact")) compact = url.GetIntValueFromOptions("compact");
+
+   TString res = "null";
+   void *ret_obj = nullptr;
+   TClass *ret_cl = nullptr;
+   TBufferFile *resbuf = nullptr;
+   if (reskind == 2) {
+      resbuf = new TBufferFile(TBuffer::kWrite, 10000);
+      garbage.Add(resbuf);
+   }
+
+   switch (call->ReturnType()) {
+   case TMethodCall::kLong: {
+      Long_t l(0);
+      if (method)
+         call->Execute(obj_ptr, l);
+      else
+         call->Execute(l);
+      if (resbuf)
+         resbuf->WriteLong(l);
+      else
+         res.Form("%ld", l);
+      break;
+   }
+   case TMethodCall::kDouble: {
+      Double_t d(0.);
+      if (method)
+         call->Execute(obj_ptr, d);
+      else
+         call->Execute(d);
+      if (resbuf)
+         resbuf->WriteDouble(d);
+      else
+         res.Form(TBufferJSON::GetFloatFormat(), d);
+      break;
+   }
+   case TMethodCall::kString: {
+      char *txt = nullptr;
+      if (method)
+         call->Execute(obj_ptr, &txt);
+      else
+         call->Execute(0, &txt); // here 0 is artificial, there is no proper signature
+      if (txt != nullptr) {
+         if (resbuf)
+            resbuf->WriteString(txt);
+         else
+            res.Form("\"%s\"", txt);
+      }
+      break;
+   }
+   case TMethodCall::kOther: {
+      std::string ret_kind = func ? func->GetReturnTypeNormalizedName() : method->GetReturnTypeNormalizedName();
+      if ((ret_kind.length() > 0) && (ret_kind[ret_kind.length() - 1] == '*')) {
+         ret_kind.resize(ret_kind.length() - 1);
+         ret_cl = gROOT->GetClass(ret_kind.c_str(), kTRUE, kTRUE);
+      }
+
+      if (ret_cl != nullptr) {
+         Long_t l(0);
+         if (method)
+            call->Execute(obj_ptr, l);
+         else
+            call->Execute(l);
+         if (l != 0) ret_obj = (void *)l;
+      } else {
+         if (method)
+            call->Execute(obj_ptr);
+         else
+            call->Execute();
+      }
+
+      break;
+   }
+   case TMethodCall::kNone: {
+      if (method)
+         call->Execute(obj_ptr);
+      else
+         call->Execute();
+      break;
+   }
+   }
+
+   const char *_ret_object_ = url.GetValueFromOptions("_ret_object_");
+   if (_ret_object_ != nullptr) {
+      TObject *obj = nullptr;
+      if (gDirectory) obj = gDirectory->Get(_ret_object_);
+      if (debug) debug->Append(TString::Format("Return object %s found %s\n", _ret_object_, obj ? "true" : "false"));
+
+      if (obj == nullptr) {
+         res = "null";
+      } else {
+         ret_obj = obj;
+         ret_cl = obj->IsA();
+      }
+   }
+
+   if (ret_obj && ret_cl) {
+      if ((resbuf != nullptr) && (ret_cl->GetBaseClassOffset(TObject::Class()) == 0)) {
+         TObject *obj = (TObject *)ret_obj;
+         resbuf->MapObject(obj);
+         obj->Streamer(*resbuf);
+         if (fCurrentArg) fCurrentArg->SetExtraHeader("RootClassName", ret_cl->GetName());
+      } else {
+         res = TBufferJSON::ConvertToJSON(ret_obj, ret_cl, compact);
+      }
+   }
+
+   if ((resbuf != nullptr) && (resbuf->Length() > 0) && (res_ptr != nullptr) && (res_length != nullptr)) {
+      *res_ptr = malloc(resbuf->Length());
+      memcpy(*res_ptr, resbuf->Buffer(), resbuf->Length());
+      *res_length = resbuf->Length();
+   }
+
+   if (debug) debug->Append(TString::Format("Result = %s\n", res.Data()));
+
+   if ((reskind == 1) && res_str) *res_str = res;
+
+   if (url.HasOption("_destroy_result_") && ret_obj && ret_cl) {
+      ret_cl->Destructor(ret_obj);
+      if (debug) debug->Append("Destroy result object at the end\n");
+   }
+
+   // delete all garbage objects, but should be also done with any return
+   garbage.Delete();
+
+   return kTRUE;
+}

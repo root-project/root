@@ -24,6 +24,9 @@ public:
 
    virtual Bool_t ProduceXml(const char *path, const char *options, TString &res);
 
+   virtual Bool_t ProduceExe(const char *path, const char *options, Int_t reskind, TString *ret_str,
+                             void **ret_ptr = nullptr, Long_t *ret_length = nullptr);
+
    ClassDef(TRootSnifferFull, 0) // Sniffer of ROOT objects
 };
 
