@@ -14,7 +14,6 @@
 #include "TThread.h"
 #include "TTimer.h"
 #include "TSystem.h"
-#include "TImage.h"
 #include "TROOT.h"
 #include "TUrl.h"
 #include "TClass.h"

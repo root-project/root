@@ -17,6 +17,7 @@
 #include "TList.h"
 
 class TFolder;
+class TKey;
 class TMemFile;
 class TBufferFile;
 class TDataMember;
@@ -130,6 +131,8 @@ protected:
    void ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char *ptr);
 
    virtual void ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj);
+
+   virtual void ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TObject *&obj, TClass *&obj_class);
 
    virtual void ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj);
 

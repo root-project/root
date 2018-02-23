@@ -15,6 +15,12 @@
 #include "TRootSniffer.h"
 
 class TRootSnifferFull : public TRootSniffer {
+protected:
+   virtual void ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj);
+
+   virtual void ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TObject *&obj, TClass *&obj_class);
+
+   virtual void ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj);
 
 public:
    TRootSnifferFull(const char *name, const char *objpath = "Objects");
