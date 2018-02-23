@@ -76,6 +76,69 @@ TRootSnifferFull::~TRootSnifferFull()
 {
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// scans object properties
+/// here such fields as _autoload or _icon properties depending on class or object name could be assigned
+/// By default properties, coded in the Class title are scanned. Example:
+///   ClassDef(UserClassName, 1) //  class comments *SNIFF*  _field1=value _field2="string value"
+/// Here *SNIFF* mark is important. After it all expressions like field=value are parsed
+/// One could use double quotes to code string values with spaces.
+/// Fields separated from each other with spaces
+
+void TRootSnifferFull::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
+{
+   if (obj && obj->InheritsFrom(TLeaf::Class())) {
+      rec.SetField("_more", "false");
+      rec.SetField("_can_draw", "false");
+      return;
+   }
+
+   TRootSniffer::ScanObjectProperties(rec, obj);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// scans key properties
+/// in special cases load objects from the file
+
+void TRootSnifferFull::ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TObject *&obj, TClass *&obj_class)
+{
+   if (strcmp(key->GetClassName(), "TDirectoryFile") == 0) {
+      TRootSniffer::ScanKeyProperties(rec, key, obj, obj_class);
+   } else {
+      obj_class = TClass::GetClass(key->GetClassName());
+      if (obj_class && obj_class->InheritsFrom(TTree::Class())) {
+         if (rec.CanExpandItem()) {
+            // it is requested to expand tree element - read it
+            obj = key->ReadObj();
+            if (obj) obj_class = obj->IsA();
+         } else {
+            rec.SetField("_player", "JSROOT.drawTreePlayerKey");
+            rec.SetField("_prereq", "jq2d");
+            // rec.SetField("_more", "true"); // one could allow to extend
+         }
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// scans object childs (if any)
+/// here one scans collection, branches, trees and so on
+
+void TRootSnifferFull::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
+{
+   if (obj->InheritsFrom(TTree::Class())) {
+      if (!rec.IsReadOnly(fReadOnly)) {
+         rec.SetField("_player", "JSROOT.drawTreePlayer");
+         rec.SetField("_prereq", "jq2d");
+      }
+      ScanCollection(rec, ((TTree *)obj)->GetListOfLeaves());
+   } else if (obj->InheritsFrom(TBranch::Class())) {
+      ScanCollection(rec, ((TBranch *)obj)->GetListOfLeaves());
+   } else {
+      TRootSniffer::ScanObjectChilds(rec, obj);
+   }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Method to produce image from specified object
