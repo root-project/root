@@ -1488,8 +1488,6 @@
       } else {
 
          this.DeleteAtt();
-         
-         this.ScanContent(true); // may be required for axis drawings
 
          this.ScanContent(true); // may be required for axis drawings
 
