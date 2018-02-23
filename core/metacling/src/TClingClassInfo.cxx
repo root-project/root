@@ -74,28 +74,7 @@ TClingClassInfo::TClingClassInfo(cling::Interpreter *interp, Bool_t all)
 {
    TranslationUnitDecl *TU =
       interp->getCI()->getASTContext().getTranslationUnitDecl();
-   // Could trigger deserialization of decls.
-   cling::Interpreter::PushTransactionRAII RAII(interp);
-   if (fIterAll)
-      fIter = TU->decls_begin();
-   else
-      fIter = TU->noload_decls_begin();
-
-   // Set
-   InternalNext();
    fFirstTime = true;
-   // CINT had this odd behavior where a ClassInfo created without any
-   // argument/input was set as an iterator that was ready to be iterated
-   // on but was set an not IsValid *BUT* a few routine where using this
-   // state as representing the global namespace (These routines include the
-   // GetMethod routines and CallFunc::SetFunc, but do not include many others
-   // (such as Property etc).  To be somewhat backward compatible, let's make
-   // this state actually valid (i.e., representing both the ready-for-first-
-   // iteration iterator *and* the global namespace) so that code that was
-   // working with CINT (grabbing the default initialized ClassInfo
-   // to look at the global namespace) is working again (and, yes, things that
-   // used to not work like 'asking' the filename on this will go 'further'
-   // but oh well).
    fDecl = TU;
    fType = 0;
 }
@@ -843,8 +822,17 @@ bool TClingClassInfo::IsValidMethod(const char *method, const char *proto,
 
 int TClingClassInfo::InternalNext()
 {
-
    R__LOCKGUARD(gInterpreterMutex);
+
+   cling::Interpreter::PushTransactionRAII RAII(fInterp);
+   if (fFirstTime) {
+      // fDecl must be a DeclContext in order to iterate.
+      const clang::DeclContext *DC = cast<DeclContext>(fDecl);
+      if (fIterAll)
+         fIter = DC->decls_begin();
+      else
+         fIter = DC->noload_decls_begin();
+   }
 
    if (!fIsIter) {
       // Object was not setup for iteration.
@@ -865,7 +853,6 @@ int TClingClassInfo::InternalNext()
       }
       return 0;
    }
-   cling::Interpreter::PushTransactionRAII pushedT(fInterp);
    while (true) {
       // Advance to next usable decl, or return if there is no next usable decl.
       if (fFirstTime) {
