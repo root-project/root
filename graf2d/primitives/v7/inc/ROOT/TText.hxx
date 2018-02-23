@@ -33,37 +33,13 @@ namespace Experimental {
  A text.
  */
 
-class TText {
-private:
-   std::string fText{};
-
-   /// Text's X position
-   double fX{0.};
-
-   /// Text's Y position
-   double fY{0.};
-
+class TText : public TDrawableBase<TText> {
 public:
-   TText() = default;
 
-   TText(const std::string &str) : fText(str) {}
-
-   void SetText(const std::string &txt) { fText = txt; }
-
-   std::string GetText() const { return fText; }
-
-   void SetPosition(double x, double y)
-   {
-      fX = x;
-      fY = y;
-   }
-
-   double GetX() const { return fX; }
-
-   double GetY() const { return fY; }
-};
-
-class TextDrawingOpts : public TDrawingOptsBase {
+/** class ROOT::Experimental::TText::DrawingOpts
+ Drawing options for TText.
+ */
+class DrawingOpts: public TDrawingOptsBase {
    TDrawingAttr<int> fLineWidth{*this, "Text.Line.Width", 3};                     ///< The line width.
    TDrawingAttr<TColor> fLineColor{*this, "Text.Line.Color", TColor::kBlack};     ///< The line color.
    TDrawingAttr<TColor> fFillColor{*this, "Text.Fill.Color", TColor::kInvisible}; ///< The fill color.
@@ -84,34 +60,54 @@ public:
    const TColor &GetFillColor() const { return fFillColor.Get(); }
 };
 
-class TTextDrawable : public TDrawableBase<TTextDrawable> {
-private:
-   /// Text string to be drawn
 
-   Internal::TUniWeakPtr<ROOT::Experimental::TText> fText{};
+private:
+   std::string fText{};
+
+   /// Text's X position
+   double fX{0.};
+
+   /// Text's Y position
+   double fY{0.};
 
    /// Text attributes
-   TextDrawingOpts fOpts;
+   DrawingOpts fOpts;
 
 public:
-   TTextDrawable() = default;
+   TText() = default;
 
-   TTextDrawable(const std::shared_ptr<ROOT::Experimental::TText> &txt) : fText(txt) {}
+   TText(const std::string &str) : fText(str) {}
 
-   TextDrawingOpts &GetOptions() { return fOpts; }
-   const TextDrawingOpts &GetOptions() const { return fOpts; }
+   void SetText(const std::string &txt) { fText = txt; }
+
+   std::string GetText() const { return fText; }
+
+   void SetPosition(double x, double y)
+   {
+      fX = x;
+      fY = y;
+   }
+
+   double GetX() const { return fX; }
+
+   double GetY() const { return fY; }
+
+   /// Get the draing options.
+   DrawingOpts &GetOptions() { return fOpts; }
+   const DrawingOpts &GetOptions() const { return fOpts; }
 
    void Paint(Internal::TVirtualCanvasPainter &canv) final
    {
       canv.AddDisplayItem(
-         std::make_unique<ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TTextDrawable>>(this));
+         std::make_unique<ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TText>>(this));
    }
 };
 
-inline std::unique_ptr<ROOT::Experimental::TTextDrawable>
+inline std::shared_ptr<ROOT::Experimental::TText>
 GetDrawable(const std::shared_ptr<ROOT::Experimental::TText> &text)
 {
-   return std::make_unique<ROOT::Experimental::TTextDrawable>(text);
+   /// A TText is a TDrawable itself.
+   return text;
 }
 
 } // namespace Experimental
