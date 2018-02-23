@@ -25,14 +25,7 @@
 #include "TROOT.h"
 #include "TTimer.h"
 #include "TFolder.h"
-#include "TTree.h"
-#include "TBranch.h"
-#include "TLeaf.h"
 #include "TClass.h"
-#include "TMethod.h"
-#include "TFunction.h"
-#include "TMethodArg.h"
-#include "TMethodCall.h"
 #include "TRealData.h"
 #include "TDataMember.h"
 #include "TDataType.h"
@@ -662,16 +655,10 @@ void TRootSniffer::ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char 
 
 void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
 {
-   TClass *cl = obj ? obj->IsA() : 0;
-
-   if (cl && cl->InheritsFrom(TLeaf::Class())) {
-      rec.SetField("_more", "false");
-      rec.SetField("_can_draw", "false");
-      return;
-   }
+   TClass *cl = obj ? obj->IsA() : nullptr;
 
    const char *pos = strstr(cl ? cl->GetTitle() : "", "*SNIFF*");
-   if (pos == 0) return;
+   if (!pos) return;
 
    pos += 7;
    while (*pos != 0) {
@@ -698,6 +685,26 @@ void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// scans key properties
+/// in special cases load objects from the file
+
+void TRootSniffer::ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TObject *&obj, TClass *&obj_class)
+{
+   if (strcmp(key->GetClassName(), "TDirectoryFile") == 0) {
+      if (rec.fLevel == 0) {
+         TDirectory *dir = dynamic_cast<TDirectory *>(key->ReadObj());
+         if (dir) {
+            obj = dir;
+            obj_class = dir->IsA();
+         }
+      } else {
+         rec.SetField(item_prop_more, "true", kFALSE);
+         rec.fHasMore = kTRUE;
+      }
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// scans object childs (if any)
 /// here one scans collection, branches, trees and so on
 
@@ -708,15 +715,7 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
    } else if (obj->InheritsFrom(TDirectory::Class())) {
       TDirectory *dir = (TDirectory *)obj;
       ScanCollection(rec, dir->GetList(), 0, dir->GetListOfKeys());
-   } else if (obj->InheritsFrom(TTree::Class())) {
-      if (!rec.IsReadOnly(fReadOnly)) {
-         rec.SetField("_player", "JSROOT.drawTreePlayer");
-         rec.SetField("_prereq", "jq2d");
-      }
-      ScanCollection(rec, ((TTree *)obj)->GetListOfLeaves());
-   } else if (obj->InheritsFrom(TBranch::Class())) {
-      ScanCollection(rec, ((TBranch *)obj)->GetListOfLeaves());
-   } else if (rec.CanExpandItem()) {
+   } if (rec.CanExpandItem()) {
       ScanObjectMembers(rec, obj->IsA(), (char *)obj);
    }
 }
@@ -784,24 +783,24 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, co
       }
    }
 
-   if (keys_lst != 0) {
+   if (keys_lst) {
       TIter iter(keys_lst);
-      TObject *kobj(0);
+      TObject *kobj = nullptr;
 
-      while ((kobj = iter()) != 0) {
+      while ((kobj = iter()) != nullptr) {
          TKey *key = dynamic_cast<TKey *>(kobj);
-         if (key == 0) continue;
-         TObject *obj = (lst == 0) ? 0 : lst->FindObject(key->GetName());
+         if (!key) continue;
+         TObject *obj = lst ? lst->FindObject(key->GetName()) : nullptr;
 
          // even object with the name exists, it should also match with class name
-         if ((obj != 0) && (strcmp(obj->ClassName(), key->GetClassName()) != 0)) obj = 0;
+         if (obj && (strcmp(obj->ClassName(), key->GetClassName()) != 0)) obj = nullptr;
 
          // if object of that name and of that class already in the list, ignore appropriate key
-         if ((obj != 0) && (master.fMask & TRootSnifferScanRec::kScan)) continue;
+         if (obj && (master.fMask & TRootSnifferScanRec::kScan)) continue;
 
          Bool_t iskey = kFALSE;
          // if object not exists, provide key itself for the scan
-         if (obj == 0) {
+         if (!obj) {
             obj = key;
             iskey = kTRUE;
          }
@@ -823,37 +822,12 @@ void TRootSniffer::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, co
 
             ScanObjectProperties(chld, obj);
 
-            if (obj->GetTitle() != 0) chld.SetField(item_prop_title, obj->GetTitle());
+            if (obj->GetTitle()) chld.SetField(item_prop_title, obj->GetTitle());
 
             // special handling of TKey class - in non-readonly mode
             // sniffer allowed to fetch objects
-            if (!chld.IsReadOnly(fReadOnly) && iskey) {
-               if (strcmp(key->GetClassName(), "TDirectoryFile") == 0) {
-                  if (chld.fLevel == 0) {
-                     TDirectory *dir = dynamic_cast<TDirectory *>(key->ReadObj());
-                     if (dir != 0) {
-                        obj = dir;
-                        obj_class = dir->IsA();
-                     }
-                  } else {
-                     chld.SetField(item_prop_more, "true", kFALSE);
-                     chld.fHasMore = kTRUE;
-                  }
-               } else {
-                  obj_class = TClass::GetClass(key->GetClassName());
-                  if (obj_class && obj_class->InheritsFrom(TTree::Class())) {
-                     if (rec.CanExpandItem()) {
-                        // it is requested to expand tree element - read it
-                        obj = key->ReadObj();
-                        if (obj) obj_class = obj->IsA();
-                     } else {
-                        rec.SetField("_player", "JSROOT.drawTreePlayerKey");
-                        rec.SetField("_prereq", "jq2d");
-                        // rec.SetField("_more", "true"); // one could allow to extend
-                     }
-                  }
-               }
-            }
+            if (!chld.IsReadOnly(fReadOnly) && iskey)
+               ScanKeyProperties(chld, key, obj, obj_class);
 
             rec.SetRootClass(obj_class);
 
