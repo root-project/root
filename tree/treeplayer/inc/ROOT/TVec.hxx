@@ -473,84 +473,84 @@ auto operator||(const V &c, const TVec<T> &v) -> decltype(v[0] || c, TVec<Boolea
 template <typename T0, typename T1>
 auto operator+(const TVec<T0> &v0, const TVec<T1> &v1) -> TVec<decltype(v0[0] + v1[0])>
 {
-   return ROOT::Internal::VecOps::Operate(v0, v1, "+", [](const T0 &v0, const T1 &v1) { return v0 + v1; });
+   return ROOT::Internal::VecOps::Operate(v0, v1, "+", [](const T0 &t0, const T1 &t1) { return t0 + t1; });
 }
 
 template <typename T0, typename T1>
 auto operator-(const TVec<T0> &v0, const TVec<T1> &v1) -> TVec<decltype(v0[0] - v1[0])>
 {
-   return ROOT::Internal::VecOps::Operate(v0, v1, "-", [](const T0 &v0, const T1 &v1) { return v0 - v1; });
+   return ROOT::Internal::VecOps::Operate(v0, v1, "-", [](const T0 &t0, const T1 &t1) { return t0 - t1; });
 }
 
 template <typename T0, typename T1>
 auto operator*(const TVec<T0> &v0, const TVec<T1> &v1) -> TVec<decltype(v0[0] * v1[0])>
 {
-   return ROOT::Internal::VecOps::Operate(v0, v1, "*", [](const T0 &v0, const T1 &v1) { return v0 * v1; });
+   return ROOT::Internal::VecOps::Operate(v0, v1, "*", [](const T0 &t0, const T1 &t1) { return t0 * t1; });
 }
 
 template <typename T0, typename T1>
 auto operator/(const TVec<T0> &v0, const TVec<T1> &v1) -> TVec<decltype(v0[0] / v1[0])>
 {
-   return ROOT::Internal::VecOps::Operate(v0, v1, "/", [](const T0 &v0, const T1 &v1) { return v0 / v1; });
+   return ROOT::Internal::VecOps::Operate(v0, v1, "/", [](const T0 &t0, const T1 &t1) { return t0 / t1; });
 }
 
 template <typename T0, typename T1>
 auto operator%(const TVec<T0> &v0, const TVec<T1> &v1) -> TVec<decltype(v0[0] % v1[0])>
 {
-   return ROOT::Internal::VecOps::Operate(v0, v1, "%", [](const T0 &v0, const T1 &v1) { return v0 % v1; });
+   return ROOT::Internal::VecOps::Operate(v0, v1, "%", [](const T0 &t0, const T1 &t1) { return t0 % t1; });
 }
 
 template <typename T0, typename T1>
 TVec<Boolean_t> operator>(const TVec<T0> &v0, const TVec<T1> &v1)
 {
-   return ROOT::Internal::VecOps::Operate(v0, v1, ">", [](const T0 &v0, const T1 &v1) -> Boolean_t { return v0 > v1; });
+   return ROOT::Internal::VecOps::Operate(v0, v1, ">", [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 > t1; });
 }
 
 template <typename T0, typename T1>
 TVec<Boolean_t> operator>=(const TVec<T0> &v0, const TVec<T1> &v1)
 {
    return ROOT::Internal::VecOps::Operate(v0, v1, ">=",
-                                          [](const T0 &v0, const T1 &v1) -> Boolean_t { return v0 >= v1; });
+                                          [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 >= t1; });
 }
 
 template <typename T0, typename T1>
 TVec<Boolean_t> operator==(const TVec<T0> &v0, const TVec<T1> &v1)
 {
    return ROOT::Internal::VecOps::Operate(v0, v1, "==",
-                                          [](const T0 &v0, const T1 &v1) -> Boolean_t { return v0 == v1; });
+                                          [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 == t1; });
 }
 
 template <typename T0, typename T1>
 TVec<Boolean_t> operator!=(const TVec<T0> &v0, const TVec<T1> &v1)
 {
    return ROOT::Internal::VecOps::Operate(v0, v1, "!=",
-                                          [](const T0 &v0, const T1 &v1) -> Boolean_t { return v0 != v1; });
+                                          [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 != t1; });
 }
 template <typename T0, typename T1>
 TVec<Boolean_t> operator<=(const TVec<T0> &v0, const TVec<T1> &v1)
 {
    return ROOT::Internal::VecOps::Operate(v0, v1, "<=",
-                                          [](const T0 &v0, const T1 &v1) -> Boolean_t { return v0 <= v1; });
+                                          [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 <= t1; });
 }
 
 template <typename T0, typename T1>
 TVec<Boolean_t> operator<(const TVec<T0> &v0, const TVec<T1> &v1)
 {
-   return ROOT::Internal::VecOps::Operate(v0, v1, "<", [](const T0 &v0, const T1 &v1) -> Boolean_t { return v0 < v1; });
+   return ROOT::Internal::VecOps::Operate(v0, v1, "<", [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 < t1; });
 }
 
 template <typename T0, typename T1>
 TVec<Boolean_t> operator&&(const TVec<T0> &v0, const TVec<T1> &v1)
 {
    return ROOT::Internal::VecOps::Operate(v0, v1, "&&",
-                                          [](const T0 &v0, const T1 &v1) -> Boolean_t { return v0 && v1; });
+                                          [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 && t1; });
 }
 
 template <typename T0, typename T1>
 TVec<Boolean_t> operator||(const TVec<T0> &v0, const TVec<T1> &v1)
 {
    return ROOT::Internal::VecOps::Operate(v0, v1, "||",
-                                          [](const T0 &v0, const T1 &v1) -> Boolean_t { return v0 || v1; });
+                                          [](const T0 &t0, const T1 &t1) -> Boolean_t { return t0 || t1; });
 }
 
 ///@}
