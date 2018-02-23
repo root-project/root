@@ -18,7 +18,6 @@
 #include "TROOT.h"
 #include "TUrl.h"
 #include "TClass.h"
-#include "TCanvas.h"
 #include "TFolder.h"
 #include "RVersion.h"
 #include "RConfigure.h"
@@ -170,7 +169,14 @@ THttpServer::THttpServer(const char *engine)
    fDefaultPage = fJSROOTSYS + "/files/online.htm";
    fDrawPage = fJSROOTSYS + "/files/draw.htm";
 
-   SetSniffer(new TRootSniffer("sniff"));
+   TRootSniffer *sniff = nullptr;
+   if (strstr(engine,"nofullsniff")) {
+      sniff = new TRootSniffer("sniff");
+   } else {
+      sniff = (TRootSniffer *) gROOT->ProcessLineSync("new TRootSnifferFull(\"sniff\");");
+   }
+
+   SetSniffer(sniff);
 
    // start timer
    SetTimer(20, kTRUE);

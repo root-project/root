@@ -218,11 +218,11 @@ public:
 
    Bool_t ProduceJson(const char *path, const char *options, TString &res);
 
-   Bool_t ProduceXml(const char *path, const char *options, TString &res);
+   virtual Bool_t ProduceXml(const char *path, const char *options, TString &res);
 
    Bool_t ProduceBinary(const char *path, const char *options, void *&ptr, Long_t &length);
 
-   Bool_t ProduceImage(Int_t kind, const char *path, const char *options, void *&ptr, Long_t &length);
+   virtual Bool_t ProduceImage(Int_t kind, const char *path, const char *options, void *&ptr, Long_t &length);
 
    Bool_t ProduceExe(const char *path, const char *options, Int_t reskind, TString *ret_str, void **ret_ptr = 0,
                      Long_t *ret_length = 0);
