@@ -521,24 +521,6 @@ if(gviz)
   endif()
 endif()
 
-#---Check for Qt installation-------------------------------------------------------
-if(qt OR qtgsi)
-  message(STATUS "Looking for Qt4")
-  find_package(Qt4 4.8 COMPONENTS QtCore QtGui)
-  if(NOT QT4_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Qt4 package not found and qt/qtgsi component required")
-    else()
-      message(STATUS "Qt4 not found. Switching off qt/qtgsi option")
-      set(qt OFF CACHE BOOL "" FORCE)
-      set(qtgsi OFF CACHE BOOL "" FORCE)
-    endif()
-  else()
-    MATH(EXPR QT_VERSION_NUM "${QT_VERSION_MAJOR}*10000 + ${QT_VERSION_MINOR}*100 + ${QT_VERSION_PATCH}")
-  endif()
-endif()
-
-
 #---Check for Bonjour installation-------------------------------------------------------
 if(bonjour)
   message(STATUS "Looking for Bonjour")
