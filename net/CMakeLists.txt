@@ -45,5 +45,6 @@ endif()
 
 if(http)
    add_subdirectory(http)
+   add_subdirectory(httpsniff)
 endif()
 
