@@ -42,7 +42,6 @@ public:
 class DrawingOpts: public TDrawingOptsBase {
    TDrawingAttr<int> fLineWidth{*this, "Text.Line.Width", 3};                     ///< The line width.
    TDrawingAttr<TColor> fLineColor{*this, "Text.Line.Color", TColor::kBlack};     ///< The line color.
-   TDrawingAttr<TColor> fFillColor{*this, "Text.Fill.Color", TColor::kInvisible}; ///< The fill color.
 
 public:
    /// The color of the line.
@@ -53,11 +52,6 @@ public:
    /// The width of the line.
    void SetLineWidth(int width) { fLineWidth = width; }
    int GetLineWidth() { return (int)fLineWidth; }
-
-   /// The fill color
-   void SetFillColor(const TColor &col) { fFillColor = col; }
-   TColor &GetFillColor() { return fFillColor.Get(); }
-   const TColor &GetFillColor() const { return fFillColor.Get(); }
 };
 
 
