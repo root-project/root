@@ -20,6 +20,10 @@ public:
    TRootSnifferFull(const char *name, const char *objpath = "Objects");
    virtual ~TRootSnifferFull();
 
+   virtual Bool_t ProduceImage(Int_t kind, const char *path, const char *options, void *&ptr, Long_t &length);
+
+   virtual Bool_t ProduceXml(const char *path, const char *options, TString &res);
+
    ClassDef(TRootSnifferFull, 0) // Sniffer of ROOT objects
 };
 

@@ -1235,19 +1235,9 @@ Bool_t TRootSniffer::ProduceItem(const char *path, const char *options, TString 
 /// produce XML data for specified item
 /// For object conversion TBufferXML is used
 
-Bool_t TRootSniffer::ProduceXml(const char *path, const char * /*options*/, TString &res)
+Bool_t TRootSniffer::ProduceXml(const char * /* path */, const char * /* options */, TString & /* res */)
 {
-   if ((path == 0) || (*path == 0)) return kFALSE;
-
-   if (*path == '/') path++;
-
-   TClass *obj_cl(0);
-   void *obj_ptr = FindInHierarchy(path, &obj_cl);
-   if ((obj_ptr == 0) || (obj_cl == 0)) return kFALSE;
-
-   res = TBufferXML::ConvertToXML(obj_ptr, obj_cl);
-
-   return res.Length() > 0;
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1794,88 +1784,11 @@ Bool_t TRootSniffer::ProduceBinary(const char *path, const char * /*query*/, voi
 ///
 ///  Return is memory with produced image
 ///  Memory must be released by user with free(ptr) call
+///  Method implemented in TRootSnifferFull
 
-Bool_t TRootSniffer::ProduceImage(Int_t kind, const char *path, const char *options, void *&ptr, Long_t &length)
+Bool_t TRootSniffer::ProduceImage(Int_t /*kind*/, const char */*path*/, const char */*options*/, void *&/*ptr*/, Long_t &/*length*/)
 {
-   ptr = 0;
-   length = 0;
-
-   if ((path == 0) || (*path == 0)) return kFALSE;
-   if (*path == '/') path++;
-
-   TClass *obj_cl(0);
-   void *obj_ptr = FindInHierarchy(path, &obj_cl);
-   if ((obj_ptr == 0) || (obj_cl == 0)) return kFALSE;
-
-   if (obj_cl->GetBaseClassOffset(TObject::Class()) != 0) {
-      Error("TRootSniffer", "Only derived from TObject classes can be drawn");
-      return kFALSE;
-   }
-
-   TObject *obj = (TObject *)obj_ptr;
-
-   TImage *img = TImage::Create();
-   if (img == 0) return kFALSE;
-
-   if (obj->InheritsFrom(TPad::Class())) {
-
-      if (gDebug > 1) Info("TRootSniffer", "Crate IMAGE directly from pad");
-      img->FromPad((TPad *)obj);
-   } else if (IsDrawableClass(obj->IsA())) {
-
-      if (gDebug > 1) Info("TRootSniffer", "Crate IMAGE from object %s", obj->GetName());
-
-      Int_t width(300), height(200);
-      TString drawopt = "";
-
-      if ((options != 0) && (*options != 0)) {
-         TUrl url;
-         url.SetOptions(options);
-         url.ParseOptions();
-         Int_t w = url.GetIntValueFromOptions("w");
-         if (w > 10) width = w;
-         Int_t h = url.GetIntValueFromOptions("h");
-         if (h > 10) height = h;
-         const char *opt = url.GetValueFromOptions("opt");
-         if (opt != 0) drawopt = opt;
-      }
-
-      Bool_t isbatch = gROOT->IsBatch();
-      TVirtualPad *save_gPad = gPad;
-
-      if (!isbatch) gROOT->SetBatch(kTRUE);
-
-      TCanvas *c1 = new TCanvas("__online_draw_canvas__", "title", width, height);
-      obj->Draw(drawopt.Data());
-      img->FromPad(c1);
-      delete c1;
-
-      if (!isbatch) gROOT->SetBatch(kFALSE);
-      gPad = save_gPad;
-
-   } else {
-      delete img;
-      return kFALSE;
-   }
-
-   TImage *im = TImage::Create();
-   im->Append(img);
-
-   char *png_buffer(0);
-   int size(0);
-
-   im->GetImageBuffer(&png_buffer, &size, (TImage::EImageFileTypes)kind);
-
-   if ((png_buffer != 0) && (size > 0)) {
-      ptr = malloc(size);
-      length = size;
-      memcpy(ptr, png_buffer, length);
-   }
-
-   delete[] png_buffer;
-   delete im;
-
-   return ptr != 0;
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
