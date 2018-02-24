@@ -377,7 +377,14 @@ TPad::~TPad()
    Close();
    CloseToolTip(fTip);
    DeleteToolTip(fTip);
-   SafeDelete(fPrimitives);
+   auto primitives = fPrimitives;
+   // In some cases, fPrimitives has the kMustCleanup bit set which will lead
+   // its destructor to call RecursiveRemove and since this pad is still
+   // likely to be (indirectly) in the list of cleanups, we must set
+   // fPrimitives to nullptr to avoid TPad::RecursiveRemove from calling
+   // a member function of a partially destructed object.
+   fPrimitives = nullptr;
+   delete primitives;
    SafeDelete(fExecs);
    delete fViewer3D;
    if (fCollideGrid) delete [] fCollideGrid;
