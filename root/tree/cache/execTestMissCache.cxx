@@ -26,6 +26,7 @@ void execTestMissCache() {
 
       in_tree->Write();
       in_file->Close();
+      delete in_file;
    }
 
    TFile * in_file = TFile::Open(in_fname);
