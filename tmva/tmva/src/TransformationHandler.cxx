@@ -115,10 +115,11 @@ TMVA::VariableTransformBase* TMVA::TransformationHandler::AddTransformation( Var
 
 void TMVA::TransformationHandler::AddStats( Int_t k, UInt_t ivar, Double_t mean, Double_t rms, Double_t min, Double_t max )
 {
-   if (rms <= 0) {
+   if (rms <= 0 || TMath::IsNaN(rms)) {
       Log() << kWARNING << "Variable \"" << Variable(ivar).GetExpression()
-            << "\" has zero or negative RMS^2 "
-            << "==> set to zero. Please check the variable content" << Endl;
+            << "\" has zero, negative, or NaN RMS^2: "
+            << rms
+            << " ==> set to zero. Please check the variable content" << Endl;
       rms = 0;
    }
 
