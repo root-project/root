@@ -375,9 +375,9 @@ Bool_t TRootSniffer::ProduceImage(Int_t kind, const char *path, const char *opti
          Info("TRootSniffer", "Crate IMAGE from object %s", obj->GetName());
 
       Int_t width(300), height(200);
-      TString drawopt = "";
+      TString drawopt;
 
-      if ((options != 0) && (*options != 0)) {
+      if (options && (*options != 0)) {
          TUrl url;
          url.SetOptions(options);
          url.ParseOptions();
@@ -388,7 +388,7 @@ Bool_t TRootSniffer::ProduceImage(Int_t kind, const char *path, const char *opti
          if (h > 10)
             height = h;
          const char *opt = url.GetValueFromOptions("opt");
-         if (opt != 0)
+         if (opt)
             drawopt = opt;
       }
 
