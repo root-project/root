@@ -73,7 +73,7 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
    if (!fServer)
-      fServer = std::make_unique<THttpServer>("dummy");
+      fServer = std::make_unique<THttpServer>("nofullsniffer");
 
    if (!with_http || (fAddr.length() > 0))
       return true;

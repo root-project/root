@@ -13,6 +13,7 @@ ROOT_OBJECT_LIBRARY(ROOTWebDisplayObjs G__ROOTWebDisplay.cxx ${WebDisplay_source
 
 ROOT_LINKER_LIBRARY(${libname} $<TARGET_OBJECTS:ROOTWebDisplayObjs> $<TARGET_OBJECTS:RootPcmObjs>
                     LIBRARIES ${CMAKE_DL_LIBS}
-                    DEPENDENCIES RHTTP)
+                    DEPENDENCIES RHTTP MathCore)
+ROOT_INSTALL_HEADERS()
 
 ROOT_INSTALL_HEADERS()
