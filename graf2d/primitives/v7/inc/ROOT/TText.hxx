@@ -46,12 +46,13 @@ class DrawingOpts: public TDrawingOptsBase {
 public:
    /// The color of the line.
    void SetLineColor(const TColor &col) { fLineColor = col; }
-   TColor &GetLineColor() { return fLineColor.Get(); }
+   TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
    const TColor &GetLineColor() const { return fLineColor.Get(); }
 
    /// The width of the line.
    void SetLineWidth(int width) { fLineWidth = width; }
-   int GetLineWidth() { return (int)fLineWidth; }
+   TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
+   int GetLineWidth() const { return (int)fLineWidth; }
 };
 
 
