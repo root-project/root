@@ -19,10 +19,6 @@
 #pragma link C++ class ROOT::Experimental::TColor+;
 #pragma link C++ class ROOT::Experimental::TStringEnumAttr+;
 #pragma link C++ class ROOT::Experimental::TDrawingAttrBase+;
-#pragma link C++ class ROOT::Experimental::TDrawingAttrValOrRef<int>+;
-#pragma link C++ class ROOT::Experimental::TDrawingAttrValOrRef<float>+;
-#pragma link C++ class ROOT::Experimental::TDrawingAttrValOrRef<ROOT::Experimental::TColor>+;
-#pragma link C++ class ROOT::Experimental::TDrawingAttrValOrRef<ROOT::Experimental::TStringEnumAttr>+;
 #pragma link C++ class ROOT::Experimental::TDrawingAttr<ROOT::Experimental::TColor>+;
 #pragma link C++ class ROOT::Experimental::TDrawingAttr<int>+;
 #pragma link C++ class ROOT::Experimental::TDrawingAttr<float>+;
