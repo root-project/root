@@ -62,8 +62,6 @@ const char *item_prop_rootversion = "_root_version";
 /// constructor
 
 TRootSnifferScanRec::TRootSnifferScanRec()
-   : fParent(0), fMask(0), fSearchPath(0), fLevel(0), fItemName(), fItemsNames(), fRestriction(0), fStore(0),
-     fHasMore(kFALSE), fNodeStarted(kFALSE), fNumFields(0), fNumChilds(0)
 {
    fItemsNames.SetOwner(kTRUE);
 }
@@ -187,7 +185,7 @@ void TRootSnifferScanRec::SetRootClass(TClass *cl)
 
 Bool_t TRootSnifferScanRec::Done() const
 {
-   if (fStore == 0)
+   if (!fStore)
       return kFALSE;
 
    if ((fMask & kSearch) && fStore->GetResPtr())
@@ -213,10 +211,10 @@ Bool_t TRootSnifferScanRec::IsReadyForResult() const
       return kFALSE;
 
    // only when full search path is scanned
-   if (fSearchPath != 0)
+   if (fSearchPath)
       return kFALSE;
 
-   if (fStore == 0)
+   if (!fStore)
       return kFALSE;
 
    return kTRUE;
@@ -228,7 +226,7 @@ Bool_t TRootSnifferScanRec::IsReadyForResult() const
 
 Bool_t TRootSnifferScanRec::SetResult(void *obj, TClass *cl, TDataMember *member)
 {
-   if (member == 0)
+   if (!member)
       return SetFoundResult(obj, cl);
 
    fStore->Error("SetResult",
@@ -311,19 +309,19 @@ TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj, const ch
    if (super.Done())
       return kFALSE;
 
-   if ((obj != 0) && (obj_name == 0))
+   if (obj && !obj_name)
       obj_name = obj->GetName();
 
    // exclude zero names
-   if ((obj_name == 0) || (*obj_name == 0))
+   if (!obj_name || (*obj_name == 0))
       return kFALSE;
 
-   const char *full_name = 0;
+   const char *full_name = nullptr;
 
    // remove slashes from file names
    if (obj && obj->InheritsFrom(TDirectoryFile::Class())) {
       const char *slash = strrchr(obj_name, '/');
-      if (slash != 0) {
+      if (slash) {
          full_name = obj_name;
          obj_name = slash + 1;
          if (*obj_name == 0)
@@ -358,7 +356,7 @@ TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj, const ch
       // only when doing scan, increment level, used for text formatting
       fLevel++;
    } else {
-      if (fSearchPath == 0)
+      if (!fSearchPath)
          return kFALSE;
 
       if (strncmp(fSearchPath, fItemName.Data(), fItemName.Length()) != 0)
@@ -373,7 +371,7 @@ TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj, const ch
       }
 
       if (*separ == 0) {
-         fSearchPath = 0;
+         fSearchPath = nullptr;
          if (fMask & kExpand) {
             topelement = kTRUE;
             fMask = (fMask & kOnlyFields) | kScan;
@@ -388,10 +386,10 @@ TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj, const ch
 
    CreateNode(fItemName.Data());
 
-   if ((obj_name != 0) && (fItemName != obj_name))
+   if (obj_name && (fItemName != obj_name))
       SetField(item_prop_realname, obj_name);
 
-   if (full_name != 0)
+   if (full_name)
       SetField("_fullname", full_name);
 
    if (topelement)
@@ -423,8 +421,7 @@ ClassImp(TRootSnifferBase);
 /// constructor
 
 TRootSnifferBase::TRootSnifferBase(const char *name, const char *objpath)
-   : TNamed(name, "sniffer of root objects"), fObjectsPath(objpath), fReadOnly(kTRUE), fScanGlobalDir(kTRUE),
-     fCurrentArg(0), fCurrentRestrict(0), fCurrentAllowedMethods(0), fRestrictions(), fAutoLoad()
+   : TNamed(name, "sniffer of root objects"), fObjectsPath(objpath)
 {
    fRestrictions.SetOwner(kTRUE);
 }
@@ -492,7 +489,7 @@ void TRootSnifferBase::SetAutoLoad(const char *scripts)
 
 const char *TRootSnifferBase::GetAutoLoad() const
 {
-   return fAutoLoad.Length() > 0 ? fAutoLoad.Data() : 0;
+   return fAutoLoad.Length() > 0 ? fAutoLoad.Data() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -501,7 +498,7 @@ const char *TRootSnifferBase::GetAutoLoad() const
 
 Bool_t TRootSnifferBase::HasRestriction(const char *item_name)
 {
-   if ((item_name == 0) || (*item_name == 0) || (fCurrentArg == 0))
+   if (!item_name || (*item_name == 0) || !fCurrentArg)
       return kFALSE;
 
    return fRestrictions.FindObject(item_name) != 0;
@@ -514,9 +511,9 @@ Bool_t TRootSnifferBase::HasRestriction(const char *item_name)
 
 Int_t TRootSnifferBase::WithCurrentUserName(const char *option)
 {
-   const char *username = fCurrentArg ? fCurrentArg->GetUserName() : 0;
+   const char *username = fCurrentArg ? fCurrentArg->GetUserName() : nullptr;
 
-   if ((username == 0) || (option == 0) || (*option == 0))
+   if (!username || !option || (*option == 0))
       return 0;
 
    if (strcmp(option, "all") == 0)
@@ -530,7 +527,7 @@ Int_t TRootSnifferBase::WithCurrentUserName(const char *option)
 
    TObjArray *arr = TString(option).Tokenize(",");
 
-   Bool_t find = arr->FindObject(username) != 0;
+   Bool_t find = arr->FindObject(username) != nullptr;
 
    delete arr;
 
@@ -548,7 +545,7 @@ Int_t TRootSnifferBase::WithCurrentUserName(const char *option)
 
 Int_t TRootSnifferBase::CheckRestriction(const char *full_item_name)
 {
-   if ((full_item_name == 0) || (*full_item_name == 0))
+   if (!full_item_name || (*full_item_name == 0))
       return 0;
 
    const char *item_name = strrchr(full_item_name, '/');
@@ -560,11 +557,11 @@ Int_t TRootSnifferBase::CheckRestriction(const char *full_item_name)
    TString pattern1 = TString("*/") + item_name + "%%%";
    TString pattern2 = TString(full_item_name) + "%%%";
 
-   const char *options = 0;
+   const char *options = nullptr;
    TIter iter(&fRestrictions);
    TObject *obj;
 
-   while ((obj = iter()) != 0) {
+   while ((obj = iter()) != nullptr) {
       const char *title = obj->GetTitle();
 
       if (strstr(title, pattern1.Data()) == title) {
@@ -577,7 +574,7 @@ Int_t TRootSnifferBase::CheckRestriction(const char *full_item_name)
       }
    }
 
-   if (options == 0)
+   if (!options)
       return 0;
 
    TUrl url;
@@ -611,7 +608,7 @@ Int_t TRootSnifferBase::CheckRestriction(const char *full_item_name)
 
 void TRootSnifferBase::ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, char *ptr)
 {
-   if ((cl == 0) || (ptr == 0) || rec.Done())
+   if (!cl || !ptr || rec.Done())
       return;
 
    // ensure that real class data (including parents) exists
@@ -619,16 +616,16 @@ void TRootSnifferBase::ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, c
       cl->BuildRealData();
 
    // scan only real data
-   TObject *obj = 0;
+   TObject *obj = nullptr;
    TIter iter(cl->GetListOfRealData());
-   while ((obj = iter()) != 0) {
+   while ((obj = iter()) != nullptr) {
       TRealData *rdata = dynamic_cast<TRealData *>(obj);
-      if ((rdata == 0) || strchr(rdata->GetName(), '.'))
+      if (!rdata || strchr(rdata->GetName(), '.'))
          continue;
 
       TDataMember *member = rdata->GetDataMember();
       // exclude enum or static variables
-      if ((member == 0) || (member->Property() & (kIsStatic | kIsEnum | kIsUnion)))
+      if (!member || (member->Property() & (kIsStatic | kIsEnum | kIsUnion)))
          continue;
       char *member_ptr = ptr + rdata->GetThisOffset();
 
@@ -669,8 +666,8 @@ void TRootSnifferBase::ScanObjectMembers(TRootSnifferScanRec &rec, TClass *cl, c
             chld.SetField(item_prop_arraydim, dim, kFALSE);
          } else if (member->GetArrayIndex() != 0) {
             TRealData *idata = cl->GetRealData(member->GetArrayIndex());
-            TDataMember *imember = (idata != 0) ? idata->GetDataMember() : 0;
-            if ((imember != 0) && (strcmp(imember->GetTrueTypeName(), "int") == 0)) {
+            TDataMember *imember = idata ? idata->GetDataMember() : nullptr;
+            if (imember && (strcmp(imember->GetTrueTypeName(), "int") == 0)) {
                Int_t arraylen = *((int *)(ptr + idata->GetThisOffset()));
                chld.SetField(item_prop_arraydim, TString::Format("[%d]", arraylen), kFALSE);
             }
@@ -778,25 +775,25 @@ void TRootSnifferBase::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
 /// scan collection content
 
 void TRootSnifferBase::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, const char *foldername,
-                                  TCollection *keys_lst)
+                                      TCollection *keys_lst)
 {
-   if (((lst == 0) || (lst->GetSize() == 0)) && ((keys_lst == 0) || (keys_lst->GetSize() == 0)))
+   if ((!lst || (lst->GetSize() == 0)) && (!keys_lst || (keys_lst->GetSize() == 0)))
       return;
 
    TRootSnifferScanRec folderrec;
    if (foldername) {
-      if (!folderrec.GoInside(rec, 0, foldername, this))
+      if (!folderrec.GoInside(rec, nullptr, foldername, this))
          return;
    }
 
    TRootSnifferScanRec &master = foldername ? folderrec : rec;
 
-   if (lst != 0) {
+   if (lst) {
       TIter iter(lst);
       TObject *next = iter();
       Bool_t isany = kFALSE;
 
-      while (next != 0) {
+      while (next) {
          if (IsItemField(next)) {
             // special case - in the beginning one could have items for master folder
             if (!isany && (next->GetName() != 0) && ((*(next->GetName()) == '_') || master.ScanOnlyFields()))
@@ -809,7 +806,7 @@ void TRootSnifferBase::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst
          TObject *obj = next;
 
          TRootSnifferScanRec chld;
-         if (!chld.GoInside(master, obj, 0, this)) {
+         if (!chld.GoInside(master, obj, nullptr, this)) {
             next = iter();
             continue;
          }
@@ -821,7 +818,7 @@ void TRootSnifferBase::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst
 
          ScanObjectProperties(chld, obj);
          // now properties, coded as TNamed objects, placed after object in the hierarchy
-         while ((next = iter()) != 0) {
+         while ((next = iter()) != nullptr) {
             if (!IsItemField(next))
                break;
             if ((next->GetName() != 0) && ((*(next->GetName()) == '_') || chld.ScanOnlyFields())) {
@@ -836,7 +833,7 @@ void TRootSnifferBase::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst
 
          if (!has_kind)
             chld.SetRootClass(obj->IsA());
-         if (!has_title && (obj->GetTitle() != 0))
+         if (!has_title && obj->GetTitle())
             chld.SetField(item_prop_title, obj->GetTitle());
 
          ScanObjectChilds(chld, obj);
@@ -878,7 +875,7 @@ void TRootSnifferBase::ScanCollection(TRootSnifferScanRec &rec, TCollection *lst
 
             if (!chld.IsReadOnly(fReadOnly) && iskey && chld.IsReadyForResult()) {
                TObject *keyobj = key->ReadObj();
-               if (keyobj != 0)
+               if (keyobj)
                   if (chld.SetResult(keyobj, keyobj->IsA()))
                      return;
             }
@@ -933,7 +930,7 @@ void TRootSnifferBase::ScanRoot(TRootSnifferScanRec &rec)
 
    if (HasStreamerInfo()) {
       TRootSnifferScanRec chld;
-      if (chld.GoInside(rec, 0, "StreamerInfo", this)) {
+      if (chld.GoInside(rec, nullptr, "StreamerInfo", this)) {
          chld.SetField(item_prop_kind, "ROOT.TStreamerInfoList");
          chld.SetField(item_prop_title, "List of streamer infos for binary I/O");
          chld.SetField(item_prop_hidden, "true");
@@ -948,13 +945,13 @@ void TRootSnifferBase::ScanRoot(TRootSnifferScanRec &rec)
 
       ScanCollection(rec, gROOT->GetListOfFiles(), "Files");
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// scan ROOT hierarchy with provided store object
 
-void TRootSnifferBase::ScanHierarchy(const char *topname, const char *path, TRootSnifferStore *store, Bool_t only_fields)
+void TRootSnifferBase::ScanHierarchy(const char *topname, const char *path, TRootSnifferStore *store,
+                                     Bool_t only_fields)
 {
    TRootSnifferScanRec rec;
    rec.fSearchPath = path;
@@ -962,11 +959,11 @@ void TRootSnifferBase::ScanHierarchy(const char *topname, const char *path, TRoo
       while (*rec.fSearchPath == '/')
          rec.fSearchPath++;
       if (*rec.fSearchPath == 0)
-         rec.fSearchPath = 0;
+         rec.fSearchPath = nullptr;
    }
 
    // if path non-empty, we should find item first and than start scanning
-   rec.fMask = (rec.fSearchPath == 0) ? TRootSnifferScanRec::kScan : TRootSnifferScanRec::kExpand;
+   rec.fMask = (rec.fSearchPath == nullptr) ? TRootSnifferScanRec::kScan : TRootSnifferScanRec::kExpand;
    if (only_fields)
       rec.fMask |= TRootSnifferScanRec::kOnlyFields;
 
@@ -974,10 +971,10 @@ void TRootSnifferBase::ScanHierarchy(const char *topname, const char *path, TRoo
 
    rec.CreateNode(topname);
 
-   if (rec.fSearchPath == 0)
+   if (rec.fSearchPath == nullptr)
       rec.SetField(item_prop_rootversion, TString::Format("%d", ROOT_VERSION_CODE));
 
-   if ((rec.fSearchPath == 0) && (GetAutoLoad() != 0))
+   if ((rec.fSearchPath == nullptr) && GetAutoLoad())
       rec.SetField(item_prop_autoload, GetAutoLoad());
 
    ScanRoot(rec);
@@ -999,7 +996,7 @@ void *TRootSnifferBase::FindInHierarchy(const char *path, TClass **cl, TDataMemb
 
    TRootSnifferScanRec rec;
    rec.fSearchPath = path;
-   rec.fMask = (chld != 0) ? TRootSnifferScanRec::kCheckChilds : TRootSnifferScanRec::kSearch;
+   rec.fMask = chld ? TRootSnifferScanRec::kCheckChilds : TRootSnifferScanRec::kSearch;
    if (*rec.fSearchPath == '/')
       rec.fSearchPath++;
    rec.fStore = &store;
@@ -1010,7 +1007,7 @@ void *TRootSnifferBase::FindInHierarchy(const char *path, TClass **cl, TDataMemb
    TClass *res_cl = store.GetResClass();
    void *res = store.GetResPtr();
 
-   if ((res_member != 0) && (res_cl != 0) && (member == 0)) {
+   if (res_member && res_cl && !member) {
       res_cl = (res_member->IsBasic() || res_member->IsSTLContainer()) ? 0 : gROOT->GetClass(res_member->GetTypeName());
       TRealData *rdata = res_cl->GetRealData(res_member->GetName());
       if (rdata) {
@@ -1018,7 +1015,7 @@ void *TRootSnifferBase::FindInHierarchy(const char *path, TClass **cl, TDataMemb
          if (res_member->IsaPointer())
             res = *((char **)res);
       } else {
-         res = 0; // should never happen
+         res = nullptr; // should never happen
       }
    }
 
@@ -1040,11 +1037,11 @@ void *TRootSnifferBase::FindInHierarchy(const char *path, TClass **cl, TDataMemb
 
 TObject *TRootSnifferBase::FindTObjectInHierarchy(const char *path)
 {
-   TClass *cl(0);
+   TClass *cl = nullptr;
 
    void *obj = FindInHierarchy(path, &cl);
 
-   return (cl != 0) && (cl->GetBaseClassOffset(TObject::Class()) == 0) ? (TObject *)obj : 0;
+   return cl && (cl->GetBaseClassOffset(TObject::Class()) == 0) ? (TObject *)obj : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1055,7 +1052,7 @@ ULong_t TRootSnifferBase::GetItemHash(const char *itemname)
 {
    TObject *obj = FindTObjectInHierarchy(itemname);
 
-   return (obj == nullptr) ? 0 : TString::Hash(obj, obj->IsA()->Size());
+   return !obj ? 0 : TString::Hash(obj, obj->IsA()->Size());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1086,7 +1083,7 @@ Bool_t TRootSnifferBase::CanExploreItem(const char *path)
 
 Bool_t TRootSnifferBase::ProduceJson(const char *path, const char *options, TString &res)
 {
-   if ((path == 0) || (*path == 0))
+   if (!path || (*path == 0))
       return kFALSE;
 
    if (*path == '/')
@@ -1099,13 +1096,13 @@ Bool_t TRootSnifferBase::ProduceJson(const char *path, const char *options, TStr
    if (url.GetValueFromOptions("compact"))
       compact = url.GetIntValueFromOptions("compact");
 
-   TClass *obj_cl(0);
-   TDataMember *member(0);
+   TClass *obj_cl = nullptr;
+   TDataMember *member = nullptr;
    void *obj_ptr = FindInHierarchy(path, &obj_cl, &member);
-   if ((obj_ptr == 0) || ((obj_cl == 0) && (member == 0)))
+   if (!obj_ptr || (!obj_cl && !member))
       return kFALSE;
 
-   res = TBufferJSON::ConvertToJSON(obj_ptr, obj_cl, compact >= 0 ? compact : 0, member ? member->GetName() : 0);
+   res = TBufferJSON::ConvertToJSON(obj_ptr, obj_cl, compact >= 0 ? compact : 0, member ? member->GetName() : nullptr);
 
    return res.Length() > 0;
 }
@@ -1115,7 +1112,7 @@ Bool_t TRootSnifferBase::ProduceJson(const char *path, const char *options, TStr
 
 Bool_t TRootSnifferBase::ExecuteCmd(const char *path, const char *options, TString &res)
 {
-   TFolder *parent(0);
+   TFolder *parent = nullptr;
    TObject *obj = GetItem(path, parent, kFALSE, kFALSE);
 
    const char *kind = GetItemField(parent, obj, item_prop_kind);
@@ -1127,7 +1124,7 @@ Bool_t TRootSnifferBase::ExecuteCmd(const char *path, const char *options, TStri
    }
 
    const char *cmethod = GetItemField(parent, obj, "method");
-   if ((cmethod == 0) || (strlen(cmethod) == 0)) {
+   if (!cmethod || (strlen(cmethod) == 0)) {
       if (gDebug > 0)
          Info("ExecuteCmd", "Entry %s do not defines method for execution", path);
       res = "false";
@@ -1157,7 +1154,7 @@ Bool_t TRootSnifferBase::ExecuteCmd(const char *path, const char *options, TStri
       for (Int_t n = 0; n < numargs; n++) {
          TString argname = TString::Format("arg%d", n + 1);
          const char *argvalue = url.GetValueFromOptions(argname);
-         if (argvalue == 0) {
+         if (!argvalue) {
             if (gDebug > 0)
                Info("ExecuteCmd", "For command %s argument %s not specified in options %s", path, argname.Data(),
                     options);
@@ -1174,7 +1171,7 @@ Bool_t TRootSnifferBase::ExecuteCmd(const char *path, const char *options, TStri
    if (gDebug > 0)
       Info("ExecuteCmd", "Executing command %s method:%s", path, method.Data());
 
-   TObject *item_obj = 0;
+   TObject *item_obj = nullptr;
    Ssiz_t separ = method.Index("/->");
 
    if (method.Index("this->") == 0) {
@@ -1185,7 +1182,7 @@ Bool_t TRootSnifferBase::ExecuteCmd(const char *path, const char *options, TStri
       item_obj = FindTObjectInHierarchy(TString(method.Data(), separ).Data());
    }
 
-   if (item_obj != 0) {
+   if (item_obj) {
       method =
          TString::Format("((%s*)%lu)->%s", item_obj->ClassName(), (long unsigned)item_obj, method.Data() + separ + 3);
       if (gDebug > 2)
@@ -1218,6 +1215,7 @@ Bool_t TRootSnifferBase::ProduceItem(const char *path, const char *options, TStr
 ////////////////////////////////////////////////////////////////////////////////
 /// produce XML data for specified item
 /// For object conversion TBufferXML is used
+/// Implemented only in TRootSniffer class
 
 Bool_t TRootSnifferBase::ProduceXml(const char * /* path */, const char * /* options */, TString & /* res */)
 {
@@ -1229,7 +1227,7 @@ Bool_t TRootSnifferBase::ProduceXml(const char * /* path */, const char * /* opt
 
 TString TRootSnifferBase::DecodeUrlOptionValue(const char *value, Bool_t remove_quotes)
 {
-   if ((value == 0) || (strlen(value) == 0))
+   if (!value || (strlen(value) == 0))
       return TString();
 
    TString res = value;
@@ -1257,9 +1255,10 @@ TString TRootSnifferBase::DecodeUrlOptionValue(const char *value, Bool_t remove_
 /// options include method and extra list of parameters
 /// sniffer should be not-readonly to allow execution of the commands
 /// reskind defines kind of result 0 - debug, 1 - json, 2 - binary
+/// Implemented only in TRootSniffer class
 
 Bool_t TRootSnifferBase::ProduceExe(const char * /*path*/, const char * /*options*/, Int_t /*reskind*/,
-                                TString * /*res_str*/, void ** /*res_ptr*/, Long_t * /*res_length*/)
+                                    TString * /*res_str*/, void ** /*res_ptr*/, Long_t * /*res_length*/)
 {
    return kFALSE;
 }
@@ -1279,9 +1278,9 @@ Bool_t TRootSnifferBase::ProduceExe(const char * /*path*/, const char * /*option
 /// multi.json request do not support binary requests for the items
 
 Bool_t TRootSnifferBase::ProduceMulti(const char *path, const char *options, void *&ptr, Long_t &length, TString &str,
-                                  Bool_t asjson)
+                                      Bool_t asjson)
 {
-   if ((fCurrentArg == 0) || (fCurrentArg->GetPostDataLength() <= 0) || (fCurrentArg->GetPostData() == 0))
+   if (!fCurrentArg || (fCurrentArg->GetPostDataLength() <= 0) || (fCurrentArg->GetPostData() == nullptr))
       return kFALSE;
 
    const char *args = (const char *)fCurrentArg->GetPostData();
@@ -1329,10 +1328,10 @@ Bool_t TRootSnifferBase::ProduceMulti(const char *path, const char *options, voi
          file1.Remove(0, pos + 1);
       }
 
-      if ((path != 0) && (*path != 0))
+      if (path && (*path != 0))
          path1 = TString(path) + "/" + path1;
 
-      void *ptr1 = 0;
+      void *ptr1 = nullptr;
       Long_t len1 = 0;
       TString str1;
 
@@ -1350,7 +1349,7 @@ Bool_t TRootSnifferBase::ProduceMulti(const char *path, const char *options, voi
          else
             str.Append("null");
       } else {
-         if ((str1.Length() > 0) && (ptr1 == 0)) {
+         if ((str1.Length() > 0) && !ptr1) {
             len1 = str1.Length();
             ptr1 = malloc(len1);
             memcpy(ptr1, str1.Data(), len1);
@@ -1393,9 +1392,10 @@ Bool_t TRootSnifferBase::ProduceMulti(const char *path, const char *options, voi
 ////////////////////////////////////////////////////////////////////////////////
 /// produce binary data for specified item
 /// if "zipped" option specified in query, buffer will be compressed
-/// Implemented only in TRootSnifferFull class
+/// Implemented only in TRootSniffer class
 
-Bool_t TRootSnifferBase::ProduceBinary(const char * /*path*/, const char * /*query*/, void *& /*ptr*/, Long_t & /*length*/)
+Bool_t
+TRootSnifferBase::ProduceBinary(const char * /*path*/, const char * /*query*/, void *& /*ptr*/, Long_t & /*length*/)
 {
    return kFALSE;
 }
@@ -1418,10 +1418,10 @@ Bool_t TRootSnifferBase::ProduceBinary(const char * /*path*/, const char * /*que
 ///
 ///  Return is memory with produced image
 ///  Memory must be released by user with free(ptr) call
-///  Method implemented in TRootSnifferFull
+///  Method implemented in TRootSniffer
 
 Bool_t TRootSnifferBase::ProduceImage(Int_t /*kind*/, const char * /*path*/, const char * /*options*/, void *& /*ptr*/,
-                                  Long_t & /*length*/)
+                                      Long_t & /*length*/)
 {
    return kFALSE;
 }
@@ -1443,10 +1443,10 @@ Bool_t TRootSnifferBase::ProduceImage(Int_t /*kind*/, const char * /*path*/, con
 /// Result returned either as string or binary buffer,
 /// which should be released with free() call
 
-Bool_t
-TRootSnifferBase::Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str)
+Bool_t TRootSnifferBase::Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length,
+                                 TString &str)
 {
-   if ((file == 0) || (*file == 0))
+   if (!file || (*file == 0))
       return kFALSE;
 
    if (strcmp(file, "root.bin") == 0)
@@ -1462,7 +1462,7 @@ TRootSnifferBase::Produce(const char *path, const char *file, const char *option
       return ProduceImage(TImage::kGif, path, options, ptr, length);
 
    if (strcmp(file, "exe.bin") == 0)
-      return ProduceExe(path, options, 2, 0, &ptr, &length);
+      return ProduceExe(path, options, 2, nullptr, &ptr, &length);
 
    if (strcmp(file, "root.xml") == 0)
       return ProduceXml(path, options, str);
@@ -1502,15 +1502,15 @@ TObject *TRootSnifferBase::GetItem(const char *fullname, TFolder *&parent, Bool_
 {
    TFolder *topf = gROOT->GetRootFolder();
 
-   if (topf == 0) {
+   if (!topf) {
       Error("RegisterObject", "Not found top ROOT folder!!!");
-      return 0;
+      return nullptr;
    }
 
    TFolder *httpfold = dynamic_cast<TFolder *>(topf->FindObject("http"));
-   if (httpfold == 0) {
+   if (!httpfold) {
       if (!force)
-         return 0;
+         return nullptr;
       httpfold = topf->AddFolder("http", "ROOT http server");
       httpfold->SetBit(kCanDelete);
       // register top folder in list of cleanups
@@ -1521,7 +1521,7 @@ TObject *TRootSnifferBase::GetItem(const char *fullname, TFolder *&parent, Bool_
    parent = httpfold;
    TObject *obj = httpfold;
 
-   if (fullname == 0)
+   if (!fullname)
       return httpfold;
 
    // when full path started not with slash, "Objects" subfolder is appended
@@ -1537,20 +1537,20 @@ TObject *TRootSnifferBase::GetItem(const char *fullname, TFolder *&parent, Bool_
          continue;
 
       TFolder *fold = dynamic_cast<TFolder *>(obj);
-      if (fold == 0)
-         return 0;
+      if (!fold)
+         return nullptr;
 
       TIter iter(fold->GetListOfFolders());
-      while ((obj = iter()) != 0) {
+      while ((obj = iter()) != nullptr) {
          if (IsItemField(obj))
             continue;
          if (tok.CompareTo(obj->GetName()) == 0)
             break;
       }
 
-      if (obj == 0) {
+      if (!obj) {
          if (!force)
-            return 0;
+            return nullptr;
          obj = fold->AddFolder(tok, "sub-folder");
          obj->SetBit(kCanDelete);
       }
@@ -1566,7 +1566,7 @@ TObject *TRootSnifferBase::GetItem(const char *fullname, TFolder *&parent, Bool_
 
 TFolder *TRootSnifferBase::GetSubFolder(const char *subfolder, Bool_t force)
 {
-   TFolder *parent = 0;
+   TFolder *parent = nullptr;
 
    return dynamic_cast<TFolder *>(GetItem(subfolder, parent, force));
 }
@@ -1595,7 +1595,7 @@ TFolder *TRootSnifferBase::GetSubFolder(const char *subfolder, Bool_t force)
 Bool_t TRootSnifferBase::RegisterObject(const char *subfolder, TObject *obj)
 {
    TFolder *f = GetSubFolder(subfolder, kTRUE);
-   if (f == 0)
+   if (!f)
       return kFALSE;
 
    // If object will be destroyed, it will be removed from the folders automatically
@@ -1612,19 +1612,18 @@ Bool_t TRootSnifferBase::RegisterObject(const char *subfolder, TObject *obj)
 
 Bool_t TRootSnifferBase::UnregisterObject(TObject *obj)
 {
-   if (obj == 0)
+   if (!obj)
       return kTRUE;
 
    TFolder *topf = dynamic_cast<TFolder *>(gROOT->FindObject("//root/http"));
 
-   if (topf == 0) {
+   if (!topf) {
       Error("UnregisterObject", "Not found //root/http folder!!!");
       return kFALSE;
    }
 
    // TODO - probably we should remove all set properties as well
-   if (topf)
-      topf->RecursiveRemove(obj);
+   topf->RecursiveRemove(obj);
 
    return kTRUE;
 }
@@ -1635,7 +1634,7 @@ Bool_t TRootSnifferBase::UnregisterObject(TObject *obj)
 Bool_t TRootSnifferBase::CreateItem(const char *fullname, const char *title)
 {
    TFolder *f = GetSubFolder(fullname, kTRUE);
-   if (f == 0)
+   if (!f)
       return kFALSE;
 
    if (title)
@@ -1650,35 +1649,36 @@ Bool_t TRootSnifferBase::CreateItem(const char *fullname, const char *title)
 
 Bool_t TRootSnifferBase::IsItemField(TObject *obj) const
 {
-   return (obj != 0) && (obj->IsA() == TNamed::Class()) && obj->TestBit(kItemField);
+   return (obj != nullptr) && (obj->IsA() == TNamed::Class()) && obj->TestBit(kItemField);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set or get field for the child
 /// each field coded as TNamed object, placed after chld in the parent hierarchy
 
-Bool_t TRootSnifferBase::AccessField(TFolder *parent, TObject *chld, const char *name, const char *value, TNamed **only_get)
+Bool_t
+TRootSnifferBase::AccessField(TFolder *parent, TObject *chld, const char *name, const char *value, TNamed **only_get)
 {
-   if (parent == 0)
+   if (!parent)
       return kFALSE;
 
-   if (chld == 0) {
-      Info("SetField", "Should be special case for top folder, support later");
+   if (!chld) {
+      Info("AccessField", "Should be special case for top folder, support later");
       return kFALSE;
    }
 
    TIter iter(parent->GetListOfFolders());
 
-   TObject *obj = 0;
+   TObject *obj = nullptr;
    Bool_t find(kFALSE), last_find(kFALSE);
    // this is special case of top folder - fields are on very top
    if (parent == chld) {
       last_find = find = kTRUE;
    }
-   TNamed *curr = 0;
-   while ((obj = iter()) != 0) {
+   TNamed *curr = nullptr;
+   while ((obj = iter()) != nullptr) {
       if (IsItemField(obj)) {
-         if (last_find && (obj->GetName() != 0) && !strcmp(name, obj->GetName()))
+         if (last_find && obj->GetName() && !strcmp(name, obj->GetName()))
             curr = (TNamed *)obj;
       } else {
          last_find = (obj == chld);
@@ -1693,13 +1693,13 @@ Bool_t TRootSnifferBase::AccessField(TFolder *parent, TObject *chld, const char 
    if (!find)
       return kFALSE;
 
-   if (only_get != 0) {
+   if (only_get) {
       *only_get = curr;
-      return curr != 0;
+      return curr != nullptr;
    }
 
-   if (curr != 0) {
-      if (value != 0) {
+   if (curr) {
+      if (value) {
          curr->SetTitle(value);
       } else {
          parent->Remove(curr);
@@ -1719,8 +1719,8 @@ Bool_t TRootSnifferBase::AccessField(TFolder *parent, TObject *chld, const char 
 
    // only here we do dynamic cast to the TList to use AddAfter
    TList *lst = dynamic_cast<TList *>(parent->GetListOfFolders());
-   if (lst == 0) {
-      Error("SetField", "Fail cast to TList");
+   if (!lst) {
+      Error("AccessField", "Fail cast to TList");
       return kFALSE;
    }
 
@@ -1737,18 +1737,18 @@ Bool_t TRootSnifferBase::AccessField(TFolder *parent, TObject *chld, const char 
 
 Bool_t TRootSnifferBase::SetItemField(const char *fullname, const char *name, const char *value)
 {
-   if ((fullname == 0) || (name == 0))
+   if (!fullname || !name)
       return kFALSE;
 
-   TFolder *parent(0);
+   TFolder *parent = nullptr;
    TObject *obj = GetItem(fullname, parent);
 
-   if ((parent == 0) || (obj == 0))
+   if (!parent || !obj)
       return kFALSE;
 
    if (strcmp(name, item_prop_title) == 0) {
       TNamed *n = dynamic_cast<TNamed *>(obj);
-      if (n != 0) {
+      if (n) {
          n->SetTitle(value);
          return kTRUE;
       }
@@ -1762,15 +1762,15 @@ Bool_t TRootSnifferBase::SetItemField(const char *fullname, const char *name, co
 
 const char *TRootSnifferBase::GetItemField(TFolder *parent, TObject *obj, const char *name)
 {
-   if ((parent == 0) || (obj == 0) || (name == 0))
-      return 0;
+   if (!parent || !obj || !name)
+      return nullptr;
 
-   TNamed *field(0);
+   TNamed *field = nullptr;
 
-   if (!AccessField(parent, obj, name, 0, &field))
-      return 0;
+   if (!AccessField(parent, obj, name, nullptr, &field))
+      return nullptr;
 
-   return field ? field->GetTitle() : 0;
+   return field ? field->GetTitle() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1778,10 +1778,10 @@ const char *TRootSnifferBase::GetItemField(TFolder *parent, TObject *obj, const 
 
 const char *TRootSnifferBase::GetItemField(const char *fullname, const char *name)
 {
-   if (fullname == 0)
-      return 0;
+   if (!fullname)
+      return nullptr;
 
-   TFolder *parent(0);
+   TFolder *parent = nullptr;
    TObject *obj = GetItem(fullname, parent);
 
    return GetItemField(parent, obj, name);
@@ -1819,7 +1819,7 @@ Bool_t TRootSnifferBase::RegisterCommand(const char *cmdname, const char *method
 {
    CreateItem(cmdname, Form("command %s", method));
    SetItemField(cmdname, "_kind", "Command");
-   if (icon != 0) {
+   if (icon) {
       if (strncmp(icon, "button;", 7) == 0) {
          SetItemField(cmdname, "_fastcmd", "true");
          icon += 7;
