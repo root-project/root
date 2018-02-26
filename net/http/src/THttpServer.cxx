@@ -133,12 +133,8 @@ ClassImp(THttpServer);
 /// but one could set JSROOTSYS shell variable to specify alternative location
 
 THttpServer::THttpServer(const char *engine)
-   : TNamed("http", "ROOT http server"), fEngines(), fTimer(nullptr), fSniffer(nullptr), fTerminated(kFALSE),
-     fMainThrdId(0), fJSROOTSYS(), fTopName("ROOT"), fJSROOT(), fLocations(), fDefaultPage(), fDefaultPageCont(),
-     fDrawPage(), fDrawPageCont(), fCallArgs()
+   : TNamed("http", "ROOT http server")
 {
-   fLocations.SetOwner(kTRUE);
-
 #ifdef COMPILED_WITH_DABC
    const char *dabcsys = gSystem->Getenv("DABCSYS");
    if (dabcsys)
@@ -286,12 +282,10 @@ void THttpServer::AddLocation(const char *prefix, const char *path)
    if (!prefix || (*prefix == 0))
       return;
 
-   TNamed *obj = dynamic_cast<TNamed *>(fLocations.FindObject(prefix));
-   if (obj) {
-      obj->SetTitle(path);
-   } else {
-      fLocations.Add(new TNamed(prefix, path));
-   }
+   if (!path)
+      fLocations.erase(fLocations.find(prefix));
+   else
+      fLocations[prefix] = path;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -481,16 +475,15 @@ Bool_t THttpServer::IsFileRequested(const char *uri, TString &res) const
       return kFALSE;
 
    TString fname(uri);
-   TIter iter(&fLocations);
-   TObject *obj(nullptr);
-   while ((obj = iter()) != nullptr) {
-      Ssiz_t pos = fname.Index(obj->GetName());
+
+   for (auto iter = fLocations.begin(); iter != fLocations.end(); iter++) {
+      Ssiz_t pos = fname.Index(iter->first.c_str());
       if (pos == kNPOS)
          continue;
-      fname.Remove(0, pos + (strlen(obj->GetName()) - 1));
+      fname.Remove(0, pos + (iter->first.length() - 1));
       if (!VerifyFilePath(fname.Data()))
          return kFALSE;
-      res = obj->GetTitle();
+      res = iter->second.c_str();
       if ((fname[0] == '/') && (res[res.Length() - 1] == '/'))
          res.Resize(res.Length() - 1);
       res.Append(fname);
@@ -635,7 +628,7 @@ void THttpServer::ProcessRequest(THttpCallArg *arg)
 
    if (arg->fFileName.IsNull() || (arg->fFileName == "index.htm")) {
 
-      THttpWSHandler *handler(0);
+      THttpWSHandler *handler(nullptr);
 
       if (arg->fFileName.IsNull())
          handler = dynamic_cast<THttpWSHandler *>(fSniffer->FindTObjectInHierarchy(arg->fPathName.Data()));
