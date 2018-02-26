@@ -25,7 +25,7 @@
 #include "THttpWSEngine.h"
 #include "THttpLongPollEngine.h"
 #include "THttpWSHandler.h"
-#include "TRootSniffer.h"
+#include "TRootSnifferBase.h"
 #include "TRootSnifferStore.h"
 
 #include <string>
@@ -167,11 +167,11 @@ THttpServer::THttpServer(const char *engine)
    fDefaultPage = fJSROOTSYS + "/files/online.htm";
    fDrawPage = fJSROOTSYS + "/files/draw.htm";
 
-   TRootSniffer *sniff = nullptr;
+   TRootSnifferBase *sniff = nullptr;
    if (strstr(engine,"nofullsniff")) {
-      sniff = new TRootSniffer("sniff");
+      sniff = new TRootSnifferBase("sniff");
    } else {
-      sniff = (TRootSniffer *) gROOT->ProcessLineSync("new TRootSnifferFull(\"sniff\");");
+      sniff = (TRootSnifferBase *) gROOT->ProcessLineSync("new TRootSniffer(\"sniff\");");
    }
 
    SetSniffer(sniff);
@@ -240,7 +240,7 @@ THttpServer::~THttpServer()
 /// Set TRootSniffer to the server
 /// Server takes ownership over sniffer
 
-void THttpServer::SetSniffer(TRootSniffer *sniff)
+void THttpServer::SetSniffer(TRootSnifferBase *sniff)
 {
    if (fSniffer)
       delete fSniffer;
