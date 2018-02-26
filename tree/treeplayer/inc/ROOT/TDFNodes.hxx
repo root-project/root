@@ -261,6 +261,19 @@ class TColumnValue {
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
    /// in contiguous memory. Only used when T == TArrayBranch<U>.
    bool fArrayHasBeenChecked = false;
+   /// If MustUseReaderArray, i.e. we are reading an array, we return a reference to this TArrayBranch to clients
+   TArrayBranch<ColumnValue_t> fArrayBranch;
+
+   // TODO these helper functions could be substituted with a constexpr if at the point of usage
+   // setup TArrayBranch if using a TTreeReaderArray
+   template <bool HasReaderArray = MustUseReaderArray>
+   typename std::enable_if<HasReaderArray, void>::type SetArrayBranch()
+   {
+      fArrayBranch.SetReaderArray(*fTreeReaders.back());
+   }
+   // do nothing if not using a TTreeReaderArray
+   template <bool HasReaderArray = MustUseReaderArray>
+   typename std::enable_if<!HasReaderArray, void>::type SetArrayBranch() {}
 
 public:
    static constexpr bool fgMustUseReaderArray = MustUseReaderArray;
@@ -273,6 +286,7 @@ public:
    {
       fColumnKind = EColumnKind::kTree;
       fTreeReaders.emplace_back(new TreeReader_t(*r, bn.c_str()));
+      SetArrayBranch();
    }
 
    /// This overload is used to return scalar quantities (i.e. types that are not read into a TArrayBranch)
@@ -283,7 +297,7 @@ public:
    /// This overload is used to return arrays (i.e. types that are read into a TArrayBranch)
    template <typename U = T,
              typename std::enable_if<TColumnValue<U>::fgMustUseReaderArray, int>::type = 0>
-   TArrayBranch<ColumnValue_t> Get(Long64_t)
+   TArrayBranch<ColumnValue_t> &Get(Long64_t)
    {
       auto &readerArray = *fTreeReaders.back();
       // We only use TTreeReaderArrays to read columns that users flagged as type `TArrayBranch`, so we need to check
@@ -304,7 +318,9 @@ public:
          }
       }
 
-      return TArrayBranch<ColumnValue_t>(readerArray);
+      // trigger loading of the contens of the TTreeReaderArray
+      readerArray.At(0);
+      return fArrayBranch;
    }
 
    void Reset()
