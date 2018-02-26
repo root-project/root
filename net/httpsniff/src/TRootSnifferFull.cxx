@@ -74,6 +74,28 @@ TRootSnifferFull::TRootSnifferFull(const char *name, const char *objpath)
 
 TRootSnifferFull::~TRootSnifferFull()
 {
+   if (fSinfo)
+      delete fSinfo;
+
+   if (fMemFile)
+      delete fMemFile;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// return true if object can be drawn
+
+Bool_t TRootSnifferFull::CanDrawClass(TClass *cl)
+{
+   if (!cl) return kFALSE;
+   if (cl->InheritsFrom(TH1::Class()))
+      return kTRUE;
+   if (cl->InheritsFrom(TGraph::Class()))
+      return kTRUE;
+   if (cl->InheritsFrom(TCanvas::Class()))
+      return kTRUE;
+   if (cl->InheritsFrom(TProfile::Class()))
+      return kTRUE;
+   return kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +161,165 @@ void TRootSnifferFull::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Returns hash value for streamer infos
+/// At the moment - just number of items in streamer infos list.
+
+ULong_t TRootSnifferFull::GetStreamerInfoHash()
+{
+   return fSinfo ? fSinfo->GetSize() : 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Return true if it is streamer info item name
+
+Bool_t TRootSnifferFull::IsStreamerInfoItem(const char *itemname)
+{
+   if (!itemname || (*itemname == 0))
+      return kFALSE;
+
+   return (strcmp(itemname, "StreamerInfo") == 0) || (strcmp(itemname, "StreamerInfo/") == 0);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Get hash function for specified item
+/// used to detect any changes in the specified object
+
+ULong_t TRootSnifferFull::GetItemHash(const char *itemname)
+{
+   if (IsStreamerInfoItem(itemname))
+      return GetStreamerInfoHash();
+
+   return TRootSniffer::GetItemHash(itemname);
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+/// Creates TMemFile instance, which used for objects streaming
+/// One could not use TBufferFile directly,
+/// while one also require streamer infos list
+
+void TRootSnifferFull::CreateMemFile()
+{
+   if (fMemFile)
+      return;
+
+   TDirectory *olddir = gDirectory;
+   gDirectory = nullptr;
+   TFile *oldfile = gFile;
+   gFile = nullptr;
+
+   fMemFile = new TMemFile("dummy.file", "RECREATE");
+   gROOT->GetListOfFiles()->Remove(fMemFile);
+
+   TH1F *d = new TH1F("d", "d", 10, 0, 10);
+   fMemFile->WriteObject(d, "h1");
+   delete d;
+
+   TGraph *gr = new TGraph(10);
+   gr->SetName("abc");
+   //      // gr->SetDrawOptions("AC*");
+   fMemFile->WriteObject(gr, "gr1");
+   delete gr;
+
+   fMemFile->WriteStreamerInfo();
+
+   // make primary list of streamer infos
+   TList *l = new TList();
+
+   l->Add(gROOT->GetListOfStreamerInfo()->FindObject("TGraph"));
+   l->Add(gROOT->GetListOfStreamerInfo()->FindObject("TH1F"));
+   l->Add(gROOT->GetListOfStreamerInfo()->FindObject("TH1"));
+   l->Add(gROOT->GetListOfStreamerInfo()->FindObject("TNamed"));
+   l->Add(gROOT->GetListOfStreamerInfo()->FindObject("TObject"));
+
+   fMemFile->WriteObject(l, "ll");
+   delete l;
+
+   fMemFile->WriteStreamerInfo();
+
+   fSinfo = fMemFile->GetStreamerInfoList();
+
+   gDirectory = olddir;
+   gFile = oldfile;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Search element with specified path
+/// Returns pointer on element
+/// Optionally one could obtain element class, member description
+/// and number of childs. When chld!=0, not only element is searched,
+/// but also number of childs are counted. When member!=0, any object
+/// will be scanned for its data members (disregard of extra options)
+
+void *TRootSnifferFull::FindInHierarchy(const char *path, TClass **cl, TDataMember **member, Int_t *chld)
+{
+   if (IsStreamerInfoItem(path)) {
+      // special handling for streamer info
+      CreateMemFile();
+      if (cl && fSinfo)
+         *cl = fSinfo->IsA();
+      return fSinfo;
+   }
+
+   return TRootSniffer::FindInHierarchy(path, cl, member, chld);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// produce binary data for specified item
+/// if "zipped" option specified in query, buffer will be compressed
+
+Bool_t TRootSnifferFull::ProduceBinary(const char *path, const char * /*query*/, void *&ptr, Long_t &length)
+{
+   if (!path || (*path == 0))
+      return kFALSE;
+
+   if (*path == '/')
+      path++;
+
+   TClass *obj_cl = nullptr;
+   void *obj_ptr = FindInHierarchy(path, &obj_cl);
+   if (!obj_ptr || !obj_cl)
+      return kFALSE;
+
+   if (obj_cl->GetBaseClassOffset(TObject::Class()) != 0) {
+      Info("ProduceBinary", "Non-TObject class not supported");
+      return kFALSE;
+   }
+
+   // ensure that memfile exists
+   CreateMemFile();
+
+   TDirectory *olddir = gDirectory;
+   gDirectory = nullptr;
+   TFile *oldfile = gFile;
+   gFile = nullptr;
+
+   TObject *obj = (TObject *)obj_ptr;
+
+   TBufferFile *sbuf = new TBufferFile(TBuffer::kWrite, 100000);
+   sbuf->SetParent(fMemFile);
+   sbuf->MapObject(obj);
+   obj->Streamer(*sbuf);
+   if (fCurrentArg)
+      fCurrentArg->SetExtraHeader("RootClassName", obj_cl->GetName());
+
+   // produce actual version of streamer info
+   delete fSinfo;
+   fMemFile->WriteStreamerInfo();
+   fSinfo = fMemFile->GetStreamerInfoList();
+
+   gDirectory = olddir;
+   gFile = oldfile;
+
+   ptr = malloc(sbuf->Length());
+   memcpy(ptr, sbuf->Buffer(), sbuf->Length());
+   length = sbuf->Length();
+
+   delete sbuf;
+
+   return kTRUE;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Method to produce image from specified object
@@ -185,7 +366,7 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const char *path, const char *
 
       if (gDebug > 1) Info("TRootSniffer", "Crate IMAGE directly from pad");
       img->FromPad((TPad *)obj);
-   } else if (IsDrawableClass(obj->IsA())) {
+   } else if (CanDrawClass(obj->IsA())) {
 
       if (gDebug > 1) Info("TRootSniffer", "Crate IMAGE from object %s", obj->GetName());
 
