@@ -4,6 +4,6 @@
 #pragma link off all classes;
 #pragma link off all functions;
 
-#pragma link C++ class TRootSnifferFull;
+#pragma link C++ class TRootSniffer;
 
 #endif

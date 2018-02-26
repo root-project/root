@@ -13,7 +13,7 @@
 
 #pragma link C++ class THttpCallArg;
 #pragma link C++ class THttpServer;
-#pragma link C++ class TRootSniffer;
+#pragma link C++ class TRootSnifferBase;
 #pragma link C++ class TRootSnifferScanRec;
 #pragma link C++ class TRootSnifferStore;
 #pragma link C++ class TRootSnifferStoreXml;

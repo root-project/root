@@ -9,8 +9,8 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#ifndef ROOT_TRootSniffer
-#define ROOT_TRootSniffer
+#ifndef ROOT_TRootSnifferBase
+#define ROOT_TRootSnifferBase
 
 #include "TNamed.h"
 
@@ -22,11 +22,11 @@ class TBufferFile;
 class TDataMember;
 class THttpCallArg;
 class TRootSnifferStore;
-class TRootSniffer;
+class TRootSnifferBase;
 
 class TRootSnifferScanRec {
 
-   friend class TRootSniffer;
+   friend class TRootSnifferBase;
 
 protected:
    // different bits used to scan hierarchy
@@ -86,7 +86,7 @@ public:
    Bool_t SetResult(void *obj, TClass *cl, TDataMember *member = 0);
 
    /** Set found element with class and datamember (optional) */
-   Bool_t SetFoundResult(void *obj, TClass *cl, TDataMember *member = 0);
+   Bool_t SetFoundResult(void *obj, TClass *cl, TDataMember *member = nullptr);
 
    /** Returns depth of hierarchy */
    Int_t Depth() const;
@@ -98,19 +98,19 @@ public:
    void MakeItemName(const char *objname, TString &itemname);
 
    /** Produces full name for the current item */
-   void BuildFullName(TString &buf, TRootSnifferScanRec *prnt = 0);
+   void BuildFullName(TString &buf, TRootSnifferScanRec *prnt = nullptr);
 
    /** Returns read-only flag for current item */
    Bool_t IsReadOnly(Bool_t dflt = kTRUE);
 
-   Bool_t GoInside(TRootSnifferScanRec &super, TObject *obj, const char *obj_name = 0, TRootSniffer *sniffer = 0);
+   Bool_t GoInside(TRootSnifferScanRec &super, TObject *obj, const char *obj_name = nullptr, TRootSnifferBase *sniffer = nullptr);
 
    ClassDef(TRootSnifferScanRec, 0) // Scan record for objects sniffer
 };
 
 //_______________________________________________________________________
 
-class TRootSniffer : public TNamed {
+class TRootSnifferBase : public TNamed {
    enum {
       kItemField = BIT(21) // item property stored as TNamed
    };
@@ -157,8 +157,8 @@ protected:
    virtual Bool_t HasStreamerInfo() const { return kFALSE; }
 
 public:
-   TRootSniffer(const char *name, const char *objpath = "Objects");
-   virtual ~TRootSniffer();
+   TRootSnifferBase(const char *name, const char *objpath = "Objects");
+   virtual ~TRootSnifferBase();
 
    static Bool_t IsDrawableClass(TClass *cl);
 
@@ -235,7 +235,7 @@ public:
 
    Bool_t Produce(const char *path, const char *file, const char *options, void *&ptr, Long_t &length, TString &str);
 
-   ClassDef(TRootSniffer, 0) // Sniffer of ROOT objects
+   ClassDef(TRootSnifferBase, 0) // Sniffer of ROOT objects (basic version)
 };
 
 #endif

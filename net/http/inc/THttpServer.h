@@ -24,15 +24,15 @@
 
 class THttpEngine;
 class THttpTimer;
-class TRootSniffer;
+class TRootSnifferBase;
 
 class THttpServer : public TNamed {
 
 protected:
-   TList fEngines;         ///<! engines which runs http server
-   THttpTimer *fTimer;     ///<! timer used to access main thread
-   TRootSniffer *fSniffer; ///<! sniffer provides access to ROOT objects hierarchy
-   Bool_t fTerminated;     ///<! termination flag, disables all requests processing
+   TList fEngines;             ///<! engines which runs http server
+   THttpTimer *fTimer;         ///<! timer used to access main thread
+   TRootSnifferBase *fSniffer; ///<! sniffer provides access to ROOT objects hierarchy
+   Bool_t fTerminated;         ///<! termination flag, disables all requests processing
 
    Long_t fMainThrdId; ///<! id of the main ROOT process
 
@@ -64,19 +64,19 @@ public:
    Bool_t IsAnyEngine() const { return fEngines.GetSize() > 0; }
 
    /** returns pointer on objects sniffer */
-   TRootSniffer *GetSniffer() const { return fSniffer; }
+   TRootSnifferBase *GetSniffer() const { return fSniffer; }
+
+   void SetSniffer(TRootSnifferBase *sniff);
+
+   Bool_t IsReadOnly() const;
+
+   void SetReadOnly(Bool_t readonly);
 
    /** set termination flag, no any further requests will be processed */
    void SetTerminate();
 
    /** returns kTRUE, if server was terminated */
    Bool_t IsTerminated() const { return fTerminated; }
-
-   void SetSniffer(TRootSniffer *sniff);
-
-   Bool_t IsReadOnly() const;
-
-   void SetReadOnly(Bool_t readonly);
 
    /** Enable CORS header to ProcessRequests() responses
     * Specified location (typically "*") add as "Access-Control-Allow-Origin" header */
