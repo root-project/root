@@ -48,26 +48,39 @@ public:
    const std::string &operator[](std::size_t idx) const { return fOptSet[idx]; }
 };
 
-/** \class ROOT::Experimental::TStringEnumAttr
- Graphics attribute that consists of a string, selected from a set of options.
+/** \class ROOT::Experimental::TStringEnumAttrBase
+ Base class for template TStringEnumAttr, erasing the underlying integral type.
  */
-class TStringEnumAttr {
-   std::size_t fIdx; ///< Selected option from fStringSet.
+class TStringEnumAttrBase {
+protected:
+   /// Selected option from fStringSet.
+   std::size_t fIdx;
+
    /// Reference to the set of options.
    const TStringEnumAttrSet *fStringSet; //!
 
 public:
+   TStringEnumAttrBase(std::size_t idx, const TStringEnumAttrSet &strSet): fIdx(idx), fStringSet(&strSet) {}
+};
+
+/** \class ROOT::Experimental::TStringEnumAttr
+ Graphics attribute that consists of a string, selected from a set of options.
+ \tparam ENUM - underlying enum type (or `int` etc).
+ */
+template <class ENUM>
+class TStringEnumAttr: public TStringEnumAttrBase {
+public:
    /// Construct the option from the set of strings and the selected option index.
-   TStringEnumAttr(std::size_t idx, const TStringEnumAttrSet &strSet): fIdx(idx), fStringSet(&strSet) {}
+   TStringEnumAttr(ENUM idx, const TStringEnumAttrSet &strSet): TStringEnumAttrBase((std::size_t)idx, strSet) {}
 
    /// Set the index of the selected option.
-   void SetIndex(int idx) { fIdx = idx; }
+   void SetIndex(ENUM idx) { fIdx = (std::size_t)idx; }
 
    /// Get the string representing the selected option.
-   const std::string& GetAsString() const { return (*fStringSet)[fIdx]; }
+   const std::string& GetAsString() const { return (*fStringSet)[(std::size_t)fIdx]; }
 
    /// Get the index of the selected option.
-   std::size_t GetIndex() const { return fIdx; }
+   ENUM GetIndex() const { return static_cast<ENUM>(fIdx); }
 };
 
 /// Initialize an attribute `val` from a string value.
@@ -75,7 +88,7 @@ public:
 ///\param[in] name - the attribute name, for diagnostic purposes.
 ///\param[in] strval - the attribute value as a string.
 ///\param[out] val - the value to be initialized.
-void InitializeAttrFromString(const std::string &name, const std::string &strval, TStringEnumAttr& val);
+void InitializeAttrFromString(const std::string &name, const std::string &strval, TStringEnumAttrBase& val);
 
 } // namespace Experimental
 } // namespace ROOT
