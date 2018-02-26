@@ -83,7 +83,7 @@ namespace Experimental {
 
 namespace VecOps {
 // clang-format off
-/*
+/**
 \class ROOT::Experimental::VecOps::TVec
 \ingroup vecops
 \brief A "std:::vector"-like collection of values implementing handy operation to analyse them
@@ -118,7 +118,7 @@ In this case, the memory associated to myStlVec and myTVec is the same, myTVec s
 If any method which implies a re-allocation is called, e.g. *emplace_back* or *resize*, the adopted
 memory is released and new one is allocated. The previous content is copied in the new memory and
 preserved.
-*/
+**/
 // clang-format on
 template <typename T>
 class TVec {
