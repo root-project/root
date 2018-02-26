@@ -623,7 +623,7 @@ ClassImp(TROOT);
 TROOT::TROOT() : TDirectory(),
      fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fWeb(""), fIsWeb(0), fEditHistograms(kTRUE),
+     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fWebDisplay(""), fIsWebDisplay(0), fEditHistograms(kTRUE),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
@@ -656,7 +656,7 @@ TROOT::TROOT() : TDirectory(),
 TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    : TDirectory(), fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fWeb(""), fIsWeb(0), fEditHistograms(kTRUE),
+     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fWebDisplay(""), fIsWebDisplay(0), fEditHistograms(kTRUE),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
@@ -2747,17 +2747,18 @@ void TROOT::SetMacroPath(const char *newpath)
 /// It also turn the normal graphics to Batch to avoid the loading of local
 /// graphics libraries.
 
-void TROOT::SetWeb(TString web)
+void TROOT::SetWebDisplay(const char *webdisplay)
 {
-   fWeb = web;
-   fWeb.ToLower();
-   if (fWeb.Contains("cef") || fWeb.Contains("qt5") || fWeb.Contains("browser") || fWeb.Length() ==0) {
-      fIsWeb = 1;
-      if (gROOT->IsBatch()) fIsWeb++;
+   fWebDisplay = webdisplay;
+   fWebDisplay.ToLower();
+   if (fWebDisplay.Contains("cef")     || fWebDisplay.Contains("qt5") ||
+       fWebDisplay.Contains("browser") || fWebDisplay.Length() ==0) {
+      fIsWebDisplay = 1;
+      if (gROOT->IsBatch()) fIsWebDisplay++;
       gROOT->SetBatch(kTRUE);
    } else {
-      fWeb = "";
-      fIsWeb = 0;
+      fWebDisplay = "";
+      fIsWebDisplay = 0;
       Warning("SetWeb", "Invalid web display");
    }
 }

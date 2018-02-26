@@ -131,8 +131,8 @@ protected:
    std::atomic<TApplication*> fApplication;  //Pointer to current application
    TInterpreter    *fInterpreter;         //Command interpreter
    Bool_t          fBatch;                //True if session without graphics
-   TString         fWeb;                  //If not empty it defines where web graphics should be rendered (cef, qt5, browser...)
-   Short_t         fIsWeb;                // >0 if session with graphics on web (defined by fWeb)
+   TString         fWebDisplay;           //If not empty it defines where web graphics should be rendered (cef, qt5, browser...)
+   Short_t         fIsWebDisplay;         // >0 if session with graphics on web (defined by fWebDisplay)
    Bool_t          fEditHistograms;       //True if histograms can be edited with the mouse
    Bool_t          fFromPopUp;            //True if command executed from a popup menu
    Bool_t          fMustClean;            //True if object destructor scans canvases
@@ -280,7 +280,7 @@ public:
    Int_t             GetNtypes() const { return fTypes->GetSize(); }
    TFolder          *GetRootFolder() const { return fRootFolder; }
    TProcessUUID     *GetUUIDs() const { return fUUIDs; }
-   TString           GetWeb() const { return fWeb; }
+   TString           GetWebDisplay() const { return fWebDisplay; }
    void              Idle(UInt_t idleTimeInSec, const char *command = 0);
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }
@@ -291,8 +291,8 @@ public:
    Bool_t            IsLineProcessing() const { return fLineIsProcessing ? kTRUE : kFALSE; }
    Bool_t            IsProofServ() const { return fName == "proofserv" ? kTRUE : kFALSE; }
    Bool_t            IsRootFile(const char *filename) const;
-   Bool_t            IsWeb() const { return (fIsWeb > 0); }
-   Bool_t            IsWebBatch() const { return (fIsWeb > 1); }
+   Bool_t            IsWebDisplay() const { return (fIsWebDisplay > 0); }
+   Bool_t            IsWebDisplayBatch() const { return (fIsWebDisplay > 1); }
    void              ls(Option_t *option = "") const;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    TClass           *LoadClass(const char *name, Bool_t silent = kFALSE) const;
@@ -322,7 +322,7 @@ public:
    void              SaveContext();
    void              SetApplication(TApplication *app) { fApplication = app; }
    void              SetBatch(Bool_t batch = kTRUE) { fBatch = batch; }
-   void              SetWeb(TString web);
+   void              SetWebDisplay(const char *webdisplay);
    void              SetCutClassName(const char *name = "TCutG");
    void              SetDefCanvasName(const char *name = "c1") { fDefCanvasName = name; }
    void              SetEditHistograms(Bool_t flag = kTRUE) { fEditHistograms = flag; }

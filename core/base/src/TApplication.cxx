@@ -423,10 +423,10 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
          TString opt;
          opt = argv[i];
          if (opt.BeginsWith("-")) {
-            gROOT->SetWeb("");
+            gROOT->SetWebDisplay("");
          } else {
             argv[i] = null;
-            gROOT->SetWeb(opt.Data());
+            gROOT->SetWebDisplay(opt.Data());
          }
       } else if (!strcmp(argv[i], "-e")) {
          argv[i] = null;
