@@ -132,7 +132,8 @@ protected:
    TInterpreter    *fInterpreter;         //Command interpreter
    Bool_t          fBatch;                //True if session without graphics
    TString         fWebDisplay;           //If not empty it defines where web graphics should be rendered (cef, qt5, browser...)
-   Short_t         fIsWebDisplay;         // >0 if session with graphics on web (defined by fWebDisplay)
+   Bool_t          fIsWebDisplay;         //True if session with graphics on web
+   Bool_t          fIsWebDisplayBatch;    //True if session with graphics on web and batch mode
    Bool_t          fEditHistograms;       //True if histograms can be edited with the mouse
    Bool_t          fFromPopUp;            //True if command executed from a popup menu
    Bool_t          fMustClean;            //True if object destructor scans canvases
@@ -291,8 +292,8 @@ public:
    Bool_t            IsLineProcessing() const { return fLineIsProcessing ? kTRUE : kFALSE; }
    Bool_t            IsProofServ() const { return fName == "proofserv" ? kTRUE : kFALSE; }
    Bool_t            IsRootFile(const char *filename) const;
-   Bool_t            IsWebDisplay() const { return (fIsWebDisplay > 0); }
-   Bool_t            IsWebDisplayBatch() const { return (fIsWebDisplay > 1); }
+   Bool_t            IsWebDisplay() const { return fIsWebDisplay; }
+   Bool_t            IsWebDisplayBatch() const { return fIsWebDisplayBatch; }
    void              ls(Option_t *option = "") const;
    Int_t             LoadClass(const char *classname, const char *libname, Bool_t check = kFALSE);
    TClass           *LoadClass(const char *name, Bool_t silent = kFALSE) const;
