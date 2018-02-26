@@ -18,7 +18,6 @@
 
 class TFolder;
 class TKey;
-class TMemFile;
 class TBufferFile;
 class TDataMember;
 class THttpCallArg;
@@ -118,8 +117,6 @@ class TRootSniffer : public TNamed {
 
 protected:
    TString fObjectsPath; ///<! default path for registered objects
-   TMemFile *fMemFile;   ///<! file used to manage streamer infos
-   TList *fSinfo;        ///<! last produced streamer info
    Bool_t fReadOnly; ///<! indicate if sniffer allowed to change ROOT structures - for instance, read objects from files
    Bool_t fScanGlobalDir;          ///<! when enabled (default), scan gROOT for histograms, canvases, open files
    THttpCallArg *fCurrentArg;      ///<! current http arguments (if any)
@@ -139,11 +136,7 @@ protected:
    void
    ScanCollection(TRootSnifferScanRec &rec, TCollection *lst, const char *foldername = 0, TCollection *keys_lst = 0);
 
-   /** Method is used to scan ROOT objects.
-    * Can be reimplemented to extend scanning */
    virtual void ScanRoot(TRootSnifferScanRec &rec);
-
-   void CreateMemFile();
 
    TString DecodeUrlOptionValue(const char *value, Bool_t remove_quotes = kTRUE);
 
@@ -158,6 +151,10 @@ protected:
    Bool_t AccessField(TFolder *parent, TObject *item, const char *name, const char *value, TNamed **only_get = 0);
 
    Int_t WithCurrentUserName(const char *option);
+
+   virtual Bool_t CanDrawClass(TClass *) { return kFALSE; }
+
+   virtual Bool_t HasStreamerInfo() const { return kFALSE; }
 
 public:
    TRootSniffer(const char *name, const char *objpath = "Objects");
@@ -207,23 +204,23 @@ public:
 
    TObject *FindTObjectInHierarchy(const char *path);
 
-   virtual void *FindInHierarchy(const char *path, TClass **cl = 0, TDataMember **member = 0, Int_t *chld = 0);
+   virtual void *FindInHierarchy(const char *path, TClass **cl = nullptr, TDataMember **member = nullptr, Int_t *chld = nullptr);
 
    Bool_t CanDrawItem(const char *path);
 
    Bool_t CanExploreItem(const char *path);
 
-   Bool_t IsStreamerInfoItem(const char *itemname);
+   virtual Bool_t IsStreamerInfoItem(const char *) { return kFALSE; }
 
-   ULong_t GetStreamerInfoHash();
+   virtual ULong_t GetStreamerInfoHash() { return 0; }
 
-   ULong_t GetItemHash(const char *itemname);
+   virtual ULong_t GetItemHash(const char *itemname);
 
    Bool_t ProduceJson(const char *path, const char *options, TString &res);
 
    virtual Bool_t ProduceXml(const char *path, const char *options, TString &res);
 
-   Bool_t ProduceBinary(const char *path, const char *options, void *&ptr, Long_t &length);
+   virtual Bool_t ProduceBinary(const char *path, const char *options, void *&ptr, Long_t &length);
 
    virtual Bool_t ProduceImage(Int_t kind, const char *path, const char *options, void *&ptr, Long_t &length);
 
