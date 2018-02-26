@@ -21,6 +21,8 @@
 #include "THttpCallArg.h"
 
 #include <mutex>
+#include <map>
+#include <string>
 
 class THttpEngine;
 class THttpTimer;
@@ -29,17 +31,17 @@ class TRootSnifferBase;
 class THttpServer : public TNamed {
 
 protected:
-   TList fEngines;             ///<! engines which runs http server
-   THttpTimer *fTimer;         ///<! timer used to access main thread
-   TRootSnifferBase *fSniffer; ///<! sniffer provides access to ROOT objects hierarchy
-   Bool_t fTerminated;         ///<! termination flag, disables all requests processing
+   TList fEngines;                      ///<! engines which runs http server
+   THttpTimer *fTimer{nullptr};         ///<! timer used to access main thread
+   TRootSnifferBase *fSniffer{nullptr}; ///<! sniffer provides access to ROOT objects hierarchy
+   Bool_t fTerminated{kFALSE};          ///<! termination flag, disables all requests processing
+   Long_t fMainThrdId{0};               ///<! id of the main ROOT process
 
-   Long_t fMainThrdId; ///<! id of the main ROOT process
+   TString fJSROOTSYS;       ///<! location of local JSROOT files
+   TString fTopName{"ROOT"}; ///<! name of top folder, default - "ROOT"
+   TString fJSROOT;          ///<! location of external JSROOT files
 
-   TString fJSROOTSYS; ///<! location of local JSROOT files
-   TString fTopName;   ///<! name of top folder, default - "ROOT"
-   TString fJSROOT;    ///<! location of external JSROOT files
-   TList fLocations;   ///<! list of local directories, which could be accessed via server
+   std::map<std::string, std::string> fLocations; ///<! list of local directories, which could be accessed via server
 
    TString fDefaultPage;     ///<! file name for default page name
    TString fDefaultPageCont; ///<! content of the file content
