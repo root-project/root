@@ -18,7 +18,7 @@ namespace ROOT {
 namespace Detail {
 namespace VecOps {
 
-/*
+/**
 \class ROOT::Detail::VecOps::TAdoptAllocator
 \ingroup vecops
 \brief TAdoptAllocator allows to bind to an already initialised memory region as managed.
@@ -45,7 +45,7 @@ Upon a second allocation, the vector *v* ceases to be a proxy
 v.emplace_back(0.);
 ~~~
 now the vector *v* owns its memory as a regular vector.
-*/
+**/
 
 template <typename T>
 class TAdoptAllocator {
