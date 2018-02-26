@@ -20,6 +20,13 @@ namespace TDF {
 using namespace ROOT::Experimental::TDF;
 using namespace ROOT::Detail::TDF;
 
+/// Detect whether a type is an instantiation of TArrayBranch<T>
+template <typename T>
+struct IsArrayBranch : public std::false_type {};
+
+template <typename T>
+struct IsArrayBranch<TArrayBranch<T>> : public std::true_type {};
+
 /// Choose between TTreeReader{Array,Value} depending on whether the branch type
 /// T is a `TArrayBranch<T>` or any other type (respectively).
 template <typename T>
