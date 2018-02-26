@@ -79,10 +79,11 @@ TRootSniffer::~TRootSniffer()
    delete fMemFile;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// return true if object can be drawn
 
-Bool_t TRootSniffer::CanDrawClass(TClass *cl)
+////////////////////////////////////////////////////////////////////////////////
+/// return true if given class can be drawn in JSROOT
+
+Bool_t TRootSniffer::IsDrawableClass(TClass *cl)
 {
    if (!cl) return kFALSE;
    if (cl->InheritsFrom(TH1::Class()))
