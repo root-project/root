@@ -231,16 +231,16 @@ TTree branch or from a temporary column respectively.
 TDataFrame nodes can store tuples of TColumnValues and retrieve an updated
 value for the column via the `Get` method.
 **/
-template <typename T>
+template <typename T, bool MustUseReaderArray = IsArrayBranch<T>::value>
 class TColumnValue {
-   // following line is equivalent to pseudo-code: ProxyParam_t == TArrayBranch<U> ? U : T
-   // ReaderValueOrArray_t is a TTreeReaderValue<T> unless T is TArrayBranch<U>
-   using ProxyParam_t = typename std::conditional<std::is_same<ReaderValueOrArray_t<T>, TTreeReaderValue<T>>::value, T,
-                                                  TakeFirstParameter_t<T>>::type;
+   // ColumnValue_t is the type of the column or the type of the elements of an array column
+   using ColumnValue_t = typename std::conditional<MustUseReaderArray, TakeFirstParameter_t<T>, T>::type;
+   using TreeReader_t = typename std::conditional<MustUseReaderArray, TTreeReaderArray<ColumnValue_t>,
+                                                  TTreeReaderValue<ColumnValue_t>>::type;
 
    /// TColumnValue has a slightly different behaviour whether the column comes from a TTreeReader, a TDataFrame Define
    /// or a TDataSource. It stores which it is as an enum.
-   enum class EColumnKind { kTreeValue, kTreeArray, kCustomColumn, kDataSource, kInvalid };
+   enum class EColumnKind { kTree, kCustomColumn, kDataSource, kInvalid };
    // Set to the correct value by MakeProxy or SetTmpColumn
    EColumnKind fColumnKind = EColumnKind::kInvalid;
    /// The slot this value belongs to. Only needed when querying custom column values, it is set in `SetTmpColumn`.
@@ -250,10 +250,8 @@ class TColumnValue {
    // The vectors are used as very small stacks (1-2 elements typically) that fill in case of interleaved task execution
    // i.e. when more than one task needs readers in this worker thread.
 
-   /// Owning ptrs to a TTreeReaderValue. Used for non-temporary columns when T != TArrayBranch<U>
-   std::vector<std::unique_ptr<TTreeReaderValue<T>>> fReaderValues;
-   /// Owning ptrs to a TTreeReaderArray. Used for non-temporary columns when T == TArrayBranch<U>.
-   std::vector<std::unique_ptr<TTreeReaderArray<ProxyParam_t>>> fReaderArrays;
+   /// Owning ptrs to a TTreeReaderValue or TTreeReaderArray. Only used for Tree columns.
+   std::vector<std::unique_ptr<TreeReader_t>> fTreeReaders;
    /// Non-owning ptrs to the value of a custom column.
    std::vector<T *> fCustomValuePtrs;
    /// Non-owning ptrs to the value of a data-source column.
@@ -265,32 +263,29 @@ class TColumnValue {
    bool fArrayHasBeenChecked = false;
 
 public:
+   static constexpr bool fgMustUseReaderArray = MustUseReaderArray;
+
    TColumnValue() = default;
 
    void SetTmpColumn(unsigned int slot, TCustomColumnBase *tmpColumn);
 
    void MakeProxy(TTreeReader *r, const std::string &bn)
    {
-      constexpr bool useReaderValue = std::is_same<ProxyParam_t, T>::value;
-      if (useReaderValue) {
-         fColumnKind = EColumnKind::kTreeValue;
-         fReaderValues.emplace_back(new TTreeReaderValue<T>(*r, bn.c_str()));
-      } else {
-         fColumnKind = EColumnKind::kTreeArray;
-         fReaderArrays.emplace_back(new TTreeReaderArray<ProxyParam_t>(*r, bn.c_str()));
-      }
+      fColumnKind = EColumnKind::kTree;
+      fTreeReaders.emplace_back(new TreeReader_t(*r, bn.c_str()));
    }
 
    /// This overload is used to return scalar quantities (i.e. types that are not read into a TArrayBranch)
    template <typename U = T,
-             typename std::enable_if<std::is_same<typename TColumnValue<U>::ProxyParam_t, U>::value, int>::type = 0>
+             typename std::enable_if<!TColumnValue<U>::fgMustUseReaderArray, int>::type = 0>
    T &Get(Long64_t entry);
 
    /// This overload is used to return arrays (i.e. types that are read into a TArrayBranch)
-   template <typename U = T, typename std::enable_if<!std::is_same<ProxyParam_t, U>::value, int>::type = 0>
-   TArrayBranch<ProxyParam_t> Get(Long64_t)
+   template <typename U = T,
+             typename std::enable_if<TColumnValue<U>::fgMustUseReaderArray, int>::type = 0>
+   TArrayBranch<ColumnValue_t> Get(Long64_t)
    {
-      auto &readerArray = *fReaderArrays.back();
+      auto &readerArray = *fTreeReaders.back();
       // We only use TTreeReaderArrays to read columns that users flagged as type `TArrayBranch`, so we need to check
       // that the branch stores the array as contiguous memory that we can actually wrap in an `TArrayBranch`.
       // Currently we need the first entry to have been loaded to perform the check
@@ -309,14 +304,13 @@ public:
          }
       }
 
-      return TArrayBranch<ProxyParam_t>(readerArray);
+      return TArrayBranch<ColumnValue_t>(readerArray);
    }
 
    void Reset()
    {
       switch (fColumnKind) {
-      case EColumnKind::kTreeValue: fReaderValues.pop_back(); break;
-      case EColumnKind::kTreeArray: fReaderArrays.pop_back(); break;
+      case EColumnKind::kTree: fTreeReaders.pop_back(); break;
       case EColumnKind::kCustomColumn:
          fCustomColumns.pop_back();
          fCustomValuePtrs.pop_back();
@@ -806,8 +800,8 @@ public:
 namespace Internal {
 namespace TDF {
 
-template <typename T>
-void TColumnValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::TDF::TCustomColumnBase *customColumn)
+template <typename T, bool B>
+void TColumnValue<T, B>::SetTmpColumn(unsigned int slot, ROOT::Detail::TDF::TCustomColumnBase *customColumn)
 {
    fCustomColumns.emplace_back(customColumn);
    if (customColumn->GetTypeId() != typeid(T))
@@ -827,15 +821,13 @@ void TColumnValue<T>::SetTmpColumn(unsigned int slot, ROOT::Detail::TDF::TCustom
 
 // This method is executed inside the event-loop, many times per entry
 // If need be, the if statement can be avoided using thunks
-// (have both branches inside functions and have a pointer to
-// the branch to be executed)
-template <typename T>
-template <typename U,
-          typename std::enable_if<std::is_same<typename TColumnValue<U>::ProxyParam_t, U>::value, int>::type>
-T &TColumnValue<T>::Get(Long64_t entry)
+// (have both branches inside functions and have a pointer to the branch to be executed)
+template <typename T, bool B>
+template <typename U, typename std::enable_if<!TColumnValue<U>::fgMustUseReaderArray, int>::type>
+T &TColumnValue<T, B>::Get(Long64_t entry)
 {
-   if (fColumnKind == EColumnKind::kTreeValue) {
-      return *(fReaderValues.back()->Get());
+   if (fColumnKind == EColumnKind::kTree) {
+      return *(fTreeReaders.back()->Get());
    } else {
       fCustomColumns.back()->Update(fSlot, entry);
       return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.back() : **fDSValuePtrs.back();
