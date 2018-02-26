@@ -952,28 +952,6 @@ void TRootSnifferBase::ScanRoot(TRootSnifferScanRec &rec)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// return true if given class can be drawn
-
-Bool_t TRootSnifferBase::IsDrawableClass(TClass *cl)
-{
-   if (!cl)
-      return kFALSE;
-   TClass *prnt = gROOT->GetClass("TH1", kFALSE);
-   if (prnt && cl->InheritsFrom(prnt))
-      return kTRUE;
-   prnt = gROOT->GetClass("TGraph", kFALSE);
-   if (prnt && cl->InheritsFrom(prnt))
-      return kTRUE;
-   prnt = gROOT->GetClass("TCanvas", kFALSE);
-   if (prnt && cl->InheritsFrom(prnt))
-      return kTRUE;
-   prnt = gROOT->GetClass("TProfile", kFALSE);
-   if (prnt && cl->InheritsFrom(prnt))
-      return kTRUE;
-   return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// scan ROOT hierarchy with provided store object
 
 void TRootSnifferBase::ScanHierarchy(const char *topname, const char *path, TRootSnifferStore *store, Bool_t only_fields)
