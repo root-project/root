@@ -9,7 +9,7 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "TRootSnifferFull.h"
+#include "TRootSniffer.h"
 
 #include "TH1.h"
 #include "TGraph.h"
@@ -59,32 +59,30 @@
 // ROOT collections and containers like TTree, TCanvas, ...             //
 //////////////////////////////////////////////////////////////////////////
 
-ClassImp(TRootSnifferFull);
+ClassImp(TRootSniffer);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// constructor
 
-TRootSnifferFull::TRootSnifferFull(const char *name, const char *objpath)
-   : TRootSniffer(name, objpath)
+TRootSniffer::TRootSniffer(const char *name, const char *objpath)
+   : TRootSnifferBase(name, objpath)
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// destructor
 
-TRootSnifferFull::~TRootSnifferFull()
+TRootSniffer::~TRootSniffer()
 {
-   if (fSinfo)
-      delete fSinfo;
+   delete fSinfo;
 
-   if (fMemFile)
-      delete fMemFile;
+   delete fMemFile;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// return true if object can be drawn
 
-Bool_t TRootSnifferFull::CanDrawClass(TClass *cl)
+Bool_t TRootSniffer::CanDrawClass(TClass *cl)
 {
    if (!cl) return kFALSE;
    if (cl->InheritsFrom(TH1::Class()))
@@ -107,7 +105,7 @@ Bool_t TRootSnifferFull::CanDrawClass(TClass *cl)
 /// One could use double quotes to code string values with spaces.
 /// Fields separated from each other with spaces
 
-void TRootSnifferFull::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
+void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
 {
    if (obj && obj->InheritsFrom(TLeaf::Class())) {
       rec.SetField("_more", "false");
@@ -122,7 +120,7 @@ void TRootSnifferFull::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *o
 /// scans key properties
 /// in special cases load objects from the file
 
-void TRootSnifferFull::ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TObject *&obj, TClass *&obj_class)
+void TRootSniffer::ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TObject *&obj, TClass *&obj_class)
 {
    if (strcmp(key->GetClassName(), "TDirectoryFile") == 0) {
       TRootSniffer::ScanKeyProperties(rec, key, obj, obj_class);
@@ -146,7 +144,7 @@ void TRootSnifferFull::ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TO
 /// scans object childs (if any)
 /// here one scans collection, branches, trees and so on
 
-void TRootSnifferFull::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
+void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
 {
    if (obj->InheritsFrom(TTree::Class())) {
       if (!rec.IsReadOnly(fReadOnly)) {
@@ -165,7 +163,7 @@ void TRootSnifferFull::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
 /// Returns hash value for streamer infos
 /// At the moment - just number of items in streamer infos list.
 
-ULong_t TRootSnifferFull::GetStreamerInfoHash()
+ULong_t TRootSniffer::GetStreamerInfoHash()
 {
    return fSinfo ? fSinfo->GetSize() : 0;
 }
@@ -173,7 +171,7 @@ ULong_t TRootSnifferFull::GetStreamerInfoHash()
 ////////////////////////////////////////////////////////////////////////////////
 /// Return true if it is streamer info item name
 
-Bool_t TRootSnifferFull::IsStreamerInfoItem(const char *itemname)
+Bool_t TRootSniffer::IsStreamerInfoItem(const char *itemname)
 {
    if (!itemname || (*itemname == 0))
       return kFALSE;
@@ -185,7 +183,7 @@ Bool_t TRootSnifferFull::IsStreamerInfoItem(const char *itemname)
 /// Get hash function for specified item
 /// used to detect any changes in the specified object
 
-ULong_t TRootSnifferFull::GetItemHash(const char *itemname)
+ULong_t TRootSniffer::GetItemHash(const char *itemname)
 {
    if (IsStreamerInfoItem(itemname))
       return GetStreamerInfoHash();
@@ -199,7 +197,7 @@ ULong_t TRootSnifferFull::GetItemHash(const char *itemname)
 /// One could not use TBufferFile directly,
 /// while one also require streamer infos list
 
-void TRootSnifferFull::CreateMemFile()
+void TRootSniffer::CreateMemFile()
 {
    if (fMemFile)
       return;
@@ -252,7 +250,7 @@ void TRootSnifferFull::CreateMemFile()
 /// but also number of childs are counted. When member!=0, any object
 /// will be scanned for its data members (disregard of extra options)
 
-void *TRootSnifferFull::FindInHierarchy(const char *path, TClass **cl, TDataMember **member, Int_t *chld)
+void *TRootSniffer::FindInHierarchy(const char *path, TClass **cl, TDataMember **member, Int_t *chld)
 {
    if (IsStreamerInfoItem(path)) {
       // special handling for streamer info
@@ -269,7 +267,7 @@ void *TRootSnifferFull::FindInHierarchy(const char *path, TClass **cl, TDataMemb
 /// produce binary data for specified item
 /// if "zipped" option specified in query, buffer will be compressed
 
-Bool_t TRootSnifferFull::ProduceBinary(const char *path, const char * /*query*/, void *&ptr, Long_t &length)
+Bool_t TRootSniffer::ProduceBinary(const char *path, const char * /*query*/, void *&ptr, Long_t &length)
 {
    if (!path || (*path == 0))
       return kFALSE;
@@ -340,7 +338,7 @@ Bool_t TRootSnifferFull::ProduceBinary(const char *path, const char * /*query*/,
 ///  Return is memory with produced image
 ///  Memory must be released by user with free(ptr) call
 
-Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const char *path, const char *options, void *&ptr, Long_t &length)
+Bool_t TRootSniffer::ProduceImage(Int_t kind, const char *path, const char *options, void *&ptr, Long_t &length)
 {
    ptr = nullptr;
    length = 0;
@@ -427,7 +425,7 @@ Bool_t TRootSnifferFull::ProduceImage(Int_t kind, const char *path, const char *
 /// produce XML data for specified item
 /// For object conversion TBufferXML is used
 
-Bool_t TRootSnifferFull::ProduceXml(const char *path, const char * /*options*/, TString &res)
+Bool_t TRootSniffer::ProduceXml(const char *path, const char * /*options*/, TString &res)
 {
    if (!path || (*path == 0)) return kFALSE;
 
@@ -448,7 +446,7 @@ Bool_t TRootSnifferFull::ProduceXml(const char *path, const char * /*options*/, 
 /// sniffer should be not-readonly to allow execution of the commands
 /// reskind defines kind of result 0 - debug, 1 - json, 2 - binary
 
-Bool_t TRootSnifferFull::ProduceExe(const char *path, const char *options, Int_t reskind, TString *res_str, void **res_ptr,
+Bool_t TRootSniffer::ProduceExe(const char *path, const char *options, Int_t reskind, TString *res_str, void **res_ptr,
                                 Long_t *res_length)
 {
    TString *debug = (reskind == 0) ? res_str : nullptr;
