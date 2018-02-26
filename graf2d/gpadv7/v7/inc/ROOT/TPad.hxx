@@ -233,6 +233,9 @@ public:
       fPos = pos;
       return *this;
    }
+
+   TDrawingAttr<TPadPos> &GetOffset() { return fPos; }
+   const TDrawingAttr<TPadPos> &GetOffset() const { return fPos; }
 };
 
 /** \class TPadDrawable
