@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/env python
 
 from ROOT import TMVA, TFile, TString
 from array import array

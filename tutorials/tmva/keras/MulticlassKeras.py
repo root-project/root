@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/env python
 
 from ROOT import TMVA, TFile, TTree, TCut, gROOT
 from os.path import isfile

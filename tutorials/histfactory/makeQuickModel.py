@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/bin/env python
 
 #
 # A pyROOT script that allows one to

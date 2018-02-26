@@ -1,4 +1,4 @@
-#!/usr/bin/env @python@
+#!/bin/env @python@
 
 # ROOT command line tools: rootslimtree
 # Author: Lawrence Lee via Julien Ripoche's rooteventselector
