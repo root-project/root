@@ -1899,6 +1899,8 @@ void TFormula::ExtractFunctors(TString &formula)
 
             // check if function is provided by gROOT
             TObject *obj = 0;
+            // exclude case function name is x,y,z,t
+            if (!IsReservedName(name))
             {
                R__LOCKGUARD(gROOTMutex);
                obj = gROOT->GetListOfFunctions()->FindObject(name);
