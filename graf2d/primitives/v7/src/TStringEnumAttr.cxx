@@ -27,7 +27,7 @@ using namespace ROOT::Experimental;
 ///\param[out] val - the value to be initialized.
 
 void ROOT::Experimental::InitializeAttrFromString(const std::string & /*name*/, const std::string &strval,
-                                                  ROOT::Experimental::TStringEnumAttr & /*val*/)
+                                                  ROOT::Experimental::TStringEnumAttrBase & /*val*/)
 {
    if (strval.empty())
       return;
