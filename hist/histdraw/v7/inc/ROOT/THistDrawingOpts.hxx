@@ -43,20 +43,21 @@ private:
       static const TStringEnumAttrSet styles{"hist", "bar", "text"};
       return styles;
    }
-   TDrawingAttr<TStringEnumAttr> fStyle{*this, "Hist.1D.Style", 0, Styles()};
+   TDrawingAttr<TStringEnumAttr<EStyle>> fStyle{*this, "Hist.1D.Style", EStyle::kBar, Styles()};
    TDrawingAttr<TColor> fLineColor{*this, "Hist.1D.Line.Color"};
    TDrawingAttr<int> fLineWidth{*this, "Hist.1D.Line.Width"};
 
 public:
-   EStyle GetStyle() const { return static_cast<EStyle>(fStyle.Get().GetIndex()); }
-   void SetStyle(EStyle style) { fStyle.Get().SetIndex(static_cast<int>(style)); }
+   EStyle GetStyle() const { return fStyle.Get().GetIndex(); }
+   TDrawingAttr<TStringEnumAttr<EStyle>> &GetStyle() { return fStyle; }
+   void SetStyle(EStyle style) { fStyle.Get().SetIndex(style); }
 
    TColor GetLineColor() const { return fLineColor.Get(); }
    TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
    void SetLineColor(const TColor& col) { fLineColor = col; }
 
    int GetLineWidth() const { return fLineWidth.Get(); }
-   TDrawingAttr<int> &GetLineWidth() { return fLineWidth.Get(); }
+   TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
    void SetLineWidth(int width) { fLineWidth = width; }
 };
 
@@ -73,20 +74,21 @@ private:
       static const TStringEnumAttrSet styles{"box", "surf", "text"};
       return styles;
    }
-   TDrawingAttr<TStringEnumAttr> fStyle{*this, "Hist.2D.Style", 0, Styles()};
+   TDrawingAttr<TStringEnumAttr<EStyle>> fStyle{*this, "Hist.2D.Style", EStyle::kBox, Styles()};
    TDrawingAttr<TColor> fLineColor{*this, "Hist.2D.Line.Color"};
    TDrawingAttr<int> fLineWidth{*this, "Hist.2D.Line.Width"};
 
 public:
-   EStyle GetStyle() const { return static_cast<EStyle>(fStyle.Get().GetIndex()); }
-   void SetStyle(EStyle style) { fStyle.Get().SetIndex(static_cast<int>(style)); }
+   EStyle GetStyle() const { return fStyle.Get().GetIndex(); }
+   TDrawingAttr<TStringEnumAttr<EStyle>> &GetStyle() { return fStyle; }
+   void SetStyle(EStyle style) { fStyle.Get().SetIndex(style); }
 
    TColor GetLineColor() const { return fLineColor.Get(); }
    TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
    void SetLineColor(const TColor& col) { fLineColor = col; }
 
    int GetLineWidth() const { return fLineWidth.Get(); }
-   TDrawingAttr<int> &GetLineWidth() { return fLineWidth.Get(); }
+   TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
    void SetLineWidth(int width) { fLineWidth = width; }
 };
 
@@ -103,20 +105,21 @@ private:
       static const TStringEnumAttrSet styles{"box", "iso"};
       return styles;
    }
-   TDrawingAttr<TStringEnumAttr> fStyle{*this, "Hist.3D.Style", 0, Styles()};
+   TDrawingAttr<TStringEnumAttr<EStyle>> fStyle{*this, "Hist.3D.Style", EStyle::kBox, Styles()};
    TDrawingAttr<TColor> fLineColor{*this, "Hist.3D.Line.Color"};
    TDrawingAttr<int> fLineWidth{*this, "Hist.3D.Line.Width"};
 
 public:
-   EStyle GetStyle() const { return static_cast<EStyle>(fStyle.Get().GetIndex()); }
-   void SetStyle(EStyle style) { fStyle.Get().SetIndex(static_cast<int>(style)); }
+   EStyle GetStyle() const { return fStyle.Get().GetIndex(); }
+   TDrawingAttr<TStringEnumAttr<EStyle>> &GetStyle() { return fStyle; }
+   void SetStyle(EStyle style) { fStyle.Get().SetIndex(style); }
 
    TColor GetLineColor() const { return fLineColor.Get(); }
    TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
    void SetLineColor(const TColor& col) { fLineColor = col; }
 
    int GetLineWidth() const { return fLineWidth.Get(); }
-   TDrawingAttr<int> &GetLineWidth() { return fLineWidth.Get(); }
+   TDrawingAttr<int> &GetLineWidth() { return fLineWidth; }
    void SetLineWidth(int width) { fLineWidth = width; }
 };
 
