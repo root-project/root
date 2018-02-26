@@ -623,7 +623,8 @@ ClassImp(TROOT);
 TROOT::TROOT() : TDirectory(),
      fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fWebDisplay(""), fIsWebDisplay(0), fEditHistograms(kTRUE),
+     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
+     fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
@@ -656,7 +657,8 @@ TROOT::TROOT() : TDirectory(),
 TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    : TDirectory(), fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fWebDisplay(""), fIsWebDisplay(0), fEditHistograms(kTRUE),
+     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
+     fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
@@ -2743,6 +2745,7 @@ void TROOT::SetMacroPath(const char *newpath)
 /// - "cef" web graphics is rendered via the Chromium Embedded Framework
 /// - "qt5" web graphics is rendered via Qt5
 /// - "browser" or "" web graphics is rendered in the default web browser
+/// - "off" turn off the web display and come back to normal mode.
 ///
 /// It also turn the normal graphics to Batch to avoid the loading of local
 /// graphics libraries.
@@ -2753,13 +2756,15 @@ void TROOT::SetWebDisplay(const char *webdisplay)
    fWebDisplay.ToLower();
    if (fWebDisplay.Contains("cef")     || fWebDisplay.Contains("qt5") ||
        fWebDisplay.Contains("browser") || fWebDisplay.Length() ==0) {
-      fIsWebDisplay = 1;
-      if (gROOT->IsBatch()) fIsWebDisplay++;
+      fIsWebDisplay = kTRUE;
+      if (gROOT->IsBatch()) fIsWebDisplayBatch = kTRUE;
       gROOT->SetBatch(kTRUE);
-   } else {
+   } else if (fWebDisplay.Contains("off")) {
       fWebDisplay = "";
-      fIsWebDisplay = 0;
-      Warning("SetWeb", "Invalid web display");
+      fIsWebDisplay = kFALSE;
+      fIsWebDisplayBatch = kFALSE;
+   } else {
+      Warning("SetWebDisplay", "Invalid option");
    }
 }
 
