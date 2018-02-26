@@ -52,9 +52,11 @@ public:
    void SetStyle(EStyle style) { fStyle.Get().SetIndex(static_cast<int>(style)); }
 
    TColor GetLineColor() const { return fLineColor.Get(); }
+   TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
    void SetLineColor(const TColor& col) { fLineColor = col; }
 
    int GetLineWidth() const { return fLineWidth.Get(); }
+   TDrawingAttr<int> &GetLineWidth() { return fLineWidth.Get(); }
    void SetLineWidth(int width) { fLineWidth = width; }
 };
 
@@ -80,9 +82,11 @@ public:
    void SetStyle(EStyle style) { fStyle.Get().SetIndex(static_cast<int>(style)); }
 
    TColor GetLineColor() const { return fLineColor.Get(); }
+   TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
    void SetLineColor(const TColor& col) { fLineColor = col; }
 
    int GetLineWidth() const { return fLineWidth.Get(); }
+   TDrawingAttr<int> &GetLineWidth() { return fLineWidth.Get(); }
    void SetLineWidth(int width) { fLineWidth = width; }
 };
 
@@ -108,9 +112,11 @@ public:
    void SetStyle(EStyle style) { fStyle.Get().SetIndex(static_cast<int>(style)); }
 
    TColor GetLineColor() const { return fLineColor.Get(); }
+   TDrawingAttr<TColor> &GetLineColor() { return fLineColor; }
    void SetLineColor(const TColor& col) { fLineColor = col; }
 
    int GetLineWidth() const { return fLineWidth.Get(); }
+   TDrawingAttr<int> &GetLineWidth() { return fLineWidth.Get(); }
    void SetLineWidth(int width) { fLineWidth = width; }
 };
 
