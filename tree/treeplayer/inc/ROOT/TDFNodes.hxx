@@ -470,14 +470,13 @@ public:
    void InitNode();
 };
 
+// clang-format off
 namespace TCCHelperTypes {
-struct TNothing {
-};
-struct TSlot {
-};
-struct TSlotAndEntry {
-};
+struct TNothing;
+struct TSlot;
+struct TSlotAndEntry;
 }
+// clang-format on
 
 template <typename F, typename UPDATE_HELPER_TYPE = TCCHelperTypes::TNothing>
 class TCustomColumn final : public TCustomColumnBase {
