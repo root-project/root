@@ -168,7 +168,7 @@ THttpServer::THttpServer(const char *engine)
    fDrawPage = fJSROOTSYS + "/files/draw.htm";
 
    TRootSnifferBase *sniff = nullptr;
-   if (strstr(engine,"nofullsniff")) {
+   if (strstr(engine,"nofullsniffer")) {
       sniff = new TRootSnifferBase("sniff");
    } else {
       sniff = (TRootSnifferBase *) gROOT->ProcessLineSync("new TRootSniffer(\"sniff\");");

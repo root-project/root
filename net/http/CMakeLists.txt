@@ -57,4 +57,4 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RHTTP
                               SOURCES ${sources}
                               LIBRARIES ${SYSLIBS} ZLIB::ZLIB ${RT_LIBRARIES} ${FASTCGI_LIBRARY}
                                         ${OPENSSL_LIBRARIES} ${CMAKE_DL_LIBS}
-                              DEPENDENCIES Thread Hist Gpad Graf RIO)
+                              DEPENDENCIES Thread RIO)
