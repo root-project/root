@@ -73,21 +73,16 @@ void fillMatrix(AMatrix &X, AReal x)
 /*! Fill matrix with random, Gaussian-distributed values. */
 //______________________________________________________________________________
 template <typename AMatrix>
-void randomMatrix(AMatrix &X)
+void randomMatrix(AMatrix &X, double mean = 0.0, double sigma = 1.0)
 {
-    size_t m,n;
-    m = X.GetNrows();
-    n = X.GetNcols();
+   TRandom rand(clock());
 
-    TRandom rand(clock());
+   size_t m = X.GetNrows();
+   size_t n = X.GetNcols();
 
-    Double_t sigma = sqrt(10.0);
-
-    for (size_t i = 0; i < m; i++) {
-        for (size_t j = 0; j < n; j++) {
-        X(i,j) = rand.Gaus(0.0, sigma);
-        }
-    }
+   for (size_t i = 0; i < m; ++i)
+      for (size_t j = 0; j < n; ++j)
+         X(i,j) = rand.Gaus(mean, sigma);
 }
 
 /*! Generate a random batch as input for a neural net. */
