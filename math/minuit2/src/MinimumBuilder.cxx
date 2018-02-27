@@ -8,10 +8,7 @@
  **********************************************************************/
 
 #include "Minuit2/MinimumBuilder.h"
-
-#if defined(DEBUG) || defined(WARNINGMSG)
 #include "Minuit2/MnPrint.h"
-#endif
 
 
 namespace ROOT {
