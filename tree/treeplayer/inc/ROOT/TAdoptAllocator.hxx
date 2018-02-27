@@ -50,6 +50,8 @@ now the vector *v* owns its memory as a regular vector.
 template <typename T>
 class TAdoptAllocator {
 public:
+   using propagate_on_container_move_assignment = std::true_type;
+   using propagate_on_container_swap = std::true_type;
    using StdAlloc_t = std::allocator<T>;
    using value_type = typename StdAlloc_t::value_type;
    using pointer = typename StdAlloc_t::pointer;
@@ -63,16 +65,18 @@ private:
    enum class EAllocType : char { kOwning, kAdopting, kAdoptingNoAllocYet };
    using StdAllocTraits_t = std::allocator_traits<StdAlloc_t>;
    pointer fInitialAddress = nullptr;
-   size_type fInitialSize = 0;
    EAllocType fAllocType = EAllocType::kOwning;
    StdAlloc_t fStdAllocator;
 
 public:
    /// This is the constructor which allows the allocator to adopt a certain memory region.
-   TAdoptAllocator(pointer p, size_type n)
-      : fInitialAddress(p), fInitialSize(n), fAllocType(EAllocType::kAdoptingNoAllocYet){};
+   TAdoptAllocator(pointer p)
+      : fInitialAddress(p), fAllocType(EAllocType::kAdoptingNoAllocYet){};
    TAdoptAllocator() = default;
    TAdoptAllocator(const TAdoptAllocator &) = default;
+   TAdoptAllocator(TAdoptAllocator &&) = default;
+   TAdoptAllocator &operator=(const TAdoptAllocator &) = default;
+   TAdoptAllocator &operator=(TAdoptAllocator &&) = default;
 
    /// Construct a value at a certain memory address
    /// This method is a no op if memory has been adopted.
@@ -121,8 +125,18 @@ public:
          StdAllocTraits_t::deallocate(fStdAllocator, p, n);
    }
 
-   bool operator==(const TAdoptAllocator<T> &other) { return fAllocType == other.fAllocType; }
-   bool operator!=(const TAdoptAllocator<T> &other) { return fAllocType != other.fAllocType; }
+   bool operator==(const TAdoptAllocator<T> &other)
+   {
+      return fInitialAddress == other.fInitialAddress &&
+             fAllocType == other.fAllocType &&
+             fStdAllocator == other.fStdAllocator;
+   }
+   bool operator!=(const TAdoptAllocator<T> &other)
+   {
+      return fInitialAddress != other.fInitialAddress ||
+             fAllocType != other.fAllocType ||
+             fStdAllocator != other.fStdAllocator;
+   }
 };
 
 } // End NS VecOps
