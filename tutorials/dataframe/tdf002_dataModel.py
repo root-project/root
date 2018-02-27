@@ -79,22 +79,21 @@ print("%s passed all filters" %nentries.GetValue())
 # transverse momentum.
 
 getPt_code ='''
-std::vector<double> getPt (const FourVectors &tracks)
+using namespace ROOT::Experimental::VecOps;
+TVec<double> getPt(const TVec<FourVector> &tracks)
 {
-   std::vector<double> pts;
-   pts.reserve(tracks.size());
-   for (auto &t : tracks) pts.emplace_back(t.Pt());
-   return pts;
+   auto pt = [](const FourVector &v) { return v.pt(); };
+   return Map(tracks, pt);
 }
 '''
 ROOT.gInterpreter.Declare(getPt_code)
 
 getPtWeights_code ='''
-std::vector<double> getPtWeights (const FourVectors &tracks) {
-   std::vector<double> ptsw;
-   ptsw.reserve(tracks.size());
-   for (auto &t : tracks) ptsw.emplace_back(1. / t.Pt());
-   return ptsw;
+using namespace ROOT::Experimental::VecOps;
+TVec<double> getPtWeights(const TVec<FourVector> &tracks)
+{
+   auto ptWeight = [](const FourVector &v) { return 1. / v.Pt(); };
+   return Map(tracks, ptWeight);
 };
 '''
 ROOT.gInterpreter.Declare(getPtWeights_code)
