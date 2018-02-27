@@ -11,31 +11,62 @@
 #ifndef ROOT_TDF_TINTERFACE
 #define ROOT_TDF_TINTERFACE
 
-#include "ROOT/TResultProxy.hxx"
-#include "ROOT/TDataSource.hxx"
-#include "ROOT/TDFNodes.hxx"
+#include <stddef.h>
+#include <algorithm>
+#include <initializer_list>
+#include <limits>
+#include <memory>
+#include <sstream>
+#include <stdexcept>
+#include <string>
+#include <tuple>
+#include <type_traits> // is_same, enable_if
+#include <typeinfo>
+#include <vector>
+
+#include "ROOT/RStringView.hxx"
+#include "ROOT/TCutFlowReport.hxx"
 #include "ROOT/TDFActionHelpers.hxx"
 #include "ROOT/TDFHistoModels.hxx"
 #include "ROOT/TDFInterfaceUtils.hxx"
+#include "ROOT/TDFNodes.hxx"
+#include "ROOT/TDFNodesUtils.hxx"
 #include "ROOT/TDFUtils.hxx"
+#include "ROOT/TDataSource.hxx"
+#include "ROOT/TResultProxy.hxx"
+#include "ROOT/TSnapshotOptions.hxx"
+#include "ROOT/TypeTraits.hxx"
 #include "RtypesCore.h" // for ULong64_t
+#include "TAxis.h"
 #include "TChain.h"
+#include "TDirectory.h"
+#include "TError.h"
 #include "TH1.h" // For Histo actions
 #include "TH2.h" // For Histo actions
 #include "TH3.h" // For Histo actions
 #include "TInterpreter.h"
 #include "TProfile.h"   // For Histo actions
 #include "TProfile2D.h" // For Histo actions
-#include "TRegexp.h"
 #include "TROOT.h" // IsImplicitMTEnabled
+#include "TRegexp.h"
+#include "TString.h"
 #include "TTreeReader.h"
 
-#include <initializer_list>
-#include <memory>
-#include <string>
-#include <sstream>
-#include <typeinfo>
-#include <type_traits> // is_same, enable_if
+class TH2D;
+class TH3D;
+class TProfile2D;
+class TProfile;
+namespace ROOT {
+namespace Detail {
+namespace TDF {
+namespace TCCHelperTypes {
+struct TNothing;
+struct TSlot;
+struct TSlotAndEntry;
+}  // namespace TCCHelperTypes
+}  // namespace TDF
+}  // namespace Detail
+}  // namespace ROOT
 
 namespace ROOT {
 

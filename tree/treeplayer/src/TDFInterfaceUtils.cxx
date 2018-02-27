@@ -8,19 +8,37 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <ROOT/RStringView.hxx>
 #include <ROOT/TDFInterfaceUtils.hxx>
-#include <ROOT/TDFUtils.hxx>
-#include <ROOT/TSeq.hxx>
+#include <ROOT/RStringView.hxx>
+#include <RtypesCore.h>
+#include <TClass.h>
 #include <TFriendElement.h>
 #include <TInterpreter.h>
 #include <TObject.h>
 #include <TRegexp.h>
+#include <TString.h>
 #include <TTree.h>
 
-#include <set>
+#include <iosfwd>
 #include <stdexcept>
-#include <utility>
+#include <string>
+#include <typeinfo>
+
+namespace ROOT {
+namespace Detail {
+namespace TDF {
+class TCustomColumnBase;
+class TFilterBase;
+class TLoopManager;
+class TRangeBase;
+}  // namespace TDF
+}  // namespace Detail
+namespace Experimental {
+namespace TDF {
+class TDataSource;
+}  // namespace TDF
+}  // namespace Experimental
+}  // namespace ROOT
 
 namespace ROOT {
 namespace Internal {
@@ -28,6 +46,8 @@ namespace TDF {
 
 // The set here is used as a registry, the real list, which keeps the order, is
 // the one in the vector
+class TActionBase;
+
 void GetBranchNamesImpl(TTree &t, std::set<std::string> &bNamesReg, ColumnNames_t &bNames,
                         std::set<TTree *> &analysedTrees)
 {
