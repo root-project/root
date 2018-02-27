@@ -166,7 +166,7 @@ public:
    explicit TVec(size_type count) : fData(count) {}
    TVec(const std::vector<T> &other) { std::copy(other.begin(), other.end(), fData.begin()); }
    TVec(std::initializer_list<T> init) : fData(init) {}
-   TVec(pointer p, size_type n) : fData(n, T(), ROOT::Detail::VecOps::TAdoptAllocator<T>(p, n)) {}
+   TVec(pointer p, size_type n) : fData(n, T(), ROOT::Detail::VecOps::TAdoptAllocator<T>(p)) {}
    // assignment
    TVec<T> &operator=(const TVec<T> &) = default;
    TVec<T> &operator=(TVec<T> &&) = default;
