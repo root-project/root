@@ -76,9 +76,8 @@ TEST(VecOps, MoveCtor)
 
 TEST(VecOps, MathScalar)
 {
-   using namespace ROOT::Experimental::VecOps;
-   TVec<double> ref{1, 2, 3};
-   TVec<double> v(ref);
+   ROOT::Experimental::VecOps::TVec<double> ref{1, 2, 3};
+   ROOT::Experimental::VecOps::TVec<double> v(ref);
    int scalar = 3;
    auto plus = v + scalar;
    auto minus = v - scalar;
@@ -105,9 +104,8 @@ TEST(VecOps, MathScalar)
 
 TEST(VecOps, MathScalarInPlace)
 {
-   using namespace ROOT::Experimental::VecOps;
-   TVec<double> ref{1, 2, 3};
-   const TVec<double> v(ref);
+   ROOT::Experimental::VecOps::TVec<double> ref{1, 2, 3};
+   const ROOT::Experimental::VecOps::TVec<double> v(ref);
    int scalar = 3;
    auto plus = v;
    plus += scalar;
@@ -126,10 +124,9 @@ TEST(VecOps, MathScalarInPlace)
 
 TEST(VecOps, MathVector)
 {
-   using namespace ROOT::Experimental::VecOps;
-   TVec<double> ref{1, 2, 3};
-   TVec<double> vec{3, 4, 5};
-   TVec<double> v(ref);
+   ROOT::Experimental::VecOps::TVec<double> ref{1, 2, 3};
+   ROOT::Experimental::VecOps::TVec<double> vec{3, 4, 5};
+   ROOT::Experimental::VecOps::TVec<double> v(ref);
    auto plus = v + vec;
    auto minus = v - vec;
    auto mult = v * vec;
@@ -167,10 +164,9 @@ TEST(VecOps, MathVector)
 
 TEST(VecOps, MathVectorInPlace)
 {
-   using namespace ROOT::Experimental::VecOps;
-   TVec<double> ref{1, 2, 3};
-   TVec<double> vec{3, 4, 5};
-   TVec<double> v(ref);
+   ROOT::Experimental::VecOps::TVec<double> ref{1, 2, 3};
+   ROOT::Experimental::VecOps::TVec<double> vec{3, 4, 5};
+   ROOT::Experimental::VecOps::TVec<double> v(ref);
    auto plus = v;
    plus += vec;
    auto minus = v;
@@ -188,8 +184,7 @@ TEST(VecOps, MathVectorInPlace)
 
 TEST(VecOps, Filter)
 {
-   using namespace ROOT::Experimental::VecOps;
-   TVec<int> v{0, 1, 2, 3, 4, 5};
+   ROOT::Experimental::VecOps::TVec<int> v{0, 1, 2, 3, 4, 5};
    const std::vector<int> vEvenRef{0, 2, 4};
    const std::vector<int> vOddRef{1, 3, 5};
    auto vEven = v[v % 2 == 0];
@@ -207,7 +202,6 @@ TEST(VecOps, Filter)
 template <typename T, typename V>
 std::string PrintTVec(ROOT::Experimental::VecOps::TVec<T> v, V w)
 {
-   using namespace ROOT::Experimental::VecOps;
    std::stringstream ss;
    ss << v << " " << w << std::endl;
    ss << v + w << std::endl;
@@ -233,9 +227,8 @@ std::string PrintTVec(ROOT::Experimental::VecOps::TVec<T> v, V w)
 
 TEST(VecOps, PrintOps)
 {
-   using namespace ROOT::Experimental::VecOps;
-   TVec<int> ref{1, 2, 3};
-   TVec<int> v(ref);
+   ROOT::Experimental::VecOps::TVec<int> ref{1, 2, 3};
+   ROOT::Experimental::VecOps::TVec<int> v(ref);
 
    auto ref0 = R"ref0({ 1, 2, 3 } 2
 { 3, 4, 5 }
@@ -333,8 +326,7 @@ TEST(VecOps, PrintOps)
 
 TEST(VecOps, MathFuncs)
 {
-   using namespace ROOT::Experimental::VecOps;
-   TVec<double> v{1, 2, 3};
+   ROOT::Experimental::VecOps::TVec<double> v{1, 2, 3};
    CheckEqual(sqrt(v), Map(v, [](double x) { return std::sqrt(x); }), " error checking math function sqrt");
    CheckEqual(log(v), Map(v, [](double x) { return std::log(x); }), " error checking math function log");
    CheckEqual(sin(v), Map(v, [](double x) { return std::sin(x); }), " error checking math function sin");
