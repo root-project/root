@@ -262,7 +262,7 @@ class TColumnValue {
    /// in contiguous memory. Only used when T == TVec<U>.
    bool fArrayHasBeenChecked = false;
    /// If MustUseReaderArray, i.e. we are reading an array, we return a reference to this TVec to clients
-   TVec<ColumnValue_t> fArrayBranch;
+   TVec<ColumnValue_t> fTVec;
 
 public:
    static constexpr bool fgMustUseReaderArray = MustUseReaderArray;
@@ -312,8 +312,8 @@ public:
       auto readerArrayAddr = &readerArray.At(0);
       auto readerArraySize = readerArray.GetSize();
       TVec<ColumnValue_t> arrayBranch(readerArrayAddr, readerArraySize);
-      swap(fArrayBranch, arrayBranch);
-      return fArrayBranch;
+      swap(fTVec, arrayBranch);
+      return fTVec;
    }
 
    void Reset()
