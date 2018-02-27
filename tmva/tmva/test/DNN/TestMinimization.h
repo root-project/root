@@ -37,7 +37,7 @@ template <typename Architecture>
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t    = TNet<Architecture>;
 
-   size_t nSamples  = 1024;
+   size_t nSamples  = 256;
    size_t nFeatures = 8;
    size_t batchSize = 8;
 
@@ -55,9 +55,8 @@ template <typename Architecture>
    fillMatrix(WTest, 1.0);
 
    Net_t net(batchSize, nFeatures, ELossFunction::kMeanSquaredError);
-   net.AddLayer(64, EActivationFunction::kIdentity);
-   net.AddLayer(64, EActivationFunction::kIdentity);
-   net.AddLayer(64, EActivationFunction::kIdentity);
+   net.AddLayer(8, EActivationFunction::kIdentity);
+   net.AddLayer(8, EActivationFunction::kIdentity);
    net.AddLayer(1, EActivationFunction::kIdentity);
    net.Initialize(EInitialization::kGauss);
 
@@ -79,11 +78,11 @@ template <typename Architecture>
 }
 
 /** Train a linear neural network on data from two randomly generated linear mappings
- *  from a 20-dimensional input space to a 1-dimensional output space. Set weights
+ *  from a 8-dimensional input space to a 1-dimensional output space. Set weights
  *  corresponding to the second mapping to zero so that the neural network is forced to
  *  learn the first mapping.
  *  Returns the error of the response of the network to the input containing
- *  only ones to the 1x20 matrix used to generate the training data.
+ *  only ones to the 1x8 matrix used to generate the training data.
  */
 template <typename Architecture>
 auto testMinimizationWeights() -> typename Architecture::Scalar_t
@@ -91,9 +90,9 @@ auto testMinimizationWeights() -> typename Architecture::Scalar_t
    using Matrix_t = typename Architecture::Matrix_t;
    using Net_t = TNet<Architecture>;
 
-   size_t nSamples = 10000;
-   size_t nFeatures = 20;
-   size_t batchSize = 256;
+   size_t nSamples  = 256;
+   size_t nFeatures = 8;
+   size_t batchSize = 8;
 
    TMatrixT<Double_t> X1(nSamples, nFeatures), X2(nSamples, nFeatures), XTrain(2 * nSamples, nFeatures),
       Y1(nSamples, 1), Y2(nSamples, 1), YTrain(2 * nSamples, 1), W1(nSamples, 1), W2(nSamples, 1), W(2 * nSamples, 1),
@@ -122,9 +121,8 @@ auto testMinimizationWeights() -> typename Architecture::Scalar_t
    WTest = 1.0;
 
    Net_t net(batchSize, nFeatures, ELossFunction::kMeanSquaredError);
-   net.AddLayer(64, EActivationFunction::kIdentity);
-   net.AddLayer(64, EActivationFunction::kIdentity);
-   net.AddLayer(64, EActivationFunction::kIdentity);
+   net.AddLayer(8, EActivationFunction::kIdentity);
+   net.AddLayer(8, EActivationFunction::kIdentity);
    net.AddLayer(1, EActivationFunction::kIdentity);
    net.Initialize(EInitialization::kGauss);
 
@@ -155,9 +153,9 @@ template <typename Architecture>
    using Scalar_t = typename Architecture::Scalar_t;
    using Net_t    = TNet<Architecture>;
 
-   size_t nSamples  = 10000;
-   size_t nFeatures = 20;
-   size_t batchSize = 256;
+   size_t nSamples  = 256;
+   size_t nFeatures = 8;
+   size_t batchSize = 8;
 
    TMatrixT<Double_t> XTrain(nSamples, nFeatures), YTrain(nSamples, 1), WTrain(nSamples, 1),
       XTest(batchSize, nFeatures), YTest(batchSize, 1), WTest(nSamples, 1), W(nFeatures, 1);
@@ -180,9 +178,8 @@ template <typename Architecture>
    applyMatrix(WTest, ur);
 
    Net_t net(batchSize, nFeatures, ELossFunction::kMeanSquaredError);
-   net.AddLayer(64, EActivationFunction::kIdentity);
-   net.AddLayer(64, EActivationFunction::kIdentity);
-   net.AddLayer(64, EActivationFunction::kIdentity);
+   net.AddLayer(8, EActivationFunction::kIdentity);
+   net.AddLayer(8, EActivationFunction::kIdentity);
    net.AddLayer(1, EActivationFunction::kIdentity);
    net.Initialize(EInitialization::kGauss);
 
