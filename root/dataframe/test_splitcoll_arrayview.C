@@ -2,6 +2,7 @@
 #include "TFile.h"
 #include "TTree.h"
 #include "ROOT/TSeq.hxx"
+#include "ROOT/TVec.hxx"
 
 #include <iostream>
 
@@ -15,6 +16,11 @@ public:
    ClassDef(A,2)
 };
 
+ostream& operator<<(ostream& os, const A& a)
+{
+    os << "[" << a.a << ", " << a.b << "]";
+    return os;
+}
 
 #ifdef __ROOTCLING__
 #pragma link C++ class std::vector<A>+;
@@ -42,7 +48,7 @@ int test_splitcoll_arrayview() {
    TFile f(fileName);
    try {
       ROOT::Experimental::TDataFrame d(treeName, fileName, {"v.a"});
-      auto c = d.Filter([](ROOT::Experimental::TDF::TArrayBranch<float> d) {
+      auto c = d.Filter([](ROOT::Experimental::VecOps::TVec<float> d) {
                    for (auto v : d)
                       std::cout << v << std::endl;
                    return d[1] > 5;
@@ -54,7 +60,7 @@ int test_splitcoll_arrayview() {
    }
 
    ROOT::Experimental::TDataFrame d(treeName, fileName, {"v"});
-   auto c = d.Filter([](ROOT::Experimental::TDF::TArrayBranch<A> d) {
+   auto c = d.Filter([](ROOT::Experimental::VecOps::TVec<A> d) {
       int q=0;
       for (auto v : d ) {
          std::cout << v.a << std::endl;
