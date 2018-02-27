@@ -561,19 +561,6 @@ extern template void MeanHelper::Exec(unsigned int, const std::vector<char> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<int> &);
 extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned int> &);
 
-template <typename T>
-struct AddRefIfNotArrayBranch {
-   using type = T &;
-};
-
-template <typename T>
-struct AddRefIfNotArrayBranch<TVec<T>> {
-   using type = TVec<T>;
-};
-
-template <typename T>
-using AddRefIfNotArrayBranch_t = typename AddRefIfNotArrayBranch<T>::type;
-
 /// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
 template <typename T>
 void SetBranchesHelper(TTree & /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
