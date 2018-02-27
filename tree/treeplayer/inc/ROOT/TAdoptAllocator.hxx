@@ -133,9 +133,7 @@ public:
    }
    bool operator!=(const TAdoptAllocator<T> &other)
    {
-      return fInitialAddress != other.fInitialAddress ||
-             fAllocType != other.fAllocType ||
-             fStdAllocator != other.fStdAllocator;
+      return !(*this == other);
    }
 };
 
