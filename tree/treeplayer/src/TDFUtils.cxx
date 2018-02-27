@@ -166,7 +166,9 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
                                      " has both a leaf count and a static length. This is not supported.");
          }
       }
-   } else if (tmpBranch) {
+   }
+
+   if (tmpBranch) {
       // this must be a temporary branch
       auto &id = tmpBranch->GetTypeId();
       auto typeName = TypeID2TypeName(id);
@@ -179,9 +181,9 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
          throw std::runtime_error(msg);
       }
       return typeName;
-   } else {
-      throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
    }
+
+   throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
 }
 
 /// Convert type name (e.g. "Float_t") to ROOT type code (e.g. 'F') -- see TBranch documentation.
