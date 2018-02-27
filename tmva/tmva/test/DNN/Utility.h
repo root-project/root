@@ -70,10 +70,10 @@ void fillMatrix(AMatrix &X, AReal x)
    }
 }
 
-/*! Fill matrix with random, Poisson-distributed values. */
+/*! Fill matrix with random, Gaussian-distributed values. */
 //______________________________________________________________________________
 template <typename AMatrix>
-void randomMatrix(AMatrix &X)
+void randomMatrix(AMatrix &X, double mean = 0.0, double sigma = 1.0)
 {
    TRandom rand(clock());
 
@@ -82,7 +82,7 @@ void randomMatrix(AMatrix &X)
 
    for (size_t i = 0; i < m; ++i)
       for (size_t j = 0; j < n; ++j)
-         X(i,j) = rand.Poisson(1.0);
+         X(i,j) = rand.Gaus(mean, sigma);
 }
 
 /*! Generate a random batch as input for a neural net. */
