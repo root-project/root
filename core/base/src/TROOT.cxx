@@ -2740,31 +2740,45 @@ void TROOT::SetMacroPath(const char *newpath)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// If `web` is not empty it defines where web graphics should be rendered
+/// The input parameter `webdisplay` defines where web graphics should be rendered.
 ///
-/// - "cef" web graphics is rendered via the Chromium Embedded Framework
-/// - "qt5" web graphics is rendered via Qt5
-/// - "browser" or "" web graphics is rendered in the default web browser
-/// - "off" turn off the web display and come back to normal mode.
+/// if `webdisplay` may contains:
 ///
-/// It also turn the normal graphics to Batch to avoid the loading of local
-/// graphics libraries.
+///  - "off": turns off the web display and come back to normal graphics in
+///    interactive mode.
+///  - "batch":  turns the web display in batch mode. It can be combined with an
+///    other string which will be considered as the new current web display
+///  - "nobatch": turns the web display in interactive mode. It can be combined with an
+///    other string which will be considered as the new current web display
+///
+/// If the option "off" is not set, this method turns the normal graphics to
+/// "Batch" to avoid the loading of local graphics libraries.
 
 void TROOT::SetWebDisplay(const char *webdisplay)
 {
-   fWebDisplay = webdisplay;
-   fWebDisplay.ToLower();
-   if (fWebDisplay.Contains("cef")     || fWebDisplay.Contains("qt5") ||
-       fWebDisplay.Contains("browser") || fWebDisplay.Length() ==0) {
-      fIsWebDisplay = kTRUE;
-      if (gROOT->IsBatch()) fIsWebDisplayBatch = kTRUE;
-      gROOT->SetBatch(kTRUE);
-   } else if (fWebDisplay.Contains("off")) {
-      fWebDisplay = "";
+   TString wd = webdisplay;
+   wd.ToLower();
+   wd.ReplaceAll(" ","");
+
+   if (wd.Contains("off")) {
       fIsWebDisplay = kFALSE;
       fIsWebDisplayBatch = kFALSE;
+      fWebDisplay = "";
+      gROOT->SetBatch(kFALSE);
    } else {
-      Warning("SetWebDisplay", "Invalid option");
+      fIsWebDisplay = kTRUE;
+      if (wd.Contains("nobatch")) {
+         wd.ReplaceAll("nobatch","");
+         fIsWebDisplayBatch = kFALSE;
+         if (wd.Length() >0) fWebDisplay = wd;
+      } else if (wd.Contains("batch")) {
+         wd.ReplaceAll("batch","");
+         fIsWebDisplayBatch = kTRUE;
+         if (wd.Length() >0) fWebDisplay = wd;
+      } else {
+         fWebDisplay = wd;
+      }
+      gROOT->SetBatch(kTRUE);
    }
 }
 
