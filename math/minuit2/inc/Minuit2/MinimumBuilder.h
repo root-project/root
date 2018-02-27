@@ -40,7 +40,7 @@ public:
    bool TraceIter() const { return (fTracer); }
    MnTraceObject * TraceObject() const { return (fTracer); }
 
-   virtual void SetPrintLevel(int level) { fPrintLevel = level;}
+   virtual void SetPrintLevel(int level) const { fPrintLevel = level;}
    virtual void SetStorageLevel(int level) { fStorageLevel = level;}
 
    // set trace object (user manages it)
@@ -54,7 +54,7 @@ public:
 
 private:
 
-   int fPrintLevel;
+   mutable int fPrintLevel;
    int fStorageLevel;
 
    MnTraceObject * fTracer; //! tracer object (it is managed by user)
