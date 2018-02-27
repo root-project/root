@@ -83,7 +83,7 @@ TEST_F(TDFAndFriends, FriendArrayByFile)
    TDataFrame d(*t1);
 
    int i(0);
-   auto checkArr = [&i](TDF::TArrayBranch<float> av) {
+   auto checkArr = [&i](VecOps::TVec<float> av) {
       auto ifloat = float(i);
       EXPECT_EQ(ifloat, av[0]);
       EXPECT_EQ(ifloat + 1, av[1]);
@@ -104,7 +104,7 @@ TEST_F(TDFAndFriends, FriendArrayByPointer)
    TDataFrame d(*t1);
 
    int i(0);
-   auto checkArr = [&i](TDF::TArrayBranch<float> av) {
+   auto checkArr = [&i](VecOps::TVec<float> av) {
       auto ifloat = float(i);
       EXPECT_EQ(ifloat, av[0]);
       EXPECT_EQ(ifloat + 1, av[1]);

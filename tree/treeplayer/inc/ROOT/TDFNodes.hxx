@@ -16,7 +16,7 @@
 #include "ROOT/TDataSource.hxx"
 #include "ROOT/TDFNodesUtils.hxx"
 #include "ROOT/TDFUtils.hxx"
-#include "ROOT/TArrayBranch.hxx"
+#include "ROOT/TVec.hxx"
 #include "ROOT/TSpinMutex.hxx"
 #include "TTreeReaderArray.h"
 #include "TTreeReaderValue.h"
@@ -231,7 +231,7 @@ TTree branch or from a temporary column respectively.
 TDataFrame nodes can store tuples of TColumnValues and retrieve an updated
 value for the column via the `Get` method.
 **/
-template <typename T, bool MustUseReaderArray = IsArrayBranch<T>::value>
+template <typename T, bool MustUseReaderArray = IsTVec<T>::value>
 class TColumnValue {
    // ColumnValue_t is the type of the column or the type of the elements of an array column
    using ColumnValue_t = typename std::conditional<MustUseReaderArray, TakeFirstParameter_t<T>, T>::type;
@@ -259,21 +259,10 @@ class TColumnValue {
    /// Non-owning ptrs to the node responsible for the custom column. Needed when querying custom values.
    std::vector<TCustomColumnBase *> fCustomColumns;
    /// Signal whether we ever checked that the branch we are reading with a TTreeReaderArray stores array elements
-   /// in contiguous memory. Only used when T == TArrayBranch<U>.
+   /// in contiguous memory. Only used when T == TVec<U>.
    bool fArrayHasBeenChecked = false;
-   /// If MustUseReaderArray, i.e. we are reading an array, we return a reference to this TArrayBranch to clients
-   TArrayBranch<ColumnValue_t> fArrayBranch;
-
-   // TODO these helper functions could be substituted with a constexpr if at the point of usage
-   // setup TArrayBranch if using a TTreeReaderArray
-   template <bool HasReaderArray = MustUseReaderArray>
-   typename std::enable_if<HasReaderArray, void>::type SetArrayBranch()
-   {
-      fArrayBranch.SetReaderArray(*fTreeReaders.back());
-   }
-   // do nothing if not using a TTreeReaderArray
-   template <bool HasReaderArray = MustUseReaderArray>
-   typename std::enable_if<!HasReaderArray, void>::type SetArrayBranch() {}
+   /// If MustUseReaderArray, i.e. we are reading an array, we return a reference to this TVec to clients
+   TVec<ColumnValue_t> fArrayBranch;
 
 public:
    static constexpr bool fgMustUseReaderArray = MustUseReaderArray;
@@ -286,22 +275,21 @@ public:
    {
       fColumnKind = EColumnKind::kTree;
       fTreeReaders.emplace_back(new TreeReader_t(*r, bn.c_str()));
-      SetArrayBranch();
    }
 
-   /// This overload is used to return scalar quantities (i.e. types that are not read into a TArrayBranch)
+   /// This overload is used to return scalar quantities (i.e. types that are not read into a TVec)
    template <typename U = T,
              typename std::enable_if<!TColumnValue<U>::fgMustUseReaderArray, int>::type = 0>
    T &Get(Long64_t entry);
 
-   /// This overload is used to return arrays (i.e. types that are read into a TArrayBranch)
+   /// This overload is used to return arrays (i.e. types that are read into a TVec)
    template <typename U = T,
              typename std::enable_if<TColumnValue<U>::fgMustUseReaderArray, int>::type = 0>
-   TArrayBranch<ColumnValue_t> &Get(Long64_t)
+   TVec<ColumnValue_t> &Get(Long64_t)
    {
       auto &readerArray = *fTreeReaders.back();
-      // We only use TTreeReaderArrays to read columns that users flagged as type `TArrayBranch`, so we need to check
-      // that the branch stores the array as contiguous memory that we can actually wrap in an `TArrayBranch`.
+      // We only use TTreeReaderArrays to read columns that users flagged as type `TVec`, so we need to check
+      // that the branch stores the array as contiguous memory that we can actually wrap in an `TVec`.
       // Currently we need the first entry to have been loaded to perform the check
       // TODO Move check to `MakeProxy` once Axel implements this kind of check in TTreeReaderArray using TBranchProxy
       if (!fArrayHasBeenChecked) {
@@ -310,7 +298,7 @@ public:
                std::string exceptionText = "Branch ";
                exceptionText += readerArray.GetBranchName();
                exceptionText +=
-                  " hangs from a non-split branch. For this reason, it cannot be accessed via a TArrayBranch."
+                  " hangs from a non-split branch. For this reason, it cannot be accessed via a TVec."
                   " Please read the top level branch instead.";
                throw std::runtime_error(exceptionText);
             }
@@ -319,7 +307,12 @@ public:
       }
 
       // trigger loading of the contens of the TTreeReaderArray
-      readerArray.At(0);
+      // the address of the first element in the reader array is not necessarily equal to
+      // the address returned by the GetAddress method
+      auto readerArrayAddr = &readerArray.At(0);
+      auto readerArraySize = readerArray.GetSize();
+      TVec<ColumnValue_t> arrayBranch(readerArrayAddr, readerArraySize);
+      swap(fArrayBranch, arrayBranch);
       return fArrayBranch;
    }
 

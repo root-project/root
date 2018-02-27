@@ -20,7 +20,7 @@
 #include <vector>
 
 #include "Compression.h"
-#include "ROOT/TArrayBranch.hxx"
+#include "ROOT/TVec.hxx"
 #include "ROOT/TBufferMerger.hxx" // for SnapshotHelper
 #include "ROOT/TDFUtils.hxx"
 #include "ROOT/TSnapshotOptions.hxx"
@@ -45,6 +45,7 @@ namespace Internal {
 namespace TDF {
 using namespace ROOT::TypeTraits;
 using namespace ROOT::Experimental::TDF;
+using namespace ROOT::Experimental::VecOps;
 
 using Hist_t = ::TH1D;
 
@@ -261,12 +262,12 @@ public:
 };
 
 // In case of the take helper we have 4 cases:
-// 1. The column is not an TArrayBranch, the collection is not a vector
-// 2. The column is not an TArrayBranch, the collection is a vector
-// 3. The column is an TArrayBranch, the collection is not a vector
-// 4. The column is an TArrayBranch, the collection is a vector
+// 1. The column is not an TVec, the collection is not a vector
+// 2. The column is not an TVec, the collection is a vector
+// 3. The column is an TVec, the collection is not a vector
+// 4. The column is an TVec, the collection is a vector
 
-// Case 1.: The column is not an TArrayBranch, the collection is not a vector
+// Case 1.: The column is not an TVec, the collection is not a vector
 // No optimisations, no transformations: just copies.
 template <typename RealT_t, typename T, typename COLL>
 class TakeHelper {
@@ -301,7 +302,7 @@ public:
    COLL &PartialUpdate(unsigned int slot) { return *fColls[slot].get(); }
 };
 
-// Case 2.: The column is not an TArrayBranch, the collection is a vector
+// Case 2.: The column is not an TVec, the collection is a vector
 // Optimisations, no transformations: just copies.
 template <typename RealT_t, typename T>
 class TakeHelper<RealT_t, T, std::vector<T>> {
@@ -342,14 +343,14 @@ public:
    std::vector<T> &PartialUpdate(unsigned int slot) { return *fColls[slot]; }
 };
 
-// Case 3.: The column is a TArrayBranch, the collection is not a vector
-// No optimisations, transformations from TArrayBranchs to vectors
+// Case 3.: The column is a TVec, the collection is not a vector
+// No optimisations, transformations from TVecs to vectors
 template <typename RealT_t, typename COLL>
-class TakeHelper<RealT_t, TArrayBranch<RealT_t>, COLL> {
+class TakeHelper<RealT_t, TVec<RealT_t>, COLL> {
    std::vector<std::shared_ptr<COLL>> fColls;
 
 public:
-   using BranchTypes_t = TypeList<TArrayBranch<RealT_t>>;
+   using BranchTypes_t = TypeList<TVec<RealT_t>>;
    TakeHelper(const std::shared_ptr<COLL> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
@@ -361,7 +362,7 @@ public:
 
    void InitSlot(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, TArrayBranch<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
+   void Exec(unsigned int slot, TVec<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
 
    void Finalize()
    {
@@ -375,14 +376,14 @@ public:
    }
 };
 
-// Case 4.: The column is an TArrayBranch, the collection is a vector
-// Optimisations, transformations from TArrayBranchs to vectors
+// Case 4.: The column is an TVec, the collection is a vector
+// Optimisations, transformations from TVecs to vectors
 template <typename RealT_t>
-class TakeHelper<RealT_t, TArrayBranch<RealT_t>, std::vector<RealT_t>> {
+class TakeHelper<RealT_t, TVec<RealT_t>, std::vector<RealT_t>> {
    std::vector<std::shared_ptr<std::vector<std::vector<RealT_t>>>> fColls;
 
 public:
-   using BranchTypes_t = TypeList<TArrayBranch<RealT_t>>;
+   using BranchTypes_t = TypeList<TVec<RealT_t>>;
    TakeHelper(const std::shared_ptr<std::vector<std::vector<RealT_t>>> &resultColl, const unsigned int nSlots)
    {
       fColls.emplace_back(resultColl);
@@ -397,7 +398,7 @@ public:
 
    void InitSlot(TTreeReader *, unsigned int) {}
 
-   void Exec(unsigned int slot, TArrayBranch<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
+   void Exec(unsigned int slot, TVec<RealT_t> av) { fColls[slot]->emplace_back(av.begin(), av.end()); }
 
    // This is optimised to treat vectors
    void Finalize()
@@ -566,8 +567,8 @@ struct AddRefIfNotArrayBranch {
 };
 
 template <typename T>
-struct AddRefIfNotArrayBranch<TArrayBranch<T>> {
-   using type = TArrayBranch<T>;
+struct AddRefIfNotArrayBranch<TVec<T>> {
+   using type = TVec<T>;
 };
 
 template <typename T>
@@ -582,11 +583,11 @@ void SetBranchesHelper(TTree & /*inputTree*/, TTree &outputTree, const std::stri
 }
 
 /// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
-/// This overload is called for columns of type `TArrayBranch<T>`. For TDF, these represent c-style arrays in ROOT
+/// This overload is called for columns of type `TVec<T>`. For TDF, these represent c-style arrays in ROOT
 /// files, so we are sure that there are input trees to which we can ask the correct branch title
 template <typename T>
 void SetBranchesHelper(TTree &inputTree, TTree &outputTree, const std::string &validName, const std::string &name,
-                       TArrayBranch<T> *ab)
+                       TVec<T> *ab)
 {
    auto *const inputBranch = inputTree.GetBranch(validName.c_str());
    auto *const leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
@@ -596,7 +597,7 @@ void SetBranchesHelper(TTree &inputTree, TTree &outputTree, const std::string &v
    const auto btype = leaf->GetTypeName();
    const auto rootbtype = TypeName2ROOTTypeName(btype);
    const auto leaflist = std::string(bname) + "[" + counterStr + "]/" + rootbtype;
-   auto *const outputBranch = outputTree.Branch(name.c_str(), ab->GetData(), leaflist.c_str());
+   auto *const outputBranch = outputTree.Branch(name.c_str(), ab->data(), leaflist.c_str());
    outputBranch->SetTitle(inputBranch->GetTitle());
 }
 
@@ -643,7 +644,7 @@ public:
       fInputTree->AddClone(fOutputTree.get());
    }
 
-   void Exec(unsigned int /* slot */, AddRefIfNotArrayBranch_t<BranchTypes>... values)
+   void Exec(unsigned int /* slot */, BranchTypes&... values)
    {
       if (fIsFirstEvent) {
          using ind_t = GenStaticSeq_t<sizeof...(BranchTypes)>;
@@ -653,7 +654,7 @@ public:
    }
 
    template <int... S>
-   void SetBranches(AddRefIfNotArrayBranch_t<BranchTypes>... values, StaticSeq<S...> /*dummy*/)
+   void SetBranches(BranchTypes&... values, StaticSeq<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {
@@ -725,7 +726,7 @@ public:
       fIsFirstEvent[slot] = 1; // reset first event flag for this slot
    }
 
-   void Exec(unsigned int slot, AddRefIfNotArrayBranch_t<BranchTypes>... values)
+   void Exec(unsigned int slot, BranchTypes&... values)
    {
       if (fIsFirstEvent[slot]) {
          using ind_t = GenStaticSeq_t<sizeof...(BranchTypes)>;
@@ -740,7 +741,7 @@ public:
    }
 
    template <int... S>
-   void SetBranches(unsigned int slot, AddRefIfNotArrayBranch_t<BranchTypes>... values, StaticSeq<S...> /*dummy*/)
+   void SetBranches(unsigned int slot, BranchTypes&... values, StaticSeq<S...> /*dummy*/)
    {
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {

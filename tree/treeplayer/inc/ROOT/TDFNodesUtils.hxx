@@ -11,31 +11,32 @@
 #ifndef ROOT_TDFNODES_UTILS
 #define ROOT_TDFNODES_UTILS
 
-#include "ROOT/TArrayBranch.hxx"
+#include "ROOT/TVec.hxx"
 #include "ROOT/TDFUtils.hxx" // ColumnNames_t
 
 namespace ROOT {
 namespace Internal {
 namespace TDF {
 using namespace ROOT::Experimental::TDF;
+using namespace ROOT::Experimental::VecOps;
 using namespace ROOT::Detail::TDF;
 
-/// Detect whether a type is an instantiation of TArrayBranch<T>
+/// Detect whether a type is an instantiation of TVec<T>
 template <typename T>
-struct IsArrayBranch : public std::false_type {};
+struct IsTVec : public std::false_type {};
 
 template <typename T>
-struct IsArrayBranch<TArrayBranch<T>> : public std::true_type {};
+struct IsTVec<TVec<T>> : public std::true_type {};
 
 /// Choose between TTreeReader{Array,Value} depending on whether the branch type
-/// T is a `TArrayBranch<T>` or any other type (respectively).
+/// T is a `TVec<T>` or any other type (respectively).
 template <typename T>
 struct TReaderValueOrArray {
    using Proxy_t = TTreeReaderValue<T>;
 };
 
 template <typename T>
-struct TReaderValueOrArray<TArrayBranch<T>> {
+struct TReaderValueOrArray<TVec<T>> {
    using Proxy_t = TTreeReaderArray<T>;
 };
 
