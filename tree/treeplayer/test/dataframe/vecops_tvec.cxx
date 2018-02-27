@@ -40,6 +40,32 @@ TEST(VecOps, CopyCtor)
    EXPECT_EQ(v2[2], 3);
 }
 
+class TLeakChecker {
+public:
+   static bool fgDestroyed;
+   ~TLeakChecker(){
+      fgDestroyed = true;
+   }
+};
+bool TLeakChecker::fgDestroyed = false;
+
+TEST(VecOps, CopyCtorCheckNoLeak)
+{
+   ROOT::Experimental::VecOps::TVec<TLeakChecker> ref;
+   ref.emplace_back(TLeakChecker());
+   ROOT::Experimental::VecOps::TVec<TLeakChecker> proxy(ref.data(), ref.size());
+   TLeakChecker::fgDestroyed = false;
+   {
+      auto v = proxy;
+   }
+   EXPECT_TRUE(TLeakChecker::fgDestroyed);
+
+   TLeakChecker::fgDestroyed = false;
+   ref.clear();
+   EXPECT_TRUE(TLeakChecker::fgDestroyed);
+
+}
+
 TEST(VecOps, MoveCtor)
 {
    ROOT::Experimental::VecOps::TVec<int> v1{1, 2, 3};
