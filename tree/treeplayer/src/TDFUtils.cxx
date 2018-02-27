@@ -151,7 +151,15 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
       static const TClassRef tbranchelRef("TBranchElement");
       if (branch->InheritsFrom(tbranchelRef)) {
          // this branch is not a fundamental type, we can ask for the class name
-         return static_cast<TBranchElement *>(branch)->GetClassName();
+         std::string classname(static_cast<TBranchElement *>(branch)->GetClassName());
+         if (classname.compare(0, 7, "vector<") == 0) {
+            // column type is "vector<ValueType>", we read it as "TVec<ValueType>"
+            // value type is the classname.size() - 8 chars after the 7th character in "vector<ValueType>"
+            auto valueType = classname.substr(7, classname.size() - 8);
+            return "ROOT::Experimental::VecOps::TVec<" + valueType + ">";
+         } else {
+            return classname;
+         }
       } else {
          // this branch must be a fundamental type or array thereof
          const auto listOfLeaves = branch->GetListOfLeaves();
