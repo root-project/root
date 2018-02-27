@@ -649,7 +649,7 @@ public:
    /// \tparam COLL The type of collection used to store the values.
    /// \param[in] column The name of the column to collect the values of.
    ///
-   /// If the type of the column is `TArrayBranch<T>`, i.e. in the ROOT dataset this is
+   /// If the type of the column is `TVec<T>`, i.e. in the ROOT dataset this is
    /// a C-style array, the type stored in the return container is a `std::vector<T>` to
    /// guarantee the lifetime of the data involved.
    /// This action is *lazy*: upon invocation of this method the calculation is

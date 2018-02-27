@@ -38,8 +38,6 @@ namespace ROOT {
 namespace Experimental {
 namespace TDF {
 class TDataSource;
-template <typename T>
-class TArrayBranch;
 } // namespace TDF
 template <int D, typename P, template <int, typename, template <typename> class> class... S>
 class THist;
@@ -423,10 +421,10 @@ template <typename T>
 struct IsDeque_t<std::deque<T>> : std::true_type {};
 
 template <typename>
-struct IsTArrayBranch_t : std::false_type {};
+struct IsTVec_t : std::false_type {};
 
 template <typename T>
-struct IsTArrayBranch_t<ROOT::Experimental::TDF::TArrayBranch<T>> : std::true_type {};
+struct IsTVec_t<ROOT::Experimental::VecOps::TVec<T>> : std::true_type {};
 // clang-format on
 
 } // namespace TDF
@@ -448,11 +446,11 @@ using SumReturnType_t = MinReturnType_t<T>;
 template <typename T, typename COLL = std::vector<T>>
 struct TTakeRealTypes {
    // We cannot put in the output collection C arrays: the ownership is not defined.
-   // We therefore proceed to check if T is an TArrayBranch
+   // We therefore proceed to check if T is an TVec
    // If yes, we check what type is the output collection and we rebuild it.
-   // E.g. if a vector<V> was the selected collection, where V is TArrayBranch<T>,
+   // E.g. if a vector<V> was the selected collection, where V is TVec<T>,
    // the collection becomes vector<vector<T>>.
-   static constexpr auto isAB = TDFInternal::IsTArrayBranch_t<T>::value;
+   static constexpr auto isAB = TDFInternal::IsTVec_t<T>::value;
    using RealT_t = typename TDFInternal::ValueType<T>::value_type;
    using VTColl_t = std::vector<RealT_t>;
 

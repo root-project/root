@@ -13,7 +13,7 @@
 
 #include "ROOT/TDataSource.hxx" // ColumnName2ColumnTypeName
 #include "ROOT/TypeTraits.hxx"
-#include "ROOT/TArrayBranch.hxx"
+#include "ROOT/TVec.hxx"
 #include "ROOT/TSnapshotOptions.hxx"
 #include "TH1.h"
 #include "TTreeReaderArray.h"
@@ -128,7 +128,7 @@ struct ValueType<T, false> {
 };
 
 template <typename T>
-struct ValueType<ROOT::Experimental::TDF::TArrayBranch<T>, false> {
+struct ValueType<ROOT::Experimental::VecOps::TVec<T>, false> {
    using value_type = T;
 };
 

@@ -144,10 +144,10 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
             throw std::runtime_error("could not deduce type of branch " + std::string(colName));
          } else if (l->GetLeafCount() != nullptr && l->GetLenStatic() == 1) {
             // this is a variable-sized array
-            return "ROOT::Experimental::TDF::TArrayBranch<" + branchType + ">";
+            return "ROOT::Experimental::VecOps::TVec<" + branchType + ">";
          } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() > 1) {
             // this is a fixed-sized array (we do not differentiate between variable- and fixed-sized arrays)
-            return "ROOT::Experimental::TDF::TArrayBranch<" + branchType + ">";
+            return "ROOT::Experimental::VecOps::TVec<" + branchType + ">";
          } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() == 1) {
             // this branch contains a single fundamental type
             return l->GetTypeName();
