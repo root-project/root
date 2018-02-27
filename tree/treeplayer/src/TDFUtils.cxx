@@ -114,6 +114,7 @@ std::string TypeID2TypeName(const std::type_info &id)
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define. Returns an empty string if type name deduction fails.
+/// Note that for fixed- or variable-sized c-style arrays as well std::vector<T>, the returned type name will be TVec<T>
 std::string
 ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch, TDataSource *ds)
 {
