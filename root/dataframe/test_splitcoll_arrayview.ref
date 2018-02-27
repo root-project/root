@@ -1,7 +1,7 @@
 
 Processing /Users/danilopiparo/RootDevel/Root6/head/roottest/root/dataframe/test_splitcoll_arrayview.C+...
 0
-Exceptioncaught: Branch v.a hangs from a non-split branch. For this reason, it cannot be accessed via a TArrayBranch. Please read the top level branch instead.
+Exceptioncaught: Branch v.a hangs from a non-split branch. For this reason, it cannot be accessed via a TVec. Please read the top level branch instead.
 0
 0
 1

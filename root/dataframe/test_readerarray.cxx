@@ -3,6 +3,7 @@
 #include "TTree.h"
 #include "TTreeReaderArray.h"
 #include "ROOT/TSeq.hxx"
+#include "ROOT/TVec.hxx"
 
 
 void fill_tree(const char* filename, const char* treeName) {
@@ -27,7 +28,7 @@ int main() {
    fill_tree(fileName,treeName);
 
    ROOT::Experimental::TDataFrame d(treeName, fileName, {"b1"});
-   auto c = d.Filter([](ROOT::Experimental::TDF::TArrayBranch<double> a) {
+   auto c = d.Filter([](ROOT::Experimental::VecOps::TVec<double> a) {
                 std::cout << a[0] << " " << a[1] << " " << a[2] << std::endl;
                 return true;
              }).Count();
