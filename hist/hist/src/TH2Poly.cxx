@@ -214,8 +214,8 @@ TH2PolyBin *TH2Poly::CreateBin(TObject *poly)
 
 Int_t TH2Poly::AddBin(TObject *poly)
 {
-   Int_t ibin = fNcells-kNOverflow;
    auto *bin = CreateBin(poly);
+   Int_t ibin = fNcells-kNOverflow;
    if(!bin) return 0;
 
    // If the bin lies outside histogram boundaries, then extends the boundaries.
