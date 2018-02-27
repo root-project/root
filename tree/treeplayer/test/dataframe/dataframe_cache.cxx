@@ -11,6 +11,7 @@
 
 using namespace ROOT::Experimental;
 using namespace ROOT::Experimental::TDF;
+using namespace ROOT::Experimental::VecOps;
 
 TEST(Cache, FundType)
 {
@@ -237,7 +238,7 @@ TEST(Cache, Carrays)
    }
 
    TDataFrame tdf(treeName, fileName);
-   auto cache = tdf.Cache<TArrayBranch<float>>({"arr"});
+   auto cache = tdf.Cache<TVec<float>>({"arr"});
    int i = 0;
    auto checkArr = [&i](std::vector<float> av) {
       auto ifloat = float(i);

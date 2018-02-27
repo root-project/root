@@ -330,11 +330,11 @@ Here is a list of the most important features that have been omitted in the "Cra
 You don't need to read all these to start using `TDataFrame`, but they are useful to save typing time and runtime.
 
 ### Treatment of columns holding collections
-When using TDataFrame to read data from a ROOT file, users can specify that the type of a branch is `TArrayBranch<T>` to indicate the branch is a c-style array, an STL array or any other collection type associated to a contiguous storage in memory.
+When using TDataFrame to read data from a ROOT file, users can specify that the type of a branch is `TVec<T>` to indicate the branch is a c-style array, an STL array or any other collection type associated to a contiguous storage in memory.
 
-Column values of type `TArrayBranch<T>` perform no copy of the underlying array data, it's in some sense a view, and offer a minimal array-like interface to access the array elements: either via square brackets, or with range-based for loops.
+Column values of type `TVec<T>` perform no copy of the underlying array data, it's in some sense a view, and offer a minimal array-like interface to access the array elements: either via square brackets, or with range-based for loops.
 
-The `TArrayBranch<T>` type signals to TDataFrame that a special behaviour needs to be adopted when snapshotting a dataset on disk. Indeed, if columns which are variable size C arrays are treated via the `TArrayBranch<T>`, TDataFrame will correctly persistify them - if anything else is adopted, for example `std::span`, only the first element of the array will be written.
+The `TVec<T>` type signals to TDataFrame that a special behaviour needs to be adopted when snapshotting a dataset on disk. Indeed, if columns which are variable size C arrays are treated via the `TVec<T>`, TDataFrame will correctly persistify them - if anything else is adopted, for example `std::span`, only the first element of the array will be written.
 
 ### Callbacks
 Acting on a TResultProxy, it is possible to register a callback that TDataFrame will execute "everyNEvents" on a partial result.

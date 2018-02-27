@@ -68,8 +68,8 @@ TEST(TDataFrameUtils, DeduceAllPODsFromColumns)
                                                      {"Long64_t", "Long64_t"},
                                                      {"ULong64_t", "ULong64_t"},
                                                      {"bool", "Bool_t"},
-                                                     {"arrint", "ROOT::Experimental::TDF::TArrayBranch<Int_t>"},
-                                                     {"vararrint", "ROOT::Experimental::TDF::TArrayBranch<Int_t>"}};
+                                                     {"arrint", "ROOT::Experimental::VecOps::TVec<Int_t>"},
+                                                     {"vararrint", "ROOT::Experimental::VecOps::TVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
       auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, &t, nullptr);
@@ -95,8 +95,8 @@ TEST(TDataFrameUtils, DeduceTypeOfBranchesWithCustomTitle)
 
    std::map<const char *, const char *> nameTypes = {{"float", "Float_t"},
                                                      {"i", "Int_t"},
-                                                     {"arrint", "ROOT::Experimental::TDF::TArrayBranch<Int_t>"},
-                                                     {"vararrint", "ROOT::Experimental::TDF::TArrayBranch<Int_t>"}};
+                                                     {"arrint", "ROOT::Experimental::VecOps::TVec<Int_t>"},
+                                                     {"vararrint", "ROOT::Experimental::VecOps::TVec<Int_t>"}};
 
    for (auto &nameType : nameTypes) {
       auto typeName = ROOT::Internal::TDF::ColumnName2ColumnTypeName(nameType.first, &t, nullptr);
