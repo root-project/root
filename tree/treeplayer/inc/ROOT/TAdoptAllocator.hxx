@@ -60,7 +60,8 @@ public:
    using const_reference = typename StdAlloc_t::const_reference;
    using size_type = typename StdAlloc_t::size_type;
    using difference_type = typename StdAlloc_t::difference_type;
-
+   template<typename U>
+   struct rebind { using other = TAdoptAllocator<U>; };
 private:
    enum class EAllocType : char { kOwning, kAdopting, kAdoptingNoAllocYet };
    using StdAllocTraits_t = std::allocator_traits<StdAlloc_t>;
