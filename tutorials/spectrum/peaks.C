@@ -10,9 +10,8 @@
 /// as initial values of parameters to make a global fit.
 /// The background is computed and drawn on top of the original histogram.
 ///
-/// This script can fit "peaks' heights" or "peaks' areas".
-/// Uncomment the line defining `__PEAKS_C_FIT_AREAS__` at the beginning of the
-/// script if you want "peaks' areas":
+/// This script can fit "peaks' heights" or "peaks' areas" (comment out
+/// or uncomment the line which defines `__PEAKS_C_FIT_AREAS__`).
 ///
 /// To execute this example, do (in ROOT 5 or ROOT 6):
 ///
@@ -43,6 +42,10 @@
 #include "TSpectrum.h"
 #include "TVirtualFitter.h"
 
+//
+// Comment out the line below, if you want "peaks' heights".
+// Uncomment the line below, if you want "peaks' areas".
+//
 // #define __PEAKS_C_FIT_AREAS__ 1 /* fit peaks' areas */
 
 Int_t npeaks = 30;
@@ -130,6 +133,6 @@ void peaks(Int_t np=10) {
    h2->Fit("fit");
 }
 
-#if defined(__PEAKS_C_FIT_AREAS__)
+#if !defined(__CINT__) && defined(__PEAKS_C_FIT_AREAS__)
 #undef __PEAKS_C_FIT_AREAS__
-#endif /* defined(__PEAKS_C_FIT_AREAS__) */
+#endif /* !defined(__CINT__) && defined(__PEAKS_C_FIT_AREAS__) */
