@@ -114,23 +114,31 @@ std::string TypeID2TypeName(const std::type_info &id)
 
 /// Return a string containing the type of the given branch. Works both with real TTree branches and with temporary
 /// column created by Define. Returns an empty string if type name deduction fails.
+/// Note that for fixed- or variable-sized c-style arrays as well std::vector<T>, the returned type name will be TVec<T>
 std::string
 ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumnBase *tmpBranch, TDataSource *ds)
 {
-   // if this is a TDataSource column, we just ask the type name to the data-source
-   if (ds && ds->HasColumn(colName)) {
-      return ds->GetTypeName(colName);
-   }
+   std::string colType;
 
-   TBranch *branch = nullptr;
-   if (tree)
-      branch = tree->GetBranch(colName.c_str());
+   // if this is a TDataSource column, we just ask the type name to the data-source
+   if (ds && ds->HasColumn(colName))
+      colType = ds->GetTypeName(colName);
+
+   TBranch *branch = tree ? tree->GetBranch(colName.c_str()) : nullptr;
    if (branch) {
       // this must be a real TTree branch
       static const TClassRef tbranchelRef("TBranchElement");
       if (branch->InheritsFrom(tbranchelRef)) {
          // this branch is not a fundamental type, we can ask for the class name
-         return static_cast<TBranchElement *>(branch)->GetClassName();
+         std::string classname(static_cast<TBranchElement *>(branch)->GetClassName());
+         if (classname.compare(0, 7, "vector<") == 0) {
+            // column type is "vector<ValueType>", we read it as "TVec<ValueType>"
+            // value type is the classname.size() - 8 chars after the 7th character in "vector<ValueType>"
+            auto valueType = classname.substr(7, classname.size() - 8);
+            colType = "ROOT::Experimental::VecOps::TVec<" + valueType + ">";
+         } else {
+            colType = classname;
+         }
       } else {
          // this branch must be a fundamental type or array thereof
          const auto listOfLeaves = branch->GetListOfLeaves();
@@ -144,20 +152,22 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
             throw std::runtime_error("could not deduce type of branch " + std::string(colName));
          } else if (l->GetLeafCount() != nullptr && l->GetLenStatic() == 1) {
             // this is a variable-sized array
-            return "ROOT::Experimental::VecOps::TVec<" + branchType + ">";
+            colType = "ROOT::Experimental::VecOps::TVec<" + branchType + ">";
          } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() > 1) {
             // this is a fixed-sized array (we do not differentiate between variable- and fixed-sized arrays)
-            return "ROOT::Experimental::VecOps::TVec<" + branchType + ">";
+            colType = "ROOT::Experimental::VecOps::TVec<" + branchType + ">";
          } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() == 1) {
             // this branch contains a single fundamental type
-            return l->GetTypeName();
+            colType = l->GetTypeName();
          } else {
             // we do not know how to deal with this branch
             throw std::runtime_error("TTree branch " + colName +
                                      " has both a leaf count and a static length. This is not supported.");
          }
       }
-   } else if (tmpBranch) {
+   }
+
+   if (tmpBranch) {
       // this must be a temporary branch
       auto &id = tmpBranch->GetTypeId();
       auto typeName = TypeID2TypeName(id);
@@ -169,10 +179,13 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
          msg += ".";
          throw std::runtime_error(msg);
       }
-      return typeName;
-   } else {
-      throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
+      colType = typeName;
    }
+
+   if (colType.empty())
+      throw std::runtime_error("Column \"" + colName + "\" is not in a file and has not been defined.");
+
+   return colType;
 }
 
 /// Convert type name (e.g. "Float_t") to ROOT type code (e.g. 'F') -- see TBranch documentation.

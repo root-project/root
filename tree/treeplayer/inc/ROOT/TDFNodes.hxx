@@ -262,7 +262,7 @@ class TColumnValue {
    /// in contiguous memory. Only used when T == TVec<U>.
    bool fArrayHasBeenChecked = false;
    /// If MustUseReaderArray, i.e. we are reading an array, we return a reference to this TVec to clients
-   TVec<ColumnValue_t> fArrayBranch;
+   TVec<ColumnValue_t> fTVec;
 
 public:
    static constexpr bool fgMustUseReaderArray = MustUseReaderArray;
@@ -278,43 +278,13 @@ public:
    }
 
    /// This overload is used to return scalar quantities (i.e. types that are not read into a TVec)
-   template <typename U = T,
-             typename std::enable_if<!TColumnValue<U>::fgMustUseReaderArray, int>::type = 0>
+   template <typename U = T, typename std::enable_if<!TColumnValue<U>::fgMustUseReaderArray, int>::type = 0>
    T &Get(Long64_t entry);
 
-   /// This overload is used to return arrays (i.e. types that are read into a TVec)
-   template <typename U = T,
-             typename std::enable_if<TColumnValue<U>::fgMustUseReaderArray, int>::type = 0>
-   TVec<ColumnValue_t> &Get(Long64_t)
-   {
-      auto &readerArray = *fTreeReaders.back();
-      // We only use TTreeReaderArrays to read columns that users flagged as type `TVec`, so we need to check
-      // that the branch stores the array as contiguous memory that we can actually wrap in an `TVec`.
-      // Currently we need the first entry to have been loaded to perform the check
-      // TODO Move check to `MakeProxy` once Axel implements this kind of check in TTreeReaderArray using TBranchProxy
-      if (!fArrayHasBeenChecked) {
-         if (readerArray.GetSize() > 1) {
-            if (1 != (&readerArray[1] - &readerArray[0])) {
-               std::string exceptionText = "Branch ";
-               exceptionText += readerArray.GetBranchName();
-               exceptionText +=
-                  " hangs from a non-split branch. For this reason, it cannot be accessed via a TVec."
-                  " Please read the top level branch instead.";
-               throw std::runtime_error(exceptionText);
-            }
-            fArrayHasBeenChecked = true;
-         }
-      }
-
-      // trigger loading of the contens of the TTreeReaderArray
-      // the address of the first element in the reader array is not necessarily equal to
-      // the address returned by the GetAddress method
-      auto readerArrayAddr = &readerArray.At(0);
-      auto readerArraySize = readerArray.GetSize();
-      TVec<ColumnValue_t> arrayBranch(readerArrayAddr, readerArraySize);
-      swap(fArrayBranch, arrayBranch);
-      return fArrayBranch;
-   }
+   /// This overload is used to return arrays (i.e. types that are read into a TVec).
+   /// In this case the returned T is always a TVec<ColumnValue_t>.
+   template <typename U = T, typename std::enable_if<TColumnValue<U>::fgMustUseReaderArray, int>::type = 0>
+   T &Get(Long64_t entry);
 
    void Reset()
    {
@@ -837,6 +807,45 @@ T &TColumnValue<T, B>::Get(Long64_t entry)
 {
    if (fColumnKind == EColumnKind::kTree) {
       return *(fTreeReaders.back()->Get());
+   } else {
+      fCustomColumns.back()->Update(fSlot, entry);
+      return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.back() : **fDSValuePtrs.back();
+   }
+}
+
+/// This overload is used to return arrays (i.e. types that are read into a TVec)
+template <typename T, bool B>
+template <typename U, typename std::enable_if<TColumnValue<U>::fgMustUseReaderArray, int>::type>
+T &TColumnValue<T, B>::Get(Long64_t entry)
+{
+   if (fColumnKind == EColumnKind::kTree) {
+      auto &readerArray = *fTreeReaders.back();
+      // We only use TTreeReaderArrays to read columns that users flagged as type `TVec`, so we need to check
+      // that the branch stores the array as contiguous memory that we can actually wrap in an `TVec`.
+      // Currently we need the first entry to have been loaded to perform the check
+      // TODO Move check to `MakeProxy` once Axel implements this kind of check in TTreeReaderArray using
+      // TBranchProxy
+      if (!fArrayHasBeenChecked) {
+         if (readerArray.GetSize() > 1) {
+            if (1 != (&readerArray[1] - &readerArray[0])) {
+               std::string exceptionText = "Branch ";
+               exceptionText += readerArray.GetBranchName();
+               exceptionText += " hangs from a non-split branch. For this reason, it cannot be accessed via a TVec."
+                                " Please read the top level branch instead.";
+               throw std::runtime_error(exceptionText);
+            }
+            fArrayHasBeenChecked = true;
+         }
+      }
+
+      // trigger loading of the contens of the TTreeReaderArray
+      // the address of the first element in the reader array is not necessarily equal to
+      // the address returned by the GetAddress method
+      auto readerArrayAddr = &readerArray.At(0);
+      auto readerArraySize = readerArray.GetSize();
+      T tvec(readerArrayAddr, readerArraySize);
+      swap(fTVec, tvec);
+      return fTVec;
    } else {
       fCustomColumns.back()->Update(fSlot, entry);
       return fColumnKind == EColumnKind::kCustomColumn ? *fCustomValuePtrs.back() : **fDSValuePtrs.back();
