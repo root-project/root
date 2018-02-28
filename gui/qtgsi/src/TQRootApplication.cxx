@@ -46,8 +46,8 @@ void qMessageOutput( QtMsgType type, const char *msg )
 ////////////////////////////////////////////////////////////////////////////////
 /// Connect ROOT via Timer call back.
 
-TQRootApplication::TQRootApplication(int &argc, char **argv, int poll) :
-      QApplication(argc,argv), fQTimer(0), fRTimer(0)
+TQRootApplication::TQRootApplication(int &myargc, char **myargv, int poll) :
+      QApplication(myargc, myargv), fQTimer(0), fRTimer(0)
 {
    if (poll == 0) {
       fQTimer = new QTimer( this );

@@ -24,8 +24,8 @@ ClassImp(TQRootCanvas);
 ////////////////////////////////////////////////////////////////////////////////
 /// set defaults
 
-TQRootCanvas::TQRootCanvas( QWidget *parent, const char *name, TCanvas *c )
-  : QWidget(parent), fNeedResize(kTRUE)
+TQRootCanvas::TQRootCanvas(QWidget *wparent, const char *name, TCanvas *c)
+  : QWidget(wparent), fNeedResize(kTRUE)
 {
    setUpdatesEnabled( kTRUE );
    setMouseTracking(kTRUE);
@@ -47,13 +47,13 @@ TQRootCanvas::TQRootCanvas( QWidget *parent, const char *name, TCanvas *c )
       fCanvas=c;
    }
    // create the context menu
-   fContextMenu = new TQCanvasMenu( parent, fCanvas );
+   fContextMenu = new TQCanvasMenu( wparent, fCanvas );
 
    // test here all the events sent to the QWidget
    // has a parent widget then install filter
-   if ( parent ) {
-      parent->installEventFilter( this );
-      fParent = parent;
+   if ( wparent ) {
+      wparent->installEventFilter( this );
+      fParent = wparent;
    }
    else
       fParent=0;
@@ -65,7 +65,7 @@ TQRootCanvas::TQRootCanvas( QWidget *parent, const char *name, TCanvas *c )
 ////////////////////////////////////////////////////////////////////////////////
 /// set defaults
 
-TQRootCanvas::TQRootCanvas( QWidget *parent, QWidget* tabWin, const char *name, TCanvas *c )
+TQRootCanvas::TQRootCanvas(QWidget *wparent, QWidget* tabWin, const char *name, TCanvas *c)
   : QWidget(tabWin), fNeedResize(kTRUE)
 {
    setUpdatesEnabled( kTRUE );
@@ -86,13 +86,13 @@ TQRootCanvas::TQRootCanvas( QWidget *parent, QWidget* tabWin, const char *name, 
       fCanvas=c;
    }
    // create the context menu
-   fContextMenu = new TQCanvasMenu( parent, tabWin, fCanvas );
+   fContextMenu = new TQCanvasMenu( wparent, tabWin, fCanvas );
 
    // test here all the events sent to the QWidget
    // has a parent widget then install filter
-   if ( parent ) {
-      parent->installEventFilter( this );
-      fParent = parent;
+   if ( wparent ) {
+      wparent->installEventFilter( this );
+      fParent = wparent;
    }
    else
       fParent=0;
