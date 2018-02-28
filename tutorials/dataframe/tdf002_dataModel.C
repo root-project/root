@@ -10,7 +10,7 @@
 /// \author Danilo Piparo
 
 using FourVector = ROOT::Math::XYZTVector;
-using FourVectors = std::vector<FourVector>;
+using FourVectors = ROOT::Experimental::VecOps::TVec<FourVector>;
 using CylFourVector = ROOT::Math::RhoEtaPhiVector;
 
 // A simple helper function to fill a test tree: this makes the example
@@ -56,7 +56,7 @@ int tdf002_dataModel()
    // We prepare an input tree to run on
    auto fileName = "tdf002_dataModel.root";
    auto treeName = "myTree";
-   fill_tree(fileName, treeName);
+   //fill_tree(fileName, treeName);
 
    // We read the tree from the file and create a TDataFrame, a class that
    // allows us to interact with the data contained in the tree.
@@ -75,20 +75,12 @@ int tdf002_dataModel()
    // In this example, we will cut on the number of tracks and plot their
    // transverse momentum.
    auto getPt = [](const FourVectors &tracks) {
-      std::vector<double> pts;
-      pts.reserve(tracks.size());
-      for (auto &t : tracks)
-         pts.emplace_back(t.Pt());
-      return pts;
+      return ROOT::Experimental::VecOps::Map(tracks, [](const FourVector& v){return v.Pt();});
    };
 
    // We do the same for the weights.
    auto getPtWeights = [](const FourVectors &tracks) {
-      std::vector<double> ptsw;
-      ptsw.reserve(tracks.size());
-      for (auto &t : tracks)
-         ptsw.emplace_back(1. / t.Pt());
-      return ptsw;
+      return ROOT::Experimental::VecOps::Map(tracks, [](const FourVector& v){ return 1. / v.Pt();});
    };
 
    auto augmented_d = d.Define("tracks_n", [](const FourVectors &tracks) { return (int)tracks.size(); })
