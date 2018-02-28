@@ -4017,7 +4017,7 @@
    TCanvasPainter.prototype.GetNewColor = function(attr) {
       if (!attr) return;
 
-      var tcol = attr.fAttr.fAttr; // this is TColor instance
+      var tcol = attr.fAttr; // this is TColor instance
       if (!tcol.fKind)
          return "rgb(" + Math.round(tcol.fRedOrPalettePos*255) + "," +
                          Math.round(tcol.fGreen*255) + "," +
