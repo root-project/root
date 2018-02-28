@@ -19,6 +19,7 @@
 #include "TBranch.h"
 #include "TBranchElement.h"
 #include "TClass.h"
+#include "TClassEdit.h"
 #include "TClassRef.h"
 #include "TLeaf.h"
 #include "TObjArray.h"
@@ -148,17 +149,22 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
       branch = tree->GetBranch(colName.c_str());
    }
 
+   auto ComposeTVecTypeName = [](const std::string& valueType) {
+      return "ROOT::Experimental::VecOps::TVec<" + valueType + ">";
+      };
+
    if (branch) {
       // this must be a real TTree branch
       static const TClassRef tbranchelRef("TBranchElement");
       if (branch->InheritsFrom(tbranchelRef)) {
          // this branch is not a fundamental type, we can ask for the class name
          std::string classname(static_cast<TBranchElement *>(branch)->GetClassName());
-         if (classname.compare(0, 7, "vector<") == 0) {
-            // column type is "vector<ValueType>", we read it as "TVec<ValueType>"
-            // value type is the classname.size() - 8 chars after the 7th character in "vector<ValueType>"
-            auto valueType = classname.substr(7, classname.size() - 8);
-            colType = "ROOT::Experimental::VecOps::TVec<" + valueType + ">";
+         if (ROOT::ESTLType::kSTLvector == TClassEdit::IsSTLCont(classname)) {
+            std::vector<std::string> split;
+            int dummy;
+            TClassEdit::GetSplit(classname.c_str(), split, dummy);
+            auto &valueType = split[1];
+            colType = ComposeTVecTypeName(valueType);
          } else {
             colType = classname;
          }
@@ -175,10 +181,10 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
             throw std::runtime_error("could not deduce type of branch " + std::string(colName));
          } else if (l->GetLeafCount() != nullptr && l->GetLenStatic() == 1) {
             // this is a variable-sized array
-            colType = "ROOT::Experimental::VecOps::TVec<" + branchType + ">";
+            colType = ComposeTVecTypeName(branchType);
          } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() > 1) {
             // this is a fixed-sized array (we do not differentiate between variable- and fixed-sized arrays)
-            colType = "ROOT::Experimental::VecOps::TVec<" + branchType + ">";
+            colType = ComposeTVecTypeName(branchType);
          } else if (l->GetLeafCount() == nullptr && l->GetLenStatic() == 1) {
             // this branch contains a single fundamental type
             colType = l->GetTypeName();
