@@ -393,7 +393,7 @@ TRootSnifferScanRec::GoInside(TRootSnifferScanRec &super, TObject *obj, const ch
       SetField("_fullname", full_name);
 
    if (topelement)
-      SetField(item_prop_rootversion, TString::Format("%d", ROOT_VERSION_CODE));
+      SetField(item_prop_rootversion, TString::Format("%d", ROOT_VERSION_CODE), kFALSE);
 
    if (topelement && sniffer->GetAutoLoad())
       SetField(item_prop_autoload, sniffer->GetAutoLoad());
@@ -933,7 +933,7 @@ void TRootSnifferBase::ScanRoot(TRootSnifferScanRec &rec)
       if (chld.GoInside(rec, nullptr, "StreamerInfo", this)) {
          chld.SetField(item_prop_kind, "ROOT.TStreamerInfoList");
          chld.SetField(item_prop_title, "List of streamer infos for binary I/O");
-         chld.SetField(item_prop_hidden, "true");
+         chld.SetField(item_prop_hidden, "true", kFALSE);
          chld.SetField("_after_request", "JSROOT.MarkAsStreamerInfo");
       }
    }
@@ -972,7 +972,7 @@ void TRootSnifferBase::ScanHierarchy(const char *topname, const char *path, TRoo
    rec.CreateNode(topname);
 
    if (rec.fSearchPath == nullptr)
-      rec.SetField(item_prop_rootversion, TString::Format("%d", ROOT_VERSION_CODE));
+      rec.SetField(item_prop_rootversion, TString::Format("%d", ROOT_VERSION_CODE), kFALSE);
 
    if ((rec.fSearchPath == nullptr) && GetAutoLoad())
       rec.SetField(item_prop_autoload, GetAutoLoad());

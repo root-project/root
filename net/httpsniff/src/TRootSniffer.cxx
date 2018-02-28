@@ -108,8 +108,8 @@ Bool_t TRootSniffer::IsDrawableClass(TClass *cl)
 void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
 {
    if (obj && obj->InheritsFrom(TLeaf::Class())) {
-      rec.SetField("_more", "false");
-      rec.SetField("_can_draw", "false");
+      rec.SetField("_more", "false", kFALSE);
+      rec.SetField("_can_draw", "false", kFALSE);
       return;
    }
 
@@ -135,7 +135,7 @@ void TRootSniffer::ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TObjec
          } else {
             rec.SetField("_player", "JSROOT.drawTreePlayerKey");
             rec.SetField("_prereq", "jq2d");
-            // rec.SetField("_more", "true"); // one could allow to extend
+            // rec.SetField("_more", "true", kFALSE); // one could allow to extend
          }
       }
    }
