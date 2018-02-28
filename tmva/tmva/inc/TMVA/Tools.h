@@ -317,10 +317,10 @@ namespace TMVA {
 
       void discard(unsigned long long z)
       {
-         for (unsigned long long i = 0; i < z; ++i) {
-            volatile result_type r;
-            r = fRandom.Integer(max());
-         }
+         double r;
+         for (unsigned long long i = 0; i < z; ++i)
+            r = fRandom.Rndm();
+         (void) r; /* avoid unused variable warning */
       }
 
    private:
