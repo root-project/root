@@ -9,24 +9,15 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include <stdlib.h>
-#include "qevent.h"
-#include "qdialog.h"
-#include "qpushbutton.h"
-#include "qlabel.h"
-#include "qobject.h"
-#include "qlineedit.h"
-#if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-# include "q3hbox.h"
-typedef Q3HBox QHBox;
-#endif
-
 #include "TQRootDialog.h"
+
 #include "TMethod.h"
 #include "TCanvas.h"
 #include "TROOT.h"
 #include "TClass.h"
 #include "TObjString.h"
+
+#include <stdlib.h>
 
 using namespace Qt;
 
@@ -35,91 +26,27 @@ ClassImp(TQRootDialog);
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor
 
-TQRootDialog::TQRootDialog(QWidget *wparent, const char *wname, WFlags f,
-                         TObject* obj, TMethod *method ) :
-   QVBox(wparent,wname, f | WType_Modal | WStyle_Dialog   ),
-   fLineEdit(0),
-   fCurCanvas(0),
-   fParent(wparent)
+TQRootDialog::TQRootDialog(QWidget *wparent, const QString& title, TObject* obj, TMethod *method)
+   : QWidget(wparent)
+   , fLineEdit(nullptr)
+   , fCurObj(obj)
+   , fCurMethod(method)
+   , fCurCanvas(nullptr)
+   , fParent(wparent)
 {
-   fCurObj=obj;
-   fCurMethod=method;
-   setSizePolicy(QSizePolicy(QSizePolicy::Expanding,
-                            QSizePolicy::Expanding));
-   fArgBox = new QVBox(this, "args");
-   fArgBox->setSizePolicy(QSizePolicy(QSizePolicy::Expanding,
-                 QSizePolicy::Expanding));
-   QHBox *hbox = new QHBox(this,"buttons");
-   QPushButton *bOk = new QPushButton("Apply",hbox,"Apply");
-   QPushButton *bCancel = new QPushButton("Cancel",hbox,"Close");
-   connect(bCancel,SIGNAL (clicked()), this, SLOT(close()));
-   connect(bOk,SIGNAL( clicked() ), this, SLOT( ExecuteMethod() ));
-}
+   setObjectName(title);
 
-////////////////////////////////////////////////////////////////////////////////
-/// Execute ROOT methods.
+   QPushButton *apply  = new QPushButton("Apply");
+   QPushButton *cancel = new QPushButton("Cancel");
+   QHBoxLayout *hbox   = new QHBoxLayout(fParent);
 
-void TQRootDialog::ExecuteMethod()
-{
-   Bool_t deletion = kFALSE;
-   TVirtualPad *psave =  gROOT->GetSelectedPad();
+   hbox->addWidget(apply);
+   hbox->addWidget(cancel);
 
-   //if (fCurObj)
-   TObjArray tobjlist(fCurMethod->GetListOfMethodArgs()->LastIndex()+1);
-#if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-   typedef QList<QLineEdit*>::iterator iter;
-   for (iter st = fList.begin(); st != fList.end(); ++st) {
-     QString s = (*st)->text();
-      TObjString *t = new TObjString( (const char*) s );
-      tobjlist.AddLast((TObject*) t) ;
-   }
-#else
-   for ( QLineEdit* st = fList.first(); st; st = fList.next()) {
-      QString s = st->text();
-      TObjString *t = new TObjString( (const char*) s );
-      tobjlist.AddLast((TObject*) t) ;
-   }
-#endif
-   // handle command if existing object
-   if ( fCurObj ) {
-      if( strcmp(fCurMethod->GetName(),"Delete") == 0  ) {
-         if (fCurObj) {
-            delete fCurObj;
-            fCurObj=0;
-            deletion = kTRUE;
-         }
-      }
-      else if (  strcmp(fCurMethod->GetName(),"SetCanvasSize") == 0 ) {
-         int value[2] = {0,0};
-         int l=0;
-#if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-         for (iter st = fList.begin(); st != fList.end(); ++st) {
-            QString s = (*st)->text();
-            value[l++] = atoi ( s );
-         }
-#else
-         for ( QLineEdit* st = fList.first(); st; st = fList.next()) {
-            QString s = st->text();
-            value[l++] = atoi ( s );
-         }
-#endif
-         fParent->resize(value[0], value[1]);
-      }
-      else {
-         // here call cint call
-         fCurObj->Execute( fCurMethod, &tobjlist);
-      }
-   } // ! fCurrent Obj
+   setLayout(hbox);
 
-   if (!deletion ) {
-      gROOT->SetSelectedPad(psave);
-      gROOT->GetSelectedPad()->Modified();
-      gROOT->GetSelectedPad()->Update();
-   }
-   else {
-      gROOT->SetSelectedPad( gPad );
-      gROOT->GetSelectedPad()->Update();
-   }
+   connect(apply, SIGNAL(clicked()), fParent, SLOT(ExecuteMethod()));
+   connect(cancel,SIGNAL(clicked()), fParent, SLOT(close()));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -127,14 +54,49 @@ void TQRootDialog::ExecuteMethod()
 
 TQRootDialog::~TQRootDialog()
 {
-   if (fArgBox) delete fArgBox;
-   if (fLineEdit) delete fLineEdit;
-#if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-   // Perhaps we need to deallocate all?
-   fList.erase(fList.begin(),fList.end());
-#else
-   fList.remove();
-#endif
+   if (fLineEdit)
+      delete fLineEdit;
+   fList.erase(fList.begin(), fList.end());
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Execute ROOT methods.
+
+void TQRootDialog::ExecuteMethod()
+{
+   Bool_t deletion = false;
+   TVirtualPad *psave = gROOT->GetSelectedPad();
+
+   TObjArray tobjlist(fCurMethod->GetListOfMethodArgs()->LastIndex()+1);
+
+   for (auto str : fList)
+      tobjlist.AddLast((TObject*) new TObjString(str->text().toAscii().data()));
+
+   // handle command if existing object
+   if (fCurObj) {
+      if(strcmp(fCurMethod->GetName(),"Delete") == 0) {
+            delete fCurObj;
+            fCurObj = nullptr;
+            deletion = true;
+      } else if (strcmp(fCurMethod->GetName(),"SetCanvasSize") == 0 ) {
+         int i = 0, value[2] = {0, 0};
+         for (auto str : fList)
+            value[i++] = atoi(str->text().toAscii().data());
+         fParent->resize(value[0], value[1]);
+      } else {
+         // here call cint call
+         fCurObj->Execute(fCurMethod, &tobjlist);
+      }
+   } // ! fCurrent Obj
+
+   if (!deletion) {
+      gROOT->SetSelectedPad(psave);
+      gROOT->GetSelectedPad()->Modified();
+      gROOT->GetSelectedPad()->Update();
+   } else {
+      gROOT->SetSelectedPad(gPad);
+      gROOT->GetSelectedPad()->Update();
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,14 +106,14 @@ void TQRootDialog::Add(const char* argname, const char* value, const char* /*typ
 {
    QString s;
    s = value;
-   new QLabel(argname,fArgBox);
-   QLineEdit* lineEdit = new  QLineEdit(fArgBox);
+   new QLabel(argname, this);
+   QLineEdit* lineEdit = new  QLineEdit(this);
    if (fLineEdit) {
       fLineEdit->setGeometry(10,10, 130, 30);
       fLineEdit->setFocus();
       fLineEdit->setText(s);
    }
-   fList.append( lineEdit );
+   fList.append(lineEdit);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

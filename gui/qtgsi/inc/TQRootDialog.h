@@ -18,43 +18,19 @@
 //
 // A TQRootDialog is used to prompt for the arguments of an object's
 // member function. It is called by the TQCanvasMenu class
-// @see TQCanvasMenu, QList, QVBox, TMethod, TCanvas
+// @see TQCanvasMenu, QList, QVBoxLayout, TMethod, TCanvas
 // @authors Denis Bertini <d.bertini@gsi.de>
 //    M. AL-Turany  <m.al-turany@gsi.de>
 ////////////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-# include "qlineedit.h"
-# include "qnamespace.h"
-# if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-#  include "qlist.h"
-#  include "q3vbox.h"
-typedef Q3VBox QVBox;
-# else
-#  include "qvbox.h"
-# endif
-#endif
+#include <QtGui>
 
 #include "TObject.h"
 
 class TMethod;
 class TCanvas;
 
-class QCloseEvent;
-class QLineEdit;
-class QWidget;
-#ifdef __CINT__
-template <typename T> class QList;
-class QLineEdit;
-class QList<QLineEdit*>;
-class QVBox;
-#if QTVERS > 3
-class WindowFlags;
-typedef WindowFlags Qt::WFlags;
-#endif
-#endif
-
-class TQRootDialog: public QVBox
+class TQRootDialog : public QWidget
 {
 #ifndef __CINT__
    Q_OBJECT
@@ -64,8 +40,8 @@ private:
    TQRootDialog& operator=(const TQRootDialog &);
 
 public:
-   TQRootDialog(QWidget *parent, const char *name, Qt::WFlags f=0,
-                TObject *obj=0,TMethod *meth=0);
+   TQRootDialog(QWidget *parent, const QString& title,
+                TObject *obj = nullptr, TMethod *method = nullptr);
    virtual ~TQRootDialog();
    void Add(const char* argname, const char* value, const char* type);
    void Popup();
@@ -77,17 +53,12 @@ public slots:
 
 protected:
    void closeEvent( QCloseEvent* ce);
-   QVBox *fArgBox;         // Box layout
    QLineEdit *fLineEdit;   // LineEdit widget for arguments
    TObject *fCurObj;       // Selected object
    TMethod *fCurMethod;    // method to be executed
    TCanvas* fCurCanvas;    // current canvas
    QWidget* fParent;       // parent widget
-# if (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
    QList<QLineEdit*> fList; // list of widget corresponding to the number of arguments
-#else
-   QList<QLineEdit> fList; // list of widget corresponding to the number of arguments
-#endif
    ClassDef(TQRootDialog,1)  //prompt for the arguments of an object's member function
 };
 
