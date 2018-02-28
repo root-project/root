@@ -24,11 +24,13 @@ pdfunc.SetParameters(1.0, 0.0)  # set sigma to 1 and mean to zero
 pdfunc.SetTitle("")
 pdfunc.SetLineColor(kBlue)
 
-pdfunc.GetXaxis().SetLabelSize(0.06)
-pdfunc.GetXaxis().SetTitle("x")
-pdfunc.GetXaxis().SetTitleSize(0.07)
-pdfunc.GetXaxis().SetTitleOffset(0.55)
-pdfunc.GetYaxis().SetLabelSize(0.06)
+Xaxis = pdfunc.GetXaxis()
+Yaxis = pdfunc.GetYaxis()
+Xaxis.SetLabelSize(0.06)
+Xaxis.SetTitle("x")
+Xaxis.SetTitleSize(0.07)
+Xaxis.SetTitleOffset(0.55)
+Yaxis.SetLabelSize(0.06)
 
 cdfunc.SetParameters(1.0, 0.0)  # set sigma to 1 and mean to zero
 cdfunc.SetTitle("")
