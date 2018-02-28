@@ -1092,6 +1092,8 @@ static void LoadCoreModules(cling::Interpreter &interp)
    if (!CI.getLangOpts().Modules)
       return;
 
+   bool fromRootCling = dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym");
+
    clang::HeaderSearch &headerSearch = CI.getPreprocessor().getHeaderSearchInfo();
    clang::ModuleMap &moduleMap = headerSearch.getModuleMap();
    // List of core modules we can load, but it's ok if they are missing because
@@ -1133,6 +1135,15 @@ static void LoadCoreModules(cling::Interpreter &interp)
    // core modules have defined it:
    // https://www.gnu.org/software/libc/manual/html_node/Complex-Numbers.html
    interp.declare("#ifdef I\n #undef I\n #endif\n");
+
+   if (!fromRootCling) {
+      if (!LoadModule(moduleMap.findModule("TreePlayer")->Name, interp))
+         Error("TCling::LoadCodeModules", "Cannot load module TreePlayer");
+      if (!LoadModule(moduleMap.findModule("TMVA")->Name, interp))
+         Error("TCling::LoadCodeModules", "Cannot load module TMVA");
+      if (!LoadModule(moduleMap.findModule("Graf")->Name, interp))
+         Error("TCling::LoadCodeModule", "Cannot load module Graf");
+   }
 }
 
 static bool FileExists(const char *file)
