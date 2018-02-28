@@ -29,6 +29,7 @@
 #include "ROOT/RStringView.hxx"
 #include "RtypesCore.h"
 #include "TBranch.h"
+#include "TClassEdit.h"
 #include "TDirectory.h"
 #include "TFile.h" // for SnapshotHelper
 #include "TH1.h"
@@ -563,20 +564,27 @@ extern template void MeanHelper::Exec(unsigned int, const std::vector<unsigned i
 
 /// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
 template <typename T>
-void SetBranchesHelper(TTree & /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
+void SetBranchesHelper(TTree * /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
                        const std::string &name, T *address)
 {
    outputTree.Branch(name.c_str(), address);
 }
 
 /// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
-/// This overload is called for columns of type `TVec<T>`. For TDF, these represent c-style arrays in ROOT
-/// files, so we are sure that there are input trees to which we can ask the correct branch title
+/// This overload is called for columns of type `TVec<T>`. For TDF, these can represent:
+/// 1. c-style arrays in ROOT files, so we are sure that there are input trees to which we can ask the correct branch title
+/// 2. TVecs coming from a custom column or a source
 template <typename T>
-void SetBranchesHelper(TTree &inputTree, TTree &outputTree, const std::string &validName, const std::string &name,
+void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &validName, const std::string &name,
                        TVec<T> *ab)
 {
-   auto *const inputBranch = inputTree.GetBranch(validName.c_str());
+   // Check if this TVec is coming from a custom column or a source
+   auto *const inputBranch = inputTree ? inputTree->GetBranch(validName.c_str()) : nullptr;
+   if (!inputBranch) {
+      outputTree.Branch(name.c_str(), ab);
+      return;
+   }
+
    auto *const leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
    const auto bname = leaf->GetName();
    const auto counterStr =
@@ -645,7 +653,7 @@ public:
    {
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {
-         (SetBranchesHelper(*fInputTree, *fOutputTree, fValidBranchNames[S], fBranchNames[S], &values), 0)..., 0};
+         (SetBranchesHelper(fInputTree, *fOutputTree, fValidBranchNames[S], fBranchNames[S], &values), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
       fIsFirstEvent = false;
    }
@@ -732,7 +740,7 @@ public:
    {
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {
-         (SetBranchesHelper(*fInputTrees[slot], *fOutputTrees[slot], fValidBranchNames[S], fBranchNames[S], &values),
+         (SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fValidBranchNames[S], fBranchNames[S], &values),
           0)...,
          0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
