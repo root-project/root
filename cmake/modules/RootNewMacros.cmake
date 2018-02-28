@@ -469,7 +469,7 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
     endif()
   endif(APPLE)
 
-  set(excluded_headers RConfig.h RVersion.h RtypesImp.h TVersionCheck.h
+  set(excluded_headers RConfig.h RVersion.h RtypesImp.h
                         RtypesCore.h TClassEdit.h
                         TIsAProxy.h TVirtualIsAProxy.h
                         DllImport.h ESTLType.h ROOT/RStringView.hxx Varargs.h
@@ -487,10 +487,10 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   # Add a `use` directive to Core/Thread to signal that they use some
   # split out submodules and we pass the rootcling integrity check.
   if ("${library}" STREQUAL Core)
-    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Types\n")
-    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Core_Config_C\n")
+    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Foundation_Stage1_NoRTTI\n")
+    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Foundation_C\n")
   elseif ("${library}" STREQUAL Thread)
-    set (modulemap_entry "${modulemap_entry}\n  use ThreadLocalStorage\n")
+    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Foundation_C\n")
   endif()
 
   # For modules GCocoa and GQuartz we need objc context.
