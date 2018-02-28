@@ -306,12 +306,12 @@ namespace TMVA {
    public:
       using result_type = UIntType;
 
-      RandomGenerator(UIntType seed = 0) { fRandom.SetSeed(seed); }
+      RandomGenerator(UIntType s = 0) { fRandom.SetSeed(s); }
 
       static constexpr UIntType min() { return 0; }
       static constexpr UIntType max() { return max_val; }
 
-      void seed(UIntType val = 0) { fRandom.SetSeed(val); }
+      void seed(UIntType s = 0) { fRandom.SetSeed(s); }
 
       UIntType operator()() { return fRandom.Integer(max()); }
 
