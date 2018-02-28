@@ -52,7 +52,7 @@ TQRootApplication::TQRootApplication(int &argc, char **argv, int poll) :
    if (poll == 0) {
       fQTimer = new QTimer( this );
       QObject::connect( fQTimer, SIGNAL(timeout()),this, SLOT(Execute()) );
-      fQTimer->start( 20, FALSE );
+      fQTimer->start(20);
       fRTimer = new TTimer(20);
       fRTimer->Start(20, kFALSE);
    }

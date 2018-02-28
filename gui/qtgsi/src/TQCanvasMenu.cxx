@@ -9,23 +9,11 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
-#include "qevent.h"
-#include "qdialog.h"
-#include "qpushbutton.h"
-#include "qlabel.h"
-#include "qpainter.h"
-#if  (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-# ifndef QT3_SUPPORT
-#  define QT3_SUPPORT
-# endif
-# include "q3popupmenu.h"
-#else
-# include "qpopupmenu.h"
-#endif
-
-
 #include "TQCanvasMenu.h"
+#include "TQRootDialog.h"
+
+#include "Riostream.h"
+
 #include "TClass.h"
 #include "TROOT.h"
 #include "TMethod.h"
@@ -33,7 +21,6 @@
 #include "TMethodArg.h"
 #include "TCanvas.h"
 #include "TDataType.h"
-#include "TQRootDialog.h"
 
 ClassImp(TQCanvasMenu);
 
@@ -43,7 +30,6 @@ ClassImp(TQCanvasMenu);
 TQCanvasMenu::TQCanvasMenu(QWidget* parent, TCanvas *canvas)
 {
    fc       = canvas;
-   fPopup   = new QPopupMenu;
    fCurrObj = 0;
    fParent  = parent;
    fTabWin  = 0;
@@ -57,7 +43,6 @@ TQCanvasMenu::TQCanvasMenu(QWidget* parent, TCanvas *canvas)
 TQCanvasMenu::TQCanvasMenu(QWidget* parent, QWidget *tabWin, TCanvas *canvas)
 {
    fc       = canvas;
-   fPopup   = new QPopupMenu;
    fParent  = parent;
    fTabWin  = tabWin;
    fCurrObj = 0;
@@ -70,7 +55,6 @@ TQCanvasMenu::TQCanvasMenu(QWidget* parent, QWidget *tabWin, TCanvas *canvas)
 
 TQCanvasMenu::~TQCanvasMenu()
 {
-   if (fPopup) delete fPopup;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,34 +102,30 @@ char *TQCanvasMenu::CreateArgumentTitle(TMethodArg *argument)
 
 void TQCanvasMenu::Popup(TObject *obj, double x, double y, QMouseEvent *e)
 {
-   TClass *klass=obj->IsA();
-   Int_t curId=-1;
+   TClass *cls = obj->IsA();
 
    fCurrObj=obj;
-   fPopup->clear();
+   fMenu.clear();
    fMethods.Clear();
 
-   QString buffer=klass->GetName();
-   buffer+="::";
-   buffer+=obj->GetName();
-   fPopup->insertItem(buffer, this, SLOT( Execute(int) ), 0,curId); curId++;
-   klass->GetMenuItems(&fMethods);
-   fPopup->insertSeparator();
-   TIter iter(&fMethods);
-   TMethod *method=0;
-   while ( (method = dynamic_cast<TMethod*>(iter())) != 0) {
-      buffer=method->GetName();
-      fPopup->insertItem(buffer, this, SLOT( Execute(int) ), 0,curId);
-      curId++;
-   }
+   QString name = cls->GetName();
+   name = name + "::" + obj->GetName();
+
+   fMenu.addAction(name , this, SLOT(Execute(int)), 0);
+   fMenu.addSeparator();
+
+   cls->GetMenuItems(&fMethods);
+   for (auto item : fMethods)
+      if (TMethod *method = dynamic_cast<TMethod*>(item))
+         fMenu.addAction(method->GetName(), this, SLOT(Execute(int)), 0);
+
    // hold the position where the mouse was clicked
-   fMousePosX= x;
-   fMousePosY= y;
+   fMousePosX = x;
+   fMousePosY = y;
 
    // let Qt decide how to draw the popup Menu otherwise we have a problem that
    // the visible rectangle can get outside the screen (M.T. 03.06.02)
-   fPopup->popup(e->globalPos(), 0);
-
+   fMenu.popup(e->globalPos(), /* QAction* */ nullptr);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -184,7 +164,7 @@ void TQCanvasMenu::Execute(int id)
 void TQCanvasMenu::Dialog(TObject* object, TMethod* method)
 {
    if (!(object && method)) return;
-   fDialog = new TQRootDialog(fParent,CreateDialogTitle(object, method),0,object ,method);
+   fDialog = new TQRootDialog(fParent, CreateDialogTitle(object, method), object, method);
    fDialog->SetTCanvas(fc);
    // iterate through all arguments and create apropriate input-data objects:
    // inputlines, option menus...

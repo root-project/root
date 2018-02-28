@@ -22,17 +22,11 @@
 //
 ///////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "qapplication.h"
-#include "qobject.h"
-#include "qtimer.h"
-#endif
-
 #include "Rtypes.h"
 
+#include <QtGui>
+
 class TTimer;
-class QApplication;
-class QTimer;
 
 class TQRootApplication : public QApplication {
 #ifndef __CINT__

@@ -22,7 +22,7 @@
 //
 ////////////////////////////////////////////////////////////////////////////////
 
-#include "qobject.h"
+#include <QtGui>
 
 #include "TList.h"
 
@@ -30,20 +30,6 @@ class TCanvas;
 class TObject;
 class TMethodArg;
 class TQRootDialog;
-
-#if  (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-class Q3PopupMenu;
-typedef Q3PopupMenu QPopupMenu;
-#else
-class QPopupMenu;
-#endif
-
-class QAction;
-class QMouseEvent;
-class QObject;
-class QPaintEvent;
-class QResizeEvent;
-class QWidget;
 
 class TQCanvasMenu : public QObject {
 #ifndef __CINT__
@@ -67,7 +53,7 @@ public slots:
 
 protected:
    TObject* fCurrObj;         // current selected object
-   QPopupMenu  *fPopup;       // Qt popup menu
+   QMenu fMenu;               // Qt popup menu
    TList fMethods;            // list of Root metheds associated with the selected object
    TCanvas *fc;               // pointer to the ROOT canvas
    TQRootDialog *fDialog;     // the TQRootDialog which is used to prompt for
