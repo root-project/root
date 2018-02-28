@@ -110,6 +110,8 @@ void TRootSniffer::ScanObjectProperties(TRootSnifferScanRec &rec, TObject *obj)
    if (obj && obj->InheritsFrom(TLeaf::Class())) {
       rec.SetField("_more", "false", kFALSE);
       rec.SetField("_can_draw", "false", kFALSE);
+      rec.SetField("_player", "JSROOT.drawLeafPlayer");
+      rec.SetField("_prereq", "jq2d");
       return;
    }
 
@@ -133,6 +135,7 @@ void TRootSniffer::ScanKeyProperties(TRootSnifferScanRec &rec, TKey *key, TObjec
             if (obj)
                obj_class = obj->IsA();
          } else {
+            rec.SetField("_ttree", "true", kFALSE); // indicate ROOT TTree
             rec.SetField("_player", "JSROOT.drawTreePlayerKey");
             rec.SetField("_prereq", "jq2d");
             // rec.SetField("_more", "true", kFALSE); // one could allow to extend
@@ -149,6 +152,7 @@ void TRootSniffer::ScanObjectChilds(TRootSnifferScanRec &rec, TObject *obj)
 {
    if (obj->InheritsFrom(TTree::Class())) {
       if (!rec.IsReadOnly(fReadOnly)) {
+         rec.SetField("_ttree", "true", kFALSE); // indicate ROOT TTree
          rec.SetField("_player", "JSROOT.drawTreePlayer");
          rec.SetField("_prereq", "jq2d");
       }
