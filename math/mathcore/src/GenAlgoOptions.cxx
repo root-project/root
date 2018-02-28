@@ -17,6 +17,7 @@
 #include <algorithm>
 #include <functional>
 #include <ctype.h>   // need to use c version of tolower defined here
+#include <string>
 
 namespace ROOT {
 namespace Math {
