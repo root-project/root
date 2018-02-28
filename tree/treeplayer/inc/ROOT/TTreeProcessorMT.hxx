@@ -57,14 +57,15 @@ namespace ROOT {
       private:
          typedef std::pair<std::string, std::string> NameAlias;
 
-         std::unique_ptr<TChain> fChain;         ///< Chain on which to operate
-         std::vector<std::string> fFileNames;    ///< Names of the files
-         std::string fTreeName;                  ///< Name of the tree
-         TEntryList fEntryList;                  ///< Entry numbers to be processed
-         std::vector<Long64_t> fLoadedEntries;   ///<! Per-task loaded entries (for task interleaving)
-         std::vector<NameAlias> fFriendNames;    ///< <name,alias> pairs of the friends of the tree/chain
+         // NOTE: fFriends must come before fChain to be deleted after it, see ROOT-9281 for more details
+         std::vector<std::unique_ptr<TChain>> fFriends; ///< Friends of the tree/chain
+         std::unique_ptr<TChain> fChain;                ///< Chain on which to operate
+         std::vector<std::string> fFileNames;           ///< Names of the files
+         std::string fTreeName;                         ///< Name of the tree
+         TEntryList fEntryList;                         ///< Entry numbers to be processed
+         std::vector<Long64_t> fLoadedEntries;          ///<! Per-task loaded entries (for task interleaving)
+         std::vector<NameAlias> fFriendNames;           ///< <name,alias> pairs of the friends of the tree/chain
          std::vector<std::vector<std::string>> fFriendFileNames; ///< Names of the files where friends are stored
-         std::vector<std::unique_ptr<TChain>> fFriends;          ///< Friends of the tree/chain
 
          ////////////////////////////////////////////////////////////////////////////////
          /// Initialize TTreeView.
