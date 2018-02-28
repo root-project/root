@@ -1,7 +1,6 @@
 /// \file
 /// \ingroup tutorial_spectrum
 /// \notebook
-/// Getting Contours From TH2D.
 /// Illustrates how to find peaks in histograms.
 ///
 /// This script generates a random number of gaussian peaks
@@ -65,7 +64,7 @@ Double_t fpeaks(Double_t *x, Double_t *par) {
 void peaks(Int_t np=10) {
    npeaks = TMath::Abs(np);
    TH1F *h = new TH1F("h","test",500,0,1000);
-   //generate n peaks at random
+   // Generate n peaks at random
    Double_t par[3000];
    par[0] = 0.8;
    par[1] = -0.6/1000;
@@ -87,11 +86,11 @@ void peaks(Int_t np=10) {
    h->FillRandom("f",200000);
    h->Draw();
    TH1F *h2 = (TH1F*)h->Clone("h2");
-   //Use TSpectrum to find the peak candidates
+   // Use TSpectrum to find the peak candidates
    TSpectrum *s = new TSpectrum(2*npeaks);
    Int_t nfound = s->Search(h,2,"",0.10);
    printf("Found %d candidate peaks to fit\n",nfound);
-   //Estimate background using TSpectrum::Background
+   // Estimate background using TSpectrum::Background
    TH1 *hb = s->Background(h,20,"same");
    if (hb) c1->Update();
    if (np <0) return;
@@ -100,14 +99,14 @@ void peaks(Int_t np=10) {
    c1->cd(2);
    TF1 *fline = new TF1("fline","pol1",0,1000);
    h->Fit("fline","qn");
-   //Loop on all found peaks. Eliminate peaks at the background level
+   // Loop on all found peaks. Eliminate peaks at the background level
    par[0] = fline->GetParameter(0);
    par[1] = fline->GetParameter(1);
    npeaks = 0;
 #if ROOT_VERSION_CODE >= ROOT_VERSION(6,00,00)
    Double_t *xpeaks; // ROOT 6
 #else
-   Float_t *xpeaks; // ROOT 5
+   Float_t *xpeaks;  // ROOT 5
 #endif
    xpeaks = s->GetPositionX();
    for (p=0;p<nfound;p++) {
@@ -126,7 +125,7 @@ void peaks(Int_t np=10) {
    printf("Found %d useful peaks to fit\n",npeaks);
    printf("Now fitting: Be patient\n");
    TF1 *fit = new TF1("fit",fpeaks,0,1000,2+3*npeaks);
-   //we may have more than the default 25 parameters
+   // We may have more than the default 25 parameters
    TVirtualFitter::Fitter(h2,10+3*npeaks);
    fit->SetParameters(par);
    fit->SetNpx(1000);
