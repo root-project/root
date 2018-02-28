@@ -18,7 +18,7 @@
 // TROOT                                                                //
 //                                                                      //
 // The TROOT object is the entry point to the system.                   //
-// The single instance of TROOT is accessable via the global gROOT.     //
+// The single instance of TROOT is accessible via the global gROOT.     //
 // Using the gROOT pointer one has access to basically every object     //
 // created in a ROOT based program. The TROOT object is essentially a   //
 // "dispatcher" with several lists pointing to the ROOT main objects.   //
@@ -168,7 +168,7 @@ protected:
    TCollection     *fClassGenerators;     //List of user defined class generators;
    TSeqCollection  *fSecContexts;         //List of security contexts (TSecContext)
    TSeqCollection  *fProofs;              //List of proof sessions
-   TSeqCollection  *fClipboard;           //List of clipbard objects
+   TSeqCollection  *fClipboard;           //List of clipboard objects
    TSeqCollection  *fDataSets;            //List of data sets (TDSet or TChain)
    AListOfEnums_t   fEnums;               //List of enum types
    TProcessUUID    *fUUIDs;               //Pointer to TProcessID managing TUUIDs
