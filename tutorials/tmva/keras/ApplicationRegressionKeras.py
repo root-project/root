@@ -26,7 +26,7 @@ for branch in tree.GetListOfBranches():
         reader.AddVariable(branchName, branches[branchName])
 
 # Book methods
-reader.BookMVA('PyKeras', TString('dataset/weights/TMVAClassification_PyKeras.weights.xml'))
+reader.BookMVA('PyKeras', TString('dataset/weights/TMVARegression_PyKeras.weights.xml'))
 
 # Print some example regressions
 print('Some example regressions:')
