@@ -21,7 +21,7 @@
 //////////////////////////////////////////////////////////////////////////
 
 /// Help for command line options.
-/// 
+///
 ///  - b : run in batch mode without graphics
 ///  - x : exit on exception
 ///  - e expression: request execution of the given C++ expression.
@@ -66,6 +66,7 @@ Options:
   -q : exit after processing command line macro files
   -l : do not show splash screen
   -t : enable thread-safety and implicit multi-threading (IMT)
+ --web: display graphics in a web browser
  --notebook : execute ROOT notebook
  dir : if dir is a valid directory cd to it before executing
 

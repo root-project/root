@@ -625,7 +625,8 @@ ClassImp(TROOT);
 TROOT::TROOT() : TDirectory(),
      fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fEditHistograms(kTRUE),
+     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
+     fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
@@ -658,7 +659,8 @@ TROOT::TROOT() : TDirectory(),
 TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    : TDirectory(), fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fEditHistograms(kTRUE),
+     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
+     fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
@@ -2737,6 +2739,49 @@ void TROOT::SetMacroPath(const char *newpath)
       macroPath = "";
    else
       macroPath = newpath;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// The input parameter `webdisplay` defines where web graphics should be rendered.
+///
+/// if `webdisplay` may contains:
+///
+///  - "off": turns off the web display and come back to normal graphics in
+///    interactive mode.
+///  - "batch":  turns the web display in batch mode. It can be combined with an
+///    other string which will be considered as the new current web display
+///  - "nobatch": turns the web display in interactive mode. It can be combined with an
+///    other string which will be considered as the new current web display
+///
+/// If the option "off" is not set, this method turns the normal graphics to
+/// "Batch" to avoid the loading of local graphics libraries.
+
+void TROOT::SetWebDisplay(const char *webdisplay)
+{
+   TString wd = webdisplay;
+   wd.ToLower();
+   wd.ReplaceAll(" ","");
+
+   if (wd.Contains("off")) {
+      fIsWebDisplay = kFALSE;
+      fIsWebDisplayBatch = kFALSE;
+      fWebDisplay = "";
+      gROOT->SetBatch(kFALSE);
+   } else {
+      fIsWebDisplay = kTRUE;
+      if (wd.Contains("nobatch")) {
+         wd.ReplaceAll("nobatch","");
+         fIsWebDisplayBatch = kFALSE;
+         if (wd.Length() >0) fWebDisplay = wd;
+      } else if (wd.Contains("batch")) {
+         wd.ReplaceAll("batch","");
+         fIsWebDisplayBatch = kTRUE;
+         if (wd.Length() >0) fWebDisplay = wd;
+      } else {
+         fWebDisplay = wd;
+      }
+      gROOT->SetBatch(kTRUE);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
