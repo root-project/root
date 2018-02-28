@@ -90,6 +90,8 @@ class CppCompleter(object):
     TROOT::IsProofServ
     TROOT::IsRootFile
     TROOT::IsSortable
+    TROOT::IsWebDisplay
+    TROOT::IsWebDisplayBatch
     TROOT::IsWritable
     TROOT::IsZombie
     >>> comp.deactivate()
