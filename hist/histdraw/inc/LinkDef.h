@@ -36,5 +36,9 @@
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<1> >+;
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<2>>+;
 #pragma link C++ class ROOT::Experimental::Internal::TUniWeakPtr<ROOT::Experimental::Detail::THistImplPrecisionAgnosticBase<3>>+;
+#pragma link C++ class ROOT::Experimental::TDrawingAttr<ROOT::Experimental::TStringEnumAttr<ROOT::Experimental::THistDrawingOpts<1>::EStyle>>+;
+#pragma link C++ class ROOT::Experimental::TDrawingAttr<ROOT::Experimental::TStringEnumAttr<ROOT::Experimental::THistDrawingOpts<2>::EStyle>>+;
+#pragma link C++ class ROOT::Experimental::TDrawingAttr<ROOT::Experimental::TStringEnumAttr<ROOT::Experimental::THistDrawingOpts<3>::EStyle>>+;
+
 
 #endif
