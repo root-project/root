@@ -36,15 +36,9 @@ dataloader.PrepareTrainingAndTestTree(TCut(''),
 
 # Generate model
 
-# Define initialization
-def normal(shape, name=None):
-    return initializations.normal(shape, scale=0.05, name=name)
-
-
 # Define model
 model = Sequential()
 model.add(Dense(64, activation='relu', W_regularizer=l2(1e-5), input_dim=4))
-#model.add(Dense(32, init=normal, activation='relu', W_regularizer=l2(1e-5)))
 model.add(Dense(2, activation='softmax'))
 
 # Set loss and optimizer
