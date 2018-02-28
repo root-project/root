@@ -10,7 +10,11 @@
 /// as initial values of parameters to make a global fit.
 /// The background is computed and drawn on top of the original histogram.
 ///
-/// To execute this example, do:
+/// This script can fit "peaks' heights" or "peaks' areas".
+/// Uncomment the line defining `__PEAKS_C_FIT_AREAS__` at the beginning of the
+/// script if you want "peaks' areas":
+///
+/// To execute this example, do (in ROOT 5 or ROOT 6):
 ///
 /// ~~~{.cpp}
 ///  root > .x peaks.C  (generate 10 peaks by default)
@@ -25,6 +29,7 @@
 ///  root > .x peaks.C(-20)
 /// ~~~
 ///
+/// \macro_output
 /// \macro_image
 /// \macro_code
 ///
@@ -38,13 +43,18 @@
 #include "TSpectrum.h"
 #include "TVirtualFitter.h"
 
+// #define __PEAKS_C_FIT_AREAS__ 1 /* fit peaks' areas */
+
 Int_t npeaks = 30;
 Double_t fpeaks(Double_t *x, Double_t *par) {
    Double_t result = par[0] + par[1]*x[0];
    for (Int_t p=0;p<npeaks;p++) {
-      Double_t norm  = par[3*p+2];
+      Double_t norm  = par[3*p+2]; // "height" or "area"
       Double_t mean  = par[3*p+3];
       Double_t sigma = par[3*p+4];
+#if defined(__PEAKS_C_FIT_AREAS__)
+      norm /= sigma * (TMath::Sqrt(TMath::TwoPi())); // "area"
+#endif /* defined(__PEAKS_C_FIT_AREAS__) */
       result += norm*TMath::Gaus(x[0],mean,sigma);
    }
    return result;
@@ -58,9 +68,12 @@ void peaks(Int_t np=10) {
    par[1] = -0.6/1000;
    Int_t p;
    for (p=0;p<npeaks;p++) {
-      par[3*p+2] = 1;
-      par[3*p+3] = 10+gRandom->Rndm()*980;
-      par[3*p+4] = 3+2*gRandom->Rndm();
+      par[3*p+2] = 1; // "height"
+      par[3*p+3] = 10+gRandom->Rndm()*980; // "mean"
+      par[3*p+4] = 3+2*gRandom->Rndm(); // "sigma"
+#if defined(__PEAKS_C_FIT_AREAS__)
+      par[3*p+2] *= par[3*p+4] * (TMath::Sqrt(TMath::TwoPi())); // "area"
+#endif /* defined(__PEAKS_C_FIT_AREAS__) */
    }
    TF1 *f = new TF1("f",fpeaks,0,1000,2+3*npeaks);
    f->SetNpx(1000);
@@ -88,15 +101,23 @@ void peaks(Int_t np=10) {
    par[0] = fline->GetParameter(0);
    par[1] = fline->GetParameter(1);
    npeaks = 0;
-   Double_t *xpeaks = s->GetPositionX();
+#if ROOT_VERSION_CODE >= ROOT_VERSION(6,00,00)
+   Double_t *xpeaks; // ROOT 6
+#else
+   Float_t *xpeaks; // ROOT 5
+#endif
+   xpeaks = s->GetPositionX();
    for (p=0;p<nfound;p++) {
       Double_t xp = xpeaks[p];
       Int_t bin = h->GetXaxis()->FindBin(xp);
       Double_t yp = h->GetBinContent(bin);
       if (yp-TMath::Sqrt(yp) < fline->Eval(xp)) continue;
-      par[3*npeaks+2] = yp;
-      par[3*npeaks+3] = xp;
-      par[3*npeaks+4] = 3;
+      par[3*npeaks+2] = yp; // "height"
+      par[3*npeaks+3] = xp; // "mean"
+      par[3*npeaks+4] = 3; // "sigma"
+#if defined(__PEAKS_C_FIT_AREAS__)
+      par[3*npeaks+2] *= par[3*npeaks+4] * (TMath::Sqrt(TMath::TwoPi())); // "area"
+#endif /* defined(__PEAKS_C_FIT_AREAS__) */
       npeaks++;
    }
    printf("Found %d useful peaks to fit\n",npeaks);
@@ -108,3 +129,7 @@ void peaks(Int_t np=10) {
    fit->SetNpx(1000);
    h2->Fit("fit");
 }
+
+#if defined(__PEAKS_C_FIT_AREAS__)
+#undef __PEAKS_C_FIT_AREAS__
+#endif /* defined(__PEAKS_C_FIT_AREAS__) */
