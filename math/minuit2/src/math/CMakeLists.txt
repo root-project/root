@@ -23,9 +23,9 @@ set(MATH_SOURCES
     MinimizerOptions.cxx
 )
 
-copy_standalone(../../../../../math/mathcore/inc/Fit ../../inc/Fit ${FIT_HEADERS})
-copy_standalone(../../../../../math/mathcore/inc/Math ../../inc/Math ${MATH_HEADERS})
-copy_standalone(../../../../../math/mathcore/src . ${MATH_SOURCES})
+copy_standalone(../../../../math/mathcore/inc/Fit ../../inc/Fit ${FIT_HEADERS})
+copy_standalone(../../../../math/mathcore/inc/Math ../../inc/Math ${MATH_HEADERS})
+copy_standalone(../../../../math/mathcore/src . ${MATH_SOURCES})
 
 prepend_path(MATH_HEADERS ../../inc/Math ${MATH_HEADERS})
 prepend_path(FIT_HEADERS ../../inc/Fit ${FIT_HEADERS})

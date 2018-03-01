@@ -1,14 +1,3 @@
-copy_standalone(../../../test/MnTutorial .
-    Quad1F.h
-    Quad1FMain.cxx
-    Quad4F.h
-    Quad4FMain.cxx
-    Quad8F.h
-    Quad8FMain.cxx
-    Quad12F.h
-    Quad12FMain.cxx
-)
-
 add_executable( Quad1F
     Quad1F.h
     Quad1FMain.cxx
