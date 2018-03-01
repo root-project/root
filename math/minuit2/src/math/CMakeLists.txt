@@ -54,7 +54,7 @@ target_compile_definitions(
     ROOT_Math_VecTypes
 )
 
-install(TARGETS Math DESTINATION lib EXPORT Minuit2-targets)
+target_link_libraries(Math PUBLIC MinuitCommon)
 
 target_compile_features(Math PUBLIC cxx_auto_type cxx_static_assert)
 set_target_properties(Math PROPERTIES CXX_EXTENSIONS OFF)

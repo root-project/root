@@ -46,12 +46,15 @@ if(MINUIT2_OMP)
 
     # For CMake < 3.9, we need to make the target ourselves
     if(NOT TARGET OpenMP::OpenMP_CXX)
-        add_library(OpenMP_TARGET INTERFACE)
-        add_library(OpenMP::OpenMP_CXX ALIAS OpenMP_TARGET)
-        target_compile_options(OpenMP_TARGET INTERFACE ${OpenMP_CXX_FLAGS})
+        add_library(OpenMP::OpenMP_CXX IMPORTED INTERFACE)
+        set_property(TARGET OpenMP::OpenMP_CXX
+                     PROPERTY INTERFACE_COMPILE_OPTIONS ${OpenMP_CXX_FLAGS})
+        # Only works if the same flag is passed to the linker; use CMake 3.9+ otherwise (Intel, AppleClang)
+        set_property(TARGET OpenMP::OpenMP_CXX
+                     PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_FLAGS})
+
         find_package(Threads REQUIRED)
-        target_link_libraries(OpenMP_TARGET INTERFACE Threads::Threads)
-        target_link_libraries(OpenMP_TARGET INTERFACE ${OpenMP_CXX_FLAGS})
+        target_link_libraries(MinuitCommon INTERFACE Threads::Threads)
     endif()
     target_link_libraries(MinuitCommon INTERFACE OpenMP::OpenMP_CXX)
     message(STATUS "Building Minuit2 with OpenMP support")
@@ -66,19 +69,24 @@ if(MINUIT2_MPI)
 
     # For supporting CMake < 3.9:
     if(NOT TARGET MPI::MPI_CXX)
-        add_library(MPI_LIB_TARGET INTERFACE)
-        add_library(MPI::MPI_CXX ALIAS MPI_LIB_TARGET)
+        add_library(MPI::MPI_CXX IMPORTED INTERFACE)
 
-        target_compile_options(MPI_LIB_TARGET INTERFACE "${MPI_CXX_COMPILE_FLAGS}")
-        target_include_directories(MPI_LIB_TARGET INTERFACE "${MPI_CXX_INCLUDE_PATH}")
-        target_link_libraries(MPI_LIB_TARGET INTERFACE ${MPI_CXX_LINK_FLAGS} ${MPI_CXX_LIBRARIES})
+        set_property(TARGET MPI::MPI_CXX
+                     PROPERTY INTERFACE_COMPILE_OPTIONS ${MPI_CXX_COMPILE_FLAGS})
+        set_property(TARGET MPI::MPI_CXX
+                     PROPERTY INTERFACE_INCLUDE_DIRECTORIES "${MPI_CXX_INCLUDE_PATH}") 
+        set_property(TARGET MPI::MPI_CXX
+                     PROPERTY INTERFACE_LINK_LIBRARIES ${MPI_CXX_LINK_FLAGS} ${MPI_CXX_LIBRARIES})
     endif()
 
     message(STATUS "Building Minuit2 with MPI support")
     message(STATUS "Run: ${MPIEXEC} ${MPIEXEC_NUMPROC_FLAG} ${MPIEXEC_MAX_NUMPROCS} ${MPIEXEC_PREFLAGS} EXECUTABLE ${MPIEXEC_POSTFLAGS} ARGS")
     target_compile_definitions(MinuitCommon INTERFACE "-DMPIPROC")
-    target_link_libraries(MinuitCommon INTERFACE MPI::MPI_CXXX)
+    target_link_libraries(MinuitCommon INTERFACE MPI::MPI_CXX)
 endif()
+
+install(TARGETS MinuitCommon
+        EXPORT Minuit2Config)
 
 add_subdirectory(src)
 
