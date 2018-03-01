@@ -35,7 +35,7 @@ web-based FitPanel prototype.
 std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TFitPanel::GetWindow()
 {
    if (!fWindow) {
-      fWindow = TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
+      fWindow = TWebWindowsManager::Instance()->CreateWindow(gROOT->IsWebDisplayBatch());
 
       fWindow->SetPanelName("FitPanel");
 
