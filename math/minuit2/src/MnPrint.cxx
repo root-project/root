@@ -26,6 +26,10 @@
 #define PRECISION 13
 #define WIDTH     20
 
+#ifdef MPIPROC
+#include "mpi.h"
+#endif
+
 
 namespace ROOT {
 
@@ -37,6 +41,17 @@ int gPrintLevel = 3;
 int gPrintLevel = 0;
 #endif
 
+#ifdef MPIPROC
+static inline bool IsMPIRankZero() {
+   int rank;
+   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+   return rank==0;
+}
+#else
+static inline bool IsMPIRankZero() {
+   return true;
+}
+#endif
 
 int MnPrint::SetLevel(int level) {
    int prevLevel  = gPrintLevel;
@@ -49,6 +64,7 @@ int MnPrint::Level( ) {
 }
 
 void MnPrint::PrintFcn(std::ostream & os, double value, bool endline) {
+   if ( !IsMPIRankZero() ) return;
    int pr = os.precision(PRECISION);
    os << value;
    if (endline) os << std::endl;
@@ -61,6 +77,7 @@ void MnPrint::PrintState(std::ostream & os, const MinimumState & state, const ch
 }
 
 void MnPrint::PrintState(std::ostream & os, double fval, double edm, int ncalls, const char * msg, int iter) {
+   if ( !IsMPIRankZero() ) return;
    // helper function to print function value, edm and ncalls  and message in one single line
    os << msg;
    if (iter>=0) os << std::setw(3) << iter;
@@ -74,6 +91,7 @@ void MnPrint::PrintState(std::ostream & os, double fval, double edm, int ncalls,
 
 
 std::ostream& operator<<(std::ostream& os, const LAVector& vec) {
+   if ( !IsMPIRankZero() ) return os;
    // print a vector
    os << "LAVector parameters:" << std::endl;
    int pr = os.precision(PRECISION);
@@ -89,6 +107,7 @@ std::ostream& operator<<(std::ostream& os, const LAVector& vec) {
 }
 
 std::ostream& operator<<(std::ostream& os, const LASymMatrix& matrix) {
+   if ( !IsMPIRankZero() ) return os;
    // print a matrix
    os << "LASymMatrix parameters:" << std::endl;
    int pr = os.precision(8);
@@ -107,6 +126,7 @@ std::ostream& operator<<(std::ostream& os, const LASymMatrix& matrix) {
 }
 
 std::ostream& operator<<(std::ostream& os, const MnUserParameters& par) {
+   if ( !IsMPIRankZero() ) return os;
    // print the MnUserParameter object
    os << std::endl;
 
@@ -156,6 +176,7 @@ std::ostream& operator<<(std::ostream& os, const MnUserParameters& par) {
 }
 
 std::ostream& operator<<(std::ostream& os, const MnUserCovariance& matrix) {
+   if ( !IsMPIRankZero() ) return os;
    // print the MnUserCovariance
    os << std::endl;
 
@@ -193,6 +214,7 @@ std::ostream& operator<<(std::ostream& os, const MnUserCovariance& matrix) {
 }
 
 std::ostream& operator<<(std::ostream& os, const MnGlobalCorrelationCoeff& coeff) {
+   if ( !IsMPIRankZero() ) return os;
    // print the global correlation coefficient
    os << std::endl;
 
@@ -211,6 +233,7 @@ std::ostream& operator<<(std::ostream& os, const MnGlobalCorrelationCoeff& coeff
 }
 
 std::ostream& operator<<(std::ostream& os, const MnUserParameterState& state) {
+   if ( !IsMPIRankZero() ) return os;
    // print the MnUserParameterState
    os << std::endl;
 
@@ -243,6 +266,7 @@ std::ostream& operator<<(std::ostream& os, const MnUserParameterState& state) {
 }
 
 std::ostream& operator<<(std::ostream& os, const FunctionMinimum& min) {
+   if ( !IsMPIRankZero() ) return os;
    // print the FunctionMinimum
    os << std::endl;
    if(!min.IsValid()) {
@@ -282,6 +306,7 @@ std::ostream& operator<<(std::ostream& os, const FunctionMinimum& min) {
 }
 
 std::ostream& operator<<(std::ostream& os, const MinimumState& min) {
+   if ( !IsMPIRankZero() ) return os;
 
    os << std::endl;
    int pr = os.precision(PRECISION);
@@ -300,6 +325,7 @@ std::ostream& operator<<(std::ostream& os, const MinimumState& min) {
 }
 
 std::ostream& operator<<(std::ostream& os, const MnMachinePrecision& prec) {
+   if ( !IsMPIRankZero() ) return os;
    // print the Precision
    os << std::endl;
 
@@ -313,6 +339,7 @@ std::ostream& operator<<(std::ostream& os, const MnMachinePrecision& prec) {
 }
 
 std::ostream& operator<<(std::ostream& os, const MinosError& me) {
+   if ( !IsMPIRankZero() ) return os;
    // print the Minos Error
    os << std::endl;
 
@@ -355,6 +382,7 @@ std::ostream& operator<<(std::ostream& os, const MinosError& me) {
 }
 
 std::ostream& operator<<(std::ostream& os, const ContoursError& ce) {
+   if ( !IsMPIRankZero() ) return os;
    // print the ContoursError
    os << std::endl;
    os <<"Contours # of function calls: "<<ce.NFcn()<<std::endl;
