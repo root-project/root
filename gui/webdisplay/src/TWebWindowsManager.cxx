@@ -215,11 +215,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       return false;
    }
 
-   THttpWSHandler *handler = (THttpWSHandler *)win.fWSHandler.get();
-   bool batch_mode = win.IsBatchMode();
-
-   TString addr;
-   addr.Form("/web7gui/%s/%s", handler->GetName(), (batch_mode ? "?batch_mode" : ""));
+   std::string addr = GetUrl(win, false);
 
    std::string where = _where;
    if (where.empty())
@@ -228,7 +224,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    bool is_native = where.empty() || (where == "native"), is_qt5 = (where == "qt5"), is_cef = (where == "cef"),
         is_chrome = (where == "chrome") || (where == "chromium");
 
-   if (batch_mode) {
+   if (win.IsBatchMode()) {
       if (!is_cef && !is_chrome) {
          R__ERROR_HERE("WebDisplay") << "To use batch mode 'cef' or 'chromium' should be configured as output";
          return false;
@@ -259,9 +255,9 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
 
       if (symbol_cef) {
          typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
-         printf("Show canvas in CEF window:  %s\n", addr.Data());
+         printf("Show canvas in CEF window:  %s\n", addr.c_str());
          FunctionCef3 func = (FunctionCef3)symbol_cef;
-         func(addr.Data(), fServer.get(), batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
+         func(addr.c_str(), fServer.get(), win.IsBatchMode(), rootsys, cef_path, win.GetWidth(), win.GetHeight());
          return true;
       }
    }
@@ -279,9 +275,9 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
       }
       if (symbol_qt5) {
          typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
-         printf("Show canvas in Qt5 window:  %s\n", addr.Data());
+         printf("Show canvas in Qt5 window:  %s\n", addr.c_str());
          FunctionQt5 func = (FunctionQt5)symbol_qt5;
-         func(addr.Data(), fServer.get(), batch_mode, win.GetWidth(), win.GetHeight());
+         func(addr.c_str(), fServer.get(), win.IsBatchMode(), win.GetWidth(), win.GetHeight());
          return true;
       }
    }
@@ -299,7 +295,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    if (is_chrome) {
       // see https://peter.sh/experiments/chromium-command-line-switches/
       exec = where.c_str();
-      if (batch_mode) {
+      if (win.IsBatchMode()) {
          int debug_port = (int)(9800 + 1000 * gRandom->Rndm(1)); // debug port required to keep chrome running
          exec.Append(Form(" --headless --disable-gpu --disable-webgl --remote-debugging-port=%d ", debug_port));
       } else {
@@ -308,22 +304,22 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          exec.Append(" --app="); // use app mode
       }
       exec.Append("\'");
-      exec.Append(addr.Data());
+      exec.Append(addr.c_str());
       exec.Append("\' &");
    } else if (!is_native && !is_cef && !is_qt5 && (where != "browser")) {
       if (where.find("$") != std::string::npos) {
          exec = where.c_str();
-         exec.ReplaceAll("$url", addr);
+         exec.ReplaceAll("$url", addr.c_str());
          exec.ReplaceAll("$w", std::to_string(win.GetWidth() ? win.GetWidth() : 800).c_str());
          exec.ReplaceAll("$h", std::to_string(win.GetHeight() ? win.GetHeight() : 600).c_str());
       } else {
-         exec.Form("%s %s &", where.c_str(), addr.Data());
-         // if (batch_mode) exec.Append(" --headless");
+         exec.Form("%s %s &", where.c_str(), addr.c_str());
+         // if (win.IsBatchMode()) exec.Append(" --headless");
       }
    } else if (gSystem->InheritsFrom("TMacOSXSystem")) {
-      exec.Form("open \'%s\'", addr.Data());
+      exec.Form("open \'%s\'", addr.c_str());
    } else {
-      exec.Form("xdg-open \'%s\' &", addr.Data());
+      exec.Form("xdg-open \'%s\' &", addr.c_str());
    }
 
    printf("Show canvas in browser with cmd:  %s\n", exec.Data());
