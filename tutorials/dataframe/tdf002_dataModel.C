@@ -56,7 +56,7 @@ int tdf002_dataModel()
    // We prepare an input tree to run on
    auto fileName = "tdf002_dataModel.root";
    auto treeName = "myTree";
-   //fill_tree(fileName, treeName);
+   fill_tree(fileName, treeName);
 
    // We read the tree from the file and create a TDataFrame, a class that
    // allows us to interact with the data contained in the tree.

@@ -151,9 +151,9 @@ ColumnName2ColumnTypeName(const std::string &colName, TTree *tree, TCustomColumn
       branch = tree->GetBranch(colName.c_str());
    }
 
-   auto ComposeTVecTypeName = [](const std::string& valueType) {
+   auto ComposeTVecTypeName = [](const std::string &valueType) {
       return "ROOT::Experimental::VecOps::TVec<" + valueType + ">";
-      };
+   };
 
    if (branch) {
       // this must be a real TTree branch
