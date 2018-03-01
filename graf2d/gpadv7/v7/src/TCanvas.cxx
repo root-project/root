@@ -111,8 +111,10 @@ void ROOT::Experimental::TCanvas::Hide()
 
 void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename, bool async, CanvasCallback_t callback)
 {
-   if (!fPainter)
-      fPainter = Internal::TVirtualCanvasPainter::Create(*this);
+   if (!fPainter) {
+      // TODO: probably, one should remove such canvas display after short timeout
+      Show("batch_canvas");
+   }
    if (filename.find(".svg") != std::string::npos)
       fPainter->DoWhenReady("SVG", filename, async, callback);
    else if (filename.find(".png") != std::string::npos)
