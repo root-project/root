@@ -11,12 +11,12 @@ if(lz4)
 else()
       ROOTTEST_ADD_TEST(multiTree
                   MACRO runmultiTree.C
-                  OUTREF multiTree.ref)
+                  OUTREF multiTreeZLIB.ref)
 
       ROOTTEST_ADD_TEST(autocache
                   COPY_TO_BUILDDIR AliESDs-0.root AliESDs-1.root
                   MACRO runautocache.C
-                  OUTREF autocache.ref
+                  OUTREF autocacheZLIB.ref
                   ERRREF autocache.eref)
 endif()
 
@@ -49,7 +49,7 @@ if(lz4)
 else()
       ROOTTEST_ADD_TEST(perfstattest
                   MACRO execperfstattest.C
-                  OUTREF execperfstattest.oref
+                  OUTREF execperfstattestZLIB.oref
                   ERRREF execperfstattest.eref
                   DEPENDS perfstattest-libevent-build)
 endif()

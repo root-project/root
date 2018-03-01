@@ -25,7 +25,7 @@ void exectrim() {
 
    //Get old file, old tree and set top branch address
    TChain* chain=new TChain("tree");
-   chain->Add("./output_Coulomb_LER_study_10.root");
+   chain->Add("output_Coulomb_LER_study_10.root");
    // Deactivate all branches
    chain->SetBranchStatus("*",0);
    // Activate 4 branches only: our skim
