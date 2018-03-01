@@ -13,9 +13,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 #include "ROOT/TWebWindowsManager.hxx"
 
 #include <ROOT/TLogger.hxx>
@@ -33,6 +30,7 @@
 #include "TApplication.h"
 #include "TTimer.h"
 #include "RConfigure.h"
+#include "TROOT.h"
 
 /** \class ROOT::Experimental::TWebWindowManager
 \ingroup webdisplay
@@ -224,11 +222,8 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    addr.Form("/web7gui/%s/%s", handler->GetName(), (batch_mode ? "?batch_mode" : ""));
 
    std::string where = _where;
-   if (where.empty()) {
-      const char *cwhere = gSystem->Getenv("WEBGUI_WHERE");
-      if (cwhere)
-         where = cwhere;
-   }
+   if (where.empty())
+      where = gROOT->GetWebDisplay().Data();
 
    bool is_native = where.empty() || (where == "native"), is_qt5 = (where == "qt5"), is_cef = (where == "cef"),
         is_chrome = (where == "chrome") || (where == "chromium");
