@@ -1,5 +1,5 @@
 
-Processing runautocache.C...
+Processing /home/oksana/CERN_sources/root/roottest/root/tree/cache/runautocache.C...
 Starting runautocache() test
 
 * Learn entries set to 20, readahead to 256000
@@ -30,8 +30,6 @@ PrintCacheStats output:
 Number of branches in the cache ...: 484
 Cache Efficiency ..................: 1.000000
 Cache Efficiency Rel...............: 0.234074
-SecondaryEfficiency..............:0.000000
-SecondaryEfficiencyRel..........:0.000000
 Learn entries......................: 20
 Cached Reading.....................: 1216387 bytes in 9 transactions
 Reading............................: 1003154 bytes in 517 uncached transactions
@@ -63,8 +61,6 @@ PrintCacheStats output:
 Number of branches in the cache ...: 484
 Cache Efficiency ..................: 0.793970
 Cache Efficiency Rel...............: 0.234074
-SecondaryEfficiency..............:0.000000
-SecondaryEfficiencyRel..........:0.000000
 Learn entries......................: 20
 Cached Reading.....................: 1216387 bytes in 9 transactions
 Reading............................: 1003154 bytes in 517 uncached transactions
@@ -86,8 +82,6 @@ PrintCacheStats output:
 Number of branches in the cache ...: 484
 Cache Efficiency ..................: 0.562969
 Cache Efficiency Rel...............: 1.000000
-SecondaryEfficiency..............:0.000000
-SecondaryEfficiencyRel..........:0.000000
 Learn entries......................: 20
 Cached Reading.....................: 2219541 bytes in 17 transactions
 Reading............................: 0 bytes in 0 uncached transactions
@@ -109,8 +103,6 @@ PrintCacheStats output:
 Number of branches in the cache ...: 484
 Cache Efficiency ..................: 0.562969
 Cache Efficiency Rel...............: 1.000000
-SecondaryEfficiency..............:0.000000
-SecondaryEfficiencyRel..........:0.000000
 Learn entries......................: 20
 Cached Reading.....................: 2219541 bytes in 17 transactions
 Reading............................: 0 bytes in 0 uncached transactions
@@ -133,8 +125,6 @@ PrintCacheStats output:
 Number of branches in the cache ...: 484
 Cache Efficiency ..................: 0.918605
 Cache Efficiency Rel...............: 0.234074
-SecondaryEfficiency..............:0.000000
-SecondaryEfficiencyRel..........:0.000000
 Learn entries......................: 20
 Cached Reading.....................: 1216387 bytes in 9 transactions
 Reading............................: 1003154 bytes in 517 uncached transactions
@@ -155,8 +145,6 @@ PrintCacheStats output:
 Number of branches in the cache ...: 484
 Cache Efficiency ..................: 0.918605
 Cache Efficiency Rel...............: 0.234074
-SecondaryEfficiency..............:0.000000
-SecondaryEfficiencyRel..........:0.000000
 Learn entries......................: 20
 Cached Reading.....................: 1216387 bytes in 9 transactions
 Reading............................: 1003154 bytes in 517 uncached transactions
@@ -186,8 +174,6 @@ PrintCacheStats output:
 Number of branches in the cache ...: 484
 Cache Efficiency ..................: 0.634538
 Cache Efficiency Rel...............: 0.234074
-SecondaryEfficiency..............:0.000000
-SecondaryEfficiencyRel..........:0.000000
 Learn entries......................: 20
 Cached Reading.....................: 1216387 bytes in 13 transactions
 Reading............................: 1003154 bytes in 517 uncached transactions
