@@ -40,8 +40,8 @@ private:
    TQCanvasMenu& operator=(const TQCanvasMenu&) {return *this;}
 
 public:
-   TQCanvasMenu(QWidget* parent = 0, TCanvas *canvas = 0);
-   TQCanvasMenu(QWidget* parent, QWidget *tabWin, TCanvas *canvas) ;
+   TQCanvasMenu(QWidget* wparent = 0, TCanvas *canvas = 0);
+   TQCanvasMenu(QWidget* wparent, QWidget *tabWin, TCanvas *canvas) ;
    virtual ~TQCanvasMenu();
    void Popup(TObject *obj, double x, double y, QMouseEvent *e);
    void Dialog(TObject *obj, TMethod* method);
