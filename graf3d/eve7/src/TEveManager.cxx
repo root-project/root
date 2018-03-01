@@ -114,7 +114,7 @@ TEveManager::TEveManager() : // (Bool_t map_window, Option_t* opt) :
    fOrphanage = new TEveElementList("Global Orphanage");
    fOrphanage->IncDenyDestroy();
 
-   fRedrawTimer.Connect("Timeout()", "TEveManager", this, "DoRedraw3D()");
+   fRedrawTimer.Connect("Timeout()", "ROOT::Experimental::TEveManager", this, "DoRedraw3D()");
    fMacroFolder = new TFolder("EVE", "Visualization macros");
    gROOT->GetListOfBrowsables()->Add(fMacroFolder);
 
