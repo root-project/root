@@ -31,6 +31,7 @@
 #include "TTimer.h"
 #include "RConfigure.h"
 #include "TROOT.h"
+#include "TEnv.h"
 
 /** \class ROOT::Experimental::TWebWindowManager
 \ingroup webdisplay
@@ -69,6 +70,22 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Creates http server, if required - with real http engine (civetweb)
+/// One could configure concrete HTTP port, which should be used for the server,
+/// provide following entry in rootrc file:
+///
+///      WebGui.HttpPort: 8088
+///
+/// or specify range of http ports, which can be used:
+///
+///      WebGui.HttpPortMin: 8800
+///      WebGui.HttpPortMax: 9800
+///
+/// By default range [8800..9800] is used
+///
+/// One also can bind HTTP server socket to loopback address,
+/// In that case only connection from localhost will be available:
+///
+///      WebGui.HttpLoopback: 1
 
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
@@ -80,21 +97,38 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 
    // gServer = new THttpServer("http:8080?loopback&websocket_timeout=10000");
 
-   int http_port = 0;
-   const char *ports = gSystem->Getenv("WEBGUI_PORT");
-   if (ports)
-      http_port = std::atoi(ports);
+   int http_port = gEnv->GetValue("WebGui.HttpPort", 0);
+   int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
+   int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
+   int http_loopback = gEnv->GetValue("WebGui.HttpLoopback", 0);
+   int ntry = 100;
+
+   if (http_port < 0) {
+      R__ERROR_HERE("WebDisplay") << "Not allow to create real HTTP server, check WebGui.HttpPort variable";
+      return false;
+   }
+
    if (!http_port)
       gRandom->SetSeed(0);
 
-   for (int ntry = 0; ntry < 100; ++ntry) {
-      if (!http_port)
-         http_port = (int)(8800 + 1000 * gRandom->Rndm(1));
+   if (http_max - http_min < ntry)
+      ntry = http_max - http_min;
 
-      // TODO: ensure that port can be used
-      // TODO: replace TString::Format with more adequate implementation like
-      // https://stackoverflow.com/questions/4668760
-      if (fServer->CreateEngine(TString::Format("http:%d?websocket_timeout=10000", http_port))) {
+   while (ntry-- >= 0) {
+      if (!http_port) {
+         if ((http_min <= 0) || (http_max <= http_min)) {
+            R__ERROR_HERE("WebDisplay") << "Wrong HTTP range configuration, check WebGui.HttpPortMin/Max variables";
+            return false;
+         }
+
+         http_port = (int)(http_min + (http_max - http_min) * gRandom->Rndm(1));
+      }
+
+      TString engine;
+      engine.Form("http:%d?websocket_timeout=10000", http_port);
+      if (http_loopback) engine.Append("&loopback");
+
+      if (fServer->CreateEngine(engine)) {
          fAddr = "http://localhost:";
          fAddr.append(std::to_string(http_port));
          return true;
