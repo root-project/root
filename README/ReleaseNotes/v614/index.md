@@ -80,6 +80,9 @@ The following people have contributed to this new version:
      for color vision deficiency to enable accurate interpretation of scientific data.
      See the article [here](https://arxiv.org/abs/1712.01662)
    - New graphics style "ATLAS" from M.Sutton.
+   - In `TGraphPainter` the fit parameters were painted too early. [In some cases graph's
+     error bars overlapped the stat box](https://root-forum.cern.ch/t/hide-error-bars-behind-tpavestats/27996).
+
 
 ## 3D Graphics Libraries
   - When a LEGO plot was drawn with Theta=90, the X and Y axis were misplaced.
