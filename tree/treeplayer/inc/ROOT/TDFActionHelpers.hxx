@@ -591,7 +591,7 @@ using AddRefIfNotArrayBranch_t = typename AddRefIfNotArrayBranch<T>::type;
 
 /// Helper function for SnapshotHelper and SnapshotHelperMT. It creates new branches for the output TTree of a Snapshot.
 template <typename T>
-void SetBranchesHelper(TTree & /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
+void SetBranchesHelper(TTree * /*inputTree*/, TTree &outputTree, const std::string & /*validName*/,
                        const std::string &name, T *address)
 {
    outputTree.Branch(name.c_str(), address);
@@ -601,10 +601,10 @@ void SetBranchesHelper(TTree & /*inputTree*/, TTree &outputTree, const std::stri
 /// This overload is called for columns of type `TArrayBranch<T>`. For TDF, these represent c-style arrays in ROOT
 /// files, so we are sure that there are input trees to which we can ask the correct branch title
 template <typename T>
-void SetBranchesHelper(TTree &inputTree, TTree &outputTree, const std::string &validName, const std::string &name,
+void SetBranchesHelper(TTree *inputTree, TTree &outputTree, const std::string &validName, const std::string &name,
                        TArrayBranch<T> *ab)
 {
-   auto *const inputBranch = inputTree.GetBranch(validName.c_str());
+   auto *const inputBranch = inputTree->GetBranch(validName.c_str());
    auto *const leaf = static_cast<TLeaf *>(inputBranch->GetListOfLeaves()->UncheckedAt(0));
    const auto bname = leaf->GetName();
    const auto counterStr =
@@ -673,7 +673,7 @@ public:
    {
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {
-         (SetBranchesHelper(*fInputTree, *fOutputTree, fValidBranchNames[S], fBranchNames[S], &values), 0)..., 0};
+         (SetBranchesHelper(fInputTree, *fOutputTree, fValidBranchNames[S], fBranchNames[S], &values), 0)..., 0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
       fIsFirstEvent = false;
    }
@@ -760,7 +760,7 @@ public:
    {
       // hack to call TTree::Branch on all variadic template arguments
       int expander[] = {
-         (SetBranchesHelper(*fInputTrees[slot], *fOutputTrees[slot], fValidBranchNames[S], fBranchNames[S], &values),
+         (SetBranchesHelper(fInputTrees[slot], *fOutputTrees[slot], fValidBranchNames[S], fBranchNames[S], &values),
           0)...,
          0};
       (void)expander; // avoid unused variable warnings for older compilers such as gcc 4.9
