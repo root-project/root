@@ -13,9 +13,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 #include "ROOT/TWebWindow.hxx"
 
 #include "ROOT/TWebWindowsManager.hxx"
@@ -65,7 +62,7 @@ In second case no any graphical elements will be created. For the normal window 
 (width and height), which are applied when window shown.
 
 Each window can be shown several times (if allowed) in different places - either as the
-CEF (chromium embdedded) window or in the standard web browser. When started, window will open and show
+CEF (chromium embedded) window or in the standard web browser. When started, window will open and show
 HTML page, configured with TWebWindow::SetDefaultPage() method.
 
 Typically (but not necessarily) clients open web socket connection to the window and one can exchange data,
