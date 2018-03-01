@@ -444,4 +444,27 @@ TEST(TDFSnapshotMore, ColsWithCustomTitlesMT)
    gSystem->Unlink((prefix + fname).c_str());
    ROOT::DisableImplicitMT();
 }
+
+TEST(TDFSnapshotMore, TreeWithFriendsMT)
+{
+   const auto fname = "treewithfriendsmt.root";
+   ROOT::EnableImplicitMT();
+   TDataFrame(10).Define("x", []() { return 0; }).Snapshot<int>("t", fname, {"x"});
+
+   TFile file(fname);
+   auto tree = static_cast<TTree *>(file.Get("t"));
+   TFile file2(fname);
+   auto tree2 = static_cast<TTree *>(file2.Get("t"));
+   tree->AddFriend(tree2);
+
+   const auto outfname = "out_treewithfriendsmt.root";
+   TDataFrame df(*tree);
+   df.Snapshot<int>("t", outfname, {"x"});
+   ROOT::DisableImplicitMT();
+
+   gSystem->Unlink(fname);
+   gSystem->Unlink(outfname);
+}
+
+
 #endif
