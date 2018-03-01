@@ -40,7 +40,7 @@ std::unique_ptr<ROOT::Experimental::Internal::TVirtualCanvasPainter::Generator>
 }
 
 std::unique_ptr<ROOT::Experimental::Internal::TVirtualCanvasPainter> ROOT::Experimental::Internal::
-   TVirtualCanvasPainter::Create(const TCanvas &canv, bool batch_mode)
+   TVirtualCanvasPainter::Create(const TCanvas &canv)
 {
    if (!GetGenerator()) {
       LoadCanvasPainterLibrary();
@@ -49,7 +49,7 @@ std::unique_ptr<ROOT::Experimental::Internal::TVirtualCanvasPainter> ROOT::Exper
          throw std::runtime_error("TVirtualCanvasPainter::Generator failed to initialize");
       }
    }
-   return GetGenerator()->Create(canv, batch_mode);
+   return GetGenerator()->Create(canv);
 }
 
 /// The implementation is here to pin the vtable.

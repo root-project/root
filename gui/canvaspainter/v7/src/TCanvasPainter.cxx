@@ -199,8 +199,6 @@ private:
    /// The canvas we are painting. It might go out of existence while painting.
    const TCanvas &fCanvas; ///<!  Canvas
 
-   bool fBatchMode; ///<! indicate if canvas works in batch mode (can be independent from gROOT->isBatch())
-
    std::shared_ptr<TWebWindow> fWindow; ///!< configured display
 
    WebConnList fWebConn;           ///<! connections list
@@ -245,16 +243,13 @@ private:
    int CheckWaitingCmd(const std::string &cmdname, double);
 
 public:
-   TCanvasPainter(const TCanvas &canv, bool batch_mode)
-      : fCanvas(canv), fBatchMode(batch_mode), fWindow(), fWebConn(), fHadWebConn(false), fDisplayList(), fCmds(),
+   TCanvasPainter(const TCanvas &canv)
+      : fCanvas(canv), fWindow(), fWebConn(), fHadWebConn(false), fDisplayList(), fCmds(),
         fCmdsCnt(0), fWaitingCmdId(), fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0), fUpdatesLst()
    {
    }
 
    virtual ~TCanvasPainter();
-
-   /// returns true is canvas used in batch mode
-   virtual bool IsBatchMode() const override { return fBatchMode; }
 
    virtual void AddDisplayItem(std::unique_ptr<TDisplayItem> &&item) override
    {
@@ -283,9 +278,9 @@ public:
    public:
       /// Create a new TCanvasPainter to paint the given TCanvas.
       std::unique_ptr<TVirtualCanvasPainter>
-      Create(const ROOT::Experimental::TCanvas &canv, bool batch_mode) const override
+      Create(const ROOT::Experimental::TCanvas &canv) const override
       {
-         return std::make_unique<TCanvasPainter>(canv, batch_mode);
+         return std::make_unique<TCanvasPainter>(canv);
       }
       ~GeneratorImpl() = default;
 
@@ -629,7 +624,7 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
 void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 {
    if (!fWindow) {
-      fWindow = TWebWindowsManager::Instance()->CreateWindow(IsBatchMode());
+      fWindow = TWebWindowsManager::Instance()->CreateWindow(gROOT->IsWebDisplayBatch());
 
       fWindow->SetConnLimit(0); // allow any number of connections
 
@@ -654,7 +649,7 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> wi
       return false;
    }
 
-   if (IsBatchMode()) {
+   if (fWindow->IsBatchMode()) {
       R__ERROR_HERE("AddPanel") << "Canvas shown in batch mode";
       return false;
    }

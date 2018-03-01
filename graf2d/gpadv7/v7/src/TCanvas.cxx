@@ -90,11 +90,10 @@ void ROOT::Experimental::TCanvas::Show(const std::string &where)
       return;
    }
 
-   bool batch_mode = gROOT->IsBatch();
    if (!fModified)
       fModified = 1; // 0 is special value, means no changes and no drawings
 
-   fPainter = Internal::TVirtualCanvasPainter::Create(*this, batch_mode);
+   fPainter = Internal::TVirtualCanvasPainter::Create(*this);
    if (fPainter) {
       fPainter->NewDisplay(where);
       fPainter->CanvasUpdated(fModified, true, nullptr); // trigger async display
@@ -113,7 +112,7 @@ void ROOT::Experimental::TCanvas::Hide()
 void ROOT::Experimental::TCanvas::SaveAs(const std::string &filename, bool async, CanvasCallback_t callback)
 {
    if (!fPainter)
-      fPainter = Internal::TVirtualCanvasPainter::Create(*this, true);
+      fPainter = Internal::TVirtualCanvasPainter::Create(*this);
    if (filename.find(".svg") != std::string::npos)
       fPainter->DoWhenReady("SVG", filename, async, callback);
    else if (filename.find(".png") != std::string::npos)
