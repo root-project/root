@@ -123,15 +123,17 @@ TEST_F(TDFSnapshot, Snapshot_aliases)
 // Test for ROOT-9122
 TEST_F(TDFSnapshot, Snapshot_nocolumnmatch)
 {
+   const auto fname = "snapshotnocolumnmatch.root";
    TDataFrame d(1);
    int ret(1);
    try {
       testing::internal::CaptureStderr();
-      d.Snapshot("t", "f.root", "x");
+      d.Snapshot("t", fname, "x");
    } catch (const std::runtime_error &e) {
       ret = 0;
    }
    EXPECT_EQ(0, ret);
+   gSystem->Unlink(fname);
 }
 
 void test_snapshot_update(TInterface<TLoopManager> &tdf)
