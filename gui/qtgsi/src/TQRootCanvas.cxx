@@ -281,21 +281,21 @@ Bool_t TQRootCanvas ::eventFilter( QObject *o, QEvent *e )
 ////////////////////////////////////////////////////////////////////////////////
 /// Entering a drag event.
 
-void TQRootCanvas::dragEnterEvent(QDragEnterEvent *event)
+void TQRootCanvas::dragEnterEvent(QDragEnterEvent *e)
 {
-   if (event->mimeData()->hasText())
-      event->acceptProposedAction();
+   if (e->mimeData()->hasText())
+      e->acceptProposedAction();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Start a drop, for now only histogram objects can be drwon by droping.
 
-void TQRootCanvas::dropEvent(QDropEvent *event)
+void TQRootCanvas::dropEvent(QDropEvent *e)
 {
-   if (event->mimeData()->hasText()) {
-      const char *name = event->mimeData()->text().toAscii().data();
+   if (e->mimeData()->hasText()) {
+      const char *name = e->mimeData()->text().toAscii().data();
       TObject *dragedObject = gROOT->FindObject(name);
-      QPoint Pos = event->pos();
+      QPoint Pos = e->pos();
       TObject *object=0;
       TPad *pad = fCanvas->Pick(Pos.x(), Pos.y(), object);
       if (dragedObject!=0) {
@@ -308,7 +308,7 @@ void TQRootCanvas::dropEvent(QDropEvent *event)
          std::cout << "object " << name << " not found by ROOT" << std::endl;
       }
    }
-   event->acceptProposedAction();
+   e->acceptProposedAction();
 }
 
 /////////////////////////////////////End Drag and drop Support (Mohammad Al-Turany)
@@ -620,9 +620,9 @@ void TQRootCanvas::GetCanvasPar(Int_t &wtopx, Int_t &wtopy, UInt_t &ww, UInt_t &
 ////////////////////////////////////////////////////////////////////////////////
 /// just a wrapper
 
-void TQRootCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
+void TQRootCanvas::HandleInput(EEventType button, Int_t ix, Int_t iy)
 {
-   fCanvas->HandleInput(button, x, y);
+   fCanvas->HandleInput(button, ix, iy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -740,9 +740,9 @@ void TQRootCanvas::SaveSource(const char *filename, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// just a wrapper
 
-void TQRootCanvas::SetCursor(ECursor cursor)
+void TQRootCanvas::SetCursor(ECursor c)
 {
-   fCanvas->SetCursor(cursor);
+   fCanvas->SetCursor(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

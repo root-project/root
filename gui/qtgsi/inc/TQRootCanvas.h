@@ -47,8 +47,8 @@ private:
 
 public:
 
-   TQRootCanvas( QWidget *parent = 0, const char *name = 0 ,TCanvas *c=0);
-   TQRootCanvas( QWidget *parent, QWidget* tabWin , const char *name = 0 ,TCanvas *c=0);
+   TQRootCanvas( QWidget *wparent = 0, const char *name = 0 ,TCanvas *c=0);
+   TQRootCanvas( QWidget *wparent, QWidget* tabWin , const char *name = 0 ,TCanvas *c=0);
    virtual ~TQRootCanvas();
    TCanvas* GetCanvas() { return fCanvas;}
    Int_t GetRootWid() { return fWid;}

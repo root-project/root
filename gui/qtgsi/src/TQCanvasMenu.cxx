@@ -27,11 +27,11 @@ ClassImp(TQCanvasMenu);
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor, create the popup menu
 
-TQCanvasMenu::TQCanvasMenu(QWidget* parent, TCanvas *canvas)
+TQCanvasMenu::TQCanvasMenu(QWidget* wparent, TCanvas *canvas)
 {
    fc       = canvas;
    fCurrObj = 0;
-   fParent  = parent;
+   fParent  = wparent;
    fTabWin  = 0;
    fDialog  = 0;
    fMousePosX = fMousePosY = 0;
@@ -40,10 +40,10 @@ TQCanvasMenu::TQCanvasMenu(QWidget* parent, TCanvas *canvas)
 ////////////////////////////////////////////////////////////////////////////////
 /// ctor, create the popup menu
 
-TQCanvasMenu::TQCanvasMenu(QWidget* parent, QWidget *tabWin, TCanvas *canvas)
+TQCanvasMenu::TQCanvasMenu(QWidget* wparent, QWidget *tabWin, TCanvas *canvas)
 {
    fc       = canvas;
-   fParent  = parent;
+   fParent  = wparent;
    fTabWin  = tabWin;
    fCurrObj = 0;
    fDialog  = 0;
