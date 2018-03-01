@@ -427,7 +427,7 @@ void TApplication::GetOptions(Int_t *argc, char **argv)
             else                  gROOT->SetWebDisplay("");
          } else {
             argv[i] = null;
-            if (gROOT->IsBatch()) opt.Append("batch");
+            if (gROOT->IsBatch()) opt.Prepend("batch");
             gROOT->SetWebDisplay(opt.Data());
          }
       } else if (!strcmp(argv[i], "-e")) {
