@@ -281,7 +281,7 @@ public:
    Int_t             GetNtypes() const { return fTypes->GetSize(); }
    TFolder          *GetRootFolder() const { return fRootFolder; }
    TProcessUUID     *GetUUIDs() const { return fUUIDs; }
-   TString           GetWebDisplay() const { return fWebDisplay; }
+   const TString    &GetWebDisplay() const { return fWebDisplay; }
    void              Idle(UInt_t idleTimeInSec, const char *command = 0);
    Int_t             IgnoreInclude(const char *fname, const char *expandedfname);
    Bool_t            IsBatch() const { return fBatch; }

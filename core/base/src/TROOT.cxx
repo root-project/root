@@ -2748,9 +2748,9 @@ void TROOT::SetMacroPath(const char *newpath)
 ///
 ///  - "off": turns off the web display and come back to normal graphics in
 ///    interactive mode.
-///  - "batch":  turns the web display in batch mode. It can be combined with an
+///  - "batch":  turns the web display in batch mode. It can be prepend with an
 ///    other string which will be considered as the new current web display
-///  - "nobatch": turns the web display in interactive mode. It can be combined with an
+///  - "nobatch": turns the web display in interactive mode. It can be prepend with an
 ///    other string which will be considered as the new current web display
 ///
 /// If the option "off" is not set, this method turns the normal graphics to
@@ -2758,28 +2758,27 @@ void TROOT::SetMacroPath(const char *newpath)
 
 void TROOT::SetWebDisplay(const char *webdisplay)
 {
-   TString wd = webdisplay;
-   wd.ToLower();
-   wd.ReplaceAll(" ","");
+   const char *wd = webdisplay;
+   if (!wd)
+      wd = "";
 
-   if (wd.Contains("off")) {
+   if (!strcmp(wd, "off")) {
       fIsWebDisplay = kFALSE;
       fIsWebDisplayBatch = kFALSE;
       fWebDisplay = "";
       gROOT->SetBatch(kFALSE);
    } else {
       fIsWebDisplay = kTRUE;
-      if (wd.Contains("nobatch")) {
-         wd.ReplaceAll("nobatch","");
-         fIsWebDisplayBatch = kFALSE;
-         if (wd.Length() >0) fWebDisplay = wd;
-      } else if (wd.Contains("batch")) {
-         wd.ReplaceAll("batch","");
+      if (!strncmp(wd, "batch", 5)) {
          fIsWebDisplayBatch = kTRUE;
-         if (wd.Length() >0) fWebDisplay = wd;
+         wd += 5;
+      } else if (!strncmp(wd, "nobatch", 7)) {
+         fIsWebDisplayBatch = kFALSE;
+         wd += 7;
       } else {
-         fWebDisplay = wd;
+         fIsWebDisplayBatch = kFALSE;
       }
+      fWebDisplay = wd;
       gROOT->SetBatch(kTRUE);
    }
 }
