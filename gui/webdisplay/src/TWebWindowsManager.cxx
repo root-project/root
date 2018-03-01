@@ -124,7 +124,7 @@ std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsM
       return nullptr;
    }
 
-   win->SetBatchMode(batch_mode);
+   win->SetBatchMode(batch_mode || gROOT->IsWebDisplayBatch());
 
    win->SetId(++fIdCnt); // set unique ID
 

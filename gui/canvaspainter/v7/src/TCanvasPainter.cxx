@@ -623,8 +623,16 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
 
 void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 {
+   std::string showarg = where;
+   bool batch_mode = false;
+   if (showarg == "batch_canvas") {
+      batch_mode = true;
+      showarg.clear();
+   }
+
    if (!fWindow) {
-      fWindow = TWebWindowsManager::Instance()->CreateWindow(gROOT->IsWebDisplayBatch());
+
+      fWindow = TWebWindowsManager::Instance()->CreateWindow(batch_mode);
 
       fWindow->SetConnLimit(0); // allow any number of connections
 
@@ -635,7 +643,7 @@ void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
       // fWindow->SetGeometry(500,300);
    }
 
-   fWindow->Show(where);
+   fWindow->Show(showarg);
 }
 
 /// append window and panel inside canvas window
