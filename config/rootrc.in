@@ -254,6 +254,15 @@ Browser.ExpandDirectories    yes
 # Start URL for the TRootBrowser embedded HTML renderer
 Browser.StartUrl:            http://root.cern.ch/root/html/ClassIndex.html
 
+# WebGui specific settings (defaults are shown)
+# fixed http port number for server, 0 - not fixed, -1 - disabled completely
+WebGui.HttpPort:            0
+# range for allowed http ports, selected randomly
+WebGui.HttpPortMin:         8800
+WebGui.HttpPortMax:         9800
+# Use only loopback address to bind http server
+WebGui.HttpLoopback:        0
+
 # OpenGL options (defaults are shown)
 # Default user interaction model for 3D view manipulation assumes that user
 # controls the scene (rotates or moves it). Change this to 'yes' to switch
