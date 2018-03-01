@@ -85,6 +85,21 @@ if(MINUIT2_MPI)
     target_link_libraries(MinuitCommon INTERFACE MPI::MPI_CXX)
 endif()
 
+
+
+# Make a config file to make this usable as a CMake Package
+# Start by adding the version in a CMake understandable way
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(
+    Minuit2ConfigVersion.cmake
+    VERSION ${Minuit2_VERSION}
+    COMPATIBILITY AnyNewerVersion
+    )
+
+install(FILES "${CMAKE_CURRENT_BINARY_DIR}/Minuit2ConfigVersion.cmake"
+    DESTINATION share/cmake/Modules/Minuit2)
+
+# Now, install the Interface targets
 install(TARGETS MinuitCommon
         EXPORT Minuit2Config)
 
