@@ -3,13 +3,13 @@ See `README.md` for information about building Minuit2.
 
 ## Extracting
 
-To extract, run the following commands from the `math/minuit2/standalone/build` directory:
+To extract, run the following commands from the `math/minuit2/build` directory:
 
 ```bash
 cmake .. -DMAKE_STANDALONE=ON
 ```
 
-This will fill in the `math/minuit2/standalone` directory with all the files needed for Minuit2, copied from the corresponding ROOT files, as part of the configure step.
+This will fill in the `math/minuit2` directory with all the files needed for Minuit2, copied from the corresponding ROOT files, as part of the configure step.
 At this point, you could continue to build (using `make`). Note that the CMake option `MAKE_STANDALONE` will automatically be set to `ON` if you are inside the ROOT source tree,
 and any manual setting of it will be remembered as long as the `CMakeCache.txt` file is not removed.
 
@@ -42,7 +42,7 @@ make package
 
 ## Maintenence
 
-All CMake files are stored in the `standalone` directory. If new files are needed by Minuit2 due to additions to [ROOT], they should be added to the source files lists in `src/Math/CMakeLists.txt` and `src/Minuit2/CMakeLists.txt` (depending on if it's a new Math or Minuit2 requirement).
+If new files are needed by Minuit2 due to additions to [ROOT], they should be added to the source files lists in `src/Math/CMakeLists.txt` and `src/Minuit2/CMakeLists.txt` (depending on if it's a new Math or Minuit2 requirement).
 
 
 [ROOT]: https://root.cern.ch
