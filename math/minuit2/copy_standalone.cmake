@@ -33,6 +33,7 @@ function(COPY_STANDALONE ORIGINAL_DIR NEW_DIR)
     foreach(FILENAME ${ARGN})
         # All paths are relative to master directory
         set(ORIG_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${ORIGINAL_DIR}/${FILENAME}")
+        set(NEW_DIR_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${NEW_DIR}")
         set(NEW_FILE "${CMAKE_CURRENT_SOURCE_DIR}/${NEW_DIR}/${FILENAME}")
 
         # Normalize paths
@@ -52,7 +53,7 @@ function(COPY_STANDALONE ORIGINAL_DIR NEW_DIR)
             endif()
 
             # Actually do the copy here
-            configure_file("${ORIG_FILE}" "${NEW_FILE}" COPYONLY)
+            file(COPY "${ORIG_FILE}" DESTINATION "${NEW_DIR_FULL}")
 
             # Allow cleaning with make purge
             set_property(GLOBAL APPEND PROPERTY COPY_STANDALONE_LISTING "${NEW_FILE}")
@@ -63,7 +64,7 @@ function(COPY_STANDALONE ORIGINAL_DIR NEW_DIR)
             endif()
         endif()
     endforeach()
-    string(REPLACE ";" " " LISTING "${ARGN}")
-    message(STATUS "Copied ${LISTING}")
+    string(REPLACE ";" ", " LISTING "${ARGN}")
+    message(STATUS "Copied to ${NEW_DIR}: ${LISTING}")
 endfunction()
 
