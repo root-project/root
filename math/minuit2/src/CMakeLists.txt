@@ -1,3 +1,5 @@
+add_subdirectory(math)
+
 set(MINUIT2_HEADERS
     ABObj.h
     ABProd.h
@@ -188,10 +190,8 @@ set(MINUIT2_SOURCES
     mnxerbla.cxx
 )
 
-copy_standalone(../../../inc/Minuit2 ../../inc/Minuit2 ${MINUIT2_HEADERS})
-copy_standalone(../../../src . ${MINUIT2_SOURCES})
 
-prepend_path(MINUIT2_HEADERS ../../inc/Minuit2 ${MINUIT2_HEADERS})
+prepend_path(MINUIT2_HEADERS ../inc/Minuit2 ${MINUIT2_HEADERS})
 
 add_library(Minuit2
     ${MINUIT2_SOURCES}

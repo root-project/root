@@ -1,15 +1,16 @@
-############################################################################
-# CMakeLists.txt file for building ROOT math/minuit2 package
-############################################################################
+cmake_minimum_required(VERSION 3.1)
 
 option(minuit2_mpi "Enable support for MPI in Minuit2")
 option(minuit2_omp "Enable support for OpenMP in Minuit2")
 
-add_definitions(-DWARNINGMSG -DUSE_ROOT_ERROR)
-ROOT_STANDARD_LIBRARY_PACKAGE(Minuit2
-                              HEADERS *.h Minuit2/*.h
-                              DICTIONARY_OPTIONS "-writeEmptyRootPCM"
-                              DEPENDENCIES MathCore Hist)
+# This package can be built separately
+# or as part of ROOT.
+if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+  ROOT_STANDARD_LIBRARY_PACKAGE(Minuit2
+                                HEADERS *.h Minuit2/*.h
+                                DICTIONARY_OPTIONS "-writeEmptyRootPCM"
+                                DEPENDENCIES MathCore Hist)
+endif()
 
 if(minuit2_omp)
   find_package(OpenMP REQUIRED)
@@ -23,7 +24,9 @@ if(minuit2_omp)
       PROPERTY INTERFACE_LINK_LIBRARIES ${OpenMP_CXX_LIBRARIES})
   endif()
 
-  target_link_libraries(Minuit2 Threads::Threads OpenMP::OpenMP_CXX)
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    target_link_libraries(Minuit2 Threads::Threads OpenMP::OpenMP_CXX)
+  endif()
 endif()
 
 if(minuit2_mpi)
@@ -38,8 +41,15 @@ if(minuit2_mpi)
       PROPERTY INTERFACE_LINK_LIBRARIES ${MPI_CXX_LINK_FLAGS} ${MPI_CXX_LIBRARIES})
   endif()
 
-  target_compile_definitions(Minuit2 PUBLIC MPIPROC)
-  target_link_libraries(Minuit2 MPI::MPI_CXX)
+  if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+    target_compile_definitions(Minuit2 PUBLIC MPIPROC)
+    target_link_libraries(Minuit2 MPI::MPI_CXX)
+  endif()
 endif()
 
-ROOT_ADD_TEST_SUBDIRECTORY(test)
+if(CMAKE_PROJECT_NAME STREQUAL ROOT)
+  add_definitions(-DWARNINGMSG -DUSE_ROOT_ERROR)
+  ROOT_ADD_TEST_SUBDIRECTORY(test)
+else()
+  include(StandAlone.cmake)
+endif()

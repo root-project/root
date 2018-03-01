@@ -1,28 +1,3 @@
-copy_standalone(../../../test/MnSim .
-    DemoFumili.cxx
-    DemoGaussSim.cxx
-    FlatRandomGen.h
-    GaussDataGen.cxx
-    GaussDataGen.h
-    GaussFcn.cxx
-    GaussFcn.h
-    GaussFcn2.cxx
-    GaussFcn2.h
-    GaussFunction.h
-    GaussRandomGen.h
-    GaussianModelFunction.h
-    ParallelTest.cxx
-    PaulTest.cxx
-    PaulTest2.cxx
-    PaulTest3.cxx
-    PaulTest4.cxx
-    ReneTest.cxx
-    demoMinimizer.cxx
-    paul.txt
-    paul2.txt
-    paul3.txt
-    paul4.txt
-)
 
 add_library(GaussSim
     GaussDataGen.cxx

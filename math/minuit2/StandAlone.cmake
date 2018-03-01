@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 # Check to see if we are inside ROOT
-if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../../build/version_number")
+if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../../build/version_number")
     option(MAKE_STANDALONE "Copy in the files from the main ROOT files" ON)
     message(STATUS "Copying in files from ROOT sources to standalone directory")
 else()
@@ -12,8 +12,8 @@ endif()
 include(copy_standalone.cmake)
 
 # If MAKE_STANDALONE, copy these files in
-copy_standalone(../../../build . version_number)
-copy_standalone(../../.. . LICENSE LGPL2_1.txt)
+copy_standalone(../../build . version_number)
+copy_standalone(../.. . LICENSE LGPL2_1.txt)
 
 file(READ ${CMAKE_SOURCE_DIR}/version_number versionstr)
 string(STRIP ${versionstr} versionstr)
@@ -88,7 +88,8 @@ install(DIRECTORY inc/Minuit2 DESTINATION include/Minuit2)
 
 # Only add tests if this is the main project
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
-    add_subdirectory(test)
+    add_subdirectory(test/MnSim)
+    add_subdirectory(test/MnTutorial)
 endif()
 
 # Add purge target
@@ -115,6 +116,14 @@ set(CPACK_RESOURCE_FILE_README "${CMAKE_CURRENT_SOURCE_DIR}/README.md")
 set(CPACK_SOURCE_GENERATOR "TGZ;ZIP")
 # CPack collects *everything* except what's listed here.
 set(CPACK_SOURCE_IGNORE_FILES
+    /Root.cmake
+    /test/CMakeLists.txt
+    /test/Makefile
+    /test/testMinimizer.cxx
+    /test/testNdimFit.cxx
+    /test/testUnbinGausFit.cxx
+    /test/testUserFunc.cxx
+    /Module.mk
     /.git
     /dist
     /.*build.*
