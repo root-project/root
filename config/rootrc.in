@@ -260,8 +260,8 @@ WebGui.HttpPort:            0
 # range for allowed http ports, selected randomly
 WebGui.HttpPortMin:         8800
 WebGui.HttpPortMax:         9800
-# Use only loopback address to bind http server
-WebGui.HttpLoopback:        0
+# Use only loopback address to bind http server (default - no)
+WebGui.HttpLoopback:        no
 
 # OpenGL options (defaults are shown)
 # Default user interaction model for 3D view manipulation assumes that user
