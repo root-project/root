@@ -55,10 +55,10 @@ void InitTDFValues(unsigned int slot, TDFValueTuple &valueTuple, TTreeReader *r,
    // hack to expand a parameter pack without c++17 fold expressions.
    // The statement defines a variable with type std::initializer_list<int>, containing all zeroes, and SetTmpColumn or
    // SetProxy are conditionally executed as the braced init list is expanded. The final ... expands S.
-   std::initializer_list<int> expander{(isTmpColumn[S]
-                                           ? std::get<S>(valueTuple).SetTmpColumn(slot, customCols.at(bn.at(S)).get())
-                                           : std::get<S>(valueTuple).MakeProxy(r, bn.at(S)),
-                                        0)...};
+   int expander[] = {(isTmpColumn[S] ? std::get<S>(valueTuple).SetTmpColumn(slot, customCols.at(bn.at(S)).get())
+                                     : std::get<S>(valueTuple).MakeProxy(r, bn.at(S)),
+                      0)...,
+                     0};
    (void)expander; // avoid "unused variable" warnings for expander on gcc4.9
    (void)slot;     // avoid _bogus_ "unused variable" warnings for slot on gcc 4.9
    (void)r;        // avoid "unused variable" warnings for r on gcc5.2
