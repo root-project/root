@@ -216,15 +216,18 @@ int TMVACrossValidation()
    // Process some output programatically, printing the ROC score for each
    // booked method.
    //
-   auto bdtg_result = ce.GetResults()[0];
-   std::cout << "==> BDTG ROC: avg (std): " << bdtg_result.GetROCAverage() << " ("
-             << bdtg_result.GetROCStandardDeviation() << ")"
-             << "" << std::endl;
-
-   auto fisher_result = ce.GetResults()[1];
-   std::cout << "==> Fisher ROC: avg (std): " << fisher_result.GetROCAverage() << " ("
-             << fisher_result.GetROCStandardDeviation() << ")"
-             << "" << std::endl;
+   size_t iMethod = 0;
+   for (auto && result : ce.GetResults()) {
+      std::cout << "Summary for method " << ce.GetMethods()[iMethod++].GetValue<TString>("MethodName")
+                << std::endl;
+      for (UInt_t iFold = 0; iFold<ce.GetNumFolds(); ++iFold) {
+         std::cout << "\tFold " << iFold << ": "
+                   << "ROC int: " << result.GetROCValues()[iFold]
+                   << ", "
+                   << "BkgEff@SigEff=0.3: " << result.GetEff30Values()[iFold]
+                   << std::endl;
+      }
+   }
 
    // --------------------------------------------------------------------------
 
