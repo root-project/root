@@ -26,14 +26,14 @@
 
 class THttpEngine;
 class THttpTimer;
-class TRootSnifferBase;
+class TRootSniffer;
 
 class THttpServer : public TNamed {
 
 protected:
    TList fEngines;                      ///<! engines which runs http server
    THttpTimer *fTimer{nullptr};         ///<! timer used to access main thread
-   TRootSnifferBase *fSniffer{nullptr}; ///<! sniffer provides access to ROOT objects hierarchy
+   TRootSniffer *fSniffer{nullptr}; ///<! sniffer provides access to ROOT objects hierarchy
    Bool_t fTerminated{kFALSE};          ///<! termination flag, disables all requests processing
    Long_t fMainThrdId{0};               ///<! id of the main ROOT process
 
@@ -66,9 +66,9 @@ public:
    Bool_t IsAnyEngine() const { return fEngines.GetSize() > 0; }
 
    /** returns pointer on objects sniffer */
-   TRootSnifferBase *GetSniffer() const { return fSniffer; }
+   TRootSniffer *GetSniffer() const { return fSniffer; }
 
-   void SetSniffer(TRootSnifferBase *sniff);
+   void SetSniffer(TRootSniffer *sniff);
 
    Bool_t IsReadOnly() const;
 
