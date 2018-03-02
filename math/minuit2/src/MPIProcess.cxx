@@ -16,8 +16,8 @@ namespace ROOT {
 
 namespace Minuit2 {
 
-   int MPIProcess::fgGlobalSize = 1;
-   int MPIProcess::fgGlobalRank = 0;
+   unsigned int MPIProcess::fgGlobalSize = 1;
+   unsigned int MPIProcess::fgGlobalRank = 0;
 
    // By default all procs are for X
    unsigned int MPIProcess::fgCartSizeX = 0;
@@ -125,8 +125,11 @@ namespace Minuit2 {
 
       // set size and rank
       if (fgCommunicator!=0) {
-         MPI_Comm_size(*fgCommunicator, &fSize);
-         MPI_Comm_rank(*fgCommunicator, &fRank);
+         int size, rank;
+         MPI_Comm_size(*fgCommunicator, &size);
+         MPI_Comm_rank(*fgCommunicator, &rank);
+         fSize = (unsigned int) size;
+         fRank = (unsigned int) rank;
       }
       else {
          // no MPI calls
