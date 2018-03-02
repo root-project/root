@@ -74,7 +74,7 @@ int TMVACrossValidationApplication()
    Int_t eventID;
 
    reader->AddVariable("x", &x);
-   reader->AddVariable("y", &x);
+   reader->AddVariable("y", &y);
    reader->AddSpectator("eventID", &eventID);
 
    // Book the serialised methods
