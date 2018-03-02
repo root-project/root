@@ -71,7 +71,7 @@ public:
    CrossValidationResult(const CrossValidationResult &);
    ~CrossValidationResult() { fROCCurves = nullptr; }
 
-   std::map<UInt_t, Float_t> GetROCValues() { return fROCs; }
+   std::map<UInt_t, Float_t> GetROCValues() const { return fROCs; }
    Float_t GetROCAverage() const;
    Float_t GetROCStandardDeviation() const;
    TMultiGraph *GetROCCurves(Bool_t fLegend = kTRUE);
@@ -79,18 +79,18 @@ public:
 
    TCanvas *Draw(const TString name = "CrossValidation") const;
 
-   std::vector<Double_t> GetSigValues() { return fSigs; }
-   std::vector<Double_t> GetSepValues() { return fSeps; }
-   std::vector<Double_t> GetEff01Values() { return fEff01s; }
-   std::vector<Double_t> GetEff10Values() { return fEff10s; }
-   std::vector<Double_t> GetEff30Values() { return fEff30s; }
-   std::vector<Double_t> GetEffAreaValues() { return fEffAreas; }
-   std::vector<Double_t> GetTrainEff01Values() { return fTrainEff01s; }
-   std::vector<Double_t> GetTrainEff10Values() { return fTrainEff10s; }
-   std::vector<Double_t> GetTrainEff30Values() { return fTrainEff30s; }
-   };
+   std::vector<Double_t> GetSigValues() const { return fSigs; }
+   std::vector<Double_t> GetSepValues() const { return fSeps; }
+   std::vector<Double_t> GetEff01Values() const { return fEff01s; }
+   std::vector<Double_t> GetEff10Values() const { return fEff10s; }
+   std::vector<Double_t> GetEff30Values() const { return fEff30s; }
+   std::vector<Double_t> GetEffAreaValues() const { return fEffAreas; }
+   std::vector<Double_t> GetTrainEff01Values() const { return fTrainEff01s; }
+   std::vector<Double_t> GetTrainEff10Values() const { return fTrainEff10s; }
+   std::vector<Double_t> GetTrainEff30Values() const { return fTrainEff30s; }
+};
 
-   class CrossValidation : public Envelope {
+class CrossValidation : public Envelope {
 
    public:
       explicit CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TString options);
