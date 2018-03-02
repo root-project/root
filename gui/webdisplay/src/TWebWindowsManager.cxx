@@ -85,7 +85,7 @@ ROOT::Experimental::TWebWindowsManager::~TWebWindowsManager()
 /// One also can bind HTTP server socket to loopback address,
 /// In that case only connection from localhost will be available:
 ///
-///      WebGui.HttpLoopback: 1
+///      WebGui.HttpLoopback: yes
 
 bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 {
@@ -100,7 +100,9 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
    int http_port = gEnv->GetValue("WebGui.HttpPort", 0);
    int http_min = gEnv->GetValue("WebGui.HttpPortMin", 8800);
    int http_max = gEnv->GetValue("WebGui.HttpPortMax", 9800);
-   int http_loopback = gEnv->GetValue("WebGui.HttpLoopback", 0);
+   const char *http_loopback = gEnv->GetValue("WebGui.HttpLoopback", "no");
+
+   bool assign_loopback = http_loopback && (strstr(http_loopback,"yes") != 0);
    int ntry = 100;
 
    if (http_port < 0) {
@@ -126,7 +128,7 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 
       TString engine;
       engine.Form("http:%d?websocket_timeout=10000", http_port);
-      if (http_loopback) engine.Append("&loopback");
+      if (assign_loopback) engine.Append("&loopback");
 
       if (fServer->CreateEngine(engine)) {
          fAddr = "http://localhost:";
@@ -232,7 +234,7 @@ std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::T
 ///  browser - default system web-browser, communication via random http port from range 8800 - 9800
 ///  chrome  - use Google Chrome web browser (requires at least v60), supports headless mode,
 ///            preferable display kind if cef is not available
-/// chromium - open-source flawor of chrome, available on most Linux distributions
+/// chromium - open-source flavor of Chrome, available on most Linux distributions
 ///   native - either any available local display or default browser
 ///   <prog> - any program name which will be started instead of default browser, like firefox or /usr/bin/opera
 ///            one could use following parameters:
