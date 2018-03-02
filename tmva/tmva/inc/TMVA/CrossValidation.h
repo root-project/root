@@ -92,55 +92,55 @@ public:
 
 class CrossValidation : public Envelope {
 
-   public:
-      explicit CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TString options);
-      explicit CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TFile *outputFile, TString options);
-      ~CrossValidation();
+public:
+   explicit CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TString options);
+   explicit CrossValidation(TString jobName, TMVA::DataLoader *dataloader, TFile *outputFile, TString options);
+   ~CrossValidation();
 
-      void InitOptions();
-      void ParseOptions();
+   void InitOptions();
+   void ParseOptions();
 
-      void SetNumFolds(UInt_t i);
-      void SetSplitExpr(TString splitExpr);
+   void SetNumFolds(UInt_t i);
+   void SetSplitExpr(TString splitExpr);
 
-      UInt_t GetNumFolds() {return fNumFolds;}
-      TString GetSplitExpr() { return fSplitExprString; }
+   UInt_t GetNumFolds() { return fNumFolds; }
+   TString GetSplitExpr() { return fSplitExprString; }
 
-      Factory &GetFactory() { return *fFactory; }
+   Factory &GetFactory() { return *fFactory; }
 
-      const std::vector<CrossValidationResult> &GetResults() const;
+   const std::vector<CrossValidationResult> &GetResults() const;
 
-      void Evaluate();
+   void Evaluate();
 
-   private:
-      void ProcessFold(UInt_t iFold, UInt_t iMethod);
-      void MergeFolds();
+private:
+   void ProcessFold(UInt_t iFold, UInt_t iMethod);
+   void MergeFolds();
 
-      Types::EAnalysisType fAnalysisType;
-      TString fAnalysisTypeStr;
-      Bool_t fCorrelations;
-      TString fCvFactoryOptions;
-      Bool_t fDrawProgressBar;
-      Bool_t fFoldFileOutput; //! If true: generate output file for each fold
-      Bool_t fFoldStatus;     //! If true: dataset is prepared
-      TString fJobName;
-      UInt_t fNumFolds; //! Number of folds to prepare
-      TString fOutputFactoryOptions;
-      TString fOutputEnsembling; //! How to combine output of individual folds
-      TFile *fOutputFile;
-      Bool_t fSilent;
-      TString fSplitExprString;
-      std::vector<CrossValidationResult> fResults; //!
-      Bool_t fROC;
-      TString fTransformations;
-      Bool_t fVerbose;
-      TString fVerboseLevel;
+   Types::EAnalysisType fAnalysisType;
+   TString fAnalysisTypeStr;
+   Bool_t fCorrelations;
+   TString fCvFactoryOptions;
+   Bool_t fDrawProgressBar;
+   Bool_t fFoldFileOutput; //! If true: generate output file for each fold
+   Bool_t fFoldStatus;     //! If true: dataset is prepared
+   TString fJobName;
+   UInt_t fNumFolds; //! Number of folds to prepare
+   TString fOutputFactoryOptions;
+   TString fOutputEnsembling; //! How to combine output of individual folds
+   TFile *fOutputFile;
+   Bool_t fSilent;
+   TString fSplitExprString;
+   std::vector<CrossValidationResult> fResults; //!
+   Bool_t fROC;
+   TString fTransformations;
+   Bool_t fVerbose;
+   TString fVerboseLevel;
 
-      std::unique_ptr<Factory> fFoldFactory;
-      std::unique_ptr<Factory> fFactory;
-      std::unique_ptr<CvSplitKFolds> fSplit;
+   std::unique_ptr<Factory> fFoldFactory;
+   std::unique_ptr<Factory> fFactory;
+   std::unique_ptr<CvSplitKFolds> fSplit;
 
-      ClassDef(CrossValidation, 0);
+   ClassDef(CrossValidation, 0);
    };
 
 } // namespace TMVA
