@@ -86,8 +86,9 @@ namespace TMVA {
           */
           virtual void Evaluate() = 0;
 
+          std::vector<OptionMap> &GetMethods();
+
       protected:
-         std::vector<OptionMap> &GetMethods();
 
          /**
            Utility method to get TMVA::DataInputHandler reference from the DataLoader.
