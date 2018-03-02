@@ -66,7 +66,7 @@ of a main program creating an interactive version is shown below:
 ~~~
 */
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "RConfigure.h"
 #include "RConfigOptions.h"
 #include "RVersion.h"
@@ -258,7 +258,8 @@ namespace {
                          const char* fwdDeclCode,
                          void (*triggerFunc)(),
                          const TROOT::FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
-                         const char** classesHeaders):
+                         const char **classesHeaders,
+                         bool hasCxxModule):
                            fModuleName(moduleName),
                            fHeaders(headers),
                            fPayloadCode(payloadCode),
@@ -266,7 +267,8 @@ namespace {
                            fIncludePaths(includePaths),
                            fTriggerFunc(triggerFunc),
                            fClassesHeaders(classesHeaders),
-                           fFwdNargsToKeepColl(fwdDeclsArgToSkip){}
+                           fFwdNargsToKeepColl(fwdDeclsArgToSkip),
+                           fHasCxxModule(hasCxxModule) {}
 
       const char* fModuleName; // module name
       const char** fHeaders; // 0-terminated array of header files
@@ -277,6 +279,7 @@ namespace {
       const char** fClassesHeaders; // 0-terminated list of classes and related header files
       const TROOT::FwdDeclArgsToKeepCollection_t fFwdNargsToKeepColl; // Collection of
                                                                       // pairs of template fwd decls and number of
+      bool fHasCxxModule; // Whether this module has a C++ module alongside it.
    };
 
    std::vector<ModuleHeaderInfo_t>& GetModuleHeaderInfoBuffer() {
@@ -555,11 +558,13 @@ namespace Internal {
    void EnableImplicitMT(UInt_t numthreads)
    {
 #ifdef R__USE_IMT
+      if (ROOT::Internal::IsImplicitMTEnabledImpl())
+         return;
       EnableThreadSafety();
       static void (*sym)(UInt_t) = (void(*)(UInt_t))Internal::GetSymInLibImt("ROOT_TImplicitMT_EnableImplicitMT");
       if (sym)
          sym(numthreads);
-      ROOT::Internal::IsImplicitMTEnabledImpl() = kTRUE;
+      ROOT::Internal::IsImplicitMTEnabledImpl() = true;
 #else
       ::Warning("EnableImplicitMT", "Cannot enable implicit multi-threading with %d threads, please build ROOT with -Dimt=ON", numthreads);
 #endif
@@ -620,7 +625,8 @@ ClassImp(TROOT);
 TROOT::TROOT() : TDirectory(),
      fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fEditHistograms(kTRUE),
+     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
+     fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
@@ -653,7 +659,8 @@ TROOT::TROOT() : TDirectory(),
 TROOT::TROOT(const char *name, const char *title, VoidFuncPtr_t *initfunc)
    : TDirectory(), fLineIsProcessing(0), fVersion(0), fVersionInt(0), fVersionCode(0),
      fVersionDate(0), fVersionTime(0), fBuiltDate(0), fBuiltTime(0),
-     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE), fEditHistograms(kTRUE),
+     fTimer(0), fApplication(0), fInterpreter(0), fBatch(kTRUE),
+     fIsWebDisplay(kFALSE), fIsWebDisplayBatch(kFALSE), fEditHistograms(kTRUE),
      fFromPopUp(kTRUE),fMustClean(kTRUE),fReadingObject(kFALSE),fForceStyle(kFALSE),
      fInterrupt(kFALSE),fEscape(kFALSE),fExecutingMacro(kFALSE),fEditorMode(0),
      fPrimitive(0),fSelectPad(0),fClasses(0),fTypes(0),fGlobals(0),fGlobalFunctions(0),
@@ -2068,7 +2075,8 @@ void TROOT::InitInterpreter()
                                    li->fTriggerFunc,
                                    li->fFwdNargsToKeepColl,
                                    li->fClassesHeaders,
-                                   kTRUE /*lateRegistration*/);
+                                   kTRUE /*lateRegistration*/,
+                                   li->fHasCxxModule);
    }
    GetModuleHeaderInfoBuffer().clear();
 
@@ -2477,7 +2485,8 @@ void TROOT::RegisterModule(const char* modulename,
                            const char* fwdDeclCode,
                            void (*triggerFunc)(),
                            const TInterpreter::FwdDeclArgsToKeepCollection_t& fwdDeclsArgToSkip,
-                           const char** classesHeaders)
+                           const char** classesHeaders,
+                           bool hasCxxModule)
 {
 
    // First a side track to insure proper end of process behavior.
@@ -2539,12 +2548,12 @@ void TROOT::RegisterModule(const char* modulename,
 
    // Now register with TCling.
    if (gCling) {
-      gCling->RegisterModule(modulename, headers, includePaths, payloadCode, fwdDeclCode,
-                             triggerFunc, fwdDeclsArgToSkip, classesHeaders);
+      gCling->RegisterModule(modulename, headers, includePaths, payloadCode, fwdDeclCode, triggerFunc,
+                             fwdDeclsArgToSkip, classesHeaders, false, hasCxxModule);
    } else {
-      GetModuleHeaderInfoBuffer()
-         .push_back(ModuleHeaderInfo_t (modulename, headers, includePaths, payloadCode, fwdDeclCode,
-                                        triggerFunc, fwdDeclsArgToSkip,classesHeaders));
+      GetModuleHeaderInfoBuffer().push_back(ModuleHeaderInfo_t(modulename, headers, includePaths, payloadCode,
+                                                               fwdDeclCode, triggerFunc, fwdDeclsArgToSkip,
+                                                               classesHeaders, hasCxxModule));
    }
 }
 
@@ -2733,6 +2742,48 @@ void TROOT::SetMacroPath(const char *newpath)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// The input parameter `webdisplay` defines where web graphics should be rendered.
+///
+/// if `webdisplay` may contains:
+///
+///  - "off": turns off the web display and come back to normal graphics in
+///    interactive mode.
+///  - "batch":  turns the web display in batch mode. It can be prepend with an
+///    other string which will be considered as the new current web display
+///  - "nobatch": turns the web display in interactive mode. It can be prepend with an
+///    other string which will be considered as the new current web display
+///
+/// If the option "off" is not set, this method turns the normal graphics to
+/// "Batch" to avoid the loading of local graphics libraries.
+
+void TROOT::SetWebDisplay(const char *webdisplay)
+{
+   const char *wd = webdisplay;
+   if (!wd)
+      wd = "";
+
+   if (!strcmp(wd, "off")) {
+      fIsWebDisplay = kFALSE;
+      fIsWebDisplayBatch = kFALSE;
+      fWebDisplay = "";
+      gROOT->SetBatch(kFALSE);
+   } else {
+      fIsWebDisplay = kTRUE;
+      if (!strncmp(wd, "batch", 5)) {
+         fIsWebDisplayBatch = kTRUE;
+         wd += 5;
+      } else if (!strncmp(wd, "nobatch", 7)) {
+         fIsWebDisplayBatch = kFALSE;
+         wd += 7;
+      } else {
+         fIsWebDisplayBatch = kFALSE;
+      }
+      fWebDisplay = wd;
+      gROOT->SetBatch(kTRUE);
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// Increase the indentation level for ls().
 
 Int_t TROOT::IncreaseDirLevel()
@@ -2824,7 +2875,7 @@ const TString& TROOT::GetRootSys() {
 #endif
       static TString rootsys;
       if (rootsys.IsNull())
-         rootsys = gSystem->Getenv("ROOTSYS");
+         rootsys = gSystem->UnixPathName(gSystem->Getenv("ROOTSYS"));
       if (rootsys.IsNull())
          rootsys = gRootDir;
       return rootsys;

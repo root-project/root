@@ -3,9 +3,6 @@
 # @author Simon Pfreundschuh
 ############################################################################
 
-project(tmva-tests)
-find_package(ROOT REQUIRED)
-
 set(Libraries Core MathCore Matrix TMVA)
 include_directories(${ROOT_INCLUDE_DIRS})
 

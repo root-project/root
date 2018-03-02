@@ -18,7 +18,7 @@
 
 #include "Rtypes.h"
 
-R__LOAD_LIBRARY(libGpad);
+R__LOAD_LIBRARY(libROOTHistDraw);
 
 #include "ROOT/THist.hxx"
 #include "ROOT/TCanvas.hxx"
@@ -46,7 +46,7 @@ void draw()
 
    // Create a canvas to be displayed.
    auto canvas = Experimental::TCanvas::Create("Canvas Title");
-   canvas->Draw(pHist).SetLineColor(Experimental::TColor::kRed);
+   canvas->Draw(pHist)->SetLineColor(Experimental::TColor::kRed);
 
    canvas->Show();
 }

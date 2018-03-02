@@ -25,21 +25,9 @@
 //version 2.0
 //////////////////////////////////////////////////////////////////////
 
-#ifndef __CINT__
-#include "qwidget.h"
-#include "qstring.h"
-#if !(QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 3
-# include "qdragobject.h"
-#endif
-#endif
+#include <QtGui>
 
 #include "TVirtualPad.h"
-
-
-class QAction;
-class QMouseEvent;
-class QResizeEvent;
-class QPaintEvent;
 
 class TPad;
 class TContextMenu;
@@ -47,12 +35,6 @@ class TControlBar;
 class TCanvas;
 class TQCanvasMenu;
 class TBrowser;
-class QWidget;
-class QDropEvent;
-class QDragEnterEvent;
-class QCloseEvent;
-class QEvent;
-class QObject;
 
 class TQRootCanvas : public QWidget
 {
@@ -65,8 +47,8 @@ private:
 
 public:
 
-   TQRootCanvas( QWidget *parent = 0, const char *name = 0 ,TCanvas *c=0);
-   TQRootCanvas( QWidget *parent, QWidget* tabWin , const char *name = 0 ,TCanvas *c=0);
+   TQRootCanvas( QWidget *wparent = 0, const char *name = 0 ,TCanvas *c=0);
+   TQRootCanvas( QWidget *wparent, QWidget* tabWin , const char *name = 0 ,TCanvas *c=0);
    virtual ~TQRootCanvas();
    TCanvas* GetCanvas() { return fCanvas;}
    Int_t GetRootWid() { return fWid;}

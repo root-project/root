@@ -26,6 +26,17 @@ set(ENV{LANG} C)
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin)
+
+# Before setting ROOTSYS, make sure that the environment isn't polluted by a different
+# ROOT build. This is significant e,g. for roottest, which will otherwise have libraries
+# of a different ROOT build available / visible / reachable.
+if($ENV{ROOTSYS})
+  string(REPLACE "$ENV{ROOTSYS}/bin" "" ENV{PATH}, $ENV{PATH})
+  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV{LD_LIBRARY_PATH} $ENV{LD_LIBRARY_PATH})
+  string(REPLACE "$ENV{ROOTSYS}/lib" "" ENV{PYTHONPATH} $ENV{PYTHONPATH})
+  set(ENV{"ROOTSYS"} ${CMAKE_BINARY_DIR})
+endif()
+
 set(ROOTSYS ${CMAKE_BINARY_DIR})
 set(HEADER_OUTPUT_PATH ${CMAKE_BINARY_DIR}/include)
 set(ROOT_INCLUDE_DIR ${HEADER_OUTPUT_PATH})
@@ -294,7 +305,8 @@ file(WRITE "${CMAKE_BINARY_DIR}/include/module.modulemap.extra" "${__modulemap_e
 set(ROOT_CXXMODULES_WRITE_TO_CURRENT_DIR ON)
 
 get_property(__allHeaders GLOBAL PROPERTY ROOT_HEADER_TARGETS)
-add_custom_target(move_headers ALL DEPENDS ${__allHeaders})
+get_property(__allBuiltins GLOBAL PROPERTY ROOT_BUILTIN_TARGETS)
+add_custom_target(move_headers ALL DEPENDS ${__allHeaders} ${__allBuiltins})
 
 #---Global PCH-----------------------------------------------------------------------------------
 get_property(__allTargets GLOBAL PROPERTY ROOT_DICTIONARY_TARGETS)
@@ -316,6 +328,7 @@ if(MSVC)
   string(REPLACE "-nologo" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-EHsc-" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
   string(REPLACE "-GR" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
+  string(REPLACE "-MDd" "" CMAKE_CXX_FLAGS_SEPARATE "${CMAKE_CXX_FLAGS_SEPARATE}")
 endif()
 
 add_custom_command(OUTPUT etc/dictpch/allLinkDefs.h
@@ -355,7 +368,6 @@ else()
 endif()
 
 #---hsimple.root---------(use the executable for clearer dependencies and proper return code)---
-if(NOT WIN32)
 add_custom_target(hsimple ALL DEPENDS tutorials/hsimple.root)
 add_dependencies(hsimple onepcm)
 if(WIN32)
@@ -374,7 +386,6 @@ else()
                      DEPENDS $<TARGET_FILE:root.exe> Cling Hist Tree Gpad Graf HistPainter move_artifacts)
 endif()
 install(FILES ${CMAKE_BINARY_DIR}/tutorials/hsimple.root DESTINATION ${CMAKE_INSTALL_TUTDIR} COMPONENT tests)
-endif()
 
 #---version--------------------------------------------------------------------------------------
 if(NOT WIN32)
@@ -432,19 +443,24 @@ if(testing)
     #---Is the roottest source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
       set(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/roottest)
-    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../roottest)
-      get_filename_component(roottestdir ${CMAKE_CURRENT_SOURCE_DIR}/../roottest ABSOLUTE)
+    else()
+      # Need to break into two steps in case the source dir is a symlink
+      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
+      set(roottestdir ${_source_dir}/../roottest)
     endif()
-    if(roottestdir)
+
+    if(IS_DIRECTORY ${roottestdir})
       file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/roottest)
       add_subdirectory(${roottestdir} roottest)
     else()
       message("-- Could not find roottest directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} http://root.cern.ch/git/roottest.git
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
+                      http://github.com/root-project/roottest.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(roottest)
     endif()
   endif()
+
   if(rootbench)
     find_package(Git REQUIRED)
     execute_process(COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
@@ -453,15 +469,19 @@ if(testing)
     #---Is the rootbench source directory around?
     if(IS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
       set(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/rootbench)
-    elseif(EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/../rootbench)
-      get_filename_component(rootbenchdir ${CMAKE_CURRENT_SOURCE_DIR}/../rootbench ABSOLUTE)
+    else()
+      # Need to break into two steps in case the source dir is a symlink
+      get_filename_component(_source_dir ${CMAKE_CURRENT_SOURCE_DIR} REALPATH)
+      set(rootbenchdir ${_source_dir}/../rootbench)
     endif()
-    if(rootbenchdir)
+
+    if(IS_DIRECTORY ${rootbenchdir})
       file(REMOVE_RECURSE ${CMAKE_CURRENT_BINARY_DIR}/rootbench)
       add_subdirectory(${rootbenchdir} rootbench)
     else()
       message("-- Could not find rootbench directory! Cloning from the repository...")
-      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH} https://github.com/root-project/rootbench.git
+      execute_process(COMMAND ${GIT_EXECUTABLE} clone -b ${GIT_BRANCH}
+                      https://github.com/root-project/rootbench.git
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
       add_subdirectory(rootbench)
     endif()

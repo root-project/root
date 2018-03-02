@@ -470,11 +470,10 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   endif(APPLE)
 
   set(excluded_headers RConfig.h RVersion.h RtypesImp.h
-                        Rtypes.h RtypesCore.h TClassEdit.h
+                        RtypesCore.h TClassEdit.h
                         TIsAProxy.h TVirtualIsAProxy.h
-                        DllImport.h TGenericClassInfo.h
-                        TSchemaHelper.h ESTLType.h RStringView.h Varargs.h
-                        RootMetaSelection.h libcpp_string_view.h
+                        DllImport.h ESTLType.h ROOT/RStringView.hxx Varargs.h
+                        libcpp_string_view.h
                         RWrap_libcpp_string_view.h
                         ThreadLocalStorage.h
                         TBranchProxyTemplate.h TGLIncludes.h TGLWSIncludes.h
@@ -488,10 +487,10 @@ function (ROOT_CXXMODULES_APPEND_TO_MODULEMAP library library_headers)
   # Add a `use` directive to Core/Thread to signal that they use some
   # split out submodules and we pass the rootcling integrity check.
   if ("${library}" STREQUAL Core)
-    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Types\n")
-    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Core_Config_C\n")
+    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Foundation_Stage1_NoRTTI\n")
+    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Foundation_C\n")
   elseif ("${library}" STREQUAL Thread)
-    set (modulemap_entry "${modulemap_entry}\n  use ThreadLocalStorage\n")
+    set (modulemap_entry "${modulemap_entry}\n  use ROOT_Foundation_C\n")
   endif()
 
   # For modules GCocoa and GQuartz we need objc context.
@@ -649,6 +648,7 @@ function(ROOT_LINKER_LIBRARY library)
   set_property(GLOBAL APPEND PROPERTY ROOT_EXPORTED_TARGETS ${library})
   set_target_properties(${library} PROPERTIES OUTPUT_NAME ${library_name})
   set_target_properties(${library} PROPERTIES INTERFACE_LINK_LIBRARIES "${ARG_DEPENDENCIES}")
+  target_include_directories(${library} INTERFACE $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
   # Do not add -Dname_EXPORTS to the command-line when building files in this
   # target. Doing so is actively harmful for the modules build because it
   # creates extra module variants, and not useful because we don't use these
@@ -1304,7 +1304,6 @@ function(ROOT_ADD_GTEST test_suite)
   # against. For example, tests in Core should link only against libCore. This could be tricky
   # to implement because some ROOT components create more than one library.
   ROOT_EXECUTABLE(${test_suite} ${source_files} LIBRARIES ${ARG_LIBRARIES})
-  set_property(TARGET ${test_suite} PROPERTY RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
   target_link_libraries(${test_suite} gtest gtest_main gmock gmock_main)
 
   ROOT_PATH_TO_STRING(mangled_name ${test_suite} PATH_SEPARATOR_REPLACEMENT "-")
@@ -1330,7 +1329,7 @@ function(ROOT_ADD_PYUNITTESTS name)
       PYTHONPATH=${ROOTSYS}/lib:$ENV{PYTHONPATH})
   string(REGEX REPLACE "[_]" "-" good_name "${name}")
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
+                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR} -p "*.py" -v
                 ENVIRONMENT ${ROOT_ENV})
 endfunction()
 
@@ -1346,7 +1345,7 @@ function(ROOT_ADD_PYUNITTEST name file)
   get_filename_component(file_name ${file} NAME)
   get_filename_component(file_dir ${file} DIRECTORY)
   ROOT_ADD_TEST(pyunittests-${good_name}
-                COMMAND ${PYTHON_EXECUTABLE} -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
+                COMMAND ${PYTHON_EXECUTABLE} -B -m unittest discover -s ${CMAKE_CURRENT_SOURCE_DIR}/${file_dir} -p ${file_name} -v
                 ENVIRONMENT ${ROOT_ENV})
 endfunction()
 

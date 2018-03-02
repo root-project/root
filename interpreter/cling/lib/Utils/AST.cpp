@@ -1433,14 +1433,25 @@ namespace utils {
 
   NamedDecl* Lookup::Named(Sema* S, const char* Name,
                            const DeclContext* Within) {
-    DeclarationName DName = &S->Context.Idents.get(Name);
-    return Lookup::Named(S, DName, Within);
+    return Lookup::Named(S, llvm::StringRef(Name), Within);
   }
 
-  NamedDecl* Lookup::Named(Sema* S, const DeclarationName& Name,
+  NamedDecl* Lookup::Named(Sema* S, const clang::DeclarationName& Name,
                            const DeclContext* Within) {
     LookupResult R(*S, Name, SourceLocation(), Sema::LookupOrdinaryName,
                    Sema::ForRedeclaration);
+    Lookup::Named(S, R, Within);
+    if (R.empty())
+      return 0;
+
+    R.resolveKind();
+
+    if (R.isSingleResult())
+      return R.getFoundDecl();
+    return (clang::NamedDecl*)-1;
+  }
+
+  void Lookup::Named(Sema* S, LookupResult& R, const DeclContext* Within) {
     R.suppressDiagnostics();
     if (!Within)
       S->LookupName(R, S->TUScope);
@@ -1453,19 +1464,10 @@ namespace utils {
       }
       if (!primaryWithin) {
         // No definition, no lookup result.
-        return 0;
+        return;
       }
       S->LookupQualifiedName(R, const_cast<DeclContext*>(primaryWithin));
     }
-
-    if (R.empty())
-      return 0;
-
-    R.resolveKind();
-
-    if (R.isSingleResult())
-      return R.getFoundDecl();
-    return (clang::NamedDecl*)-1;
   }
 
   static NestedNameSpecifier*

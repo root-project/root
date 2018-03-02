@@ -13,8 +13,19 @@ namespace ROOT {
 namespace Experimental {
 namespace TDF {
 
-std::vector<void *> TRootDS::GetColumnReadersImpl(std::string_view name, const std::type_info &)
+std::vector<void *> TRootDS::GetColumnReadersImpl(std::string_view name, const std::type_info &id)
 {
+   const auto colTypeName = GetTypeName(name);
+   const auto &colTypeId = ROOT::Internal::TDF::TypeName2TypeID(colTypeName);
+   if (id != colTypeId) {
+      std::string err = "The type of column \"";
+      err += name;
+      err += "\" is ";
+      err += colTypeName;
+      err += " but a different one has been selected.";
+      throw std::runtime_error(err);
+   }
+
    const auto index =
       std::distance(fListOfBranches.begin(), std::find(fListOfBranches.begin(), fListOfBranches.end(), name));
    std::vector<void *> ret(fNSlots);
@@ -29,9 +40,11 @@ TRootDS::TRootDS(std::string_view treeName, std::string_view fileNameGlob)
 {
    fModelChain.Add(fFileNameGlob.c_str());
 
-   auto &lob = *fModelChain.GetListOfBranches();
+   const TObjArray &lob = *fModelChain.GetListOfBranches();
    fListOfBranches.resize(lob.GetEntries());
-   std::transform(lob.begin(), lob.end(), fListOfBranches.begin(), [](TObject *o) { return o->GetName(); });
+
+   TIterCategory<TObjArray> iter(&lob);
+   std::transform(iter.Begin(), iter.End(), fListOfBranches.begin(), [](TObject *o) { return o->GetName(); });
 }
 
 TRootDS::~TRootDS()

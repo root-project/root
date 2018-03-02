@@ -35,7 +35,7 @@ as a TString, construct a TString from it, eg:
 ~~~
 */
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include <stdlib.h>
 #include <ctype.h>
 #include <list>
@@ -2238,6 +2238,17 @@ again:
 ////////////////////////////////////////////////////////////////////////////////
 /// Formats a string using a printf style format descriptor.
 /// Existing string contents will be overwritten.
+/// See also the static version TString::Format
+/// ~~~ {.cpp}
+///   TString formatted;
+///   formatted.Form("%s in <%s>: %s", type, location, msg);
+///
+///   lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttp://root.cern.ch",
+///                      gROOT->GetVersion()));
+/// ~~~
+///
+/// Note: this is not to be confused with ::Format and ::Form (in the global namespace)
+/// which returns a const char* and relies on a thread-local static character buffer.
 
 void TString::Form(const char *va_(fmt), ...)
 {
@@ -2249,8 +2260,17 @@ void TString::Form(const char *va_(fmt), ...)
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Static method which formats a string using a printf style format
-/// descriptor and return a TString. Same as TString::Form() but it is
+/// descriptor and return a TString. Similar to TString::Form() but it is
 /// not needed to first create a TString.
+/// ~~~ {.cpp}
+///   lines.emplace_back(TString::Format("Welcome to ROOT %s%%shttp://root.cern.ch",
+///                      gROOT->GetVersion()));
+///   TString formatted;
+///   formatted.Form("%s in <%s>: %s", type, location, msg);
+/// ~~~
+///
+/// Note: this is not to be confused with ::Format and ::Form (in the global namespace)
+/// which returns a const char* and relies on a thread-local static character buffer.
 
 TString TString::Format(const char *va_(fmt), ...)
 {

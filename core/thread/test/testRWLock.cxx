@@ -190,20 +190,22 @@ template <typename T>
 void ResetRestore(T &m, size_t repeat = 1)
 {
    do {
+      auto whint0 = m.WriteLock();
+      auto state = m.GetStateBefore();
       auto rhint = m.ReadLock();
-      m.Restore( m.Reset() );
+      m.Apply( m.Rewind(*state.get()) );
       m.ReadUnLock(rhint);
 
       m.ReadLock();
       m.ReadLock();
       m.ReadLock();
-      m.Restore( m.Reset() );
+      m.Apply( m.Rewind(*state.get()) );
       m.ReadUnLock(rhint);
       m.ReadUnLock(rhint);
       m.ReadUnLock(rhint);
 
       auto whint = m.WriteLock();
-      m.Restore( m.Reset() );
+      m.Apply( m.Rewind(*state.get()) );
       m.WriteUnLock(whint);
 
 
@@ -215,7 +217,7 @@ void ResetRestore(T &m, size_t repeat = 1)
       m.ReadLock();
       m.WriteLock();
       m.ReadLock();
-      m.Restore( m.Reset() );
+      m.Apply( m.Rewind(*state.get()) );
       m.ReadUnLock(rhint);
       m.WriteUnLock(whint);
       m.ReadUnLock(rhint);
@@ -224,6 +226,7 @@ void ResetRestore(T &m, size_t repeat = 1)
       m.ReadUnLock(rhint);
       m.ReadUnLock(rhint);
       m.ReadUnLock(rhint);
+      m.WriteUnLock(whint0);
    } while ( --repeat > 0 );
 }
 
@@ -551,7 +554,7 @@ TEST(RWLock, LargeconcurrentReadsAndWritesStd)
 
 TEST(RWLock, LargeconcurrentReadsAndWritesSpin)
 {
-   concurrentReadsAndWrites(gRWMutexSpin,10,20,gRepetition / 1000);
+   concurrentReadsAndWrites(gRWMutexSpin,10,20,gRepetition / 100000);
 }
 
 TEST(RWLock, concurrentReadsAndWritesTL)

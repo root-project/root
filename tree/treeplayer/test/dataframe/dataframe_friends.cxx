@@ -83,7 +83,7 @@ TEST_F(TDFAndFriends, FriendArrayByFile)
    TDataFrame d(*t1);
 
    int i(0);
-   auto checkArr = [&i](TDF::TArrayBranch<float> av) {
+   auto checkArr = [&i](VecOps::TVec<float> av) {
       auto ifloat = float(i);
       EXPECT_EQ(ifloat, av[0]);
       EXPECT_EQ(ifloat + 1, av[1]);
@@ -104,7 +104,7 @@ TEST_F(TDFAndFriends, FriendArrayByPointer)
    TDataFrame d(*t1);
 
    int i(0);
-   auto checkArr = [&i](TDF::TArrayBranch<float> av) {
+   auto checkArr = [&i](VecOps::TVec<float> av) {
       auto ifloat = float(i);
       EXPECT_EQ(ifloat, av[0]);
       EXPECT_EQ(ifloat + 1, av[1]);
@@ -155,8 +155,7 @@ TEST_F(TDFAndFriends, FromJittedDefine)
 
 TEST_F(TDFAndFriends, FriendMT)
 {
-   auto nSlots = 4U;
-   ROOT::EnableImplicitMT(nSlots);
+   ROOT::EnableImplicitMT(4u);
 
    TFile f1(kFile4);
    TTree *t1 = static_cast<TTree *>(f1.Get("t"));
@@ -167,10 +166,12 @@ TEST_F(TDFAndFriends, FriendMT)
    EXPECT_EQ(*x, 4);
    for (auto v : t)
       EXPECT_EQ(v, 5);
+   ROOT::DisableImplicitMT();
 }
 
 TEST_F(TDFAndFriends, FriendAliasMT)
 {
+   ROOT::EnableImplicitMT(4u);
    TFile f1(kFile4);
    TTree *t1 = static_cast<TTree *>(f1.Get("t"));
    TFile f2(kFile4);
@@ -182,10 +183,12 @@ TEST_F(TDFAndFriends, FriendAliasMT)
    EXPECT_EQ(*x, 4);
    for (auto v : t)
       EXPECT_EQ(v, 4);
+   ROOT::DisableImplicitMT();
 }
 
 TEST_F(TDFAndFriends, FriendChainMT)
 {
+   ROOT::EnableImplicitMT(4u);
    TChain c1("t");
    c1.AddFile(kFile1);
    c1.AddFile(kFile4);
@@ -205,6 +208,7 @@ TEST_F(TDFAndFriends, FriendChainMT)
    auto y = d.Max<int>("y");
    EXPECT_EQ(*x, 1);
    EXPECT_EQ(*y, 5);
+   ROOT::DisableImplicitMT();
 }
 
 #endif // R__USE_IMT

@@ -57,6 +57,21 @@ The learning period is stopped (and prefetching is actually started) when:
      fEntryMin + fgLearnEntries (default to 100).
    - A 'cached' TChain switches over to a new file.
 
+Further, the TreeCache can optimize its behavior on a cache miss.  When
+miss optimization is enabled, it will track all branches utilized after
+the learning phase (those that cause a cache miss).  When one cache miss
+occurs, then all the utilized branches will be prefetched for that event.
+This optimization utilizes the observation that infrequently accessed
+branches are often accessed together.  For example, this will greatly speed
+up an analysis where the results of a trigger are read out for every branch,
+but the majority of event collections are read only when the trigger results
+pass a set of filters.  NOTE - when this mode is enabled, the memory dedicated
+to the cache will up to double in the case of cache miss.  Additionally, on
+the first miss of an event, we must iterate through all the "active branches"
+for the miss cache and find the correct basket.  This can be potentially a
+CPU-expensive operation compared to, e.g., the latency of a SSD.  This is why
+the miss cache is currently disabled by default.
+
 ## WHY DO WE NEED the TreeCache when doing data analysis?
 
 When writing a TTree, the branch buffers are kept in memory.
@@ -240,6 +255,7 @@ of effective system reads for a given file with a code like
 #include "TLeaf.h"
 #include "TFriendElement.h"
 #include "TFile.h"
+#include "TMath.h"
 #include <limits.h>
 
 Int_t TTreeCache::fgLearnEntries = 100;
@@ -249,60 +265,16 @@ ClassImp(TTreeCache);
 ////////////////////////////////////////////////////////////////////////////////
 /// Default Constructor.
 
-TTreeCache::TTreeCache() : TFileCacheRead(),
-   fEntryMin(0),
-   fEntryMax(1),
-   fEntryCurrent(-1),
-   fEntryNext(-1),
-   fNbranches(0),
-   fNReadOk(0),
-   fNReadMiss(0),
-   fNReadPref(0),
-   fBranches(0),
-   fBrNames(0),
-   fTree(0),
-   fIsLearning(kTRUE),
-   fIsManual(kFALSE),
-   fFirstBuffer(kTRUE),
-   fOneTime(kFALSE),
-   fReverseRead(0),
-   fFillTimes(0),
-   fFirstTime(kTRUE),
-   fFirstEntry(-1),
-   fReadDirectionSet(kFALSE),
-   fEnabled(kTRUE),
-   fPrefillType(GetConfiguredPrefillType()),
-   fAutoCreated(kFALSE)
+TTreeCache::TTreeCache() : TFileCacheRead(), fPrefillType(GetConfiguredPrefillType())
 {
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Constructor.
 
-TTreeCache::TTreeCache(TTree *tree, Int_t buffersize) : TFileCacheRead(tree->GetCurrentFile(),buffersize,tree),
-   fEntryMin(0),
-   fEntryMax(tree->GetEntriesFast()),
-   fEntryCurrent(-1),
-   fEntryNext(0),
-   fNbranches(0),
-   fNReadOk(0),
-   fNReadMiss(0),
-   fNReadPref(0),
-   fBranches(0),
-   fBrNames(new TList),
-   fTree(tree),
-   fIsLearning(kTRUE),
-   fIsManual(kFALSE),
-   fFirstBuffer(kTRUE),
-   fOneTime(kFALSE),
-   fReverseRead(0),
-   fFillTimes(0),
-   fFirstTime(kTRUE),
-   fFirstEntry(-1),
-   fReadDirectionSet(kFALSE),
-   fEnabled(kTRUE),
-   fPrefillType(GetConfiguredPrefillType()),
-   fAutoCreated(kFALSE)
+TTreeCache::TTreeCache(TTree *tree, Int_t buffersize)
+   : TFileCacheRead(tree->GetCurrentFile(), buffersize, tree), fEntryMax(tree->GetEntriesFast()), fEntryNext(0),
+     fBrNames(new TList), fTree(tree), fPrefillType(GetConfiguredPrefillType())
 {
    fEntryNext = fEntryMin + fgLearnEntries;
    Int_t nleaves = tree->GetListOfLeaves()->GetEntries();
@@ -614,10 +586,296 @@ Int_t TTreeCache::DropBranch(const char *bname, Bool_t subbranches /*= kFALSE*/)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Start of methods for the miss cache.
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
+/// Enable / disable the miss cache.
+///
+/// The first time this is called on a TTreeCache object, the corresponding
+/// data structures will be allocated.  Subsequent enable / disables will
+/// simply turn the functionality on/off.
+void TTreeCache::SetOptimizeMisses(Bool_t opt)
+{
+
+   if (opt && !fMissCache) {
+      ResetMissCache();
+   }
+   fOptimizeMisses = opt;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Reset all the miss cache training.
+///
+/// The contents of the miss cache will be emptied as well as the list of
+/// branches used.
+void TTreeCache::ResetMissCache()
+{
+
+   fLastMiss = -1;
+   fFirstMiss = -1;
+
+   if (!fMissCache) {
+      fMissCache.reset(new MissCache());
+   }
+   fMissCache->clear();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// For the event currently being fetched into the miss cache, find the IO
+/// (offset / length tuple) to pull in the current basket for a given branch.
+///
+/// Returns:
+/// - IOPos describing the IO operation necessary for the basket on this branch
+/// - On failure, IOPos.length will be set to 0.
+TTreeCache::IOPos TTreeCache::FindBranchBasketPos(TBranch &b, Long64_t entry)
+{
+   if (R__unlikely(b.GetDirectory() == 0)) {
+      // printf("Branch at %p has no valid directory.\n", &b);
+      return IOPos{0, 0};
+   }
+   if (R__unlikely(b.GetDirectory()->GetFile() != fFile)) {
+      // printf("Branch at %p is in wrong file (branch file %p, my file %p).\n", &b, b.GetDirectory()->GetFile(),
+      // fFile);
+      return IOPos{0, 0};
+   }
+
+   // printf("Trying to find a basket for branch %p\n", &b);
+   // Pull in metadata about branch; make sure it is valid
+   Int_t *lbaskets = b.GetBasketBytes();
+   Long64_t *entries = b.GetBasketEntry();
+   if (R__unlikely(!lbaskets || !entries)) {
+      // printf("No baskets or entries.\n");
+      return IOPos{0, 0};
+   }
+   // Int_t blistsize = b.GetListOfBaskets()->GetSize();
+   Int_t blistsize = b.GetWriteBasket();
+   if (R__unlikely(blistsize <= 0)) {
+      // printf("Basket list is size 0.\n");
+      return IOPos{0, 0};
+   }
+
+   // Search for the basket that contains the event of interest.  Unlike the primary cache, we
+   // are only interested in a single basket per branch - we don't try to fill the cache.
+   Long64_t basketOffset = TMath::BinarySearch(blistsize, entries, entry);
+   if (basketOffset < 0) { // No entry found.
+      // printf("No entry offset found for entry %ld\n", fTree->GetReadEntry());
+      return IOPos{0, 0};
+   }
+
+   // Check to see if there's already a copy of this basket in memory.  If so, don't fetch it
+   if ((basketOffset < blistsize) && b.GetListOfBaskets()->UncheckedAt(basketOffset)) {
+
+      // printf("Basket is already in memory.\n");
+      return IOPos{0, 0};
+   }
+
+   Long64_t pos = b.GetBasketSeek(basketOffset);
+   Int_t len = lbaskets[basketOffset];
+   if (R__unlikely(pos <= 0 || len <= 0)) {
+      /*printf("Basket returned was invalid (basketOffset=%ld, pos=%ld, len=%d).\n", basketOffset, pos, len);
+      for (int idx=0; idx<blistsize; idx++) {
+         printf("Basket entry %d, first event %d, pos %ld\n", idx, entries[idx], b.GetBasketSeek(idx));
+      }*/
+      return IOPos{0, 0};
+   } // Sanity check
+   // Do not cache a basket if it is bigger than the cache size!
+   if (R__unlikely(len > fBufferSizeMin)) {
+      // printf("Basket size is greater than the cache size.\n");
+      return IOPos{0, 0};
+   }
+
+   return {pos, len};
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Given a particular IO description (offset / length) representing a 'miss' of
+/// the TTreeCache's primary cache, calculate all the corresponding IO that
+/// should be performed.
+///
+/// `all` indicates that this function should search the set of _all_ branches
+/// in this TTree.  When set to false, we only search through branches that
+/// have previously incurred a miss.
+///
+/// Returns:
+/// - TBranch pointer corresponding to the basket that will be retrieved by
+///   this IO operation.
+/// - If no corresponding branch could be found (or an error occurs), this
+///   returns nullptr.
+TBranch *TTreeCache::CalculateMissEntries(Long64_t pos, Int_t len, Bool_t all)
+{
+   if (R__unlikely((pos < 0) || (len < 0))) {
+      return nullptr;
+   }
+
+   int count = all ? (fTree->GetListOfLeaves())->GetEntriesFast() : fMissCache->fBranches.size();
+   fMissCache->fEntries.reserve(count);
+   fMissCache->fEntries.clear();
+   Bool_t found_request = kFALSE;
+   TBranch *resultBranch = nullptr;
+   Long64_t entry = fTree->GetReadEntry();
+   // printf("Will search %d branches for basket at %ld.\n", count, pos);
+   for (int i = 0; i < count; i++) {
+      TBranch *b =
+         all ? static_cast<TBranch *>(static_cast<TLeaf *>((fTree->GetListOfLeaves())->UncheckedAt(i))->GetBranch())
+             : fMissCache->fBranches[i];
+      IOPos iopos = FindBranchBasketPos(*b, entry);
+      if (iopos.fLen == 0) { // Error indicator
+         continue;
+      }
+      if (iopos.fPos == pos && iopos.fLen == len) {
+         found_request = kTRUE;
+         resultBranch = b;
+         // Note that we continue to iterate; fills up the rest of the entries in the cache.
+      }
+      // At this point, we are ready to push back a new offset
+      fMissCache->fEntries.emplace_back(std::move(iopos));
+   }
+   if (R__unlikely(!found_request)) {
+      // We have gone through all the branches in this file and the requested basket
+      // doesn't appear to be in any of them.  Likely a logic error / bug.
+      fMissCache->fEntries.clear();
+   }
+   return resultBranch;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+///
+/// Process a cache miss; (pos, len) isn't in the buffer.
+///
+/// The first time we have a miss, we buffer as many baskets we can (up to the
+/// maximum size of the TTreeCache) in memory from all branches that are not in
+/// the prefetch list.
+///
+/// Subsequent times, we fetch all the buffers corresponding to branches that
+/// had previously seen misses.  If it turns out the (pos, len) isn't in the
+/// list of branches, we treat this as if it was the first miss.
+///
+/// Returns true if we were able to pull the data into the miss cache.
+///
+Bool_t TTreeCache::ProcessMiss(Long64_t pos, int len)
+{
+
+   Bool_t firstMiss = kFALSE;
+   if (fFirstMiss == -1) {
+      fFirstMiss = fEntryCurrent;
+      firstMiss = kTRUE;
+   }
+   fLastMiss = fEntryCurrent;
+   // The first time this is executed, we try to pull in as much data as we can.
+   TBranch *b = CalculateMissEntries(pos, len, firstMiss);
+   if (!b) {
+      if (!firstMiss) {
+         // TODO: this recalculates for *all* branches, throwing away the above work.
+         b = CalculateMissEntries(pos, len, kTRUE);
+      }
+      if (!b) {
+         // printf("ProcessMiss: pos %ld does not appear to correspond to a buffer in this file.\n", pos);
+         // We have gone through all the branches in this file and the requested basket
+         // doesn't appear to be in any of them.  Likely a logic error / bug.
+         fMissCache->fEntries.clear();
+         return kFALSE;
+      }
+   }
+   // TODO: this should be a set.
+   fMissCache->fBranches.push_back(b);
+
+   // OK, sort the entries
+   std::sort(fMissCache->fEntries.begin(), fMissCache->fEntries.end());
+
+   // Now, fetch the buffer.
+   std::vector<Long64_t> positions;
+   positions.reserve(fMissCache->fEntries.size());
+   std::vector<Int_t> lengths;
+   lengths.reserve(fMissCache->fEntries.size());
+   ULong64_t cumulative = 0;
+   for (auto &mcentry : fMissCache->fEntries) {
+      positions.push_back(mcentry.fIO.fPos);
+      lengths.push_back(mcentry.fIO.fLen);
+      mcentry.fIndex = cumulative;
+      cumulative += mcentry.fIO.fLen;
+   }
+   fMissCache->fData.reserve(cumulative);
+   // printf("Reading %lu bytes into miss cache for %lu entries.\n", cumulative, fEntries->size());
+   fNMissReadPref += fMissCache->fEntries.size();
+   fFile->ReadBuffers(&(fMissCache->fData[0]), &(positions[0]), &(lengths[0]), fMissCache->fEntries.size());
+   fFirstMiss = fLastMiss = fEntryCurrent;
+
+   return kTRUE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Given an IO operation (pos, len) that was a cache miss in the primary TTC,
+/// try the operation again with the miss cache.
+///
+/// Returns true if the IO operation was successful and the contents of buf
+/// were populated with the requested data.
+///
+Bool_t TTreeCache::CheckMissCache(char *buf, Long64_t pos, int len)
+{
+
+   if (!fOptimizeMisses) {
+      return kFALSE;
+   }
+   if (R__unlikely((pos < 0) || (len < 0))) {
+      return kFALSE;
+   }
+
+   // printf("Checking the miss cache for offset=%ld, length=%d\n", pos, len);
+
+   // First, binary search to see if the desired basket is already cached.
+   MissCache::Entry mcentry{IOPos{pos, len}};
+   auto iter = std::lower_bound(fMissCache->fEntries.begin(), fMissCache->fEntries.end(), mcentry);
+
+   if (iter != fMissCache->fEntries.end()) {
+      if (len > iter->fIO.fLen) {
+         ++fNMissReadMiss;
+         return kFALSE;
+      }
+      auto offset = iter->fIndex;
+      memcpy(buf, &(fMissCache->fData[offset]), len);
+      // printf("Returning data from pos=%ld in miss cache.\n", offset);
+      ++fNMissReadOk;
+      return kTRUE;
+   }
+
+   // printf("Data not in miss cache.\n");
+
+   // Update the cache, looking for this (pos, len).
+   if (!ProcessMiss(pos, len)) {
+      // printf("Unable to pull data into miss cache.\n");
+      ++fNMissReadMiss;
+      return kFALSE;
+   }
+
+   // OK, we updated the cache with as much information as possible.  Seach again for
+   // the entry we want.
+   iter = std::lower_bound(fMissCache->fEntries.begin(), fMissCache->fEntries.end(), mcentry);
+
+   if (iter != fMissCache->fEntries.end()) {
+      auto offset = iter->fIndex;
+      // printf("Expecting data at offset %ld in miss cache.\n", offset);
+      memcpy(buf, &(fMissCache->fData[offset]), len);
+      ++fNMissReadOk;
+      return kTRUE;
+   }
+
+   // This must be a logic bug.  ProcessMiss should return false if (pos, len)
+   // wasn't put into fEntries.
+   ++fNMissReadMiss;
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// End of methods for miss cache.
+////////////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////////////
 /// Fill the cache buffer with the branches in the cache.
 
 Bool_t TTreeCache::FillBuffer()
 {
+
    if (fNbranches <= 0) return kFALSE;
    TTree *tree = ((TBranch*)fBranches->UncheckedAt(0))->GetTree();
    Long64_t entry = tree->GetReadEntry();
@@ -936,7 +1194,7 @@ TTreeCache::EPrefillType TTreeCache::GetConfiguredPrefillType() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Give the total efficiency of the cache... defined as the ratio
+/// Give the total efficiency of the primary cache... defined as the ratio
 /// of blocks found in the cache vs. the number of blocks prefetched
 /// ( it could be more than 1 if we read the same block from the cache more
 ///   than once )
@@ -953,6 +1211,18 @@ Double_t TTreeCache::GetEfficiency() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// The total efficiency of the 'miss cache' - defined as the ratio
+/// of blocks found in the cache versus the number of blocks prefetched
+
+Double_t TTreeCache::GetMissEfficiency() const
+{
+   if (!fNMissReadPref) {
+      return 0;
+   }
+   return static_cast<double>(fNMissReadOk) / static_cast<double>(fNMissReadPref);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 /// This will indicate a sort of relative efficiency... a ratio of the
 /// reads found in the cache to the number of reads so far
 
@@ -962,6 +1232,19 @@ Double_t TTreeCache::GetEfficiencyRel() const
       return 0;
 
    return ((Double_t)fNReadOk / (Double_t)(fNReadOk + fNReadMiss));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Relative efficiency of the 'miss cache' - ratio of the reads found in cache
+/// to the number of reads so far.
+
+Double_t TTreeCache::GetMissEfficiencyRel() const
+{
+   if (!fNMissReadOk && !fNMissReadMiss) {
+      return 0;
+   }
+
+   return static_cast<double>(fNMissReadOk) / static_cast<double>(fNMissReadOk + fNMissReadMiss);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1002,6 +1285,8 @@ void TTreeCache::Print(Option_t *option) const
    printf("Number of branches in the cache ...: %d\n",fNbranches);
    printf("Cache Efficiency ..................: %f\n",GetEfficiency());
    printf("Cache Efficiency Rel...............: %f\n",GetEfficiencyRel());
+   printf("Secondary Efficiency ..............: %f\n", GetMissEfficiency());
+   printf("Secondary Efficiency Rel ..........: %f\n", GetMissEfficiencyRel());
    printf("Learn entries......................: %d\n",TTreeCache::GetLearnEntries());
    if ( opt.Contains("cachedbranches") ) {
       opt.ReplaceAll("cachedbranches","");
@@ -1038,6 +1323,10 @@ Int_t TTreeCache::ReadBufferNormal(char *buf, Long64_t pos, Int_t len){
 
       return res;
    }
+   if (CheckMissCache(buf, pos, len)) {
+      return 1;
+   }
+
    fNReadMiss++;
 
    return 0;

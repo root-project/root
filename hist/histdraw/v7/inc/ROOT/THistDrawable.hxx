@@ -23,12 +23,8 @@
 
 #include <memory>
 
-class TH1;
-
 namespace ROOT {
 namespace Experimental {
-
-class TPadBase;
 
 template <int DIMENSIONS, class PRECISION,
           template <int D_, class P_, template <class P__> class STORAGE> class... STAT>
@@ -64,18 +60,10 @@ extern template class THistPainterBase<3>;
 
 } // namespace Internal
 
-class THistDrawableBase: public TDrawable {
-protected:
-   std::unique_ptr<TH1> fOldHist;
-
+template <class DERIVED>
+class THistDrawableBase: public TDrawableBase<DERIVED> {
 public:
-   TH1 *GetOldHist() const { return fOldHist.get(); }
-
-   THistDrawableBase();
-   THistDrawableBase(THistDrawableBase &&);
-   virtual ~THistDrawableBase();
-
-   THistDrawableBase &operator=(THistDrawableBase &&);
+   virtual ~THistDrawableBase() = default;
 
    void PopulateMenu(TMenuItems &) final;
 
@@ -86,7 +74,7 @@ public:
 };
 
 template <int DIMENSIONS>
-class THistDrawable final: public THistDrawableBase {
+class THistDrawable final: public THistDrawableBase<THistDrawable<DIMENSIONS>> {
 public:
    using HistImpl_t = Detail::THistImplPrecisionAgnosticBase<DIMENSIONS>;
 
@@ -94,19 +82,17 @@ private:
    Internal::TUniWeakPtr<HistImpl_t> fHistImpl;
    THistDrawingOpts<DIMENSIONS> fOpts;
 
-   bool UpdateOldHist();
-
 public:
    THistDrawable();
 
    template <class HIST>
-   THistDrawable(const std::shared_ptr<HIST> &hist, TPadBase& pad)
-      : fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl())), fOpts(pad)
+   THistDrawable(const std::shared_ptr<HIST> &hist, const THistDrawingOpts<DIMENSIONS> &opts = {})
+      : fHistImpl(std::shared_ptr<HistImpl_t>(hist, hist->GetImpl())), fOpts(opts)
    {}
 
    template <class HIST>
-   THistDrawable(std::unique_ptr<HIST> &&hist, TPadBase& pad)
-      : fHistImpl(std::unique_ptr<HistImpl_t>(std::move(hist->TakeImpl()))), fOpts(pad)
+   THistDrawable(std::unique_ptr<HIST> &&hist, const THistDrawingOpts<DIMENSIONS> &opts = {})
+      : fHistImpl(std::unique_ptr<HistImpl_t>(std::move(hist->TakeImpl()))), fOpts(opts)
    {}
 
    /// Paint the histogram
@@ -115,6 +101,10 @@ public:
    THistDrawingOpts<DIMENSIONS> &GetOptions() { return fOpts; }
    const THistDrawingOpts<DIMENSIONS> &GetOptions() const { return fOpts; }
 };
+
+extern template class THistDrawableBase<THistDrawable<1>>;
+extern template class THistDrawableBase<THistDrawable<2>>;
+extern template class THistDrawableBase<THistDrawable<3>>;
 
 extern template class THistDrawable<1>;
 extern template class THistDrawable<2>;

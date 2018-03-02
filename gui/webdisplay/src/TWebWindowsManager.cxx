@@ -13,9 +13,6 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#pragma GCC diagnostic ignored "-Wall"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-
 #include "ROOT/TWebWindowsManager.hxx"
 
 #include <ROOT/TLogger.hxx>
@@ -32,6 +29,8 @@
 #include "TStopwatch.h"
 #include "TApplication.h"
 #include "TTimer.h"
+#include "RConfigure.h"
+#include "TROOT.h"
 
 /** \class ROOT::Experimental::TWebWindowManager
 \ingroup webdisplay
@@ -114,18 +113,18 @@ bool ROOT::Experimental::TWebWindowsManager::CreateHttpServer(bool with_http)
 std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TWebWindowsManager::CreateWindow(bool batch_mode)
 {
    if (!CreateHttpServer()) {
-      R__ERROR_HERE("CreateWindow") << "Cannot create http server";
+      R__ERROR_HERE("WebDisplay") << "Cannot create http server when creating window";
       return nullptr;
    }
 
    std::shared_ptr<ROOT::Experimental::TWebWindow> win = std::make_shared<ROOT::Experimental::TWebWindow>();
 
    if (!win) {
-      R__ERROR_HERE("CreateWindow") << "Fail to create TWebWindow instance";
+      R__ERROR_HERE("WebDisplay") << "Fail to create TWebWindow instance";
       return nullptr;
    }
 
-   win->SetBatchMode(batch_mode);
+   win->SetBatchMode(batch_mode || gROOT->IsWebDisplayBatch());
 
    win->SetId(++fIdCnt); // set unique ID
 
@@ -160,6 +159,37 @@ void ROOT::Experimental::TWebWindowsManager::Unregister(ROOT::Experimental::TWeb
 }
 
 //////////////////////////////////////////////////////////////////////////
+/// Provide URL address to access specified window from inside or from remote
+
+std::string ROOT::Experimental::TWebWindowsManager::GetUrl(ROOT::Experimental::TWebWindow &win, bool remote)
+{
+   if (!fServer) {
+      R__ERROR_HERE("WebDisplay") << "Server instance not exists when requesting window URL";
+      return "";
+   }
+
+   std::string addr = "/web7gui/";
+
+   addr.append(((THttpWSHandler *)win.fWSHandler.get())->GetName());
+
+   if (win.IsBatchMode())
+      addr.append("/?batch_mode");
+   else
+      addr.append("/");
+
+   if (remote) {
+      if (!CreateHttpServer(true)) {
+         R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server when requesting URL";
+         return "";
+      }
+
+      addr = fAddr + addr;
+   }
+
+   return addr;
+}
+
+//////////////////////////////////////////////////////////////////////////
 /// Show window in specified location
 /// Parameter "where" specifies that kind of window display should be used. Possible values:
 ///
@@ -181,71 +211,80 @@ void ROOT::Experimental::TWebWindowsManager::Unregister(ROOT::Experimental::TWeb
 bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow &win, const std::string &_where)
 {
    if (!fServer) {
-      R__ERROR_HERE("Show") << "Server instance not exists";
+      R__ERROR_HERE("WebDisplay") << "Server instance not exists to show window";
       return false;
    }
 
-   THttpWSHandler *handler = (THttpWSHandler *)win.fWSHandler.get();
-   bool batch_mode = win.IsBatchMode();
-
-   TString addr;
-   addr.Form("/web7gui/%s/%s", handler->GetName(), (batch_mode ? "?batch_mode" : ""));
+   std::string addr = GetUrl(win, false);
 
    std::string where = _where;
-   if (where.empty()) {
-      const char *cwhere = gSystem->Getenv("WEBGUI_WHERE");
-      if (cwhere)
-         where = cwhere;
-   }
+   if (where.empty())
+      where = gROOT->GetWebDisplay().Data();
 
    bool is_native = where.empty() || (where == "native"), is_qt5 = (where == "qt5"), is_cef = (where == "cef"),
         is_chrome = (where == "chrome") || (where == "chromium");
 
-   if (batch_mode) {
+   if (win.IsBatchMode()) {
       if (!is_cef && !is_chrome) {
-         R__ERROR_HERE("Show") << "To use batch mode 'cef' or 'chromium' should be configured as output";
+         R__ERROR_HERE("WebDisplay") << "To use batch mode 'cef' or 'chromium' should be configured as output";
          return false;
       }
       if (is_cef) {
          const char *displ = gSystem->Getenv("DISPLAY");
          if (!displ || (*displ == 0)) {
-            R__ERROR_HERE("Show") << "For a time been in batch mode DISPLAY variable should be set. See "
-                                     "gui/webdisplay/Readme.md for more info";
+            R__ERROR_HERE("WebDisplay") << "For a time been in batch mode DISPLAY variable should be set. See "
+                                           "gui/webdisplay/Readme.md for more info";
             return false;
          }
       }
    }
 
-   Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
+#ifdef R__HAS_CEFWEB
 
-   if (symbol_qt5 && (is_native || is_qt5)) {
-      typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
-
-      printf("Show canvas in Qt5 window:  %s\n", addr.Data());
-
-      FunctionQt5 func = (FunctionQt5)symbol_qt5;
-      func(addr.Data(), fServer.get(), batch_mode, win.GetWidth(), win.GetHeight());
-      return false;
-   }
-
-   // TODO: one should try to load CEF libraries only when really needed
-   // probably, one should create separate DLL with CEF-related code
-   Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
    const char *cef_path = gSystem->Getenv("CEF_PATH");
    const char *rootsys = gSystem->Getenv("ROOTSYS");
-   if (symbol_cef && cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || is_cef)) {
-      typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
+   if (cef_path && !gSystem->AccessPathName(cef_path) && rootsys && (is_native || is_cef)) {
 
-      printf("Show canvas in CEF window:  %s\n", addr.Data());
+      Func_t symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
 
-      FunctionCef3 func = (FunctionCef3)symbol_cef;
-      func(addr.Data(), fServer.get(), batch_mode, rootsys, cef_path, win.GetWidth(), win.GetHeight());
+      if (!symbol_cef) {
+         gSystem->Load("libROOTCefDisplay");
+         // TODO: make minimal C++ interface here
+         symbol_cef = gSystem->DynFindSymbol("*", "webgui_start_browser_in_cef3");
+      }
 
-      return true;
+      if (symbol_cef) {
+         typedef void (*FunctionCef3)(const char *, void *, bool, const char *, const char *, unsigned, unsigned);
+         printf("Show canvas in CEF window:  %s\n", addr.c_str());
+         FunctionCef3 func = (FunctionCef3)symbol_cef;
+         func(addr.c_str(), fServer.get(), win.IsBatchMode(), rootsys, cef_path, win.GetWidth(), win.GetHeight());
+         return true;
+      }
    }
 
+#endif
+
+#ifdef R__HAS_QT5WEB
+
+   if (is_native || is_qt5) {
+      Func_t symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
+
+      if (!symbol_qt5) {
+         gSystem->Load("libROOTQt5WebDisplay");
+         symbol_qt5 = gSystem->DynFindSymbol("*", "webgui_start_browser_in_qt5");
+      }
+      if (symbol_qt5) {
+         typedef void (*FunctionQt5)(const char *, void *, bool, unsigned, unsigned);
+         printf("Show canvas in Qt5 window:  %s\n", addr.c_str());
+         FunctionQt5 func = (FunctionQt5)symbol_qt5;
+         func(addr.c_str(), fServer.get(), win.IsBatchMode(), win.GetWidth(), win.GetHeight());
+         return true;
+      }
+   }
+#endif
+
    if (!CreateHttpServer(true)) {
-      R__ERROR_HERE("Show") << "Fail to start real HTTP server";
+      R__ERROR_HERE("WebDisplay") << "Fail to start real HTTP server";
       return false;
    }
 
@@ -256,7 +295,7 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
    if (is_chrome) {
       // see https://peter.sh/experiments/chromium-command-line-switches/
       exec = where.c_str();
-      if (batch_mode) {
+      if (win.IsBatchMode()) {
          int debug_port = (int)(9800 + 1000 * gRandom->Rndm(1)); // debug port required to keep chrome running
          exec.Append(Form(" --headless --disable-gpu --disable-webgl --remote-debugging-port=%d ", debug_port));
       } else {
@@ -265,22 +304,22 @@ bool ROOT::Experimental::TWebWindowsManager::Show(ROOT::Experimental::TWebWindow
          exec.Append(" --app="); // use app mode
       }
       exec.Append("\'");
-      exec.Append(addr.Data());
+      exec.Append(addr.c_str());
       exec.Append("\' &");
    } else if (!is_native && !is_cef && !is_qt5 && (where != "browser")) {
       if (where.find("$") != std::string::npos) {
          exec = where.c_str();
-         exec.ReplaceAll("$url", addr);
+         exec.ReplaceAll("$url", addr.c_str());
          exec.ReplaceAll("$w", std::to_string(win.GetWidth() ? win.GetWidth() : 800).c_str());
          exec.ReplaceAll("$h", std::to_string(win.GetHeight() ? win.GetHeight() : 600).c_str());
       } else {
-         exec.Form("%s %s &", where.c_str(), addr.Data());
-         // if (batch_mode) exec.Append(" --headless");
+         exec.Form("%s %s &", where.c_str(), addr.c_str());
+         // if (win.IsBatchMode()) exec.Append(" --headless");
       }
    } else if (gSystem->InheritsFrom("TMacOSXSystem")) {
-      exec.Form("open \'%s\'", addr.Data());
+      exec.Form("open \'%s\'", addr.c_str());
    } else {
-      exec.Form("xdg-open \'%s\' &", addr.Data());
+      exec.Form("xdg-open \'%s\' &", addr.c_str());
    }
 
    printf("Show canvas in browser with cmd:  %s\n", exec.Data());

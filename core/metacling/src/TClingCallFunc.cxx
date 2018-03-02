@@ -1078,7 +1078,7 @@ void TClingCallFunc::make_narg_call_with_return(const unsigned N, const string &
 
 tcling_callfunc_Wrapper_t TClingCallFunc::make_wrapper()
 {
-   R__LOCKGUARD(gInterpreterMutex);
+   R__LOCKGUARD_CLING(gInterpreterMutex);
 
    const FunctionDecl *FD = GetDecl();
    string wrapper_name;
@@ -1466,7 +1466,7 @@ void TClingCallFunc::exec(void *address, void *ret)
 
    unsigned num_args = fArgVals.size();
    {
-      R__LOCKGUARD(gInterpreterMutex);
+      R__LOCKGUARD_CLING(gInterpreterMutex);
 
       const FunctionDecl *FD = GetDecl();
 
@@ -1789,49 +1789,142 @@ void TClingCallFunc::execWithULL(void *address, cling::Value *val)
    val->getULL() = ret;
 }
 
+// Handle integral types.
+template <class T>
+TClingCallFunc::ExecWithRetFunc_t TClingCallFunc::InitRetAndExecIntegral(QualType QT, cling::Value &ret)
+{
+   ret = cling::Value::Create<T>(QT.getAsOpaquePtr(), *fInterp);
+   static_assert(std::is_integral<T>::value, "Must be called with integral T");
+   if (std::is_signed<T>::value)
+      return [this](void* address, cling::Value& ret) { execWithLL<T>(address, &ret); };
+   else
+      return [this](void* address, cling::Value& ret) { execWithULL<T>(address, &ret); };
+}
 
-#define R__CF_InitRetAndExec(T, address, QT, ret)                 \
-{                                                                 \
-   *ret = cling::Value::Create<T>(QT.getAsOpaquePtr(), *fInterp); \
-   /* Release lock during user function execution*/               \
-   R__LOCK_SUSPEND(gInterpreterMutex);                            \
-                                                                  \
-   static_assert(std::is_integral<T>::value, "Must be called with integral T"); \
-   if (std::is_signed<T>::value)                                  \
-      execWithLL<T>(address, ret);                                \
-   else                                                           \
-      execWithULL<T>(address, ret);                               \
+// Handle builtin types.
+TClingCallFunc::ExecWithRetFunc_t
+TClingCallFunc::InitRetAndExecBuiltin(QualType QT, const clang::BuiltinType *BT, cling::Value &ret) {
+   switch (BT->getKind()) {
+      case BuiltinType::Void: {
+         ret = cling::Value::Create<void>(QT.getAsOpaquePtr(), *fInterp);
+         return [this](void* address, cling::Value& ret) { exec(address, 0); };
+         break;
+      }
+
+         //
+         //  Unsigned Types
+         //
+      case BuiltinType::Bool:
+         return InitRetAndExecIntegral<bool>(QT, ret);
+         break;
+      case BuiltinType::Char_U: // char on targets where it is unsigned
+      case BuiltinType::UChar:
+         return InitRetAndExecIntegral<char>(QT, ret);
+         break;
+      case BuiltinType::WChar_U:
+         return InitRetAndExecIntegral<wchar_t>(QT, ret);
+         break;
+      case BuiltinType::Char16:
+         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
+               "Invalid type 'char16_t'!");
+         return {};
+         break;
+      case BuiltinType::Char32:
+         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
+               "Invalid type 'char32_t'!");
+         return {};
+         break;
+      case BuiltinType::UShort:
+         return InitRetAndExecIntegral<unsigned short>(QT, ret);
+         break;
+      case BuiltinType::UInt:
+         return InitRetAndExecIntegral<unsigned int>(QT, ret);
+         break;
+      case BuiltinType::ULong:
+         return InitRetAndExecIntegral<unsigned long>(QT, ret);
+         break;
+      case BuiltinType::ULongLong:
+         return InitRetAndExecIntegral<unsigned long long>(QT, ret);
+         break;
+      case BuiltinType::UInt128: {
+            ::Error("TClingCallFunc::InitRetAndExecBuiltin",
+                  "Invalid type '__uint128_t'!");
+            return {};
+         }
+         break;
+
+         //
+         //  Signed Types
+         //
+      case BuiltinType::Char_S: // char on targets where it is signed
+      case BuiltinType::SChar:
+         return InitRetAndExecIntegral<signed char>(QT, ret);
+         break;
+      case BuiltinType::WChar_S:
+         // wchar_t on targets where it is signed.
+         // The standard doesn't allow to specify signednedd of wchar_t
+         // thus this maps simply to wchar_t.
+         return InitRetAndExecIntegral<wchar_t>(QT, ret);
+         break;
+      case BuiltinType::Short:
+         return InitRetAndExecIntegral<short>(QT, ret);
+         break;
+      case BuiltinType::Int:
+         return InitRetAndExecIntegral<int>(QT, ret);
+         break;
+      case BuiltinType::Long:
+         return InitRetAndExecIntegral<long>(QT, ret);
+         break;
+      case BuiltinType::LongLong:
+         return InitRetAndExecIntegral<long long>(QT, ret);
+         break;
+      case BuiltinType::Int128:
+         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
+               "Invalid type '__int128_t'!");
+         return {};
+         break;
+      case BuiltinType::Half:
+         // half in OpenCL, __fp16 in ARM NEON
+         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
+               "Invalid type 'Half'!");
+         return {};
+         break;
+      case BuiltinType::Float: {
+         ret = cling::Value::Create<float>(QT.getAsOpaquePtr(), *fInterp);
+         return [this](void* address, cling::Value& ret) { exec(address, &ret.getFloat()); };
+         break;
+      }
+      case BuiltinType::Double: {
+         ret = cling::Value::Create<double>(QT.getAsOpaquePtr(), *fInterp);
+         return [this](void* address, cling::Value& ret) { exec(address, &ret.getDouble()); };
+         break;
+      }
+      case BuiltinType::LongDouble: {
+         ret = cling::Value::Create<long double>(QT.getAsOpaquePtr(), *fInterp);
+         return [this](void* address, cling::Value& ret) { exec(address, &ret.getLongDouble()); };
+         break;
+      }
+         //
+         //  Language-Specific Types
+         //
+      case BuiltinType::NullPtr:
+         // C++11 nullptr
+         ::Error("TClingCallFunc::InitRetAndExecBuiltin",
+               "Invalid type 'nullptr'!");
+         return {};
+         break;
+      default:
+         break;
+   }
+   return {};
 }
 
 
-void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
-{
-   if (!ret) {
-      exec(address, 0);
-      return;
-   }
-
-   R__LOCKGUARD_NAMED(global,gInterpreterMutex);
-
-   const FunctionDecl *FD = GetDecl();
-
-   if (const CXXConstructorDecl *CD = dyn_cast<CXXConstructorDecl>(FD)) {
-      ASTContext &Context = FD->getASTContext();
-      const TypeDecl *TD = dyn_cast<TypeDecl>(CD->getDeclContext());
-      QualType ClassTy(TD->getTypeForDecl(), 0);
-      QualType QT = Context.getLValueReferenceType(ClassTy);
-      *ret = cling::Value(QT, *fInterp);
-      // Store the new()'ed address in getPtr()
-      R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
-      exec(address, &ret->getPtr());
-      return;
-   }
-   QualType QT = FD->getReturnType().getCanonicalType();
+TClingCallFunc::ExecWithRetFunc_t
+TClingCallFunc::InitRetAndExecNoCtor(clang::QualType QT, cling::Value &ret) {
    if (QT->isReferenceType()) {
-      *ret = cling::Value(QT, *fInterp);
-      R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
-      exec(address, &ret->getPtr());
-      return;
+      ret = cling::Value(QT, *fInterp);
+      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
    } else if (QT->isMemberPointerType()) {
       const MemberPointerType *MPT = QT->getAs<MemberPointerType>();
       if (MPT->isMemberDataPointer()) {
@@ -1840,179 +1933,72 @@ void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
          // storage to the storage for the designated data member.
          // But that's not relevant: we use it as a non-builtin, allocated
          // type.
-         *ret = cling::Value(QT, *fInterp);
-         R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
-         exec(address, ret->getPtr());
-         return;
+         ret = cling::Value(QT, *fInterp);
+         return [this](void* address, cling::Value& ret) { exec(address, ret.getPtr()); };
       }
       // We are a function member pointer.
-      *ret = cling::Value(QT, *fInterp);
-      R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
-      exec(address, &ret->getPtr());
-      return;
+      ret = cling::Value(QT, *fInterp);
+      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
    } else if (QT->isPointerType() || QT->isArrayType()) {
       // Note: ArrayType is an illegal function return value type.
-      *ret = cling::Value::Create<void*>(QT.getAsOpaquePtr(), *fInterp);
-      R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
-      exec(address, &ret->getPtr());
-      return;
+      ret = cling::Value::Create<void*>(QT.getAsOpaquePtr(), *fInterp);
+      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
    } else if (QT->isRecordType()) {
-      *ret = cling::Value(QT, *fInterp);
-      R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
-      exec(address, ret->getPtr());
-      return;
+      ret = cling::Value(QT, *fInterp);
+      return [this](void* address, cling::Value& ret) { exec(address, ret.getPtr()); };
    } else if (const EnumType *ET = dyn_cast<EnumType>(&*QT)) {
       // Note: We may need to worry about the underlying type
       //       of the enum here.
       (void) ET;
-      *ret = cling::Value(QT, *fInterp);
-      R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
-      execWithLL<int>(address, ret);
-      return;
+      ret = cling::Value(QT, *fInterp);
+      return [this](void* address, cling::Value& ret) { execWithLL<int>(address, &ret); };
    } else if (const BuiltinType *BT = dyn_cast<BuiltinType>(&*QT)) {
-      switch (BT->getKind()) {
-         case BuiltinType::Void: {
-            *ret = cling::Value::Create<void>(QT.getAsOpaquePtr(), *fInterp);
-            R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
-            exec(address, 0);
-            return;
-            break;
-         }
-
-            //
-            //  Unsigned Types
-            //
-         case BuiltinType::Bool:
-            R__CF_InitRetAndExec(bool, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::Char_U: // char on targets where it is unsigned
-         case BuiltinType::UChar:
-            R__CF_InitRetAndExec(char, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::WChar_U:
-            R__CF_InitRetAndExec(wchar_t, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::Char16:
-            ::Error("TClingCallFunc::exec_with_valref_return",
-                  "Invalid type 'char16_t'!");
-            return;
-            break;
-         case BuiltinType::Char32:
-            ::Error("TClingCallFunc::exec_with_valref_return",
-                  "Invalid type 'char32_t'!");
-            return;
-            break;
-         case BuiltinType::UShort:
-            R__CF_InitRetAndExec(unsigned short, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::UInt:
-            R__CF_InitRetAndExec(unsigned int, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::ULong:
-            R__CF_InitRetAndExec(unsigned long, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::ULongLong:
-            R__CF_InitRetAndExec(unsigned long long, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::UInt128: {
-               ::Error("TClingCallFunc::exec_with_valref_return",
-                     "Invalid type '__uint128_t'!");
-               return;
-            }
-            break;
-
-            //
-            //  Signed Types
-            //
-         case BuiltinType::Char_S: // char on targets where it is signed
-         case BuiltinType::SChar:
-            R__CF_InitRetAndExec(signed char, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::WChar_S:
-            // wchar_t on targets where it is signed.
-            // The standard doesn't allow to specify signednedd of wchar_t
-            // thus this maps simply to wchar_t.
-            R__CF_InitRetAndExec(wchar_t, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::Short:
-            R__CF_InitRetAndExec(short, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::Int:
-            R__CF_InitRetAndExec(int, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::Long:
-            R__CF_InitRetAndExec(long, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::LongLong:
-            R__CF_InitRetAndExec(long long, address, QT, ret);
-            return;
-            break;
-         case BuiltinType::Int128:
-            ::Error("TClingCallFunc::exec_with_valref_return",
-                  "Invalid type '__int128_t'!");
-            return;
-            break;
-         case BuiltinType::Half:
-            // half in OpenCL, __fp16 in ARM NEON
-            ::Error("TClingCallFunc::exec_with_valref_return",
-                  "Invalid type 'Half'!");
-            return;
-            break;
-         case BuiltinType::Float: {
-            *ret = cling::Value::Create<float>(QT.getAsOpaquePtr(), *fInterp);
-            R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
-            exec(address, &ret->getFloat());
-            return;
-            break;
-         }
-         case BuiltinType::Double: {
-            *ret = cling::Value::Create<double>(QT.getAsOpaquePtr(), *fInterp);
-            R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
-            exec(address, &ret->getDouble());
-            return;
-            break;
-         }
-         case BuiltinType::LongDouble: {
-            *ret = cling::Value::Create<long double>(QT.getAsOpaquePtr(), *fInterp);
-            R__LOCK_SUSPEND(gInterpreterMutex); // Release lock during user function execution
-            exec(address, &ret->getLongDouble());
-            return;
-            break;
-         }
-            //
-            //  Language-Specific Types
-            //
-         case BuiltinType::NullPtr:
-            // C++11 nullptr
-            ::Error("TClingCallFunc::exec_with_valref_return",
-                  "Invalid type 'nullptr'!");
-            return;
-            break;
-         default:
-            break;
-      }
+      return InitRetAndExecBuiltin(QT, BT, ret);
    }
    ::Error("TClingCallFunc::exec_with_valref_return",
          "Unrecognized return type!");
    QT->dump();
+   return {};
+}
+
+TClingCallFunc::ExecWithRetFunc_t
+TClingCallFunc::InitRetAndExec(const clang::FunctionDecl *FD, cling::Value &ret) {
+   if (const CXXConstructorDecl *CD = dyn_cast<CXXConstructorDecl>(FD)) {
+      ASTContext &Context = FD->getASTContext();
+      const TypeDecl *TD = dyn_cast<TypeDecl>(CD->getDeclContext());
+      QualType ClassTy(TD->getTypeForDecl(), 0);
+      QualType QT = Context.getLValueReferenceType(ClassTy);
+      ret = cling::Value(QT, *fInterp);
+      // Store the new()'ed address in getPtr()
+      return [this](void* address, cling::Value& ret) { exec(address, &ret.getPtr()); };
+   } else {
+      QualType QT = FD->getReturnType().getCanonicalType();
+      return InitRetAndExecNoCtor(QT, ret);
+   }
+}
+
+void TClingCallFunc::exec_with_valref_return(void *address, cling::Value *ret)
+{
+   if (!ret) {
+      exec(address, 0);
+      return;
+   }
+   std::function<void(void*, cling::Value&)> execFunc;
+
+   /* Release lock during user function execution*/
+   {
+      R__LOCKGUARD_CLING(gInterpreterMutex);
+      execFunc = InitRetAndExec(GetDecl(), *ret);
+   }
+
+   if (execFunc)
+      execFunc(address, *ret);
    return;
 }
 
 void TClingCallFunc::EvaluateArgList(const string &ArgList)
 {
-   R__LOCKGUARD(gInterpreterMutex);
+   R__LOCKGUARD_CLING(gInterpreterMutex);
 
    SmallVector<Expr *, 4> exprs;
    fInterp->getLookupHelper().findArgList(ArgList, exprs,
@@ -2118,7 +2104,7 @@ void *TClingCallFunc::ExecDefaultConstructor(const TClingClassInfo *info, void *
    }
    tcling_callfunc_ctor_Wrapper_t wrapper = 0;
    {
-      R__LOCKGUARD(gInterpreterMutex);
+      R__LOCKGUARD_CLING(gInterpreterMutex);
       const Decl *D = info->GetDecl();
       //if (!info->HasDefaultConstructor()) {
       //   // FIXME: We might have a ROOT ioctor, we might
@@ -2155,7 +2141,7 @@ void TClingCallFunc::ExecDestructor(const TClingClassInfo *info, void *address /
 
    tcling_callfunc_dtor_Wrapper_t wrapper = 0;
    {
-      R__LOCKGUARD(gInterpreterMutex);
+      R__LOCKGUARD_CLING(gInterpreterMutex);
       const Decl *D = info->GetDecl();
       map<const Decl *, void *>::iterator I = gDtorWrapperStore.find(D);
       if (I != gDtorWrapperStore.end()) {
@@ -2207,7 +2193,7 @@ void *TClingCallFunc::InterfaceMethod()
    if (!fWrapper) {
       const FunctionDecl *decl = GetDecl();
 
-      R__LOCKGUARD(gInterpreterMutex);
+      R__LOCKGUARD_CLING(gInterpreterMutex);
       map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
       if (I != gWrapperStore.end()) {
          fWrapper = (tcling_callfunc_Wrapper_t) I->second;
@@ -2236,7 +2222,7 @@ TInterpreter::CallFuncIFacePtr_t TClingCallFunc::IFacePtr()
    if (!fWrapper) {
       const FunctionDecl *decl = GetDecl();
 
-      R__LOCKGUARD(gInterpreterMutex);
+      R__LOCKGUARD_CLING(gInterpreterMutex);
       map<const FunctionDecl *, void *>::iterator I = gWrapperStore.find(decl);
       if (I != gWrapperStore.end()) {
          fWrapper = (tcling_callfunc_Wrapper_t) I->second;

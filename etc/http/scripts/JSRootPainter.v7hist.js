@@ -95,15 +95,23 @@
       return false;
    }
 
+   THistPainter.prototype.DecodeOptions = function(opt) {
+      if (!this.options) this.options = { Hist : 1 };
+
+
+   }
+
+   THistPainter.prototype.Clear3DScene = function() {
+      var fp = this.frame_painter();
+      if (fp && typeof fp.Create3DScene === 'function')
+         fp.Create3DScene(-1);
+      this.mode3d = false;
+   }
+
    THistPainter.prototype.Cleanup = function() {
-      if (this.keys_handler) {
-         window.removeEventListener( 'keydown', this.keys_handler, false );
-         this.keys_handler = null;
-      }
 
       // clear all 3D buffers
-      if (typeof this.Create3DScene === 'function')
-         this.Create3DScene(-1);
+      this.Clear3DScene();
 
       delete this.fPalette;
       delete this.fContour;
@@ -148,7 +156,7 @@
          if (!this.pallette && JSROOT.Painter.GetColorPalette)
             this.palette = JSROOT.Painter.GetColorPalette();
 
-         var pp = this.pad_painter(true);
+         var pp = this.pad_painter();
          if (this.palette && pp) {
             var indx = pp.GetCurrentPrimitiveIndx(), num = pp.GetNumPrimitives();
 
@@ -163,16 +171,15 @@
          this.options._pfc = this.options._plc = this.options._pmc = false;
       }
 */
-      var obj = this.GetObject().fOpts.fHistAttrs,
-          pp = this.pad_painter();
 
-      if (!this.fillatt || !this.fillatt.changed)
-         this.fillatt = this.createAttFill(null, 0, 0);
+      var opts = this.GetObject().fOpts,
+          pp   = this.canv_painter();
 
-      var lcol = pp.GetNewColor(obj.fLine.fColor.fIdx);
+      this.createAttFill( { pattern: 0, color: 0 });
 
-      if (!this.lineatt || !this.lineatt.changed)
-         this.lineatt = new JSROOT.TAttLineHandler(lcol || 'black');
+      var lcol = pp.GetNewColor(opts.fLineColor);
+
+      this.createAttLine({ color: lcol || 'black' });
    }
 
    THistPainter.prototype.UpdateObject = function(obj, opt) {
@@ -283,11 +290,6 @@
    THistPainter.prototype.ToggleStat = function(arg) {
    }
 
-   THistPainter.prototype.IsAxisZoomed = function(axis) {
-      var obj = this.frame_painter();
-      return obj['zoom_'+axis+'min'] !== obj['zoom_'+axis+'max'];
-   }
-
    THistPainter.prototype.GetSelectIndex = function(axis, size, add) {
       // be aware - here indexes starts from 0
       var indx = 0,
@@ -298,11 +300,11 @@
           max = main ? main['zoom_' + axis + 'max'] : 0;
 
       if ((min !== max) && taxis) {
-         if (size == "left") {
+         if (size == "left")
             indx = taxis.FindBin(min, add || 0);
-         } else {
+         else
             indx = taxis.FindBin(max, (add || 0) + 0.5);
-         }
+         if (indx<0) indx = 0; else if (indx>nbins) indx = nbins;
       } else {
          indx = (size == "left") ? 0 : nbins;
       }
@@ -323,6 +325,7 @@
    }
 
    THistPainter.prototype.ButtonClick = function(funcname) {
+      // TODO: move to frame painter
       switch(funcname) {
          case "ToggleZoom":
             if ((this.zoom_xmin !== this.zoom_xmax) || (this.zoom_ymin !== this.zoom_ymax) || (this.zoom_zmin !== this.zoom_zmax)) {
@@ -334,17 +337,17 @@
                return true;
             }
             break;
-         case "ToggleLogX": this.ToggleLog("x"); break;
-         case "ToggleLogY": this.ToggleLog("y"); break;
-         case "ToggleLogZ": this.ToggleLog("z"); break;
+         case "ToggleLogX": this.frame_painter().ToggleLog("x"); break;
+         case "ToggleLogY": this.frame_painter().ToggleLog("y"); break;
+         case "ToggleLogZ": this.frame_painter().ToggleLog("z"); break;
          case "ToggleStatBox": this.ToggleStat(); return true; break;
       }
       return false;
    }
 
    THistPainter.prototype.FillToolbar = function() {
-      var pp = this.pad_painter(true);
-      if (pp===null) return;
+      var pp = this.pad_painter();
+      if (!pp) return;
 
       pp.AddButton(JSROOT.ToolbarIcons.auto_zoom, 'Toggle between unzoom and autozoom-in', 'ToggleZoom', "Ctrl *");
       pp.AddButton(JSROOT.ToolbarIcons.arrow_right, "Toggle log x", "ToggleLogX", "PageDown");
@@ -492,31 +495,35 @@
             this.FillHistContextMenu(menu);
       }
 
-      if ((this.options.Lego > 0) || (this.options.Surf > 0) || (this.Dimension() === 3)) {
+      if (this.options.Mode3D) {
          // menu for 3D drawings
 
          if (menu.size() > 0)
             menu.add("separator");
 
-         var main = this.frame_painter();
+         var main = this.main_painter() || this,
+             fp = this.frame_painter(),
+             axis_painter = fp;
 
          menu.addchk(main.tooltip_allowed, 'Show tooltips', function() {
             main.tooltip_allowed = !main.tooltip_allowed;
          });
 
-         menu.addchk(main.enable_highlight, 'Highlight bins', function() {
-            main.enable_highlight = !main.enable_highlight;
-            if (!main.enable_highlight && main.BinHighlight3D && main.mode3d) main.BinHighlight3D(null);
+         menu.addchk(axis_painter.enable_highlight, 'Highlight bins', function() {
+            axis_painter.enable_highlight = !axis_painter.enable_highlight;
+            if (!axis_painter.enable_highlight && main.BinHighlight3D && main.mode3d) main.BinHighlight3D(null);
          });
 
-         menu.addchk(main.options.FrontBox, 'Front box', function() {
-            main.options.FrontBox = !main.options.FrontBox;
-            if (main.Render3D) main.Render3D();
-         });
-         menu.addchk(main.options.BackBox, 'Back box', function() {
-            main.options.BackBox = !main.options.BackBox;
-            if (main.Render3D) main.Render3D();
-         });
+         if (fp && fp.Render3D) {
+            menu.addchk(main.options.FrontBox, 'Front box', function() {
+               main.options.FrontBox = !main.options.FrontBox;
+               fp.Render3D();
+            });
+            menu.addchk(main.options.BackBox, 'Back box', function() {
+               main.options.BackBox = !main.options.BackBox;
+               fp.Render3D();
+            });
+         }
 
          if (this.draw_content) {
             menu.addchk(!this.options.Zero, 'Suppress zeros', function() {
@@ -566,10 +573,10 @@
       }
 
       // bins less than zmin not drawn
-      if (zc < this.colzmin) return (this.options.Color === 11) ? 0 : -1;
+      if (zc < this.colzmin) return this.options.Zero ? -1 : 0;
 
       // if bin content exactly zmin, draw it when col0 specified or when content is positive
-      if (zc===this.colzmin) return ((this.colzmin != 0) || (this.options.Color === 11) || this.IsTH2Poly()) ? 0 : -1;
+      if (zc===this.colzmin) return ((this.colzmin != 0) || !this.options.Zero || this.IsTH2Poly()) ? 0 : -1;
 
       return Math.floor(0.01+(zc-this.colzmin)*(cntr.length-1)/(this.colzmax-this.colzmin));
    }
@@ -589,7 +596,7 @@
 
    THistPainter.prototype.GetPalette = function(force) {
       if (!this.fPalette || force) {
-         var pp = this.options.Palette ? null : this.pad_painter();
+         var pp = this.options.Palette ? null : this.canv_painter();
          this.fPalette = (pp && pp.CanvasPalette) ? pp.CanvasPalette : JSROOT.Painter.GetColorPalette(this.options.Palette);
       }
       return this.fPalette;
@@ -640,13 +647,31 @@
    }
 
    THistPainter.prototype.ToggleColz = function() {
-      if (this.options.Zscale > 0) {
-         this.options.Zscale = 0;
-      } else {
-         this.options.Zscale = 1;
+      var can_toggle = this.options.Mode3D ? (this.options.Lego === 12 || this.options.Lego === 14 || this.options.Surf === 11 || this.options.Surf === 12) :
+         this.options.Color || this.options.Contour;
+
+      if (can_toggle) {
+         this.options.Zscale = !this.options.Zscale;
+         this.DrawColorPalette(this.options.Zscale, false, true);
+      }
+   }
+
+   THistPainter.prototype.ToggleMode3D = function() {
+      this.options.Mode3D = !this.options.Mode3D;
+
+      if (this.options.Mode3D) {
+         if (!this.options.Surf && !this.options.Lego && !this.options.Error) {
+            if ((this.nbinsx>=50) || (this.nbinsy>=50))
+               this.options.Lego = this.options.Color ? 14 : 13;
+            else
+               this.options.Lego = this.options.Color ? 12 : 1;
+
+            this.options.Zero = false; // do not show zeros by default
+         }
       }
 
-      this.DrawColorPalette(this.options.Zscale > 0, false, true);
+      this.CopyOptionsToOthers();
+      this.InteractiveRedraw("pad","drawopt");
    }
 
    THistPainter.prototype.PrepareColorDraw = function(args) {
@@ -665,7 +690,7 @@
              i2: this.GetSelectIndex("x", "right", 1 + args.extra),
              j1: (hdim===1) ? 0 : this.GetSelectIndex("y", "left", 0 - args.extra),
              j2: (hdim===1) ? 1 : this.GetSelectIndex("y", "right", 1 + args.extra),
-             min: 0, max: 0, sumz: 0
+             min: 0, max: 0, sumz: 0, xbar1: 0, xbar2: 1, ybar1: 0, ybar2: 1
           };
       res.grx = new Float32Array(res.i2+1);
       res.gry = new Float32Array(res.j2+1);
@@ -847,6 +872,7 @@
           right = this.GetSelectIndex("x", "right"),
           stat_sumw = 0, stat_sumwx = 0, stat_sumwx2 = 0, stat_sumwy = 0, stat_sumwy2 = 0,
           i, xx = 0, w = 0, xmax = null, wmax = null,
+          fp = this.frame_painter(),
           res = { name: "histo", meanx: 0, meany: 0, rmsx: 0, rmsy: 0, integral: 0, entries: this.stat_entries, xmax:0, wmax:0 };
 
       for (i = left; i < right; ++i) {
@@ -870,7 +896,7 @@
       }
 
       // when no range selection done, use original statistic from histogram
-      if (!this.IsAxisZoomed("x") && histo.fTsumw) {
+      if (!fp.IsAxisZoomed("x") && histo.fTsumw) {
          stat_sumw = histo.fTsumw;
          stat_sumwx = histo.fTsumwx;
          stat_sumwx2 = histo.fTsumwx2;
@@ -973,7 +999,7 @@
           histo = this.GetHisto(), xaxis = this.GetAxis("x"),
           i, x1, x2, grx1, grx2, y, gry1, gry2, w,
           bars = "", barsl = "", barsr = "",
-          side = (this.options.Bar > 10) ? this.options.Bar % 10 : 0;
+          side = (this.options.BarStyle > 10) ? this.options.BarStyle % 10 : 0;
 
       if (side>4) side = 4;
       gry2 = pmain.swap_xy ? 0 : height;
@@ -1016,7 +1042,7 @@
          }
       }
 
-      if (this.fillatt.color == "none") this.fillatt.color = "blue";
+      if (this.fillatt.empty()) this.fillatt.SetSolidColor("blue");
 
       if (bars.length > 0)
          this.draw_g.append("svg:path")
@@ -1062,11 +1088,11 @@
          bins2.unshift({grx:grx, gry: gry2});
       }
 
-      var kind = (this.options.Error == 14) ? "bezier" : "line",
+      var kind = (this.options.ErrorKind === 4) ? "bezier" : "line",
           path1 = JSROOT.Painter.BuildSvgPath(kind, bins1),
           path2 = JSROOT.Painter.BuildSvgPath("L"+kind, bins2);
 
-      if (this.fillatt.color == "none") this.fillatt.color = "blue";
+      if (this.fillatt.empty()) this.fillatt.setSolidColor("blue");
 
       this.draw_g.append("svg:path")
                  .attr("d", path1.path + path2.path + "Z")
@@ -1078,17 +1104,17 @@
       // new method, create svg:path expression ourself directly from histogram
       // all points will be used, compress expression when too large
 
-      this.CheckHistDrawAttributes();
-
       var width = this.frame_width(), height = this.frame_height(), options = this.options;
 
       if (!this.draw_content || (width<=0) || (height<=0))
          return this.RemoveDrawG();
 
-      if (options.Bar > 0)
+      this.CheckHistDrawAttributes();
+
+      if (options.Bar)
          return this.DrawBars(width, height);
 
-      if ((options.Error == 13) || (options.Error == 14))
+      if ((options.ErrorKind === 3) || (options.ErrorKind === 4))
          return this.DrawFilledErrors(width, height);
 
       this.CreateG(true);
@@ -1100,10 +1126,11 @@
           res = "", lastbin = false,
           startx, currx, curry, x, grx, y, gry, curry_min, curry_max, prevy, prevx, i, besti,
           exclude_zero = !options.Zero,
-          show_errors = (options.Error > 0),
-          show_markers = (options.Mark > 0),
-          show_line = (options.Line > 0),
-          show_text = (options.Text > 0),
+          show_errors = options.Error,
+          show_markers = options.Mark,
+          show_line = options.Line,
+          show_text = options.Text,
+          text_profile = show_text && (this.options.TextKind == "E") && this.IsTProfile() && histo.fBinEntries,
           path_fill = null, path_err = null, path_marker = null, path_line = null,
           endx = "", endy = "", dend = 0, my, yerr1, yerr2, bincont, binerr, mx1, mx2, midx,
           mpath = "", text_col, text_angle, text_size;
@@ -1111,18 +1138,17 @@
       //if (show_errors && !show_markers && (histo.fMarkerStyle > 1))
       //   show_markers = true;
 
-      if (options.Error == 12) {
-         if (this.fillatt.color=='none') show_markers = true;
-                                    else path_fill = "";
+      if (options.ErrorKind === 2) {
+         if (this.fillatt.empty()) show_markers = true;
+                               else path_fill = "";
       } else
-      if (options.Error > 0) path_err = "";
+      if (options.Error) path_err = "";
 
       if (show_line) path_line = "";
 
       if (show_markers) {
          // draw markers also when e2 option was specified
-         if (!this.markeratt)
-            this.markeratt = new JSROOT.TAttMarkerHandler(histo, options.Mark - 20);
+         this.createAttMarker({ attr: histo, style: this.options.MarkStyle });
          if (this.markeratt.size > 0) {
             // simply use relative move from point, can optimize in the future
             path_marker = "";
@@ -1134,13 +1160,13 @@
 
       if (show_text) {
          text_col = this.get_color(histo.fMarkerColor);
-         text_angle = (options.Text>1000) ? -1*(options.Text % 1000) : 0;
+         text_angle = -1*options.TextAngle;
          text_size = 20;
 
          if ((options.fMarkerSize!==1) && text_angle)
             text_size = 0.02 * height * options.fMarkerSize;
 
-         if (!text_angle && (options.Text<1000)) {
+         if (!text_angle && !options.TextKind) {
              var space = width / (right - left + 1);
              if (space < 3 * text_size) {
                 text_angle = 270;
@@ -1155,7 +1181,7 @@
       // instead define min and max value and made min-max drawing
       var use_minmax = ((right-left) > 3*width);
 
-      if (options.Error == 11) {
+      if (options.ErrorKind === 1) {
          var lw = this.lineatt.width + JSROOT.gStyle.fEndErrorSize;
          endx = "m0," + lw + "v-" + 2*lw + "m0," + lw;
          endy = "m" + lw + ",0h-" + 2*lw + "m" + lw + ",0";
@@ -1212,27 +1238,16 @@
                      }
 
                      if (show_text) {
-                        var cont = bincont;
-                        if ((options.Text>=2000) && (options.Text < 3000) && this.IsTProfile() && histo.getBinEntries)
-                           cont = histo.getBinEntries(besti+1);
+                        var cont = text_profile ? histo.fBinEntries[besti+1] : bincont;
 
-                        var posx = Math.round(mx1 + (mx2-mx1)*0.1),
-                            posy = Math.round(my-2-text_size),
-                            sizex = Math.round((mx2-mx1)*0.8),
-                            sizey = text_size,
-                            lbl = (cont === Math.round(cont)) ? cont.toString() : JSROOT.FFormat(cont, JSROOT.gStyle.fPaintTextFormat),
-                            talign = 22;
+                        if (cont!==0) {
+                           var lbl = (cont === Math.round(cont)) ? cont.toString() : JSROOT.FFormat(cont, JSROOT.gStyle.fPaintTextFormat);
 
-                        if (text_angle) {
-                           posx = midx;
-                           posy = Math.round(my - 2 - text_size/5);
-                           sizex = 0;
-                           sizey = 0;
-                           talign = 12;
+                           if (text_angle)
+                              this.DrawText({ align: 12, x: midx, y: Math.round(my - 2 - text_size/5), width: 0, height: 0, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
+                           else
+                              this.DrawText({ align: 22, x: Math.round(mx1 + (mx2-mx1)*0.1), y: Math.round(my-2-text_size), width: Math.round((mx2-mx1)*0.8), height: text_size, text: lbl, color: text_col, latex: 0 });
                         }
-
-                        if (cont!==0)
-                           this.DrawText({ align: talign, x: posx, y: posy, width: sizex, height: sizey, rotate: text_angle, text: lbl, color: text_col, latex: 0 });
                      }
 
                      if (show_line && (path_line !== null))
@@ -1299,10 +1314,9 @@
       }
 
       var close_path = "";
-
       if (!this.fillatt.empty()) {
-         var h0 = (height+3);
-         if ((this.hmin>=0) && (pmain.gry(0) < height)) h0 = Math.round(pmain.gry(0));
+         var h0 = height + 3, gry0 = Math.round(pmain.gry(0));
+         if (gry0 <= 0) h0 = -3; else if (gry0 < height) h0 = gry0;
          close_path = "L"+currx+","+h0 + "L"+startx+","+h0 + "Z";
          if (res.length>0) res += close_path;
       }
@@ -1321,7 +1335,7 @@
          if ((path_line !== null) && (path_line.length > 0)) {
             if (!this.fillatt.empty())
                this.draw_g.append("svg:path")
-                     .attr("d", options.Line===2 ? (path_line + close_path) : res)
+                     .attr("d", options.Fill ? (path_line + close_path) : res)
                      .attr("stroke", "none")
                      .call(this.fillatt.func);
 
@@ -1361,10 +1375,10 @@
 
       if (name.length>0) tips.push(name);
 
-      if ((this.options.Error > 0) || (this.options.Mark > 0)) {
+      if (this.options.Error || this.options.Mark) {
          tips.push("x = " + pmain.AxisAsText("x", (x1+x2)/2));
          tips.push("y = " + pmain.AxisAsText("y", cont));
-         if (this.options.Error > 0) {
+         if (this.options.Error) {
             tips.push("error x = " + ((x2 - x1) / 2).toPrecision(4));
             tips.push("error y = " + histo.getBinError(bin + 1).toPrecision(4));
          }
@@ -1391,7 +1405,7 @@
    }
 
    TH1Painter.prototype.ProcessTooltip = function(pnt) {
-      if ((pnt === null) || !this.draw_content || (this.options.Lego > 0) || (this.options.Surf > 0)) {
+      if ((pnt === null) || !this.draw_content || this.options.Mode3D) {
          if (this.draw_g !== null)
             this.draw_g.select(".tooltip_bin").remove();
          this.ProvideUserTooltip(null);
@@ -1464,7 +1478,7 @@
       grx1 = Math.round(grx1);
       grx2 = Math.round(GetBinGrX(findbin+1));
 
-      if (this.options.Bar > 0) {
+      if (this.options.Bar) {
          var w = grx2 - grx1;
          grx1 += Math.round(this.options.fBarOffset/1000*w);
          grx2 = grx1 + Math.round(this.options.fBarWidth/1000*w);
@@ -1476,7 +1490,7 @@
 
       midy = gry1 = gry2 = GetBinGrY(findbin);
 
-      if (this.options.Bar > 0) {
+      if (this.options.Bar) {
          show_rect = true;
 
          gapx = 0;
@@ -1487,15 +1501,15 @@
 
          if (!pnt.touch && (pnt.nproc === 1))
             if ((pnt_y<gry1) || (pnt_y>gry2)) findbin = null;
-      } else
-      if ((this.options.Error > 0) || (this.options.Mark > 0) || (this.options.Line > 0))  {
+
+      } else if (this.options.Error || this.options.Mark || this.options.Line)  {
 
          show_rect = true;
 
          var msize = 3;
          if (this.markeratt) msize = Math.max(msize, this.markeratt.GetFullSize());
 
-         if (this.options.Error > 0) {
+         if (this.options.Error) {
             var cont = histo.getBinContent(findbin+1),
                 binerr = histo.getBinError(findbin+1);
 
@@ -1525,15 +1539,16 @@
          show_rect = (pnt.nproc === 1) && (right-left < width);
 
          if (show_rect) {
-            // for mouse events mouse pointer should be under the curve
-            if ((pnt.y < gry1) && !pnt.touch) findbin = null;
-
             gry2 = height;
 
-            if ((this.fillatt.color !== 'none') && (this.hmin>=0)) {
+            if (!this.fillatt.empty()) {
                gry2 = Math.round(pmain.gry(0));
-               if ((gry2 > height) || (gry2 <= gry1)) gry2 = height;
+               if (gry2 < 0) gry2 = 0; else if (gry2 > height) gry2 = height;
+               if (gry2 < gry1) { var d = gry1; gry1 = gry2; gry2 = d; }
             }
+
+            // for mouse events pointer should be between y1 and y2
+            if (((pnt.y < gry1) || (pnt.y > gry2)) && !pnt.touch) findbin = null;
          }
       }
 
@@ -1556,9 +1571,9 @@
       }
 
       var res = { name: "histo", title: histo.fTitle,
-                  x: midx, y: midy,
+                  x: midx, y: midy, exact: true,
                   color1: this.lineatt ? this.lineatt.color : 'green',
-                  color2: this.fillatt ? this.fillatt.color : 'blue',
+                  color2: this.fillatt ? this.fillatt.fillcoloralt('blue') : 'blue',
                   lines: this.GetBinTips(findbin) };
 
       if (pnt.disabled) {
@@ -1632,10 +1647,13 @@
          if (arg==='inspect')
             return JSROOT.draw(this.divid, this.GetObject(), arg);
 
-         this.options = this.DecodeOptions(arg, true);
+         this.DecodeOptions(arg); // obsolete, should be implemented differently
+
+         if (this.options.need_fillcol && this.fillatt && this.fillatt.empty())
+            this.fillatt.Change(5,1001);
 
          // redraw all objects
-         this.RedrawPad();
+         this.InteractiveRedraw("pad", "drawopt");
       });
    }
 
@@ -1661,7 +1679,7 @@
       }
 
       if ((right - left < dist) && (left < right))
-         this.Zoom(xaxis.GetBinCoord(left), xaxis.GetBinCoord(right));
+         this.frame_painter().Zoom(xaxis.GetBinCoord(left), xaxis.GetBinCoord(right));
    }
 
    TH1Painter.prototype.CanZoomIn = function(axis,min,max) {
@@ -1677,23 +1695,21 @@
 
    TH1Painter.prototype.CallDrawFunc = function(callback, resize) {
 
-      var is3d = this.options.Lego || this.options.Surf, main = this.frame_painter();
+      var main = this.frame_painter();
 
-      if (main && (main.mode3d !== is3d)) {
+      if (main && (main.mode3d !== this.options.Mode3D)) {
          // that to do with that case
-         is3d = main.mode3d;
-         if (is3d) this.options.Lego = 2;
+         this.options.Mode3D = main.mode3d;
       }
 
-      var funcname = is3d ? "Draw3D" : "Draw2D";
+      var funcname = this.options.Mode3D ? "Draw3D" : "Draw2D";
 
       this[funcname](callback, resize);
    }
 
    TH1Painter.prototype.Draw2D = function(call_back) {
-      if (typeof this.Create3DScene === 'function')
-         this.Create3DScene(-1);
 
+      this.Clear3DScene();
       this.mode3d = false;
 
       // this.ScanContent(true);
@@ -1726,18 +1742,20 @@
 
       painter.PrepareFrame(divid);
 
-      painter.options = { Hist: 1, Bar: 0, Error: 0, errorX: 0, Zero: 0, Mark: 0, Line: 0, Text: 0, Lego: 0, Surf: 0,
-                          fBarOffset: 0, fBarWidth: 1000, fMarkerSize: 1, BaseLine: false };
+      painter.options = { Hist: true, Bar: false, Error: false, ErrorKind: -1, errorX: 0, Zero: false, Mark: false,
+                          Line: false, Fill: false, Lego: 0, Surf: 0,
+                          Text: false, TextAngle: 0, TextKind: "", AutoColor: 0,
+                          fBarOffset: 0, fBarWidth: 1000, fMarkerSize: 1, BaseLine: false, Mode3D: false };
 
       // here we deciding how histogram will look like and how will be shown
-      // painter.options = painter.DecodeOptions(opt);
+      // painter.DecodeOptions(opt);
 
       painter.ScanContent();
 
       // painter.CreateStat(); // only when required
 
       painter.CallDrawFunc(function() {
-         // if ((painter.options.Lego === 0) && painter.options.AutoZoom) painter.AutoZoom();
+         // if (!painter.options.Mode3D && painter.options.AutoZoom) painter.AutoZoom();
          // painter.FillToolbar();
          painter.DrawingReady();
       });
@@ -1793,7 +1811,7 @@
       this.is_projection = (this.is_projection === kind) ? "" : kind;
       this.projection_width = width;
 
-      var canp = this.pad_painter();
+      var canp = this.canv_painter();
       if (canp) canp.ToggleProjection(this.is_projection, this.RedrawProjection.bind(this));
    }
 
@@ -1831,11 +1849,11 @@
       menu.addDrawMenu("Draw with", sett.opts, function(arg) {
          if (arg==='inspect')
             return JSROOT.draw(this.divid, this.GetObject(), arg);
-         this.options = this.DecodeOptions(arg);
-         this.RedrawPad();
+         this.DecodeOptions(arg);
+         this.InteractiveRedraw("pad", "drawopt");
       });
 
-      if (this.options.Color > 0)
+      if (this.options.Color)
          this.FillPaletteMenu(menu);
    }
 
@@ -1844,31 +1862,8 @@
 
       switch(funcname) {
          case "ToggleColor": this.ToggleColor(); break;
-         case "ToggleColorZ":
-            if (this.options.Lego === 12 || this.options.Lego === 14 ||
-                this.options.Color > 0 || this.options.Contour > 0 ||
-                this.options.Surf === 11 || this.options.Surf === 12) this.ToggleColz();
-            break;
-         case "Toggle3D":
-            if (this.options.Surf > 0) {
-               this.options.Surf = -this.options.Surf;
-            } else
-            if (this.options.Lego > 0) {
-               this.options.Lego = 0;
-            } else
-            if (this.options.Surf < 0) {
-               this.options.Surf = -this.options.Surf;
-            } else {
-               if ((this.nbinsx>=50) || (this.nbinsy>=50))
-                  this.options.Lego = (this.options.Color > 0) ? 14 : 13;
-               else
-                  this.options.Lego = (this.options.Color > 0) ? 12 : 1;
-
-               this.options.Zero = 0; // do not show zeros by default
-            }
-
-            this.RedrawPad();
-            break;
+         case "ToggleColorZ": this.ToggleColz(); break;
+         case "Toggle3D": this.ToggleMode3D(); break;
          default: return false;
       }
 
@@ -1879,7 +1874,7 @@
    TH2Painter.prototype.FillToolbar = function() {
       THistPainter.prototype.FillToolbar.call(this);
 
-      var pp = this.pad_painter(true);
+      var pp = this.pad_painter();
       if (pp===null) return;
 
       if (!this.IsTH2Poly())
@@ -1890,24 +1885,18 @@
 
    TH2Painter.prototype.ToggleColor = function() {
 
-      var toggle = true;
-
-      if (this.options.Lego > 0) { this.options.Lego = 0; toggle = false; } else
-      if (this.options.Surf > 0) { this.options.Surf = -this.options.Surf; toggle = false; }
-
-      if (this.options.Color == 0) {
-         this.options.Color = ('LastColor' in this.options) ?  this.options.LastColor : 1;
-      } else
-      if (toggle) {
-         this.options.LastColor = this.options.Color;
-         this.options.Color = 0;
+      if (this.options.Mode3D) {
+         this.options.Mode3D = false;
+         this.options.Color = true;
+      } else {
+         this.options.Color = !this.options.Color;
       }
 
       this._can_move_colz = true; // indicate that next redraw can move Z scale
 
       this.Redraw();
 
-      // this.DrawColorPalette((this.options.Color > 0) && (this.options.Zscale > 0));
+      // this.DrawColorPalette(this.options.Color && this.options.Zscale);
    }
 
    TH2Painter.prototype.AutoZoom = function() {
@@ -1956,7 +1945,7 @@
          isany = true;
       }
 
-      if (isany) this.Zoom(xmin, xmax, ymin, ymax);
+      if (isany) this.frame_painter().Zoom(xmin, xmax, ymin, ymax);
    }
 
    TH2Painter.prototype.ScanContent = function(when_axis_changed) {
@@ -2018,6 +2007,7 @@
           stat_sum0 = 0, stat_sumx1 = 0, stat_sumy1 = 0,
           stat_sumx2 = 0, stat_sumy2 = 0, stat_sumxy = 0,
           xside, yside, xx, yy, zz,
+          fp = this.frame_painter(),
           res = { name: "histo", entries: 0, integral: 0, meanx: 0, meany: 0, rmsx: 0, rmsy: 0, matrix: [0,0,0,0,0,0,0,0,0], xmax: 0, ymax:0, wmax: null };
 
       if (this.IsTH2Poly()) {
@@ -2110,7 +2100,7 @@
          }
       }
 
-      if (!this.IsAxisZoomed("x") && !this.IsAxisZoomed("y") && (histo.fTsumw > 0)) {
+      if (!fp.IsAxisZoomed("x") && !fp.IsAxisZoomed("y") && (histo.fTsumw > 0)) {
          stat_sum0 = histo.fTsumw;
          stat_sumx1 = histo.fTsumwx;
          stat_sumx2 = histo.fTsumwx2;
@@ -2204,7 +2194,7 @@
             binz = histo.getBinContent(i + 1, j + 1);
             colindx = this.getContourColor(binz, true);
             if (binz===0) {
-               if (this.options.Color===11) continue;
+               if (!this.options.Zero) continue;
                if ((colindx === null) && this._show_empty_bins) colindx = 0;
             }
             if (colindx === null) continue;
@@ -2513,8 +2503,8 @@
 
             switch (painter.options.Contour) {
                case 1: break;
-               case 11: fillcolor = 'none'; lineatt = new JSROOT.TAttLineHandler(icol); break;
-               case 12: fillcolor = 'none'; lineatt = new JSROOT.TAttLineHandler({fLineColor:1, fLineStyle: (colindx%5 + 1), fLineWidth: 1 }); break;
+               case 11: fillcolor = 'none'; lineatt = new JSROOT.TAttLineHandler({ color: icol }); break;
+               case 12: fillcolor = 'none'; lineatt = new JSROOT.TAttLineHandler({ color:1, style: (colindx%5 + 1), width: 1 }); break;
                case 13: fillcolor = 'none'; lineatt = painter.lineatt; break;
                case 14: break;
             }
@@ -2595,7 +2585,7 @@
          bin = histo.fBins.arr[i];
          colindx = this.getContourColor(bin.fContent, true);
          if (colindx === null) continue;
-         if ((bin.fContent === 0) && (this.options.Color === 11)) continue;
+         if ((bin.fContent === 0) && !this.options.Zero) continue;
 
          // check if bin outside visible range
          if ((bin.fXmin > pmain.scale_xmax) || (bin.fXmax < pmain.scale_xmin) ||
@@ -2624,7 +2614,7 @@
 
       if (textbins.length > 0) {
          var text_col = this.get_color(histo.fMarkerColor),
-             text_angle = (this.options.Text > 1000) ? -1*(this.options.Text % 1000) : 0,
+             text_angle = -1*this.options.TextAngle,
              text_g = this.draw_g.append("svg:g").attr("class","th2poly_text"),
              text_size = 12;
 
@@ -2640,7 +2630,7 @@
                 posy = Math.round(pmain.y((bin.fYmin + bin.fYmax)/2)),
                 lbl = "";
 
-            if (this.options.Text < 1000) {
+            if (!this.options.TextKind) {
                lbl = (Math.round(bin.fContent) === bin.fContent) ? bin.fContent.toString() :
                           JSROOT.FFormat(bin.fContent, JSROOT.gStyle.fPaintTextFormat);
             } else {
@@ -2665,9 +2655,11 @@
       if (handle===null) handle = this.PrepareColorDraw({ rounding: false });
 
       var text_col = this.get_color(histo.fMarkerColor),
-          text_angle = (this.options.Text > 1000) ? -1*(this.options.Text % 1000) : 0,
+          text_angle = -1*this.options.TextAngle,
           text_g = this.draw_g.append("svg:g").attr("class","th2_text"),
-          text_size = 20, text_offset = 0;
+          text_size = 20, text_offset = 0,
+          profile2d = (this.options.TextKind == "E") &&
+                      this.MatchObjectType('TProfile2D') && (typeof histo.getBinEntries=='function');
 
       if ((histo.fMarkerSize!==1) && text_angle)
          text_size = Math.round(0.02*h*histo.fMarkerSize);
@@ -2684,9 +2676,8 @@
             binw = handle.grx[i+1] - handle.grx[i];
             binh = handle.gry[j] - handle.gry[j+1];
 
-            if ((this.options.Text >= 2000) && (this.options.Text < 3000) &&
-                 this.MatchObjectType('TProfile2D') && (typeof histo.getBinEntries=='function'))
-                   binz = histo.getBinEntries(i+1, j+1);
+            if (profile2d)
+               binz = histo.getBinEntries(i+1, j+1);
 
             lbl = (binz === Math.round(binz)) ? binz.toString() :
                       JSROOT.FFormat(binz, JSROOT.gStyle.fPaintTextFormat);
@@ -2838,10 +2829,10 @@
 
             res += "M"+xx+","+yy + "v"+hh + "h"+ww + "v-"+hh + "z";
 
-            if ((binz<0) && (this.options.Box === 10))
+            if ((binz<0) && (this.options.BoxStyle === 10))
                cross += "M"+xx+","+yy + "l"+ww+","+hh + "M"+(xx+ww)+","+yy + "l-"+ww+","+hh;
 
-            if ((this.options.Box === 11) && (ww>5) && (hh>5)) {
+            if ((this.options.BoxStyle === 11) && (ww>5) && (hh>5)) {
                var pww = Math.round(ww*0.1),
                    phh = Math.round(hh*0.1),
                    side1 = "M"+xx+","+yy + "h"+ww + "l"+(-pww)+","+phh + "h"+(2*pww-ww) +
@@ -2855,13 +2846,13 @@
       }
 
       if (res.length > 0) {
-        var elem = this.draw_g.append("svg:path")
-                              .attr("d", res)
-                              .call(this.fillatt.func);
-        if ((this.options.Box === 11) || (this.fillatt.color !== 'none'))
-           elem.style('stroke','none');
-        else
-           elem.call(this.lineatt.func);
+         var elem = this.draw_g.append("svg:path")
+                               .attr("d", res)
+                               .call(this.fillatt.func);
+         if ((this.options.BoxStyle === 11) || !this.fillatt.empty())
+            elem.style('stroke','none');
+         else
+            elem.call(this.lineatt.func);
       }
 
       if ((btn1.length>0) && (this.fillatt.color !== 'none'))
@@ -2899,10 +2890,8 @@
           bars = "", markers = "", posy;
 
       // create attribute only when necessary
-      if (!this.markeratt) {
-         if (histo.fMarkerColor === 1) histo.fMarkerColor = histo.fLineColor;
-         this.markeratt = new JSROOT.TAttMarkerHandler(histo, 5);
-      }
+      if (histo.fMarkerColor === 1) histo.fMarkerColor = histo.fLineColor;
+      this.createAttMarker({ attr: histo, style: 5 });
 
       // reset absolution position for markers
       this.markeratt.reset_pos();
@@ -3010,11 +2999,12 @@
           colindx, cmd1, cmd2, i, j, binz, cw, ch, factor = 1.,
           scale = this.options.ScatCoef * ((this.gmaxbin) > 2000 ? 2000. / this.gmaxbin : 1.);
 
+      JSROOT.seed(handle.sumz);
+
       if (scale*handle.sumz < 1e5) {
          // one can use direct drawing of scatter plot without any patterns
 
-         if (!this.markeratt)
-            this.markeratt = new JSROOT.TAttMarkerHandler(histo);
+         this.createAttMarker({ attr: histo });
 
          this.markeratt.reset_pos();
 
@@ -3030,8 +3020,8 @@
 
                for (k=0;k<npix;++k)
                   path += this.markeratt.create(
-                            Math.round(handle.grx[i] + cw * Math.random()),
-                            Math.round(handle.gry[j+1] + ch * Math.random()));
+                            Math.round(handle.grx[i] + cw * JSROOT.random()),
+                            Math.round(handle.gry[j+1] + ch * JSROOT.random()));
             }
          }
 
@@ -3086,8 +3076,7 @@
       if (defs.empty() && (colPaths.length>0))
          defs = layer.insert("svg:defs",":first-child");
 
-      if (!this.markeratt)
-         this.markeratt = new JSROOT.TAttMarkerHandler(histo);
+      this.createAttMarker({ attr: histo });
 
       for (colindx=0;colindx<colPaths.length;++colindx)
         if ((colPaths[colindx] !== undefined) && (colindx<this.fContour.length)) {
@@ -3110,8 +3099,8 @@
               arrx[0] = arry[0] = 0.5;
            } else {
               for (var n=0;n<npix;++n) {
-                 arrx[n] = Math.random();
-                 arry[n] = Math.random();
+                 arrx[n] = JSROOT.random();
+                 arry[n] = JSROOT.random();
               }
            }
 
@@ -3142,6 +3131,9 @@
 
    TH2Painter.prototype.DrawBins = function() {
 
+      if (!this.draw_content)
+         return this.RemoveDrawG();
+
       this.CheckHistDrawAttributes();
 
       this.CreateG(true);
@@ -3152,34 +3144,26 @@
 
       // if (this.lineatt.color == 'none') this.lineatt.color = 'cyan';
 
-      if (this.options.Color + this.options.Box + this.options.Scat + this.options.Text +
-          this.options.Contour + this.options.Arrow + this.options.Candle.length == 0)
-         this.options.Scat = 1;
-
-      if (this.draw_content)
       if (this.IsTH2Poly())
          handle = this.DrawPolyBinsColor(w, h);
-      else
-      if (this.options.Color > 0)
-         handle = this.DrawBinsColor(w, h);
-      else
-      if (this.options.Scat > 0)
+      else if (this.options.Scat)
          handle = this.DrawBinsScatter(w, h);
-      else
-      if (this.options.Box > 0)
+      else if (this.options.Color)
+         handle = this.DrawBinsColor(w, h);
+      else if (this.options.Box)
          handle = this.DrawBinsBox(w, h);
-      else
-      if (this.options.Arrow > 0)
+      else if (this.options.Arrow)
          handle = this.DrawBinsArrow(w, h);
-      else
-      if (this.options.Contour > 0)
+      else if (this.options.Contour > 0)
          handle = this.DrawBinsContour(w, h);
-      else
-      if (this.options.Candle.length > 0)
+      else if (this.options.Candle)
          handle = this.DrawCandle(w, h);
 
-      if (this.options.Text > 0)
+      if (this.options.Text)
          handle = this.DrawBinsText(w, h, handle);
+
+      if (!handle)
+         handle = this.DrawBinsScatter(w, h);
 
       this.tt_handle = handle;
    }
@@ -3304,7 +3288,7 @@
                     (realy < bin.fYmin) || (realy > bin.fYmax)) continue;
 
                // ignore empty bins with col0 option
-               if ((bin.fContent === 0) && (this.options.Color === 11)) continue;
+               if ((bin.fContent === 0) && !this.options.Zero) continue;
 
                var gr = bin.fPoly, numgraphs = 1;
                if (gr._typename === 'TMultiGraph') { numgraphs = bin.fPoly.fGraphs.arr.length; gr = null; }
@@ -3328,7 +3312,7 @@
          var res = { name: "histo", title: histo.fTitle || "title",
                      x: pnt.x, y: pnt.y,
                      color1: this.lineatt ? this.lineatt.color : 'green',
-                     color2: this.fillatt ? this.fillatt.color : 'blue',
+                     color2: this.fillatt ? this.fillatt.fillcoloralt('blue') : 'blue',
                      exact: true, menu: true,
                      lines: this.ProvidePolyBinHints(foundindx, realx, realy) };
 
@@ -3379,7 +3363,7 @@
          var res = { name: histo.fName || "histo", title: histo.fTitle || "title",
                      x: pnt.x, y: pnt.y,
                      color1: this.lineatt ? this.lineatt.color : 'green',
-                     color2: this.fillatt ? this.fillatt.color : 'blue',
+                     color2: this.fillatt ? this.fillatt.fillcoloralt('blue') : 'blue',
                      lines: this.GetCandleTips(p), exact: true, menu: true };
 
          if (pnt.disabled) {
@@ -3441,10 +3425,10 @@
       var res = { name: histo.fName || "histo", title: histo.fTitle || "title",
                   x: pnt.x, y: pnt.y,
                   color1: this.lineatt ? this.lineatt.color : 'green',
-                  color2: this.fillatt ? this.fillatt.color : 'blue',
+                  color2: this.fillatt ? this.fillatt.fillcoloralt('blue') : 'blue',
                   lines: this.GetBinTips(i, j), exact: true, menu: true };
 
-      if (this.options.Color > 0) res.color2 = this.GetPalette().getColor(colindx);
+      if (this.options.Color) res.color2 = this.GetPalette().getColor(colindx);
 
       if (pnt.disabled && !this.is_projection) {
          ttrect.remove();
@@ -3516,12 +3500,10 @@
    TH2Painter.prototype.Draw2D = function(call_back, resize) {
 
       this.mode3d = false;
-
-      if (typeof this.Create3DScene == 'function')
-         this.Create3DScene(-1);
+      this.Clear3DScene();
 
       // draw new palette, resize frame if required
-      // var pp = this.DrawColorPalette((this.options.Zscale > 0) && ((this.options.Color > 0) || (this.options.Contour > 0)), true);
+      // var pp = this.DrawColorPalette(this.options.Zscale && (this.options.Color || this.options.Contour), true);
 
       if (this.DrawAxes());
          this.DrawBins();
@@ -3547,20 +3529,13 @@
 
    TH2Painter.prototype.CallDrawFunc = function(callback, resize) {
 
-      var is3d = false, main = this.frame_painter();
+      var main = this.frame_painter();
 
-      if (this.options.Contour > 0) is3d = main.mode3d; else
-      if ((this.options.Lego > 0) || (this.options.Surf > 0) || (this.options.Error > 0)) is3d = true;
-
-      if (is3d !== main.mode3d) {
-         is3d = main.mode3d;
-
-         if (this.options.Lego && !is3d) this.options.Lego = 0;
-         if (this.options.Surf && !is3d) this.options.Surf = 0;
-         if (this.options.Error && !is3d) this.options.Error = 0;
+      if (this.options.Mode3D !== main.mode3d) {
+         this.options.Mode3D = main.mode3d;
       }
 
-      var funcname = is3d ? "Draw3D" : "Draw2D";
+      var funcname = this.options.Mode3D ? "Draw3D" : "Draw2D";
 
       this[funcname](callback, resize);
    }
@@ -3575,19 +3550,21 @@
 
       painter.PrepareFrame(divid);
 
-      painter.options = { Hist: 0, Bar: 0, Error: 0, errorX: 0, Zero: 0, Mark: 0, Line: 0, Text: 1, Lego: 0, Surf: 0,
-                          fBarOffset: 0, fBarWidth: 1000, BaseLine: false,
-                          Color: 0, Scat: 0, ScatCoef: 1, Candle: 0, Box: 0, Arrow: 0, Contour: 0, Candle: "", Proj: 0 };
+      painter.options = { Hist: false, Bar: false, Error: false, ErrorKind: -1, errorX: 0, Zero: false, Mark: false,
+                          Line: false, Fill: false, Lego: 0, Surf: 0,
+                          Text: true, TextAngle: 0, TextKind: "",
+                          fBarOffset: 0, fBarWidth: 1000, BaseLine: false, Mode3D: false, AutoColor: 0,
+                          Color: false, Scat: false, ScatCoef: 1, Candle: "", Box: false, BoxStyle: 0, Arrow: false, Contour: 0, Proj: 0 };
 
-      if (obj.fOpts.fStyle.fIdx == 1) painter.options.Box = 1;
-                                 else painter.options.Color = 1;
+      if (obj.fOpts.fStyle.fIdx == 1) painter.options.Box = true;
+                                 else painter.options.Color = true;
 
       // here we deciding how histogram will look like and how will be shown
-      // painter.options = painter.DecodeOptions(opt);
+      painter.DecodeOptions(opt);
 
       if (painter.IsTH2Poly()) {
-         if (painter.options.Lego) painter.options.Lego = 12; else // and lego always 12
-         if (!painter.options.Color) painter.options.Color = 1; // default color
+         if (painter.options.Mode3D) painter.options.Lego = 12; // lego always 12
+         else if (!painter.options.Color) painter.options.Color = true; // default is color
       }
 
       painter._show_empty_bins = false;
@@ -3599,9 +3576,7 @@
       // painter.CreateStat(); // only when required
 
       painter.CallDrawFunc(function() {
-         //if ((this.options.Lego <= 0) && (this.options.Surf <= 0)) {
-         //   if (this.options.AutoZoom) this.AutoZoom();
-         //}
+         //if (!this.options.Mode3D && this.options.AutoZoom) this.AutoZoom();
          // this.FillToolbar();
          //if (this.options.Project && !this.mode3d)
          //   this.ToggleProjection(this.options.Project);

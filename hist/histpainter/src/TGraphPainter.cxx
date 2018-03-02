@@ -1023,6 +1023,26 @@ void TGraphPainter::PaintHelper(TGraph *theGraph, Option_t *option)
       } else {
          PaintGraphSimple(theGraph,chopt);
       }
+
+      // Paint the fit parameters if needed.
+      TF1 *fit = 0;
+      TList *functions = theGraph->GetListOfFunctions();
+      TObject *f;
+      if (functions) {
+         f = (TF1*)functions->First();
+         if (f) {
+            if (f->InheritsFrom(TF1::Class())) fit = (TF1*)f;
+         }
+         TIter   next(functions);
+         while ((f = (TObject*) next())) {
+            if (f->InheritsFrom(TF1::Class())) {
+               fit = (TF1*)f;
+               break;
+            }
+         }
+      }
+      if (fit) PaintStats(theGraph, fit);
+
    }
 }
 
@@ -1171,24 +1191,6 @@ void TGraphPainter::PaintGraph(TGraph *theGraph, Int_t npoints, const Double_t *
 
    // Set Clipping option
    gPad->SetBit(TGraph::kClipFrame, theGraph->TestBit(TGraph::kClipFrame));
-
-   TF1 *fit = 0;
-   TList *functions = theGraph->GetListOfFunctions();
-   TObject *f;
-   if (functions) {
-      f = (TF1*)functions->First();
-      if (f) {
-         if (f->InheritsFrom(TF1::Class())) fit = (TF1*)f;
-      }
-      TIter   next(functions);
-      while ((f = (TObject*) next())) {
-         if (f->InheritsFrom(TF1::Class())) {
-            fit = (TF1*)f;
-            break;
-         }
-      }
-   }
-   if (fit) PaintStats(theGraph, fit);
 
    rwxmin   = gPad->GetUxmin();
    rwxmax   = gPad->GetUxmax();

@@ -993,7 +993,7 @@ fGUIThreadHandle(0), fGUIThreadId(0)
    char *buf = new char[MAX_MODULE_NAME32 + 1];
 
 #ifdef ROOTPREFIX
-   if (gSystem->Getenv("ROOTIGNOREPREFIX") {
+   if (gSystem->Getenv("ROOTIGNOREPREFIX")) {
 #endif
    // set ROOTSYS
    HMODULE hModCore = ::GetModuleHandle("libCore.dll");
@@ -2090,6 +2090,8 @@ void *TWinNTSystem::OpenDirectory(const char *fdir)
       if (!(entry[strlen(dir)-1] == '/' || entry[strlen(dir)-1] == '\\' )) {
          strlcat(entry,"\\",nche);
       }
+      if (entry[strlen(dir)-1] == ' ')
+         entry[strlen(dir)-1] = '\0';
       strlcat(entry,"*",nche);
 
       HANDLE searchFile;
@@ -2490,10 +2492,13 @@ Bool_t TWinNTSystem::IsAbsoluteFileName(const char *dir)
 
 const char *TWinNTSystem::UnixPathName(const char *name)
 {
-   static char temp[1024];
-   strlcpy(temp, name,1024);
+   const int kBufSize = 1024;
+   TTHREAD_TLS_ARRAY(char, kBufSize, temp);
+
+   strlcpy(temp, name, kBufSize);
    char *currentChar = temp;
 
+   // This can not change the size of the string.
    while (*currentChar != '\0') {
       if (*currentChar == '\\') *currentChar = '/';
       currentChar++;
@@ -2895,6 +2900,13 @@ Bool_t TWinNTSystem::ExpandPathName(TString &patbuf0)
 
    Int_t old_level = gErrorIgnoreLevel;
    gErrorIgnoreLevel = kFatal; // Explicitly remove all messages
+   if (patbuf0.BeginsWith("\\")) {
+      const char driveletter = DriveName(patbuf);
+      if (driveletter) {
+         patbuf0.Prepend(":");
+         patbuf0.Prepend(driveletter);
+      }
+   }
    TUrl urlpath(patbuf0, kTRUE);
    TString proto = urlpath.GetProtocol();
    gErrorIgnoreLevel = old_level;
@@ -3857,12 +3869,15 @@ void TWinNTSystem::Exit(int code, Bool_t mode)
       if (gROOT->GetListOfBrowsers()) {
          // GetListOfBrowsers()->Delete() creates problems when a browser is
          // created on the stack, calling CloseWindow() solves the problem
-         //gROOT->GetListOfBrowsers()->Delete();
-         TBrowser *b;
-         TIter next(gROOT->GetListOfBrowsers());
-         while ((b = (TBrowser*) next()))
-            gROOT->ProcessLine(TString::Format("((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()->CloseWindow();",
-                                               (ULong_t)b));
+         if (gROOT->IsBatch())
+            gROOT->GetListOfBrowsers()->Delete();
+         else {
+            TBrowser *b;
+            TIter next(gROOT->GetListOfBrowsers());
+            while ((b = (TBrowser*) next()))
+               gROOT->ProcessLine(TString::Format("((TBrowser*)0x%lx)->GetBrowserImp()->GetMainFrame()->CloseWindow();",
+                                                  (ULong_t)b));
+         }
       }
       gROOT->EndOfProcessCleanups();
    }

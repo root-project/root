@@ -62,7 +62,7 @@ a 'using namespace std;' has been applied to and with:
 #include "TProtoClass.h"
 #include "TROOT.h"
 #include "TRealData.h"
-#include "TCheckHashRecurveRemoveConsistency.h" // Private header
+#include "TCheckHashRecursiveRemoveConsistency.h" // Private header
 #include "TStreamer.h"
 #include "TStreamerElement.h"
 #include "TVirtualStreamerInfo.h"
@@ -5875,7 +5875,7 @@ void TClass::SetRuntimeProperties()
 
    UChar_t properties = static_cast<UChar_t>(ERuntimeProperties::kSet);
 
-   if (ROOT::Internal::TCheckHashRecurveRemoveConsistency::Check(*this))
+   if (ROOT::Internal::TCheckHashRecursiveRemoveConsistency::Check(*this))
       properties |= static_cast<UChar_t>(ERuntimeProperties::kConsistentHash);
 
    const_cast<TClass *>(this)->fRuntimeProperties = properties;
@@ -6989,8 +6989,8 @@ Bool_t ROOT::Internal::HasConsistentHashMember(const char *cname)
    // cross-checked in testHashRecursiveRemove.cxx
    static const char *handVerified[] = {
       "TEnvRec",    "TDataType",      "TObjArray",    "TList",   "THashList",
-      "TClass",     "TCling",         "TInterpreter", "TMethod", "ROOT::Internal::TCheckHashRecurveRemoveConsistency",
-      "TCheckHashRecurveRemoveConsistency", "TGWindow",
+      "TClass",     "TCling",         "TInterpreter", "TMethod", "ROOT::Internal::TCheckHashRecursiveRemoveConsistency",
+      "TCheckHashRecursiveRemoveConsistency", "TGWindow",
       "TDirectory", "TDirectoryFile", "TObject",      "TH1",
       "TQClass" };
 

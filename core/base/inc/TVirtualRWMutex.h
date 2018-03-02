@@ -44,6 +44,20 @@ public:
    // distinct from these)
    class Hint_t;
 
+   /// \class State
+   /// Earlier lock state as returned by `GetState()` that can be passed to
+   /// `Restore()`
+   struct State {
+      virtual ~State(); // implemented in TVirtualMutex.cxx
+   };
+
+   /// \class StateDelta
+   /// State as returned by `GetStateDelta()` that can be passed to
+   /// `Restore()`
+   struct StateDelta {
+      virtual ~StateDelta(); // implemented in TVirtualMutex.cxx
+   };
+
    virtual Hint_t *ReadLock() = 0;
    virtual void ReadUnLock(Hint_t *) = 0;
    virtual Hint_t *WriteLock() = 0;
@@ -53,6 +67,10 @@ public:
    Int_t TryLock() override { WriteLock(); return 1; }
    Int_t UnLock() override { WriteUnLock(nullptr); return 1; }
    Int_t CleanUp() override { WriteUnLock(nullptr); return 1; }
+
+   virtual std::unique_ptr<State> GetStateBefore() = 0;
+   virtual std::unique_ptr<StateDelta> Rewind(const State& earlierState) = 0;
+   virtual void Apply(std::unique_ptr<StateDelta> &&delta) = 0;
 
    TVirtualRWMutex *Factory(Bool_t /*recursive*/ = kFALSE) override = 0;
 

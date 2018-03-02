@@ -73,6 +73,13 @@ public:
       kAllAxes = kXaxis | kYaxis | kZaxis
    };
 
+   /// Enumeration specifying the way to treat statoverflow
+   enum  EStatOverflows {
+         kIgnore = 0,   ///< Override global flag ignoring the overflows
+         kConsider = 1, ///< Override global flag considering the overflows
+         kNeutral = 2,  ///< Adapt to the global flag
+   };
+
    friend class TH1Merger;
 
 protected:
@@ -101,6 +108,7 @@ protected:
     Double_t     *fIntegral;        ///<!Integral of bins used by GetRandom
     TVirtualHistPainter *fPainter;  ///<!pointer to histogram painter
     EBinErrorOpt  fBinStatErrOpt;   ///< option for bin statistical errors
+    EStatOverflows fStatOverflows;  ///< per object flag to use under/overflows in statistics
     static Int_t  fgBufferSize;     ///<!default buffer size for automatic histograms
     static Bool_t fgAddDirectory;   ///<!flag to add histograms to the directory
     static Bool_t fgStatOverflows;  ///<!flag to use under/overflows in statistics
@@ -137,6 +145,7 @@ protected:
                                Option_t * opt, Bool_t doerr = kFALSE) const;
 
    virtual void     DoFillN(Int_t ntimes, const Double_t *x, const Double_t *w, Int_t stride=1);
+   Bool_t    GetStatOverflowsBehaviour() const { return EStatOverflows::kNeutral == fStatOverflows ? fgStatOverflows : EStatOverflows::kConsider == fStatOverflows; }
 
    static bool CheckAxisLimits(const TAxis* a1, const TAxis* a2);
    static bool CheckBinLimits(const TAxis* a1, const TAxis* a2);
@@ -302,6 +311,7 @@ public:
            Double_t GetRMSError(Int_t axis=1) const { return GetStdDevError(axis); }
 
    virtual Double_t GetSkewness(Int_t axis=1) const;
+           EStatOverflows GetStatOverflows() const {return fStatOverflows; }; ///< Get the behaviour adopted by the object about the statoverflows. See EStatOverflows for more information.
            TAxis*   GetXaxis()  { return &fXaxis; }
            TAxis*   GetYaxis()  { return &fYaxis; }
            TAxis*   GetZaxis()  { return &fZaxis; }
@@ -323,7 +333,7 @@ public:
    virtual void     LabelsInflate(Option_t *axis="X");
    virtual void     LabelsOption(Option_t *option="h", Option_t *axis="X");
    virtual Long64_t Merge(TCollection *list);
-   virtual Bool_t   Multiply(TF1 *h1, Double_t c1=1);
+   virtual Bool_t   Multiply(TF1 *f1, Double_t c1=1);
    virtual Bool_t   Multiply(const TH1 *h1);
    virtual Bool_t   Multiply(const TH1 *h1, const TH1 *h2, Double_t c1=1, Double_t c2=1, Option_t *option=""); // *MENU*
    virtual void     Paint(Option_t *option="");
@@ -390,6 +400,7 @@ public:
    virtual void     SetTitleFont(Style_t font=62, Option_t *axis="X");
    virtual void     SetTitleOffset(Float_t offset=1, Option_t *axis="X");
    virtual void     SetTitleSize(Float_t size=0.02, Option_t *axis="X");
+           void     SetStatOverflows(EStatOverflows statOverflows) {fStatOverflows = statOverflows;}; ///< See GetStatOverflows for more information.
    virtual void     SetTitle(const char *title);  // *MENU*
    virtual void     SetXTitle(const char *title) {fXaxis.SetTitle(title);}
    virtual void     SetYTitle(const char *title) {fYaxis.SetTitle(title);}
@@ -416,7 +427,7 @@ public:
    virtual void     SetCellError(Int_t binx, Int_t biny, Double_t content)
                         { Obsolete("SetCellError", "v6-00", "v6-04"); SetBinError(binx, biny, content); }
 
-   ClassDef(TH1,7)  //1-Dim histogram base class
+   ClassDef(TH1,8)  //1-Dim histogram base class
 
 protected:
    virtual Double_t RetrieveBinContent(Int_t bin) const;

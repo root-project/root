@@ -45,8 +45,8 @@ TEST(DrawOptTest, OneD)
    TAxisConfig xaxis{10, 0., 1.};
    auto h = std::make_shared<TH1D>(xaxis);
    TCanvas canv;
-   auto &Opts = canv.Draw(h);
-   Opts.SetLineColor(TColor::kRed);
-   TColor shouldBeRed = Opts.GetLineColor();
+   auto optsPtr = canv.Draw(h);
+   optsPtr->SetLineColor(TColor::kRed);
+   TColor shouldBeRed = (TColor)optsPtr->GetLineColor();
    EXPECT_EQ(shouldBeRed, TColor::kRed);
 }

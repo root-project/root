@@ -102,12 +102,11 @@ TSocket::TSocket(TInetAddress addr, const char *service, Int_t tcpwindowsize)
       fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
                                         tcpwindowsize);
 
-      if (fSocket != -1) {
-         R__LOCKGUARD(gROOTMutex);
+      if (fSocket != kInvalid) {
          gROOT->GetListOfSockets()->Add(this);
       }
    } else
-      fSocket = -1;
+      fSocket = kInvalid;
 
 }
 
@@ -148,10 +147,9 @@ TSocket::TSocket(TInetAddress addr, Int_t port, Int_t tcpwindowsize)
 
    fSocket = gSystem->OpenConnection(addr.GetHostName(), fAddress.GetPort(),
                                      tcpwindowsize);
-   if (fSocket == -1)
+   if (fSocket == kInvalid)
       fAddress.fPort = -1;
    else {
-      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -193,12 +191,11 @@ TSocket::TSocket(const char *host, const char *service, Int_t tcpwindowsize)
 
    if (fAddress.GetPort() != -1) {
       fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
-      if (fSocket != -1) {
-         R__LOCKGUARD(gROOTMutex);
+      if (fSocket != kInvalid) {
          gROOT->GetListOfSockets()->Add(this);
       }
    } else
-      fSocket = -1;
+      fSocket = kInvalid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -243,10 +240,9 @@ TSocket::TSocket(const char *url, Int_t port, Int_t tcpwindowsize)
    ResetBit(TSocket::kBrokenConn);
 
    fSocket = gSystem->OpenConnection(host, fAddress.GetPort(), tcpwindowsize);
-   if (fSocket == -1) {
-      fAddress.fPort = -1;
+   if (fSocket == kInvalid) {
+      fAddress.fPort = kInvalid;
    } else {
-      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -282,7 +278,6 @@ TSocket::TSocket(const char *sockpath) : TNamed(sockpath, "")
 
    fSocket = gSystem->OpenConnection(sockpath, -1, -1);
    if (fSocket > 0) {
-      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    }
 }
@@ -311,10 +306,9 @@ TSocket::TSocket(Int_t desc) : TNamed("", "")
    if (desc >= 0) {
       fSocket  = desc;
       fAddress = gSystem->GetPeerName(fSocket);
-      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    } else
-      fSocket = -1;
+      fSocket = kInvalid;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -346,10 +340,9 @@ TSocket::TSocket(Int_t desc, const char *sockpath) : TNamed(sockpath, "")
 
    if (desc >= 0) {
       fSocket  = desc;
-      R__LOCKGUARD(gROOTMutex);
       gROOT->GetListOfSockets()->Add(this);
    } else
-      fSocket = -1;
+      fSocket = kInvalid;
 }
 
 
@@ -373,10 +366,23 @@ TSocket::TSocket(const TSocket &s) : TNamed(s)
    fLastUsageMtx   = 0;
    ResetBit(TSocket::kBrokenConn);
 
-   if (fSocket != -1) {
-      R__LOCKGUARD(gROOTMutex);
+   if (fSocket != kInvalid) {
       gROOT->GetListOfSockets()->Add(this);
    }
+}
+////////////////////////////////////////////////////////////////////////////////
+/// Close the socket and mark as due to a broken connection.
+
+void TSocket::MarkBrokenConnection()
+{
+   SetBit(TSocket::kBrokenConn);
+   if (IsValid()) {
+      gSystem->CloseConnection(fSocket, kFALSE);
+      fSocket = kInvalidStillInList;
+   }
+
+   SafeDelete(fUUIDs);
+   SafeDelete(fLastUsageMtx);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -389,12 +395,13 @@ void TSocket::Close(Option_t *option)
 {
    Bool_t force = option ? (!strcmp(option, "force") ? kTRUE : kFALSE) : kFALSE;
 
-   if (fSocket != -1) {
-      gSystem->CloseConnection(fSocket, force);
-      R__LOCKGUARD(gROOTMutex);
+   if (fSocket != kInvalid) {
+      if (IsValid()) { // Filter out kInvalidStillInList case (disconnected but not removed from list)
+         gSystem->CloseConnection(fSocket, force);
+      }
       gROOT->GetListOfSockets()->Remove(this);
    }
-   fSocket = -1;
+   fSocket = kInvalid;
 
    SafeDelete(fUUIDs);
    SafeDelete(fLastUsageMtx);
@@ -521,7 +528,7 @@ Int_t TSocket::Send(const TMessage &mess)
 {
    TSystem::ResetErrno();
 
-   if (fSocket == -1) return -1;
+   if (!IsValid()) return -1;
 
    if (mess.IsReading()) {
       Error("Send", "cannot send a message used for reading");
@@ -554,8 +561,7 @@ Int_t TSocket::Send(const TMessage &mess)
    if ((nsent = gSystem->SendRaw(fSocket, mbuf, mlen, 0)) <= 0) {
       if (nsent == -5) {
          // Connection reset by peer or broken
-         SetBit(TSocket::kBrokenConn);
-         Close();
+         MarkBrokenConnection();
       }
       return nsent;
    }
@@ -572,8 +578,7 @@ Int_t TSocket::Send(const TMessage &mess)
       if ((n = gSystem->RecvRaw(fSocket, buf, sizeof(buf), 0)) < 0) {
          if (n == -5) {
             // Connection reset by peer or broken
-            SetBit(TSocket::kBrokenConn);
-            Close();
+            MarkBrokenConnection();
          } else
             n = -1;
          return n;
@@ -621,15 +626,14 @@ Int_t TSocket::SendRaw(const void *buffer, Int_t length, ESendRecvOptions opt)
 {
    TSystem::ResetErrno();
 
-   if (fSocket == -1) return -1;
+   if (!IsValid()) return -1;
 
    ResetBit(TSocket::kBrokenConn);
    Int_t nsent;
    if ((nsent = gSystem->SendRaw(fSocket, buffer, length, (int) opt)) <= 0) {
       if (nsent == -5) {
          // Connection reset or broken: close
-         SetBit(TSocket::kBrokenConn);
-         Close();
+         MarkBrokenConnection();
       }
       return nsent;
    }
@@ -819,7 +823,7 @@ Int_t TSocket::Recv(TMessage *&mess)
 {
    TSystem::ResetErrno();
 
-   if (fSocket == -1) {
+   if (!IsValid()) {
       mess = 0;
       return -1;
    }
@@ -831,8 +835,7 @@ oncemore:
    if ((n = gSystem->RecvRaw(fSocket, &len, sizeof(UInt_t), 0)) <= 0) {
       if (n == 0 || n == -5) {
          // Connection closed, reset or broken
-         SetBit(TSocket::kBrokenConn);
-         Close();
+         MarkBrokenConnection();
       }
       mess = 0;
       return n;
@@ -844,8 +847,7 @@ oncemore:
    if ((n = gSystem->RecvRaw(fSocket, buf+sizeof(UInt_t), len, 0)) <= 0) {
       if (n == 0 || n == -5) {
          // Connection closed, reset or broken
-         SetBit(TSocket::kBrokenConn);
-         Close();
+         MarkBrokenConnection();
       }
       delete [] buf;
       mess = 0;
@@ -872,8 +874,7 @@ oncemore:
       if ((n2 = gSystem->SendRaw(fSocket, ok, sizeof(ok), 0)) < 0) {
          if (n2 == -5) {
             // Connection reset or broken
-            SetBit(TSocket::kBrokenConn);
-            Close();
+            MarkBrokenConnection();
          }
          delete mess;
          mess = 0;
@@ -902,7 +903,7 @@ Int_t TSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
 {
    TSystem::ResetErrno();
 
-   if (fSocket == -1) return -1;
+   if (!IsValid()) return -1;
    if (length == 0) return 0;
 
    ResetBit(TSocket::kBrokenConn);
@@ -910,8 +911,7 @@ Int_t TSocket::RecvRaw(void *buffer, Int_t length, ESendRecvOptions opt)
    if ((n = gSystem->RecvRaw(fSocket, buffer, length, (int) opt)) <= 0) {
       if (n == 0 || n == -5) {
          // Connection closed, reset or broken
-         SetBit(TSocket::kBrokenConn);
-         Close();
+         MarkBrokenConnection();
       }
       return n;
    }
@@ -1016,7 +1016,7 @@ Bool_t TSocket::RecvProcessIDs(TMessage *mess)
 
 Int_t TSocket::SetOption(ESockOptions opt, Int_t val)
 {
-   if (fSocket == -1) return -1;
+   if (!IsValid()) return -1;
 
    return gSystem->SetSockOpt(fSocket, opt, val);
 }
@@ -1026,7 +1026,7 @@ Int_t TSocket::SetOption(ESockOptions opt, Int_t val)
 
 Int_t TSocket::GetOption(ESockOptions opt, Int_t &val)
 {
-   if (fSocket == -1) return -1;
+   if (!IsValid()) return -1;
 
    return gSystem->GetSockOpt(fSocket, opt, &val);
 }

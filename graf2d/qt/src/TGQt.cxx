@@ -2332,7 +2332,7 @@ void  TGQt::SetMarkerSize(Float_t markersize)
 
 void  TGQt::SetMarkerStyle(Style_t markerstyle){
    if (fMarkerStyle == markerstyle) return;
-   TPoint shape[15];
+   TPoint shape[17];
    markerstyle  = TMath::Abs(markerstyle);
    if (markerstyle%1000 >= 31) return;
    fMarkerStyle = markerstyle%1000;

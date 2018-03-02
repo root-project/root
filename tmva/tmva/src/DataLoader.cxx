@@ -53,6 +53,7 @@
 #include "TMVA/Configurable.h"
 #include "TMVA/DataLoader.h"
 #include "TMVA/Config.h"
+#include "TMVA/CvSplit.h"
 #include "TMVA/Tools.h"
 #include "TMVA/Ranking.h"
 #include "TMVA/DataSet.h"
@@ -90,8 +91,7 @@ TMVA::DataLoader::DataLoader( TString thedlName)
    fTransformations      ( "I" ),
    fVerbose              ( kFALSE ),
    fDataAssignType       ( kAssignEvents ),
-   fATreeEvent           (0),
-   fMakeFoldDataSet      ( kFALSE )
+   fATreeEvent           (0)
 {
    fDataSetManager = new DataSetManager( *fDataInputHandler ); // DSMTEST
    SetName(thedlName.Data());
@@ -656,186 +656,30 @@ void TMVA::DataLoader::PrepareTrainingAndTestTree( TCut sigcut, TCut bkgcut, con
 /// classes. The option to split the training dataset into a training set and
 /// a validation set is implemented but not currently used.
 
-void TMVA::DataLoader::MakeKFoldDataSet(UInt_t numberFolds, bool validationSet){
-   // No need to do it again if the sets have already been split.
-   if(fMakeFoldDataSet){
-      Log() << kInfo << "Splitting in k-folds has been already done" << Endl;
-      return;
-   }
-
-   fMakeFoldDataSet = kTRUE;
-
-   // Get the original event vectors for testing and training from the dataset.
-   const std::vector<Event*> TrainingData = DefaultDataSetInfo().GetDataSet()->GetEventCollection(Types::kTraining);
-   const std::vector<Event*> TestingData = DefaultDataSetInfo().GetDataSet()->GetEventCollection(Types::kTesting);
-
-   std::vector<Event*> TrainSigData;
-   std::vector<Event*> TrainBkgData;
-   std::vector<Event*> TestSigData;
-   std::vector<Event*> TestBkgData;
-
-   // Split the testing and training sets into signal and background classes.
-   for(UInt_t i=0; i<TrainingData.size(); ++i){
-      if( strncmp( DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName(), "Signal", 6) == 0){ TrainSigData.push_back(TrainingData.at(i)); }
-      else if( strncmp( DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName(), "Background", 10) == 0){ TrainBkgData.push_back(TrainingData.at(i)); }
-      else{
-         Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << DefaultDataSetInfo().GetClassInfo( TrainingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
-      }
-   }
-
-   for(UInt_t i=0; i<TestingData.size(); ++i){
-      if( strncmp( DefaultDataSetInfo().GetClassInfo( TestingData.at(i)->GetClass() )->GetName(), "Signal", 6) == 0){ TestSigData.push_back(TestingData.at(i)); }
-      else if( strncmp( DefaultDataSetInfo().GetClassInfo( TestingData.at(i)->GetClass() )->GetName(), "Background", 10) == 0){ TestBkgData.push_back(TestingData.at(i)); }
-      else{
-         Log() << kFATAL << "DataSets should only contain Signal and Background classes for classification, " << DefaultDataSetInfo().GetClassInfo( TestingData.at(i)->GetClass() )->GetName() << " is not a recognised class" << Endl;
-      }
-   }
-
-
-   // Split the sets into the number of folds.
-   if(validationSet){
-      std::vector<std::vector<Event*>> tempSigEvents = SplitSets(TrainSigData,0,2);
-      std::vector<std::vector<Event*>> tempBkgEvents = SplitSets(TrainBkgData,0,2);
-      fTrainSigEvents = SplitSets(tempSigEvents.at(0),0,numberFolds);
-      fTrainBkgEvents = SplitSets(tempBkgEvents.at(0),0,numberFolds);
-      fValidSigEvents = SplitSets(tempSigEvents.at(1),0,numberFolds);
-      fValidBkgEvents = SplitSets(tempBkgEvents.at(1),0,numberFolds);
-   }
-   else{
-      fTrainSigEvents = SplitSets(TrainSigData,0,numberFolds);
-      fTrainBkgEvents = SplitSets(TrainBkgData,0,numberFolds);
-   }
-
-   fTestSigEvents = SplitSets(TestSigData,0,numberFolds);
-   fTestBkgEvents = SplitSets(TestBkgData,0,numberFolds);
+void TMVA::DataLoader::MakeKFoldDataSet(CvSplit & s)
+{
+   s.MakeKFoldDataSet( DefaultDataSetInfo() );
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Function for assigning the correct folds to the testing or training set.
 
-void TMVA::DataLoader::PrepareFoldDataSet(UInt_t foldNumber, Types::ETreeType tt){
-
-   UInt_t numFolds = fTrainSigEvents.size();
-
-   std::vector<Event*>* tempTrain = new std::vector<Event*>;
-   std::vector<Event*>* tempTest = new std::vector<Event*>;
-
-   UInt_t nTrain = 0;
-   UInt_t nTest = 0;
-
-   // Get the number of events so the memory can be reserved.
-   for(UInt_t i=0; i<numFolds; ++i){
-      if(tt == Types::kTraining){
-         if(i!=foldNumber){
-            nTrain += fTrainSigEvents.at(i).size();
-            nTrain += fTrainBkgEvents.at(i).size();
-         }
-         else{
-            nTest += fTrainSigEvents.at(i).size();
-            nTest += fTrainSigEvents.at(i).size();
-         }
-      }
-      else if(tt == Types::kValidation){
-         if(i!=foldNumber){
-            nTrain += fValidSigEvents.at(i).size();
-            nTrain += fValidBkgEvents.at(i).size();
-         }
-         else{
-            nTest += fValidSigEvents.at(i).size();
-            nTest += fValidSigEvents.at(i).size();
-         }
-      }
-      else if(tt == Types::kTesting){
-         if(i!=foldNumber){
-            nTrain += fTestSigEvents.at(i).size();
-            nTrain += fTestBkgEvents.at(i).size();
-         }
-         else{
-            nTest += fTestSigEvents.at(i).size();
-            nTest += fTestSigEvents.at(i).size();
-         }
-      }
-   }
-
-   // Reserve memory before filling vectors
-   tempTrain->reserve(nTrain);
-   tempTest->reserve(nTest);
-
-   // Fill vectors with correct folds for testing and training.
-   for(UInt_t j=0; j<numFolds; ++j){
-      if(tt == Types::kTraining){
-         if(j!=foldNumber){
-            tempTrain->insert(tempTrain->end(), fTrainSigEvents.at(j).begin(), fTrainSigEvents.at(j).end());
-            tempTrain->insert(tempTrain->end(), fTrainBkgEvents.at(j).begin(), fTrainBkgEvents.at(j).end());
-         }
-         else{
-            tempTest->insert(tempTest->end(), fTrainSigEvents.at(j).begin(), fTrainSigEvents.at(j).end());
-            tempTest->insert(tempTest->end(), fTrainBkgEvents.at(j).begin(), fTrainBkgEvents.at(j).end());
-         }
-      }
-      else if(tt == Types::kValidation){
-         if(j!=foldNumber){
-            tempTrain->insert(tempTrain->end(), fValidSigEvents.at(j).begin(), fValidSigEvents.at(j).end());
-            tempTrain->insert(tempTrain->end(), fValidBkgEvents.at(j).begin(), fValidBkgEvents.at(j).end());
-         }
-         else{
-            tempTest->insert(tempTest->end(), fValidSigEvents.at(j).begin(), fValidSigEvents.at(j).end());
-            tempTest->insert(tempTest->end(), fValidBkgEvents.at(j).begin(), fValidBkgEvents.at(j).end());
-         }
-      }
-      else if(tt == Types::kTesting){
-         if(j!=foldNumber){
-            tempTrain->insert(tempTrain->end(), fTestSigEvents.at(j).begin(), fTestSigEvents.at(j).end());
-            tempTrain->insert(tempTrain->end(), fTestBkgEvents.at(j).begin(), fTestBkgEvents.at(j).end());
-         }
-         else{
-            tempTest->insert(tempTest->end(), fTestSigEvents.at(j).begin(), fTestSigEvents.at(j).end());
-            tempTest->insert(tempTest->end(), fTestBkgEvents.at(j).begin(), fTestBkgEvents.at(j).end());
-         }
-      }
-   }
-
-   // Assign the vectors of the events to rebuild the dataset
-   DefaultDataSetInfo().GetDataSet()->SetEventCollection(tempTrain,Types::kTraining,false);
-   DefaultDataSetInfo().GetDataSet()->SetEventCollection(tempTest,Types::kTesting,false);
-   delete tempTest;
-   delete tempTrain;
+void TMVA::DataLoader::PrepareFoldDataSet(CvSplit & s, UInt_t foldNumber, Types::ETreeType tt)
+{
+   s.PrepareFoldDataSet( DefaultDataSetInfo(), foldNumber, tt );
 }
 
+
 ////////////////////////////////////////////////////////////////////////////////
-/// Splits the input vector in to equally sized randomly sampled folds.
+/// Recombines the dataset. The precise semantics depend on the actual split.
+/// 
+/// Similar to the inverse operation of `MakeKFoldDataSet` but _will_ differ.
+/// See documentation for each particular split for more information.
+///
 
-std::vector<std::vector<TMVA::Event*>> TMVA::DataLoader::SplitSets(std::vector<TMVA::Event*>& oldSet, int seedNum, int numFolds){
-
-   ULong64_t nEntries = oldSet.size();
-   ULong64_t foldSize = nEntries/numFolds;
-
-   std::vector<std::vector<Event*>> tempSets;
-   tempSets.resize(numFolds);
-
-   TRandom3 r(seedNum);
-
-   ULong64_t inSet = 0;
-
-   for(ULong64_t i=0; i<nEntries; i++){
-      bool inTree = false;
-      if(inSet == foldSize*numFolds){
-         break;
-      }
-      else{
-         while(!inTree){
-            int s = r.Integer(numFolds);
-            if(tempSets.at(s).size()<foldSize){
-               tempSets.at(s).push_back(oldSet.at(i));
-               inSet++;
-               inTree=true;
-            }
-         }
-      }
-   }
-
-   return tempSets;
-
+void TMVA::DataLoader::RecombineKFoldDataSet(CvSplit & s, Types::ETreeType tt)
+{
+   s.RecombineKFoldDataSet( DefaultDataSetInfo(), tt );
 }
 
 ////////////////////////////////////////////////////////////////////////////////

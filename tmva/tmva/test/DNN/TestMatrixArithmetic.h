@@ -31,6 +31,7 @@ auto testMultiplication(size_t ntests)
    using Matrix_t = typename Architecture_t::Matrix_t;
 
    Scalar_t maximumError = 0.0;
+   Scalar_t mean = 5.0, sigma = 2.0;
 
    for (size_t t = 0; t < ntests; t++) {
       size_t m, n, k;
@@ -39,11 +40,11 @@ auto testMultiplication(size_t ntests)
       k = rand() % 100 + 1;
 
       TMatrixT<Scalar_t> ARef(m,k), A2Ref(m,k), ATRef(k,m) , BRef(k,n), BTRef(n,k), CRef(m,n);
-      TMVA::DNN::randomMatrix(ARef);
-      TMVA::DNN::randomMatrix(A2Ref);
-      TMVA::DNN::randomMatrix(ATRef);
-      TMVA::DNN::randomMatrix(BRef);
-      TMVA::DNN::randomMatrix(BTRef);
+      TMVA::DNN::randomMatrix(ARef, mean, sigma);
+      TMVA::DNN::randomMatrix(A2Ref, mean, sigma);
+      TMVA::DNN::randomMatrix(ATRef, mean, sigma);
+      TMVA::DNN::randomMatrix(BRef, mean, sigma);
+      TMVA::DNN::randomMatrix(BTRef, mean, sigma);
       Matrix_t A(ARef), A2(A2Ref), AT(ATRef), B(BRef), BT(BTRef),  C(CRef);
 
       // A * B

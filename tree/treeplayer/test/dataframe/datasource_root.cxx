@@ -47,7 +47,7 @@ TEST(TRootDS, ColTypeNames)
    EXPECT_STREQ("i", colNames[0].c_str());
    EXPECT_STREQ("g", colNames[1].c_str());
 
-   EXPECT_STREQ("int", tds.GetTypeName("i").c_str());
+   EXPECT_STREQ("Int_t", tds.GetTypeName("i").c_str());
    EXPECT_STREQ("TGraph", tds.GetTypeName("g").c_str());
 }
 
@@ -87,6 +87,21 @@ TEST(TRootTDS, ColumnReaders)
       }
       slot++;
    }
+}
+
+TEST(TRootTDS, ColumnReadersWrongType)
+{
+   TRootDS tds(treeName, fileGlob);
+   const auto nSlots = 3U;
+   tds.SetNSlots(nSlots);
+   int res = 1;
+   try {
+      auto vals = tds.GetColumnReaders<char *>("i");
+   } catch (const std::runtime_error &e) {
+      EXPECT_STREQ("The type of column \"i\" is Int_t but a different one has been selected.", e.what());
+      res = 0;
+   }
+   EXPECT_EQ(0, res);
 }
 
 #ifndef NDEBUG

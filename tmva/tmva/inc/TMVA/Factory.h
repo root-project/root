@@ -79,6 +79,7 @@ namespace TMVA {
    
 
    class Factory : public Configurable {
+      friend class CrossValidation;
    public:
 
       typedef std::vector<IMethod*> MVector;
@@ -191,6 +192,8 @@ namespace TMVA {
 
       void SetInputTreesFromEventAssignTrees();
 
+      MethodBase* BookMethodWeightfile(DataLoader *dataloader, TMVA::Types::EMVA methodType, const TString &weightfile);
+
    private:
 
       // data members
@@ -202,8 +205,9 @@ namespace TMVA {
 
       // cd to local directory
       TString                                   fOptions;         //! option string given by construction (presently only "V")
-      TString                                   fTransformations; //! List of transformations to test
+      TString                                   fTransformations; //! list of transformations to test
       Bool_t                                    fVerbose;         //! verbose mode
+      TString                                   fVerboseLevel;    //! verbosity level, controls granularity of logging
       Bool_t                                    fCorrelations;    //! enable to calculate corelations
       Bool_t                                    fROC;             //! enable to calculate ROC values
       Bool_t                                    fSilentFile;      //! used in contructor wihtout file 
@@ -211,7 +215,7 @@ namespace TMVA {
       TString                                   fJobName;         //! jobname, used as extension in weight file names
 
       Types::EAnalysisType                      fAnalysisType;    //! the training type
-      Bool_t                                    fModelPersistence;//!option to save the trained model in xml file or using serialization
+      Bool_t                                    fModelPersistence;//! option to save the trained model in xml file or using serialization
       
       
    protected:

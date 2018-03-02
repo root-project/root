@@ -333,7 +333,7 @@ End_Macro
 ~~~
 */
 
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "TTree.h"
 
 #include "ROOT/TIOFeatures.hxx"
@@ -5433,7 +5433,7 @@ Int_t TTree::GetEntry(Long64_t entry, Int_t getall)
 #ifdef R__USE_IMT
    // At most one parallel read with a single branch
    unsigned int nSortedBranches(2);
-   if (nSortedBranches > 1 && ROOT::IsImplicitMTEnabled() && fIMTEnabled) {
+   if (nSortedBranches > 1 && ROOT::IsImplicitMTEnabled() && fIMTEnabled && !TTreeCacheUnzip::IsParallelUnzip()) {
       if (fSortedBranches.empty()) {
         InitializeBranchLists(true);
         nSortedBranches = fSortedBranches.size();
@@ -8383,9 +8383,11 @@ Int_t TTree::SetCacheSizeAux(Bool_t autocache /* = kTRUE */, Long64_t cacheSize 
       return 0;
    }
 
+#ifdef R__USE_IMT
    if(TTreeCacheUnzip::IsParallelUnzip() && file->GetCompressionLevel() > 0)
       pf = new TTreeCacheUnzip(this, cacheSize);
    else
+#endif
       pf = new TTreeCache(this, cacheSize);
 
    pf->SetAutoCreated(autocache);

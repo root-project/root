@@ -8,7 +8,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
+#include <algorithm>
+#include <stdexcept>
+
 #include "ROOT/TDataFrame.hxx"
+#include "TChain.h"
+#include "TDirectory.h"
+
 using namespace ROOT::Experimental;
 
 // clang-format off
@@ -271,6 +277,8 @@ on this [below](#callgraphs)).
 
 You can read more about defining new columns [here](#custom-columns).
 
+\image html TDF_Graph.png "A graph composed of two branches, one starting with a filter and one with a define. The end point of a branch is always an action."
+
 ### Running on a range of entries
 It is sometimes necessary to limit the processing of the dataset to a range of entries. For this reason, the TDataFrame
 offers the concept of ranges as a node of the TDataFrame chain of transformations; this means that filters, columns and
@@ -322,11 +330,11 @@ Here is a list of the most important features that have been omitted in the "Cra
 You don't need to read all these to start using `TDataFrame`, but they are useful to save typing time and runtime.
 
 ### Treatment of columns holding collections
-When using TDataFrame to read data from a ROOT file, users can specify that the type of a branch is `TArrayBranch<T>` to indicate the branch is a c-style array, an STL array or any other collection type associated to a contiguous storage in memory.
+When using TDataFrame to read data from a ROOT file, users can specify that the type of a branch is `TVec<T>` to indicate the branch is a c-style array, an STL array or any other collection type associated to a contiguous storage in memory.
 
-Column values of type `TArrayBranch<T>` perform no copy of the underlying array data, it's in some sense a view, and offer a minimal array-like interface to access the array elements: either via square brackets, or with range-based for loops.
+Column values of type `TVec<T>` perform no copy of the underlying array data, it's in some sense a view, and offer a minimal array-like interface to access the array elements: either via square brackets, or with range-based for loops.
 
-The `TArrayBranch<T>` type signals to TDataFrame that a special behaviour needs to be adopted when snapshotting a dataset on disk. Indeed, if columns which are variable size C arrays are treated via the `TArrayBranch<T>`, TDataFrame will correctly persistify them - if anything else is adopted, for example `std::span`, only the first element of the array will be written.
+The `TVec<T>` type signals to TDataFrame that a special behaviour needs to be adopted when snapshotting a dataset on disk. Indeed, if columns which are variable size C arrays are treated via the `TVec<T>`, TDataFrame will correctly persistify them - if anything else is adopted, for example `std::span`, only the first element of the array will be written.
 
 ### Callbacks
 Acting on a TResultProxy, it is possible to register a callback that TDataFrame will execute "everyNEvents" on a partial result.
@@ -442,7 +450,7 @@ t.AddFriend(t,"myFriend");
 in order to access a certain column `col` of the tree ft, it will be necessary to alias it before. To continue the example:
 ~~~{.cpp}
 TDataFrame d(t);
-d.Alias("myFriend.MyCol", "myFriend_MyCol");
+d.Alias("myFriend_MyCol", "myFriend.MyCol");
 auto f = d.Filter("myFriend_MyCol == 42");
 ~~~
 
@@ -534,21 +542,21 @@ once, a run is triggered.
 ### <a name="ranges"></a>Ranges
 When `TDataFrame` is not being used in a multi-thread environment (i.e. no call to `EnableImplicitMT` was made),
 `Range` transformations are available. These act very much like filters but instead of basing their decision on
-a filter expression, they rely on `start`,`stop` and `stride` parameters.
+a filter expression, they rely on `begin`,`end` and `stride` parameters.
 
-- `start`: number of entries that will be skipped before starting processing again
-- `stop`: maximum number of entries that will be processed
-- `stride`: only process one entry every `stride` entries
+- `begin`: initial entry number considered for this range.
+- `end`: final entry number (excluded) considered for this range. 0 means that the range goes until the end of the dataset.
+- `stride`: process one entry of the [begin, end) range every `stride` entries. Must be strictly greater than 0.
 
-The actual number of entries processed downstream of a `Range` node will be `(stop - start)/stride` (or less if less
+The actual number of entries processed downstream of a `Range` node will be `(end - begin)/stride` (or less if less
 entries than that are available).
 
 Note that ranges act "locally", not based on the global entry count: `Range(10,50)` means "skip the first 10 entries
 *that reach this node*, let the next 40 entries pass, then stop processing". If a range node hangs from a filter node,
-and the range has a `start` parameter of 10, that means the range will skip the first 10 entries *that pass the
+and the range has a `begin` parameter of 10, that means the range will skip the first 10 entries *that pass the
 preceding filter*.
 
-Ranges allow "early quitting": if all branches of execution of a functional graph reached their `stop` value of
+Ranges allow "early quitting": if all branches of execution of a functional graph reached their `end` value of
 processed entries, the event-loop is immediately interrupted. This is useful for debugging and quick data explorations.
 
 ### <a name="custom-columns"></a> Custom columns
@@ -624,7 +632,7 @@ note that all actions are only executed for events that pass all preceding filte
 
 | **Queries** | **Description** |
 |-----------|-----------------|
-| Report | This is not properly an action, since when `Report` is called it does not book an operation to be performed on each entry. Instead, it interrogates the data-frame directly to print a cutflow report, i.e. statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. |
+| Report | This is not properly an action, since when `Report` is called it does not book an operation to be performed on each entry. Instead, it interrogates the data-frame directly to print a cutflow report, i.e. statistics on how many entries have been accepted and rejected by the filters. See the section on [named filters](#named-filters-and-cutflow-reports) for a more detailed explanation. The method returns a TCutFlowReport instance which can be queried programmatically to get information about the effects of the individual cuts. |
 
 ##  <a name="parallel-execution"></a>Parallel execution
 As pointed out before in this document, `TDataFrame` can transparently perform multi-threaded event loops to speed up
@@ -704,7 +712,7 @@ TDataFrame::TDataFrame(std::string_view treeName, const std::vector<std::string>
    std::string treeNameInt(treeName);
    auto chain = std::make_shared<TChain>(treeNameInt.c_str());
    for (auto &fileName : filenames)
-      chain->Add(TDFInternal::ToConstCharPtr(fileName));
+      chain->Add(fileName.c_str());
    GetProxiedPtr()->SetTree(chain);
 }
 

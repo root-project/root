@@ -60,12 +60,13 @@ TStyle::TStyle() :TNamed()
 ////////////////////////////////////////////////////////////////////////////////
 /// Create a new TStyle.
 /// The following names are reserved to create special styles
-///   -Classic: the default style set in TStyle::Reset
-///   -Plain: a black&white oriented style
-///   -Bold:
-///   -Video;
-///   -Pub:
-///   -Modern:
+///   - `Classic`: the default style set in TStyle::Reset
+///   - `Plain`: a black&white oriented style
+///   - `Bold`
+///   - `Video`
+///   - `Pub`
+///   - `Modern`
+///   - `ATLAS`: style used by the ATLAS experiment
 ///     (see the definition of these styles below).
 ///
 /// Note a side-effect of calling gStyle->SetFillColor(0). This is nearly
@@ -255,7 +256,50 @@ TStyle::TStyle(const char *name, const char *title)
       SetTitleTextColor(kBlue);
       return;
    }
-
+   if (strcmp(style_name,"ATLAS") == 0) {
+      // Author: M.Sutton - Atlas Collaboration 2010
+      SetFrameBorderMode(0);
+      SetFrameFillColor(0);
+      SetCanvasBorderMode(0);
+      SetCanvasColor(0);
+      SetPadBorderMode(0);
+      SetPadColor(0);
+      SetStatColor(0);
+      SetPaperSize(20,26);
+      SetPadTopMargin(0.05);
+      SetPadRightMargin(0.05);
+      SetPadBottomMargin(0.16);
+      SetPadLeftMargin(0.16);
+      SetTitleXOffset(1.4);
+      SetTitleYOffset(1.4);
+      Int_t font = 42;
+      Double_t tsize=0.05;
+      SetTextFont(font);
+      SetTextSize(tsize);
+      SetLabelFont(font,"x");
+      SetTitleFont(font,"x");
+      SetLabelFont(font,"y");
+      SetTitleFont(font,"y");
+      SetLabelFont(font,"z");
+      SetTitleFont(font,"z");
+      SetLabelSize(tsize,"x");
+      SetTitleSize(tsize,"x");
+      SetLabelSize(tsize,"y");
+      SetTitleSize(tsize,"y");
+      SetLabelSize(tsize,"z");
+      SetTitleSize(tsize,"z");
+      SetMarkerStyle(20);
+      SetMarkerSize(1.2);
+      SetHistLineWidth(2.);
+      SetLineStyleString(2,"[12 12]");
+      SetErrorX(0.0001);   // get rid of X error bars (as recommended in ATLAS figure guidelines)
+      SetEndErrorSize(0.); // get rid of error bar caps
+      SetOptTitle(0);
+      SetOptStat(0);
+      SetOptFit(0);
+      SetPadTickX(1);
+      SetPadTickY(1);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -297,6 +341,7 @@ void TStyle::BuildStyles()
    new TStyle("Classic","Classic Style");
    new TStyle("Default","Equivalent to Classic");
    new TStyle("Modern", "Modern Style");
+   new TStyle("ATLAS",  "ATLAS Style");
    delete col;
 }
 
@@ -701,6 +746,50 @@ void TStyle::Reset(Option_t *opt)
       SetTitleOffset(1.3,"y");
       SetTitleFillColor(10);
       SetTitleTextColor(kBlue);
+      return;
+   }
+   if (strcmp(style_name,"ATLAS") == 0) {
+      SetFrameBorderMode(0);
+      SetFrameFillColor(0);
+      SetCanvasBorderMode(0);
+      SetCanvasColor(0);
+      SetPadBorderMode(0);
+      SetPadColor(0);
+      SetStatColor(0);
+      SetPaperSize(20,26);
+      SetPadTopMargin(0.05);
+      SetPadRightMargin(0.05);
+      SetPadBottomMargin(0.16);
+      SetPadLeftMargin(0.16);
+      SetTitleXOffset(1.4);
+      SetTitleYOffset(1.4);
+      Int_t font = 42;
+      Double_t tsize=0.05;
+      SetTextFont(font);
+      SetTextSize(tsize);
+      SetLabelFont(font,"x");
+      SetTitleFont(font,"x");
+      SetLabelFont(font,"y");
+      SetTitleFont(font,"y");
+      SetLabelFont(font,"z");
+      SetTitleFont(font,"z");
+      SetLabelSize(tsize,"x");
+      SetTitleSize(tsize,"x");
+      SetLabelSize(tsize,"y");
+      SetTitleSize(tsize,"y");
+      SetLabelSize(tsize,"z");
+      SetTitleSize(tsize,"z");
+      SetMarkerStyle(20);
+      SetMarkerSize(1.2);
+      SetHistLineWidth(2.);
+      SetLineStyleString(2,"[12 12]");
+      SetErrorX(0.0001);
+      SetEndErrorSize(0.);
+      SetOptTitle(0);
+      SetOptStat(0);
+      SetOptFit(0);
+      SetPadTickX(1);
+      SetPadTickY(1);
       return;
    }
 }

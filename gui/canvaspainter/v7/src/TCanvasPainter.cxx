@@ -17,6 +17,7 @@
 #include "ROOT/TCanvas.hxx"
 #include <ROOT/TLogger.hxx>
 #include <ROOT/TDisplayItem.hxx>
+#include <ROOT/TPadDisplayItem.hxx>
 #include <ROOT/TMenuItem.hxx>
 
 #include <ROOT/TWebWindow.hxx>
@@ -172,18 +173,18 @@ private:
    };
 
    struct WebCommand {
-      std::string fId{};            ///<! command identifier
-      std::string fName{};          ///<! command name
-      std::string fArg{};           ///<! command arg
-      bool fRunning{false};         ///<! true when command submitted
-      CanvasCallback_t fCallback{}; ///<! callback function associated with command
-      unsigned fConnId{0};          ///<! connection id was used to send command
+      std::string fId{};                   ///<! command identifier
+      std::string fName{};                 ///<! command name
+      std::string fArg{};                  ///<! command arg
+      bool fRunning{false};                ///<! true when command submitted
+      CanvasCallback_t fCallback{nullptr}; ///<! callback function associated with command
+      unsigned fConnId{0};                 ///<! connection id was used to send command
       WebCommand() = default;
    };
 
    struct WebUpdate {
-      uint64_t fVersion{0};         ///<! canvas version
-      CanvasCallback_t fCallback{}; ///<! callback function associated with command
+      uint64_t fVersion{0};                ///<! canvas version
+      CanvasCallback_t fCallback{nullptr}; ///<! callback function associated with command
       WebUpdate() = default;
    };
 
@@ -198,21 +199,20 @@ private:
    /// The canvas we are painting. It might go out of existence while painting.
    const TCanvas &fCanvas; ///<!  Canvas
 
-   bool fBatchMode; ///<! indicate if canvas works in batch mode (can be independent from gROOT->isBatch())
-
    std::shared_ptr<TWebWindow> fWindow; ///!< configured display
 
-   WebConnList fWebConn;         ///<! connections list
-   bool fHadWebConn;             ///<! true if any connection were existing
-   TPadDisplayItem fDisplayList; ///!< full list of items to display
-   WebCommandsList fCmds;        ///!< list of submitted commands
-   uint64_t fCmdsCnt;            ///!< commands counter
-   std::string fWaitingCmdId;    ///!< command id waited for completion
+   WebConnList fWebConn;           ///<! connections list
+   bool fHadWebConn{false};        ///<! true if any connection were existing
+   TPadDisplayItem fDisplayList;   ///!< full list of items to display
+   std::string fCurrentDrawableId; ///!< id of drawable, which paint method is called
+   WebCommandsList fCmds;          ///!< list of submitted commands
+   uint64_t fCmdsCnt{0};           ///!< commands counter
+   std::string fWaitingCmdId;      ///!< command id waited for completion
 
-   uint64_t fSnapshotVersion;   ///!< version of snapshot
-   std::string fSnapshot;       ///!< last produced snapshot
-   uint64_t fSnapshotDelivered; ///!< minimal version delivered to all connections
-   WebUpdatesList fUpdatesLst;  ///!< list of callbacks for canvas update
+   uint64_t fSnapshotVersion{0};   ///!< version of snapshot
+   std::string fSnapshot;          ///!< last produced snapshot
+   uint64_t fSnapshotDelivered{0}; ///!< minimal version delivered to all connections
+   WebUpdatesList fUpdatesLst;     ///!< list of callbacks for canvas update
 
    /// Disable copy construction.
    TCanvasPainter(const TCanvasPainter &) = delete;
@@ -243,18 +243,15 @@ private:
    int CheckWaitingCmd(const std::string &cmdname, double);
 
 public:
-   TCanvasPainter(const TCanvas &canv, bool batch_mode)
-      : fCanvas(canv), fBatchMode(batch_mode), fWindow(), fWebConn(), fHadWebConn(false), fDisplayList(), fCmds(),
-        fCmdsCnt(0), fWaitingCmdId(), fSnapshotVersion(0), fSnapshot(), fSnapshotDelivered(0), fUpdatesLst()
-   {
-   }
+   TCanvasPainter(const TCanvas &canv) : fCanvas(canv) {}
 
    virtual ~TCanvasPainter();
 
-   /// returns true is canvas used in batch mode
-   virtual bool IsBatchMode() const override { return fBatchMode; }
-
-   virtual void AddDisplayItem(TDisplayItem *item) override { fDisplayList.Add(item); }
+   virtual void AddDisplayItem(std::unique_ptr<TDisplayItem> &&item) override
+   {
+      item->SetObjectID(fCurrentDrawableId);
+      fDisplayList.Add(std::move(item));
+   }
 
    virtual void CanvasUpdated(uint64_t ver, bool async, ROOT::Experimental::CanvasCallback_t callback) override;
 
@@ -276,10 +273,9 @@ public:
    class GeneratorImpl : public Generator {
    public:
       /// Create a new TCanvasPainter to paint the given TCanvas.
-      std::unique_ptr<TVirtualCanvasPainter>
-      Create(const ROOT::Experimental::TCanvas &canv, bool batch_mode) const override
+      std::unique_ptr<TVirtualCanvasPainter> Create(const ROOT::Experimental::TCanvas &canv) const override
       {
-         return std::make_unique<TCanvasPainter>(canv, batch_mode);
+         return std::make_unique<TCanvasPainter>(canv);
       }
       ~GeneratorImpl() = default;
 
@@ -306,6 +302,9 @@ struct TNewCanvasPainterReg {
 } // namespace Experimental
 } // namespace ROOT
 
+/////////////////////////////////////////////////////////////////////////////////////////////
+/// destructor
+
 ROOT::Experimental::TCanvasPainter::~TCanvasPainter()
 {
    CancelCommands();
@@ -314,8 +313,10 @@ ROOT::Experimental::TCanvasPainter::~TCanvasPainter()
       fWindow->CloseConnections();
 }
 
+/////////////////////////////////////////////////////////////////////////////////////////////
 /// Checks if specified version was delivered to all clients
 /// Used to wait for such condition
+
 int ROOT::Experimental::TCanvasPainter::CheckDeliveredVersion(uint64_t ver, double)
 {
    if (fWebConn.empty() && fHadWebConn)
@@ -340,6 +341,10 @@ void ROOT::Experimental::TCanvasPainter::CancelUpdates()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Cancel command execution on provided connection
+/// All commands are cancelled, when connid === 0
+
 void ROOT::Experimental::TCanvasPainter::CancelCommands(unsigned connid)
 {
    auto iter = fCmds.begin();
@@ -354,6 +359,9 @@ void ROOT::Experimental::TCanvasPainter::CancelCommands(unsigned connid)
       }
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Check if canvas need to sand data to the clients
 
 void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
 {
@@ -433,6 +441,10 @@ void ROOT::Experimental::TCanvasPainter::CheckDataToSend()
    }
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Method invoked when canvas should be updated on the client side
+/// Depending from delivered status, each client will received new data
+
 void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
                                                        ROOT::Experimental::CanvasCallback_t callback)
 {
@@ -467,7 +479,7 @@ void ROOT::Experimental::TCanvasPainter::CanvasUpdated(uint64_t ver, bool async,
 }
 
 ///////////////////////////////////////////////////
-/// Used to wait until submited command executed
+/// Used to wait until submitted command executed
 
 int ROOT::Experimental::TCanvasPainter::CheckWaitingCmd(const std::string &cmdname, double)
 {
@@ -480,7 +492,9 @@ int ROOT::Experimental::TCanvasPainter::CheckWaitingCmd(const std::string &cmdna
    return 0;
 }
 
+//////////////////////////////////////////////////////////////////////////
 /// perform special action when drawing is ready
+
 void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, const std::string &arg, bool async,
                                                      CanvasCallback_t callback)
 {
@@ -511,6 +525,9 @@ void ROOT::Experimental::TCanvasPainter::DoWhenReady(const std::string &name, co
    if (!async)
       fWindow->WaitFor([this, name](double tm) { return CheckWaitingCmd(name, tm); }, 100);
 }
+
+//////////////////////////////////////////////////////////////////////////
+/// Process data from the client
 
 void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std::string &arg)
 {
@@ -620,24 +637,32 @@ void ROOT::Experimental::TCanvasPainter::ProcessData(unsigned connid, const std:
    CheckDataToSend();
 }
 
+//////////////////////////////////////////////////////////////////////////
+/// Create new display for the canvas
+/// See ROOT::Experimental::TWebWindowsManager::Show() docu for more info
+
 void ROOT::Experimental::TCanvasPainter::NewDisplay(const std::string &where)
 {
+   std::string showarg = where;
+   bool batch_mode = false;
+   if (showarg == "batch_canvas") {
+      batch_mode = true;
+      showarg.clear();
+   }
+
    if (!fWindow) {
-      fWindow = TWebWindowsManager::Instance()->CreateWindow(IsBatchMode());
-
+      fWindow = TWebWindowsManager::Instance()->CreateWindow(batch_mode);
       fWindow->SetConnLimit(0); // allow any number of connections
-
       fWindow->SetDefaultPage("file:$jsrootsys/files/canvas.htm");
-
       fWindow->SetDataCallBack([this](unsigned connid, const std::string &arg) { ProcessData(connid, arg); });
-
       // fWindow->SetGeometry(500,300);
    }
 
-   fWindow->Show(where);
+   fWindow->Show(showarg);
 }
 
-/// append window and panel inside canvas window
+//////////////////////////////////////////////////////////////////////////
+/// Add window as panel inside canvas window
 
 bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> win)
 {
@@ -648,7 +673,7 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> wi
       return false;
    }
 
-   if (IsBatchMode()) {
+   if (fWindow->IsBatchMode()) {
       R__ERROR_HERE("AddPanel") << "Canvas shown in batch mode";
       return false;
    }
@@ -672,34 +697,29 @@ bool ROOT::Experimental::TCanvasPainter::AddPanel(std::shared_ptr<TWebWindow> wi
    return true;
 }
 
-// #include <fstream>
+////////////////////////////////////////////////////////////////////////////////
+/// Create JSON representation of data, which should be send to the clients
+/// Here server-side painting is performed - each drawable adds own elements in
+/// so-called display list, which transferred to the clients
 
 std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Experimental::TCanvas &can)
 {
-
    fDisplayList.Clear();
 
    fDisplayList.SetObjectIDAsPtr((void *)&can);
 
-   auto *snap = new ROOT::Experimental::TOrdinaryDisplayItem<ROOT::Experimental::TCanvas>(&can);
-   snap->SetObjectIDAsPtr((void *)&can);
-   fDisplayList.Add(snap);
+   fDisplayList.SetFrame(can.GetFrame());
 
    for (auto &&drawable : can.GetPrimitives()) {
 
+      fCurrentDrawableId = TDisplayItem::MakeIDFromPtr(drawable.get());
+
       drawable->Paint(*this);
-
-      fDisplayList.Last()->SetObjectIDAsPtr(&(*drawable));
-
-      // ROOT::Experimental::TDisplayItem *sub = drawable->CreateSnapshot(can);
-      // if (!sub) continue;
-      // sub->SetObjectIDAsPtr(&(*drawable));
-      // lst.Add(sub);
    }
 
-   TString res = TBufferJSON::ConvertToJSON(&fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+   TString res = TBufferJSON::ToJSON(&fDisplayList /*, 23 */);
 
-   //   TBufferJSON::ExportToFile("canv.json", &fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
+   // TBufferJSON::ExportToFile("canv.json", &fDisplayList, gROOT->GetClass("ROOT::Experimental::TPadDisplayItem"));
 
    fDisplayList.Clear();
 
@@ -708,6 +728,10 @@ std::string ROOT::Experimental::TCanvasPainter::CreateSnapshot(const ROOT::Exper
 
    return std::string(res.Data());
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Find drawable in the canvas with specified id
+/// Used to communicate with the clients, which does not have any pointer
 
 ROOT::Experimental::TDrawable *
 ROOT::Experimental::TCanvasPainter::FindDrawable(const ROOT::Experimental::TCanvas &can, const std::string &id)
@@ -727,8 +751,10 @@ ROOT::Experimental::TCanvasPainter::FindDrawable(const ROOT::Experimental::TCanv
    return nullptr;
 }
 
+////////////////////////////////////////////////////////////////////////////////
 /// Method called when GUI sends file to save on local disk
 /// File coded with base64 coding
+
 void ROOT::Experimental::TCanvasPainter::SaveCreatedFile(std::string &reply)
 {
    size_t pos = reply.find(":");
@@ -747,6 +773,9 @@ void ROOT::Experimental::TCanvasPainter::SaveCreatedFile(std::string &reply)
 
    printf("Create file %s len %d\n", fname.c_str(), (int)binary.length());
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Process reply on the currently active command
 
 bool ROOT::Experimental::TCanvasPainter::FrontCommandReplied(const std::string &reply)
 {

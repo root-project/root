@@ -3,22 +3,49 @@
 # @author Pere Mato, CERN
 ############################################################################
 
-include(${QT_USE_FILE})
-add_definitions(-DQT3_SUPPORT= -DQT3_SUPPORT_CONSTRUCTOR= -DQT_DLL -DQT_THREAD_SUPPORT)
-if(QT_QT3SUPPORT_INCLUDE_DIR)
-  include_directories(${QT_QT3SUPPORT_INCLUDE_DIR})
+if(fail-on-missing)
+  set(QT_REQUIRED REQUIRED)
 endif()
 
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated-register)
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-uninitialized)
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-deprecated)
-ROOT_ADD_CXX_FLAG(CMAKE_CXX_FLAGS -Wno-shadow)
+find_package(Qt4 4.8 COMPONENTS QtCore QtGui ${QT_REQUIRED})
 
-QT4_WRAP_CPP(mocfiles inc/TQCanvasMenu.h inc/TQRootApplication.h
-                      inc/TQRootCanvas.h inc/TQRootDialog.h)
+if(NOT QT4_FOUND)
+  message(STATUS "Qt4 not found. Switching off qtgsi option")
+  set(qtgsi OFF CACHE BOOL "" FORCE)
+  return()
+endif()
+
+include(${QT_USE_FILE})
+
+set(headers
+  inc/TQApplication.h
+  inc/TQCanvasImp.h
+  inc/TQCanvasMenu.h
+  inc/TQRootApplication.h
+  inc/TQRootCanvas.h
+  inc/TQRootDialog.h
+  inc/TQRootGuiFactory.h
+)
+
+set(sources
+  src/TQApplication.cxx
+  src/TQCanvasImp.cxx
+  src/TQCanvasMenu.cxx
+  src/TQRootApplication.cxx
+  src/TQRootCanvas.cxx
+  src/TQRootDialog.cxx
+  src/TQRootGuiFactory.cxx
+)
+
+QT4_WRAP_CPP(moc_sources
+  inc/TQCanvasMenu.h
+  inc/TQRootApplication.h
+  inc/TQRootCanvas.h
+  inc/TQRootDialog.h
+)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(QtGSI
-                              SOURCES *.cxx ${mocfiles}
-                              DICTIONARY_OPTIONS -DQTVERS=0x${QT_VERSION_NUM} -Wno-deprecated
-                              LIBRARIES ${QT_LIBRARIES} ${QT_QT3SUPPORT_LIBRARY}
+                              HEADERS ${headers}
+                              SOURCES ${sources} ${moc_sources}
+                              LIBRARIES Qt4::QtCore Qt4::QtGui
                               DEPENDENCIES Gui Gpad)

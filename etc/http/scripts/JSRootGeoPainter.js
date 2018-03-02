@@ -2047,15 +2047,15 @@
          if (add_objects && !this.addExtra(obj, itemname)) return false;
          isany = this.drawGeoTrack(obj, itemname);
       } else
-      if (obj._typename === 'TEveTrack') {
+      if ((obj._typename === 'TEveTrack') || (obj._typename === 'ROOT::Experimental::TEveTrack')) {
          if (add_objects && !this.addExtra(obj, itemname)) return false;
          isany = this.drawEveTrack(obj, itemname);
       } else
-      if ((obj._typename === 'TEvePointSet') || (obj._typename === "TPolyMarker3D")) {
+      if ((obj._typename === 'TEvePointSet') || (obj._typename === "ROOT::Experimental::TEvePointSet") || (obj._typename === "TPolyMarker3D")) {
          if (add_objects && !this.addExtra(obj, itemname)) return false;
          isany = this.drawHit(obj, itemname);
       } else
-      if (obj._typename === "TEveGeoShapeExtract") {
+      if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::TEveGeoShapeExtract")) {
          if (add_objects && !this.addExtra(obj, itemname)) return false;
          isany = this.drawExtraShape(obj, itemname);
       }
@@ -2180,7 +2180,7 @@
       if (!hit || !hit.fN || (hit.fN < 0)) return false;
 
       var hit_size = 8*hit.fMarkerSize,
-          size = hit.fN-1,
+          size = hit.fN,
           projv = this.options.projectPos,
           projx = (this.options.project === "x"),
           projy = (this.options.project === "y"),
@@ -2850,13 +2850,7 @@
          if (!force_draw)
            this.TestAxisVisibility(null, this._toplevel);
       } else {
-
          this.drawSimpleAxis();
-
-         //var axis = JSROOT.Create("TNamed");
-         //axis._typename = "TAxis3D";
-         //axis._main = this;
-         //JSROOT.draw(this.divid, axis); // it will include drawing of
       }
    }
 
@@ -3031,7 +3025,7 @@
    }
 
    TGeoPainter.prototype.CheckResize = function(size) {
-      var pad_painter = this.pad_painter();
+      var pad_painter = this.canv_painter();
 
       // firefox is the only browser which correctly supports resize of embedded canvas,
       // for others we should force canvas redrawing at every step
@@ -3113,7 +3107,7 @@
       if ((obj._typename === 'TGeoVolumeAssembly') || (obj._typename === 'TGeoVolume')) {
          shape = obj.fShape;
       } else
-      if (obj._typename === "TEveGeoShapeExtract") {
+      if ((obj._typename === "TEveGeoShapeExtract") || (obj._typename === "ROOT::Experimental::TEveGeoShapeExtract")) {
          shape = obj.fShape;
       } else
       if (obj._typename === 'TGeoManager') {
@@ -3205,7 +3199,7 @@
    }
 
    JSROOT.GEO.provideVisStyle = function(obj) {
-      if (obj._typename === 'TEveGeoShapeExtract')
+      if ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::TEveGeoShapeExtract'))
          return obj.fRnrSelf ? " geovis_this" : "";
 
       var vis = !JSROOT.GEO.TestBit(obj, JSROOT.GEO.BITS.kVisNone) &&
@@ -3254,7 +3248,7 @@
       if (obj._typename.indexOf("TGeoVolume")===0) {
          volume = obj;
       } else
-      if (obj._typename == "TEveGeoShapeExtract") {
+      if ((obj._typename == "TEveGeoShapeExtract") || (obj._typename == "ROOT::Experimental::TEveGeoShapeExtract") ) {
          iseve = true;
          shape = obj.fShape;
          subnodes = obj.fElements ? obj.fElements.arr : null;
@@ -3324,7 +3318,7 @@
 
    JSROOT.GEO.createList = function(parent, lst, name, title) {
 
-      if ((lst==null) || !('arr' in lst) || (lst.arr.length==0)) return;
+      if (!lst || !('arr' in lst) || (lst.arr.length==0)) return;
 
       var item = {
           _name: name,
@@ -3370,7 +3364,7 @@
       if (!item._geoobj) return false;
 
       var obj = item._geoobj, vol = item._volume,
-          iseve = (obj._typename === 'TEveGeoShapeExtract');
+          iseve = ((obj._typename === 'TEveGeoShapeExtract') || (obj._typename === 'ROOT::Experimental::TEveGeoShapeExtract'));
 
       if (!vol && !iseve) return false;
 
@@ -3496,7 +3490,7 @@
          return false; // no need to update icon - we did it ourself
       }
 
-      if (hitem._geoobj && hitem._geoobj._typename == "TEveGeoShapeExtract") {
+      if (hitem._geoobj && (( hitem._geoobj._typename == "TEveGeoShapeExtract") || ( hitem._geoobj._typename == "ROOT::Experimental::TEveGeoShapeExtract"))) {
          hitem._geoobj.fRnrSelf = !hitem._geoobj.fRnrSelf;
 
          JSROOT.GEO.updateBrowserIcons(hitem._geoobj, hpainter);
@@ -3562,7 +3556,7 @@
       var isnode = (obj._typename.indexOf('TGeoNode') === 0),
           isvolume = (obj._typename.indexOf('TGeoVolume') === 0),
           ismanager = (obj._typename === 'TGeoManager'),
-          iseve = (obj._typename === 'TEveGeoShapeExtract');
+          iseve = ((obj._typename === 'TEveGeoShapeExtract')||(obj._typename === 'ROOT::Experimental::TEveGeoShapeExtract'));
 
       if (!isnode && !isvolume && !ismanager && !iseve) return false;
 

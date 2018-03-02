@@ -32,9 +32,9 @@ There are limitations for complex objects like TTree, which can not be converted
 */
 
 #include "TBufferXML.h"
+
 #include "Compression.h"
 #include "TXMLFile.h"
-
 #include "TObjArray.h"
 #include "TROOT.h"
 #include "TError.h"
@@ -45,32 +45,19 @@ There are limitations for complex objects like TTree, which can not be converted
 #include "TMethodCall.h"
 #include "TStreamerInfo.h"
 #include "TStreamerElement.h"
-#include "TProcessID.h"
 #include "TFile.h"
 #include "TMemberStreamer.h"
 #include "TStreamer.h"
-#include "TStreamerInfoActions.h"
 #include "RZip.h"
 
-#ifdef R__VISUAL_CPLUSPLUS
-#define FLong64 "%I64d"
-#define FULong64 "%I64u"
-#else
-#define FLong64 "%lld"
-#define FULong64 "%llu"
-#endif
-
 ClassImp(TBufferXML);
-
-std::string TBufferXML::fgFloatFmt = "%e";
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
 
 TBufferXML::TBufferXML()
-   : TBuffer(), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
-     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0),
-     fIOVersion(3)
+   : TBufferText(), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fErrorFlag(0), fCanUseCompact(kFALSE),
+     fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
 {
 }
 
@@ -79,15 +66,9 @@ TBufferXML::TBufferXML()
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferXML::TBufferXML(TBuffer::EMode mode)
-   : TBuffer(mode), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
-     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0),
-     fIOVersion(3)
+   : TBufferText(mode), TXMLSetup(), fXML(nullptr), fStack(), fVersionBuf(-111), fErrorFlag(0), fCanUseCompact(kFALSE),
+     fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
 {
-   fBufSize = 1000000000;
-
-   SetParent(nullptr);
-   SetBit(kCannotHandleMemberWiseStreaming);
-   // SetBit(kTextBasedStreaming);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -96,19 +77,14 @@ TBufferXML::TBufferXML(TBuffer::EMode mode)
 /// Mode should be either TBuffer::kRead or TBuffer::kWrite.
 
 TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
-   : TBuffer(mode), TXMLSetup(*file), fXML(nullptr), fStack(), fVersionBuf(-111), fObjMap(nullptr), fIdArray(nullptr),
-     fErrorFlag(0), fCanUseCompact(kFALSE), fExpectedChain(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0),
-     fIOVersion(3)
+   : TBufferText(mode, file), TXMLSetup(*file), fXML(nullptr), fStack(), fVersionBuf(-111), fErrorFlag(0),
+     fCanUseCompact(kFALSE), fExpectedBaseClass(nullptr), fCompressLevel(0), fIOVersion(3)
 {
    // this is for the case when StreamerInfo reads elements from
    // buffer as ReadFastArray. When it checks if size of buffer is
    // too small and skip reading. Actually, more improved method should
    // be used here.
-   fBufSize = 1000000000;
 
-   SetParent(file);
-   SetBit(kCannotHandleMemberWiseStreaming);
-   // SetBit(kTextBasedStreaming);
    if (XmlFile()) {
       SetXML(XmlFile()->XML());
       SetCompressionSettings(XmlFile()->GetCompressionSettings());
@@ -121,11 +97,8 @@ TBufferXML::TBufferXML(TBuffer::EMode mode, TXMLFile *file)
 
 TBufferXML::~TBufferXML()
 {
-   if (fObjMap)
-      delete fObjMap;
-   if (fIdArray)
-      delete fIdArray;
-   fStack.Delete();
+   while (fStack.size() > 0)
+      PopStack();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -171,6 +144,7 @@ TString TBufferXML::ConvertToXML(const void *obj, const TClass *cl, Bool_t Gener
 
    TBufferXML buf(TBuffer::kWrite);
    buf.SetXML(&xml);
+   buf.InitMap();
 
    buf.SetXmlLayout(GenericLayout ? TXMLSetup::kGeneralized : TXMLSetup::kSpecialized);
    buf.SetUseNamespaces(UseNamespaces);
@@ -220,6 +194,7 @@ void *TBufferXML::ConvertFromXMLAny(const char *str, TClass **cl, Bool_t Generic
    TBufferXML buf(TBuffer::kRead);
 
    buf.SetXML(&xml);
+   buf.InitMap();
 
    buf.SetXmlLayout(GenericLayout ? TXMLSetup::kGeneralized : TXMLSetup::kSpecialized);
    buf.SetUseNamespaces(UseNamespaces);
@@ -344,7 +319,7 @@ TXMLStackObj *TBufferXML::PushStack(XMLNodePointer_t current, Bool_t simple)
    }
 
    TXMLStackObj *stack = new TXMLStackObj(current);
-   fStack.Add(stack);
+   fStack.push_back(stack);
    return stack;
 }
 
@@ -353,21 +328,11 @@ TXMLStackObj *TBufferXML::PushStack(XMLNodePointer_t current, Bool_t simple)
 
 TXMLStackObj *TBufferXML::PopStack()
 {
-   TObject *last = fStack.Last();
-   if (last) {
-      fStack.Remove(last);
-      delete last;
-      fStack.Compress();
+   if (fStack.size() > 0) {
+      delete fStack.back();
+      fStack.pop_back();
    }
-   return static_cast<TXMLStackObj *>(fStack.Last());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return xml stack object of specified depth.
-
-TXMLStackObj *TBufferXML::Stack(Int_t depth)
-{
-   return (depth <= fStack.GetLast()) ? static_cast<TXMLStackObj *>(fStack.At(fStack.GetLast() - depth)) : nullptr;
+   return fStack.size() > 0 ? Stack() : nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -375,7 +340,7 @@ TXMLStackObj *TBufferXML::Stack(Int_t depth)
 
 XMLNodePointer_t TBufferXML::StackNode()
 {
-   TXMLStackObj *stack = static_cast<TXMLStackObj *>(fStack.Last());
+   TXMLStackObj *stack = Stack();
    return stack ? stack->fNode : nullptr;
 }
 
@@ -384,7 +349,7 @@ XMLNodePointer_t TBufferXML::StackNode()
 
 void TBufferXML::ShiftStack(const char *errinfo)
 {
-   TXMLStackObj *stack = static_cast<TXMLStackObj *>(fStack.Last());
+   TXMLStackObj *stack = Stack();
    if (stack) {
       fXML->ShiftToNext(stack->fNode);
       if (gDebug > 4)
@@ -584,12 +549,7 @@ Bool_t TBufferXML::ProcessPointer(const void *ptr, XMLNodePointer_t node)
    if (!ptr) {
       refvalue = xmlio::Null; // null
    } else {
-      if (!fObjMap)
-         return kFALSE;
-
-      ULong_t hash = TString::Hash(&ptr, sizeof(void *));
-
-      XMLNodePointer_t refnode = (XMLNodePointer_t)(Long_t)fObjMap->GetValue(hash, (Long_t)ptr);
+      XMLNodePointer_t refnode = (XMLNodePointer_t)(Long_t)GetMapEntry(ptr);
       if (!refnode)
          return kFALSE;
 
@@ -610,24 +570,6 @@ Bool_t TBufferXML::ProcessPointer(const void *ptr, XMLNodePointer_t node)
    }
 
    return kFALSE;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Register pair of object pointer and node, where this object is saved,
-/// in object map
-
-void TBufferXML::RegisterPointer(const void *ptr, XMLNodePointer_t node)
-{
-   if (!node || !ptr)
-      return;
-
-   ULong_t hash = TString::Hash(&ptr, sizeof(void *));
-
-   if (!fObjMap)
-      fObjMap = new TExMap();
-
-   if (fObjMap->GetValue(hash, (Long_t)ptr) == 0)
-      fObjMap->Add(hash, (Long_t)ptr, (Long_t)node);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -652,16 +594,19 @@ Bool_t TBufferXML::ExtractPointer(XMLNodePointer_t node, void *&ptr, TClass *&cl
       return kTRUE;
    }
 
-   if (!fIdArray || !fObjMap)
+   if (strncmp(ptrid, xmlio::IdBase, strlen(xmlio::IdBase)) != 0) {
+      Error("ExtractPointer", "Pointer tag %s not started from %s", ptrid, xmlio::IdBase);
       return kFALSE;
-
-   TNamed *obj = static_cast<TNamed *>(fIdArray->FindObject(ptrid));
-   if (obj) {
-      ptr = (void *)(Long_t)fObjMap->GetValue((Long_t)fIdArray->IndexOf(obj));
-      cl = TClass::GetClass(obj->GetTitle());
-      return kTRUE;
    }
-   return kFALSE;
+
+   Int_t id = TString(ptrid + strlen(xmlio::IdBase)).Atoi();
+
+   GetMappedObject(id + 1, ptr, cl);
+
+   if (!ptr || !cl)
+      Error("ExtractPointer", "not found ptr %s result %p %s", ptrid, ptr, (cl ? cl->GetName() : "null"));
+
+   return ptr && cl;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -677,20 +622,17 @@ void TBufferXML::ExtractReference(XMLNodePointer_t node, const void *ptr, const 
    if (!refid)
       return;
 
-   if (!fIdArray) {
-      fIdArray = new TObjArray;
-      fIdArray->SetOwner(kTRUE);
+   if (strncmp(refid, xmlio::IdBase, strlen(xmlio::IdBase)) != 0) {
+      Error("ExtractReference", "Reference tag %s not started from %s", refid, xmlio::IdBase);
+      return;
    }
-   TNamed *nid = new TNamed(refid, cl->GetName());
-   fIdArray->Add(nid);
 
-   if (!fObjMap)
-      fObjMap = new TExMap();
+   Int_t id = TString(refid + strlen(xmlio::IdBase)).Atoi();
 
-   fObjMap->Add((Long_t)fIdArray->IndexOf(nid), (Long_t)ptr);
+   MapObject(ptr, cl, id + 1);
 
    if (gDebug > 2)
-      Info("ExtractReference", "Find reference %s for object %p", refid, ptr);
+      Info("ExtractReference", "Find reference %s for object %p class %s", refid, ptr, (cl ? cl->GetName() : "null"));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -836,6 +778,7 @@ XMLNodePointer_t TBufferXML::XmlWriteObject(const void *obj, const TClass *cl, B
 
    if (!cl)
       obj = nullptr;
+
    if (ProcessPointer(obj, objnode))
       return objnode;
 
@@ -844,7 +787,7 @@ XMLNodePointer_t TBufferXML::XmlWriteObject(const void *obj, const TClass *cl, B
    fXML->NewAttr(objnode, nullptr, xmlio::ObjClass, clname);
 
    if (cacheReuse)
-      RegisterPointer(obj, objnode);
+      fMap->Add(Void_Hash(obj), (Long_t)obj, (Long_t)objnode);
 
    PushStack(objnode);
 
@@ -939,7 +882,6 @@ void TBufferXML::IncrementLevel(TVirtualStreamerInfo *info)
 void TBufferXML::WorkWithClass(TStreamerInfo *sinfo, const TClass *cl)
 {
    fCanUseCompact = kFALSE;
-   fExpectedChain = kFALSE;
 
    if (sinfo)
       cl = sinfo->GetClass();
@@ -1008,7 +950,6 @@ void TBufferXML::DecrementLevel(TVirtualStreamerInfo *info)
    CheckVersionBuf();
 
    fCanUseCompact = kFALSE;
-   fExpectedChain = kFALSE;
 
    if (gDebug > 2)
       Info("DecrementLevel", "Class: %s", (info ? info->GetClass()->GetName() : "custom"));
@@ -1051,7 +992,6 @@ void TBufferXML::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
 {
    CheckVersionBuf();
 
-   fExpectedChain = kFALSE;
    fCanUseCompact = kFALSE;
    fExpectedBaseClass = nullptr;
 
@@ -1066,7 +1006,7 @@ void TBufferXML::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
       PopStack(); // go level back
       if (IsReading())
          ShiftStack("startelem"); // shift to next element, only for reading
-      stack = static_cast<TXMLStackObj *>(fStack.Last());
+      stack = Stack();
    }
 
    if (!stack) {
@@ -1091,12 +1031,6 @@ void TBufferXML::WorkWithElement(TStreamerElement *elem, Int_t comp_type)
       Info("SetStreamerElementNumber", "    Next element %s", elem->GetName());
 
    Bool_t isBasicType = (elem->GetType() > 0) && (elem->GetType() < 20);
-
-   fExpectedChain = isBasicType && (comp_type - elem->GetType() == TStreamerInfo::kOffsetL);
-
-   if (fExpectedChain && (gDebug > 3)) {
-      Info("SetStreamerElementNumber", "    Expects chain for elem %s number %d", elem->GetName(), number);
-   }
 
    fCanUseCompact =
       isBasicType && ((elem->GetType() == comp_type) || (elem->GetType() == comp_type - TStreamerInfo::kConv) ||
@@ -1508,37 +1442,6 @@ void TBufferXML::WriteClass(const TClass *cl)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Suppressed function of TBuffer
-
-Int_t TBufferXML::CheckByteCount(UInt_t /*r_s */, UInt_t /*r_c*/, const TClass * /*cl*/)
-{
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Suppressed function of TBuffer
-
-Int_t TBufferXML::CheckByteCount(UInt_t, UInt_t, const char *)
-{
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Suppressed function of TBuffer
-
-void TBufferXML::SetByteCount(UInt_t, Bool_t)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Skip class version from I/O buffer.
-
-void TBufferXML::SkipVersion(const TClass *cl)
-{
-   ReadVersion(nullptr, nullptr, cl);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Read version value from buffer
 
 Version_t TBufferXML::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*cl*/)
@@ -1567,17 +1470,6 @@ Version_t TBufferXML::ReadVersion(UInt_t *start, UInt_t *bcnt, const TClass * /*
       Info("ReadVersion", "Version = %d", res);
 
    return res;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read class version from I/O buffer, when the caller knows for sure that
-/// there is no checksum written/involved.
-
-Version_t TBufferXML::ReadVersionNoCheckSum(UInt_t *, UInt_t *)
-{
-   Info("ReadVersionNoCheckSum", "No idea if required");
-
-   return ReadVersion();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1690,86 +1582,6 @@ R__ALWAYS_INLINE Int_t TBufferXML::XmlReadArray(T *&arr, bool is_static)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read a Float16_t from the buffer
-
-void TBufferXML::ReadFloat16(Float_t *f, TStreamerElement * /*ele*/)
-{
-   BeforeIOoperation();
-   XmlReadBasic(*f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer
-
-void TBufferXML::ReadDouble32(Double_t *d, TStreamerElement * /*ele*/)
-{
-   BeforeIOoperation();
-   XmlReadBasic(*d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the factor and minimun value have been specified
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferXML does not optimize space in this case.
-
-void TBufferXML::ReadWithFactor(Float_t *ptr, Double_t /* factor */, Double_t /* minvalue */)
-{
-   BeforeIOoperation();
-   XmlReadBasic(*ptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Float16_t from the buffer when the number of bits is specified (explicitly or not)
-/// see comments about Float16_t encoding at TBufferFile::WriteFloat16().
-/// Currently TBufferXML does not optimize space in this case.
-
-void TBufferXML::ReadWithNbits(Float_t *ptr, Int_t /* nbits */)
-{
-   BeforeIOoperation();
-   XmlReadBasic(*ptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the factor and minimum value have been specified
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferXML does not optimize space in this case.
-
-void TBufferXML::ReadWithFactor(Double_t *ptr, Double_t /* factor */, Double_t /* minvalue */)
-{
-   BeforeIOoperation();
-   XmlReadBasic(*ptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read a Double32_t from the buffer when the number of bits is specified (explicitly or not)
-/// see comments about Double32_t encoding at TBufferFile::WriteDouble32().
-/// Currently TBufferXML does not optimize space in this case.
-
-void TBufferXML::ReadWithNbits(Double_t *ptr, Int_t /* nbits */)
-{
-   BeforeIOoperation();
-   XmlReadBasic(*ptr);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write a Float16_t to the buffer
-
-void TBufferXML::WriteFloat16(Float_t *f, TStreamerElement * /*ele*/)
-{
-   BeforeIOoperation();
-   XmlWriteBasic(*f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write a Double32_t to the buffer
-
-void TBufferXML::WriteDouble32(Double_t *d, TStreamerElement * /*ele*/)
-{
-   BeforeIOoperation();
-   XmlWriteBasic(*d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Read array of Bool_t from buffer
 
 Int_t TBufferXML::ReadArray(Bool_t *&b)
@@ -1869,22 +1681,6 @@ Int_t TBufferXML::ReadArray(Float_t *&f)
 /// Read array of Double_t from buffer
 
 Int_t TBufferXML::ReadArray(Double_t *&d)
-{
-   return XmlReadArray(d);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-Int_t TBufferXML::ReadArrayFloat16(Float_t *&f, TStreamerElement * /*ele*/)
-{
-   return XmlReadArray(f);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-Int_t TBufferXML::ReadArrayDouble32(Double_t *&d, TStreamerElement * /*ele*/)
 {
    return XmlReadArray(d);
 }
@@ -1994,22 +1790,6 @@ Int_t TBufferXML::ReadStaticArray(Double_t *d)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-Int_t TBufferXML::ReadStaticArrayFloat16(Float_t *f, TStreamerElement * /*ele*/)
-{
-   return XmlReadArray(f, true);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-Int_t TBufferXML::ReadStaticArrayDouble32(Double_t *d, TStreamerElement * /*ele*/)
-{
-   return XmlReadArray(d, true);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Template method to read content of array, which not include size of array
 /// Also treated situation, when instead of one single array chain
 /// of several elements should be produced
@@ -2020,45 +1800,12 @@ R__ALWAYS_INLINE void TBufferXML::XmlReadFastArray(T *arr, Int_t n)
    BeforeIOoperation();
    if (n <= 0)
       return;
-   TStreamerElement *elem = Stack(0)->fElem;
-   if (elem && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) &&
-       (elem->GetArrayLength() != n))
-      fExpectedChain = kTRUE;
-   if (fExpectedChain) {
-      fExpectedChain = kFALSE;
-      Int_t startnumber = Stack(0)->fElemNumber;
-      TStreamerInfo *info = Stack(1)->fInfo;
-      Int_t index = 0;
-      while (index < n) {
-         elem = (TStreamerElement *)info->GetElements()->At(startnumber++);
-         if (elem->GetType() < TStreamerInfo::kOffsetL) {
-            if (index > 0) {
-               PopStack();
-               ShiftStack("chainreader");
-               VerifyElemNode(elem);
-            }
-            fCanUseCompact = kTRUE;
-            XmlReadBasic(arr[index]);
-            index++;
-         } else {
-            if (!VerifyItemNode(xmlio::Array, "ReadFastArray"))
-               return;
-            PushStack(StackNode());
-            Int_t elemlen = elem->GetArrayLength();
-            XmlReadArrayContent((arr + index), elemlen);
-            PopStack();
-            ShiftStack("readfastarr");
-            index += elemlen;
-         }
-      }
-   } else {
-      if (!VerifyItemNode(xmlio::Array, "ReadFastArray"))
-         return;
-      PushStack(StackNode());
-      XmlReadArrayContent(arr, n);
-      PopStack();
-      ShiftStack("readfastarr");
-   }
+   if (!VerifyItemNode(xmlio::Array, "ReadFastArray"))
+      return;
+   PushStack(StackNode());
+   XmlReadArrayContent(arr, n);
+   PopStack();
+   ShiftStack("readfastarr");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2186,54 +1933,6 @@ void TBufferXML::ReadFastArray(Double_t *d, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-void TBufferXML::ReadFastArrayFloat16(Float_t *f, Int_t n, TStreamerElement * /*ele*/)
-{
-   XmlReadFastArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-void TBufferXML::ReadFastArrayWithFactor(Float_t *f, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
-{
-   XmlReadFastArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Float16_t from buffer
-
-void TBufferXML::ReadFastArrayWithNbits(Float_t *f, Int_t n, Int_t /*nbits*/)
-{
-   XmlReadFastArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-void TBufferXML::ReadFastArrayDouble32(Double_t *d, Int_t n, TStreamerElement * /*ele*/)
-{
-   XmlReadFastArray(d, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-void TBufferXML::ReadFastArrayWithFactor(Double_t *d, Int_t n, Double_t /* factor */, Double_t /* minvalue */)
-{
-   XmlReadFastArray(d, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read array of Double32_t from buffer
-
-void TBufferXML::ReadFastArrayWithNbits(Double_t *d, Int_t n, Int_t /*nbits*/)
-{
-   XmlReadFastArray(d, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Read an array of 'n' objects from the I/O buffer.
 /// Stores the objects read starting at the address 'start'.
 /// The objects in the array are assume to be of class 'cl'.
@@ -2265,6 +1964,16 @@ void TBufferXML::ReadFastArray(void *start, const TClass *cl, Int_t n, TMemberSt
 void TBufferXML::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t isPreAlloc, TMemberStreamer *streamer,
                                const TClass *onFileClass)
 {
+
+   Bool_t oldStyle = kFALSE; // flag used to reproduce old-style I/= actions for kSTLp
+
+   if ((GetIOVersion() < 4) && !isPreAlloc) {
+      TStreamerElement *elem = Stack()->fElem;
+      if (elem && ((elem->GetType() == TStreamerInfo::kSTLp) ||
+                   (elem->GetType() == TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL)))
+         oldStyle = kTRUE;
+   }
+
    if (streamer) {
       if (isPreAlloc) {
          for (Int_t j = 0; j < n; j++) {
@@ -2273,13 +1982,19 @@ void TBufferXML::ReadFastArray(void **start, const TClass *cl, Int_t n, Bool_t i
          }
       }
       streamer->SetOnFileClass(onFileClass);
-      (*streamer)(*this, (void *)start, 0);
+      (*streamer)(*this, (void *)start, oldStyle ? n : 0);
       return;
    }
 
    if (!isPreAlloc) {
 
       for (Int_t j = 0; j < n; j++) {
+         if (oldStyle) {
+            if (!start[j])
+               start[j] = ((TClass *)cl)->New();
+            ((TClass *)cl)->Streamer(start[j], *this);
+            continue;
+         }
          // delete the object or collection
          void *old = start[j];
          start[j] = ReadObjectAny(cl);
@@ -2453,22 +2168,6 @@ void TBufferXML::WriteArray(const Double_t *d, Int_t n)
    XmlWriteArray(d, n);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Float16_t to buffer
-
-void TBufferXML::WriteArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
-{
-   XmlWriteArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Double32_t to buffer
-
-void TBufferXML::WriteArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
-{
-   XmlWriteArray(d, n);
-}
-
 /////////////////////////////////////////////////////////////////////////////////
 /// Write array without size attribute
 /// Also treat situation, when instead of one single array
@@ -2480,40 +2179,10 @@ R__ALWAYS_INLINE void TBufferXML::XmlWriteFastArray(const T *arr, Int_t n)
    BeforeIOoperation();
    if (n <= 0)
       return;
-   TStreamerElement *elem = Stack(0)->fElem;
-   if (elem && (elem->GetType() > TStreamerInfo::kOffsetL) && (elem->GetType() < TStreamerInfo::kOffsetP) &&
-       (elem->GetArrayLength() != n))
-      fExpectedChain = kTRUE;
-   if (fExpectedChain) {
-      TStreamerInfo *info = Stack(1)->fInfo;
-      Int_t startnumber = Stack(0)->fElemNumber;
-      fExpectedChain = kFALSE;
-      Int_t index = 0;
-      while (index < n) {
-         elem = (TStreamerElement *)info->GetElements()->At(startnumber++);
-         if (elem->GetType() < TStreamerInfo::kOffsetL) {
-            if (index > 0) {
-               PopStack();
-               CreateElemNode(elem);
-            }
-            fCanUseCompact = kTRUE;
-            XmlWriteBasic(arr[index]);
-            index++;
-         } else {
-            XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);
-            Int_t elemlen = elem->GetArrayLength();
-            PushStack(arrnode);
-            XmlWriteArrayContent((arr + index), elemlen);
-            index += elemlen;
-            PopStack();
-         }
-      }
-   } else {
-      XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);
-      PushStack(arrnode);
-      XmlWriteArrayContent(arr, n);
-      PopStack();
-   }
+   XMLNodePointer_t arrnode = CreateItemNode(xmlio::Array);
+   PushStack(arrnode);
+   XmlWriteArrayContent(arr, n);
+   PopStack();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2531,7 +2200,7 @@ void TBufferXML::WriteFastArray(const Bool_t *b, Int_t n)
 
 void TBufferXML::WriteFastArray(const Char_t *c, Int_t n)
 {
-   Bool_t usedefault = (n == 0) || fExpectedChain;
+   Bool_t usedefault = (n == 0);
    const Char_t *buf = c;
    if (!usedefault)
       for (int i = 0; i < n; i++) {
@@ -2641,22 +2310,6 @@ void TBufferXML::WriteFastArray(const Double_t *d, Int_t n)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Write array of Float16_t to buffer
-
-void TBufferXML::WriteFastArrayFloat16(const Float_t *f, Int_t n, TStreamerElement * /*ele*/)
-{
-   XmlWriteFastArray(f, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write array of Double32_t to buffer
-
-void TBufferXML::WriteFastArrayDouble32(const Double_t *d, Int_t n, TStreamerElement * /*ele*/)
-{
-   XmlWriteFastArray(d, n);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Write array of n characters into the I/O buffer.
 /// Used only by TLeafC, just dummy implementation here
 
@@ -2699,8 +2352,17 @@ Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t
    // if isPreAlloc is true (data member has a ->) we can assume that the pointer
    // is never 0.
 
+   Bool_t oldStyle = kFALSE; // flag used to reproduce old-style I/O actions for kSTLp
+
+   if ((GetIOVersion() < 4) && !isPreAlloc) {
+      TStreamerElement *elem = Stack()->fElem;
+      if (elem && ((elem->GetType() == TStreamerInfo::kSTLp) ||
+                   (elem->GetType() == TStreamerInfo::kSTLp + TStreamerInfo::kOffsetL)))
+         oldStyle = kTRUE;
+   }
+
    if (streamer) {
-      (*streamer)(*this, (void *)start, 0);
+      (*streamer)(*this, (void *)start, oldStyle ? n : 0);
       return 0;
    }
 
@@ -2712,7 +2374,7 @@ Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t
 
       for (Int_t j = 0; j < n; j++) {
          // must write StreamerInfo if pointer is null
-         if (!strInfo && !start[j]) {
+         if (!strInfo && !start[j] && !oldStyle) {
             if (cl->Property() & kIsAbstract) {
                // Do not try to generate the StreamerInfo for an abstract class
             } else {
@@ -2721,7 +2383,10 @@ Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t
             }
          }
          strInfo = 2003;
-         res |= WriteObjectAny(start[j], cl);
+         if (oldStyle)
+            ((TClass *)cl)->Streamer(start[j], *this);
+         else
+            res |= WriteObjectAny(start[j], cl);
       }
 
    } else {
@@ -2737,33 +2402,21 @@ Int_t TBufferXML::WriteFastArray(void **start, const TClass *cl, Int_t n, Bool_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// steram object to/from buffer
-
-void TBufferXML::StreamObject(void *obj, const std::type_info &typeinfo, const TClass * /* onFileClass */)
-{
-   StreamObject(obj, TClass::GetClass(typeinfo));
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// steram object to/from buffer
-
-void TBufferXML::StreamObject(void *obj, const char *className, const TClass * /* onFileClass */)
-{
-   StreamObject(obj, TClass::GetClass(className));
-}
-
-void TBufferXML::StreamObject(TObject *obj)
-{
-   // steram object to/from buffer
-
-   StreamObject(obj, obj ? obj->IsA() : TObject::Class());
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Stream object to/from buffer
 
 void TBufferXML::StreamObject(void *obj, const TClass *cl, const TClass * /* onfileClass */)
 {
+   if (GetIOVersion() < 4) {
+      TStreamerElement *elem = Stack()->fElem;
+      if (elem && (elem->GetType() == TStreamerInfo::kTObject)) {
+         ((TObject *)obj)->TObject::Streamer(*this);
+         return;
+      } else if (elem && (elem->GetType() == TStreamerInfo::kTNamed)) {
+         ((TNamed *)obj)->TNamed::Streamer(*this);
+         return;
+      }
+   }
+
    BeforeIOoperation();
    if (gDebug > 1)
       Info("StreamObject", "Class: %s", (cl ? cl->GetName() : "none"));
@@ -3228,9 +2881,8 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(Long_t value)
 
 XMLNodePointer_t TBufferXML::XmlWriteBasic(Long64_t value)
 {
-   char buf[50];
-   snprintf(buf, sizeof(buf), FLong64, value);
-   return XmlWriteValue(buf, xmlio::Long64);
+   std::string buf = std::to_string(value);
+   return XmlWriteValue(buf.c_str(), xmlio::Long64);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3239,7 +2891,7 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(Long64_t value)
 XMLNodePointer_t TBufferXML::XmlWriteBasic(Float_t value)
 {
    char buf[200];
-   snprintf(buf, sizeof(buf), fgFloatFmt.c_str(), value);
+   ConvertFloat(value, buf, sizeof(buf), kTRUE);
    return XmlWriteValue(buf, xmlio::Float);
 }
 
@@ -3249,7 +2901,7 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(Float_t value)
 XMLNodePointer_t TBufferXML::XmlWriteBasic(Double_t value)
 {
    char buf[1000];
-   snprintf(buf, sizeof(buf), fgFloatFmt.c_str(), value);
+   ConvertDouble(value, buf, sizeof(buf), kTRUE);
    return XmlWriteValue(buf, xmlio::Double);
 }
 
@@ -3306,9 +2958,8 @@ XMLNodePointer_t TBufferXML::XmlWriteBasic(ULong_t value)
 
 XMLNodePointer_t TBufferXML::XmlWriteBasic(ULong64_t value)
 {
-   char buf[50];
-   snprintf(buf, sizeof(buf), FULong64, value);
-   return XmlWriteValue(buf, xmlio::ULong64);
+   std::string buf = std::to_string(value);
+   return XmlWriteValue(buf.c_str(), xmlio::ULong64);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3387,7 +3038,7 @@ void TBufferXML::XmlReadBasic(Long64_t &value)
 {
    const char *res = XmlReadValue(xmlio::Long64);
    if (res)
-      sscanf(res, FLong64, &value);
+      value = (Long64_t)std::stoll(res);
    else
       value = 0;
 }
@@ -3485,7 +3136,7 @@ void TBufferXML::XmlReadBasic(ULong64_t &value)
 {
    const char *res = XmlReadValue(xmlio::ULong64);
    if (res)
-      sscanf(res, FULong64, &value);
+      value = (ULong64_t)std::stoull(res);
    else
       value = 0;
 }
@@ -3523,646 +3174,10 @@ const char *TBufferXML::XmlReadValue(const char *name)
    return fValueBuf.Data();
 }
 
-void TBufferXML::SetFloatFormat(const char *fmt)
-{
-   // Set printf format for float/double members, default "%e"
-   // This method is not thread-safe as it changes a global state.
-
-   if (!fmt)
-      fgFloatFmt = "%e";
-   fgFloatFmt = fmt;
-}
-
-const char *TBufferXML::GetFloatFormat()
-{
-   // return current printf format for float/double members, default "%e"
-
-   return fgFloatFmt.c_str();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-/// The collection needs to be a split TClonesArray or a split vector of pointers.
-
-Int_t TBufferXML::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *obj)
-{
-   TVirtualStreamerInfo *info = sequence.fStreamerInfo;
-   IncrementLevel(info);
-
-   if (gDebug) {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter).PrintDebug(*this, obj);
-         (*iter)(*this, obj);
-      }
-
-   } else {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter)(*this, obj);
-      }
-   }
-
-   DecrementLevel(info);
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-/// The collection needs to be a split TClonesArray or a split vector of pointers.
-
-Int_t TBufferXML::ApplySequenceVecPtr(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection,
-                                      void *end_collection)
-{
-   TVirtualStreamerInfo *info = sequence.fStreamerInfo;
-   IncrementLevel(info);
-
-   if (gDebug) {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter).PrintDebug(
-            *this, *(char **)start_collection); // Warning: This limits us to TClonesArray and vector of pointers.
-         (*iter)(*this, start_collection, end_collection);
-      }
-
-   } else {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter)(*this, start_collection, end_collection);
-      }
-   }
-
-   DecrementLevel(info);
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Read one collection of objects from the buffer using the StreamerInfoLoopAction.
-
-Int_t TBufferXML::ApplySequence(const TStreamerInfoActions::TActionSequence &sequence, void *start_collection,
-                                void *end_collection)
-{
-   TVirtualStreamerInfo *info = sequence.fStreamerInfo;
-   IncrementLevel(info);
-
-   TStreamerInfoActions::TLoopConfiguration *loopconfig = sequence.fLoopConfig;
-   if (gDebug) {
-
-      // Get the address of the first item for the PrintDebug.
-      // (Performance is not essential here since we are going to print to
-      // the screen anyway).
-      void *arr0 = loopconfig->GetFirstAddress(start_collection, end_collection);
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter).PrintDebug(*this, arr0);
-         (*iter)(*this, start_collection, end_collection, loopconfig);
-      }
-
-   } else {
-      // loop on all active members
-      TStreamerInfoActions::ActionContainer_t::const_iterator end = sequence.fActions.end();
-      for (TStreamerInfoActions::ActionContainer_t::const_iterator iter = sequence.fActions.begin(); iter != end;
-           ++iter) {
-         // Idea: Try to remove this function call as it is really needed only for XML streaming.
-         SetStreamerElementNumber((*iter).fConfiguration->fCompInfo->fElem, (*iter).fConfiguration->fCompInfo->fType);
-         (*iter)(*this, start_collection, end_collection, loopconfig);
-      }
-   }
-
-   DecrementLevel(info);
-   return 0;
-}
-
-// abstract TBuffer methods, probably dedicated to have them in the TBufferText
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object of the specified class is already in
-/// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is 0 ).
-
-Bool_t TBufferXML::CheckObject(const TObject *obj)
-{
-   return CheckObject(obj, TObject::Class());
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the specified object of the specified class is already in
-/// the buffer. Returns kTRUE if object already in the buffer,
-/// kFALSE otherwise (also if obj is 0 ).
-
-Bool_t TBufferXML::CheckObject(const void *obj, const TClass *ptrClass)
-{
-   if (!obj || !ptrClass || !fObjMap)
-      return kFALSE;
-
-   TClass *clActual = ptrClass->GetActualClass(obj);
-
-   const char *temp = (const char *)obj;
-
-   if (clActual && (ptrClass != clActual))
-      temp -= clActual->GetBaseClassOffset(ptrClass);
-
-   return fObjMap->GetValue(TString::Hash(&temp, sizeof(void *)), (Long_t)temp) != 0;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 /// Return current streamer info element
 
 TVirtualStreamerInfo *TBufferXML::GetInfo()
 {
    return Stack()->fInfo;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Deserialize information from a buffer into an object.
-///
-/// Note: This function is called by the xxx::Streamer() functions in
-/// rootcint-generated dictionaries.
-/// This function assumes that the class version and the byte count
-/// information have been read.
-///
-/// \param[in] version The version number of the class
-/// \param[in] start   The starting position in the buffer b
-/// \param[in] count   The number of bytes for this object in the buffer
-///
-
-Int_t TBufferXML::ReadClassBuffer(const TClass *cl, void *pointer, Int_t version, UInt_t start, UInt_t count,
-                                  const TClass *onFileClass)
-{
-
-   //---------------------------------------------------------------------------
-   // The ondisk class has been specified so get foreign streamer info
-   /////////////////////////////////////////////////////////////////////////////
-
-   TStreamerInfo *sinfo = 0;
-   if (onFileClass) {
-      sinfo = (TStreamerInfo *)cl->GetConversionStreamerInfo(onFileClass, version);
-      if (!sinfo) {
-         Error("ReadClassBuffer",
-               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
-               onFileClass->GetName(), version, cl->GetName(), Length());
-         CheckByteCount(start, count, onFileClass);
-         return 0;
-      }
-   }
-   //---------------------------------------------------------------------------
-   // Get local streamer info
-   /////////////////////////////////////////////////////////////////////////////
-   /// The StreamerInfo should exist at this point.
-
-   else {
-      R__LOCKGUARD(gInterpreterMutex);
-      auto infos = cl->GetStreamerInfos();
-      auto ninfos = infos->GetSize();
-      if (version < -1 || version >= ninfos) {
-         Error("ReadBuffer1", "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
-               cl->GetName(), version, Length());
-         CheckByteCount(start, count, cl);
-         return 0;
-      }
-      sinfo = (TStreamerInfo *)infos->At(version);
-      if (!sinfo) {
-         // Unless the data is coming via a socket connection from with schema evolution
-         // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
-         // one for the current version, otherwise let's complain ...
-         // We could also get here if there old class version was '1' and the new class version is higher than 1
-         // AND the checksum is the same.
-         if (version == cl->GetClassVersion() || version == 1) {
-            const_cast<TClass *>(cl)->BuildRealData(pointer);
-            // This creation is alright since we just checked within the
-            // current 'locked' section.
-            sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
-            const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
-            if (gDebug > 0)
-               printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
-            sinfo->Build();
-         } else if (version == 0) {
-            // When the object was written the class was version zero, so
-            // there is no StreamerInfo to be found.
-            // Check that the buffer position corresponds to the byte count.
-            CheckByteCount(start, count, cl);
-            return 0;
-         } else {
-            Error("ReadClassBuffer",
-                  "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
-                  version, cl->GetName(), Length());
-            CheckByteCount(start, count, cl);
-            return 0;
-         }
-      } else if (!sinfo->IsCompiled()) { // Note this read is protected by the above lock.
-         // Streamer info has not been compiled, but exists.
-         // Therefore it was read in from a file and we have to do schema evolution.
-         const_cast<TClass *>(cl)->BuildRealData(pointer);
-         sinfo->BuildOld();
-      }
-   }
-
-   // Deserialize the object.
-   ApplySequence(*(sinfo->GetReadObjectWiseActions()), (char *)pointer);
-   if (sinfo->IsRecovered())
-      count = 0;
-
-   // Check that the buffer position corresponds to the byte count.
-   CheckByteCount(start, count, cl);
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Deserialize information from a buffer into an object.
-///
-/// Note: This function is called by the xxx::Streamer()
-/// functions in rootcint-generated dictionaries.
-///
-
-Int_t TBufferXML::ReadClassBuffer(const TClass *cl, void *pointer, const TClass *onFileClass)
-{
-   // Read the class version from the buffer.
-   UInt_t R__s = 0; // Start of object.
-   UInt_t R__c = 0; // Count of bytes.
-   Version_t version;
-
-   if (onFileClass)
-      version = ReadVersion(&R__s, &R__c, onFileClass);
-   else
-      version = ReadVersion(&R__s, &R__c, cl);
-
-   Bool_t v2file = kFALSE;
-   TFile *file = (TFile *)GetParent();
-   if (file && file->GetVersion() < 30000) {
-      version = -1; // This is old file
-      v2file = kTRUE;
-   }
-
-   //---------------------------------------------------------------------------
-   // The ondisk class has been specified so get foreign streamer info
-   /////////////////////////////////////////////////////////////////////////////
-
-   TStreamerInfo *sinfo = nullptr;
-   if (onFileClass) {
-      sinfo = (TStreamerInfo *)cl->GetConversionStreamerInfo(onFileClass, version);
-      if (!sinfo) {
-         Error("ReadClassBuffer",
-               "Could not find the right streamer info to convert %s version %d into a %s, object skipped at offset %d",
-               onFileClass->GetName(), version, cl->GetName(), Length());
-         CheckByteCount(R__s, R__c, onFileClass);
-         return 0;
-      }
-   }
-   //---------------------------------------------------------------------------
-   // Get local streamer info
-   /////////////////////////////////////////////////////////////////////////////
-   /// The StreamerInfo should exist at this point.
-
-   else {
-      TStreamerInfo *guess = (TStreamerInfo *)cl->GetLastReadInfo();
-      if (guess && guess->GetClassVersion() == version) {
-         sinfo = guess;
-      } else {
-         // The last one is not the one we are looking for.
-         {
-            R__LOCKGUARD(gInterpreterMutex);
-
-            const TObjArray *infos = cl->GetStreamerInfos();
-            Int_t infocapacity = infos->Capacity();
-            if (infocapacity) {
-               if (version < -1 || version >= infocapacity) {
-                  Error("ReadClassBuffer",
-                        "class: %s, attempting to access a wrong version: %d, object skipped at offset %d",
-                        cl->GetName(), version, Length());
-                  CheckByteCount(R__s, R__c, cl);
-                  return 0;
-               }
-               sinfo = (TStreamerInfo *)infos->UncheckedAt(version);
-               if (sinfo) {
-                  if (!sinfo->IsCompiled()) {
-                     // Streamer info has not been compiled, but exists.
-                     // Therefore it was read in from a file and we have to do schema evolution?
-                     R__LOCKGUARD(gInterpreterMutex);
-                     const_cast<TClass *>(cl)->BuildRealData(pointer);
-                     sinfo->BuildOld();
-                  }
-                  // If the compilation succeeded, remember this StreamerInfo.
-                  // const_cast okay because of the lock on gInterpreterMutex.
-                  if (sinfo->IsCompiled())
-                     const_cast<TClass *>(cl)->SetLastReadInfo(sinfo);
-               }
-            }
-         }
-
-         if (!sinfo) {
-            // Unless the data is coming via a socket connection from with schema evolution
-            // (tracking) was not enabled.  So let's create the StreamerInfo if it is the
-            // one for the current version, otherwise let's complain ...
-            // We could also get here when reading a file prior to the introduction of StreamerInfo.
-            // We could also get here if there old class version was '1' and the new class version is higher than 1
-            // AND the checksum is the same.
-            if (v2file || version == cl->GetClassVersion() || version == 1) {
-               R__LOCKGUARD(gInterpreterMutex);
-
-               // We need to check if another thread did not get here first
-               // and did the StreamerInfo creation already.
-               auto infos = cl->GetStreamerInfos();
-               auto ninfos = infos->GetSize();
-               if (!(version < -1 || version >= ninfos)) {
-                  sinfo = (TStreamerInfo *)infos->At(version);
-               }
-               if (!sinfo) {
-                  const_cast<TClass *>(cl)->BuildRealData(pointer);
-                  sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
-                  sinfo->SetClassVersion(version);
-                  const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
-                  if (gDebug > 0)
-                     printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), version);
-                  if (v2file) {
-                     sinfo->Build();             // Get the elements.
-                     sinfo->Clear("build");      // Undo compilation.
-                     sinfo->BuildEmulated(file); // Fix the types and redo compilation.
-                  } else {
-                     sinfo->Build();
-                  }
-               }
-            } else if (version == 0) {
-               // When the object was written the class was version zero, so
-               // there is no StreamerInfo to be found.
-               // Check that the buffer position corresponds to the byte count.
-               CheckByteCount(R__s, R__c, cl);
-               return 0;
-            } else {
-               Error("ReadClassBuffer",
-                     "Could not find the StreamerInfo for version %d of the class %s, object skipped at offset %d",
-                     version, cl->GetName(), Length());
-               CheckByteCount(R__s, R__c, cl);
-               return 0;
-            }
-         }
-      }
-   }
-
-   // deserialize the object
-   ApplySequence(*(sinfo->GetReadObjectWiseActions()), (char *)pointer);
-   if (sinfo->TStreamerInfo::IsRecovered())
-      R__c = 0; // 'TStreamerInfo::' avoids going via a virtual function.
-
-   // Check that the buffer position corresponds to the byte count.
-   CheckByteCount(R__s, R__c, cl);
-
-   if (gDebug > 2)
-      printf(" ReadBuffer for class: %s has read %d bytes\n", cl->GetName(), R__c);
-
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Function called by the Streamer functions to serialize object at p
-/// to buffer b. The optional argument info may be specified to give an
-/// alternative StreamerInfo instead of using the default StreamerInfo
-/// automatically built from the class definition.
-/// For more information, see class TStreamerInfo.
-
-Int_t TBufferXML::WriteClassBuffer(const TClass *cl, void *pointer)
-{
-   // build the StreamerInfo if first time for the class
-   TStreamerInfo *sinfo = (TStreamerInfo *)const_cast<TClass *>(cl)->GetCurrentStreamerInfo();
-   if (!sinfo) {
-      // Have to be sure between the check and the taking of the lock if the current streamer has changed
-      R__LOCKGUARD(gInterpreterMutex);
-      sinfo = (TStreamerInfo *)const_cast<TClass *>(cl)->GetCurrentStreamerInfo();
-      if (!sinfo) {
-         const_cast<TClass *>(cl)->BuildRealData(pointer);
-         sinfo = new TStreamerInfo(const_cast<TClass *>(cl));
-         const_cast<TClass *>(cl)->SetCurrentStreamerInfo(sinfo);
-         const_cast<TClass *>(cl)->RegisterStreamerInfo(sinfo);
-         if (gDebug > 0)
-            printf("Creating StreamerInfo for class: %s, version: %d\n", cl->GetName(), cl->GetClassVersion());
-         sinfo->Build();
-      }
-   } else if (!sinfo->IsCompiled()) {
-      R__LOCKGUARD(gInterpreterMutex);
-      // Redo the test in case we have been victim of a data race on fIsCompiled.
-      if (!sinfo->IsCompiled()) {
-         const_cast<TClass *>(cl)->BuildRealData(pointer);
-         sinfo->BuildOld();
-      }
-   }
-
-   // write the class version number and reserve space for the byte count
-   UInt_t R__c = WriteVersion(cl, kTRUE);
-
-   // NOTE: In the future Philippe wants this to happen via a custom action
-   TagStreamerInfo(sinfo);
-   ApplySequence(*(sinfo->GetWriteObjectWiseActions()), (char *)pointer);
-
-   // write the byte count at the start of the buffer
-   SetByteCount(R__c, kTRUE);
-
-   if (gDebug > 2)
-      printf(" WriteBuffer for class: %s version %d has written %d bytes\n", cl->GetName(), cl->GetClassVersion(),
-             UInt_t(fBufCur - fBuffer) - R__c - (UInt_t)sizeof(UInt_t));
-   return 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Mark the classindex of the current file as using this TStreamerInfo
-
-void TBufferXML::TagStreamerInfo(TVirtualStreamerInfo *info)
-{
-   TFile *file = (TFile *)GetParent();
-   if (file) {
-      TArrayC *cindex = file->GetClassIndex();
-      Int_t nindex = cindex->GetSize();
-      Int_t number = info->GetNumber();
-      if (number < 0 || number >= nindex) {
-         Error("TagStreamerInfo", "StreamerInfo: %s number: %d out of range[0,%d] in file: %s", info->GetName(), number,
-               nindex, file->GetName());
-         return;
-      }
-      if (cindex->fArray[number] == 0) {
-         cindex->fArray[0] = 1;
-         cindex->fArray[number] = 1;
-      }
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Convert object into json structures.
-/// !!! Should be used only by TBufferJSON itself.
-/// Use ConvertToJSON() methods to convert object to json
-
-void TBufferXML::WriteObject(const TObject *obj, Bool_t cacheReuse /* = kTRUE */)
-{
-   WriteObjectAny(obj, TObject::Class(), cacheReuse);
-}
-
-namespace {
-struct DynamicType {
-   // Helper class to enable typeid on any address
-   // Used in code similar to:
-   //    typeid( * (DynamicType*) void_ptr );
-   virtual ~DynamicType() {}
-};
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Write object to I/O buffer.
-/// This function assumes that the value in 'obj' is the value stored in
-/// a pointer to a "ptrClass". The actual type of the object pointed to
-/// can be any class derived from "ptrClass".
-/// Return:
-///  - 0: failure
-///  - 1: success
-///  - 2: truncated success (i.e actual class is missing. Only ptrClass saved.)
-///
-/// If 'cacheReuse' is true (default) upon seeing an object address a second time,
-/// we record the offset where its was written the first time rather than streaming
-/// the object a second time.
-/// If 'cacheReuse' is false, we always stream the object.  This allows the (re)use
-/// of temporary object to store different data in the same buffer.
-
-Int_t TBufferXML::WriteObjectAny(const void *obj, const TClass *ptrClass, Bool_t cacheReuse /* = kTRUE */)
-{
-   if (!obj) {
-      WriteObjectClass(nullptr, nullptr, kTRUE);
-      return 1;
-   }
-
-   if (!ptrClass) {
-      Error("WriteObjectAny", "ptrClass argument may not be 0");
-      return 0;
-   }
-
-   TClass *clActual = ptrClass->GetActualClass(obj);
-
-   if (!clActual) {
-      // The ptrClass is a class with a virtual table and we have no
-      // TClass with the actual type_info in memory.
-
-      DynamicType *d_ptr = (DynamicType *)obj;
-      Warning("WriteObjectAny", "An object of type %s (from type_info) passed through a %s pointer was truncated (due "
-                                "a missing dictionary)!!!",
-              typeid(*d_ptr).name(), ptrClass->GetName());
-      WriteObjectClass(obj, ptrClass, cacheReuse);
-      return 2;
-   } else if (clActual && (clActual != ptrClass)) {
-      const char *temp = (const char *)obj;
-      temp -= clActual->GetBaseClassOffset(ptrClass);
-      WriteObjectClass(temp, clActual, cacheReuse);
-      return 1;
-   } else {
-      WriteObjectClass(obj, ptrClass, cacheReuse);
-      return 1;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// force writing the TStreamerInfo to the file
-
-void TBufferXML::ForceWriteInfo(TVirtualStreamerInfo *info, Bool_t force)
-{
-   if (info)
-      info->ForceWriteInfo((TFile *)GetParent(), force);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Make sure TStreamerInfo is not optimized, otherwise it will not be
-/// possible to support schema evolution in read mode.
-/// In case the StreamerInfo has already been computed and optimized,
-/// one must disable the option BypassStreamer.
-
-void TBufferXML::ForceWriteInfoClones(TClonesArray *a)
-{
-   TStreamerInfo *sinfo = (TStreamerInfo *)a->GetClass()->GetStreamerInfo();
-   ForceWriteInfo(sinfo, kFALSE);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface to TStreamerInfo::ReadBufferClones.
-
-Int_t TBufferXML::ReadClones(TClonesArray *a, Int_t nobjects, Version_t objvers)
-{
-   char **arr = (char **)a->GetObjectRef(0);
-   char **end = arr + nobjects;
-   // a->GetClass()->GetStreamerInfo()->ReadBufferClones(*this,a,nobjects,-1,0);
-   TStreamerInfo *info = (TStreamerInfo *)a->GetClass()->GetStreamerInfo(objvers);
-   // return info->ReadBuffer(*this,arr,-1,nobjects,0,1);
-   return ApplySequenceVecPtr(*(info->GetReadMemberWiseActions(kTRUE)), arr, end);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Interface to TStreamerInfo::WriteBufferClones.
-
-Int_t TBufferXML::WriteClones(TClonesArray *a, Int_t nobjects)
-{
-   char **arr = reinterpret_cast<char **>(a->GetObjectRef(0));
-   // a->GetClass()->GetStreamerInfo()->WriteBufferClones(*this,(TClonesArray*)a,nobjects,-1,0);
-   TStreamerInfo *info = (TStreamerInfo *)a->GetClass()->GetStreamerInfo();
-   // return info->WriteBufferAux(*this,arr,-1,nobjects,0,1);
-   char **end = arr + nobjects;
-   // No need to tell call ForceWriteInfo as it by ForceWriteInfoClones.
-   return ApplySequenceVecPtr(*(info->GetWriteMemberWiseActions(kTRUE)), arr, end);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// The TProcessID with number pidf is read from file.
-/// If the object is not already entered in the gROOT list, it is added.
-
-TProcessID *TBufferXML::ReadProcessID(UShort_t pidf)
-{
-   TFile *file = (TFile *)GetParent();
-   if (!file) {
-      if (!pidf)
-         return TProcessID::GetPID(); // may happen when cloning an object
-      return 0;
-   }
-
-   TProcessID *pid = nullptr;
-   {
-      R__LOCKGUARD_IMT(gInterpreterMutex); // Lock for parallel TTree I/O
-      pid = file->ReadProcessID(pidf);
-   }
-
-   return pid;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Check if the ProcessID pid is already in the file.
-/// If not, add it and return the index number in the local file list.
-
-UShort_t TBufferXML::WriteProcessID(TProcessID *pid)
-{
-   TFile *file = (TFile *)GetParent();
-   if (!file)
-      return 0;
-   return file->WriteProcessID(pid);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return the exec id stored in the current TStreamerInfo element.
-/// The execid has been saved in the unique id of the TStreamerElement
-/// being read by TStreamerElement::Streamer.
-/// The current element (fgElement) is set as a static global
-/// by TStreamerInfo::ReadBuffer (Clones) when reading this TRef.
-
-UInt_t TBufferXML::GetTRefExecId()
-{
-   return TStreamerInfo::GetCurrentElement()->GetUniqueID();
 }

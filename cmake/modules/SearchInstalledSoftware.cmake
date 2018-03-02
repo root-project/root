@@ -4,6 +4,12 @@ include(FindPackageHandleStandardArgs)
 
 set(lcgpackages http://lcgpackages.web.cern.ch/lcgpackages/tarFiles/sources)
 
+macro(find_package)
+  if(NOT "${ARGV0}" IN_LIST ROOT_BUILTINS)
+    _find_package(${ARGV})
+  endif()
+endmacro()
+
 #---On MacOSX, try to find frameworks after standard libraries or headers------------
 set(CMAKE_FIND_FRAMEWORK LAST)
 
@@ -29,34 +35,20 @@ endif()
 #---Check for Zlib ------------------------------------------------------------------
 if(NOT builtin_zlib)
   message(STATUS "Looking for ZLib")
+  # Clear cache variables, or LLVM may use old values for ZLIB
+  foreach(suffix FOUND INCLUDE_DIR LIBRARY LIBRARY_DEBUG LIBRARY_RELEASE)
+    unset(ZLIB_${suffix} CACHE)
+  endforeach()
   find_package(ZLIB)
   if(NOT ZLIB_FOUND)
     message(STATUS "Zlib not found. Switching on builtin_zlib option")
     set(builtin_zlib ON CACHE BOOL "" FORCE)
-   endif()
+  endif()
 endif()
+
 if(builtin_zlib)
-  message(STATUS "Building zlib included in ROOT itself")
-  set(zlib_sources
-    ${CMAKE_SOURCE_DIR}/core/zip/src/adler32.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/compress.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/crc32.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/deflate.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/gzclose.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/gzlib.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/gzread.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/gzwrite.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/infback.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/inffast.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/inflate.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/inftrees.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/trees.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/uncompr.c
-    ${CMAKE_SOURCE_DIR}/core/zip/src/zutil.c)
-  add_library(ZLIB STATIC ${zlib_sources})
-  set_target_properties(ZLIB PROPERTIES COMPILE_FLAGS "-fPIC -I${CMAKE_SOURCE_DIR}/core/zip/inc")
-  set(ZLIB_LIBRARY " " CACHE PATH "" FORCE)
-  set(ZLIB_LIBRARIES ZLIB)
+  list(APPEND ROOT_BUILTINS ZLIB)
+  add_subdirectory(builtins/zlib)
 endif()
 
 #---Check for Unuran ------------------------------------------------------------------
@@ -199,11 +191,11 @@ if(builtin_lzma)
       URL_HASH SHA256=ce92be2df485a2bd461939908ba9666c88f44e3194d4fb2d4990ac8de7c5929f
       PREFIX LZMA
       INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND "" BUILD_COMMAND ""
+      CONFIGURE_COMMAND ""
+      BUILD_COMMAND ${CMAKE_COMMAND} -E copy lib/liblzma.lib <INSTALL_DIR>/lib
       INSTALL_COMMAND ${CMAKE_COMMAND} -E copy lib/liblzma.dll <INSTALL_DIR>/bin
       LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
       BUILD_BYPRODUCTS ${LZMA_LIBRARIES})
-    install(FILES ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/lib/liblzma.dll DESTINATION ${CMAKE_INSTALL_BINDIR})
     set(LZMA_INCLUDE_DIR ${CMAKE_BINARY_DIR}/LZMA/src/LZMA/include)
   else()
     if(CMAKE_CXX_COMPILER_ID MATCHES Clang)
@@ -227,72 +219,35 @@ if(builtin_lzma)
   endif()
 endif()
 
+#---Check for xxHash-----------------------------------------------------------------
+if(NOT builtin_xxhash)
+  message(STATUS "Looking for xxHash")
+  find_package(xxHash)
+  if(NOT xxHash_FOUND)
+    message(STATUS "xxHash not found. Switching on builtin_xxhash option")
+    set(builtin_xxhash ON CACHE BOOL "" FORCE)
+  endif()
+endif()
+
+if(builtin_xxhash)
+  list(APPEND ROOT_BUILTINS xxHash)
+  add_subdirectory(builtins/xxhash)
+endif()
 
 #---Check for LZ4--------------------------------------------------------------------
 if(NOT builtin_lz4)
   message(STATUS "Looking for LZ4")
   find_package(LZ4)
-  if(LZ4_FOUND)
-  else()
+  if(NOT LZ4_FOUND)
     message(STATUS "LZ4 not found. Switching on builtin_lz4 option")
     set(builtin_lz4 ON CACHE BOOL "" FORCE)
   endif()
 endif()
-# Note: the above if-statement may change the value of builtin_lz4 to ON.
-if(builtin_lz4)
-  set(lz4_version v1.7.5)
-  message(STATUS "Building LZ4 version ${lz4_version} included in ROOT itself")
-  if(CMAKE_CXX_COMPILER_ID STREQUAL Clang)
-    set(LZ4_CFLAGS "-Wno-format-nonliteral")
-  elseif( CMAKE_CXX_COMPILER_ID STREQUAL Intel)
-    set(LZ4_CFLAGS "-wd188 -wd181 -wd1292 -wd10006 -wd10156 -wd2259 -wd981 -wd128 -wd3179")
-  elseif("${CMAKE_CXX_COMPILER_ID}" STREQUAL "MSVC")
-    set(LZ4_CFLAGS "/Zl")
-  endif()
-  set(LZ4_URL ${lcgpackages}/lz4-${lz4_version}.tar.gz)
-  set(LZ4_LIBRARIES ${CMAKE_BINARY_DIR}/lib/${CMAKE_STATIC_LIBRARY_PREFIX}lz4${CMAKE_STATIC_LIBRARY_SUFFIX})
-  if(CMAKE_MINIMUM_REQUIRED_VERSION VERSION_GREATER 3.6.99)
-    message(WARNING "Obsoleted code needs to be removed since the the minimal required version of CMake make it useless")
-  endif()
-  if(CMAKE_VERSION VERSION_LESS 3.7.0)
-    ExternalProject_Add(
-      LZ4
-      URL ${LZ4_URL}
-      URL_HASH SHA256=0190cacd63022ccb86f44fa5041dc6c3804407ad61550ca21c382827319e7e7e
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      CONFIGURE_COMMAND ${CMAKE_COMMAND} 
-                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-                -DBUILD_SHARED_LIBS=OFF
-                -DCMAKE_INSTALL_LIBDIR=lib
-                -G${CMAKE_GENERATOR}
-                <SOURCE_DIR>/contrib/cmake_unofficial
-      BUILD_COMMAND ${CMAKE_COMMAND} --build .
-      INSTALL_COMMAND ${CMAKE_COMMAND} -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR> -P cmake_install.cmake
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
-  else()
-    ExternalProject_Add(
-      LZ4
-      URL ${LZ4_URL}
-      URL_HASH SHA256=0190cacd63022ccb86f44fa5041dc6c3804407ad61550ca21c382827319e7e7e
-      INSTALL_DIR ${CMAKE_BINARY_DIR}
-      SOURCE_SUBDIR contrib/cmake_unofficial
-      CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=<INSTALL_DIR>
-                -DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
-                -DCMAKE_C_FLAGS=${CMAKE_C_FLAGS}
-                -DCMAKE_OSX_SYSROOT=${CMAKE_OSX_SYSROOT}
-                -DCMAKE_OSX_DEPLOYMENT_TARGET=${CMAKE_OSX_DEPLOYMENT_TARGET}
-                -DBUILD_SHARED_LIBS=OFF
-                -DCMAKE_INSTALL_LIBDIR=lib
-      LOG_DOWNLOAD 1 LOG_CONFIGURE 1 LOG_BUILD 1 LOG_INSTALL 1 BUILD_IN_SOURCE 1
-      BUILD_BYPRODUCTS ${LZ4_LIBRARIES})
-  endif()
-  set(LZ4_INCLUDE_DIR ${CMAKE_BINARY_DIR}/include)
-endif()
 
+if(builtin_lz4)
+  list(APPEND ROOT_BUILTINS LZ4)
+  add_subdirectory(builtins/lz4)
+endif()
 
 #---Check for X11 which is mandatory lib on Unix--------------------------------------
 if(x11)
@@ -486,14 +441,14 @@ endif()
 #---Check for Python installation-------------------------------------------------------
 if(python)
   if(fail-on-missing)
-    find_package(PythonInterp REQUIRED)
-    find_package(PythonLibs REQUIRED)
+    find_package(PythonInterp ${python_version} REQUIRED)
+    find_package(PythonLibs ${python_version} REQUIRED)
     if (tmva)
       find_package(NumPy REQUIRED)
     endif()
   else()
-    find_package(PythonInterp)
-    find_package(PythonLibs)
+    find_package(PythonInterp ${python_version})
+    find_package(PythonLibs ${python_version})
     if(tmva)
       find_package(NumPy)
     endif()
@@ -565,24 +520,6 @@ if(gviz)
     endif()
   endif()
 endif()
-
-#---Check for Qt installation-------------------------------------------------------
-if(qt OR qtgsi)
-  message(STATUS "Looking for Qt4")
-  find_package(Qt4 4.8 COMPONENTS QtCore QtGui)
-  if(NOT QT4_FOUND)
-    if(fail-on-missing)
-      message(FATAL_ERROR "Qt4 package not found and qt/qtgsi component required")
-    else()
-      message(STATUS "Qt4 not found. Switching off qt/qtgsi option")
-      set(qt OFF CACHE BOOL "" FORCE)
-      set(qtgsi OFF CACHE BOOL "" FORCE)
-    endif()
-  else()
-    MATH(EXPR QT_VERSION_NUM "${QT_VERSION_MAJOR}*10000 + ${QT_VERSION_MINOR}*100 + ${QT_VERSION_PATCH}")
-  endif()
-endif()
-
 
 #---Check for Bonjour installation-------------------------------------------------------
 if(bonjour)
@@ -979,18 +916,8 @@ if(alien)
   endif()
 endif()
 
-#---Check for cling and llvm --------------------------------------------------------
+#---Check for cling -------- --------------------------------------------------------
 if(cling)
-  if(builtin_llvm)
-    set(LLVM_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/include
-                          ${CMAKE_BINARY_DIR}/interpreter/llvm/src/include
-                          ${CMAKE_SOURCE_DIR}/interpreter/llvm/src/tools/clang/include
-                          ${CMAKE_BINARY_DIR}/interpreter/llvm/src/tools/clang/include)
-    set(LLVM_LIBRARIES clangDriver clangFrontend)
-  else()
-    find_package(LLVM REQUIRED)  # should define the same variables LLVM_XXXX
-  endif()
-
   set(CLING_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/interpreter/cling/include)
   if(MSVC)
     set(CLING_CXXFLAGS "-DNOMINMAX -D_XKEYCHECK_H")
@@ -1003,7 +930,13 @@ if(cling)
   #---These are the libraries that we link ROOT with CLING---------------------------
   set(CLING_LIBRARIES clingInterpreter clingMetaProcessor clingUtils)
   add_custom_target(CLING)
-  add_dependencies(CLING ${CLING_LIBRARIES} clang-headers intrinsics_gen)
+  add_dependencies(CLING ${CLING_LIBRARIES})
+  if (builtin_llvm)
+    add_dependencies(CLING intrinsics_gen)
+  endif()
+  if (builtin_clang)
+    add_dependencies(CLING clang-headers)
+  endif()
 endif()
 
 #---Check for gfal-------------------------------------------------------------------
@@ -1373,9 +1306,6 @@ if(vc AND NOT Vc_FOUND)
   target_include_directories(Vc SYSTEM BEFORE INTERFACE $<BUILD_INTERFACE:${Vc_INCLUDE_DIR}>)
   target_link_libraries(Vc INTERFACE VcExt)
 
-  # propagate build-time include directories to rootcling
-  set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${Vc_INCLUDE_DIR})
-
   find_package_handle_standard_args(Vc
     FOUND_VAR Vc_FOUND
     REQUIRED_VARS Vc_INCLUDE_DIR Vc_LIBRARIES Vc_CMAKE_MODULES_DIR
@@ -1449,9 +1379,6 @@ if(veccore AND NOT VecCore_FOUND)
   add_library(VecCore INTERFACE)
   target_include_directories(VecCore SYSTEM INTERFACE $<BUILD_INTERFACE:${VecCore_ROOTDIR}/include>)
   add_dependencies(VecCore VECCORE)
-
-  # propagate build-time include directories to rootcling
-  set_property(DIRECTORY APPEND PROPERTY INCLUDE_DIRECTORIES ${VecCore_ROOTDIR}/include)
 
   if (Vc_FOUND)
     set(VecCore_Vc_FOUND True)

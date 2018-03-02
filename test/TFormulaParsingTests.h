@@ -872,7 +872,7 @@ bool test45()
 
    TF1 * func2 = (TF1*) func->Clone("func2");
 
-   bool ok = fpEqual( func2->Eval(1), func->Eval(1), true);
+   bool ok = fpEqual( func2->Eval(2), func->Eval(2), true);
    return ok;
 }
 

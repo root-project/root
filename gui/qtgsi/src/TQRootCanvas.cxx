@@ -9,40 +9,30 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-#include "Riostream.h"
-#include "qevent.h"
-#include "qdialog.h"
-#include "qpushbutton.h"
-#include "qlabel.h"
-#include "qpainter.h"
-#if  (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-# include "qnamespace.h"
-using namespace Qt;
-# include "q3dragobject.h"
-typedef Q3TextDrag QTextDrag;
-#endif
-
 #include "TQRootCanvas.h"
-#include "TROOT.h"
-#include "TClass.h"
-#include "TCanvas.h"
 #include "TQCanvasMenu.h"
+
+#include "Riostream.h"
+#include "TCanvas.h"
+#include "TClass.h"
+#include "TROOT.h"
+
+using namespace Qt;
 
 ClassImp(TQRootCanvas);
 
 ////////////////////////////////////////////////////////////////////////////////
 /// set defaults
 
-TQRootCanvas::TQRootCanvas( QWidget *parent, const char *name, TCanvas *c )
-  : QWidget( parent, name ,WRepaintNoErase | WResizeNoErase ),
-        fNeedResize(kTRUE)
+TQRootCanvas::TQRootCanvas(QWidget *wparent, const char *name, TCanvas *c)
+  : QWidget(wparent), fNeedResize(kTRUE)
 {
    setUpdatesEnabled( kTRUE );
    setMouseTracking(kTRUE);
 
    //  setBackgroundMode( NoBackground );
    setFocusPolicy( TabFocus );
-   setCursor( Qt::crossCursor );
+   setCursor( Qt::CrossCursor );
 
    fTabWin = 0;
    // add the Qt::WinId to TGX11 interface
@@ -57,13 +47,13 @@ TQRootCanvas::TQRootCanvas( QWidget *parent, const char *name, TCanvas *c )
       fCanvas=c;
    }
    // create the context menu
-   fContextMenu = new TQCanvasMenu( parent, fCanvas );
+   fContextMenu = new TQCanvasMenu( wparent, fCanvas );
 
    // test here all the events sent to the QWidget
    // has a parent widget then install filter
-   if ( parent ) {
-      parent->installEventFilter( this );
-      fParent = parent;
+   if ( wparent ) {
+      wparent->installEventFilter( this );
+      fParent = wparent;
    }
    else
       fParent=0;
@@ -75,15 +65,14 @@ TQRootCanvas::TQRootCanvas( QWidget *parent, const char *name, TCanvas *c )
 ////////////////////////////////////////////////////////////////////////////////
 /// set defaults
 
-TQRootCanvas::TQRootCanvas( QWidget *parent, QWidget* tabWin, const char *name, TCanvas *c )
-  : QWidget( tabWin, name ,WRepaintNoErase | WResizeNoErase ),
-    fNeedResize(kTRUE)
+TQRootCanvas::TQRootCanvas(QWidget *wparent, QWidget* tabWin, const char *name, TCanvas *c)
+  : QWidget(tabWin), fNeedResize(kTRUE)
 {
    setUpdatesEnabled( kTRUE );
    setMouseTracking(kTRUE);
 
    setFocusPolicy( TabFocus );
-   setCursor( Qt::crossCursor );
+   setCursor( Qt::CrossCursor );
 
    fTabWin = 0;
    // add the Qt::WinId to TGX11 interface
@@ -97,13 +86,13 @@ TQRootCanvas::TQRootCanvas( QWidget *parent, QWidget* tabWin, const char *name, 
       fCanvas=c;
    }
    // create the context menu
-   fContextMenu = new TQCanvasMenu( parent, tabWin, fCanvas );
+   fContextMenu = new TQCanvasMenu( wparent, tabWin, fCanvas );
 
    // test here all the events sent to the QWidget
    // has a parent widget then install filter
-   if ( parent ) {
-      parent->installEventFilter( this );
-      fParent = parent;
+   if ( wparent ) {
+      wparent->installEventFilter( this );
+      fParent = wparent;
    }
    else
       fParent=0;
@@ -120,20 +109,17 @@ TQRootCanvas::TQRootCanvas( QWidget *parent, QWidget* tabWin, const char *name, 
 
 void TQRootCanvas::mouseMoveEvent(QMouseEvent *e)
 {
-   if (fCanvas) {
-      if (e->state() & LeftButton) {
-         fCanvas->HandleInput(kButton1Motion, e->x(), e->y());
-      }
-      else {
-         fCanvas->HandleInput(kMouseMotion, e->x(), e->y());
-      }
-   }
+   if (!fCanvas)
+      return;
+
+   bool buttonDown = e->buttons() & Qt::LeftButton;
+   fCanvas->HandleInput(buttonDown ? kButton1Motion : kMouseMotion, e->x(), e->y());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Handle mouse button press event.
 
-void TQRootCanvas::mousePressEvent( QMouseEvent *e )
+void TQRootCanvas::mousePressEvent(QMouseEvent *e)
 {
    TPad *pad=0;
    TObjLink *pickobj=0;
@@ -142,10 +128,10 @@ void TQRootCanvas::mousePressEvent( QMouseEvent *e )
    Int_t py=e->y();
    TString selectedOpt;
    switch (e->button()) {
-      case LeftButton :
+      case Qt::LeftButton:
          fCanvas->HandleInput(kButton1Down, e->x(), e->y());
          break;
-      case RightButton :
+      case Qt::RightButton:
          selected=fCanvas->GetSelected();
          pad = fCanvas->Pick(px, py, pickobj);
          if (pad) {
@@ -167,21 +153,17 @@ void TQRootCanvas::mousePressEvent( QMouseEvent *e )
                              gPad->AbsPixeltoY(gPad->GetEventY()), e);
 
          break;
-      case MidButton :
+      case Qt::MidButton:
          pad = fCanvas->Pick(px, py, pickobj);  // get the selected pad and emit a Qt-Signal
          emit SelectedPadChanged(pad);          // that inform the Qt-world that tha pad is changed
                                                 // and give the pointer to the new pad as argument
                                                 // of the signal (M. Al-Turany)
          fCanvas->HandleInput(kButton2Down, e->x(), e->y());
-
          break;
 
-      case  NoButton :
-         break;
       default:
          break;
    }
-
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -299,21 +281,21 @@ Bool_t TQRootCanvas ::eventFilter( QObject *o, QEvent *e )
 ////////////////////////////////////////////////////////////////////////////////
 /// Entering a drag event.
 
-void TQRootCanvas::dragEnterEvent( QDragEnterEvent *e )
+void TQRootCanvas::dragEnterEvent(QDragEnterEvent *e)
 {
-   if ( QTextDrag::canDecode(e))
-      e->accept();
+   if (e->mimeData()->hasText())
+      e->acceptProposedAction();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Start a drop, for now only histogram objects can be drwon by droping.
 
-void TQRootCanvas::dropEvent( QDropEvent *Event )
+void TQRootCanvas::dropEvent(QDropEvent *e)
 {
-   QString str;
-   if ( QTextDrag::decode( Event, str ) ) {
-      TObject *dragedObject = gROOT->FindObject(str);
-      QPoint Pos = Event->pos();
+   if (e->mimeData()->hasText()) {
+      const char *name = e->mimeData()->text().toAscii().data();
+      TObject *dragedObject = gROOT->FindObject(name);
+      QPoint Pos = e->pos();
       TObject *object=0;
       TPad *pad = fCanvas->Pick(Pos.x(), Pos.y(), object);
       if (dragedObject!=0) {
@@ -322,16 +304,11 @@ void TQRootCanvas::dropEvent( QDropEvent *Event )
             dragedObject->Draw();
             pad->Update();
          }
+      } else {
+         std::cout << "object " << name << " not found by ROOT" << std::endl;
       }
-      else
-         std::cout << "object " <<
-#if  (QT_VERSION > 0x039999) // Added by cholm@nbi.dk - for Qt 4
-         str.data()
-#else
-         str
-#endif
-         <<  " not found by ROOT" << std::endl;
    }
+   e->acceptProposedAction();
 }
 
 /////////////////////////////////////End Drag and drop Support (Mohammad Al-Turany)
@@ -643,9 +620,9 @@ void TQRootCanvas::GetCanvasPar(Int_t &wtopx, Int_t &wtopy, UInt_t &ww, UInt_t &
 ////////////////////////////////////////////////////////////////////////////////
 /// just a wrapper
 
-void TQRootCanvas::HandleInput(EEventType button, Int_t x, Int_t y)
+void TQRootCanvas::HandleInput(EEventType button, Int_t ix, Int_t iy)
 {
-   fCanvas->HandleInput(button, x, y);
+   fCanvas->HandleInput(button, ix, iy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -763,9 +740,9 @@ void TQRootCanvas::SaveSource(const char *filename, Option_t *option)
 ////////////////////////////////////////////////////////////////////////////////
 /// just a wrapper
 
-void TQRootCanvas::SetCursor(ECursor cursor)
+void TQRootCanvas::SetCursor(ECursor c)
 {
-   fCanvas->SetCursor(cursor);
+   fCanvas->SetCursor(c);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -779,9 +756,9 @@ void TQRootCanvas::SetDoubleBuffer(Int_t mode)
 ////////////////////////////////////////////////////////////////////////////////
 /// just a wrapper
 
-void TQRootCanvas::SetWindowPosition(Int_t x, Int_t y)
+void TQRootCanvas::SetWindowPosition(Int_t ix, Int_t iy)
 {
-   fCanvas->SetWindowPosition(x, y) ;
+   fCanvas->SetWindowPosition(ix, iy) ;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

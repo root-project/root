@@ -13,6 +13,9 @@ ROOT_ADD_GTEST(dataframe_regression dataframe/dataframe_regression.cxx LIBRARIES
 ROOT_ADD_GTEST(dataframe_simple dataframe/dataframe_simple.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(dataframe_snapshot dataframe/dataframe_snapshot.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(dataframe_utils dataframe/dataframe_utils.cxx LIBRARIES TreePlayer)
+ROOT_ADD_GTEST(dataframe_report dataframe/dataframe_report.cxx LIBRARIES TreePlayer)
+ROOT_ADD_GTEST(dataframe_helpers dataframe/dataframe_helpers.cxx LIBRARIES TreePlayer)
+ROOT_ADD_GTEST(dataframe_ranges dataframe/dataframe_ranges.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_GTEST(datasource_more dataframe/datasource_more.cxx LIBRARIES TreePlayer)
 ROOT_ADD_GTEST(datasource_root dataframe/datasource_root.cxx LIBRARIES TreePlayer)
@@ -20,6 +23,10 @@ ROOT_ADD_GTEST(datasource_trivial dataframe/datasource_trivial.cxx LIBRARIES Tre
 configure_file(dataframe/TCsvDS_test_headers.csv . COPYONLY)
 configure_file(dataframe/TCsvDS_test_noheaders.csv . COPYONLY)
 ROOT_ADD_GTEST(datasource_csv dataframe/datasource_csv.cxx LIBRARIES TreePlayer)
+ROOT_ADD_GTEST(datasource_lazy dataframe/datasource_lazy.cxx LIBRARIES TreePlayer)
+
+ROOT_ADD_GTEST(vecops_tvecallocator dataframe/vecops_tadoptallocator.cxx LIBRARIES TreePlayer)
+ROOT_ADD_GTEST(vecops_tvec dataframe/vecops_tvec.cxx LIBRARIES TreePlayer)
 
 ROOT_ADD_PYUNITTEST(dataframe_misc dataframe/dataframe_misc.py)
 ROOT_ADD_PYUNITTEST(dataframe_histograms dataframe/dataframe_histograms.py)

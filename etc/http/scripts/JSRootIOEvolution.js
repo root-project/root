@@ -173,11 +173,42 @@
 
          if (getChar(curr) == 'Z' && getChar(curr+1) == 'L' && getCode(curr+2) == 8) { fmt = "new"; off = 2; } else
          if (getChar(curr) == 'C' && getChar(curr+1) == 'S' && getCode(curr+2) == 8) { fmt = "old"; off = 0; } else
-         if (getChar(curr) == 'X' && getChar(curr+1) == 'Z') fmt = "LZMA";
+         if (getChar(curr) == 'X' && getChar(curr+1) == 'Z') fmt = "LZMA"; else
+         if (getChar(curr) == 'L' && getChar(curr+1) == '4') { fmt = "LZ4"; off = 0; HDRSIZE = 17; }
+
+/*
+         if (fmt == "LZMA") {
+            console.log('find LZMA');
+            console.log('chars', getChar(curr), getChar(curr+1), getChar(curr+2));
+
+            for(var n=0;n<20;++n)
+               console.log('codes',n,getCode(curr+n));
+
+            var srcsize = HDRSIZE + ((getCode(curr+3) & 0xff) | ((getCode(curr+4) & 0xff) << 8) | ((getCode(curr+5) & 0xff) << 16));
+
+            var tgtsize0 = ((getCode(curr+6) & 0xff) | ((getCode(curr+7) & 0xff) << 8) | ((getCode(curr+8) & 0xff) << 16));
+
+
+            console.log('srcsize',srcsize, tgtsize0, tgtsize);
+
+            off = 0;
+
+            var uint8arr = new Uint8Array(arr.buffer, arr.byteOffset + curr + HDRSIZE + off, arr.byteLength - curr - HDRSIZE - off);
+
+            JSROOT.LZMA.decompress(uint8arr, function on_decompress_complete(result) {
+                console.log("Decompressed done", typeof result, result);
+             }, function on_decompress_progress_update(percent) {
+                /// Decompressing progress code goes here.
+                console.log("Decompressing: " + (percent * 100) + "%");
+             });
+
+            return null;
+         }
+*/
 
          /*   C H E C K   H E A D E R   */
-         if ((fmt !== "new") && (fmt !== "old")) {
-            if (!noalert) JSROOT.alert("R__unzip: " + fmt + " zlib format is not supported!");
+         if ((fmt !== "new") && (fmt !== "old") && (fmt !== "LZ4")) {
+            if (!noalert) JSROOT.alert("R__unzip: " + fmt + " format is not supported!");
             return null;
          }
 
@@ -188,7 +219,10 @@
          //  place for unpacking
          if (!tgtbuf) tgtbuf = new ArrayBuffer(tgtsize);
 
-         var reslen = JSROOT.ZIP.inflate(uint8arr, new Uint8Array(tgtbuf, fullres));
+         var tgt8arr = new Uint8Array(tgtbuf, fullres);
+
+         var reslen = (fmt === "LZ4") ? JSROOT.LZ4.uncompress(uint8arr, tgt8arr)
+                                      : JSROOT.ZIP.inflate(uint8arr, tgt8arr);
          if (reslen<=0) break;
 
          fullres += reslen;
@@ -858,7 +892,7 @@
       } else {
          var file = this;
          JSROOT.NewHttpRequest(this.fURL, "head", function(res) {
-            if (res==null)
+            if (!res)
                return JSROOT.CallBack(newfile_callback, null);
 
             var accept_ranges = res.getResponseHeader("Accept-Ranges");
@@ -1090,7 +1124,7 @@
    TFile.prototype.GetDir = function(dirname, cycle) {
       // check first that directory with such name exists
 
-      if ((cycle==null) && (typeof dirname == 'string')) {
+      if ((cycle === undefined) && (typeof dirname == 'string')) {
          var pos = dirname.lastIndexOf(';');
          if (pos>0) { cycle = dirname.substr(pos+1); dirname = dirname.substr(0,pos); }
       }

@@ -15,7 +15,9 @@
 // case of using ROOT plug-in manager
 #ifndef MATH_NO_PLUGIN_MANAGER
 #include "TEnv.h"
+#include "TVirtualRWMutex.h"
 #endif
+
 
 #include <iomanip>
 
@@ -92,15 +94,29 @@ const std::string & MinimizerOptions::DefaultMinimizerType()
    // return default minimizer
    // if is "" (no default is set) read from etc/system.rootrc
 
-   if (Minim::gDefaultMinimizer.size() == 0) {
-#ifndef MATH_NO_PLUGIN_MANAGER
-   // use value defined in etc/system.rootrc  (if not found Minuit is used)
-      if (gEnv)
-         Minim::gDefaultMinimizer = gEnv->GetValue("Root.Fitter","Minuit");
+#ifdef MATH_NO_PLUGIN_MANAGER
+   if (Minim::gDefaultMinimizer.size() != 0)
+      return Minim::gDefaultMinimizer;
+
+   Minim::gDefaultMinimizer = "Minuit2";  // in case no PM exists
+
 #else
-      Minim::gDefaultMinimizer = "Minuit2";  // in case no PM exists
+   R__READ_LOCKGUARD(ROOT::gCoreMutex);
+
+   if (Minim::gDefaultMinimizer.size() != 0)
+      return Minim::gDefaultMinimizer;
+
+   R__WRITE_LOCKGUARD(ROOT::gCoreMutex);
+
+   // Another thread also waiting for the write lock might have
+   // done the assignment
+   if (Minim::gDefaultMinimizer.size() != 0)
+      return Minim::gDefaultMinimizer;
+
+   // use value defined in etc/system.rootrc  (if not found Minuit is used)
+   if (gEnv)
+      Minim::gDefaultMinimizer = gEnv->GetValue("Root.Fitter","Minuit");
 #endif
-   }
 
    return Minim::gDefaultMinimizer;
 }

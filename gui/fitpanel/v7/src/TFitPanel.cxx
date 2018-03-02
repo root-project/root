@@ -35,7 +35,7 @@ web-based FitPanel prototype.
 std::shared_ptr<ROOT::Experimental::TWebWindow> ROOT::Experimental::TFitPanel::GetWindow()
 {
    if (!fWindow) {
-      fWindow = TWebWindowsManager::Instance()->CreateWindow(gROOT->IsBatch());
+      fWindow = TWebWindowsManager::Instance()->CreateWindow();
 
       fWindow->SetPanelName("FitPanel");
 
@@ -88,7 +88,7 @@ void ROOT::Experimental::TFitPanel::ProcessData(unsigned connid, const std::stri
       model.fModelNames.push_back(ComboBoxItem("3", "RootModel3"));
       model.fSelectModelId = "3";
 
-      TString json = TBufferJSON::ConvertToJSON(&model, gROOT->GetClass("ROOT::Experimental::TFitPanelModel"));
+      TString json = TBufferJSON::ToJSON(&model);
 
       fWindow->Send(std::string("MODEL:") + json.Data(), fConnId);
 
@@ -149,7 +149,7 @@ void ROOT::Experimental::TFitPanel::DoFit(const std::string &dname, const std::s
       fFitHist->Fill(6);
       fFitHist->Fill(7);
 
-      fCanvas->Draw(fFitHist).SetLineColor(Experimental::TColor::kBlue);
+      fCanvas->Draw(fFitHist)->SetLineColor(Experimental::TColor::kBlue);
 
       // workaround to keep histogram in the lists
       ROOT::Experimental::TDirectory::Heap().Add("fitaxis", xaxis);

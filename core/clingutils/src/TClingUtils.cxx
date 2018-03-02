@@ -24,7 +24,7 @@
 #include <unordered_set>
 
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 #include "Rtypes.h"
 
 #include "RStl.h"
@@ -4585,11 +4585,21 @@ clang::QualType ROOT::TMetaUtils::ReSubstTemplateArg(clang::QualType input, cons
          } else {
             replacedCtxt = decl->getDescribedClassTemplate();
          }
+      } else if (auto const declguide = llvm::dyn_cast<clang::CXXDeductionGuideDecl>(replacedDeclCtxt)) {
+         replacedCtxt = llvm::dyn_cast<clang::ClassTemplateDecl>(declguide->getDeducedTemplate());
+      } else if (auto const ctdecl = llvm::dyn_cast<clang::ClassTemplateDecl>(replacedDeclCtxt)) {
+         replacedCtxt = ctdecl;
       } else {
-         replacedCtxt = llvm::dyn_cast<clang::ClassTemplateDecl>(replacedDeclCtxt);
+         std::string astDump;
+         llvm::raw_string_ostream ostream(astDump);
+         instance->dump(ostream);
+         ostream.flush();
+         ROOT::TMetaUtils::Warning("ReSubstTemplateArg","Unexpected type of declaration context for template parameter: %s.\n\tThe responsible class is:\n\t%s\n",
+                                   replacedDeclCtxt->getDeclKindName(), astDump.c_str());
+         replacedCtxt = nullptr;
       }
 
-      if (replacedCtxt->getCanonicalDecl() == TSTdecl->getSpecializedTemplate()->getCanonicalDecl()
+      if ((replacedCtxt && replacedCtxt->getCanonicalDecl() == TSTdecl->getSpecializedTemplate()->getCanonicalDecl())
           || /* the following is likely just redundant */
           substType->getReplacedParameter()->getDecl()
           == TSTdecl->getSpecializedTemplate ()->getTemplateParameters()->getParam(index))

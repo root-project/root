@@ -9,22 +9,38 @@
  *************************************************************************/
 
 #include "RConfigure.h" // R__USE_IMT
+#include "ROOT/TCutFlowReport.hxx"
 #include "ROOT/TDFNodes.hxx"
-#include "ROOT/TSpinMutex.hxx"
+#include "ROOT/TDFUtils.hxx"
+#include "ROOT/TDataSource.hxx"
 #include "ROOT/TTreeProcessorMT.hxx"
+#include "ROOT/RStringView.hxx"
+#include "TTree.h"
 #ifdef R__USE_IMT
 #include "ROOT/TThreadExecutor.hxx"
 #endif
+#include <limits.h>
+#include <cassert>
+#include <functional>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <numeric>
+#include <stdexcept>
+#include <string>
+#include <utility>
+#include <vector>
+
 #include "RtypesCore.h" // Long64_t
 #include "TInterpreter.h"
 #include "TROOT.h" // IsImplicitMTEnabled
 #include "TTreeReader.h"
 
-#include <cassert>
-#include <mutex>
-#include <string>
 class TDirectory;
-class TTree;
+namespace ROOT {
+class TSpinMutex;
+} // namespace ROOT
+
 using namespace ROOT::Detail::TDF;
 using namespace ROOT::Internal::TDF;
 
@@ -76,17 +92,13 @@ bool TFilterBase::HasName() const
    return !fName.empty();
 };
 
-void TFilterBase::PrintReport() const
+void TFilterBase::FillReport(ROOT::Experimental::TDF::TCutFlowReport &rep) const
 {
-   if (fName.empty()) // PrintReport is no-op for unnamed filters
+   if (fName.empty()) // FillReport is no-op for unnamed filters
       return;
    const auto accepted = std::accumulate(fAccepted.begin(), fAccepted.end(), 0ULL);
    const auto all = accepted + std::accumulate(fRejected.begin(), fRejected.end(), 0ULL);
-   double perc = accepted;
-   if (all > 0)
-      perc /= all;
-   perc *= 100.;
-   Printf("%-10s: pass=%-10lld all=%-10lld -- %8.3f %%", fName.c_str(), accepted, all, perc);
+   rep.AddCut({fName, accepted, all});
 }
 
 void TFilterBase::InitNode()
@@ -220,7 +232,8 @@ void TLoopManager::RunTreeProcessorMT()
 void TLoopManager::RunTreeReader()
 {
    TTreeReader r(fTree.get());
-   if (0 == fTree->GetEntriesFast()) return;
+   if (0 == fTree->GetEntriesFast())
+      return;
    InitNodeSlots(&r, 0);
 
    // recursive call to check filters and conditionally execute actions
@@ -290,9 +303,12 @@ void TLoopManager::RunDataSourceMT()
 /// Named filters must be called even if the analysis logic would not require it, lest they report confusing results.
 void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 {
-   for (auto &actionPtr : fBookedActions) actionPtr->Run(slot, entry);
-   for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->CheckFilters(slot, entry);
-   for (auto &callback : fCallbacks) callback(slot);
+   for (auto &actionPtr : fBookedActions)
+      actionPtr->Run(slot, entry);
+   for (auto &namedFilterPtr : fBookedNamedFilters)
+      namedFilterPtr->CheckFilters(slot, entry);
+   for (auto &callback : fCallbacks)
+      callback(slot);
 }
 
 /// Build TTreeReaderValues for all nodes
@@ -303,10 +319,14 @@ void TLoopManager::RunAndCheckFilters(unsigned int slot, Long64_t entry)
 void TLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 {
    // booked branches must be initialized first because other nodes might need to point to the values they encapsulate
-   for (auto &bookedBranch : fBookedCustomColumns) bookedBranch.second->InitSlot(r, slot);
-   for (auto &ptr : fBookedActions) ptr->InitSlot(r, slot);
-   for (auto &ptr : fBookedFilters) ptr->InitSlot(r, slot);
-   for (auto &callback : fCallbacksOnce) callback(slot);
+   for (auto &bookedBranch : fBookedCustomColumns)
+      bookedBranch.second->InitSlot(r, slot);
+   for (auto &ptr : fBookedActions)
+      ptr->InitSlot(r, slot);
+   for (auto &ptr : fBookedFilters)
+      ptr->InitSlot(r, slot);
+   for (auto &callback : fCallbacksOnce)
+      callback(slot);
 }
 
 /// Initialize all nodes of the functional graph before running the event loop.
@@ -316,8 +336,12 @@ void TLoopManager::InitNodeSlots(TTreeReader *r, unsigned int slot)
 void TLoopManager::InitNodes()
 {
    EvalChildrenCounts();
-   for (auto &filter : fBookedFilters) filter->InitNode();
-   for (auto &customColumn : fBookedCustomColumns) customColumn.second->InitNode();
+   for (auto &filter : fBookedFilters)
+      filter->InitNode();
+   for (auto &customColumn : fBookedCustomColumns)
+      customColumn.second->InitNode();
+   for (auto &range : fBookedRanges)
+      range->InitNode();
 }
 
 /// Perform clean-up operations. To be called at the end of each event loop.
@@ -335,8 +359,12 @@ void TLoopManager::CleanUpNodes()
    // reset children counts
    fNChildren = 0;
    fNStopsReceived = 0;
-   for (auto &ptr : fBookedFilters) ptr->ResetChildrenCount();
-   for (auto &ptr : fBookedRanges) ptr->ResetChildrenCount();
+   for (auto &ptr : fBookedFilters)
+      ptr->ResetChildrenCount();
+   for (auto &ptr : fBookedRanges)
+      ptr->ResetChildrenCount();
+   for (auto &ptr : fBookedRanges)
+      ptr->ResetChildrenCount();
 
    fCallbacks.clear();
    fCallbacksOnce.clear();
@@ -345,9 +373,12 @@ void TLoopManager::CleanUpNodes()
 /// Perform clean-up operations. To be called at the end of each task execution.
 void TLoopManager::CleanUpTask(unsigned int slot)
 {
-   for (auto &ptr : fBookedActions) ptr->ClearValueReaders(slot);
-   for (auto &ptr : fBookedFilters) ptr->ClearValueReaders(slot);
-   for (auto &pair : fBookedCustomColumns) pair.second->ClearValueReaders(slot);
+   for (auto &ptr : fBookedActions)
+      ptr->ClearValueReaders(slot);
+   for (auto &ptr : fBookedFilters)
+      ptr->ClearValueReaders(slot);
+   for (auto &pair : fBookedCustomColumns)
+      pair.second->ClearValueReaders(slot);
 }
 
 /// Jit all actions that required runtime column type inference, and clean the `fToJit` member variable.
@@ -371,8 +402,10 @@ void TLoopManager::JitActions()
 /// the event loop so the graph branch they belong to must count as active even if it does not end in an action.
 void TLoopManager::EvalChildrenCounts()
 {
-   for (auto &actionPtr : fBookedActions) actionPtr->TriggerChildrenCount();
-   for (auto &namedFilterPtr : fBookedNamedFilters) namedFilterPtr->TriggerChildrenCount();
+   for (auto &actionPtr : fBookedActions)
+      actionPtr->TriggerChildrenCount();
+   for (auto &namedFilterPtr : fBookedNamedFilters)
+      namedFilterPtr->TriggerChildrenCount();
 }
 
 /// Start the event loop with a different mechanism depending on IMT/no IMT, data source/no data source.
@@ -460,10 +493,11 @@ bool TLoopManager::CheckFilters(int, unsigned int)
    return true;
 }
 
-/// Call `PrintReport` on all booked filters
-void TLoopManager::Report() const
+/// Call `FillReport` on all booked filters
+void TLoopManager::Report(ROOT::Experimental::TDF::TCutFlowReport &rep) const
 {
-   for (const auto &fPtr : fBookedNamedFilters) fPtr->PrintReport();
+   for (const auto &fPtr : fBookedNamedFilters)
+      fPtr->FillReport(rep);
 }
 
 void TLoopManager::RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f)
@@ -483,4 +517,11 @@ TRangeBase::TRangeBase(TLoopManager *implPtr, unsigned int start, unsigned int s
 TLoopManager *TRangeBase::GetImplPtr() const
 {
    return fImplPtr;
+}
+
+void TRangeBase::ResetCounters()
+{
+   fLastCheckedEntry = -1;
+   fNProcessedEntries = 0;
+   fHasStopped = false;
 }

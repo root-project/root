@@ -314,7 +314,7 @@ endif()
 #--VecCore basic test------------------------------------------------------------------------------
 if(ROOT_veccore_FOUND)
   ROOT_EXECUTABLE(test-veccore test-veccore.cxx LIBRARIES ${VecCore_LIBRARIES} BUILTINS VECCORE)
-  target_include_directories(test-veccore SYSTEM BEFORE PRIVATE ${VecCore_INCLUDE_DIRS})
+  target_include_directories(test-veccore BEFORE PRIVATE ${VecCore_INCLUDE_DIRS})
   target_compile_definitions(test-veccore PRIVATE ${VecCore_DEFINITIONS})
   if(VecCore_Vc_FOUND)
     ROOT_ADD_TEST(VecCore COMMAND test-veccore REGEX "Vc")

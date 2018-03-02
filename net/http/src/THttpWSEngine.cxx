@@ -11,6 +11,8 @@
 
 #include "THttpWSEngine.h"
 
+#include "THttpCallArg.h"
+
 //////////////////////////////////////////////////////////////////////////
 //                                                                      //
 // THttpWSEngine                                                        //
@@ -21,21 +23,12 @@
 //////////////////////////////////////////////////////////////////////////
 
 
-ClassImp(THttpWSEngine);
-
 ////////////////////////////////////////////////////////////////////////////////
-/// normal constructor
+/// Attach WSEngine to THttpCallArg to transport to the WSHandler
 
-THttpWSEngine::THttpWSEngine(const char *name, const char *title)
-   : TNamed(name, title)
+void THttpWSEngine::AttachTo(THttpCallArg &arg)
 {
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// destructor
-
-THttpWSEngine::~THttpWSEngine()
-{
+   arg.SetWSEngine(this);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -43,6 +36,24 @@ THttpWSEngine::~THttpWSEngine()
 
 void THttpWSEngine::SendCharStar(const char *str)
 {
-   if (str) Send(str, strlen(str));
+   if (str)
+      Send(str, strlen(str));
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Method should be invoked before processing data coming from websocket
+/// If method returns kTRUE, this is data is processed internally and
+/// not dedicated for further usage
+
+Bool_t THttpWSEngine::PreviewData(THttpCallArg &)
+{
+   return kFALSE;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Method invoked after user process data received via websocket
+/// Normally request is no longer usable after that
+
+void THttpWSEngine::PostProcess(THttpCallArg &)
+{
+}

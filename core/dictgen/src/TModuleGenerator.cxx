@@ -20,7 +20,7 @@
 
 #include "TClingUtils.h"
 #include "RConfigure.h"
-#include "RConfig.h"
+#include <ROOT/RConfig.h>
 
 #include "cling/Interpreter/CIFactory.h"
 #include "clang/Basic/SourceManager.h"
@@ -462,7 +462,7 @@ void TModuleGenerator::WriteRegistrationSource(std::ostream &out,
                               "    if (!isInitialized) {\n"
                               "      TROOT::RegisterModule(\"" << GetDemangledDictionaryName() << "\",\n"
                               "        headers, includePaths, payloadCode, fwdDeclCode,\n"
-                              "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl, " << fwdDeclnArgsToKeepString << ", classesHeaders);\n"
+                              "        TriggerDictionaryInitialization_" << GetDictionaryName() << "_Impl, " << fwdDeclnArgsToKeepString << ", classesHeaders, " << (fCI->getLangOpts().Modules ? "/*has C++ module*/true" : "/*has no C++ module*/false") << ");\n"
                               "      isInitialized = true;\n"
                               "    }\n"
                               "  }\n"

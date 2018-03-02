@@ -19,7 +19,7 @@
 #include <array>
 #include <memory>
 #include <sstream>
-#include "RStringView.h"
+#include "ROOT/RStringView.hxx"
 #include <vector>
 
 namespace ROOT {
@@ -45,13 +45,22 @@ class TLogEntry;
 class TLogHandler {
 public:
    virtual ~TLogHandler();
-   // Returns false if further emission of this Log should be suppressed.
+   /// Returns false if further emission of this Log should be suppressed.
    virtual bool Emit(const TLogEntry &entry) = 0;
 };
+
+
+/**
+ A TLogHandler that multiplexes diagnostics to different client `TLogHandler`s.
+ `TLogHandler::Get()` returns the process's (static) log manager.
+ */
 
 class TLogManager: public TLogHandler {
 private:
    std::vector<std::unique_ptr<TLogHandler>> fHandlers;
+
+   long long fNumWarnings{0};
+   long long fNumErrors{0};
 
    /// Initialize taking a TLogHandlerDefault.
    TLogManager(std::unique_ptr<TLogHandler> &&lh) { fHandlers.emplace_back(std::move(lh)); }
@@ -74,7 +83,49 @@ public:
             return false;
       return true;
    }
+
+   /// Returns the current number of warnings seen by this log manager.
+   long long GetNumWarnings() const { return fNumWarnings; }
+
+   /// Returns the current number of errors seen by this log manager.
+   long long GetNumErrors() const { return fNumErrors; }
 };
+
+/**
+ Object to count the number of warnings and errors emitted by a section of code,
+ after construction of this type.
+ */
+class TLogDiagCounter {
+private:
+   /// The number of the TLogManager's emitted warnings at construction time of *this.
+   long long fInitialWarnings{TLogManager::Get().GetNumWarnings()};
+   /// The number of the TLogManager's emitted errors at construction time.
+   long long fInitialErrors{TLogManager::Get().GetNumErrors()};
+
+public:
+   /// Get the number of warnings that the TLogManager has emitted since construction of *this.
+   long long GetAccumulatedWarnings() const { return TLogManager::Get().GetNumWarnings() - fInitialWarnings; }
+
+   /// Get the number of errors that the TLogManager has emitted since construction of *this.
+   long long GetAccumulatedErrors() const { return TLogManager::Get().GetNumErrors() - fInitialErrors; }
+
+   /// Whether the TLogManager has emitted a warnings since construction time of *this.
+   bool HasWarningOccurred() const { return GetAccumulatedWarnings(); }
+
+   /// Whether the TLogManager has emitted an error since construction time of *this.
+   bool HasErrorOccurred() const { return GetAccumulatedErrors(); }
+
+   /// Whether the TLogManager has emitted an error or a warning since construction time of *this.
+   bool HasErrorOrWarningOccurred() const { return HasWarningOccurred() || HasErrorOccurred(); }
+};
+
+/**
+ A diagnostic, emitted by the TLogManager upon destruction of the TLogEntry.
+ One can construct a TLogEntry through the utility preprocessor macros R__ERROR_HERE, R__WARNING_HERE etc
+ like this:
+     R__INFO_HERE("CodeGroupForInstanceLibrary") << "All we know is " << 42;
+ This will automatically capture the current class and function name, the file and line number.
+ */
 
 class TLogEntry: public std::ostringstream {
 public:

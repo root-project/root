@@ -60,8 +60,11 @@ void TMakeProject::AddInclude(FILE *fp, const char *header, Bool_t system, char 
 
 void TMakeProject::ChopFileName(TString &name, Int_t limit)
 {
-   if (name.Length() >= limit) {
-      Bool_t has_extension = (strcmp(name.Data() + name.Length() - 2, ".h") == 0);
+   Ssiz_t len = name.Length();
+   Bool_t has_extension = name.EndsWith(".h");
+   if (has_extension)
+      len -= 2;
+   if (len >= limit) {
       if (has_extension) {
          name.Remove(name.Length()-2);
       }
@@ -116,7 +119,7 @@ TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos
                   if (strcmp(name + strlen(name) - 2, ".h") == 0) {
                      result.Append(".h");
                   }
-                  ChopFileName(result,255);
+                  ChopFileName(result,127);
                   return result;
                }
 #ifndef WIN32
@@ -148,7 +151,7 @@ TString TMakeProject::GetHeaderName(const char *in_name, const TList *extrainfos
             result.Append(name[i]);
       }
    }
-   ChopFileName(result,255);
+   ChopFileName(result,127);
    return result;
 }
 

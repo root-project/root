@@ -1,57 +1,49 @@
-// This can be used in C mode. It cannot go in ROOT_Type because ThreadLocalStorage.h
-// uses kFALSE and kTRUE, which come from Rtypes.h causing a cycle.
-// FIXME: This should be separated because it introduces header dependency
-// libThread->libCore->libThread. We should figure out a way to implement it in
-// a more reasonable way.
-module ThreadLocalStorage {
-  header "ThreadLocalStorage.h"
+// This module contains header files from module Core which can be used in both
+// C and C++ context.
+module ROOT_Foundation_C [system] {
+  module "ThreadLocalStorage.h" { header "ThreadLocalStorage.h" export * }
+  module "strlcpy.h" { header "strlcpy.h" export * }
+  module "snprintf.h" { header "snprintf.h" export * }
+
   export *
 }
-// These can be used in C mode.
-module ROOT_Types {
+
+// This module contains header files from module Core which are used as
+// configuration for ROOT. They contain a lot of macro definitions which are
+// supposed to be textually expanded in each TU.
+module ROOT_Config [system] {
+  // These headers are supposed to be only textually expanded for each TU.
+  module "RVersion.h" { textual header "RVersion.h" export * }
+  module "RConfig.h" { textual header "RConfig.h" export * }
+  module "RConfigure.h" { textual header "RConfigure.h" export * }
+  // FIXME: There is little benefit in keeping DllImport as a separate header.
+  // The majority of its uses already include Rtypes.h which includes DllImport.
+  module "DllImport.h" { header "DllImport.h" export * }
+
+  export *
+}
+
+// This module contains header files from module Core which do not need -frtti.
+// They are mainly needed for ROOT stage1 build.
+module ROOT_Foundation_Stage1_NoRTTI [system] {
   module "RtypesCore.h" { header "RtypesCore.h" export * }
   module "ESTLType.h" { header "ESTLType.h" export * }
-  // FIXME: This module should contain only header files with types.
-  // The listed below headers are here because we want them to work in both
-  // -frtti and -fno-rtti environment. Move them into a separate module.
-  module "RStringView.h" { header "RStringView.h" export * }
-  module "Varargs.h" { header "Varargs.h" export * } // Old should revisit, either drop or delete.
+  module "ROOT/RStringView.hxx" {
+    // RWrap_libcpp_string_view.h is meant to be included only by ROOT/RStringView.hxx
+    textual header "ROOT/RWrap_libcpp_string_view.h"
+    header "ROOT/RStringView.hxx"
+    export *
+  }
+  // Varargs contains a lot of macros for supporting the obsolete va_args.
+  // FIXME: We may want to drop this when we reimplement all uses to use variadic
+  // templates.
+  module "Varargs.h" { header "Varargs.h" export * }
   module "TClassEdit.h" { header "TClassEdit.h" export * }
-  module "strlcpy.h" { header "strlcpy.h" export * }
-  module "RConfig.h" { textual header "RConfig.h" export * }
-  module "DllImport.h" { header "DllImport.h" export * } // Should merge in RConfig.h.
-  module "RConfigure.h" { textual header "RConfigure.h" export * }
-  module "RVersion.h" { textual header "RVersion.h" export * }
-  // This should go in RConfig.h as it defines macros.
+  module "TIsAProxy.h" { header "TIsAProxy.h" export * }
+  module "TVirtualIsAProxy.h" { header "TVirtualIsAProxy.h" export * }
+  module "TException.h" { header "TException.h" export * }
+
   export *
-}
-
-// This module is special, it contains headers which don't require rtti support
-// to build (eg. don't use dynamic_cast or typeid). They are also needed when
-// compiling rootcling with -fno-rtti. We have to keep them outside module ROOT
-// to avoid -fno-rtti invocation to trigger building of entire module ROOT
-// some of whose headers require -frtti.
-// Rtypes.h however has an optional dependency on rtti unless one defines
-// R__NO_INLINE_CLASSDEF. We therefore keep two versions of this module: One
-// with rtti and one without rtti.
-module ROOT_Core_Config_C {
- //requires cplusplus
- 
- exclude header "RtypesImp.h"
- module "Rtypes.h" { header "Rtypes.h" export * }
- module "TException.h" { header "TException.h" export * }
- module "TGenericClassInfo.h" { header "TGenericClassInfo.h" export * }
- module "TSchemaHelper.h" { header "TSchemaHelper.h" export * }
- module "RootMetaSelection.h" { header "RootMetaSelection.h" export * }
- module "snprintf.h" { header "snprintf.h" export * } // #included by Rtypes, could go away?
- module "TIsAProxy.h" { header "TIsAProxy.h" export * }
- module "TVirtualIsAProxy.h" { header "TVirtualIsAProxy.h" export * }
-
- // Should we marked textual because of inclusion libcpp_string_view.h,
- // using macros to set up the header file.
- module "RWrap_libcpp_string_view.h" {  textual header "RWrap_libcpp_string_view.h" export * }
-
- export *
 }
 
 // Some frameworks include gl.h or gltypes.h (eg. Cocoa) and thus we cannot build
@@ -63,9 +55,9 @@ module ROOT_Core_Config_C {
 // when there is no folder GL or contents in it.
 // module ROOT_Glew {
   // Depending on the platform we get some of these three installed.
-  module "glew.h" { header "GL/glew.h" export * }
-  module "wglew.h" { header "GL/wglew.h" export * }
-  module "glxew.h" { header "GL/glxew.h" export * }
+  module "glew.h" [system] { header "GL/glew.h" export * }
+  module "wglew.h" [system] { header "GL/wglew.h" export * }
+  module "glxew.h" [system] { header "GL/glxew.h" export * }
 //  link "lib/libGLEW.so"
 //}
 

@@ -63,6 +63,21 @@ void tdf004_cutFlowReport()
    // event-loop that has been run using the relevant TDataFrame.
    std::cout << "Cut3 stats:" << std::endl;
    filtered3.Report();
+
+   // It is not only possible to print the information about cuts, but also to
+   // retrieve it to then use it programmatically.
    std::cout << "All stats:" << std::endl;
-   d.Report();
+   auto allCutsReport = d.Report();
+
+   // We can now loop on the cuts
+   std::cout << "Name\tAll\tPass\tEfficiency" << std::endl;
+   for (auto &&cutInfo : allCutsReport) {
+      std::cout << cutInfo.GetName() << "\t" << cutInfo.GetAll() << "\t" << cutInfo.GetPass() << "\t"
+                << cutInfo.GetEff() << " %" << std::endl;
+   }
+
+   // Or get information about them individually
+   auto cutName = "Cut1";
+   auto cut = allCutsReport["Cut1"];
+   std::cout << cutName << " efficiency is " << cut.GetEff() << " %" << std::endl;
 }
