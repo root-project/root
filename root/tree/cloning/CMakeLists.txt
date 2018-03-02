@@ -4,20 +4,24 @@ else()
       set(ROOT_EVENT_DIR ${ROOT_SOURCE_DIR}/roottest/root/treeformula/event/)
 endif()
 
+if(TARGET onepcm)
+      set(EventDependencies "onepcm")
+endif()
+
 # Generating dataset from tree-treeformula-event test
-# FIXME: it will be nice to move
+# FIXME: it will be nice to move  tree-treeformula-event to CMake and add it as dependency
 ROOT_GENERATE_DICTIONARY(EventDict ${ROOT_EVENT_DIR}/Event.h 
                   LINKDEF ${ROOT_EVENT_DIR}/EventLinkDef.h)
 
 ROOT_LINKER_LIBRARY(EventTreeFormula TEST ${ROOT_EVENT_DIR}/Event.cxx EventDict.cxx
                   LIBRARIES Core Tree Hist MathCore)
 
-ROOT_EXECUTABLE(EventGenerate ${ROOT_EVENT_DIR}/MainEvent.cxx 
-                  LIBRARIES Core Tree Hist MathCore EventTreeFormula)
+ROOTTEST_GENERATE_EXECUTABLE(EventGenerate ${ROOT_EVENT_DIR}/MainEvent.cxx 
+                  LIBRARIES Core RIO Net Tree Hist MathCore EventTreeFormula)
 
 add_custom_command(OUTPUT Event.root
                   COMMAND ./EventGenerate 6 0 0 1 30 > log
-                  DEPENDS EventGenerate)
+                  DEPENDS EventGenerate ${EventDependencies})
 add_custom_target(event-generation ALL DEPENDS Event.root)
 
 add_custom_command(
@@ -28,6 +32,10 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy
                 Event.root
                 event2.root)
+
+if(TARGET hsimple)
+      set(HSimpleDependencies "hsimple")
+endif()
 
 # Using already generated hsimple.root from ${ROOTSYS}
 add_custom_target(hsimple-file ALL DEPENDS ${ROOTSYS}/tutorials/hsimple.root)
@@ -40,7 +48,7 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy
                 ${ROOTSYS}/tutorials/hsimple.root
                 hsimple2.root
-        DEPENDS ${ROOTSYS}/tutorials/hsimple.root)
+        DEPENDS ${HSimpleDependencies})
 
 set(RootExeOptions -e "gSystem->Load(\"libEventTreeFormula\")")
 
